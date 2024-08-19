@@ -16,28 +16,28 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
-        global scrollInfo
-        set scrollInfo $args
+    global scrollInfo
+    set scrollInfo $args
 }
 # For trace add variable
 proc override args {
-        global x
-        set x 12345
+    global x
+    set x 12345
 }
 
 # Procedures used in widget VALIDATION tests
 proc doval {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        return 1
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    return 1
 }
 proc doval2 {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        set ::e mydata
-        return 1
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    set ::e mydata
+    return 1
 }
 proc doval3 {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        return 0
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    return 0
 }
 
 set cy [font metrics {Courier -12} -linespace]
@@ -1011,7 +1011,7 @@ test entry-3.34 {EntryWidgetCmd procedure, "index" widget command} -setup {
 } -cleanup {
     destroy .e
 } -returnCodes {ok} -match glob -result {*}
-test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -setup {
+test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -constraints failsOnXQuarz -setup {
     entry .e
     pack .e ; update idletasks
     update
@@ -1763,7 +1763,7 @@ test entry-6.1 {EntryComputeGeometry procedure} -constraints {
     pack .e ; update idletasks
 } -body {
     .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
-        -highlightthickness 3
+	-highlightthickness 3
     .e insert end 012\t45
     update
     list [.e index @61] [.e index @62]
@@ -1777,7 +1777,7 @@ test entry-6.2 {EntryComputeGeometry procedure} -constraints {
     pack .e ; update idletasks
 } -body {
     .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
-        -justify center -highlightthickness 3
+	-justify center -highlightthickness 3
     .e insert end 012\t45
     update
     list [.e index @96] [.e index @97]
@@ -1791,7 +1791,7 @@ test entry-6.3 {EntryComputeGeometry procedure} -constraints {
     pack .e ; update idletasks
 } -body {
     .e configure -font {Courier -12} -bd 2 -relief raised -width 20 \
-        -justify right -highlightthickness 3
+	-justify right -highlightthickness 3
     .e insert end 012\t45
     update
     list [.e index @131] [.e index @132]
@@ -2344,8 +2344,8 @@ test entry-8.18 {DeleteChars procedure} -setup {
     # note: XPAD corresponds to the hardcoded    #define XPAD 1
     set XPAD 1
     set expected [expr { [font measure [.e cget -font] "xyy"] \
-                          + 2 * ( [.e cget -borderwidth] + \
-                                [.e cget -highlightthickness] + $XPAD ) } ]
+			  + 2 * ( [.e cget -borderwidth] + \
+				[.e cget -highlightthickness] + $XPAD ) } ]
     expr {[winfo reqwidth .e] == $expected}
 } -cleanup {
     destroy .e
@@ -2756,7 +2756,7 @@ test entry-13.15 {GetEntryIndex procedure} -body {
 
 test entry-13.16 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2767,7 +2767,7 @@ test entry-13.16 {GetEntryIndex procedure} -constraints fonts -body {
 } -result 4
 test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2778,7 +2778,7 @@ test entry-13.17 {GetEntryIndex procedure} -constraints fonts -body {
 } -result 4
 test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2789,7 +2789,7 @@ test entry-13.18 {GetEntryIndex procedure} -constraints fonts -body {
 } -result 5
 test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2800,7 +2800,7 @@ test entry-13.19 {GetEntryIndex procedure} -constraints fonts -body {
 } -result 8
 test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2811,7 +2811,7 @@ test entry-13.20 {GetEntryIndex procedure} -constraints fonts -body {
 } -result 9
 test entry-13.21 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2831,7 +2831,7 @@ test entry-13.22 {GetEntryIndex procedure} -setup {
 } -returnCodes error -result {bad entry index "1xyz"}
 test entry-13.23 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2842,7 +2842,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
 } -result 0
 test entry-13.24 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2853,7 +2853,7 @@ test entry-13.24 {GetEntryIndex procedure} -body {
 } -result 12
 test entry-13.25 {GetEntryIndex procedure} -body {
     entry .e -width 5 -relief sunken -highlightthickness 2 -bd 2\
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e ; update idletasks
     .e insert 0 012345678901234567890
     .e xview 4
@@ -2898,7 +2898,7 @@ test entry-14.2 {EntryFetchSelection procedure} -body {
 test entry-14.3 {EntryFetchSelection procedure} -setup {
     set x {}
     for {set i 1} {$i <= 500} {incr i} {
-        append x "This is line $i, out of 500\n"
+	append x "This is line $i, out of 500\n"
 }
 } -body {
     entry .e
@@ -3047,10 +3047,10 @@ test entry-19.1 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a
     set ::vVals
@@ -3062,10 +3062,10 @@ test entry-19.2 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a   ;# previous settings
     .e insert 1 b
@@ -3078,10 +3078,10 @@ test entry-19.3 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 ab   ;# previous settings
     .e insert end c
@@ -3094,10 +3094,10 @@ test entry-19.4 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
@@ -3110,10 +3110,10 @@ test entry-19.5 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
@@ -3126,10 +3126,10 @@ test entry-19.6 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
@@ -3143,10 +3143,10 @@ test entry-19.7 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focus \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abc                 ;# previous settings
     set ::vVals {}
@@ -3160,10 +3160,10 @@ test entry-19.8 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e configure -validate focus    ;# previous settings
     .e insert end abcd              ;# previous settings
@@ -3179,10 +3179,10 @@ test entry-19.9 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focus \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd      ;# previous settings
     focus -force .e         ;# previous settings
@@ -3200,10 +3200,10 @@ test entry-19.10 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd          ;# previous settings
     focus -force .e
@@ -3218,10 +3218,10 @@ test entry-19.11 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd          ;# previous settings
     focus -force .e             ;# previous settings
@@ -3239,10 +3239,10 @@ test entry-19.12 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focusin \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 abcd              ;# previous settings
     focus -force .e
@@ -3257,10 +3257,10 @@ test entry-19.13 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focusin \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::vVals {}
@@ -3276,10 +3276,10 @@ test entry-19.14 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3295,10 +3295,10 @@ test entry-19.15 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3318,10 +3318,10 @@ test entry-19.16 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3341,10 +3341,10 @@ test entry-19.17 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::e newdata
@@ -3359,10 +3359,10 @@ test entry-19.18 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     set ::e newdata                 ;# previous settings
     .e configure -validate all
@@ -3379,10 +3379,10 @@ test entry-19.19 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     set ::e nextdata                 ;# previous settings
 
@@ -3402,10 +3402,10 @@ test entry-19.20 {entry widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e ; update idletasks
     set ::e nextdata                 ;# previous settings
     .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V] ;# prev
@@ -3427,8 +3427,8 @@ test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     entry .e -validate key \
-        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
-        -textvariable ::e
+	-validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+	-textvariable ::e
     pack .e ; update idletasks
     set ::e origdata
     .e insert 0 A
@@ -3578,7 +3578,7 @@ test entry-25.1 {Bug [5d991b822e]} {
     set var INIT
     entry .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable {}
+	.b configure -textvariable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -3591,7 +3591,7 @@ test entry-25.2 {Bug [5d991b822e]} {
     set var INIT
     entry .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable new
+	.b configure -textvariable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}
