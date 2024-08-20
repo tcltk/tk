@@ -369,13 +369,18 @@ typedef struct TkTextEmbWindow {
 				 * means no such script. Malloc-ed. */
     int align;			/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
-    int padX, padY;		/* Padding to leave around each side of
+    Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of
 				 * window, in pixels. */
     int stretch;		/* Should window stretch to fill vertical
 				 * space of line (except for pady)? 0 or 1. */
     int isOwner;		/* Should destroy the window when un-embed? This will only be
 				 * done if the text widget is the owner. Default is true
 				 * (this is compatible to older versions). */
+#ifdef BUILD_tk
+    int padX, padY;
+#else
+    int padXUnused, padYUnused;
+#endif
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
     TkTextEmbWindowClient *clients;
@@ -407,8 +412,13 @@ typedef struct TkTextEmbImage {
     				 * (in sharedTextPtr->imageTable).*/
     int align;			/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
-    int padX, padY;		/* Padding to leave around each side of image,
+    Tcl_Obj *padXObj, *padYObj;	/* Padding to leave around each side of image,
 				 * in pixels. */
+#ifdef BUILD_tk
+    int padX, padY;
+#else
+    int padXUnused, padYUnused;
+#endif
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
 } TkTextEmbImage;
@@ -1334,12 +1344,12 @@ typedef struct TkText {
 
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * default background. */
-    int borderWidth;		/* Width of 3-D border to draw around entire
+    Tcl_Obj *borderWidthObj;		/* Width of 3-D border to draw around entire
 				 * widget. */
-    int padX, padY;		/* Padding between text and window border. */
+    Tcl_Obj *padXObj, *padYObj;		/* Padding between text and window border. */
     int relief;			/* 3-d effect for border around entire widget:
 				 * TK_RELIEF_RAISED etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
@@ -1360,11 +1370,11 @@ typedef struct TkText {
 				 * font. */
     int spaceWidth;		/* Width of space character in default font. */
     int lineHeight;		/* Height of line in default font, including line spacing. */
-    int spacing1;		/* Default extra spacing above first display
+    Tcl_Obj *spacing1Obj;	/* Default extra spacing above first display
 				 * line for each text line. */
-    int spacing2;		/* Default extra spacing between display lines
+    Tcl_Obj *spacing2Obj;	/* Default extra spacing between display lines
 				 * for the same text line. */
-    int spacing3;		/* Default extra spacing below last display
+    Tcl_Obj *spacing3Obj;	/* Default extra spacing below last display
 				 * line for each text line. */
     Tcl_Obj *tabOptionPtr; 	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
@@ -1393,8 +1403,9 @@ typedef struct TkText {
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
     int useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
     				 * internal algorithm will be used. */
-    int width, height;		/* Desired dimensions for window, measured in
+    int width;			/* Desired width for window, measured in
 				 * characters. */
+    Tcl_Obj *heightObj; /* Desired height for window */
     int setGrid;		/* Non-zero means pass gridding information to
 				 * window manager. */
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to
@@ -1440,8 +1451,8 @@ typedef struct TkText {
     XColor *insertFgColor;	/* Foreground color for text behind a block cursor.
     				 * NULL means no value specified here. */
     int showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
-    int insertWidth;		/* Total width of insert cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor */
+    Tcl_Obj *insertWidthObj;		/* Total width of insert cursor. */
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor */
     TkTextInsertUnfocussed insertUnfocussed;
 				/* How to display the insert cursor when the
 				 * text widget does not have the focus. */
@@ -1548,6 +1559,15 @@ typedef struct TkText {
 
 #ifdef TK_CHECK_ALLOCS
     size_t widgetNumber;
+#else
+    size_t widgetNumberNotUsed;
+#endif
+#ifdef BUILD_tk
+    int borderWidth;
+    int padX, padY;
+    int height, highlightWidth;
+    int insertWidth, insertBorderWidth;
+    int spacing1, spacing2, spacing3;
 #endif
 } TkText;
 
