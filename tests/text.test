@@ -4506,7 +4506,7 @@ test text-22.22 {TextSearchCmd procedure, bad regular expression pattern} -body 
     .t search -regexp a( 1.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {couldn't compile regular expression pattern: parentheses () not balanced}
+} -returnCodes {error} -result {cannot compile regular expression pattern: parentheses () not balanced}
 test text-22.23 {TextSearchCmd procedure, skip dummy last line} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"

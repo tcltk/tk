@@ -196,7 +196,7 @@ test textImage-1.16 {configure} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {{-align {} {} center center} {-padx {} {} 0 0} {-pady {} {} 0 0} {-image {} {} {} small} {-name {} {} {} {}} {-tags {} {} {} {}}}
+} -result {{-align {} {} center center} {-padx {} {} 0 {}} {-pady {} {} 0 {}} {-image {} {} {} small} {-name {} {} {} {}} {-tags {} {} {} {}}}
 
 test textImage-1.17 {basic cget options} -setup {
     destroy .t
@@ -215,7 +215,7 @@ test textImage-1.17 {basic cget options} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {align:center padx:0 pady:0 image:small name:}
+} -result {align:center padx: pady: image:small name:}
 
 test textImage-1.18 {basic configure options} -setup {
     destroy .t
