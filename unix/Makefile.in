@@ -397,9 +397,9 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
-        tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
 	tkMacOSXMenu.o tkMacOSXMenubutton.o tkMacOSXMenus.o \
-        tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXRegion.o \
+	tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXRegion.o \
 	tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
 	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o tkMacOSXWm.o \
 	tkMacOSXXStubs.o tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o \
