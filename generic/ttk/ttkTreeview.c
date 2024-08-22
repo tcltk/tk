@@ -1457,6 +1457,10 @@ static int BoundingBox(
     int row = ItemRow(tv, item);
     Ttk_Box bbox = tv->tree.treeArea;
 
+    /* Make sure the scroll information is current before use */
+    TtkUpdateScrollInfo(tv->tree.xscrollHandle);
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
+
     if (row < tv->tree.yscroll.first || row > tv->tree.yscroll.last) {
 	/* not viewable, or off-screen */
 	return 0;
@@ -2318,6 +2322,10 @@ static int TreeviewIdentifyCommand(
     ) {
 	return TCL_ERROR;
     }
+
+    /* Make sure the scroll information is current before use */
+    TtkUpdateScrollInfo(tv->tree.xscrollHandle);
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
 
     region = IdentifyRegion(tv, x, y);
     item = IdentifyItem(tv, y);
