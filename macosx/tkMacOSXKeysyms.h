@@ -684,7 +684,7 @@ static const KeysymInfo keysymTable[] = {
     {0x07c8, 0x0398}, /* Greek_THETA */
     {0x07c9, 0x0399}, /* Greek_IOTA */
     {0x07ca, 0x039a}, /* Greek_KAPPA */
-    {0x07cb, 0x039b}, /* Greek_LAMDA */
+    {0x07cb, 0x039b}, /* Greek_LAMBDA */
     {0x07cc, 0x039c}, /* Greek_MU */
     {0x07cd, 0x039d}, /* Greek_NU */
     {0x07ce, 0x039e}, /* Greek_XI */
