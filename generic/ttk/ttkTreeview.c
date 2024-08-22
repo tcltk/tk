@@ -1737,11 +1737,6 @@ static void DrawCells(
 	return;
     }
 
-    /* Make sure that the cells won't overlap the border's bottom edge */
-    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
-	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
-    }
-
     Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
     for (i = 0; i < tv->tree.nColumns; ++i) {
 	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
