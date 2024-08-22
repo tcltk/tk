@@ -1768,12 +1768,6 @@ static void DrawItem(
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
 
-    /* Make sure that the item won't overlap the border's bottom edge:
-     */
-    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
-	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
-    }
-
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
     PrepareItem(tv, item, &displayItem);
@@ -1782,13 +1776,19 @@ static void DrawItem(
      */
     {
 	int itemWidth = TreeWidth(tv);
+	int itemHeight = rowHeight;
 	/* Make sure that the background won't overlap the border's right edge:
 	 */
 	if (itemWidth > tv->tree.treeArea.width) {
 	    itemWidth = tv->tree.treeArea.width;
 	}
+	/* Make sure that the item won't overlap the border's bottom edge:
+	 */
+	if (y + itemHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	    itemHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+	}
 	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
-        			     itemWidth, rowHeight);
+				     itemWidth, itemHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
