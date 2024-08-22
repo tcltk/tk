@@ -2882,6 +2882,10 @@ static int TreeviewSeeCommand(
     /* Make sure item is visible:
      */
     rowNumber = RowNumber(tv, item);
+    if (rowNumber < 0) {
+        /* The item cannot be moved into view because it is detached */
+        return TCL_OK;
+    }
     if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
