@@ -2874,11 +2874,16 @@ static int TreeviewSeeCommand(
     /* Make sure item is visible:
      */
     rowNumber = RowNumber(tv, item);
-    if (rowNumber < tv->tree.yscroll.first) {
-	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
-    } else if (rowNumber >= tv->tree.yscroll.last) {
+    if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
+    }
+    /* On small widgets (shorter than one row high, which is also the case
+     * before the widget is initially mapped) the above command will have
+     * scrolled down too far. This is why both conditions must be checked.
+     */
+    if (rowNumber < tv->tree.yscroll.first) {
+	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
     }
 
     return TCL_OK;
