@@ -1787,7 +1787,8 @@ static void DrawItem(
 	if (itemWidth > tv->tree.treeArea.width) {
 	    itemWidth = tv->tree.treeArea.width;
 	}
-	Ttk_Box rowBox = Ttk_MakeBox(x, y, itemWidth, rowHeight);
+	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
+        			     itemWidth, rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
