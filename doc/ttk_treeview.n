@@ -107,6 +107,24 @@ column counts, even if \fB\-show tree\fR is not specified. Thus for value N of
 this option, column #N is the first one that is scrollable. Default is 0.
 .OP \-titleitems titleItems TitleItems
 Number of items at the top that should not be vertically scrolled. Default is 0.
+.SH "INDICES"
+.PP
+Several of the widget commands for treeview take an index as their argument.
+An index specifies a particular child item within it's parent, in any of
+the following forms:
+.IP \fInumber\fR 12
+Specifies the numerical index of a child within its parent, where 0
+corresponds to the first item.
+.IP \fBend\fR 12
+Indicates the end of the list of children.
+For most commands this refers to the last child,
+but for a few commands such as \fBindex\fR and \fBinsert\fR
+it refers to the item just after the last one.
+.IP \fBfirst\fR 12
+Indicates the first child in the list of children.
+.IP \fBlast\fR 12
+Indicates the last child in the list of children.
+.PP
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
@@ -346,8 +364,7 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 \fIpathname \fBidentifier \fIitem \fIindex\fR
 .
 Returns the identifier of the item at \fIindex\fR within \fIitem\fR's list of
-children where \fIindex\fR can be \fBfirst\fR, \fBlast\fR, \fBend\fR, or a
-numeric index starting from 0.
+children. See \fBINDICES\fR for valid indices.
 .\" METHOD: identify
 .TP
 \fIpathname \fBidentify \fIcomponent x y\fR
@@ -405,15 +422,10 @@ and data columns.
 .RE
 .\" METHOD: index
 .TP
-\fIpathname \fBindex \fIitem\fR
+\fIpathname \fBindex \fIitem ?index?\fR
 .
-Returns the numeric index of \fIitem\fR within its parent's list of children.
-.TP
-\fIpathname \fBindex \fIitem index\fR
-.
-Returns the identifier of the item at \fIindex\fR within \fIitem\fR's list of
-children where \fIindex\fR can be \fBfirst\fR, \fBlast\fR, \fBend\fR, or a
-numeric index starting from 0.
+Returns the numeric index of \fIitem\fR within its parent's list of children
+or if \fIindex\fR is specified, the index of the item at \fIindex\fR.
 .\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR

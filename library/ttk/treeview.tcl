@@ -99,14 +99,14 @@ proc ttk::treeview::Keynav {w dir} {
 	        set focus [$w parent $focus]
 	    } else {
 		while {[$w item $up -open] && [$w haschildren $up]} {
-		    set up [$w index $up end]
+		    set up [$w id $up end]
 		}
 		set focus $up
 	    }
 	}
 	down {
 	    if {[$w item $focus -open] && [$w haschildren $focus]} {
-	        set focus [$w index $focus first]
+	        set focus [$w id $focus first]
 	    } else {
 		set up $focus
 		while {$up ne "" && [set down [$w next $up]] eq ""} {

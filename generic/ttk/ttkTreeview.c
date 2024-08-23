@@ -476,7 +476,7 @@ typedef struct {
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
     Tcl_Size nTitleColumns;	/* -titlecolumns */
-    Tcl_Size nTitleItems;		/* -titleitems */
+    Tcl_Size nTitleItems;	/* -titleitems */
     int striped;		/* -striped option */
 
     Tcl_Obj *showObj;		/* -show list */
@@ -716,14 +716,64 @@ static TreeItem *FindItem(
     const char *itemName = Tcl_GetString(itemNameObj);
     Tcl_HashEntry *entryPtr =  Tcl_FindHashEntry(&tv->tree.items, itemName);
 
-    if (!entryPtr) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Item %s not found", itemName));
-	Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", NULL);
-	return 0;
+    if (entryPtr) {
+	return (TreeItem *)Tcl_GetHashValue(entryPtr);
     }
-    return (TreeItem *)Tcl_GetHashValue(entryPtr);
+    /* else */
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Item %s not found", itemName));
+    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", NULL);
+    return NULL;
 }
+
+enum {index_end, index_first, index_last};
+static const char *const indexStrings[] = {"end", "first", "last", NULL};
+static TreeItem *EndPosition(Treeview *, TreeItem *);
+
+/* + FindIndex --
+ * 	Returns the item at index in item where index can be an enum or value.
+ *	If index is invalid, result is set to an error message.
+ */
+static TreeItem *FindIndex(
+    Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj)
+{
+    int fn;
+    Tcl_Size index = 0;
+
+    if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
+	    "index", 0, &fn) == TCL_OK) {
+	if (fn == index_first) {
+	    if (item->children) {
+		return item->children;
+	    }
+	} else {
+	    TreeItem *found = EndPosition(tv, item);
+	    if (found) {
+		return found;
+	    }
+	}
+
+    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK) {
+	TreeItem *child = item->children;
+	if (child) {
+	    while (child->next && index > 0) {
+		index--;
+		child = child->next;
+	    }
+	    if (index == 0) {
+		return child;
+	    }
+	}
+
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad index \"%s\": must be first, last, end, or an index number",
+	    Tcl_GetString(indexObj)));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", NULL);
+	return NULL;
+    }
+    return item;
+}
+
 
 /* + GetItemListFromObj --
  * 	Parse a Tcl_Obj * as a list of items.
@@ -2760,21 +2810,14 @@ static int TreeviewPrevCommand(
     return TCL_OK;
 }
 
-/* + $tv index $item index --
+/* + $tv identifier $item index --
  * 	Return the id of the item at index in parent $item.
  */
 static int TreeviewIdentifierCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *item;
-    int fn;
-    Tcl_Size index = 0;
-
-    enum {index_end, index_first, index_last};
-    static const char *const indexStrings[] = {
-	"end", "first", "last", NULL
-    };
+    TreeItem *item, *found;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item index");
@@ -2785,42 +2828,18 @@ static int TreeviewIdentifierCommand(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(NULL, objv[3], indexStrings, sizeof(char *),
-	    "index", 0, &fn) == TCL_OK) {
-	if (fn == index_first) {
-	    if (item->children) {
-		Tcl_SetObjResult(interp, (item->children)->idObj);
-	    }
-	} else {
-	    item = EndPosition(tv, item);
-	    if (item) {
-		Tcl_SetObjResult(interp, item->idObj);
-	    }
-	}
-
-    } else if (Tcl_GetSizeIntFromObj(NULL, objv[3], &index) == TCL_OK) {
-	item = item->children;
-	if (item) {
-	    while (item->next && index > 0) {
-		index--;
-		item = item->next;
-	    }
-	    if (index == 0) {
-		Tcl_SetObjResult(interp, item->idObj);
-	    }
-	}
-
-    } else {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad index \"%s\": must be first, last, end, or an index",
-	    Tcl_GetString(objv[3])));
+    found = FindIndex(interp, tv, item, objv[3]);
+    if (found != NULL && found != item && found->idObj != NULL) {
+	Tcl_SetObjResult(interp, found->idObj);
+    } else if (found == NULL) {
 	return TCL_ERROR;
     }
     return TCL_OK;
 }
 
-/* + $tv index $item --
- * 	Return the index of $item within its parent.
+/* + $tv index $item ?index? --
+ * 	Return the index of $item within its parent or
+ *	the index of the item at position index.
  */
 static int TreeviewIndexCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2829,15 +2848,20 @@ static int TreeviewIndexCommand(
     TreeItem *item;
     Tcl_Size index = 0;
 
-    if (objc == 4) {
-	return TreeviewIdentifierCommand(recordPtr, interp,objc, objv);
-    } else if (objc != 3) {
+    if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item ?index?");
 	return TCL_ERROR;
     }
     item = FindItem(interp, tv, objv[2]);
     if (!item) {
 	return TCL_ERROR;
+    }
+
+    if (objc == 4) {
+	item = FindIndex(interp, tv, item, objv[3]);
+	if (item == NULL) {
+	    return TCL_ERROR;
+	}
     }
 
     while (item->prev) {
@@ -4717,6 +4741,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "focus", 		TreeviewFocusCommand,0 },
     { "haschildren",	TreeviewHasChildrenCommand,0 },
     { "heading", 	TreeviewHeadingCommand,0 },
+    { "id",	  	TreeviewIdentifierCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
     { "identifier",  	TreeviewIdentifierCommand,0 },
     { "index",  	TreeviewIndexCommand,0 },
