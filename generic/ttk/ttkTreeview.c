@@ -2468,25 +2468,6 @@ static void TreeviewDisplay(void *clientData, Drawable d)
  * +++ Utilities for widget commands
  */
 
-/* + InsertPosition --
- * 	Locate the previous sibling for [$tree insert].
- *
- * 	Returns a pointer to the item just before the specified index,
- * 	or 0 if the item is to be inserted at the beginning.
- */
-static TreeItem *InsertPosition(TreeItem *parent, int index)
-{
-    TreeItem *prev = 0, *next = parent->children;
-
-    while (next != 0 && index > 0) {
-	--index;
-	prev = next;
-	next = prev->next;
-    }
-
-    return prev;
-}
-
 /* + EndPosition --
  * 	Locate the last child of the specified node.
  *
@@ -3443,13 +3424,9 @@ static int TreeviewInsertCommand(
 
     /* Locate previous sibling based on $index:
      */
-    if (!strcmp(Tcl_GetString(objv[3]), "end")) {
-	sibling = EndPosition(tv, parent);
-    } else {
-	int index;
-	if (Tcl_GetIntFromObj(interp, objv[3], &index) != TCL_OK)
-	    return TCL_ERROR;
-	sibling = InsertPosition(parent, index);
+    sibling = FindItemByIndex(interp, tv, parent, objv[3]);
+    if (sibling == NULL) {
+	return TCL_ERROR;
     }
 
     /* Get node name:
@@ -3686,23 +3663,9 @@ static int TreeviewMoveCommand(
 
     /* Locate previous sibling based on $index:
      */
-    if (!strcmp(Tcl_GetString(objv[4]), "end")) {
-	sibling = EndPosition(tv, parent);
-    } else {
-	TreeItem *p;
-	int index;
-
-	if (Tcl_GetIntFromObj(interp, objv[4], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	sibling = 0;
-	for (p = parent->children; p != NULL && index > 0; p = p->next) {
-	    if (p != item) {
-		--index;
-	    } /* else -- moving node forward, count index+1 nodes  */
-	    sibling = p;
-	}
+    sibling = FindItemByIndex(interp, tv, parent, objv[4]);
+    if (sibling == NULL) {
+	return TCL_ERROR;
     }
 
     /* Check ancestry:
