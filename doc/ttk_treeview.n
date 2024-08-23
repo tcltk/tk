@@ -492,12 +492,14 @@ Returns the identifier of \fIitem\fR's previous sibling,
 or \fB{}\fR if \fIitem\fR is the first child of its parent.
 .\" METHOD: see
 .TP
-\fIpathname \fBsee \fIitem\fR
+\fIpathname \fBsee \fIitem\fR ?\fIindex\fR?
 .
 Ensure that \fIitem\fR is visible:
 sets all of \fIitem\fR's ancestors to \fB\-open true\fR,
 and scrolls the widget if necessary so that \fIitem\fR is
-within the visible portion of the tree.
+within the visible portion of the tree. If \fIindex\fR is
+specified, then the child at \fIindex\fR in \fIitem\fR is
+used as the item to make visible.
 .\" METHOD: selection
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList\fR?

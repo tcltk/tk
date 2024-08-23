@@ -3745,7 +3745,7 @@ static int TreeviewYViewCommand(
     return TtkScrollviewCommand(interp, objc, objv, tv->tree.yscrollHandle);
 }
 
-/* $tree see $item --
+/* $tree see $item ?index? --
  * 	Ensure that $item is visible.
  */
 static int TreeviewSeeCommand(
@@ -3755,11 +3755,15 @@ static int TreeviewSeeCommand(
     TreeItem *item, *parent;
     int scrollRow1, scrollRow2, visibleRows;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item");
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?index?");
 	return TCL_ERROR;
     }
     if (!(item = FindItem(interp, tv, objv[2]))) {
+	return TCL_ERROR;
+    }
+
+    if (objc == 4 && !(item = FindIndex(interp, tv, item, objv[3]))) {
 	return TCL_ERROR;
     }
 
