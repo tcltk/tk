@@ -3438,6 +3438,88 @@ static int TreeviewExpandCommand(
 {
     return TreeviewCollapseExpand(recordPtr, interp, objc, objv, 1);
 }
+ 
+/*
+ * Recursively set items hidden state
+ */
+int TreeviewHideRecursive(TreeItem *item, int hide) {
+    int changed = 0;
+
+    if ((item->hidden && !hide) || (!item->hidden && hide)) {
+	item->hidden = hide;
+	changed = 1;
+    }
+
+    if (item->children) {
+	for (item = item->children; item; item = item->next) {
+	    changed |= TreeviewHideRecursive(item, hide);
+	}
+    }
+    return changed;
+}
+
+/* + $tv hide|unhide $items --
+ * 	hide/unhide items and all child items
+ */
+static int TreeviewHideUnhide(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int hide)
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem **items;
+    int changed = 0;
+    Tcl_Size i = 0;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "items");
+	return TCL_ERROR;
+    }
+
+    /* Get items with special work-around for only root item {} */
+    if (Tcl_ListObjLength(interp, objv[2], &i) == TCL_OK && i == 0) {
+	Tcl_Obj *listObj = Tcl_NewListObj(0, 0);
+	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj("",-1));
+	Tcl_IncrRefCount(listObj);
+	items = GetItemListFromObj(interp, tv, listObj);
+	Tcl_DecrRefCount(listObj);
+    } else {
+	items = GetItemListFromObj(interp, tv, objv[2]);
+    }
+
+    if (!items) {
+	return TCL_ERROR;
+    }
+
+    /* Do hide/unhide for each item */
+    for (i = 0; items[i]; ++i) {
+	changed |= TreeviewHideRecursive(items[i], hide);
+    }
+
+    /* Update widget if any changes were made */
+    if (changed) {
+	tv->tree.rowPosNeedsUpdate = 1;
+	TtkRedisplayWidget(&tv->core);
+    }
+    ckfree(items);
+    return TCL_OK;
+}
+
+/* + $tv hide $items --
+ * 	Hide items and all child items
+ */
+static int TreeviewHideCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    return TreeviewHideUnhide(recordPtr, interp, objc, objv, 1);
+}
+
+/* + $tv unhide $items --
+ * 	Unhide items and all child items
+ */
+static int TreeviewUnhideCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    return TreeviewHideUnhide(recordPtr, interp, objc, objv, 0);
+}
 
 /*------------------------------------------------------------------------
  * +++ Widget commands -- tree modification.
@@ -4756,6 +4838,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "focus", 		TreeviewFocusCommand,0 },
     { "haschildren",	TreeviewHasChildrenCommand,0 },
     { "heading", 	TreeviewHeadingCommand,0 },
+    { "hide",	  	TreeviewHideCommand,0 },
     { "id",	  	TreeviewIdentifierCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
     { "identifier",  	TreeviewIdentifierCommand,0 },
@@ -4774,6 +4857,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },
+    { "unhide",	  	TreeviewUnhideCommand,0 },
     { "xview",  	TreeviewXViewCommand,0 },
     { "yview",  	TreeviewYViewCommand,0 },
     { 0,0,0 }

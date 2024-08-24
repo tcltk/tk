@@ -361,6 +361,12 @@ A script to evaluate when the heading label is pressed.
 .PP
 Use \fIpathname heading #0\fR to configure the tree column heading.
 .RE
+.\" METHOD: hide
+.TP
+\fIpathname \fBhide \fIitemList\fR
+.
+Hide all of the items in \fIitemList\fR and all child items. Same as
+[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR].
 .\" METHOD: identifier
 .TP
 \fIpathname \fBidentifier \fIitem index\fR
@@ -656,6 +662,13 @@ Removes the tag \fItag\fR from each of the items in \fIitemList\fR. If
 \fIitemList\fR is omitted, removes \fItag\fR from all of the items in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
+.RE
+.\" METHOD: unhide
+.TP
+\fIpathname \fBunhide \fIitemList\fR
+.
+Unhide all of the items in \fIitemList\fR and all child items. Same as
+[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR].
 .RE
 .SH "ITEM OPTIONS"
 .PP
