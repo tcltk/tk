@@ -1763,9 +1763,16 @@ static void DrawItem(
 {
     Ttk_State state = ItemState(tv, item);
     DisplayItem displayItem;
-    int rowHeight = tv->tree.rowHeight;
-    int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
-    int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
+    int x, y, h, rowHeight;
+    
+    rowHeight = tv->tree.rowHeight;
+    h = rowHeight * (row - tv->tree.yscroll.first);
+    if (h >= tv->tree.treeArea.height) {
+        /* The item is outside the visible area */
+        return;
+    }
+    x = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    y = tv->tree.treeArea.y + h;
 
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
@@ -1774,20 +1781,8 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	int itemWidth = TreeWidth(tv);
-	int itemHeight = rowHeight;
-	/* Make sure that the background won't overlap the border's right edge:
-	 */
-	if (itemWidth > tv->tree.treeArea.width) {
-	    itemWidth = tv->tree.treeArea.width;
-	}
-	/* Make sure that the item won't overlap the border's bottom edge:
-	 */
-	if (y + itemHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
-	    itemHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
-	}
 	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
-				     itemWidth, itemHeight);
+				     TreeWidth(tv), rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -1850,18 +1845,84 @@ static int DrawForest(
     return row;
 }
 
+/* + DrawTreeArea --
+ * 	Draw the tree area including the headings, if any
+ */
+static void DrawTreeArea(Treeview *tv, Drawable d) {
+    if (tv->tree.showFlags & SHOW_HEADINGS) {
+	DrawHeadings(tv, d);
+    }
+    DrawForest(tv, tv->tree.root->children, d, 0, 0);
+}
+    
 /* + TreeviewDisplay --
  * 	Display() widget hook.  Draw the widget contents.
  */
 static void TreeviewDisplay(void *clientData, Drawable d)
 {
     Treeview *tv = (Treeview *)clientData;
+    Tk_Window tkwin = tv->core.tkwin;
+    int x, y, width, height, winWidth, winHeight;
+    Drawable p = d;
+    XGCValues gcValues;
+    GC gc;
 
+    /* Draw the general layout of the treeview widget */
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
-    if (tv->tree.showFlags & SHOW_HEADINGS) {
-	DrawHeadings(tv, d);
+
+    /* When the tree area does not fit in the available space, there is a
+     * risk that it will be drawn over other areas of the layout. To prevent
+     * that, a helper drawable is used to make sure it doesn't color outside
+     * the lines.
+     */
+
+    winWidth = Tk_Width(tkwin); 
+    winHeight = Tk_Height(tkwin);
+    width = tv->tree.treeArea.width;
+    height = tv->tree.headingArea.height + tv->tree.treeArea.height;
+
+    if ((width == winWidth && height == winHeight)
+      || (tv->tree.treeArea.height % tv->tree.rowHeight == 0
+        && TreeWidth(tv) <= width)) {
+        /* No protection is needed; either the tree area fills the entire
+         * widget, or everything fits within the available area.
+         */
+        DrawTreeArea(tv, d);
+    } else {
+        /* The tree area will need to be clipped after it is drawn
+         */
+        
+        x = tv->tree.treeArea.x;
+        if (tv->tree.showFlags & SHOW_HEADINGS) {
+            y = tv->tree.headingArea.y;
+        } else {
+            y = tv->tree.treeArea.y;
+        }
+        
+        /* Create the temporary helper drawable */
+        p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
+          winWidth, winHeight, Tk_Depth(tkwin));
+        
+        /* Get a graphics context for copying the drawable content */
+        gcValues.function = GXcopy;
+        gcValues.graphics_exposures = False;
+        gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+        
+        /* Copy the widget background into the helper */
+        XCopyArea(Tk_Display(tkwin), d, p, gc, 0, 0,
+          (unsigned) winWidth, (unsigned) winHeight, 0, 0);
+        
+        /* Draw the tree onto the helper without regard for borders */
+        DrawTreeArea(tv, p);
+
+        /* Copy only the tree area inside the borders back */
+        XCopyArea(Tk_Display(tkwin), p, d, gc, x, y,
+          (unsigned) width, (unsigned) height, x, y);
+        
+        /* Clean up the temporary resources */
+        Tk_FreePixmap(Tk_Display(tkwin), p);
+        Tk_FreeGC(Tk_Display(tkwin), gc);
     }
-    DrawForest(tv, tv->tree.root->children, d, 0, 0);
 }
 
 /*------------------------------------------------------------------------
