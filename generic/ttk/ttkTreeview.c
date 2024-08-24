@@ -515,7 +515,8 @@ typedef struct {
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED 		(USER_MASK<<3)
 
-static const char *const SelectModeStrings[] = { "none", "browse", "extended", "multiple", NULL };
+static const char *const SelectModeStrings[] = {
+	"none", "single", "browse", "extended", "multiple", NULL };
 static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {

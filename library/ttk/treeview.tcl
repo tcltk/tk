@@ -347,6 +347,13 @@ proc ttk::treeview::select.choose.none {w item cell} { $w focus $item; $w see $i
 proc ttk::treeview::select.toggle.none {w item cell} { $w focus $item; $w see $item }
 proc ttk::treeview::select.extend.none {w item cell} { $w focus $item; $w see $item }
 
+## -selectmode single:
+#
+proc ttk::treeview::select.move.single   {w item cell} { BrowseTo $w $item $cell }
+proc ttk::treeview::select.choose.single {w item cell} { BrowseTo $w $item $cell }
+proc ttk::treeview::select.toggle.single {w item cell} { BrowseTo $w $item $cell }
+proc ttk::treeview::select.extend.single {w item cell} { BrowseTo $w $item $cell }
+
 ## -selectmode browse:
 #
 proc ttk::treeview::select.move.browse   {w item cell} { BrowseTo $w $item $cell }

@@ -65,16 +65,18 @@ Specifies the number of rows which should be visible.
 Note that
 the requested width is determined from the sum of the column widths.
 .OP \-selectmode selectMode SelectMode
-Controls how the built-in class bindings manage the selection.
-One of \fBnone\fR, \fBbrowse\fR, \fBextended\fR, or \fBmultiple\fR.
+Controls how the built-in class bindings manage the selection. Options are:
+\fBnone\fR, \fBsingle\fR, \fBbrowse\fR, \fBextended\fR, or \fBmultiple\fR.
 .RS
 .PP
-If set to \fBnone\fR, then the selection can not be changed.
-If \fBbrowse\fR, only a single item will be selected at a time.
-If \fBextended\fR (the default), a single item may be selected. Multiple items
+For \fBnone\fR, the selection can not be changed.
+For \fBsingle\fR and \fBbrowse\fR, only a single item will be selected at a
+time. In this mode, the selection follows the focus during keyboard traversal.
+For \fBextended\fR (the default), a single item may be selected. Multiple items
 can be selected by using the Control (individual) and Shift (range) keys.
-If \fBmultiple\fR, multiple items can be individually selected without changing
-the selection state of other items.
+For \fBmultiple\fR, multiple items can be selected without changing
+the selection state of other items. In this mode, the focus and selection are
+independent which allows for keyboard traversal without changing the selection.
 .PP
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
@@ -110,7 +112,7 @@ Number of items at the top that should not be vertically scrolled. Default is 0.
 .SH "INDICES"
 .PP
 Several of the widget commands for treeview take an index as their argument.
-An index specifies a particular child item within it's parent, in any of
+An index specifies a particular child item within it's parent, using any of
 the following forms:
 .IP \fInumber\fR 12
 Specifies the numerical index of a child within its parent, where 0
