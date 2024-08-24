@@ -117,8 +117,8 @@ Specifies the numerical index of a child within its parent, where 0
 corresponds to the first item.
 .IP \fBend\fR 12
 Indicates the end of the list of children.
-For most commands this refers to the last child,
-but for a few commands such as \fBindex\fR and \fBinsert\fR
+For most commands this refers to the last child, but for a few
+commands such as \fBindex\fR, \fBinsert\fR, and \fBmove\fR
 it refers to the item just after the last one.
 .IP \fBfirst\fR 12
 Indicates the first child in the list of children.
@@ -361,10 +361,10 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 .RE
 .\" METHOD: identifier
 .TP
-\fIpathname \fBidentifier \fIitem \fIindex\fR
+\fIpathname \fBidentifier \fIitem index\fR
 .
 Returns the identifier of the item at \fIindex\fR within \fIitem\fR's list of
-children. See \fBINDICES\fR for valid indices.
+children. See \fBINDICES\fR for valid forms of \fIindex\fR.
 .\" METHOD: identify
 .TP
 \fIpathname \fBidentify \fIcomponent x y\fR
@@ -425,17 +425,16 @@ and data columns.
 \fIpathname \fBindex \fIitem ?index?\fR
 .
 Returns the numeric index of \fIitem\fR within its parent's list of children
-or if \fIindex\fR is specified, the index of the item at \fIindex\fR.
+or if \fIindex\fR is specified, the index of the item at \fIindex\fR in
+\fIitem\fR's list of children. See \fBINDICES\fR for valid forms of \fIindex\fR.
 .\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
-Creates a new item.
-\fIparent\fR is the identifier of the parent item,
-or the empty string \fB{}\fR
-to create a new top-level item.
-\fIindex\fR is an integer, or the value \fBend\fR, specifying where in the
-list of \fIparent\fR's children to insert the new item.
+Creates a new item, where \fIparent\fR is the identifier of the parent item,
+or the empty string \fB{}\fR to create a new top-level item and
+\fIindex\fR specifies where in the list of \fIparent\fR's children to insert
+the new item. See \fBINDICES\fR for valid forms of \fIindex\fR.
 If \fIindex\fR is negative or zero,
 the new node is inserted at the beginning;
 if \fIindex\fR is greater than or equal to the current number of children,
@@ -465,7 +464,8 @@ See \fBITEM OPTIONS\fR for the list of available options.
 \fIpathname \fBmove \fIitem parent index\fR
 .
 Moves \fIitem\fR to position \fIindex\fR in \fIparent\fR's list of children.
-It is illegal to move an item under one of its descendants.
+See \fBINDICES\fR for valid forms of \fIindex\fR. It is illegal to move an item under one
+of its descendants.
 .RS
 .PP
 If \fIindex\fR is negative or zero, \fIitem\fR is moved
@@ -495,11 +495,10 @@ or \fB{}\fR if \fIitem\fR is the first child of its parent.
 \fIpathname \fBsee \fIitem\fR ?\fIindex\fR?
 .
 Ensure that \fIitem\fR is visible:
-sets all of \fIitem\fR's ancestors to \fB\-open true\fR,
-and scrolls the widget if necessary so that \fIitem\fR is
-within the visible portion of the tree. If \fIindex\fR is
-specified, then the child at \fIindex\fR in \fIitem\fR is
-used as the item to make visible.
+sets all of \fIitem\fR's ancestors to \fB\-open true\fR, and scrolls the widget
+if necessary so that \fIitem\fR is within the visible portion of the tree. If
+\fIindex\fR is specified, then the child at \fIindex\fR under \fIitem\fR is used
+as the item to make visible. See \fBINDICES\fR for valid forms of \fIindex\fR.
 .\" METHOD: selection
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList\fR?
@@ -555,7 +554,7 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 \fIpathname \fBsize\fR ?\fI\-recurse\fR? \fIitem\fR
 .
 Returns the number of children belonging to \fIitem\fR. With \fI\-recurse\fR
-option, will include all sub child items.
+option, will include all descendants.
 .\" METHOD: tag
 .TP
 \fIpathName \fBtag \fIargs...\fR
