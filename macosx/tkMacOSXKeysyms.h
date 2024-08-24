@@ -48,7 +48,7 @@ static const KeyInfo keyArray[] = {
     {57,	XK_Caps_Lock,   MOD_KEYCHAR},
     {58,	XK_Alt_L,	MOD_KEYCHAR},
     {59,	XK_Control_L,	MOD_KEYCHAR},
-    {60,	XK_Shift_R, 	MOD_KEYCHAR},
+    {60,	XK_Shift_R,	MOD_KEYCHAR},
     {61,	XK_Alt_R,	MOD_KEYCHAR},
     {62,	XK_Control_R,	MOD_KEYCHAR},
     {63,	XK_Super_L,	MOD_KEYCHAR},
