@@ -3364,7 +3364,7 @@ int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurs
 }
 
 /* + $tv collapse|expand ?-recurse? $items --
- * 	Collapse/expand item and with -recurse all child items
+ * 	Collapse/expand items and with -recurse all child items
  */
 static int TreeviewCollapseExpand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int open)
@@ -3408,7 +3408,7 @@ static int TreeviewCollapseExpand(
 
     /* Do expand/collapse for each item */
     for (i = 0; items[i]; ++i) {
-	changed |= TreeviewOpenRecursive(items[i], open, openObj, objc == 4);
+	changed |= TreeviewOpenRecursive(items[i], open, openObj, option > -1);
     }
 
     /* Update widget if any changes were made */
@@ -3422,7 +3422,7 @@ static int TreeviewCollapseExpand(
 }
 
 /* + $tv collapse ?-recurse? $items --
- * 	Collapse item and with -recurse all child items
+ * 	Collapse items and with -recurse all child items
  */
 static int TreeviewCollapseCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3431,7 +3431,7 @@ static int TreeviewCollapseCommand(
 }
 
 /* + $tv expand ?-recurse? $items --
- * 	Expand item and with -recurse all child items
+ * 	Expand items and with -recurse all child items
  */
 static int TreeviewExpandCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3442,7 +3442,7 @@ static int TreeviewExpandCommand(
 /*
  * Recursively set items hidden state
  */
-int TreeviewHideRecursive(TreeItem *item, int hide) {
+int TreeviewHideRecursive(TreeItem *item, int hide, int recurse) {
     int changed = 0;
 
     if ((item->hidden && !hide) || (!item->hidden && hide)) {
@@ -3450,39 +3450,46 @@ int TreeviewHideRecursive(TreeItem *item, int hide) {
 	changed = 1;
     }
 
-    if (item->children) {
+    if (recurse && item->children) {
 	for (item = item->children; item; item = item->next) {
-	    changed |= TreeviewHideRecursive(item, hide);
+	    changed |= TreeviewHideRecursive(item, hide, recurse);
 	}
     }
     return changed;
 }
 
-/* + $tv hide|unhide $items --
- * 	hide/unhide items and all child items
+/* + $tv hide|unhide ?-recurse? $items --
+ * 	Hide/unhide items and with -recurse all child items
  */
 static int TreeviewHideUnhide(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int hide)
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int changed = 0;
+    int option = -1, changed = 0;
     Tcl_Size i = 0;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "items");
+    static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
+	return TCL_ERROR;
+    }
+
+    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
+	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
 	return TCL_ERROR;
     }
 
     /* Get items with special work-around for only root item {} */
-    if (Tcl_ListObjLength(interp, objv[2], &i) == TCL_OK && i == 0) {
+    if (Tcl_ListObjLength(interp, objv[objc-1], &i) == TCL_OK && i == 0) {
 	Tcl_Obj *listObj = Tcl_NewListObj(0, 0);
 	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj("",-1));
 	Tcl_IncrRefCount(listObj);
 	items = GetItemListFromObj(interp, tv, listObj);
 	Tcl_DecrRefCount(listObj);
     } else {
-	items = GetItemListFromObj(interp, tv, objv[2]);
+	items = GetItemListFromObj(interp, tv, objv[objc-1]);
     }
 
     if (!items) {
@@ -3491,7 +3498,7 @@ static int TreeviewHideUnhide(
 
     /* Do hide/unhide for each item */
     for (i = 0; items[i]; ++i) {
-	changed |= TreeviewHideRecursive(items[i], hide);
+	changed |= TreeviewHideRecursive(items[i], hide, option > -1);
     }
 
     /* Update widget if any changes were made */
@@ -3503,8 +3510,8 @@ static int TreeviewHideUnhide(
     return TCL_OK;
 }
 
-/* + $tv hide $items --
- * 	Hide items and all child items
+/* + $tv hide ?-recurse? $items --
+ * 	Hide items and with -recurse all child items
  */
 static int TreeviewHideCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3512,8 +3519,8 @@ static int TreeviewHideCommand(
     return TreeviewHideUnhide(recordPtr, interp, objc, objv, 1);
 }
 
-/* + $tv unhide $items --
- * 	Unhide items and all child items
+/* + $tv unhide ?-recurse? $items --
+ * 	Unhide items and with -recurse all child items
  */
 static int TreeviewUnhideCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])

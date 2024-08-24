@@ -363,10 +363,11 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 .RE
 .\" METHOD: hide
 .TP
-\fIpathname \fBhide \fIitemList\fR
+\fIpathname \fBhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Hide all of the items in \fIitemList\fR and all child items. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR].
+[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR]. With \fI\-recurse\fR option,
+will also hide all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: identifier
 .TP
 \fIpathname \fBidentifier \fIitem index\fR
@@ -665,11 +666,11 @@ then the \fB\-tags\fR for that item are unchanged.
 .RE
 .\" METHOD: unhide
 .TP
-\fIpathname \fBunhide \fIitemList\fR
+\fIpathname \fBunhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Unhide all of the items in \fIitemList\fR and all child items. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR].
-.RE
+[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR]. With \fI\-recurse\fR option,
+will also unhide all of their descendants. Use \fB{}\fR for root item.
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items
