@@ -55,14 +55,29 @@ bind Treeview	<Button-1> 		{ ttk::treeview::Press %W %x %y }
 bind Treeview	<Double-Button-1> 	{ ttk::treeview::DoubleClick %W %x %y }
 bind Treeview	<ButtonRelease-1> 	{ ttk::treeview::Release %W %x %y }
 bind Treeview	<B1-Motion> 		{ ttk::treeview::Drag %W %x %y }
-bind Treeview 	<Up>    		{ ttk::treeview::Keynav %W up }
-bind Treeview 	<Down>  		{ ttk::treeview::Keynav %W down }
-bind Treeview 	<Right> 		{ ttk::treeview::Keynav %W right }
-bind Treeview 	<Left>  		{ ttk::treeview::Keynav %W left }
-bind Treeview	<Prior>			{ %W yview scroll -1 pages }
-bind Treeview	<Next> 			{ %W yview scroll  1 pages }
+
+bind Treeview 	<<PrevLine>>    	{ ttk::treeview::Keynav %W up }
+bind Treeview 	<<NextLine>>  		{ ttk::treeview::Keynav %W down }
+bind Treeview 	<<PrevChar>> 		{ ttk::treeview::Keynav %W left }
+bind Treeview 	<<NextChar>> 		{ ttk::treeview::Keynav %W right }
 bind Treeview	<Return>		{ ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ttk::treeview::ToggleFocus %W }
+
+bind Treeview	<<PrevPara>>		{ ttk::treeview::Keynav %W top }
+bind Treeview	<<NextPara>>		{ ttk::treeview::Keynav %W bottom }
+
+bind Treeview	<Prior>			{ %W yview scroll -1 pages }
+bind Treeview	<Next> 			{ %W yview scroll  1 pages }
+bind Treeview	<Control-Prior>		{ %W yview moveto 0 }
+bind Treeview	<Control-Next> 		{ %W yview moveto 1 }
+
+bind Treeview	<<PrevWord>>		{ %W xview scroll -1 pages }
+bind Treeview	<<NextWord>>		{ %W xview scroll 1 pages }
+
+bind Treeview	<<LineStart>>		{ ttk::treeview::Keynav %W first }
+bind Treeview	<<LineEnd>>		{ ttk::treeview::Keynav %W last }
+bind Treeview	<Control-Home>		{ ttk::treeview::Keynav %W top }
+bind Treeview	<Control-End>		{ ttk::treeview::Keynav %W bottom }
 
 bind Treeview	<Shift-Button-1> \
 		{ ttk::treeview::Select %W %x %y extend }
@@ -117,6 +132,7 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	left {
 	    if {$cells} {
+		# Move to previous cell
 		# This assumes that colAnchor is of the "#N" format.
 		set colNo [string range $colAnchor 1 end]
 		set firstCol [expr {"tree" ni [$w cget -show]}]
@@ -132,6 +148,7 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	right {
 	    if {$cells} {
+		# Move to next cell
 		set colNo [string range $colAnchor 1 end]
 		set dispCol [$w cget -displaycolumns]
 		if {$dispCol eq "#all"} {
@@ -147,9 +164,41 @@ proc ttk::treeview::Keynav {w dir} {
 	    	OpenItem $w $focus
 	    }
 	}
+	first {
+	    if {$cells} {
+		# Move to first cell in row
+		set colAnchor [format "#%d" [expr {"tree" ni [$w cget -show]}]]
+	    } else
+		# Move to first row
+		set focus [$w id [$w parent $focus] first]
+	    }
+	}
+	last {
+	    if {$cells} {
+		# Move to last cell in row
+		set columns [$w cget -displaycolumns]
+		if {$columns eq "#all"} {
+		    set columns [$w cget -columns]
+		}
+		set colAnchor [format "#%d" [expr {[llength $columns] - 1}]]
+	    } else {
+		# Move to last row
+		set focus [$w id [$w parent $focus] last]
+	    }
+	}
+	top {
+	    if {[$w haschildren {}]} {
+		set focus [$w id {} first]
+	    }
+	}
+	bottom {
+	    if {[$w haschildren {}]} {
+		set focus [$w id {} end]
+	    }
+	}
     }
 
-    if {$focus != {}} {
+    if {$focus ne {}} {
 	if {$cells} {
 	    set cell [list $focus $colAnchor]
 	    SelectOp $w $focus $cell choose
