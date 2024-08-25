@@ -17,6 +17,11 @@
 #ifndef _TKTEXTPRIV
 #define _TKTEXTPRIV
 
+#if (UINTPTR_MAX >= 0xffffffffffffffffu)
+ /* This is a real 64 bit architecture. */
+#   define TK_IS_64_BIT_ARCH
+#endif
+
 /*
  * The following struct is private for TkTextBTree.c, but we want fast access to
  * the internal content.

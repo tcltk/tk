@@ -114,11 +114,6 @@
 #   define TCL_INDEX_TEMP_TABLE 64
 #endif
 
-#if (UINTPTR_MAX >= 0xffffffffffffffffu)
-    /* This is a real 64 bit architecture. */
-#   define TK_IS_64_BIT_ARCH
-#endif
-
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
 #	define TCL_Z_MODIFIER	"I"
