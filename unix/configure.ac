@@ -141,8 +141,8 @@ fi
 
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
-        Different --prefix selected for Tk and Tcl!
-        [[package require tk]] may not work correctly in tclsh.])
+	Different --prefix selected for Tk and Tcl!
+	[[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
@@ -282,15 +282,15 @@ if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
     if test -d /System/Library/Frameworks/UserNotifications.framework; then
-        LIBS="$LIBS -framework UserNotifications"
+	LIBS="$LIBS -framework UserNotifications"
     fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
-        LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
+	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
     EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
-        AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
+	AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
     fi
 else
     #--------------------------------------------------------------------
@@ -452,7 +452,7 @@ if test $tk_aqua = no; then
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
 	else
-            enable_xft=yes
+	    enable_xft=yes
 	fi
     fi
     if test $enable_xft = "yes" ; then
@@ -484,9 +484,9 @@ if test $tk_aqua = no; then
 	found_cups=`cups-config 2>/dev/null`
 	dnl make sure package configurator (cups-config)
 	dnl says that libcups is present.
-        if test "$found_cups" = ""; then
+	if test "$found_cups" = ""; then
 	    found_cups=no
-        else
+	else
 	    found_cups=yes
 	    CUPS_CFLAGS="-DHAVE_CUPS"
 	    CUPS_LIBS=`cups-config --libs`
@@ -630,17 +630,17 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     # Construct a fake local framework structure to make linking with
     # '-framework Tk' and running of tktest work
     AC_CONFIG_COMMANDS([Tk.framework], [n=Tk &&
-        f=$n.framework && v=Versions/$VERSION &&
-        rm -rf $f && mkdir -p $f/$v/Resources &&
-        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
-        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
-        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
-        unset n f v
+	f=$n.framework && v=Versions/$VERSION &&
+	rm -rf $f && mkdir -p $f/$v/Resources &&
+	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+	if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+	unset n f v
     ], VERSION=${TK_VERSION} && tk_aqua=${tk_aqua})
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
     if test "${libdir}" = '${exec_prefix}/lib'; then
-        # override libdir default
-        libdir="/Library/Frameworks"
+	# override libdir default
+	libdir="/Library/Frameworks"
     fi
     if test ${TCL_MAJOR_VERSION} = 8 ; then
 	TK_LIB_FILE="Tk"
@@ -683,7 +683,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then
-        EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
+	EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"

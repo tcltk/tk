@@ -157,3 +157,34 @@ namespace eval ttk::theme::clam {
 	ttk::style configure Sash -sashthickness 4.5p -gripsize 15p
     }
 }
+
+# ttk::theme::clam::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::clam::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 3p   4.5p 1.5p}}
+	}
+	s {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 1.5p 4.5p 3p  }}
+	}
+	w {
+	    ttk::style configure $style.Tab -padding     {1.5p 4.5p 1.5p 4.5p}
+	    ttk::style map $style.Tab -padding {selected {3p   4.5p 1.5p 4.5p}}
+	}
+	e {
+	    ttk::style configure $style.Tab -padding     {1.5p 4.5p 1.5p 4.5p}
+	    ttk::style map $style.Tab -padding {selected {1.5p 4.5p 3p   4.5p}}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 3p   4.5p 1.5p}}
+	}
+    }
+}
