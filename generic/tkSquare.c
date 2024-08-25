@@ -47,15 +47,14 @@ typedef struct {
      * Information used when displaying widget:
      */
 
-    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border around whole widget. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around whole widget. */
     Tcl_Obj *bgBorderPtr;
     Tcl_Obj *fgBorderPtr;
     Tcl_Obj *reliefPtr;
     GC gc;			/* Graphics context for copying from
 				 * off-screen pixmap onto screen. */
-    Tcl_Obj *doubleBufferPtr;	/* Non-zero means double-buffer redisplay with
-				 * pixmap; zero means draw straight onto the
-				 * display. */
+    int doubleBuffer;		/* Non-zero means double-buffer redisplay with
+				 * pixmap; 0 means draw straight onto the display. */
     int updatePending;		/* Non-zero means a call to SquareDisplay has
 				 * already been scheduled. */
 } Square;
@@ -73,9 +72,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", offsetof(Square, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	    "2", offsetof(Square, borderWidthObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", offsetof(Square, doubleBufferPtr), TCL_INDEX_NONE, 0 , NULL, 0},
+	    "1", TCL_INDEX_NONE, offsetof(Square, doubleBuffer), 0 , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
@@ -321,7 +320,6 @@ SquareConfigure(
 {
     int borderWidth;
     Tk_3DBorder bgBorder;
-    int doubleBuffer;
 
     /*
      * Set the background for the window and create a graphics context for use
@@ -332,8 +330,7 @@ SquareConfigure(
 	    squarePtr->bgBorderPtr);
     Tk_SetWindowBackground(squarePtr->tkwin,
 	    Tk_3DBorderColor(bgBorder)->pixel);
-    Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if ((squarePtr->gc == NULL) && doubleBuffer) {
+    if ((squarePtr->gc == NULL) && squarePtr->doubleBuffer) {
 	XGCValues gcValues;
 	gcValues.function = GXcopy;
 	gcValues.graphics_exposures = False;
@@ -347,7 +344,7 @@ SquareConfigure(
      */
 
     Tk_GeometryRequest(squarePtr->tkwin, 200, 150);
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     Tk_SetInternalBorder(squarePtr->tkwin, borderWidth);
     if (!squarePtr->updatePending) {
@@ -477,7 +474,6 @@ SquareDisplay(
     Drawable d;
     int borderWidth, size, relief;
     Tk_3DBorder bgBorder, fgBorder;
-    int doubleBuffer;
 
     squarePtr->updatePending = 0;
     if (!Tk_IsMapped(tkwin)) {
@@ -488,8 +484,7 @@ SquareDisplay(
      * Create a pixmap for double-buffering, if necessary.
      */
 
-    Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if (doubleBuffer) {
+    if (squarePtr->doubleBuffer) {
 	pm = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
 		Tk_Width(tkwin), Tk_Height(tkwin),
 		DefaultDepthOfScreen(Tk_Screen(tkwin)));
@@ -502,7 +497,7 @@ SquareDisplay(
      * Redraw the widget's background and border.
      */
 
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     bgBorder = Tk_Get3DBorderFromObj(squarePtr->tkwin,
 	    squarePtr->bgBorderPtr);
@@ -524,7 +519,7 @@ SquareDisplay(
      * If double-buffered, copy to the screen and release the pixmap.
      */
 
-    if (doubleBuffer) {
+    if (squarePtr->doubleBuffer) {
 	XCopyArea(Tk_Display(tkwin), pm, Tk_WindowId(tkwin), squarePtr->gc,
 		0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
 		0, 0);
@@ -557,7 +552,7 @@ KeepInWindow(
     int i, bd, relief;
     int borderWidth, size;
 
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->xPtr,
 	    &squarePtr->x);
