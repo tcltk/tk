@@ -102,9 +102,6 @@ typedef struct {
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;			/* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
-#ifdef BUILD_tk
-    int height, width;
-#endif
 } Frame;
 
 /*
@@ -202,7 +199,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_CURSOR, TCL_INDEX_NONE, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_FRAME_HEIGHT, offsetof(Frame, heightObj), offsetof(Frame, height), 0, 0, 0},
+	DEF_FRAME_HEIGHT, offsetof(Frame, heightObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_FRAME_HIGHLIGHT_BG, TCL_INDEX_NONE,
 	offsetof(Frame, highlightBgColorPtr), 0, 0, 0},
@@ -223,7 +220,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_VISUAL, TCL_INDEX_NONE, offsetof(Frame, visualName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_FRAME_WIDTH, offsetof(Frame, widthObj), offsetof(Frame, width), 0, 0, 0},
+	DEF_FRAME_WIDTH, offsetof(Frame, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -988,7 +985,7 @@ ConfigureFrame(
     Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
     Tk_Image image = NULL;
-    int padX, padY;
+    int padX, padY, width, height;
     int borderWidth, highlightWidth;
 
     /*
@@ -1052,6 +1049,18 @@ ConfigureFrame(
 	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, None);
     }
 
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->widthObj, &width);
+    if (width < 0) {
+	Tcl_DecrRefCount(framePtr->widthObj);
+	framePtr->widthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->widthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->heightObj, &height);
+    if (height < 0) {
+	Tcl_DecrRefCount(framePtr->heightObj);
+	framePtr->heightObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->heightObj);
+    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
     if (borderWidth < 0) {
 	Tcl_DecrRefCount(framePtr->borderWidthObj);
@@ -1176,7 +1185,7 @@ FrameWorldChanged(
     int anyTextLabel, anyWindowLabel;
     int bWidthLeft, bWidthRight, bWidthTop, bWidthBottom;
     const char *labelText;
-    int padX, padY;
+    int padX, padY, width, height;
     int borderWidth, highlightWidth;
 
     anyTextLabel = (framePtr->type == TYPE_LABELFRAME) &&
@@ -1319,8 +1328,10 @@ FrameWorldChanged(
 	Tk_SetMinimumRequestSize(tkwin, minwidth, minheight);
     }
 
-    if ((framePtr->width > 0) || (framePtr->height > 0)) {
-	Tk_GeometryRequest(tkwin, framePtr->width, framePtr->height);
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->widthObj, &width);
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->heightObj, &height);
+    if ((width > 0) || (height > 0)) {
+	Tk_GeometryRequest(tkwin, width, height);
     }
 
     if (Tk_IsMapped(tkwin)) {
