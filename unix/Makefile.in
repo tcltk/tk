@@ -405,9 +405,9 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
-        tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
 	tkMacOSXMenu.o tkMacOSXMenubutton.o tkMacOSXMenus.o \
-        tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
+	tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
 	tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
 	tkMacOSXSubwindows.o tkMacOSXSysTray.o tkMacOSXWindowEvent.o tkMacOSXWm.o \
 	tkMacOSXXStubs.o tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o \
@@ -651,7 +651,7 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	    if test "x$(MACHER)" = "x" ; then \
 		cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
 	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
-	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
 	    ${NATIVE_ZIP} -A ${LIB_FILE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
@@ -693,7 +693,7 @@ ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	    if test "x$(MACHER)" = "x" ; then \
 		cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
 	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
-	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
 	    ${NATIVE_ZIP} -A ${WISH_EXE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
