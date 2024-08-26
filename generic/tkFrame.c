@@ -1658,10 +1658,10 @@ DisplayFrame(
      */
 
     XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-	    framePtr->copyGC, hlWidth, hlWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2 * hlWidth),
-	    (unsigned) (Tk_Height(tkwin) - 2 * hlWidth),
-	    hlWidth, hlWidth);
+	    framePtr->copyGC, highlightWidth, highlightWidth,
+	    (unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
+	    (unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
+	    highlightWidth, highlightWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
