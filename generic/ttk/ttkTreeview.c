@@ -1871,9 +1871,7 @@ static void TreeviewDisplay(void *clientData, Drawable d)
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
 
     /* When the tree area does not fit in the available space, there is a
-     * risk that it will be drawn over other areas of the layout. To prevent
-     * that, a helper drawable is used to make sure it doesn't color outside
-     * the lines.
+     * risk that it will be drawn over other areas of the layout.
      */
 
     winWidth = Tk_Width(tkwin); 
@@ -1889,39 +1887,45 @@ static void TreeviewDisplay(void *clientData, Drawable d)
          */
         DrawTreeArea(tv, d);
     } else {
-        /* The tree area will need to be clipped after it is drawn
+        /* The tree area needs to be clipped
          */
-        
+
         x = tv->tree.treeArea.x;
         if (tv->tree.showFlags & SHOW_HEADINGS) {
             y = tv->tree.headingArea.y;
         } else {
             y = tv->tree.treeArea.y;
         }
-        
-        /* Create the temporary helper drawable */
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+        /* Create a temporary helper drawable */
         p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
           winWidth, winHeight, Tk_Depth(tkwin));
-        
+
         /* Get a graphics context for copying the drawable content */
         gcValues.function = GXcopy;
         gcValues.graphics_exposures = False;
         gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
-        
+
         /* Copy the widget background into the helper */
         XCopyArea(Tk_Display(tkwin), d, p, gc, 0, 0,
           (unsigned) winWidth, (unsigned) winHeight, 0, 0);
-        
+
         /* Draw the tree onto the helper without regard for borders */
         DrawTreeArea(tv, p);
 
         /* Copy only the tree area inside the borders back */
         XCopyArea(Tk_Display(tkwin), p, d, gc, x, y,
           (unsigned) width, (unsigned) height, x, y);
-        
+
         /* Clean up the temporary resources */
         Tk_FreePixmap(Tk_Display(tkwin), p);
         Tk_FreeGC(Tk_Display(tkwin), gc);
+#else
+        TkpClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
+        DrawTreeArea(tv, d);
+        TkpClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+#endif
     }
 }
 
