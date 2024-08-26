@@ -1863,9 +1863,11 @@ static void TreeviewDisplay(void *clientData, Drawable d)
     Treeview *tv = (Treeview *)clientData;
     Tk_Window tkwin = tv->core.tkwin;
     int x, y, width, height, winWidth, winHeight;
+#ifndef TK_NO_DOUBLE_BUFFERING
     Drawable p = d;
     XGCValues gcValues;
     GC gc;
+#endif
 
     /* Draw the general layout of the treeview widget */
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
