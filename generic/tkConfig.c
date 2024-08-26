@@ -955,9 +955,6 @@ DoObjConfig(
     case TK_OPTION_JUSTIFY: {
 	int newJustify;
 	const char *const *justifyTable = tkJustifyStrings;
-	if (optionPtr->specPtr->flags & TK_OPTION_JUSTIFY_FULL) {
-	    justifyTable = justifyFullStrings;
-	}
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
