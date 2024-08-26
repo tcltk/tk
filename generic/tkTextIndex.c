@@ -57,7 +57,7 @@ static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
  * mapped very fast. Furthermore the revised version is using a section
  * structure for acceleration.
  */
-const Tcl_ObjType tkTextIndexType = {
+const TkObjType tkTextIndexType = {
     "textindex",/* name */
     NULL,	/* freeIntRepProc */
     NULL,	/* dupIntRepProc */
