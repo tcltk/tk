@@ -48,7 +48,7 @@ static TkTextSegment *	IndexToSeg(const TkTextIndex *indexPtr, Tcl_Size *offsetP
 static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
 
 /*
- * This object is no longer in use anymore.
+ * This object was used by the legacy text widget but is no longer in use.
  *
  * The cache of indices has been eliminated, because it has worked in only
  * one case: the user has given a numeric index. But this case is quite seldom,
@@ -57,10 +57,7 @@ static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
  * mapped very fast. Furthermore the revised version is using a section
  * structure for acceleration.
  */
-#if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 5
-const
-#endif /* end of backport to 8.5 */
-Tcl_ObjType tkTextIndexType = {
+const Tcl_ObjType tkTextIndexType = {
     "textindex",/* name */
     NULL,	/* freeIntRepProc */
     NULL,	/* dupIntRepProc */
