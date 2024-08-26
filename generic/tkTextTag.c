@@ -33,7 +33,7 @@
 #endif
 
 /*
- * The 'Tk_Justify' enum in tk.h is used to define a type for the -justify option of
+ * The 'TkTextJustify' enum in tkText.h is used to define a type for the -justify option of
  * the Text widget. These values are used as indices into the string table below.
  */
 
@@ -991,7 +991,7 @@ TkTextUpdateTagDisplayFlags(
 
     if ((tagPtr->elide >= 0)
 	    || tagPtr->tkfont
-	    || tagPtr->justify != TK_JUSTIFY_NULL
+	    || tagPtr->justify != TK_TEXT_JUSTIFY_NULL
 	    || tagPtr->lMargin1Obj
 	    || tagPtr->lMargin2Obj
 	    || tagPtr->offsetObj
@@ -1901,7 +1901,7 @@ TkTextCreateTag(
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->elide = -1;
-    tagPtr->justify = TK_JUSTIFY_NULL;
+    tagPtr->justify = TK_TEXT_JUSTIFY_NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
