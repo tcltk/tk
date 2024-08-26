@@ -563,10 +563,6 @@ Tk_InitOptions(
  *--------------------------------------------------------------
  */
 
-static const char *const justifyFullStrings[] = {
-    "left", "right", "center", "full", NULL
-};
-
 static int
 DoObjConfig(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
@@ -954,12 +950,11 @@ DoObjConfig(
     }
     case TK_OPTION_JUSTIFY: {
 	int newJustify;
-	const char *const *justifyTable = tkJustifyStrings;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newJustify = -1;
-	} else if (Tcl_GetIndexFromObj(interp, valuePtr, justifyTable,
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
 		"justification", (nullOK ? TCL_NULL_OK : 0), &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
 	}
