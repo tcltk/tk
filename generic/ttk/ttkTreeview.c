@@ -10,6 +10,8 @@
 
 #ifdef _WIN32
 #include "tkWinInt.h"
+#elif defined(MAC_OSX_TK)
+#include "tkMacOSXPrivate.h"
 #endif
 
 #define DEF_TREE_ROWS		"10"
@@ -24,8 +26,6 @@ static const int HALO   		= 4;	/* heading separator */
 #define TTK_STATE_LEAF TTK_STATE_USER2
 
 #define STATE_CHANGED	 	(0x100)	/* item state option changed */
-
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Tree items.
@@ -1601,7 +1601,9 @@ static Ttk_Layout TreeviewGetLayout(
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
-	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
+	if (tv->tree.rowHeight < 1) {
+	    tv->tree.rowHeight = 1;
+	}
     }
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.indent);
@@ -1862,12 +1864,7 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 {
     Treeview *tv = (Treeview *)clientData;
     Tk_Window tkwin = tv->core.tkwin;
-    int x, y, width, height, winWidth, winHeight;
-#ifndef TK_NO_DOUBLE_BUFFERING
-    Drawable p = d;
-    XGCValues gcValues;
-    GC gc;
-#endif
+    int width, height, winWidth, winHeight;
 
     /* Draw the general layout of the treeview widget */
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
@@ -1892,6 +1889,8 @@ static void TreeviewDisplay(void *clientData, Drawable d)
         /* The tree area needs to be clipped
          */
 
+	int x, y;
+
         x = tv->tree.treeArea.x;
         if (tv->tree.showFlags & SHOW_HEADINGS) {
             y = tv->tree.headingArea.y;
@@ -1900,6 +1899,10 @@ static void TreeviewDisplay(void *clientData, Drawable d)
         }
 
 #ifndef TK_NO_DOUBLE_BUFFERING
+	Drawable p;
+	XGCValues gcValues;
+	GC gc;
+
         /* Create a temporary helper drawable */
         p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
           winWidth, winHeight, Tk_Depth(tkwin));
@@ -1924,6 +1927,13 @@ static void TreeviewDisplay(void *clientData, Drawable d)
         Tk_FreePixmap(Tk_Display(tkwin), p);
         Tk_FreeGC(Tk_Display(tkwin), gc);
 #else
+	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
+	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
+	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {
+	    y -= 4;
+	    height += 4;
+	}
+
         TkpClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
         DrawTreeArea(tv, d);
         TkpClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
