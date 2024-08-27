@@ -79,3 +79,34 @@ namespace eval ttk::theme::winnative {
 	    -background SystemHighlight -borderwidth 0
     }
 }
+
+# ttk::theme::winnative::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook style $style and the
+# style $style.Tab.  Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::winnative::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style -tabmargins     {2 2 2 0}
+	    ttk::style map $style.Tab -expand {selected {2 2 2 0}}
+	}
+	s {
+	    ttk::style configure $style -tabmargins     {2 0 2 2}
+	    ttk::style map $style.Tab -expand {selected {2 0 2 2}}
+	}
+	w {
+	    ttk::style configure $style -tabmargins     {2 2 0 2}
+	    ttk::style map $style.Tab -expand {selected {2 2 0 2}}
+	}
+	e {
+	    ttk::style configure $style -tabmargins     {0 2 2 2}
+	    ttk::style map $style.Tab -expand {selected {0 2 2 2}}
+	}
+	default {
+	    ttk::style configure $style -tabmargins     {2 2 2 0}
+	    ttk::style map $style.Tab -expand {selected {2 2 2 0}}
+	}
+    }
+}
