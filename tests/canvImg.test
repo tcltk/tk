@@ -29,7 +29,7 @@ test canvImg-1.2 {options for image items} -body {
     .c create image 50 50 -anchor gorp -tags i1
 } -cleanup {
     .c delete all
-} -returnCodes error -result {bad anchor position "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
 test canvImg-1.3 {options for image items} -constraints testImageType -setup {
     image create test foo
 	.c delete all
