@@ -28,7 +28,6 @@
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
 #endif
-#define OK_TO_LOG 1
 
 #include <stdlib.h>
 #include <assert.h>
@@ -145,19 +144,12 @@ static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
 
 /*
  * Macros to make debugging/testing logging a little easier.
- *
- * On OSX 10.14 Drawing procedures are sometimes run because the system has
- * decided to redraw the window.  This can corrupt the data that a test is
- * trying to collect.  So we don't write to the logging variables when the
- * drawing procedure is being run that way.  Other systems can always log.
  */
 
 #define LOG(toVar,what) \
-    if (OK_TO_LOG) \
-	Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+    Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 #define CLEAR(var) \
-    if (OK_TO_LOG) \
-	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
+    Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
 
 /*
  * Speed up if the text content only contains monospaced line heights, and line wrapping
