@@ -781,12 +781,12 @@ TkPointerEvent(
 
     if ((eventPtr->type == MotionNotify) && !appGrabbed) {
 
-        /*
-         * Warp the mouse pointer with respect to window dispPtr->warpWindow
-         * if such a window was set in HandleEventGenerate.
-         */
+	/*
+	 * Warp the mouse pointer with respect to window dispPtr->warpWindow
+	 * if such a window was set in HandleEventGenerate.
+	 */
 
-        TkDoWarpWrtWin(dispPtr);
+	TkDoWarpWrtWin(dispPtr);
     }
 
     if (!appGrabbed) {
@@ -820,12 +820,12 @@ TkPointerEvent(
 	    return 0;
 	}
 
-        /*
-         * Warp the mouse pointer with respect to window dispPtr->warpWindow
-         * if such a window was set in HandleEventGenerate.
-         */
+	/*
+	 * Warp the mouse pointer with respect to window dispPtr->warpWindow
+	 * if such a window was set in HandleEventGenerate.
+	 */
 
-        TkDoWarpWrtWin(dispPtr);
+	TkDoWarpWrtWin(dispPtr);
 	return 1;
     }
 

@@ -26,7 +26,7 @@ test canvText-1.1 {configuration options: good value for "anchor"} -body {
 } -result {nw nw}
 test canvasText-1.2 {configuration options: bad value for "anchor"} -body {
     .c itemconfigure test -anchor xyz
-} -returnCodes error -result {bad anchor position "xyz": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "xyz": must be n, ne, e, se, s, sw, w, nw, or center}
 test canvText-1.3 {configuration options: good value for "fill"} -body {
     .c itemconfigure test -fill #ff0000
     list [lindex [.c itemconfigure test -fill] 4] [.c itemcget test -fill]
