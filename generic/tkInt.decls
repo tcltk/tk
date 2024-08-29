@@ -948,9 +948,9 @@ declare 50 aqua {
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }
-declare 52 aqua {
-    void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
-}
+#
+# Slot 52 unused (WAS: TkMacOSXSetDrawingEnabled)
+#
 # Made public as Tk_MacOSXGetNSWindowForDrawable
 #declare 54 aqua {
 #    void *TkMacOSXDrawable(Drawable drawable)

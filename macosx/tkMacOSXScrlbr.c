@@ -262,7 +262,6 @@ TkpDisplayScrollbar(
     NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
-	    || (macWin->flags & TK_DO_NOT_DRAW)
 	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
