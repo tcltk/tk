@@ -60,11 +60,11 @@ typedef struct TkCanvas {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_3DBorder bgBorder;	/* Used for canvas background. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;

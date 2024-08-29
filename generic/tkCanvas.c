@@ -101,7 +101,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidth), 0, NULL},
+	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_DOUBLE, "-closeenough", "closeEnough", "CloseEnough",
 	DEF_CANVAS_CLOSE_ENOUGH, offsetof(TkCanvas, closeEnough), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-confine", "confine", "Confine",
@@ -117,7 +117,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_CANVAS_HIGHLIGHT, offsetof(TkCanvas, highlightColorPtr), 0, NULL},
     {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness",
-	DEF_CANVAS_HIGHLIGHT_WIDTH, offsetof(TkCanvas, highlightWidth), 0, NULL},
+	DEF_CANVAS_HIGHLIGHT_WIDTH, offsetof(TkCanvas, highlightWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_CANVAS_INSERT_BG, offsetof(TkCanvas, textInfo.insertBorder), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
@@ -678,10 +678,10 @@ Tk_CanvasObjCmd(
 	    CanvasCmdDeletedProc);
     canvasPtr->firstItemPtr = NULL;
     canvasPtr->lastItemPtr = NULL;
-    canvasPtr->borderWidth = 0;
+    canvasPtr->borderWidthObj = NULL;
     canvasPtr->bgBorder = NULL;
     canvasPtr->relief = TK_RELIEF_FLAT;
-    canvasPtr->highlightWidth = 0;
+    canvasPtr->highlightWidthObj = NULL;
     canvasPtr->highlightBgColorPtr = NULL;
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
@@ -2259,6 +2259,7 @@ ConfigureCanvas(
     XGCValues gcValues;
     GC newGC;
     Tk_State old_canvas_state=canvasPtr->canvas_state;
+    int borderWidth, highlightWidth;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2273,10 +2274,21 @@ ConfigureCanvas(
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
 
-    if (canvasPtr->highlightWidth < 0) {
-	canvasPtr->highlightWidth = 0;
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
+    if (borderWidth < 0) {
+	borderWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->borderWidthObj);
+	canvasPtr->borderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->borderWidthObj);
     }
-    canvasPtr->inset = canvasPtr->borderWidth + canvasPtr->highlightWidth;
+    if (highlightWidth < 0) {
+	highlightWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->highlightWidthObj);
+	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
+    }
+    canvasPtr->inset = borderWidth + highlightWidth;
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
@@ -2992,6 +3004,7 @@ DisplayCanvas(
     Tk_Item *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
+    int borderWidth, highlightWidth;
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3169,17 +3182,18 @@ DisplayCanvas(
      */
 
   borders:
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
     if (canvasPtr->flags & REDRAW_BORDERS) {
 	canvasPtr->flags &= ~REDRAW_BORDERS;
-	if (canvasPtr->borderWidth > 0) {
+	if (borderWidth > 0) {
 	    Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin),
-		    canvasPtr->bgBorder, canvasPtr->highlightWidth,
-		    canvasPtr->highlightWidth,
-		    Tk_Width(tkwin) - 2*canvasPtr->highlightWidth,
-		    Tk_Height(tkwin) - 2*canvasPtr->highlightWidth,
-		    canvasPtr->borderWidth, canvasPtr->relief);
+		    canvasPtr->bgBorder, highlightWidth, highlightWidth,
+		    Tk_Width(tkwin) - 2 * highlightWidth,
+		    Tk_Height(tkwin) - 2 * highlightWidth,
+		    borderWidth, canvasPtr->relief);
 	}
-	if (canvasPtr->highlightWidth > 0) {
+	if (highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
@@ -3188,10 +3202,10 @@ DisplayCanvas(
 		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
 		Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
-			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
+			highlightWidth, Tk_WindowId(tkwin));
 	    } else {
 		Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
-			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
+			highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
     }
@@ -5565,7 +5579,9 @@ CanvasFocusProc(
     int gotFocus)		/* 1 means window is getting focus, 0 means
 				 * it's losing it. */
 {
-    Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
+	int highlightWidth;
+
+	Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
     if (gotFocus) {
 	canvasPtr->textInfo.gotFocus = 1;
 	canvasPtr->textInfo.cursorOn = 1;
@@ -5579,7 +5595,8 @@ CanvasFocusProc(
 	canvasPtr->insertBlinkHandler = NULL;
     }
     EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
-    if (canvasPtr->highlightWidth > 0) {
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth > 0) {
 	canvasPtr->flags |= REDRAW_BORDERS;
 	if (!(canvasPtr->flags & REDRAW_PENDING)) {
 	    Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
