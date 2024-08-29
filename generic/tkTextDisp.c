@@ -8549,25 +8549,6 @@ DisplayText(
 	return; /* the widget has been deleted */
     }
 
-#ifdef MAC_OSX_TK
-    /*
-     * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
-     */
-    TkWindow* winPtr = (TkWindow*)(textPtr->tkwin);
-    MacDrawable* macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)) {
-	dInfoPtr->flags &= ~REDRAW_PENDING;
-	ClearRegion(invalidRegion);
-	if (dInfoPtr->flags & ASYNC_PENDING) {
-	    assert(dInfoPtr->flags & ASYNC_UPDATE);
-	    dInfoPtr->flags &= ~ASYNC_PENDING;
-	    /* continue with asynchronous pixel-height calculation */
-	    InvokeAsyncUpdateLineMetrics(textPtr);
-	}
-	return;
-    }
-#endif
-
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
