@@ -4183,22 +4183,6 @@ DisplayText(
 	return;
     }
 
-#ifdef MAC_OSX_TK
-    /*
-     * If the toplevel is being resized it would be dangerous to try redrawing
-     * the widget.  But we can just clear the REDRAW_PENDING flag and return.
-     * This display proc will be called again after the widget has been
-     * reconfigured.
-     */
-
-    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
-	dInfoPtr->flags &= ~REDRAW_PENDING;
-    	return;
-     }
-#endif
-
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
