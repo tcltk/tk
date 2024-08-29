@@ -469,12 +469,37 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
     }
 }
 
-## SelectAll -- select all siblings for focus item
+## SelectAll -- select all siblings of item
 #
-proc ::ttk::treeview::SelectAll {w} {
-    set focus [$w focus]
-    $w selection set [$w children [$w parent $focus]]
-    # To do: recursive, select all in root
+proc ::ttk::treeview::SelectAll {w {item {}}} {
+    set cellmode [expr {[$w cget -selecttype] eq "cell"}]
+    if {$cellmode} {
+	SelectAllCells $w $item
+    } else {
+	SelectAllItems $w $item
+    }
+}
+
+proc ::ttk::treeview::SelectAllItems {w item} {
+    if {$item eq "" || ([$w item $item -open] && [$w haschildren $item])} {
+	set list [$w children $item]
+	$w selection add $list
+	foreach child $list {
+	    SelectAllItems $w $child
+	}
+    }
+}
+
+proc ::ttk::treeview::SelectAllCells {w item} {
+    set first [format "#%d" [FirstColumn $w]]
+    set last  [format "#%d" [LastColumn $w]]
+
+    if {$item eq "" || ([$w item $item -open] && [$w haschildren $item])} {
+	foreach child [$w children $item] {
+	    $w cellselection add [list $child $first] [list $child $last]
+	    SelectAllCells $w $child
+	}
+    }
 }
 
 ## Motion -- pointer motion binding.
