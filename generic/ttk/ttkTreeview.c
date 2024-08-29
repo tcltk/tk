@@ -2270,8 +2270,8 @@ static void DrawItem(
     dispRow = DisplayRow(item->rowPos, tv);
     h = tv->tree.rowHeight * dispRow;
     if (h >= tv->tree.treeArea.height) {
-        /* The item is outside the visible area */
-        return;
+	/* The item is outside the visible area */
+	return;
     }
 
     rowHeight = tv->tree.rowHeight * item->height;
@@ -2409,7 +2409,7 @@ static void DrawForest(
  */
 static void DrawTreeArea(Treeview *tv, Drawable d) {
     if (tv->tree.showFlags & SHOW_HEADINGS) {
-        DrawHeadings(tv, d);
+	DrawHeadings(tv, d);
     }
     DrawForest(tv, tv->tree.root->children, d, 0);
     DrawSeparators(tv, d);
@@ -2430,12 +2430,12 @@ static void TreeviewDisplay(void *clientData, Drawable d)
     /* When the tree area does not fit in the available space, there is a
      * risk that it will be drawn over other areas of the layout.
      */
-    
-    winWidth = Tk_Width(tkwin); 
+
+    winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
     width = tv->tree.treeArea.width;
     height = tv->tree.headingArea.height + tv->tree.treeArea.height;
-    
+
     if ((width == winWidth && height == winHeight)
       || (tv->tree.treeArea.height % tv->tree.rowHeight == 0
 	&& TreeWidth(tv) <= width)) {
@@ -2446,9 +2446,9 @@ static void TreeviewDisplay(void *clientData, Drawable d)
     } else {
 	/* The tree area needs to be clipped
 	 */
-    
+
        int x, y;
-    
+
 	x = tv->tree.treeArea.x;
 	if (tv->tree.showFlags & SHOW_HEADINGS) {
 	    y = tv->tree.headingArea.y;
@@ -4309,7 +4309,7 @@ static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber
 {
     Tcl_Size i, newSize = columnNumber + 1;
     if (newSize < tv->tree.nColumns + 1) {
-        newSize = tv->tree.nColumns + 1;
+	newSize = tv->tree.nColumns + 1;
     }
     if (item->nTagSets < newSize) {
 	if (item->cellTagSets == NULL) {
