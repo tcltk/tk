@@ -105,7 +105,7 @@ bind Treeview	<Control-Shift-End>	{ ::ttk::treeview::SelectionExtend %W bottom }
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectAll %W }
-bind Treeview	<<SelectNone>>		{ %W selection set {} }
+bind Treeview	<<SelectNone>>		{ ::ttk::treeview::SelectNone %W }
 
 # Mousewheel and TouchpadScroll
 ttk::copyBindings TtkScrollable Treeview
@@ -453,7 +453,7 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	bottom {
 	    # Select all cells/items from focus to bottom
 	    set focus [$w id {} last]
-	    while {[$w haschildren $focus] && [$w item $focus -open]} {
+	    while {[$w item $focus -open] && [$w haschildren $focus]} {
 		set focus [$w id $focus last]
 	    }
 	}
@@ -469,7 +469,7 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
     }
 }
 
-## SelectAll -- select all siblings of item
+## SelectAll -- select all items/cells under item
 #
 proc ::ttk::treeview::SelectAll {w {item {}}} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
@@ -499,6 +499,17 @@ proc ::ttk::treeview::SelectAllCells {w item} {
 	    $w cellselection add [list $child $first] [list $child $last]
 	    SelectAllCells $w $child
 	}
+    }
+}
+
+## SelectNone -- Unselect all items/cells
+#
+proc ::ttk::treeview::SelectNone {w} {
+    set cellmode [expr {[$w cget -selecttype] eq "cell"}]
+    if {$cellmode} {
+	$w cellselection set {}
+    } else {
+	$w selection set {}
     }
 }
 
