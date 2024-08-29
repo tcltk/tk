@@ -1237,11 +1237,6 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-#ifdef MAC_OSX_TK
-MODULE_SCOPE int	TkpDrawingIsDisabled(Tk_Window tkwin);
-#else
-# define TkpDrawingIsDisabled(tkwin) 0
-#endif
 MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,

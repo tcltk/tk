@@ -45,21 +45,6 @@
 # define DEBUG(expr) expr
 #endif
 
-// Portability to 8.5/8.6
-#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
-# ifdef MAC_OSX_TK
-static int
-TkpDrawingIsDisabled(
-   Tk_Window tkwin)
-{
-    MacDrawable *macWin = ((TkWindow *) tkwin)->privatePtr;
-    return macWin && !!(macWin->flags & TK_DO_NOT_DRAW);
-}
-#else
-static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
-#endif
-#endif /* TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7 */
-
 /*
  * "Calculations of line pixel heights and the size of the vertical
  * scrollbar."
@@ -8564,10 +8549,13 @@ DisplayText(
 	return; /* the widget has been deleted */
     }
 
-    if (TkpDrawingIsDisabled(textPtr->tkwin)) {
-	/*
-	 * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
-	 */
+#ifdef MAC_OSX_TK
+    /*
+     * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
+     */
+    TkWindow* winPtr = (TkWindow*)(textPtr->tkwin);
+    MacDrawable* macWin = winPtr->privatePtr;
+    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)) {
 	dInfoPtr->flags &= ~REDRAW_PENDING;
 	ClearRegion(invalidRegion);
 	if (dInfoPtr->flags & ASYNC_PENDING) {
@@ -8578,6 +8566,7 @@ DisplayText(
 	}
 	return;
     }
+#endif
 
     interp = textPtr->interp;
     Tcl_Preserve(interp);
