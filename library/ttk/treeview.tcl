@@ -370,9 +370,10 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 ## SelectionExtend -- Extend item/cell selection
 #
 proc ::ttk::treeview::SelectionExtend {w dir} {
+    variable State
     set focus [$w focus]
 
-    if {[$w cget -selectmode] ne "extended" || $focus eq ""} {
+    if {[$w cget -selectmode] ni [list "extended" "multiple"] || $focus eq ""} {
 	return
     }
 
@@ -381,14 +382,35 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	set colNum [GetColumn $w]
     }
 
+    lassign $State(cellCurrent) current colCurrent
+    if {$focus ne $current} {
+	set focus $current
+	scan $colCurrent "#%d" colNum
+    }
+
     switch -- $dir {
 	up {
 	    # Extend selection to prev item
-	    set focus [$w prev $focus]
+	    if {[set up [$w prev $focus]] eq ""} {
+	        set focus [$w parent $focus]
+	    } else {
+		while {[$w item $up -open] && [$w haschildren $up]} {
+		    set up [$w id $up end]
+		}
+		set focus $up
+	    }
 	}
 	down {
 	    # Extend selection to next item
-	    set focus [$w next $focus]
+	    if {[$w item $focus -open] && [$w haschildren $focus]} {
+	        set focus [$w id $focus first]
+	    } else {
+		set up $focus
+		while {$up ne "" && [set down [$w next $up]] eq ""} {
+		    set up [$w parent $up]
+		}
+		set focus $down
+	    }
 	}
 	left {
 	    # Extend selection to prev cell
@@ -675,6 +697,7 @@ proc ::ttk::treeview::select.toggle.extended {w item cell} {
 proc ::ttk::treeview::select.extend.extended {w item cell} {
     variable State
     if {$cell ne ""} {
+	set State(cellCurrent) $cell
 	if {$State(cellAnchor) ne ""} {
 	    $w cellselection $State(cellAnchorOp) $State(cellAnchor) $cell
 	} else {
