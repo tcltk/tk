@@ -153,7 +153,7 @@ Tk_GetAnchor(
 
   error:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad anchor position \"%s\": must be"
+	    "bad anchor \"%s\": must be"
 	    " n, ne, e, se, s, sw, w, nw, or center", string));
     Tcl_SetErrorCode(interp, "TK", "VALUE", "ANCHOR", (char *)NULL);
     return TCL_ERROR;
