@@ -88,7 +88,6 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_DRAWN_UNDER_MENU	0x08
 #define TK_IS_PIXMAP		0x10
 #define TK_IS_BW_PIXMAP		0x20
-#define TK_DO_NOT_DRAW          0x40
 #define TTK_HAS_CONTRASTING_BG  0x80
 
 /*
