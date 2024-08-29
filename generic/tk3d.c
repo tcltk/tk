@@ -677,9 +677,10 @@ Tk_GetRelief(
 	relief = TK_RELIEF_SUNKEN;
     } else {
 	if (interp) {
+	    int ambigeous = (c == 'r' || c == 's') && (name[1] == '\0');
 	    Tcl_SetObjResult(interp,
-		    Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
-		    name, "flat, groove, raised, ridge, solid, or sunken"));
+		    Tcl_ObjPrintf("%s relief \"%.50s\": must be %s",
+		    ambigeous ? "ambigeous" : "bad", name, "flat, groove, raised, ridge, solid, or sunken"));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", (char *)NULL);
 	}
 	return TCL_ERROR;

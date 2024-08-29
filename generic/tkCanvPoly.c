@@ -680,7 +680,7 @@ ComputePolygonBbox(
 	if (index < 0) {
 	    index += (polyPtr->numPoints - polyPtr->autoClosed) * 2;
 	}
- 	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
+	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
 	tsoffset->yoffset = (int) (polyPtr->coordPtr[index+1] + 0.5);
     } else {
 	if (tsoffset->flags & TK_OFFSET_LEFT) {
@@ -1100,7 +1100,7 @@ PolygonInsert(
 	 * [5fb8145997].
 	 */
 
-    	double width;
+	double width;
 	int j;
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
