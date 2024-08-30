@@ -343,16 +343,34 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	top {
-	    # Move to beginning and select first item or cell in col
+	    # Move to top (first item) of widget and select item/cell
 	    $w yview moveto 0
 	    set focus [$w id {} first]
 	}
 	bottom {
-	    # Move to end and select last item or cell in col
+	    # Move to end (last item) of widget and select item/cell
 	    $w yview moveto 1
 	    set focus [$w id {} last]
 	    while {[$w item $focus -open] && [$w haschildren $focus]} {
 		set focus [$w id $focus last]
+	    }
+	}
+	pageTop {
+	    # Select item/cell at top of page (current widget view)
+	    set rh [ttk::style configure Treeview -rowheight]
+	    set y [expr {"headings" in [$w cget -show] ? $rh : 1}]
+	    for {} {$y < [winfo height $w]} {incr y $rh} {
+		set focus [$w identify item 10 $y]
+		if {$focus ne ""} break
+	    }
+	}
+	pageBottom {
+	    # Select item/cell at bottom of page (current widget view)
+	    set rh [expr {[ttk::style configure Treeview -rowheight] * -1}]
+	    set y [expr {[winfo height $w] + $rh}]
+	    for {} {$y > 0} {incr y $rh} {
+		set focus [$w identify item 10 $y]
+		if {$focus ne ""} break
 	    }
 	}
     }
