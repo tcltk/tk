@@ -115,7 +115,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     /* Remark: Default for -fill should be NULL, see [2860519]. Will be fixed in Tk 8.7 */
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
- 	DEF_CANVITEM_OUTLINE, Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
 	"round", Tk_Offset(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
@@ -677,7 +677,7 @@ ComputePolygonBbox(
 	if (index < 0) {
 	    index += (polyPtr->numPoints - polyPtr->autoClosed) * 2;
 	}
- 	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
+	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
 	tsoffset->yoffset = (int) (polyPtr->coordPtr[index+1] + 0.5);
     } else {
 	if (tsoffset->flags & TK_OFFSET_LEFT) {
@@ -1096,7 +1096,7 @@ PolygonInsert(
 	 * [5fb8145997].
 	 */
 
-    	double width;
+	double width;
 	int j;
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
