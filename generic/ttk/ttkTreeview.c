@@ -22,8 +22,8 @@
 #define DEF_MINWIDTH		"20"
 
 static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
-static const int DEFAULT_INDENT 	= 20;
-static const int HALO   		= 4;	/* heading separator */
+static const int DEFAULT_INDENT = 20;
+static const int HALO   	= 4;	/* heading separator */
 
 #define STATE_CHANGED	 	(0x100)	/* item state option changed */
 
@@ -54,8 +54,8 @@ struct TreeItemRec {
     Tcl_Obj	*valuesObj;
     Tcl_Obj	*openObj;
     Tcl_Obj	*tagsObj;
-    Tcl_Obj     *selObj;
-    Tcl_Obj     *imageAnchorObj;
+    Tcl_Obj	*selObj;
+    Tcl_Obj	*imageAnchorObj;
     int 	hidden;
     int		height; 	/* Height is in number of row heights */
 
@@ -284,7 +284,7 @@ typedef struct {
     int 	width;		/* Column width, in pixels */
     int 	minWidth;	/* Minimum column width, in pixels */
     int 	stretch;	/* Should column stretch while resizing? */
-    int         separator;      /* Should this column have a separator? */
+    int		separator;	/* Should this column have a separator? */
     Tcl_Obj	*idObj;		/* Column identifier, from -columns option */
 
     Tcl_Obj	*anchorObj;	/* -anchor for cell data <<NOTE-ANCHOR>> */
@@ -301,7 +301,7 @@ typedef struct {
     /* Temporary storage for cell data
      */
     Tcl_Obj 	*data;
-    int         selected;
+    int		selected;
     Ttk_TagSet	tagset;
 } TreeColumn;
 
@@ -1685,6 +1685,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
     Tcl_Size colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (tv->tree.nTitleColumns <= colno) {
 	xpos -= tv->tree.xscroll.first;
@@ -1693,7 +1694,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
     while (colno < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[colno];
 	int next_xpos = xpos + column->width;
-	if (xpos <= x && x <= next_xpos + HALO) {
+	if (xpos <= x && x <= next_xpos + scaledHALO) {
 	    *x1 = next_xpos;
 	    return colno;
 	}
@@ -1825,11 +1826,12 @@ static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
 {
     int x1 = 0;
     Tcl_Size colno = IdentifyDisplayColumn(tv, x, &x1);
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
 	if (colno < 0) {
 	    return REGION_NOTHING;
-	} else if (-HALO <= x1 - x  && x1 - x <= HALO) {
+	} else if (-scaledHALO <= x1 - x  && x1 - x <= scaledHALO) {
 	    return REGION_SEPARATOR;
 	} else {
 	    return REGION_HEADING;
@@ -2326,7 +2328,7 @@ static void DrawItem(
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;
- 	    stateCell |= TTK_STATE_SELECTED;
+	    stateCell |= TTK_STATE_SELECTED;
 	}
 
 	if (column->tagset) {
@@ -2447,7 +2449,7 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	/* The tree area needs to be clipped
 	 */
 
-       int x, y;
+	int x, y;
 
 	x = tv->tree.treeArea.x;
 	if (tv->tree.showFlags & SHOW_HEADINGS) {
@@ -2856,6 +2858,7 @@ static int TreeviewHorribleIdentify(
     Tcl_Size dColumnNumber;
     char dcolbuf[32];
     int x, y, x1;
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     /* ASSERT: objc == 4 */
 
@@ -2871,7 +2874,7 @@ static int TreeviewHorribleIdentify(
     snprintf(dcolbuf, sizeof(dcolbuf), "#%" TCL_SIZE_MODIFIER "d", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
-	if (-HALO <= x1 - x  && x1 - x <= HALO) {
+	if (-scaledHALO <= x1 - x  && x1 - x <= scaledHALO) {
 	    what = "separator";
 	} else {
 	    what = "heading";
@@ -3288,7 +3291,7 @@ static int TreeviewInsertCommand(
 	interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
     newItem->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     if (ConfigureItem(interp, tv, newItem, objc, objv) != TCL_OK) {
-    	Tcl_DeleteHashEntry(entryPtr);
+	Tcl_DeleteHashEntry(entryPtr);
 	FreeItem(newItem);
 	return TCL_ERROR;
     }
@@ -3725,7 +3728,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc != 4) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
 	return TCL_ERROR;
     }
 
@@ -3953,7 +3956,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (objc < 4 || objc > 5) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle arg...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle arg...?");
 	return TCL_ERROR;
     }
 
@@ -4047,7 +4050,7 @@ static int TreeviewTagBindCommand(
     Ttk_Tag tag;
 
     if (objc < 4 || objc > 6) {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
 	return TCL_ERROR;
     }
 
@@ -4181,7 +4184,7 @@ static int TreeviewTagHasCommand(
 	    Tcl_NewBooleanObj(Ttk_TagSetContains(item->tagset, tag)));
 	return TCL_OK;
     } else {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
 	return TCL_ERROR;
     }
 }
@@ -4243,7 +4246,7 @@ static int TreeviewCtagHasCommand(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
 	return TCL_OK;
     } else {
-    	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");
+	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");
 	return TCL_ERROR;
     }
 }
