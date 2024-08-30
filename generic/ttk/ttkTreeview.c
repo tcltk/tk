@@ -1235,10 +1235,10 @@ static int ConfigureColumn(
     if (mask & GEOMETRY_CHANGED) {
 	if (!Tk_IsMapped(tv->core.tkwin)) {
 	    TtkResizeWidget(&tv->core);
-        } else {
+	} else {
 	    RecomputeSlack(tv);
 	    ResizeColumns(tv, TreeWidth(tv));
-        }
+	}
     }
     TtkRedisplayWidget(&tv->core);
 
@@ -1766,12 +1766,12 @@ static void DrawItem(
     Ttk_State state = ItemState(tv, item);
     DisplayItem displayItem;
     int x, y, h, rowHeight;
-    
+
     rowHeight = tv->tree.rowHeight;
     h = rowHeight * (row - tv->tree.yscroll.first);
     if (h >= tv->tree.treeArea.height) {
-        /* The item is outside the visible area */
-        return;
+	/* The item is outside the visible area */
+	return;
     }
     x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     y = tv->tree.treeArea.y + h;
@@ -1797,7 +1797,7 @@ static void DrawItem(
 		x+indent, y, colwidth-indent, rowHeight);
 	if (item->textObj) { displayItem.textObj = item->textObj; }
 	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-        displayItem.anchorObj = tv->tree.column0.anchorObj;
+	displayItem.anchorObj = tv->tree.column0.anchorObj;
 	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
 	x += colwidth;
     }
@@ -1841,7 +1841,7 @@ static int DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
     while (item && row <= tv->tree.yscroll.last) {
-        row = DrawSubtree(tv, item, d, depth, row);
+	row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
     return row;
@@ -1856,7 +1856,7 @@ static void DrawTreeArea(Treeview *tv, Drawable d) {
     }
     DrawForest(tv, tv->tree.root->children, d, 0, 0);
 }
-    
+
 /* + TreeviewDisplay --
  * 	Display() widget hook.  Draw the widget contents.
  */
@@ -1873,59 +1873,59 @@ static void TreeviewDisplay(void *clientData, Drawable d)
      * risk that it will be drawn over other areas of the layout.
      */
 
-    winWidth = Tk_Width(tkwin); 
+    winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
     width = tv->tree.treeArea.width;
     height = tv->tree.headingArea.height + tv->tree.treeArea.height;
 
     if ((width == winWidth && height == winHeight)
       || (tv->tree.treeArea.height % tv->tree.rowHeight == 0
-        && TreeWidth(tv) <= width)) {
-        /* No protection is needed; either the tree area fills the entire
-         * widget, or everything fits within the available area.
-         */
-        DrawTreeArea(tv, d);
+	&& TreeWidth(tv) <= width)) {
+	/* No protection is needed; either the tree area fills the entire
+	 * widget, or everything fits within the available area.
+	 */
+	DrawTreeArea(tv, d);
     } else {
-        /* The tree area needs to be clipped
-         */
+	/* The tree area needs to be clipped
+	 */
 
 	int x, y;
 
-        x = tv->tree.treeArea.x;
-        if (tv->tree.showFlags & SHOW_HEADINGS) {
-            y = tv->tree.headingArea.y;
-        } else {
-            y = tv->tree.treeArea.y;
-        }
+	x = tv->tree.treeArea.x;
+	if (tv->tree.showFlags & SHOW_HEADINGS) {
+	    y = tv->tree.headingArea.y;
+	} else {
+	    y = tv->tree.treeArea.y;
+	}
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 	Drawable p;
 	XGCValues gcValues;
 	GC gc;
 
-        /* Create a temporary helper drawable */
-        p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-          winWidth, winHeight, Tk_Depth(tkwin));
+	/* Create a temporary helper drawable */
+	p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
+	  winWidth, winHeight, Tk_Depth(tkwin));
 
-        /* Get a graphics context for copying the drawable content */
-        gcValues.function = GXcopy;
-        gcValues.graphics_exposures = False;
-        gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+	/* Get a graphics context for copying the drawable content */
+	gcValues.function = GXcopy;
+	gcValues.graphics_exposures = False;
+	gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
 
-        /* Copy the widget background into the helper */
-        XCopyArea(Tk_Display(tkwin), d, p, gc, 0, 0,
-          (unsigned) winWidth, (unsigned) winHeight, 0, 0);
+	/* Copy the widget background into the helper */
+	XCopyArea(Tk_Display(tkwin), d, p, gc, 0, 0,
+	  (unsigned) winWidth, (unsigned) winHeight, 0, 0);
 
-        /* Draw the tree onto the helper without regard for borders */
-        DrawTreeArea(tv, p);
+	/* Draw the tree onto the helper without regard for borders */
+	DrawTreeArea(tv, p);
 
-        /* Copy only the tree area inside the borders back */
-        XCopyArea(Tk_Display(tkwin), p, d, gc, x, y,
-          (unsigned) width, (unsigned) height, x, y);
+	/* Copy only the tree area inside the borders back */
+	XCopyArea(Tk_Display(tkwin), p, d, gc, x, y,
+	  (unsigned) width, (unsigned) height, x, y);
 
-        /* Clean up the temporary resources */
-        Tk_FreePixmap(Tk_Display(tkwin), p);
-        Tk_FreeGC(Tk_Display(tkwin), gc);
+	/* Clean up the temporary resources */
+	Tk_FreePixmap(Tk_Display(tkwin), p);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
 #else
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
 	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
@@ -1934,9 +1934,9 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	    height += 4;
 	}
 
-        TkpClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
-        DrawTreeArea(tv, d);
-        TkpClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+	TkpClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
+	DrawTreeArea(tv, d);
+	TkpClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
 #endif
     }
 }
@@ -2331,8 +2331,8 @@ static int TreeviewHorribleIdentify(
 
 	    BoundingBox(tv, item, NULL, &itemBox);
 	    PrepareItem(tv, item, &displayItem);
-            if (item->textObj) { displayItem.textObj = item->textObj; }
-            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
+	    if (item->textObj) { displayItem.textObj = item->textObj; }
+	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2389,7 +2389,7 @@ static int TreeviewIdentifyCommand(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], submethodStrings,
 		sizeof(char *), "command", TCL_EXACT, &submethod) != TCL_OK
-        || Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[3], &x) != TCL_OK
+	|| Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[3], &x) != TCL_OK
 	|| Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[4], &y) != TCL_OK
     ) {
 	return TCL_ERROR;
@@ -2450,8 +2450,8 @@ static int TreeviewIdentifyCommand(
 	    }
 
 	    PrepareItem(tv, item, &displayItem);
-            if (item->textObj) { displayItem.textObj = item->textObj; }
-            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
+	    if (item->textObj) { displayItem.textObj = item->textObj; }
+	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2715,7 +2715,7 @@ static int TreeviewInsertCommand(
 	interp, (void *)newItem, tv->tree.itemOptionTable, tv->core.tkwin);
     newItem->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     if (ConfigureItem(interp, tv, newItem, objc, objv) != TCL_OK) {
-    	Tcl_DeleteHashEntry(entryPtr);
+	Tcl_DeleteHashEntry(entryPtr);
 	FreeItem(newItem);
 	return TCL_ERROR;
     }
@@ -2814,9 +2814,9 @@ static int TreeviewDeleteCommand(
      */
     delq = 0;
     for (i = 0; items[i]; ++i) {
-        if (items[i]->state & TTK_STATE_SELECTED) {
-            selChange = 1;
-        }
+	if (items[i]->state & TTK_STATE_SELECTED) {
+	    selChange = 1;
+	}
 	delq = DeleteItems(items[i], delq);
     }
 
@@ -2834,7 +2834,7 @@ static int TreeviewDeleteCommand(
 
     ckfree(items);
     if (selChange) {
-        TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+	TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
     }
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
@@ -2955,8 +2955,8 @@ static int TreeviewSeeCommand(
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < 0) {
-        /* The item cannot be moved into view because it is detached */
-        return TCL_OK;
+	/* The item cannot be moved into view because it is detached */
+	return TCL_OK;
     }
     if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
@@ -3086,7 +3086,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc != 4) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
 	return TCL_ERROR;
     }
 
@@ -3163,7 +3163,7 @@ static int TreeviewTagBindCommand(
     Ttk_Tag tag;
 
     if (objc < 4 || objc > 6) {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
 	return TCL_ERROR;
     }
 
@@ -3267,7 +3267,7 @@ static int TreeviewTagHasCommand(
 	    Tcl_NewBooleanObj(Ttk_TagSetContains(item->tagset, tag)));
 	return TCL_OK;
     } else {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
 	return TCL_ERROR;
     }
 }
