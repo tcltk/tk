@@ -489,7 +489,14 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 
 ## SelectAll -- select all items/cells under item
 #
-proc ::ttk::treeview::SelectAll {w {item {}}} {
+proc ::ttk::treeview::SelectAll {w {item {}} {in_parent 0}} {
+    if {$in_parent && $item eq ""} {
+	set focus [$w focus]
+	if {$focus ne ""} {
+	    set item [$w parent $focus]
+	}
+    }
+
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
 	SelectAllCells $w $item
