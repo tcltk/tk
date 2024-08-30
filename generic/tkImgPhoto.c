@@ -2322,7 +2322,7 @@ ToggleComplexAlphaIfNeeded(
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
-     	    mPtr->flags |= COMPLEX_ALPHA;
+	    mPtr->flags |= COMPLEX_ALPHA;
 	    break;
 	}
     }
@@ -3687,7 +3687,7 @@ Tk_PhotoPutZoomedBlock(
 			    *destPtr++ = srcPtr[blueOffset];
 			    *destPtr++ = 255;
 			    continue;
- 			}
+			}
 
 			if (compRule==TK_PHOTO_COMPOSITE_SET || !destPtr[3]) {
 			    /*
@@ -4258,7 +4258,7 @@ ImgGetPhoto(
 			    blockPtr->width * blockPtr->pixelSize;
 		}
 	    } else {
-	 	int gray = (unsigned char) (((optPtr->background->red>>8) * 11
+		int gray = (unsigned char) (((optPtr->background->red>>8) * 11
 			+ (optPtr->background->green>>8) * 16
 			+ (optPtr->background->blue>>8) * 5 + 16) >> 5);
 

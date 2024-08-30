@@ -169,11 +169,11 @@ typedef struct TkCanvas {
 				 * Units are pixels in canvas coords. */
     char *regionString;		/* The option string from which scrollX1 etc.
 				 * are derived. Malloc'ed. */
-    int xScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *xScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
-    int yScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *yScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
