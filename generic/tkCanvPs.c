@@ -912,7 +912,7 @@ PostscriptBitmap(
 	 * syntactically correct.
 	 */
 
-        Tcl_AppendToObj(psObj, "<>", -1);
+	Tcl_AppendToObj(psObj, "<>", -1);
 	return;
     }
 
