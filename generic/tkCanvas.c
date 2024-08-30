@@ -266,7 +266,7 @@ static Tcl_Obj *	ScrollFractions(int screen1,
 			    int screen2, int object1, int object2);
 static int		RelinkItems(TkCanvas *canvasPtr, Tcl_Obj *tag,
 			    Tk_Item *prevPtr, TagSearch **searchPtrPtr);
-static void 		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
+static void		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
 static void		TagSearchExprDestroy(TagSearchExpr *expr);
 static void		TagSearchDestroy(TagSearch *searchPtr);
 static int		TagSearchScan(TkCanvas *canvasPtr,
@@ -686,8 +686,8 @@ Tk_CanvasObjCmd(
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
     canvasPtr->pixmapGC = NULL;
-    canvasPtr->width = None;
-    canvasPtr->height = None;
+    canvasPtr->width = 0;
+    canvasPtr->height = 0;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
@@ -963,7 +963,7 @@ CanvasWidgetCmd(
 		 * If new tag expression, then insert in linked list.
 		 */
 
-	    	TagSearchExpr *expr, **lastPtr;
+		TagSearchExpr *expr, **lastPtr;
 
 		lastPtr = &(canvasPtr->bindTagExprs);
 		while ((expr = *lastPtr) != NULL) {
@@ -1434,7 +1434,7 @@ CanvasWidgetCmd(
 		     * be deleted.
 		     */
 
- 		}
+		}
 	    }
 	}
 	break;
@@ -2297,7 +2297,7 @@ ConfigureCanvas(
 	int result;
 
 	for ( itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-	    	    	    itemPtr = itemPtr->nextPtr) {
+		itemPtr = itemPtr->nextPtr) {
 	    if ( itemPtr->state == TK_STATE_NULL ) {
 		result = (*itemPtr->typePtr->configProc)(canvasPtr->interp,
 			(Tk_Canvas) canvasPtr, itemPtr, 0, NULL,
@@ -2992,10 +2992,6 @@ DisplayCanvas(
     Tk_Item *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
-#ifdef MAC_OSX_TK
-    TkWindow *winPtr;
-    MacDrawable *macWin;
-#endif
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3004,19 +3000,6 @@ DisplayCanvas(
     if (!Tk_IsMapped(tkwin)) {
 	goto done;
     }
-
-#ifdef MAC_OSX_TK
-    /*
-     * If drawing is disabled, all we need to do is
-     * clear the REDRAW_PENDING flag.
-     */
-    winPtr = (TkWindow *)(canvasPtr->tkwin);
-    macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
-	canvasPtr->flags &= ~REDRAW_PENDING;
-	return;
-    }
-#endif
 
     /*
      * Choose a new current item if that is needed (this could cause event
@@ -3204,10 +3187,10 @@ DisplayCanvas(
 	    if (canvasPtr->textInfo.gotFocus) {
 		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
-	    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
+		Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    } else {
-	    	Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
+		Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
@@ -3388,7 +3371,7 @@ Tk_CanvasEventuallyRedraw(
     }
 
     if ((x1 >= x2) || (y1 >= y2) ||
- 	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
+	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
 	    (x1 >= canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin)) ||
 	    (y1 >= canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin))) {
 	return;
@@ -3446,7 +3429,7 @@ EventuallyRedrawItem(
 	return;
     }
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
- 	    (itemPtr->x2 < canvasPtr->xOrigin) ||
+	    (itemPtr->x2 < canvasPtr->xOrigin) ||
 	    (itemPtr->y2 < canvasPtr->yOrigin) ||
 	    (itemPtr->x1 >= canvasPtr->xOrigin+Tk_Width(canvasPtr->tkwin)) ||
 	    (itemPtr->y1 >= canvasPtr->yOrigin+Tk_Height(canvasPtr->tkwin))) {
@@ -3694,7 +3677,7 @@ TagSearchExprDestroy(
     TagSearchExpr *expr)
 {
     if (expr != NULL) {
-    	if (expr->uids) {
+	if (expr->uids) {
 	    ckfree(expr->uids);
 	}
 	ckfree(expr);
@@ -5473,7 +5456,7 @@ CanvasDoEvent(
     expr = canvasPtr->bindTagExprs;
     while (expr) {
 	expr->index = 0;
-    	expr->match = TagSearchEvalExpr(expr, itemPtr);
+	expr->match = TagSearchEvalExpr(expr, itemPtr);
 	if (expr->match) {
 	    numExprs++;
 	}
@@ -5499,7 +5482,7 @@ CanvasDoEvent(
     i = itemPtr->numTags+2;
     expr = canvasPtr->bindTagExprs;
     while (expr) {
-    	if (expr->match) {
+	if (expr->match) {
 	    objectPtr[i++] = (int *) expr->uid;
 	}
 	expr = expr->next;

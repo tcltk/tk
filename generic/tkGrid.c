@@ -3338,7 +3338,7 @@ ConfigureContent(
     	if (containerPtr == NULL) {
 	    containerPtr = GetGrid(parent);
 	    InitContainerData(containerPtr);
-    	}
+	}
 
 	if (contentPtr->containerPtr != NULL && contentPtr->containerPtr != containerPtr) {
 	    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
