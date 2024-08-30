@@ -469,7 +469,7 @@ FileReadGIF(
 		    "no value given for \"%s\" option",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "OPT_VALUE",
-		    (char *) NULL);
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[++i], &index) != TCL_OK) {
@@ -485,14 +485,14 @@ FileReadGIF(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"couldn't read GIF header from file \"%s\"", fileName));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "HEADER",
-		(char *) NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"GIF image file \"%s\" has dimension(s) <= 0", fileName));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BOGUS_SIZE",
-		(char *) NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -507,7 +507,7 @@ FileReadGIF(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"GIF file truncated", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED",
-		(char *) NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     bitPixel = 2 << (buf[0] & 0x07);
@@ -517,7 +517,7 @@ FileReadGIF(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "error reading color map", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP",
-		    (char *) NULL);
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -563,7 +563,7 @@ FileReadGIF(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "no image data for this index", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "NO_DATA",
-		    (char *) NULL);
+		    (char *)NULL);
 	    goto error;
 
 	case GIF_EXTENSION:
@@ -581,7 +581,7 @@ FileReadGIF(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
-			(char *) NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    continue;
@@ -591,7 +591,7 @@ FileReadGIF(
 			"couldn't read left/top/width/height in GIF image",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "DIMENSIONS",
-			(char *) NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -622,7 +622,7 @@ FileReadGIF(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "error reading color map", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF",
-			    "COLOR_MAP", (char *) NULL);
+			    "COLOR_MAP", (char *)NULL);
 		    goto error;
 		}
 	    }
@@ -685,7 +685,7 @@ FileReadGIF(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "error reading color map", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP",
-		    (char *) NULL);
+		    (char *)NULL);
 	    goto error;
 	}
     }
@@ -929,11 +929,11 @@ ReadOneByte(
 {
     unsigned char buf[2];
     if (Fread(gifConfPtr, buf, 1, 1, chan) != 1) {
-        /*
-         * Premature end of image.
-         */
+	/*
+	 * Premature end of image.
+	 */
 
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"premature end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", NULL);
 	return -1;
@@ -1218,7 +1218,7 @@ DoExtension(
 	break;
     case 0xfe:			/* Comment Extension */
 	strcpy(extensionStreamName,"comment");
-        /* copy the extension data below */
+	/* copy the extension data below */
 	break;
     }
     /* Add extension to dict */
@@ -1349,7 +1349,7 @@ ReadImage(
     if (initialCodeSize > MAX_LWZ_BITS) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("malformed image", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "MALFORMED",
-		(char *) NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1468,24 +1468,24 @@ ReadImage(
 		}
 		firstCode = append[code];
 
-	        /*
-	         * Push the head of the code onto the stack.
-	         */
+		/*
+		 * Push the head of the code onto the stack.
+		 */
 
-	        *top++ = firstCode;
+		*top++ = firstCode;
 
-                if (maxCode < (1 << MAX_LWZ_BITS)) {
+		if (maxCode < (1 << MAX_LWZ_BITS)) {
 		    /*
 		     * If there's still room in our codes table, add a new entry.
 		     * Otherwise don't, and keep using the current table.
-                     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
-                     * specification.
+		     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
+		     * specification.
 		     */
 
 		    prefix[maxCode] = oldCode;
 		    append[maxCode] = firstCode;
 		    maxCode++;
-                }
+		}
 
 		/*
 		 * maxCode tells us the maximum code value we can accept. If
@@ -1867,7 +1867,7 @@ Fread(
     Tcl_Channel chan)
 {
     if (hunk < 0 || count < 0) {
-        return -1;
+	return -1;
     }
 
     if (gifConfPtr->fromData == INLINE_DATA_BASE64) {
@@ -2047,7 +2047,7 @@ CommonWriteGIF(
     if (state.num >= MAXCOLORMAPSIZE) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("too many colors", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLORFUL",
-		(char *) NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (state.num<2) {
