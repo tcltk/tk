@@ -698,9 +698,9 @@ typedef struct TkMainInfo {
 				 * down, in case it's a Tcl_ObjCmdProc2 */
 #endif
     unsigned int ttkNbTabsStickBit;
-    				/* Information used by ttk::notebook. */
+				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
-    				/* Information used by ttk::scale. */
+				/* Information used by ttk::scale. */
 } TkMainInfo;
 
 /*
@@ -713,7 +713,7 @@ typedef struct {
     const void *source;		/* Bits for bitmap. */
     int width, height;		/* Dimensions of bitmap. */
     int native;			/* 0 means generic (X style) bitmap, 1 means
-    				 * native style bitmap. */
+				 * native style bitmap. */
 } TkPredefBitmap;
 
 /*
