@@ -40,7 +40,7 @@
  */
 
 #define TK_PHOTO_ALLOC_FAILURE_MESSAGE \
-        "not enough free memory for image buffer"
+	"not enough free memory for image buffer"
 
 
 /*
@@ -87,11 +87,11 @@ static const char *const colorFormatNames[] = {
 
 struct FormatOptions {
     int options;         /* Individual bits indicate which options were
-                          * specified - see below. */
+			  * specified - see below. */
     Tcl_Obj *formatName; /* Name specified without an option. */
     enum ColorFormatType colorFormat;
-                         /* The color format type given with the
-                          * -colorformat option */
+			 /* The color format type given with the
+			  * -colorformat option */
 };
 
 /*
@@ -121,34 +121,34 @@ static const char *const formatOptionNames[] = {
  */
 
 static int      ParseFormatOptions(Tcl_Interp *interp, int allowedOptions,
-                    Tcl_Size objc, Tcl_Obj *const objv[], Tcl_Size *indexPtr,
-                    struct FormatOptions *optPtr);
+		    Tcl_Size objc, Tcl_Obj *const objv[], Tcl_Size *indexPtr,
+		    struct FormatOptions *optPtr);
 static Tcl_Obj  *GetBadOptMsg(const char *badValue, int allowedOpts);
 static int      StringMatchDef(Tcl_Obj *data, Tcl_Obj *formatString,
-                    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
+		    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
 static int      StringReadDef(Tcl_Interp *interp, Tcl_Obj *data,
-                    Tcl_Obj *formatString, Tk_PhotoHandle imageHandle,
-                    int destX, int destY, int width, int height,
-                    int srcX, int srcY);
+		    Tcl_Obj *formatString, Tk_PhotoHandle imageHandle,
+		    int destX, int destY, int width, int height,
+		    int srcX, int srcY);
 static int      StringWriteDef(Tcl_Interp *interp,
-                    Tcl_Obj *formatString,
-                    Tk_PhotoImageBlock *blockPtr);
+		    Tcl_Obj *formatString,
+		    Tk_PhotoImageBlock *blockPtr);
 static int      ParseColor(Tcl_Interp *interp, Tcl_Obj *specObj,
-                    Display *display, Colormap colormap, unsigned char *redPtr,
-                    unsigned char *greenPtr, unsigned char *bluePtr,
-                    unsigned char *alphaPtr);
+		    Display *display, Colormap colormap, unsigned char *redPtr,
+		    unsigned char *greenPtr, unsigned char *bluePtr,
+		    unsigned char *alphaPtr);
 static int      ParseColorAsList(const char *colorString, unsigned char *redPtr,
-                    unsigned char *greenPtr, unsigned char *bluePtr,
-                    unsigned char *alphaPtr);
+		    unsigned char *greenPtr, unsigned char *bluePtr,
+		    unsigned char *alphaPtr);
 static int      ParseColorAsHex(Tcl_Interp *interp, const char *colorString,
-                    int colorStrLen, Display *display, Colormap colormap,
-                    unsigned char *redPtr, unsigned char *greenPtr,
-                    unsigned char *bluePtr, unsigned char *alphaPtr);
+		    int colorStrLen, Display *display, Colormap colormap,
+		    unsigned char *redPtr, unsigned char *greenPtr,
+		    unsigned char *bluePtr, unsigned char *alphaPtr);
 static int      ParseColorAsStandard(Tcl_Interp *interp,
-                    const char *colorString, int colorStrLen,
-                    Display *display, Colormap colormap,
-                    unsigned char *redPtr, unsigned char *greenPtr,
-                    unsigned char *bluePtr, unsigned char *alphaPtr);
+		    const char *colorString, int colorStrLen,
+		    Display *display, Colormap colormap,
+		    unsigned char *redPtr, unsigned char *greenPtr,
+		    unsigned char *bluePtr, unsigned char *alphaPtr);
 
 /*
  * The format record for the default image handler
@@ -189,14 +189,14 @@ static int
 ParseFormatOptions(
     Tcl_Interp *interp,               /* For error messages */
     int allowedOptions,               /* Bitfield specifying which options are
-                                       * to be considered allowed */
+				       * to be considered allowed */
     Tcl_Size objc,                         /* Number of elements in argv[] */
     Tcl_Obj *const objv[],            /* The arguments to parse */
     Tcl_Size *indexPtr,                    /* Index giving the first element to
-                                       * parse. The value is updated to the
-                                       * index where parsing ended */
+				       * parse. The value is updated to the
+				       * index where parsing ended */
     struct FormatOptions *optPtr)     /* Parsed option values are written to
-                                       * this struct */
+				       * this struct */
 
 {
     Tcl_Size optIndex, index;
@@ -212,76 +212,76 @@ ParseFormatOptions(
     optPtr->formatName = NULL;
     optPtr->colorFormat = COLORFORMAT_RGB2;
     for (index = *indexPtr; index < objc; *indexPtr = ++index) {
-        int optionExists;
+	int optionExists;
 
-        /*
-         * The first value can be the format handler's name. It goes to
-         * optPtr->name.
-         */
-        option = Tcl_GetString(objv[index]);
-        if (option[0] != '-') {
-            if (first) {
-                optPtr->formatName = objv[index];
-                first = 0;
-                continue;
-            } else {
-                break;
-            }
-        }
-        first = 0;
+	/*
+	 * The first value can be the format handler's name. It goes to
+	 * optPtr->name.
+	 */
+	option = Tcl_GetString(objv[index]);
+	if (option[0] != '-') {
+	    if (first) {
+		optPtr->formatName = objv[index];
+		first = 0;
+		continue;
+	    } else {
+		break;
+	    }
+	}
+	first = 0;
 
-        /*
-         * Check if option is known and allowed
-         */
+	/*
+	 * Check if option is known and allowed
+	 */
 
-        optionExists = 1;
-        if (Tcl_GetIndexFromObj(NULL, objv[index], formatOptionNames,
-                "format option", 0, &optIndex) != TCL_OK) {
-            optionExists = 0;
-        }
-        if (!optionExists || !((1 << optIndex) & allowedOptions)) {
-            Tcl_SetObjResult(interp, GetBadOptMsg(Tcl_GetString(objv[index]),
-                    allowedOptions));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
-            return TCL_ERROR;
-        }
+	optionExists = 1;
+	if (Tcl_GetIndexFromObj(NULL, objv[index], formatOptionNames,
+		"format option", 0, &optIndex) != TCL_OK) {
+	    optionExists = 0;
+	}
+	if (!optionExists || !((1 << optIndex) & allowedOptions)) {
+	    Tcl_SetObjResult(interp, GetBadOptMsg(Tcl_GetString(objv[index]),
+		    allowedOptions));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
+	    return TCL_ERROR;
+	}
 
-        /*
-         * Option-specific checks
-         */
+	/*
+	 * Option-specific checks
+	 */
 
-        switch (1 << optIndex) {
-        case OPT_COLORFORMAT:
-            *indexPtr = ++index;
-            if (index >= objc) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("the \"%s\" option "
-                        "requires a value", Tcl_GetString(objv[index - 1])));
-                Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                        "MISSING_VALUE", NULL);
-                return TCL_ERROR;
-            }
-            if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
-                    TCL_EXACT, &typeIndex) != TCL_OK
-                    || (typeIndex != COLORFORMAT_LIST
-                    && typeIndex != COLORFORMAT_RGB2
-                    && typeIndex != COLORFORMAT_RGBA2) ) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad color format "
-                        "\"%s\": must be rgb, rgba, or list",
-                        Tcl_GetString(objv[index])));
-                Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                        "BAD_COLOR_FORMAT", NULL);
-                return TCL_ERROR;
-            }
-            optPtr->colorFormat = (enum ColorFormatType)typeIndex;
-            break;
-        default:
-            Tcl_Panic("ParseFormatOptions: unexpected switch fallthrough");
-        }
+	switch (1 << optIndex) {
+	case OPT_COLORFORMAT:
+	    *indexPtr = ++index;
+	    if (index >= objc) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("the \"%s\" option "
+			"requires a value", Tcl_GetString(objv[index - 1])));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"MISSING_VALUE", (char *)NULL);
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
+		    TCL_EXACT, &typeIndex) != TCL_OK
+		    || (typeIndex != COLORFORMAT_LIST
+		    && typeIndex != COLORFORMAT_RGB2
+		    && typeIndex != COLORFORMAT_RGBA2) ) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad color format "
+			"\"%s\": must be rgb, rgba, or list",
+			Tcl_GetString(objv[index])));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"BAD_COLOR_FORMAT", (char *)NULL);
+		return TCL_ERROR;
+	    }
+	    optPtr->colorFormat = (enum ColorFormatType)typeIndex;
+	    break;
+	default:
+	    Tcl_Panic("ParseFormatOptions: unexpected switch fallthrough");
+	}
 
-        /*
-         * Add option to bitfield in optPtr
-         */
-        optPtr->options |= (1 << optIndex);
+	/*
+	 * Add option to bitfield in optPtr
+	 */
+	optPtr->options |= (1 << optIndex);
     }
 
     return TCL_OK;
@@ -311,29 +311,29 @@ GetBadOptMsg(
     Tcl_Obj *resObj = Tcl_ObjPrintf("bad format option \"%s\": ", badValue);
 
     if (allowedOpts == 0) {
-        Tcl_AppendToObj(resObj, "no options allowed", TCL_INDEX_NONE);
+	Tcl_AppendToObj(resObj, "no options allowed", TCL_INDEX_NONE);
     } else {
-        Tcl_AppendToObj(resObj, "must be ", TCL_INDEX_NONE);
-        bit = 1;
-        for (i = 0; formatOptionNames[i] != NULL; i++) {
-            if (allowedOpts & bit) {
-                if (allowedOpts & (bit -1)) {
-                    /*
-                     * not the first option
-                     */
-                    if (allowedOpts & ~((bit << 1) - 1)) {
-                        /*
-                         * not the last option
-                         */
-                        Tcl_AppendToObj(resObj, ", ", TCL_INDEX_NONE);
-                    } else {
-                        Tcl_AppendToObj(resObj, ", or ", TCL_INDEX_NONE);
-                    }
-                }
-                Tcl_AppendToObj(resObj, formatOptionNames[i], TCL_INDEX_NONE);
-            }
-            bit <<=1;
-        }
+	Tcl_AppendToObj(resObj, "must be ", TCL_INDEX_NONE);
+	bit = 1;
+	for (i = 0; formatOptionNames[i] != NULL; i++) {
+	    if (allowedOpts & bit) {
+		if (allowedOpts & (bit -1)) {
+		    /*
+		     * not the first option
+		     */
+		    if (allowedOpts & ~((bit << 1) - 1)) {
+			/*
+			 * not the last option
+			 */
+			Tcl_AppendToObj(resObj, ", ", TCL_INDEX_NONE);
+		    } else {
+			Tcl_AppendToObj(resObj, ", or ", TCL_INDEX_NONE);
+		    }
+		}
+		Tcl_AppendToObj(resObj, formatOptionNames[i], TCL_INDEX_NONE);
+	    }
+	    bit <<=1;
+	}
     }
     return resObj;
 }
@@ -377,34 +377,34 @@ StringMatchDef(
      */
 
     if (Tcl_ListObjGetElements(interp, data, &rowCount, &rowListPtr)
-            != TCL_OK) {
-        return 0;
+	    != TCL_OK) {
+	return 0;
     }
     if (rowCount == 0) {
-        /*
-         * empty list is valid data
-         */
+	/*
+	 * empty list is valid data
+	 */
 
-        *widthPtr = 0;
-        *heightPtr = 0;
-        return 1;
+	*widthPtr = 0;
+	*heightPtr = 0;
+	return 1;
     }
     colCount = -1;
     for (y = 0; y < rowCount; y++) {
-        if (Tcl_ListObjLength(interp, rowListPtr[y], &curColCount) != TCL_OK) {
-            return 0;
-        }
-        if (colCount < 0) {
-            colCount = curColCount;
-        } else if (curColCount != colCount) {
-            if (interp != NULL) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "d: "
-                        "all rows must have the same number of elements", y));
-                Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                        "INVALID_DATA", NULL);
-            }
-            return 0;
-        }
+	if (Tcl_ListObjLength(interp, rowListPtr[y], &curColCount) != TCL_OK) {
+	    return 0;
+	}
+	if (colCount < 0) {
+	    colCount = curColCount;
+	} else if (curColCount != colCount) {
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "d: "
+			"all rows must have the same number of elements", y));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"INVALID_DATA", (char *)NULL);
+	    }
+	    return 0;
+	}
     }
 
     /*
@@ -413,16 +413,16 @@ StringMatchDef(
      * pixel for validity.
      */
     if (Tcl_ListObjIndex(interp, rowListPtr[0], 0, &pixelData) != TCL_OK) {
-        return 0;
+	return 0;
     }
     (void)Tcl_GetString(pixelData);
     if (pixelData->length > TK_PHOTO_MAX_COLOR_LENGTH) {
-        return 0;
+	return 0;
     }
     if (ParseColor(interp, pixelData, Tk_Display(Tk_MainWindow(interp)),
-            Tk_Colormap(Tk_MainWindow(interp)), &dummy, &dummy, &dummy, &dummy)
-            != TCL_OK) {
-        return 0;
+	    Tk_Colormap(Tk_MainWindow(interp)), &dummy, &dummy, &dummy, &dummy)
+	    != TCL_OK) {
+	return 0;
     }
 
     /*
@@ -464,10 +464,10 @@ StringReadDef(
     Tcl_Obj *formatString,      /* value of the -format option */
     Tk_PhotoHandle imageHandle, /* write data to this image */
     int destX, int destY,       /* start writing data at this point
-                                 * in destination image*/
+				 * in destination image*/
     int width, int height,      /* dimensions of area to write to */
     int srcX, int srcY)         /* start reading source data at these
-                                 * coordinates */
+				 * coordinates */
 {
     Tcl_Obj **rowListPtr, **colListPtr;
     Tcl_Obj **objv;
@@ -488,21 +488,21 @@ StringReadDef(
 
     memset(&opts, 0, sizeof(opts));
     if (formatString != NULL) {
-        if (Tcl_ListObjGetElements(interp, formatString, &objc, &objv)
-                != TCL_OK) {
-            return TCL_ERROR;
-        }
-        optIndex = 0;
-        if (ParseFormatOptions(interp, 0, objc, objv, &optIndex, &opts)
-                != TCL_OK) {
-            return TCL_ERROR;
-        }
-        if (optIndex < objc) {
-            Tcl_SetObjResult(interp,
-                    GetBadOptMsg(Tcl_GetString(objv[optIndex]), 0));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
-            return TCL_ERROR;
-        }
+	if (Tcl_ListObjGetElements(interp, formatString, &objc, &objv)
+		!= TCL_OK) {
+	    return TCL_ERROR;
+	}
+	optIndex = 0;
+	if (ParseFormatOptions(interp, 0, objc, objv, &optIndex, &opts)
+		!= TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (optIndex < objc) {
+	    Tcl_SetObjResult(interp,
+		    GetBadOptMsg(Tcl_GetString(objv[optIndex]), 0));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
+	    return TCL_ERROR;
+	}
     }
 
     /*
@@ -510,24 +510,24 @@ StringReadDef(
      */
 
     if (Tcl_ListObjGetElements(interp, data, &rowCount, &rowListPtr)
-            != TCL_OK ) {
-        return TCL_ERROR;
+	    != TCL_OK ) {
+	return TCL_ERROR;
     }
     if ( rowCount > 0 && Tcl_ListObjLength(interp, rowListPtr[0], &colCount)
-            != TCL_OK) {
-        return TCL_ERROR;
+	    != TCL_OK) {
+	return TCL_ERROR;
     }
     if (width <= 0 || height <= 0 || rowCount == 0 || colCount == 0) {
-        /*
-         * No changes with zero sized input or zero sized output region
-         */
+	/*
+	 * No changes with zero sized input or zero sized output region
+	 */
 
-        return TCL_OK;
+	return TCL_OK;
     }
     if (srcX < 0 || srcY < 0 || srcX >= rowCount || srcY >= colCount) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf("source coordinates out of range"));
-        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("source coordinates out of range"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", (char *)NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -536,11 +536,11 @@ StringReadDef(
      */
 
     if (colCount > (int)(UINT_MAX / 4 / rowCount)) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                        "photo image dimensions exceed Tcl memory limits"));
-        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                "OVERFLOW", NULL);
-        return TCL_OK;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"photo image dimensions exceed Tcl memory limits"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		"OVERFLOW", (char *)NULL);
+	return TCL_OK;
     }
 
     /*
@@ -557,39 +557,39 @@ StringReadDef(
     srcBlock.offset[3] = 3;
     srcBlock.pixelPtr = (unsigned char *)attemptckalloc(srcBlock.pitch * srcBlock.height);
     if (srcBlock.pixelPtr == NULL) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
-        Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
+	Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
+	return TCL_ERROR;
     }
     curPixelPtr = srcBlock.pixelPtr;
     display = Tk_Display(Tk_MainWindow(interp));
     colormap = Tk_Colormap(Tk_MainWindow(interp));
     for (y = srcY; y < rowCount; y++) {
-        /*
-         * We don't test the length of row, as that's been done in
-         * ImgStringMatch()
-         */
+	/*
+	 * We don't test the length of row, as that's been done in
+	 * ImgStringMatch()
+	 */
 
-        if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount,
-                &colListPtr) != TCL_OK) {
-            goto errorExit;
-        }
-        for (x = srcX; x < colCount; x++) {
-            if (ParseColor(interp, colListPtr[x], display, colormap,
-                    curPixelPtr, curPixelPtr + 1, curPixelPtr + 2,
-                    curPixelPtr + 3) != TCL_OK) {
-                goto errorExit;
-            }
-            curPixelPtr += 4;
-        }
+	if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount,
+		&colListPtr) != TCL_OK) {
+	    goto errorExit;
+	}
+	for (x = srcX; x < colCount; x++) {
+	    if (ParseColor(interp, colListPtr[x], display, colormap,
+		    curPixelPtr, curPixelPtr + 1, curPixelPtr + 2,
+		    curPixelPtr + 3) != TCL_OK) {
+		goto errorExit;
+	    }
+	    curPixelPtr += 4;
+	}
     }
 
     /*
      * Write image data to destHandle
      */
     if (Tk_PhotoPutBlock(interp, imageHandle, &srcBlock, destX, destY,
-            width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-        goto errorExit;
+	    width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+	goto errorExit;
     }
 
     ckfree(srcBlock.pixelPtr);
@@ -635,20 +635,20 @@ StringWriteDef(
      * Parse format suboptions
      */
     if (Tcl_ListObjGetElements(interp, formatString, &objc, &objv)
-            != TCL_OK) {
-        return TCL_ERROR;
+	    != TCL_OK) {
+	return TCL_ERROR;
     }
     allowedOpts = OPT_COLORFORMAT;
     optIndex = 0;
     if (ParseFormatOptions(interp, allowedOpts, objc, objv, &optIndex, &opts)
-            != TCL_OK) {
-        return TCL_ERROR;
+	    != TCL_OK) {
+	return TCL_ERROR;
     }
     if (optIndex < objc) {
-        Tcl_SetObjResult(interp,
-                GetBadOptMsg(Tcl_GetString(objv[optIndex]), allowedOpts));
-        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp,
+		GetBadOptMsg(Tcl_GetString(objv[optIndex]), allowedOpts));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
+	return TCL_ERROR;
     }
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
@@ -660,84 +660,84 @@ StringWriteDef(
      */
 
     if (blockPtr->offset[3] < 0) {
-        hasAlpha = 0;
-        alphaOffset = 0;
+	hasAlpha = 0;
+	alphaOffset = 0;
     } else {
-        hasAlpha = 1;
-        alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];
+	hasAlpha = 1;
+	alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];
     }
 
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
-        int row, col;
-        Tcl_DString data, line;
-        char colorBuf[11];
-        unsigned char *pixelPtr;
-        unsigned char alphaVal = 255;
+	int row, col;
+	Tcl_DString data, line;
+	char colorBuf[11];
+	unsigned char *pixelPtr;
+	unsigned char alphaVal = 255;
 
-        Tcl_DStringInit(&data);
-        for (row=0; row<blockPtr->height; row++) {
-            pixelPtr = blockPtr->pixelPtr + blockPtr->offset[0]
-                    + row * blockPtr->pitch;
-            Tcl_DStringInit(&line);
-            for (col=0; col<blockPtr->width; col++) {
-                if (hasAlpha) {
-                    alphaVal = pixelPtr[alphaOffset];
-                }
+	Tcl_DStringInit(&data);
+	for (row=0; row<blockPtr->height; row++) {
+	    pixelPtr = blockPtr->pixelPtr + blockPtr->offset[0]
+		    + row * blockPtr->pitch;
+	    Tcl_DStringInit(&line);
+	    for (col=0; col<blockPtr->width; col++) {
+		if (hasAlpha) {
+		    alphaVal = pixelPtr[alphaOffset];
+		}
 
-                /*
-                 * We don't build lines as a list for #RGBA and #RGB. Since
-                 * these color formats look like comments, the first element
-                 * of the list would get quoted with an additional {} .
-                 * While this is not a problem if the data is used as
-                 * a list, it would cause problems if someone decides to parse
-                 * it as a string (and it looks kinda strange)
-                 */
+		/*
+		 * We don't build lines as a list for #RGBA and #RGB. Since
+		 * these color formats look like comments, the first element
+		 * of the list would get quoted with an additional {} .
+		 * While this is not a problem if the data is used as
+		 * a list, it would cause problems if someone decides to parse
+		 * it as a string (and it looks kinda strange)
+		 */
 
-                switch (opts.colorFormat) {
-                case COLORFORMAT_RGB2:
-                    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x ",  pixelPtr[0],
-                            pixelPtr[greenOffset], pixelPtr[blueOffset]);
-                    Tcl_DStringAppend(&line, colorBuf, TCL_INDEX_NONE);
-                    break;
-                case COLORFORMAT_RGBA2:
-                    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x%02x ",
-                            pixelPtr[0], pixelPtr[greenOffset],
-                            pixelPtr[blueOffset], alphaVal);
-                    Tcl_DStringAppend(&line, colorBuf, TCL_INDEX_NONE);
-                    break;
-                case COLORFORMAT_LIST:
-                    Tcl_DStringStartSublist(&line);
-                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[0]);
-                    Tcl_DStringAppendElement(&line, colorBuf);
-                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[greenOffset]);
-                    Tcl_DStringAppendElement(&line, colorBuf);
-                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[blueOffset]);
-                    Tcl_DStringAppendElement(&line, colorBuf);
-                    snprintf(colorBuf, sizeof(colorBuf), "%d", alphaVal);
-                    Tcl_DStringAppendElement(&line, colorBuf);
-                    Tcl_DStringEndSublist(&line);
-                    break;
-                default:
-                    Tcl_Panic("unexpected switch fallthrough");
-                }
-                pixelPtr += blockPtr->pixelSize;
-            }
-            if (opts.colorFormat != COLORFORMAT_LIST) {
-                /*
-                 * For the #XXX formats, we need to remove the last
-                 * whitespace.
-                 */
+		switch (opts.colorFormat) {
+		case COLORFORMAT_RGB2:
+		    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x ",  pixelPtr[0],
+			    pixelPtr[greenOffset], pixelPtr[blueOffset]);
+		    Tcl_DStringAppend(&line, colorBuf, TCL_INDEX_NONE);
+		    break;
+		case COLORFORMAT_RGBA2:
+		    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x%02x ",
+			    pixelPtr[0], pixelPtr[greenOffset],
+			    pixelPtr[blueOffset], alphaVal);
+		    Tcl_DStringAppend(&line, colorBuf, TCL_INDEX_NONE);
+		    break;
+		case COLORFORMAT_LIST:
+		    Tcl_DStringStartSublist(&line);
+		    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[0]);
+		    Tcl_DStringAppendElement(&line, colorBuf);
+		    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[greenOffset]);
+		    Tcl_DStringAppendElement(&line, colorBuf);
+		    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[blueOffset]);
+		    Tcl_DStringAppendElement(&line, colorBuf);
+		    snprintf(colorBuf, sizeof(colorBuf), "%d", alphaVal);
+		    Tcl_DStringAppendElement(&line, colorBuf);
+		    Tcl_DStringEndSublist(&line);
+		    break;
+		default:
+		    Tcl_Panic("unexpected switch fallthrough");
+		}
+		pixelPtr += blockPtr->pixelSize;
+	    }
+	    if (opts.colorFormat != COLORFORMAT_LIST) {
+		/*
+		 * For the #XXX formats, we need to remove the last
+		 * whitespace.
+		 */
 
-                *(Tcl_DStringValue(&line) + Tcl_DStringLength(&line) - 1)
-                        = '\0';
-            }
-            Tcl_DStringAppendElement(&data, Tcl_DStringValue(&line));
-            Tcl_DStringFree(&line);
-        }
-        result = Tcl_NewStringObj(Tcl_DStringValue(&data), TCL_INDEX_NONE);
-        Tcl_DStringFree(&data);
+		*(Tcl_DStringValue(&line) + Tcl_DStringLength(&line) - 1)
+			= '\0';
+	    }
+	    Tcl_DStringAppendElement(&data, Tcl_DStringValue(&line));
+	    Tcl_DStringFree(&line);
+	}
+	result = Tcl_NewStringObj(Tcl_DStringValue(&data), TCL_INDEX_NONE);
+	Tcl_DStringFree(&data);
     } else {
-        result = Tcl_NewObj();
+	result = Tcl_NewObj();
     }
 
     Tcl_SetObjResult(interp, result);
@@ -770,7 +770,7 @@ ParseColor(
     Tcl_Interp *interp,         /* error messages go there */
     Tcl_Obj *specObj,           /* the color data to parse */
     Display *display,           /* display of main window, needed to parse
-                                 * standard Tk colors */
+				 * standard Tk colors */
     Colormap colormap,          /* colormap of current display */
     unsigned char *redPtr,      /* the result is written to these pointers */
     unsigned char *greenPtr,
@@ -787,23 +787,23 @@ ParseColor(
     specString = Tcl_GetStringFromObj(specObj, &length);
 
     if (length == 0) {
-        /* Empty string */
-        *redPtr = *greenPtr = *bluePtr = *alphaPtr = 0;
-        return TCL_OK;
+	/* Empty string */
+	*redPtr = *greenPtr = *bluePtr = *alphaPtr = 0;
+	return TCL_OK;
     }
     if (length > TK_PHOTO_MAX_COLOR_LENGTH) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color"));
-        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                "INVALID_COLOR", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		"INVALID_COLOR", (char *)NULL);
+	return TCL_ERROR;
     }
     if (specString[0] == '#') {
-        return ParseColorAsHex(interp, specString, length, display,
-                colormap, redPtr, greenPtr, bluePtr, alphaPtr);
+	return ParseColorAsHex(interp, specString, length, display,
+		colormap, redPtr, greenPtr, bluePtr, alphaPtr);
     }
     if (ParseColorAsList(specString,
-            redPtr, greenPtr, bluePtr, alphaPtr) == TCL_OK) {
-        return TCL_OK;
+	    redPtr, greenPtr, bluePtr, alphaPtr) == TCL_OK) {
+	return TCL_OK;
     }
 
     /*
@@ -813,7 +813,7 @@ ParseColor(
 
     Tcl_ResetResult(interp);
     return ParseColorAsStandard(interp, specString, length, display,
-            colormap, redPtr, greenPtr, bluePtr, alphaPtr);
+	    colormap, redPtr, greenPtr, bluePtr, alphaPtr);
 
 }
 
@@ -863,24 +863,24 @@ ParseColorAsList(
      */
 
     while(isspace(UCHAR(*curPos))) {
-        ++curPos;
+	++curPos;
     }
     while (i < 4 && *curPos != '\0') {
-        values[i] = strtol(curPos, (char **)&curPos, 0);
-        if (values[i] < 0 || values[i] > 255) {
-            return TCL_ERROR;
-        }
-        while(isspace(UCHAR(*curPos))) {
-            ++curPos;
-        }
-        ++i;
+	values[i] = strtol(curPos, (char **)&curPos, 0);
+	if (values[i] < 0 || values[i] > 255) {
+	    return TCL_ERROR;
+	}
+	while(isspace(UCHAR(*curPos))) {
+	    ++curPos;
+	}
+	++i;
     }
 
     if (i < 3 || *curPos != '\0') {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
     if (i < 4) {
-        values[3] = 255;
+	values[3] = 255;
     }
 
     *redPtr = (unsigned char) values[0];
@@ -897,7 +897,7 @@ ParseColorAsList(
  * ParseColorAsHex --
  *
  *      This function extracts color and alpha values from a string
- *      starting with '#', followed by hex digits. It undestands both
+ *      starting with '#', followed by hex digits. It understands both
  *      the #RGBA form and the #RBG (with optional suffix)
  *
  * Results:
@@ -927,39 +927,39 @@ ParseColorAsHex(
     unsigned long int colorValue = 0;
 
     if (colorStrLen - 1 != 4 && colorStrLen - 1 != 8) {
-        return ParseColorAsStandard(interp, colorString, colorStrLen,
-                display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
+	return ParseColorAsStandard(interp, colorString, colorStrLen,
+		display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
     }
     for (i = 1; i < colorStrLen; i++) {
-        if (!isxdigit(UCHAR(colorString[i]))) {
-            /*
-             * There still is a chance that this is a Tk color with
-             * an alpha suffix
-             */
+	if (!isxdigit(UCHAR(colorString[i]))) {
+	    /*
+	     * There still is a chance that this is a Tk color with
+	     * an alpha suffix
+	     */
 
-            return ParseColorAsStandard(interp, colorString, colorStrLen,
-                    display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
-        }
+	    return ParseColorAsStandard(interp, colorString, colorStrLen,
+		    display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
+	}
     }
 
     colorValue = strtoul(colorString + 1, NULL, 16);
     switch (colorStrLen - 1) {
     case 4:
-        /* #RGBA format */
-        *redPtr = (unsigned char) ((colorValue >> 12) * 0x11);
-        *greenPtr = (unsigned char) (((colorValue >> 8) & 0xf) * 0x11);
-        *bluePtr = (unsigned char) (((colorValue >> 4) & 0xf) * 0x11);
-        *alphaPtr = (unsigned char) ((colorValue & 0xf) * 0x11);
-        return TCL_OK;
+	/* #RGBA format */
+	*redPtr = (unsigned char) ((colorValue >> 12) * 0x11);
+	*greenPtr = (unsigned char) (((colorValue >> 8) & 0xf) * 0x11);
+	*bluePtr = (unsigned char) (((colorValue >> 4) & 0xf) * 0x11);
+	*alphaPtr = (unsigned char) ((colorValue & 0xf) * 0x11);
+	return TCL_OK;
     case 8:
-        /* #RRGGBBAA format */
-        *redPtr = (unsigned char) (colorValue >> 24);
-        *greenPtr = (unsigned char) ((colorValue >> 16) & 0xff);
-        *bluePtr = (unsigned char) ((colorValue >> 8) & 0xff);
-        *alphaPtr = (unsigned char) (colorValue & 0xff);
-        return TCL_OK;
+	/* #RRGGBBAA format */
+	*redPtr = (unsigned char) (colorValue >> 24);
+	*greenPtr = (unsigned char) ((colorValue >> 16) & 0xff);
+	*bluePtr = (unsigned char) ((colorValue >> 8) & 0xff);
+	*alphaPtr = (unsigned char) (colorValue & 0xff);
+	return TCL_OK;
     default:
-        Tcl_Panic("unexpected switch fallthrough");
+	Tcl_Panic("unexpected switch fallthrough");
     }
 
     /* Shouldn't get here */
@@ -971,7 +971,7 @@ ParseColorAsHex(
  *
  * ParseColorAsStandard --
  *
- *      This function tries to split a color stirng in a color and a
+ *      This function tries to split a color string in a color and a
  *      suffix part and to extract color and alpha values from them. The
  *      color part is treated as regular Tk color.
  *
@@ -1010,31 +1010,31 @@ ParseColorAsStandard(
      */
 
     if ((suffixString = strrchr(specString, '@')) == NULL
-            && ((suffixString = strrchr(specString, '#')) == NULL
-                    || suffixString == specString)) {
-        suffixString = specString + specStrLen;
-        colorString = specString;
+	    && ((suffixString = strrchr(specString, '#')) == NULL
+		    || suffixString == specString)) {
+	suffixString = specString + specStrLen;
+	colorString = specString;
     } else {
-        strncpy(colorBuffer, specString, suffixString - specString);
-        colorBuffer[suffixString - specString] = '\0';
-        colorString = (const char*)colorBuffer;
+	strncpy(colorBuffer, specString, suffixString - specString);
+	colorBuffer[suffixString - specString] = '\0';
+	colorString = (const char*)colorBuffer;
     }
 
     /*
      * Try to parse as standard Tk color.
      *
      * We don't use Tk_GetColor() et al. here, as those functions
-     * migth return a color that does not exaxtly match the given name
+     * might return a color that does not exactly match the given name
      * if the colormap is full. Also, we don't really want the color to be
      * added to the colormap.
      */
 
     if ( ! TkParseColor(display, colormap, colorString, &parsedColor)) {
-         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-            "invalid color name \"%s\"", specString));
-         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                 "INVALID_COLOR", NULL);
-         return TCL_ERROR;
+	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "invalid color name \"%s\"", specString));
+	 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		 "INVALID_COLOR", (char *)NULL);
+	 return TCL_ERROR;
     }
 
     /*
@@ -1043,54 +1043,54 @@ ParseColorAsStandard(
 
     switch (suffixString[0]) {
     case '\0':
-        suffixAlpha = 255;
-        break;
+	suffixAlpha = 255;
+	break;
     case '@':
-        if (Tcl_GetDouble(NULL, suffixString + 1, &fracAlpha) != TCL_OK) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha "
-                    "suffix \"%s\": expected floating-point value",
-                    suffixString));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                    "INVALID COLOR", NULL);
-            return TCL_ERROR;
-        }
-        if (fracAlpha < 0 || fracAlpha > 1) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha suffix"
-                    " \"%s\": value must be in the range from 0 to 1",
-                    suffixString));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                    "INVALID_COLOR", NULL);
-            return TCL_ERROR;
-        }
-        suffixAlpha = (unsigned int) floor(fracAlpha * 255 + 0.5);
-        break;
+	if (Tcl_GetDouble(NULL, suffixString + 1, &fracAlpha) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha "
+		    "suffix \"%s\": expected floating-point value",
+		    suffixString));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "INVALID COLOR", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (fracAlpha < 0 || fracAlpha > 1) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha suffix"
+		    " \"%s\": value must be in the range from 0 to 1",
+		    suffixString));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "INVALID_COLOR", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	suffixAlpha = (unsigned int) floor(fracAlpha * 255 + 0.5);
+	break;
     case '#':
-        if (strlen(suffixString + 1) < 1 || strlen(suffixString + 1)> 2) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "invalid alpha suffix \"%s\"", suffixString));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                    "INVALID_COLOR", NULL);
-            return TCL_ERROR;
-        }
-        for (i = 1; i <= (int)strlen(suffixString + 1); i++) {
-            if ( ! isxdigit(UCHAR(suffixString[i]))) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                        "invalid alpha suffix \"%s\": expected hex digit",
-                        suffixString));
-                Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                        "INVALID_COLOR", NULL);
-                return TCL_ERROR;
-            }
-        }
-        if (strlen(suffixString + 1) == 1) {
-            sscanf(suffixString, "#%1x", &suffixAlpha);
-            suffixAlpha *= 0x11;
-        } else {
-            sscanf(suffixString, "#%2x", &suffixAlpha);
-        }
-        break;
+	if (strlen(suffixString + 1) < 1 || strlen(suffixString + 1)> 2) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "invalid alpha suffix \"%s\"", suffixString));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "INVALID_COLOR", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	for (i = 1; i <= (int)strlen(suffixString + 1); i++) {
+	    if ( ! isxdigit(UCHAR(suffixString[i]))) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid alpha suffix \"%s\": expected hex digit",
+			suffixString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"INVALID_COLOR", (char *)NULL);
+		return TCL_ERROR;
+	    }
+	}
+	if (strlen(suffixString + 1) == 1) {
+	    sscanf(suffixString, "#%1x", &suffixAlpha);
+	    suffixAlpha *= 0x11;
+	} else {
+	    sscanf(suffixString, "#%2x", &suffixAlpha);
+	}
+	break;
     default:
-        Tcl_Panic("unexpected switch fallthrough");
+	Tcl_Panic("unexpected switch fallthrough");
     }
 
     *redPtr = (unsigned char) (parsedColor.red >> 8);

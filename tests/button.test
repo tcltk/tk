@@ -1020,7 +1020,7 @@ test button-1.104 {configuration option: "activebackground" for label} -setup {
     .l configure -font {}
 } -cleanup {
     destroy .l
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.105 {configuration option: "font" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2
     pack .b
@@ -1039,7 +1039,7 @@ test button-1.106 {configuration option: "activebackground" for button} -setup {
     .b configure -font {}
 } -cleanup {
     destroy .b
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.107 {configuration option: "font" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2
     pack .c
@@ -1058,7 +1058,7 @@ test button-1.108 {configuration option: "activebackground" for checkbutton} -se
     .c configure -font {}
 } -cleanup {
     destroy .c
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.109 {configuration option: "font" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2
     pack .r
@@ -1077,7 +1077,7 @@ test button-1.110 {configuration option: "activebackground" for radiobutton} -se
     .r configure -font {}
 } -cleanup {
     destroy .r
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test button-1.111 {configuration option: "foreground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}

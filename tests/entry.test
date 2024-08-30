@@ -241,7 +241,7 @@ test entry-1.20 {configuration option: "font" for entry} -setup {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test entry-1.21 {configuration option: "foreground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
