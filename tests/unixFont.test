@@ -71,7 +71,7 @@ proc getsize {} {
 
 test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11 noExceed} {
     list [catch {font measure {} xyz} msg] $msg
-} {1 {font "" doesn't exist}}
+} {1 {font "" does not exist}}
 test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 failsOnUbuntu} {
     font measure fixed 0
 } 6

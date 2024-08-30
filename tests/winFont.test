@@ -21,7 +21,7 @@ test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
 } -body {
     catch {font delete xyz}
     font measure {} xyz
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test winfont-1.2 {TkpGetNativeFont procedure: native} -constraints win -body {
     font measure ansifixed 0
     font measure ansi 0
