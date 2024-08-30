@@ -302,7 +302,7 @@ static Tk_Item *	StartTagSearch(TkCanvas *canvasPtr,
 #else /* USE_OLD_TAG_SEARCH */
 static int		RelinkItems(TkCanvas *canvasPtr, Tcl_Obj *tag,
 			    Tk_Item *prevPtr, TagSearch **searchPtrPtr);
-static void 		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
+static void		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
 static void		TagSearchExprDestroy(TagSearchExpr *expr);
 static void		TagSearchDestroy(TagSearch *searchPtr);
 static int		TagSearchScan(TkCanvas *canvasPtr,
@@ -679,8 +679,8 @@ Tk_CanvasObjCmd(
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
     canvasPtr->pixmapGC = NULL;
-    canvasPtr->width = None;
-    canvasPtr->height = None;
+    canvasPtr->width = 0;
+    canvasPtr->height = 0;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
@@ -991,7 +991,7 @@ CanvasWidgetCmd(
 		 * If new tag expression, then insert in linked list.
 		 */
 
-	    	TagSearchExpr *expr, **lastPtr;
+		TagSearchExpr *expr, **lastPtr;
 
 		lastPtr = &(canvasPtr->bindTagExprs);
 		while ((expr = *lastPtr) != NULL) {
@@ -1449,21 +1449,21 @@ CanvasWidgetCmd(
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 
-                    /*
-                     * Don't shuffle the tags sequence: memmove the tags.
-                     */
+		    /*
+		     * Don't shuffle the tags sequence: memmove the tags.
+		     */
 
-                    memmove((void *)(itemPtr->tagPtr + i),
-                            itemPtr->tagPtr + i + 1,
-                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
+		    memmove((void *)(itemPtr->tagPtr + i),
+			    itemPtr->tagPtr + i + 1,
+			    (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 
-                    /*
-                     * There must be no break here: all tags with the same name must
-                     * be deleted.
-                     */
+		    /*
+		     * There must be no break here: all tags with the same name must
+		     * be deleted.
+		     */
 
- 		}
+		}
 	    }
 	}
 	break;
@@ -1840,15 +1840,15 @@ CanvasWidgetCmd(
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
 
-            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, first, last);
 	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
 	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-            if (!(dontRedraw1 && dontRedraw2)) {
+	    if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
 		EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -2052,7 +2052,6 @@ CanvasWidgetCmd(
 	int newX = 0;		/* Initialization needed only to prevent gcc
 				 * warnings. */
 	double fraction;
-	const char **args;
 
 	if (objc == 2) {
 	    Tcl_SetObjResult(interp, ScrollFractions(
@@ -2063,11 +2062,7 @@ CanvasWidgetCmd(
 	    break;
 	}
 
-	args = TkGetStringsFromObjs(objc, objv);
 	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	if (args != NULL) {
-	    ckfree(args);
-	}
 	switch (type) {
 	case TK_SCROLL_MOVETO:
 	    newX = canvasPtr->scrollX1 - canvasPtr->inset
@@ -2098,7 +2093,6 @@ CanvasWidgetCmd(
 	int newY = 0;		/* Initialization needed only to prevent gcc
 				 * warnings. */
 	double fraction;
-	const char **args;
 
 	if (objc == 2) {
 	    Tcl_SetObjResult(interp, ScrollFractions(
@@ -2109,11 +2103,7 @@ CanvasWidgetCmd(
 	    break;
 	}
 
-	args = TkGetStringsFromObjs(objc, objv);
 	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	if (args != NULL) {
-	    ckfree(args);
-	}
 	switch (type) {
 	case TK_SCROLL_MOVETO:
 	    newY = canvasPtr->scrollY1 - canvasPtr->inset + (int) (
@@ -2211,7 +2201,7 @@ DestroyCanvas(
     if (canvasPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
     }
-    Tk_FreeOptions(configSpecs, (char *) canvasPtr, canvasPtr->display, 0);
+    Tk_FreeOptions(configSpecs, (char *)canvasPtr, canvasPtr->display, 0);
     canvasPtr->tkwin = NULL;
     ckfree(canvasPtr);
 }
@@ -2286,7 +2276,7 @@ ConfigureCanvas(
 	int result;
 
 	for ( itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-	    	    	    itemPtr = itemPtr->nextPtr) {
+		itemPtr = itemPtr->nextPtr) {
 	    if ( itemPtr->state == TK_STATE_NULL ) {
 		result = (*itemPtr->typePtr->configProc)(canvasPtr->interp,
 			(Tk_Canvas) canvasPtr, itemPtr, 0, NULL,
@@ -2333,7 +2323,7 @@ ConfigureCanvas(
 	if (argc2 != 4) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad scrollRegion \"%s\"", canvasPtr->regionString));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", (char *)NULL);
 	badRegion:
 	    ckfree(canvasPtr->regionString);
 	    ckfree(argv2);
@@ -2654,7 +2644,7 @@ DisplayCanvas(
 		    Tk_Height(tkwin) - 2*canvasPtr->highlightWidth,
 		    canvasPtr->borderWidth, canvasPtr->relief);
 	}
-	if (canvasPtr->highlightWidth != 0) {
+	if (canvasPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
@@ -2662,10 +2652,10 @@ DisplayCanvas(
 	    if (canvasPtr->textInfo.gotFocus) {
 		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
-	    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
+		TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    } else {
-	    	TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
+		TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
@@ -2846,7 +2836,7 @@ Tk_CanvasEventuallyRedraw(
     }
 
     if ((x1 >= x2) || (y1 >= y2) ||
- 	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
+	    (x2 < canvasPtr->xOrigin) || (y2 < canvasPtr->yOrigin) ||
 	    (x1 >= canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin)) ||
 	    (y1 >= canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin))) {
 	return;
@@ -2904,7 +2894,7 @@ EventuallyRedrawItem(
 	return;
     }
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
- 	    (itemPtr->x2 < canvasPtr->xOrigin) ||
+	    (itemPtr->x2 < canvasPtr->xOrigin) ||
 	    (itemPtr->y2 < canvasPtr->yOrigin) ||
 	    (itemPtr->x1 >= canvasPtr->xOrigin+Tk_Width(canvasPtr->tkwin)) ||
 	    (itemPtr->y1 >= canvasPtr->yOrigin+Tk_Height(canvasPtr->tkwin))) {
@@ -3354,7 +3344,7 @@ TagSearchExprDestroy(
     TagSearchExpr *expr)
 {
     if (expr != NULL) {
-    	if (expr->uids) {
+	if (expr->uids) {
 	    ckfree(expr->uids);
 	}
 	ckfree(expr);
@@ -4994,9 +4984,9 @@ PickCurrentItem(
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 #endif /* USE_OLD_TAG_SEARCH */
 		    /* then */ {
-                    memmove((void *)(itemPtr->tagPtr + i),
-                            itemPtr->tagPtr + i + 1,
-                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
+		    memmove((void *)(itemPtr->tagPtr + i),
+			    itemPtr->tagPtr + i + 1,
+			    (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 		    break;
 		}
@@ -5181,7 +5171,7 @@ CanvasDoEvent(
     expr = canvasPtr->bindTagExprs;
     while (expr) {
 	expr->index = 0;
-    	expr->match = TagSearchEvalExpr(expr, itemPtr);
+	expr->match = TagSearchEvalExpr(expr, itemPtr);
 	if (expr->match) {
 	    numExprs++;
 	}
@@ -5213,7 +5203,7 @@ CanvasDoEvent(
     i = itemPtr->numTags+2;
     expr = canvasPtr->bindTagExprs;
     while (expr) {
-    	if (expr->match) {
+	if (expr->match) {
 	    objectPtr[i++] = (int *) expr->uid;
 	}
 	expr = expr->next;
