@@ -256,7 +256,7 @@ ImageCoords(
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
 		    &imgPtr->x) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
-  		    &imgPtr->y) != TCL_OK)) {
+		    &imgPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	ComputeImageBbox(canvas, imgPtr);
