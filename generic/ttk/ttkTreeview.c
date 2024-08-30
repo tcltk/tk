@@ -1890,6 +1890,11 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	 */
 
 	int x, y;
+#ifndef TK_NO_DOUBLE_BUFFERING
+	Drawable p;
+	XGCValues gcValues;
+	GC gc;
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
 	x = tv->tree.treeArea.x;
 	if (tv->tree.showFlags & SHOW_HEADINGS) {
@@ -1899,10 +1904,6 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	}
 
 #ifndef TK_NO_DOUBLE_BUFFERING
-	Drawable p;
-	XGCValues gcValues;
-	GC gc;
-
 	/* Create a temporary helper drawable */
 	p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
 	  winWidth, winHeight, Tk_Depth(tkwin));
