@@ -148,6 +148,30 @@ proc ::ttk::treeview::GetColumn {w} {
     return $colNum
 }
 
+# Get first visible row
+proc ::ttk::treeview::FirstRow {w} {
+    set item ""
+    set rh [ttk::style configure Treeview -rowheight]
+    set y [expr {"headings" in [$w cget -show] ? $rh : 1}]
+    for {} {$y < [winfo height $w]} {incr y $rh} {
+	set item [$w identify item 10 $y]
+	if {$item ne ""} break
+    }
+    return $item
+}
+
+# Get last visible row
+proc ::ttk::treeview::LastRow {w} {
+    set item ""
+    set rh [expr {[ttk::style configure Treeview -rowheight] * -1}]
+    set y [expr {[winfo height $w] + $rh}]
+    for {} {$y > 0} {incr y $rh} {
+	set item [$w identify item 10 $y]
+	if {$item ne ""} break
+    }
+    return $item
+}
+
 ## KeyNav -- Keyboard navigation to move focus and selected item/cell
 #
 proc ::ttk::treeview::KeyNav {w dir} {
@@ -184,7 +208,7 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    }
 	}
 	left {
-	    # Move one cell left or close item if open
+	    # Move left one cell or close item if open
 	    if {$cellmode} {
 		if {$colNum > [FirstColumn $w]} {
 		    incr colNum -1
@@ -196,7 +220,7 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    }
 	}
 	right {
-	    # Move one cell right or open item if closed
+	    # Move right one cell or open item if closed
 	    if {$cellmode} {
 		# Move to next cell
 		if {$colNum < [LastColumn $w]} {
@@ -223,12 +247,12 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    }
 	}
 	top {
-	    # Move to beginning and select first item or cell in col
+	    # Move to topmost item or cell in col
 	    $w yview moveto 0
 	    set focus [$w id {} first]
 	}
 	bottom {
-	    # Move to end and select last item or cell in col
+	    # Move to bottom-most item or cell in col
 	    $w yview moveto 1
 	    set focus [$w id {} last]
 	    while {[$w item $focus -open] && [$w haschildren $focus]} {
@@ -285,7 +309,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 		update idletasks
 		set focus [$w identify item $x $y]
 	    } else {
-		# Select first item/cell if at top already
+		# Select topmost item/cell if at top already
 		set focus [$w id {} first]
 	    }
 	}
@@ -298,7 +322,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 		update idletasks
 		set focus [$w identify item $x $y]
 	    } else {
-		# Select last item/cell if at bottom already
+		# Select bottom-most item/cell if at bottom already
 		set focus [$w id {} last]
 		while {[$w haschildren $focus] && [$w item $focus -open]} {
 		    set focus [$w id $focus last]
@@ -354,12 +378,12 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	top {
-	    # Move to top (first item) of widget and select item/cell
+	    # Move to & select topmost item/cell
 	    $w yview moveto 0
 	    set focus [$w id {} first]
 	}
 	bottom {
-	    # Move to end (last item) of widget and select item/cell
+	    # Move to & select bottom-most item/cell
 	    $w yview moveto 1
 	    set focus [$w id {} last]
 	    while {[$w item $focus -open] && [$w haschildren $focus]} {
@@ -367,22 +391,12 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	pageTop {
-	    # Select item/cell at top of page (current widget view)
-	    set rh [ttk::style configure Treeview -rowheight]
-	    set y [expr {"headings" in [$w cget -show] ? $rh : 1}]
-	    for {} {$y < [winfo height $w]} {incr y $rh} {
-		set focus [$w identify item 10 $y]
-		if {$focus ne ""} break
-	    }
+	    # Select top item/cell on page (window view)
+	    set focus [FirstRow $w]
 	}
 	pageBottom {
-	    # Select item/cell at bottom of page (current widget view)
-	    set rh [expr {[ttk::style configure Treeview -rowheight] * -1}]
-	    set y [expr {[winfo height $w] + $rh}]
-	    for {} {$y > 0} {incr y $rh} {
-		set focus [$w identify item 10 $y]
-		if {$focus ne ""} break
-	    }
+	    # Select bottom item/cell on page (window view)
+	    set focus [LastRow $w]
 	}
     }
 
@@ -488,6 +502,14 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	    while {[$w item $focus -open] && [$w haschildren $focus]} {
 		set focus [$w id $focus last]
 	    }
+	}
+	pageTop {
+	    # Select all items/cells from current to page top (window view)
+	    set focus [FirstRow $w]
+	}
+	pageBottom {
+	    # Select all items/cells from current to page bottom (window view)
+	    set focus [LastRow $w]
 	}
     }
 
