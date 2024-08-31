@@ -57,51 +57,54 @@ bind Treeview	<Button-1> 		{ ::ttk::treeview::Press %W %x %y }
 bind Treeview	<Double-Button-1> 	{ ::ttk::treeview::DoubleClick %W %x %y }
 bind Treeview	<ButtonRelease-1> 	{ ::ttk::treeview::Release %W %x %y }
 bind Treeview	<B1-Motion> 		{ ::ttk::treeview::Drag %W %x %y }
-
 bind Treeview	<Shift-Button-1> 	{ ::ttk::treeview::Select %W %x %y extend }
 bind Treeview	<<ToggleSelection>>	{ ::ttk::treeview::Select %W %x %y toggle }
 
-# Arrow key navigation bindings
+# Left/Right arrow key bindings (none, shift, control, control+shift)
 bind Treeview 	<<PrevChar>> 		{ ::ttk::treeview::KeyNav %W left }
 bind Treeview 	<<NextChar>> 		{ ::ttk::treeview::KeyNav %W right }
-bind Treeview 	<<PrevLine>>    	{ ::ttk::treeview::KeyNav %W up }
-bind Treeview 	<<NextLine>>  		{ ::ttk::treeview::KeyNav %W down }
-bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W top }
-bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W bottom }
-
-# Selection toggle bindings
-bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W }
-bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W }
-
-# Home and End bindings
-bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
-bind Treeview	<<LineEnd>>		{ ::ttk::treeview::KeyNav %W last }
-bind Treeview	<Control-Home>		{ ::ttk::treeview::KeyNav %W top }
-bind Treeview	<Control-End>		{ ::ttk::treeview::KeyNav %W bottom }
-
-# Page up/down bindings
-bind Treeview	<Prior>			{ ::ttk::treeview::ScrollPage %W up }
-bind Treeview	<Next> 			{ ::ttk::treeview::ScrollPage %W down }
-bind Treeview	<Control-Prior>		{ ::ttk::treeview::ScrollPage %W top }
-bind Treeview	<Control-Next> 		{ ::ttk::treeview::ScrollPage %W bottom }
-
-# Page left/right bindings
-bind Treeview	<<PrevWord>>		{ ::ttk::treeview::ScrollPage %W left }
-bind Treeview	<<NextWord>>		{ ::ttk::treeview::ScrollPage %W right }
-
-# Selection extend bindings
 bind Treeview	<<SelectPrevChar>>	{ ::ttk::treeview::SelectionExtend %W left }
 bind Treeview	<<SelectNextChar>>	{ ::ttk::treeview::SelectionExtend %W right }
-bind Treeview	<<SelectPrevLine>>	{ ::ttk::treeview::SelectionExtend %W up }
-bind Treeview	<<SelectNextLine>>	{ ::ttk::treeview::SelectionExtend %W down }
+bind Treeview	<<PrevWord>>		{ ::ttk::treeview::KeyNav %W first }
+bind Treeview	<<NextWord>>		{ ::ttk::treeview::KeyNav %W last }
 bind Treeview	<<SelectPrevWord>>	{ ::ttk::treeview::SelectionExtend %W first }
 bind Treeview	<<SelectNextWord>>	{ ::ttk::treeview::SelectionExtend %W last }
-bind Treeview	<<SelectLineStart>>	{ ::ttk::treeview::SelectionExtend %W first }
-bind Treeview	<<SelectLineEnd>>	{ ::ttk::treeview::SelectionExtend %W last }
+
+# Up/down arrow key bindings (none, shift, control, control+shift)
+bind Treeview 	<<PrevLine>>    	{ ::ttk::treeview::KeyNav %W up }
+bind Treeview 	<<NextLine>>  		{ ::ttk::treeview::KeyNav %W down }
+bind Treeview	<<SelectPrevLine>>	{ ::ttk::treeview::SelectionExtend %W up }
+bind Treeview	<<SelectNextLine>>	{ ::ttk::treeview::SelectionExtend %W down }
+bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W top }
+bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W bottom }
 bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::SelectionExtend %W top }
 bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::SelectionExtend %W bottom }
+
+# Home/End key bindings (none, shift, control, control+shift)
+bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
+bind Treeview	<<LineEnd>>		{ ::ttk::treeview::KeyNav %W last }
+bind Treeview	<<SelectLineStart>>	{ ::ttk::treeview::SelectionExtend %W first }
+bind Treeview	<<SelectLineEnd>>	{ ::ttk::treeview::SelectionExtend %W last }
+bind Treeview	<Control-Home>		{ ::ttk::treeview::KeyNav %W top }
+bind Treeview	<Control-End>		{ ::ttk::treeview::KeyNav %W bottom }
 bind Treeview	<Control-Shift-Home>	{ ::ttk::treeview::SelectionExtend %W top }
 bind Treeview	<Control-Shift-End>	{ ::ttk::treeview::SelectionExtend %W bottom }
+
+# Page Up/Down key bindings (none, shift, control, control+shift)
+bind Treeview	<Prior>			{ ::ttk::treeview::ScrollPage %W up }
+bind Treeview	<Next> 			{ ::ttk::treeview::ScrollPage %W down }
+bind Treeview	<Shift-Prior>		{ ::ttk::treeview::ScrollPage %W left }
+bind Treeview	<Shift-Next> 		{ ::ttk::treeview::ScrollPage %W right }
+bind Treeview	<Control-Prior>		{ ::ttk::treeview::ScrollPage %W top }
+bind Treeview	<Control-Next> 		{ ::ttk::treeview::ScrollPage %W bottom }
+bind Treeview	<Control-Shift-Prior>	{ ::ttk::treeview::ScrollPage %W pageTop }
+bind Treeview	<Control-Shift-Next> 	{ ::ttk::treeview::ScrollPage %W pageBottom }
+bind Treeview	<Alt-Prior>		{ ::ttk::treeview::ScrollPage %W pageTop; break }
+bind Treeview	<Alt-Next> 		{ ::ttk::treeview::ScrollPage %W pageBottom; break }
+
+# Other keys
+bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W }
+bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W }
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectAll %W }
