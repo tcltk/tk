@@ -24,6 +24,7 @@ namespace eval ttk::treeview {
     set State(cellAnchor)	{}
     set State(cellAnchorOp)	"set"
     set State(cellCurrent)	{}
+    set State(current)		{}
 
     # Copy the layouts from Treeview to CheckTreeview
     foreach _from {Treeview Item Cell Heading Row Separator}  {
@@ -303,7 +304,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    if {$start > 0.0} {
 		$w xview scroll -1 pages
 		update idletasks
-		if {$cellmode} {
+		if {$cellmode && $x ne ""} {
 		    # Select cell at same coord
 		    lassign [$w identify cell $x $y] focus colId
 		}
@@ -320,7 +321,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    if {$end < 1.0} {
 		$w xview scroll 1 pages
 		update idletasks
-		if {$cellmode} {
+		if {$cellmode && $x ne ""} {
 		    # Select cell at same coord
 		    lassign [$w identify cell $x $y] focus colId
 		}
@@ -394,19 +395,22 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
     variable State
     set focus [$w focus]
 
-    if {[$w cget -selectmode] ni [list "extended" "multiple"] || $focus eq ""} {
-	return
-    }
-
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
 	set colNum [GetColumn $w]
     }
 
-    lassign $State(cellCurrent) current colCurrent
-    if {$focus ne $current} {
-	set focus $current
-	scan $colCurrent "#%d" colNum
+    if {$cellmode} {
+	lassign $State(cellCurrent) current colCurrent
+	if {$focus ne $current && $current ne ""} {
+	    set focus $current
+	    scan $colCurrent "#%d" colNum
+	}
+    } else {
+	set current $State(current)
+	if {$focus ne $current && $current ne ""} {
+	    set focus $current
+	}
     }
 
     switch -- $dir {
@@ -759,6 +763,7 @@ proc ::ttk::treeview::select.toggle.extended {w item cell} {
 	set State(cellAnchorOp) add
 	set State(cellCurrent) $cell
     } else {
+	set State(current) $item
 	$w selection toggle [list $item]
     }
 }
@@ -772,8 +777,10 @@ proc ::ttk::treeview::select.extend.extended {w item cell} {
 	    BrowseTo $w $item $cell
 	}
     } else {
+	set State(current) $item
 	if {[set anchor [$w focus]] ne ""} {
 	    $w selection set [between $w $anchor $item]
+	    $w see $item
 	} else {
 	    BrowseTo $w $item $cell
 	}
@@ -913,7 +920,7 @@ proc ::ttk::treeview::Toggle {w item} {
 #
 proc ::ttk::treeview::ToggleFocus {w} {
     set focus [$w focus]
-    if {$focus eq ""} { return }
+    if {$focus eq "" || [$w cget -selectmode] eq "none"} { return }
 
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
@@ -934,11 +941,12 @@ proc ::ttk::treeview::ToggleFocus {w} {
 proc ::ttk::treeview::BrowseTo {w item cell} {
     variable State
 
-    $w see $item
-    $w focus $item
-    set State(cellAnchor) $cell
-    set State(cellAnchorOp) set
-    set State(cellCurrent) $cell
+    if {$item ne [$w focus]} {
+	$w see $item
+	$w focus $item
+    }
+    array set State [list cellAnchor $cell cellAnchorOp set cellCurrent $cell \
+	current $item]
     if {$cell ne ""} {
 	$w cellselection set [list $cell]
     } else {
