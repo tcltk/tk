@@ -236,9 +236,9 @@ proc ::ttk::treeview::KeyNav {w dir} {
     # Do select
     if {$focus ne {}} {
 	if {$cellmode} {
-	    SelectOp $w $focus [list $focus [format "#%d" $colNum]] choose
+	    SelectOp $w $focus [list $focus [format "#%d" $colNum]] moveto
 	} else {
-	    SelectOp $w $focus "" move
+	    SelectOp $w $focus "" moveto
 	}
     }
 }
@@ -378,9 +378,9 @@ proc ::ttk::treeview::ScrollPage {w dir} {
     # Do select
     if {$focus ne ""} {
 	if {$cellmode} {
-	    SelectOp $w $focus [list $focus $colId] choose
+	    SelectOp $w $focus [list $focus $colId] moveto
 	} else {
-	    SelectOp $w $focus "" move
+	    SelectOp $w $focus "" moveto
 	}
     }
 }
@@ -490,6 +490,10 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 ## SelectAll -- select all items/cells under item
 #
 proc ::ttk::treeview::SelectAll {w {item {}} {in_parent 0}} {
+    if {[$w cget -selectmode] ni [list "extended" "multiple"]} {
+	return
+    }
+
     if {$in_parent && $item eq ""} {
 	set focus [$w focus]
 	if {$focus ne ""} {
@@ -603,7 +607,7 @@ proc ::ttk::treeview::IdentifyCell {w x y} {
 #	See "Selection modes", below.
 #
 proc ::ttk::treeview::Select {w x y op} {
-    if {[set item [$w identify row $x $y]] ne "" } {
+    if {[set item [$w identify item $x $y]] ne "" } {
 	set cell [IdentifyCell $w $x $y]
 	SelectOp $w $item $cell $op
     }
@@ -612,7 +616,7 @@ proc ::ttk::treeview::Select {w x y op} {
 ## DoubleClick -- Double-Button-1 binding.
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
-    if {[set row [$w identify row $x $y]] ne ""} {
+    if {[set row [$w identify item $x $y]] ne ""} {
 	Toggle $w $row
     } else {
 	Press $w $x $y ;# perform single-click action
@@ -711,7 +715,7 @@ proc ::ttk::treeview::heading.release {w} {
 ### Selection modes.
 #
 
-## SelectOp $w $item $cell [ move | choose | extend | toggle ] --
+## SelectOp $w $item $cell [ moveto | choose | extend | toggle ] --
 #	Dispatch to appropriate selection operation
 #	depending on current value of -selectmode.
 #
@@ -721,28 +725,28 @@ proc ::ttk::treeview::SelectOp {w item cell op} {
 
 ## -selectmode none:
 #
-proc ::ttk::treeview::select.move.none   {w item cell} { $w focus $item; $w see $item }
+proc ::ttk::treeview::select.moveto.none {w item cell} { $w focus $item; $w see $item }
 proc ::ttk::treeview::select.choose.none {w item cell} { $w focus $item; $w see $item }
 proc ::ttk::treeview::select.toggle.none {w item cell} { $w focus $item; $w see $item }
 proc ::ttk::treeview::select.extend.none {w item cell} { $w focus $item; $w see $item }
 
 ## -selectmode single:
 #
-proc ::ttk::treeview::select.move.single   {w item cell} { BrowseTo $w $item $cell }
+proc ::ttk::treeview::select.moveto.single {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.choose.single {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.toggle.single {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.extend.single {w item cell} { BrowseTo $w $item $cell }
 
 ## -selectmode browse:
 #
-proc ::ttk::treeview::select.move.browse   {w item cell} { BrowseTo $w $item $cell }
+proc ::ttk::treeview::select.moveto.browse {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.choose.browse {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.toggle.browse {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.extend.browse {w item cell} { BrowseTo $w $item $cell }
 
 ## -selectmode extended:
 #
-proc ::ttk::treeview::select.move.extended {w item cell}   { BrowseTo $w $item $cell }
+proc ::ttk::treeview::select.moveto.extended {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.choose.extended {w item cell} { BrowseTo $w $item $cell }
 proc ::ttk::treeview::select.toggle.extended {w item cell} {
     variable State
@@ -775,9 +779,13 @@ proc ::ttk::treeview::select.extend.extended {w item cell} {
 
 ## -selectmode multiple:
 #
-proc ::ttk::treeview::select.move.multiple {w item cell} {
+proc ::ttk::treeview::select.moveto.multiple {w item cell} {
     variable State
     if {$cell ne ""} {
+	set State(cellAnchor) $cell
+	set State(cellAnchorOp) add
+	set State(cellCurrent) $cell
+	$w focus $item
     } else {
 	$w focus $item
     }
@@ -789,6 +797,7 @@ proc ::ttk::treeview::select.choose.multiple {w item cell} {
 	set State(cellAnchor) $cell
 	set State(cellAnchorOp) add
 	set State(cellCurrent) $cell
+	$w focus $item
     } else {
 	$w focus $item
 	$w selection toggle [list $item]
@@ -801,6 +810,7 @@ proc ::ttk::treeview::select.toggle.multiple {w item cell} {
 	set State(cellAnchor) $cell
 	set State(cellAnchorOp) add
 	set State(cellCurrent) $cell
+	$w focus $item
     } else {
 	$w focus $item
 	$w selection toggle [list $item]
@@ -809,13 +819,18 @@ proc ::ttk::treeview::select.toggle.multiple {w item cell} {
 proc ::ttk::treeview::select.extend.multiple {w item cell} {
     variable State
     if {$cell ne ""} {
-	$w cellselection toggle [list $cell]
-	set State(cellAnchor) $cell
-	set State(cellAnchorOp) add
 	set State(cellCurrent) $cell
+	if {$State(cellAnchor) ne ""} {
+	    $w cellselection $State(cellAnchorOp) $State(cellAnchor) $cell
+	} else {
+	    BrowseTo $w $item $cell
+	}
     } else {
-	$w focus $item
-	$w selection toggle [list $item]
+	if {[set anchor [$w focus]] ne ""} {
+	    $w selection add [between $w $anchor $item]
+	} else {
+	    BrowseTo $w $item $cell
+	}
     }
 }
 
@@ -894,13 +909,20 @@ proc ::ttk::treeview::Toggle {w item} {
 ## ToggleFocus -- toggle opened/closed state of focus item
 #
 proc ::ttk::treeview::ToggleFocus {w} {
-    set item [$w focus]
-    if {$item ne ""} {
-	if {[$w cget -selectmode] eq "multiple"} {
-	    SelectOp $w $item {} choose
-	} else {
-	    Toggle $w $item
-	}
+    set focus [$w focus]
+    if {$focus eq ""} { return }
+
+    set cellmode [expr {[$w cget -selecttype] eq "cell"}]
+    if {$cellmode} {
+	set colId [list $focus [format "#%d" [GetColumn $w]]]
+    } else {
+	set colId ""
+    }
+
+    if {[$w cget -selectmode] ne "multiple"} {
+	Toggle $w $focus
+    } else {
+	SelectOp $w $focus $colId choose
     }
 }
 
