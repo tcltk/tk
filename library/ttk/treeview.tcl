@@ -264,8 +264,15 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	} else {
 	    lassign [$w bbox $focus] x y width height
 	}
-	incr x [expr {$width / 2}]
-	incr y [expr {$height / 2}]
+	if {$x ne ""} {
+	    incr x [expr {$width / 2}]
+	    incr y [expr {$height / 2}]
+	} else {
+	    switch -- $dir {
+		"up" {set dir pageTop}
+		"down" {set dir pageBottom}
+	    }
+	}
     }
 
     switch -- $dir {
