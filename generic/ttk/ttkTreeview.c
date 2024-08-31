@@ -10,6 +10,8 @@
 
 #ifdef _WIN32
 #include "tkWinInt.h"
+#elif defined(MAC_OSX_TK)
+#include "tkMacOSXPrivate.h"
 #endif
 
 #define DEF_TREE_ROWS		"10"
@@ -20,12 +22,10 @@
 #define DEF_MINWIDTH		"20"
 
 static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
-static const int DEFAULT_INDENT 	= 20;
-static const int HALO   		= 4;	/* heading separator */
+static const int DEFAULT_INDENT = 20;
+static const int HALO   	= 4;	/* heading separator */
 
 #define STATE_CHANGED	 	(0x100)	/* item state option changed */
-
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Tree items.
@@ -55,8 +55,8 @@ struct TreeItemRec {
     Tcl_Obj	*valuesObj;
     Tcl_Obj	*openObj;
     Tcl_Obj	*tagsObj;
-    Tcl_Obj     *selObj;
-    Tcl_Obj     *imageAnchorObj;
+    Tcl_Obj	*selObj;
+    Tcl_Obj	*imageAnchorObj;
     int 	hidden;
     int		height; 	/* Height is in number of row heights */
 
@@ -287,7 +287,7 @@ typedef struct {
     int 	width;		/* Column width, in pixels */
     int 	minWidth;	/* Minimum column width, in pixels */
     int 	stretch;	/* Should column stretch while resizing? */
-    int         separator;      /* Should this column have a separator? */
+    int		separator;	/* Should this column have a separator? */
     Tcl_Obj	*idObj;		/* Column identifier, from -columns option */
 
     Tcl_Obj	*anchorObj;	/* -anchor for cell data <<NOTE-ANCHOR>> */
@@ -304,7 +304,7 @@ typedef struct {
     /* Temporary storage for cell data
      */
     Tcl_Obj 	*data;
-    int         selected;
+    int		selected;
     Ttk_TagSet	tagset;
 } TreeColumn;
 
@@ -1772,6 +1772,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
     Tcl_Size colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (tv->tree.nTitleColumns <= colno) {
 	xpos -= tv->tree.xscroll.first;
@@ -1780,7 +1781,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
     while (colno < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[colno];
 	int next_xpos = xpos + column->width;
-	if (xpos <= x && x <= next_xpos + HALO) {
+	if (xpos <= x && x <= next_xpos + scaledHALO) {
 	    *x1 = next_xpos;
 	    return colno;
 	}
@@ -1840,6 +1841,10 @@ static int BoundingBox(
 {
     int dispRow;
     Ttk_Box bbox = tv->tree.treeArea;
+
+    /* Make sure the scroll information is current before use */
+    TtkUpdateScrollInfo(tv->tree.xscrollHandle);
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
 
     if (tv->tree.rowPosNeedsUpdate) {
 	UpdatePositionTree(tv);
@@ -1908,11 +1913,12 @@ static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
 {
     int x1 = 0;
     Tcl_Size colno = IdentifyDisplayColumn(tv, x, &x1);
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
 	if (colno < 0) {
 	    return REGION_NOTHING;
-	} else if (-HALO <= x1 - x  && x1 - x <= HALO) {
+	} else if (-scaledHALO <= x1 - x  && x1 - x <= scaledHALO) {
 	    return REGION_SEPARATOR;
 	} else {
 	    return REGION_HEADING;
@@ -2007,7 +2013,9 @@ static Ttk_Layout TreeviewGetLayout(
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
     }
-    tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
+    if (tv->tree.rowHeight < 1) {
+	tv->tree.rowHeight = 1;
+    }
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
@@ -2252,7 +2260,8 @@ static void DrawCells(
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    Ttk_Padding cellPadding = {4, 0, 4, 0};
+    int horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
+    Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
     DisplayItem displayItemLocal;
     DisplayItem displayItemCell, displayItemCellSel;
     int rowHeight = tv->tree.rowHeight * item->height;
@@ -2350,11 +2359,19 @@ static void DrawItem(
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
     DisplayItem displayItem, displayItemSel, displayItemLocal;
-    int rowHeight = tv->tree.rowHeight * item->height;
-    int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
-    int xTitle = tv->tree.treeArea.x;
-    int dispRow = DisplayRow(item->rowPos, tv);
-    int y = tv->tree.treeArea.y + tv->tree.rowHeight * dispRow;
+    int x, y, h, xTitle, dispRow, rowHeight;
+
+    dispRow = DisplayRow(item->rowPos, tv);
+    h = tv->tree.rowHeight * dispRow;
+    if (h >= tv->tree.treeArea.height) {
+	/* The item is outside the visible area */
+	return;
+    }
+
+    rowHeight = tv->tree.rowHeight * item->height;
+    x = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    xTitle = tv->tree.treeArea.x;
+    y = tv->tree.treeArea.y + h;
 
     /* Make sure that the item won't overlap the border's bottom edge:
      */
@@ -2368,13 +2385,8 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	int itemWidth = TreeWidth(tv);
-	/* Make sure that the background won't overlap the border's right edge:
-	 */
-	if (itemWidth > tv->tree.treeArea.width) {
-	    itemWidth = tv->tree.treeArea.width;
-	}
-	Ttk_Box rowBox = Ttk_MakeBox(x, y, itemWidth, rowHeight);
+	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
+				     TreeWidth(tv), rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -2492,19 +2504,99 @@ static void DrawForest(
     }
 }
 
+/* + DrawTreeArea --
+ *     Draw the tree area including the headings, if any
+ */
+static void DrawTreeArea(Treeview *tv, Drawable d) {
+    if (tv->tree.showFlags & SHOW_HEADINGS) {
+	DrawHeadings(tv, d);
+    }
+    DrawForest(tv, tv->tree.root->children, d, 0);
+    DrawSeparators(tv, d);
+}
+
 /* + TreeviewDisplay --
  * 	Display() widget hook.  Draw the widget contents.
  */
 static void TreeviewDisplay(void *clientData, Drawable d)
 {
     Treeview *tv = (Treeview *)clientData;
+    Tk_Window tkwin = tv->core.tkwin;
+    int width, height, winWidth, winHeight;
 
+    /* Draw the general layout of the treeview widget */
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
-    if (tv->tree.showFlags & SHOW_HEADINGS) {
-	DrawHeadings(tv, d);
+
+    /* When the tree area does not fit in the available space, there is a
+     * risk that it will be drawn over other areas of the layout.
+     */
+
+    winWidth = Tk_Width(tkwin);
+    winHeight = Tk_Height(tkwin);
+    width = tv->tree.treeArea.width;
+    height = tv->tree.headingArea.height + tv->tree.treeArea.height;
+
+    if ((width == winWidth && height == winHeight)
+      || (tv->tree.treeArea.height % tv->tree.rowHeight == 0
+	&& TreeWidth(tv) <= width)) {
+	/* No protection is needed; either the tree area fills the entire
+	 * widget, or everything fits within the available area.
+	 */
+	DrawTreeArea(tv, d);
+    } else {
+	/* The tree area needs to be clipped
+	 */
+
+	int x, y;
+
+	x = tv->tree.treeArea.x;
+	if (tv->tree.showFlags & SHOW_HEADINGS) {
+	    y = tv->tree.headingArea.y;
+	} else {
+	    y = tv->tree.treeArea.y;
+	}
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+	Drawable p;
+	XGCValues gcValues;
+	GC gc;
+
+	/* Create a temporary helper drawable */
+	p = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
+	  winWidth, winHeight, Tk_Depth(tkwin));
+
+	/* Get a graphics context for copying the drawable content */
+	gcValues.function = GXcopy;
+	gcValues.graphics_exposures = False;
+	gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+
+	/* Copy the widget background into the helper */
+	XCopyArea(Tk_Display(tkwin), d, p, gc, 0, 0,
+	  (unsigned) winWidth, (unsigned) winHeight, 0, 0);
+
+	/* Draw the tree onto the helper without regard for borders */
+	DrawTreeArea(tv, p);
+
+	/* Copy only the tree area inside the borders back */
+	XCopyArea(Tk_Display(tkwin), p, d, gc, x, y,
+	  (unsigned) width, (unsigned) height, x, y);
+
+	/* Clean up the temporary resources */
+	Tk_FreePixmap(Tk_Display(tkwin), p);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+#else
+	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
+	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
+	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {
+	    y -= 4;
+	    height += 4;
+	}
+
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
+	DrawTreeArea(tv, d);
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+#endif
     }
-    DrawForest(tv, tv->tree.root->children, d, 0);
-    DrawSeparators(tv, d);
 }
 
 /*------------------------------------------------------------------------
@@ -2969,6 +3061,7 @@ static int TreeviewHorribleIdentify(
     Tcl_Size dColumnNumber;
     char dcolbuf[32];
     int x, y, x1;
+    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
 
     /* ASSERT: objc == 4 */
 
@@ -2984,7 +3077,7 @@ static int TreeviewHorribleIdentify(
     snprintf(dcolbuf, sizeof(dcolbuf), "#%" TCL_SIZE_MODIFIER "d", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
-	if (-HALO <= x1 - x  && x1 - x <= HALO) {
+	if (-scaledHALO <= x1 - x  && x1 - x <= scaledHALO) {
 	    what = "separator";
 	} else {
 	    what = "heading";
@@ -3067,6 +3160,10 @@ static int TreeviewIdentifyCommand(
     ) {
 	return TCL_ERROR;
     }
+
+    /* Make sure the scroll information is current before use */
+    TtkUpdateScrollInfo(tv->tree.xscrollHandle);
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
 
     region = IdentifyRegion(tv, x, y);
     item = IdentifyItem(tv, y);
@@ -3438,7 +3535,7 @@ static int TreeviewExpandCommand(
 {
     return TreeviewCollapseExpand(recordPtr, interp, objc, objv, 1);
 }
- 
+
 /*
  * Recursively set items hidden state
  */
@@ -3894,10 +3991,17 @@ static int TreeviewSeeCommand(
 	    - tv->tree.titleRows;
     scrollRow1 = item->rowPos - tv->tree.titleRows;
     scrollRow2 = scrollRow1 + item->height - 1;
+
+    if (scrollRow2 >= tv->tree.yscroll.first + visibleRows) {
+	scrollRow2 = 1 + scrollRow2 - visibleRows;
+	TtkScrollTo(tv->tree.yscrollHandle, scrollRow2, 1);
+    }
+
+    /* On small widgets (shorter than one row high, which is also the case
+     * before the widget is initially mapped) the above command will have
+     * scrolled down too far. This is why both conditions must be checked.
+     */
     if (scrollRow1 < tv->tree.yscroll.first || item->height > visibleRows) {
-	TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, 1);
-    } else if (scrollRow2 >= tv->tree.yscroll.first + visibleRows) {
-	scrollRow1 = 1 + scrollRow2 - visibleRows;
 	TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, 1);
     }
 
@@ -4002,7 +4106,7 @@ static int TreeviewSelectionCommand(
     enum {
 	SELECTION_SET, SELECTION_ADD, SELECTION_HAS, SELECTION_INCLUDES,
 	SELECTION_REMOVE, SELECTION_SIZE, SELECTION_TOGGLE
-	
+
     };
     static const char *const selopStrings[] = {
 	"set", "add", "has", "includes", "remove", "size", "toggle", NULL
@@ -4634,7 +4738,10 @@ static int TreeviewTagAddCommand(
 /* Make sure tagset at column is allocated and initialised */
 static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber)
 {
-    Tcl_Size i, newSize = MAX(columnNumber + 1, tv->tree.nColumns + 1);
+    Tcl_Size i, newSize = columnNumber + 1;
+    if (newSize < tv->tree.nColumns + 1) {
+	newSize = tv->tree.nColumns + 1;
+    }
     if (item->nTagSets < newSize) {
 	if (item->cellTagSets == NULL) {
 	    item->cellTagSets = (Ttk_TagSet *)
