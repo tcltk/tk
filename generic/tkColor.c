@@ -185,8 +185,8 @@ Tk_AllocColorFromObj(
  *----------------------------------------------------------------------
  */
 
-XColor *
-Tk_GetColor(
+static XColor *
+Tk_GetColor_(
     Tcl_Interp *interp,		/* Place to leave error message if color can't
 				 * be found. */
     Tk_Window tkwin,		/* Window in which color will be used. */
@@ -265,6 +265,21 @@ Tk_GetColor(
     return &tkColPtr->color;
 }
 
+XColor *
+Tk_GetColor(
+    Tcl_Interp *interp,		/* Place to leave error message if color can't
+				 * be found. */
+    Tk_Window tkwin,		/* Window in which color will be used. */
+    Tk_Uid name)		/* Name of color to be allocated (in form
+				 * suitable for passing to XParseColor). */
+{
+	XColor *x;
+	Tcl_Obj *obj = Tcl_NewStringObj(name, -1);
+
+    x = Tk_GetColor_(interp, tkwin, Tcl_GetString(obj));
+    Tcl_DecrRefCount(obj);
+    return x;
+}
 /*
  *----------------------------------------------------------------------
  *

@@ -179,8 +179,8 @@ Tk_Alloc3DBorderFromObj(
  *--------------------------------------------------------------
  */
 
-Tk_3DBorder
-Tk_Get3DBorder(
+static Tk_3DBorder
+Tk_Get3DBorder_(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
@@ -253,6 +253,23 @@ Tk_Get3DBorder(
     gcValues.foreground = borderPtr->bgColorPtr->pixel;
     borderPtr->bgGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     return (Tk_3DBorder) borderPtr;
+}
+
+Tk_3DBorder
+Tk_Get3DBorder(
+    Tcl_Interp *interp,		/* Place to store an error message. */
+    Tk_Window tkwin,		/* Token for window in which border will be
+				 * drawn. */
+    Tk_Uid colorName)		/* String giving name of color for window
+				 * background. */
+{
+	Tk_3DBorder x;
+	Tcl_Obj *obj = Tcl_NewStringObj(colorName, -1);
+
+    x = Tk_Get3DBorder_(interp, tkwin, Tcl_GetString(obj));
+    Tcl_DecrRefCount(obj);
+    return x;
+
 }
 
 /*
