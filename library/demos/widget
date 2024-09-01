@@ -380,6 +380,7 @@ addFormattedText {
     @@demo sayings	A collection of famous and infamous sayings
     @@demo mclist	A multi-column list of countries
     @@demo tree		A directory browser tree
+    @@demo treeview	An enhanced treeview demo
 
     @@subtitle	Entries, Spin-boxes and Combo-boxes
     @@demo entry1	Entries without scrollbars
