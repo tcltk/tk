@@ -106,6 +106,10 @@ bind Treeview	<Alt-Next> 		{ ::ttk::treeview::ScrollPage %W pageBottom; break }
 # Other keys
 bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W }
+bind Treeview 	<Tab> 			{ ::ttk::treeview::KeyNav %W right; break }
+bind Treeview 	<Shift-Tab> 		{ ::ttk::treeview::KeyNav %W left; break }
+#bind Treeview	<Return>		{ ::ttk::treeview::KeyNav %W down; break }
+#bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up; break }
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectAll %W }
