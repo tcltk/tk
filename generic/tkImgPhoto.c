@@ -1743,7 +1743,7 @@ ParseSubcommandOptions(
 	    }
 	    *optIndexPtr = ++index;
 	    optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
-		    Tk_GetUid(Tcl_GetString(objv[index])));
+		    Tcl_GetString(objv[index]));
 	    if (!optPtr->background) {
 		return TCL_ERROR;
 	    }
@@ -2043,7 +2043,7 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objc, (const char **)objv, (char *)modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	goto errorExit;
     }
 

@@ -112,7 +112,7 @@ static const struct {
 	.forceOnAttrs = kWindowNoTitleBarAttribute |
 		kWindowDoesNotCycleAttribute,
 	.flags = WM_TOPMOST,
-        .styleMask = 0},
+	.styleMask = 0},
     [kSheetWindowClass] = {
 	.validAttrs = kWindowResizableAttribute,
 	.forceOnAttrs = kWindowNoTitleBarAttribute |
@@ -621,7 +621,7 @@ static void placeAsTab(TKWindow *macWindow) {
 #endif
 
 - (NSSize)windowWillResize:(NSWindow *)sender
-                    toSize:(NSSize)frameSize
+		    toSize:(NSSize)frameSize
 {
     NSRect currentFrame = [sender frame];
     TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
@@ -1223,9 +1223,9 @@ TkWmDeadWindow(
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
-        if (winPtr->window) {
-            ((MacDrawable *)winPtr->window)->view = nil;
-        }
+	if (winPtr->window) {
+	    ((MacDrawable *)winPtr->window)->view = nil;
+	}
 	wmPtr->window = NULL;
 
 	if (parent) {
@@ -1749,7 +1749,7 @@ WmSetAttribute(
 		} else if (![macWindow isKindOfClass: [NSPanel class]] &&
 			   styleMaskBits[index].allowed == NSWindowClass_panel) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "styleMask bit \"%s\" can only be used with an NSPanel",
+			"styleMask bit \"%s\" can only be used with an NSPanel",
 			styleMaskBits[index].bitname));
 		    Tcl_SetErrorCode(interp, "TK", "INVALID_STYLEMASK_BIT", NULL);
 		    return TCL_ERROR;
@@ -1794,15 +1794,15 @@ WmSetAttribute(
 	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]);
 	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue);
 #endif
-        macWindow.styleMask = (unsigned long) styleMaskValue;
+	macWindow.styleMask = (unsigned long) styleMaskValue;
 	NSRect newFrame = [macWindow frame];
 	int heightDiff = newFrame.size.height - oldFrame.size.height;
 	int newHeight = heightDiff < 0 ? newFrame.size.height :
 	    newFrame.size.height - heightDiff;
 	[(TKWindow *)macWindow tkLayoutChanged];
 	if (heightDiff) {
-	    //Calling XMoveResizeWindow twice is a hack to force a relayout
-	    //of the window.
+	    // Calling XMoveResizeWindow twice is a hack to force a relayout
+	    // of the window.
 	    XMoveResizeWindow(winPtr->display, winPtr->window,
 	 		  winPtr->changes.x, winPtr->changes.y,
 			  newFrame.size.width, newHeight - 1);
@@ -2544,16 +2544,16 @@ WmForgetCmd(
 	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
 	/*
-         * Flags (above) must be cleared before calling TkMapTopFrame (below).
-         */
+	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
+	 */
 
 	TkMapTopFrame(frameWin);
     } else {
@@ -2962,7 +2962,7 @@ WmIconbitmapCmd(
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	}
     } else {
-	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, Tk_GetUid(str));
+	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
@@ -4311,12 +4311,12 @@ WmTransientCmd(
 	RemoveTransient(winPtr);
 	containerPtr = (TkWindow*) container;
 	while (!Tk_TopWinHierarchy(containerPtr)) {
-            /*
-             * Ensure that the container window is actually a Tk toplevel.
-             */
+	    /*
+	     * Ensure that the container window is actually a Tk toplevel.
+	     */
 
-            containerPtr = containerPtr->parentPtr;
-        }
+	    containerPtr = containerPtr->parentPtr;
+	}
 	Tk_MakeWindowExist((Tk_Window)containerPtr);
 
 	if (wmPtr->iconFor != NULL) {
@@ -5216,7 +5216,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-            continue;
+	    continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -6240,7 +6240,7 @@ TkUnsupported1ObjCmd(
     case TKMWS_APPEARANCE:
 	if ([NSApp macOSVersion] < 100900) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                "Window appearances did not exist until OSX 10.9.", TCL_INDEX_NONE));
+		"Window appearances did not exist until OSX 10.9.", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
 	    return TCL_ERROR;
 	}
@@ -6794,7 +6794,7 @@ TkMacOSXMakeRealWindowExist(
     }
     if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
 	    !(styleMask & NSDocModalWindowMask)) {
-        /*
+	/*
 	 * Workaround for [Bug 2824538]: Textured windows are draggable from
 	 *                               opaque content.
 	 */
@@ -7568,9 +7568,9 @@ ApplyContainerOverrideChanges(
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
 	if ([NSApp macOSVersion] == 100600) {
 	    styleMask = NSTitledWindowMask         |
-		        NSClosableWindowMask       |
-		        NSMiniaturizableWindowMask |
-		        NSResizableWindowMask;
+			NSClosableWindowMask       |
+			NSMiniaturizableWindowMask |
+			NSResizableWindowMask;
 	} else {
 	    styleMask |= NSTitledWindowMask;
 	}
