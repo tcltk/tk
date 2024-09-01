@@ -42,7 +42,7 @@ Token for window in which the cursor will be used.
 .AP Tcl_Obj *objPtr in/out
 Description of cursor;  see below for possible values.  Internal rep will be
 modified to cache pointer to corresponding Tk_Cursor.
-.AP char *name in
+.AP "const char" *name in
 Same as \fIobjPtr\fR except description of cursor is passed as a string and
 resulting Tk_Cursor is not cached.
 .AP "const char" *source in
