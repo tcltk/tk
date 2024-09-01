@@ -103,6 +103,20 @@ bind Treeview	<Control-Shift-Next> 	{ ::ttk::treeview::ScrollPage %W pageBottom 
 bind Treeview	<Alt-Prior>		{ ::ttk::treeview::ScrollPage %W left; break }
 bind Treeview	<Alt-Next> 		{ ::ttk::treeview::ScrollPage %W right; break }
 
+# Scroll Lock bindings
+bind Treeview	<Mod3-Up>		{ %w yview scroll -1 units }
+bind Treeview	<Mod3-Down>		{ %w yview scroll 1 units }
+bind Treeview	<Mod3-Left>		{ %w xview scroll -1 units }
+bind Treeview	<Mod3-Right>		{ %w xview scroll 1 units }
+bind Treeview	<Mod3-Prior>		{ %w yview scroll -1 pages }
+bind Treeview	<Mod3-Next>		{ %w yview scroll 1 pages }
+bind Treeview	<Mod3-Control-Prior>	{ %W yview moveto 0.0 }
+bind Treeview	<Mod3-Control-Next>	{ %W yview moveto 1.0 }
+bind Treeview	<Mod3-Home>		{ %w xview scroll -1 pages }
+bind Treeview	<Mod3-End>		{ %w xview scroll 1 pages }
+bind Treeview	<Mod3-Control-Home>	{ %W xview moveto 0.0 }
+bind Treeview	<Mod3-Control-End>	{ %W xview moveto 1.0 }
+
 # Other keys
 bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W }
