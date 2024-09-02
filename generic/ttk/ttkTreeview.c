@@ -4087,8 +4087,12 @@ static int TreeviewFocusCommand(
 	return TCL_OK;
     } else if (objc == 3) {
 	TreeItem *newFocus = FindItem(interp, tv, objv[2]);
-	if (!newFocus)
+	if (!newFocus) {
 	    return TCL_ERROR;
+	}
+	if (newFocus == tv->tree.root) {
+	    newFocus = 0;
+	}
 	tv->tree.focus = newFocus;
 	TtkRedisplayWidget(&tv->core);
 	return TCL_OK;
