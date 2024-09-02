@@ -528,11 +528,11 @@ DoConfig(
 			!= TCL_OK) {
 		    return TCL_ERROR;
 		} else {
+		    Tcl_IncrRefCount(arg);
 		    if (*(Tcl_Obj **)ptr != NULL) {
 			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
 		    }
 		    *(Tcl_Obj **)ptr = arg;
-		    Tcl_IncrRefCount(*(Tcl_Obj **)ptr);
 		}
 	    } else if (nullValue) {
 		*(int *)ptr = INT_MIN;
@@ -790,7 +790,7 @@ FormatConfigValue(
     result = "";
     if (specPtr->specFlags & TK_CONFIG_OBJS) {
 	if (*(Tcl_Obj **)ptr != NULL) {
-	    result = Tcl_GetString(*((Tcl_Obj **)ptr));
+	    result = Tcl_GetString(*(Tcl_Obj **)ptr);
 	}
 	return result;
     }
@@ -1019,6 +1019,11 @@ Tk_FreeOptions(
 	    continue;
 	}
 	ptr = (char *)widgRec + specPtr->offset;
+	if ((specPtr->specFlags & TK_CONFIG_OBJS) && (*(Tcl_Obj **)ptr != NULL)) {
+	    Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+	    *(Tcl_Obj **)ptr = NULL;
+	    continue;
+	}
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **)ptr) != NULL) {
@@ -1046,12 +1051,6 @@ Tk_FreeOptions(
 	    if (*((Tk_3DBorder *)ptr) != NULL) {
 		Tk_Free3DBorder(*((Tk_3DBorder *)ptr));
 		*((Tk_3DBorder *)ptr) = NULL;
-	    }
-	    break;
-	case TK_CONFIG_PIXELS:
-	    if ((specPtr->specFlags & TK_CONFIG_OBJS) && (*((Tcl_Obj **)ptr) != NULL)) {
-		Tcl_DecrRefCount(*((Tcl_Obj **)ptr));
-		*((Tcl_Obj **)ptr) = NULL;
 	    }
 	    break;
 	case TK_CONFIG_CURSOR:
