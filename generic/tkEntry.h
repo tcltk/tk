@@ -115,9 +115,9 @@ typedef struct {
 				 * non-NULL, entry's string tracks the
 				 * contents of this variable and vice
 				 * versa. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int prefWidth;		/* Desired width of window, measured in
 				 * average characters. */
     char *scrollCmd;		/* Command prefix for communicating with

@@ -149,7 +149,7 @@ typedef struct {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
     char *yScrollCmd;		/* Command prefix for communicating with
@@ -294,7 +294,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_LISTBOX_STATE, TCL_INDEX_NONE, offsetof(Listbox, state),
 	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	 DEF_LISTBOX_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Listbox, takeFocus),
+	 DEF_LISTBOX_TAKE_FOCUS, offsetof(Listbox, takeFocusObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	 DEF_LISTBOX_WIDTH, TCL_INDEX_NONE, offsetof(Listbox, width), 0, 0, 0},
