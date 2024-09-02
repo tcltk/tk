@@ -8195,7 +8195,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-05-01 (change) [e30699] Fix appearence of arrows in ttk widgets
 	(nemethi)
 
-2024-05-01 (change) Add keycodes ISO_Group_Shift and 
+2024-05-03 (change) Add keycodes ISO_Group_Shift and dead_hamza
 
 2024-05-10 (change) Improve look of the classic theme (gavilan)
 
@@ -8217,7 +8217,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2024-06-30 (bug) [b3a1b9] bind KP_Enter as Return key in treeview (nijtmans)
 
-2024-07-06 (bug) [51ece3] Fix crash on [convas dchars] (vogel)
+2024-07-06 (bug) [51ece3] Fix crash on [canvas dchars] (vogel)
 
 2024-07-22 (bug)[2d3a81] fix segfault on menubutton destroy (MS-Win only)
 	(oehlmann)
