@@ -8177,7 +8177,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2024-01-09 (bug)[b7abf0] treeview destruction from O(N^2) to O(N) (emiliano)
 
-2024-01-12 (bug)[737abf] text image insertion from O(N^2) to O(N)
+2024-01-12 (bug)[737abf] text image insertiondead_hamza (nijtmans) from O(N^2) to O(N)
 
 2024-01-27 (bug)[8da7af] font caching performance issues (thraen,vogel)
 
@@ -8185,4 +8185,46 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.14, Feb 28, 2024 - https://core.tcl-lang.org/tk/ for details
 
+2024-03-15 (bug)[47d4f2] Throw focus events if marked by X11 as inferior
+	(leunissen)
+
+2024-03-19 (bug) [fdc0ed] Fix segfault on [focus -force] with xvfb (vogel)
+
+2024-04-21 (bug) [ab839e] Fix [text undo] clearingdata
+
+2024-05-01 (change) [e30699] Fix appearence of arrows in ttk widgets
+	(nemethi)
+
+2024-05-01 (change) Add keycodes ISO_Group_Shift and 
+
+2024-05-10 (change) Improve look of the classic theme (gavilan)
+
+2024-05-11 (change) Improved focus ring for ttk (nemethi)
+
+2024-05-13 (bug) [treeview identify] now point aware (vogel)
+
+2024-05-29 (bug) Fix default font detection for high DPI (vogel,nemethi)
+
+2024-06-02 (bug) Fix [ttk::combobox] covering down arrow (vogel,gavilan)
+
+2024-06-09 (bug)  [a0241c] Fix performance of image copy (vogel)
+
+2024-06-11 (bug) [157652] Fix image read with -from option for gif/png
+	(vogel)
+
+2024-06-18 (bug) [865af0] Throw error message on corrupt gif file
+	(obermeier)
+
+2024-06-30 (bug) [b3a1b9] bind KP_Enter as Return key in treeview (nijtmans)
+
+2024-07-06 (bug) [51ece3] Fix crash on [convas dchars] (vogel)
+
 2024-07-22 (bug)[2d3a81] fix segfault on menubutton destroy (MS-Win only)
+	(oehlmann)
+
+2024-07-31 (bug) [0d4879,089da4,f569b9] Improve focus ring for ttk widgets
+	(nemethi)
+
+2024-08-28 (bug) [d82fa2] [ttk::treview] painting/clipping/scrolling of last
+	item (bron,nemethi,werner)
+
