@@ -207,7 +207,7 @@ typedef struct TkCanvas {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
     double pixelsPerMM;		/* Scale factor between MM and pixels; used
