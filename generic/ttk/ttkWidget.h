@@ -38,7 +38,7 @@ typedef struct
     /*
      * Storage for resources:
      */
-    Tcl_Obj *takeFocusPtr;	/* Storage for -takefocus option */
+    Tcl_Obj *takeFocusObj;	/* Storage for -takefocus option */
     Tcl_Obj *cursorObj;		/* Storage for -cursor option */
     Tcl_Obj *styleObj;		/* Name of currently-applied style */
     Tcl_Obj *classObj;		/* Class name (readonly option) */
@@ -124,10 +124,10 @@ MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetConstructorObjCmd;
  */
 #define WIDGET_TAKEFOCUS_TRUE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"ttk::takefocus", offsetof(WidgetCore, takeFocusPtr), TCL_INDEX_NONE, 0,0,0 }
+	"ttk::takefocus", offsetof(WidgetCore, takeFocusObj), TCL_INDEX_NONE, 0,0,0 }
 #define WIDGET_TAKEFOCUS_FALSE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"", offsetof(WidgetCore, takeFocusPtr), TCL_INDEX_NONE, 0,0,0 }
+	"", offsetof(WidgetCore, takeFocusObj), TCL_INDEX_NONE, 0,0,0 }
 
 /* WIDGET_INHERIT_OPTIONS(baseOptionSpecs) --
  * Add this at the end of an OptionSpecs table to inherit

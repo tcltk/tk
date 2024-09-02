@@ -162,8 +162,8 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"normal", offsetof(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
 	&stateOption},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocus),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocusObj),
+	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
 	DEF_CANVAS_WIDTH, offsetof(TkCanvas, width), 0, NULL},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -732,7 +732,7 @@ Tk_CanvasObjCmd(
     canvasPtr->hotPtr = NULL;
     canvasPtr->hotPrevPtr = NULL;
     canvasPtr->cursor = NULL;
-    canvasPtr->takeFocus = NULL;
+    canvasPtr->takeFocusObj = NULL;
     canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
     canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
     canvasPtr->flags = 0;

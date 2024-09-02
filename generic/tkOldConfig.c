@@ -189,14 +189,9 @@ Tk_ConfigureWidget(
 		}
 		Tcl_DecrRefCount(arg);
 	    } else {
-		if (specPtr->defValue != NULL) {
-		    value = Tk_GetUid(specPtr->defValue);
-		} else {
-		    value = NULL;
-		}
-		if ((value != NULL) && !(specPtr->specFlags
+		if ((specPtr->defValue != NULL) && !(specPtr->specFlags
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
-		    Tcl_Obj *arg = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+		    Tcl_Obj *arg = Tcl_NewStringObj(specPtr->defValue, TCL_INDEX_NONE);
 		    Tcl_IncrRefCount(arg);
 		    if (DoConfig(interp, tkwin, specPtr, arg, widgRec) !=
 			    TCL_OK) {
@@ -351,7 +346,8 @@ DoConfig(
 	nullValue = 1;
     }
 
-    if ((specPtr->specFlags & TK_CONFIG_OBJS) && (specPtr->type != TK_CONFIG_PIXELS)) {
+    if ((specPtr->specFlags & TK_CONFIG_OBJS) && (specPtr->type != TK_CONFIG_STRING)
+	    && (specPtr->type != TK_CONFIG_PIXELS)) {
 	/* Prevent surprises for other options than TK_CONFIG_PIXELS */
 	Tcl_AppendResult(interp, "TK_CONFIG_OBJS not supported", (char *)NULL);
 	return TCL_ERROR;
@@ -382,13 +378,20 @@ DoConfig(
 
 	    if (nullValue) {
 		newStr = NULL;
+	    } else if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		Tcl_IncrRefCount(arg);
+		newStr = (char *)arg;
 	    } else {
 		newStr = (char *)ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **)ptr);
 	    if (oldStr != NULL) {
-		ckfree(oldStr);
+		if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		    Tcl_DecrRefCount((Tcl_Obj *)oldStr);
+		} else {
+		    ckfree(oldStr);
+		}
 	    }
 	    *((char **)ptr) = newStr;
 	    break;
@@ -424,7 +427,7 @@ DoConfig(
 	    if (nullValue) {
 		newFont = NULL;
 	    } else {
-		newFont = Tk_GetFont(interp, tkwin, value);
+		newFont = Tk_AllocFontFromObj(interp, tkwin, arg);
 		if (newFont == NULL) {
 		    return TCL_ERROR;
 		}
@@ -439,7 +442,7 @@ DoConfig(
 	    if (nullValue) {
 		newBmp = None;
 	    } else {
-		newBmp = Tk_GetBitmap(interp, tkwin, value);
+		newBmp = Tk_AllocBitmapFromObj(interp, tkwin, arg);
 		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
@@ -811,7 +814,7 @@ FormatConfigValue(
 	result = buffer;
 	break;
     case TK_CONFIG_STRING:
-	result = (*(char **)ptr);
+	result = *(char **)ptr;
 	if (result == NULL) {
 	    result = "";
 	}

@@ -841,7 +841,6 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
@@ -849,11 +848,6 @@ typedef struct TkText {
 				 * horizontal scrollbar when view changes. */
     Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. */
-#else
-    char *takeFocus;
-    char *xScrollCmd;
-    char *yScrollCmd;
-#endif
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration

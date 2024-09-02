@@ -119,8 +119,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_STATE, TCL_INDEX_NONE, offsetof(TkMenuButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_MENUBUTTON_TAKE_FOCUS, TCL_INDEX_NONE,
-	offsetof(TkMenuButton, takeFocus), TK_OPTION_NULL_OK, 0, 0},
+	DEF_MENUBUTTON_TAKE_FOCUS, offsetof(TkMenuButton, takeFocusObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_MENUBUTTON_TEXT, TCL_INDEX_NONE, offsetof(TkMenuButton, text), 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
@@ -280,7 +280,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->indicatorHeight = 0;
     mbPtr->direction = DIRECTION_FLUSH;
     mbPtr->cursor = NULL;
-    mbPtr->takeFocus = NULL;
+    mbPtr->takeFocusObj = NULL;
     mbPtr->flags = 0;
     mbPtr->borderWidthObj = NULL;
     mbPtr->highlightWidthObj = NULL;

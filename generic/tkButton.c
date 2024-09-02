@@ -127,7 +127,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_STATE, TCL_INDEX_NONE, offsetof(TkButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_LABEL_TAKE_FOCUS, offsetof(TkButton, takeFocusPtr), TCL_INDEX_NONE,
+	DEF_LABEL_TAKE_FOCUS, offsetof(TkButton, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_BUTTON_TEXT, offsetof(TkButton, textPtr), TCL_INDEX_NONE, 0, 0, 0},
@@ -228,7 +228,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_STATE, TCL_INDEX_NONE, offsetof(TkButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusPtr), TCL_INDEX_NONE,
+	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_BUTTON_TEXT, offsetof(TkButton, textPtr), TCL_INDEX_NONE, 0, 0, 0},
@@ -333,7 +333,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_STATE, TCL_INDEX_NONE, offsetof(TkButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusPtr), TCL_INDEX_NONE,
+	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_BUTTON_TEXT, offsetof(TkButton, textPtr), TCL_INDEX_NONE, 0, 0, 0},
@@ -443,7 +443,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	DEF_BUTTON_STATE, TCL_INDEX_NONE, offsetof(TkButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusPtr), TCL_INDEX_NONE,
+	DEF_BUTTON_TAKE_FOCUS, offsetof(TkButton, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_BUTTON_TEXT, offsetof(TkButton, textPtr), TCL_INDEX_NONE, 0, 0, 0},
@@ -730,7 +730,7 @@ ButtonCreate(
     butPtr->offValuePtr = NULL;
     butPtr->tristateValuePtr = NULL;
     butPtr->cursor = NULL;
-    butPtr->takeFocusPtr = NULL;
+    butPtr->takeFocusObj = NULL;
     butPtr->commandPtr = NULL;
     butPtr->flags = 0;
 
