@@ -4468,6 +4468,293 @@ static int TreeviewCellSelectionCommand(
 }
 
 /*------------------------------------------------------------------------
+ * +++ Widget commands -- search and sort
+ */
+
+/* + $tv search item ?-option value...? pattern
+ */
+static int TreeviewSearchCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *parent, *item = 0;
+    TreeColumn *column = 0;
+    const char *pattern = 0;
+    Tcl_Size i, plen;
+    int match = 0;
+    Tcl_Obj *patternObj;
+
+    enum {
+	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMN,
+	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
+	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
+	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START
+    };
+    static const char *const searchStrings[] = {
+	"-all", "-ascii", "-backwards", "-column", "-dictionary", "-exact",
+	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not", "-real",
+	"-recurse", "-recursive", "-regexp", "-start", NULL
+    };
+    int index, all = 0, depth = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
+    int match_op = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
+
+    if (objc < 3 || objc > 30) {
+	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
+	return TCL_ERROR;
+    }
+
+    if (!(parent = FindItem(interp, tv, objv[2]))) {
+	return TCL_ERROR;
+    }
+
+    depth = ItemDepth(parent) + 1;
+
+    for (i = 3; i < objc - 1; ++i) {
+	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], searchStrings,
+		sizeof(char *), "option", 0, &index)) {
+	    return TCL_ERROR;
+	}
+
+	switch (index) {
+	    case SEARCH_ALL:
+		all = 1;
+		break;
+	    case SEARCH_ASCII:
+		mode = SEARCH_ASCII;
+		break;
+	    case SEARCH_BACKWARDS:
+		forwards = 0;
+		break;
+	    case SEARCH_COLUMN:
+		if (i == objc - 2) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no column specified"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
+		    return TCL_ERROR;
+		}
+		if (!(column = FindColumn(interp, tv, objv[++i]))) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case SEARCH_DICTIONARY:
+		mode = SEARCH_DICTIONARY;
+		break;
+	    case SEARCH_EXACT:
+		match_op = SEARCH_EXACT;
+		break;
+	    case SEARCH_FORWARDS:
+		forwards = 1;
+		break;
+	    case SEARCH_GLOB:
+		match_op = SEARCH_GLOB;
+		break;
+	    case SEARCH_HIDDEN:
+		hidden = 1;
+		break;
+	    case SEARCH_INTEGER:
+		mode = SEARCH_INTEGER;
+		break;
+	    case SEARCH_NOCASE:
+		nocase = 1;
+		break;
+	    case SEARCH_NOT:
+		not = 1;
+		break;
+	    case SEARCH_REAL:
+		mode = SEARCH_REAL;
+		break;
+	    case SEARCH_RECURSE:
+	    case SEARCH_RECURSIVE:
+		recurse = 1;
+		break;
+	    case SEARCH_REGEXP:
+		match_op = SEARCH_REGEXP;
+		break;
+	    case SEARCH_START:
+		if (i == objc - 2) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no start item specified"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", NULL);
+		    return TCL_ERROR;
+		}
+		if (!(item = FindItem(interp, tv, objv[++i]))) {
+		    return TCL_ERROR;
+		}
+		break;
+	}
+    }
+    /* Not implemented: all, mode=dictionary, column, recurse, start, wrap-around, hidden columns? */
+
+    /* If no start id, use first child of parent */
+    if (!item) {
+	item = parent->children;
+    }
+
+    /* Loop over items, get values, compare values to pattern, break for match */
+    patternObj = objv[objc-1];
+    pattern = Tcl_GetStringFromObj(patternObj, &plen);
+    while (item) {
+	if (!(item->hidden) || (item->hidden && hidden)) {
+	    Tcl_Obj *elementObj;
+	    Tcl_Size count = 0;
+
+	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj, &count) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    for (i = ((tv->tree.showFlags & SHOW_TREE) ? -1 : 0); i < count; ++i) {
+		if (i == -1) {
+		    elementObj = item->textObj;
+		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i, &elementObj) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		if (!elementObj) continue;
+
+		if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
+		    /* Do compare using ASCII/Unicode compare */
+		    if (match_op == SEARCH_EXACT) {
+			Tcl_Size len;
+			const char *string = Tcl_GetStringFromObj(elementObj, &len);
+			Tcl_Size numChars = (len <= plen ? len : plen);
+
+			if (!nocase) {
+			    match = !Tcl_UtfNcmp(string, pattern, numChars);
+			} else {
+			    match = !Tcl_UtfNcasecmp(string, pattern, numChars);
+			}
+		    } else if (match_op = SEARCH_GLOB) {
+			const char *string = Tcl_GetString(elementObj);
+
+			match = Tcl_StringCaseMatch(string, pattern, nocase ? TCL_MATCH_NOCASE : 0);
+		    } else if (match_op = SEARCH_REGEXP) {
+			match = Tcl_RegExpMatchObj(interp, elementObj, patternObj);
+		    }
+
+		} else if (mode == SEARCH_INTEGER) {
+		    /* Do compare using wide integer compare */
+		    Tcl_WideInt val1, val2;
+
+		    if (Tcl_GetWideIntFromObj(interp, elementObj, &val1) == TCL_OK &&
+			Tcl_GetWideIntFromObj(interp, patternObj, &val2) == TCL_OK) {
+			match = (val1 == val2);
+		    } else {
+			return TCL_ERROR;
+		    }
+
+		} else if (mode == SEARCH_REAL) {
+		    /* Do compare using double value compare */
+		    double val1, val2;
+
+		    if (Tcl_GetDoubleFromObj(interp, elementObj, &val1) == TCL_OK &&
+			Tcl_GetDoubleFromObj(interp, patternObj, &val2) == TCL_OK) {
+			match = (val1 == val2);
+		    } else {
+			return TCL_ERROR;
+		    }
+		}
+
+		if (match == !not) {
+		    match = 1;
+		    break;
+		}
+	    }
+	}
+
+	if (match) {
+	   break;
+	}
+
+	/* Move to next/prev item */
+	if (forwards) {
+	    item = item->next;
+	} else {
+	    item = item->prev;
+	}
+    }
+
+    if (match && item) {
+	Tcl_SetObjResult(interp, item->idObj);
+    }
+    return TCL_OK;
+}
+
+/* + $tv sort parent ?-option value...?
+ */
+static int TreeviewSortCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *parent;
+    TreeColumn *column = 0;
+
+    enum {
+	SORT_ASCII, SORT_COLUMN, SORT_DECREASING, SORT_DICTIONARY,
+	SORT_INCREASING, SORT_INTEGER, SORT_NOCASE, SORT_REAL, SORT_RECURSE,
+	SORT_RECURSIVE
+    };
+    static const char *const sortStrings[] = {
+	"-ascii", "-column", "-decreasing", "-dictionary", "-increasing",
+	"-integer", "-nocase", "-real", "-recurse", "-recursive", NULL
+    };
+    int index, mode = SORT_ASCII, increasing = 1, nocase = 0, recurse = 0;
+
+    if (objc < 3 || objc > 15) {
+	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...?");
+	return TCL_ERROR;
+    }
+
+    if (!(parent = FindItem(interp, tv, objv[2]))) {
+	return TCL_ERROR;
+    }
+
+    for (Tcl_Size i = 3; i < objc; ++i) {
+	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], sortStrings,
+		sizeof(char *), "option", 0, &index)) {
+	    return TCL_ERROR;
+	}
+
+	switch (index) {
+	    case SORT_ASCII:
+		mode = SORT_ASCII;
+		break;
+	    case SORT_COLUMN:
+		if (i == objc - 2) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no column specified"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
+		    return TCL_ERROR;
+		}
+		if (!(column = FindColumn(interp, tv, objv[++i]))) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case SORT_DECREASING:
+		increasing = 0;
+		break;
+	    case SORT_DICTIONARY:
+		mode = SORT_DICTIONARY;
+		break;
+	    case SORT_INCREASING:
+		increasing = 1;
+		break;
+	    case SORT_INTEGER:
+		mode = SORT_INTEGER;
+		break;
+	    case SORT_NOCASE:
+		nocase = 1;
+		break;
+	    case SORT_REAL:
+		mode = SORT_REAL;
+		break;
+	    case SORT_RECURSE:
+	    case SORT_RECURSIVE:
+		recurse = 1;
+		break;
+	}
+    }
+
+
+    return TCL_OK;
+}
+
+/*------------------------------------------------------------------------
  * +++ Widget commands -- tags and bindings.
  */
 
@@ -4968,10 +5255,12 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "next", 		TreeviewNextCommand,0 },
     { "parent", 	TreeviewParentCommand,0 },
     { "prev", 		TreeviewPrevCommand,0 },
+    { "search",  	TreeviewSearchCommand,0 },
     { "see", 		TreeviewSeeCommand,0 },
     { "selection",	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
     { "size",  		TreeviewSizeCommand,0 },
+    { "sort",  		TreeviewSortCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },
