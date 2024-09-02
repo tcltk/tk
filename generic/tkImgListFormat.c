@@ -242,7 +242,7 @@ ParseFormatOptions(
 	if (!optionExists || !((1 << optIndex) & allowedOptions)) {
 	    Tcl_SetObjResult(interp, GetBadOptMsg(Tcl_GetString(objv[index]),
 		    allowedOptions));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -257,7 +257,7 @@ ParseFormatOptions(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("the \"%s\" option "
 			"requires a value", Tcl_GetString(objv[index - 1])));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"MISSING_VALUE", NULL);
+			"MISSING_VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
@@ -269,7 +269,7 @@ ParseFormatOptions(
 			"\"%s\": must be rgb, rgba, or list",
 			Tcl_GetString(objv[index])));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"BAD_COLOR_FORMAT", NULL);
+			"BAD_COLOR_FORMAT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    optPtr->colorFormat = (enum ColorFormatType)typeIndex;
@@ -401,7 +401,7 @@ StringMatchDef(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "d: "
 			"all rows must have the same number of elements", y));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"INVALID_DATA", NULL);
+			"INVALID_DATA", (char *)NULL);
 	    }
 	    return 0;
 	}
@@ -500,7 +500,7 @@ StringReadDef(
 	if (optIndex < objc) {
 	    Tcl_SetObjResult(interp,
 		    GetBadOptMsg(Tcl_GetString(objv[optIndex]), 0));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -526,7 +526,7 @@ StringReadDef(
     }
     if (srcX < 0 || srcY < 0 || srcX >= rowCount || srcY >= colCount) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("source coordinates out of range"));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -539,7 +539,7 @@ StringReadDef(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"photo image dimensions exceed Tcl memory limits"));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		"OVERFLOW", NULL);
+		"OVERFLOW", (char *)NULL);
 	return TCL_OK;
     }
 
@@ -558,7 +558,7 @@ StringReadDef(
     srcBlock.pixelPtr = (unsigned char *)attemptckalloc(srcBlock.pitch * srcBlock.height);
     if (srcBlock.pixelPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
-	Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
 	return TCL_ERROR;
     }
     curPixelPtr = srcBlock.pixelPtr;
@@ -647,7 +647,7 @@ StringWriteDef(
     if (optIndex < objc) {
 	Tcl_SetObjResult(interp,
 		GetBadOptMsg(Tcl_GetString(objv[optIndex]), allowedOpts));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -794,7 +794,7 @@ ParseColor(
     if (length > TK_PHOTO_MAX_COLOR_LENGTH) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color"));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		"INVALID_COLOR", NULL);
+		"INVALID_COLOR", (char *)NULL);
 	return TCL_ERROR;
     }
     if (specString[0] == '#') {
@@ -897,7 +897,7 @@ ParseColorAsList(
  * ParseColorAsHex --
  *
  *      This function extracts color and alpha values from a string
- *      starting with '#', followed by hex digits. It undestands both
+ *      starting with '#', followed by hex digits. It understands both
  *      the #RGBA form and the #RBG (with optional suffix)
  *
  * Results:
@@ -971,7 +971,7 @@ ParseColorAsHex(
  *
  * ParseColorAsStandard --
  *
- *      This function tries to split a color stirng in a color and a
+ *      This function tries to split a color string in a color and a
  *      suffix part and to extract color and alpha values from them. The
  *      color part is treated as regular Tk color.
  *
@@ -1024,7 +1024,7 @@ ParseColorAsStandard(
      * Try to parse as standard Tk color.
      *
      * We don't use Tk_GetColor() et al. here, as those functions
-     * migth return a color that does not exaxtly match the given name
+     * might return a color that does not exactly match the given name
      * if the colormap is full. Also, we don't really want the color to be
      * added to the colormap.
      */
@@ -1033,7 +1033,7 @@ ParseColorAsStandard(
 	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "invalid color name \"%s\"", specString));
 	 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		 "INVALID_COLOR", NULL);
+		 "INVALID_COLOR", (char *)NULL);
 	 return TCL_ERROR;
     }
 
@@ -1051,7 +1051,7 @@ ParseColorAsStandard(
 		    "suffix \"%s\": expected floating-point value",
 		    suffixString));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		    "INVALID COLOR", NULL);
+		    "INVALID COLOR", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (fracAlpha < 0 || fracAlpha > 1) {
@@ -1059,7 +1059,7 @@ ParseColorAsStandard(
 		    " \"%s\": value must be in the range from 0 to 1",
 		    suffixString));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		    "INVALID_COLOR", NULL);
+		    "INVALID_COLOR", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	suffixAlpha = (unsigned int) floor(fracAlpha * 255 + 0.5);
@@ -1069,7 +1069,7 @@ ParseColorAsStandard(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "invalid alpha suffix \"%s\"", suffixString));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		    "INVALID_COLOR", NULL);
+		    "INVALID_COLOR", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	for (i = 1; i <= (int)strlen(suffixString + 1); i++) {
@@ -1078,7 +1078,7 @@ ParseColorAsStandard(
 			"invalid alpha suffix \"%s\": expected hex digit",
 			suffixString));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"INVALID_COLOR", NULL);
+			"INVALID_COLOR", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}

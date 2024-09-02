@@ -334,7 +334,7 @@ declare 79 {
 }
 declare 80 {
     Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tk_Uid colorName)
+	    const char *colorName)
 }
 declare 81 {
     void Tk_GetAllBindings(Tcl_Interp *interp,
@@ -363,7 +363,7 @@ declare 87 {
     int Tk_GetCapStyle(Tcl_Interp *interp, const char *str, int *capPtr)
 }
 declare 88 {
-    XColor *Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name)
+    XColor *Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin, const char *name)
 }
 declare 89 {
     XColor *Tk_GetColorByValue(Tk_Window tkwin, XColor *colorPtr)
@@ -374,13 +374,13 @@ declare 90 {
 }
 declare 91 {
     Tk_Cursor Tk_GetCursor(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tk_Uid str)
+	    const char *str)
 }
 declare 92 {
     Tk_Cursor Tk_GetCursorFromData(Tcl_Interp *interp,
 	    Tk_Window tkwin, const char *source, const char *mask,
 	    int width, int height, int xHot, int yHot,
-	    Tk_Uid fg, Tk_Uid bg)
+	    const char *fg, const char *bg)
 }
 declare 93 {
     Tk_Font Tk_GetFont(Tcl_Interp *interp,
