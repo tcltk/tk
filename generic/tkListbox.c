@@ -149,9 +149,9 @@ typedef struct {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     char *yScrollCmd;		/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no command
 				 * to issue. Malloc'ed. */

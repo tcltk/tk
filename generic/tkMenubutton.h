@@ -171,7 +171,7 @@ typedef struct {
     				 * or right, and the active item will be next
     				 * to the button. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
