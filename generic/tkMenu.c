@@ -284,7 +284,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_SELECT_MONO, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENU_TAKE_FOCUS,
-	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenu, takeFocusObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-tearoff", "tearOff", "TearOff",
 	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), 0, NULL, 0},
     {TK_OPTION_STRING, "-tearoffcommand", "tearOffCommand",

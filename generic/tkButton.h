@@ -227,7 +227,7 @@ typedef struct {
 
     Tk_Cursor cursor;		/* Value of -cursor option: if not NULL,
 				 * specifies current cursor for window. */
-    Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. */
     Tcl_Obj *commandPtr;	/* Value of -command option: specifies script
