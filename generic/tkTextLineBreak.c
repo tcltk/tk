@@ -261,7 +261,7 @@ TkTextComputeBreakLocations(
 	    }
 	    lastBreakablePos = i;
 	    break;
-        case LINEBREAK_INSIDEACHAR:
+	case LINEBREAK_INSIDEACHAR:
 	    break;
 	}
     }
@@ -899,7 +899,7 @@ ComputeBreakLocations(
 	    case HY: {
 		char brk = BrkPairTable[cls][HY];
 
-	    	/*
+		/*
 		 * The HYPHEN-MINUS (U+002D) needs special context treatment. For simplicity we
 		 * will only check whether we have two preceding, and two succeeding letters.
 		 * TODO: Is there a better method for the decision?
@@ -918,7 +918,7 @@ ComputeBreakLocations(
 		    }
 		}
 		nletters = 0;
-	    	break;
+		break;
 	    }
 	    default: {
 		char brk = BrkPairTable[cls][pcls];

@@ -28,11 +28,11 @@ typedef struct TkTextUndoMyAtom {
 
 typedef struct TkTextUndoStack_ {
     TkTextUndoPerformProc *undoProc;
-    				/* Function for callback to perform undo/redo actions. */
+				/* Function for callback to perform undo/redo actions. */
     TkTextUndoFreeProc *freeProc;
-    				/* Function which frees stack items, can be NULL. */
+				/* Function which frees stack items, can be NULL. */
     TkTextUndoStackContentChangedProc *contentChangedProc;
-    				/* Function which informs about stack changes. */
+				/* Function which informs about stack changes. */
     TkTextUndoContext context;	/* User data. */
     TkTextUndoMyAtom *current;	/* Current undo atom (not yet pushed). */
     TkTextUndoMyAtom *root;	/* The root of the undo/redo stack. */

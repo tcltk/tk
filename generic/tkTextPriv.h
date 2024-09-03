@@ -40,11 +40,11 @@ struct TkTextMyBTree {
     size_t numPixelReferences;
 				/* Number of clients of this B-tree which care about pixel heights. */
     struct TkBTreeNodePixelInfo *pixelInfoBuffer;
-    				/* Buffer of size numPixelReferences used for recomputation of pixel
-    				 * information. */
+				/* Buffer of size numPixelReferences used for recomputation of pixel
+				 * information. */
     size_t stateEpoch;	/* Updated each time any aspect of the B-tree changes. */
     TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency checking code, and to access
-    				 * list of all B-tree clients. */
+				 * list of all B-tree clients. */
 };
 
 

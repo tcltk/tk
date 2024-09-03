@@ -83,23 +83,23 @@ typedef struct TkBTreeNodePixelInfo {
 typedef struct Node {
     struct Node *parentPtr;	/* Pointer to parent node, or NULL if this is the root. */
     struct Node *nextPtr;	/* Next in list of siblings with the same parent node, or
-    				 * NULL for end of list. */
+				 * NULL for end of list. */
     struct Node *childPtr;	/* List of children (used if level > 0). */
     TkTextLine *linePtr;	/* Level > 0: first line in leftmost leaf; else first line
-    				 * in children. */
+				 * in children. */
     TkTextLine *lastPtr;	/* Level > 0: Last line in rightmost leaf; else last line
-    				 * in children. */
+				 * in children. */
     TkTextTagSet *tagonPtr;	/* The union of tagonPtr over all childrens/lines. */
     TkTextTagSet *tagoffPtr;	/* The union of tagoffPtr over all childrens/lines. */
     NodePixelInfo *pixelInfo;	/* Array containing pixel information in the subtree rooted here,
-    				 * one entry for each peer widget. */
+				 * one entry for each peer widget. */
     uint32_t level;		/* Level of this node in the B-tree. 0 refers to the bottom of
-    				 * the tree (children are lines, not nodes). */
+				 * the tree (children are lines, not nodes). */
     uint32_t size;		/* Sum of size over all lines belonging to this node. */
     uint32_t numChildren;	/* Number of children of this node. */
     uint32_t numLines;		/* Total number of lines (leaves) in the subtree rooted here. */
     uint32_t numLogicalLines;	/* Total number of logical lines (a line whose predecessing line
-    				 * don't have an elided newline). */
+				 * don't have an elided newline). */
     uint32_t numBranches;	/* Counting the number of branches in this node. */
 } Node;
 
@@ -149,16 +149,16 @@ int tkBTreeDebug = 0;
 
 typedef struct SplitInfo {
     int offset;		/* Out: Offset for insertion, -1 if SplitSeg
-    			 * did not increase/decrease the segment. */
+			 * did not increase/decrease the segment. */
     int increase;	/* In: Additional bytes required for the insertion of new chars.
-    			 * Can be negative, in this case the size will be decreased.
+			 * Can be negative, in this case the size will be decreased.
 			 */
     int splitted;	/* Out: Flag whether a split has been done. */
     int forceSplit;	/* In: The char segment must be split after offset, because a
-    			 * newline will be inserted, and we shift the content after
+			 * newline will be inserted, and we shift the content after
 			 * offset into the new line. */
     TkTextTagSet *tagInfoPtr;
-    			/* in: Tag information of new segment, can be NULL.
+			/* in: Tag information of new segment, can be NULL.
 			 * Out: Tag information of char segment, when inserting. */
 } SplitInfo;
 
@@ -488,7 +488,7 @@ typedef struct UndoTokenTagChange {
     TkTextUndoIndex endIndex;	/* End of insertion range. */
     TkTextTag *tagPtr;		/* Added/removed tag. */
     int32_t *lengths;		/* Array of tagged lengths (in byte size): if negative: skip this part;
-    				 * if positive: tag/untag this part. Last entry is 0 (zero). This
+				 * if positive: tag/untag this part. Last entry is 0 (zero). This
 				 * attribute can be NULL. Any part outside of this array will be
 				 * tagged/untagged. */
 } UndoTokenTagChange;
@@ -2950,7 +2950,7 @@ TkBTreeAdjustPixelHeight(
     TkTextLine *linePtr,	/* The logical line to update. */
     int newPixelHeight,		/* The line's known height in pixels. */
     unsigned mergedLines,	/* The number of extra lines which have been merged with this one
-    				 * (due to elided eols). They will have their pixel height set to
+				 * (due to elided eols). They will have their pixel height set to
 				 * zero, and the total pixel height associated with the given linePtr. */
     unsigned numDispLines)	/* The new number of display lines for this logical line. */
 {
@@ -3022,7 +3022,7 @@ TkBTreeUpdatePixelHeights(
     const TkText *textPtr,	/* Client of the B-tree. */
     TkTextLine *linePtr,	/* Start with this logical line. */
     int numLines,		/* Number of lines for update (inclusively start line). If negative,
-    				 * this is the number of deleted lines. */
+				 * this is the number of deleted lines. */
     unsigned epoch)		/* Current line metric epoch. */
 {
     Node *nodePtr = linePtr->parentPtr;
@@ -3589,7 +3589,7 @@ MakeTagInfo(
 	}
 	break;
     case TK_TEXT_TAGGING_NONE:
-    	/*
+	/*
 	 * The new text will not be tagged.
 	 */
 	break;
@@ -4379,17 +4379,17 @@ void
 TkBTreeInsertChars(
     TkTextBTree tree,		/* Tree to insert into. */
     TkTextIndex *indexPtr,	/* Indicates where to insert text. When the function returns,
-    				 * this index contains the new position. */
+				 * this index contains the new position. */
     const char *string,		/* Pointer to bytes to insert (may contain newlines, must be
-    				 * null-terminated). */
+				 * null-terminated). */
     TkTextTagSet *tagInfoPtr,	/* Tag information for the new segments, can be NULL. */
     TkTextTag *hyphenTagPtr,	/* Tag information for hyphen segments, can be NULL. If not NULL
-    				 * this is a list of tags connected via 'nextPtr'. */
+				 * this is a list of tags connected via 'nextPtr'. */
     TkTextUndoInfo *undoInfo)	/* Undo information, can be NULL. */
 {
     TkSharedText *sharedTextPtr;/* Handle to shared text resource. */
     TkTextSegment *prevPtr;	/* The segment just before the first new segment (NULL means new
-    				 * segment is at beginning of line). */
+				 * segment is at beginning of line). */
     TkTextLine *linePtr;	/* Current line (new segments are added to this line). */
     int changeToLineCount;	/* Counts change to total number of lines in file. */
     int changeToLogicalLineCount;
@@ -4492,7 +4492,7 @@ TkBTreeInsertChars(
 	    switch (UCHAR(*s)) {
 	    case 0x00:
 		/* nul */
-	    	strEnd = s;
+		strEnd = s;
 		break;
 	    case 0x0a:
 		/* line feed */
@@ -4505,9 +4505,9 @@ TkBTreeInsertChars(
 		    strEnd = s;
 		    hyphenRules = 0;
 		}
-	    	break;
+		break;
 	    case 0xff:
-	    	/*
+		/*
 		 * Hyphen support (0xff is not allowed in UTF-8 strings, it's a private flag
 		 * denoting a soft hyphen, see ParseHyphens [tkText.c]).
 		 */
@@ -5815,7 +5815,7 @@ JoinSections(
 
 	if (sectionPtr->prevPtr
 		&& !isLinkSegment
-	    	&& !IsBranchSection(sectionPtr->prevPtr)) {
+		&& !IsBranchSection(sectionPtr->prevPtr)) {
 	    int lengthLHS = sectionPtr->prevPtr->length;
 
 	    if (lengthLHS < NUM_TEXT_SEGS) {
@@ -5901,7 +5901,7 @@ RebuildSections(
     TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     TkTextLine *linePtr,		/* Pointer to existing line */
     int propagateChangeOfNumBranches)	/* Should we propagate a change in number of branches
-    					 * to B-Tree? */
+					 * to B-Tree? */
 {
     TkTextSection *sectionPtr, *prevSectionPtr;
     TkTextSegment *segPtr;
@@ -6538,7 +6538,7 @@ SplitSeg(
 		TkTextSegment *prevPtr;
 
 		if (splitInfo->tagInfoPtr
-		    	? TkTextTagSetIsEqual(segPtr->tagInfoPtr, splitInfo->tagInfoPtr)
+			? TkTextTagSetIsEqual(segPtr->tagInfoPtr, splitInfo->tagInfoPtr)
 			: CanInsertLeft(indexPtr->textPtr, count, segPtr)) {
 		    /*
 		     * Insert text into this char segment.
@@ -6881,10 +6881,10 @@ DeleteRange(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *firstSegPtr,	/* Indicates the segment just before where the deletion starts. */
     TkTextSegment *lastSegPtr,	/* Indicates the last segment where the deletion stops (exclusive
-    				 * this segment). FirstSegPtr and lastSegPtr may belong to
+				 * this segment). FirstSegPtr and lastSegPtr may belong to
 				 * different lines. */
     int flags,			/* Flags controlling the deletion. If DELETE_INCLUSIVE is set then
-    				 * also firstSegPtr and lastSegPtr will be deleted. */
+				 * also firstSegPtr and lastSegPtr will be deleted. */
     TkTextUndoInfo *undoInfo)	/* Store undo information, can be NULL. */
 {
     const TkTextSegment *lastNewlineSegPtr;
@@ -7605,7 +7605,7 @@ DeleteIndexRange(
     TkTextIndex *indexPtr2,	/* Indicates character just after the last one that is to be deleted. */
     int flags,			/* Flags controlling the deletion. */
     const UndoTokenInsert *undoToken,
-    				/* Perform undo, can be NULL. */
+				/* Perform undo, can be NULL. */
     TkTextUndoInfo *redoInfo)	/* Store undo information, can be NULL. */
 {
     TkTextSegment *segPtr1;	/* The segment just before the start of the deletion range. */
@@ -8080,28 +8080,28 @@ TkBTreeLinesTo(
     }
 
     if (textPtr) {
-        /*
-         * The index to return must be relative to textPtr, not to the entire
-         * tree. Take care to never return a negative index when linePtr
-         * denotes a line before -startindex, or an index larger than the
-         * number of lines in textPtr when linePtr is a line past -endindex.
-         */
+	/*
+	 * The index to return must be relative to textPtr, not to the entire
+	 * tree. Take care to never return a negative index when linePtr
+	 * denotes a line before -startindex, or an index larger than the
+	 * number of lines in textPtr when linePtr is a line past -endindex.
+	 */
 
-        unsigned indexStart, indexEnd;
+	unsigned indexStart, indexEnd;
 
 	indexStart = TkBTreeLinesTo(tree, NULL, TkBTreeGetStartLine(textPtr), NULL);
 	indexEnd = TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL);
 
-        if (index < indexStart) {
+	if (index < indexStart) {
 	    if (deviation) { *deviation = indexStart - index; }
-            index = 0;
-        } else if (index > indexEnd) {
+	    index = 0;
+	} else if (index > indexEnd) {
 	    if (deviation) { *deviation = indexEnd - index; }
-            index = indexEnd;
-        } else {
+	    index = indexEnd;
+	} else {
 	    if (deviation) { *deviation = 0; }
-            index -= indexStart;
-        }
+	    index -= indexStart;
+	}
     } else if (deviation) {
 	*deviation = 0;
     }
@@ -8129,12 +8129,12 @@ TkBTreeLinesTo(
 void
 TkBTreeLinkSegment(
     const TkSharedText *sharedTextPtr,
-    				/* Handle to shared text resource. */
+				/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Pointer to new segment to be added to
 				 * B-tree. Should be completely initialized by caller except for
 				 * nextPtr field. */
     TkTextIndex *indexPtr)	/* Where to add segment: it gets linked in just before the segment
-    				 * indicated here. */
+				 * indicated here. */
 {
     TkTextSegment *prevPtr1;
     TkTextLine *linePtr;
@@ -10670,7 +10670,7 @@ TkBTreeClearTags(
 		    lineNo1 : TkBTreeLinesTo(sharedTextPtr->tree, NULL, linePtr2, NULL);
 
 	    affectedTagInfoPtr = ClearTagsFromNode(sharedTextPtr, rootPtr, 0, lineNo1, lineNo2,
-	    		firstPtr, lastPtr, affectedTagInfoPtr, undoToken, &data, discardSelection,
+			firstPtr, lastPtr, affectedTagInfoPtr, undoToken, &data, discardSelection,
 			1, changedProc, textPtr);
 	    anyChanges = CheckIfAnyTagIsAffected(sharedTextPtr, affectedTagInfoPtr, discardSelection);
 
@@ -11043,7 +11043,7 @@ FindTagEndInLine(
 	byteOffset = TkTextIndexGetByteIndex(indexPtr);
     } else if (searchPtr->textPtr && linePtr == searchPtr->textPtr->endMarker->sectionPtr->linePtr) {
 	segPtr = searchPtr->textPtr->endMarker;
-        byteOffset = TkTextSegToIndex(segPtr);
+	byteOffset = TkTextSegToIndex(segPtr);
     } else {
 	segPtr = linePtr->lastPtr;
 	byteOffset = linePtr->size - segPtr->size;
@@ -11332,9 +11332,9 @@ TestPrevSegmentIsTagged(
 void
 TkBTreeStartSearch(
     const TkTextIndex *indexPtr1,
-    				/* Search starts here. Tag toggles at this position will be returned. */
+				/* Search starts here. Tag toggles at this position will be returned. */
     const TkTextIndex *indexPtr2,
-    				/* Search stops here. Tag toggles at this position *will* not be
+				/* Search stops here. Tag toggles at this position *will* not be
 				 * returned. */
     const TkTextTag *tagPtr,	/* Tag to search for. */
     TkTextSearch *searchPtr,	/* Where to store information about search's progress. */
@@ -11413,7 +11413,7 @@ TkBTreeStartSearch(
 	searchPtr->resultPtr = segPtr;
     } else if (!(searchPtr->resultPtr = FindTagStart(searchPtr, indexPtr2))) {
 	if (mode == SEARCH_EITHER_TAGON_TAGOFF
-	    	&& searchPtr->endOfText
+		&& searchPtr->endOfText
 		&& TestPrevSegmentIsTagged(indexPtr2, tagPtr)) {
 	    /*
 	     * We must find end of text.
@@ -11476,7 +11476,7 @@ TkBTreeStartSearchBack(
 				/* Search starts here. Tag toggles at this position will not be
 				 * returned iff mode is SEARCH_NEXT_TAGON. */
     const TkTextIndex *indexPtr2,
-    				/* Search stops here. Tag toggles at this position *will* be returned. */
+				/* Search stops here. Tag toggles at this position *will* be returned. */
     const TkTextTag *tagPtr,	/* Tag to search for. */
     TkTextSearch *searchPtr,	/* Where to store information about search's progress. */
     TkTextSearchMode mode)	/* The search mode, see definition of TkTextSearchMode. */
@@ -12231,9 +12231,9 @@ FindNextTaggedNode(
 TkTextSegment *
 TkBTreeFindNextTagged(
     const TkTextIndex *indexPtr1,
-    				/* Search starts here. Tag toggles at this position will be returned. */
+				/* Search starts here. Tag toggles at this position will be returned. */
     const TkTextIndex *indexPtr2,
-    				/* Search stops here. Tag toggles at this position will not be
+				/* Search stops here. Tag toggles at this position will not be
 				 * returned. */
     const struct TkBitField *discardTags)
 				/* Discard these tags when searching, can be NULL. */
@@ -12389,10 +12389,10 @@ FindNextUntaggedNode(
 TkTextSegment *
 TkBTreeFindNextUntagged(
     const TkTextIndex *indexPtr1,
-    				/* Search starts here. Tag toggles at this position will be
+				/* Search starts here. Tag toggles at this position will be
 				 * returned. */
     const TkTextIndex *indexPtr2,
-    				/* Search stops here. Tag toggles at this position will not be
+				/* Search stops here. Tag toggles at this position will not be
 				 * returned. */
     const struct TkBitField *discardTags)
 				/* Discard these tags when searching, can be NULL. */
@@ -12564,9 +12564,9 @@ FindPrevTaggedNode(
 TkTextSegment *
 TkBTreeFindPrevTagged(
     const TkTextIndex *indexPtr1,
-    				/* Search starts here. Tag toggles at this position will be returned. */
+				/* Search starts here. Tag toggles at this position will be returned. */
     const TkTextIndex *indexPtr2,
-    				/* Search stops here. Tag toggles at this position will be returned. */
+				/* Search stops here. Tag toggles at this position will be returned. */
     int discardSelection)	/* Discard selection tags? */
 {
     const TkSharedText *sharedTextPtr = TkTextIndexGetShared(indexPtr1);
@@ -12679,10 +12679,10 @@ TkBTreeGetSegmentTags(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *segPtr,	/* Get tags from this segment. */
     const TkText *textPtr,		/* If non-NULL, then only return tags for this text widget
-    					 * (when there are peer widgets). */
+					 * (when there are peer widgets). */
     TkTextSortMethod sortMeth,		/* Sort tags according to this method. */
     int *flags)				/* If non-NULL, return whether this chain contains the
-    					 * "sel" tag (TK_TEXT_IS_SELECTED), or if this chain is elided
+					 * "sel" tag (TK_TEXT_IS_SELECTED), or if this chain is elided
 					 * (TK_TEXT_IS_ELIDED). */
 {
     const TkTextTagSet *tagInfoPtr;
@@ -14406,7 +14406,7 @@ TkBTreeNextDisplayLine(
     TkText *textPtr,		/* Information about text widget. */
     TkTextLine *linePtr,	/* Start at this logical line. */
     unsigned *displayLineNo,	/* IN: Start at this display line number in given logical line.
-    				 * OUT: Store display line number of requested display line. */
+				 * OUT: Store display line number of requested display line. */
     unsigned offset)		/* Offset to requested display line. */
 {
     const Node *nodePtr;
@@ -14545,7 +14545,7 @@ TkBTreePrevDisplayLine(
     TkText *textPtr,		/* Information about text widget. */
     TkTextLine *linePtr,	/* Start at this logical line. */
     unsigned *displayLineNo,	/* IN: Start at this display line number in given logical line.
-    				 * OUT: Store display line number of requested display line. */
+				 * OUT: Store display line number of requested display line. */
     unsigned offset)		/* Offset to requested display line. */
 {
     const Node *nodeStack[MAX_CHILDREN];
@@ -16330,7 +16330,7 @@ CheckSegments(
 	    }
 	}
 	if (!sharedTextPtr->steadyMarks
-	    	&& segPtr->typePtr->gravity == GRAVITY_RIGHT
+		&& segPtr->typePtr->gravity == GRAVITY_RIGHT
 		&& segPtr->nextPtr
 		&& segPtr->nextPtr->typePtr->gravity == GRAVITY_LEFT) {
 	    if (segPtr->typePtr == &tkTextBranchType && segPtr->nextPtr->typePtr == &tkTextLinkType) {

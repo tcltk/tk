@@ -59,8 +59,8 @@ static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 static void		EmbWinStructureProc(void *clientData, XEvent *eventPtr);
-static void	        EmbWinDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr,
-                            int x, int y, int lineHeight, int baseline, Display *display,
+static void		EmbWinDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr,
+			    int x, int y, int lineHeight, int baseline, Display *display,
 			    Drawable dst, int screenY);
 static void		EmbWinUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static TkTextEmbWindowClient *EmbWinGetClient(const TkText *textPtr, TkTextSegment *ewPtr);
@@ -157,7 +157,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align), 0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextEmbWindow, createObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-owner", NULL, NULL,
 	"1", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, isOwner), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
@@ -1258,7 +1258,7 @@ DestroyOrUnmapWindow(
 	    client->displayed = 0;
 	}
 	Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
-	if (client->tkwin && ewPtr->body.ew.create) {
+	if (client->tkwin && ewPtr->body.ew.createObj) {
 	    Tk_DeleteEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
 	    if (ewPtr->body.ew.isOwner) {
 		Tk_DestroyWindow(client->tkwin);
@@ -1330,7 +1330,7 @@ EmbWinRestoreProc(
 {
     int isNew;
 
-    if (ewPtr->body.ew.create) {
+    if (ewPtr->body.ew.createObj) {
 	/*
 	 * EmbWinLayoutProc is doing the creation of the window.
 	 */
@@ -1380,10 +1380,10 @@ EmbWinLayoutProc(
     TCL_UNUSED(Tcl_Size),		/* Chunk must not include more than this many characters. */
     int noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
     TkWrapMode wrapMode,	/* Wrap mode to use for line: TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE,
-    				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_CODEPOINT. */
+				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_CODEPOINT. */
     TCL_UNUSED(TkTextSpaceMode),	/* Not used. */
     TkTextDispChunk *chunkPtr)	/* Structure to fill in with information about this chunk. The x
-    				 * field has already been set by the caller. This argument may be
+				 * field has already been set by the caller. This argument may be
 				 * NULL. */
 {
     int width, height;
@@ -1397,14 +1397,14 @@ EmbWinLayoutProc(
     client = EmbWinGetClient(textPtr, ewPtr);
     ewPtr->body.ew.tkwin = client ? client->tkwin : NULL;
 
-    if (!ewPtr->body.ew.tkwin && ewPtr->body.ew.create) {
+    if (!ewPtr->body.ew.tkwin && ewPtr->body.ew.createObj) {
 	int code;
 	int isNew;
 	Tk_Window ancestor;
 	const char *before, *string;
 	Tcl_DString name, buf, *dsPtr = NULL;
 
-	before = ewPtr->body.ew.create;
+	before = Tcl_GetString(ewPtr->body.ew.createObj);
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -1458,7 +1458,7 @@ EmbWinLayoutProc(
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_GetString(ewPtr->body.ew.createObj), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
@@ -1479,7 +1479,7 @@ EmbWinLayoutProc(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-	    	cantEmbed = 1;
+		cantEmbed = 1;
 		break;
 	    }
 	}
