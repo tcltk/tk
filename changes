@@ -8177,7 +8177,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2024-01-09 (bug)[b7abf0] treeview destruction from O(N^2) to O(N) (emiliano)
 
-2024-01-12 (bug)[737abf] text image insertiondead_hamza (nijtmans) from O(N^2) to O(N)
+2024-01-12 (bug)[737abf] text image insertion from O(N^2) to O(N)
 
 2024-01-27 (bug)[8da7af] font caching performance issues (thraen,vogel)
 
@@ -8195,7 +8195,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-05-01 (change) [e30699] Fix appearence of arrows in ttk widgets
 	(nemethi)
 
-2024-05-03 (change) Add keycodes ISO_Group_Shift and dead_hamza
+2024-05-03 (change) Add keycodes ISO_Group_Shift and dead_hamza (nijtmans)
 
 2024-05-10 (change) Improve look of the classic theme (gavilan)
 
