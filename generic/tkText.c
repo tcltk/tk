@@ -159,7 +159,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	Tk_Offset(TkText, highlightWidth), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground","inactiveSelectBackground",
 	"Foreground",
-	DEF_TEXT_INACTIVE_SELECT_COLOR,
+	DEF_TEXT_INACTIVE_SELECT_BG_COLOR,
 	-1, Tk_Offset(TkText, inactiveSelBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
