@@ -1095,6 +1095,7 @@ dead_U                           65161     0xFE89
 dead_schwa                       65162     0xFE8A
 dead_SCHWA                       65163     0xFE8B
 dead_greek                       65164     0xFE8C
+dead_hamza                       65165     0xFE8D
 dead_lowline                     65168     0xFE90
 dead_aboveverticalline           65169     0xFE91
 dead_belowverticalline           65170     0xFE92
