@@ -334,7 +334,7 @@ typedef struct TkMenu {
     				 * be used to generate a title for tearoff. */
     Tcl_Obj *tearoffCommandPtr;	/* If non-NULL, points to a command to run
 				 * whenever the menu is torn-off. */
-    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
     Tcl_Obj *cursorPtr;		/* Current cursor for window, or NULL. */
