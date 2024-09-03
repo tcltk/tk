@@ -111,7 +111,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_STATE, TCL_INDEX_NONE, offsetof(TkScale, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusObj), TCL_INDEX_NONE,
+	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-tickinterval", "tickInterval", "TickInterval",
 	DEF_SCALE_TICK_INTERVAL, TCL_INDEX_NONE, offsetof(TkScale, tickInterval),
@@ -324,7 +324,7 @@ Tk_ScaleObjCmd(
     scalePtr->vertLabelX	= 0;
     scalePtr->fontHeight	= 0;
     scalePtr->cursor		= NULL;
-    scalePtr->takeFocusObj	= NULL;
+    scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
 
 
