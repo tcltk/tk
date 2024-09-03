@@ -44,7 +44,7 @@ typedef struct {
     Tk_OptionTable itemAttrOptionTable;
 				/* Table that defines configuration options
 				 * available for listbox items. */
-    char *listVarName;		/* List variable name */
+    Tcl_Obj *listVarNameObj;	/* List variable name */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
     Tcl_Size nElements;		/* Holds the current count of elements */
     Tcl_HashTable *selection;	/* Tracks selection */
@@ -117,7 +117,7 @@ typedef struct {
      * Information about what's selected or active, if any.
      */
 
-    Tk_Uid selectMode;		/* Selection style: single, browse, multiple,
+    Tcl_Obj *selectModeObj;		/* Selection style: single, browse, multiple,
 				 * or extended. This value isn't used in C
 				 * code, but the Tcl bindings use it. */
     int numSelected;		/* Number of elements currently selected. */
@@ -149,13 +149,13 @@ typedef struct {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
-    char *yScrollCmd;		/* Command prefix for communicating with
+    Tcl_Obj *yScrollCmdObj;	/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no command
 				 * to issue. Malloc'ed. */
-    char *xScrollCmd;		/* Command prefix for communicating with
+    Tcl_Obj *xScrollCmdObj;	/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no command
 				 * to issue. Malloc'ed. */
     int state;			/* Listbox state. */
@@ -286,7 +286,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selFgColorPtr),
 	 TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
-	 DEF_LISTBOX_SELECT_MODE, TCL_INDEX_NONE, offsetof(Listbox, selectMode),
+	 DEF_LISTBOX_SELECT_MODE, offsetof(Listbox, selectModeObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	 DEF_LISTBOX_SET_GRID, TCL_INDEX_NONE, offsetof(Listbox, setGrid), 0, 0, 0},
@@ -294,18 +294,18 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_LISTBOX_STATE, TCL_INDEX_NONE, offsetof(Listbox, state),
 	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	 DEF_LISTBOX_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Listbox, takeFocus),
+	 DEF_LISTBOX_TAKE_FOCUS, offsetof(Listbox, takeFocusObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	 DEF_LISTBOX_WIDTH, TCL_INDEX_NONE, offsetof(Listbox, width), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	 DEF_LISTBOX_SCROLL_COMMAND, TCL_INDEX_NONE, offsetof(Listbox, xScrollCmd),
+	 DEF_LISTBOX_SCROLL_COMMAND, offsetof(Listbox, xScrollCmdObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	 DEF_LISTBOX_SCROLL_COMMAND, TCL_INDEX_NONE, offsetof(Listbox, yScrollCmd),
+	 DEF_LISTBOX_SCROLL_COMMAND, offsetof(Listbox, yScrollCmdObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-listvariable", "listVariable", "Variable",
-	 DEF_LISTBOX_LIST_VARIABLE, TCL_INDEX_NONE, offsetof(Listbox, listVarName),
+	 DEF_LISTBOX_LIST_VARIABLE, offsetof(Listbox, listVarNameObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
@@ -1456,8 +1456,8 @@ DestroyListbox(
 	listPtr->listObj = NULL;
     }
 
-    if (listPtr->listVarName != NULL) {
-	Tcl_UntraceVar2(listPtr->interp, listPtr->listVarName, NULL,
+    if (listPtr->listVarNameObj != NULL) {
+	Tcl_UntraceVar2(listPtr->interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, listPtr);
     }
@@ -1563,8 +1563,8 @@ ConfigureListbox(
     int oldExport, error;
 
     oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
-    if (listPtr->listVarName != NULL) {
-	Tcl_UntraceVar2(interp, listPtr->listVarName, NULL,
+    if (listPtr->listVarNameObj != NULL) {
+	Tcl_UntraceVar2(interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, listPtr);
     }
@@ -1647,14 +1647,14 @@ ConfigureListbox(
 	 */
 
 	oldListObj = listPtr->listObj;
-	if (listPtr->listVarName != NULL) {
-	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
+	if (listPtr->listVarNameObj != NULL) {
+	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, Tcl_GetString(listPtr->listVarNameObj),
 		    NULL, TCL_GLOBAL_ONLY);
 	    Tcl_Size dummy;
 
 	    if (listVarObj == NULL) {
 		listVarObj = (oldListObj ? oldListObj : Tcl_NewObj());
-		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
+		if (Tcl_SetVar2Ex(interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    continue;
@@ -1673,7 +1673,7 @@ ConfigureListbox(
 	    }
 
 	    listPtr->listObj = listVarObj;
-	    Tcl_TraceVar2(listPtr->interp, listPtr->listVarName,
+	    Tcl_TraceVar2(listPtr->interp, Tcl_GetString(listPtr->listVarNameObj),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ListboxListVarProc, listPtr);
 	} else if (listPtr->listObj == NULL) {
@@ -2353,8 +2353,8 @@ ListboxInsertSubCmd(
     Tcl_IncrRefCount(newListObj);
     Tcl_DecrRefCount(listPtr->listObj);
     listPtr->listObj = newListObj;
-    if (listPtr->listVarName != NULL) {
-	Tcl_SetVar2Ex(listPtr->interp, listPtr->listVarName, NULL,
+    if (listPtr->listVarNameObj != NULL) {
+	Tcl_SetVar2Ex(listPtr->interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 		listPtr->listObj, TCL_GLOBAL_ONLY);
     }
 
@@ -2513,8 +2513,8 @@ ListboxDeleteSubCmd(
     Tcl_IncrRefCount(newListObj);
     Tcl_DecrRefCount(listPtr->listObj);
     listPtr->listObj = newListObj;
-    if (listPtr->listVarName != NULL) {
-	Tcl_SetVar2Ex(listPtr->interp, listPtr->listVarName, NULL,
+    if (listPtr->listVarNameObj != NULL) {
+	Tcl_SetVar2Ex(listPtr->interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 		listPtr->listObj, TCL_GLOBAL_ONLY);
     }
 
@@ -3278,7 +3278,7 @@ ListboxUpdateVScrollbar(
     Tcl_Interp *interp;
     Tcl_DString buf;
 
-    if (listPtr->yScrollCmd == NULL) {
+    if (listPtr->yScrollCmdObj == NULL) {
 	return;
     }
     if (listPtr->nElements == 0) {
@@ -3303,7 +3303,7 @@ ListboxUpdateVScrollbar(
     interp = listPtr->interp;
     Tcl_Preserve(interp);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, listPtr->yScrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, Tcl_GetString(listPtr->yScrollCmdObj), TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, firstStr, TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
@@ -3348,7 +3348,7 @@ ListboxUpdateHScrollbar(
     Tcl_Interp *interp;
     Tcl_DString buf;
 
-    if (listPtr->xScrollCmd == NULL) {
+    if (listPtr->xScrollCmdObj == NULL) {
 	return;
     }
 
@@ -3375,7 +3375,7 @@ ListboxUpdateHScrollbar(
     interp = listPtr->interp;
     Tcl_Preserve(interp);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, listPtr->xScrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, Tcl_GetString(listPtr->xScrollCmdObj), TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, firstStr, TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
@@ -3425,12 +3425,12 @@ ListboxListVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 
-	if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
+	if (!Tcl_InterpDeleted(interp) && listPtr->listVarNameObj) {
 	    void *probe = NULL;
 
 	    do {
 		probe = Tcl_VarTraceInfo(interp,
-			listPtr->listVarName,
+			Tcl_GetString(listPtr->listVarNameObj),
 			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 			ListboxListVarProc, probe);
 		if (probe == (void *)listPtr) {
@@ -3446,16 +3446,16 @@ ListboxListVarProc(
 		 */
 		return NULL;
 	    }
-	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
+	    Tcl_SetVar2Ex(interp, Tcl_GetString(listPtr->listVarNameObj), NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar2(interp, listPtr->listVarName,
+	    Tcl_TraceVar2(interp, Tcl_GetString(listPtr->listVarNameObj),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ListboxListVarProc, clientData);
 	    return NULL;
 	}
     } else {
 	oldListObj = listPtr->listObj;
-	varListObj = Tcl_GetVar2Ex(listPtr->interp, listPtr->listVarName,
+	varListObj = Tcl_GetVar2Ex(listPtr->interp, Tcl_GetString(listPtr->listVarNameObj),
 		NULL, TCL_GLOBAL_ONLY);
 
 	/*
@@ -3465,7 +3465,7 @@ ListboxListVarProc(
 	 */
 
 	if (Tcl_ListObjLength(listPtr->interp, varListObj, &i) != TCL_OK) {
-	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL, oldListObj,
+	    Tcl_SetVar2Ex(interp, Tcl_GetString(listPtr->listVarNameObj), NULL, oldListObj,
 		    TCL_GLOBAL_ONLY);
 	    return (char *) "invalid listvar value";
 	}

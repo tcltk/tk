@@ -98,7 +98,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
 	(TCL_MAJOR_VERSION > 8) ? TK_OPTION_ENUM_VAR : 0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextEmbWindow, createObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	"0", offsetof(TkTextEmbWindow, padXObj), offsetof(TkTextEmbWindow, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
@@ -290,7 +290,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.sharedTextPtr = textPtr->sharedTextPtr;
 	ewPtr->body.ew.linePtr = NULL;
 	ewPtr->body.ew.tkwin = NULL;
-	ewPtr->body.ew.create = NULL;
+	ewPtr->body.ew.createObj = NULL;
 	ewPtr->body.ew.align = TK_ALIGN_CENTER;
 	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
 	ewPtr->body.ew.padXObj = ewPtr->body.ew.padYObj = NULL;
@@ -846,7 +846,7 @@ EmbWinLayoutProc(
 	ewPtr->body.ew.tkwin = client->tkwin;
     }
 
-    if ((ewPtr->body.ew.tkwin == NULL) && (ewPtr->body.ew.create != NULL)) {
+    if ((ewPtr->body.ew.tkwin == NULL) && (ewPtr->body.ew.createObj != NULL)) {
 	int code, isNew;
 	Tk_Window ancestor;
 	Tcl_HashEntry *hPtr;
@@ -854,7 +854,7 @@ EmbWinLayoutProc(
 	Tcl_DString buf, *dsPtr = NULL;
 	Tcl_Obj *nameObj;
 
-	before = ewPtr->body.ew.create;
+	before = Tcl_GetString(ewPtr->body.ew.createObj);
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -908,7 +908,7 @@ EmbWinLayoutProc(
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_GetString(ewPtr->body.ew.createObj), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
