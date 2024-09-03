@@ -151,7 +151,7 @@ enum command {
 static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DestroyScale(void *memPtr);
 static double		MaxTickRoundingError(TkScale *scalePtr,
 			    double tickResolution);
@@ -590,7 +590,7 @@ ConfigureScale(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkScale *scalePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in objv. */
+    Tcl_Size objc,		/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
@@ -647,10 +647,10 @@ ConfigureScale(
 	    }
 	}
 
-        /*
-         * The fromValue shall not be rounded to the resolution, but the
-         * toValue and tickInterval do.
-         */
+	/*
+	 * The fromValue shall not be rounded to the resolution, but the
+	 * toValue and tickInterval do.
+	 */
 
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
 	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
@@ -712,9 +712,9 @@ ConfigureScale(
 	} else {
 	    char varString[TCL_DOUBLE_SPACE], scaleString[TCL_DOUBLE_SPACE];
 
-            Tcl_PrintDouble(NULL, varValue, varString);
-            Tcl_PrintDouble(NULL, scalePtr->value, scaleString);
-            if (strcmp(varString, scaleString)) {
+	    Tcl_PrintDouble(NULL, varValue, varString);
+	    Tcl_PrintDouble(NULL, scalePtr->value, scaleString);
+	    if (strcmp(varString, scaleString)) {
 		ScaleSetVariable(scalePtr);
 	    }
 	}
@@ -1056,14 +1056,14 @@ ComputeScaleGeometry(
      */
 
     if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
-            scalePtr->fromValue) < 0) {
-        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+	    scalePtr->fromValue) < 0) {
+	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
     if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
-            scalePtr->toValue) < 0) {
-        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+	    scalePtr->toValue) < 0) {
+	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
     if (valuePixels < tmp) {
@@ -1075,14 +1075,14 @@ ComputeScaleGeometry(
      */
 
     if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
-            scalePtr->fromValue) < 0) {
-        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+	    scalePtr->fromValue) < 0) {
+	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     tickPixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
     if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
-            scalePtr->toValue) < 0) {
-        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+	    scalePtr->toValue) < 0) {
+	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
     if (tickPixels < tmp) {
@@ -1277,7 +1277,7 @@ TkRoundValueToResolution(
     double value)		/* Value to round. */
 {
     return TkRoundIntervalToResolution(scalePtr, value - scalePtr->fromValue)
-            + scalePtr->fromValue;
+	    + scalePtr->fromValue;
 }
 
 double
@@ -1294,13 +1294,13 @@ TkRoundIntervalToResolution(
     rounded = scalePtr->resolution * tick;
     rem = value - rounded;
     if (rem < 0) {
-        if (rem <= -scalePtr->resolution/2) {
-            rounded = (tick - 1.0) * scalePtr->resolution;
-        }
+	if (rem <= -scalePtr->resolution/2) {
+	    rounded = (tick - 1.0) * scalePtr->resolution;
+	}
     } else {
-        if (rem >= scalePtr->resolution/2) {
-            rounded = (tick + 1.0) * scalePtr->resolution;
-        }
+	if (rem >= scalePtr->resolution/2) {
+	    rounded = (tick + 1.0) * scalePtr->resolution;
+	}
     }
     return rounded;
 }
@@ -1344,27 +1344,27 @@ ScaleVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
-            void *probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        Tcl_GetString(scalePtr->varNamePtr),
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        ScaleVarProc, probe);
-                if (probe == (void *)scalePtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * varNamePtr, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(scalePtr->varNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ScaleVarProc, probe);
+		if (probe == (void *)scalePtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * varNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
 	    Tcl_TraceVar2(interp, Tcl_GetString(scalePtr->varNamePtr),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ScaleVarProc, clientData);
@@ -1490,10 +1490,10 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
-                scalePtr->value) < 0) {
-            string[TCL_DOUBLE_SPACE - 1] = '\0';
-        }
+	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+		scalePtr->value) < 0) {
+	    string[TCL_DOUBLE_SPACE - 1] = '\0';
+	}
 	scalePtr->flags |= SETTING_VAR;
 	Tcl_ObjSetVar2(scalePtr->interp, scalePtr->varNamePtr, NULL,
 		Tcl_NewStringObj(string, TCL_INDEX_NONE), TCL_GLOBAL_ONLY);
