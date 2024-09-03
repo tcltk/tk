@@ -39,7 +39,7 @@ typedef struct TImageModel {
     int width, height;          /* Dimensions of image. */
     char *imageName;            /* Name of image (malloc-ed). */
     char *varName;              /* Name of variable in which to log events for
-                                 * image (malloc-ed). */
+				 * image (malloc-ed). */
 } TImageModel;
 
 /*
