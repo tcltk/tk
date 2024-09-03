@@ -524,24 +524,24 @@ Tk_Grab(
     if (grabResult == GrabNotViewable) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: window not viewable", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", (char *)NULL);
     } else if (grabResult == AlreadyGrabbed) {
     alreadyGrabbed:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: another application has grab", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", (char *)NULL);
     } else if (grabResult == GrabFrozen) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: keyboard or pointer frozen", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", (char *)NULL);
     } else if (grabResult == GrabInvalidTime) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: invalid time", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", (char *)NULL);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"grab failed for unknown reason (code %d)", grabResult));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", (char *)NULL);
     }
     return TCL_ERROR;
 }

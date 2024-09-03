@@ -296,7 +296,7 @@ EXTERN void		Tk_GeometryRequest(Tk_Window tkwin, int reqWidth,
 				int reqHeight);
 /* 80 */
 EXTERN Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid colorName);
+				const char *colorName);
 /* 81 */
 EXTERN void		Tk_GetAllBindings(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable, void *object);
@@ -321,7 +321,7 @@ EXTERN int		Tk_GetCapStyle(Tcl_Interp *interp, const char *str,
 				int *capPtr);
 /* 88 */
 EXTERN XColor *		Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid name);
+				const char *name);
 /* 89 */
 EXTERN XColor *		Tk_GetColorByValue(Tk_Window tkwin, XColor *colorPtr);
 /* 90 */
@@ -329,12 +329,13 @@ EXTERN Colormap		Tk_GetColormap(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *str);
 /* 91 */
 EXTERN Tk_Cursor	Tk_GetCursor(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid str);
+				const char *str);
 /* 92 */
 EXTERN Tk_Cursor	Tk_GetCursorFromData(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *source,
 				const char *mask, int width, int height,
-				int xHot, int yHot, Tk_Uid fg, Tk_Uid bg);
+				int xHot, int yHot, const char *fg,
+				const char *bg);
 /* 93 */
 EXTERN Tk_Font		Tk_GetFont(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *str);
@@ -979,7 +980,7 @@ typedef struct TkStubs {
     void (*reserved77)(void);
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
-    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
+    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, const char *colorName); /* 80 */
     void (*tk_GetAllBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable, void *object); /* 81 */
     int (*tk_GetAnchor) (Tcl_Interp *interp, const char *str, Tk_Anchor *anchorPtr); /* 82 */
     const char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
@@ -987,11 +988,11 @@ typedef struct TkStubs {
     Pixmap (*tk_GetBitmap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 85 */
     Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 86 */
     int (*tk_GetCapStyle) (Tcl_Interp *interp, const char *str, int *capPtr); /* 87 */
-    XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name); /* 88 */
+    XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, const char *name); /* 88 */
     XColor * (*tk_GetColorByValue) (Tk_Window tkwin, XColor *colorPtr); /* 89 */
     Colormap (*tk_GetColormap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 90 */
-    Tk_Cursor (*tk_GetCursor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid str); /* 91 */
-    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, Tk_Uid fg, Tk_Uid bg); /* 92 */
+    Tk_Cursor (*tk_GetCursor) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 91 */
+    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, const char *fg, const char *bg); /* 92 */
     Tk_Font (*tk_GetFont) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 93 */
     Tk_Font (*tk_GetFontFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 94 */
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
