@@ -114,7 +114,7 @@ typedef struct TkTextEmbWindow {
 				 * yet. */
     TkTextLine *linePtr;	/* Line structure that contains this
 				 * window. */
-    char *create;		/* Script to create window on-demand. NULL
+    Tcl_Obj *createObj;	/* Script to create window on-demand. NULL
 				 * means no such script. Malloc-ed. */
     Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of window. */
 #if TCL_MAJOR_VERSION > 8
