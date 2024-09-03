@@ -2057,8 +2057,8 @@ CanvasWidgetCmd(
 		    * (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    break;
 	case TK_SCROLL_UNITS: {
-		int xScrollIncrement;
-		Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
+	    int xScrollIncrement;
+	    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
 	    if (xScrollIncrement > 0) {
 		newX = canvasPtr->xOrigin + count * xScrollIncrement;
 	    } else {
