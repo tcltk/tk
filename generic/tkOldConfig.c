@@ -406,7 +406,7 @@ DoConfig(
 	    if (nullValue) {
 		newPtr = NULL;
 	    } else {
-		newPtr = Tk_GetColor(interp, tkwin, value);
+		newPtr = Tk_AllocColorFromObj(interp, tkwin, arg);
 		if (newPtr == NULL) {
 		    return TCL_ERROR;
 		}
@@ -457,7 +457,7 @@ DoConfig(
 	    if (nullValue) {
 		newBorder = NULL;
 	    } else {
-		newBorder = Tk_Get3DBorder(interp, tkwin, value);
+		newBorder = Tk_Alloc3DBorderFromObj(interp, tkwin, arg);
 		if (newBorder == NULL) {
 		    return TCL_ERROR;
 		}
@@ -481,7 +481,7 @@ DoConfig(
 	    if (nullValue) {
 		newCursor = NULL;
 	    } else {
-		newCursor = Tk_GetCursor(interp, tkwin, value);
+		newCursor = Tk_AllocCursorFromObj(interp, tkwin, arg);
 		if (newCursor == NULL) {
 		    return TCL_ERROR;
 		}
@@ -497,7 +497,7 @@ DoConfig(
 	    break;
 	}
 	case TK_CONFIG_JUSTIFY:
-	    if (Tk_GetJustify(interp, value, (Tk_Justify *)ptr) != TCL_OK) {
+	    if (Tk_GetJustifyFromObj(interp, arg, (Tk_Justify *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;

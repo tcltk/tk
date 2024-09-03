@@ -3003,7 +3003,7 @@ WmIconbitmapCmd(
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	}
     } else {
-	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, Tk_GetUid(str));
+	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
