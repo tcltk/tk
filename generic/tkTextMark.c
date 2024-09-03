@@ -544,7 +544,7 @@ TkTextMarkCmd(
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
-    				 * enough to know that objv[1] is "mark". */
+				 * enough to know that objv[1] is "mark". */
 {
     Tcl_HashEntry *hPtr;
     TkTextSegment *markPtr;
@@ -647,8 +647,8 @@ TkTextMarkCmd(
 #endif /* TK_IS_64_BIT_ARCH */
 	);
 	assert(!TkTextFindMark(textPtr, uniqName));
-    	markPtr1 = TkTextMakeMark(textPtr, uniqName);
-    	markPtr1->privateMarkFlag = 1;
+	markPtr1 = TkTextMakeMark(textPtr, uniqName);
+	markPtr1->privateMarkFlag = 1;
 	textPtr->sharedTextPtr->numMarks -= 1; /* take back counting */
 	textPtr->sharedTextPtr->numPrivateMarks += 1;
 	TkBTreeLinkSegment(textPtr->sharedTextPtr, markPtr1, &index1);
@@ -1655,7 +1655,7 @@ SetMark(
     TkText *textPtr,		/* Text widget in which to create mark. */
     const char *name,		/* Name of mark to set. */
     const Tk_SegType *typePtr,	/* Sepcifies the gravity, either tkTextLeftMarkType,
-    				 * tkTextRightMarkType, or NULL. */
+				 * tkTextRightMarkType, or NULL. */
     TkTextIndex *indexPtr)	/* Where to set mark. */
 {
     Tcl_HashEntry *hPtr = NULL;
@@ -2479,7 +2479,7 @@ MarkLayoutProc(
     TCL_UNUSED(TkWrapMode),	/* Not used. */
     TCL_UNUSED(TkTextSpaceMode),	/* Not used. */
     TkTextDispChunk *chunkPtr)	/* Structure to fill in with information about this chunk. The x
-    				 * field has already been set by the caller. */
+				 * field has already been set by the caller. */
 {
     TkText *textPtr = indexPtr->textPtr;
 
@@ -2693,9 +2693,9 @@ TkrTextInsertDisplayProc(
     TkText *textPtr,		/* The current text widget. */
     TCL_UNUSED(TkTextDispChunk *),	/* Chunk that is to be drawn. */
     int x,			/* X-position in dst at which to draw this chunk (may differ
-    				 * from the x-position in the chunk because of scrolling). */
+				 * from the x-position in the chunk because of scrolling). */
     int y,			/* Y-position at which to draw this chunk in dst (x-position
-    				 * is in the chunk itself). */
+				 * is in the chunk itself). */
     int height,			/* Total height of line. */
     TCL_UNUSED(int),		/* Offset of baseline from y. */
     TCL_UNUSED(Display *),		/* Display to use for drawing. */

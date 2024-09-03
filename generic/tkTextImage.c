@@ -684,7 +684,7 @@ EmbImageConfigure(
     TkText *textPtr,		/* Information about text widget that contains embedded image. */
     TkTextSegment *eiPtr,	/* Embedded image to be configured. */
     int *maskPtr,		/* Return the bit-wise OR of the typeMask fields of affected options,
-    				 * can be NULL. */
+				 * can be NULL. */
     int undoable,		/* Replacement of tags is undoable? */
     int objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of strings describing configuration options. */

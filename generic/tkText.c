@@ -384,9 +384,9 @@ typedef struct SearchSpec {
     int noCase;		/* Case-insenstivive? */
     int noLineStop;		/* If not set, a regexp search will use the TCL_REG_NLSTOP flag. */
     int overlap;		/* If set, results from multiple searches (-all) are allowed to
-    				 * overlap each other. */
+				 * overlap each other. */
     int strictLimits;		/* If set, matches must be completely inside the from,to range.
-    				 * Otherwise the limits only apply to the start of each match. */
+				 * Otherwise the limits only apply to the start of each match. */
     int all;			/* Whether all or the first match should be reported. */
     int backwards;		/* Searching forwards or backwards. */
     int searchElide;		/* Search in hidden text as well. */
@@ -407,7 +407,7 @@ typedef struct SearchSpec {
     SearchLineIndexProc *lineIndexProc;
 				/* Function to call when we have found a match. */
     void *clientData;	/* Information about structure being searched, in this case a text
-    				 * widget. */
+				 * widget. */
 } SearchSpec;
 
 /*
@@ -536,7 +536,7 @@ enum {
     TK_DUMP_IMG                     = SEG_GROUP_IMAGE,
     TK_DUMP_NODE                    = 1 << 18,
     TK_DUMP_DUMP_ALL                = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_MARK|TK_DUMP_TAG|
-                                      TK_DUMP_WIN|TK_DUMP_IMG,
+				      TK_DUMP_WIN|TK_DUMP_IMG,
 
     TK_DUMP_DISPLAY                 = 1 << 19,
     TK_DUMP_DISPLAY_CHARS           = TK_DUMP_CHARS|TK_DUMP_DISPLAY,
@@ -559,12 +559,12 @@ enum {
     TK_DUMP_INCLUDE_SYSTEM_COLORS   = 1U << 31,
     TK_DUMP_INSPECT_DFLT            = TK_DUMP_DUMP_ALL,
     TK_DUMP_INSPECT_COMPLETE        = TK_DUMP_INSPECT_DFLT|TK_DUMP_TAG_BINDINGS|TK_DUMP_TEXT_CONFIGS|
-    			              TK_DUMP_TAG_CONFIGS|TK_DUMP_INCLUDE_SEL|TK_DUMP_INSERT_MARK|
+			              TK_DUMP_TAG_CONFIGS|TK_DUMP_INCLUDE_SEL|TK_DUMP_INSERT_MARK|
 				      TK_DUMP_INCLUDE_DATABASE_CONFIG|TK_DUMP_INCLUDE_SYSTEM_CONFIG|
 				      TK_DUMP_INCLUDE_DEFAULT_CONFIG|TK_DUMP_ELIDE|
 				      TK_DUMP_INCLUDE_SYSTEM_COLORS,
     TK_DUMP_INSPECT_ALL             = TK_DUMP_INSPECT_COMPLETE|TK_DUMP_DISPLAY_TEXT|
-    			              TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
+			              TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
 				      TK_DUMP_NESTED,
 };
 
@@ -1572,7 +1572,7 @@ TextWidgetObjCmd(
     }
     case TEXT_CHECKSUM:
 	result = TextChecksumCmd(textPtr, interp, objc, objv);
-    	break;
+	break;
     case TEXT_CGET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
@@ -1697,7 +1697,7 @@ TextWidgetObjCmd(
 		}
 		break;
 	    case 'd':
-	    	if (length > 8 && strncmp("-display", option, 8) == 0) {
+		if (length > 8 && strncmp("-display", option, 8) == 0) {
 		    switch (option[8]) {
 		    case 'c':
 			if (strcmp("chars", option + 8) == 0) {
@@ -1760,7 +1760,7 @@ TextWidgetObjCmd(
 		}
 		break;
 	    case 'l':
-	    	if (strncmp("-lines", option, length) == 0) {
+		if (strncmp("-lines", option, length) == 0) {
 		    TkTextBTree tree = sharedTextPtr->tree;
 		    value = TkBTreeLinesTo(tree, textPtr, TkTextIndexGetLine(&indexTo), NULL)
 			    - TkBTreeLinesTo(tree, textPtr, TkTextIndexGetLine(&indexFrom), NULL);
@@ -2128,7 +2128,7 @@ TextWidgetObjCmd(
 	    i += 1;
 
 	    if (option[1] == '-') {
-	    	if (option[2] == '\0') {
+		if (option[2] == '\0') {
 		    break;
 		}
 		badOption = 1;
@@ -2307,7 +2307,7 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_ISDEAD:
-    	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkTextIsDeadPeer(textPtr)));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkTextIsDeadPeer(textPtr)));
 	break;
     case TEXT_ISEMPTY: {
 	int overall = 0;
@@ -2387,16 +2387,16 @@ TextWidgetObjCmd(
 	result = TextPeerCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_PENDINGSYNC: {
-        if (objc != 2) {
-            Tcl_WrongNumArgs(interp, 2, objv, NULL);
-            result = TCL_ERROR;
-            goto done;
-        }
+	if (objc != 2) {
+	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
+	    result = TCL_ERROR;
+	    goto done;
+	}
 	if (!sharedTextPtr->allowUpdateLineMetrics) {
 	    ProcessConfigureNotify(textPtr, 1);
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkTextPendingSync(textPtr)));
-        break;
+	break;
     }
     case TEXT_REPLACE:
     case TEXT_TK_TEXTREPLACE: {
@@ -2607,7 +2607,7 @@ TextWidgetObjCmd(
 	    Tcl_SetObjResult(interp, cmd);
 	    Tcl_GuardedDecrRefCount(cmd);
 	}
-    	break;
+	break;
     }
     case TEXT_WINDOW:
 	result = TkTextWindowCmd(textPtr, interp, objc, objv);
@@ -4259,10 +4259,10 @@ TkConfigureText(
 	 * Also, clamp the insert and current (unshared) marks to the new
 	 * -start/-end range limits of the widget. All other (shared)
 	 * marks are unchanged.
-         * The return value of TkTextMarkNameToIndex does not need to be
-         * checked: "insert" and "current" marks always exist, and the
-         * purpose of the code below precisely is to move them inside the
-         * -start/-end range.
+	 * The return value of TkTextMarkNameToIndex does not need to be
+	 * checked: "insert" and "current" marks always exist, and the
+	 * purpose of the code below precisely is to move them inside the
+	 * -start/-end range.
 	 */
 
 	currentEpoch = TkBTreeIncrEpoch(tree);
@@ -4819,11 +4819,11 @@ FindNewTopPosition(
 
 		lineIndex = TkBTreeLinesTo(tree, NULL, TkTextIndexGetLine(index1Ptr), NULL);
 		byteIndex = TkTextIndexGetByteIndex(&tPtr->topIndex);
-            } else {
-                /*
-                 * Deletion range starts after the top line. This peers's view
-                 * will not need to be reset. Nothing to do.
-                 */
+	    } else {
+		/*
+		 * Deletion range starts after the top line. This peers's view
+		 * will not need to be reset. Nothing to do.
+		 */
 	    }
 	} else if (TkTextIndexGetLine(index2Ptr) == TkTextIndexGetLine(&tPtr->topIndex)) {
 	    /*
@@ -4837,11 +4837,11 @@ FindNewTopPosition(
 	    if (TkTextIndexGetLine(index1Ptr) == TkTextIndexGetLine(index2Ptr)) {
 		byteIndex += TkTextIndexGetByteIndex(index1Ptr);
 	    }
-        } else {
-            /*
-             * Deletion range ends before the top line. This peers's view
-             * will not need to be reset. Nothing to do.
-             */
+	} else {
+	    /*
+	     * Deletion range ends before the top line. This peers's view
+	     * will not need to be reset. Nothing to do.
+	     */
 	}
 
 	if (lineIndex != -1) {
@@ -4885,13 +4885,13 @@ SetNewTopPosition(
 	    } else {
 		TkTextIndex start;
 
-                /*
-                 * Line may be before -startindex of tPtr and must be clamped to -startindex
+		/*
+		 * Line may be before -startindex of tPtr and must be clamped to -startindex
 		 * before providing it to TkTextSetYView otherwise lines before -startindex
-                 * would be displayed. There is no need to worry about -endline however,
-                 * because the view will only be reset if the deletion involves the TOP
+		 * would be displayed. There is no need to worry about -endline however,
+		 * because the view will only be reset if the deletion involves the TOP
 		 * line of the screen.
-                 */
+		 */
 
 		TkTextIndexClear2(&start, tPtr, sharedTextPtr->tree);
 		TkTextIndexSetSegment(&start, tPtr->startMarker);
@@ -4930,7 +4930,7 @@ ParseHyphens(
 		string += 1;
 		break;
 	    case '+':
-	    	*buffer++ = 0xff;
+		*buffer++ = 0xff;
 		*buffer++ = '+';
 		string += 1;
 		break;
@@ -5045,7 +5045,7 @@ static void
 InsertChars(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextIndex *index1Ptr,	/* Where to insert new characters. May be modified if the index
-    				 * is not valid for insertion (e.g. if at "end"). */
+				 * is not valid for insertion (e.g. if at "end"). */
     TkTextIndex *index2Ptr,	/* Out: Index at the end of the inserted text. */
     char const *string,		/* Null-terminated string containing new information to add to text. */
     unsigned length,		/* Length of string content. */
@@ -5159,9 +5159,9 @@ InsertChars(
      */
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
-        if (TkBTreeCharTagged(index1Ptr, tPtr->selTagPtr)) {
-            TkTextSelectionEvent(tPtr);
-        }
+	if (TkBTreeCharTagged(index1Ptr, tPtr->selTagPtr)) {
+	    TkTextSelectionEvent(tPtr);
+	}
 	tPtr->abortSelections = 1;
     }
 
@@ -5929,7 +5929,7 @@ TextFetchSelection(
     Tcl_Size offset,			/* Offset within selection of first character to be returned. */
     char *buffer,		/* Location in which to place selection. */
     Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer, not including
-    				 * terminating NULL character. */
+				 * terminating NULL character. */
 {
     TkText *textPtr = (TkText *)clientData;
     TkTextSearch *searchPtr;
@@ -6820,11 +6820,11 @@ TextSearchFoundMatch(
     int lineNum,		/* Line on which match was found. */
     SearchSpec *searchSpecPtr,	/* Search parameters. */
     void *clientData,	/* Token returned by the 'addNextLineProc', TextSearchAddNextLine.
-    				 * May be NULL, in which we case we must generate it (from lineNum). */
+				 * May be NULL, in which we case we must generate it (from lineNum). */
     Tcl_Obj *theLine,		/* Text from current line, only accessed for exact searches, and
-    				 * is allowed to be NULL for regexp searches. */
+				 * is allowed to be NULL for regexp searches. */
     int matchOffset,		/* Offset of found item in utf-8 bytes for exact search, Unicode
-    				 * chars for regexp. */
+				 * chars for regexp. */
     int matchLength)		/* Length also in bytes/chars as per search type. */
 {
     int numChars;
@@ -7399,7 +7399,7 @@ TextDumpCmd(
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
-    				 * enough to know that objv[1] is "dump". */
+				 * enough to know that objv[1] is "dump". */
 {
     TkTextIndex index1, index2;
     TkTextBTree tree;
@@ -7871,7 +7871,7 @@ TextChecksumCmd(
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
-    				 * enough to know that objv[1] is "checksum". */
+				 * enough to know that objv[1] is "checksum". */
 {
     const TkSharedText *sharedTextPtr;
     const TkTextSegment *segPtr;
@@ -8495,7 +8495,7 @@ TextInspectCmd(
 	case SEG_GROUP_MARK:
 	    if (segPtr == textPtr->endMarker) {
 		if (prevPtr != segPtr
-		    	&& (what & SEG_GROUP_CHAR)
+			&& (what & SEG_GROUP_CHAR)
 			&& segPtr->sectionPtr->linePtr != TkBTreeGetLastLine(textPtr)) {
 		    /* print newline before finishing */
 		    type = "break";
@@ -8870,7 +8870,7 @@ TextEditCmd(
 	    Tcl_Obj* arrObj = (objc == 5 ? objv[4] : (objc == 4 ? objv[3] : NULL));
 	    Tcl_SetObjResult(textPtr->interp, MakeEditInfo(interp, textPtr, arrObj));
 	}
-    	break;
+	break;
     case EDIT_INSPECT:
 	if (objc != 3 && objc != 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "?stack?");
@@ -8980,7 +8980,7 @@ TextEditCmd(
 
 	    TkTextUndoSetMaxStackDepth(sharedTextPtr->undoStack, textPtr->maxUndoDepth, redoDepth);
 	}
-    	break;
+	break;
     case EDIT_REDO: {
 	int result;
 
@@ -10136,7 +10136,7 @@ TkrTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */
     char *string)		/* Place to store the position. Must have at least TK_POS_CHARS
-    				 * characters. */
+				 * characters. */
 {
     assert(textPtr);
     return TkTextIndexPrint(textPtr->sharedTextPtr, textPtr, indexPtr, string);
@@ -10279,7 +10279,7 @@ SearchCore(
     int alreadySearchOffset = -1;
 
     const char *pattern = NULL;	/* For exact searches only. */
-    int firstNewLine = -1; 	/* For exact searches only. */
+    int firstNewLine = -1;	/* For exact searches only. */
     Tcl_RegExp regexp = NULL;	/* For regexp searches only. */
 
     /*
@@ -10674,13 +10674,13 @@ SearchCore(
 			    break;
 			} else {
 			    alreadySearchOffset -= (matchLength ? matchLength : 1);
-                            if (alreadySearchOffset < 0) {
-                                break;
-                            }
+			    if (alreadySearchOffset < 0) {
+				break;
+			    }
 			}
 		    } else {
-                        firstOffset = matchLength ? p - startOfLine + matchLength
-                                                  : p - startOfLine + 1;
+			firstOffset = matchLength ? p - startOfLine + matchLength
+						  : p - startOfLine + 1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find

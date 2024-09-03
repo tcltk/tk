@@ -265,7 +265,7 @@ TkTextTagCmd(
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
-    				 * enough to know that objv[1] is "tag". */
+				 * enough to know that objv[1] is "tag". */
 {
     static const char *const tagOptionStrings[] = {
 	"add", "bind", "cget", "clear", "configure", "delete", "findnext", "findprev",
@@ -619,7 +619,7 @@ TkTextTagCmd(
 	break;
     }
     case TAG_NAMES:
-    	return EnumerateTags(interp, textPtr, objc, objv);
+	return EnumerateTags(interp, textPtr, objc, objv);
 	/* not reached */
     case TAG_NEXTRANGE: {
 	TkTextSearch tSearch;
@@ -1574,10 +1574,10 @@ TkTextTagChangedUndoRedo(
  *----------------------------------------------------------------------
  *
  * GrabSelection --
- * 	Grab the selection if we're supposed to export it and don't already
- * 	have it.
+ *	Grab the selection if we're supposed to export it and don't already
+ *	have it.
  *
- * 	Also, invalidate partially-completed selection retrievals. We only
+ *	Also, invalidate partially-completed selection retrievals. We only
  *	need to check whether the tag is "sel" for this textPtr (not for
  *	other peer widget's "sel" tags) because we cannot reach this code
  *	path with a different widget's "sel" tag.
@@ -1598,7 +1598,7 @@ GrabSelection(
     int add,			/* 'true' means that we have added the "sel" tag;
 				 * 'false' means we have removed the "sel" tag. */
     int changed)		/* 'false' means that the selection has not changed, nevertheless
-    				 * the text widget should become the owner again. */
+				 * the text widget should become the owner again. */
 {
     int ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
 
@@ -1710,7 +1710,7 @@ TkTextBindEvent(
     Tcl_Obj *const objv[],	/* Remaining argument objects. */
     TkSharedText *sharedTextPtr,/* Shared text resource. */
     Tk_BindingTable *bindingTablePtr,
-    				/* Pointer to binding table. */
+				/* Pointer to binding table. */
     const char *name)		/* Bind event to this resource (tag or image). */
 {
     static const unsigned motionMask = ButtonMotionMask|Button1MotionMask
@@ -1990,7 +1990,7 @@ TkTextFindTag(
 static TkTextTag *
 FindTag(
     Tcl_Interp *interp,		/* Interpreter to use for error message; if NULL, then don't record
-    				 * an error message. */
+				 * an error message. */
     const TkText *textPtr,	/* Widget in which tag is being used. */
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
@@ -3015,7 +3015,7 @@ TkTextPickCurrent(
 	     */
 
 	    if (!(newTagInfoPtr = TkTextGetTagSetFromChunk(newDispChunkPtr))) {
-	    	newTagInfoPtr = sharedTextPtr->emptyTagInfoPtr;
+		newTagInfoPtr = sharedTextPtr->emptyTagInfoPtr;
 	    }
 	    TkTextTagSetIncrRefCount(newTagInfoPtr);
 	    leaveTags = TkTextTagSetCopy(textPtr->curTagInfoPtr);

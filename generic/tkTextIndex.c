@@ -58,11 +58,13 @@ static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
  * structure for acceleration.
  */
 const TkObjType tkTextIndexType = {
-    "textindex",/* name */
+    {"textindex",/* name */
     NULL,	/* freeIntRepProc */
     NULL,	/* dupIntRepProc */
     NULL,	/* updateStringProc */
-    NULL	/* setFromAnyProc */
+    NULL,	/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -1124,7 +1126,7 @@ TkTextIndexEnsureBeforeLastChar(
     assert(indexPtr->textPtr);
 
     if (TkTextIsDeadPeer(indexPtr->textPtr)) {
-        return 0;
+	return 0;
     }
 
     lastLinePtr = TkBTreeGetLastLine(textPtr);
@@ -2018,7 +2020,7 @@ static TkTextSegment *
 IndexToSeg(
     const TkTextIndex *indexPtr,/* Text index. */
     Tcl_Size *offsetPtr)		/* Where to store offset within segment, or NULL if offset isn't
-    				 * wanted. */
+				 * wanted. */
 {
     TkTextSection *sectionPtr;
     TkTextSegment *segPtr;
@@ -2673,11 +2675,11 @@ TkpTextGetIndex(
 int
 TkTextIndexPrint(
     const TkSharedText *sharedTextPtr,
-    				/* Pointer to shared resource. */
+				/* Pointer to shared resource. */
     const TkText *textPtr,	/* Information about text widget, can be NULL. */
     const TkTextIndex *indexPtr,/* Pointer to index. */
     char *string)		/* Place to store the position. Must have at least TK_POS_CHARS
-    				 * characters. */
+				 * characters. */
 {
     const TkTextSegment *segPtr;
     const TkTextLine *linePtr;
@@ -2942,22 +2944,22 @@ ForwBack(
 	    forward = (count < 0) == (*string == '-');
 	    count = abs(count);
 
-            if (forward) {
-                TkTextFindDisplayIndex(textPtr, indexPtr, count, &xOffset);
-            } else {
-                TkTextIndex indexPtr2 = *indexPtr;
+	    if (forward) {
+		TkTextFindDisplayIndex(textPtr, indexPtr, count, &xOffset);
+	    } else {
+		TkTextIndex indexPtr2 = *indexPtr;
 
-                /*
-                 * Check crossing of the start of text boundary. If crossed, adjust
-                 * xOffset so that the returned index will refer to the start of line.
-                 */
+		/*
+		 * Check crossing of the start of text boundary. If crossed, adjust
+		 * xOffset so that the returned index will refer to the start of line.
+		 */
 
-                TkTextFindDisplayIndex(textPtr, &indexPtr2, -(count - 1), NULL);
-                TkTextFindDisplayIndex(textPtr, indexPtr, -count, &xOffset);
-                if (!TkTextIndexCompare(indexPtr, &indexPtr2)) {
-                    xOffset = 0;
-                }
-            }
+		TkTextFindDisplayIndex(textPtr, &indexPtr2, -(count - 1), NULL);
+		TkTextFindDisplayIndex(textPtr, indexPtr, -count, &xOffset);
+		if (!TkTextIndexCompare(indexPtr, &indexPtr2)) {
+		    xOffset = 0;
+		}
+	    }
 
 	    /*
 	     * This call assumes indexPtr is the beginning of a display line
@@ -3330,7 +3332,7 @@ unsigned
 TkTextIndexCountBytes(
     const TkTextIndex *indexPtr1,	/* Index describing location of character from which to count. */
     const TkTextIndex *indexPtr2)	/* Index describing location of last character at which to
-    					 * stop the count. */
+					 * stop the count. */
 {
     int byteCount;
     TkTextLine *linePtr;
@@ -3338,7 +3340,7 @@ TkTextIndexCountBytes(
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
 
     if (indexPtr1->priv.linePtr == indexPtr2->priv.linePtr) {
-        return TkTextIndexGetByteIndex(indexPtr2) - TkTextIndexGetByteIndex(indexPtr1);
+	return TkTextIndexGetByteIndex(indexPtr2) - TkTextIndexGetByteIndex(indexPtr1);
     }
 
     /*
@@ -3861,7 +3863,7 @@ static const char *
 StartEnd(
     TkText *textPtr,		/* Information about text widget. */
     const char *string,		/* String to parse for additional info about modifier (count and units).
-    				 * Points to first character of modifier word. */
+				 * Points to first character of modifier word. */
     TkTextIndex *indexPtr)	/* Index to modify based on string. */
 {
     const char *p;
