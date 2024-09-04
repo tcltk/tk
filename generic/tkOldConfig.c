@@ -348,7 +348,7 @@ DoConfig(
 
     if ((specPtr->specFlags & TK_CONFIG_OBJS) && (specPtr->type != TK_CONFIG_STRING)
 	    && (specPtr->type != TK_CONFIG_PIXELS)) {
-	/* Prevent surprises for other options than TK_CONFIG_PIXELS */
+	/* Prevent surprises for other options than TK_CONFIG_(STRING|PIXELS) */
 	Tcl_AppendResult(interp, "TK_CONFIG_OBJS not supported", (char *)NULL);
 	return TCL_ERROR;
     }
