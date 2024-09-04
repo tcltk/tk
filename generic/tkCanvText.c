@@ -54,7 +54,7 @@ typedef struct TextItem {
     Pixmap activeStipple;	/* Stipple bitmap for text, or None. */
     Pixmap disabledStipple;	/* Stipple bitmap for text, or None. */
     char *text;			/* Text for item (malloc-ed). */
-    int width;			/* Width of lines for word-wrap, pixels. Zero
+    Tcl_Obj *widthObj;		/* Width of lines for word-wrap, pixels. Zero
 				 * means no word-wrap. */
     int underline;		/* Index of character to put underline beneath
 				 * or INT_MIN for no underlining. */
@@ -209,7 +209,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
 	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(TextItem, widthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -346,7 +346,7 @@ CreateText(
     textPtr->activeStipple = None;
     textPtr->disabledStipple = None;
     textPtr->text	= NULL;
-    textPtr->width	= 0;
+    textPtr->widthObj	= NULL;
     textPtr->underline	= INT_MIN;
     textPtr->angle	= 0.0;
 
@@ -724,8 +724,12 @@ ComputeTextBbox(
     }
 
     Tk_FreeTextLayout(textPtr->textLayout);
+    width = 0;
+    if (textPtr->widthObj) {
+	Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textPtr->widthObj, &width);
+    }
     textPtr->textLayout = Tk_ComputeTextLayout(textPtr->tkfont,
-	    textPtr->text, textPtr->numChars, textPtr->width,
+	    textPtr->text, textPtr->numChars, width,
 	    textPtr->justify, 0, &width, &height);
 
     if (state == TK_STATE_HIDDEN || textPtr->color == NULL) {
