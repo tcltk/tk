@@ -65,7 +65,6 @@ jobs:
           - 'no'
           - 'mem'
         options:
-          - '--enable-aqua'
           - '--disable-aqua'
     defaults:
       run:
