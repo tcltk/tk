@@ -11,6 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
 pack .t -expand 1 -fill both
@@ -859,7 +861,7 @@ test textIndex-19.13 {Display lines} {
     destroy .txt .sbar
 } {}
 
-test textIndex-19.14 {Display lines + lines with Unicode text} {
+test textIndex-19.14 {Display lines + lines with Unicode text} failsOnXQuarz {
     destroy .t
     pack [text .t -font {Courier -24} -borderwidth 0 -highlightthickness 0]
     update
