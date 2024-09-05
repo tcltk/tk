@@ -33,7 +33,7 @@ typedef struct TkScrollbar {
     Tcl_Command widgetCmd;	/* Token for scrollbar's widget command. */
     int vertical;		/* Non-zero means vertical orientation
 				 * requested, zero means horizontal. */
-    int width;			/* Desired narrow dimension of scrollbar, in
+    Tcl_Obj *widthObj;		/* Desired narrow dimension of scrollbar, in
 				 * pixels. */
     char *command;		/* Command prefix to use when invoking
 				 * scrolling commands. NULL means don't invoke
@@ -48,7 +48,7 @@ typedef struct TkScrollbar {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D borders. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D borders. */
     Tk_3DBorder bgBorder;	/* Used for drawing background (all flat
 				 * surfaces except for trough). */
     Tk_3DBorder activeBorder;	/* For drawing backgrounds when active (i.e.
@@ -56,7 +56,7 @@ typedef struct TkScrollbar {
     XColor *troughColorPtr;	/* Color for drawing trough. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
