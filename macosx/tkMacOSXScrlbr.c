@@ -251,6 +251,7 @@ TkpDisplayScrollbar(
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXDrawingContext dc;
+    int borderWidth, highlightWidth;
 
     scrollPtr->flags &= ~REDRAW_PENDING;
 
@@ -283,7 +284,8 @@ TkpDisplayScrollbar(
      * Draw a 3D rectangle to provide a base for the native scrollbar.
      */
 
-    if (scrollPtr->highlightWidth > 0) {
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth > 0) {
     	GC fgGC, bgGC;
 
     	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
@@ -292,19 +294,20 @@ TkpDisplayScrollbar(
     	} else {
     	    fgGC = bgGC;
     	}
-    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
+    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
     		(Pixmap) macWin);
     }
 
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
     Tk_Draw3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
-	    scrollPtr->highlightWidth, scrollPtr->highlightWidth,
-	    Tk_Width(tkwin) - 2*scrollPtr->highlightWidth,
-	    Tk_Height(tkwin) - 2*scrollPtr->highlightWidth,
-	    scrollPtr->borderWidth, scrollPtr->relief);
+	    highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, scrollPtr->relief);
     Tk_Fill3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
 	    scrollPtr->inset, scrollPtr->inset,
-	    Tk_Width(tkwin) - 2*scrollPtr->inset,
-	    Tk_Height(tkwin) - 2*scrollPtr->inset, 0, TK_RELIEF_FLAT);
+	    Tk_Width(tkwin) - 2 * scrollPtr->inset,
+	    Tk_Height(tkwin) - 2 * scrollPtr->inset, 0, TK_RELIEF_FLAT);
 
     /*
      * Update values and then draw the native scrollbar over the rectangle.
@@ -371,13 +374,14 @@ TkpComputeScrollbarGeometry(
      */
 
     int fieldLength;
+    int width, borderWidth, highlightWidth;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
-    scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    scrollPtr->inset = highlightWidth + borderWidth;
     if ([NSApp macOSVersion] == 100600) {
-	scrollPtr->arrowLength = scrollPtr->width;
+	scrollPtr->arrowLength = width;
     } else {
 	scrollPtr->arrowLength = 0;
     }
@@ -421,14 +425,14 @@ TkpComputeScrollbarGeometry(
 
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		scrollPtr->width + 2*scrollPtr->inset,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		width + 2 * scrollPtr->inset,
+		2 * (scrollPtr->arrowLength + borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		2 * (scrollPtr->arrowLength + borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight,
-		scrollPtr->width + 2*scrollPtr->inset);
+		width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
