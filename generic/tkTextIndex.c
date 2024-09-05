@@ -3337,7 +3337,7 @@ TkTextIndexCountBytes(
     int byteCount;
     TkTextLine *linePtr;
 
-    assert(TkTextIndexCompare(indexPtr1, indexPtr2) < 0);
+    assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
 
     if (indexPtr1->priv.linePtr == indexPtr2->priv.linePtr) {
 	return TkTextIndexGetByteIndex(indexPtr2) - TkTextIndexGetByteIndex(indexPtr1);
