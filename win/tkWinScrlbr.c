@@ -404,7 +404,7 @@ TkpComputeScrollbarGeometry(
 	fieldLength = Tk_Width(scrollPtr->tkwin);
 	minThumbSize = hThumb;
     }
-    fieldLength -= 2*scrollPtr->arrowLength;
+    fieldLength -= 2 * scrollPtr->arrowLength;
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -444,10 +444,10 @@ TkpComputeScrollbarGeometry(
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		width, 2*scrollPtr->arrowLength + minThumbSize);
+		width, 2 * scrollPtr->arrowLength + minThumbSize);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*scrollPtr->arrowLength + minThumbSize, width);
+		2 * scrollPtr->arrowLength + minThumbSize, width);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, 0);
 }

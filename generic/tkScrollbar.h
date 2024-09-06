@@ -68,7 +68,7 @@ typedef struct TkScrollbar {
 				 * Indicates how much interior stuff must be
 				 * offset from outside edges to leave room for
 				 * borders. */
-    int elementBorderWidth;	/* Width of border to draw around elements
+    Tcl_Obj *elementBorderWidthObj;	/* Width of border to draw around elements
 				 * inside scrollbar (arrows and slider). -1
 				 * means use borderWidth. */
     int arrowLength;		/* Length of arrows along long dimension of
