@@ -1124,7 +1124,7 @@ typedef struct Tk_ItemType {
 typedef struct Tk_CanvasTextInfo {
     Tk_3DBorder selBorder;	/* Border and background for selected
 				 * characters. Read-only to items.*/
-    int selBorderWidth;		/* Width of border around selection. Read-only
+    Tcl_Obj *selBorderWidthObj;		/* Width of border around selection. Read-only
 				 * to items. */
     XColor *selFgColorPtr;	/* Foreground color for selected text.
 				 * Read-only to items. */
@@ -1144,9 +1144,9 @@ typedef struct Tk_CanvasTextInfo {
 				 * items. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. Read-only to items. */
-    int insertWidth;		/* Total width of insertion cursor. Read-only
+    Tcl_Obj *insertWidthObj;		/* Total width of insertion cursor. Read-only
 				 * to items. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor.
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor.
 				 * Read-only to items. */
     Tk_Item *focusItemPtr;	/* Item that currently has the input focus, or
 				 * NULL if no such item. Read-only to items. */
