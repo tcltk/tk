@@ -78,7 +78,7 @@ typedef struct TkCanvas {
 				 * borders. */
     GC pixmapGC;		/* Used to copy bits from a pixmap to the
 				 * screen and also to clear the pixmap. */
-    int width, height;		/* Dimensions to request for canvas window,
+    Tcl_Obj *widthObj, *heightObj;		/* Dimensions to request for canvas window,
 				 * specified in pixels. */
     int redrawX1, redrawY1;	/* Upper left corner of area to redraw, in
 				 * pixel coordinates. Border pixels are
