@@ -8228,3 +8228,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-08-28 (bug) [d82fa2] [ttk::treview] painting/clipping/scrolling of last
 	item (bron,nemethi,werner)
 
+- Released 8.6.15, Sep 13, 2024 - https://core.tcl-lang.org/tk/ for details
