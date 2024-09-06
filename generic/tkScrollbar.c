@@ -57,7 +57,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_SCROLLBAR_CURSOR, offsetof(TkScrollbar, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-elementborderwidth", "elementBorderWidth",
 	"BorderWidth", DEF_SCROLLBAR_EL_BORDER_WIDTH,
-	offsetof(TkScrollbar, elementBorderWidth), TK_CONFIG_NULL_OK, NULL},
+	offsetof(TkScrollbar, elementBorderWidthObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_SCROLLBAR_HIGHLIGHT_BG,
 	offsetof(TkScrollbar, highlightBgColorPtr), 0, NULL},
@@ -172,7 +172,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->highlightBgColorPtr = NULL;
     scrollPtr->highlightColorPtr = NULL;
     scrollPtr->inset = 0;
-    scrollPtr->elementBorderWidth = INT_MIN;
+    scrollPtr->elementBorderWidthObj = NULL;
     scrollPtr->arrowLength = 0;
     scrollPtr->sliderFirst = 0;
     scrollPtr->sliderLast = 0;
@@ -317,11 +317,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pixels = yDelta;
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pixels = xDelta;
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -346,11 +346,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pos = y - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pos = x - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -472,7 +472,7 @@ ConfigureScrollbar(
     Tcl_Obj *const objv[],		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
-    int width, borderWidth, highlightWidth;
+    int width, borderWidth, highlightWidth, elementBorderWidth;
 
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs, objc,
 	    objv, scrollPtr, flags) != TCL_OK) {
@@ -507,8 +507,12 @@ ConfigureScrollbar(
 	scrollPtr->widthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(scrollPtr->widthObj);
     }
-    if (scrollPtr->elementBorderWidth < 0) {
-	scrollPtr->elementBorderWidth = INT_MIN;
+    if (scrollPtr->elementBorderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->elementBorderWidthObj, &elementBorderWidth);
+	if (elementBorderWidth < 0) {
+	    Tcl_DecrRefCount(scrollPtr->elementBorderWidthObj);
+	    scrollPtr->elementBorderWidthObj = NULL;
+	}
     }
     /*
      * Configure platform specific options.
