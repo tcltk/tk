@@ -109,7 +109,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_CANVAS_CURSOR, offsetof(TkCanvas, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-height", "height", "Height",
-	DEF_CANVAS_HEIGHT, offsetof(TkCanvas, height), 0, NULL},
+	DEF_CANVAS_HEIGHT, offsetof(TkCanvas, heightObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_CANVAS_HIGHLIGHT_BG,
 	offsetof(TkCanvas, highlightBgColorPtr), 0, NULL},
@@ -165,7 +165,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocusObj),
 	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
-	DEF_CANVAS_WIDTH, offsetof(TkCanvas, width), 0, NULL},
+	DEF_CANVAS_WIDTH, offsetof(TkCanvas, widthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_CANVAS_X_SCROLL_CMD, offsetof(TkCanvas, xScrollCmd),
 	TK_CONFIG_NULL_OK, NULL},
@@ -686,8 +686,8 @@ Tk_CanvasObjCmd(
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
     canvasPtr->pixmapGC = NULL;
-    canvasPtr->width = 0;
-    canvasPtr->height = 0;
+    canvasPtr->widthObj = NULL;
+    canvasPtr->heightObj = NULL;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
@@ -2265,7 +2265,7 @@ ConfigureCanvas(
     XGCValues gcValues;
     GC newGC;
     Tk_State old_canvas_state=canvasPtr->canvas_state;
-    int borderWidth, highlightWidth;
+    int width, height, borderWidth, highlightWidth;
     int xScrollIncrement, yScrollIncrement;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
@@ -2281,10 +2281,24 @@ ConfigureCanvas(
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
 
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->heightObj, &height);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
+    if (height < 0) {
+	height = 0;
+	Tcl_DecrRefCount(canvasPtr->heightObj);
+	canvasPtr->heightObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->heightObj);
+    }
+    if (width < 0) {
+	width = 0;
+	Tcl_DecrRefCount(canvasPtr->widthObj);
+	canvasPtr->widthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->widthObj);
+    }
     if (borderWidth < 0) {
 	borderWidth = 0;
 	Tcl_DecrRefCount(canvasPtr->borderWidthObj);
@@ -2346,8 +2360,8 @@ ConfigureCanvas(
      * Reset the desired dimensions for the window.
      */
 
-    Tk_GeometryRequest(canvasPtr->tkwin, canvasPtr->width + 2*canvasPtr->inset,
-	    canvasPtr->height + 2*canvasPtr->inset);
+    Tk_GeometryRequest(canvasPtr->tkwin, width + 2*canvasPtr->inset,
+	    height + 2*canvasPtr->inset);
 
     /*
      * Restart the cursor timing sequence in case the on-time or off-time just
@@ -2401,16 +2415,16 @@ ConfigureCanvas(
     if (flags & TK_OFFSET_LEFT) {
 	canvasPtr->tsoffset.xoffset = 0;
     } else if (flags & TK_OFFSET_CENTER) {
-	canvasPtr->tsoffset.xoffset = canvasPtr->width/2;
+	canvasPtr->tsoffset.xoffset = width / 2;
     } else if (flags & TK_OFFSET_RIGHT) {
-	canvasPtr->tsoffset.xoffset = canvasPtr->width;
+	canvasPtr->tsoffset.xoffset = width;
     }
     if (flags & TK_OFFSET_TOP) {
 	canvasPtr->tsoffset.yoffset = 0;
     } else if (flags & TK_OFFSET_MIDDLE) {
-	canvasPtr->tsoffset.yoffset = canvasPtr->height/2;
+	canvasPtr->tsoffset.yoffset = height / 2;
     } else if (flags & TK_OFFSET_BOTTOM) {
-	canvasPtr->tsoffset.yoffset = canvasPtr->height;
+	canvasPtr->tsoffset.yoffset = height;
     }
 
     /*
