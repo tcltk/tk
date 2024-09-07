@@ -3070,7 +3070,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
+		    (void)Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3080,7 +3080,7 @@ WmAttributesCmd(
 			}
 		    } else {
 			XColor *cPtr =
-			    Tk_GetColor(interp, tkwin, crefstr);
+			    Tk_AllocColorFromObj(interp, tkwin, objv[i+1]);
 			if (cPtr == NULL) {
 			    return TCL_ERROR;
 			}

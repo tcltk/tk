@@ -102,9 +102,8 @@ TkpDisplayScrollbar(
     XPoint points[7];
     Tk_3DBorder border;
     int relief, width, elementBorderWidth;
-    int highlightWidth;
+    int borderWidth, highlightWidth;
     Pixmap pixmap;
-	int borderWidth;
 
     if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	goto done;
