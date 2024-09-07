@@ -1577,8 +1577,8 @@ ParseSubcommandOptions(
 		goto oneValueRequired;
 	    }
 	    *optIndexPtr = ++index;
-	    optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
-		    Tk_GetUid(Tcl_GetString(objv[index])));
+	    optPtr->background = Tk_AllocColorFromObj(interp, Tk_MainWindow(interp),
+		    objv[index]);
 	    if (!optPtr->background) {
 		return TCL_ERROR;
 	    }
