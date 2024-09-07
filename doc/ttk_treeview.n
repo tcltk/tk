@@ -134,6 +134,12 @@ In addition to the standard
 \fBstate\fR, \fBstyle\fR, \fBxview\fR and \fByview\fR
 commands (see \fBttk::widget\fR),
 treeview widgets support the following additional commands:
+.\" METHOD: after
+.TP
+\fIpathname \fBafter \fIitem\fR
+.
+Returns the identifier of item after \fIitem\fR in the current view.
+Can be the first child, next sibling, next sibling of an ancestor, or {} for none.
 .\" METHOD: bbox
 .TP
 \fIpathname \fBbbox \fIitem\fR ?\fIcolumn\fR?
@@ -146,6 +152,12 @@ offscreen), returns the empty list.
 If \fIcolumn\fR is specified and is not hidden (by the \fB\-displaycolumns\fR
 option), returns the bounding box of that cell within \fIitem\fR
 (even if the cell is horizontally scrolled offscreen).
+.\" METHOD: before
+.TP
+\fIpathname \fBbefore \fIitem\fR
+.
+Returns the identifier of item before \fIitem\fR in the current view.
+Can be the previous sibling, parent of \fIitem\fR, or {} for none.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?

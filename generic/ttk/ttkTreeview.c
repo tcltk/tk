@@ -818,6 +818,86 @@ static TreeItem *FindItemByIndex(
     return found;
 }
 
+/* + FindPrevVisibleItem --
+ *	Return the first visible item before item in widget
+ */
+TreeItem *FindPrevVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
+	int allow_hidden, int recurse, int first) {
+    TreeItem *prev;
+
+    if (!item) {
+	return item;
+    }
+
+    /* Get prev item */
+    if (first) {
+	prev = item->prev;
+    } else {
+	prev = item;
+    }
+
+    /* If none, get parent */
+    if (!prev) {
+	prev = item->parent;
+	if (prev == root || prev == tv->tree.root) {
+	    return 0;
+	} else {
+	    return prev;
+	}
+    }
+
+    /* Skip to prev if hidden */
+    while (prev && (prev->hidden && !allow_hidden)) {
+	prev = prev->prev;
+    }
+
+    /* Move to last child, if any */
+    if (prev && (prev->state & TTK_STATE_OPEN) && prev->children && recurse) {
+	prev = FindPrevVisibleItem(tv, root, EndPosition(tv, prev), allow_hidden, recurse, 0);
+    }
+    return prev;
+}
+
+/* + FindNextVisibleItem --
+ *	Return the first visible item after item in widget
+ */
+TreeItem *FindNextVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
+	int allow_hidden, int recurse, int first) {
+    TreeItem *next;
+
+    if (!item) {
+	return item;
+    }
+
+    /* Move to first child or next item */
+    if (first) {
+	if ((item->state & TTK_STATE_OPEN) && item->children && recurse) {
+	    next = FindNextVisibleItem(tv, root, item->children, allow_hidden, recurse, 0);
+	} else {
+	    next = item->next;
+	}
+    } else {
+	next = item;
+    }
+
+    /* If none, get parent's next item */
+    while (!next) {
+	next = item->parent;
+	if (next == root || next == tv->tree.root) {
+	    return 0;
+	} else {
+	    item = next;
+		next = next->next;
+	}
+    }
+
+    /* Skip to next item if hidden */
+    while (next && (next->hidden && !allow_hidden)) {
+	next = next->next;
+    }
+    return next;
+}
+
 /* + GetItemListFromObj --
  * 	Parse a Tcl_Obj * as a list of items.
  * 	Returns a NULL-terminated array of items; result must
@@ -2926,6 +3006,60 @@ static int TreeviewPrevCommand(
     return TCL_OK;
 }
 
+/* + $tv before $item --
+ *	Get item before $item in view, which may be a sibling or parent
+ */
+static int TreeviewBeforeCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item, *before;
+    int allow_hidden = 0;
+    int allow_recurse = 1;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    before = FindPrevVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+    if (before && before->idObj) {
+	Tcl_SetObjResult(interp, before->idObj);
+    }
+    return TCL_OK;
+}
+
+/* + $tv after $item --
+ *	Get item after $item in view, which may be a child, sibling, or sibling of ancestor
+ */
+static int TreeviewAfterCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item, *after;
+    int allow_hidden = 0;
+    int allow_recurse = 1;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    after = FindNextVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+    if (after && after->idObj) {
+	Tcl_SetObjResult(interp, after->idObj);
+    }
+    return TCL_OK;
+}
+
 /* + $tv identifier $item index --
  * 	Return the id of the item at index in parent $item.
  */
@@ -4581,6 +4715,7 @@ static int TreeviewSearchCommand(
 		break;
 	}
     }
+
     /* Not implemented: all, mode=dictionary, column, recurse, start, wrap-around, hidden columns? */
 
     /* If no start id, use first child of parent */
@@ -5225,7 +5360,9 @@ static const Ttk_Ensemble TreeviewTagCommands[] = {
  * +++ Widget commands record.
  */
 static const Ttk_Ensemble TreeviewCommands[] = {
+    { "after",  	TreeviewAfterCommand,0 },
     { "bbox",  		TreeviewBBoxCommand,0 },
+    { "before",  	TreeviewBeforeCommand,0 },
     { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
