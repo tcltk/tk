@@ -8215,8 +8215,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-06-18 (bug) [865af0] Throw error message on corrupt gif file
 	(obermeier)
 
-2024-06-30 (bug) [b3a1b9] bind KP_Enter as Return key in treeview (nijtmans)
-
 2024-07-06 (bug) [51ece3] Fix crash on [canvas dchars] (vogel)
 
 2024-07-22 (bug)[2d3a81] fix segfault on menubutton destroy (MS-Win only)
