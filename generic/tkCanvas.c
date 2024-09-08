@@ -101,7 +101,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidth), 0, NULL},
+	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_DOUBLE, "-closeenough", "closeEnough", "CloseEnough",
 	DEF_CANVAS_CLOSE_ENOUGH, offsetof(TkCanvas, closeEnough), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-confine", "confine", "Confine",
@@ -117,21 +117,21 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_CANVAS_HIGHLIGHT, offsetof(TkCanvas, highlightColorPtr), 0, NULL},
     {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness",
-	DEF_CANVAS_HIGHLIGHT_WIDTH, offsetof(TkCanvas, highlightWidth), 0, NULL},
+	DEF_CANVAS_HIGHLIGHT_WIDTH, offsetof(TkCanvas, highlightWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_CANVAS_INSERT_BG, offsetof(TkCanvas, textInfo.insertBorder), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_CANVAS_INSERT_BD_COLOR,
-	offsetof(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
+	DEF_CANVAS_INSERT_BD_COLOR, offsetof(TkCanvas, textInfo.insertBorderWidthObj),
+	TK_CONFIG_OBJS|TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_CANVAS_INSERT_BD_MONO,
-	offsetof(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_MONO_ONLY, NULL},
+	DEF_CANVAS_INSERT_BD_MONO, offsetof(TkCanvas, textInfo.insertBorderWidthObj),
+	TK_CONFIG_OBJS|TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_CANVAS_INSERT_OFF_TIME, offsetof(TkCanvas, insertOffTime), 0, NULL},
     {TK_CONFIG_INT, "-insertontime", "insertOnTime", "OnTime",
 	DEF_CANVAS_INSERT_ON_TIME, offsetof(TkCanvas, insertOnTime), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_CANVAS_INSERT_WIDTH, offsetof(TkCanvas, textInfo.insertWidth), 0, NULL},
+	DEF_CANVAS_INSERT_WIDTH, offsetof(TkCanvas, textInfo.insertWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-offset", "offset", "Offset", "0,0",
 	offsetof(TkCanvas, tsoffset),TK_CONFIG_DONT_SET_DEFAULT,
 	&offsetOption},
@@ -147,11 +147,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_CANVAS_SELECT_MONO, offsetof(TkCanvas, textInfo.selBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_CANVAS_SELECT_BD_COLOR,
-	offsetof(TkCanvas, textInfo.selBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
+	DEF_CANVAS_SELECT_BD_COLOR, offsetof(TkCanvas, textInfo.selBorderWidthObj),
+	TK_CONFIG_OBJS|TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_CANVAS_SELECT_BD_MONO, offsetof(TkCanvas, textInfo.selBorderWidth),
-	TK_CONFIG_MONO_ONLY, NULL},
+	DEF_CANVAS_SELECT_BD_MONO, offsetof(TkCanvas, textInfo.selBorderWidthObj),
+	TK_CONFIG_OBJS|TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_CANVAS_SELECT_FG_COLOR, offsetof(TkCanvas, textInfo.selFgColorPtr),
 	TK_CONFIG_COLOR_ONLY|TK_CONFIG_NULL_OK, NULL},
@@ -162,24 +162,22 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"normal", offsetof(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
 	&stateOption},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocus),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocusObj),
+	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
 	DEF_CANVAS_WIDTH, offsetof(TkCanvas, widthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_CANVAS_X_SCROLL_CMD, offsetof(TkCanvas, xScrollCmd),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-xscrollincrement", "xScrollIncrement",
-	"ScrollIncrement",
-	DEF_CANVAS_X_SCROLL_INCREMENT, offsetof(TkCanvas, xScrollIncrement),
-	0, NULL},
+	"ScrollIncrement", DEF_CANVAS_X_SCROLL_INCREMENT,
+	offsetof(TkCanvas, xScrollIncrementObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
 	DEF_CANVAS_Y_SCROLL_CMD, offsetof(TkCanvas, yScrollCmd),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-yscrollincrement", "yScrollIncrement",
-	"ScrollIncrement",
-	DEF_CANVAS_Y_SCROLL_INCREMENT, offsetof(TkCanvas, yScrollIncrement),
-	0, NULL},
+	"ScrollIncrement", DEF_CANVAS_Y_SCROLL_INCREMENT,
+	offsetof(TkCanvas, yScrollIncrementObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -678,10 +676,10 @@ Tk_CanvasObjCmd(
 	    CanvasCmdDeletedProc);
     canvasPtr->firstItemPtr = NULL;
     canvasPtr->lastItemPtr = NULL;
-    canvasPtr->borderWidth = 0;
+    canvasPtr->borderWidthObj = NULL;
     canvasPtr->bgBorder = NULL;
     canvasPtr->relief = TK_RELIEF_FLAT;
-    canvasPtr->highlightWidth = 0;
+    canvasPtr->highlightWidthObj = NULL;
     canvasPtr->highlightBgColorPtr = NULL;
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
@@ -690,7 +688,7 @@ Tk_CanvasObjCmd(
     canvasPtr->heightObj = NULL;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
-    canvasPtr->textInfo.selBorderWidth = 0;
+    canvasPtr->textInfo.selBorderWidthObj = NULL;
     canvasPtr->textInfo.selFgColorPtr = NULL;
     canvasPtr->textInfo.selItemPtr = NULL;
     canvasPtr->textInfo.selectFirst = TCL_INDEX_NONE;
@@ -698,8 +696,8 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.anchorItemPtr = NULL;
     canvasPtr->textInfo.selectAnchor = 0;
     canvasPtr->textInfo.insertBorder = NULL;
-    canvasPtr->textInfo.insertWidth = 0;
-    canvasPtr->textInfo.insertBorderWidth = 0;
+    canvasPtr->textInfo.insertWidthObj = NULL;
+    canvasPtr->textInfo.insertBorderWidthObj = NULL;
     canvasPtr->textInfo.focusItemPtr = NULL;
     canvasPtr->textInfo.gotFocus = 0;
     canvasPtr->textInfo.cursorOn = 0;
@@ -723,8 +721,8 @@ Tk_CanvasObjCmd(
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
     canvasPtr->regionString = NULL;
-    canvasPtr->xScrollIncrement = 0;
-    canvasPtr->yScrollIncrement = 0;
+    canvasPtr->xScrollIncrementObj = NULL;
+    canvasPtr->yScrollIncrementObj = NULL;
     canvasPtr->scanX = 0;
     canvasPtr->scanXOrigin = 0;
     canvasPtr->scanY = 0;
@@ -732,7 +730,7 @@ Tk_CanvasObjCmd(
     canvasPtr->hotPtr = NULL;
     canvasPtr->hotPrevPtr = NULL;
     canvasPtr->cursor = NULL;
-    canvasPtr->takeFocus = NULL;
+    canvasPtr->takeFocusObj = NULL;
     canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
     canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
     canvasPtr->flags = 0;
@@ -2056,14 +2054,17 @@ CanvasWidgetCmd(
 	    newX = (int) (canvasPtr->xOrigin + count * .9
 		    * (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    break;
-	case TK_SCROLL_UNITS:
-	    if (canvasPtr->xScrollIncrement > 0) {
-		newX = canvasPtr->xOrigin + count*canvasPtr->xScrollIncrement;
+	case TK_SCROLL_UNITS: {
+	    int xScrollIncrement;
+	    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
+	    if (xScrollIncrement > 0) {
+		newX = canvasPtr->xOrigin + count * xScrollIncrement;
 	    } else {
 		newX = (int) (canvasPtr->xOrigin + count * .1
 			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;
+	}
 	default:
 	    result = TCL_ERROR;
 	    goto done;
@@ -2096,14 +2097,17 @@ CanvasWidgetCmd(
 	    newY = (int) (canvasPtr->yOrigin + count * .9
 		    * (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    break;
-	case TK_SCROLL_UNITS:
-	    if (canvasPtr->yScrollIncrement > 0) {
-		newY = canvasPtr->yOrigin + count*canvasPtr->yScrollIncrement;
+	case TK_SCROLL_UNITS: {
+	    int yScrollIncrement;
+	    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
+	    if (yScrollIncrement > 0) {
+		newY = canvasPtr->yOrigin + count * yScrollIncrement;
 	    } else {
 		newY = (int) (canvasPtr->yOrigin + count * .1
-			* (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
+			* (Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    }
 	    break;
+	}
 	default:
 	    result = TCL_ERROR;
 	    goto done;
@@ -2259,7 +2263,9 @@ ConfigureCanvas(
     XGCValues gcValues;
     GC newGC;
     Tk_State old_canvas_state=canvasPtr->canvas_state;
-    int width, height;
+    int width, height, borderWidth, highlightWidth;
+    int xScrollIncrement, yScrollIncrement;
+    int insertBorderWidth, insertWidth;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2274,17 +2280,43 @@ ConfigureCanvas(
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
 
-    if (canvasPtr->highlightWidth < 0) {
-	canvasPtr->highlightWidth = 0;
-    }
-    canvasPtr->inset = canvasPtr->borderWidth + canvasPtr->highlightWidth;
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->heightObj, &height);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &insertBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &insertWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->widthObj, &width);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
+    if (borderWidth < 0) {
+	borderWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->borderWidthObj);
+	canvasPtr->borderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->borderWidthObj);
+    }
     if (height < 0) {
 	height = 0;
 	Tcl_DecrRefCount(canvasPtr->heightObj);
 	canvasPtr->heightObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->heightObj);
+    }
+    if (highlightWidth < 0) {
+	highlightWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->highlightWidthObj);
+	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
+    }
+    if (insertBorderWidth < 0) {
+	insertBorderWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->textInfo.insertBorderWidthObj);
+	canvasPtr->textInfo.insertBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->textInfo.insertBorderWidthObj);
+    }
+    if (insertWidth < 0) {
+	insertWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->textInfo.insertWidthObj);
+	canvasPtr->textInfo.insertWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->textInfo.insertWidthObj);
     }
     if (width < 0) {
 	width = 0;
@@ -2292,6 +2324,19 @@ ConfigureCanvas(
 	canvasPtr->widthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->widthObj);
     }
+    if (xScrollIncrement < 0) {
+	xScrollIncrement = 0;
+	Tcl_DecrRefCount(canvasPtr->xScrollIncrementObj);
+	canvasPtr->xScrollIncrementObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->xScrollIncrementObj);
+    }
+    if (yScrollIncrement < 0) {
+	yScrollIncrement = 0;
+	Tcl_DecrRefCount(canvasPtr->yScrollIncrementObj);
+	canvasPtr->yScrollIncrementObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->yScrollIncrementObj);
+    }
+    canvasPtr->inset = borderWidth + highlightWidth;
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
@@ -3007,6 +3052,7 @@ DisplayCanvas(
     Tk_Item *itemPtr;
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
+    int borderWidth, highlightWidth;
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3184,17 +3230,18 @@ DisplayCanvas(
      */
 
   borders:
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
     if (canvasPtr->flags & REDRAW_BORDERS) {
 	canvasPtr->flags &= ~REDRAW_BORDERS;
-	if (canvasPtr->borderWidth > 0) {
+	if (borderWidth > 0) {
 	    Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin),
-		    canvasPtr->bgBorder, canvasPtr->highlightWidth,
-		    canvasPtr->highlightWidth,
-		    Tk_Width(tkwin) - 2*canvasPtr->highlightWidth,
-		    Tk_Height(tkwin) - 2*canvasPtr->highlightWidth,
-		    canvasPtr->borderWidth, canvasPtr->relief);
+		    canvasPtr->bgBorder, highlightWidth, highlightWidth,
+		    Tk_Width(tkwin) - 2 * highlightWidth,
+		    Tk_Height(tkwin) - 2 * highlightWidth,
+		    borderWidth, canvasPtr->relief);
 	}
-	if (canvasPtr->highlightWidth > 0) {
+	if (highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
@@ -3203,10 +3250,10 @@ DisplayCanvas(
 		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
 		Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
-			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
+			highlightWidth, Tk_WindowId(tkwin));
 	    } else {
 		Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
-			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
+			highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
     }
@@ -5580,6 +5627,8 @@ CanvasFocusProc(
     int gotFocus)		/* 1 means window is getting focus, 0 means
 				 * it's losing it. */
 {
+    int highlightWidth;
+
     Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
     if (gotFocus) {
 	canvasPtr->textInfo.gotFocus = 1;
@@ -5594,7 +5643,8 @@ CanvasFocusProc(
 	canvasPtr->insertBlinkHandler = NULL;
     }
     EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
-    if (canvasPtr->highlightWidth > 0) {
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth > 0) {
 	canvasPtr->flags |= REDRAW_BORDERS;
 	if (!(canvasPtr->flags & REDRAW_PENDING)) {
 	    Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
@@ -5935,7 +5985,8 @@ CanvasSetOrigin(
 				 * corresponding to top edge of canvas
 				 * window). */
 {
-    int left, right, top, bottom, delta;
+    int left, right, top, bottom, delta;;
+    int xScrollIncrement, yScrollIncrement;
 
     /*
      * If scroll increments have been set, round the window origin to the
@@ -5943,26 +5994,28 @@ CanvasSetOrigin(
      * just inside the borders, not the upper left corner.
      */
 
-    if (canvasPtr->xScrollIncrement > 0) {
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
+    if (xScrollIncrement > 0) {
 	if (xOrigin >= 0) {
-	    xOrigin += canvasPtr->xScrollIncrement/2;
+	    xOrigin += xScrollIncrement/2;
 	    xOrigin -= (xOrigin + canvasPtr->inset)
-		    % canvasPtr->xScrollIncrement;
+		    % xScrollIncrement;
 	} else {
-	    xOrigin = (-xOrigin) + canvasPtr->xScrollIncrement/2;
+	    xOrigin = (-xOrigin) + xScrollIncrement/2;
 	    xOrigin = -(xOrigin - (xOrigin - canvasPtr->inset)
-		    % canvasPtr->xScrollIncrement);
+		    % xScrollIncrement);
 	}
     }
-    if (canvasPtr->yScrollIncrement > 0) {
+    if (yScrollIncrement > 0) {
 	if (yOrigin >= 0) {
-	    yOrigin += canvasPtr->yScrollIncrement/2;
+	    yOrigin += yScrollIncrement/2;
 	    yOrigin -= (yOrigin + canvasPtr->inset)
-		    % canvasPtr->yScrollIncrement;
+		    % yScrollIncrement;
 	} else {
-	    yOrigin = (-yOrigin) + canvasPtr->yScrollIncrement/2;
+	    yOrigin = (-yOrigin) + yScrollIncrement/2;
 	    yOrigin = -(yOrigin - (yOrigin - canvasPtr->inset)
-		    % canvasPtr->yScrollIncrement);
+		    % yScrollIncrement);
 	}
     }
 
@@ -5986,27 +6039,27 @@ CanvasSetOrigin(
 		- (yOrigin + Tk_Height(canvasPtr->tkwin) - canvasPtr->inset);
 	if ((left < 0) && (right > 0)) {
 	    delta = (right > -left) ? -left : right;
-	    if (canvasPtr->xScrollIncrement > 0) {
-		delta -= delta % canvasPtr->xScrollIncrement;
+	    if (xScrollIncrement > 0) {
+		delta -= delta % xScrollIncrement;
 	    }
 	    xOrigin += delta;
 	} else if ((right < 0) && (left > 0)) {
 	    delta = (left > -right) ? -right : left;
-	    if (canvasPtr->xScrollIncrement > 0) {
-		delta -= delta % canvasPtr->xScrollIncrement;
+	    if (xScrollIncrement > 0) {
+		delta -= delta % xScrollIncrement;
 	    }
 	    xOrigin -= delta;
 	}
 	if ((top < 0) && (bottom > 0)) {
 	    delta = (bottom > -top) ? -top : bottom;
-	    if (canvasPtr->yScrollIncrement > 0) {
-		delta -= delta % canvasPtr->yScrollIncrement;
+	    if (yScrollIncrement > 0) {
+		delta -= delta % yScrollIncrement;
 	    }
 	    yOrigin += delta;
 	} else if ((bottom < 0) && (top > 0)) {
 	    delta = (top > -bottom) ? -bottom : top;
-	    if (canvasPtr->yScrollIncrement > 0) {
-		delta -= delta % canvasPtr->yScrollIncrement;
+	    if (yScrollIncrement > 0) {
+		delta -= delta % yScrollIncrement;
 	    }
 	    yOrigin -= delta;
 	}

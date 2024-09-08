@@ -60,11 +60,11 @@ typedef struct TkCanvas {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_3DBorder bgBorder;	/* Used for canvas background. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
@@ -169,11 +169,11 @@ typedef struct TkCanvas {
 				 * Units are pixels in canvas coords. */
     char *regionString;		/* The option string from which scrollX1 etc.
 				 * are derived. Malloc'ed. */
-    int xScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *xScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
-    int yScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *yScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
@@ -207,9 +207,9 @@ typedef struct TkCanvas {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     double pixelsPerMM;		/* Scale factor between MM and pixels; used
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
