@@ -529,7 +529,7 @@ if necessary so that \fIitem\fR is within the visible portion of the tree. If
 as the item to make visible. See \fBINDICES\fR for valid forms of \fIindex\fR.
 .\" METHOD: selection
 .TP
-\fIpathname \fBselection\fR ?\fIselop itemList\fR?
+\fIpathname \fBselection\fR ?\fIselop itemList|from to\fR?
 .
 Manages item selection. Item selection is independent from cell selection
 handled by the \fBcellselection\fR command.
@@ -537,27 +537,50 @@ If \fIselop\fR is not specified, returns the list of selected items.
 Otherwise, \fIselop\fR is one of the following:
 .RS
 .TP
-\fIpathname \fBselection set \fIitemList\fR
-.
-\fIitemList\fR becomes the new selection. Use empty set {} to clear selection.
-.TP
 \fIpathname \fBselection add \fIitemList\fR
 .
-Add \fIitemList\fR to the selection.
+Add items in \fIitemList\fR to the selection.
+.TP
+\fIpathname \fBselection add \fIfromItem toItem\fR
+.
+Add items between \fIfromItem\fR and \fItoItem\fR (inclusive) to the selection.
 .TP
 \fIpathname \fBselection has \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
 not included in the selection.
 .TP
+\fIpathname \fBselection has \fIfromItem toItem\fR
+.
+Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\fR
+(inclusive), or 0 if any are not.
+.TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
 not included in the selection.
 .TP
+\fIpathname \fBselection includes \fIfromItem toItem\fR
+.
+Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\fR
+(inclusive), or 0 if any are not.
+.TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
-Remove \fIitemList\fR from the selection.
+Remove all of the items in \fIitemList\fR from the selection.
+.TP
+\fIpathname \fBselection remove \fIfromItem toItem\fR
+.
+Remove all of the items between \fIfromItem\fR and \fItoItem\fR (inclusive) from
+the selection.
+.TP
+\fIpathname \fBselection set \fIitemList\fR
+.
+Sets selection to items in \fIitemList\fR. Use empty set {} to clear selection.
+.TP
+\fIpathname \fBselection set \fIfromItem toItem\fR
+.
+Sets selection to the items between \fIfromItem\fR and \fItoItem\fR (inclusive).
 .TP
 \fIpathname \fBselection size\fR
 .
@@ -566,6 +589,11 @@ Return the number of selected items.
 \fIpathname \fBselection toggle \fIitemList\fR
 .
 Toggle the selection state of each item in \fIitemList\fR.
+.TP
+\fIpathname \fBselection toggle \fIfromItem toItem\fR
+.
+Toggle the selection state of each item between \fIfromItem\fR and \fItoItem\fR
+(inclusive).
 .RE
 .\" METHOD: set
 .TP

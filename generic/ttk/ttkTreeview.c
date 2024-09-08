@@ -4290,7 +4290,7 @@ static int TreeviewFocusCommand(
     }
 }
 
-/* + $tree selection ?add|remove|set|toggle $items?
+/* + $tree selection ?add|remove|set|toggle $items|$from $to?
  */
 static int TreeviewSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -4306,7 +4306,8 @@ static int TreeviewSelectionCommand(
 
     Treeview *tv = (Treeview *)recordPtr;
     int selop = 0, i, selChange = 0;
-    TreeItem *item, **items = NULL;
+    TreeItem *item, **items = NULL, *from, *to;
+    Tcl_Obj *listObj = NULL;
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
@@ -4323,16 +4324,32 @@ static int TreeviewSelectionCommand(
 	}
     }
 
-    if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|has|includes|remove|set|size|toggle? ?items?");
+    if (objc < 3 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|has|includes|remove|set|size|toggle? ?items|from? ?to?");
 	return TCL_ERROR;
     } else if (objc == 3 && selop != SELECTION_SIZE) {
-	Tcl_WrongNumArgs(interp, 2, objv, "add|has|includes|remove|set|toggle items");
+	Tcl_WrongNumArgs(interp, 2, objv, "add|has|includes|remove|set|toggle items|from to");
 	return TCL_ERROR;
     }
 
     if (objc == 4) {
 	items = GetItemListFromObj(interp, tv, objv[3]);
+	if (!items) {
+	    return TCL_ERROR;
+	}
+    } else if (objc == 5) {
+	int allow_hidden = 0;
+	int allow_recurse = 1;
+	if (!(from = FindItem(interp, tv, objv[3])) || !(to = FindItem(interp, tv, objv[4]))) {
+	    return TCL_ERROR;
+	}
+	
+	listObj = GetBetweenList(interp, tv, from, to, allow_hidden, allow_recurse);
+	if (listObj) {
+	    items = GetItemListFromObj(interp, tv, listObj);
+	} else {
+	    return TCL_ERROR;
+	}
 	if (!items) {
 	    return TCL_ERROR;
 	}
