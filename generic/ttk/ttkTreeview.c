@@ -4343,7 +4343,7 @@ static int TreeviewSelectionCommand(
 	if (!(from = FindItem(interp, tv, objv[3])) || !(to = FindItem(interp, tv, objv[4]))) {
 	    return TCL_ERROR;
 	}
-	
+
 	listObj = GetBetweenList(interp, tv, from, to, allow_hidden, allow_recurse);
 	if (listObj) {
 	    items = GetItemListFromObj(interp, tv, listObj);
@@ -4686,8 +4686,7 @@ static int TreeviewSearchCommand(
     TreeColumn *column = NULL;
     const char *pattern = NULL;
     Tcl_Size i, plen;
-    int match = 0;
-    Tcl_Obj *patternObj;
+    Tcl_Obj *patternObj, *resultObj;
 
     enum {
 	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMN,
@@ -4701,7 +4700,7 @@ static int TreeviewSearchCommand(
 	"-recurse", "-recursive", "-regexp", "-start", NULL
     };
     int index, all = 0, depth = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
-    int match_op = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
+    int type = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
 
     if (objc < 3 || objc > 30) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
@@ -4744,13 +4743,13 @@ static int TreeviewSearchCommand(
 		mode = SEARCH_DICTIONARY;
 		break;
 	    case SEARCH_EXACT:
-		match_op = SEARCH_EXACT;
+		type = SEARCH_EXACT;
 		break;
 	    case SEARCH_FORWARDS:
 		forwards = 1;
 		break;
 	    case SEARCH_GLOB:
-		match_op = SEARCH_GLOB;
+		type = SEARCH_GLOB;
 		break;
 	    case SEARCH_HIDDEN:
 		hidden = 1;
@@ -4772,7 +4771,7 @@ static int TreeviewSearchCommand(
 		recurse = 1;
 		break;
 	    case SEARCH_REGEXP:
-		match_op = SEARCH_REGEXP;
+		type = SEARCH_REGEXP;
 		break;
 	    case SEARCH_START:
 		if (i == objc - 2) {
@@ -4792,15 +4791,23 @@ static int TreeviewSearchCommand(
 	item = parent->children;
     }
 
-    /* Loop over items, get values, compare values to pattern, break for match */
     patternObj = objv[objc-1];
     pattern = Tcl_GetStringFromObj(patternObj, &plen);
+    resultObj = Tcl_NewListObj(0,0);
+    if (!pattern || !resultObj ) {
+	return TCL_ERROR;
+    }
+
+    /* Loop over items, get values, compare to pattern, add matches to result */
     while (item) {
+	int match = 0;
+
 	if (!(item->hidden) || (item->hidden && hidden)) {
 	    Tcl_Obj *elementObj;
 	    Tcl_Size count = 0;
 
 	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj, &count) != TCL_OK) {
+		Tcl_BounceRefCount(resultObj);
 		return TCL_ERROR;
 	    }
 
@@ -4808,13 +4815,14 @@ static int TreeviewSearchCommand(
 		if (i == -1) {
 		    elementObj = item->textObj;
 		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i, &elementObj) != TCL_OK) {
+		    Tcl_BounceRefCount(resultObj);
 		    return TCL_ERROR;
 		}
 		if (!elementObj) continue;
 
 		if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
 		    /* Do compare using ASCII/Unicode compare */
-		    if (match_op == SEARCH_EXACT) {
+		    if (type == SEARCH_EXACT) {
 			Tcl_Size len;
 			const char *string = Tcl_GetStringFromObj(elementObj, &len);
 			Tcl_Size numChars = (len <= plen ? len : plen);
@@ -4824,11 +4832,11 @@ static int TreeviewSearchCommand(
 			} else {
 			    match = !Tcl_UtfNcasecmp(string, pattern, numChars);
 			}
-		    } else if (match_op = SEARCH_GLOB) {
+		    } else if (type == SEARCH_GLOB) {
 			const char *string = Tcl_GetString(elementObj);
 
 			match = Tcl_StringCaseMatch(string, pattern, nocase ? TCL_MATCH_NOCASE : 0);
-		    } else if (match_op = SEARCH_REGEXP) {
+		    } else if (type == SEARCH_REGEXP) {
 			match = Tcl_RegExpMatchObj(interp, elementObj, patternObj);
 		    }
 
@@ -4840,6 +4848,7 @@ static int TreeviewSearchCommand(
 			Tcl_GetWideIntFromObj(interp, patternObj, &val2) == TCL_OK) {
 			match = (val1 == val2);
 		    } else {
+			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
 		    }
 
@@ -4851,32 +4860,37 @@ static int TreeviewSearchCommand(
 			Tcl_GetDoubleFromObj(interp, patternObj, &val2) == TCL_OK) {
 			match = (val1 == val2);
 		    } else {
+			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
 		    }
 		}
 
+		/* If there is a match */
 		if (match == !not) {
 		    match = 1;
-		    break;
+		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
+			Tcl_BounceRefCount(resultObj);
+			return TCL_ERROR;
+		    }
+		    if (!all) {
+			break;
+		    }
 		}
 	    }
 	}
 
-	if (match) {
+	if (match && !all) {
 	   break;
 	}
 
 	/* Move to next/prev item */
 	if (forwards) {
-	    item = item->next;
+	    item = FindNextVisibleItem(tv, parent, item, hidden, recurse, 1);
 	} else {
-	    item = item->prev;
+	    item = FindPrevVisibleItem(tv, parent, item, hidden, recurse, 1);
 	}
     }
-
-    if (match && item) {
-	Tcl_SetObjResult(interp, item->idObj);
-    }
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -5097,6 +5111,7 @@ static int TreeviewTagHasCommand(
 
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
+
     } else if (objc == 5) {	/* Test if item has specified tag */
 	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[3]);
 	TreeItem *item = FindItem(interp, tv, objv[4]);
