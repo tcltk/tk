@@ -817,7 +817,7 @@ proc ::ttk::treeview::select.extend.extended {w item cell} {
     } else {
 	set State(current) $item
 	if {[set anchor [$w focus]] ne ""} {
-	    $w selection set [between $w $anchor $item]
+	    $w selection set $anchor $item
 	    $w see $item
 	} else {
 	    BrowseTo $w $item $cell
@@ -875,48 +875,10 @@ proc ::ttk::treeview::select.extend.multiple {w item cell} {
 	}
     } else {
 	if {[set anchor [$w focus]] ne ""} {
-	    $w selection add [between $w $anchor $item]
+	    $w selection add $anchor $item
 	} else {
 	    BrowseTo $w $item $cell
 	}
-    }
-}
-
-### Tree structure utilities.
-#
-
-## between $tv $item1 $item2 --
-#	Returns a list of all items between $item1 and $item2,
-#	in preorder traversal order.  $item1 and $item2 may be
-#	in either order.
-#
-# NOTES:
-#	This routine is O(N) in the size of the tree.
-#	There's probably a way to do this that's O(N) in the number
-#	of items returned, but I'm not clever enough to figure it out.
-#
-proc ::ttk::treeview::between {tv item1 item2} {
-    variable between [list]
-    variable selectingBetween 0
-    ScanBetween $tv $item1 $item2 {}
-    return $between
-}
-
-## ScanBetween --
-#	Recursive worker routine for ttk::treeview::between
-#
-proc ::ttk::treeview::ScanBetween {tv item1 item2 item} {
-    variable between
-    variable selectingBetween
-
-    if {$item eq $item1 || $item eq $item2} {
-	lappend between $item
-	set selectingBetween [expr {!$selectingBetween}]
-    } elseif {$selectingBetween} {
-	lappend between $item
-    }
-    foreach child [$tv children $item] {
-	ScanBetween $tv $item1 $item2 $child
     }
 }
 
