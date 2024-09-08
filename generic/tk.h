@@ -1155,9 +1155,12 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
-    void *reserved1;		/* reserved for future use */
-    void *reserved2;
-    void *reserved3;
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor.
+				 * Read-only to items. */
+    Tcl_Obj *insertWidthObj;		/* Total width of insertion cursor. Read-only
+				 * to items. */
+    Tcl_Obj *selBorderWidthObj;		/* Width of border around selection. Read-only
+				 * to items. */
 } Tk_CanvasTextInfo;
 
 /*
