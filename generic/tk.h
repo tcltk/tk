@@ -54,7 +54,7 @@ extern "C" {
  * library/tk.tcl	(1 LOC patch)
  * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.ac	(as above)
- * README		(sections 0 and 1)
+ * README.md		(sections 0 and 1)
  * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
@@ -1004,7 +1004,7 @@ typedef struct Tk_Item {
 				 * this canvas. Later items in list are drawn
 				 * just below earlier ones. */
     Tk_State state;		/* State of item. */
-    char *reserved1;		/* reserved for future use */
+    void *reserved1;		/* reserved for future use */
     int redraw_flags;		/* Some flags used in the canvas */
 
     /*
@@ -1239,8 +1239,8 @@ typedef struct Tk_Outline {
     Tk_Dash dash;		/* Dash pattern. */
     Tk_Dash activeDash;		/* Dash pattern if state is active. */
     Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */
-    void *reserved1;		/* Reserved for future expansion. */
-    void *reserved2;
+    Tcl_Obj *offsetObj;		/* Dash offset. */
+    void *reserved2;		/* Reserved for future expansion. */
     void *reserved3;
     Tk_TSOffset tsoffset;	/* Stipple offset for outline. */
     XColor *color;		/* Outline color. */

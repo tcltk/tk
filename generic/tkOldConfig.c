@@ -214,14 +214,9 @@ Tk_ConfigureWidget(
 		}
 		Tcl_DecrRefCount(arg);
 	    } else {
-		if (specPtr->defValue != NULL) {
-		    value = Tk_GetUid(specPtr->defValue);
-		} else {
-		    value = NULL;
-		}
-		if ((value != NULL) && !(specPtr->specFlags
+		if ((specPtr->defValue != NULL) && !(specPtr->specFlags
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
-		    Tcl_Obj *arg = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+		    Tcl_Obj *arg = Tcl_NewStringObj(specPtr->defValue, TCL_INDEX_NONE);
 		    Tcl_IncrRefCount(arg);
 		    if (DoConfig(interp, tkwin, specPtr, arg, widgRec) !=
 			    TCL_OK) {
@@ -376,8 +371,9 @@ DoConfig(
 	nullValue = 1;
     }
 
-    if (specPtr->specFlags & TK_CONFIG_OBJS) {
-	/* Prevent surprises, TK_CONFIG_OBJS is not supported yet */
+    if ((specPtr->specFlags & TK_CONFIG_OBJS) && (specPtr->type != TK_CONFIG_STRING)
+	    && (specPtr->type != TK_CONFIG_PIXELS)) {
+	/* Prevent surprises for other options than TK_CONFIG_(STRING|PIXELS) */
 	Tcl_AppendResult(interp, "TK_CONFIG_OBJS not supported", (char *)NULL);
 	return TCL_ERROR;
     }
@@ -407,13 +403,20 @@ DoConfig(
 
 	    if (nullValue) {
 		newStr = NULL;
+	    } else if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		Tcl_IncrRefCount(arg);
+		newStr = (char *)arg;
 	    } else {
 		newStr = (char *)ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **)ptr);
 	    if (oldStr != NULL) {
-		ckfree(oldStr);
+		if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		    Tcl_DecrRefCount((Tcl_Obj *)oldStr);
+		} else {
+		    ckfree(oldStr);
+		}
 	    }
 	    *((char **)ptr) = newStr;
 	    break;
@@ -449,7 +452,7 @@ DoConfig(
 	    if (nullValue) {
 		newFont = NULL;
 	    } else {
-		newFont = Tk_GetFont(interp, tkwin, value);
+		newFont = Tk_AllocFontFromObj(interp, tkwin, arg);
 		if (newFont == NULL) {
 		    return TCL_ERROR;
 		}
@@ -464,7 +467,7 @@ DoConfig(
 	    if (nullValue) {
 		newBmp = None;
 	    } else {
-		newBmp = Tk_GetBitmap(interp, tkwin, value);
+		newBmp = Tk_AllocBitmapFromObj(interp, tkwin, arg);
 		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
@@ -542,7 +545,24 @@ DoConfig(
 	    }
 	    break;
 	case TK_CONFIG_PIXELS:
-	    if (nullValue) {
+	    if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		int dummy;
+		if (nullValue) {
+		    if (*(Tcl_Obj **)ptr != NULL) {
+			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+			*(Tcl_Obj **)ptr = NULL;
+		    }
+		} else if (Tk_GetPixelsFromObj(interp, tkwin, arg, &dummy)
+			!= TCL_OK) {
+		    return TCL_ERROR;
+		} else {
+		    Tcl_IncrRefCount(arg);
+		    if (*(Tcl_Obj **)ptr != NULL) {
+			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+		    }
+		    *(Tcl_Obj **)ptr = arg;
+		}
+	    } else if (nullValue) {
 		*(int *)ptr = INT_MIN;
 	    } else if (Tk_GetPixelsFromObj(interp, tkwin, arg, (int *)ptr)
 		!= TCL_OK) {
@@ -796,6 +816,12 @@ FormatConfigValue(
     }
     ptr = (char *)widgRec + specPtr->offset;
     result = "";
+    if (specPtr->specFlags & TK_CONFIG_OBJS) {
+	if (*(Tcl_Obj **)ptr != NULL) {
+	    result = Tcl_GetString(*(Tcl_Obj **)ptr);
+	}
+	return result;
+    }
     switch (specPtr->type) {
     case TK_CONFIG_BOOLEAN:
 	if (*((int *)ptr) == 0) {
@@ -813,7 +839,7 @@ FormatConfigValue(
 	result = buffer;
 	break;
     case TK_CONFIG_STRING:
-	result = (*(char **)ptr);
+	result = *(char **)ptr;
 	if (result == NULL) {
 	    result = "";
 	}
@@ -1021,6 +1047,11 @@ Tk_FreeOptions(
 	    continue;
 	}
 	ptr = (char *)widgRec + specPtr->offset;
+	if ((specPtr->specFlags & TK_CONFIG_OBJS) && (*(Tcl_Obj **)ptr != NULL)) {
+	    Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+	    *(Tcl_Obj **)ptr = NULL;
+	    continue;
+	}
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **)ptr) != NULL) {
