@@ -1124,7 +1124,7 @@ typedef struct Tk_ItemType {
 typedef struct Tk_CanvasTextInfo {
     Tk_3DBorder selBorder;	/* Border and background for selected
 				 * characters. Read-only to items.*/
-    Tcl_Obj *selBorderWidthObj;		/* Width of border around selection. Read-only
+    int selBorderWidth;		/* Width of border around selection. Read-only
 				 * to items. */
     XColor *selFgColorPtr;	/* Foreground color for selected text.
 				 * Read-only to items. */
@@ -1144,9 +1144,9 @@ typedef struct Tk_CanvasTextInfo {
 				 * items. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. Read-only to items. */
-    Tcl_Obj *insertWidthObj;		/* Total width of insertion cursor. Read-only
+    int insertWidth;		/* Total width of insertion cursor. Read-only
 				 * to items. */
-    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor.
+    int insertBorderWidth;	/* Width of 3-D border around insert cursor.
 				 * Read-only to items. */
     Tk_Item *focusItemPtr;	/* Item that currently has the input focus, or
 				 * NULL if no such item. Read-only to items. */
@@ -1155,9 +1155,12 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
-    void *reserved1;		/* reserved for future use */
-    void *reserved2;
-    void *reserved3;
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor.
+				 * Read-only to items. */
+    Tcl_Obj *insertWidthObj;		/* Total width of insertion cursor. Read-only
+				 * to items. */
+    Tcl_Obj *selBorderWidthObj;		/* Width of border around selection. Read-only
+				 * to items. */
 } Tk_CanvasTextInfo;
 
 /*
@@ -1196,7 +1199,7 @@ typedef struct Tk_Outline {
     double width;		/* Width of outline. */
     double activeWidth;		/* Width of outline. */
     double disabledWidth;	/* Width of outline. */
-    int reserved1;
+    int offset;			/* Dash offset. */
     Tk_Dash dash;		/* Dash pattern. */
     Tk_Dash activeDash;		/* Dash pattern if state is active. */
     Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */

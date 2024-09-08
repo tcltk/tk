@@ -930,7 +930,7 @@ DisplayCanvText(
 	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
 	    int xFirst, yFirst, hFirst;
 	    int xLast, yLast, wLast;
-		int selBorderWidth;
+	    int selBorderWidth;
 
 	    /*
 	     * Draw a special background under the selection.
