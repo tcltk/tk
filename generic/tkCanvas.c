@@ -5627,9 +5627,9 @@ CanvasFocusProc(
     int gotFocus)		/* 1 means window is getting focus, 0 means
 				 * it's losing it. */
 {
-	int highlightWidth;
+    int highlightWidth;
 
-	Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
+    Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
     if (gotFocus) {
 	canvasPtr->textInfo.gotFocus = 1;
 	canvasPtr->textInfo.cursorOn = 1;
