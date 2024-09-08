@@ -1195,10 +1195,10 @@ Tk_ChangeOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-	if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
-		outline->offsetObj, &outline->offset) != TCL_OK) {
-	    outline->offset = 0;
-	}
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
+    }
     dash = &(outline->dash);
     color = outline->color;
     stipple = outline->stipple;
