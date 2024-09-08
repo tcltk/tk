@@ -970,7 +970,10 @@ Tk_CreateOutline(
     outline->width = 1.0;
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
+    outline->offset = 0;
     outline->offsetObj = NULL;
+    outline->reserved2 = NULL;
+    outline->reserved3 = NULL;
     outline->dash.number = 0;
     outline->activeDash.number = 0;
     outline->disabledDash.number = 0;
@@ -1140,10 +1143,11 @@ Tk_ConfigOutlineGC(
     }
     if (mask && (dash->number != 0)) {
 	gcValues->line_style = LineOnOffDash;
-	if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
-		outline->offsetObj, &gcValues->dash_offset) != TCL_OK) {
-	    gcValues->dash_offset = 0;
+	if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+		outline->offsetObj, &outline->offset) != TCL_OK) {
+	    outline->offset = 0;
 	}
+	gcValues->dash_offset = outline->offset;
 	if ((unsigned int)ABS(dash->number) > sizeof(char *)) {
 	    gcValues->dashes = dash->pattern.pt[0];
 	} else if (dash->number != 0) {
@@ -1186,16 +1190,15 @@ Tk_ChangeOutlineGC(
     XColor *color;
     Pixmap stipple;
     Tk_State state = item->state;
-    int offset;
 
     width = outline->width;
     if (width < 1.0) {
 	width = 1.0;
     }
-	if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
-		outline->offsetObj, &offset) != TCL_OK) {
-	    offset = 0;
-	}
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
+    }
     dash = &(outline->dash);
     color = outline->color;
     stipple = outline->stipple;
@@ -1241,13 +1244,13 @@ Tk_ChangeOutlineGC(
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	q = (char *)ckalloc(2 * i);
 	i = DashConvert(q, p, i, width);
-	XSetDashes(Canvas(canvas)->display, outline->gc, offset, q,i);
+	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset, q,i);
 	ckfree(q);
     } else if (dash->number>2 || (dash->number==2 &&
 	    (dash->pattern.array[0]!=dash->pattern.array[1]))) {
 	p = (dash->number > (int) sizeof(char *))
 		? dash->pattern.pt : dash->pattern.array;
-	XSetDashes(Canvas(canvas)->display, outline->gc, offset, p,
+	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset, p,
 		dash->number);
     }
     if (stipple!=None) {
@@ -1309,15 +1312,14 @@ Tk_ResetOutlineGC(
     XColor *color;
     Pixmap stipple;
     Tk_State state = item->state;
-    int offset;
 
     width = outline->width;
     if (width < 1.0) {
 	width = 1.0;
     }
-    if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
-	    outline->offsetObj, &offset) != TCL_OK) {
-	offset = 0;
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
     }
     dash = &(outline->dash);
     color = outline->color;
@@ -1366,7 +1368,7 @@ Tk_ResetOutlineGC(
 	} else {
 	    dashList = (char) (4 * width + 0.5);
 	}
-	XSetDashes(Canvas(canvas)->display, outline->gc, offset,
+	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset,
 		&dashList , 1);
     }
     if (stipple != None) {
@@ -1410,7 +1412,6 @@ Tk_CanvasPsOutline(
     Pixmap stipple = outline->stipple;
     Tk_State state = item->state;
     Tcl_Obj *psObj = GetPostscriptBuffer(interp);
-    int offset;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1444,9 +1445,9 @@ Tk_CanvasPsOutline(
 	}
     }
 
-    if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
-	    outline->offsetObj, &offset) != TCL_OK) {
-	offset = 0;
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
     }
     Tcl_AppendPrintfToObj(psObj, "%.15g setlinewidth\n", width);
 
@@ -1467,7 +1468,7 @@ Tk_CanvasPsOutline(
 	    Tcl_AppendObjToObj(psObj, converted);
 	}
 	Tcl_DecrRefCount(converted);
-	Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", offset);
+	Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
     } else if (dash->number < 0) {
 	if (dash->number < -5) {
 	    lptr = (char *)ckalloc(1 - 2*dash->number);
@@ -1480,7 +1481,7 @@ Tk_CanvasPsOutline(
 	    for (; --i>0 ;) {
 		Tcl_AppendPrintfToObj(psObj, " %d", *p++ & 0xff);
 	    }
-	    Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", offset);
+	    Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
 	} else {
 	    Tcl_AppendToObj(psObj, "] 0 setdash\n", TCL_INDEX_NONE);
 	}
