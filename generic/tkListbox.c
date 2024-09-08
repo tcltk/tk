@@ -151,21 +151,18 @@ typedef struct {
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
     Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     Tcl_Obj *yScrollCmdObj;	/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no command
-				 * to issue. Malloc'ed. */
+				 * to issue. May be NULL. */
     Tcl_Obj *xScrollCmdObj;	/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no command
-				 * to issue. Malloc'ed. */
+				 * to issue. May be NULL. */
     int state;			/* Listbox state. */
     Pixmap gray;		/* Pixmap for displaying disabled text. */
     int flags;			/* Various flag bits: see below for
 				 * definitions. */
     Tk_Justify justify;         /* Justification. */
-#ifdef BUILD_tk
-    int borderWidth, selBorderWidth, highlightWidth;
-#endif
 } Listbox;
 
 /*
@@ -244,7 +241,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_LISTBOX_BORDER_WIDTH, offsetof(Listbox, borderWidthObj), offsetof(Listbox, borderWidth),
+	 DEF_LISTBOX_BORDER_WIDTH, offsetof(Listbox, borderWidthObj), TCL_INDEX_NONE,
 	 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_LISTBOX_CURSOR, TCL_INDEX_NONE, offsetof(Listbox, cursor),
@@ -270,8 +267,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Listbox, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, offsetof(Listbox, highlightWidthObj),
-	 offsetof(Listbox, highlightWidth), 0, 0, 0},
+	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH,
+	 offsetof(Listbox, highlightWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_LISTBOX_JUSTIFY, TCL_INDEX_NONE, offsetof(Listbox, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -281,7 +278,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 0, DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	 "BorderWidth", DEF_LISTBOX_SELECT_BD, offsetof(Listbox, selBorderWidthObj),
-	 offsetof(Listbox, selBorderWidth), 0, 0, 0},
+	 TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selFgColorPtr),
 	 TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_FG_MONO, 0},
@@ -1010,7 +1007,7 @@ ListboxWidgetObjCmd(
 	    if (diff <= listPtr->fullLines / 3) {
 		ChangeListboxView(listPtr, index);
 	    } else {
-		ChangeListboxView(listPtr, index - (listPtr->fullLines-1)/2);
+		ChangeListboxView(listPtr, index - (listPtr->fullLines - 1)/2);
 	    }
 	} else {
 	    diff = index - (listPtr->topIndex + listPtr->fullLines - 1);
@@ -1018,7 +1015,7 @@ ListboxWidgetObjCmd(
 		if (diff <= listPtr->fullLines / 3) {
 		    ChangeListboxView(listPtr, listPtr->topIndex + diff);
 		} else {
-		    ChangeListboxView(listPtr, index-(listPtr->fullLines-1)/2);
+		    ChangeListboxView(listPtr, index-(listPtr->fullLines - 1)/2);
 		}
 	    }
 	}
@@ -1096,6 +1093,7 @@ ListboxBboxSubCmd(
 	int pixelWidth, x, y, result;
 	Tcl_Size stringLen;
 	Tk_FontMetrics fm;
+	int selBorderWidth;
 
 	/*
 	 * Compute the pixel width of the requested element.
@@ -1110,17 +1108,18 @@ ListboxBboxSubCmd(
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
 	if (listPtr->justify == TK_JUSTIFY_LEFT) {
-	    x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
+	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
 	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-	    x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+	    x = Tk_Width(tkwin) - (listPtr->inset + selBorderWidth)
 		    - pixelWidth - listPtr->xOffset + GetMaxOffset(listPtr);
 	} else {
-	    x = (Tk_Width(tkwin) - pixelWidth)/2
-		    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
+	    x = (Tk_Width(tkwin) - pixelWidth) / 2
+		    - listPtr->xOffset + GetMaxOffset(listPtr) / 2;
 	}
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
-		+ listPtr->inset + listPtr->selBorderWidth;
+		+ listPtr->inset + selBorderWidth;
 	results[0] = Tcl_NewWideIntObj(x);
 	results[1] = Tcl_NewWideIntObj(y);
 	results[2] = Tcl_NewWideIntObj(pixelWidth);
@@ -1248,9 +1247,11 @@ ListboxXviewSubCmd(
     int index, count, windowWidth, windowUnits;
     int offset = 0;		/* Initialized to stop gcc warnings. */
     double fraction;
+    int selBorderWidth;
 
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
     windowWidth = Tk_Width(listPtr->tkwin)
-	    - 2*(listPtr->inset + listPtr->selBorderWidth);
+	    - 2 * (listPtr->inset + selBorderWidth);
     if (objc == 2) {
 	Tcl_Obj *results[2];
 
@@ -1561,6 +1562,7 @@ ConfigureListbox(
     Tcl_Obj *oldListObj = NULL;
     Tcl_Obj *errorResult = NULL;
     int oldExport, error;
+    int borderWidth, selBorderWidth, highlightWidth;
 
     oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
     if (listPtr->listVarNameObj != NULL) {
@@ -1597,25 +1599,28 @@ ConfigureListbox(
 
 	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
 
-	if (listPtr->borderWidth < 0) {
-	    listPtr->borderWidth = 0;
-		Tcl_DecrRefCount(listPtr->borderWidthObj);
-		listPtr->borderWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(listPtr->borderWidthObj);
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->borderWidthObj, &borderWidth);
+	if (borderWidth < 0) {
+	    borderWidth = 0;
+	    Tcl_DecrRefCount(listPtr->borderWidthObj);
+	    listPtr->borderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(listPtr->borderWidthObj);
 	}
-	if (listPtr->highlightWidth < 0) {
-	    listPtr->highlightWidth = 0;
-		Tcl_DecrRefCount(listPtr->highlightWidthObj);
-		listPtr->highlightWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(listPtr->highlightWidthObj);
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->highlightWidthObj, &highlightWidth);
+	if (highlightWidth < 0) {
+	    highlightWidth = 0;
+	    Tcl_DecrRefCount(listPtr->highlightWidthObj);
+	    listPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(listPtr->highlightWidthObj);
 	}
-	if (listPtr->selBorderWidth < 0) {
-	    listPtr->selBorderWidth = 0;
-		Tcl_DecrRefCount(listPtr->selBorderWidthObj);
-		listPtr->selBorderWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(listPtr->selBorderWidthObj);
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
+	if (selBorderWidth < 0) {
+	    selBorderWidth = 0;
+	    Tcl_DecrRefCount(listPtr->selBorderWidthObj);
+	    listPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(listPtr->selBorderWidthObj);
 	}
-	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
+	listPtr->inset = highlightWidth + borderWidth;
 
 	/*
 	 * Claim the selection if we've suddenly started exporting it and
@@ -1868,6 +1873,7 @@ DisplayListbox(
 				 * off-screen. */
     Pixmap pixmap;
     int textWidth;
+    int borderWidth, selBorderWidth, highlightWidth;
 
     listPtr->flags &= ~REDRAW_PENDING;
     if (listPtr->flags & LISTBOX_DELETED) {
@@ -1919,17 +1925,18 @@ DisplayListbox(
      * Display each item in the listbox.
      */
 
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
     limit = listPtr->topIndex + listPtr->fullLines + listPtr->partialLine - 1;
     if (limit >= (int)listPtr->nElements) {
 	limit = listPtr->nElements-1;
     }
     left = right = 0;
     if (listPtr->xOffset > 0) {
-	left = listPtr->selBorderWidth+1;
+	left = selBorderWidth + 1;
     }
     if ((listPtr->maxWidth - listPtr->xOffset) > (Tk_Width(listPtr->tkwin)
-	    - 2*(listPtr->inset + listPtr->selBorderWidth))) {
-	right = listPtr->selBorderWidth+1;
+	    - 2 * (listPtr->inset + selBorderWidth))) {
+	right = selBorderWidth + 1;
     }
     prevSelected = 0;
 
@@ -1961,7 +1968,7 @@ DisplayListbox(
 		 */
 
 		gc = listPtr->selTextGC;
-		width = Tk_Width(tkwin) - 2*listPtr->inset;
+		width = Tk_Width(tkwin) - 2 * listPtr->inset;
 		selectedBg = listPtr->selBorder;
 
 		/*
@@ -2018,29 +2025,29 @@ DisplayListbox(
 		/* Draw left bevel */
 		if (left == 0) {
 		    Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
-			    x, y, listPtr->selBorderWidth, listPtr->lineHeight,
+			    x, y, selBorderWidth, listPtr->lineHeight,
 			    1, TK_RELIEF_RAISED);
 		}
 		/* Draw right bevel */
 		if (right == 0) {
 		    Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
-			    x + width - listPtr->selBorderWidth, y,
-			    listPtr->selBorderWidth, listPtr->lineHeight,
+			    x + width - selBorderWidth, y,
+			    selBorderWidth, listPtr->lineHeight,
 			    0, TK_RELIEF_RAISED);
 		}
 		/* Draw top bevel */
 		if (!prevSelected) {
 		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg,
 			    x-left, y, width+left+right,
-			    listPtr->selBorderWidth,
+			    selBorderWidth,
 			    1, 1, 1, TK_RELIEF_RAISED);
 		}
 		/* Draw bottom bevel */
 		if (i + 1 == (int)listPtr->nElements ||
 			!Tcl_FindHashEntry(listPtr->selection, KEY(i + 1))) {
 		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg, x-left,
-			    y + listPtr->lineHeight - listPtr->selBorderWidth,
-			    width+left+right, listPtr->selBorderWidth, 0, 0, 0,
+			    y + listPtr->lineHeight - selBorderWidth,
+			    width+left+right, selBorderWidth, 0, 0, 0,
 			    TK_RELIEF_RAISED);
 		}
 		prevSelected = 1;
@@ -2062,7 +2069,7 @@ DisplayListbox(
 		     */
 
 		    if (attrs->border != NULL) {
-			width = Tk_Width(tkwin) - 2*listPtr->inset;
+			width = Tk_Width(tkwin) - 2 * listPtr->inset;
 			Tk_Fill3DRectangle(tkwin, pixmap, attrs->border, x, y,
 				width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
 		    }
@@ -2092,12 +2099,12 @@ DisplayListbox(
 	textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
-	y += fm.ascent + listPtr->selBorderWidth;
+	y += fm.ascent + selBorderWidth;
 
 	if (listPtr->justify == TK_JUSTIFY_LEFT) {
-	    x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
+	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
 	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-	    x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+	    x = Tk_Width(tkwin) - (listPtr->inset + selBorderWidth)
 		    - textWidth - listPtr->xOffset + GetMaxOffset(listPtr);
 	} else {
 	    x = (Tk_Width(tkwin) - textWidth)/2
@@ -2127,7 +2134,7 @@ DisplayListbox(
 		x = listPtr->inset;
 		y = (i - listPtr->topIndex) * listPtr->lineHeight
 			+ listPtr->inset;
-		width = Tk_Width(tkwin) - 2*listPtr->inset;
+		width = Tk_Width(tkwin) - 2 * listPtr->inset;
 
 		TkDrawDottedRect(disp, pixmap, gc, x, y,
 			width, listPtr->lineHeight);
@@ -2153,22 +2160,24 @@ DisplayListbox(
      * of the text of the listbox entries.
      */
 
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->borderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->highlightWidthObj, &highlightWidth);
     Tk_Draw3DRectangle(tkwin, pixmap, listPtr->normalBorder,
-	    listPtr->highlightWidth, listPtr->highlightWidth,
-	    Tk_Width(tkwin) - 2*listPtr->highlightWidth,
-	    Tk_Height(tkwin) - 2*listPtr->highlightWidth,
-	    listPtr->borderWidth, listPtr->relief);
-    if (listPtr->highlightWidth > 0) {
+	    highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, listPtr->relief);
+    if (highlightWidth > 0) {
 	GC fgGC, bgGC;
 
 	bgGC = Tk_GCForColor(listPtr->highlightBgColorPtr, pixmap);
 	if (listPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(listPtr->highlightColorPtr, pixmap);
 	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
-		    listPtr->highlightWidth, pixmap);
+		    highlightWidth, pixmap);
 	} else {
 	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
-		    listPtr->highlightWidth, pixmap);
+		    highlightWidth, pixmap);
 	}
     }
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -2217,6 +2226,7 @@ ListboxComputeGeometry(
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
+    int selBorderWidth;
 
     if (fontChanged || maxIsStale) {
 	listPtr->xScrollUnit = Tk_TextWidth(listPtr->tkfont, "0", 1);
@@ -2244,7 +2254,8 @@ ListboxComputeGeometry(
     }
 
     Tk_GetFontMetrics(listPtr->tkfont, &fm);
-    listPtr->lineHeight = fm.linespace + 1 + 2*listPtr->selBorderWidth;
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
+    listPtr->lineHeight = fm.linespace + 1 + 2 * selBorderWidth;
     width = listPtr->width;
     if (width <= 0) {
 	width = (listPtr->maxWidth + listPtr->xScrollUnit - 1)
@@ -2253,8 +2264,8 @@ ListboxComputeGeometry(
 	    width = 1;
 	}
     }
-    pixelWidth = width*listPtr->xScrollUnit + 2*listPtr->inset
-	    + 2*listPtr->selBorderWidth;
+    pixelWidth = width*listPtr->xScrollUnit + 2 * listPtr->inset
+	    + 2 * selBorderWidth;
     height = listPtr->height;
     if (listPtr->height <= 0) {
 	height = (int)listPtr->nElements;
@@ -2262,7 +2273,7 @@ ListboxComputeGeometry(
 	    height = 1;
 	}
     }
-    pixelHeight = height*listPtr->lineHeight + 2*listPtr->inset;
+    pixelHeight = height*listPtr->lineHeight + 2 * listPtr->inset;
     Tk_GeometryRequest(listPtr->tkwin, pixelWidth, pixelHeight);
     Tk_SetInternalBorder(listPtr->tkwin, listPtr->inset);
     if (updateGrid) {
@@ -2611,7 +2622,7 @@ ListboxEventProc(
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
 
-	vertSpace = Tk_Height(listPtr->tkwin) - 2*listPtr->inset;
+	vertSpace = Tk_Height(listPtr->tkwin) - 2 * listPtr->inset;
 	listPtr->fullLines = vertSpace / listPtr->lineHeight;
 	if ((listPtr->fullLines*listPtr->lineHeight) < vertSpace) {
 	    listPtr->partialLine = 1;
@@ -3347,13 +3358,15 @@ ListboxUpdateHScrollbar(
     double first, last;
     Tcl_Interp *interp;
     Tcl_DString buf;
+    int selBorderWidth;
 
     if (listPtr->xScrollCmdObj == NULL) {
 	return;
     }
 
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
     windowWidth = Tk_Width(listPtr->tkwin)
-	    - 2*(listPtr->inset + listPtr->selBorderWidth);
+	    - 2 * (listPtr->inset + selBorderWidth);
     if (listPtr->maxWidth == 0) {
 	first = 0;
 	last = 1.0;
@@ -3624,11 +3637,12 @@ MigrateHashEntries(
 static int GetMaxOffset(
     Listbox *listPtr)
 {
-    int maxOffset;
+    int maxOffset, selBorderWidth;
 
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
     maxOffset = listPtr->maxWidth -
-	    (Tk_Width(listPtr->tkwin) - 2*listPtr->inset -
-	    2*listPtr->selBorderWidth) + listPtr->xScrollUnit - 1;
+	    (Tk_Width(listPtr->tkwin) - 2 * listPtr->inset -
+	    2 * selBorderWidth) + listPtr->xScrollUnit - 1;
     if (maxOffset < 0) {
 
 	/*
