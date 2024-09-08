@@ -227,26 +227,11 @@ proc ::ttk::treeview::KeyNav {w dir} {
     switch -- $dir {
 	up {
 	    # Move up one item/cell
-	    if {[set up [$w prev $focus]] eq ""} {
-	        set focus [$w parent $focus]
-	    } else {
-		while {[$w item $up -open] && [$w haschildren $up]} {
-		    set up [$w id $up end]
-		}
-		set focus $up
-	    }
+	    set focus [$w before $focus]
 	}
 	down {
 	    # Move down one item/cell
-	    if {[$w item $focus -open] && [$w haschildren $focus]} {
-	        set focus [$w id $focus first]
-	    } else {
-		set up $focus
-		while {$up ne "" && [set down [$w next $up]] eq ""} {
-		    set up [$w parent $up]
-		}
-		set focus $down
-	    }
+	    set focus [$w after $focus]
 	}
 	left {
 	    # Move left one cell or close item if open
@@ -480,26 +465,11 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
     switch -- $dir {
 	up {
 	    # Extend selection to prev item
-	    if {[set up [$w prev $focus]] eq ""} {
-	        set focus [$w parent $focus]
-	    } else {
-		while {[$w item $up -open] && [$w haschildren $up]} {
-		    set up [$w id $up end]
-		}
-		set focus $up
-	    }
+	    set focus [$w before $focus]
 	}
 	down {
 	    # Extend selection to next item
-	    if {[$w item $focus -open] && [$w haschildren $focus]} {
-	        set focus [$w id $focus first]
-	    } else {
-		set up $focus
-		while {$up ne "" && [set down [$w next $up]] eq ""} {
-		    set up [$w parent $up]
-		}
-		set focus $down
-	    }
+	    set focus [$w after $focus]
 	}
 	left {
 	    # Extend selection to prev cell
