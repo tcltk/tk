@@ -37,10 +37,10 @@ typedef struct {
     int \fIselBorderWidth\fR;
     XColor *\fIselFgColorPtr\fR;
     Tk_Item *\fIselItemPtr\fR;
-    int \fIselectFirst\fR;
-    int \fIselectLast\fR;
+    Tcl_Size \fIselectFirst\fR;
+    Tcl_Size \fIselectLast\fR;
     Tk_Item *\fIanchorItemPtr\fR;
-    int \fIselectAnchor\fR;
+    Tcl_Size \fIselectAnchor\fR;
     Tk_3DBorder \fIinsertBorder\fR;
     int \fIinsertWidth\fR;
     int \fIinsertBorderWidth\fR;
