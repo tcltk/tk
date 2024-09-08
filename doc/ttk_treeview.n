@@ -158,6 +158,13 @@ option), returns the bounding box of that cell within \fIitem\fR
 .
 Returns the identifier of item before \fIitem\fR in the current view.
 Can be the previous sibling, parent of \fIitem\fR, or {} for none.
+.\" METHOD: between
+.TP
+\fIpathname \fBbetween \fIfrom to\fR
+.
+Returns a list of all of the items between \fIfrom\fR and \fIto\fR, inclusive.
+Item \fIto\fR should be after \fIfrom\fR in the treeview items, but if not the
+last item will be used instead.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?

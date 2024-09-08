@@ -3060,6 +3060,60 @@ static int TreeviewAfterCommand(
     return TCL_OK;
 }
 
+/* + GetBetweenList --
+ *	Get a list of items between from and to in widget
+ */
+Tcl_Obj *GetBetweenList(
+    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, int allow_hidden, int allow_recurse)
+{
+    TreeItem *item = from;
+    Tcl_Obj *result = Tcl_NewListObj(0,0);
+    if (!result) {
+	return NULL;
+    }
+
+    while (item && item != to) {
+	if (Tcl_ListObjAppendElement(interp, result, item->idObj) != TCL_OK) {
+	    Tcl_DecrRefCount(result);
+	    return NULL;
+	}
+	item = FindNextVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+    }
+    if (item == to) {
+	Tcl_ListObjAppendElement(interp, result, item->idObj);
+    }
+    return result;
+}
+
+/* + $tv between $from $to --
+ *	Get list of items between from and to, inclusive
+ */
+static int TreeviewBetweenCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *from, *to;
+    Tcl_Obj *result;
+    int allow_hidden = 0;
+    int allow_recurse = 1;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "from to");
+	return TCL_ERROR;
+    }
+    if (!(from = FindItem(interp, tv, objv[2])) || !(to = FindItem(interp, tv, objv[3]))) {
+	return TCL_ERROR;
+    }
+
+    result = GetBetweenList(interp, tv, from, to, allow_hidden, allow_recurse);
+    if (result) {
+	Tcl_SetObjResult(interp, result);
+    } else {
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
 /* + $tv identifier $item index --
  * 	Return the id of the item at index in parent $item.
  */
@@ -5363,6 +5417,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "after",  	TreeviewAfterCommand,0 },
     { "bbox",  		TreeviewBBoxCommand,0 },
     { "before",  	TreeviewBeforeCommand,0 },
+    { "between",  	TreeviewBetweenCommand,0 },
     { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
