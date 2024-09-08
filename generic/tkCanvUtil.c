@@ -1143,7 +1143,7 @@ Tk_ConfigOutlineGC(
     }
     if (mask && (dash->number != 0)) {
 	gcValues->line_style = LineOnOffDash;
-	if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
 		outline->offsetObj, &outline->offset) != TCL_OK) {
 	    outline->offset = 0;
 	}
@@ -1195,7 +1195,7 @@ Tk_ChangeOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-	if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
 		outline->offsetObj, &outline->offset) != TCL_OK) {
 	    outline->offset = 0;
 	}
@@ -1317,7 +1317,7 @@ Tk_ResetOutlineGC(
     if (width < 1.0) {
 	width = 1.0;
     }
-    if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
 	    outline->offsetObj, &outline->offset) != TCL_OK) {
 	outline->offset = 0;
     }
@@ -1445,7 +1445,7 @@ Tk_CanvasPsOutline(
 	}
     }
 
-    if (!outline->offsetObj || Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
 	    outline->offsetObj, &outline->offset) != TCL_OK) {
 	outline->offset = 0;
     }
