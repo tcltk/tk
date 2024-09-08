@@ -4699,7 +4699,7 @@ static int TreeviewSearchCommand(
 	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not", "-real",
 	"-recurse", "-recursive", "-regexp", "-start", NULL
     };
-    int index, all = 0, depth = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
+    int index, all = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
     int type = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
 
     if (objc < 3 || objc > 30) {
@@ -4710,8 +4710,6 @@ static int TreeviewSearchCommand(
     if (!(parent = FindItem(interp, tv, objv[2]))) {
 	return TCL_ERROR;
     }
-
-    depth = ItemDepth(parent) + 1;
 
     for (i = 3; i < objc - 1; ++i) {
 	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], searchStrings,
@@ -4786,9 +4784,13 @@ static int TreeviewSearchCommand(
 	}
     }
 
-    /* If no start id, use first child of parent */
+    /* If no start id, use first child for forwards or last child for backwards */
     if (!item) {
-	item = parent->children;
+	if (forwards) {
+	    item = parent->children;
+	} else {
+	    item = EndPosition(tv, parent);
+	}
     }
 
     patternObj = objv[objc-1];

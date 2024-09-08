@@ -518,6 +518,112 @@ or \fB{}\fR if \fIitem\fR is at the top level of the hierarchy.
 .
 Returns the identifier of \fIitem\fR's previous sibling,
 or \fB{}\fR if \fIitem\fR is the first child of its parent.
+.\" METHOD: search
+.TP
+\fIpathname \fBsearch \fIparent\fR ?\fI\-option ...\fR? \fIpattern\fR
+.
+Searches within \fIparent\fR's children for \fIpattern\fR and returns the
+identifier of the first match. Valid options are:
+.RS
+.\" OPTION: -exact
+.TP
+\fB\-exact\fR
+.
+\fIPattern\fR is a literal string that is compared for exact equality
+against each cell/element. This is the default.
+.\" OPTION: -glob
+.TP
+\fB\-glob\fR
+.
+\fIPattern\fR is a glob-style pattern which is matched against each
+cell/element using the same rules as the \fBstring match\fR command.
+.\" OPTION: -regexp
+.TP
+\fB\-regexp\fR
+.
+\fIPattern\fR is a regular expression that is matched against each
+cell/element using the rules described in the \fBre_syntax\fR reference page.
+.\" OPTION: -all
+.TP
+\fB\-all\fR
+.
+Return the identifiers of all items that match \fIpattern\fR rather than only
+the first one.
+.\" OPTION: -not
+.TP
+\fB\-not\fR
+.
+Negates the match, so rather than return items that match \fIpattern\fR, only
+items that do not match \fIpattern\fR will be returned.
+.\" OPTION: -start
+.TP
+\fB\-start \fIitem\fR
+.
+Start the search at item \fIitem\fR. \fIItem\fR must be a descendant of
+\fIparent\fR.
+
+.\" OPTION: -ascii
+.TP
+\fB\-ascii\fR
+.
+The values are to be compared to \fIpattern\fR as Unicode strings (the
+name is for backward-compatibility reasons.) This is the default.
+.\" OPTION: -dictionary
+.TP
+\fB\-dictionary\fR
+.
+The values are to be compared to \fIpattern\fR using dictionary-style
+comparisons (see \fBlsort\fR for a full description). Same as -ascii for now.
+.\" OPTION: -integer
+.TP
+\fB\-integer\fR
+.
+The values are to be compared to \fIpattern\fR as integers.
+.\" OPTION: -nocase
+.TP
+\fB\-nocase\fR
+.
+Comparisons are to be performed in a case-insensitive manner. Only used with
+\fB\-ascii\fR option.
+.\" OPTION: -real
+.TP
+\fB\-real\fR
+.
+The values are to be compared to \fIpattern\fR as floating-point values.
+
+.\" OPTION: -backwards
+.TP
+\fB\-backwards\fR
+.
+The search is to be performed backwards starting from \fI\-start\fR item or
+last child of \fIparent\fR if not specified, until the first item in the
+treeview.
+.\" OPTION: -forwards
+.TP
+\fB\-forwards\fR
+.
+The search is to be performed forwards starting from \fI\-start\fR item or
+first child of \fIparent\fR if not specified, until the last item in the
+treeview. This is the default.
+
+.\" OPTION: -column
+.TP
+\fB\-column \fIcolumn\fR
+.
+Only search within column \fIcolumn\fR.
+.\" OPTION: -hidden
+.TP
+\fB\-hidden\fR
+.
+Search within hidden items too. Normally hidden items are excluded from the
+search.
+.\" OPTION: -recurse
+.TP
+\fB\-recurse\fR
+.
+Search within all of the descendants of \fIparent\fR's children. Normally only
+the children of \fIparent\fR are searched.
+.RE
 .\" METHOD: see
 .TP
 \fIpathname \fBsee \fIitem\fR ?\fIindex\fR?
