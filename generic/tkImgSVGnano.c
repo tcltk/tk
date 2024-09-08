@@ -194,15 +194,15 @@ FileMatchSVG(
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
-        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
-        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+	GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+	if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
-        }
-        if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
+	}
+	if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
 	    nsvgDelete(nsvgImage);
-        }
-        return 1;
+	}
+	return 1;
     }
     return 0;
 }
@@ -243,7 +243,7 @@ FileReadSVG(
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
 
     if (nsvgImage == NULL) {
-        Tcl_Obj *dataObj = Tcl_NewObj();
+	Tcl_Obj *dataObj = Tcl_NewObj();
 
 	if (Tcl_ReadChars(chan, dataObj, TCL_INDEX_NONE, 0) == TCL_IO_FAILURE) {
 	    /* in case of an error reading the file */
@@ -304,15 +304,15 @@ StringMatchSVG(
     }
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage != NULL) {
-        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
-        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+	GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+	if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
-        }
-        if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
+	}
+	if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
 	    nsvgDelete(nsvgImage);
-        }
-        return 1;
+	}
+	return 1;
     }
     return 0;
 }
@@ -392,7 +392,7 @@ ParseSVGWithOptions(
     NSVGimage *nsvgImage;
     int parameterScaleSeen = 0;
     static const char *const fmtOptions[] = {
-        "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
+	"-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
     enum fmtOptionsEnum {
 	OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
@@ -421,7 +421,7 @@ ParseSVGWithOptions(
     ropts->scaleToWidth = 0;
     if ((formatObj != NULL) &&
 	    Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
-        goto error;
+	goto error;
     }
     for (; objc > 0 ; objc--, objv++) {
 	int optIndex;
@@ -475,7 +475,7 @@ ParseSVGWithOptions(
 	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_DPI:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
-	        goto error;
+		goto error;
 	    }
 	    if (dpi < 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -488,7 +488,7 @@ ParseSVGWithOptions(
 	case OPT_SCALE:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->scale) ==
 		TCL_ERROR) {
-	        goto error;
+		goto error;
 	    }
 	    if (ropts->scale <= 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -501,7 +501,7 @@ ParseSVGWithOptions(
 	case OPT_SCALE_TO_HEIGHT:
 	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToHeight) ==
 		TCL_ERROR) {
-	        goto error;
+		goto error;
 	    }
 	    if (ropts->scaleToHeight <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -514,7 +514,7 @@ ParseSVGWithOptions(
 	case OPT_SCALE_TO_WIDTH:
 	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToWidth) ==
 		TCL_ERROR) {
-	        goto error;
+		goto error;
 	    }
 	    if (ropts->scaleToWidth <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -538,7 +538,7 @@ ParseSVGWithOptions(
 
 error:
     if (inputCopy != NULL) {
-        ckfree(inputCopy);
+	ckfree(inputCopy);
     }
     return NULL;
 }
@@ -669,8 +669,8 @@ GetScaleFromParameters(
     int width, height;
 
     if ((nsvgImage->width == 0.0) || (nsvgImage->height == 0.0)) {
-        width = height = 0;
-        scale = 1.0;
+	width = height = 0;
+	scale = 1.0;
     } else if (ropts->scaleToHeight > 0) {
 	/*
 	 * Fixed height
@@ -759,7 +759,7 @@ CacheSVG(
     NSVGcache *cachePtr = GetCachePtr(interp);
 
     if (cachePtr != NULL) {
-        cachePtr->dataOrChan = dataOrChan;
+	cachePtr->dataOrChan = dataOrChan;
 	if (formatObj != NULL) {
 	    data = Tcl_GetStringFromObj(formatObj, &length);
 	    Tcl_DStringAppend(&cachePtr->formatString, data, length);
@@ -801,10 +801,10 @@ GetCachedSVG(
 
     if ((cachePtr != NULL) && (cachePtr->nsvgImage != NULL) &&
 	(cachePtr->dataOrChan == dataOrChan)) {
-        if (formatObj != NULL) {
+	if (formatObj != NULL) {
 	    data = Tcl_GetStringFromObj(formatObj, &length);
 	    if (strcmp(data, Tcl_DStringValue(&cachePtr->formatString)) == 0) {
-	        nsvgImage = cachePtr->nsvgImage;
+		nsvgImage = cachePtr->nsvgImage;
 		*ropts = cachePtr->ropts;
 		cachePtr->nsvgImage = NULL;
 	    }
@@ -838,8 +838,8 @@ CleanCache(Tcl_Interp *interp)
     NSVGcache *cachePtr = GetCachePtr(interp);
 
     if (cachePtr != NULL) {
-        cachePtr->dataOrChan = NULL;
-        Tcl_DStringSetLength(&cachePtr->formatString, 0);
+	cachePtr->dataOrChan = NULL;
+	Tcl_DStringSetLength(&cachePtr->formatString, 0);
 	if (cachePtr->nsvgImage != NULL) {
 	    nsvgDelete(cachePtr->nsvgImage);
 	    cachePtr->nsvgImage = NULL;
@@ -869,7 +869,7 @@ FreeCache(void *clientData, TCL_UNUSED(Tcl_Interp *))
 
     Tcl_DStringFree(&cachePtr->formatString);
     if (cachePtr->nsvgImage != NULL) {
-        nsvgDelete(cachePtr->nsvgImage);
+	nsvgDelete(cachePtr->nsvgImage);
     }
     ckfree(cachePtr);
 }
