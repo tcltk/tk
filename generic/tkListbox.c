@@ -154,10 +154,10 @@ typedef struct {
 				 * scripts. May be NULL. */
     Tcl_Obj *yScrollCmdObj;	/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no command
-				 * to issue. Malloc'ed. */
+				 * to issue. May be NULL. */
     Tcl_Obj *xScrollCmdObj;	/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no command
-				 * to issue. Malloc'ed. */
+				 * to issue. May be NULL. */
     int state;			/* Listbox state. */
     Pixmap gray;		/* Pixmap for displaying disabled text. */
     int flags;			/* Various flag bits: see below for
