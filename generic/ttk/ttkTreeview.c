@@ -4685,8 +4685,10 @@ static int TreeviewSearchCommand(
     TreeItem *parent, *item = NULL;
     TreeColumn *column = NULL;
     const char *pattern = NULL;
-    Tcl_Size i, plen;
-    Tcl_Obj *patternObj, *resultObj;
+    Tcl_Size i, plen, len;
+    Tcl_Obj *patObj, *resultObj;
+    Tcl_WideInt intVal;
+    double doubleVal;
 
     enum {
 	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMN,
@@ -4696,13 +4698,13 @@ static int TreeviewSearchCommand(
     };
     static const char *const searchStrings[] = {
 	"-all", "-ascii", "-backwards", "-column", "-dictionary", "-exact",
-	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not", "-real",
-	"-recurse", "-recursive", "-regexp", "-start", NULL
+	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not",
+	"-real", "-recurse", "-recursive", "-regexp", "-start", NULL
     };
     int index, all = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
     int type = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
 
-    if (objc < 3 || objc > 30) {
+    if (objc < 4 || objc > 30) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
 	return TCL_ERROR;
     }
@@ -4739,6 +4741,7 @@ static int TreeviewSearchCommand(
 		break;
 	    case SEARCH_DICTIONARY:
 		mode = SEARCH_DICTIONARY;
+		nocase = 1;
 		break;
 	    case SEARCH_EXACT:
 		type = SEARCH_EXACT;
@@ -4784,7 +4787,7 @@ static int TreeviewSearchCommand(
 	}
     }
 
-    /* If no start id, use first child for forwards or last child for backwards */
+    /* If no start item, use first/last child for forwards/backwards search */
     if (!item) {
 	if (forwards) {
 	    item = parent->children;
@@ -4793,40 +4796,57 @@ static int TreeviewSearchCommand(
 	}
     }
 
-    patternObj = objv[objc-1];
-    pattern = Tcl_GetStringFromObj(patternObj, &plen);
-    resultObj = Tcl_NewListObj(0,0);
-    if (!pattern || !resultObj ) {
+    /* Get native form of pattern */
+    patObj = objv[objc-1];
+    if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
+	if (!(pattern = Tcl_GetStringFromObj(patObj, &plen))) {
+	    return TCL_ERROR;
+	}
+    } else if (mode == SEARCH_INTEGER) {
+	if (Tcl_GetWideIntFromObj(interp, patObj, &intVal) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    } else if (mode == SEARCH_REAL) {
+	if (Tcl_GetDoubleFromObj(interp, patObj, &doubleVal) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+
+    if (!(resultObj = Tcl_NewListObj(0,0))) {
 	return TCL_ERROR;
     }
 
-    /* Loop over items, get values, compare to pattern, add matches to result */
+    /* Loop over items, compare values to pattern, and add matches to result */
     while (item) {
 	int match = 0;
 
+	/* Skip hidden items unless allowed */
 	if (!(item->hidden) || (item->hidden && hidden)) {
-	    Tcl_Obj *elementObj;
+	    Tcl_Obj *valObj;
 	    Tcl_Size count = 0;
 
-	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj, &count) != TCL_OK) {
+	    /* Get cell values */
+	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj,
+		    &count) != TCL_OK) {
 		Tcl_BounceRefCount(resultObj);
 		return TCL_ERROR;
 	    }
 
+	    /* Loop over text & cell values and compare to pattern */
 	    for (i = ((tv->tree.showFlags & SHOW_TREE) ? -1 : 0); i < count; ++i) {
 		if (i == -1) {
-		    elementObj = item->textObj;
-		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i, &elementObj) != TCL_OK) {
+		    valObj = item->textObj;
+		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i, &valObj)
+			!= TCL_OK) {
 		    Tcl_BounceRefCount(resultObj);
 		    return TCL_ERROR;
 		}
-		if (!elementObj) continue;
+		if (!valObj) continue;
 
+		/* Do ASCII/Unicode compare */
 		if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
-		    /* Do compare using ASCII/Unicode compare */
 		    if (type == SEARCH_EXACT) {
-			Tcl_Size len;
-			const char *string = Tcl_GetStringFromObj(elementObj, &len);
+			const char *string = Tcl_GetStringFromObj(valObj, &len);
 			Tcl_Size numChars = (len <= plen ? len : plen);
 
 			if (!nocase) {
@@ -4834,43 +4854,43 @@ static int TreeviewSearchCommand(
 			} else {
 			    match = !Tcl_UtfNcasecmp(string, pattern, numChars);
 			}
+
 		    } else if (type == SEARCH_GLOB) {
-			const char *string = Tcl_GetString(elementObj);
+			match = Tcl_StringCaseMatch(Tcl_GetString(valObj),
+			    pattern, nocase ? TCL_MATCH_NOCASE : 0);
 
-			match = Tcl_StringCaseMatch(string, pattern, nocase ? TCL_MATCH_NOCASE : 0);
 		    } else if (type == SEARCH_REGEXP) {
-			match = Tcl_RegExpMatchObj(interp, elementObj, patternObj);
+			match = Tcl_RegExpMatchObj(interp, valObj, patObj);
 		    }
 
+		/* Do wide integer compare */
 		} else if (mode == SEARCH_INTEGER) {
-		    /* Do compare using wide integer compare */
-		    Tcl_WideInt val1, val2;
+		    Tcl_WideInt val;
 
-		    if (Tcl_GetWideIntFromObj(interp, elementObj, &val1) == TCL_OK &&
-			Tcl_GetWideIntFromObj(interp, patternObj, &val2) == TCL_OK) {
-			match = (val1 == val2);
-		    } else {
+		    if (Tcl_GetWideIntFromObj(interp, valObj, &val) == TCL_OK) {
+			match = (intVal == val);
+		    } else if (Tcl_GetStringFromObj(valObj, &len) && len > 0) {
 			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
-		    }
+		    } /* Ignore empty values */
 
+		/* Do double value compare */
 		} else if (mode == SEARCH_REAL) {
-		    /* Do compare using double value compare */
-		    double val1, val2;
+		    double val;
 
-		    if (Tcl_GetDoubleFromObj(interp, elementObj, &val1) == TCL_OK &&
-			Tcl_GetDoubleFromObj(interp, patternObj, &val2) == TCL_OK) {
-			match = (val1 == val2);
-		    } else {
+		    if (Tcl_GetDoubleFromObj(interp, valObj, &val) == TCL_OK) {
+			match = (doubleVal == val);
+		    } else if (Tcl_GetStringFromObj(valObj, &len) && len > 0) {
 			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
-		    }
+		    } /* Ignore empty values */
 		}
 
-		/* If there is a match */
+		/* For a match, lappend to result and exit if not all */
 		if (match == !not) {
 		    match = 1;
-		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
+		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj)
+			    != TCL_OK) {
 			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
 		    }
