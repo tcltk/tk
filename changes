@@ -8187,6 +8187,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2024-03-15 (bug)[47d4f2] Throw focus events if marked by X11 as inferior
 	(leunissen)
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2024-03-19 (bug) [fdc0ed] Fix segfault on [focus -force] with xvfb (vogel)
 
