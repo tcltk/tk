@@ -2119,14 +2119,14 @@ CanvasWidgetCmd(
 	    break;
 	case TK_SCROLL_PAGES:
 	    newX = (int) (canvasPtr->xOrigin + count * .9
-		    * (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
+		    * (Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    break;
 	case TK_SCROLL_UNITS:
 	    if (canvasPtr->xScrollIncrement > 0) {
-		newX = canvasPtr->xOrigin + count*canvasPtr->xScrollIncrement;
+		newX = canvasPtr->xOrigin + count * canvasPtr->xScrollIncrement;
 	    } else {
 		newX = (int) (canvasPtr->xOrigin + count * .1
-			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
+			* (Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    }
 	    break;
 	default:
@@ -2159,14 +2159,14 @@ CanvasWidgetCmd(
 	    break;
 	case TK_SCROLL_PAGES:
 	    newY = (int) (canvasPtr->yOrigin + count * .9
-		    * (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
+		    * (Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    break;
 	case TK_SCROLL_UNITS:
 	    if (canvasPtr->yScrollIncrement > 0) {
-		newY = canvasPtr->yOrigin + count*canvasPtr->yScrollIncrement;
+		newY = canvasPtr->yOrigin + count * canvasPtr->yScrollIncrement;
 	    } else {
 		newY = (int) (canvasPtr->yOrigin + count * .1
-			* (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
+			* (Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    }
 	    break;
 	default:
@@ -2338,8 +2338,23 @@ ConfigureCanvas(
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
 
+    if (canvasPtr->borderWidth < 0) {
+	canvasPtr->borderWidth = 0;
+    }
+    if (canvasPtr->height < 0) {
+	canvasPtr->height = 0;
+    }
     if (canvasPtr->highlightWidth < 0) {
 	canvasPtr->highlightWidth = 0;
+    }
+    if (canvasPtr->width < 0) {
+	canvasPtr->width = 0;
+    }
+    if (canvasPtr->xScrollIncrement < 0) {
+	canvasPtr->xScrollIncrement = 0;
+    }
+    if (canvasPtr->yScrollIncrement < 0) {
+	canvasPtr->yScrollIncrement = 0;
     }
     canvasPtr->inset = canvasPtr->borderWidth + canvasPtr->highlightWidth;
 
@@ -2378,8 +2393,8 @@ ConfigureCanvas(
      * Reset the desired dimensions for the window.
      */
 
-    Tk_GeometryRequest(canvasPtr->tkwin, canvasPtr->width + 2*canvasPtr->inset,
-	    canvasPtr->height + 2*canvasPtr->inset);
+    Tk_GeometryRequest(canvasPtr->tkwin, canvasPtr->width + 2 * canvasPtr->inset,
+	    canvasPtr->height + 2 * canvasPtr->inset);
 
     /*
      * Restart the cursor timing sequence in case the on-time or off-time just
@@ -2433,14 +2448,14 @@ ConfigureCanvas(
     if (flags & TK_OFFSET_LEFT) {
 	canvasPtr->tsoffset.xoffset = 0;
     } else if (flags & TK_OFFSET_CENTER) {
-	canvasPtr->tsoffset.xoffset = canvasPtr->width/2;
+	canvasPtr->tsoffset.xoffset = canvasPtr->width / 2;
     } else if (flags & TK_OFFSET_RIGHT) {
 	canvasPtr->tsoffset.xoffset = canvasPtr->width;
     }
     if (flags & TK_OFFSET_TOP) {
 	canvasPtr->tsoffset.yoffset = 0;
     } else if (flags & TK_OFFSET_MIDDLE) {
-	canvasPtr->tsoffset.yoffset = canvasPtr->height/2;
+	canvasPtr->tsoffset.yoffset = canvasPtr->height / 2;
     } else if (flags & TK_OFFSET_BOTTOM) {
 	canvasPtr->tsoffset.yoffset = canvasPtr->height;
     }
@@ -3257,8 +3272,8 @@ DisplayCanvas(
 	    Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin),
 		    canvasPtr->bgBorder, canvasPtr->highlightWidth,
 		    canvasPtr->highlightWidth,
-		    Tk_Width(tkwin) - 2*canvasPtr->highlightWidth,
-		    Tk_Height(tkwin) - 2*canvasPtr->highlightWidth,
+		    Tk_Width(tkwin) - 2 * canvasPtr->highlightWidth,
+		    Tk_Height(tkwin) - 2 * canvasPtr->highlightWidth,
 		    canvasPtr->borderWidth, canvasPtr->relief);
 	}
 	if (canvasPtr->highlightWidth > 0) {
