@@ -799,8 +799,8 @@ ComputeTextBbox(
      */
 
     textInfoPtr = textPtr->textInfoPtr;
-    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &textInfoPtr->insertWidth);
-    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &textInfoPtr->selBorderWidth);
+    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), (Tcl_Obj *)textInfoPtr->reserved2, &textInfoPtr->insertWidth);
+    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), (Tcl_Obj *)textInfoPtr->reserved3, &textInfoPtr->selBorderWidth);
     fudge = (textInfoPtr->insertWidth + 1) / 2;
     if (textInfoPtr->selBorderWidth > fudge) {
 	fudge = textInfoPtr->selBorderWidth;
@@ -949,7 +949,7 @@ DisplayCanvText(
 
 	    x = xFirst;
 	    height = hFirst;
-	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &textInfoPtr->selBorderWidth);
+	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), (Tcl_Obj *)textInfoPtr->reserved3, &textInfoPtr->selBorderWidth);
 	    for (y = yFirst ; y <= yLast; y += height) {
 		int dx1, dy1, dx2, dy2;
 		double s = textPtr->sine, c = textPtr->cosine;
@@ -996,7 +996,7 @@ DisplayCanvText(
 	    double s = textPtr->sine, c = textPtr->cosine;
 	    XPoint points[4];
 
-	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &textInfoPtr->insertWidth);
+	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), (Tcl_Obj *)textInfoPtr->reserved2, &textInfoPtr->insertWidth);
 	    dx1 = x - (textInfoPtr->insertWidth / 2);
 	    dy1 = y;
 	    dx2 = textInfoPtr->insertWidth;
@@ -1013,7 +1013,7 @@ DisplayCanvText(
 	    Tk_SetCaretPos(Tk_CanvasTkwin(canvas), points[0].x, points[0].y,
 		    height);
 	    if (textInfoPtr->cursorOn) {
-		Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertBorderWidthObj, &textInfoPtr->insertBorderWidth);
+		Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), (Tcl_Obj *)textInfoPtr->reserved1, &textInfoPtr->insertBorderWidth);
 		Tk_Fill3DPolygon(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->insertBorder, points, 4,
 			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
