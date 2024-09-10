@@ -385,11 +385,11 @@ static void DrawFocusRing(
 
     if (solid) {
 	XRectangle rects[4] = {
-	    {b.x, b.y, b.width, thickness},				/* N */
-	    {b.x, b.y + b.height - thickness, b.width, thickness},	/* S */
-	    {b.x, b.y + thickness, thickness, b.height - 2*thickness},	/* W */
-	    {b.x + b.width - thickness, b.y + thickness,		/* E */
-	     thickness, b.height - 2*thickness}
+	    {(short)b.x, (short)b.y, (unsigned short)b.width, (unsigned short)thickness},				/* N */
+	    {(short)b.x, (short)(b.y + b.height - thickness), (unsigned short)b.width, (unsigned short)thickness},	/* S */
+	    {(short)b.x, (short)(b.y + thickness), (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)},	/* W */
+	    {(short)(b.x + b.width - thickness), (short)(b.y + thickness),		/* E */
+	    (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)}
 	};
 
 	XFillRectangles(disp, d, gc, rects, 4);
