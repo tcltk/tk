@@ -1526,11 +1526,11 @@ typedef struct TkText {
 
     Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     Tcl_Obj *xScrollCmdObj;		/* Prefix of command to issue to update
-				 * horizontal scrollbar when view changes. */
+				 * horizontal scrollbar when view changes. May be NULL. */
     Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
-				 * vertical scrollbar when view changes. */
+				 * vertical scrollbar when view changes. May be NULL. */
     unsigned flags;		/* Miscellaneous flags; see below for definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     size_t refCount;		/* Number of objects referring to us. */
