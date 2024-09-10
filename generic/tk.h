@@ -978,7 +978,7 @@ typedef struct Tk_Item {
 				 * this canvas. Later items in list are drawn
 				 * just below earlier ones. */
     Tk_State state;		/* State of item. */
-    char *reserved1;		/* reserved for future use */
+    void *reserved1;		/* reserved for future use */
     int redraw_flags;		/* Some flags used in the canvas */
 
     /*
@@ -1155,6 +1155,9 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
+    void *reserved1;		/* reserved for future use */
+    void *reserved2;
+    void *reserved3;
 } Tk_CanvasTextInfo;
 
 /*
@@ -1197,8 +1200,8 @@ typedef struct Tk_Outline {
     Tk_Dash dash;		/* Dash pattern. */
     Tk_Dash activeDash;		/* Dash pattern if state is active. */
     Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */
-    void *reserved1;		/* Reserved for future expansion. */
-    void *reserved2;
+    Tcl_Obj *offsetObj;		/* Dash offset. */
+    void *reserved2;		/* Reserved for future expansion. */
     void *reserved3;
     Tk_TSOffset tsoffset;	/* Stipple offset for outline. */
     XColor *color;		/* Outline color. */

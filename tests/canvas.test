@@ -44,7 +44,7 @@ test canvas-1.6 {configuration options: bad value for "bd"} -body {
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
     .c cget -borderwidth
-} -result 1
+} -result 1.3
 test canvas-1.8 {configuration options: bad value for "borderwidth"} -body {
     .c configure -borderwidth badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -72,7 +72,7 @@ test canvas-1.14 {configuration options: bad value for "cursor"} -body {
 test canvas-1.15 {configuration options: good value for "height"} -body {
     .c configure -height 2.1
     .c cget -height
-} -result 2
+} -result 2.1
 test canvas-1.16 {configuration options: bad value for "height"} -body {
     .c configure -height x42
 } -returnCodes error -result {expected screen distance but got "x42"}

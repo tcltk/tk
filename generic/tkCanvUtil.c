@@ -971,6 +971,9 @@ Tk_CreateOutline(
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
     outline->offset = 0;
+    outline->offsetObj = NULL;
+    outline->reserved2 = NULL;
+    outline->reserved3 = NULL;
     outline->dash.number = 0;
     outline->activeDash.number = 0;
     outline->disabledDash.number = 0;
@@ -1140,6 +1143,10 @@ Tk_ConfigOutlineGC(
     }
     if (mask && (dash->number != 0)) {
 	gcValues->line_style = LineOnOffDash;
+	if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+		outline->offsetObj, &outline->offset) != TCL_OK) {
+	    outline->offset = 0;
+	}
 	gcValues->dash_offset = outline->offset;
 	if ((unsigned int)ABS(dash->number) > sizeof(char *)) {
 	    gcValues->dashes = dash->pattern.pt[0];
@@ -1187,6 +1194,10 @@ Tk_ChangeOutlineGC(
     width = outline->width;
     if (width < 1.0) {
 	width = 1.0;
+    }
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
     }
     dash = &(outline->dash);
     color = outline->color;
@@ -1305,6 +1316,10 @@ Tk_ResetOutlineGC(
     width = outline->width;
     if (width < 1.0) {
 	width = 1.0;
+    }
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
     }
     dash = &(outline->dash);
     color = outline->color;
@@ -1430,6 +1445,10 @@ Tk_CanvasPsOutline(
 	}
     }
 
+    if (outline->offsetObj && Tk_GetPixelsFromObj(NULL, Canvas(canvas)->tkwin,
+	    outline->offsetObj, &outline->offset) != TCL_OK) {
+	outline->offset = 0;
+    }
     Tcl_AppendPrintfToObj(psObj, "%.15g setlinewidth\n", width);
 
     ptr = ((unsigned) ABS(dash->number) > sizeof(char *)) ?
