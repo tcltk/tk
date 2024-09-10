@@ -7741,11 +7741,11 @@ TkTextFindDisplayIndex(
 
 	if (displayLineOffset > 0) {
 	    ComputeMissingMetric(textPtr, &info, THRESHOLD_LINE_OFFSET, displayLineOffset);
-	    info.numDispLines -= info.displayLineNo;
 
 	    while (1) {
 		const TkTextDispLineEntry *last;
 
+		info.numDispLines -= info.displayLineNo;
 		if ((int) info.numDispLines >= displayLineOffset) {
 		    last = info.entry + displayLineOffset;
 		    byteOffset = last->byteOffset;
