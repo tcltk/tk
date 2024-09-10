@@ -85,7 +85,7 @@ static void FillElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     BackgroundElement *bg = (BackgroundElement *)elementRecord;
-    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,bg->backgroundObj);
+    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin, bg->backgroundObj);
 
     XFillRectangle(Tk_Display(tkwin), d,
 	Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
@@ -341,7 +341,7 @@ static void PaddingElementSize(
 
     Tk_GetReliefFromObj(NULL, padding->reliefObj, &relief);
     Tk_GetPixelsFromObj(NULL, tkwin, padding->shiftreliefObj, &shiftRelief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,padding->paddingObj,&pad);
+    Ttk_GetPaddingFromObj(NULL, tkwin, padding->paddingObj, &pad);
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
 
@@ -385,11 +385,11 @@ static void DrawFocusRing(
 
     if (solid) {
 	XRectangle rects[4] = {
-	    {b.x, b.y, b.width, thickness},				/* N */
-	    {b.x, b.y + b.height - thickness, b.width, thickness},	/* S */
-	    {b.x, b.y + thickness, thickness, b.height - 2*thickness},	/* W */
-	    {b.x + b.width - thickness, b.y + thickness,		/* E */
-	     thickness, b.height - 2*thickness}
+	    {(short)b.x, (short)b.y, (unsigned short)b.width, (unsigned short)thickness},				/* N */
+	    {(short)b.x, (short)(b.y + b.height - thickness), (unsigned short)b.width, (unsigned short)thickness},	/* S */
+	    {(short)b.x, (short)(b.y + thickness), (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)},	/* W */
+	    {(short)(b.x + b.width - thickness), (short)(b.y + thickness),		/* E */
+	    (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)}
 	};
 
 	XFillRectangles(disp, d, gc, rects, 4);
@@ -576,7 +576,7 @@ static const Ttk_ElementOptionSpec SizegripOptions[] = {
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(SizegripElement,gripSizeObj), "11.25p" },
-    {0,TK_OPTION_BOOLEAN,0,0}
+    {0, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void SizegripSize(
@@ -616,9 +616,9 @@ static void SizegripDraw(
     while (gripCount--) {
 	x1 -= gripSpace; y2 -= gripSpace;
 	for (int i = 1; i < gripThickness; i++) {
-	    XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
+	    XDrawLine(Tk_Display(tkwin), d, darkGC, x1,y1, x2,y2); --x1; --y2;
 	}
-	XDrawLine(Tk_Display(tkwin), d, lightGC,  x1,y1, x2,y2); --x1; --y2;
+	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
     }
 }
 
@@ -928,7 +928,7 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static const Ttk_Padding ArrowPadding = { 3,3,3,3 };
+static const Ttk_Padding ArrowPadding = { 3, 3, 3, 3 };
 
 static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1642,7 +1642,7 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 	offsetof(TabElement,highlightObj), "0" },
     { "-highlightcolor", TK_OPTION_COLOR,
 	offsetof(TabElement,highlightColorObj), "#4a6984" },
-    {0,TK_OPTION_BOOLEAN,0,0}
+    {0, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void TabElementSize(
@@ -1877,7 +1877,7 @@ static void ClientElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, ce->borderWidthObj, &borderWidth);
 
     Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
+	b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_RAISED);
 }
 
 static const Ttk_ElementSpec ClientElementSpec = {
@@ -1902,7 +1902,7 @@ TtkElements_Init(Tcl_Interp *interp)
      * Elements:
      */
     Ttk_RegisterElement(interp, theme, "background",
-	    &BackgroundElementSpec,NULL);
+	    &BackgroundElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "fill", &FillElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
