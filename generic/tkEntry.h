@@ -129,19 +129,6 @@ typedef struct {
 				 * only used by the Entry widget. */
 
     /*
-     * Fields used in displaying help text if entry value is empty
-     */
-
-    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
-    char *placeholderString;	/* String value of placeholder. */
-    Tcl_Size placeholderChars;	/* Number of chars in placeholder. */
-    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
-    GC placeholderGC;		/* For drawing placeholder text. */
-    int placeholderX;		/* Origin for layout. */
-    int placeholderLeftIndex;	/* Character index of left-most character
-				 * visible in window. */
-
-    /*
      * Fields whose values are derived from the current values of the
      * configuration settings above.
      */
@@ -186,6 +173,19 @@ typedef struct {
 				 * commands. Malloc'ed. */
     char *invalidCmd;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
+    /*
+     * Fields used in displaying help text if entry value is empty
+     */
+
+    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
+    char *placeholderString;	/* String value of placeholder. */
+    Tcl_Size placeholderChars;	/* Number of chars in placeholder. */
+    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
+    GC placeholderGC;		/* For drawing placeholder text. */
+    int placeholderX;		/* Origin for layout. */
+    int placeholderLeftIndex;	/* Character index of left-most character
+				 * visible in window. */
+
 #ifdef BUILD_tk
     int borderWidth;
     int highlightWidth;
