@@ -155,20 +155,20 @@ typedef struct TkCanvas {
      * Information used for managing scrollbars:
      */
 
-    char *xScrollCmd;		/* Command prefix for communicating with
+    Tcl_Obj *xScrollCmdObj;		/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no
-				 * horizontal scrollbar. Malloc'ed. */
-    char *yScrollCmd;		/* Command prefix for communicating with
+				 * horizontal scrollbar. */
+    Tcl_Obj *yScrollCmdObj;		/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no vertical
-				 * scrollbar. Malloc'ed. */
+				 * scrollbar. */
     int scrollX1, scrollY1, scrollX2, scrollY2;
 				/* These four coordinates define the region
 				 * that is the 100% area for scrolling (i.e.
 				 * these numbers determine the size and
 				 * location of the sliders on scrollbars).
 				 * Units are pixels in canvas coords. */
-    char *regionString;		/* The option string from which scrollX1 etc.
-				 * are derived. Malloc'ed. */
+    Tcl_Obj *regionObj;		/* The option string from which scrollX1 etc.
+				 * are derived. */
     Tcl_Obj *xScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always

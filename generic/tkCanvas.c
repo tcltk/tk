@@ -138,8 +138,8 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
 	DEF_CANVAS_RELIEF, offsetof(TkCanvas, relief), 0, NULL},
     {TK_CONFIG_STRING, "-scrollregion", "scrollRegion", "ScrollRegion",
-	DEF_CANVAS_SCROLL_REGION, offsetof(TkCanvas, regionString),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_SCROLL_REGION, offsetof(TkCanvas, regionObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	DEF_CANVAS_SELECT_COLOR, offsetof(TkCanvas, textInfo.selBorder),
 	TK_CONFIG_COLOR_ONLY, NULL},
@@ -163,21 +163,23 @@ static const Tk_ConfigSpec configSpecs[] = {
 	&stateOption},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocusObj),
-	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
 	DEF_CANVAS_WIDTH, offsetof(TkCanvas, widthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_CANVAS_X_SCROLL_CMD, offsetof(TkCanvas, xScrollCmd),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_X_SCROLL_CMD, offsetof(TkCanvas, xScrollCmdObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-xscrollincrement", "xScrollIncrement",
-	"ScrollIncrement", DEF_CANVAS_X_SCROLL_INCREMENT,
-	offsetof(TkCanvas, xScrollIncrementObj), TK_CONFIG_OBJS, NULL},
+	"ScrollIncrement",
+	DEF_CANVAS_X_SCROLL_INCREMENT, offsetof(TkCanvas, xScrollIncrementObj),
+	TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	DEF_CANVAS_Y_SCROLL_CMD, offsetof(TkCanvas, yScrollCmd),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_Y_SCROLL_CMD, offsetof(TkCanvas, yScrollCmdObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-yscrollincrement", "yScrollIncrement",
-	"ScrollIncrement", DEF_CANVAS_Y_SCROLL_INCREMENT,
-	offsetof(TkCanvas, yScrollIncrementObj), TK_CONFIG_OBJS, NULL},
+	"ScrollIncrement",
+	DEF_CANVAS_Y_SCROLL_INCREMENT, offsetof(TkCanvas, yScrollIncrementObj),
+	TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -688,6 +690,7 @@ Tk_CanvasObjCmd(
     canvasPtr->heightObj = NULL;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
+    canvasPtr->textInfo.selBorderWidth = 0;
     canvasPtr->textInfo.selBorderWidthObj = NULL;
     canvasPtr->textInfo.selFgColorPtr = NULL;
     canvasPtr->textInfo.selItemPtr = NULL;
@@ -696,7 +699,9 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.anchorItemPtr = NULL;
     canvasPtr->textInfo.selectAnchor = 0;
     canvasPtr->textInfo.insertBorder = NULL;
+    canvasPtr->textInfo.insertWidth = 0;
     canvasPtr->textInfo.insertWidthObj = NULL;
+    canvasPtr->textInfo.insertBorderWidth = 0;
     canvasPtr->textInfo.insertBorderWidthObj = NULL;
     canvasPtr->textInfo.focusItemPtr = NULL;
     canvasPtr->textInfo.gotFocus = 0;
@@ -714,13 +719,13 @@ Tk_CanvasObjCmd(
     canvasPtr->pickEvent.xcrossing.x = 0;
     canvasPtr->pickEvent.xcrossing.y = 0;
     canvasPtr->state = 0;
-    canvasPtr->xScrollCmd = NULL;
-    canvasPtr->yScrollCmd = NULL;
+    canvasPtr->xScrollCmdObj = NULL;
+    canvasPtr->yScrollCmdObj = NULL;
     canvasPtr->scrollX1 = 0;
     canvasPtr->scrollY1 = 0;
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
-    canvasPtr->regionString = NULL;
+    canvasPtr->regionObj = NULL;
     canvasPtr->xScrollIncrementObj = NULL;
     canvasPtr->yScrollIncrementObj = NULL;
     canvasPtr->scanX = 0;
@@ -2052,7 +2057,7 @@ CanvasWidgetCmd(
 	    break;
 	case TK_SCROLL_PAGES:
 	    newX = (int) (canvasPtr->xOrigin + count * .9
-		    * (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
+		    * (Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    break;
 	case TK_SCROLL_UNITS: {
 	    int xScrollIncrement;
@@ -2061,7 +2066,7 @@ CanvasWidgetCmd(
 		newX = canvasPtr->xOrigin + count * xScrollIncrement;
 	    } else {
 		newX = (int) (canvasPtr->xOrigin + count * .1
-			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
+			* (Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    }
 	    break;
 	}
@@ -2095,7 +2100,7 @@ CanvasWidgetCmd(
 	    break;
 	case TK_SCROLL_PAGES:
 	    newY = (int) (canvasPtr->yOrigin + count * .9
-		    * (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
+		    * (Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset));
 	    break;
 	case TK_SCROLL_UNITS: {
 	    int yScrollIncrement;
@@ -2265,7 +2270,6 @@ ConfigureCanvas(
     Tk_State old_canvas_state=canvasPtr->canvas_state;
     int width, height, borderWidth, highlightWidth;
     int xScrollIncrement, yScrollIncrement;
-    int insertBorderWidth, insertWidth;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2283,8 +2287,9 @@ ConfigureCanvas(
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->heightObj, &height);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &insertBorderWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &insertWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &canvasPtr->textInfo.insertBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &canvasPtr->textInfo.insertWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.selBorderWidthObj, &canvasPtr->textInfo.selBorderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
@@ -2306,17 +2311,23 @@ ConfigureCanvas(
 	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
     }
-    if (insertBorderWidth < 0) {
-	insertBorderWidth = 0;
+    if (canvasPtr->textInfo.insertBorderWidth < 0) {
+	canvasPtr->textInfo.insertBorderWidth = 0;
 	Tcl_DecrRefCount(canvasPtr->textInfo.insertBorderWidthObj);
 	canvasPtr->textInfo.insertBorderWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->textInfo.insertBorderWidthObj);
     }
-    if (insertWidth < 0) {
-	insertWidth = 0;
+    if (canvasPtr->textInfo.insertWidth < 0) {
+	canvasPtr->textInfo.insertWidth = 0;
 	Tcl_DecrRefCount(canvasPtr->textInfo.insertWidthObj);
 	canvasPtr->textInfo.insertWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->textInfo.insertWidthObj);
+    }
+    if (canvasPtr->textInfo.selBorderWidth < 0) {
+	canvasPtr->textInfo.selBorderWidth = 0;
+	Tcl_DecrRefCount(canvasPtr->textInfo.selBorderWidthObj);
+	canvasPtr->textInfo.selBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(canvasPtr->textInfo.selBorderWidthObj);
     }
     if (width < 0) {
 	width = 0;
@@ -2373,8 +2384,8 @@ ConfigureCanvas(
      * Reset the desired dimensions for the window.
      */
 
-    Tk_GeometryRequest(canvasPtr->tkwin, width + 2*canvasPtr->inset,
-	    height + 2*canvasPtr->inset);
+    Tk_GeometryRequest(canvasPtr->tkwin, width + 2 * canvasPtr->inset,
+	    height + 2 * canvasPtr->inset);
 
     /*
      * Restart the cursor timing sequence in case the on-time or off-time just
@@ -2393,22 +2404,22 @@ ConfigureCanvas(
     canvasPtr->scrollY1 = 0;
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
-    if (canvasPtr->regionString != NULL) {
+    if (canvasPtr->regionObj != NULL) {
 	Tcl_Size argc2;
 	const char **argv2;
 
-	if (Tcl_SplitList(canvasPtr->interp, canvasPtr->regionString,
+	if (Tcl_SplitList(canvasPtr->interp, Tcl_GetString(canvasPtr->regionObj),
 		&argc2, &argv2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (argc2 != 4) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad scrollRegion \"%s\"", canvasPtr->regionString));
+		    "bad scrollRegion \"%s\"", Tcl_GetString(canvasPtr->regionObj)));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", (char *)NULL);
 	badRegion:
-	    ckfree(canvasPtr->regionString);
+	    Tcl_DecrRefCount(canvasPtr->regionObj);
 	    ckfree(argv2);
-	    canvasPtr->regionString = NULL;
+	    canvasPtr->regionObj = NULL;
 	    return TCL_ERROR;
 	}
 	if ((Tk_GetPixels(canvasPtr->interp, canvasPtr->tkwin,
@@ -2480,6 +2491,10 @@ CanvasWorldChanged(
 {
     TkCanvas *canvasPtr = (TkCanvas *)instanceData;
     Tk_Item *itemPtr;
+
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &canvasPtr->textInfo.insertBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &canvasPtr->textInfo.insertWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.selBorderWidthObj, &canvasPtr->textInfo.selBorderWidth);
 
     itemPtr = canvasPtr->firstItemPtr;
     for ( ; itemPtr != NULL; itemPtr = itemPtr->nextPtr) {
@@ -5891,7 +5906,7 @@ CanvasUpdateScrollbars(
     Tcl_Interp *interp;
     int xOrigin, yOrigin, inset, width, height;
     int scrollX1, scrollX2, scrollY1, scrollY2;
-    char *xScrollCmd, *yScrollCmd;
+    Tcl_Obj *xScrollCmdObj, *yScrollCmdObj;
     Tcl_DString buf;
 
     /*
@@ -5901,13 +5916,13 @@ CanvasUpdateScrollbars(
 
     interp = canvasPtr->interp;
     Tcl_Preserve(interp);
-    xScrollCmd = canvasPtr->xScrollCmd;
-    if (xScrollCmd != NULL) {
-	Tcl_Preserve(xScrollCmd);
+    xScrollCmdObj = canvasPtr->xScrollCmdObj;
+    if (xScrollCmdObj != NULL) {
+	Tcl_IncrRefCount(xScrollCmdObj);
     }
-    yScrollCmd = canvasPtr->yScrollCmd;
-    if (yScrollCmd != NULL) {
-	Tcl_Preserve(yScrollCmd);
+    yScrollCmdObj = canvasPtr->yScrollCmdObj;
+    if (yScrollCmdObj != NULL) {
+	Tcl_IncrRefCount(yScrollCmdObj);
     }
     xOrigin = canvasPtr->xOrigin;
     yOrigin = canvasPtr->yOrigin;
@@ -5919,12 +5934,12 @@ CanvasUpdateScrollbars(
     scrollY1 = canvasPtr->scrollY1;
     scrollY2 = canvasPtr->scrollY2;
     canvasPtr->flags &= ~UPDATE_SCROLLBARS;
-    if (canvasPtr->xScrollCmd != NULL) {
+    if (canvasPtr->xScrollCmdObj != NULL) {
 	Tcl_Obj *fractions = ScrollFractions(xOrigin + inset,
 		xOrigin + width - inset, scrollX1, scrollX2);
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(xScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), TCL_INDEX_NONE);
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -5934,15 +5949,15 @@ CanvasUpdateScrollbars(
 	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_ResetResult(interp);
-	Tcl_Release(xScrollCmd);
+	Tcl_DecrRefCount(xScrollCmdObj);
     }
 
-    if (yScrollCmd != NULL) {
+    if (yScrollCmdObj != NULL) {
 	Tcl_Obj *fractions = ScrollFractions(yOrigin + inset,
 		yOrigin + height - inset, scrollY1, scrollY2);
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(yScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), TCL_INDEX_NONE);
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -5952,7 +5967,7 @@ CanvasUpdateScrollbars(
 	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_ResetResult(interp);
-	Tcl_Release(yScrollCmd);
+	Tcl_DecrRefCount(yScrollCmdObj);
     }
     Tcl_Release(interp);
 }
@@ -5985,7 +6000,7 @@ CanvasSetOrigin(
 				 * corresponding to top edge of canvas
 				 * window). */
 {
-    int left, right, top, bottom, delta;;
+    int left, right, top, bottom, delta;
     int xScrollIncrement, yScrollIncrement;
 
     /*
@@ -6030,7 +6045,7 @@ CanvasSetOrigin(
      * full increments.
      */
 
-    if ((canvasPtr->confine) && (canvasPtr->regionString != NULL)) {
+    if ((canvasPtr->confine) && (canvasPtr->regionObj != NULL)) {
 	left = xOrigin + canvasPtr->inset - canvasPtr->scrollX1;
 	right = canvasPtr->scrollX2
 		- (xOrigin + Tk_Width(canvasPtr->tkwin) - canvasPtr->inset);

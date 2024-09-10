@@ -715,7 +715,7 @@ ComputeTextBbox(
     TextItem *textPtr)		/* Item whose bbox is to be recomputed. */
 {
     Tk_CanvasTextInfo *textInfoPtr;
-    int width, height, fudge, i, insertWidth, selBorderWidth;
+    int width, height, fudge, i;
     Tk_State state = textPtr->header.state;
     double x[4], y[4], dx[4], dy[4], sinA, cosA, tmp;
 
@@ -799,11 +799,11 @@ ComputeTextBbox(
      */
 
     textInfoPtr = textPtr->textInfoPtr;
-    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &insertWidth);
-    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &selBorderWidth);
-    fudge = (insertWidth + 1) / 2;
-    if (selBorderWidth > fudge) {
-	fudge = selBorderWidth;
+    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &textInfoPtr->insertWidth);
+    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &textInfoPtr->selBorderWidth);
+    fudge = (textInfoPtr->insertWidth + 1) / 2;
+    if (textInfoPtr->selBorderWidth > fudge) {
+	fudge = textInfoPtr->selBorderWidth;
     }
 
     /*
@@ -930,7 +930,6 @@ DisplayCanvText(
 	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
 	    int xFirst, yFirst, hFirst;
 	    int xLast, yLast, wLast;
-	    int selBorderWidth;
 
 	    /*
 	     * Draw a special background under the selection.
@@ -950,7 +949,7 @@ DisplayCanvText(
 
 	    x = xFirst;
 	    height = hFirst;
-	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &selBorderWidth);
+	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->selBorderWidthObj, &textInfoPtr->selBorderWidth);
 	    for (y = yFirst ; y <= yLast; y += height) {
 		int dx1, dy1, dx2, dy2;
 		double s = textPtr->sine, c = textPtr->cosine;
@@ -961,9 +960,9 @@ DisplayCanvText(
 		} else {
 		    width = textPtr->actualWidth - x;
 		}
-		dx1 = x - selBorderWidth;
+		dx1 = x - textInfoPtr->selBorderWidth;
 		dy1 = y;
-		dx2 = width + 2 * selBorderWidth;
+		dx2 = width + 2 * textInfoPtr->selBorderWidth;
 		dy2 = height;
 		points[0].x = (short)(drawableX + dx1*c + dy1*s);
 		points[0].y = (short)(drawableY + dy1*c - dx1*s);
@@ -975,7 +974,7 @@ DisplayCanvText(
 		points[3].y = (short)(drawableY + (dy1+dy2)*c - dx1*s);
 		Tk_Fill3DPolygon(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->selBorder, points, 4,
-			selBorderWidth, TK_RELIEF_RAISED);
+			textInfoPtr->selBorderWidth, TK_RELIEF_RAISED);
 		x = 0;
 	    }
 	}
@@ -996,12 +995,11 @@ DisplayCanvText(
 	    int dx1, dy1, dx2, dy2;
 	    double s = textPtr->sine, c = textPtr->cosine;
 	    XPoint points[4];
-	    int insertWidth;
 
-	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &insertWidth);
-	    dx1 = x - (insertWidth / 2);
+	    Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertWidthObj, &textInfoPtr->insertWidth);
+	    dx1 = x - (textInfoPtr->insertWidth / 2);
 	    dy1 = y;
-	    dx2 = insertWidth;
+	    dx2 = textInfoPtr->insertWidth;
 	    dy2 = height;
 	    points[0].x = (short)(drawableX + dx1*c + dy1*s);
 	    points[0].y = (short)(drawableY + dy1*c - dx1*s);
@@ -1015,11 +1013,10 @@ DisplayCanvText(
 	    Tk_SetCaretPos(Tk_CanvasTkwin(canvas), points[0].x, points[0].y,
 		    height);
 	    if (textInfoPtr->cursorOn) {
-		int insertBorderWidth;
-		Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertBorderWidthObj, &insertBorderWidth);
+		Tk_GetPixelsFromObj(NULL, Tk_CanvasTkwin(canvas), textInfoPtr->insertBorderWidthObj, &textInfoPtr->insertBorderWidth);
 		Tk_Fill3DPolygon(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->insertBorder, points, 4,
-			insertBorderWidth, TK_RELIEF_RAISED);
+			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	    } else if (textPtr->cursorOffGC != NULL) {
 		/*
 		 * Redraw the background over the area of the cursor, even
