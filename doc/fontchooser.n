@@ -24,7 +24,7 @@ the native platform font selection dialog where available, or a dialog
 implemented in Tcl otherwise.
 .PP
 Unlike most of the other Tk dialog commands, \fBtk fontchooser\fR does not
-return an immediate result, as on some platforms (Mac OS X) the standard font
+return an immediate result, as on some platforms (macOS) the standard font
 dialog is modeless while on others (Windows) it is modal. To accommodate this
 difference, all user interaction with the dialog will be communicated to the
 caller via callbacks or virtual events.
@@ -121,7 +121,7 @@ It is implementation dependent which exact user actions result in the callback
 being called resp. the virtual events being sent. Where an Apply or OK button
 is present in the dialog, that button will trigger the \fB\-command\fR callback
 and \fB<<TkFontchooserFontChanged>>\fR virtual event. On some implementations
-other user actions may also have that effect; on Mac OS X for instance, the
+other user actions may also have that effect; on macOS for instance, the
 standard font selection dialog immediately reflects all user choices to the
 caller.
 .PP
