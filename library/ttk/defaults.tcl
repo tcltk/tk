@@ -198,7 +198,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+			     selected $colors(-selectfg)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
