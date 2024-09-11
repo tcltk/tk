@@ -6,7 +6,6 @@ on:
     - "core-8-branch"
     - "core-8-6-branch"
     - "revised_text"
-    - "bug-1871581951"
     tags:
     - "core-**"
 permissions:
