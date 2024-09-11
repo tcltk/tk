@@ -87,7 +87,7 @@ following values are possible for \fIpredefinedType\fR:
 Displays three buttons whose symbolic names are \fBabort\fR,
 \fBretry\fR and \fBignore\fR.
 .IP \fBok\fR 18
-Displays one button whose symbolic name is \fBok\fR.
+Displays one button whose symbolic name is \fBok\fR. This is the default.
 .IP \fBokcancel\fR 18
 Displays two buttons whose symbolic names are \fBok\fR and \fBcancel\fR.
 .IP \fBretrycancel\fR 18
