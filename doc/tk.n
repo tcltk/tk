@@ -156,7 +156,7 @@ state is returned.  This is turned on by default for the main display.
 .
 Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
-or \fBaqua\fR (Mac OS X Aqua).
+or \fBaqua\fR (macOS Aqua).
 .SH "SEE ALSO"
 busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
 .SH KEYWORDS
