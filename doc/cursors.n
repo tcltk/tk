@@ -131,9 +131,9 @@ wait
 .CE
 .RE
 .TP
-\fBMac OS X\fR
+\fBmacOS\fR
 .
-On Mac OS X systems, the following cursors are mapped to native cursors:
+On macOS, the following cursors are mapped to native cursors:
 .RS
 .CS
 arrow

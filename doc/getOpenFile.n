@@ -42,7 +42,7 @@ Specifies the prefix of a Tcl command to invoke when the user closes the
 dialog after having selected an item. This callback is not called if the
 user cancelled the dialog. The actual command consists of \fIstring\fR
 followed by a space and the value selected by the user in the dialog. This
-is only available on Mac OS X.
+is only available on macOS.
 .\" OPTION: -confirmoverwrite
 .TP
 \fB\-confirmoverwrite\fI boolean\fR
@@ -58,7 +58,7 @@ that the overwrite take place without confirmation.  Default value is true.
 Specifies a string that will be appended to the filename if the user
 enters a filename without an extension. The default value is the empty
 string, which means no extension will be appended to the filename in
-any case. This option is ignored on Mac OS X, which
+any case. This option is ignored on macOS, which
 does not require extensions to filenames,
 and the UNIX implementation guesses reasonable values for this from
 the \fB\-filetypes\fR option when this is not supplied.
@@ -96,7 +96,7 @@ Specifies a filename to be displayed in the dialog when it pops up.
 \fB\-message\fI string\fR
 .
 Specifies a message to include in the client area of the dialog.
-This is only available on Mac OS X.
+This is only available on macOS.
 .\" OPTION: -multiple
 .TP
 \fB\-multiple\fI boolean\fR
@@ -107,7 +107,7 @@ Allows the user to choose multiple files from the Open dialog.
 \fB\-parent\fI window\fR
 .
 Makes \fIwindow\fR the logical parent of the file dialog. The file
-dialog is displayed on top of its parent window. On Mac OS X, this
+dialog is displayed on top of its parent window. On macOS, this
 turns the file dialog into a sheet attached to the parent window.
 .\" OPTION: -title
 .TP
