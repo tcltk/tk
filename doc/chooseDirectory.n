@@ -24,7 +24,7 @@ Specifies the prefix of a Tcl command to invoke when the user closes the
 dialog after having selected an item. This callback is not called if the
 user cancelled the dialog. The actual command consists of \fIstring\fR
 followed by a space and the value selected by the user in the dialog. This
-is only available on Mac OS X.
+is only available on macOS.
 .\" OPTION: -initialdir
 .TP
 \fB\-initialdir\fI dirname\fR
@@ -42,7 +42,7 @@ relative path to an absolute path.
 \fB\-message\fI string\fR
 .
 Specifies a message to include in the client area of the dialog.
-This is only available on Mac OS X.
+This is only available on macOS.
 .\" OPTION: -mustexist
 .TP
 \fB\-mustexist\fI boolean\fR
@@ -55,7 +55,7 @@ already exist.  The default value is \fIfalse\fR.
 \fB\-parent\fI window\fR
 .
 Makes \fIwindow\fR the logical parent of the dialog. The dialog
-is displayed on top of its parent window. On Mac OS X, this
+is displayed on top of its parent window. On macOS, this
 turns the file dialog into a sheet attached to the parent window.
 .\" OPTION: -title
 .TP
