@@ -28,7 +28,7 @@ The following option-value pairs are supported:
 Specifies the prefix of a Tcl command to invoke when the user closes the
 dialog. The actual command consists of \fIstring\fR followed by a space
 and the name of the button clicked by the user to close the dialog. This
-is only available on Mac OS X.
+is only available on macOS.
 .TP
 \fB\-default\fR \fIname\fR
 .
@@ -82,7 +82,7 @@ Displays three buttons whose symbolic names are \fBabort\fR,
 .TP 18
 \fBok\fR
 .
-Displays one button whose symbolic name is \fBok\fR.
+Displays one button whose symbolic name is \fBok\fR. This is the default.
 .TP 18
 \fBokcancel\fR
 .
