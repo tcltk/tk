@@ -55,8 +55,7 @@ typedef struct {
     Tcl_Command widgetCmd;	/* Token for menubutton's widget command. */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
-    char *menuName;		/* Name of menu associated with widget.
-				 * Malloc-ed. */
+    Tcl_Obj *menuNameObj;		/* Name of menu associated with widget. */
 
     /*
      * Information about what's displayed in the menu button:
@@ -65,13 +64,13 @@ typedef struct {
     char *text;			/* Text to display in button (malloc'ed) or
 				 * NULL. */
     int underline;		/* Index of character to underline. INT_MIN means no underline */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textVarNameObj;	/* Name of variable or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */
     Pixmap bitmap;		/* Bitmap to display or None. If not None then
 				 * text and textVar and underline are
 				 * ignored. */
-    char *imageString;		/* Name of image to display (malloc'ed), or
+    Tcl_Obj *imageObj;		/* Name of image to display (malloc'ed), or
 				 * NULL. If non-NULL, bitmap, text, and
 				 * textVarName are ignored. */
     Tk_Image image;		/* Image to display in window, or NULL if
@@ -89,10 +88,10 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Structure used to draw 3-D border and
 				 * background when window is active. NULL
 				 * means no such border exists. */
-    int borderWidth;		/* Width of border. */
+    Tcl_Obj *borderWidthObj;	/* Width of border. */
     int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. <= 0 means
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -121,18 +120,12 @@ typedef struct {
 				 * pixel (positive means to right). */
     int rightBearing;		/* Amount text sticks right from its
 				 * origin. */
-    char *widthString;		/* Value of -width option. Malloc'ed. */
-    char *heightString;		/* Value of -height option. Malloc'ed. */
-    int width, height;		/* If > 0, these specify dimensions to request
-				 * for window, in characters for text and in
-				 * pixels for bitmaps. In this case the actual
-				 * size of the text string or bitmap is
-				 * ignored in computing desired window
-				 * size. */
-    int wrapLength;		/* Line length (in pixels) at which to wrap
-				 * onto next line. <= 0 means don't wrap
+    Tcl_Obj *widthObj;		/* Value of -width option. */
+    Tcl_Obj *heightObj;		/* Value of -height option. */
+    Tcl_Obj *wrapLengthObj;	/* Line length (in pixels) at which to wrap
+				 * onto next line. 0 means don't wrap
 				 * except at newlines. */
-    int padX, padY;		/* Extra space around text or bitmap (pixels
+    Tcl_Obj *padXObj, *padYObj;	/* Extra space around text or bitmap (pixels
 				 * on each side). */
     Tk_Anchor anchor;		/* Where text/bitmap should be displayed
 				 * inside window region. */
@@ -171,9 +164,9 @@ typedef struct {
     				 * or right, and the active item will be next
     				 * to the button. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
 } TkMenuButton;
