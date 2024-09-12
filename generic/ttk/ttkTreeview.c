@@ -4685,7 +4685,8 @@ static int TreeviewSearchCommand(
     TreeItem *parent, *item = NULL;
     TreeColumn *column = NULL;
     const char *pattern = NULL;
-    Tcl_Size i, plen, len;
+    Tcl_Size i, plen, len, columnNumber = -1;
+    Tcl_Size columnFirst = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
     Tcl_Obj *patObj, *resultObj;
     Tcl_WideInt intVal;
     double doubleVal;
@@ -4735,8 +4736,13 @@ static int TreeviewSearchCommand(
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
-		if (!(column = FindColumn(interp, tv, objv[++i]))) {
+		if ((column = FindColumn(interp, tv, objv[++i])) == NULL) {
 		    return TCL_ERROR;
+		}
+		if (column == &tv->tree.column0) {
+		    columnNumber = 0;
+		} else if (tv->tree.columns) {
+		    columnNumber = column - tv->tree.columns + 1;
 		}
 		break;
 	    case SEARCH_DICTIONARY:
@@ -4823,7 +4829,7 @@ static int TreeviewSearchCommand(
 	/* Skip hidden items unless allowed */
 	if (!(item->hidden) || (item->hidden && hidden)) {
 	    Tcl_Obj *valObj;
-	    Tcl_Size count = 0;
+	    Tcl_Size count = 0, start, end;
 
 	    /* Get cell values */
 	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj,
@@ -4832,11 +4838,25 @@ static int TreeviewSearchCommand(
 		return TCL_ERROR;
 	    }
 
+	    /* If searching within a column or all cells */
+	    if (columnNumber > -1) {
+		if (columnNumber <= count) {
+		    start = columnNumber;
+		    end = columnNumber;
+		} else {
+		    start = 0;
+		    end = -1;
+		}
+	    } else {
+		start = columnFirst;
+		end = count;
+	    }
+
 	    /* Loop over text & cell values and compare to pattern */
-	    for (i = ((tv->tree.showFlags & SHOW_TREE) ? -1 : 0); i < count; ++i) {
-		if (i == -1) {
+	    for (i = start; i <= end; ++i) {
+		if (i == 0) {
 		    valObj = item->textObj;
-		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i, &valObj)
+		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i-1, &valObj)
 			!= TCL_OK) {
 		    Tcl_BounceRefCount(resultObj);
 		    return TCL_ERROR;
@@ -4894,9 +4914,7 @@ static int TreeviewSearchCommand(
 			Tcl_BounceRefCount(resultObj);
 			return TCL_ERROR;
 		    }
-		    if (!all) {
-			break;
-		    }
+		    break;
 		}
 	    }
 	}

@@ -573,7 +573,7 @@ name is for backward-compatibility reasons.) This is the default.
 \fB\-dictionary\fR
 .
 The values are to be compared to \fIpattern\fR using dictionary-style
-comparisons (see \fBlsort\fR for a full description). Same as -ascii for now.
+comparisons (see \fBlsort\fR for a full description).
 .\" OPTION: -integer
 .TP
 \fB\-integer\fR
@@ -605,7 +605,6 @@ treeview.
 The search is to be performed forwards starting from \fI\-start\fR item or
 first child of \fIparent\fR if not specified, until the last item in the
 treeview. This is the default.
-
 .\" OPTION: -column
 .TP
 \fB\-column \fIcolumn\fR
@@ -615,14 +614,14 @@ Only search within column \fIcolumn\fR.
 .TP
 \fB\-hidden\fR
 .
-Search within hidden items too. Normally hidden items are excluded from the
+Search within hidden items too. The default is to exclude hidden items from the
 search.
 .\" OPTION: -recurse
 .TP
 \fB\-recurse\fR
 .
-Search within all of the descendants of \fIparent\fR's children. Normally only
-the children of \fIparent\fR are searched.
+Search within all of the descendants of \fIparent\fR's children. The default is
+to only search within the children of \fIparent\fR.
 .RE
 .\" METHOD: see
 .TP
