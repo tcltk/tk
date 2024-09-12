@@ -710,10 +710,11 @@ in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .\" METHOD: size
 .TP
-\fIpathname \fBsize\fR ?\fI\-recurse\fR? \fIitem\fR
+\fIpathname \fBsize\fR ?\fI\-hidden\fR? ?\fI\-recurse\fR? \fIitem\fR
 .
 Returns the number of children belonging to \fIitem\fR. With \fI\-recurse\fR
-option, will include all descendants.
+option, will include all descendants. With \fI\-hidden\fR option, will include
+hidden items.
 .\" METHOD: tag
 .TP
 \fIpathName \fBtag \fIargs...\fR

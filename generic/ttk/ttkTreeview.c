@@ -732,7 +732,7 @@ static TreeItem *FindItem(
 enum {index_end, index_first, index_last};
 static const char *const indexStrings[] = {"end", "first", "last", NULL};
 static TreeItem *EndPosition(Treeview *, TreeItem *);
-int TreeviewCountRecursive(TreeItem *, int);
+int TreeviewCountRecursive(TreeItem *, int, int);
 
 /* + FindIndex --
  * 	Returns the index for value or error if invalid.
@@ -748,9 +748,9 @@ static Tcl_Size FindIndex(
 	if (fn == index_first) {
 	    index = 0;
 	} else if (fn == index_last) {
-	    index = TreeviewCountRecursive(item, 0) - 1;
+	    index = TreeviewCountRecursive(item, 1, 0) - 1;
 	} else {
-	    index = TreeviewCountRecursive(item, 0);
+	    index = TreeviewCountRecursive(item, 1, 0);
 	}
 
     } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK) {
@@ -2868,47 +2868,63 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-int TreeviewCountRecursive(TreeItem *item, int recurse) {
+int TreeviewCountRecursive(TreeItem *item, int hidden, int recurse) {
     int count = 0;
 
     for (item = item->children; item; item = item->next) {
-	count++;
-	if (recurse && item->children) {
-	    count += TreeviewCountRecursive(item, recurse);
+	if (hidden || !item->hidden) {
+	    count++;
+	    if (recurse && item->children) {
+		count += TreeviewCountRecursive(item, hidden, recurse);
+	    }
 	}
     }
     return count;
 }
 
-
-/* + $tv size ?-recurse? $item --
- * 	Return count of immediate children associated with $item or
- *	with -recurse, all sub children.
+/* + $tv size ?-hidden? ?-recurse? $item --
+ * 	Return count of immediate children associated with $item or with
+ *	-recurse, all sub children. With -hidden, include hidden items.
  */
 static int TreeviewSizeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int count;
-    int option = -1;
+    int count, option = -1, hidden = 0, recurse = 0;
+    Tcl_Size i;
 
-    static const char *const sizeStrings[] = { "-recurse", "-recursive", NULL };
+    enum { SIZE_HIDDEN, SIZE_RECURSE, SIZE_RECURSIVE };
+    static const char *const sizeStrings[] = {
+	"-hidden", "-recurse", "-recursive", NULL };
 
-    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], sizeStrings,
-	    sizeof(char *), "option", 0, &option) != TCL_OK) {
-	return TCL_ERROR;
-    } else if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? item");
+    if (objc < 3 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-recurse? item");
 	return TCL_ERROR;
     }
+
+    if (objc > 3) {
+	for (i = 2; i < objc-1; ++i) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sizeStrings,
+		    sizeof(char *), "option", 0, &option) == TCL_OK) {
+		if (option == SIZE_HIDDEN) {
+		    hidden = 1;
+		} else {
+		    recurse = 1;
+		}
+	    } else {
+		return TCL_ERROR;
+	    }
+	}
+    }
+
     item = FindItem(interp, tv, objv[objc-1]);
     if (!item) {
 	return TCL_ERROR;
     }
 
-    count = TreeviewCountRecursive(item, objc == 4);
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(count));
+    count = TreeviewCountRecursive(item, hidden, recurse);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
     return TCL_OK;
 }
 
