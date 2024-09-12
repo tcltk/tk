@@ -136,6 +136,9 @@ static TreeItem *NewItem(void)
     item->tagset = NULL;
     item->imagespec = NULL;
 
+    item->itemPos = -1;
+    item->visiblePos = -1;
+    item->rowPos = -1;
     return item;
 }
 
@@ -822,7 +825,7 @@ static TreeItem *FindItemByIndex(
  *	Return the first visible item before item in widget
  */
 TreeItem *FindPrevVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
-	int allow_hidden, int recurse, int first) {
+	int hidden, int recurse, int first) {
     TreeItem *prev;
 
     if (!item) {
@@ -847,13 +850,13 @@ TreeItem *FindPrevVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
     }
 
     /* Skip to prev if hidden */
-    while (prev && (prev->hidden && !allow_hidden)) {
+    while (prev && (prev->hidden && !hidden)) {
 	prev = prev->prev;
     }
 
     /* Move to last child, if any */
     if (prev && (prev->state & TTK_STATE_OPEN) && prev->children && recurse) {
-	prev = FindPrevVisibleItem(tv, root, EndPosition(tv, prev), allow_hidden, recurse, 0);
+	prev = FindPrevVisibleItem(tv, root, EndPosition(tv, prev), hidden, recurse, 0);
     }
     return prev;
 }
@@ -862,7 +865,7 @@ TreeItem *FindPrevVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
  *	Return the first visible item after item in widget
  */
 TreeItem *FindNextVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
-	int allow_hidden, int recurse, int first) {
+	int hidden, int recurse, int first) {
     TreeItem *next;
 
     if (!item) {
@@ -872,7 +875,7 @@ TreeItem *FindNextVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
     /* Move to first child or next item */
     if (first) {
 	if ((item->state & TTK_STATE_OPEN) && item->children && recurse) {
-	    next = FindNextVisibleItem(tv, root, item->children, allow_hidden, recurse, 0);
+	    next = FindNextVisibleItem(tv, root, item->children, hidden, recurse, 0);
 	} else {
 	    next = item->next;
 	}
@@ -892,7 +895,7 @@ TreeItem *FindNextVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
     }
 
     /* Skip to next item if hidden */
-    while (next && (next->hidden && !allow_hidden)) {
+    while (next && (next->hidden && !hidden)) {
 	next = next->next;
     }
     return next;
@@ -3014,8 +3017,8 @@ static int TreeviewBeforeCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *before;
-    int allow_hidden = 0;
-    int allow_recurse = 1;
+    int hidden = 0;
+    int recurse = 1;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -3026,7 +3029,7 @@ static int TreeviewBeforeCommand(
 	return TCL_ERROR;
     }
 
-    before = FindPrevVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+    before = FindPrevVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
     if (before && before->idObj) {
 	Tcl_SetObjResult(interp, before->idObj);
     }
@@ -3041,8 +3044,8 @@ static int TreeviewAfterCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *after;
-    int allow_hidden = 0;
-    int allow_recurse = 1;
+    int hidden = 0;
+    int recurse = 1;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -3053,7 +3056,7 @@ static int TreeviewAfterCommand(
 	return TCL_ERROR;
     }
 
-    after = FindNextVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+    after = FindNextVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
     if (after && after->idObj) {
 	Tcl_SetObjResult(interp, after->idObj);
     }
@@ -3064,20 +3067,30 @@ static int TreeviewAfterCommand(
  *	Get a list of items between from and to in widget
  */
 Tcl_Obj *GetBetweenList(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, int allow_hidden, int allow_recurse)
+    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, int hidden, int recurse)
 {
     TreeItem *item = from;
+    int forwards;
     Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
     if (!resultObj) {
 	return NULL;
     }
+
+    if (tv->tree.rowPosNeedsUpdate) {
+	UpdatePositionTree(tv);
+    }
+    forwards = (from->itemPos < to->itemPos) ? 1 : 0;
 
     while (item && item != to) {
 	if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
 	    Tcl_BounceRefCount(resultObj);
 	    return NULL;
 	}
-	item = FindNextVisibleItem(tv, tv->tree.root, item, allow_hidden, allow_recurse, 1);
+	if (forwards) {
+	    item = FindNextVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+	} else {
+	    item = FindPrevVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+	}
     }
     if (item == to) {
 	Tcl_ListObjAppendElement(interp, resultObj, item->idObj);
@@ -3094,8 +3107,8 @@ static int TreeviewBetweenCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *from, *to;
     Tcl_Obj *resultObj;
-    int allow_hidden = 0;
-    int allow_recurse = 1;
+    int hidden = 0;
+    int recurse = 1;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "from to");
@@ -3105,7 +3118,7 @@ static int TreeviewBetweenCommand(
 	return TCL_ERROR;
     }
 
-    resultObj = GetBetweenList(interp, tv, from, to, allow_hidden, allow_recurse);
+    resultObj = GetBetweenList(interp, tv, from, to, hidden, recurse);
     if (resultObj) {
 	Tcl_SetObjResult(interp, resultObj);
     } else {
@@ -4338,13 +4351,13 @@ static int TreeviewSelectionCommand(
 	    return TCL_ERROR;
 	}
     } else if (objc == 5) {
-	int allow_hidden = 0;
-	int allow_recurse = 1;
+	int hidden = 0;
+	int recurse = 1;
 	if (!(from = FindItem(interp, tv, objv[3])) || !(to = FindItem(interp, tv, objv[4]))) {
 	    return TCL_ERROR;
 	}
 
-	listObj = GetBetweenList(interp, tv, from, to, allow_hidden, allow_recurse);
+	listObj = GetBetweenList(interp, tv, from, to, hidden, recurse);
 	if (listObj) {
 	    items = GetItemListFromObj(interp, tv, listObj);
 	} else {
