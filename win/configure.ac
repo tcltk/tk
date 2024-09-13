@@ -242,7 +242,11 @@ else
 fi
 fi
 
-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
+else
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
+fi
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
@@ -250,7 +254,7 @@ TK_LIB_FLAG="-l"
 if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
     TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
 fi
-eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
+eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}tk${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 
