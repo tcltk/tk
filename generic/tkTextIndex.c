@@ -2945,7 +2945,19 @@ ForwBack(
 	    count = abs(count);
 
 	    if (forward) {
+		TkTextIndex indexPtr2 = *indexPtr;
+
+		/*
+		 * Check crossing of the end of text boundary. If crossed, adjust
+		 * xOffset so that the returned index will refer to the end of line.
+		 */
+
+		TkTextFindDisplayIndex(textPtr, &indexPtr2, count - 1, NULL);
 		TkTextFindDisplayIndex(textPtr, indexPtr, count, &xOffset);
+		if (!TkTextIndexCompare(&indexPtr2, indexPtr)) {
+		    TkTextIndexSetupToEndOfText(indexPtr, textPtr, textPtr->sharedTextPtr->tree);
+		    TkTextFindDisplayIndex(textPtr, indexPtr, 0, &xOffset);
+		}
 	    } else {
 		TkTextIndex indexPtr2 = *indexPtr;
 
