@@ -74,7 +74,7 @@ remains at \fB1.0\fR.
 .
 Places the window in a mode that takes up the entire screen, has no
 borders, and covers the general use area (i.e. Start menu and taskbar on
-Windows, dock and menubar on OSX, general window decorations on X11).
+Windows, dock and menubar on macOS, general window decorations on X11).
 .\" OPTION: -topmost
 .TP
 \fB\-topmost\fR
@@ -102,7 +102,7 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 2000/XP+.  Where not supported, the \fB\-transparentcolor\fR value remains
 at \fB{}\fR.
 .PP
-On MacOS, the following attributes may be set.
+On macOS, the following attributes may be set.
 .\" OPTION: -appearance
 .TP
 \fB\-appearance\fR
@@ -261,7 +261,7 @@ indicates a window that has no special interpretation.
 \fB\-zoomed\fR
 .
 Requests that the window should be maximized. This is the same as \fBwm state
-zoomed\fR on Windows and Mac OS X.
+zoomed\fR on Windows and macOS.
 .PP
 On X11, changes to window attributes are performed asynchronously. Querying
 the value of an attribute returns the current state, which will not be the
@@ -592,7 +592,7 @@ simultaneously.  It is recommended to use not more than 2 icons, placing
 the larger icon first. This command also sets the panel icon for the
 application if the window manager or desktop environment supports it.
 .PP
-On Macintosh, the first image called is loaded into an OSX-native icon
+On Macintosh, the first image called is loaded into an OS-native icon
 format, and becomes the application icon in dialogs, the Dock, and
 other contexts. At the
 script level the command will accept only the first image passed in the
@@ -821,8 +821,8 @@ window in the stacking order.
 .
 If \fInewstate\fR is specified, the window will be set to the new state,
 otherwise it returns the current state of \fIwindow\fR: either
-\fBnormal\fR, \fBiconic\fR, \fBwithdrawn\fR, \fBicon\fR, or (Windows and Mac
-OS X only) \fBzoomed\fR.
+\fBnormal\fR, \fBiconic\fR, \fBwithdrawn\fR, \fBicon\fR, or (Windows and macOS
+only) \fBzoomed\fR.
 The difference between \fBiconic\fR and \fBicon\fR is that
 \fBiconic\fR refers to a window that has been iconified (e.g., with the
 \fBwm iconify\fR command) while \fBicon\fR refers to a window whose only
