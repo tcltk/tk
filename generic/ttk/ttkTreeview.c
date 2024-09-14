@@ -3567,6 +3567,14 @@ static int TreeviewSeeCommand(
 	return TCL_ERROR;
     }
 
+    /* The item cannot be moved into view if any ancestor (or itself) is detached.
+     */
+    for (parent = item; parent; parent = parent->parent) {
+	if (IsDetached(tv, parent)) {
+	    return TCL_OK;
+	}
+    }
+
     /* Make sure all ancestors are open:
      */
     for (parent = item->parent; parent; parent = parent->parent) {
