@@ -1748,6 +1748,19 @@ static int IsDetached(Treeview* tv, TreeItem* item)
 	item->parent == NULL && item != tv->tree.root;
 }
 
+/* Is an item or one of its ancestors detached? */
+static int IsItemOrAncestorDetached(Treeview* tv, TreeItem* item)
+{
+    TreeItem *parent;
+
+    for (parent = item; parent; parent = parent->parent) {
+	if (IsDetached(tv, parent)) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
 /* + BoundingBox --
  * 	Compute the parcel of the specified column of the specified item,
  *	(or the entire item if column is NULL)
@@ -1761,7 +1774,6 @@ static int BoundingBox(
 {
     int dispRow;
     Ttk_Box bbox = tv->tree.treeArea;
-    TreeItem *parent;
 
     /* Make sure the scroll information is current before use */
     TtkUpdateScrollInfo(tv->tree.xscrollHandle);
@@ -1775,11 +1787,8 @@ static int BoundingBox(
 	/* not viewable, or off-screen */
 	return 0;
     }
-    for (parent = item; parent; parent = parent->parent) {
-	if (IsDetached(tv, parent)) {
-	    /* detached, or ancestor detached */
-	    return 0;
-	}
+    if (IsItemOrAncestorDetached(tv, item)) {
+	return 0;
     }
 
     bbox.y += dispRow * tv->tree.rowHeight;
@@ -3576,10 +3585,8 @@ static int TreeviewSeeCommand(
 
     /* The item cannot be moved into view if any ancestor (or itself) is detached.
      */
-    for (parent = item; parent; parent = parent->parent) {
-	if (IsDetached(tv, parent)) {
-	    return TCL_OK;
-	}
+    if (IsItemOrAncestorDetached(tv, item)) {
+	return TCL_OK;
     }
 
     /* Make sure all ancestors are open:
