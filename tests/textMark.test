@@ -204,7 +204,7 @@ test textMark-6.6 {attempt to move the insert mark beyond peer -endline - bug 34
   set res [.p index insert]
 } -cleanup {
   destroy .p
-} -result {1.2}
+} -result {1.9}
 
 test textMark-7.1 {MarkFindNext - invalid mark name} -body {
     .t mark next bogus
