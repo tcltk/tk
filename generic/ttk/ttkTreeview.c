@@ -1741,6 +1741,13 @@ static int DisplayRow(int row, Treeview *tv)
     return row - tv->tree.yscroll.first + tv->tree.titleRows;
 }
 
+/* Is an item detached? The root is never detached. */
+static int IsDetached(Treeview* tv, TreeItem* item)
+{
+    return item->next == NULL && item->prev == NULL &&
+	item->parent == NULL && item != tv->tree.root;
+}
+
 /* + BoundingBox --
  * 	Compute the parcel of the specified column of the specified item,
  *	(or the entire item if column is NULL)
@@ -1754,6 +1761,7 @@ static int BoundingBox(
 {
     int dispRow;
     Ttk_Box bbox = tv->tree.treeArea;
+    TreeItem *parent;
 
     /* Make sure the scroll information is current before use */
     TtkUpdateScrollInfo(tv->tree.xscrollHandle);
@@ -1766,6 +1774,12 @@ static int BoundingBox(
     if (dispRow < 0) {
 	/* not viewable, or off-screen */
 	return 0;
+    }
+    for (parent = item; parent; parent = parent->parent) {
+	if (IsDetached(tv, parent)) {
+	    /* detached, or ancestor detached */
+	    return 0;
+	}
     }
 
     bbox.y += dispRow * tv->tree.rowHeight;
@@ -3345,13 +3359,6 @@ static int TreeviewDetachCommand(
     TtkRedisplayWidget(&tv->core);
     ckfree(items);
     return TCL_OK;
-}
-
-/* Is an item detached? The root is never detached. */
-static int IsDetached(Treeview *tv, TreeItem *item)
-{
-	return item->next == NULL && item->prev == NULL &&
-			item->parent == NULL && item != tv->tree.root;
 }
 
 /* + $tv detached ?$item? --
