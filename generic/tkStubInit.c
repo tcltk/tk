@@ -544,6 +544,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXGetContainer, /* 49 */
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
+    0, /* 52 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
