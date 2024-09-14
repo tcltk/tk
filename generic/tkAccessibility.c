@@ -274,19 +274,19 @@ const struct TkAccessibleVirtualEventMap eventMap[] = {
 
 /* Data storage for linking windows, events and commands. */
 struct TkAccessibleBindingTable {
-	Tk_Window *win,
-	TkAccessibleVirtualEvent vEvent,
-	const * char cmd;
+  Tk_Window *win,
+    TkAccessibleVirtualEvent vEvent,
+    const * char cmd;
 }
 
-/* Hash table for linking windows and the event/command data.*/
-Tcl_HashTable WindowAccessibleCmd;
-Tcl_InitHashTable(&WindowAccessibleCmd, TCL_STRING_KEYS);
+
+  struct TkAccessibleBindingTable bindTable, *tblPtr;
+tablPtr = &bindTable;
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_SetAccessibleEventCmd --
+ * Tk_SetAccessibleEvent --
  *
  *	This function links a platform-neutral event name and command to a 
  *	specfic widget. 
@@ -301,11 +301,11 @@ Tcl_InitHashTable(&WindowAccessibleCmd, TCL_STRING_KEYS);
  */
 
 int
-Tk_SetAccessibleEventCmd(
-		     TCL_UNUSED(void *),
-		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
-		     Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleEvent(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? event? cmd?");
@@ -317,10 +317,6 @@ Tk_SetAccessibleEventCmd(
   const * char winevent;
   const * char cmd;
   Tk_Window win;
-  Tcl_HashEntry *hPtr = NULL;
-  TkAccessibleBindingTable bindTablePtr;
-  
-  
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
@@ -330,22 +326,31 @@ Tk_SetAccessibleEventCmd(
   winevent = Tcl_GetString(objv[2]);
   cmd = Tcl_GetString(objv[3]);
   
-  
-  
-  /* Set accessibility event table for window, add to hash table. */
+  /* Set accessibility event table for window, add to table pointer. */
 
-    for (i = 0; eventMap[i].scriptEvent != NULL; i++) {
-      if(strcmp(eventMap[i].scriptEvent, winevent) == 0) {
-	Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&WindowAccessibleRole, 
-						  win, &isNew);
-	bindTablePtr.win = win;
-	bindTablePtr.vEvent=eventMap[i].vEvent;
-	bindTablePtr.cmd = cmd;
-	Tcl_SetHashValue(hPtr, bindTablePtr);
-      } else {
-	continue;
-      }
-      return TCL_OK:
+  for (i = 0; eventMap[i].scriptEvent != NULL; i++) {
+    if(strcmp(eventMap[i].scriptEvent, winevent) == 0) {
+      tblPtr->win = win;
+      tblPtr->vEvent=eventMap[i].vEvent;
+      tblPtr->cmd = cmd;
+    } else {
+      continue;
     }
-	return TCL_OK;
+    return TCL_OK:
+  }
+  return TCL_OK;
+}
+
+
+
+/*
+ * Event proc which retrieves the Tk accessibility event to map to native API's.
+ */
+
+TkAccessibleVirtualEvent 
+AccessibleEventProc(
+		    TCL_UNUSED(Tcl_Event *),
+		    TCL_UNUSED(int))
+{
+  return tblPtr->vEvent;
 }
