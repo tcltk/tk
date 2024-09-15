@@ -366,7 +366,7 @@ ArcCoords(
 	    }
 	}
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
- 		    &arcPtr->bbox[0]) != TCL_OK)
+		    &arcPtr->bbox[0]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
 		    &arcPtr->bbox[1]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2],
