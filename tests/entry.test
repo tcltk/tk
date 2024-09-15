@@ -874,8 +874,7 @@ test entry-3.23 {EntryWidgetCmd procedure, "delete" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 0123457890
-# Constrained by XQuartzKnownBug because [36e379c01b] (crash in XLoadQueryFont) kicks in.
-test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -constraints XQuartzKnownBug -setup {
+test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e ; update idletasks
     update
@@ -993,8 +992,7 @@ test entry-3.34 {EntryWidgetCmd procedure, "index" widget command} -setup {
 } -cleanup {
     destroy .e
 } -returnCodes {ok} -match glob -result {*}
-# Constrained by XQuartzKnownBug because [36e379c01b] (crash in XLoadQueryFont) kicks in.
-test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -constraints XQuartzKnownBug -setup {
+test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -setup {
     entry .e
     pack .e ; update idletasks
     update
