@@ -273,8 +273,6 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
-# ditto for tests failing on macOS with XQuartz
-testConstraint XQuartzKnownBug [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" || [testConstraint knownBug]}]
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testbitmap      [llength [info commands testbitmap]]
