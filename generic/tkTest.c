@@ -1584,7 +1584,7 @@ ImageDisplay(
     } else {
 
 	/*
-         * Drawing is not possible on the first call to DisplayImage.
+	 * Drawing is not possible on the first call to DisplayImage.
 	 * Save the message, but do not log it until the actual display.
 	 */
 

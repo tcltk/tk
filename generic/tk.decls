@@ -806,7 +806,7 @@ declare 211 {
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
 declare 212 {
-    TCL_NORETURN1 void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+    void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 declare 213 {
@@ -1166,11 +1166,11 @@ export {
 	    int exact)
 }
 export {
-    TCL_NORETURN1 void Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+    void Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 export {
-    TCL_NORETURN1 void Tk_MainExW(int argc, wchar_t **argv,
+    void Tk_MainExW(int argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 }
 

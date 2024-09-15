@@ -725,7 +725,7 @@ ImgPhotoCmd(
 	if (options.options & OPT_FORMAT) {
 	    matched = 0;
 	    for (imageFormat = tsdPtr->formatList; imageFormat != NULL;
-	 	imageFormat = imageFormat->nextPtr) {
+		imageFormat = imageFormat->nextPtr) {
 		if ((strncasecmp(Tcl_GetString(options.format),
 			imageFormat->name, strlen(imageFormat->name)) == 0)) {
 		    matched = 1;
@@ -915,9 +915,9 @@ ImgPhotoCmd(
 		}
 		dataWidth = listObjc;
 		/*
- 		 * Memory allocation overflow protection.
- 		 * May not be able to trigger/ demo / test this.
- 		 */
+		 * Memory allocation overflow protection.
+		 * May not be able to trigger/ demo / test this.
+		 */
 
 		if (dataWidth > (int)((UINT_MAX/3) / dataHeight)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -1577,8 +1577,8 @@ ParseSubcommandOptions(
 		goto oneValueRequired;
 	    }
 	    *optIndexPtr = ++index;
-	    optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
-		    Tk_GetUid(Tcl_GetString(objv[index])));
+	    optPtr->background = Tk_AllocColorFromObj(interp, Tk_MainWindow(interp),
+		    objv[index]);
 	    if (!optPtr->background) {
 		return TCL_ERROR;
 	    }
@@ -2097,7 +2097,7 @@ ToggleComplexAlphaIfNeeded(
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
-     	    mPtr->flags |= COMPLEX_ALPHA;
+	    mPtr->flags |= COMPLEX_ALPHA;
 	    break;
 	}
     }
@@ -3337,7 +3337,7 @@ Tk_PhotoPutZoomedBlock(
 			    *destPtr++ = srcPtr[blueOffset];
 			    *destPtr++ = 255;
 			    continue;
- 			}
+			}
 
 			if (compRule==TK_PHOTO_COMPOSITE_SET || !destPtr[3]) {
 			    /*
@@ -3908,7 +3908,7 @@ ImgGetPhoto(
 			    blockPtr->width * blockPtr->pixelSize;
 		}
 	    } else {
-	 	int gray = (unsigned char) (((optPtr->background->red>>8) * 11
+		int gray = (unsigned char) (((optPtr->background->red>>8) * 11
 			+ (optPtr->background->green>>8) * 16
 			+ (optPtr->background->blue>>8) * 5 + 16) >> 5);
 

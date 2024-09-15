@@ -1754,11 +1754,11 @@ Tk_WinfoObjCmd(
 	{
 	    Colormap temp = Tk_Colormap(tkwin);
 	    Tk_Colormap(tkwin) = TK_DYNAMIC_COLORMAP;
-	    colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+	    colorPtr = Tk_AllocColorFromObj(interp, tkwin, objv[3]);
 	    Tk_Colormap(tkwin) = temp;
 	}
 #else
-	colorPtr = Tk_GetColor(interp, tkwin, Tcl_GetString(objv[3]));
+	colorPtr = Tk_AllocColorFromObj(interp, tkwin, objv[3]);
 #endif
 	if (colorPtr == NULL) {
 	    return TCL_ERROR;

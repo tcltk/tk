@@ -274,6 +274,9 @@ you will have to adapt the above settings as follows:
 ttk::style configure $nbStyle -tabmargins {2 0 2 2}
 ttk::style map $nbStyle.Tab -expand {selected {2 2 2 2}}
 .CE
+The easiest way to do this is to invoke the library procedure
+\fBttk::configureNotebookStyle\fP with \fB$nbStyle\fP as argument, after
+setting the style's \fB\-tabposition\fP option.
 .RE
 \fB\-font\fP \fIfont\fP
 .br
@@ -281,16 +284,18 @@ ttk::style map $nbStyle.Tab -expand {selected {2 2 2 2}}
 .br
 \fB\-padding\fP \fIpadding\fP
 .RS
-Some themes (e.g., \fBclam\fP) use a different \fIpadding\fP for the
-selected tab.  For example, the Ttk library file \fBclamTheme.tcl\fP
-contains the lines
+Some themes use a different \fIpadding\fP for the selected tab.  For example,
+the Ttk library file \fBclamTheme.tcl\fP contains the lines
 .CS
 ttk::style configure TNotebook.Tab -padding {6 2 6 2}
 ttk::style map TNotebook.Tab -padding {selected {6 4 6 2}}
 .CE
 which are valid for the default value \fBnw\fP of the \fB\-tabposition\fP
-style option.  Again, for a different tab position you will have to adapt
-the above settings accordingly.
+style option.  For a \fBttk::notebook\fP style having a different tab position
+you will have to adapt the above settings accordingly.  Again, the easiest way
+to do this is to invoke the library procedure \fBttk::configureNotebookStyle\fP
+with the style name as argument, after setting the style's \fB\-tabposition\fP
+option.
 .RE
 .PP
 Some options are only available for specific themes.

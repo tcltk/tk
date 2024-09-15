@@ -233,16 +233,16 @@ CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
 
 if test ${SHARED_BUILD} = 0; then
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
+	RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
+	RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     fi
     TK_RES=""
 else
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
+	RC_DEFINES="${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES=""
+	RC_DEFINES=""
     fi
     TK_RES='tk.$(RES)'
 fi

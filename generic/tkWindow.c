@@ -2895,8 +2895,8 @@ DeleteWindowsExitProc(
      */
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
-           dispPtr = dispPtr->nextPtr) {
-       XSync(dispPtr->display, False);
+	    dispPtr = dispPtr->nextPtr) {
+	XSync(dispPtr->display, False);
     }
 
     /*
