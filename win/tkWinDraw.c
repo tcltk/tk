@@ -1504,7 +1504,9 @@ TkWinDrawDottedRect(
     Display *disp,		/* Display containing the dotted rectangle. */
     Drawable d,			/* Where to draw the rectangle (typically a
 				 * pixmap for double buffering). */
-    unsigned long pixel,	/* color to use for drawing the rectangle. */
+    long pixel,			/* Color to use for drawing the rectangle.  If
+				 * pixel < 0 then the black color and the
+				 * foreground mix mode R2_NOT are used. */
     int x, int y,		/* Coordinates of the top-left corner. */
     int width, int height)	/* Width & height, _including the border_. */
 {
@@ -1518,8 +1520,13 @@ TkWinDrawDottedRect(
     dc = TkWinGetDrawableDC(disp, d, &state);
 
     lb.lbStyle = BS_SOLID;
-    lb.lbColor = (COLORREF)pixel;
+    lb.lbColor = pixel < 0 ? RGB(0, 0, 0) : (COLORREF)pixel;
     lb.lbHatch = 0;
+
+    if (pixel < 0) {
+	SetROP2(dc, R2_NOT);
+	SetBkMode(dc, TRANSPARENT);
+    }
 
     pen = ExtCreatePen(PS_COSMETIC | PS_ALTERNATE, 1, &lb, 0, NULL);
     SelectObject(dc, pen);

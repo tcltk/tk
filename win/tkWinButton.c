@@ -325,7 +325,6 @@ TkpDisplayButton(
     int y, relief;
     Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
-    RECT rect;
     int defaultWidth;		/* Width of default ring. */
     int offset;			/* 0 means this is a label widget. 1 means it
 				 * is a flavor of button, so we offset the
@@ -632,22 +631,17 @@ TkpDisplayButton(
      */
 
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
 	if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
-	    rect.top = butPtr->borderWidth + 1 + defaultWidth;
-	    rect.left = rect.top;
-	    rect.right = Tk_Width(tkwin) - rect.left;
-	    rect.bottom = Tk_Height(tkwin) - rect.top;
+	    int dottedWidth = butPtr->borderWidth + 1 + defaultWidth;
+	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
+		    dottedWidth, dottedWidth,
+		    Tk_Width(tkwin) - 2*dottedWidth,
+		    Tk_Height(tkwin) - 2*dottedWidth);
 	} else {
-	    rect.top = y-1 + textYOffset;
-	    rect.left = x-1 + textXOffset;
-	    rect.right = x+butPtr->textWidth + 1 + textXOffset;
-	    rect.bottom = y+butPtr->textHeight + 2 + textYOffset;
+	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
+		    x-1 + textXOffset, y-1 + textYOffset,
+		    butPtr->textWidth + 2, butPtr->textHeight + 3);
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
-	DrawFocusRect(dc, &rect);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
     y += height/2;
