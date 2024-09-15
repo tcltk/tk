@@ -510,13 +510,17 @@ static WidgetSpec ScaleWidgetSpec =
 };
 
 TTK_BEGIN_LAYOUT(VerticalScaleLayout)
-    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )
+    TTK_GROUP("Vertical.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
-    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )
+    TTK_GROUP("Horizontal.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 
 /*
