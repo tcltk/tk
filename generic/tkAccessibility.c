@@ -274,9 +274,9 @@ const struct TkAccessibleVirtualEventMap eventMap[] = {
 
 /* Data storage for linking windows, events and commands. */
 struct TkAccessibleBindingTable {
-  Tk_Window *win,
-    TkAccessibleVirtualEvent vEvent,
-    const * char cmd;
+  Tk_Window *win;
+  TkAccessibleVirtualEvent vEvent;
+  const * char cmd;
 }
 
 
