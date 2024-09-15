@@ -101,6 +101,8 @@ If \fIcolumn\fR is specified, returns the bounding box of that cell.
 If the \fIitem\fR is not visible
 (i.e., if it is a descendant of a closed item or is scrolled offscreen),
 returns the empty list.
+If the element is partially visible, the result gives the full area of the
+element, including any parts that are not visible.
 .TP
 \fIpathname \fBcget \fIoption\fR
 Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
