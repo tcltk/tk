@@ -280,8 +280,8 @@ struct TkAccessibleBindingTable {
 }
 
 
-  struct TkAccessibleBindingTable bindTable, *tblPtr;
-tablPtr = &bindTable;
+struct TkAccessibleBindingTable bindTable, *tblPtr;
+tblPtr = &bindTable;
 
 /*
  *----------------------------------------------------------------------
@@ -341,8 +341,6 @@ Tk_SetAccessibleEvent(
   return TCL_OK;
 }
 
-
-
 /*
  * Event proc which retrieves the Tk accessibility event to map to native API's.
  */
@@ -354,3 +352,67 @@ AccessibleEventProc(
 {
   return tblPtr->vEvent;
 }
+
+/* Build list of standard accessibility states. */
+typedef enum {
+TK_STATE_ACTIVE,
+TK_STATE_CHECKED,
+TK_STATE_EDITABLE,
+TK_STATE_ENABLED,
+TK_STATE_FOCUSABLE,
+TK_STATE_FOCUSED,
+TK_STATE_HORIZONTAL,
+TK_STATE_ICONIFIED,
+TK_STATE_MODAL,
+TK_STATE_MULTI_LINE,
+TK_STATE_MULTISELECTABLE,
+TK_STATE_PRESSED,
+TK_STATE_RESIZABLE,
+TK_STATE_SELECTABLE,
+TK_STATE_SELECTED,
+TK_STATE_SINGLE_LINE,
+TK_STATE_VERTICAL,
+TK_STATE_VISIBLE,
+TK_STATE_SELECTABLE_TEXT,
+TK_STATE_DEFAULT,
+TK_STATE_READ_ONLY,
+TK_STATE_COLLAPSED,
+TK_STATE_HAS_TOOLTIP
+} TkAccessibleState:
+
+/* Map script-level accessibility states to C states. */
+
+struct TkAccessibleStateMap {
+  const char *scriptState;
+  TkAccessibleState state;
+};
+
+const struct TkAccessibleState stateMap[] = {
+  {"acc_active", 	TK_STATE_ACTIVE},
+  {"acc_checked", 	TK_STATE_CHECKED},
+  {"acc_editable",	TK_STATE_EDITABLE},
+  {"acc_enabled",	TK_STATE_ENABLED},
+  {"acc_focusable",	TK_STATE_FOCUSABLE},
+  {"acc_focused",	TK_STATE_FOCUSED},
+  {"acc_horizontal",	TK_STATE_HORIZONTAL},
+  {"acc_iconified", 	TK_STATE_ICONIFIED},
+  {"acc_modal",	TK_STATE_MODAL},
+  {"acc_multiline",	TK_STATE_MULTI_LINE},
+  {"acc_multiselectable",	TK_STATE_MULTISELECTABLE},
+  {"acc_pressed",	TK_STATE_PRESSED},
+  {"acc_resizable", 	TK_STATE_RESIZABLE},
+  {"acc_selectable", 	TK_STATE_SELECTABLE},
+  {"acc_selected",	TK_STATE_SELECTED},
+  {"acc_single_line",	TK_STATE_SINGLE_LINE},
+  {"acc_vertical", 	TK_STATE_VERTICAL},
+  {"acc_visible",	TK_STATE_VISIBLE},
+  {"acc_selectable_text",	TK_STATE_SELECTABLE_TEXT},
+  {"acc_default",	TK_STATE_DEFAULT},
+  {"acc_read_ponly",	TK_STATE_READ_ONLY},
+  {"acc_collapsed",	TK_STATE_COLLAPSED},
+  {"acc_tooltip",	TK_STATE_HAS_TOOLTIP},
+   {NULL,	0}
+};
+
+
+/*To-do: Build TkAccessibilityObject struct from roles, states, events, actions.*/
