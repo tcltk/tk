@@ -688,10 +688,39 @@ test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
     .top.tree see e
     update idletasks
     set after [lindex [.top.vs get] 1]
-    expr $after < $before
+    expr ($after < $before)
 } -cleanup {
     destroy .top
 } -result 1
+test treeview-9.4 {no scrolling on see command on an item below a detached item; bbox on such item is empty} -setup {
+    toplevel .top
+    ttk::treeview .top.tree -show tree -height 10 -columns {label} \
+            -yscrollcommand [list .top.vs set]
+    ttk::scrollbar .top.vs -command {.top.tree yview}
+    grid .top.tree -row 0 -column 0 -sticky ns
+    grid .top.vs -row 0 -column 1 -sticky ns
+
+    foreach dir {A B C D E F G H} {
+        set id [string cat dir $dir]
+        .top.tree insert {} end -id $id -text "dir $dir" -open 1
+        for {set i 1} {$i <= 10} {incr i} {
+	    .top.tree insert $id end -id $id-$i -text "dir $dir item $i"
+        }
+    }
+    update
+    .top.tree detach dirD
+    .top.tree item dirC -open 0
+    update
+} -body {
+    set before [lindex [.top.vs get] 1]
+    .top.tree see dirD-4
+    update
+    set after [lindex [.top.vs get] 1]
+    set res [expr ($after == $before)]
+    lappend res [.top.tree bbox dirD-4]
+} -cleanup {
+    destroy .top
+} -result {1 {}}
 
 test treeview-10.0 "See command" -setup {
     # Setup common for all 10.* tests
