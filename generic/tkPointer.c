@@ -181,7 +181,7 @@ GenerateEnterLeave(
 		 */
 
 		InitializeEvent(&event, targetPtr, LeaveNotify, x, y, state,
-			NotifyNormal);
+			NotifyAncestor);
 
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
@@ -386,7 +386,7 @@ Tk_UpdatePointer(
 
 	if (targetWinPtr != NULL) {
 	    InitializeEvent(&event, targetWinPtr, MotionNotify, x, y,
-		    tsdPtr->lastState, NotifyNormal);
+		    tsdPtr->lastState, NotifyAncestor);
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	}
 	tsdPtr->lastPos = pos;
