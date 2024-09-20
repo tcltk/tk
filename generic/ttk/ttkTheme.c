@@ -534,9 +534,10 @@ void Ttk_TkDestroyedHandler(
     StylePackageData* pkgPtr = GetStylePackageData(interp);
 
     /*
-     * Cancel any pending ThemeChanged calls:
+     * Cancel any pending ThemeChanged calls. We might be called
+     * before Ttk is initialized. See bug [3981091ed336].
      */
-    if (pkgPtr->themeChangePending) {
+    if (pkgPtr && pkgPtr->themeChangePending) {
 	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
     }
 }
