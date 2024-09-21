@@ -2845,7 +2845,11 @@ int TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
     return count;
 }
 
-/* + $tv size ?-hidden? ?-recurse? $item --
+enum { OPT_HIDDEN, OPT_RECURSE, OPT_RECURSIVE, OPT_NORECURSE };
+static const char *const optStrings[] = {
+	"-hidden", "-recurse", "-recursive", "-norecurse", NULL };
+
+/* + $tv size ?-opt ...? $item --
  * 	Return count of immediate children associated with $item or with
  *	-recurse, all sub children. With -hidden, include hidden items.
  */
@@ -2857,10 +2861,6 @@ static int TreeviewSizeCommand(
     int count, option = -1, hidden = 0, recurse = 0;
     Tcl_Size i;
 
-    enum { SIZE_HIDDEN, SIZE_RECURSE, SIZE_RECURSIVE };
-    static const char *const sizeStrings[] = {
-	"-hidden", "-recurse", "-recursive", NULL };
-
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-recurse? item");
 	return TCL_ERROR;
@@ -2868,12 +2868,14 @@ static int TreeviewSizeCommand(
 
     if (objc > 3) {
 	for (i = 2; i < objc-1; ++i) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sizeStrings,
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
 		    sizeof(char *), "option", 0, &option) == TCL_OK) {
-		if (option == SIZE_HIDDEN) {
+		if (option == OPT_HIDDEN) {
 		    hidden = 1;
-		} else {
+		} else if (option != OPT_NORECURSE) {
 		    recurse = 1;
+		} else {
+		    recurse = 0;
 		}
 	    } else {
 		return TCL_ERROR;
@@ -2988,7 +2990,7 @@ static int TreeviewPrevCommand(
     return TCL_OK;
 }
 
-/* + $tv before $item --
+/* + $tv before ?-opt ...? $item --
  *	Get item before $item in view, which may be a sibling or parent
  */
 static int TreeviewBeforeCommand(
@@ -2996,14 +2998,32 @@ static int TreeviewBeforeCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *before;
-    int hidden = 0;
-    int recurse = 1;
+    int option = -1, hidden = 0, recurse = 1;
+    Tcl_Size i;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item");
+    if (objc < 3 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
 	return TCL_ERROR;
     }
-    item = FindItem(interp, tv, objv[2]);
+
+    if (objc > 3) {
+	for (i = 2; i < objc-1; ++i) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
+		    sizeof(char *), "option", 0, &option) == TCL_OK) {
+		if (option == OPT_HIDDEN) {
+		    hidden = 1;
+		} else if (option != OPT_NORECURSE) {
+		    recurse = 1;
+		} else {
+		    recurse = 0;
+		}
+	    } else {
+		return TCL_ERROR;
+	    }
+	}
+    }
+
+    item = FindItem(interp, tv, objv[objc-1]);
     if (!item) {
 	return TCL_ERROR;
     }
@@ -3015,7 +3035,7 @@ static int TreeviewBeforeCommand(
     return TCL_OK;
 }
 
-/* + $tv after $item --
+/* + $tv after ?-opt ...? $item --
  *	Get item after $item in view, which may be a child, sibling, or sibling of ancestor
  */
 static int TreeviewAfterCommand(
@@ -3023,14 +3043,32 @@ static int TreeviewAfterCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *after;
-    int hidden = 0;
-    int recurse = 1;
+    int option = -1, hidden = 0, recurse = 1;
+    Tcl_Size i;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item");
+    if (objc < 3 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
 	return TCL_ERROR;
     }
-    item = FindItem(interp, tv, objv[2]);
+
+    if (objc > 3) {
+	for (i = 2; i < objc-1; ++i) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
+		    sizeof(char *), "option", 0, &option) == TCL_OK) {
+		if (option == OPT_HIDDEN) {
+		    hidden = 1;
+		} else if (option != OPT_NORECURSE) {
+		    recurse = 1;
+		} else {
+		    recurse = 0;
+		}
+	    } else {
+		return TCL_ERROR;
+	    }
+	}
+    }
+
+    item = FindItem(interp, tv, objv[objc-1]);
     if (!item) {
 	return TCL_ERROR;
     }
@@ -3077,7 +3115,7 @@ Tcl_Obj *GetBetweenList(
     return resultObj;
 }
 
-/* + $tv between $from $to --
+/* + $tv between ?-opt ...? $from $to --
  *	Get list of items between from and to, inclusive
  */
 static int TreeviewBetweenCommand(
@@ -3086,14 +3124,32 @@ static int TreeviewBetweenCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *from, *to;
     Tcl_Obj *resultObj;
-    int hidden = 0;
-    int recurse = 1;
+    int option = -1, hidden = 0, recurse = 1;
+    Tcl_Size i;
 
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "from to");
+    if (objc < 3 || objc > 6) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? from to");
 	return TCL_ERROR;
     }
-    if (!(from = FindItem(interp, tv, objv[2])) || !(to = FindItem(interp, tv, objv[3]))) {
+
+    if (objc > 3) {
+	for (i = 2; i < objc-2; ++i) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
+		    sizeof(char *), "option", 0, &option) == TCL_OK) {
+		if (option == OPT_HIDDEN) {
+		    hidden = 1;
+		} else if (option != OPT_NORECURSE) {
+		    recurse = 1;
+		} else {
+		    recurse = 0;
+		}
+	    } else {
+		return TCL_ERROR;
+	    }
+	}
+    }
+
+    if (!(from = FindItem(interp, tv, objv[objc-2])) || !(to = FindItem(interp, tv, objv[objc-1]))) {
 	return TCL_ERROR;
     }
 

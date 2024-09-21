@@ -136,13 +136,15 @@ commands (see \fBttk::widget\fR),
 treeview widgets support the following additional commands:
 .\" METHOD: after
 .TP
-\fIpathname \fBafter \fIitem\fR
+\fIpathname \fBafter\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
-Returns the identifier of item after \fIitem\fR in the current view.
-Can be the first child, next sibling, next sibling of an ancestor, or {} for none.
+Returns the identifier of item after \fIitem\fR in the current view. Can be
+the first child, next sibling, next sibling of an ancestor, or {} for none.
+With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
+include child items.
 .\" METHOD: bbox
 .TP
-\fIpathname \fBbbox \fIitem\fR ?\fIcolumn\fR?
+\fIpathname \fBbbox\fR \fIitem\fR ?\fIcolumn\fR?
 .
 Returns the bounding box (relative to the treeview widget's window)
 of the specified \fIitem\fR in the form \fIx y width height\fR.
@@ -154,15 +156,19 @@ option), returns the bounding box of that cell within \fIitem\fR
 (even if the cell is horizontally scrolled offscreen).
 .\" METHOD: before
 .TP
-\fIpathname \fBbefore \fIitem\fR
+\fIpathname \fBbefore\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
 Returns the identifier of item before \fIitem\fR in the current view.
 Can be the previous sibling, parent of \fIitem\fR, or {} for none.
+With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
+include child items.
 .\" METHOD: between
 .TP
-\fIpathname \fBbetween \fIfrom to\fR
+\fIpathname \fBbetween\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfrom to\fR
 .
 Returns a list of all of the items between \fIfrom\fR and \fIto\fR, inclusive.
+With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
+include child items.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
@@ -557,8 +563,10 @@ items that do not match \fIpattern\fR will be returned.
 .TP
 \fB\-start \fIitem\fR
 .
-Start the search at item \fIitem\fR. \fIItem\fR must be a descendant of
-\fIparent\fR.
+Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
+\fIparent\fR. When resuming a search, use the \fBbefore\fR or \fBafter\fR
+subcommands to get the start item. All other options should be the same as the
+initial search including \fIparent\fR.
 
 .\" OPTION: -ascii
 .TP
@@ -710,11 +718,11 @@ in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .\" METHOD: size
 .TP
-\fIpathname \fBsize\fR ?\fI\-hidden\fR? ?\fI\-recurse\fR? \fIitem\fR
+\fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse? item\fR
 .
-Returns the number of children belonging to \fIitem\fR. With \fI\-recurse\fR
-option, will include all descendants. With \fI\-hidden\fR option, will include
-hidden items.
+Returns the number of children belonging to \fIitem\fR. With \fI\-hidden\fR
+option, will include hidden items. With \fI\-recurse\fR option, will include
+all descendants.
 .\" METHOD: tag
 .TP
 \fIpathName \fBtag \fIargs...\fR
