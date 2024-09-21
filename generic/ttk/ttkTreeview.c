@@ -821,84 +821,72 @@ static TreeItem *FindItemByIndex(
     return found;
 }
 
-/* + FindPrevVisibleItem --
- *	Return the first visible item before item in widget
+/* + GetPrevItem --
+ *	Return the previous item in the widget view
  */
-TreeItem *FindPrevVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
-	int hidden, int recurse, int first) {
-    TreeItem *prev;
+TreeItem *GetPrevItem(Treeview *tv, TreeItem *root, TreeItem *item, int hidden, int recurse) {
+   TreeItem *prev;
 
-    if (!item) {
-	return item;
+    if (!item || !root) {
+	return NULL;
     }
 
-    /* Get prev item */
-    if (first) {
+    while (item != NULL) {
 	prev = item->prev;
-    } else {
-	prev = item;
-    }
-
-    /* If none, get parent */
-    if (!prev) {
-	prev = item->parent;
-	if (prev == root || prev == tv->tree.root) {
-	    return 0;
+	if (prev == NULL) {
+	    prev = item->parent;
 	} else {
+	    if (recurse && prev->children) {
+		while ((prev->state & TTK_STATE_OPEN) && (!prev->hidden || 
+			(prev->hidden && hidden)) && prev->children) {
+		    prev = EndPosition(tv, prev);
+		}
+	    }
+	}
+	if (prev == root) {
+	    return NULL;
+	}
+	if (!prev->hidden || (prev->hidden && hidden)) {
 	    return prev;
 	}
+	item = prev;
     }
-
-    /* Skip to prev if hidden */
-    while (prev && (prev->hidden && !hidden)) {
-	prev = prev->prev;
-    }
-
-    /* Move to last child, if any */
-    if (prev && (prev->state & TTK_STATE_OPEN) && prev->children && recurse) {
-	prev = FindPrevVisibleItem(tv, root, EndPosition(tv, prev), hidden, recurse, 0);
-    }
-    return prev;
+    return item;
 }
 
-/* + FindNextVisibleItem --
- *	Return the first visible item after item in widget
+/* + GetNextItem --
+ *	Return the next item in the widget view
  */
-TreeItem *FindNextVisibleItem(Treeview *tv, TreeItem *root, TreeItem *item,
-	int hidden, int recurse, int first) {
+TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
     TreeItem *next;
 
-    if (!item) {
-	return item;
+    if (!item || !root) {
+	return NULL;
     }
 
-    /* Move to first child or next item */
-    if (first) {
-	if ((item->state & TTK_STATE_OPEN) && item->children && recurse) {
-	    next = FindNextVisibleItem(tv, root, item->children, hidden, recurse, 0);
-	} else {
+    while (item != NULL) {
+	next = NULL;
+
+	if (recurse && (item->state & TTK_STATE_OPEN) && item->children &&
+		(!item->hidden || (item->hidden && hidden))) {
+	    next = item->children;
+	}
+	if (next == NULL) {
 	    next = item->next;
 	}
-    } else {
-	next = item;
-    }
-
-    /* If none, get parent's next item */
-    while (!next) {
-	next = item->parent;
-	if (next == root || next == tv->tree.root) {
-	    return 0;
-	} else {
-	    item = next;
-		next = next->next;
+	while (next == NULL && item != root) {
+	    item = item->parent;
+	    next = item->next;
 	}
+	if (next == NULL || next == root) {
+	    return NULL;
+	}
+	if (!next->hidden || (next->hidden && hidden)) {
+	    return next;
+	}
+	item = next;
     }
-
-    /* Skip to next item if hidden */
-    while (next && (next->hidden && !hidden)) {
-	next = next->next;
-    }
-    return next;
+    return item;
 }
 
 /* + GetItemListFromObj --
@@ -2868,10 +2856,11 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-int TreeviewCountRecursive(TreeItem *item, int hidden, int recurse) {
+int TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
     int count = 0;
+    TreeItem *item;
 
-    for (item = item->children; item; item = item->next) {
+    for (item = parent->children; item; item = item->next) {
 	if (hidden || !item->hidden) {
 	    count++;
 	    if (recurse && item->children) {
@@ -3045,7 +3034,7 @@ static int TreeviewBeforeCommand(
 	return TCL_ERROR;
     }
 
-    before = FindPrevVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+    before = GetPrevItem(tv, tv->tree.root, item, hidden, recurse);
     if (before && before->idObj) {
 	Tcl_SetObjResult(interp, before->idObj);
     }
@@ -3072,7 +3061,7 @@ static int TreeviewAfterCommand(
 	return TCL_ERROR;
     }
 
-    after = FindNextVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+    after = GetNextItem(tv->tree.root, item, hidden, recurse);
     if (after && after->idObj) {
 	Tcl_SetObjResult(interp, after->idObj);
     }
@@ -3103,9 +3092,9 @@ Tcl_Obj *GetBetweenList(
 	    return NULL;
 	}
 	if (forwards) {
-	    item = FindNextVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+	    item = GetNextItem(tv->tree.root, item, hidden, recurse);
 	} else {
-	    item = FindPrevVisibleItem(tv, tv->tree.root, item, hidden, recurse, 1);
+	    item = GetPrevItem(tv->tree.root, item, hidden, recurse);
 	}
     }
     if (item == to) {
@@ -4954,9 +4943,9 @@ static int TreeviewSearchCommand(
 
 	/* Move to next/prev item */
 	if (forwards) {
-	    item = FindNextVisibleItem(tv, parent, item, hidden, recurse, 1);
+	    item = GetNextItem(parent, item, hidden, recurse);
 	} else {
-	    item = FindPrevVisibleItem(tv, parent, item, hidden, recurse, 1);
+	    item = GetPrevItem(tv, parent, item, hidden, recurse);
 	}
     }
     Tcl_SetObjResult(interp, resultObj);
