@@ -32,6 +32,7 @@ static const int HALO   	= 4;	/* heading separator */
  *
  * INVARIANTS:
  * 	item->children	==> item->children->parent == item
+ * 	item->lastChild	==> item->lastChild->parent == item
  *	item->next	==> item->next->parent == item->parent
  * 	item->next 	==> item->next->prev == item
  * 	item->prev 	==> item->prev->next == item
@@ -42,6 +43,7 @@ struct TreeItemRec {
     Tcl_HashEntry *entryPtr;	/* Back-pointer to hash table entry */
     TreeItem	*parent;	/* Parent item */
     TreeItem	*children;	/* Linked list of child items */
+    TreeItem	*lastChild;	/* Last child in linked list of child items */
     TreeItem	*next;		/* Next sibling */
     TreeItem	*prev;		/* Previous sibling */
 
@@ -117,7 +119,8 @@ static TreeItem *NewItem(void)
     TreeItem *item = (TreeItem *)ckalloc(sizeof(*item));
 
     item->entryPtr = NULL;
-    item->parent = item->children = item->next = item->prev = NULL;
+    item->parent = item->children = item->lastChild = NULL;
+    item->next = item->prev = NULL;
 
     item->state = 0ul;
     item->idObj = NULL;
@@ -184,11 +187,13 @@ static void DetachItem(TreeItem *item)
 	item->prev->next = item->next;
     if (item->next)
 	item->next->prev = item->prev;
+    if (item->parent && item->parent->lastChild == item)
+	item->parent->lastChild = item->prev;
     item->next = item->prev = item->parent = NULL;
 }
 
 /* + InsertItem --
- * 	Insert an item into the tree after the specified item.
+ * 	Insert an item into the tree after the specified item prev.
  *
  * Preconditions:
  * 	+ item is currently detached
@@ -207,6 +212,8 @@ static void InsertItem(TreeItem *parent, TreeItem *prev, TreeItem *item)
     }
     if (item->next) {
 	item->next->prev = item;
+    } else {
+	parent->lastChild = item;
     }
 }
 
@@ -469,7 +476,6 @@ typedef struct {
     TreeColumn *columns;	/* Array of column options for data columns */
 
     TreeItem *focus;		/* Current focus item */
-    TreeItem *endPtr;		/* See EndPosition() */
 
     /* Widget options:
      */
@@ -731,7 +737,6 @@ static TreeItem *FindItem(
 
 enum {index_end, index_first, index_last};
 static const char *const indexStrings[] = {"end", "first", "last", NULL};
-static TreeItem *EndPosition(Treeview *, TreeItem *);
 int TreeviewCountRecursive(TreeItem *, int, int);
 
 /* + FindIndex --
@@ -785,7 +790,7 @@ static TreeItem *FindItemByIndex(
 		found = item->children;
 	    }
 	} else {
-	    found = EndPosition(tv, item);
+	    found = item->lastChild;
 	}
 	if (before && fn != index_end && found) {
 	    found = found->prev;
@@ -805,7 +810,7 @@ static TreeItem *FindItemByIndex(
 		if (found) {
 		    found = found->prev;
 		} else {
-		    found = EndPosition(tv, item);
+		    found = item->lastChild;
 		}
 	    }
 	}
@@ -824,7 +829,7 @@ static TreeItem *FindItemByIndex(
 /* + GetPrevItem --
  *	Return the previous item in the widget view
  */
-TreeItem *GetPrevItem(Treeview *tv, TreeItem *root, TreeItem *item, int hidden, int recurse) {
+TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
    TreeItem *prev;
 
     if (!item || !root) {
@@ -837,16 +842,16 @@ TreeItem *GetPrevItem(Treeview *tv, TreeItem *root, TreeItem *item, int hidden, 
 	    prev = item->parent;
 	} else {
 	    if (recurse && prev->children) {
-		while ((prev->state & TTK_STATE_OPEN) && (!prev->hidden || 
-			(prev->hidden && hidden)) && prev->children) {
-		    prev = EndPosition(tv, prev);
+		while (prev && (prev->state & TTK_STATE_OPEN) &&
+			(!prev->hidden || hidden) && prev->children) {
+		    prev = prev->lastChild;
 		}
 	    }
 	}
 	if (prev == root) {
 	    return NULL;
 	}
-	if (!prev->hidden || (prev->hidden && hidden)) {
+	if (!prev->hidden || hidden) {
 	    return prev;
 	}
 	item = prev;
@@ -1465,7 +1470,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     Tcl_InitHashTable(&tv->tree.items, TCL_STRING_KEYS);
     tv->tree.serial = 0;
 
-    tv->tree.focus = tv->tree.endPtr = NULL;
+    tv->tree.focus = NULL;
 
     /* Create root item "":
      */
@@ -2674,37 +2679,6 @@ static void TreeviewDisplay(void *clientData, Drawable d)
  * +++ Utilities for widget commands
  */
 
-/* + EndPosition --
- * 	Locate the last child of the specified node.
- *
- * 	To avoid quadratic-time behavior in the common cases
- * 	where the treeview is populated in breadth-first or
- * 	depth-first order using [$tv insert $parent end ...],
- * 	we cache the result from the last call to EndPosition()
- * 	and start the search from there on a cache hit.
- *
- */
-static TreeItem *EndPosition(Treeview *tv, TreeItem *parent)
-{
-    TreeItem *endPtr = tv->tree.endPtr;
-
-    while (endPtr && endPtr->parent != parent) {
-	endPtr = endPtr->parent;
-    }
-    if (!endPtr) {
-	endPtr = parent->children;
-    }
-
-    if (endPtr) {
-	while (endPtr->next) {
-	    endPtr = endPtr->next;
-	}
-	tv->tree.endPtr = endPtr;
-    }
-
-    return endPtr;
-}
-
 /* + AncestryCheck --
  * 	Verify that specified item is not an ancestor of the specified parent;
  * 	returns 1 if OK, 0 and leaves an error message in interp otherwise.
@@ -3034,7 +3008,7 @@ static int TreeviewBeforeCommand(
 	return TCL_ERROR;
     }
 
-    before = GetPrevItem(tv, tv->tree.root, item, hidden, recurse);
+    before = GetPrevItem(tv->tree.root, item, hidden, recurse);
     if (before && before->idObj) {
 	Tcl_SetObjResult(interp, before->idObj);
     }
@@ -4063,8 +4037,6 @@ static int TreeviewDeleteCommand(
 	TreeItem *next = delq->next;
 	if (tv->tree.focus == delq)
 	    tv->tree.focus = NULL;
-	if (tv->tree.endPtr == delq)
-	    tv->tree.endPtr = NULL;
 	FreeItem(delq);
 	delq = next;
     }
@@ -4816,7 +4788,7 @@ static int TreeviewSearchCommand(
 	if (forwards) {
 	    item = parent->children;
 	} else {
-	    item = EndPosition(tv, parent);
+	    item = parent->lastChild;
 	}
     }
 
@@ -4945,7 +4917,7 @@ static int TreeviewSearchCommand(
 	if (forwards) {
 	    item = GetNextItem(parent, item, hidden, recurse);
 	} else {
-	    item = GetPrevItem(tv, parent, item, hidden, recurse);
+	    item = GetPrevItem(parent, item, hidden, recurse);
 	}
     }
     Tcl_SetObjResult(interp, resultObj);
