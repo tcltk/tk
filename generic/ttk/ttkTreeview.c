@@ -4779,6 +4779,9 @@ static int TreeviewSearchCommand(
 		if (!(item = FindItem(interp, tv, objv[++i]))) {
 		    return TCL_ERROR;
 		}
+		if (!AncestryCheck(interp, tv, item, parent)) {
+		    return TCL_ERROR;
+		}
 		break;
 	}
     }
