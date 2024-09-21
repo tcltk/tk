@@ -1249,14 +1249,14 @@ static Ttk_ElementSpec SliderElementSpec = {
 typedef struct {
     Tcl_Obj *colorObj;
     Tcl_Obj *marginObj;
-    Tcl_Obj *diameterObj;
+    Tcl_Obj *sizeObj;
 } TreeitemIndicator;
 
 static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	Tk_Offset(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
-	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
+	Tk_Offset(TreeitemIndicator,sizeObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
 	Tk_Offset(TreeitemIndicator,marginObj), "2 2 4 2" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -1274,7 +1274,8 @@ static void TreeitemIndicatorSize(
     int size = 0;
     Ttk_Padding margins;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &size);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
@@ -1297,7 +1298,7 @@ static void TreeitemIndicatorDraw(
 	return;
     }
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     XDrawRectangle(Tk_Display(tkwin), d, gc,
