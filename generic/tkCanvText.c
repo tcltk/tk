@@ -732,6 +732,13 @@ ComputeTextBbox(
 	width = height = 0;
     }
 
+#ifdef MAC_OSX_TK
+#define FACTOR 0.75 /* See ticket [7ea3245acd] */
+    width = ROUND((float) width / FACTOR);
+    height = ROUND((float) height / FACTOR);
+#undef FACTOR
+#endif
+
     /*
      * Use overall geometry information to compute the top-left corner of the
      * bounding box for the text item.
