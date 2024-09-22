@@ -718,6 +718,9 @@ ComputeTextBbox(
     int width, height, fudge, i;
     Tk_State state = textPtr->header.state;
     double x[4], y[4], dx[4], dy[4], sinA, cosA, tmp;
+    Tk_FontMetrics fm;
+    Tk_GetFontMetrics(textPtr->tkfont, &fm);
+
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -732,12 +735,11 @@ ComputeTextBbox(
 	width = height = 0;
     }
 
-#ifdef MAC_OSX_TK
-#define FACTOR 0.75 /* See ticket [7ea3245acd] */
-    width = ROUND((float) width / FACTOR);
-    height = ROUND((float) height / FACTOR);
-#undef FACTOR
-#endif
+    /* Extend the bounding box to account for characters that overhang.
+     * See [7ea3245acd]
+     */
+    
+    width += fm.ascent;
 
     /*
      * Use overall geometry information to compute the top-left corner of the
