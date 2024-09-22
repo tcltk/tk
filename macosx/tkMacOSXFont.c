@@ -16,8 +16,8 @@
 #include "tkMacOSXFont.h"
 #include "tkMacOSXConstants.h"
 
-#define defaultOrientation kCTFontDefaultOrientation
-#define verticalOrientation kCTFontVerticalOrientation
+#define defaultOrientation kCTFontOrientationDefault
+#define verticalOrientation kCTFontOrientationVertical
 #define fixedPitch kCTFontUserFixedPitchFontType
 
 /*
@@ -1185,7 +1185,7 @@ TkpMeasureCharsInContext(
     CFRelease(typesetter);
     [attributedString release];
     [string release];
-    length = ceil(width - offset);
+    length = ceil((width - offset) / FACTOR);
     fit = (TclUtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
