@@ -1904,6 +1904,26 @@ static int DisplayRow(int row, Treeview *tv)
     return row - tv->tree.yscroll.first + tv->tree.titleRows;
 }
 
+/* Is an item detached? The root is never detached. */
+static int IsDetached(Treeview* tv, TreeItem* item)
+{
+    return item->next == NULL && item->prev == NULL &&
+	item->parent == NULL && item != tv->tree.root;
+}
+
+/* Is an item or one of its ancestors detached? */
+static int IsItemOrAncestorDetached(Treeview* tv, TreeItem* item)
+{
+    TreeItem *parent;
+
+    for (parent = item; parent; parent = parent->parent) {
+	if (IsDetached(tv, parent)) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
 /* + BoundingBox --
  * 	Compute the parcel of the specified column of the specified item,
  *	(or the entire item if column is NULL)
@@ -1928,6 +1948,9 @@ static int BoundingBox(
     dispRow = DisplayRow(item->rowPos, tv);
     if (dispRow < 0) {
 	/* not viewable, or off-screen */
+	return 0;
+    }
+    if (IsItemOrAncestorDetached(tv, item)) {
 	return 0;
     }
 
@@ -2336,7 +2359,7 @@ static void DrawCells(
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    int horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
+    short horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
     Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
     DisplayItem displayItemLocal;
     DisplayItem displayItemCell, displayItemCellSel;
@@ -3986,13 +4009,6 @@ static int TreeviewDetachCommand(
     return TCL_OK;
 }
 
-/* Is an item detached? The root is never detached. */
-static int IsDetached(Treeview *tv, TreeItem *item)
-{
-	return item->next == NULL && item->prev == NULL &&
-			item->parent == NULL && item != tv->tree.root;
-}
-
 /* + $tv detached ?$item? --
  * 	List detached items (in arbitrary order) or query the detached state of
  * 	$item.
@@ -4196,6 +4212,12 @@ static int TreeviewSeeCommand(
 	if (error) {
 	    return TCL_ERROR;
 	}
+    }
+
+    /* The item cannot be moved into view if any ancestor (or itself) is detached.
+     */
+    if (IsItemOrAncestorDetached(tv, item)) {
+	return TCL_OK;
     }
 
     /* Make sure all ancestors are open:
@@ -5673,12 +5695,12 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    Ttk_Padding margins;
     int size = 0;
+    Ttk_Padding margins;
 
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    if (size % 2 == 0) --size;	/* An odd size is better for the arrow. */
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
@@ -5696,6 +5718,7 @@ static void TreeitemIndicatorDraw(
     ArrowDirection direction =
 	(state & TTK_STATE_OPEN) ? ARROW_DOWN : ARROW_RIGHT;
     Ttk_Padding margins;
+    int cx, cy;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues; GC gc; unsigned mask;
 
@@ -5704,6 +5727,24 @@ static void TreeitemIndicatorDraw(
 
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
     b = Ttk_PadBox(b, margins);
+
+    switch (direction) {
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_RIGHT:
+	default:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
     gcvalues.foreground = borderColor->pixel;
     gcvalues.line_width = 1;
