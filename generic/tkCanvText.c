@@ -715,12 +715,14 @@ ComputeTextBbox(
     TextItem *textPtr)		/* Item whose bbox is to be recomputed. */
 {
     Tk_CanvasTextInfo *textInfoPtr;
-    int width, height, fudge, i;
+    int width, height, fudge, i, overhang = 0;
     Tk_State state = textPtr->header.state;
     double x[4], y[4], dx[4], dy[4], sinA, cosA, tmp;
     Tk_FontMetrics fm;
-    Tk_GetFontMetrics(textPtr->tkfont, &fm);
-
+    if (textPtr->tkfont) {
+	Tk_GetFontMetrics(textPtr->tkfont, &fm);
+	overhang = fm.ascent;
+    }
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -734,12 +736,6 @@ ComputeTextBbox(
     if (state == TK_STATE_HIDDEN || textPtr->color == NULL) {
 	width = height = 0;
     }
-
-    /* Extend the bounding box to account for characters that overhang.
-     * See [7ea3245acd]
-     */
-    
-    width += fm.ascent;
 
     /*
      * Use overall geometry information to compute the top-left corner of the
@@ -845,7 +841,12 @@ ComputeTextBbox(
 	    tmp = x[i];
 	}
     }
-    textPtr->header.x2 = ROUND(tmp);
+
+    /* Extend the bounding box to account for characters that overhang.
+     * See [7ea3245acd]
+     */
+
+    textPtr->header.x2 = ROUND(tmp) + overhang;
     for (i=1,tmp=y[0] ; i<4 ; i++) {
 	if (y[i] > tmp) {
 	    tmp = y[i];
