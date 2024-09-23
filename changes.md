@@ -40,7 +40,6 @@ writing Tcl scripts containing Tk commands.
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
  - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
- - [Unexpected behavior of ttk::treeview with detached items](https://core.tcl-lang.org/tk/tktview/8e9d65)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
  - [Aqua : canvas item partially refresh](https://core.tcl-lang.org/tk/tktview/bbc7ea)
  - [Enter key works differently in Windows and Linux](https://core.tcl-lang.org/tk/tktview/b3a1b9)
