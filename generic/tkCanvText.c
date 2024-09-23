@@ -737,6 +737,12 @@ ComputeTextBbox(
 	width = height = 0;
     }
 
+    /* Extend the width to account for characters that overhang.
+     * See [7ea3245acd]
+     */
+
+    width += overhang;
+    
     /*
      * Use overall geometry information to compute the top-left corner of the
      * bounding box for the text item.
@@ -841,12 +847,7 @@ ComputeTextBbox(
 	    tmp = x[i];
 	}
     }
-
-    /* Extend the bounding box to account for characters that overhang.
-     * See [7ea3245acd]
-     */
-
-    textPtr->header.x2 = ROUND(tmp) + overhang;
+    textPtr->header.x2 = ROUND(tmp);
     for (i=1,tmp=y[0] ; i<4 ; i++) {
 	if (y[i] > tmp) {
 	    tmp = y[i];
