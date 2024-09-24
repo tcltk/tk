@@ -41,7 +41,6 @@ writing Tcl scripts containing Tk commands.
  - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
- - [Aqua : canvas item partially refresh](https://core.tcl-lang.org/tk/tktview/bbc7ea)
  - [Enter key works differently in Windows and Linux](https://core.tcl-lang.org/tk/tktview/b3a1b9)
  - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
  - [The wm manage command does not work on current macOS versions](https://core.tcl-lang.org/tk/tktview/8a6012)
