@@ -46,4 +46,5 @@ writing Tcl scripts containing Tk commands.
  - [The wm manage command does not work on current macOS versions](https://core.tcl-lang.org/tk/tktview/8a6012)
  - [Slow processing irregular transparencies](https://core.tcl-lang.org/tk/tktview/919066)
  - [text's cursor width on 0th column](https://core.tcl-lang.org/tk/tktview/47fbfc)
+ - [text widget breaks graphemes with combining diacritical marks](https://core.tcl-lang.org/tk/tktview/442208)
  
