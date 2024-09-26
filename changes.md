@@ -4,7 +4,14 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.0.0 arises from the check-in with tag core-9-0-0.
+Release Tk 9.0.1 arises from the check-in with tag `core-9-0-0`.
+
+The changes since Tk 9.0.0 include...
+
+
+
+
+Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
 Highlighted differences between Tk 9.0 and Tk 8.6 are summarized below,
 with focus on changes important to programmers using the Tk library and
