@@ -731,7 +731,7 @@ TkMacOSXComputeMenuButtonParams(
 {
     MacMenuButton *mbPtr = (MacMenuButton *) butPtr;
 
-    if (butPtr->image || butPtr->bitmap || butPtr->text) {
+    if (butPtr->image || butPtr->bitmap || butPtr->textObj) {
 	/* TODO: allow for Small and Mini menubuttons. */
 	*btnkind = kThemePopupButton;
     } else { /* This should never happen. */
