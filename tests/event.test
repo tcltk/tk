@@ -851,7 +851,7 @@ test event-8 {event generate with keysyms corresponding to
     # (system-independent) known keysym, unless the system
     # running the test does not have a keyboard with a
     # diaeresis key.
-    if {[expr {[lindex $res 3] ne "??"}]} {
+    if {[lindex $res 3] ne "??"} {
 	# keyboard has a physical diaeresis key and bug is fixed
 	return "OK"
     } else  {
