@@ -55,23 +55,21 @@ typedef struct {
     Tcl_Command widgetCmd;	/* Token for menubutton's widget command. */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
-    char *menuName;		/* Name of menu associated with widget.
-				 * Malloc-ed. */
+    Tcl_Obj *menuNameObj;		/* Name of menu associated with widget. */
 
     /*
      * Information about what's displayed in the menu button:
      */
 
-    char *text;			/* Text to display in button (malloc'ed) or
-				 * NULL. */
+    Tcl_Obj *textObj;			/* Text to display in button. May be NULL. */
     int underline;		/* Index of character to underline. INT_MIN means no underline */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textVarNameObj;	/* Name of variable or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */
     Pixmap bitmap;		/* Bitmap to display or None. If not None then
 				 * text and textVar and underline are
 				 * ignored. */
-    char *imageString;		/* Name of image to display (malloc'ed), or
+    Tcl_Obj *imageObj;		/* Name of image to display, or
 				 * NULL. If non-NULL, bitmap, text, and
 				 * textVarName are ignored. */
     Tk_Image image;		/* Image to display in window, or NULL if
@@ -171,7 +169,7 @@ typedef struct {
     				 * or right, and the active item will be next
     				 * to the button. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
     int flags;			/* Various flags; see below for
