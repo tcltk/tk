@@ -10,9 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
-
-TkMainInfo *accessibleinterp = TkGetMainInfoList();
+#include "tkInt.h"
 
 
 /* Build list of standard accessibility roles. */
@@ -87,8 +85,8 @@ const struct TkRoleMap roleMap[] = {
   {"acc_treeview", TK_ROLE_OUTLINE}, 
   {"acc_treeitem", TK_ROLE_OUTLINEITEM}, 
   {"acc_notebooktab", TK_ROLE_PAGE_TAB}, 
-  {"acc_notebook", TK_ROLE_PAGE_TAB_LIST}, 
-  {"acc_panedwindow", TK_ROLE_SPLITPANE}, 
+  {"acc_notebook", TK_ROLE_PAGETABLIST}, 
+  {"acc_panedwindow", TK_ROLE_PANE}, 
   {"acc_button", TK_ROLE_PUSH_BUTTON}, 
   {"acc_radiobutton", TK_ROLE_RADIOBUTTON}, 
   {"acc_scrollbar", TK_ROLE_SCROLL_BAR}, 
@@ -103,76 +101,6 @@ const struct TkRoleMap roleMap[] = {
   {NULL, 0}
 };
 
-/* Hash table for storing role assignments.*/
-Tcl_HashTable WindowAccessibleRole;
-Tcl_InitHashTable(&WindowAccessibleRole, TCL_STRING_KEYS);
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_SetAccessibleRole --
- *
- *	This function assigns a platform-neutral accessibility role for a 
- *	specific widget. 
- *	
- *
- * Results:
- *	Assigns an accessibility role.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-Tk_SetAccessibleRole(
-		     TCL_UNUSED(void *),
-		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
-		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
-  if (objc < 2) {
-    Tcl_WrongNumArgs(ip, 1, objv, "window? role?");
-    return TCL_ERROR;
-  }
-	
-  Tcl_Size i;
-  int isNew = 0;
-  const * char widgetrole;
-  Tk_Window win;
-  Tcl_HashEntry *hPtr = NULL;
-  
-  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-  if (win == NULL) {
-    return TCL_ERROR;
-  }
-  
-  /* Set accessibility role for window, add to hash table. */
-
-  if (objc == 3) {
-    widgetrole =  Tcl_GetString(objv[2]);
-    for (i = 0; roleMap[i].scriptRole != NULL; i++) {
-      if(strcmp(roleMap[i].scriptRole, widgetrole) == 0) {
-	Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&WindowAccessibleRole, 
-						  win, &isNew);
-	Tcl_SetHashValue(hPtr, roleMap[i].role);
-      } else {
-	continue;
-      }
-      return TCL_OK;
-    }
-  
-    /* Retrieve current accessibility role for window. */
-    if (objc == 2) {
-      hPtr = Tcl_FindHashEntry(&WindowAccessibleRole, Tk_PathName(win));
-      widgetrole = Tcl_GetHashValue(hPtr);
-      Tcl_SetObjResult(ip, widgetrole);
-      return TCL_OK;
-    }
-    return TCL_OK;
-  }
-}
 
 /* Build list of standard accessibility events. */
 
@@ -276,86 +204,14 @@ const struct TkAccessibleVirtualEventMap eventMap[] = {
 struct TkAccessibleBindingTable {
   Tk_Window *win;
   TkAccessibleVirtualEvent vEvent;
-  const * char cmd;
-}
+  const char *cmd;
+};
 
-
-struct TkAccessibleBindingTable bindTable, *tblPtr;
-tblPtr = &bindTable;
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_SetAccessibleEvent --
- *
- *	This function links a platform-neutral event name and command to a 
- *	specfic widget. 
- *
- * Results:
- *	Assigns an event and command to a widget in a struct.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-Tk_SetAccessibleEvent(
-		      TCL_UNUSED(void *),
-		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
-		      Tcl_Obj *const objv[])	/* Argument objects. */
-{	
-  if (objc < 3) {
-    Tcl_WrongNumArgs(ip, 1, objv, "window? event? cmd?");
-    return TCL_ERROR;
-  }
-	
-  Tcl_Size i;
-  int isNew = 0;
-  const * char winevent;
-  const * char cmd;
-  Tk_Window win;
-  
-  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-  if (win == NULL) {
-    return TCL_ERROR;
-  }
-  
-  winevent = Tcl_GetString(objv[2]);
-  cmd = Tcl_GetString(objv[3]);
-  
-  /* Set accessibility event table for window, add to table pointer. */
-
-  for (i = 0; eventMap[i].scriptEvent != NULL; i++) {
-    if(strcmp(eventMap[i].scriptEvent, winevent) == 0) {
-      tblPtr->win = win;
-      tblPtr->vEvent=eventMap[i].vEvent;
-      tblPtr->cmd = cmd;
-    } else {
-      continue;
-    }
-    return TCL_OK:
-  }
-  return TCL_OK;
-}
-
-/*
- * Event proc which retrieves the Tk accessibility event to map to native API's.
- */
-
-TkAccessibleVirtualEvent 
-AccessibleEventProc(
-		    TCL_UNUSED(Tcl_Event *),
-		    TCL_UNUSED(int))
-{
-  return tblPtr->vEvent;
-}
+struct TkAccessibleBindingTable *tblPtr, bindTable;
 
 /* Build list of standard accessibility states. */
 typedef enum {
-TK_STATE_ACTIVE,
+TK_STATE_IS_ACTIVE,
 TK_STATE_CHECKED,
 TK_STATE_EDITABLE,
 TK_STATE_ENABLED,
@@ -378,7 +234,7 @@ TK_STATE_DEFAULT,
 TK_STATE_READ_ONLY,
 TK_STATE_COLLAPSED,
 TK_STATE_HAS_TOOLTIP
-} TkAccessibleState:
+} TkAccessibleState;
 
 /* Map script-level accessibility states to C states. */
 
@@ -387,8 +243,8 @@ struct TkAccessibleStateMap {
   TkAccessibleState state;
 };
 
-const struct TkAccessibleState stateMap[] = {
-  {"acc_active", 	TK_STATE_ACTIVE},
+const struct TkAccessibleStateMap stateMap[] = {
+  {"acc_active", 	TK_STATE_IS_ACTIVE},
   {"acc_checked", 	TK_STATE_CHECKED},
   {"acc_editable",	TK_STATE_EDITABLE},
   {"acc_enabled",	TK_STATE_ENABLED},
@@ -414,5 +270,338 @@ const struct TkAccessibleState stateMap[] = {
    {NULL,	0}
 };
 
+  /* Hash table for storing role assignments.*/
+
+Tcl_HashTable WindowAccessibleRole;
+  /* Hash table for storing window states.*/
+  Tcl_HashTable WindowAccessibleState;
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitAccessibilityStorage --
+ *
+ *	Creates hash tables used by some of the functions in this file.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Allocates memory & creates some hash tables.
+ *
+ *----------------------------------------------------------------------
+
+ */
+
+
+static void
+InitAccessibilityStorage()
+
+{
+ 
+  Tcl_InitHashTable(&WindowAccessibleRole, TCL_STRING_KEYS);
+  Tcl_InitHashTable(&WindowAccessibleState, TCL_STRING_KEYS);
+
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetAccessibleRole --
+ *
+ *	This function assigns a platform-neutral accessibility role for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Assigns an accessibility role.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_SetAccessibleRole(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window? role?");
+    return TCL_ERROR;
+  }
+	
+  Tcl_Size i;
+  int isNew = 0;
+  const char *widgetrole;
+  Tk_Window win;
+  Tcl_HashEntry *hPtr = NULL;
+  
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+  
+  /* Set accessibility role for window, add to hash table. */
+
+  widgetrole =  Tcl_GetString(objv[2]);
+  for (i = 0; roleMap[i].scriptRole != NULL; i++) {
+    if(strcmp(roleMap[i].scriptRole, widgetrole) == 0) {
+      hPtr = Tcl_CreateHashEntry(&WindowAccessibleRole, 
+				 Tk_PathName(win), &isNew);
+      Tcl_SetHashValue(hPtr, roleMap[i].role);
+    } else {
+      continue;
+    }
+    return TCL_OK;
+  }
+  
+  return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleRole --
+ *
+ *	This function retrieves a platform-neutral accessibility role for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Gets an accessibility role.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+int
+Tk_GetAccessibleRole(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  Tcl_HashEntry *hPtr;
+  int *accessiblerole;
+
+  
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+  
+  /* Retrieve accessibility role for window from hash table. */
+  
+  hPtr = Tcl_FindHashEntry(&WindowAccessibleRole, Tk_PathName(win));
+  accessiblerole = Tcl_GetHashValue(hPtr);
+  if (accessiblerole == TCL_OK) {
+    accessiblerole = Tcl_GetHashValue(hPtr);
+    return accessiblerole;
+  }
+  return TCL_OK;
+}
+
+  
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetAccessibleEvent --
+ *
+ *	This function links a platform-neutral event name and command to a 
+ *	specfic widget. 
+ *
+ * Results:
+ *	Assigns an event and command to a widget in a struct.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_SetAccessibleEvent(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 4) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window? event? cmd?");
+    return TCL_ERROR;
+  }
+	
+  Tcl_Size i;
+  const char * winevent;
+  const char * cmd;
+  Tk_Window win;
+
+
+  tblPtr = &bindTable;
+
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+  
+  winevent = Tcl_GetString(objv[2]);
+  cmd = Tcl_GetString(objv[3]);
+  
+  /* Set accessibility event table for window, add to table pointer. */
+
+  for (i = 0; eventMap[i].scriptEvent != NULL; i++) {
+    if(strcmp(eventMap[i].scriptEvent, winevent) == 0) {
+      tblPtr->win = (Tk_Window *)win;
+      tblPtr->vEvent=eventMap[i].vEvent;
+      tblPtr->cmd = cmd;
+    } else {
+      continue;
+    }
+    return TCL_OK;
+  }
+  return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetAccessibleState --
+ *
+ *	This function assigns a platform-neutral accessibility state for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Assigns an accessibility state.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_SetAccessibleState(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window? state?");
+    return TCL_ERROR;
+  }
+	
+  Tcl_Size i;
+  int isNew = 0;
+  const char * widgetstate;
+  Tk_Window win;
+  Tcl_HashEntry *hPtr = NULL;
+  
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+  
+  /* Set accessibility state for window, add to hash table. */
+
+  widgetstate =  Tcl_GetString(objv[2]);
+  for (i = 0; stateMap[i].scriptState != NULL; i++) {
+    if(strcmp(stateMap[i].scriptState, widgetstate) == 0) {
+      hPtr = Tcl_CreateHashEntry(&WindowAccessibleState, 
+				 Tk_PathName(win), &isNew);
+      Tcl_SetHashValue(hPtr, stateMap[i].state);
+    } else {
+      continue;
+    }
+    return TCL_OK;
+  }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleState --
+ *
+ *	This function retrieves a platform-neutral accessibility state for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Gets an accessibility state.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+int
+Tk_GetAccessibleState(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  Tcl_HashEntry *hPtr;
+  int *accessiblestate;
+
+  /* Retrieve accessibility role for window from hash table. */
+  
+  hPtr = Tcl_FindHashEntry(&WindowAccessibleState, Tk_PathName(win));
+  accessiblestate = Tcl_GetHashValue(hPtr);
+  if (accessiblestate == TCL_OK) {
+    accessiblestate = Tcl_GetHashValue(hPtr);
+    return accessiblestate;
+  }
+  return TCL_OK;
+}
+
+
+/*
+ * Register script-level commands to set accessibility attributes. 
+ */
+
+int
+TkAccessibility_Init(
+   Tcl_Interp *interp)
+{
+  InitAccessibilityStorage();
+  Tcl_CreateObjCommand(interp, "::tk::accessible::setrole", Tk_SetAccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::getrole", Tk_GetAccessibleRole, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::setstate", Tk_SetAccessibleState, NULL, NULL);
+    return TCL_OK;
+}
+
 
 /*To-do: Build TkAccessibilityObject struct from roles, states, events, actions.*/
+
+
+
+
