@@ -266,11 +266,11 @@ TkpComputeMenuButtonGeometry(
 	haveImage = 1;
     }
 
-    if (butPtr->text && strlen(butPtr->text) > 0) {
+    if (butPtr->textObj && Tcl_GetString(butPtr->textObj)[0]) {
 	haveText = 1;
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		butPtr->text, TCL_INDEX_NONE, butPtr->wrapLength,
+		Tcl_GetString(butPtr->textObj), TCL_INDEX_NONE, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 	txtWidth = butPtr->textWidth;
 	txtHeight = butPtr->textHeight;
