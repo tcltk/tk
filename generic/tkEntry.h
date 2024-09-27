@@ -185,12 +185,6 @@ typedef struct {
     int placeholderX;		/* Origin for layout. */
     int placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
-
-    Tcl_Obj *borderWidthObj;
-    Tcl_Obj *highlightWidthObj;
-    Tcl_Obj *insertWidthObj;
-    Tcl_Obj *insertBorderWidthObj;
-    Tcl_Obj *selBorderWidthObj;
 } Entry;
 
 /*
