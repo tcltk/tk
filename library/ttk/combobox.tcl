@@ -158,7 +158,7 @@ proc ttk::combobox::Motion {w x y} {
     variable State
     ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}]
+	&& [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -367,10 +367,10 @@ proc ttk::combobox::ConfigureListbox {cb} {
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
 	grid $popdown.sb
-        grid configure $popdown.l -padx {1 0}
+	grid configure $popdown.l -padx {1 0}
     } else {
 	grid remove $popdown.sb
-        grid configure $popdown.l -padx 1
+	grid configure $popdown.l -padx 1
     }
     $popdown.l configure -height $height
 }

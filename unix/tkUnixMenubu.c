@@ -367,7 +367,7 @@ TkpComputeMenuButtonGeometry(
     if (haveImage == 0 || mbPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
 
-	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
+	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
 		TCL_INDEX_NONE, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
 	txtWidth = mbPtr->textWidth;

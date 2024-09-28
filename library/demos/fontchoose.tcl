@@ -20,7 +20,7 @@ catch {font create FontchooseDemoFont {*}[font actual TkDefaultFont]}
 # The font chooser needs to be configured and then shown.
 proc SelectFont {parent} {
     tk fontchooser configure -font FontchooseDemoFont \
-        -command ApplyFont -parent $parent
+	-command ApplyFont -parent $parent
     tk fontchooser show
 }
 
@@ -33,9 +33,9 @@ proc ApplyFont {font} {
 #
 bind $w <<TkFontchooserVisibility>> {
     if {[tk fontchooser configure -visible]} {
-        %W.f.font state disabled
+	%W.f.font state disabled
     } else {
-        %W.f.font state !disabled
+	%W.f.font state !disabled
     }
 }
 
