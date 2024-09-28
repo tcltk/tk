@@ -70,11 +70,11 @@ extern "C" {
 #endif
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
-#   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
-#   define TK_RELEASE_SERIAL	4
+#   define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
+#   define TK_RELEASE_SERIAL	1
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0b4"
+#   define TK_PATCH_LEVEL		"9.0.1"
 #endif /* TK_MAJOR_VERSION */
 
 /*

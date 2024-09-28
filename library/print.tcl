@@ -76,7 +76,7 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-        if {[info exists printer_name] && $printer_name ne ""} {
+	if {[info exists printer_name] && $printer_name ne ""} {
 	    set printargs(hDC) $printer_name
 	    set printargs(pw) $paper_width
 	    set printargs(pl) $paper_height

@@ -264,7 +264,7 @@ its descendants. It also makes sure it's not possible to leave button
 \fB.cancel\fR using the keyboard.
 .SH PORTABILITY
 .PP
-Note that the \fBtk busy\fR command does not currently have any effect on OSX
+Note that the \fBtk busy\fR command does not currently have any effect on macOS
 when Tk is built using Aqua support.
 .SH "SEE ALSO"
 grab(n)
