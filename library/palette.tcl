@@ -250,19 +250,19 @@ proc ::tk::RecolorTree {w colors} {
 
 proc ::tk::Darken {color percent} {
     if {$percent < 0} {
-        return #000000
+	return #000000
     } elseif {$percent > 200} {
-        return #ffffff
+	return #ffffff
     } elseif {$percent <= 100} {
-        lassign [winfo rgb . $color] r g b
-        set r [expr {($r/256)*$percent/100}]
-        set g [expr {($g/256)*$percent/100}]
-        set b [expr {($b/256)*$percent/100}]
+	lassign [winfo rgb . $color] r g b
+	set r [expr {($r/256)*$percent/100}]
+	set g [expr {($g/256)*$percent/100}]
+	set b [expr {($b/256)*$percent/100}]
     } elseif {$percent > 100} {
-        lassign [winfo rgb . $color] r g b
-        set r [expr {255 - ((65535-$r)/256)*(200-$percent)/100}]
-        set g [expr {255 - ((65535-$g)/256)*(200-$percent)/100}]
-        set b [expr {255 - ((65535-$b)/256)*(200-$percent)/100}]
+	lassign [winfo rgb . $color] r g b
+	set r [expr {255 - ((65535-$r)/256)*(200-$percent)/100}]
+	set g [expr {255 - ((65535-$g)/256)*(200-$percent)/100}]
+	set b [expr {255 - ((65535-$b)/256)*(200-$percent)/100}]
     }
     return [format #%02x%02x%02x $r $g $b]
 }

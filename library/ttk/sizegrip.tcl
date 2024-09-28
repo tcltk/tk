@@ -26,8 +26,8 @@ namespace eval ttk::sizegrip {
 	height 		0
 	widthInc	1
 	heightInc	1
-        resizeX         1
-        resizeY         1
+	resizeX         1
+	resizeY         1
 	toplevel 	{}
     }
 }
@@ -46,7 +46,7 @@ proc ttk::sizegrip::Press {W X Y} {
     # If the toplevel is not resizable then bail
     foreach {State(resizeX) State(resizeY)} [wm resizable $top] break
     if {!$State(resizeX) && !$State(resizeY)} {
-        return
+	return
     }
 
     # Sanity-checks:
@@ -83,10 +83,10 @@ proc ttk::sizegrip::Drag {W X Y} {
     set w $State(width)
     set h $State(height)
     if {$State(resizeX)} {
-        set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
+	set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
     }
     if {$State(resizeY)} {
-        set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
+	set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
     }
     if {$w <= 0} { set w 1 }
     if {$h <= 0} { set h 1 }
