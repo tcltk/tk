@@ -313,6 +313,9 @@ Tk_PackObjCmd(
 	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
 		continue;
 	    }
+	    if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+		continue;
+	    }
 	    contentPtr = GetPacker(content);
 	    if ((contentPtr != NULL) && (contentPtr->containerPtr != NULL)) {
 		Tk_ManageGeometry(content, NULL, NULL);
@@ -337,6 +340,9 @@ Tk_PackObjCmd(
 	}
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &content) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+	    return TCL_OK;
 	}
 	contentPtr = GetPacker(content);
 	if (contentPtr->containerPtr == NULL) {
@@ -391,6 +397,9 @@ Tk_PackObjCmd(
 	}
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	    return TCL_OK;
 	}
 	containerPtr = GetPacker(container);
 	if (objc == 3) {
@@ -447,6 +456,9 @@ Tk_PackObjCmd(
 	}
 	if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	    return TCL_OK;
 	}
 	resultObj = Tcl_NewObj();
 	containerPtr = GetPacker(container);
@@ -1562,6 +1574,9 @@ ConfigureContent(
     for (j = 0; j < numWindows; j++) {
 	if (TkGetWindowFromObj(interp, tkwin, objv[j], &content) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+	    return TCL_OK;
 	}
 	if (Tk_TopWinHierarchy(content)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
