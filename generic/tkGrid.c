@@ -445,6 +445,9 @@ GridAnchorCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
+    }
     containerPtr = GetGrid(container);
 
     if (objc == 3) {
@@ -517,6 +520,9 @@ GridBboxCommand(
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
     }
     containerPtr = GetGrid(container);
 
@@ -641,6 +647,9 @@ GridForgetRemoveCommand(
 	if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+	    return TCL_OK;
+	}
 
 	contentPtr = GetGrid(content);
 	if (contentPtr->containerPtr != NULL) {
@@ -732,6 +741,9 @@ GridInfoCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &content) != TCL_OK) {
 	return TCL_ERROR;
     }
+    if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
+    }
     contentPtr = GetGrid(content);
     if (contentPtr->containerPtr == NULL) {
 	Tcl_ResetResult(interp);
@@ -798,6 +810,9 @@ GridLocationCommand(
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
     }
 
     if (Tk_GetPixelsFromObj(interp, container, objv[3], &x) != TCL_OK) {
@@ -887,6 +902,9 @@ GridPropagateCommand(
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
     }
     containerPtr = GetGrid(container);
     if (objc == 3) {
@@ -991,6 +1009,9 @@ GridRowColumnConfigureCommand(
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
     }
 
     listCopy = Tcl_DuplicateObj(objv[3]);
@@ -1309,6 +1330,9 @@ GridSizeCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
+    }
     containerPtr = GetGrid(container);
 
     if (containerPtr->containerDataPtr != NULL) {
@@ -1387,6 +1411,9 @@ GridContentCommand(
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
+    }
+    if (((TkWindow *) container)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
     }
     containerPtr = GetGrid(container);
 
@@ -2982,6 +3009,9 @@ ConfigureContent(
 
 	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
 		return TCL_ERROR;
+	    }
+	    if (((TkWindow *) content)->flags & TK_ALREADY_DEAD) {
+		return TCL_OK;
 	    }
 	    if (containerPtr == NULL) {
 		/*
