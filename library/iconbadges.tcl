@@ -220,7 +220,7 @@ if {[tk windowingsystem] eq "x11"} {
 	}
 
 	if {!([string is integer -strict $badgenumber] && $badgenumber > 0)
-	&& $badgenumber ne "!" && $badgenumber ne ""} {
+		&& $badgenumber ne "!" && $badgenumber ne ""} {
 	    return -code error "can't use \"$badgenumber\" as icon badge"
 	}
 

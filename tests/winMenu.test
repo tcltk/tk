@@ -470,8 +470,8 @@ test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} -constraints {
 } -body {
     catch {unset foo}
     proc bgerror {args} {
-        global foo errorInfo
-        set foo [list $args $errorInfo]
+	global foo errorInfo
+	set foo [list $args $errorInfo]
     }
     menu .m1
     .m1 add command -command {error 1} -label "winMenu-11.2: Please select this menu item."

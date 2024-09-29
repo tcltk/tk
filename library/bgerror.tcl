@@ -22,7 +22,7 @@ namespace eval ::tk::dialog::error {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
 	option add *ErrorDialog*info.text.background \
-	systemTextBackgroundColor widgetDefault
+		systemTextBackgroundColor widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }

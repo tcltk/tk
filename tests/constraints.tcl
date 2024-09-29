@@ -148,32 +148,32 @@ namespace eval tk {
 	proc imageInit {} {
 	    variable ImageNames
 	    if {![info exists ImageNames]} {
-	set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+		set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
 	    }
 	    imageCleanup
 	    if {[lsort [image names]] ne $ImageNames} {
-	return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
+		return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
 	    }
 	}
 	proc imageFinish {} {
 	    variable ImageNames
 	    set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
 	    if {$imgs ne $ImageNames} {
-	return -code error "images remaining: [image names] != $ImageNames"
+		return -code error "images remaining: [image names] != $ImageNames"
 	    }
 	    imageCleanup
 	}
 	proc imageCleanup {} {
 	    variable ImageNames
 	    foreach img [image names] {
-	if {$img ni $ImageNames} {image delete $img}
+		if {$img ni $ImageNames} {image delete $img}
 	    }
 	}
 	proc imageNames {} {
 	    variable ImageNames
 	    set r {}
 	    foreach img [image names] {
-	if {$img ni $ImageNames} {lappend r $img}
+		if {$img ni $ImageNames} {lappend r $img}
 	    }
 	    return $r
 	}

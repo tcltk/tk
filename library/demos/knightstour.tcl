@@ -58,12 +58,12 @@ proc Next {square} {
 	if {[lsearch -exact -integer $visited $testSquare] < 0} {
 	    set count [CheckSquare $testSquare]
 	    if {$count < $minimum} {
-	set minimum $count
-	set nextSquare $testSquare
+		set minimum $count
+		set nextSquare $testSquare
 	    } elseif {$count == $minimum} {
-	# to remove the enhancement to Warnsdorff's rule
-	# remove the next line:
-	set nextSquare [Edgemost $nextSquare $testSquare]
+		# to remove the enhancement to Warnsdorff's rule
+		# remove the next line:
+		set nextSquare [Edgemost $nextSquare $testSquare]
 	    }
 	}
     }
@@ -104,13 +104,13 @@ proc MovePiece {dlg last square} {
 	if {[llength $visited] == 64} {
 	    variable initial
 	    if {$initial == $square} {
-	$dlg.f.txt insert end "Closed tour!"
+		$dlg.f.txt insert end "Closed tour!"
 	    } else {
-	$dlg.f.txt insert end "Success"
-	if {$continuous} {
-	    after [expr {$delay * 2}] [namespace code \
-	[list Tour $dlg [expr {int(rand() * 64)}]]]
-	}
+		$dlg.f.txt insert end "Success"
+		if {$continuous} {
+		    after [expr {$delay * 2}] [namespace code \
+			[list Tour $dlg [expr {int(rand() * 64)}]]]
+		}
 	    }
 	} else {
 	    $dlg.f.txt insert end "FAILED!"
@@ -195,16 +195,16 @@ proc CreateGUI {} {
     for {set row 7} {$row >= 0} {incr row -1} {
 	for {set col 0} {$col < 8} {incr col} {
 	    if {(($col & 1) ^ ($row & 1))} {
-	set fill tan3 ; set dfill tan4
+		set fill tan3 ; set dfill tan4
 	    } else {
-	set fill bisque ; set dfill bisque3
+		set fill bisque ; set dfill bisque3
 	    }
 	    set coords [list [expr {$col * 24 + 3}]p \
 			     [expr {$row * 24 + 3}]p \
-	     [expr {$col * 24 + 24}]p \
+			     [expr {$col * 24 + 24}]p \
 			     [expr {$row * 24 + 24}]p]
 	    $c create rectangle $coords -fill $fill -disabledfill $dfill \
-	-width 1.5p -state disabled -outline black
+		-width 1.5p -state disabled -outline black
 	}
     }
     if {[tk windowingsystem] ne "x11"} {

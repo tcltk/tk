@@ -59,7 +59,7 @@ test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     set map [list "\r" "\\r" "\n" "\\n"]
     clipboard append "line 1\nline 2"
     list [string map $map [selection get -selection CLIPBOARD]]\
-        [string map $map [testclipboard]]
+	[string map $map [testclipboard]]
 } -cleanup {
     clipboard clear
 } -result [list "line 1\\nline 2" "line 1\\nline 2"]
@@ -72,7 +72,7 @@ test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     set map [list "\r" "\\r" "\n" "\\n"]
     clipboard append "line 1Ç\nline 2"
     list [string map $map [selection get -selection CLIPBOARD]]\
-        [string map $map [testclipboard]]
+	[string map $map [testclipboard]]
 } -cleanup {
     clipboard clear
 } -result [list "line 1Ç\\nline 2" "line 1Ç\\nline 2"]

@@ -25,11 +25,11 @@ proc GetWindowInfo {title button} {
     array set a $windowInfo
     set childinfo {} ; set childtext ""
     foreach child $a(children) {
-        lappend childinfo $child [set info [testgetwindowinfo $child]]
-        array set ca $info
-        if {$ca(class) eq "Static"} {
-            append childtext $ca(text)
-        }
+	lappend childinfo $child [set info [testgetwindowinfo $child]]
+	array set ca $info
+	if {$ca(class) eq "Static"} {
+	    append childtext $ca(text)
+	}
     }
     set a(children) $childinfo
     set a(childtext) $childtext
@@ -261,7 +261,7 @@ test winMsgbox-3.1 {tk_messageBox detail (sourceforge bug #1692927)} -constraint
     set title "winMsgbox-3.0 [pid]"
     after 100 [list GetWindowInfo $title 2]
     set r [tk_messageBox -type ok -title $title \
-               -message Hello -detail "Pleased to meet you"]
+	       -message Hello -detail "Pleased to meet you"]
     array set info $windowInfo
     lappend r $info(childtext)
 } -cleanup {

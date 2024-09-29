@@ -42,9 +42,9 @@ namespace eval ttk::theme::vista {
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -background SystemWindow \
-	-stripedbackground System3dLight
+		-stripedbackground System3dLight
 	ttk::style configure Treeview.Separator \
-	-background System3dLight
+		-background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
@@ -67,14 +67,14 @@ namespace eval ttk::theme::vista {
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
 	ttk::style layout TCombobox {
 	    Combobox.border -sticky nswe -border 0 -children {
-	Combobox.rightdownarrow -side right -sticky ns
-	Combobox.padding -sticky nswe -children {
-	    Combobox.background -sticky nswe -children {
-	Combobox.focus -sticky nswe -children {
-	    Combobox.textarea -sticky nswe
-	}
-	    }
-	}
+		Combobox.rightdownarrow -side right -sticky ns
+		Combobox.padding -sticky nswe -children {
+		    Combobox.background -sticky nswe -children {
+			Combobox.focus -sticky nswe -children {
+			    Combobox.textarea -sticky nswe
+			}
+		    }
+		}
 	    }
 	}
 	# Vista.Combobox droplist frame
@@ -82,7 +82,7 @@ namespace eval ttk::theme::vista {
 	    LISTBOX 3 {disabled 4 active 3 focus 2 {} 1}
 	ttk::style layout ComboboxPopdownFrame {
 	    ComboboxPopdownFrame.background -sticky news -border 1 -children {
-	ComboboxPopdownFrame.padding -sticky news
+		ComboboxPopdownFrame.padding -sticky news
 	    }
 	}
 	ttk::style map TCombobox \
@@ -102,11 +102,11 @@ namespace eval ttk::theme::vista {
 	    EDIT 3 {disabled 3 readonly 3 focus 4 hover 2 {} 1}
 	ttk::style layout TEntry {
 	    Entry.field -sticky news -border 0 -children {
-	Entry.background -sticky news -children {
-	    Entry.padding -sticky news -children {
-	Entry.textarea -sticky news
-	    }
-	}
+		Entry.background -sticky news -children {
+		    Entry.padding -sticky news -children {
+			Entry.textarea -sticky news
+		    }
+		}
 	    }
 	}
 	ttk::style map TEntry \
@@ -132,15 +132,15 @@ namespace eval ttk::theme::vista {
 	    -syssize { SM_CXVSCROLL SM_CYVSCROLL }
 	ttk::style layout TSpinbox {
 	    Spinbox.field -sticky nswe -children {
-	Spinbox.background -sticky news -children {
-	    Spinbox.padding -sticky news -children {
-	Spinbox.innerbg -sticky news -children {
-	    Spinbox.textarea
-	}
-	    }
-	    Spinbox.uparrow -side top -sticky ens
-	    Spinbox.downarrow -side bottom -sticky ens
-	}
+		Spinbox.background -sticky news -children {
+		    Spinbox.padding -sticky news -children {
+			Spinbox.innerbg -sticky news -children {
+			    Spinbox.textarea
+			}
+		    }
+		    Spinbox.uparrow -side top -sticky ens
+		    Spinbox.downarrow -side bottom -sticky ens
+		}
 	    }
 	}
 	ttk::style map TSpinbox \
@@ -182,15 +182,15 @@ namespace eval ttk::theme::vista {
 	    PROGRESS 3 {{} 1} -padding 8
 	ttk::style layout Horizontal.TProgressbar {
 	    Horizontal.Progressbar.trough -sticky nswe -children {
-	Horizontal.Progressbar.pbar -side left -sticky ns
-	Horizontal.Progressbar.ctext -sticky nesw
+		Horizontal.Progressbar.pbar -side left -sticky ns
+		Horizontal.Progressbar.ctext -sticky nesw
 	    }
 	}
 	ttk::style element create Vertical.Progressbar.pbar vsapi \
 	    PROGRESS 3 {{} 1} -padding 8
 	ttk::style layout Vertical.TProgressbar {
 	    Vertical.Progressbar.trough -sticky nswe -children {
-	Vertical.Progressbar.pbar -side bottom -sticky we
+		Vertical.Progressbar.pbar -side bottom -sticky we
 	    }
 	}
 
@@ -200,10 +200,10 @@ namespace eval ttk::theme::vista {
 	    -width 6 -height 12
 	ttk::style layout Horizontal.TScale {
 	    Scale.focus -sticky nswe -children {
-	Horizontal.Scale.trough -sticky nswe -children {
-	    Horizontal.Scale.track -sticky we
-	    Horizontal.Scale.slider -side left -sticky {}
-	}
+		Horizontal.Scale.trough -sticky nswe -children {
+		    Horizontal.Scale.track -sticky we
+		    Horizontal.Scale.slider -side left -sticky {}
+		}
 	    }
 	}
 	ttk::style element create Vertical.Scale.slider vsapi \
@@ -211,10 +211,10 @@ namespace eval ttk::theme::vista {
 	    -width 12 -height 6
 	ttk::style layout Vertical.TScale {
 	    Scale.focus -sticky nswe -children {
-	Vertical.Scale.trough -sticky nswe -children {
-	    Vertical.Scale.track -sticky ns
-	    Vertical.Scale.slider -side top -sticky {}
-	}
+		Vertical.Scale.trough -sticky nswe -children {
+		    Vertical.Scale.track -sticky ns
+		    Vertical.Scale.slider -side top -sticky {}
+		}
 	    }
 	}
 
