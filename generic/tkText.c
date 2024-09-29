@@ -193,7 +193,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_TEXT_SELECT_BD_COLOR,
 	offsetof(TkText, selBorderWidthObj), offsetof(TkText, selBorderWidth),
-	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
+	0, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
@@ -2227,6 +2227,31 @@ ConfigureText(
 	textPtr->spacing3Obj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->spacing3Obj);
     }
+    if (textPtr->insertBorderWidth < 0) {
+	textPtr->insertBorderWidth = 0;
+	if (textPtr->insertBorderWidthObj) {
+	    Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
+	}
+	textPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->insertBorderWidthObj);
+    }
+    if (textPtr->insertWidth < 0) {
+	textPtr->insertWidth = 0;
+	if (textPtr->insertWidthObj) {
+	    Tcl_DecrRefCount(textPtr->insertWidthObj);
+	}
+	textPtr->insertWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->insertWidthObj);
+    }
+    if (textPtr->selBorderWidth < 0) {
+	textPtr->selBorderWidth = 0;
+	if (textPtr->selBorderWidthObj) {
+	    Tcl_DecrRefCount(textPtr->selBorderWidthObj);
+	}
+	textPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->selBorderWidthObj);
+    }
+
 
     /*
      * Parse tab stops.

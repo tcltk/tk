@@ -3378,18 +3378,18 @@ test text-14.9 {ConfigureText procedure} -setup {
 test text-14.10 {ConfigureText procedure} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .t configure -selectborderwidth {}
+    .t configure -selectborderwidth 0
     .t tag cget sel -borderwidth
 } -cleanup {
     destroy .t
-} -result {}
+} -result 0
 test text-14.11 {ConfigureText procedure} -setup {
     text .t
 } -body {
     .t configure -selectborderwidth foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {expected screen distance or "" but got "foo"}
+} -returnCodes error -result {expected screen distance but got "foo"}
 test text-14.12 {ConfigureText procedure} -body {
     text .t
     entry .t.e
