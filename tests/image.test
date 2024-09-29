@@ -68,7 +68,7 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     update
     # On MacOS we need to wait for the test image display procedure to run.
     while {"timed out" ni $x && [lindex $x end 1] ne "display"} {
-        vwait x
+	vwait x
     }
     after cancel timer
     if {[lindex $x end] eq "timed out"} {
@@ -226,11 +226,11 @@ test image-4.2 {Tk_ImageCmd procedure, "names" option} -constraints {
     interp create testinterp
     load {} Tk testinterp
     interp eval testinterp {
-        image delete {*}[image names]
-        image create test myimage
-        image create test img2
-        image create test 24613
-        lsort [image names]
+	image delete {*}[image names]
+	image create test myimage
+	image create test img2
+	image create test 24613
+	lsort [image names]
     }
 } -cleanup {
     interp delete testinterp
@@ -241,9 +241,9 @@ test image-4.3 {Tk_ImageCmd procedure, "names" option} -setup {
     interp create testinterp
     load {} Tk testinterp
     interp eval testinterp {
-        image delete {*}[image names]
-        eval image delete [image names] [image names]
-        lsort [image names]
+	image delete {*}[image names]
+	eval image delete [image names] [image names]
+	lsort [image names]
     }
 } -cleanup {
     interp delete testinterp

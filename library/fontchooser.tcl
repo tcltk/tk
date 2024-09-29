@@ -62,7 +62,7 @@ proc ::tk::fontchooser::Setup {} {
     }
     bind [winfo class .] <<ThemeChanged>> \
 	    [list +ttk::style layout FontchooserFrame \
-	    [ttk::style layout FontchooserFrame]]
+		    [ttk::style layout FontchooserFrame]]
 
     namespace ensemble create -map {
 	show ::tk::fontchooser::Show
@@ -115,10 +115,10 @@ proc ::tk::fontchooser::Configure {args} {
 	foreach spec $specs {
 	    foreach {name xx yy default} $spec break
 	    lappend result $name \
-	    [expr {[info exists S($name)] ? $S($name) : $default}]
+		    [expr {[info exists S($name)] ? $S($name) : $default}]
 	}
 	lappend result -visible \
-	[expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
+		[expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
 	return $result
     }
     if {[llength $args] == 1} {
@@ -129,8 +129,8 @@ proc ::tk::fontchooser::Configure {args} {
 	    return $S($option)
 	}
 	return -code error -errorcode [list TK LOOKUP OPTION $option] \
-	"bad option \"$option\": must be\
-	-command, -font, -parent, -title or -visible"
+		"bad option \"$option\": must be\
+		-command, -font, -parent, -title or -visible"
     }
     set cache [dict create -parent $S(-parent) -title $S(-title) \
 	    -font $S(-font) -command $S(-command)]
@@ -183,40 +183,40 @@ proc ::tk::fontchooser::Create {} {
 	::tk::AmpWidget ::ttk::label $S(W).style -text [::msgcat::mc "Font st&yle:"]
 	::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"]
 	ttk::entry $S(W).efont -width 18 \
-	-textvariable [namespace which -variable S](font)
+		-textvariable [namespace which -variable S](font)
 	ttk::entry $S(W).estyle -width 10 \
-	-textvariable [namespace which -variable S](style)
+		-textvariable [namespace which -variable S](style)
 	ttk::entry $S(W).esize -textvariable [namespace which -variable S](size) \
-	-width 3 -validate key -validatecommand {regexp -- {^-*[0-9]*$} %P}
+		-width 3 -validate key -validatecommand {regexp -- {^-*[0-9]*$} %P}
 
 	ttk_slistbox $S(W).lfonts -height 7 -exportselection 0 \
-	-selectmode browse -activestyle none \
-	-listvariable [namespace which -variable S](fonts)
+		-selectmode browse -activestyle none \
+		-listvariable [namespace which -variable S](fonts)
 	ttk_slistbox $S(W).lstyles -width 5 -height 7 -exportselection 0 \
-	-selectmode browse -activestyle none \
-	-listvariable [namespace which -variable S](styles)
+		-selectmode browse -activestyle none \
+		-listvariable [namespace which -variable S](styles)
 	ttk_slistbox $S(W).lsizes -width 4 -height 7 -exportselection 0 \
-	-selectmode browse -activestyle none \
-	-listvariable [namespace which -variable S](sizes)
+		-selectmode browse -activestyle none \
+		-listvariable [namespace which -variable S](sizes)
 
 	set WE $S(W).effects
 	::ttk::labelframe $WE -text [::msgcat::mc "Effects"]
 	::tk::AmpWidget ::ttk::checkbutton $WE.strike \
-	-variable [namespace which -variable S](strike) \
-	-text [::msgcat::mc "Stri&keout"] \
-	-command [namespace code [list Click strike]]
+		-variable [namespace which -variable S](strike) \
+		-text [::msgcat::mc "Stri&keout"] \
+		-command [namespace code [list Click strike]]
 	::tk::AmpWidget ::ttk::checkbutton $WE.under \
-	-variable [namespace which -variable S](under) \
-	-text [::msgcat::mc "&Underline"] \
-	-command [namespace code [list Click under]]
+		-variable [namespace which -variable S](under) \
+		-text [::msgcat::mc "&Underline"] \
+		-command [namespace code [list Click under]]
 
 	set bbox [::ttk::frame $S(W).bbox]
 	::ttk::button $S(W).ok -text [::msgcat::mc OK] -default active\
-	-command [namespace code [list Done 1]]
+		-command [namespace code [list Done 1]]
 	::ttk::button $S(W).cancel -text [::msgcat::mc Cancel] \
-	-command [namespace code [list Done 0]]
+		-command [namespace code [list Done 0]]
 	::tk::AmpWidget ::ttk::button $S(W).apply -text [::msgcat::mc "&Apply"] \
-	-command [namespace code [list Apply]]
+		-command [namespace code [list Apply]]
 	wm protocol $S(W) WM_DELETE_WINDOW [namespace code [list Done 0]]
 
 	# Calculate minimum sizes
@@ -226,11 +226,11 @@ proc ::tk::fontchooser::Create {} {
 	set minsize(gap) [::tk::ScaleNum 10]
 	set minsize(bbox) [winfo reqwidth $S(W).ok]
 	set minsize(fonts) \
-	[expr {[font measure TkDefaultFont "Helvetica"] + $scroll_width}]
+		[expr {[font measure TkDefaultFont "Helvetica"] + $scroll_width}]
 	set minsize(styles) \
-	[expr {[font measure TkDefaultFont "Bold Italic"] + $scroll_width}]
+		[expr {[font measure TkDefaultFont "Bold Italic"] + $scroll_width}]
 	set minsize(sizes) \
-	[expr {[font measure TkDefaultFont "-99"] + $scroll_width}]
+		[expr {[font measure TkDefaultFont "-99"] + $scroll_width}]
 	set min [expr {$minsize(gap) * 4}]
 	foreach {what width} [array get minsize] {
 	    incr min $width
@@ -256,7 +256,7 @@ proc ::tk::fontchooser::Create {} {
 	set WS $S(W).sample
 	::ttk::labelframe $WS -text [::msgcat::mc "Sample"]
 	::ttk::label $WS.sample -relief sunken -anchor center \
-	-textvariable [namespace which -variable S](sampletext)
+		-textvariable [namespace which -variable S](sampletext)
 	set S(sample) $WS.sample
 	grid $WS.sample -sticky news -padx 4.5p -pady 3p
 	grid rowconfigure $WS 0 -weight 1
@@ -292,15 +292,15 @@ proc ::tk::fontchooser::Create {} {
 	Init $S(-font)
 
 	trace add variable [namespace which -variable S](size) \
-	write [namespace code [list Tracer]]
+		write [namespace code [list Tracer]]
 	trace add variable [namespace which -variable S](style) \
-	write [namespace code [list Tracer]]
+		write [namespace code [list Tracer]]
 	trace add variable [namespace which -variable S](font) \
-	write [namespace code [list Tracer]]
+		write [namespace code [list Tracer]]
 	trace add variable [namespace which -variable S](strike) \
-	write [namespace code [list Tracer]]
+		write [namespace code [list Tracer]]
 	trace add variable [namespace which -variable S](under) \
-	write [namespace code [list Tracer]]
+		write [namespace code [list Tracer]]
     }
 
     Init $S(-font)
@@ -422,19 +422,19 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
 	    $S(W).e$var2 icursor end
 	    $S(W).e$var2 selection clear
 	    if {[set i [lsearch $S(bad) $var2]] >= 0} {
-	set S(bad) [lreplace $S(bad) $i $i]
+		set S(bad) [lreplace $S(bad) $i $i]
 	    }
 	} else {
 	    # No match, try prefix
 	    set n [lsearch -glob $S(${var2}s,lcase) "$value*"]
 	    if {$var2 ne "size" || !([regexp -- {^(-[0-9]+|[0-9]+)$} $value] && $value >= -4096 && $value <= 4096)} {
-	 if {[lsearch $S(bad) $var2] < 0} {
-	     lappend S(bad) $var2
-	 }
+		 if {[lsearch $S(bad) $var2] < 0} {
+		     lappend S(bad) $var2
+		 }
 	    } else {
-	if {[set i [lsearch $S(bad) $var2]] >= 0} {
-	    set S(bad) [lreplace $S(bad) $i $i]
-	}
+		if {[set i [lsearch $S(bad) $var2]] >= 0} {
+		    set S(bad) [lreplace $S(bad) $i $i]
+		}
 	    }
 	}
 	$S(W).l${var2}s see $n
