@@ -734,10 +734,8 @@ GridInfoCommand(
     }
     contentPtr = GetGrid(content);
     if (contentPtr->containerPtr == NULL) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "window \"%s\" isn't gridded", Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "GRID", "NOT_GRIDDED", NULL);
-	return TCL_ERROR;
+	Tcl_ResetResult(interp);
+	return TCL_OK;
     }
 
     infoObj = Tcl_NewObj();
