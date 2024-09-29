@@ -49,12 +49,12 @@ namespace eval ttk::theme::alt {
 	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
-	   alternate $colors(-altindicator) \
-	   disabled $colors(-frame)]
+		   alternate $colors(-altindicator) \
+		   disabled $colors(-frame)]
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
-	   alternate $colors(-altindicator) \
-	   disabled $colors(-frame)]
+		   alternate $colors(-altindicator) \
+		   disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
