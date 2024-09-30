@@ -76,7 +76,7 @@ proc ttk::treeview::Keynav {w dir} {
     switch -- $dir {
 	up {
 	    if {[set up [$w prev $focus]] eq ""} {
-	set focus [$w parent $focus]
+		set focus [$w parent $focus]
 	    } else {
 		while {[$w item $up -open] && [llength [$w children $up]]} {
 		    set up [lindex [$w children $up] end]
@@ -86,7 +86,7 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	down {
 	    if {[$w item $focus -open] && [llength [$w children $focus]]} {
-	set focus [lindex [$w children $focus] 0]
+		set focus [lindex [$w children $focus] 0]
 	    } else {
 		set up $focus
 		while {$up ne "" && [set down [$w next $up]] eq ""} {
@@ -97,13 +97,13 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	left {
 	    if {$cells} {
-	# This assumes that colAnchor is of the "#N" format.
-	set colNo [string range $colAnchor 1 end]
-	set firstCol [expr {"tree" ni [$w cget -show]}]
-	if {$colNo >  $firstCol} {
-	    incr colNo -1
-	    set colAnchor "#$colNo"
-	}
+		# This assumes that colAnchor is of the "#N" format.
+		set colNo [string range $colAnchor 1 end]
+		set firstCol [expr {"tree" ni [$w cget -show]}]
+		if {$colNo >  $firstCol} {
+		    incr colNo -1
+		    set colAnchor "#$colNo"
+		}
 	    } elseif {[$w item $focus -open] && [llength [$w children $focus]]} {
 		CloseItem $w $focus
 	    } else {
@@ -112,19 +112,19 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	right {
 	    if {$cells} {
-	set colNo [string range $colAnchor 1 end]
-	set dispCol [$w cget -displaycolumns]
-	if {$dispCol eq "#all"} {
-	    set lastCol [llength [$w cget -columns]]
-	} else {
-	    set lastCol [llength $dispCol]
-	}
-	if {$colNo < ($lastCol - 1)} {
-	    incr colNo
-	    set colAnchor "#$colNo"
-	}
+		set colNo [string range $colAnchor 1 end]
+		set dispCol [$w cget -displaycolumns]
+		if {$dispCol eq "#all"} {
+		    set lastCol [llength [$w cget -columns]]
+		} else {
+		    set lastCol [llength $dispCol]
+		}
+		if {$colNo < ($lastCol - 1)} {
+		    incr colNo
+		    set colAnchor "#$colNo"
+		}
 	    } else {
-	OpenItem $w $focus
+		OpenItem $w $focus
 	    }
 	}
     }

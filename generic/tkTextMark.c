@@ -666,7 +666,11 @@ TkTextInsertDisplayProc(
 		    height, 0, TK_RELIEF_FLAT);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_HOLLOW) {
-	if (textPtr->insertBorderWidth < 1) {
+	if (textPtr->insertBorderWidth > 0) {
+	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
+		    x - halfWidth, y, charWidth + textPtr->insertWidth,
+		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+	} else {
 	    /*
 	     * Hack to work around the fact that a "solid" border always
 	     * paints in black.
@@ -677,10 +681,6 @@ TkTextInsertDisplayProc(
 	    XDrawRectangle(Tk_Display(textPtr->tkwin), dst, borderPtr->bgGC,
 		    x - halfWidth, y, charWidth + textPtr->insertWidth - 1,
 		    height - 1);
-	} else {
-	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,

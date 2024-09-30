@@ -2348,6 +2348,15 @@ ConfigureCanvas(
 	Tcl_IncrRefCount(canvasPtr->yScrollIncrementObj);
     }
     canvasPtr->inset = borderWidth + highlightWidth;
+    if (canvasPtr->textInfo.insertBorderWidth < 0) {
+	canvasPtr->textInfo.insertBorderWidth = 0;
+    }
+    if (canvasPtr->textInfo.insertWidth < 0) {
+	canvasPtr->textInfo.insertWidth = 0;
+    }
+    if (canvasPtr->textInfo.selBorderWidth < 0) {
+	canvasPtr->textInfo.selBorderWidth = 0;
+    }
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
