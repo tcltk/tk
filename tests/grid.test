@@ -709,7 +709,7 @@ test grid-10.23 {column/row configure} -body {
     grid columnconfigure . .b -weight 1
     set res {}
     foreach i {0 1 2 3} {
-        lappend res [grid columnconfigure . $i -weight]
+	lappend res [grid columnconfigure . $i -weight]
     }
     return $res
 } -cleanup {
@@ -726,7 +726,7 @@ test grid-10.24 {column/row configure} -body {
     grid columnconfigure . .c -weight 2
     set res {}
     foreach i {0 1 2 3 4 5 6} {
-        lappend res [grid columnconfigure . $i -weight]
+	lappend res [grid columnconfigure . $i -weight]
     }
     return $res
 } -cleanup {
@@ -743,7 +743,7 @@ test grid-10.25 {column/row configure} -body {
     grid rowconfigure . {1 .d} -weight 2
     set res {}
     foreach i {0 1 2 3 4 5 6 7} {
-        lappend res [grid rowconfigure . $i -weight]
+	lappend res [grid rowconfigure . $i -weight]
     }
     return $res
 } -cleanup {
@@ -1023,7 +1023,7 @@ test grid-11.15 {^ ^ test with multiple windows} -body {
 } -result {{0,0 50,50} {50,0 50,100} {100,0 50,100} {0,50 50,50}}
 test grid-11.16 {default widget placement} -body {
     foreach l {a b c d e} {
-        frame .$l -width 50 -height 50
+	frame .$l -width 50 -height 50
     }
     grid .a .b .c .d -sticky news
     grid  x  ^  x .e -sticky news
@@ -1037,7 +1037,7 @@ test grid-11.16 {default widget placement} -body {
 } -result {50 100 50}
 test grid-11.17 {default widget placement} -body {
     foreach l {a b c d e} {
-        frame .$l -width 50 -height 50
+	frame .$l -width 50 -height 50
     }
     grid .a .b .c .d -sticky news
     grid  ^  x  ^ .e -sticky news
@@ -1051,7 +1051,7 @@ test grid-11.17 {default widget placement} -body {
 } -result {100 50 100}
 test grid-11.18 {default widget placement} -body {
     foreach l {a b c d e} {
-        frame .$l -width 50 -height 50
+	frame .$l -width 50 -height 50
     }
     grid .a .b .c .d -sticky news
     grid  ^  ^  ^  x -in .           ;# ^ and no child should work with -in.
@@ -1067,7 +1067,7 @@ test grid-11.18 {default widget placement} -body {
 } -result {100 100 100 50}
 test grid-11.19 {default widget placement} -body {
     foreach l {a b c d e} {
-        frame .$l -width 50 -height 50
+	frame .$l -width 50 -height 50
     }
     grid .a .b -sticky news
     grid .c .d -sticky news
@@ -1143,8 +1143,8 @@ test grid-13.1 {-in} -body {
 test grid-13.2 {-in} -body {
     frame .f -bg red
     list [winfo manager .f] \
-         [catch {grid .f -in .f} err] $err \
-         [winfo manager .f]
+	 [catch {grid .f -in .f} err] $err \
+	 [winfo manager .f]
 } -cleanup {
     grid_reset 13.1.1
 } -result {{} 1 {window can't be managed in itself} {}}
@@ -1321,11 +1321,11 @@ test grid-14.1 {structure notify} -body {
     update
     set a ""
     lappend a "[winfo x .g],[winfo y .g] \
-        [winfo width .g],[winfo height .g]"
+	[winfo width .g],[winfo height .g]"
     .f configure -bd 5 -relief raised
     update
     lappend a "[winfo x .g],[winfo y .g] \
-        [winfo width .g],[winfo height .g]"
+	[winfo width .g],[winfo height .g]"
     return $a
 } -cleanup {
     grid_reset 14.1
@@ -1565,13 +1565,13 @@ test grid-16.9 {layout uniform} -body {
     frame .f4 -width 135 -height 100
     frame .f5 -width 80 -height 40
     for {set t 1} {$t <= 5} {incr t} {
-        grid .f$t
+	grid .f$t
     }
     grid rowconfigure . {0 2} -uniform a
     grid rowconfigure . {1 3} -uniform b
     update
     list [grid bbox . 0 0] [grid bbox . 0 1] [grid bbox . 0 2] \
-            [grid bbox . 0 3] [grid bbox . 0 4]
+	    [grid bbox . 0 3] [grid bbox . 0 4]
 } -cleanup {
     grid_reset 16.9
 } -result {{0 0 135 75} {0 75 135 100} {0 175 135 75} {0 250 135 100} {0 350 135 40}}
@@ -1591,7 +1591,7 @@ test grid-16.10 {layout uniform} -body {
     grid columnconfigure . 4 -minsize 130
     update
     list [grid bbox . 0 0] [grid bbox . 2 1] [grid bbox . 1 2] \
-            [grid bbox . 4 3] [grid bbox . 3 4]
+	    [grid bbox . 4 3] [grid bbox . 3 4]
 } -cleanup {
     grid_reset 16.10
 } -result {{0 0 75 60} {170 60 150 30} {75 90 95 90} {390 180 140 100} {320 280 70 45}}
@@ -1634,7 +1634,7 @@ test grid-16.12 {layout uniform (grow)} -body {
 } -cleanup {
     grid_reset 16.12
 } -result [list {0 0 50 95} {50 0 50 95} {100 0 100 95} {200 0 70 95} \
-        {0 0 70 95} {70 0 50 95} {120 0 140 95} {260 0 90 95}]
+	{0 0 70 95} {70 0 50 95} {120 0 140 95} {260 0 90 95}]
 test grid-16.13 {layout span} -body {
     frame .f1 -width 24 -height 20
     frame .f2 -width 38 -height 20
@@ -1643,15 +1643,15 @@ test grid-16.13 {layout span} -body {
     grid .f3 - - -
     set res {}
     foreach w {{0 1 0 0} {0 0 1 0} {1 3 4 0} {1 2 1 2} {1 1 1 12}} {
-        for {set c 0} {$c < 4} {incr c} {
-            grid columnconfigure . $c -weight [lindex $w $c]
-        }
-        update
-        set res2 {}
-        for {set c 0} {$c <= 4} {incr c} {
-            lappend res2 [lindex [grid bbox . $c 0] 2]
-        }
-        lappend res $res2
+	for {set c 0} {$c < 4} {incr c} {
+	    grid columnconfigure . $c -weight [lindex $w $c]
+	}
+	update
+	set res2 {}
+	for {set c 0} {$c <= 4} {incr c} {
+	    lappend res2 [lindex [grid bbox . $c 0] 2]
+	}
+	lappend res $res2
     }
     return $res
     # The last result below should ideally be 8 8 8 126 but the current
@@ -1659,7 +1659,7 @@ test grid-16.13 {layout span} -body {
 } -cleanup {
     grid_reset 16.13
 } -result [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 14 42 56 38 0] \
-           [list 18 38 18 76 0] [list 7 8 9 126 0]]
+	   [list 18 38 18 76 0] [list 7 8 9 126 0]]
 test grid-16.14 {layout span} -body {
     frame .f1 -width 110 -height 20
     frame .f2 -width 38 -height 20
@@ -1668,21 +1668,21 @@ test grid-16.14 {layout span} -body {
     grid .f3 - - -
     set res {}
     foreach w {{0 1 0 0} {0 0 1 0} {1 3 4 0} {1 2 1 3} {1 1 1 12}} {
-        for {set c 0} {$c < 4} {incr c} {
-            grid columnconfigure . $c -weight [lindex $w $c]
-        }
-        update
-        set res2 {}
-        for {set c 0} {$c <= 4} {incr c} {
-            lappend res2 [lindex [grid bbox . $c 0] 2]
-        }
-        lappend res $res2
+	for {set c 0} {$c < 4} {incr c} {
+	    grid columnconfigure . $c -weight [lindex $w $c]
+	}
+	update
+	set res2 {}
+	for {set c 0} {$c <= 4} {incr c} {
+	    lappend res2 [lindex [grid bbox . $c 0] 2]
+	}
+	lappend res $res2
     }
     return $res
 } -cleanup {
     grid_reset 16.14
 } -result [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 14 42 56 38 0] \
-           [list 27 55 28 40 0] [list 36 37 37 40 0]]
+	   [list 27 55 28 40 0] [list 36 37 37 40 0]]
 test grid-16.15 {layout span} -body {
     frame .f1 -width 24 -height 20
     frame .f2 -width 38 -height 20
@@ -1691,21 +1691,21 @@ test grid-16.15 {layout span} -body {
     grid x .f3 - -
     set res {}
     foreach w {{0 1 0 0} {0 0 1 0} {1 0 1 0} {0 0 0 0} {1 0 0 6}} {
-        for {set c 0} {$c < 4} {incr c} {
-            grid columnconfigure . $c -weight [lindex $w $c]
-        }
-        update
-        set res2 {}
-        for {set c 0} {$c <= 4} {incr c} {
-            lappend res2 [lindex [grid bbox . $c 0] 2]
-        }
-        lappend res $res2
+	for {set c 0} {$c < 4} {incr c} {
+	    grid columnconfigure . $c -weight [lindex $w $c]
+	}
+	update
+	set res2 {}
+	for {set c 0} {$c <= 4} {incr c} {
+	    lappend res2 [lindex [grid bbox . $c 0] 2]
+	}
+	lappend res $res2
     }
     return $res
 } -cleanup {
     grid_reset 16.15
 } -result [list [list 0 112 0 38 0] [list 0 0 112 38 0] [list 0 0 112 38 0] \
-           [list 0 37 37 76 0] [list 0 12 12 126 0]]
+	   [list 0 37 37 76 0] [list 0 12 12 126 0]]
 test grid-16.16 {layout span} -body {
     frame .f1 -width 64 -height 20
     frame .f2 -width 38 -height 20
@@ -1718,21 +1718,21 @@ test grid-16.16 {layout span} -body {
     grid .f4 .f5 .f6
     set res {}
     foreach w {{1 1 5 1} {0 0 1 0} {1 3 4 0} {1 2 1 2} {1 1 1 12}} {
-        for {set c 0} {$c < 4} {incr c} {
-            grid columnconfigure . $c -weight [lindex $w $c]
-        }
-        update
-        set res2 {}
-        for {set c 0} {$c <= 4} {incr c} {
-            lappend res2 [lindex [grid bbox . $c 0] 2]
-        }
-        lappend res $res2
+	for {set c 0} {$c < 4} {incr c} {
+	    grid columnconfigure . $c -weight [lindex $w $c]
+	}
+	update
+	set res2 {}
+	for {set c 0} {$c <= 4} {incr c} {
+	    lappend res2 [lindex [grid bbox . $c 0] 2]
+	}
+	lappend res $res2
     }
     return $res
 } -cleanup {
     grid_reset 16.16
 } -result [list [list 30 34 43 43 0] [list 30 34 48 38 0] [list 22 42 48 38 0] \
-           [list 25 39 29 57 0] [list 30 34 22 64 0]]
+	   [list 25 39 29 57 0] [list 30 34 22 64 0]]
 test grid-16.17 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2 3} {
 	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
@@ -1766,15 +1766,15 @@ test grid-16.18 {layout span} -body {
     grid columnconfigure . 0 -weight 1
     set res {}
     foreach w {{1 0 0} {0 1 0} {0 0 1}} {
-        for {set c 0} {$c < 3} {incr c} {
-            grid columnconfigure . $c -weight [lindex $w $c]
-        }
-        update
-        set res2 {}
-        for {set c 0} {$c <= 2} {incr c} {
-            lappend res2 [lindex [grid bbox . $c 0] 2]
-        }
-        lappend res $res2
+	for {set c 0} {$c < 3} {incr c} {
+	    grid columnconfigure . $c -weight [lindex $w $c]
+	}
+	update
+	set res2 {}
+	for {set c 0} {$c <= 2} {incr c} {
+	    lappend res2 [lindex [grid bbox . $c 0] 2]
+	}
+	lappend res $res2
     }
     return $res
 } -cleanup {
@@ -1795,7 +1795,7 @@ test grid-16.19 {layout span} -constraints { knownBug } -body {
     set res {}
     update
     for {set c 0} {$c <= 5} {incr c} {
-        lappend res [lindex [grid bbox . $c 0] 2]
+	lappend res [lindex [grid bbox . $c 0] 2]
     }
     return $res
 } -cleanup {
@@ -1861,10 +1861,10 @@ test grid-18.2 {test support for minreqsize} -body {
 test grid-19.1 {uniform realloc} -body {
     # Use a lot of uniform groups to test the reallocation mechanism
     for {set t 0} {$t < 100} {incr t 2} {
-        frame .fa$t -width 5 -height 20
-        frame .fb$t -width 6 -height 20
-        grid .fa$t .fb$t -row 0 -column $t -sticky news
-        grid columnconfigure . [list $t [expr {$t + 1}]] -uniform a$t
+	frame .fa$t -width 5 -height 20
+	frame .fb$t -width 6 -height 20
+	grid .fa$t .fb$t -row 0 -column $t -sticky news
+	grid columnconfigure . [list $t [expr {$t + 1}]] -uniform a$t
     }
     update
     grid bbox .
@@ -1927,16 +1927,16 @@ test grid-21.6 {anchor} -body {
     . configure -width 300 -height 250
     set res {}
     foreach a {n ne e se s sw w nw center} {
-        grid anchor . $a
-        update
-        lappend res [grid bbox .]
+	grid anchor . $a
+	update
+	lappend res [grid bbox .]
     }
     return $res
 } -cleanup {
     grid_reset 21.6
 } -result [list {37 0 225 150} {75 0 225 150} {75 50 225 150} {75 100 225 150} \
-           {37 100 225 150} {0 100 225 150} {0 50 225 150} {0 0 225 150} \
-           {37 50 225 150}]
+	   {37 100 225 150} {0 100 225 150} {0 50 225 150} {0 0 225 150} \
+	   {37 50 225 150}]
 test grid-21.7 {anchor} -body {
     # Test with a non-symmetric internal border.
     # This only tests vertically, there is currently no way to get
@@ -1954,17 +1954,17 @@ test grid-21.7 {anchor} -body {
     . configure -width 300 -height 250
     set res {}
     foreach a {n ne e se s sw w nw center} {
-        grid anchor .f $a
-        update
-        lappend res [grid bbox .f]
+	grid anchor .f $a
+	update
+	lappend res [grid bbox .f]
     }
     pack propagate . 1 ; wm geometry . {}
     return $res
 } -cleanup {
     grid_reset 21.7
 } -result [list {37 20 225 150} {75 20 225 150} {75 60 225 150} {75 100 225 150} \
-           {37 100 225 150} {0 100 225 150} {0 60 225 150} {0 20 225 150} \
-           {37 60 225 150}]
+	   {37 100 225 150} {0 100 225 150} {0 60 225 150} {0 20 225 150} \
+	   {37 60 225 150}]
 
 test grid-22.1 {remove: basic argument checking} {
     list [catch {grid remove foo} msg] $msg
@@ -2022,7 +2022,7 @@ test grid-22.5 {remove} {
 grid_reset 22.5
 
 test grid-23 {grid configure -in leaked from previous container window - bug
-              6aea69fccbb266b7f0437686379fbe5b55442958} {
+	      6aea69fccbb266b7f0437686379fbe5b55442958} {
     frame .f
     frame .g
     pack .f .g

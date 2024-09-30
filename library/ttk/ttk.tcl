@@ -178,7 +178,7 @@ proc ttk::LoadThemes {} {
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
 	    foreach script $scripts {
-	uplevel #0 [list source -encoding utf-8 [file join $library $script]]
+		uplevel #0 [list source -encoding utf-8 [file join $library $script]]
 	    }
 	}
     }

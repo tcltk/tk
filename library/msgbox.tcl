@@ -325,18 +325,18 @@ proc ::tk::MessageBox {args} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
 	    switch $data(-icon) {
-	error {
-	    ttk::label $w.bitmap -image ::tk::icons::error
-	}
-	info {
-	    ttk::label $w.bitmap -image ::tk::icons::information
-	}
-	question {
-	    ttk::label $w.bitmap -image ::tk::icons::question
-	}
-	default {
-	    ttk::label $w.bitmap -image ::tk::icons::warning
-	}
+		error {
+		    ttk::label $w.bitmap -image ::tk::icons::error
+		}
+		info {
+		    ttk::label $w.bitmap -image ::tk::icons::information
+		}
+		question {
+		    ttk::label $w.bitmap -image ::tk::icons::question
+		}
+		default {
+		    ttk::label $w.bitmap -image ::tk::icons::warning
+		}
 	    }
 	}
     }
