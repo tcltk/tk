@@ -908,20 +908,20 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     set s1 {    Yeah-ah-ah-ah-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-Yow}
     set s2 {    Yeah ah ah ah oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh Yow}
     $c create text 21 18 \
-        -font $f \
-        -text $s1 \
-        -fill white \
-        -width 922 \
-        -anchor nw \
-        -tags tbox1
+	-font $f \
+	-text $s1 \
+	-fill white \
+	-width 922 \
+	-anchor nw \
+	-tags tbox1
     $c create rect {*}[$c bbox tbox1] -outline red
     $c create text 21 160 \
-        -font $f \
-        -text $s2 \
-        -fill white \
-        -width 922 \
-        -anchor nw \
-        -tags tbox2
+	-font $f \
+	-text $s2 \
+	-fill white \
+	-width 922 \
+	-anchor nw \
+	-tags tbox2
     $c create rect {*}[$c bbox tbox2] -outline red
     after 500 "set done 1" ; vwait done
     set results [list]
@@ -933,7 +933,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     lappend results [selection get]
     array set metrics [font metrics $f]
     set x [expr {21 + [font measure $f "    "] \
-        + ([font measure {Arial 28 bold} "Y"] / 2)}]
+	+ ([font measure {Arial 28 bold} "Y"] / 2)}]
     set y1 [expr {18 + ($metrics(-linespace) / 2)}]
     set y2 [expr {160 + ($metrics(-linespace) / 2)}]
     lappend results [$c index tbox1 @$x,$y1]
@@ -950,10 +950,10 @@ test canvText-20.1 {angled text bounding box} -setup {
 	list $b $a $d $c
     }
     proc almosteq {b1 b2} {
-        # check whether the two boxes are equal, with 1 unit tolerance on each x y w h
-        lassign $b1 a b c d
-        lassign $b2 e f g h
-        expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
+	# check whether the two boxes are equal, with 1 unit tolerance on each x y w h
+	lassign $b1 a b c d
+	lassign $b2 e f g h
+	expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
     }
 } -body {
     .c create text 2 2 -tag t -anchor center -text 0 -font {TkDefaultFont 24}

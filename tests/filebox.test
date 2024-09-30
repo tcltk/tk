@@ -168,27 +168,27 @@ foreach mode $modes {
     regsub \"-foo\" $options "" options
 
     foreach option $options {
-        if {[string index $option 0] eq "-"} {
+	if {[string index $option 0] eq "-"} {
 	    test filebox-1.2-$mode$option "tk_getOpenFile command" -body {
 		tk_getOpenFile $option
 	    } -returnCodes error -result "value for \"$option\" missing"
-        }
+	}
     }
 
     test filebox-1.3.1-$mode "tk_getOpenFile command" -constraints notAqua -body {
-        tk_getOpenFile -foo bar
+	tk_getOpenFile -foo bar
     } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,notAqua)
     test filebox-1.3.2-$mode "tk_getOpenFile command" -constraints aqua -body {
-        tk_getOpenFile -foo bar
+	tk_getOpenFile -foo bar
     } -returnCodes error -result $unknownOptionsMsg(tk_getOpenFile,aqua)
     test filebox-1.4-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -initialdir
+	tk_getOpenFile -initialdir
     } -returnCodes error -result {value for "-initialdir" missing}
     test filebox-1.5-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -parent foo.bar
+	tk_getOpenFile -parent foo.bar
     } -returnCodes error -result {bad window path name "foo.bar"}
     test filebox-1.6-$mode "tk_getOpenFile command" -body {
-        tk_getOpenFile -filetypes {Foo}
+	tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
     set isNative [expr {
@@ -210,8 +210,8 @@ foreach mode $modes {
     # set verylongstring $verylongstring$verylongstring
 
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent cancel
-        tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
+	ToPressButton $parent cancel
+	tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
     set fileName $tmpFile
@@ -219,63 +219,63 @@ foreach mode $modes {
     set pathName [file join $fileDir $fileName]
 
     test filebox-2.2-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Press Ok" \
+	ToPressButton $parent ok
+	set choice [tk_getOpenFile -title "Press Ok" \
 		-parent $parent -initialfile $fileName -initialdir $fileDir]
     } $pathName
     test filebox-2.3-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToEnterFileByKey $parent $fileName $fileDir
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
+	ToEnterFileByKey $parent $fileName $fileDir
+	set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir $fileDir]
     } $pathName
     test filebox-2.4-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        cd $fileDir
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
+	cd $fileDir
+	ToPressButton $parent ok
+	set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir . -initialfile $fileName]
     } $pathName
     test filebox-2.5-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-        ToPressButton $parent ok
-        set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
+	ToPressButton $parent ok
+	set choice [tk_getOpenFile -title "Enter \"$fileName\" and press Ok" \
 		-parent $parent -initialdir /badpath -initialfile $fileName]
     } $pathName
     test filebox-2.6-$mode "tk_getOpenFile command" -setup {
-        toplevel .t1; toplevel .t2
-        wm geometry .t1 +0+0
-        wm geometry .t2 +0+0
+	toplevel .t1; toplevel .t2
+	wm geometry .t1 +0+0
+	wm geometry .t2 +0+0
     } -constraints nonUnixUserInteraction -body {
-        set choice {}
-        ToPressButton .t1 ok
-        lappend choice [tk_getOpenFile \
+	set choice {}
+	ToPressButton .t1 ok
+	lappend choice [tk_getOpenFile \
 		-title "Enter \"$fileName\" and press Ok" \
 		-parent .t1 -initialdir $fileDir \
 		-initialfile $fileName]
-        ToPressButton .t2 ok
-        lappend choice [tk_getOpenFile \
+	ToPressButton .t2 ok
+	lappend choice [tk_getOpenFile \
 		-title "Enter \"$fileName\" and press Ok" \
 		-parent .t2 -initialdir $fileDir \
 		-initialfile $fileName]
-        ToPressButton .t1 ok
-        lappend choice [tk_getOpenFile \
+	ToPressButton .t1 ok
+	lappend choice [tk_getOpenFile \
 		-title "Enter \"$fileName\" and press Ok" \
 		-parent .t1 -initialdir $fileDir \
 		-initialfile $fileName]
     } -result [list $pathName $pathName $pathName] -cleanup {
-        destroy .t1
-        destroy .t2
+	destroy .t1
+	destroy .t2
     }
 
     foreach x [lsort -integer [array names filters]] {
-        test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
+	test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
 	    set choice [tk_getOpenFile -title "Press Ok" \
 		    -filetypes $filters($x) -parent $parent \
 		    -initialfile $fileName -initialdir $fileDir]
-        } $pathName
+	} $pathName
     }
     foreach {x res} [list 1 "-unset-" 2 "Text files"] {
 	set t [expr {$x + [llength [array names filters]]}]
-        test filebox-3.$t-$mode "tk_getOpenFile command" nonUnixUserInteraction {
+	test filebox-3.$t-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    catch {unset tv}
 	    catch {unset typeName}
 	    ToPressButton $parent ok
@@ -289,7 +289,7 @@ foreach mode $modes {
 		set typeName "-unset-"
 	    }
 	    set typeName
-        } $res
+	} $res
     }
 
     test filebox-4.1.1-$mode "tk_getSaveFile command" -constraints notAqua -body {

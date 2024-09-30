@@ -486,7 +486,7 @@ test message-4.1 {Bug [5d991b822e]} {
     set var INIT
     message .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable {}
+	.b configure -textvariable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -499,7 +499,7 @@ test message-4.2 {Bug [5d991b822e]} {
     set var INIT
     message .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable new
+	.b configure -textvariable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}

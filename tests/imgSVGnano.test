@@ -16,18 +16,18 @@ namespace eval svgnano {
     variable data
 
     set data(plus) {\
-            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-                <path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
-                <path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
-                <circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
-                <ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
-                <line x1="10" y1="90" x2="50" y2="99"/>
-                <rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
-                <polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
-                <polygon fill ="yellow" points="80,80 70,85 90,90"/>
-                </svg>}
-                set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w">
-            </svg>\
+	    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+		<path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
+		<path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
+		<circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
+		<ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
+		<line x1="10" y1="90" x2="50" y2="99"/>
+		<rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
+		<polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
+		<polygon fill ="yellow" points="80,80 70,85 90,90"/>
+		</svg>}
+		set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w">
+	    </svg>\
     }
 
     tcltest::makeFile $data(plus) plus.svg

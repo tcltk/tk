@@ -355,7 +355,7 @@ proc ::tk::spinbox::ArrowPress {w x y} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
 	    set Priv(afterId) [after $delay \
-	    [list ::tk::spinbox::Invoke $w $Priv(element)]]
+		    [list ::tk::spinbox::Invoke $w $Priv(element)]]
 	}
 	if {[info exists Priv(outsideElement)]} {
 	    unset Priv(outsideElement)
