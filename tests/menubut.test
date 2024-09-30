@@ -98,7 +98,7 @@ test menubutton-1.15 {configuration options} -body {
     .mb cget -borderwidth
 } -cleanup {
     .mb configure -borderwidth [lindex [.mb configure -borderwidth] 3]
-} -result 1.3
+} -result 1
 test menubutton-1.16 {configuration options} -body {
     .mb configure -borderwidth badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
