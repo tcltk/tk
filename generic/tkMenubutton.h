@@ -61,8 +61,7 @@ typedef struct {
      * Information about what's displayed in the menu button:
      */
 
-    char *text;			/* Text to display in button (malloc'ed) or
-				 * NULL. */
+    Tcl_Obj *textObj;			/* Text to display in button. May be NULL. */
     int underline;		/* Index of character to underline. INT_MIN means no underline */
     Tcl_Obj *textVarNameObj;	/* Name of variable or NULL. If
 				 * non-NULL, button displays the contents of
@@ -70,7 +69,7 @@ typedef struct {
     Pixmap bitmap;		/* Bitmap to display or None. If not None then
 				 * text and textVar and underline are
 				 * ignored. */
-    Tcl_Obj *imageObj;		/* Name of image to display (malloc'ed), or
+    Tcl_Obj *imageObj;		/* Name of image to display, or
 				 * NULL. If non-NULL, bitmap, text, and
 				 * textVarName are ignored. */
     Tk_Image image;		/* Image to display in window, or NULL if

@@ -190,8 +190,8 @@ typedef struct {
     int requestedWidth, requestedHeight;
     int visible; /* whether XEMBED_MAPPED should be set */
     int docked;	 /* whether an icon should be docked */
-    Tcl_Obj *imageStringObj; /* option: -image */
-    Tcl_Obj *classStringObj; /* option: -class */
+    Tcl_Obj *imageObj; /* option: -image */
+    Tcl_Obj *classObj; /* option: -class */
 } DockIcon;
 
 /*
@@ -604,7 +604,7 @@ CreateTrayIconWindow(
     tkwin = icon->drawingWin = Tk_CreateWindow(icon->interp, icon->tkwin,
 	    Tk_Name(icon->tkwin), "");
     if (tkwin) {
-	Tk_SetClass(icon->drawingWin, Tcl_GetString(icon->classStringObj));
+	Tk_SetClass(icon->drawingWin, Tcl_GetString(icon->classObj));
 	Tk_CreateEventHandler(icon->drawingWin,ExposureMask|StructureNotifyMask|
 		ButtonPressMask|ButtonReleaseMask|
 		EnterWindowMask|LeaveWindowMask|PointerMotionMask,
@@ -667,11 +667,11 @@ DockToManager(
 static const
 Tk_OptionSpec IconOptionSpec[] = {
     {TK_OPTION_STRING,"-image","image","Image",
-	NULL, offsetof(DockIcon, imageStringObj), TCL_INDEX_NONE,
+	NULL, offsetof(DockIcon, imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL,
 	ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_STRING,"-class","class","Class",
-	"TrayIcon", offsetof(DockIcon, classStringObj), TCL_INDEX_NONE,
+	"TrayIcon", offsetof(DockIcon, classObj), TCL_INDEX_NONE,
 	0, NULL, ICON_CONF_CLASS},
     {TK_OPTION_BOOLEAN,"-docked","docked","Docked",
 	"1", TCL_INDEX_NONE, offsetof(DockIcon, docked), 0, NULL,
@@ -901,13 +901,13 @@ DisplayIcon(
 			Tk_WindowId(icon->drawingWin), w, h, 32);
 	    }
 	    if (!icon->photo) {
-		icon->photo = Tk_FindPhoto(icon->interp, Tcl_GetString(icon->imageStringObj));
+		icon->photo = Tk_FindPhoto(icon->interp, Tcl_GetString(icon->imageObj));
 	    }
 	    if (!icon->photo && !icon->imageVisualInstance) {
 		Tcl_InterpState saved
 			= Tcl_SaveInterpState(icon->interp, TCL_OK);
 		icon->imageVisualInstance = Tk_GetImage(icon->interp,icon->drawingWin,
-			Tcl_GetString(icon->imageStringObj), IgnoreImageChange, NULL);
+			Tcl_GetString(icon->imageObj), IgnoreImageChange, NULL);
 		Tcl_RestoreInterpState(icon->interp,saved);
 	    }
 	    if (icon->photo && !icon->offscreenImage) {
@@ -1418,7 +1418,7 @@ TrayIconUpdate(
      */
     if (mask & ICON_CONF_CLASS) {
 	if (icon->drawingWin)
-	    Tk_SetClass(icon->drawingWin,Tk_GetUid(Tcl_GetString(icon->classStringObj)));
+	    Tk_SetClass(icon->drawingWin,Tk_GetUid(Tcl_GetString(icon->classObj)));
     }
     /*
      * First, ensure right icon visibility.
@@ -1517,8 +1517,8 @@ TrayIconConfigureMethod(
     mask |= addflags;
     /* now check option validity */
     if (mask & ICON_CONF_IMAGE) {
-	if (icon->imageStringObj) {
-	    newImage = Tk_GetImage(interp, icon->tkwin, Tcl_GetString(icon->imageStringObj),
+	if (icon->imageObj) {
+	    newImage = Tk_GetImage(interp, icon->tkwin, Tcl_GetString(icon->imageObj),
 		    TrayIconImageChanged, icon);
 	    if (!newImage) {
 		Tk_RestoreSavedOptions(&saved);

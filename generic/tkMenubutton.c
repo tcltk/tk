@@ -122,7 +122,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_TAKE_FOCUS, offsetof(TkMenuButton, takeFocusObj),
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
-	DEF_MENUBUTTON_TEXT, TCL_INDEX_NONE, offsetof(TkMenuButton, text), 0, 0, 0},
+	DEF_MENUBUTTON_TEXT, offsetof(TkMenuButton, textObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_MENUBUTTON_TEXT_VARIABLE, offsetof(TkMenuButton, textVarNameObj),
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
@@ -239,7 +239,7 @@ Tk_MenubuttonObjCmd(
 	    MenuButtonCmdDeletedProc);
     mbPtr->optionTable = optionTable;
     mbPtr->menuNameObj = NULL;
-    mbPtr->text = NULL;
+    mbPtr->textObj = NULL;
     mbPtr->underline = INT_MIN;
     mbPtr->textVarNameObj = NULL;
     mbPtr->bitmap = None;
@@ -629,14 +629,14 @@ ConfigureMenuButton(
 
 	value = Tcl_GetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
-	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->text,
+	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
 		    TCL_GLOBAL_ONLY);
 	} else {
-	    if (mbPtr->text != NULL) {
-		ckfree(mbPtr->text);
+	    if (mbPtr->textObj != NULL) {
+		Tcl_DecrRefCount(mbPtr->textObj);
 	    }
-	    mbPtr->text = (char *)ckalloc(strlen(value) + 1);
-	    strcpy(mbPtr->text, value);
+	    mbPtr->textObj = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+	    Tcl_IncrRefCount(mbPtr->textObj);
 	}
 	Tcl_TraceVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -877,15 +877,12 @@ static char *
 MenuButtonTextVarProc(
     void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),		/* Name of variable. */
+    TCL_UNUSED(const char *),		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     const char *value;
-    size_t len;
-    (void)name1;
-    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -914,7 +911,7 @@ MenuButtonTextVarProc(
 		 */
 		return NULL;
 	    }
-	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->text,
+	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
 		    TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -927,12 +924,11 @@ MenuButtonTextVarProc(
     if (value == NULL) {
 	value = "";
     }
-    if (mbPtr->text != NULL) {
-	ckfree(mbPtr->text);
+    if (mbPtr->textObj != NULL) {
+	Tcl_DecrRefCount(mbPtr->textObj);
     }
-    len = 1 + strlen(value);
-    mbPtr->text = (char *)ckalloc(len);
-    memcpy(mbPtr->text, value, len);
+    mbPtr->textObj= Tcl_NewStringObj(value, TCL_INDEX_NONE);
+	Tcl_IncrRefCount(mbPtr->textObj);
     TkpComputeMenuButtonGeometry(mbPtr);
 
     if ((mbPtr->tkwin != NULL) && Tk_IsMapped(mbPtr->tkwin)
