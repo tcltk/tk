@@ -87,10 +87,10 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Structure used to draw 3-D border and
 				 * background when window is active. NULL
 				 * means no such border exists. */
-    Tcl_Obj *borderWidthObj;	/* Width of border. */
+    int borderWidth;		/* Width of border. */
     int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
-    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. 0 means
+    int highlightWidth;		/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -121,10 +121,16 @@ typedef struct {
 				 * origin. */
     Tcl_Obj *widthObj;		/* Value of -width option. */
     Tcl_Obj *heightObj;		/* Value of -height option. */
-    Tcl_Obj *wrapLengthObj;	/* Line length (in pixels) at which to wrap
-				 * onto next line. 0 means don't wrap
+    int width, height;		/* If > 0, these specify dimensions to request
+				 * for window, in characters for text and in
+				 * pixels for bitmaps. In this case the actual
+				 * size of the text string or bitmap is
+				 * ignored in computing desired window
+				 * size. */
+    int wrapLength;		/* Line length (in pixels) at which to wrap
+				 * onto next line. <= 0 means don't wrap
 				 * except at newlines. */
-    Tcl_Obj *padXObj, *padYObj;	/* Extra space around text or bitmap (pixels
+    int padX, padY;		/* Extra space around text or bitmap (pixels
 				 * on each side). */
     Tk_Anchor anchor;		/* Where text/bitmap should be displayed
 				 * inside window region. */

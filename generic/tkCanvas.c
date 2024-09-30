@@ -2347,15 +2347,6 @@ ConfigureCanvas(
     if (canvasPtr->highlightWidth < 0) {
 	canvasPtr->highlightWidth = 0;
     }
-    if (canvasPtr->textInfo.insertBorderWidth < 0) {
-	canvasPtr->textInfo.insertBorderWidth = 0;
-    }
-    if (canvasPtr->textInfo.insertWidth < 0) {
-	canvasPtr->textInfo.insertWidth = 0;
-    }
-    if (canvasPtr->textInfo.selBorderWidth < 0) {
-	canvasPtr->textInfo.selBorderWidth = 0;
-    }
     if (canvasPtr->width < 0) {
 	canvasPtr->width = 0;
     }
