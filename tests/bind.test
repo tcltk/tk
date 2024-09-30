@@ -6857,7 +6857,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # pointer should have moved the same amount as the window moved
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
-        if {$pos1 != [expr {$pos2 - 400}]} {
+        if {$pos1 != ($pos2 - 400)} {
             set res [list $pointerPos1 $pointerPos2]
         }
     }

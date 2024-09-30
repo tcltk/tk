@@ -818,11 +818,9 @@ FrontWindowAtPoint(
     int y)
 {
     NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
-    NSArray *windows = [NSApp orderedWindows];
-    TkWindow *winPtr = NULL;
 
-    for (NSWindow *w in windows) {
-	winPtr = TkMacOSXGetTkWindow(w);
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
 	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect windowFrame = [w frame];
@@ -7380,8 +7378,6 @@ ApplyWindowAttributeFlagChanges(
 	}
 	if ((changedAttributes & (kWindowResizableAttribute |
 		kWindowFullZoomAttribute)) || initial) {
-	    [macWindow setShowsResizeIndicator:
-		    !!(newAttributes & kWindowResizableAttribute)];
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];

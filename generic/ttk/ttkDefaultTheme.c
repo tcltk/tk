@@ -1233,13 +1233,14 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    int diameter = 0;
+    int size = 0;
     Ttk_Padding margins;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = diameter + Ttk_PaddingWidth(margins);
-    *heightPtr = diameter + Ttk_PaddingHeight(margins);
+    *widthPtr = size + Ttk_PaddingWidth(margins);
+    *heightPtr = size + Ttk_PaddingHeight(margins);
 }
 
 static void TreeitemIndicatorDraw(
@@ -1259,7 +1260,7 @@ static void TreeitemIndicatorDraw(
 	return;
     }
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     XDrawRectangle(Tk_Display(tkwin), d, gc,
