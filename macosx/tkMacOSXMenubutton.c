@@ -276,7 +276,7 @@ TkpComputeMenuButtonGeometry(
 	Tk_FreeTextLayout(butPtr->textLayout);
 	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textObj), TCL_INDEX_NONE, &wrapLength,
+		Tcl_GetString(butPtr->textObj), TCL_INDEX_NONE, wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 	txtWidth = butPtr->textWidth;
 	txtHeight = butPtr->textHeight;
@@ -291,10 +291,10 @@ TkpComputeMenuButtonGeometry(
      * otherwise it is not really a compound button.
      */
 
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtr->width);
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtr->height);
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtr->width);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtr->height);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
     if (haveImage && haveText) {
 	switch ((enum compound) butPtr->compound) {
 	case COMPOUND_TOP:
