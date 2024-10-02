@@ -487,7 +487,7 @@ DrawMenuButtonImageAndText(
 	if (haveImage) {
 	    TkComputeAnchor(butPtr->anchor, tkwin,
 		    butPtr->padX + butPtr->borderWidth,
-			butPtr->padY + butPtr->borderWidth,
+		    butPtr->padY + butPtr->borderWidth,
 		    width, height, &x, &y);
 	    imageXOffset = LEFT_INSET;
 	    imageYOffset += y;
