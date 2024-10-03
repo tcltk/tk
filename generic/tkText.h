@@ -130,10 +130,6 @@ typedef struct TkTextEmbWindow {
     TkTextEmbWindowClient *clients;
 				/* Linked list of peer-widget specific
 				 * information for this embedded window. */
-#if defined(BUILD_tk)
-    int padX, padY;		/* Padding to leave around each side of
-				 * window, in pixels. */
-#endif
 } TkTextEmbWindow;
 
 /*
@@ -167,10 +163,6 @@ typedef struct TkTextEmbImage {
 				 * image. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-#if defined(BUILD_tk)
-    int padX, padY;		/* Padding to leave around each side of
-				 * window, in pixels. */
-#endif
 } TkTextEmbImage;
 
 /*
@@ -358,6 +350,9 @@ typedef struct TkTextTag {
 
     Tk_3DBorder border;		/* Used for drawing background. NULL means no
 				 * value specified here. */
+#if TK_MAJOR_VERSION < 9
+    int borderWidth;		/* Width of 3-D border for background. */
+#endif
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border for background. */
 #if TK_MAJOR_VERSION < 9
     char *reliefString;		/* -relief option string (malloc-ed). NULL
@@ -379,33 +374,18 @@ typedef struct TkTextTag {
 #endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
 				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *lMargin1Obj;	/* -lmargin1 option object. NULL
 				 * means option not specified. */
-#else
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     int lMargin1;		/* Left margin for first display line of each
 				 * text line, in pixels. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *lMargin2Obj;	/* -lmargin2 option object. NULL
 				 * means option not specified. */
-#else
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     int lMargin2;		/* Left margin for second and later display lines
 				 * of each text line, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
 				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
-#else
-    char *offsetString;		/* -offset option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
 				 * subscripts. INT_MIN means option not specified. */
@@ -417,13 +397,8 @@ typedef struct TkTextTag {
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
 				 * color as foreground. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
 				 * means option not specified. */
-#else
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
@@ -431,26 +406,20 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means
 				 * no value specified here. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing1Obj;	/* -spacing1 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing1;
 #endif
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing2Obj;	/* -spacing2 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing2;
 #endif
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing3Obj;	/* -spacing3 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing3String;	/* -spacing3 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing3;
 #endif
     Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
 				 * specified. */
@@ -489,15 +458,6 @@ typedef struct TkTextTag {
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
-#ifdef BUILD_tk
-    int spacing1;		/* Extra spacing above first display line for
-				 * text line. INT_MIN means option not specified. */
-    int spacing2;		/* Extra spacing between display lines for the
-				 * same text line. INT_MIN means option not specified. */
-    int spacing3;		/* Extra spacing below last display line for
-				 * text line. INT_MIN means option not specified. */
-    int borderWidth;		/* Width of 3-D border for background. */
-#endif
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -841,7 +801,6 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
@@ -849,11 +808,6 @@ typedef struct TkText {
 				 * horizontal scrollbar when view changes. May be NULL. */
     Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. May be NULL. */
-#else
-    char *takeFocus;
-    char *xScrollCmd;
-    char *yScrollCmd;
-#endif
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
@@ -878,11 +832,8 @@ typedef struct TkText {
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
 #ifdef BUILD_tk
-    int padX, padY;
-    int selBorderWidth;
     int highlightWidth;
     int borderWidth;
-    int spacing1, spacing2, spacing3;
     int height;
     int insertBorderWidth;
     int insertWidth;
