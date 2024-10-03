@@ -804,9 +804,9 @@ GetStyle(
     styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = TK_JUSTIFY_LEFT;
-    styleValues.spacing1 = textPtr->spacing1;
-    styleValues.spacing2 = textPtr->spacing2;
-    styleValues.spacing3 = textPtr->spacing3;
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &styleValues.spacing1);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing2Obj, &styleValues.spacing2);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing3Obj, &styleValues.spacing3);
     styleValues.tabArrayPtr = textPtr->tabArrayPtr;
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
@@ -861,7 +861,7 @@ GetStyle(
 	if ((tagPtr->borderWidthObj != NULL)
 		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
 		&& (tagPtr->priority > borderWidthPrio)) {
-	    styleValues.borderWidth = tagPtr->borderWidth;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
 	}
 	if ((tagPtr->relief != TK_RELIEF_NULL)
@@ -935,19 +935,19 @@ GetStyle(
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
 	    rMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing1 != INT_MIN)
+	if ((tagPtr->spacing1Obj != NULL)
 		&& (tagPtr->priority > spacing1Prio)) {
-	    styleValues.spacing1 = tagPtr->spacing1;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &styleValues.spacing1);
 	    spacing1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing2 != INT_MIN)
+	if ((tagPtr->spacing2Obj != NULL)
 		&& (tagPtr->priority > spacing2Prio)) {
-	    styleValues.spacing2 = tagPtr->spacing2;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing2Obj, &styleValues.spacing2);
 	    spacing2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing3 != INT_MIN)
+	if ((tagPtr->spacing3Obj != NULL)
 		&& (tagPtr->priority > spacing3Prio)) {
-	    styleValues.spacing3 = tagPtr->spacing3;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing3Obj, &styleValues.spacing3);
 	    spacing3Prio = tagPtr->priority;
 	}
 	if ((tagPtr->tabStringPtr != NULL)
@@ -4173,6 +4173,7 @@ DisplayText(
     int bottomY = 0;		/* Initialization needed only to stop compiler
 				 * warnings. */
     Tcl_Interp *interp;
+    int padX, padY;
 
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -4366,6 +4367,9 @@ DisplayText(
 
     dInfoPtr->flags &= ~REDRAW_PENDING;
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+
     /*
      * Redraw the borders if that's needed.
      */
@@ -4405,28 +4409,28 @@ DisplayText(
 	    }
 	}
 	borders = textPtr->borderWidth + textPtr->highlightWidth;
-	if (textPtr->padY > 0) {
+	if (padY > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders,
-		    Tk_Width(textPtr->tkwin) - 2*borders, textPtr->padY,
+		    Tk_Width(textPtr->tkwin) - 2 * borders, padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders,
-		    Tk_Height(textPtr->tkwin) - borders - textPtr->padY,
-		    Tk_Width(textPtr->tkwin) - 2*borders,
-		    textPtr->padY, 0, TK_RELIEF_FLAT);
+		    Tk_Height(textPtr->tkwin) - borders - padY,
+		    Tk_Width(textPtr->tkwin) - 2 * borders,
+		    padY, 0, TK_RELIEF_FLAT);
 	}
-	if (textPtr->padX > 0) {
+	if (padX > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		    textPtr->border, borders, borders + textPtr->padY,
-		    textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    textPtr->border, borders, borders + padY,
+		    padX,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border,
-		    Tk_Width(textPtr->tkwin) - borders - textPtr->padX,
-		    borders + textPtr->padY, textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    Tk_Width(textPtr->tkwin) - borders - padX,
+		    borders + padY, padX,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * padY,
 		    0, TK_RELIEF_FLAT);
 	}
 	dInfoPtr->flags &= ~REDRAW_BORDERS;
@@ -4609,8 +4613,8 @@ DisplayText(
 	}
 
 	Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		textPtr->border, dInfoPtr->x - textPtr->padX, bottomY,
-		dInfoPtr->maxX - (dInfoPtr->x - textPtr->padX),
+		textPtr->border, dInfoPtr->x - padX, bottomY,
+		dInfoPtr->maxX - (dInfoPtr->x - padX),
 		dInfoPtr->topOfEof-bottomY, 0, TK_RELIEF_FLAT);
     }
     dInfoPtr->topOfEof = bottomY;
@@ -4754,6 +4758,7 @@ TextInvalidateRegion(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int maxY, inset;
     XRectangle rect;
+    int padX, padY;
 
     /*
      * Find all lines that overlap the given region and mark them for
@@ -4774,12 +4779,14 @@ TextInvalidateRegion(
 	dInfoPtr->topOfEof = maxY;
     }
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     inset = textPtr->borderWidth + textPtr->highlightWidth;
-    if ((rect.x < (inset + textPtr->padX))
-	    || (rect.y < (inset + textPtr->padY))
+    if ((rect.x < (inset + padX))
+	    || (rect.y < (inset + padY))
 	    || ((int) (rect.x + rect.width) > (Tk_Width(textPtr->tkwin)
-		    - inset - textPtr->padX))
-	    || (maxY > (Tk_Height(textPtr->tkwin) - inset - textPtr->padY))) {
+		    - inset - padX))
+	    || (maxY > (Tk_Height(textPtr->tkwin) - inset - padY))) {
 	dInfoPtr->flags |= REDRAW_BORDERS;
     }
 }
@@ -5194,6 +5201,7 @@ TkTextRelayoutWindow(
     GC newGC;
     XGCValues gcValues;
     Bool inSync = 1;
+    int padX, padY;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5231,6 +5239,8 @@ TkTextRelayoutWindow(
      * it.
      */
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     if (textPtr->highlightWidthObj) {
 	if (textPtr->highlightWidth < 0) {
 	    textPtr->highlightWidth = 0;
@@ -5240,11 +5250,11 @@ TkTextRelayoutWindow(
 	}
     }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
-	    + textPtr->padX;
+	    + padX;
     dInfoPtr->y = textPtr->highlightWidth + textPtr->borderWidth
-	    + textPtr->padY;
+	    + padY;
     dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - textPtr->highlightWidth
-	    - textPtr->borderWidth - textPtr->padX;
+	    - textPtr->borderWidth - padX;
     if (dInfoPtr->maxX <= dInfoPtr->x) {
 	dInfoPtr->maxX = dInfoPtr->x + 1;
     }
@@ -5254,7 +5264,7 @@ TkTextRelayoutWindow(
      */
 
     dInfoPtr->maxY = Tk_Height(textPtr->tkwin) - textPtr->highlightWidth
-	    - textPtr->borderWidth - textPtr->padY;
+	    - textPtr->borderWidth - padY;
     if (dInfoPtr->maxY <= dInfoPtr->y) {
 	dInfoPtr->maxY = dInfoPtr->y + 1;
     }
