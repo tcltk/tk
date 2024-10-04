@@ -106,9 +106,6 @@ typedef struct Pane {
 				/* Paned window managing the window. */
     Tk_Window after;		/* Placeholder for parsing options. */
     Tk_Window before;		/* Placeholder for parsing options. */
-#ifdef BUILD_tk
-    int minSize;
-#endif
 } Pane;
 
 /*
@@ -344,7 +341,7 @@ static const Tk_OptionSpec paneOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-hide", "hide", "Hide",
 	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), 0,0,GEOMETRY},
     {TK_OPTION_PIXELS, "-minsize", NULL, NULL,
-	DEF_PANEDWINDOW_PANE_MINSIZE, offsetof(Pane, minSizeObj), offsetof(Pane, minSize), 0, 0, 0},
+	DEF_PANEDWINDOW_PANE_MINSIZE, offsetof(Pane, minSizeObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	DEF_PANEDWINDOW_PANE_PADX, offsetof(Pane, padXObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
@@ -921,11 +918,15 @@ ConfigurePanes(
 	found = 0;
 	for (j = 0; j < pwPtr->numPanes; j++) {
 	    if (pwPtr->panes[j] != NULL && pwPtr->panes[j]->tkwin == tkwin) {
+		int minSize;
 		Tk_SetOptions(interp, pwPtr->panes[j],
 			pwPtr->paneOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
-		if (pwPtr->panes[j]->minSize < 0) {
-		    pwPtr->panes[j]->minSize = 0;
+		Tk_GetPixelsFromObj(NULL, pwPtr->panes[j]->tkwin, pwPtr->panes[j]->minSizeObj, &minSize);
+		if (minSize < 0) {
+		    Tcl_DecrRefCount(pwPtr->panes[j]->minSizeObj);
+		    pwPtr->panes[j]->minSizeObj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(pwPtr->panes[j]->minSizeObj);
 		}
 		found = 1;
 
@@ -986,8 +987,12 @@ ConfigurePanes(
 	} else {
 	    panePtr->paneHeight = Tk_ReqHeight(tkwin) + doubleBw;
 	}
-	if (panePtr->minSize < 0) {
-	    panePtr->minSize = 0;
+	int minSize;
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
+	if (minSize < 0) {
+	    Tcl_DecrRefCount(panePtr->minSizeObj);
+	    panePtr->minSizeObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(panePtr->minSizeObj);
 	}
 
 	/*
@@ -1787,7 +1792,7 @@ ArrangePanes(
     }
 
     for (i = sashCount = 0; i < pwPtr->numPanes; i++) {
-	int padX, padY;
+	int minSize, padX, padY;
 
 	panePtr = pwPtr->panes[i];
 
@@ -1817,10 +1822,11 @@ ArrangePanes(
 	    }
 	    stretchReserve -= paneSize + 2 * padY;
 	}
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
 	if (IsStretchable(panePtr->stretch, i, first, last)
 		&& Tk_IsMapped(pwPtr->tkwin)) {
 	    paneDynSize += paneSize;
-	    paneDynMinSize += panePtr->minSize;
+	    paneDynMinSize += minSize;
 	}
 	if (i != last) {
 	    stretchReserve -= sashWidth;
@@ -1833,7 +1839,7 @@ ArrangePanes(
      */
 
     for (i = 0; i < pwPtr->numPanes; i++) {
-	int handlePad, padX, padY;
+	int handlePad, minSize, padX, padY;
 
 	panePtr = pwPtr->panes[i];
 
@@ -1859,7 +1865,8 @@ ArrangePanes(
 		Tk_ReqWidth(panePtr->tkwin) + doubleBw);
 	newPaneHeight = (panePtr->height > 0 ? panePtr->height :
 		Tk_ReqHeight(panePtr->tkwin) + doubleBw);
-	paneMinSize = panePtr->minSize;
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
+	paneMinSize = minSize;
 
 	/*
 	 * Calculate pane width and height.
@@ -1890,7 +1897,7 @@ ArrangePanes(
 	    }
 
 	    paneDynSize -= paneSize;
-	    paneDynMinSize -= panePtr->minSize;
+	    paneDynMinSize -= minSize;
 	    stretchAmount = (int) (frac * stretchReserve);
 	    if (paneSize + stretchAmount >= paneMinSize) {
 		stretchReserve -= stretchAmount;
@@ -2244,7 +2251,7 @@ ComputeGeometry(
     }
 
     for (i = 0; i < pwPtr->numPanes; i++) {
-	int handlePad, padX, padY;
+	int handlePad, minSize, padX, padY;
 
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
@@ -2265,13 +2272,14 @@ ComputeGeometry(
 	 * is by moving a sash, and that code checks the minsize.
 	 */
 
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
 	if (horizontal) {
-	    if (panePtr->paneWidth < panePtr->minSize) {
-		panePtr->paneWidth = panePtr->minSize;
+	    if (panePtr->paneWidth < minSize) {
+		panePtr->paneWidth = minSize;
 	    }
 	} else {
-	    if (panePtr->paneHeight < panePtr->minSize) {
-		panePtr->paneHeight = panePtr->minSize;
+	    if (panePtr->paneHeight < minSize) {
+		panePtr->paneHeight = minSize;
 	    }
 	}
 
@@ -2708,14 +2716,16 @@ MoveSash(
      */
 
     for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	int minSize;
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
 	    continue;
 	}
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
 	if (horizontal) {
-	    stretchReserve += panePtr->width - panePtr->minSize;
+	    stretchReserve += panePtr->width - minSize;
 	} else {
-	    stretchReserve += panePtr->height - panePtr->minSize;
+	    stretchReserve += panePtr->height - minSize;
 	}
     }
     if (stretchReserve <= 0) {
@@ -2741,6 +2751,7 @@ MoveSash(
      */
 
     for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	int minSize;
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
 	    continue;
@@ -2750,9 +2761,10 @@ MoveSash(
 	} else {
 	    paneSize = panePtr->height;
 	}
-	if (diff > (paneSize - panePtr->minSize)) {
-	    diff -= paneSize - panePtr->minSize;
-	    paneSize = panePtr->minSize;
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
+	if (diff > (paneSize - minSize)) {
+	    diff -= paneSize - minSize;
+	    paneSize = minSize;
 	} else {
 	    paneSize -= diff;
 	    i = reduceLast - reduceIncr;
