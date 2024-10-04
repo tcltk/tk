@@ -531,14 +531,18 @@ EmbImageLayoutProc(
 				 * set by the caller. */
 {
     int width, height;
-    int padX, padY;
+    int padX = 0, padY = 0;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
     }
 
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
     /*
      * See if there's room for this image on this line.
      */
@@ -715,7 +719,7 @@ EmbImageBboxProc(
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     Tk_Image image;
-    int padX, padY;
+    int padX = 0, padY = 0;
 
     image = eiPtr->body.ei.image;
     if (image != NULL) {
@@ -725,8 +729,12 @@ EmbImageBboxProc(
 	*heightPtr = 0;
     }
 
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
     *xPtr = chunkPtr->x + padX;
 
     switch (eiPtr->body.ei.align) {

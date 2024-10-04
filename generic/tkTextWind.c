@@ -833,7 +833,7 @@ EmbWinLayoutProc(
 {
     int width, height;
     TkTextEmbWindowClient *client;
-    int padX, padY;
+    int padX = 0, padY = 0;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbWinLayoutProc");
@@ -980,8 +980,6 @@ EmbWinLayoutProc(
 	Tcl_SetHashValue(hPtr, ewPtr);
     }
 
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
     /*
      * See if there's room for this window on this line.
      */
@@ -991,6 +989,12 @@ EmbWinLayoutProc(
 	width = 0;
 	height = 0;
     } else {
+	if (ewPtr->body.ew.padXObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+	}
+	if (ewPtr->body.ew.padYObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+	}
 	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2 * padX;
 	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2 * padY;
     }
@@ -1241,7 +1245,7 @@ EmbWinBboxProc(
     Tk_Window tkwin;
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
-    int padX, padY;
+    int padX = 0, padY = 0;
 
     if (client == NULL) {
 	tkwin = NULL;
@@ -1255,8 +1259,12 @@ EmbWinBboxProc(
 	*widthPtr = 0;
 	*heightPtr = 0;
     }
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+    if (ewPtr->body.ew.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+    }
+    if (ewPtr->body.ew.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+    }
     *xPtr = chunkPtr->x + padX;
     if (ewPtr->body.ew.stretch) {
 	if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
