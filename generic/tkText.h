@@ -831,13 +831,6 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
-#ifdef BUILD_tk
-    int highlightWidth;
-    int borderWidth;
-    int height;
-    int insertBorderWidth;
-    int insertWidth;
-#endif
 } TkText;
 
 /*

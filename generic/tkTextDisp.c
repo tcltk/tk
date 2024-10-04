@@ -4174,6 +4174,7 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
     int padX, padY;
+    int borderWidth, highlightWidth;
 
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -4387,13 +4388,15 @@ DisplayText(
 	    goto end;
 	}
 
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
 	Tk_Draw3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		textPtr->border, textPtr->highlightWidth,
-		textPtr->highlightWidth,
-		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
-		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
-		textPtr->borderWidth, textPtr->relief);
-	if (textPtr->highlightWidth > 0) {
+		textPtr->border, highlightWidth,
+		highlightWidth,
+		Tk_Width(textPtr->tkwin) - 2 * highlightWidth,
+		Tk_Height(textPtr->tkwin) - 2 * highlightWidth,
+		borderWidth, textPtr->relief);
+	if (highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr,
@@ -4402,13 +4405,13 @@ DisplayText(
 		fgGC = Tk_GCForColor(textPtr->highlightColorPtr,
 			Tk_WindowId(textPtr->tkwin));
 		Tk_DrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
-			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
+			highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    } else {
 		Tk_DrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
-			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
+			highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
 	}
-	borders = textPtr->borderWidth + textPtr->highlightWidth;
+	borders = borderWidth + highlightWidth;
 	if (padY > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders,
@@ -4759,6 +4762,7 @@ TextInvalidateRegion(
     int maxY, inset;
     XRectangle rect;
     int padX, padY;
+    int borderWidth, highlightWidth;
 
     /*
      * Find all lines that overlap the given region and mark them for
@@ -4781,7 +4785,9 @@ TextInvalidateRegion(
 
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
-    inset = textPtr->borderWidth + textPtr->highlightWidth;
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    inset = borderWidth + highlightWidth;
     if ((rect.x < (inset + padX))
 	    || (rect.y < (inset + padY))
 	    || ((int) (rect.x + rect.width) > (Tk_Width(textPtr->tkwin)
@@ -5202,6 +5208,7 @@ TkTextRelayoutWindow(
     XGCValues gcValues;
     Bool inSync = 1;
     int padX, padY;
+    int borderWidth, highlightWidth;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5241,20 +5248,18 @@ TkTextRelayoutWindow(
 
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
-    if (textPtr->highlightWidthObj) {
-	if (textPtr->highlightWidth < 0) {
-	    textPtr->highlightWidth = 0;
-	    Tcl_DecrRefCount(textPtr->highlightWidthObj);
-	    textPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(textPtr->highlightWidthObj);
-	}
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth < 0) {
+	highlightWidth = 0;
+	Tcl_DecrRefCount(textPtr->highlightWidthObj);
+	textPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->highlightWidthObj);
     }
-    dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
-	    + padX;
-    dInfoPtr->y = textPtr->highlightWidth + textPtr->borderWidth
-	    + padY;
-    dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - textPtr->highlightWidth
-	    - textPtr->borderWidth - padX;
+    dInfoPtr->x = highlightWidth + borderWidth + padX;
+    dInfoPtr->y = highlightWidth + borderWidth + padY;
+    dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - highlightWidth
+	    - borderWidth - padX;
     if (dInfoPtr->maxX <= dInfoPtr->x) {
 	dInfoPtr->maxX = dInfoPtr->x + 1;
     }
@@ -5263,8 +5268,8 @@ TkTextRelayoutWindow(
      * This is the only place where dInfoPtr->maxY is set.
      */
 
-    dInfoPtr->maxY = Tk_Height(textPtr->tkwin) - textPtr->highlightWidth
-	    - textPtr->borderWidth - padY;
+    dInfoPtr->maxY = Tk_Height(textPtr->tkwin) - highlightWidth
+	    - borderWidth - padY;
     if (dInfoPtr->maxY <= dInfoPtr->y) {
 	dInfoPtr->maxY = dInfoPtr->y + 1;
     }
