@@ -127,7 +127,7 @@ typedef struct PanedWindow {
 				 * specifications. */
     Tk_OptionTable paneOpts;	/* Token for pane cget table. */
     Tk_3DBorder background;	/* Background color. */
-    int borderWidth;		/* Value of -borderwidth option. */
+    Tcl_Obj *borderWidthObj;	/* Value of -borderwidth option. */
     int relief;			/* 3D border effect (TK_RELIEF_RAISED, etc) */
     Tcl_Obj *widthObj;		/* Tcl_Obj rep for width. */
     Tcl_Obj *heightObj;		/* Tcl_Obj rep for height. */
@@ -138,9 +138,9 @@ typedef struct PanedWindow {
 				 * opaque or rubberband style. */
     int sashRelief;		/* Relief used to draw sash. */
     int sashWidth;		/* Width of each sash, in pixels. */
-    Tcl_Obj *sashWidthPtr;	/* Tcl_Obj rep for sash width. */
+    Tcl_Obj *sashWidthObj;	/* Tcl_Obj rep for sash width. */
     int sashPad;		/* Additional padding around each sash. */
-    Tcl_Obj *sashPadPtr;	/* Tcl_Obj rep for sash padding. */
+    Tcl_Obj *sashPadObj;	/* Tcl_Obj rep for sash padding. */
     int showHandle;		/* Boolean indicating whether sash handles
 				 * should be drawn. */
     int handleSize;		/* Size of one side of a sash handle (handles
@@ -152,15 +152,14 @@ typedef struct PanedWindow {
 				 * off-screen pixmap onto screen. */
     int proxyx, proxyy;		/* Proxy x,y coordinates. */
     Tk_3DBorder proxyBackground;/* Background color used to draw proxy. If NULL, use background. */
-    Tcl_Obj *proxyBorderWidthPtr; /* Tcl_Obj rep for proxyBorderWidth */
+    Tcl_Obj *proxyBorderWidthObj; /* Tcl_Obj rep for proxyBorderWidth */
     int proxyBorderWidth;	/* Borderwidth used to draw proxy. */
     int proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
     Pane **panes;		/* Pointer to array of Panes. */
     int numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
     int flags;			/* Flags for widget; see below. */
-    Tcl_Obj *borderWidthObj;
-    Tcl_Obj *handlePadPtr;
+    Tcl_Obj *handlePadObj;
 } PanedWindow;
 
 /*
@@ -285,13 +284,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_PANEDWINDOW_BORDERWIDTH, offsetof(PanedWindow, borderWidthObj), offsetof(PanedWindow, borderWidth),
+	DEF_PANEDWINDOW_BORDERWIDTH, offsetof(PanedWindow, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_PANEDWINDOW_CURSOR, TCL_INDEX_NONE, offsetof(PanedWindow, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-handlepad", "handlePad", "HandlePad",
-	DEF_PANEDWINDOW_HANDLEPAD, offsetof(PanedWindow, handlePadPtr), offsetof(PanedWindow, handlePad),
+	DEF_PANEDWINDOW_HANDLEPAD, offsetof(PanedWindow, handlePadObj), offsetof(PanedWindow, handlePad),
 	0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-handlesize", "handleSize", "HandleSize",
 	DEF_PANEDWINDOW_HANDLESIZE, offsetof(PanedWindow, handleSizePtr),
@@ -309,7 +308,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, TCL_INDEX_NONE, offsetof(PanedWindow, proxyBackground), TK_OPTION_NULL_OK,
 	(void *)DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-proxyborderwidth", "proxyBorderWidth", "ProxyBorderWidth",
-	DEF_PANEDWINDOW_PROXYBORDER, offsetof(PanedWindow, proxyBorderWidthPtr),
+	DEF_PANEDWINDOW_PROXYBORDER, offsetof(PanedWindow, proxyBorderWidthObj),
 	offsetof(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
 	0, TCL_INDEX_NONE, offsetof(PanedWindow, proxyRelief),
@@ -320,13 +319,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_PANEDWINDOW_SASHCURSOR, TCL_INDEX_NONE, offsetof(PanedWindow, sashCursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-sashpad", "sashPad", "SashPad",
-	DEF_PANEDWINDOW_SASHPAD, offsetof(PanedWindow, sashPadPtr), offsetof(PanedWindow, sashPad),
+	DEF_PANEDWINDOW_SASHPAD, offsetof(PanedWindow, sashPadObj), offsetof(PanedWindow, sashPad),
 	0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-sashrelief", "sashRelief", "Relief",
 	DEF_PANEDWINDOW_SASHRELIEF, TCL_INDEX_NONE, offsetof(PanedWindow, sashRelief),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-sashwidth", "sashWidth", "Width",
-	DEF_PANEDWINDOW_SASHWIDTH, offsetof(PanedWindow, sashWidthPtr),
+	DEF_PANEDWINDOW_SASHWIDTH, offsetof(PanedWindow, sashWidthObj),
 	offsetof(PanedWindow, sashWidth), 0, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showhandle", "showHandle", "ShowHandle",
 	DEF_PANEDWINDOW_SHOWHANDLE, TCL_INDEX_NONE, offsetof(PanedWindow, showHandle),
@@ -1302,6 +1301,7 @@ PanedWindowWorldChanged(
     XGCValues gcValues;
     GC newGC;
     PanedWindow *pwPtr = (PanedWindow *)instanceData;
+    int borderWidth;
 
     /*
      * Allocated a graphics context for drawing the paned window widget
@@ -1320,7 +1320,8 @@ PanedWindowWorldChanged(
      * Issue geometry size requests to Tk.
      */
 
-    Tk_SetInternalBorder(pwPtr->tkwin, pwPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->borderWidthObj, &borderWidth);
+    Tk_SetInternalBorder(pwPtr->tkwin, borderWidth);
     if (pwPtr->width > 0 && pwPtr->height > 0) {
 	Tk_GeometryRequest(pwPtr->tkwin, pwPtr->width, pwPtr->height);
     }
@@ -1455,6 +1456,7 @@ DisplayPanedWindow(
     int i, sashWidth, sashHeight;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int first, last;
+    int borderWidth;
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1480,8 +1482,9 @@ DisplayPanedWindow(
      * Redraw the widget's background and border.
      */
 
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
-	    Tk_Width(tkwin), Tk_Height(tkwin), pwPtr->borderWidth,
+	    Tk_Width(tkwin), Tk_Height(tkwin), borderWidth,
 	    pwPtr->relief);
 
     /*
