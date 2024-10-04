@@ -385,7 +385,7 @@ TkTextTagCmd(
 	    }
 	    if (tagPtr->spacing2Obj) {
 		int spacing2;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &spacing2);
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing2Obj, &spacing2);
 		if (spacing2 < 0) {
 		    spacing2 = 0;
 		    Tcl_DecrRefCount(tagPtr->spacing2Obj);
@@ -395,7 +395,7 @@ TkTextTagCmd(
 	    }
 	    if (tagPtr->spacing3Obj) {
 		int spacing3;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &spacing3);
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing3Obj, &spacing3);
 		if (spacing3 < 0) {
 		    spacing3 = 0;
 		    Tcl_DecrRefCount(tagPtr->spacing3Obj);

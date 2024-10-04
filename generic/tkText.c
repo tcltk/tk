@@ -120,7 +120,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, TCL_INDEX_NONE,
 	offsetof(TkText, insertCursorType), 0, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_TEXT_BORDER_WIDTH, offsetof(TkText, borderWidthObj), offsetof(TkText, borderWidth),
+	DEF_TEXT_BORDER_WIDTH, offsetof(TkText, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_TEXT_CURSOR, TCL_INDEX_NONE, offsetof(TkText, cursor),
@@ -140,7 +140,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_FG, TCL_INDEX_NONE, offsetof(TkText, fgColor), 0,
 	0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_TEXT_HEIGHT, offsetof(TkText, heightObj), offsetof(TkText, height), 0, 0, 0},
+	DEF_TEXT_HEIGHT, offsetof(TkText, heightObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_TEXT_HIGHLIGHT_BG,
 	TCL_INDEX_NONE, offsetof(TkText, highlightBgColorPtr),
@@ -150,7 +150,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_TEXT_HIGHLIGHT_WIDTH, offsetof(TkText, highlightWidthObj),
-	offsetof(TkText, highlightWidth), 0, 0, TK_TEXT_LINE_GEOMETRY},
+	TCL_INDEX_NONE, 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground","inactiveSelectBackground",
 	"Foreground",
 	DEF_TEXT_INACTIVE_SELECT_BG_COLOR,
@@ -162,7 +162,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, offsetof(TkText, insertBorderWidthObj),
-	offsetof(TkText, insertBorderWidth), 0,
+	TCL_INDEX_NONE, 0,
 	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_TEXT_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(TkText, insertOffTime),
@@ -175,7 +175,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_INSERT_UNFOCUSSED, TCL_INDEX_NONE, offsetof(TkText, insertUnfocussed),
 	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), offsetof(TkText, insertWidth),
+	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndo),
@@ -2063,7 +2063,8 @@ ConfigureText(
     Tk_SavedOptions savedOptions;
     int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     int mask = 0;
-    int selBorderWidth, spacing1, spacing2, spacing3;
+    int selBorderWidth = INT_MIN, spacing1, spacing2, spacing3;
+    int insertBorderWidth, insertWidth;
 
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
 	    objc, objv, textPtr->tkwin, &savedOptions, &mask) != TCL_OK) {
@@ -2224,26 +2225,28 @@ ConfigureText(
 	textPtr->spacing3Obj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->spacing3Obj);
     }
-    if (textPtr->insertBorderWidth < 0) {
-	textPtr->insertBorderWidth = 0;
-	if (textPtr->insertBorderWidthObj) {
-	    Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
-	}
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    if (insertBorderWidth < 0) {
+	insertBorderWidth = 0;
+	Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
 	textPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->insertBorderWidthObj);
     }
-    if (textPtr->insertWidth < 0) {
-	textPtr->insertWidth = 0;
-	if (textPtr->insertWidthObj) {
-	    Tcl_DecrRefCount(textPtr->insertWidthObj);
-	}
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    if (insertWidth < 0) {
+	insertWidth = 0;
+	Tcl_DecrRefCount(textPtr->insertWidthObj);
 	textPtr->insertWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->insertWidthObj);
     }
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->selBorderWidthObj, &selBorderWidth);
+    if (textPtr->selBorderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->selBorderWidthObj, &selBorderWidth);
+    }
     if (selBorderWidth < 0) {
 	selBorderWidth = 0;
-	Tcl_DecrRefCount(textPtr->selBorderWidthObj);
+	if (textPtr->selBorderWidthObj) {
+	    Tcl_DecrRefCount(textPtr->selBorderWidthObj);
+	}
 	textPtr->selBorderWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->selBorderWidthObj);
     }
@@ -2366,9 +2369,6 @@ ConfigureText(
     if (textPtr->width <= 0) {
 	textPtr->width = 1;
     }
-    if (textPtr->height <= 0) {
-	textPtr->height = 1;
-    }
     Tk_FreeSavedOptions(&savedOptions);
     TextWorldChanged(textPtr, mask);
     return TCL_OK;
@@ -2430,10 +2430,11 @@ TextWorldChanged(
 				 * changed. */
 {
     Tk_FontMetrics fm;
-    int border;
+    int border, height;
     int oldCharHeight = textPtr->charHeight;
     int padX, padY;
     int spacing1, spacing3;
+    int borderWidth, highlightWidth;
 
     textPtr->charWidth = Tk_TextWidth(textPtr->tkfont, "0", 1);
     if (textPtr->charWidth <= 0) {
@@ -2452,16 +2453,22 @@ TextWorldChanged(
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &spacing1);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing3Obj, &spacing3);
-    border = textPtr->borderWidth + textPtr->highlightWidth;
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->heightObj, &height);
+    if (height < 1) {
+	height = 1;
+    }
+    border = borderWidth + highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
 	    textPtr->width * textPtr->charWidth + 2 * padX + 2 * border,
-	    textPtr->height * (fm.linespace + spacing1 + spacing3)
+	    height * (fm.linespace + spacing1 + spacing3)
 		    + 2 * padY + 2*border);
 
     Tk_SetInternalBorderEx(textPtr->tkwin,
 	    border + padX, border + padX, border + padY, border + padY);
     if (textPtr->setGrid) {
-	Tk_SetGrid(textPtr->tkwin, textPtr->width, textPtr->height,
+	Tk_SetGrid(textPtr->tkwin, textPtr->width, height,
 		textPtr->charWidth, textPtr->charHeight);
     } else {
 	Tk_UnsetGrid(textPtr->tkwin);
@@ -2496,6 +2503,7 @@ TextEventProc(
 {
     TkText *textPtr = (TkText *)clientData;
     TkTextIndex index, index2;
+    int highlightWidth;
 
     if (eventPtr->type == Expose) {
 	TkTextRedrawRegion(textPtr, eventPtr->xexpose.x,
@@ -2572,9 +2580,9 @@ TextEventProc(
 	     */
 
 	    TkTextChanged(NULL, textPtr, &index, &index2);
-	    if (textPtr->highlightWidth > 0) {
-		TkTextRedrawRegion(textPtr, 0, 0, textPtr->highlightWidth,
-			textPtr->highlightWidth);
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
+		TkTextRedrawRegion(textPtr, 0, 0, highlightWidth, highlightWidth);
 	    }
 	}
     }
@@ -3695,14 +3703,16 @@ TextBlinkProc(
   redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
     if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
+	int insertWidth;
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
 	if (textPtr->insertCursorType) {
 	    /* Block cursor */
 	    TkTextRedrawRegion(textPtr, x - textPtr->width / 2, y,
-		    charWidth + textPtr->insertWidth / 2, h);
+		    charWidth + insertWidth / 2, h);
 	} else {
 	    /* I-beam cursor */
-	    TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
-		    textPtr->insertWidth, h);
+	    TkTextRedrawRegion(textPtr, x - insertWidth / 2, y,
+		    insertWidth, h);
 	}
     }
 }
