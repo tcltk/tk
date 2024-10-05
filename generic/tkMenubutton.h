@@ -119,8 +119,8 @@ typedef struct {
 				 * pixel (positive means to right). */
     int rightBearing;		/* Amount text sticks right from its
 				 * origin. */
-    char *widthString;		/* Value of -width option. Malloc'ed. */
-    char *heightString;		/* Value of -height option. Malloc'ed. */
+    Tcl_Obj *widthObj;		/* Value of -width option. */
+    Tcl_Obj *heightObj;		/* Value of -height option. */
     int width, height;		/* If > 0, these specify dimensions to request
 				 * for window, in characters for text and in
 				 * pixels for bitmaps. In this case the actual
@@ -171,7 +171,7 @@ typedef struct {
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
 #ifdef BUILD_tk

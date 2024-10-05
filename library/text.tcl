@@ -536,14 +536,14 @@ proc ::tk::TextClosestGap {w x y} {
     set pos [$w index @$x,$y]
     set bbox [$w bbox $pos]
     if {($bbox eq "")
-            || ([$w compare $pos == "$pos display lineend"] == 1)} {
+	    || ([$w compare $pos == "$pos display lineend"] == 1)} {
 	return $pos
     }
     # The check on y coord of the line bbox with dlineinfo is to fix
     # [a9cf210a42] to properly handle selecting and moving the mouse
     # out of the widget.
     if {$y < [lindex [$w dlineinfo $pos] 1] ||
-            $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
+	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
 	return $pos
     }
     $w index "$pos + 1i"
@@ -965,8 +965,8 @@ proc ::tk::TextUpDownLine {w n} {
 	    "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
     set Priv(prevPos) $new
     if {[$w compare $new == "end display lineend"] \
-            || [$w compare $new == "insert display linestart"]} {
-        set Priv(textPosOrig) $new
+	    || [$w compare $new == "insert display linestart"]} {
+	set Priv(textPosOrig) $new
     }
     return $new
 }

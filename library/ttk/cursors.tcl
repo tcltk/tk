@@ -138,12 +138,12 @@ proc ttk::cursor {name} {
 proc ttk::setCursor {w name} {
     variable Cursors
     if {[info exists Cursors($name)]} {
-        set cursorname $Cursors($name)
+	set cursorname $Cursors($name)
     }  else {
-        set cursorname $name
+	set cursorname $name
     }
     if {[$w cget -cursor] ne $cursorname} {
-        $w configure -cursor $cursorname
+	$w configure -cursor $cursorname
     }
 }
 
@@ -157,10 +157,10 @@ proc ttk::setCursor {w name} {
 proc ttk::saveCursor {w saveVar excludeList} {
     upvar $saveVar sv
     if {![info exists sv]} {
-        set sv [$w cget -cursor]
+	set sv [$w cget -cursor]
     }
     if {[$w cget -cursor] ni $excludeList} {
-        set sv [$w cget -cursor]
+	set sv [$w cget -cursor]
     }
 }
 
