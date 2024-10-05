@@ -93,7 +93,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-3.$i {moving window while iconified} unix {
-        update
+	update
 	wm iconify .t
 	update idletasks
 	wm geom .t $geom
@@ -1012,7 +1012,7 @@ wm geom .t +0+0
 update
 
 test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize should update WM_NORMAL_HINTS} {testwrapper} {
+	maxsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm maxsize .t 300 300
@@ -1022,8 +1022,8 @@ test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize to a value smaller than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
+	maxsize to a value smaller than the current size should
+	set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1034,9 +1034,9 @@ test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize to a value smaller than the current size should
-        set the maxsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {testwrapper} {
+	maxsize to a value smaller than the current size should
+	set the maxsize in WM_NORMAL_HINTS even if the
+	interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1048,7 +1048,7 @@ test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize should update WM_NORMAL_HINTS} {testwrapper} {
+	minsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm minsize .t 300 300
@@ -1058,8 +1058,8 @@ test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
 } {300 300}
 
 test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize to a value larger than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
+	minsize to a value larger than the current size should
+	set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200
@@ -1070,9 +1070,9 @@ test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
 } {300 300}
 
 test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize to a value larger than the current size should
-        set the minsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {testwrapper} {
+	minsize to a value larger than the current size should
+	set the minsize in WM_NORMAL_HINTS even if the
+	interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200
@@ -1861,11 +1861,11 @@ test unixWm-50.3 {
     child alias frameid winfo id .t.f
     child eval {
 	wm withdraw .
-        toplevel .x -width 100 -height 80 -use [frameid] -bg yellow
-        tkwait visibility .x
-        update
-        set x [winfo rootx .x]
-        set y [winfo rooty .x]
+	toplevel .x -width 100 -height 80 -use [frameid] -bg yellow
+	tkwait visibility .x
+	update
+	set x [winfo rootx .x]
+	set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
 	[child eval {winfo containing $x [expr $y + 50]}]]

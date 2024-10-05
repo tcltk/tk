@@ -246,7 +246,6 @@ TkpComputeMenuButtonGeometry(
     int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
-    int highlightWidth = butPtr->highlightWidth > 0 ? butPtr->highlightWidth : 0;
 
     /*
      * First compute the size of the contents of the button.
@@ -336,15 +335,15 @@ TkpComputeMenuButtonGeometry(
 	    width = txtWidth;
 	    height = txtHeight;
 	    if (butPtr->width > 0) {
-		width = butPtr->width * avgWidth + 2*butPtr->padX;
+		width = butPtr->width * avgWidth + 2 * butPtr->padX;
 	    }
 	    if (butPtr->height > 0) {
-		height = butPtr->height * fm.linespace + 2*butPtr->padY;
+		height = butPtr->height * fm.linespace + 2 * butPtr->padY;
 	    }
 	}
     }
 
-    butPtr->inset = highlightWidth + butPtr->borderWidth;
+    butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
     width += LEFT_INSET + RIGHT_INSET + 2*butPtr->inset;
     height += 2*butPtr->inset;
     height = height < MIN_HEIGHT ? MIN_HEIGHT : height;

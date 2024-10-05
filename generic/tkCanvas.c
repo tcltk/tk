@@ -691,6 +691,7 @@ Tk_CanvasObjCmd(
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
+    canvasPtr->textInfo.reserved3 = NULL;
     canvasPtr->textInfo.selFgColorPtr = NULL;
     canvasPtr->textInfo.selItemPtr = NULL;
     canvasPtr->textInfo.selectFirst = TCL_INDEX_NONE;
@@ -699,7 +700,9 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.selectAnchor = 0;
     canvasPtr->textInfo.insertBorder = NULL;
     canvasPtr->textInfo.insertWidth = 0;
+    canvasPtr->textInfo.reserved2 = NULL;
     canvasPtr->textInfo.insertBorderWidth = 0;
+    canvasPtr->textInfo.reserved1 = NULL;
     canvasPtr->textInfo.focusItemPtr = NULL;
     canvasPtr->textInfo.gotFocus = 0;
     canvasPtr->textInfo.cursorOn = 0;
@@ -2324,6 +2327,15 @@ ConfigureCanvas(
 	Tcl_IncrRefCount(canvasPtr->yScrollIncrementObj);
     }
     canvasPtr->inset = borderWidth + highlightWidth;
+    if (canvasPtr->textInfo.insertBorderWidth < 0) {
+	canvasPtr->textInfo.insertBorderWidth = 0;
+    }
+    if (canvasPtr->textInfo.insertWidth < 0) {
+	canvasPtr->textInfo.insertWidth = 0;
+    }
+    if (canvasPtr->textInfo.selBorderWidth < 0) {
+	canvasPtr->textInfo.selBorderWidth = 0;
+    }
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;

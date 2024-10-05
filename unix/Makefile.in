@@ -1836,7 +1836,7 @@ alldist: dist
 # This target creates the HTML folder for Tcl & Tk and places it
 # in DISTDIR/html.  It uses the tcltk-man2html.tcl tool from
 # the Tcl group's tool workspace.  It depends on the Tcl & Tk being
-# in directories called tcl8.3 & tk8.3 up two directories from the
+# in directories called tcl9.0 & tk9.0 up two directories from the
 # TOOL_DIR.
 #
 

@@ -876,13 +876,13 @@ test textIndex-19.14 {Display lines + lines with Unicode text} failsOnXQuarz {
     set xat1.4 [expr {[.t count -xpixels 1.0 1.4] + 1}]
     set xat3.4 [expr {[.t count -xpixels 3.0 3.4] + 1}]
     set expected [list \
-            2.4 3.4 \
-            [.t index @${xat1.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat1.4},[expr {int($fontlinespace *2.5)}]] \
-            2.4 1.4 \
-            [.t index @${xat3.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat3.4},[expr {int($fontlinespace *0.5)}]] ]
+	    2.4 3.4 \
+	    [.t index @${xat1.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat1.4},[expr {int($fontlinespace *2.5)}]] \
+	    2.4 1.4 \
+	    [.t index @${xat3.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat3.4},[expr {int($fontlinespace *0.5)}]] ]
     set checkedOK 1
     for {set i 0} {$i < 8} {incr i} {
-        if {[.t compare [lindex $res $i] != [lindex $expected $i]]} {
+	if {[.t compare [lindex $res $i] != [lindex $expected $i]]} {
 	    set checkedOK [list result: $res - expected: $expected]
 	    break
 	}

@@ -405,7 +405,7 @@ test textTag-2.12 {TkTextTagCmd - "add" option} -body {
 test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     text .tt
     for {set i 1} {$i <10} {incr i} {
-        .tt insert end "Line $i\n"
+	.tt insert end "Line $i\n"
     }
     .tt tag configure mytag -offset 2
     .tt peer create .ptt
@@ -586,16 +586,16 @@ test textTag-5.12 {TkTextTagCmd - "configure" option} -body {
 test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5 \
-        -lmargincolor darkblue -rmargincolor lightgreen
+	-lmargincolor darkblue -rmargincolor lightgreen
     list [.t tag configure x -lmargin1] [.t tag configure x -lmargin2] \
-        [.t tag configure x -rmargin] [.t tag configure x -lmargincolor] \
-        [.t tag configure x -rmargincolor]
+	[.t tag configure x -rmargin] [.t tag configure x -lmargincolor] \
+	[.t tag configure x -rmargincolor]
 } -cleanup {
     .t tag delete x
 } -result [list {-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} \
-                {-rmargin {} {} {} 5} \
-                {-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
-          ]
+		{-rmargin {} {} {} 5} \
+		{-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
+	  ]
 test textTag-5.14 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2.0x
@@ -631,7 +631,7 @@ test textTag-5.17 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 2 -spacing2 4 -spacing3 6
     list [.t tag configure x -spacing1] [.t tag configure x -spacing2] \
-        [.t tag configure x -spacing3]
+	[.t tag configure x -spacing3]
 } -cleanup {
     .t tag delete x
 } -result {{-spacing1 {} {} {} 2} {-spacing2 {} {} {} 4} {-spacing3 {} {} {} 6}}
@@ -655,11 +655,11 @@ test textTag-5.20 {TkTextTagCmd - "configure" option} -body {
 } -returnCodes error -result {expected screen distance or "" but got "4.2.3"}
 test textTag-5.21 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectborderwidth 2 -selectforeground blue \
-        -selectbackground black
+	-selectbackground black
     .t tag configure sel -borderwidth 4 -foreground green -background yellow
     set x {}
     foreach i {-selectborderwidth -selectforeground -selectbackground} {
-        lappend x [lindex [.t configure $i] 4]
+	lappend x [lindex [.t configure $i] 4]
     }
     return $x
 } -result {4 green yellow}
@@ -772,7 +772,7 @@ test textTag-7.4 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower c
@@ -784,7 +784,7 @@ test textTag-7.5 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower d b
@@ -796,7 +796,7 @@ test textTag-7.6 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower a c
@@ -815,7 +815,7 @@ test textTag-8.2 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag names
@@ -826,7 +826,7 @@ test textTag-8.3 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag add "a b" 2.1 2.6
@@ -1094,7 +1094,7 @@ test textTag-11.4 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise c
@@ -1106,7 +1106,7 @@ test textTag-11.5 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise d b
@@ -1118,7 +1118,7 @@ test textTag-11.6 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise a c
@@ -1187,7 +1187,7 @@ test textTag-13.4 {TkTextTagCmd - "remove" option} -setup {
     text .tt
 } -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .tt insert end "Line $n\n"
+	.tt insert end "Line $n\n"
     }
     .tt tag configure Elided -elide 1
     .tt tag add Elided 6.0 end
@@ -1201,7 +1201,7 @@ test textTag-14.1 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
-        .t tag add $i 2.0 2.2
+	.t tag add $i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1212,10 +1212,10 @@ test textTag-14.2 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
     foreach i {d c b a} {
-        .t tag add $i 2.0 2.2
+	.t tag add $i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1225,7 +1225,7 @@ test textTag-14.3 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
-        .t tag add x$i 2.0 2.2
+	.t tag add x$i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1235,10 +1235,10 @@ test textTag-14.4 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
-        .t tag configure x$i -background black
+	.t tag configure x$i -background black
     }
     for {set i 29} {$i >= 0} {incr i -1} {
-        .t tag add x$i 2.0 2.2
+	.t tag add x$i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1409,15 +1409,15 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
 
 test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
-        .t tag bind $i <Enter> "lappend x enter-$i"
-        .t tag bind $i <Leave> "lappend x leave-$i"
+	.t tag bind $i <Enter> "lappend x enter-$i"
+	.t tag bind $i <Leave> "lappend x leave-$i"
     }
     .t tag lower b
     .t tag lower a
@@ -1438,15 +1438,15 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
 
 test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
-        .t tag bind $i <Enter> "lappend x enter-$i"
-        .t tag bind $i <Leave> "lappend x leave-$i"
+	.t tag bind $i <Enter> "lappend x enter-$i"
+	.t tag bind $i <Leave> "lappend x leave-$i"
     }
     .t tag lower b
     .t tag lower a
@@ -1466,7 +1466,7 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
 
 test textTag-16.5 {TkTextPickCurrent procedure} -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1486,7 +1486,7 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
     haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1507,7 +1507,7 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
     haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5

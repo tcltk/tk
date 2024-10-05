@@ -81,8 +81,8 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_MENUBUTTON_FG, TCL_INDEX_NONE, offsetof(TkMenuButton, normalFg), 0, 0, 0},
     {TK_OPTION_STRING, "-height", "height", "Height",
-	DEF_MENUBUTTON_HEIGHT, TCL_INDEX_NONE, offsetof(TkMenuButton, heightString),
-	0, 0, 0},
+	DEF_MENUBUTTON_HEIGHT, offsetof(TkMenuButton, heightObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, highlightBgColorPtr), 0, 0, 0},
@@ -129,11 +129,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
 	TK_OPTION_UNDERLINE_DEF(TkMenuButton, underline), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
-	DEF_MENUBUTTON_WIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, widthString),
-	0, 0, 0},
+	DEF_MENUBUTTON_WIDTH, offsetof(TkMenuButton, widthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthObj), offsetof(TkMenuButton, wrapLength),
-	0, 0, 0},
+	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthObj),
+	offsetof(TkMenuButton, wrapLength), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -190,7 +190,7 @@ static void		DestroyMenuButton(void *memPtr);
 
 int
 Tk_MenubuttonObjCmd(
-    void *dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -198,7 +198,6 @@ Tk_MenubuttonObjCmd(
     TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -265,10 +264,10 @@ Tk_MenubuttonObjCmd(
     mbPtr->stippleGC = NULL;
     mbPtr->leftBearing = 0;
     mbPtr->rightBearing = 0;
-    mbPtr->widthString = NULL;
-    mbPtr->heightString = NULL;
+    mbPtr->widthObj = NULL;
+    mbPtr->heightObj = NULL;
     mbPtr->width = 0;
-    mbPtr->width = 0;
+    mbPtr->height = 0;
     mbPtr->wrapLength = 0;
     mbPtr->padX = 0;
     mbPtr->padY = 0;
@@ -536,6 +535,9 @@ ConfigureMenuButton(
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
 	}
 
+	if (mbPtr->borderWidth < 0) {
+	    mbPtr->borderWidth = 0;
+	}
 	if (mbPtr->highlightWidth < 0) {
 	    mbPtr->highlightWidth = 0;
 		if (mbPtr->highlightWidthObj) {
@@ -544,7 +546,6 @@ ConfigureMenuButton(
 		mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
 		Tcl_IncrRefCount(mbPtr->highlightWidthObj);
 	}
-
 	if (mbPtr->padX < 0) {
 	    mbPtr->padX = 0;
 		if (mbPtr->padXObj) {
@@ -587,24 +588,24 @@ ConfigureMenuButton(
 	 */
 
 	if ((mbPtr->bitmap != None) || (mbPtr->image != NULL)) {
-	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->widthString,
+	    if (Tk_GetPixelsFromObj(interp, mbPtr->tkwin, mbPtr->widthObj,
 		    &mbPtr->width) != TCL_OK) {
 	    widthError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
-	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->heightString,
+	    if (Tk_GetPixelsFromObj(interp, mbPtr->tkwin, mbPtr->heightObj,
 		    &mbPtr->height) != TCL_OK) {
 	    heightError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
 	    }
 	} else {
-	    if (Tcl_GetInt(interp, mbPtr->widthString, &mbPtr->width)
+	    if (Tcl_GetIntFromObj(interp, mbPtr->widthObj, &mbPtr->width)
 		    != TCL_OK) {
 		goto widthError;
 	    }
-	    if (Tcl_GetInt(interp, mbPtr->heightString, &mbPtr->height)
+	    if (Tcl_GetIntFromObj(interp, mbPtr->heightObj, &mbPtr->height)
 		    != TCL_OK) {
 		goto heightError;
 	    }
@@ -954,19 +955,14 @@ MenuButtonTextVarProc(
 static void
 MenuButtonImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (may be <=
-				 * 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int), /* x, 		Upper left pixel (within image) that must */
+    TCL_UNUSED(int), /* y,		be redisplayed. */
+    TCL_UNUSED(int), /* width,	Dimensions of area to redisplay (may be <= */
+    TCL_UNUSED(int), /* height,	0). */
+    TCL_UNUSED(int), /* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int)) /* imgHeight) */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
     if (mbPtr->tkwin != NULL) {
 	TkpComputeMenuButtonGeometry(mbPtr);
