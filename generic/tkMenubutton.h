@@ -174,13 +174,6 @@ typedef struct {
 				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-#ifdef BUILD_tk
-    int borderWidth;
-    int highlightWidth;
-    int padX;
-    int padY;
-    int wrapLength;
-#endif
 } TkMenuButton;
 
 /*
