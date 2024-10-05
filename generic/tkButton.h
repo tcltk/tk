@@ -245,12 +245,6 @@ typedef struct {
 				 * invocataions of the button command. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-#ifdef BUILD_tk
-    int padX, padY;
-    int borderWidth;
-    int highlightWidth;
-    int width, height, wrapLength;
-#endif
 } TkButton;
 
 /*
