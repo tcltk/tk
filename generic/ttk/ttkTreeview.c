@@ -4647,12 +4647,12 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    Ttk_Padding margins;
     int size = 0;
+    Ttk_Padding margins;
 
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    if (size % 2 == 0) --size;	/* An odd size is better for the arrow. */
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
@@ -4670,14 +4670,33 @@ static void TreeitemIndicatorDraw(
     ArrowDirection direction =
 	(state & TTK_STATE_OPEN) ? ARROW_DOWN : ARROW_RIGHT;
     Ttk_Padding margins;
+    int cx, cy;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues; GC gc; unsigned mask;
 
     if (state & TTK_STATE_LEAF) /* don't draw anything */
 	return;
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     b = Ttk_PadBox(b, margins);
+
+    switch (direction) {
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_RIGHT:
+	default:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
     gcvalues.foreground = borderColor->pixel;
     gcvalues.line_width = 1;
