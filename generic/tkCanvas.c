@@ -2311,24 +2311,6 @@ ConfigureCanvas(
 	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
     }
-    if (canvasPtr->textInfo.insertBorderWidth < 0) {
-	canvasPtr->textInfo.insertBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-	canvasPtr->textInfo.reserved1 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-    }
-    if (canvasPtr->textInfo.insertWidth < 0) {
-	canvasPtr->textInfo.insertWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-	canvasPtr->textInfo.reserved2 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-    }
-    if (canvasPtr->textInfo.selBorderWidth < 0) {
-	canvasPtr->textInfo.selBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-	canvasPtr->textInfo.reserved3 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-    }
     if (width < 0) {
 	width = 0;
 	Tcl_DecrRefCount(canvasPtr->widthObj);
@@ -2350,12 +2332,21 @@ ConfigureCanvas(
     canvasPtr->inset = borderWidth + highlightWidth;
     if (canvasPtr->textInfo.insertBorderWidth < 0) {
 	canvasPtr->textInfo.insertBorderWidth = 0;
+	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
+	canvasPtr->textInfo.reserved1 = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
     }
     if (canvasPtr->textInfo.insertWidth < 0) {
 	canvasPtr->textInfo.insertWidth = 0;
+	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
+	canvasPtr->textInfo.reserved2 = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
     }
     if (canvasPtr->textInfo.selBorderWidth < 0) {
 	canvasPtr->textInfo.selBorderWidth = 0;
+	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
+	canvasPtr->textInfo.reserved3 = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
     }
 
     gcValues.function = GXcopy;
