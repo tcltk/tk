@@ -190,7 +190,7 @@ static void		DestroyMenuButton(void *memPtr);
 
 int
 Tk_MenubuttonObjCmd(
-    void *dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -198,7 +198,6 @@ Tk_MenubuttonObjCmd(
     TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -544,36 +543,27 @@ ConfigureMenuButton(
 	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
 	if (borderWidth < 0) {
 	    borderWidth = 0;
-		Tcl_DecrRefCount(mbPtr->borderWidthObj);
-		mbPtr->borderWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->borderWidthObj);
+	    Tcl_DecrRefCount(mbPtr->borderWidthObj);
+	    mbPtr->borderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->borderWidthObj);
 	}
 	if (highlightWidth < 0) {
 	    highlightWidth = 0;
-		Tcl_DecrRefCount(mbPtr->highlightWidthObj);
-		mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->highlightWidthObj);
+	    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
+	    mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->highlightWidthObj);
 	}
 	if (padX < 0) {
 	    padX = 0;
-		if (mbPtr->padXObj) {
-		    Tcl_DecrRefCount(mbPtr->padXObj);
-		}
-		mbPtr->padXObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->padXObj);
+	    Tcl_DecrRefCount(mbPtr->padXObj);
+	    mbPtr->padXObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->padXObj);
 	}
 	if (padY < 0) {
 	    padY = 0;
-		if (mbPtr->padYObj) {
-		    Tcl_DecrRefCount(mbPtr->padYObj);
-		}
-		mbPtr->padYObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->padYObj);
-		if (mbPtr->padYObj) {
-		    Tcl_DecrRefCount(mbPtr->padYObj);
-		}
-		mbPtr->padYObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->padYObj);
+		Tcl_DecrRefCount(mbPtr->padYObj);
+	    mbPtr->padYObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*
@@ -971,19 +961,14 @@ MenuButtonTextVarProc(
 static void
 MenuButtonImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (may be <=
-				 * 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (may be <= */
+    TCL_UNUSED(int),	/* height, 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
     if (mbPtr->tkwin != NULL) {
 	TkpComputeMenuButtonGeometry(mbPtr);
