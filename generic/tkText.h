@@ -218,7 +218,7 @@ typedef struct TkTextIndex {
 
 typedef struct TkTextDispChunk TkTextDispChunk;
 
-typedef void 		Tk_ChunkDisplayProc(struct TkText *textPtr,
+typedef void		Tk_ChunkDisplayProc(struct TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
@@ -374,21 +374,19 @@ typedef struct TkTextTag {
 #endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
 				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
-    Tcl_Obj *lMargin1Obj;	/* -lmargin1 option object. NULL
-				 * means option not specified. */
-    int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. INT_MIN means option not specified. */
-    Tcl_Obj *lMargin2Obj;	/* -lmargin2 option object. NULL
-				 * means option not specified. */
-    int lMargin2;		/* Left margin for second and later display lines
-				 * of each text line, in pixels. INT_MIN means option not specified. */
+    Tcl_Obj *lMargin1Obj;	/* Left margin for first display line of each
+				 * text line, in pixels. NULL means option not specified. */
+    int lMargin1;		/* No longer used, but kept for binary compatibility. */
+    Tcl_Obj *lMargin2Obj;	/* Left margin for second and later display lines
+				 * of each text line, in pixels NULL means option not specified. */
+    int lMargin2;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
 				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-    Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
-    int offset;			/* Vertical offset of text's baseline from
+    Tcl_Obj *offsetObj;		/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
-				 * subscripts. INT_MIN means option not specified. */
+				 * subscripts. NULL means option not specified. */
+    int offset;			/* No longer used, but kept for binary compatibility. */
 #if TK_MAJOR_VERSION < 9
     char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
 				 * means option not specified. */
@@ -397,9 +395,9 @@ typedef struct TkTextTag {
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
 				 * color as foreground. */
-    Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
+    Tcl_Obj *rMarginObj;	/* Right margin for text, in pixels. NULL
 				 * means option not specified. */
-    int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
+    int rMargin;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
@@ -711,7 +709,7 @@ typedef struct TkText {
 				 * for the same text line. */
     Tcl_Obj *spacing3Obj;	/* Default extra spacing below last display
 				 * line for each text line. */
-    Tcl_Obj *tabOptionPtr; 	/* Value of -tabs option string. */
+    Tcl_Obj *tabOptionPtr;	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing

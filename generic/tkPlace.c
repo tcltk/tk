@@ -53,12 +53,10 @@ typedef struct Content {
      * them is actually used, depending on flags.
      */
 
-    int x, y;			/* X and Y pixel coordinates for tkwin. */
     Tcl_Obj *xObj, *yObj;	/* Tcl_Obj rep's of x, y coords, to keep pixel
 				 * spec. information. */
     double relX, relY;		/* X and Y coordinates relative to size of
 				 * container. */
-    int width, height;		/* Absolute dimensions for tkwin. */
     Tcl_Obj *widthObj;		/* Tcl_Obj rep of width, to keep pixel
 				 * spec. */
     Tcl_Obj *heightObj;		/* Tcl_Obj rep of height, to keep pixel
@@ -84,7 +82,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
 	offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, NULL, offsetof(Content, heightObj),
-	offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),
 	0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, NULL,
@@ -98,11 +96,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	offsetof(Content, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, NULL, offsetof(Content, widthObj),
-	offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xObj),
-	offsetof(Content, x), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yObj),
-	offsetof(Content, y), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -394,8 +392,6 @@ CreateContent(
     contentPtr->inTkwin = NULL;
     contentPtr->anchor = TK_ANCHOR_NW;
     contentPtr->borderMode = BM_INSIDE;
-    contentPtr->width = INT_MIN;
-    contentPtr->height = INT_MIN;
     contentPtr->relWidth = NAN;
     contentPtr->relHeight = NAN;
     contentPtr->optionTable = table;
@@ -792,10 +788,10 @@ PlaceInfoCommand(
 	Tcl_AppendToObj(infoObj, " ", TCL_INDEX_NONE);
     }
     Tcl_AppendPrintfToObj(infoObj,
-	    "-x %d -relx %.4g -y %d -rely %.4g",
-	    contentPtr->x, contentPtr->relX, contentPtr->y, contentPtr->relY);
+	    "-x %s -relx %.4g -y %s -rely %.4g",
+	    contentPtr->xObj ? Tcl_GetString(contentPtr->xObj) : "{}", contentPtr->relX, contentPtr->yObj ? Tcl_GetString(contentPtr->yObj) : "{}", contentPtr->relY);
     if (contentPtr->widthObj) {
-	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
+	Tcl_AppendPrintfToObj(infoObj, " -width %s", Tcl_GetString(contentPtr->widthObj));
     } else {
 	Tcl_AppendToObj(infoObj, " -width {}", TCL_INDEX_NONE);
     }
@@ -806,7 +802,7 @@ PlaceInfoCommand(
 	Tcl_AppendToObj(infoObj, " -relwidth {}", TCL_INDEX_NONE);
     }
     if (contentPtr->heightObj) {
-	Tcl_AppendPrintfToObj(infoObj, " -height %d", contentPtr->height);
+	Tcl_AppendPrintfToObj(infoObj, " -height %s", Tcl_GetString(contentPtr->heightObj));
     } else {
 	Tcl_AppendToObj(infoObj, " -height {}", TCL_INDEX_NONE);
     }
@@ -847,7 +843,7 @@ RecomputePlacement(
 {
     Container *containerPtr = (Container *)clientData;
     Content *contentPtr;
-    int x, y, width, height, tmp;
+    int x = 0, y = 0, width, height, tmp;
     int containerWidth, containerHeight, containerX, containerY;
     double x1, y1, x2, y2;
     int abort;			/* May get set to non-zero to abort this
@@ -902,14 +898,20 @@ RecomputePlacement(
 	 * and location of anchor point within container.
 	 */
 
-	x1 = contentPtr->x + containerX + (contentPtr->relX*containerWidth);
+	if (contentPtr->xObj) {
+	    Tk_GetPixelsFromObj(NULL, containerPtr->tkwin, contentPtr->xObj, &x);
+	}
+	if (contentPtr->yObj) {
+	    Tk_GetPixelsFromObj(NULL, containerPtr->tkwin, contentPtr->yObj, &y);
+	}
+	x1 = x + containerX + (contentPtr->relX * containerWidth);
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
-	y1 = contentPtr->y + containerY + (contentPtr->relY*containerHeight);
+	y1 = y + containerY + (contentPtr->relY * containerHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
 	if ((contentPtr->widthObj) || contentPtr->relWidthObj) {
 	    width = 0;
 	    if (contentPtr->widthObj) {
-		width += contentPtr->width;
+		Tk_GetPixelsFromObj(NULL, containerPtr->tkwin, contentPtr->widthObj, &width);
 	    }
 	    if (contentPtr->relWidthObj) {
 		/*
@@ -920,7 +922,7 @@ RecomputePlacement(
 		 * errors in relX and relWidth accumulate.
 		 */
 
-		x2 = x1 + (contentPtr->relWidth*containerWidth);
+		x2 = x1 + (contentPtr->relWidth * containerWidth);
 		tmp = (int) (x2 + ((x2 > 0) ? 0.5 : -0.5));
 		width += tmp - x;
 	    }
@@ -931,14 +933,14 @@ RecomputePlacement(
 	if (contentPtr->heightObj || contentPtr->relHeightObj) {
 	    height = 0;
 	    if (contentPtr->heightObj) {
-		height += contentPtr->height;
+		Tk_GetPixelsFromObj(NULL, containerPtr->tkwin, contentPtr->heightObj, &height);
 	    }
 	    if (contentPtr->relHeightObj) {
 		/*
 		 * See note above for rounding errors in width computation.
 		 */
 
-		y2 = y1 + (contentPtr->relHeight*containerHeight);
+		y2 = y1 + (contentPtr->relHeight * containerHeight);
 		tmp = (int) (y2 + ((y2 > 0) ? 0.5 : -0.5));
 		height += tmp - y;
 	    }

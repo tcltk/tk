@@ -365,7 +365,7 @@ EmbImageConfigure(
     eiPtr->body.ei.image = image;
 
     if (eiPtr->body.ei.name != NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -376,7 +376,7 @@ EmbImageConfigure(
 
     name = eiPtr->body.ei.imageName;
     if (name == NULL) {
-    	name = eiPtr->body.ei.imageString;
+	name = eiPtr->body.ei.imageString;
     }
     if (name == NULL) {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
