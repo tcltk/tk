@@ -895,14 +895,14 @@ GetStyle(
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin1 != INT_MIN)
+	if ((tagPtr->lMargin1Obj != NULL)
 		&& (tagPtr->priority > lMargin1Prio)) {
-	    styleValues.lMargin1 = tagPtr->lMargin1;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin1Obj, &styleValues.lMargin1);
 	    lMargin1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin2 != INT_MIN)
+	if ((tagPtr->lMargin2Obj != NULL)
 		&& (tagPtr->priority > lMargin2Prio)) {
-	    styleValues.lMargin2 = tagPtr->lMargin2;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin2Obj, &styleValues.lMargin2);
 	    lMargin2Prio = tagPtr->priority;
 	}
 	if ((tagPtr->lMarginColor != NULL)
@@ -910,9 +910,9 @@ GetStyle(
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
 	    lMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->offset != INT_MIN)
+	if ((tagPtr->offsetObj != NULL)
 		&& (tagPtr->priority > offsetPrio)) {
-	    styleValues.offset = tagPtr->offset;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->offsetObj, &styleValues.offset);
 	    offsetPrio = tagPtr->priority;
 	}
 	if ((tagPtr->overstrike >= 0)
@@ -920,14 +920,14 @@ GetStyle(
 	    styleValues.overstrike = tagPtr->overstrike > 0;
 	    overstrikePrio = tagPtr->priority;
 	    if (tagPtr->overstrikeColor != NULL) {
-		 styleValues.overstrikeColor = tagPtr->overstrikeColor;
+		styleValues.overstrikeColor = tagPtr->overstrikeColor;
 	    } else if (fgColor != NULL) {
-		 styleValues.overstrikeColor = fgColor;
+		styleValues.overstrikeColor = fgColor;
 	    }
 	}
-	if ((tagPtr->rMargin != INT_MIN)
+	if ((tagPtr->rMarginObj != NULL)
 		&& (tagPtr->priority > rMarginPrio)) {
-	    styleValues.rMargin = tagPtr->rMargin;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->rMarginObj, &styleValues.rMargin);
 	    rMarginPrio = tagPtr->priority;
 	}
 	if ((tagPtr->rMarginColor != NULL)

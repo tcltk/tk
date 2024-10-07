@@ -36,13 +36,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_JUSTIFY, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, lMargin1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin2Obj), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, lMargin2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -52,7 +52,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_RELIEF, "-relief", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
-	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0,0},
+	NULL, offsetof(TkTextTag, rMarginObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
@@ -970,16 +970,16 @@ TkTextCreateTag(
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->lMargin1Obj = NULL;
-    tagPtr->lMargin1 = INT_MIN;
+    tagPtr->lMargin1 = 0;
     tagPtr->lMargin2Obj = NULL;
-    tagPtr->lMargin2 = INT_MIN;
+    tagPtr->lMargin2 = 0;
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetObj = NULL;
-    tagPtr->offset = INT_MIN;
+    tagPtr->offset = 0;
     tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginObj = NULL;
-    tagPtr->rMargin = INT_MIN;
+    tagPtr->rMargin = 0;
     tagPtr->rMarginColor = NULL;
     tagPtr->selBorder = NULL;
     tagPtr->selFgColor = NULL;
