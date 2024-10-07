@@ -6,10 +6,8 @@ changes to the Tk source code at
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
-The changes since Tk 9.0.0 include...
-
-
-
+## Changes since Tk 9.0.0
+ - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
@@ -45,7 +43,6 @@ writing Tcl scripts containing Tk commands.
  - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
  - [Tilde file syntax not available on 9.0 but used by "~/.Xdefaults"](https://core.tcl-lang.org/tk/tktview/fcfddc)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
- - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
  - [Enter key works differently in Windows and Linux](https://core.tcl-lang.org/tk/tktview/b3a1b9)

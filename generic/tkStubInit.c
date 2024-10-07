@@ -70,7 +70,7 @@ doNothing(void)
 #   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
 #   define TkpDefineNativeBitmaps ((void (*)(void))(void *)doNothing)
 #   define TkpCreateNativeBitmap ((Pixmap (*)(Display *, const void *))(void *)doNothing)
-#   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char*, int *, int *))(void *)doNothing)
+#   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char *, int *, int *))(void *)doNothing)
 #endif
 
 #ifdef _WIN32
