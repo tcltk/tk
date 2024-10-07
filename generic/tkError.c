@@ -165,6 +165,13 @@ Tk_DeleteErrorHandler(
      */
 
     dispPtr->deleteCount += 1;
+
+    /*
+     * Ensure that no user callback for this handler is invoked any further.
+     */
+
+    errorPtr->errorProc = NULL;
+
     if (dispPtr->deleteCount >= 10) {
 	TkErrorHandler *prevPtr;
 	TkErrorHandler *nextPtr;
