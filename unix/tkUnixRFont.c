@@ -778,7 +778,8 @@ Tk_MeasureChars(
 	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
 	    UNLOCK;
-	} else {
+	}
+	if (errorFlag) {
 	    extents.xOff = 0;
 	    errorFlag = 0;
 	}
