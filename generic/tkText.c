@@ -2295,10 +2295,10 @@ ConfigureText(
     if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
-	    || (textPtr->selTagPtr->lMargin1 != INT_MIN)
-	    || (textPtr->selTagPtr->lMargin2 != INT_MIN)
-	    || (textPtr->selTagPtr->offset != INT_MIN)
-	    || (textPtr->selTagPtr->rMargin != INT_MIN)
+	    || (textPtr->selTagPtr->lMargin1Obj != NULL)
+	    || (textPtr->selTagPtr->lMargin2Obj != NULL)
+	    || (textPtr->selTagPtr->offsetObj != NULL)
+	    || (textPtr->selTagPtr->rMarginObj != NULL)
 	    || (textPtr->selTagPtr->spacing1Obj != NULL)
 	    || (textPtr->selTagPtr->spacing2Obj != NULL)
 	    || (textPtr->selTagPtr->spacing3Obj != NULL)
@@ -3353,7 +3353,7 @@ DeleteIndexRange(
 
 	TkBTreeDeleteIndexRange(sharedTextPtr->tree, &index1, &index2);
 
-    	UpdateDirtyFlag(sharedTextPtr);
+	UpdateDirtyFlag(sharedTextPtr);
     }
 
     resetViewCount = 0;
@@ -5783,7 +5783,7 @@ SearchCore(
     int alreadySearchOffset = -1;
 
     const char *pattern = NULL;	/* For exact searches only. */
-    int firstNewLine = -1; 	/* For exact searches only. */
+    int firstNewLine = -1;	/* For exact searches only. */
     Tcl_RegExp regexp = NULL;	/* For regexp searches only. */
 
     /*
