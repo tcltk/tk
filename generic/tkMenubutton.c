@@ -561,7 +561,7 @@ ConfigureMenuButton(
 	}
 	if (padY < 0) {
 	    padY = 0;
-		Tcl_DecrRefCount(mbPtr->padYObj);
+	    Tcl_DecrRefCount(mbPtr->padYObj);
 	    mbPtr->padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(mbPtr->padYObj);
 	}
