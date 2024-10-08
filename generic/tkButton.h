@@ -302,7 +302,7 @@ MODULE_SCOPE void	TkButtonWorldChanged(void *instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
 MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
-MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
+MODULE_SCOPE void	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
 MODULE_SCOPE void	TkpDisplayButton(void *clientData);
