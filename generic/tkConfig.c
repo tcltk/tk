@@ -70,7 +70,7 @@ typedef struct TkOption {
     const Tk_OptionSpec *specPtr;
 				/* The original spec from the template passed
 				 * to Tk_CreateOptionTable.*/
-    Tk_Uid dbNameUID;	 	/* The Uid form of the option database
+    Tk_Uid dbNameUID;		/* The Uid form of the option database
 				 * name. */
     Tk_Uid dbClassUID;		/* The Uid form of the option database class
 				 * name. */
@@ -1397,7 +1397,7 @@ int
 Tk_SetOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is returned.*/
-    void *recordPtr,	    	/* The record to configure. */
+    void *recordPtr,		/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
     Tcl_Size objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
