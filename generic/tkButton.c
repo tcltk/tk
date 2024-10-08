@@ -1181,7 +1181,7 @@ ConfigureButton(
 		 * selected.
 		 */
 
- 		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
+		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
 			(*Tcl_GetString(butPtr->onValuePtr) == '\0')) {
 		    butPtr->flags |= SELECTED;
 		}
