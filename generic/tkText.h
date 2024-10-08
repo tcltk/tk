@@ -155,7 +155,7 @@ typedef struct TkTextEmbImage {
 				 * the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the
 				 * image hasn't been created yet. */
-#if TCL_MAJOR_VERSION > 8
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *padXObj, *padYObj;	/* Padding to leave around each side of image,
 				 * in pixels. */
 #else
