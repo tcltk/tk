@@ -408,7 +408,7 @@ proc ::tk::MenuUnpost menu {
 #
 # Arguments:
 # w -			The name of the menubutton widget.
-# upDown - 		"down" means button 1 is pressed, "up" means
+# upDown -		"down" means button 1 is pressed, "up" means
 #			it isn't.
 # rootx, rooty -	Coordinates of mouse, in (virtual?) root window.
 

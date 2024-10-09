@@ -19,22 +19,22 @@ switch -- [tk windowingsystem] {
 namespace eval ttk::sizegrip {
     variable State
     array set State {
-	pressed 	0
-	pressX 		0
-	pressY 		0
-	width 		0
-	height 		0
+	pressed		0
+	pressX		0
+	pressY		0
+	width		0
+	height		0
 	widthInc	1
 	heightInc	1
 	resizeX         1
 	resizeY         1
-	toplevel 	{}
+	toplevel	{}
     }
 }
 
-bind TSizegrip <Button-1> 		{ ttk::sizegrip::Press	%W %X %Y }
-bind TSizegrip <B1-Motion> 		{ ttk::sizegrip::Drag 	%W %X %Y }
-bind TSizegrip <ButtonRelease-1> 	{ ttk::sizegrip::Release %W %X %Y }
+bind TSizegrip <Button-1>		{ ttk::sizegrip::Press	%W %X %Y }
+bind TSizegrip <B1-Motion>		{ ttk::sizegrip::Drag	%W %X %Y }
+bind TSizegrip <ButtonRelease-1>	{ ttk::sizegrip::Release %W %X %Y }
 
 proc ttk::sizegrip::Press {W X Y} {
     variable State
