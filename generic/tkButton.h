@@ -245,12 +245,6 @@ typedef struct {
 				 * invocataions of the button command. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-#ifdef BUILD_tk
-    int padX, padY;
-    int borderWidth;
-    int highlightWidth;
-    int width, height, wrapLength;
-#endif
 } TkButton;
 
 /*
@@ -308,7 +302,7 @@ MODULE_SCOPE void	TkButtonWorldChanged(void *instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
 MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
-MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
+MODULE_SCOPE void	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
 MODULE_SCOPE void	TkpDisplayButton(void *clientData);

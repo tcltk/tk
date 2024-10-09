@@ -177,9 +177,9 @@ proc ttk::LoadThemes {} {
 	aqua 		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
-            foreach script $scripts {
-                uplevel #0 [list source -encoding utf-8 [file join $library $script]]
-            }
+	    foreach script $scripts {
+		uplevel #0 [list source -encoding utf-8 [file join $library $script]]
+	    }
 	}
     }
 }

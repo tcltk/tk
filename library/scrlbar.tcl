@@ -477,7 +477,7 @@ proc ::tk::ScrollTopBottom {w x y} {
 proc ::tk::ScrollButton2Down {w x y} {
     variable ::tk::Priv
     if {![winfo exists $w]} {
-        return
+	return
     }
     set element [$w identify $x $y]
     if {[string match {arrow[12]} $element]} {
@@ -493,8 +493,8 @@ proc ::tk::ScrollButton2Down {w x y} {
 
     update idletasks
     if {[winfo exists $w]} {
-        $w configure -activerelief sunken
-        $w activate slider
-        ScrollStartDrag $w $x $y
+	$w configure -activerelief sunken
+	$w activate slider
+	ScrollStartDrag $w $x $y
     }
 }

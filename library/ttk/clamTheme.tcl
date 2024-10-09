@@ -115,7 +115,7 @@ namespace eval ttk::theme::clam {
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
-            -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}

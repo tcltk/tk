@@ -80,7 +80,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthObj),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkButton, compound),
 	0, tkCompoundStrings, 0},
@@ -109,7 +109,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefLabelHighlightWidth,
 	offsetof(TkButton, highlightWidthObj),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -117,10 +117,10 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXObj),
-	offsetof(TkButton, padX), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYObj),
-	offsetof(TkButton, padY), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
@@ -140,7 +140,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, offsetof(TkButton, wrapLengthObj),
-	offsetof(TkButton, wrapLength), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -165,7 +165,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthObj),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -200,7 +200,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthObj),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -211,10 +211,10 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefButtonPadx, offsetof(TkButton, padXObj),
-	offsetof(TkButton, padX), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefButtonPady, offsetof(TkButton, padYObj),
-	offsetof(TkButton, padY), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief),
 	 0, 0, 0},
@@ -241,7 +241,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, offsetof(TkButton, wrapLengthObj),
-	offsetof(TkButton, wrapLength), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -266,7 +266,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthObj),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -298,7 +298,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthObj),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -317,10 +317,10 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXObj),
-	offsetof(TkButton, padX), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYObj),
-	offsetof(TkButton, padY), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectcolor", "selectColor", "Background",
@@ -354,7 +354,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, offsetof(TkButton, wrapLengthObj),
-	offsetof(TkButton, wrapLength), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -379,7 +379,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthObj),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -411,7 +411,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthObj),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -427,10 +427,10 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXObj),
-	offsetof(TkButton, padX), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYObj),
-	offsetof(TkButton, padY), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectcolor", "selectColor", "Background",
@@ -466,7 +466,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	DEF_BUTTON_WIDTH, offsetof(TkButton, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, offsetof(TkButton, wrapLengthObj),
-	offsetof(TkButton, wrapLength), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -688,10 +688,8 @@ ButtonCreate(
     butPtr->normalBorder = NULL;
     butPtr->activeBorder = NULL;
     butPtr->borderWidthObj = NULL;
-    butPtr->borderWidth = 0;
     butPtr->relief = TK_RELIEF_FLAT;
     butPtr->highlightWidthObj = NULL;
-    butPtr->highlightWidth = 0;
     butPtr->highlightBorder = NULL;
     butPtr->highlightColorPtr = NULL;
     butPtr->inset = 0;
@@ -706,15 +704,10 @@ ButtonCreate(
     butPtr->gray = None;
     butPtr->copyGC = NULL;
     butPtr->widthObj = NULL;
-    butPtr->width = 0;
     butPtr->heightObj = NULL;
-    butPtr->height = 0;
     butPtr->wrapLengthObj = NULL;
-    butPtr->wrapLength = 0;
     butPtr->padXObj = NULL;
-    butPtr->padX = 0;
     butPtr->padYObj = NULL;
-    butPtr->padY = 0;
     butPtr->anchor = TK_ANCHOR_CENTER;
     butPtr->justify = TK_JUSTIFY_CENTER;
     butPtr->indicatorOn = 0;
@@ -1034,6 +1027,8 @@ ConfigureButton(
     Tcl_Obj *errorResult = NULL;
     int error, haveImage;
     Tk_Image image;
+    int wrapLength, borderWidth, highlightWidth, padX, padY;
+    int butPtrWidth, butPtrHeight;
 
     /*
      * Eliminate any existing trace on variables monitored by the button.
@@ -1097,32 +1092,37 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
-	if (butPtr->wrapLength < 0) {
-	    butPtr->wrapLength = 0;
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+	if (wrapLength < 0) {
+	    wrapLength = 0;
 	    Tcl_DecrRefCount(butPtr->wrapLengthObj);
 	    butPtr->wrapLengthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->wrapLengthObj);
 	}
-	if (butPtr->borderWidth < 0) {
-	    butPtr->borderWidth = 0;
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+	if (borderWidth < 0) {
+	    borderWidth = 0;
 	    Tcl_DecrRefCount(butPtr->borderWidthObj);
 	    butPtr->borderWidthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->borderWidthObj);
 	}
-	if (butPtr->highlightWidth < 0) {
-	    butPtr->highlightWidth = 0;
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+	if (highlightWidth < 0) {
+	    highlightWidth = 0;
 	    Tcl_DecrRefCount(butPtr->highlightWidthObj);
 	    butPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->highlightWidthObj);
 	}
-	if (butPtr->padX < 0) {
-	    butPtr->padX = 0;
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+	if (padX < 0) {
+	    padX = 0;
 	    Tcl_DecrRefCount(butPtr->padXObj);
 	    butPtr->padXObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padXObj);
 	}
-	if (butPtr->padY < 0) {
-	    butPtr->padY = 0;
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
+	if (padY < 0) {
+	    padY = 0;
 	    Tcl_DecrRefCount(butPtr->padYObj);
 	    butPtr->padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padYObj);
@@ -1181,7 +1181,7 @@ ConfigureButton(
 		 * selected.
 		 */
 
- 		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
+		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
 			(*Tcl_GetString(butPtr->onValuePtr) == '\0')) {
 		    butPtr->flags |= SELECTED;
 		}
@@ -1274,13 +1274,13 @@ ConfigureButton(
 	     */
 
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->widthObj,
-		    &butPtr->width) != TCL_OK) {
+		    &butPtrWidth) != TCL_OK) {
 	    widthError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->heightObj,
-		    &butPtr->height) != TCL_OK) {
+		    &butPtrHeight) != TCL_OK) {
 	    heightError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
@@ -1290,11 +1290,11 @@ ConfigureButton(
 	     * The button displays an ordinary text string.
 	     */
 
-	    if (Tcl_GetIntFromObj(interp, butPtr->widthObj, &butPtr->width)
+	    if (Tcl_GetIntFromObj(interp, butPtr->widthObj, &butPtrWidth)
 		    != TCL_OK) {
 		goto widthError;
 	    }
-	    if (Tcl_GetIntFromObj(interp, butPtr->heightObj, &butPtr->height)
+	    if (Tcl_GetIntFromObj(interp, butPtr->heightObj, &butPtrHeight)
 		    != TCL_OK) {
 		goto heightError;
 	    }
@@ -1467,6 +1467,8 @@ ButtonEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     TkButton *butPtr = (TkButton *)clientData;
+    int highlightWidth;
+
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
@@ -1481,16 +1483,16 @@ ButtonEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags |= GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
-	    if (butPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags &= ~GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
-	    if (butPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
@@ -1725,14 +1727,12 @@ static char *
 ButtonTextVarProc(
     void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    TCL_UNUSED(const char *),		/* name1 */
+    TCL_UNUSED(const char *),		/* name2 */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = (TkButton *)clientData;
     Tcl_Obj *valuePtr;
-    (void)name1;
-    (void)name2;
 
     if (butPtr->flags & BUTTON_DELETED) {
 	return NULL;
@@ -1820,19 +1820,14 @@ ButtonTextVarProc(
 static void
 ButtonImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
@@ -1864,19 +1859,14 @@ ButtonImageProc(
 static void
 ButtonSelectImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {
@@ -1917,19 +1907,14 @@ ButtonSelectImageProc(
 static void
 ButtonTristateImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {

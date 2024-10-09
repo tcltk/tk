@@ -132,51 +132,51 @@ namespace eval tk {
 
 	namespace export fixfocus
 	proc fixfocus {} {
-            catch {destroy .focus}
-            toplevel .focus
-            wm geometry .focus +0+0
-            entry .focus.e
-            .focus.e insert 0 "fixfocus"
-            pack .focus.e
-            update
-            focus -force .focus.e
-            destroy .focus
+	    catch {destroy .focus}
+	    toplevel .focus
+	    wm geometry .focus +0+0
+	    entry .focus.e
+	    .focus.e insert 0 "fixfocus"
+	    pack .focus.e
+	    update
+	    focus -force .focus.e
+	    destroy .focus
 	}
 
-        namespace export imageInit imageFinish imageCleanup imageNames
-        variable ImageNames
-        proc imageInit {} {
-            variable ImageNames
-            if {![info exists ImageNames]} {
-                set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
-            }
-            imageCleanup
-            if {[lsort [image names]] ne $ImageNames} {
-                return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
-            }
-        }
-        proc imageFinish {} {
-            variable ImageNames
+	namespace export imageInit imageFinish imageCleanup imageNames
+	variable ImageNames
+	proc imageInit {} {
+	    variable ImageNames
+	    if {![info exists ImageNames]} {
+		set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    }
+	    imageCleanup
+	    if {[lsort [image names]] ne $ImageNames} {
+		return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
+	    }
+	}
+	proc imageFinish {} {
+	    variable ImageNames
 	    set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
-            if {$imgs ne $ImageNames} {
-                return -code error "images remaining: [image names] != $ImageNames"
-            }
-            imageCleanup
-        }
-        proc imageCleanup {} {
-            variable ImageNames
-            foreach img [image names] {
-                if {$img ni $ImageNames} {image delete $img}
-            }
-        }
-        proc imageNames {} {
-            variable ImageNames
-            set r {}
-            foreach img [image names] {
-                if {$img ni $ImageNames} {lappend r $img}
-            }
-            return $r
-        }
+	    if {$imgs ne $ImageNames} {
+		return -code error "images remaining: [image names] != $ImageNames"
+	    }
+	    imageCleanup
+	}
+	proc imageCleanup {} {
+	    variable ImageNames
+	    foreach img [image names] {
+		if {$img ni $ImageNames} {image delete $img}
+	    }
+	}
+	proc imageNames {} {
+	    variable ImageNames
+	    set r {}
+	    foreach img [image names] {
+		if {$img ni $ImageNames} {lappend r $img}
+	    }
+	    return $r
+	}
 
 	#
 	#  CONTROL TIMING ASPECTS OF POINTER WARPING
@@ -368,8 +368,8 @@ testConstraint secureserver 0
 if {[llength [info commands send]]} {
     testConstraint secureserver 1
     if {[catch {send $app set a 0} msg] == 1} {
-        if {[string match "X server insecure *" $msg]} {
-            testConstraint secureserver 0
+	if {[string match "X server insecure *" $msg]} {
+	    testConstraint secureserver 0
 	}
     }
 }

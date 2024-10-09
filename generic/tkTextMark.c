@@ -623,10 +623,13 @@ TkTextInsertDisplayProc(
 
     /* TkText *textPtr = chunkPtr->clientData; */
     TkTextIndex index;
-    int halfWidth = textPtr->insertWidth/2;
+    int halfWidth, insertWidth, insertBorderWidth;
     int rightSideWidth;
     int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    halfWidth = insertWidth/2;
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
@@ -658,15 +661,19 @@ TkTextInsertDisplayProc(
     if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
 	} else if (textPtr->selBorder == textPtr->insertBorder) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
+		    x - halfWidth, y, charWidth + insertWidth,
 		    height, 0, TK_RELIEF_FLAT);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_HOLLOW) {
-	if (textPtr->insertBorderWidth < 1) {
+	if (insertBorderWidth > 0) {
+	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
+	} else {
 	    /*
 	     * Hack to work around the fact that a "solid" border always
 	     * paints in black.
@@ -675,17 +682,13 @@ TkTextInsertDisplayProc(
 	    TkBorder *borderPtr = (TkBorder *) textPtr->insertBorder;
 
 	    XDrawRectangle(Tk_Display(textPtr->tkwin), dst, borderPtr->bgGC,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth - 1,
+		    x - halfWidth, y, charWidth + insertWidth - 1,
 		    height - 1);
-	} else {
-	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		x - halfWidth, y, charWidth + textPtr->insertWidth, height,
-		textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		x - halfWidth, y, charWidth + insertWidth, height,
+		insertBorderWidth, TK_RELIEF_RAISED);
     }
 }
 
