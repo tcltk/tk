@@ -342,7 +342,7 @@ test ttk-8.1 "Test -compound options" -body {
     # Exhaustively test each combination.
     # Main goal is to make sure no code paths crash.
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
 		update; tick
@@ -357,7 +357,7 @@ test ttk-8.2 "Test -compound options with regular button" -body {
     pack .rtb
 
     foreach image {"" icon} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound [lrange $::compoundStrings 2 end] {
 		.rtb configure -image $image -text $text -compound $compound
 		update; tick
@@ -369,7 +369,7 @@ tock
 
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
 		update; tick

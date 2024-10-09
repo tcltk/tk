@@ -147,11 +147,11 @@ proc ::tk::MessageBox {args} {
     set specs {
 	{-default "" "" ""}
 	{-detail "" "" ""}
-        {-icon "" "" "info"}
-        {-message "" "" ""}
-        {-parent "" "" .}
-        {-title "" "" " "}
-        {-type "" "" "ok"}
+	{-icon "" "" "info"}
+	{-message "" "" ""}
+	{-parent "" "" .}
+	{-title "" "" " "}
+	{-type "" "" "ok"}
     }
 
     tclParseConfigSpec $w $specs "" $args
@@ -297,7 +297,7 @@ proc ::tk::MessageBox {args} {
     if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     } elseif {$windowingsystem eq "x11"} {
-        wm attributes $w -type dialog
+	wm attributes $w -type dialog
     }
 
     ttk::frame $w.bot
@@ -325,18 +325,18 @@ proc ::tk::MessageBox {args} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
 	    switch $data(-icon) {
-                error {
-                    ttk::label $w.bitmap -image ::tk::icons::error
-                }
-                info {
-                    ttk::label $w.bitmap -image ::tk::icons::information
-                }
-                question {
-                    ttk::label $w.bitmap -image ::tk::icons::question
-                }
-                default {
-                    ttk::label $w.bitmap -image ::tk::icons::warning
-                }
+		error {
+		    ttk::label $w.bitmap -image ::tk::icons::error
+		}
+		info {
+		    ttk::label $w.bitmap -image ::tk::icons::information
+		}
+		question {
+		    ttk::label $w.bitmap -image ::tk::icons::question
+		}
+		default {
+		    ttk::label $w.bitmap -image ::tk::icons::warning
+		}
 	    }
 	}
     }
@@ -382,16 +382,16 @@ proc ::tk::MessageBox {args} {
 	    }
 	    grid configure $w.$name -pady 7
 	}
-        incr i
+	incr i
 
 	# create the binding for the key accelerator, based on the underline
 	#
-        # set underIdx [$w.$name cget -under]
-        # if {$underIdx >= 0} {
-        #     set key [string index [$w.$name cget -text] $underIdx]
-        #     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
-        #     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
-        # }
+	# set underIdx [$w.$name cget -under]
+	# if {$underIdx >= 0} {
+	#     set key [string index [$w.$name cget -text] $underIdx]
+	#     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
+	#     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
+	# }
     }
     bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 

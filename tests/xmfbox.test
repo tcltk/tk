@@ -27,25 +27,25 @@ proc cleanup {} {
 
     set err1 [catch {
 	    if [file exists ./~nosuchuser1] {
-	        file delete ./~nosuchuser1
+		file delete ./~nosuchuser1
 	    }
     } msg1]
 
     set err2 [catch {
 	    if [file exists ./~nosuchuser2] {
-	        file delete ./~nosuchuser2
+		file delete ./~nosuchuser2
 	    }
     } msg2]
 
     set err3 [catch {
 	    if [file exists ./~nosuchuser3] {
-	        file delete ./~nosuchuser3
+		file delete ./~nosuchuser3
 	    }
     } msg3]
 
     set err4 [catch {
 	    if [file exists ./~nosuchuser4] {
-	        file delete ./~nosuchuser4
+		file delete ./~nosuchuser4
 	    }
     } msg4]
 

@@ -353,6 +353,6 @@ proc textSplitWindow {textW} {
 	    $w.pane add $t -stretch always
 	}
     } else {
-        return
+	return
     }
 }

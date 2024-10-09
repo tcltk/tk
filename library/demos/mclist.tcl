@@ -157,14 +157,14 @@ proc SortBy {tree col direction} {
 set mclistGrid 0
 proc tglGrid {} {
     if {$::mclistGrid} {
-        .mclist.tree configure -stripe 1
-        foreach col [.mclist.tree cget -columns] {
-            .mclist.tree column $col -separator 1
-        }
+	.mclist.tree configure -stripe 1
+	foreach col [.mclist.tree cget -columns] {
+	    .mclist.tree column $col -separator 1
+	}
     } else {
-        .mclist.tree configure -stripe 0
-        foreach col [.mclist.tree cget -columns] {
-            .mclist.tree column $col -separator 0
-        }
+	.mclist.tree configure -stripe 0
+	foreach col [.mclist.tree cget -columns] {
+	    .mclist.tree column $col -separator 0
+	}
     }
 }

@@ -19,7 +19,7 @@ proc killTables {} {
     foreach t {alltypes chain3 chain2 chain1 configerror internal
 	    new notenoughparams twowindows} {
 	    while {[testobjconfig info $t] != ""} {
-	        testobjconfig delete $t
+		testobjconfig delete $t
 	    }
     }
 }
@@ -1289,7 +1289,7 @@ test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} -constraints 
 } -body {
     testobjconfig alltypes .a
     .a csave -color green -color black -color blue \
-        -color #ffff00 -color #ff00ff -color bogus \
+	-color #ffff00 -color #ff00ff -color bogus \
 } -cleanup {
     killTables
 } -returnCodes error -result {unknown color name "bogus"}
@@ -1766,10 +1766,10 @@ test config-14.1 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::button
-        ::foo::button .a
-        ::foo::button .b
-        }
+	namespace import -force ::button
+	::foo::button .a
+	::foo::button .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1777,10 +1777,10 @@ test config-14.2 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::canvas
-        ::foo::canvas .a
-        ::foo::canvas .b
-        }
+	namespace import -force ::canvas
+	::foo::canvas .a
+	::foo::canvas .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1788,10 +1788,10 @@ test config-14.3 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::entry
-        ::foo::entry .a
-        ::foo::entry .b
-        }
+	namespace import -force ::entry
+	::foo::entry .a
+	::foo::entry .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1799,10 +1799,10 @@ test config-14.4 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::frame
-        ::foo::frame .a
-        ::foo::frame .b
-        }
+	namespace import -force ::frame
+	::foo::frame .a
+	::foo::frame .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1810,10 +1810,10 @@ test config-14.5 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::listbox
-        ::foo::listbox .a
-        ::foo::listbox .b
-        }
+	namespace import -force ::listbox
+	::foo::listbox .a
+	::foo::listbox .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1821,10 +1821,10 @@ test config-14.6 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::menu
-        ::foo::menu .a
-        ::foo::menu .b
-        }
+	namespace import -force ::menu
+	::foo::menu .a
+	::foo::menu .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1832,10 +1832,10 @@ test config-14.7 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::menubutton
-        ::foo::menubutton .a
-        ::foo::menubutton .b
-        }
+	namespace import -force ::menubutton
+	::foo::menubutton .a
+	::foo::menubutton .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1843,10 +1843,10 @@ test config-14.8 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::message
-        ::foo::message .a
-        ::foo::message .b
-        }
+	namespace import -force ::message
+	::foo::message .a
+	::foo::message .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1854,10 +1854,10 @@ test config-14.9 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::scale
-        ::foo::scale .a
-        ::foo::scale .b
-        }
+	namespace import -force ::scale
+	::foo::scale .a
+	::foo::scale .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1865,10 +1865,10 @@ test config-14.10 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::scrollbar
-        ::foo::scrollbar .a
-        ::foo::scrollbar .b
-        }
+	namespace import -force ::scrollbar
+	::foo::scrollbar .a
+	::foo::scrollbar .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1876,10 +1876,10 @@ test config-14.11 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::spinbox
-        ::foo::spinbox .a
-        ::foo::spinbox .b
-        }
+	namespace import -force ::spinbox
+	::foo::spinbox .a
+	::foo::spinbox .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1887,10 +1887,10 @@ test config-14.12 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::text
-        ::foo::text .a
-        ::foo::text .b
-        }
+	namespace import -force ::text
+	::foo::text .a
+	::foo::text .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1898,10 +1898,10 @@ test config-14.13 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::radiobutton
-        ::foo::radiobutton .a
-        ::foo::radiobutton .b
-        }
+	namespace import -force ::radiobutton
+	::foo::radiobutton .a
+	::foo::radiobutton .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1909,10 +1909,10 @@ test config-14.14 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::checkbutton
-        ::foo::checkbutton .a
-        ::foo::checkbutton .b
-        }
+	namespace import -force ::checkbutton
+	::foo::checkbutton .a
+	::foo::checkbutton .b
+	}
     ]
     destroy .a .b
 } -result {}
