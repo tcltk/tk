@@ -38,7 +38,7 @@ interp alias {} EvalAttached {} consoleinterp eval
 # This procedure constructs and configures the console windows.
 #
 # Arguments:
-# 	None.
+#	None.
 
 proc ::tk::ConsoleInit {} {
     if {![consoleinterp eval {set tcl_interactive}]} {
@@ -722,7 +722,7 @@ Tk $::tk_patchLevel"
 }
 
 # ::tk::console::Fontchooser* --
-# 	Let the user select the console font (TIP 324).
+#	Let the user select the console font (TIP 324).
 
 proc ::tk::console::FontchooserToggle {} {
     if {[tk fontchooser configure -visible]} {
@@ -795,8 +795,8 @@ proc ::tk::console::TagProc w {
 #
 # Arguments:
 #	w	- console text widget
-# 	c1	- first char of pair
-# 	c2	- second char of pair
+#	c1	- first char of pair
+#	c2	- second char of pair
 #
 # Calls:	::tk::console::Blink
 
@@ -887,9 +887,9 @@ proc ::tk::console::MatchQuote {w {lim 1.0}} {
 #
 # Arguments:
 #	w	- console text widget
-# 	i1	- start index to blink region
-# 	i2	- end index of blink region
-# 	dur	- duration in usecs to blink for
+#	i1	- start index to blink region
+#	i2	- end index of blink region
+#	dur	- duration in usecs to blink for
 #
 # Outputs:
 #	blinks selected characters in $w
@@ -921,7 +921,7 @@ proc ::tk::console::ConstrainBuffer {w size} {
 #
 # Arguments:
 # ARGS:	w	- text widget in which to expand str
-# 	type	- type of expansion (path / proc / variable)
+#	type	- type of expansion (path / proc / variable)
 #
 # Calls:	::tk::console::Expand(Pathname|Procname|Variable)
 #
@@ -1121,7 +1121,7 @@ proc ::tk::console::ExpandVariable str {
 #
 # Arguments:
 #	l	- list to find best unique match in
-# 	e	- currently best known unique match
+#	e	- currently best known unique match
 #
 # Returns:	longest unique match in the list
 

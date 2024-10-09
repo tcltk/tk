@@ -1176,8 +1176,8 @@ test pack-12.11 {command options and errors} -setup {
 test pack-12.12 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
-    pack .pack.a -expand "who cares?"
-} -returnCodes error -result {expected boolean value but got "who cares?"}
+    pack .pack.a -expand "who_cares?"
+} -returnCodes error -result {expected boolean value but got "who_cares?"}
 test pack-12.13 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {

@@ -123,7 +123,7 @@ pack [ttk::radiobutton $radio.r2 -text "Radio 2" -variable .radioVar -value 2] -
 set triangle [ttk::checkbutton $buttonFrame.triangle -style Item -variable TriangleVar]
 bind $triangle <Button-1> {toggleTriangle %W}
 set bonjour [ttk::button $buttonFrame.bonjour -style ImageButton -text Bonjour \
- 		     -image {bonjour pressed bonjour1}]
+		     -image {bonjour pressed bonjour1}]
 set feather [ttk::button $buttonFrame.feather -style ImageButton -text Tk \
 		      -image {tkfeather pressed tkfeather1}]
 set gradient [ttk::frame $buttonFrame.gradient]

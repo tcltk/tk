@@ -170,7 +170,7 @@ proc ttk::notebook::enableTraversal {nb} {
 	#
 	bind $top <Control-Next>             {+ttk::notebook::TLCycleTab %W  1}
 	bind $top <Control-Prior>            {+ttk::notebook::TLCycleTab %W -1}
-	bind $top <Control-Tab> 	     {+ttk::notebook::TLCycleTab %W  1}
+	bind $top <Control-Tab>              {+ttk::notebook::TLCycleTab %W  1}
 	bind $top <Control-Shift-Tab>        {+ttk::notebook::TLCycleTab %W -1}
 	catch {
 	bind $top <Control-ISO_Left_Tab>     {+ttk::notebook::TLCycleTab %W -1}

@@ -16,7 +16,7 @@ namespace eval ttk::theme::vista {
 
     ttk::style theme settings vista {
 
- 	ttk::style configure . \
+	ttk::style configure . \
 	    -background SystemButtonFace \
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
