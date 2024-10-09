@@ -67,20 +67,20 @@ if {!$tip145} {apply {{} {
 global tcl_platform
 switch -- [tk windowingsystem] {
     win32 {
-        # In safe interps there is no osVersion element.
+	# In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
-            if {$tcl_platform(osVersion) >= 5.0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        } else {
-            if {[lsearch -exact [font families] Tahoma] >= 0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        }
+	    if {$tcl_platform(osVersion) >= 5.0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	} else {
+	    if {[lsearch -exact [font families] Tahoma] >= 0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	}
 	set size 8
 
 	font configure TkDefaultFont -family $family -size $size

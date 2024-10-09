@@ -55,23 +55,21 @@ typedef struct {
     Tcl_Command widgetCmd;	/* Token for menubutton's widget command. */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
-    char *menuName;		/* Name of menu associated with widget.
-				 * Malloc-ed. */
+    Tcl_Obj *menuNameObj;		/* Name of menu associated with widget. */
 
     /*
      * Information about what's displayed in the menu button:
      */
 
-    char *text;			/* Text to display in button (malloc'ed) or
-				 * NULL. */
+    Tcl_Obj *textObj;			/* Text to display in button. May be NULL. */
     int underline;		/* Index of character to underline. INT_MIN means no underline */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textVarNameObj;	/* Name of variable or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */
     Pixmap bitmap;		/* Bitmap to display or None. If not None then
 				 * text and textVar and underline are
 				 * ignored. */
-    char *imageString;		/* Name of image to display (malloc'ed), or
+    Tcl_Obj *imageObj;		/* Name of image to display, or
 				 * NULL. If non-NULL, bitmap, text, and
 				 * textVarName are ignored. */
     Tk_Image image;		/* Image to display in window, or NULL if
@@ -121,8 +119,8 @@ typedef struct {
 				 * pixel (positive means to right). */
     int rightBearing;		/* Amount text sticks right from its
 				 * origin. */
-    char *widthString;		/* Value of -width option. Malloc'ed. */
-    char *heightString;		/* Value of -height option. Malloc'ed. */
+    Tcl_Obj *widthObj;		/* Value of -width option. */
+    Tcl_Obj *heightObj;		/* Value of -height option. */
     int width, height;		/* If > 0, these specify dimensions to request
 				 * for window, in characters for text and in
 				 * pixels for bitmaps. In this case the actual
@@ -161,28 +159,21 @@ typedef struct {
 				 * whether the menubutton should show both an
 				 * image and text, and, if so, how. */
     enum direction direction;	/* Direction for where to pop the menu. Valid
-    				 * directions are "above", "below", "flush",
-    				 * "left", and "right". "above" and "below"
-    				 * will attempt to pop the menu completely
-    				 * above or below the menu respectively.
-    				 * "flush" means that the upper left corner
-    				 * of the menubutton is where the menu pops up.
-    				 * "left" and "right" will pop the menu left
-    				 * or right, and the active item will be next
-    				 * to the button. */
+				 * directions are "above", "below", "flush",
+				 * "left", and "right". "above" and "below"
+				 * will attempt to pop the menu completely
+				 * above or below the menu respectively.
+				 * "flush" means that the upper left corner
+				 * of the menubutton is where the menu pops up.
+				 * "left" and "right" will pop the menu left
+				 * or right, and the active item will be next
+				 * to the button. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-#ifdef BUILD_tk
-    int borderWidth;
-    int highlightWidth;
-    int padX;
-    int padY;
-    int wrapLength;
-#endif
 } TkMenuButton;
 
 /*
@@ -217,7 +208,7 @@ typedef struct {
 MODULE_SCOPE void	TkpComputeMenuButtonGeometry(TkMenuButton *mbPtr);
 MODULE_SCOPE TkMenuButton *TkpCreateMenuButton(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDisplayMenuButton(void *clientData);
-MODULE_SCOPE void 	TkpDestroyMenuButton(TkMenuButton *mbPtr);
+MODULE_SCOPE void	TkpDestroyMenuButton(TkMenuButton *mbPtr);
 MODULE_SCOPE void	TkMenuButtonWorldChanged(void *instanceData);
 
 #endif /* _TKMENUBUTTON */

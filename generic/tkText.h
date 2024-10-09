@@ -115,8 +115,12 @@ typedef struct TkTextEmbWindow {
     TkTextLine *linePtr;	/* Line structure that contains this
 				 * window. */
     Tcl_Obj *createObj;	/* Script to create window on-demand. NULL
-				 * means no such script. Malloc-ed. */
+				 * means no such script. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of window. */
+#else
+    int padX, padY;
+#endif
 #if TCL_MAJOR_VERSION > 8
     TkAlignMode align;		/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
@@ -130,10 +134,6 @@ typedef struct TkTextEmbWindow {
     TkTextEmbWindowClient *clients;
 				/* Linked list of peer-widget specific
 				 * information for this embedded window. */
-#if defined(BUILD_tk)
-    int padX, padY;		/* Padding to leave around each side of
-				 * window, in pixels. */
-#endif
 } TkTextEmbWindow;
 
 /*
@@ -155,8 +155,12 @@ typedef struct TkTextEmbImage {
 				 * the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the
 				 * image hasn't been created yet. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *padXObj, *padYObj;	/* Padding to leave around each side of image,
 				 * in pixels. */
+#else
+    int padX, padY;
+#endif
 #if TCL_MAJOR_VERSION > 8
     TkAlignMode align;		/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
@@ -167,10 +171,6 @@ typedef struct TkTextEmbImage {
 				 * image. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-#if defined(BUILD_tk)
-    int padX, padY;		/* Padding to leave around each side of
-				 * window, in pixels. */
-#endif
 } TkTextEmbImage;
 
 /*
@@ -226,7 +226,7 @@ typedef struct TkTextIndex {
 
 typedef struct TkTextDispChunk TkTextDispChunk;
 
-typedef void 		Tk_ChunkDisplayProc(struct TkText *textPtr,
+typedef void		Tk_ChunkDisplayProc(struct TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
@@ -358,9 +358,12 @@ typedef struct TkTextTag {
 
     Tk_3DBorder border;		/* Used for drawing background. NULL means no
 				 * value specified here. */
+#if TK_MAJOR_VERSION < 9
+    int borderWidth;		/* Width of 3-D border for background. */
+#endif
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border for background. */
 #if TK_MAJOR_VERSION < 9
-    char *reliefString;		/* -relief option string (malloc-ed). NULL
+    Tcl_Obj *reliefObj;		/* -relief option. NULL
 				 * means option not specified. */
 #endif
     int relief;			/* 3-D relief for background. */
@@ -374,96 +377,65 @@ typedef struct TkTextTag {
 				 * foreground stuff. None means no value
 				 * specified here.*/
 #if TK_MAJOR_VERSION < 9
-    char *justifyString;	/* -justify option string (malloc-ed). NULL
+    Tcl_Obj *justifyObj;	/* -justify option. NULL
 				 * means option not specified. */
 #endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
 				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *lMargin1Obj;	/* -lmargin1 option object. NULL
-				 * means option not specified. */
-#else
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *lMargin2Obj;	/* -lmargin2 option object. NULL
-				 * means option not specified. */
-#else
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int lMargin2;		/* Left margin for second and later display lines
-				 * of each text line, in pixels. INT_MIN means option not specified. */
+    Tcl_Obj *lMargin1Obj;	/* Left margin for first display line of each
+				 * text line, in pixels. NULL means option not specified. */
+    int lMargin1;		/* No longer used, but kept for binary compatibility. */
+    Tcl_Obj *lMargin2Obj;	/* Left margin for second and later display lines
+				 * of each text line, in pixels NULL means option not specified. */
+    int lMargin2;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
 				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
-#else
-    char *offsetString;		/* -offset option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int offset;			/* Vertical offset of text's baseline from
+    Tcl_Obj *offsetObj;		/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
-				 * subscripts. INT_MIN means option not specified. */
+				 * subscripts. NULL means option not specified. */
+    int offset;			/* No longer used, but kept for binary compatibility. */
 #if TK_MAJOR_VERSION < 9
-    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
+    Tcl_Obj *overstrikeObj;	/* -overstrike option. NULL
 				 * means option not specified. */
 #endif
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
 				 * color as foreground. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
+    Tcl_Obj *rMarginObj;	/* Right margin for text, in pixels. NULL
 				 * means option not specified. */
-#else
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
+    int rMargin;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
 				 * NULL means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means
 				 * no value specified here. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing1Obj;	/* -spacing1 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing1;
 #endif
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing2Obj;	/* -spacing2 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing2;
 #endif
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing3Obj;	/* -spacing3 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing3String;	/* -spacing3 option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TK_MAJOR_VERSION < 9
+    int spacing3;
 #endif
     Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
 				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
-#if TK_MAJOR_VERSION > 8
     TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-#else
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if
-				 * not specified). */
-    char *underlineString;	/* -underline option string (malloc-ed). NULL
+#if TK_MAJOR_VERSION < 9
+    Tcl_Obj *underlineObj;	/* -underline option. NULL
 				 * means option not specified. */
 #endif
     int underline;		/* > 0 means draw underline underneath
@@ -475,7 +447,7 @@ typedef struct TkTextTag {
 				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
 				 * use wrapmode for whole widget. */
 #if TK_MAJOR_VERSION < 9
-    char *elideString;		/* -elide option string (malloc-ed). NULL
+    Tcl_Obj *elideObj;		/* -elide option. NULL
 				 * means option not specified. */
 #endif
     int elide;			/* > 0 means that data under this tag
@@ -489,15 +461,6 @@ typedef struct TkTextTag {
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
-#ifdef BUILD_tk
-    int spacing1;		/* Extra spacing above first display line for
-				 * text line. INT_MIN means option not specified. */
-    int spacing2;		/* Extra spacing between display lines for the
-				 * same text line. INT_MIN means option not specified. */
-    int spacing3;		/* Extra spacing below last display line for
-				 * text line. INT_MIN means option not specified. */
-    int borderWidth;		/* Width of 3-D border for background. */
-#endif
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -726,14 +689,23 @@ typedef struct TkText {
 
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * default background. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border to draw around entire
 				 * widget. */
     Tcl_Obj *padXObj, *padYObj;		/* Padding between text and window border. */
+#else
+    int borderWidth;
+    int padX, padY;
+#endif
     int relief;			/* 3-d effect for border around entire widget:
 				 * TK_RELIEF_RAISED etc. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -745,13 +717,17 @@ typedef struct TkText {
 				 * font. */
     int charHeight;		/* Height of average character in default
 				 * font, including line spacing. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing1Obj;	/* Default extra spacing above first display
 				 * line for each text line. */
     Tcl_Obj *spacing2Obj;	/* Default extra spacing between display lines
 				 * for the same text line. */
     Tcl_Obj *spacing3Obj;	/* Default extra spacing below last display
 				 * line for each text line. */
-    Tcl_Obj *tabOptionPtr; 	/* Value of -tabs option string. */
+#else
+    int spacing1, spacing2, spacing3;
+#endif
+    Tcl_Obj *tabOptionObj;	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
@@ -766,8 +742,12 @@ typedef struct TkText {
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
 				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_NULL to
 				 * use wrapmode for whole widget. */
-    int width; Tcl_Obj *heightObj;		/* Desired dimensions for window, measured in
-				 * characters. */
+    int width;		/* Desired dimensions for window, measured in characters */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *heightObj;
+#else
+    int height;
+#endif
     int setGrid;		/* Non-zero means pass gridding information to
 				 * window manager. */
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to
@@ -790,6 +770,9 @@ typedef struct TkText {
 				/* Border and background for selected
 				 * characters when they don't have the
 				 * focus. */
+#if TK_MAJOR_VERSION < 8
+    int selBorderWidth;
+#endif
     Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected text. This is
 				 * a copy of information in *selTagPtr, so it
@@ -809,8 +792,12 @@ typedef struct TkText {
 				/* Points to segment for "insert" mark. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *insertWidthObj;		/* Total width of insert cursor. */
     Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor */
+#else
+    int insertWidth, insertBorderWidth;
+#endif
     TkTextInsertUnfocussed insertUnfocussed;
 				/* How to display the insert cursor when the
 				 * text widget does not have the focus. */
@@ -841,7 +828,6 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
@@ -849,11 +835,6 @@ typedef struct TkText {
 				 * horizontal scrollbar when view changes. May be NULL. */
     Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. May be NULL. */
-#else
-    char *takeFocus;
-    char *xScrollCmd;
-    char *yScrollCmd;
-#endif
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
@@ -877,16 +858,6 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
-#ifdef BUILD_tk
-    int padX, padY;
-    int selBorderWidth;
-    int highlightWidth;
-    int borderWidth;
-    int spacing1, spacing2, spacing3;
-    int height;
-    int insertBorderWidth;
-    int insertWidth;
-#endif
 } TkText;
 
 /*

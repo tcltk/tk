@@ -536,9 +536,10 @@ void Ttk_TkDestroyedHandler(
     StylePackageData* pkgPtr = GetStylePackageData(interp);
 
     /*
-     * Cancel any pending ThemeChanged calls:
+     * Cancel any pending ThemeChanged calls. We might be called
+     * before Ttk is initialized. See bug [3981091ed336].
      */
-    if (pkgPtr->themeChangePending) {
+    if (pkgPtr && pkgPtr->themeChangePending) {
 	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
     }
 }
@@ -1327,7 +1328,9 @@ static int StyleLookupCmd(
     }
 
     style = Ttk_GetStyle(theme, Tcl_GetString(objv[2]));
-
+    if (!style) {
+	return TCL_ERROR;
+    }
     optionName = Tcl_GetString(objv[3]);
 
     if (objc >= 5) {
@@ -1352,7 +1355,7 @@ static int StyleLookupCmd(
 }
 
 static int StyleThemeCurrentCmd(
-    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj * const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Tcl_HashSearch search;

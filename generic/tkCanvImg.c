@@ -526,7 +526,7 @@ static void
 DisplayImage(
     Tk_Canvas canvas,		/* Canvas that contains item. */
     Tk_Item *itemPtr,		/* Item to be displayed. */
-    Display *display,		/* Display on which to draw item. */
+    TCL_UNUSED(Display *),		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
     int x, int y, int width, int height)
 				/* Describes region of canvas that must be
@@ -536,7 +536,6 @@ DisplayImage(
     short drawableX, drawableY;
     Tk_Image image;
     Tk_State state = itemPtr->state;
-    (void)display;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;

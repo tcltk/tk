@@ -74,6 +74,8 @@ TkpDisplayMenuButton(
 				/* Image information that will be used to
 				 * restrict disabled pixmap as well */
     int haveImage = 0, haveText = 0;
+    int padX, padY;
+    int mbPtrBorderWidth, highlightWidth;
 
     mbPtr->flags &= ~REDRAW_PENDING;
     if ((mbPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -123,6 +125,8 @@ TkpDisplayMenuButton(
     fullWidth = 0;
     fullHeight = 0;
 
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
     if (mbPtr->compound != COMPOUND_NONE && haveImage && haveText) {
 	switch ((enum compound) mbPtr->compound) {
 	case COMPOUND_TOP:
@@ -132,11 +136,11 @@ TkpDisplayMenuButton(
 	     */
 
 	    if (mbPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + mbPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = mbPtr->textHeight + mbPtr->padY;
+		imageYOffset = mbPtr->textHeight + padY;
 	    }
-	    fullHeight = height + mbPtr->textHeight + mbPtr->padY;
+	    fullHeight = height + mbPtr->textHeight + padY;
 	    fullWidth = (width > mbPtr->textWidth ? width : mbPtr->textWidth);
 	    textXOffset = (fullWidth - mbPtr->textWidth)/2;
 	    imageXOffset = (fullWidth - width)/2;
@@ -148,11 +152,11 @@ TkpDisplayMenuButton(
 	     */
 
 	    if (mbPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + mbPtr->padX;
+		textXOffset = width + padX;
 	    } else {
-		imageXOffset = mbPtr->textWidth + mbPtr->padX;
+		imageXOffset = mbPtr->textWidth + padX;
 	    }
-	    fullWidth = mbPtr->textWidth + mbPtr->padX + width;
+	    fullWidth = mbPtr->textWidth + padX + width;
 	    fullHeight = (height > mbPtr->textHeight ? height :
 		    mbPtr->textHeight);
 	    textYOffset = (fullHeight - mbPtr->textHeight)/2;
@@ -211,7 +215,7 @@ TkpDisplayMenuButton(
 	    XSetClipOrigin(mbPtr->display, gc, 0, 0);
 	}
     } else {
-	TkComputeAnchor(mbPtr->anchor, tkwin, mbPtr->padX, mbPtr->padY,
+	TkComputeAnchor(mbPtr->anchor, tkwin, padX, padY,
 		mbPtr->textWidth + mbPtr->indicatorWidth,
 		mbPtr->textHeight, &x, &y);
 	Tk_DrawTextLayout(mbPtr->display, pixmap, gc, mbPtr->textLayout,
@@ -272,20 +276,22 @@ TkpDisplayMenuButton(
      * border.
      */
 
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->borderWidthObj, &mbPtrBorderWidth);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
     if (mbPtr->relief != TK_RELIEF_FLAT) {
 	Tk_Draw3DRectangle(tkwin, pixmap, border,
-		mbPtr->highlightWidth, mbPtr->highlightWidth,
-		Tk_Width(tkwin) - 2*mbPtr->highlightWidth,
-		Tk_Height(tkwin) - 2*mbPtr->highlightWidth,
-		mbPtr->borderWidth, mbPtr->relief);
+		highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		mbPtrBorderWidth, mbPtr->relief);
     }
-    if (mbPtr->highlightWidth > 0) {
+    if (highlightWidth > 0) {
 	if (mbPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(mbPtr->highlightColorPtr, pixmap);
 	} else {
 	    gc = Tk_GCForColor(mbPtr->highlightBgColorPtr, pixmap);
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, mbPtr->highlightWidth, pixmap);
+	Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
     }
 
     /*
@@ -347,8 +353,15 @@ TkpComputeMenuButtonGeometry(
     int	 avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
+    int borderWidth, highlightWidth, wrapLength;
+    int padX, padY;
 
-    mbPtr->inset = mbPtr->highlightWidth + mbPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->wrapLengthObj, &wrapLength);
+    mbPtr->inset = highlightWidth + borderWidth;
 
     width = 0;
     height = 0;
@@ -367,8 +380,8 @@ TkpComputeMenuButtonGeometry(
     if (haveImage == 0 || mbPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
 
-	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
-		TCL_INDEX_NONE, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
+	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
+		TCL_INDEX_NONE, wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
 	txtWidth = mbPtr->textWidth;
 	txtHeight = mbPtr->textHeight;
@@ -392,7 +405,7 @@ TkpComputeMenuButtonGeometry(
 	     * Image is above or below text.
 	     */
 
-	    height += txtHeight + mbPtr->padY;
+	    height += txtHeight + padY;
 	    width = (width > txtWidth ? width : txtWidth);
 	    break;
 	case COMPOUND_LEFT:
@@ -401,7 +414,7 @@ TkpComputeMenuButtonGeometry(
 	     * Image is left or right of text.
 	     */
 
-	    width += txtWidth + mbPtr->padX;
+	    width += txtWidth + padX;
 	    height = (height > txtHeight ? height : txtHeight);
 	    break;
 	case COMPOUND_CENTER:
@@ -421,8 +434,8 @@ TkpComputeMenuButtonGeometry(
 	if (mbPtr->height > 0) {
 	    height = mbPtr->height;
 	}
-	width += 2*mbPtr->padX;
-	height += 2*mbPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     } else {
 	if (haveImage) {
 	    if (mbPtr->width > 0) {
@@ -444,8 +457,8 @@ TkpComputeMenuButtonGeometry(
     }
 
     if (! haveImage) {
-	width += 2*mbPtr->padX;
-	height += 2*mbPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
 
     if (mbPtr->indicatorOn) {
@@ -453,15 +466,15 @@ TkpComputeMenuButtonGeometry(
 	pixels = WidthOfScreen(Tk_Screen(mbPtr->tkwin));
 	mbPtr->indicatorHeight= (INDICATOR_HEIGHT * pixels)/(10*mm);
 	mbPtr->indicatorWidth = (INDICATOR_WIDTH * pixels)/(10*mm)
-		+ 2*mbPtr->indicatorHeight;
+		+ 2 * mbPtr->indicatorHeight;
 	width += mbPtr->indicatorWidth;
     } else {
 	mbPtr->indicatorHeight = 0;
 	mbPtr->indicatorWidth = 0;
     }
 
-    Tk_GeometryRequest(mbPtr->tkwin, (int) (width + 2*mbPtr->inset),
-	    (int) (height + 2*mbPtr->inset));
+    Tk_GeometryRequest(mbPtr->tkwin, (int) (width + 2 * mbPtr->inset),
+	    (int) (height + 2 * mbPtr->inset));
     Tk_SetInternalBorder(mbPtr->tkwin, mbPtr->inset);
 }
 

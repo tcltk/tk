@@ -199,7 +199,7 @@ proc ttk::notebook::Cleanup {nb} {
     set top [winfo toplevel $nb]
     if {[info exists TLNotebooks($top)]} {
 	set index [lsearch -exact $TLNotebooks($top) $nb]
-        set TLNotebooks($top) [lreplace $TLNotebooks($top) $index $index]
+	set TLNotebooks($top) [lreplace $TLNotebooks($top) $index $index]
     }
 }
 

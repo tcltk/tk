@@ -28,9 +28,9 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     Config $dataName $args
 
     if {$data(-parent) eq "."} {
-        set w .$dataName
+	set w .$dataName
     } else {
-        set w $data(-parent).$dataName
+	set w $data(-parent).$dataName
     }
 
     # (re)create the dialog box if necessary
