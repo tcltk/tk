@@ -17,7 +17,7 @@ namespace eval ttk::theme::winnative {
 	    -font TkDefaultFont
 
 	ttk::style map "." -foreground {disabled SystemGrayText}
-        ttk::style map "." -embossed {disabled 1}
+	ttk::style map "." -embossed {disabled 1}
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
@@ -81,7 +81,7 @@ namespace eval ttk::theme::winnative {
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
-        ttk::style configure TProgressbar \
+	ttk::style configure TProgressbar \
 	    -background SystemHighlight -borderwidth 0 \
 	    -barsize 22.5p -thickness 11.25p
     }

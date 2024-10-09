@@ -172,7 +172,7 @@ test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     update
     # On MacOS we need to wait for the test image display procedure to run.
     while {"timed out" ni $y && [lindex $y end 1] ne "display"} {
-        vwait y
+	vwait y
     }
     after cancel $timer
     list $x $y [.c bbox i1]

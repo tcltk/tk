@@ -1923,7 +1923,7 @@ proc scl {lst} {
 
 proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
     if {[grab current] ne {}} {
-        return
+	return
     }
     destroy $w
 
@@ -1954,7 +1954,7 @@ proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
 proc ClosePlacedDialog {w} {
     set tl [winfo toplevel $w]
     if {![winfo exists $::PlacedDialogOldFocus]} {
-        set ::PlacedDialogOldFocus $tl
+	set ::PlacedDialogOldFocus $tl
     }
     focus $::PlacedDialogOldFocus
     set ::PlacedDialogOldFocus {}

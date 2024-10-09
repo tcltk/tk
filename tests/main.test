@@ -56,16 +56,16 @@ test main-2.2 {Tk_MainEx: -encoding option} -constraints stdio -setup {
     # Procedure to simulate interactive typing of commands, line by line,
 	# for test 2.3
     proc type {chan script} {
-        foreach line [split $script \n] {
-            if {[catch {
-                puts $chan $line
-                flush $chan
-            }]} {
-                return
-            }
-            # Grrr... Behavior depends on this value.
-            after 1000
-        }
+	foreach line [split $script \n] {
+	    if {[catch {
+		puts $chan $line
+		flush $chan
+	    }]} {
+		return
+	    }
+	    # Grrr... Behavior depends on this value.
+	    after 1000
+	}
     }
 
 test main-2.3 {Tk_MainEx: -encoding option} -constraints stdio -setup {

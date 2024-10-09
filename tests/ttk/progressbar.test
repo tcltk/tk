@@ -89,8 +89,8 @@ test progressbar-3.1 "progressbar non-core options" -setup {
     ttk::progressbar .defaultpb
 } -body {
     foreach option {-anchor -foreground -justify -style -text -wraplength \
-                    -length -maximum -mode -orient -phase -value -variable} {
-        lappend res [.defaultpb cget $option]
+		    -length -maximum -mode -orient -phase -value -variable} {
+	lappend res [.defaultpb cget $option]
     }
     set res
 } -cleanup {
@@ -104,17 +104,17 @@ test progressbar-3.2 "TIP #442 options are taken into account" -setup {
     set thefont [font actual {Arial 10}]
 } -body {
     .p configure -anchor c -foreground blue -justify right \
-            -text "TIP #442\noptions are now tested" -wraplength 100
+	    -text "TIP #442\noptions are now tested" -wraplength 100
     update
     .p step 10
     .p configure -anchor e -font $thefont -foreground green -justify center \
-            -text "Changing the value of each option\nfrom TIP #442" -wraplength 250
+	    -text "Changing the value of each option\nfrom TIP #442" -wraplength 250
     update
     .p step 20
     .p configure -orient vertical -text "Cannot be seen"
     update
     foreach option {-anchor -foreground -justify -text -wraplength} {
-        lappend res [list $option [.p cget $option]]
+	lappend res [list $option [.p cget $option]]
     }
     set res
 } -cleanup {
@@ -148,7 +148,7 @@ test progressbar-4.1 "style command" -body {
     ttk::progressbar .wh  ; # default is  -orient horizontal
     ttk::progressbar .wv -orient vertical
     list [.wh cget -style] [.wh style] [winfo class .wh]\
-         [.wv cget -style] [.wv style] [winfo class .wv]
+	 [.wv cget -style] [.wv style] [winfo class .wv]
 } -cleanup {
     destroy .wh .wv
 } -result {{} Horizontal.TProgressbar TProgressbar {} Vertical.TProgressbar TProgressbar}

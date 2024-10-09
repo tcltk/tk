@@ -6,12 +6,12 @@ namespace eval ttk::theme::alt {
 
     variable colors
     array set colors {
-	-frame 		"#d9d9d9"
+	-frame		"#d9d9d9"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
-	-darker 	"#c3c3c3"
+	-darker		"#c3c3c3"
 	-border		"#414141"
-	-activebg 	"#ececec"
+	-activebg	"#ececec"
 	-disabledfg	"#a3a3a3"
 	-selectbg	"#4a6984"
 	-selectfg	"#ffffff"
@@ -21,18 +21,18 @@ namespace eval ttk::theme::alt {
     ttk::style theme settings alt {
 
 	ttk::style configure "." \
-	    -background 	$colors(-frame) \
-	    -foreground 	black \
+	    -background		$colors(-frame) \
+	    -foreground		black \
 	    -troughcolor	$colors(-darker) \
 	    -bordercolor	$colors(-border) \
-	    -selectbackground 	$colors(-selectbg) \
-	    -selectforeground 	$colors(-selectfg) \
-	    -font 		TkDefaultFont
+	    -selectbackground	$colors(-selectbg) \
+	    -selectforeground	$colors(-selectfg) \
+	    -font		TkDefaultFont
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
 	ttk::style map "." -foreground [list disabled $colors(-disabledfg)]
-        ttk::style map "." -embossed [list disabled 1]
+	ttk::style map "." -embossed [list disabled 1]
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -padding 0.75p \
@@ -49,12 +49,12 @@ namespace eval ttk::theme::alt {
 	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
-	           alternate $colors(-altindicator) \
-	           disabled $colors(-frame)]
+		   alternate $colors(-altindicator) \
+		   disabled $colors(-frame)]
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
-	           alternate $colors(-altindicator) \
-	           disabled $colors(-frame)]
+		   alternate $colors(-altindicator) \
+		   disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised

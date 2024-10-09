@@ -162,9 +162,9 @@ test unixEmbed-1.5a {Tk_UseWindow procedure, creating Container records} -constr
     pack .f1 .f2
     child alias w winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t -use [w]
-        list [testembed] [expr {[lindex [lindex [testembed all] 0] 0] - [w]}]
+	destroy {*}[winfo children .]
+	toplevel .t -use [w]
+	list [testembed] [expr {[lindex [lindex [testembed all] 0] 0] - [w]}]
     }
 } -cleanup {
     interp delete child
@@ -203,10 +203,10 @@ test unixEmbed-1.6a {Tk_UseWindow procedure, creating Container records} -constr
     child alias w1 winfo id .f1
     child alias w2 winfo id .f2
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        toplevel .t2 -use [w2]
-        testembed
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	toplevel .t2 -use [w2]
+	testembed
     }
 } -cleanup {
     interp delete child
@@ -264,14 +264,14 @@ test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        testembed
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	testembed
     }
     destroy .f1
     update
     child eval {
-        testembed
+	testembed
     }
 } -cleanup {
     deleteWindows
@@ -306,11 +306,11 @@ test unixEmbed-2.2a {EmbeddedEventProc procedure} -constraints {
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        testembed
-        destroy .t1
-        testembed
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	testembed
+	destroy .t1
+	testembed
     }
 } -cleanup {
     interp delete child
@@ -373,9 +373,9 @@ test unixEmbed-3.1a {ContainerEventProc procedure, detect creation} -constraints
     child alias w1 winfo id .f1
     set x [testembed]
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        wm withdraw .t1
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	wm withdraw .t1
     }
     list $x [testembed]
 } -cleanup {
@@ -412,7 +412,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
     }
     update
     dobg {
-        wm geometry .t1
+	wm geometry .t1
     }
 } -cleanup {
     deleteWindows
@@ -429,12 +429,12 @@ test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -c
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1] -bd 2 -relief raised
-        update
-        wm geometry .t1 +30+40
-        update
-        wm geometry .t1
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1] -bd 2 -relief raised
+	update
+	wm geometry .t1 +30+40
+	update
+	wm geometry .t1
     }
 } -cleanup {
     interp delete child
@@ -456,7 +456,7 @@ test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -co
     }
     update
     dobg {
-        wm geometry .t1
+	wm geometry .t1
     }
 } -cleanup {
     deleteWindows
@@ -473,12 +473,12 @@ test unixEmbed-3.4a {ContainerEventProc procedure, disallow position changes} -c
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        wm geometry .t1 300x100+30+40
-        update
-        wm geometry .t1
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	wm geometry .t1 300x100+30+40
+	update
+	wm geometry .t1
     }
 } -cleanup {
     interp delete child
@@ -517,10 +517,10 @@ test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -constrain
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        .t1 configure -width 300 -height 80
-        update
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	.t1 configure -width 300 -height 80
+	update
     }
     list [winfo width .f1] [winfo height .f1] [child eval {wm geometry .t1}]
 } -cleanup {
@@ -562,14 +562,14 @@ test unixEmbed-3.6a {ContainerEventProc procedure, map requests} -constraints {
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        set x unmapped
-        bind .t1 <Map> {set x mapped}
-        update
-        after 100
-        update
-        set x
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	set x unmapped
+	bind .t1 <Map> {set x mapped}
+	update
+	after 100
+	update
+	set x
     }
 } -cleanup {
     interp delete child
@@ -612,10 +612,10 @@ test unixEmbed-3.7a {ContainerEventProc procedure, destroy events} -constraints 
     bind .f1 <Destroy> {set x dead}
     set x alive
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        destroy .t1
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	destroy .t1
     }
     update
     list $x [winfo exists .f1]
@@ -659,12 +659,12 @@ test unixEmbed-4.1a {EmbedStructureProc procedure, configure events} -constraint
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        .t1 configure -width 180 -height 100
-        update
-        winfo geometry .t1
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	.t1 configure -width 180 -height 100
+	update
+	winfo geometry .t1
     }
 } -cleanup {
     interp delete child
@@ -703,8 +703,8 @@ test unixEmbed-4.2a {EmbedStructureProc procedure, destroy events} -constraints 
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
     }
     set x [testembed]
     destroy .f1
@@ -750,12 +750,12 @@ test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        bind .t1 <FocusIn> {lappend x "focus in %W"}
-        bind .t1 <FocusOut> {lappend x "focus out %W"}
-        update
-        set x {}
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	bind .t1 <FocusIn> {lappend x "focus in %W"}
+	bind .t1 <FocusOut> {lappend x "focus out %W"}
+	update
+	set x {}
     }
     focus -force .f1
     update
@@ -800,10 +800,10 @@ test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -constra
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        after 200 {destroy .t1}
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	after 200 {destroy .t1}
     }
     after 400
     focus -force .f1
@@ -850,12 +850,12 @@ test unixEmbed-5.3a {EmbedFocusProc procedure, FocusOut events} -constraints {
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        set x {}
-        bind .t1 <FocusIn> {lappend x "focus in %W"}
-        bind .t1 <FocusOut> {lappend x "focus out %W"}
-        update
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	set x {}
+	bind .t1 <FocusIn> {lappend x "focus in %W"}
+	bind .t1 <FocusOut> {lappend x "focus out %W"}
+	update
     }
     focus -force .f1
     update
@@ -902,14 +902,14 @@ test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -const
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        bind .t1 <Configure> {set x {configure .t1 %w %h}}
-        set x {}
-        .t1 configure -width 300 -height 120
-        update
-        list $x [winfo geom .t1]
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	bind .t1 <Configure> {set x {configure .t1 %w %h}}
+	set x {}
+	.t1 configure -width 300 -height 120
+	update
+	list $x [winfo geom .t1]
     }
 } -cleanup {
     interp delete child
@@ -949,14 +949,14 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
-        update
-        bind .t1 <Configure> {set x {configure .t1 %w %h}}
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
+	update
+	bind .t1 <Configure> {set x {configure .t1 %w %h}}
 	set x {}
-        .t1 configure -width 300 -height 120
-        update
-        list $x [winfo geom .t1]
+	.t1 configure -width 300 -height 120
+	update
+	list $x [winfo geom .t1]
     }
 } -cleanup {
     interp delete child
@@ -1009,18 +1009,18 @@ test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constrai
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
     }
     focus -force .
     bind . <Key> {lappend x {key %A %E}}
     set x {}
     set y [child eval {
-        update
-        bind .t1 <Key> {lappend y {key %A}}
-        set y {}
-        event generate .t1 <Key> -keysym a
-        set y
+	update
+	bind .t1 <Key> {lappend y {key %A}}
+	set y {}
+	event generate .t1 <Key> -keysym a
+	set y
     }]
     update
     list $x $y
@@ -1071,8 +1071,8 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1]
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1]
     }
     update
     focus -force .f1
@@ -1080,11 +1080,11 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
     bind . <Key> {lappend x {key %A}}
     set x {}
     set y [child eval {
-        update
-        bind .t1 <Key> {lappend y {key %A}}
-        set y {}
-        event generate .t1 <Key> -keysym b
-        set y
+	update
+	bind .t1 <Key> {lappend y {key %A}}
+	set y {}
+	event generate .t1 <Key> -keysym b
+	set y
     }]
     update
     list $x $y
@@ -1132,17 +1132,17 @@ test unixEmbed-8.1a {TkpClaimFocus procedure} -constraints unix -setup {
     update
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1] -highlightthickness 2 -bd 2 -relief sunken
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1] -highlightthickness 2 -bd 2 -relief sunken
     }
     # This should clear focus from the application embedded in .f1
     focus -force .f2
     update
     list [child eval {
-        set x [list [focus]]
-        focus .t1
+	set x [list [focus]]
+	focus .t1
 	update
-        lappend x [focus]
+	lappend x [focus]
     }] [focus]
 } -cleanup {
     interp delete child
@@ -1228,12 +1228,12 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
     pack .f1
     child alias w1 winfo id .f1
     child eval {
-        destroy {*}[winfo children .]
-        toplevel .t1 -use [w1] -highlightthickness 2 -bd 2 -relief sunken
-        set x {}
-        lappend x [testembed]
-        destroy .t1
-        lappend x [testembed]
+	destroy {*}[winfo children .]
+	toplevel .t1 -use [w1] -highlightthickness 2 -bd 2 -relief sunken
+	set x {}
+	lappend x [testembed]
+	destroy .t1
+	lappend x [testembed]
     }
 } -cleanup {
     interp delete child
