@@ -99,7 +99,7 @@ image create photo icon2
 icon2 copy icon -zoom [expr {$tk::scalingPct / 100}]
 
 pack [button $w.i -text "Set Window Icon to Globe" -image icon2 \
-        -compound top -command {wm iconphoto . icon}] -fill x -padx 3p
+	-compound top -command {wm iconphoto . icon}] -fill x -padx 3p
 pack [button $w.b -text "Set Badge to 3" -command {wm iconbadge . 3}] \
 	-fill x -padx 3p
 pack [button $w.e -text "Set Badge to 11" -command {wm iconbadge . 11}] \

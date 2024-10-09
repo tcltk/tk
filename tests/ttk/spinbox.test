@@ -213,12 +213,12 @@ test spinbox-3.0 "textarea should expand to fill widget" -setup {
     update idletasks
     set timer [after 500 {set ::spinbox_test timedout}]
     bind . <Map> {
-        after idle {
-            wm geometry . "210x80"
+	after idle {
+	    wm geometry . "210x80"
 	    update idletasks
-            set ::spinbox_test [.sb identify element 25 5]
-        }
-        bind . <Map> {}
+	    set ::spinbox_test [.sb identify element 25 5]
+	}
+	bind . <Map> {}
     }
     grid .sb -sticky ew
     vwait ::spinbox_test
@@ -234,12 +234,12 @@ test spinbox-4.0 "Increment with duplicates in -values, wrap" -setup {
 } -body {
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {
@@ -254,13 +254,13 @@ test spinbox-4.1 "Increment with duplicates in -values, wrap, initial value set"
     .sb set three
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     .sb set two    ; # the first "two" in the -values list becomes the current value
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {
@@ -274,12 +274,12 @@ test spinbox-4.2 "Increment with duplicates in -values, no wrap" -setup {
 } -body {
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {

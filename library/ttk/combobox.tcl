@@ -42,13 +42,13 @@ namespace eval ttk::combobox {
 
 ttk::copyBindings TEntry TCombobox
 
-bind TCombobox <Down> 			{ ttk::combobox::Post %W }
-bind TCombobox <Escape> 		{ ttk::combobox::Unpost %W }
+bind TCombobox <Down>			{ ttk::combobox::Post %W }
+bind TCombobox <Escape>			{ ttk::combobox::Unpost %W }
 
-bind TCombobox <Button-1> 		{ ttk::combobox::Press "" %W %x %y }
+bind TCombobox <Button-1>		{ ttk::combobox::Press "" %W %x %y }
 bind TCombobox <Shift-Button-1>		{ ttk::combobox::Press "s" %W %x %y }
-bind TCombobox <Double-Button-1> 	{ ttk::combobox::Press "2" %W %x %y }
-bind TCombobox <Triple-Button-1> 	{ ttk::combobox::Press "3" %W %x %y }
+bind TCombobox <Double-Button-1>	{ ttk::combobox::Press "2" %W %x %y }
+bind TCombobox <Triple-Button-1>	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
 
@@ -63,7 +63,7 @@ bind TCombobox <TouchpadScroll> {
 	ttk::combobox::Scroll %W [expr {$tk::Priv(deltaY) > 0 ? -1 : 1}]
     }
 }
-bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
+bind TCombobox <<TraverseIn>>		{ ttk::combobox::TraverseIn %W }
 
 ### Combobox listbox bindings.
 #
@@ -129,9 +129,9 @@ proc ttk::combobox::Press {mode w x y} {
     focus $w
     if {$State(entryPress)} {
 	switch -- $mode {
-	    s 	{ ttk::entry::Shift-Press $w $x 	; # Shift }
-	    2	{ ttk::entry::Select $w $x word 	; # Double click}
-	    3	{ ttk::entry::Select $w $x line 	; # Triple click }
+	    s	{ ttk::entry::Shift-Press $w $x	; # Shift }
+	    2	{ ttk::entry::Select $w $x word	; # Double click}
+	    3	{ ttk::entry::Select $w $x line	; # Triple click }
 	    ""	-
 	    default { ttk::entry::Press $w $x }
 	}
@@ -158,7 +158,7 @@ proc ttk::combobox::Motion {w x y} {
     variable State
     ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}]
+	&& [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -356,7 +356,7 @@ proc ttk::combobox::ConfigureListbox {cb} {
     set values [$cb cget -values]
     set current [$cb current]
     if {$current < 0} {
-	set current 0 		;# no current entry, highlight first one
+	set current 0		;# no current entry, highlight first one
     }
     set Values($cb) $values
     $popdown.l selection clear 0 end
@@ -367,10 +367,10 @@ proc ttk::combobox::ConfigureListbox {cb} {
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
 	grid $popdown.sb
-        grid configure $popdown.l -padx {1 0}
+	grid configure $popdown.l -padx {1 0}
     } else {
 	grid remove $popdown.sb
-        grid configure $popdown.l -padx 1
+	grid configure $popdown.l -padx 1
     }
     $popdown.l configure -height $height
 }
@@ -380,7 +380,7 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
     set values [$cb cget -values]
     set current [$cb current]
     if {$current < 0} {
-	set current 0 		;# no current entry, highlight first one
+	set current 0		;# no current entry, highlight first one
     }
     $cb.popdown.menu delete 0 end
     $cb.spacer configure -width [expr {$width - 40}] -height 1
@@ -444,7 +444,7 @@ proc ttk::combobox::AquaPlacePopdown {cb popdown} {
     set style [$cb cget -style]
     set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
-    	incr $var $delta
+	incr $var $delta
     }
     wm geometry $popdown ${w}x${h}+${x}+${y}
     return [list $x $y $w $h]

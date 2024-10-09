@@ -502,7 +502,7 @@ test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-de
     lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
     set res 1
     for {set i 0} {$i < [llength $lres]} {incr i 4} {
-        set res [expr {$res * [expr {[lindex $lres $i] >= 0}] }]
+	set res [expr {$res * [expr {[lindex $lres $i] >= 0}] }]
     }
     set res
 } -cleanup {
@@ -3188,7 +3188,7 @@ test listbox-32.1 {Bug [5d991b822e]} {
     set var INIT
     listbox .b -listvariable var
     trace add variable var unset {apply {args {
-        .b configure -listvariable {}
+	.b configure -listvariable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -3201,7 +3201,7 @@ test listbox-32.2 {Bug [5d991b822e]} {
     set var INIT
     listbox .b -listvariable var
     trace add variable var unset {apply {args {
-        .b configure -listvariable new
+	.b configure -listvariable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}
