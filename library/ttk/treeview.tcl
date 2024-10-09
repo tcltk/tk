@@ -19,7 +19,7 @@ namespace eval ttk::treeview {
     set State(resizeColumn)	#0
 
     # For pressmode == "heading"
-    set State(heading) 		{}
+    set State(heading)		{}
 
     set State(cellAnchor)	{}
     set State(cellAnchorOp)	"set"
@@ -36,9 +36,9 @@ bind Treeview	<Double-Button-1>	{ ttk::treeview::DoubleClick %W %x %y }
 bind Treeview	<ButtonRelease-1>	{ ttk::treeview::Release %W %x %y }
 bind Treeview	<B1-Motion>		{ ttk::treeview::Drag %W %x %y }
 bind Treeview	<Up>			{ ttk::treeview::Keynav %W up }
-bind Treeview	<Down> 			{ ttk::treeview::Keynav %W down }
+bind Treeview	<Down>			{ ttk::treeview::Keynav %W down }
 bind Treeview	<Right>			{ ttk::treeview::Keynav %W right }
-bind Treeview	<Left> 			{ ttk::treeview::Keynav %W left }
+bind Treeview	<Left>			{ ttk::treeview::Keynav %W left }
 bind Treeview	<Prior>			{ %W yview scroll -1 pages }
 bind Treeview	<Next>			{ %W yview scroll  1 pages }
 bind Treeview	<Return>		{ ttk::treeview::ToggleFocus %W }
