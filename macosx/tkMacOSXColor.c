@@ -666,6 +666,9 @@ TkpGetColor(
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
+			color.red   = (unsigned short)(rgba[0] * 65535.0);
+			color.green = (unsigned short)(rgba[1] * 65535.0);
+			color.blue  = (unsigned short)(rgba[2] * 65535.0);
 #endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
