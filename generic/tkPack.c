@@ -484,7 +484,7 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	packPtr = GetPacker(tkwin2);
-	if (!packPtr && (packPtr->containerPtr != NULL)) {
+	if (packPtr && (packPtr->containerPtr != NULL)) {
 	    Tk_ManageGeometry(tkwin2, NULL, NULL);
 	    if (packPtr->containerPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
 		Tk_UnmaintainGeometry(packPtr->tkwin,
