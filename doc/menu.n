@@ -285,8 +285,7 @@ system menu.
 When Tk sees a Help menu on X Windows and Motif menu compatibility is
 enabled the menu is moved to be last in the menubar and is right
 justified. Motif menu compatibility is enabled by setting the Tk option
-\fB*Menu.useMotifHelp\fR to true or by calling
-\fBtk::classic::restore menu\fR.
+\fB*Menu.useMotifHelp\fR to true.
 .SH "CLONES"
 .PP
 When a menu is set as a menubar for a toplevel window, or when a menu

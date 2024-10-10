@@ -169,12 +169,12 @@ proc ttk::LoadThemes {} {
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
-	classic 	classicTheme.tcl
-	alt 		altTheme.tcl
-	clam 		clamTheme.tcl
+	classic		classicTheme.tcl
+	alt		altTheme.tcl
+	clam		clamTheme.tcl
 	winnative	winTheme.tcl
 	xpnative	{xpTheme.tcl vistaTheme.tcl}
-	aqua 		aquaTheme.tcl
+	aqua		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
 	    foreach script $scripts {
