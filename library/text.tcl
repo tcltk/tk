@@ -612,7 +612,7 @@ proc ::tk::TextButton1 {w x y} {
 # Arguments:
 # w -		The text window in which the button was pressed.
 # x -		Mouse x position.
-# y - 		Mouse y position.
+# y -		Mouse y position.
 
 proc ::tk::TextAnchor {w} {
     variable Priv
@@ -740,7 +740,7 @@ proc ::tk::TextKeyExtend {w index} {
 #
 # Arguments:
 # w -		The text window.
-# x, y - 	Position of the mouse.
+# x, y -	Position of the mouse.
 
 proc ::tk::TextPasteSelection {w x y} {
     if {[$w cget -state] eq "normal"} {
