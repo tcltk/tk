@@ -164,6 +164,8 @@ Tk_DeleteErrorHandler(
      * there are many handlers that stay around forever).
      */
 
+    errorPtr->errorProc = NULL;
+
     if (dispPtr->deleteCount++ >= 9) {
 	TkErrorHandler *prevPtr;
 	TkErrorHandler *nextPtr;
