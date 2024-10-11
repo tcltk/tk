@@ -156,7 +156,7 @@ const struct TkAccessibleStateMap stateMap[] = {
   {"acc_visible",	TK_STATE_VISIBLE},
   {"acc_selectable_text",	TK_STATE_SELECTABLE_TEXT},
   {"acc_default",	TK_STATE_DEFAULT},
-  {"acc_read_ponly",	TK_STATE_READ_ONLY},
+  {"acc_read_only",	TK_STATE_READ_ONLY},
   {"acc_collapsed",	TK_STATE_COLLAPSED},
   {"acc_tooltip",	TK_STATE_HAS_TOOLTIP},
    {NULL,	0}
@@ -414,7 +414,7 @@ Tk_GetAccessibleRole(
     accessiblerole = Tcl_GetHashValue(hPtr);
     return accessiblerole;
   } else {
-    return NULL;
+    return TCL_OK;
   }
 }
 
@@ -422,9 +422,9 @@ Tk_GetAccessibleRole(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_SetAccessibleEvent --
+ * Tk_SignalAccessibleEvent --
  *
- *	This function links a platform-neutral event name and command to a 
+ *	This function assigns a platform-neutral accessibility event name to a 
  *	specfic widget. 
  *
  * Results:
@@ -437,7 +437,7 @@ Tk_GetAccessibleRole(
  */
 
 TkAccessibleEvent
-Tk_SetAccessibleEvent(
+Tk_SignalAccessibleEvent(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
@@ -459,7 +459,7 @@ Tk_SetAccessibleEvent(
   
   winevent = Tcl_GetString(objv[2]);
   
-  /* Set accessibility event table for window, add to table pointer. */
+  /* Set accessibility event. */
 
   for (i = 0; eventMap[i].scriptEvent != NULL; i++) {
     if(strcmp(eventMap[i].scriptEvent, winevent) == 0) {
@@ -468,7 +468,7 @@ Tk_SetAccessibleEvent(
       continue;
     }
   }
-  return NULL;
+  return TCL_OK;
 }
 
 
@@ -572,7 +572,7 @@ Tk_GetAccessibleState(
     accessiblestate = Tcl_GetHashValue(hPtr);
     return accessiblestate;
   }
-  return NULL;
+  return TCL_OK;
 }
 
 
@@ -675,7 +675,7 @@ Tk_GetAccessibleName(
     name = Tcl_GetHashValue(hPtr);
     return name;
   } else {
-    return NULL;
+    return "";
   }
 }
 
@@ -779,7 +779,7 @@ Tk_GetAccessibleDescription(
     description = Tcl_GetHashValue(hPtr);
     return description;
   } else {
-    return NULL;
+    return "";
   }
 }
 
