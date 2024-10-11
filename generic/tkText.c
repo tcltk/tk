@@ -202,8 +202,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_TEXT_SELECT_BD_COLOR,
-	offsetof(TkText, selBorderWidthPtr),
-	offsetof(TkText, selBorderWidth),
+	offsetof(TkText, selBorderWidthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selFgColorPtr),
@@ -212,13 +211,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), 0, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, TCL_INDEX_NONE, offsetof(TkText, spacing1),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
 	DEF_TEXT_SPACING2, TCL_INDEX_NONE, offsetof(TkText, spacing2),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, TCL_INDEX_NONE, offsetof(TkText, spacing3),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, start), TK_OPTION_NULL_OK,
 	 &lineOption, TK_TEXT_LINE_RANGE},
@@ -226,13 +225,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state),
 	TK_OPTION_ENUM_VAR, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
-	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE,
+	DEF_TEXT_TABS, offsetof(TkText, tabOptionObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle),
 	TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus),
+	DEF_TEXT_TAKE_FOCUS, offsetof(TkText, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
 	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo),
@@ -244,10 +243,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode),
 	TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd),
+	DEF_TEXT_XSCROLL_COMMAND, offsetof(TkText, xScrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	DEF_TEXT_YSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, yScrollCmd),
+	DEF_TEXT_YSCROLL_COMMAND, offsetof(TkText, yScrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
@@ -605,7 +604,7 @@ CreateWidget(
     textPtr->undo = textPtr->sharedTextPtr->undo;
     textPtr->maxUndo = textPtr->sharedTextPtr->maxUndo;
     textPtr->autoSeparators = textPtr->sharedTextPtr->autoSeparators;
-    textPtr->tabOptionPtr = NULL;
+    textPtr->tabOptionObj = NULL;
 
     /*
      * Create the "sel" tag and the "current" and "insert" marks.
@@ -613,8 +612,7 @@ CreateWidget(
 
     textPtr->selBorder = NULL;
     textPtr->inactiveSelBorder = NULL;
-    textPtr->selBorderWidth = 0;
-    textPtr->selBorderWidthPtr = NULL;
+    textPtr->selBorderWidthObj = NULL;
     textPtr->selFgColorPtr = NULL;
 
     /*
@@ -623,9 +621,6 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->selTagPtr->reliefString = (char *)
-	    ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
-    strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
@@ -2235,9 +2230,9 @@ ConfigureText(
 	ckfree(textPtr->tabArrayPtr);
 	textPtr->tabArrayPtr = NULL;
     }
-    if (textPtr->tabOptionPtr != NULL) {
+    if (textPtr->tabOptionObj != NULL) {
 	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr,
-		textPtr->tabOptionPtr);
+		textPtr->tabOptionObj);
 	if (textPtr->tabArrayPtr == NULL) {
 	    Tcl_AddErrorInfo(interp,"\n    (while processing -tabs option)");
 	    Tk_RestoreSavedOptions(&savedOptions);
@@ -2257,9 +2252,8 @@ ConfigureText(
     } else {
 	textPtr->selTagPtr->selBorder = textPtr->selBorder;
     }
-    if (textPtr->selTagPtr->borderWidthPtr != textPtr->selBorderWidthPtr) {
-	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
-	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
+    if (textPtr->selTagPtr->borderWidthObj != textPtr->selBorderWidthObj) {
+	textPtr->selTagPtr->borderWidthObj = textPtr->selBorderWidthObj;
     }
     if (textPtr->selTagPtr->selFgColor == NULL) {
 	textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
@@ -2268,16 +2262,16 @@ ConfigureText(
     }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
-    if ((textPtr->selTagPtr->elide >= 0)
+    if ((textPtr->selTagPtr->elideObj != NULL)
 	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
-	    || (textPtr->selTagPtr->lMargin1 != INT_MIN)
-	    || (textPtr->selTagPtr->lMargin2 != INT_MIN)
-	    || (textPtr->selTagPtr->offset != INT_MIN)
-	    || (textPtr->selTagPtr->rMargin != INT_MIN)
-	    || (textPtr->selTagPtr->spacing1 != INT_MIN)
-	    || (textPtr->selTagPtr->spacing2 != INT_MIN)
-	    || (textPtr->selTagPtr->spacing3 != INT_MIN)
+	    || (textPtr->selTagPtr->lMargin1Obj != NULL)
+	    || (textPtr->selTagPtr->lMargin2Obj != NULL)
+	    || (textPtr->selTagPtr->offsetObj != NULL)
+	    || (textPtr->selTagPtr->rMarginObj != NULL)
+	    || (textPtr->selTagPtr->spacing1Obj != NULL)
+	    || (textPtr->selTagPtr->spacing2Obj != NULL)
+	    || (textPtr->selTagPtr->spacing3Obj != NULL)
 	    || (textPtr->selTagPtr->tabStringPtr != NULL)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
@@ -2294,9 +2288,9 @@ ConfigureText(
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
-	    || (textPtr->selTagPtr->overstrike >= 0)
+	    || (textPtr->selTagPtr->overstrikeObj != NULL)
 	    || (textPtr->selTagPtr->overstrikeColor != NULL)
-	    || (textPtr->selTagPtr->underline >= 0)
+	    || (textPtr->selTagPtr->underlineObj != NULL)
 	    || (textPtr->selTagPtr->underlineColor != NULL)
 	    || (textPtr->selTagPtr->lMarginColor != NULL)
 	    || (textPtr->selTagPtr->rMarginColor != NULL)) {
@@ -2489,7 +2483,7 @@ TextEventProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * NOTE: we must zero out selBorder, selBorderWidthPtr and
+	 * NOTE: we must zero out selBorder, selBorderWidthObj and
 	 * selFgColorPtr: they are duplicates of information in the "sel" tag,
 	 * which will be freed up when we delete all tags. Hence we don't want
 	 * the automatic config options freeing process to delete them as
@@ -2497,8 +2491,7 @@ TextEventProc(
 	 */
 
 	textPtr->selBorder = NULL;
-	textPtr->selBorderWidthPtr = NULL;
-	textPtr->selBorderWidth = 0;
+	textPtr->selBorderWidthObj = NULL;
 	textPtr->selFgColorPtr = NULL;
 	if (textPtr->setGrid) {
 	    Tk_UnsetGrid(textPtr->tkwin);

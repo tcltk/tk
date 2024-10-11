@@ -867,10 +867,10 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthPtr != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0')
+	if ((tagPtr->borderWidthObj != NULL)
+		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
 		&& (tagPtr->priority > borderWidthPrio)) {
-	    styleValues.borderWidth = tagPtr->borderWidth;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
 	}
 	if ((tagPtr->relief != TK_RELIEF_NULL)
@@ -904,14 +904,14 @@ GetStyle(
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin1 != INT_MIN)
+	if ((tagPtr->lMargin1Obj != NULL)
 		&& (tagPtr->priority > lMargin1Prio)) {
-	    styleValues.lMargin1 = tagPtr->lMargin1;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin1Obj, &styleValues.lMargin1);
 	    lMargin1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin2 != INT_MIN)
+	if ((tagPtr->lMargin2Obj != NULL)
 		&& (tagPtr->priority > lMargin2Prio)) {
-	    styleValues.lMargin2 = tagPtr->lMargin2;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin2Obj, &styleValues.lMargin2);
 	    lMargin2Prio = tagPtr->priority;
 	}
 	if ((tagPtr->lMarginColor != NULL)
@@ -919,14 +919,14 @@ GetStyle(
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
 	    lMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->offset != INT_MIN)
+	if ((tagPtr->offsetObj != NULL)
 		&& (tagPtr->priority > offsetPrio)) {
-	    styleValues.offset = tagPtr->offset;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->offsetObj, &styleValues.offset);
 	    offsetPrio = tagPtr->priority;
 	}
-	if ((tagPtr->overstrike >= 0)
+	if ((tagPtr->overstrikeObj != NULL)
 		&& (tagPtr->priority > overstrikePrio)) {
-	    styleValues.overstrike = tagPtr->overstrike > 0;
+	    styleValues.overstrike = tagPtr->overstrike != 0;
 	    overstrikePrio = tagPtr->priority;
 	    if (tagPtr->overstrikeColor != NULL) {
 		 styleValues.overstrikeColor = tagPtr->overstrikeColor;
@@ -934,9 +934,9 @@ GetStyle(
 		 styleValues.overstrikeColor = fgColor;
 	    }
 	}
-	if ((tagPtr->rMargin != INT_MIN)
+	if ((tagPtr->rMarginObj != NULL)
 		&& (tagPtr->priority > rMarginPrio)) {
-	    styleValues.rMargin = tagPtr->rMargin;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->rMarginObj, &styleValues.rMargin);
 	    rMarginPrio = tagPtr->priority;
 	}
 	if ((tagPtr->rMarginColor != NULL)
@@ -944,19 +944,19 @@ GetStyle(
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
 	    rMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing1 != INT_MIN)
+	if ((tagPtr->spacing1Obj != NULL)
 		&& (tagPtr->priority > spacing1Prio)) {
-	    styleValues.spacing1 = tagPtr->spacing1;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &styleValues.spacing1);
 	    spacing1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing2 != INT_MIN)
+	if ((tagPtr->spacing2Obj != NULL)
 		&& (tagPtr->priority > spacing2Prio)) {
-	    styleValues.spacing2 = tagPtr->spacing2;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing2Obj, &styleValues.spacing2);
 	    spacing2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing3 != INT_MIN)
+	if ((tagPtr->spacing3Obj != NULL)
 		&& (tagPtr->priority > spacing3Prio)) {
-	    styleValues.spacing3 = tagPtr->spacing3;
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing3Obj, &styleValues.spacing3);
 	    spacing3Prio = tagPtr->priority;
 	}
 	if ((tagPtr->tabStringPtr != NULL)
@@ -970,9 +970,9 @@ GetStyle(
 	    styleValues.tabStyle = tagPtr->tabStyle;
 	    tabStylePrio = tagPtr->priority;
 	}
-	if ((tagPtr->underline >= 0)
+	if ((tagPtr->underlineObj != NULL)
 		&& (tagPtr->priority > underlinePrio)) {
-	    styleValues.underline = tagPtr->underline > 0;
+	    styleValues.underline = tagPtr->underline != 0;
 	    underlinePrio = tagPtr->priority;
 	    if (tagPtr->underlineColor != NULL) {
 		 styleValues.underlineColor = tagPtr->underlineColor;
@@ -980,9 +980,9 @@ GetStyle(
 		 styleValues.underlineColor = fgColor;
 	    }
 	}
-	if ((tagPtr->elide >= 0)
+	if ((tagPtr->elideObj != NULL)
 		&& (tagPtr->priority > elidePrio)) {
-	    styleValues.elide = tagPtr->elide > 0;
+	    styleValues.elide = tagPtr->elide != 0;
 	    elidePrio = tagPtr->priority;
 	}
 	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR) || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
@@ -1245,7 +1245,7 @@ LayoutDLine(
 		 * toggled off), or it's a new tag with higher priority.
 		 */
 
-		if (tagPtr->elide >= 0) {
+		if (tagPtr->elideObj != NULL) {
 		    info.tagCnts[tagPtr->priority]++;
 		    if (info.tagCnts[tagPtr->priority] & 1) {
 			info.tagPtrs[tagPtr->priority] = tagPtr;
@@ -1270,13 +1270,13 @@ LayoutDLine(
 			    elide = 0;
 			    while (--info.elidePriority > 0) {
 				if (info.tagCnts[info.elidePriority] & 1) {
-				    elide = info.tagPtrs[info.elidePriority]
-					    ->elide > 0;
+				    elide = info.tagPtrs[info.elidePriority]->elideObj
+					    && (info.tagPtrs[info.elidePriority]->elide != 0);
 				    break;
 				}
 			    }
 			} else {
-			    elide = tagPtr->elide > 0;
+			    elide = tagPtr->elideObj && (tagPtr->elide != 0);
 			    info.elidePriority = tagPtr->priority;
 			}
 		    }
@@ -1392,9 +1392,9 @@ LayoutDLine(
 		 */
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
 		    || (segPtr->typePtr == &tkTextToggleOnType)) {
-		if (segPtr->body.toggle.tagPtr->elide >= 0) {
+		if (segPtr->body.toggle.tagPtr->elideObj) {
 		    elide = (segPtr->typePtr == &tkTextToggleOffType)
-			    ^ (segPtr->body.toggle.tagPtr->elide > 0);
+			    ^ (segPtr->body.toggle.tagPtr->elide != 0);
 		}
 	    }
 
@@ -4649,7 +4649,7 @@ DisplayText(
   doScrollbars:
     if (textPtr->flags & UPDATE_SCROLLBARS) {
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
-	if (textPtr->yScrollCmd != NULL) {
+	if (textPtr->yScrollCmdObj != NULL) {
 	    GetYView(textPtr->interp, textPtr, 1);
 	}
 
@@ -4665,7 +4665,7 @@ DisplayText(
 	 * Update the horizontal scrollbar, if any.
 	 */
 
-	if (textPtr->xScrollCmd != NULL) {
+	if (textPtr->xScrollCmdObj != NULL) {
 	    GetXView(textPtr->interp, textPtr, 1);
 	}
     }
@@ -6530,7 +6530,7 @@ GetXView(
     }
     dInfoPtr->xScrollFirst = first;
     dInfoPtr->xScrollLast = last;
-    if (textPtr->xScrollCmd != NULL) {
+    if (textPtr->xScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6540,7 +6540,7 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->xScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -6815,7 +6815,7 @@ GetYView(
 
     dInfoPtr->yScrollFirst = first;
     dInfoPtr->yScrollLast = last;
-    if (textPtr->yScrollCmd != NULL) {
+    if (textPtr->yScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6825,7 +6825,7 @@ GetYView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->yScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
