@@ -53,17 +53,6 @@ typedef union MacPixel_t {
 } MacPixel;
 
 /*
- * We maintain two colormaps, one for the LightAqua appearance and one for the
- * DarkAqua appearance.
- */
-
-enum macColormap {
-    noColormap,
-    lightColormap,
-    darkColormap,
-};
-
-/*
  * In TkMacOSXColor.c a Tk hash table is constructed from the static data
  * below to map system color names to CGColors.
  */

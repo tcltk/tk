@@ -1229,7 +1229,8 @@ static const char *const accentNames[] = {
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
-    [self generateExposeEvents:self.bounds];
+    // Force a redraw of the view.
+    [self setFrameSize:self.frame.size];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
