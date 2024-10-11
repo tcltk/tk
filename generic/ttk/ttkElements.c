@@ -649,18 +649,18 @@ typedef struct {
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='.5' y='.5' width='15' height='15' rx='1.5' fill='#ffffff' stroke='#888888'/>\n\
+     <rect x='.5' y='.5' width='15' height='15' rx='3.5' fill='#ffffff' stroke='#888888'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='4'/>\n\
      <path d='m4.5 8 3 3 4-6' fill='none' stroke='#ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
     </svg>";
 
 static const char checkbtnTriData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='4'/>\n\
      <path d='m4 8h8' fill='none' stroke='#ffffff' stroke-width='2'/>\n\
     </svg>";
 
