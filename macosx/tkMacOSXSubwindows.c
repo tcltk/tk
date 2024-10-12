@@ -936,8 +936,7 @@ TkMacOSXVisableClipRgn(
 
 #if 0
 //This code is not currently used.  But it shows how to iterate over the
-//rectangles in a region described by an HIShape.  Probably we want to
-//replace the current dirtyRect by such a region.
+//rectangles in a region described by an HIShape.
 
 /*
  *----------------------------------------------------------------------
@@ -976,10 +975,6 @@ InvalViewRect(
 	break;
     case kHIShapeEnumerateRect:
 	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
-	// Cannot rely on addTkDirtyRect: to force redrawing.
-	//MC This is the only place where the rect is not the view bounds.
-	//And it kills liveResize.
-	//[view generateExposeEvents:dirtyRect];
 	break;
     }
     [view generateExposeEvents:[view bounds]];
@@ -1023,7 +1018,7 @@ TkMacOSXRedrawViewIdleTask(
     TKContentView *view = (TKContentView *) clientData;
     //    fprintf(stderr, "idle redraw for %p\n", view);
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
+    [view setNeedsDisplay:YES];
 }
 
 void
@@ -1044,7 +1039,7 @@ TkMacOSXInvalidateWindow(
      	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
+    [view setNeedsDisplay:YES];
 }
 
 /*
