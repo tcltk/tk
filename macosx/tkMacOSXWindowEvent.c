@@ -238,6 +238,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
 	TKContentView *view = [window contentView];
+	// fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	if (@available(macOS 10.14, *)) {
@@ -254,7 +255,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-   	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	// fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
@@ -262,10 +263,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 {
     NSString *name = [notification name];
     if ([name isEqualToString:NSWindowWillStartLiveResizeNotification]) {
-	// printf("Starting live resize.\n");
+	// fprintf(stderr, "Starting live resize.\n");
     } else if ([name isEqualToString:NSWindowDidEndLiveResizeNotification]) {
 	[self setTkLiveResizeEnded:YES];
-	// printf("Ending live resize\n");
+	// fprintf(stderr, "Ending live resize\n");
     }
 }
 
@@ -1124,7 +1125,7 @@ ConfigureRestrictProc(
 	 * crashes or very poor performance.  The reentered flag is
 	 * used to detect this.
 	 */
-	//fprintf(stderr, "Recursive call to generateExposeEvents\n");
+	// fprintf(stderr, "Recursive call to generateExposeEvents\n");
 	return;
     }
     reentered = 1;
