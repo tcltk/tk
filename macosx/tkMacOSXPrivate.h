@@ -402,12 +402,8 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    Bool _tkNeedsDisplay;
-    NSRect _tkDirtyRect;
     NSTrackingArea *trackingArea;
 }
-@property Bool tkNeedsDisplay;
-@property NSRect tkDirtyRect;
 @property CGContextRef tkLayerBitmapContext;
 @end
 
@@ -417,8 +413,6 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) addTkDirtyRect: (NSRect) rect;
-- (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
 - (void) resetTkLayerBitmapContext;
