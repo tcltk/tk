@@ -214,7 +214,7 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
      */
 
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp activateIgnoringOtherApps: YES];
+    //[NSApp activateIgnoringOtherApps: YES];
 
     /*
      * Add an event monitor so we continue to receive NSMouseMoved and
@@ -476,6 +476,7 @@ static void showRootWindow(void *clientData) {
     if (wmPtr->hints.initial_state == NormalState) {
 	[root makeKeyAndOrderFront:NSApp];
     }
+    [NSApp activateIgnoringOtherApps: YES];
 }
 
 int
