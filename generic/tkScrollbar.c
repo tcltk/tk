@@ -51,8 +51,8 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_SCROLLBAR_BORDER_WIDTH, offsetof(TkScrollbar, borderWidth), 0, NULL},
     {TK_CONFIG_STRING, "-command", "command", "Command",
-	DEF_SCROLLBAR_COMMAND, offsetof(TkScrollbar, command),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_SCROLLBAR_COMMAND, offsetof(TkScrollbar, commandObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_SCROLLBAR_CURSOR, offsetof(TkScrollbar, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-elementborderwidth", "elementBorderWidth",
@@ -79,8 +79,8 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
 	DEF_SCROLLBAR_REPEAT_INTERVAL, offsetof(TkScrollbar, repeatInterval), 0, NULL},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_SCROLLBAR_TAKE_FOCUS, offsetof(TkScrollbar, takeFocus),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_SCROLLBAR_TAKE_FOCUS, offsetof(TkScrollbar, takeFocusObj),
+	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_COLOR, "-troughcolor", "troughColor", "Background",
 	DEF_SCROLLBAR_TROUGH_COLOR, offsetof(TkScrollbar, troughColorPtr),
 	TK_CONFIG_COLOR_ONLY, NULL},
@@ -159,7 +159,7 @@ Tk_ScrollbarObjCmd(
 	    scrollPtr, ScrollbarCmdDeletedProc);
     scrollPtr->vertical = 0;
     scrollPtr->width = 0;
-    scrollPtr->command = NULL;
+    scrollPtr->commandObj = NULL;
     scrollPtr->commandSize = 0;
     scrollPtr->repeatDelay = 0;
     scrollPtr->repeatInterval = 0;
@@ -179,6 +179,10 @@ Tk_ScrollbarObjCmd(
     scrollPtr->activeField = 0;
     scrollPtr->activeRelief = TK_RELIEF_RAISED;
 #ifndef TK_NO_DEPRECATED
+#define totalUnits dummy1
+#define windowUnits dummy2
+#define firstUnit dummy3
+#define lastUnit dummy4
     scrollPtr->totalUnits = 0;
     scrollPtr->windowUnits = 0;
     scrollPtr->firstUnit = 0;
@@ -187,7 +191,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->firstFraction = 0.0;
     scrollPtr->lastFraction = 0.0;
     scrollPtr->cursor = NULL;
-    scrollPtr->takeFocus = NULL;
+    scrollPtr->takeFocusObj = NULL;
     scrollPtr->flags = 0;
 
     if (ConfigureScrollbar(interp, scrollPtr, objc-2, objv+2, 0) != TCL_OK) {
@@ -323,11 +327,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pixels = yDelta;
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pixels = xDelta;
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -352,11 +356,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pos = y - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pos = x - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -379,6 +383,7 @@ ScrollbarWidgetObjCmd(
 	    goto error;
 	}
 #ifndef TK_NO_DEPRECATED
+#	define OLD_STYLE_COMMANDS	2
 	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
 	    resObjs[0] = Tcl_NewWideIntObj(scrollPtr->totalUnits);
 	    resObjs[1] = Tcl_NewWideIntObj(scrollPtr->windowUnits);
@@ -540,8 +545,8 @@ ConfigureScrollbar(
      * from a 3-D border.
      */
 
-    if (scrollPtr->command != NULL) {
-	scrollPtr->commandSize = (int) strlen(scrollPtr->command);
+    if (scrollPtr->commandObj != NULL) {
+	scrollPtr->commandSize = (int) strlen(Tcl_GetString(scrollPtr->commandObj));
     } else {
 	scrollPtr->commandSize = 0;
     }

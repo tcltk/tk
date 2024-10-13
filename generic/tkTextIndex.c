@@ -1621,7 +1621,7 @@ TkTextIndexForwChars(
 		 * toggled off), or it's a new tag with higher priority.
 		 */
 
-		if (tagPtr->elide >= 0) {
+		if (tagPtr->elideObj) {
 		    infoPtr->tagCnts[tagPtr->priority]++;
 		    if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -1648,13 +1648,13 @@ TkTextIndexForwChars(
 			    while (--infoPtr->elidePriority > 0) {
 				if (infoPtr->tagCnts[infoPtr->elidePriority]
 					& 1) {
-				    elide = infoPtr->tagPtrs
-					    [infoPtr->elidePriority]->elide > 0;
+				    elide = infoPtr->tagPtrs[infoPtr->elidePriority]->elideObj
+					    && infoPtr->tagPtrs[infoPtr->elidePriority]->elide != 0;
 				    break;
 				}
 			    }
 			} else {
-			    elide = tagPtr->elide > 0;
+			    elide = tagPtr->elideObj && (tagPtr->elide != 0);
 			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
@@ -1871,7 +1871,7 @@ TkTextIndexCount(
 		     * toggled off), or it's a new tag with higher priority.
 		     */
 
-		    if (tagPtr->elide >= 0) {
+		    if (tagPtr->elideObj) {
 			infoPtr->tagCnts[tagPtr->priority]++;
 			if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 			    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -1898,13 +1898,13 @@ TkTextIndexCount(
 				while (--infoPtr->elidePriority > 0) {
 				    if (infoPtr->tagCnts[
 					    infoPtr->elidePriority] & 1) {
-					elide = infoPtr->tagPtrs[
-						infoPtr->elidePriority]->elide > 0;
+					elide = infoPtr->tagPtrs[infoPtr->elidePriority]->elideObj
+						&& (infoPtr->tagPtrs[infoPtr->elidePriority]->elide != 0);
 					break;
 				    }
 				}
 			    } else {
-				elide = tagPtr->elide > 0;
+				elide = tagPtr->elideObj && (tagPtr->elide != 0);
 				infoPtr->elidePriority = tagPtr->priority;
 			    }
 			}
@@ -2160,7 +2160,7 @@ TkTextIndexBackChars(
 	     * it's a new tag with higher priority.
 	     */
 
-	    if (tagPtr->elide >= 0) {
+	    if (tagPtr->elideObj) {
 		infoPtr->tagCnts[tagPtr->priority]++;
 		if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -2185,13 +2185,13 @@ TkTextIndexBackChars(
 			elide = 0;
 			while (--infoPtr->elidePriority > 0) {
 			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
-				elide = infoPtr->tagPtrs[
-					infoPtr->elidePriority]->elide > 0;
+				elide = infoPtr->tagPtrs[infoPtr->elidePriority]->elideObj
+					&& (infoPtr->tagPtrs[infoPtr->elidePriority]->elide != 0);
 				break;
 			    }
 			}
 		    } else {
-			elide = tagPtr->elide > 0;
+			elide = tagPtr->elideObj && (tagPtr->elide != 0);
 			infoPtr->elidePriority = tagPtr->priority;
 		    }
 		}
