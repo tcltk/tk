@@ -12792,7 +12792,7 @@ TkBTreeGetLang(
 {
     const TkTextTagSet *tagInfoPtr;
     const TkSharedText *sharedTextPtr;
-    const char *langPtr;
+    const char *lang;
 
     assert(textPtr);
     assert(segPtr->tagInfoPtr);
@@ -12800,7 +12800,7 @@ TkBTreeGetLang(
 
     sharedTextPtr = textPtr->sharedTextPtr;
     tagInfoPtr = segPtr->tagInfoPtr;
-    langPtr = textPtr->lang;
+    lang = textPtr->lang;
 
     if (tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
 	unsigned i = TkTextTagSetFindFirst(tagInfoPtr);
@@ -12813,13 +12813,13 @@ TkBTreeGetLang(
 	    assert(!tagPtr->isDisabled);
 
 	    if (tagPtr->lang[0] && (int) tagPtr->priority > highestPriority) {
-		langPtr = tagPtr->lang;
+		lang = tagPtr->lang;
 		highestPriority = tagPtr->priority;
 	    }
 	}
     }
 
-    return langPtr;
+    return lang;
 }
 
 /*
