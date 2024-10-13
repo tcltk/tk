@@ -218,7 +218,6 @@ int
 TkAccessibility_Init(
    Tcl_Interp *interp)
 {
-  InitAccessibilityStorage();
   Tcl_CreateObjCommand(interp, "::tk::accessible::name", Tk_SetAccessibleName, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::description", Tk_SetAccessibleDescription, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::value", Tk_GetAccessibleValue, NULL, NULL);
