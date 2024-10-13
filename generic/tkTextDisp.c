@@ -1540,7 +1540,7 @@ SetupEolSegment(
 {
     char eolChar[10];
     Tcl_UniChar uc;
-    const char *p = textPtr->eolCharPtr ? Tcl_GetString(textPtr->eolCharPtr) : NULL;
+    const char *p = textPtr->eolCharObj ? Tcl_GetString(textPtr->eolCharObj) : NULL;
     int len;
 
     if (!p || !*p) {
@@ -1563,12 +1563,12 @@ SetupEotSegment(
 {
     char eotChar[10];
     Tcl_UniChar uc;
-    const char *p = textPtr->eotCharPtr ? Tcl_GetString(textPtr->eotCharPtr) : NULL;
+    const char *p = textPtr->eotCharObj ? Tcl_GetString(textPtr->eotCharObj) : NULL;
     int len;
 
     if (!p || !*p) {
-	if (textPtr->eolCharPtr) {
-	    p = Tcl_GetString(textPtr->eolCharPtr);
+	if (textPtr->eolCharObj) {
+	    p = Tcl_GetString(textPtr->eolCharObj);
 	}
 	if (!p || !*p) {
 	    p = "\xc2\xb6"; /* U+00B6 = PILCROW SIGN */
@@ -1957,12 +1957,12 @@ FillStyle(
     if (tagPtr->spacing1Obj)            { stylePtr->spacing1 = tagPtr->spacing1; }
     if (tagPtr->spacing2Obj)            { stylePtr->spacing2 = tagPtr->spacing2; }
     if (tagPtr->spacing3Obj)            { stylePtr->spacing3 = tagPtr->spacing3; }
-    if (tagPtr->tabStringPtr)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
+    if (tagPtr->tabStringObj)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
     if (tagPtr->elide >= 0)             { stylePtr->elide = tagPtr->elide; }
-    if (tagPtr->langPtr)                { stylePtr->lang = tagPtr->lang; }
-    if (tagPtr->hyphenRulesPtr)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
+    if (tagPtr->langObj)                { stylePtr->lang = tagPtr->lang; }
+    if (tagPtr->hyphenRulesObj)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
 
     if (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR) { stylePtr->tabStyle = tagPtr->tabStyle; }

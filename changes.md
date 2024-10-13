@@ -8,6 +8,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
 ## Changes since Tk 9.0.0
  - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
+ - [SIGABRT from Tk_DeleteErrorHandler()](https://core.tcl-lang.org/tk/tktview/f52986)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 

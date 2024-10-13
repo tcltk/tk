@@ -225,11 +225,11 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, endLine), TK_OPTION_NULL_OK, &lineOption, TK_TEXT_LINE_RANGE},
 #endif
     {TK_OPTION_STRING, "-eolchar", "eolChar", "EolChar",
-	NULL, offsetof(TkText, eolCharPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, offsetof(TkText, eolCharObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_COLOR, "-eolcolor", "eolColor", "EolColor",
 	NULL, TCL_INDEX_NONE, offsetof(TkText, eolColor), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_REDRAW},
     {TK_OPTION_STRING, "-eotchar", "eotChar", "EotChar",
-	NULL, offsetof(TkText, eotCharPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, offsetof(TkText, eotCharObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_COLOR, "-eotcolor", "eotColor", "EotColor",
 	NULL, TCL_INDEX_NONE, offsetof(TkText, eotColor), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_REDRAW},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
@@ -249,7 +249,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness", "HighlightThickness",
 	DEF_TEXT_HIGHLIGHT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, highlightWidth), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-hyphenrules", NULL, NULL,
-	NULL, offsetof(TkText, hyphenRulesPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, offsetof(TkText, hyphenRulesObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_COLOR, "-hyphencolor", "hyphenColor", "HyphenColor",
 	DEF_TEXT_FG, TCL_INDEX_NONE, offsetof(TkText, hyphenColor), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_REDRAW},
     {TK_OPTION_BOOLEAN, "-hyphens", "hyphens", "Hyphens",
@@ -280,7 +280,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(TkText, justify), TK_OPTION_ENUM_VAR, justifyStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
-	 NULL, offsetof(TkText, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	 NULL, offsetof(TkText, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndoDepth), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_INT, "-maxundosize", "maxUndoSize", "MaxUndoSize",
@@ -333,7 +333,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-synctime", "syncTime", "SyncTime",
 	"150", TCL_INDEX_NONE, offsetof(TkText, syncTime), 0, 0, TK_TEXT_SYNCHRONIZE},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
-	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_TABS, offsetof(TkText, tabOptionObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle), 0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tagging", "tagging", "Tagging",
@@ -4085,8 +4085,8 @@ TkConfigureText(
      * Parse hyphen rules.
      */
 
-    if (textPtr->hyphenRulesPtr) {
-	if (TkTextParseHyphenRules(textPtr, textPtr->hyphenRulesPtr, &textPtr->hyphenRules) != TCL_OK) {
+    if (textPtr->hyphenRulesObj) {
+	if (TkTextParseHyphenRules(textPtr, textPtr->hyphenRulesObj, &textPtr->hyphenRules) != TCL_OK) {
 	    goto error;
 	}
     } else {
@@ -4104,8 +4104,8 @@ TkConfigureText(
 	ckfree(textPtr->tabArrayPtr);
 	textPtr->tabArrayPtr = NULL;
     }
-    if (textPtr->tabOptionPtr) {
-	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, textPtr->tabOptionPtr);
+    if (textPtr->tabOptionObj) {
+	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, textPtr->tabOptionObj);
 	if (!textPtr->tabArrayPtr) {
 	    Tcl_AddErrorInfo(interp, "\n    (while processing -tabs option)");
 	    goto error;
@@ -4116,11 +4116,11 @@ TkConfigureText(
      * Check language support.
      */
 
-    if (textPtr->langPtr) {
-	if (!TkTextTestLangCode(interp, textPtr->langPtr)) {
+    if (textPtr->langObj) {
+	if (!TkTextTestLangCode(interp, textPtr->langObj)) {
 	    goto error;
 	}
-	memcpy(textPtr->lang, Tcl_GetString(textPtr->langPtr), 3);
+	memcpy(textPtr->lang, Tcl_GetString(textPtr->langObj), 3);
     } else {
 	memset(textPtr->lang, 0, 3);
     }

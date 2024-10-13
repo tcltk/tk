@@ -64,7 +64,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-hyphencolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, hyphenColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-hyphenrules", NULL, NULL,
-	NULL, offsetof(TkTextTag, hyphenRulesPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, hyphenRulesObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-inactivebackground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, attrs.inactiveBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-inactiveforeground", NULL, NULL,
@@ -73,13 +73,12 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-inactiveselectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL,
-	NULL, offsetof(TkTextTag, indentBgPtr), offsetof(TkTextTag, indentBg),
-	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL, NULL,
+	offsetof(TkTextTag, indentBgObj), offsetof(TkTextTag, indentBg), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, justifyStrings, 0},
     {TK_OPTION_STRING, "-lang", NULL, NULL,
-	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
 	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
@@ -113,7 +112,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
 	NULL, offsetof(TkTextTag, spacing3Obj), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
-	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, tabStringObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
     {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
@@ -999,7 +998,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->spacing1Obj
 	    || tagPtr->spacing2Obj
 	    || tagPtr->spacing3Obj
-	    || tagPtr->tabStringPtr
+	    || tagPtr->tabStringObj
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR
 		|| tagPtr->wrapMode == TEXT_WRAPMODE_CHAR
@@ -1136,11 +1135,11 @@ TkConfigureTag(
 
     tagPtr->attrs.borderWidth = MAX(0, tagPtr->attrs.borderWidth);
 
-    if (tagPtr->langPtr) {
-	if (!TkTextTestLangCode(interp, tagPtr->langPtr)) {
+    if (tagPtr->langObj) {
+	if (!TkTextTestLangCode(interp, tagPtr->langObj)) {
 	    rc = TCL_ERROR;
 	} else {
-	    memcpy(tagPtr->lang, Tcl_GetString(tagPtr->langPtr), 3);
+	    memcpy(tagPtr->lang, Tcl_GetString(tagPtr->langObj), 3);
 	}
     } else {
 	memset(tagPtr->lang, 0, 3);
@@ -1162,15 +1161,15 @@ TkConfigureTag(
 	ckfree(tagPtr->tabArrayPtr);
 	tagPtr->tabArrayPtr = NULL;
     }
-    if (tagPtr->tabStringPtr) {
-	if (!(tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, tagPtr->tabStringPtr))) {
+    if (tagPtr->tabStringObj) {
+	if (!(tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, tagPtr->tabStringObj))) {
 	    rc = TCL_ERROR;
 	}
     }
-    if (tagPtr->hyphenRulesPtr) {
+    if (tagPtr->hyphenRulesObj) {
 	int oldHyphenRules = tagPtr->hyphenRules;
 
-	if (TkTextParseHyphenRules(textPtr, tagPtr->hyphenRulesPtr, &tagPtr->hyphenRules) != TCL_OK) {
+	if (TkTextParseHyphenRules(textPtr, tagPtr->hyphenRulesObj, &tagPtr->hyphenRules) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 	if (oldHyphenRules != tagPtr->hyphenRules && textPtr->hyphenate) {

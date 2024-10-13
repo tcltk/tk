@@ -398,8 +398,8 @@ typedef struct TkTextEmbImage {
 				/* Information about the shared portion of the
 				 * text widget. This is used when the image
 				 * changes or is deleted. */
-    char *imageString;		/* Name of the image for this segment. */
-    char *imageName;		/* Name used by text widget to identify this
+    Tcl_Obj *imageObj;		/* Name of the image for this segment. */
+    Tcl_Obj *imageNameObj;		/* Name used by text widget to identify this
 				 * image. May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by
 				 * "image names" to identify this instance of
@@ -897,7 +897,7 @@ typedef struct TkTextTag {
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
-    Tcl_Obj *indentBgPtr;	/* -indentbackground option. Background will be indented
+    Tcl_Obj *indentBgObj;	/* -indentbackground option. Background will be indented
 				 * accordingly to the -lmargin1, and -lmargin2 options. NULL means
 				 * option not specified. */
     int indentBg;		/* If 1, Background will be indented accordingly to the -lmargin1
@@ -955,7 +955,7 @@ typedef struct TkTextTag {
     int spacing3;		/* Extra spacing below last display line for
 				 * text line. Only valid if spacing3Obj is
 				 * non-NULL. */
-    Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
+    Tcl_Obj *tabStringObj;	/* -tabs option string. NULL means option not
 				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
@@ -977,9 +977,9 @@ typedef struct TkTextTag {
 				 * whole widget. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NULL,
 				 * TEXT_SPACEMODE_NONE, TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
-    Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
+    Tcl_Obj *hyphenRulesObj;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
-    Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */
+    Tcl_Obj *langObj;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
 				 * NUL. */
     int elide;			/* > 0 means that data under this tag
@@ -1374,9 +1374,9 @@ typedef struct TkText {
     XColor *fgColor;		/* Default foreground color for text. */
     XColor *eolColor;		/* Foreground color for end of line symbol, can be NULL. */
     XColor *eotColor;		/* Foreground color for end of text symbol, can be NULL. */
-    Tcl_Obj *eolCharPtr;	/* Use this character for displaying end of line. Can be NULL or empty,
+    Tcl_Obj *eolCharObj;	/* Use this character for displaying end of line. Can be NULL or empty,
 				 * in this case the default char U+00B6 (pilcrow) will be used. */
-    Tcl_Obj *eotCharPtr;	/* Use this character for displaying end of text. Can be NULL or empty,
+    Tcl_Obj *eotCharObj;	/* Use this character for displaying end of text. Can be NULL or empty,
 				 * in this case the default char U+00B6 (pilcrow) will be used. */
     XColor *hyphenColor;	/* Foreground color for soft hyphens, can be NULL. */
     Tk_Font tkfont;		/* Default font for displaying text. */
@@ -1390,7 +1390,7 @@ typedef struct TkText {
 				 * for the same text line. */
     Tcl_Obj *spacing3Obj;	/* Default extra spacing below last display
 				 * line for each text line. */
-    Tcl_Obj *tabOptionPtr;	/* Value of -tabs option string. */
+    Tcl_Obj *tabOptionObj;	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
@@ -1398,9 +1398,9 @@ typedef struct TkText {
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
 				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. */
-    Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
+    Tcl_Obj *hyphenRulesObj;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
-    Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */
+    Tcl_Obj *langObj;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
 				 * NUL. */
 
