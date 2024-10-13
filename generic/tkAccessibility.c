@@ -215,7 +215,8 @@ Tk_AccessibleValue(
  *	
  *
  * Results:
- *	Returns an accessibility value in string format. Platform-specific API's *      will convert to the required type, if needed.
+ *	Returns an accessibility value in string format.
+ *      Platform-specific API's will convert to the required type, if needed.
  *
  * Side effects:
  *	None.
@@ -258,14 +259,13 @@ Tk_AccessibleState(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleValue  --
+ * Tk_AccessibleAction  --
  *
- *	This function reads the current value/data of the widget for  
- *	the accessibility API.
+ *	This function sets the current accessibility action for the widget. 
  *	
  *
  * Results:
- *	Returns an accessibility value in string format. Platform-specific API's *      will convert to the required type, if needed.
+ *	Returns an accessibility action for the widget.
  *
  * Side effects:
  *	None.
