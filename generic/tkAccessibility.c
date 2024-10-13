@@ -22,7 +22,7 @@
  *	
  *
  * Results:
- *	Assigns an accessibility name.
+ *	Assigns an accessibility role.
  *
  * Side effects:
  *	None.
@@ -52,7 +52,7 @@ Tk_AccessibleRole(
     return "";
   }
   
-  /* Get accessibility name for window. */
+  /* Get accessibility role for window. */
 
   obj = objv[2];
   role  =  Tcl_GetStringFromObj(obj, &arg_length);
@@ -314,7 +314,7 @@ int
 TkAccessibility_Init(
    Tcl_Interp *interp)
 {
-   Tcl_CreateObjCommand(interp, "::tk::accessible::role", Tk_AccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::role", Tk_AccessibleRole, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::name", Tk_AccessibleName, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::description", Tk_AccessibleDescription, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::value", Tk_AccessibleValue, NULL, NULL);
