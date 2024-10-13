@@ -3560,7 +3560,7 @@ TkTextIsElided(
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    tagPtr = segPtr->body.toggle.tagPtr;
-	    if (tagPtr->elide >= 0) {
+	    if (tagPtr->elideObj != NULL) {
 		infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		infoPtr->tagCnts[tagPtr->priority]++;
 	    }
@@ -3600,7 +3600,7 @@ TkTextIsElided(
 	    if ((segPtr->typePtr == &tkTextToggleOnType)
 		    || (segPtr->typePtr == &tkTextToggleOffType)) {
 		tagPtr = segPtr->body.toggle.tagPtr;
-		if (tagPtr->elide >= 0) {
+		if (tagPtr->elideObj != NULL) {
 		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		    infoPtr->tagCnts[tagPtr->priority]++;
 		}
@@ -3624,7 +3624,7 @@ TkTextIsElided(
 		    summaryPtr = summaryPtr->nextPtr) {
 		if (summaryPtr->toggleCount & 1) {
 		    tagPtr = summaryPtr->tagPtr;
-		    if (tagPtr->elide >= 0) {
+		    if (tagPtr->elideObj != NULL) {
 			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 			infoPtr->tagCnts[tagPtr->priority] +=
 				summaryPtr->toggleCount;
@@ -3642,7 +3642,7 @@ TkTextIsElided(
     infoPtr->elidePriority = -1;
     for (i = infoPtr->numTags-1; i >=0; i--) {
 	if (infoPtr->tagCnts[i] & 1) {
-	    infoPtr->elide = infoPtr->tagPtrs[i]->elide > 0;
+	    infoPtr->elide = infoPtr->tagPtrs[i]->elideObj && infoPtr->tagPtrs[i]->elide != 0;
 
 	    /*
 	     * Note: i == infoPtr->tagPtrs[i]->priority
