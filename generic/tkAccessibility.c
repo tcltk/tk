@@ -53,7 +53,7 @@ Tk_AccessibleName(
     return "";
   }
   
-  /* Set accessibility name for window. */
+  /* Get accessibility name for window. */
 
   obj = objv[2];
 
@@ -102,7 +102,7 @@ Tk_AccessibleDescription(
     return "";
   }
   
-  /* Set accessibility description for window. */
+  /* Get accessibility description for window. */
 
   obj = objv[2];
 
@@ -153,6 +153,7 @@ Tk_AccessibleValue(
     return "";
   }
 
+  /*Get accessibility value.*/
   obj = objv[2];
   value = Tcl_GetStringFromObj(obj, &arg_length);
   return value;
@@ -200,6 +201,8 @@ Tk_AccessibleState(
     return "";
   }
 
+
+  /*Get accessibility state.*/
   obj = objv[2];
   value = Tcl_GetStringFromObj(obj, &arg_length);
   return state;
