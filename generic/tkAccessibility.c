@@ -167,7 +167,8 @@ Tk_AccessibleDescription(
  *	
  *
  * Results:
- *	Returns an accessibility value in string format. Platform-specific API's *      will convert to the required type, if needed.
+ *	Returns an accessibility value in string format.
+ *      Platform-specific API's will convert to the required type, if needed.
  *
  * Side effects:
  *	None.
@@ -208,16 +209,15 @@ Tk_AccessibleValue(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleValue  --
+ * Tk_AccessibleState  --
  *
- *	This function reads the current value/data of the widget for  
+ *	This function reads the current state of the widget for  
  *	the accessibility API.
  *	
  *
  * Results:
- *	Returns an accessibility value in string format.
- *      Platform-specific API's will convert to the required type, if needed.
- *
+ *	Returns an accessibility state.
+ *      
  * Side effects:
  *	None.
  *
@@ -251,8 +251,8 @@ Tk_AccessibleState(
 
   /*Get accessibility state.*/
   obj = objv[2];
-  value = Tcl_GetStringFromObj(obj, &arg_length);
-  return value;
+  state = Tcl_GetStringFromObj(obj, &arg_length);
+  return state;
 }
 
 
