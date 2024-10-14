@@ -897,9 +897,6 @@ typedef struct TkTextTag {
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
-    Tcl_Obj *indentBgObj;	/* -indentbackground option. Background will be indented
-				 * accordingly to the -lmargin1, and -lmargin2 options. NULL means
-				 * option not specified. */
     int indentBg;		/* If 1, Background will be indented accordingly to the -lmargin1
 				 * and -lmargin2 options. -1 means not specified */
     Tk_Font tkfont;		/* Font for displaying text. NULL means no

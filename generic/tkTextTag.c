@@ -74,7 +74,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-inactiveselectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL, NULL,
-	offsetof(TkTextTag, indentBgObj), offsetof(TkTextTag, indentBg), TK_OPTION_NULL_OK, 0, 0},
+	TCL_INDEX_NONE, offsetof(TkTextTag, indentBg), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, justifyStrings, 0},
     {TK_OPTION_STRING, "-lang", NULL, NULL,
