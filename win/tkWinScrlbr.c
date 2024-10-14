@@ -506,14 +506,13 @@ ScrollbarProc(
 	 * Bail out immediately if there isn't a command to invoke.
 	 */
 
-	if (scrollPtr->info.commandSize == 0) {
+	if (!scrollPtr->info.commandObj) {
 	    Tcl_ServiceAll();
 	    return 0;
 	}
 
 	Tcl_DStringInit(&cmdString);
-	Tcl_DStringAppend(&cmdString, scrollPtr->info.command,
-		scrollPtr->info.commandSize);
+	Tcl_DStringAppend(&cmdString, Tcl_GetString(scrollPtr->info.commandObj), TCL_INDEX_NONE);
 
 	if (command == SB_LINELEFT || command == SB_LINERIGHT) {
 	    Tcl_DStringAppendElement(&cmdString, "scroll");
