@@ -160,7 +160,6 @@ Tk_ScrollbarObjCmd(
     scrollPtr->vertical = 0;
     scrollPtr->widthObj = 0;
     scrollPtr->commandObj = NULL;
-    scrollPtr->commandSize = 0;
     scrollPtr->repeatDelay = 0;
     scrollPtr->repeatInterval = 0;
     scrollPtr->borderWidthObj = NULL;
@@ -484,11 +483,6 @@ ConfigureScrollbar(
      * from a 3-D border.
      */
 
-    if (scrollPtr->commandObj != NULL) {
-	scrollPtr->commandSize = (int) strlen(Tcl_GetString(scrollPtr->commandObj));
-    } else {
-	scrollPtr->commandSize = 0;
-    }
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
     if (borderWidth < 0) {
 	Tcl_DecrRefCount(scrollPtr->borderWidthObj);
