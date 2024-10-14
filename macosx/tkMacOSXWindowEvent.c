@@ -308,11 +308,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
-#endif
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
@@ -1009,7 +1006,6 @@ ConfigureRestrictProc(
     return NO;
 }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1022,7 +1018,6 @@ ConfigureRestrictProc(
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
-#endif
 
 - (void) addTkDirtyRect: (NSRect) rect
 {
