@@ -140,9 +140,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
 	"0", offsetof(TkTextEmbImage, padYObj), offsetof(TkTextEmbImage, padY), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tags", NULL, NULL,
 	NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -716,8 +716,8 @@ EmbImageConfigure(
      * changed.
      */
 
-    if (img->imageObj) {
-	image = Tk_GetImage(textPtr->interp, textPtr->tkwin, Tcl_GetString(img->imageObj), EmbImageProc, eiPtr);
+    if (img->imageString) {
+	image = Tk_GetImage(textPtr->interp, textPtr->tkwin, img->imageString, EmbImageProc, eiPtr);
 	if (!image) {
 	    return TCL_ERROR;
 	}
@@ -732,7 +732,7 @@ EmbImageConfigure(
     }
 
     if (!img->name) {
-	if (!(name = img->imageNameObj) && !(name = img->imageObj)) {
+	if (!(name = img->imageName) && !(name = img->imageString)) {
 	    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		    "Either a \"-name\" or a \"-image\" argument must be"
 		    " provided to the \"image create\" subcommand", TCL_INDEX_NONE));
