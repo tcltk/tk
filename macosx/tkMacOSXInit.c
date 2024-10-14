@@ -15,6 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
@@ -179,7 +180,6 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
-
     }
 
 
@@ -202,18 +202,7 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
      */
 
     Ttk_MacOSXInit();
-
-    /*
-     * It is not safe to force activation of the NSApp until this method is
-     * called. Activating too early can cause the menu bar to be unresponsive.
-     * The call to activateIgnoringOtherApps was moved here to avoid this.
-     * However, with the release of macOS 10.15 (Catalina) that was no longer
-     * sufficient.  (See ticket bf93d098d7.)  The call to setActivationPolicy
-     * needed to be moved into this function as well.
-     */
-
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp activateIgnoringOtherApps: YES];
 
     /*
      * Add an event monitor so we continue to receive NSMouseMoved and
@@ -233,10 +222,11 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
      * Process events to ensure that the root window is fully initialized. See
      * ticket 56a1823c73.
      */
+    //    This seems to be unneeded now.
 
-    [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    [NSApp _unlockAutoreleasePool];
+    //    [NSApp _lockAutoreleasePool];
+    //    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
+    //    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -461,6 +451,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
+/*
+ * This static function is run as an idle task to order the root window front.
+ * This is only done if the window is in the normal state.  This avoids
+ * flashing the root window on the screen if it was withdrawn immediately after
+ * loading Tk.
+ */
+
+static void showRootWindow(void *clientData) {
+    NSWindow *root = (NSWindow *) clientData;
+    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->hints.initial_state == NormalState) {
+	[root makeKeyAndOrderFront:NSApp];
+    }
+    [NSApp activateIgnoringOtherApps: YES];
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -482,8 +489,8 @@ TkpInit(
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#   error Mac OS X 10.6 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#   error Mac OS X 10.9 required
 #endif
 
 	initialized = 1;
@@ -629,14 +636,21 @@ TkpInit(
 	 * The root window has been created and mapped, but XMapWindow deferred its
 	 * call to makeKeyAndOrderFront because the first call to XMapWindow
 	 * occurs too early in the initialization process for that.  Process idle
-	 * tasks now, so the root window is configured, then order it front.
+	 * tasks now, so the root window is configured.
 	 */
 
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
 	    if (winPtr && Tk_IsMapped(winPtr)) {
-		[window makeKeyAndOrderFront:NSApp];
+
+		/*
+		 * Ordering the root window front in an idle task allows
+		 * checking whether it was immediately withdrawn, and
+		 * therefore does not need to be placed on the screen.
+		 */
+		
+		Tcl_DoWhenIdle(showRootWindow, window);
 		break;
 	    }
 	}
