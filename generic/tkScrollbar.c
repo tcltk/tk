@@ -160,7 +160,6 @@ Tk_ScrollbarObjCmd(
     scrollPtr->vertical = 0;
     scrollPtr->width = 0;
     scrollPtr->commandObj = NULL;
-    scrollPtr->commandSize = 0;
     scrollPtr->repeatDelay = 0;
     scrollPtr->repeatInterval = 0;
     scrollPtr->borderWidth = 0;
@@ -545,11 +544,6 @@ ConfigureScrollbar(
      * from a 3-D border.
      */
 
-    if (scrollPtr->commandObj != NULL) {
-	scrollPtr->commandSize = (int) strlen(Tcl_GetString(scrollPtr->commandObj));
-    } else {
-	scrollPtr->commandSize = 0;
-    }
     if (scrollPtr->highlightWidth < 0) {
 	scrollPtr->highlightWidth = 0;
     }
