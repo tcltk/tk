@@ -43,7 +43,6 @@ typedef struct TkScrollbar {
     Tcl_Obj *commandObj;		/* Command prefix to use when invoking
 				 * scrolling commands. NULL means don't invoke
 				 * commands. */
-    int commandSize;		/* Number of non-NULL bytes in command. */
     int repeatDelay;		/* How long to wait before auto-repeating on
 				 * scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
