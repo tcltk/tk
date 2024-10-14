@@ -589,7 +589,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 @end
@@ -610,7 +609,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -2454,7 +2452,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setTkNeedsDisplay:YES];
+	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -2480,7 +2478,7 @@ WmDeiconifyCmd(
 	}
     }
 
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+    //Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -6934,7 +6932,6 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view addTkDirtyRect:bounds];
 	[view setNeedsDisplay:YES];
     }
 #endif

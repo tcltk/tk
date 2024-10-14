@@ -517,17 +517,6 @@ specific SetupProc and then a platform specific CheckProc.  In
 the macOS port, these are named TkMacOSXEventsSetupProc and
 TkMacOSXEventsCheckProc.
 
-It is important to understand that the Apple window manager does not
-have the concept of an expose event.  Their replacement for an expose
-event is to have the window manager call the [NSView drawRect] method
-in any situation where an expose event for that NSView would be
-generated in X11.  The [NSView drawRect] method is a no-op which is
-expected to be overridden by any application.  In the case of Tcl, the
-replacement [NSView drawRect] method creates a Tcl expose event
-for each dirty rectangle of the NSView, and then adds the expose
-event to the Tcl queue.
-
-
 5.2 Autorelease pools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
