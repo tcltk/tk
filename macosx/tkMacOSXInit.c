@@ -217,16 +217,6 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
 	 {
 	     return event;
 	 }];
-
-    /*
-     * Process events to ensure that the root window is fully initialized. See
-     * ticket 56a1823c73.
-     */
-    //    This seems to be unneeded now.
-
-    //    [NSApp _lockAutoreleasePool];
-    //    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    //    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -640,6 +630,7 @@ TkpInit(
 	 */
 
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
 	    if (winPtr && Tk_IsMapped(winPtr)) {
