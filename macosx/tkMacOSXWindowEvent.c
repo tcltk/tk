@@ -933,18 +933,6 @@ ExposeRestrictProc(
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
-/*
- * Restrict event processing to ConfigureNotify events.
- */
-
-static Tk_RestrictAction
-ConfigureRestrictProc(
-    TCL_UNUSED(void *),
-    XEvent *eventPtr)
-{
-    return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
-}
-
 @implementation TKContentView(TKWindowEvent)
 
 - (id)initWithFrame:(NSRect)frame
@@ -1031,8 +1019,6 @@ ConfigureRestrictProc(
     if (winPtr) {
 	unsigned int width = (unsigned int) newsize.width;
 	unsigned int height= (unsigned int) newsize.height;
-	void *oldArg;
-    	Tk_RestrictProc *oldProc;
 
 	/*
 	 * This function can be re-entered, so we need to make sure we don't
