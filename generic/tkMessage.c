@@ -605,6 +605,7 @@ ComputeMessageGeometry(
     int aspect, lowerBound, upperBound, inset;
     int padX, padY;
     Tk_FontMetrics fm;
+    Tcl_Size numChars;
 
     Tk_FreeTextLayout(msgPtr->textLayout);
 
@@ -647,8 +648,8 @@ ComputeMessageGeometry(
 	inc = width/2;
     }
 
+    numChars = TkGetCharLength(msgPtr->stringObj);
     for ( ; ; inc /= 2) {
-	Tcl_Size numChars = TkNumUtfChars(Tcl_GetString(msgPtr->stringObj), TCL_INDEX_NONE);
 	msgPtr->textLayout = Tk_ComputeTextLayout(msgPtr->tkfont,
 		Tcl_GetString(msgPtr->stringObj), numChars, width, msgPtr->justify,
 		0, &thisWidth, &thisHeight);
