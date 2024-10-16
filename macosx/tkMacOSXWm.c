@@ -556,16 +556,6 @@ static void placeAsTab(TKWindow *macWindow) {
 
 @implementation NSWindow(TKWm)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect = {point, {0,0}};
@@ -577,7 +567,6 @@ static void placeAsTab(TKWindow *macWindow) {
     NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
-#endif
 @end
 
 #pragma mark -
@@ -1738,11 +1727,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolValue != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
-#else
-	    TKLog(@"The fullscreen attribute is ignored on this system.");
-#endif
 	}
 	break;
     case WMATT_MODIFIED:
