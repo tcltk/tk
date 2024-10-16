@@ -150,7 +150,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 }
 
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window
-                        defaultFrame:(NSRect)newFrame
+			defaultFrame:(NSRect)newFrame
 {
     (void)window;
 
@@ -308,11 +308,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
-#endif
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
@@ -396,7 +393,7 @@ static void RefocusGrabWindow(void *data) {
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
-                    hasVisibleWindows:(BOOL)flag
+		    hasVisibleWindows:(BOOL)flag
 {
     (void)sender;
     (void)flag;
@@ -995,7 +992,7 @@ ConfigureRestrictProc(
 					 NSTrackingActiveAlways)
 				  owner:self
 			       userInfo:nil];
-        [self addTrackingArea:trackingArea];
+	[self addTrackingArea:trackingArea];
     }
     return self;
 }
@@ -1009,7 +1006,6 @@ ConfigureRestrictProc(
     return NO;
 }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1022,7 +1018,6 @@ ConfigureRestrictProc(
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
-#endif
 
 - (void) addTkDirtyRect: (NSRect) rect
 {
@@ -1242,7 +1237,7 @@ static const char *const accentNames[] = {
     }
     NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
     NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "];
+				componentsSeparatedByString: @" "];
     NSString *highlight = [words count] > 3 ? [words objectAtIndex:3] : nil;
     const char *accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;

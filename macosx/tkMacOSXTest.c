@@ -21,9 +21,6 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static Tcl_ObjCmdProc DebuggerObjCmd;
-#endif
 static Tcl_ObjCmdProc PressButtonObjCmd;
 static Tcl_ObjCmdProc MoveMouseObjCmd;
 static Tcl_ObjCmdProc InjectKeyEventObjCmd;
@@ -55,45 +52,12 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
-#endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * DebuggerObjCmd --
- *
- *	This procedure simply calls the low level debugger, which was
- *      deprecated in OSX 10.8.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static int
-DebuggerObjCmd(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Interp *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(Tcl_Obj *const *))
-{
-    Debugger();
-    return TCL_OK;
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -209,8 +173,8 @@ PressButtonObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -308,8 +272,8 @@ MoveMouseObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -370,12 +334,12 @@ InjectKeyEventObjCmd(
 
     if (objc < 3) {
     wrongArgs:
-        Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
+	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-            sizeof(char *), "option", 0, &index) != TCL_OK) {
-        return TCL_ERROR;
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
     }
     type = types[index];
     if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
@@ -387,37 +351,37 @@ InjectKeyEventObjCmd(
     macKC.uint = XKeysymToKeycode(NULL, keysym);
     for (i = 3; i < objc; i++) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
-                sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        switch ((enum args) index) {
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum args) index) {
 	case KEYEVENT_SHIFT:
 	    mods |= NSShiftKeyMask;
-            break;
+	    break;
 	case KEYEVENT_CONTROL:
 	    mods |= NSControlKeyMask;
-            break;
+	    break;
 	case KEYEVENT_OPTION:
 	    mods |= NSAlternateKeyMask;
-            break;
+	    break;
 	case KEYEVENT_COMMAND:
 	    mods |= NSCommandKeyMask;
-            break;
+	    break;
 	case KEYEVENT_FUNCTION:
 	    mods |= NSFunctionKeyMask;
-            break;
+	    break;
 	case KEYEVENT_X:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &x) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case KEYEVENT_Y:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &y) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -445,7 +409,7 @@ InjectKeyEventObjCmd(
     }
     keyEvent = [NSEvent keyEventWithType:type
 	location:NSMakePoint(x, y)
-        modifierFlags:mods
+	modifierFlags:mods
 	timestamp:GetCurrentEventTime()
 	windowNumber:0
 	context:nil

@@ -366,13 +366,6 @@ need to manually change the TCL_SRCROOT and TK_SRCROOT settings by editing your
 ${USER}.pbxuser file (located inside the Tk.xcodeproj bundle directory) with a
 text editor.
 
-- To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
-to the minimal OS version the binaries should be able to run on, e.g:
-	export MACOSX_DEPLOYMENT_TARGET=10.6
-This requires at least gcc 3.1; with gcc 4 or later, set/add to CFLAGS instead:
-	export CFLAGS="-mmacosx-version-min=10.6"
-Support for weak-linking was added with 8.4.14/8.5a5.
-
 Detailed Instructions for building with macosx/GNUmakefile
 ----------------------------------------------------------
 
@@ -390,8 +383,8 @@ Tcl/Tk version number, e.g. '8.7').
 Setup this shell variable as follows:
 	ver="8.7"
 
-- Setup environment variables as desired, e.g. for a universal build on 10.5:
-	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.5"
+- Setup environment variables as desired, e.g. for a universal build on 10.9:
+	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.9"
 	export CFLAGS
 
 - Change to the directory containing the Tcl and Tk source trees and build:
