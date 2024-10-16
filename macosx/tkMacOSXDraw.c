@@ -1280,6 +1280,7 @@ TkMacOSXSetupDrawingContext(
 	 */
 
 	if (@available(macOS 12.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
 	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
 	    NSAppearance *effective = view.effectiveAppearance;
 	    if( current != effective) {
@@ -1287,6 +1288,7 @@ TkMacOSXSetupDrawingContext(
 		// Deprecations be damned!
 		NSAppearance.currentAppearance = effective;
 	    }
+#endif
 	} else {
 	    /*
 	     *It is not clear if this is a problem before macos 12.0, but
