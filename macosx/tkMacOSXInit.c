@@ -406,9 +406,16 @@ TCL_NORETURN void TkpExitProc(
      * At this point it is too late to be looking up the Tk window associated
      * to any NSWindows, but it can happen.  This makes sure the answer is None
      * if such a query is attempted.
+     * It is also too late to be updating the backing layer of a window.  All
+     * tkLayerBitmapContext properties are set to nil so that updateLayer will
+     * return immediately.
      */
 
     for (TKWindow *w in [NSApp orderedWindows]) {
+	TKContentView *view = (TKContentView *) [w contentView];
+	if ([view respondsToSelector: @selector (tkLayerBitmapContext)]) {
+	    [view setTkLayerBitmapContext: nil];
+	}
 	if ([w respondsToSelector: @selector (tkWindow)]) {
 	    [w setTkWindow: None];
 	}
