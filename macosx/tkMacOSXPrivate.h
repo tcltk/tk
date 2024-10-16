@@ -321,6 +321,7 @@ VISIBILITY_HIDDEN
 @property int poolLock;
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
+@property Bool tkWillExit;
 
 /*
  * Persistent state variables used by processMouseEvent.
