@@ -137,6 +137,7 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
 {
+    (void) app;
     return YES;
 }
 
