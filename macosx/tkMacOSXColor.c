@@ -641,6 +641,7 @@ TkpGetColor(
 	    NSAppearance *windowAppearance;
 	    /* See comments in tkMacOSXDraw.c */
 	    if (@available(macOS 12.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
 		NSAppearance *current = NSAppearance.currentDrawingAppearance;
 		NSAppearance *effective = view.effectiveAppearance;
 		if( current != effective) {
@@ -648,6 +649,7 @@ TkpGetColor(
 		    // Deprecations be damned!
 		    NSAppearance.currentAppearance = effective;
 		}
+#endif
 	    }
 	    if (@available(macOS 10.14, *)) {
 		if (view) {
