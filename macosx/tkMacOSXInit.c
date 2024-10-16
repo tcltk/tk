@@ -691,7 +691,7 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
-	   TkMacOSVersionObjCmd, NULL, NULL);
+	    TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
 
