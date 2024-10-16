@@ -181,7 +181,6 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
-
     }
 
 
@@ -394,7 +393,7 @@ static void closePanels(
 	[[NSFontPanel sharedFontPanel] orderOut:nil];
     }
     if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
+	[[NSColorPanel sharedColorPanel] orderOut:nil];
     }
 }
 
@@ -471,15 +470,15 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
-        Bool stdinIsNullish = (!isatty(0) &&
+	Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#   error Mac OS X 10.6 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#   error Mac OS X 10.9 required
 #endif
 
 	initialized = 1;
@@ -495,7 +494,7 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
-            # if 0 /* This is not really an error.  Wish still runs fine. */
+	    # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	    # endif
 	}
@@ -517,40 +516,40 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 
-        /*
-         * WARNING: The finishLaunching method runs asynchronously. This
-         * creates a race between the initialization of the NSApplication and
-         * the initialization of Tk.  If Tk wins the race bad things happen
-         * with the root window (see below).  If the NSApplication wins then an
-         * AppleEvent created during launch, e.g. by dropping a file icon on
-         * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is handled in
-         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * AppleEvent later, after the required procedure has been defined.
-         */
+	/*
+	 * WARNING: The finishLaunching method runs asynchronously. This
+	 * creates a race between the initialization of the NSApplication and
+	 * the initialization of Tk.  If Tk wins the race bad things happen
+	 * with the root window (see below).  If the NSApplication wins then an
+	 * AppleEvent created during launch, e.g. by dropping a file icon on
+	 * the application icon, will be delivered before the procedure meant
+	 * to to handle the AppleEvent has been defined.  This is handled in
+	 * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+	 * AppleEvent later, after the required procedure has been defined.
+	 */
 
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
-        /*
-         * Create a Tk event source based on the Appkit event queue.
-         */
+	/*
+	 * Create a Tk event source based on the Appkit event queue.
+	 */
 
 	Tk_MacOSXSetupTkNotifier();
 
 	/*
 	 * If Tk initialization wins the race, the root window is mapped before
-         * the NSApplication is initialized.  This can cause bad things to
-         * happen.  The root window can open off screen with no way to make it
-         * appear on screen until the app icon is clicked.  This will happen if
-         * a Tk application opens a modal window in its startup script (see
-         * ticket 56a1823c73).  In other cases, an empty root window can open
-         * on screen and remain visible for a noticeable amount of time while
-         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
-         * below forces Tk to block until the Appkit event queue has been
-         * created.  This seems to be sufficient to ensure that the
-         * NSApplication initialization wins the race, avoiding these bad
-         * window behaviors.
+	 * the NSApplication is initialized.  This can cause bad things to
+	 * happen.  The root window can open off screen with no way to make it
+	 * appear on screen until the app icon is clicked.  This will happen if
+	 * a Tk application opens a modal window in its startup script (see
+	 * ticket 56a1823c73).  In other cases, an empty root window can open
+	 * on screen and remain visible for a noticeable amount of time while
+	 * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+	 * below forces Tk to block until the Appkit event queue has been
+	 * created.  This seems to be sufficient to ensure that the
+	 * NSApplication initialization wins the race, avoiding these bad
+	 * window behaviors.
 	 */
 
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
@@ -675,7 +674,7 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
-           TkMacOSVersionObjCmd, NULL, NULL);
+	    TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
 
