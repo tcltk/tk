@@ -606,6 +606,9 @@ TkpInit(
 #if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
+	} else if (getenv("TK_NO_STDERR") != NULL) {
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDERR_FILENO);
 	}
 
 	/*
