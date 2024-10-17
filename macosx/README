@@ -183,6 +183,15 @@ environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 
+- The Aqua port also supports the environment variable TK_NO_STDERR which, if set
+to a non-empty value, causes stderr to be redirected to /dev/null.  This is
+convenient because Apple sometimes releases a new OS without removing all of
+their commands which log debugging information.  Log messages are written to
+stderr, and hence printed in the terminal, when wish or tclsh is started from
+the terminal, or when running the tests. The messages are not only annoying,
+they can also cause tests to fail if a debugging message is written to stderr
+while a test is running tktest as a subprocess with exec or open.
+
 3. FullScreen, Split View and Tabbed Windows
 --------------------------------------------
 
