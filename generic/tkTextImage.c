@@ -90,10 +90,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
 	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
+	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName),
+	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -247,8 +247,8 @@ TkTextImageCmd(
 	eiPtr->size = 1;
 	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
 	eiPtr->body.ei.linePtr = NULL;
-	eiPtr->body.ei.imageName = NULL;
-	eiPtr->body.ei.imageString = NULL;
+	eiPtr->body.ei.imageNameObj = NULL;
+	eiPtr->body.ei.imageObj = NULL;
 	eiPtr->body.ei.name = NULL;
 	eiPtr->body.ei.image = NULL;
 	eiPtr->body.ei.align = TK_ALIGN_CENTER;
@@ -350,9 +350,9 @@ EmbImageConfigure(
      * changed.
      */
 
-    if (eiPtr->body.ei.imageString != NULL) {
+    if (eiPtr->body.ei.imageObj != NULL) {
 	image = Tk_GetImage(textPtr->interp, textPtr->tkwin,
-		eiPtr->body.ei.imageString, EmbImageProc, eiPtr);
+		Tcl_GetString(eiPtr->body.ei.imageObj), EmbImageProc, eiPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
 	}
@@ -365,7 +365,7 @@ EmbImageConfigure(
     eiPtr->body.ei.image = image;
 
     if (eiPtr->body.ei.name != NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -374,11 +374,11 @@ EmbImageConfigure(
      * associated with this image, delete the name.
      */
 
-    name = eiPtr->body.ei.imageName;
-    if (name == NULL) {
-    	name = eiPtr->body.ei.imageString;
-    }
-    if (name == NULL) {
+    if (eiPtr->body.ei.imageNameObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageNameObj);
+    } else if (eiPtr->body.ei.imageObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageObj);
+    } else {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		"Either a \"-name\" or a \"-image\" argument must be"
 		" provided to the \"image create\" subcommand", TCL_INDEX_NONE));
@@ -545,8 +545,8 @@ EmbImageLayoutProc(
 	height = 0;
     } else {
 	Tk_SizeOfImage(eiPtr->body.ei.image, &width, &height);
-	width += 2*eiPtr->body.ei.padX;
-	height += 2*eiPtr->body.ei.padY;
+	width += 2 * eiPtr->body.ei.padX;
+	height += 2 * eiPtr->body.ei.padY;
     }
     if ((width > (maxX - chunkPtr->x))
 	    && !noCharsYet && (textPtr->wrapMode != TEXT_WRAPMODE_NONE)) {
