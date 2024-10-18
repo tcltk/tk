@@ -40,7 +40,7 @@ wm geom .t +0+0
 update idletasks
 
 switch [tk windowingsystem] {
-    x11	 	{set fixed "TkFixedFont"}
+    x11		{set fixed "TkFixedFont"}
     win32	{set fixed "courier 12"}
     aqua	{set fixed "monaco 9"}
 }

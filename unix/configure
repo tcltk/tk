@@ -1338,7 +1338,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".14"
+TK_PATCH_LEVEL=".16"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -1479,11 +1479,11 @@ echo "${ECHO_T}found ${TCL_BIN_DIR}/tclConfig.sh" >&6
 echo $ECHO_N "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... $ECHO_C" >&6
 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
-        echo "$as_me:$LINENO: result: loading" >&5
+	echo "$as_me:$LINENO: result: loading" >&5
 echo "${ECHO_T}loading" >&6
 	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
+	echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
 echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     fi
 
@@ -1494,9 +1494,9 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     # instead of TCL_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
     if test -f "${TCL_BIN_DIR}/Makefile" ; then
-        TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
-        TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
-        TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
+	TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
+	TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
+	TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
     elif test "`uname -s`" = "Darwin"; then
 	# If Tcl was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
@@ -5181,17 +5181,17 @@ fi
 
 	    if test "$do64bit" = yes; then
 
-	        if test "$GCC" = yes; then
+		if test "$GCC" = yes; then
 
-	            { echo "$as_me:$LINENO: WARNING: 64bit mode not supported by gcc" >&5
+		    { echo "$as_me:$LINENO: WARNING: 64bit mode not supported by gcc" >&5
 echo "$as_me: WARNING: 64bit mode not supported by gcc" >&2;}
 
 else
 
-	            do64bit_ok=yes
-	            SHLIB_LD="ld -64 -shared -rdata_shared"
-	            CFLAGS="$CFLAGS -64"
-	            LDFLAGS_ARCH="-64"
+		    do64bit_ok=yes
+		    SHLIB_LD="ld -64 -shared -rdata_shared"
+		    CFLAGS="$CFLAGS -64"
+		    LDFLAGS_ARCH="-64"
 
 fi
 
@@ -5225,7 +5225,7 @@ fi
 fi
 
 	    ;;
-            esac
+	    esac
 
 	    if test $doRpath = yes; then
 
@@ -5881,7 +5881,7 @@ rm -f conftest.err conftest.$ac_objext \
 
 			for v in CFLAGS CPPFLAGS LDFLAGS; do
 			    eval $v'="$hold_'$v'"'
-		        done
+			done
 fi
 
 		    LIBS=$hold_libs
@@ -5971,7 +5971,7 @@ cat >>confdefs.h <<\_ACEOF
 #define NO_COREFOUNDATION_64 1
 _ACEOF
 
-                        LDFLAGS="$LDFLAGS -Wl,-no_arch_warnings"
+			LDFLAGS="$LDFLAGS -Wl,-no_arch_warnings"
 
 fi
 
@@ -6020,7 +6020,7 @@ _ACEOF
   SHLIB_LD="ld -shared"
 else
 
-	        SHLIB_LD="ld -non_shared"
+		SHLIB_LD="ld -non_shared"
 
 fi
 
@@ -6036,11 +6036,11 @@ fi
 	    SHLIB_CFLAGS=""
 	    if test "$SHARED_BUILD" = 1; then
 
-	        SHLIB_LD='${CC} -shared'
+		SHLIB_LD='${CC} -shared'
 
 else
 
-	        SHLIB_LD='${CC} -non_shared'
+		SHLIB_LD='${CC} -non_shared'
 
 fi
 
@@ -6569,7 +6569,7 @@ tcl_cv_ld_Bexport=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-	        LDFLAGS=$hold_ldflags
+		LDFLAGS=$hold_ldflags
 fi
 echo "$as_me:$LINENO: result: $tcl_cv_ld_Bexport" >&5
 echo "${ECHO_T}$tcl_cv_ld_Bexport" >&6
@@ -6685,35 +6685,35 @@ fi
 
     if test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""; then
 
-        LIB_SUFFIX=${SHARED_LIB_SUFFIX}
-        MAKE_LIB='${SHLIB_LD} -o $@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
-        if test "${SHLIB_SUFFIX}" = ".dll"; then
+	LIB_SUFFIX=${SHARED_LIB_SUFFIX}
+	MAKE_LIB='${SHLIB_LD} -o $@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
+	if test "${SHLIB_SUFFIX}" = ".dll"; then
 
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
-            DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
+	    INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
+	    DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
 
 else
 
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
+	    INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
 
 fi
 
 
 else
 
-        LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
+	LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
 
-        if test "$RANLIB" = ""; then
+	if test "$RANLIB" = ""; then
 
-            MAKE_LIB='$(STLIB_LD) $@ ${OBJS}'
+	    MAKE_LIB='$(STLIB_LD) $@ ${OBJS}'
 
 else
 
-            MAKE_LIB='${STLIB_LD} $@ ${OBJS} ; ${RANLIB} $@'
+	    MAKE_LIB='${STLIB_LD} $@ ${OBJS} ; ${RANLIB} $@'
 
 fi
 
-        INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
+	INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
 
 fi
 
@@ -6721,11 +6721,11 @@ fi
     # Stub lib does not depend on shared/static configuration
     if test "$RANLIB" = ""; then
 
-        MAKE_STUB_LIB='${STLIB_LD} $@ ${STUB_LIB_OBJS}'
+	MAKE_STUB_LIB='${STLIB_LD} $@ ${STUB_LIB_OBJS}'
 
 else
 
-        MAKE_STUB_LIB='${STLIB_LD} $@ ${STUB_LIB_OBJS} ; ${RANLIB} $@'
+	MAKE_STUB_LIB='${STLIB_LD} $@ ${STUB_LIB_OBJS} ; ${RANLIB} $@'
 
 fi
 
@@ -6736,7 +6736,7 @@ fi
     # it is already set when tclConfig.sh had been loaded by Tk.
     if test "x${TCL_LIBS}" = x; then
 
-        TCL_LIBS="${DL_LIBS} ${LIBS} ${MATH_LIBS}"
+	TCL_LIBS="${DL_LIBS} ${LIBS} ${MATH_LIBS}"
 fi
 
 
@@ -7255,7 +7255,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 	# See if we should use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
-        cat >conftest.$ac_ext <<_ACEOF
+	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -7266,8 +7266,8 @@ int
 main ()
 {
 switch (0) {
-            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
-        }
+	    case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
+	}
   ;
   return 0;
 }
@@ -7523,7 +7523,7 @@ int
 main ()
 {
 struct dirent64 *p; DIR64 d = opendir64(".");
-            p = readdir64(d); rewinddir64(d); closedir64(d);
+	    p = readdir64(d); rewinddir64(d); closedir64(d);
   ;
   return 0;
 }
@@ -7790,8 +7790,8 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 
 			if test "x${tcl_cv_type_off64_t}" = "xyes" && \
-	        test "x${ac_cv_func_lseek64}" = "xyes" && \
-	        test "x${ac_cv_func_open64}" = "xyes" ; then
+		test "x${ac_cv_func_lseek64}" = "xyes" && \
+		test "x${ac_cv_func_open64}" = "xyes" ; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_TYPE_OFF64_T 1
@@ -8054,11 +8054,11 @@ fi
 
 if test "$TCL_PREFIX" != "$prefix"; then
     { echo "$as_me:$LINENO: WARNING:
-        Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&5
+	Different --prefix selected for Tk and Tcl!
+	[package require Tk] may not work correctly in tclsh." >&5
 echo "$as_me: WARNING:
-        Different --prefix selected for Tk and Tcl!
-        [package require Tk] may not work correctly in tclsh." >&2;}
+	Different --prefix selected for Tk and Tcl!
+	[package require Tk] may not work correctly in tclsh." >&2;}
 fi
 
 #--------------------------------------------------------------------
@@ -9451,7 +9451,7 @@ _ACEOF
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore"
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
-        LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
+	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
@@ -10363,7 +10363,7 @@ echo "$as_me: WARNING: Can't find xft configuration, or xft is unusable" >&2;}
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
 	else
-            enable_xft=yes
+	    enable_xft=yes
 	fi
     fi
     if test $enable_xft = "yes" ; then
@@ -11125,8 +11125,8 @@ _ACEOF
 
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
     if test "${libdir}" = '${exec_prefix}/lib'; then
-        # override libdir default
-        libdir="/Library/Frameworks"
+	# override libdir default
+	libdir="/Library/Frameworks"
     fi
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
@@ -11163,7 +11163,7 @@ _ACEOF
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then
-        EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
+	EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
@@ -12366,12 +12366,12 @@ esac
 echo "$as_me: executing $ac_dest commands" >&6;}
   case $ac_dest in
     Tk.framework ) n=Tk &&
-        f=$n.framework && v=Versions/$VERSION &&
-        rm -rf $f && mkdir -p $f/$v/Resources &&
-        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
-        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
-        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
-        unset n f v
+	f=$n.framework && v=Versions/$VERSION &&
+	rm -rf $f && mkdir -p $f/$v/Resources &&
+	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+	if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+	unset n f v
      ;;
   esac
 done
