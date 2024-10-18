@@ -55,7 +55,6 @@ extern "C" {
  * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.ac	(as above)
  * README.md		(sections 0 and 1)
- * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(1 LOC patch)

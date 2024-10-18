@@ -19,7 +19,7 @@ writing Tcl scripts containing Tk commands.
 ## Many improvements to use of platform features and conventions.
  - Built-in widgets and themes are scaling-aware.
  - Improved support of two-finger gestures, where available
- - The `tk windowingsystem` "aqua" needs macOS 10.10 or later
+ - The `tk windowingsystem` "aqua" needs macOS 10.9 or later
 
 ## New commands and options
  - `tk sysnotify` — Access to the OS notifications system

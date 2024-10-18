@@ -136,7 +136,6 @@ static inline HIThemeButtonDrawInfo ComputeButtonDrawInfo(
  * define it to return nil.
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
 static CGColorRef
 CGColorFromRGBA(
     CGFloat *rgba)
@@ -161,15 +160,6 @@ CGColorFromGray(
 }
 
 #define CGCOLOR(nscolor) (nscolor).CGColor
-
-#else
-
-#define CGCOLOR(nscolor) NULL
-#define CGColorFromRGBA(rgba) NULL
-#define CGColorFromGray(gray) NULL
-#define CGPathCreateWithRoundedRect(w, x, y, z) NULL
-
-#endif
 
 /*----------------------------------------------------------------------
  * +++ Utilities.

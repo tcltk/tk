@@ -556,16 +556,6 @@ static void placeAsTab(TKWindow *macWindow) {
 
 @implementation NSWindow(TKWm)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect = {point, {0,0}};
@@ -577,7 +567,6 @@ static void placeAsTab(TKWindow *macWindow) {
     NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
-#endif
 @end
 
 #pragma mark -
@@ -589,7 +578,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 @end
@@ -610,7 +598,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1740,11 +1727,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolValue != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
-#else
-	    TKLog(@"The fullscreen attribute is ignored on this system.");
-#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -2454,7 +2437,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setTkNeedsDisplay:YES];
+	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -2480,7 +2463,7 @@ WmDeiconifyCmd(
 	}
     }
 
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+    //Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -6934,7 +6917,6 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view addTkDirtyRect:bounds];
 	[view setNeedsDisplay:YES];
     }
 #endif
