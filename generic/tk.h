@@ -728,9 +728,9 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
 #define Tk_Depth(tkwin)		(((Tk_FakeWin *) (tkwin))->depth)
 #define Tk_Visual(tkwin)	(((Tk_FakeWin *) (tkwin))->visual)
 #define Tk_WindowId(tkwin)	(((Tk_FakeWin *) (tkwin))->window)
-#define Tk_PathName(tkwin) 	(((Tk_FakeWin *) (tkwin))->pathName)
+#define Tk_PathName(tkwin)	(((Tk_FakeWin *) (tkwin))->pathName)
 #define Tk_Name(tkwin)		(((Tk_FakeWin *) (tkwin))->nameUid)
-#define Tk_Class(tkwin) 	(((Tk_FakeWin *) (tkwin))->classUid)
+#define Tk_Class(tkwin)	(((Tk_FakeWin *) (tkwin))->classUid)
 #define Tk_X(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.x)
 #define Tk_Y(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.y)
 #define Tk_Width(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.width)
@@ -995,7 +995,7 @@ typedef struct Tk_Item {
  *
  * TK_ITEM_STATE_DEPENDANT -	1 means that object needs to be redrawn if the
  *				canvas state changes.
- * TK_ITEM_DONT_REDRAW - 	1 means that the object redraw is already been
+ * TK_ITEM_DONT_REDRAW -	1 means that the object redraw is already been
  *				prepared, so the general canvas code doesn't
  *				need to do that any more.
  */

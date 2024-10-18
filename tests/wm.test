@@ -1521,7 +1521,7 @@ test wm-stackorder-2.3 {stacking order} -body {
     set res
 } -cleanup {
     destroy .t .t2
-} -result {. .t .t2} {.t .t2 .} {.t . .t2}
+} -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
     toplevel .t ; update
     toplevel .t2 ; update
