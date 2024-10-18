@@ -144,8 +144,8 @@ typedef struct TkTextEmbImage {
 				 * text widget. This is used when the image
 				 * changes or is deleted. */
     TkTextLine *linePtr;	/* Line structure that contains this image. */
-    char *imageString;		/* Name of the image for this segment. */
-    char *imageName;		/* Name used by text widget to identify this
+    Tcl_Obj *imageObj;		/* Name of the image for this segment. */
+    Tcl_Obj *imageNameObj;	/* Name used by text widget to identify this
 				 * image. May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by
 				 * "image names" to identify this instance of
