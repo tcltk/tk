@@ -445,7 +445,9 @@ GridAnchorCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
 
     if (objc == 3) {
 	gridPtr = containerPtr->containerDataPtr;
@@ -518,7 +520,9 @@ GridBboxCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
 
     if (objc >= 5) {
 	if (Tcl_GetIntFromObj(interp, objv[3], &column) != TCL_OK) {
@@ -642,7 +646,9 @@ GridForgetRemoveCommand(
 	    return TCL_ERROR;
 	}
 
-	contentPtr = GetGrid(content);
+	if (!(contentPtr = GetGrid(content))) {
+	    continue;
+	}
 	if (contentPtr->containerPtr != NULL) {
 	    /*
 	     * For "forget", reset all the settings to their defaults
@@ -732,7 +738,9 @@ GridInfoCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &content) != TCL_OK) {
 	return TCL_ERROR;
     }
-    contentPtr = GetGrid(content);
+    if (!(contentPtr = GetGrid(content))) {
+	return TCL_OK;
+    }
     if (contentPtr->containerPtr == NULL) {
 	Tcl_ResetResult(interp);
 	return TCL_OK;
@@ -807,7 +815,9 @@ GridLocationCommand(
 	return TCL_ERROR;
     }
 
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
     if (containerPtr->containerDataPtr == NULL) {
 	Tcl_SetObjResult(interp, NewPairObj(-1, -1));
 	return TCL_OK;
@@ -888,7 +898,9 @@ GridPropagateCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
     if (objc == 3) {
 	Tcl_SetObjResult(interp,
 		Tcl_NewBooleanObj(!(containerPtr->flags & DONT_PROPAGATE)));
@@ -1010,7 +1022,9 @@ GridRowColumnConfigureCommand(
 	return TCL_ERROR;
     }
 
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
     first = 0;
     last = 0;
 
@@ -1126,7 +1140,9 @@ GridRowColumnConfigureCommand(
 	     * Is it gridded in this container?
 	     */
 
-	    contentPtr = GetGrid(content);
+	    if (!(contentPtr = GetGrid(content))) {
+		continue;
+	    }
 	    if (contentPtr->containerPtr != containerPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"the window \"%s\" is not managed by \"%s\"",
@@ -1309,7 +1325,9 @@ GridSizeCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
 
     if (containerPtr->containerDataPtr != NULL) {
 	SetGridSize(containerPtr);
@@ -1388,7 +1406,9 @@ GridContentCommand(
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &container) != TCL_OK) {
 	return TCL_ERROR;
     }
-    containerPtr = GetGrid(container);
+    if (!(containerPtr = GetGrid(container))) {
+	return TCL_OK;
+    }
 
     res = Tcl_NewListObj(0, NULL);
     for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
@@ -2404,11 +2424,12 @@ ResolveConstraints(
  * GetGrid --
  *
  *	This internal procedure is used to locate a Grid structure for a given
- *	window, creating one if one doesn't exist already.
+ *	window, creating one if one doesn't exist already, except if the window
+ *	is already dead.
  *
  * Results:
  *	The return value is a pointer to the Grid structure corresponding to
- *	tkwin.
+ *	tkwin, or NULL when tkwin is already dead.
  *
  * Side effects:
  *	A new grid structure may be created. If so, then a callback is set up
@@ -2426,6 +2447,10 @@ GetGrid(
     Tcl_HashEntry *hPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+
+    if (((TkWindow *) tkwin)->flags & TK_ALREADY_DEAD) {
+	return NULL;
+    }
 
     if (!dispPtr->gridInit) {
 	Tcl_InitHashTable(&dispPtr->gridHashTable, TCL_ONE_WORD_KEYS);
@@ -2466,7 +2491,6 @@ GetGrid(
     gridPtr->sticky = 0;
     gridPtr->size = 0;
     gridPtr->in = NULL;
-    gridPtr->containerDataPtr = NULL;
     Tcl_SetHashValue(hPtr, gridPtr);
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 	    GridStructureProc, gridPtr);
@@ -2991,11 +3015,15 @@ ConfigureContent(
 		 * If the stored container does not exist, just ignore it.
 		 */
 
-		contentPtr = GetGrid(content);
+		if (!(contentPtr = GetGrid(content))) {
+		    continue;
+		}
 		if (contentPtr->in != NULL) {
 		    if (TkGetWindowFromObj(interp, content, contentPtr->in, &parent)
 			    == TCL_OK) {
-			containerPtr = GetGrid(parent);
+			if (!(containerPtr = GetGrid(parent))) {
+			    continue;
+			}
 			InitContainerData(containerPtr);
 		    }
 		}
@@ -3003,7 +3031,9 @@ ConfigureContent(
 	    if (containerPtr == NULL) {
 		parent = Tk_Parent(content);
 		if (parent != NULL) {
-		    containerPtr = GetGrid(parent);
+		    if (!(containerPtr = GetGrid(parent))) {
+			continue;
+		    }
 		    InitContainerData(containerPtr);
 		}
 	    }
@@ -3072,7 +3102,9 @@ ConfigureContent(
 		    TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    containerPtr = GetGrid(other);
+	    if (!(containerPtr = GetGrid(other))) {
+		continue;
+	    }
 	    InitContainerData(containerPtr);
 	} else if (index == CONF_ROW) {
 	    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
@@ -3149,7 +3181,9 @@ ConfigureContent(
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
 	}
-	contentPtr = GetGrid(content);
+	if (!(contentPtr = GetGrid(content))) {
+	    continue;
+	}
 
 	/*
 	 * The following statement is taken from tkPack.c:
@@ -3208,7 +3242,9 @@ ConfigureContent(
 		    return TCL_ERROR;
 		}
 		positionGiven = 1;
-		containerPtr = GetGrid(other);
+		if (!(containerPtr = GetGrid(other))) {
+		    continue;
+		}
 		InitContainerData(containerPtr);
 		break;
 	    case CONF_STICKY: {
@@ -3315,7 +3351,9 @@ ConfigureContent(
 
 	parent = Tk_Parent(content);
     	if (containerPtr == NULL) {
-	    containerPtr = GetGrid(parent);
+	    if (!(containerPtr = GetGrid(parent))) {
+		continue;
+	    }
 	    InitContainerData(containerPtr);
     	}
 
@@ -3474,7 +3512,9 @@ ConfigureContent(
 	    lastColumn = 0;
 	} else {
 	    other = Tk_NameToWindow(interp, lastWindow, tkwin);
-	    otherPtr = GetGrid(other);
+	    if (!(otherPtr = GetGrid(other))) {
+		continue;
+	    }
 	    lastRow = otherPtr->row + otherPtr->numRows - 2;
 	    lastColumn = otherPtr->column + otherPtr->numCols;
 	}

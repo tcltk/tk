@@ -1325,7 +1325,7 @@ SHELL=/bin/sh
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".14"
+TK_PATCH_LEVEL=".16"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -3242,11 +3242,11 @@ echo "${ECHO_T}found ${TCL_BIN_DIR}/tclConfig.sh" >&6
 echo $ECHO_N "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... $ECHO_C" >&6
 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
-        echo "$as_me:$LINENO: result: loading" >&5
+	echo "$as_me:$LINENO: result: loading" >&5
 echo "${ECHO_T}loading" >&6
 	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
+	echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
 echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     fi
 
@@ -3260,9 +3260,9 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     #
 
     if test -f $TCL_BIN_DIR/Makefile ; then
-        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
-        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
-        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+	TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+	TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+	TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
     fi
 
     #
@@ -3533,9 +3533,9 @@ echo "${ECHO_T}yes" >&6
     fi
 
     if test "$CYGPATH" = "echo"; then
-        DEPARG='"$<"'
+	DEPARG='"$<"'
     else
-        DEPARG='"$(shell $(CYGPATH) $<)"'
+	DEPARG='"$(shell $(CYGPATH) $<)"'
     fi
 
     # set various compiler flags depending on whether we are using gcc or cl
@@ -3820,22 +3820,22 @@ echo $ECHO_N "checking compiler flags... $ECHO_C" >&6
 
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            echo "$as_me:$LINENO: result: using static flags" >&5
+	    echo "$as_me:$LINENO: result: using static flags" >&5
 echo "${ECHO_T}using static flags" >&6
 	    runtime=
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	else
 	    # dynamic
-            echo "$as_me:$LINENO: result: using shared flags" >&5
+	    echo "$as_me:$LINENO: result: using shared flags" >&5
 echo "${ECHO_T}using shared flags" >&6
 
 	    # ad-hoc check to see if CC supports -shared.
 	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
 		{ { echo "$as_me:$LINENO: error: ${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain." >&5
+		You will need to upgrade to a newer version of the toolchain." >&5
 echo "$as_me: error: ${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain." >&2;}
+		You will need to upgrade to a newer version of the toolchain." >&2;}
    { (exit 1); exit 1; }; }
 	    fi
 
@@ -3974,14 +3974,14 @@ echo "${ECHO_T}   Using 64-bit $MACHINE mode" >&6
     else
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            echo "$as_me:$LINENO: result: using static flags" >&5
+	    echo "$as_me:$LINENO: result: using static flags" >&5
 echo "${ECHO_T}using static flags" >&6
 	    runtime=-MT
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	else
 	    # dynamic
-            echo "$as_me:$LINENO: result: using shared flags" >&5
+	    echo "$as_me:$LINENO: result: using shared flags" >&5
 echo "${ECHO_T}using shared flags" >&6
 	    runtime=-MD
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
@@ -4051,7 +4051,7 @@ echo "${ECHO_T}   Using 64-bit $MACHINE mode" >&6
 	if test "$doWince" != "no" ; then
 	    # Set defaults for common evc4/PPC2003 setup
 	    # Currently Tcl requires 300+, possibly 420+ for sockets
-	    CEVERSION=420; 		# could be 211 300 301 400 420 ...
+	    CEVERSION=420;	# could be 211 300 301 400 420 ...
 	    TARGETCPU=ARMV4;	# could be ARMV4 ARM MIPS SH3 X86 ...
 	    ARCH=ARM;		# could be ARM MIPS X86EM ...
 	    PLATFORM="Pocket PC 2003"; # or "Pocket PC 2002"
@@ -5409,16 +5409,16 @@ CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
 
 if test ${SHARED_BUILD} = 0; then
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
+	RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
+	RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     fi
     TK_RES=""
 else
     if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
+	RC_DEFINES="${RC_DEFINE} DEBUG"
     else
-        RC_DEFINES=""
+	RC_DEFINES=""
     fi
     TK_RES='tk.$(RES)'
 fi

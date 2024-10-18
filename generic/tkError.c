@@ -80,7 +80,7 @@ Tk_CreateErrorHandler(
     Tk_ErrorProc *errorProc,	/* Procedure to invoke when a matching error
 				 * occurs. NULL means just ignore matching
 				 * errors. */
-    ClientData clientData)	/* Arbitrary value to pass to errorProc. */
+    void *clientData)	/* Arbitrary value to pass to errorProc. */
 {
     TkErrorHandler *errorPtr;
     TkDisplay *dispPtr;
@@ -153,6 +153,11 @@ Tk_DeleteErrorHandler(
     errorPtr->lastRequest = NextRequest(dispPtr->display) - 1;
 
     /*
+     * Ensure that no user callback for this handler is invoked any further.
+     */
+    errorPtr->errorProc = NULL;
+
+    /*
      * Every once-in-a-while, cleanup handlers that are no longer active. We
      * probably won't be able to free the handler that was just deleted (need
      * to wait for any outstanding requests to be processed by server), but
@@ -164,11 +169,10 @@ Tk_DeleteErrorHandler(
      * there are many handlers that stay around forever).
      */
 
-    dispPtr->deleteCount += 1;
-    if (dispPtr->deleteCount >= 10) {
+    if (dispPtr->deleteCount++ >= 9) {
 	TkErrorHandler *prevPtr;
 	TkErrorHandler *nextPtr;
-	int lastSerial = LastKnownRequestProcessed(dispPtr->display);
+	unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
 
 	/*
 	 * Last chance to catch errors for this handler: if no event/error
@@ -176,7 +180,7 @@ Tk_DeleteErrorHandler(
 	 * we need a round trip with the X server now.
 	 */
 
-	if (errorPtr->lastRequest > (unsigned long) lastSerial) {
+	if (errorPtr->lastRequest > lastSerial) {
 	    XSync(dispPtr->display, False);
 	}
 	dispPtr->deleteCount = 0;
@@ -184,7 +188,7 @@ Tk_DeleteErrorHandler(
 	for (prevPtr = NULL; errorPtr != NULL; errorPtr = nextPtr) {
 	    nextPtr = errorPtr->nextPtr;
 	    if ((errorPtr->lastRequest != (unsigned long) -1)
-		    && (errorPtr->lastRequest <= (unsigned long) lastSerial)) {
+		    && (errorPtr->lastRequest <= lastSerial)) {
 		if (prevPtr == NULL) {
 		    dispPtr->errorPtr = nextPtr;
 		} else {

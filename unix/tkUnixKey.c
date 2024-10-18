@@ -129,7 +129,7 @@ TkpGetString(
     if (kePtr->charValuePtr != NULL) {
 	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
 	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-		(unsigned) kePtr->charValueLen+1);
+		kePtr->charValueLen+1);
 	return Tcl_DStringValue(dsPtr);
     }
 
@@ -178,7 +178,7 @@ TkpGetString(
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
-                &kePtr->keysym, &status);
+		&kePtr->keysym, &status);
 
 	/*
 	 * If the buffer wasn't big enough, grow the buffer and try again.
@@ -235,9 +235,9 @@ TkpGetString(
      */
 
 done:
-    kePtr->charValuePtr = ckalloc(len + 1);
+    kePtr->charValuePtr = (char *)ckalloc(len + 1);
     kePtr->charValueLen = len;
-    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
+    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), len + 1);
     return Tcl_DStringValue(dsPtr);
 }
 
@@ -331,7 +331,7 @@ TkpGetKeySym(
      */
 
     if (eventPtr->xkey.keycode > 0xff) {
-        return NoSymbol;
+	return NoSymbol;
     }
 
     /*
@@ -381,7 +381,6 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-
     sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
 	    index);
 
@@ -444,7 +443,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    int j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;
@@ -510,7 +510,7 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -537,7 +537,7 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    newCodes = ckalloc(arraySize * sizeof(KeyCode));
+	    newCodes = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
 	    memcpy(newCodes, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
 	    ckfree(dispPtr->modKeyCodes);

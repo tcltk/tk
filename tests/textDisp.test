@@ -2216,7 +2216,7 @@ update
 set totpix [.t count -update -ypixels 1.0 end]
 # check that the wrapping lines wrap exactly 6 times in total (4 times for line 151, and twice for line 153),
 # this is an assumption of the upcoming tests
-if {[expr {double(($totpix-5*$heightDiff)/$fixedHeight)}] != 206.0} {
+if {double(($totpix-5*$heightDiff)/$fixedHeight) != 206.0} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual [.t cget -font]]\",\
 is too different from the requested \"[.t cget -font]\". Some of the upcoming tests will probably fail."
 }

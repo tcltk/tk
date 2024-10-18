@@ -14,7 +14,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   xcode:
-    runs-on: macos-12
+    runs-on: macos-13
     defaults:
       run:
         shell: bash
@@ -58,7 +58,7 @@ jobs:
           fi
         timeout-minutes: 30
   clang:
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         symbols:
