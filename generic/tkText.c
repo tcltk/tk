@@ -2421,9 +2421,9 @@ TextWorldChanged(
     }
     border = textPtr->borderWidth + textPtr->highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
-	    textPtr->width * textPtr->charWidth + 2*textPtr->padX + 2*border,
-	    textPtr->height*(fm.linespace+textPtr->spacing1+textPtr->spacing3)
-		    + 2*textPtr->padY + 2*border);
+	    textPtr->width * textPtr->charWidth + 2 * textPtr->padX + 2 * border,
+	    textPtr->height * (fm.linespace + textPtr->spacing1 + textPtr->spacing3)
+		    + 2 * textPtr->padY + 2 * border);
 
     Tk_SetInternalBorderEx(textPtr->tkwin,
 	    border + textPtr->padX, border + textPtr->padX,
@@ -3313,7 +3313,7 @@ DeleteIndexRange(
 
 	TkBTreeDeleteIndexRange(sharedTextPtr->tree, &index1, &index2);
 
-    	UpdateDirtyFlag(sharedTextPtr);
+	UpdateDirtyFlag(sharedTextPtr);
     }
 
     resetViewCount = 0;
@@ -4945,7 +4945,7 @@ DumpLine(
 	    } else if ((what & TK_DUMP_IMG) &&
 		    (segPtr->typePtr == &tkTextEmbImageType)) {
 		TkTextEmbImage *eiPtr = &segPtr->body.ei;
-		const char *name = (eiPtr->name == NULL) ? "" : eiPtr->name;
+		const char *name = eiPtr->name;
 
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
@@ -5756,7 +5756,7 @@ SearchCore(
     int alreadySearchOffset = -1;
 
     const char *pattern = NULL;	/* For exact searches only. */
-    int firstNewLine = -1; 	/* For exact searches only. */
+    int firstNewLine = -1;	/* For exact searches only. */
     Tcl_RegExp regexp = NULL;	/* For regexp searches only. */
 
     /*
