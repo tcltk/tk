@@ -117,7 +117,6 @@ Tk_AllocColorFromObj(
 	     * This is a stale reference: it refers to a TkColor that's no
 	     * longer in use. Clear the reference.
 	     */
-
 	    FreeColorObj(objPtr);
 	    tkColPtr = NULL;
 	} else if ((Tk_Screen(tkwin) == tkColPtr->screen)
@@ -129,7 +128,7 @@ Tk_AllocColorFromObj(
 
     /*
      * The object didn't point to the TkColor that we wanted. Search the list
-     * of TkColors with the same name to see if one of the other TkColors is
+     * of TkColors with the same name to see if one of the saved TkColors is
      * the right one.
      */
 
@@ -156,6 +155,7 @@ Tk_AllocColorFromObj(
     tkColPtr = (TkColor *) Tk_GetColor(interp, tkwin, Tcl_GetString(objPtr));
     objPtr->internalRep.twoPtrValue.ptr1 = tkColPtr;
     if (tkColPtr != NULL) {
+	/* The resourceRefCount is incremented by Tk_GetColor. */
 	tkColPtr->objRefCount++;
     }
     return (XColor *) tkColPtr;

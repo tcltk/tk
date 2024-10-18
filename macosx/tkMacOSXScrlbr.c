@@ -160,10 +160,8 @@ TkpCreateScrollbar(
  *--------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-
 /*
- * This stand-alone drawing function is used on macOS 10.9 and newer because
+ * This stand-alone drawing function is used because
  * the HIToolbox does not draw the scrollbar thumb at the expected size on
  * those systems.  The thumb is drawn too large, causing a mouse click on the
  * thumb to be interpreted as a mouse click in the trough.
@@ -240,7 +238,6 @@ static void drawMacScrollbar(
 	CFRelease(path);
     }
 }
-#endif
 
 void
 TkpDisplayScrollbar(
@@ -322,7 +319,6 @@ TkpDisplayScrollbar(
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 
 	/*
 	 * Switch back to NSView coordinates and draw a modern scrollbar.
@@ -330,7 +326,6 @@ TkpDisplayScrollbar(
 
 	CGContextConcatCTM(dc.context, t);
 	drawMacScrollbar(scrollPtr, msPtr, dc.context);
-#endif
     }
     TkMacOSXRestoreDrawingContext(&dc);
     scrollPtr->flags &= ~REDRAW_PENDING;

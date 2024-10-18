@@ -91,9 +91,6 @@
 /* Define to 1 if you have the 'vfork' function. */
 #undef HAVE_VFORK
 
-/* Is weak import available? */
-#undef HAVE_WEAK_IMPORT
-
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
@@ -188,9 +185,6 @@
 
 /* Are we building with zipfs enabled? */
 #undef ZIPFS_BUILD
-
-/* Are Darwin SUSv3 extensions available? */
-#undef _DARWIN_C_SOURCE
 
 /* Add the _FILE_OFFSET_BITS flag when building */
 #undef _FILE_OFFSET_BITS

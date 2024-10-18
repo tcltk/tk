@@ -304,15 +304,14 @@ bind TtkScrollable <Shift-Option-MouseWheel> \
 ## Touchpad scrolling
 #
 bind TtkScrollable <TouchpadScroll> {
-    if {%# %% 5 != 0} {
-	return
-    }
-    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
-    if {$tk::Priv(deltaX) != 0} {
-	%W xview scroll [expr {-$tk::Priv(deltaX)}] units
-    }
-    if {$tk::Priv(deltaY) != 0} {
-	%W yview scroll [expr {-$tk::Priv(deltaY)}] units
+    if {%# %% 5 == 0} {
+	lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	if {$tk::Priv(deltaX) != 0} {
+	    %W xview scroll [expr {-$tk::Priv(deltaX)}] units
+	}
+	if {$tk::Priv(deltaY) != 0} {
+	    %W yview scroll [expr {-$tk::Priv(deltaY)}] units
+	}
     }
 }
 #*EOF*
