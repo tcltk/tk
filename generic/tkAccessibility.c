@@ -12,6 +12,9 @@
 
 #include "tkInt.h"
 
+
+const char *role, *name, *description, *value, *state, *action;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -30,7 +33,7 @@
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleRole(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -39,24 +42,23 @@ Tk_AccessibleRole(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? role?");
-    return "";
+    return TCL_ERROR;
   }
 	
-  const char * role;
   Tk_Window win;
   Tcl_Obj *obj;
-  int arg_length;
+  Tcl_Size arg_length;
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
   
   /* Get accessibility role for window. */
 
   obj = objv[2];
   role  =  Tcl_GetStringFromObj(obj, &arg_length);
-  return role;
+  return TCL_OK;
 }
 
 
@@ -79,7 +81,7 @@ Tk_AccessibleRole(
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleName(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -88,24 +90,23 @@ Tk_AccessibleName(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? name?");
-    return "";
+    return TCL_ERROR;
   }
 	
-  const char * name;
   Tk_Window win;
   Tcl_Obj *obj;
-  int arg_length;
+  Tcl_Size arg_length;
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
   
   /* Get accessibility name for window. */
 
   obj = objv[2];
   name  =  Tcl_GetStringFromObj(obj, &arg_length);
-  return name;
+  return TCL_OK;
 }
 
 
@@ -127,7 +128,7 @@ Tk_AccessibleName(
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleDescription(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -136,24 +137,23 @@ Tk_AccessibleDescription(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? description?");
-    return "";
+    return TCL_ERROR;
   }
 	
-  const char * description;
   Tk_Window win;
   Tcl_Obj *obj;
-  int arg_length;
+  Tcl_Size arg_length;
  
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
   
   /* Get accessibility description for window. */
 
   obj = objv[2];
   description =  Tcl_GetStringFromObj(obj, &arg_length);
-  return description;
+  return TCL_OK;
 }
 
 
@@ -176,7 +176,7 @@ Tk_AccessibleDescription(
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleValue(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -186,24 +186,23 @@ Tk_AccessibleValue(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? value?");
-    return "";
+    return TCL_ERROR;
   }
 
   Tk_Window win;
   Tcl_Obj *obj;
-  const char *value;
-  int arg_length;
+  Tcl_Size arg_length;
 
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
 
   /*Get accessibility value.*/
   obj = objv[2]; 
   value = Tcl_GetStringFromObj(obj, &arg_length);
-  return value;
+  return TCL_OK;
 }
 
 /*
@@ -224,7 +223,7 @@ Tk_AccessibleValue(
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleState(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -234,25 +233,24 @@ Tk_AccessibleState(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? state?");
-    return "";
+    return TCL_ERROR;
   }
 
   Tk_Window win;
   Tcl_Obj *obj;
-  const char *state;
-  int arg_length;
+  Tcl_Size arg_length;
 
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
 
 
   /*Get accessibility state.*/
   obj = objv[2];
   state = Tcl_GetStringFromObj(obj, &arg_length);
-  return state;
+  return TCL_OK;
 }
 
 
@@ -273,7 +271,7 @@ Tk_AccessibleState(
  *----------------------------------------------------------------------
  */
 
-const char *
+int
 Tk_AccessibleAction(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
@@ -283,25 +281,24 @@ Tk_AccessibleAction(
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? action?");
-    return "";
+    return TCL_ERROR;
   }
 
   Tk_Window win;
   Tcl_Obj *obj;
-  const char *action;
-  int arg_length;
+  Tcl_Size arg_length;
 
   
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
-    return "";
+    return TCL_ERROR;
   }
 
 
   /*Get accessibility action.*/
   obj = objv[2];
   action = Tcl_GetStringFromObj(obj, &arg_length);
-  return action;
+  return TCL_OK;
 }
 
 
