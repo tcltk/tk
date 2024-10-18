@@ -1032,7 +1032,7 @@ ConfigureFrame(
 	    && strcmp(oldMenuName, Tcl_GetString(framePtr->menuNameObj)) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
 	Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName,
-		Tcl_GetString(framePtr->menuNameObj));
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 
     if (oldMenuName != NULL) {
@@ -1839,7 +1839,7 @@ FrameEventProc(
 	}
     } else if (eventPtr->type == ActivateNotify) {
 	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
-		Tcl_GetString(framePtr->menuNameObj));
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
     return;
 
