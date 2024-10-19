@@ -1689,10 +1689,10 @@ DisplayFrame(
      */
 
     XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-	    framePtr->copyGC, highlightWidth, highlightWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
-	    (unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
-	    highlightWidth, highlightWidth);
+	    framePtr->copyGC, framePtr->highlightWidth, framePtr->highlightWidth,
+	    (unsigned) (Tk_Width(tkwin) - 2 * framePtr->highlightWidth),
+	    (unsigned) (Tk_Height(tkwin) - 2 * framePtr->highlightWidth),
+	    framePtr->highlightWidth, framePtr->highlightWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
@@ -1958,7 +1958,7 @@ TkInstallFrameMenu(
 	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
 	}
 	TkpMenuNotifyToplevelCreate(winPtr->mainPtr->interp,
-		Tcl_GetString(framePtr->menuNameObj));
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 }
 
