@@ -1927,7 +1927,7 @@ TkInstallFrameMenu(
 	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
 	}
 	TkpMenuNotifyToplevelCreate(winPtr->mainPtr->interp,
-		Tcl_GetString(framePtr->menuNameObj));
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 }
 
