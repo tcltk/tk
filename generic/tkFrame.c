@@ -977,7 +977,7 @@ ConfigureFrame(
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
-    char *oldMenuName;
+    Tcl_Obj *oldMenuNameObj;
     Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
     Tk_Image image = NULL;
@@ -987,11 +987,9 @@ ConfigureFrame(
      * Need the old menubar name for the menu code to delete it.
      */
 
-    if (framePtr->menuNameObj == NULL) {
-	oldMenuName = NULL;
-    } else {
-	oldMenuName = (char *)ckalloc(strlen(Tcl_GetString(framePtr->menuNameObj)) + 1);
-	strcpy(oldMenuName, Tcl_GetString(framePtr->menuNameObj));
+    oldMenuNameObj = framePtr->menuNameObj;
+    if (oldMenuNameObj) {
+	Tcl_IncrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->type == TYPE_LABELFRAME) {
@@ -1000,8 +998,8 @@ ConfigureFrame(
     if (Tk_SetOptions(interp, framePtr,
 	    framePtr->optionTable, objc, objv,
 	    framePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
-	if (oldMenuName != NULL) {
-	    ckfree(oldMenuName);
+	if (oldMenuNameObj != NULL) {
+	    Tcl_DecrRefCount(oldMenuNameObj);
 	}
 	return TCL_ERROR;
     }
@@ -1025,17 +1023,17 @@ ConfigureFrame(
      * A few of the options require additional processing.
      */
 
-    if ((((oldMenuName == NULL) && (framePtr->menuNameObj != NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuNameObj == NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuNameObj != NULL)
-	    && strcmp(oldMenuName, Tcl_GetString(framePtr->menuNameObj)) != 0))
+    if ((((oldMenuNameObj == NULL) && (framePtr->menuNameObj != NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj == NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj != NULL)
+	    && strcmp(Tcl_GetString(oldMenuNameObj), Tcl_GetString(framePtr->menuNameObj)) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
-	Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName,
+	Tk_SetWindowMenubar(interp, framePtr->tkwin, (oldMenuNameObj ? Tcl_GetString(oldMenuNameObj) : NULL),
 		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 
-    if (oldMenuName != NULL) {
-	ckfree(oldMenuName);
+    if (oldMenuNameObj != NULL) {
+	Tcl_DecrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->border != NULL) {
@@ -1260,8 +1258,7 @@ FrameWorldChanged(
 	case LABELANCHOR_E:
 	case LABELANCHOR_EN:
 	case LABELANCHOR_ES:
-	    bWidthRight += labelframePtr->labelReqWidth -
-		    framePtr->borderWidth;
+	    bWidthRight += labelframePtr->labelReqWidth - framePtr->borderWidth;
 	    break;
 	case LABELANCHOR_N:
 	case LABELANCHOR_NE:
@@ -1271,8 +1268,7 @@ FrameWorldChanged(
 	case LABELANCHOR_S:
 	case LABELANCHOR_SE:
 	case LABELANCHOR_SW:
-	    bWidthBottom += labelframePtr->labelReqHeight -
-		    framePtr->borderWidth;
+	    bWidthBottom += labelframePtr->labelReqHeight - framePtr->borderWidth;
 	    break;
 	default:
 	    bWidthLeft += labelframePtr->labelReqWidth - framePtr->borderWidth;
@@ -1492,7 +1488,7 @@ DisplayFrame(
 {
     Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
-    int bdX1, bdY1, bdX2, bdY2, hlWidth;
+    int bdX1, bdY1, bdX2, bdY2;
     Pixmap pixmap;
     Bool useClipping = False;
 
@@ -1505,9 +1501,7 @@ DisplayFrame(
      * Highlight shall always be drawn if it exists, so do that first.
      */
 
-    hlWidth = framePtr->highlightWidth;
-
-    if (hlWidth > 0) {
+    if (framePtr->highlightWidth > 0) {
 	GC fgGC, bgGC;
 
 	bgGC = Tk_GCForColor(framePtr->highlightBgColorPtr,
@@ -1515,10 +1509,10 @@ DisplayFrame(
 	if (framePtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(framePtr->highlightColorPtr,
 		    Tk_WindowId(tkwin));
-	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, hlWidth,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, framePtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, hlWidth,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, framePtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	}
     }
@@ -1558,7 +1552,7 @@ DisplayFrame(
 	 */
 
     noLabel:
-	TkpDrawFrameEx(tkwin, pixmap, framePtr->border, hlWidth,
+	TkpDrawFrameEx(tkwin, pixmap, framePtr->border, framePtr->highlightWidth,
 		framePtr->borderWidth, framePtr->relief);
 	if (framePtr->bgimg) {
 	    DrawFrameBackground(tkwin, pixmap, framePtr->highlightWidth, framePtr->borderWidth,
@@ -1583,9 +1577,9 @@ DisplayFrame(
 	 * Calculate how the label affects the border's position.
 	 */
 
-	bdX1 = bdY1 = hlWidth;
-	bdX2 = Tk_Width(tkwin) - hlWidth;
-	bdY2 = Tk_Height(tkwin) - hlWidth;
+	bdX1 = bdY1 = framePtr->highlightWidth;
+	bdX2 = Tk_Width(tkwin) - framePtr->highlightWidth;
+	bdY2 = Tk_Height(tkwin) - framePtr->highlightWidth;
 
 	switch (labelframePtr->labelAnchor) {
 	case LABELANCHOR_E:
