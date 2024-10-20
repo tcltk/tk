@@ -920,7 +920,7 @@ ConfigureFrame(
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
-    char *oldMenuName;
+    Tcl_Obj *oldMenuNameObj;
     Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
     Tk_Image image = NULL;
@@ -931,11 +931,9 @@ ConfigureFrame(
      * Need the old menubar name for the menu code to delete it.
      */
 
-    if (framePtr->menuNameObj == NULL) {
-	oldMenuName = NULL;
-    } else {
-	oldMenuName = (char *)ckalloc(strlen(Tcl_GetString(framePtr->menuNameObj)) + 1);
-	strcpy(oldMenuName, Tcl_GetString(framePtr->menuNameObj));
+    oldMenuNameObj = framePtr->menuNameObj;
+    if (oldMenuNameObj) {
+	Tcl_IncrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->type == TYPE_LABELFRAME) {
@@ -944,8 +942,8 @@ ConfigureFrame(
     if (Tk_SetOptions(interp, framePtr,
 	    framePtr->optionTable, objc, objv,
 	    framePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
-	if (oldMenuName != NULL) {
-	    ckfree(oldMenuName);
+	if (oldMenuNameObj != NULL) {
+	    Tcl_DecrRefCount(oldMenuNameObj);
 	}
 	return TCL_ERROR;
     }
@@ -969,17 +967,17 @@ ConfigureFrame(
      * A few of the options require additional processing.
      */
 
-    if ((((oldMenuName == NULL) && (framePtr->menuNameObj != NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuNameObj == NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuNameObj != NULL)
-	    && strcmp(oldMenuName, Tcl_GetString(framePtr->menuNameObj)) != 0))
+    if ((((oldMenuNameObj == NULL) && (framePtr->menuNameObj != NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj == NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj != NULL)
+	    && strcmp(Tcl_GetString(oldMenuNameObj), Tcl_GetString(framePtr->menuNameObj)) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
-	Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName,
+	Tk_SetWindowMenubar(interp, framePtr->tkwin, (oldMenuNameObj ? Tcl_GetString(oldMenuNameObj) : NULL),
 		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 
-    if (oldMenuName != NULL) {
-	ckfree(oldMenuName);
+    if (oldMenuNameObj != NULL) {
+	Tcl_DecrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->border != NULL) {
@@ -1203,13 +1201,12 @@ FrameWorldChanged(
      * Calculate individual border widths.
      */
 
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padYObj, &padY);
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
-
     bWidthBottom = bWidthTop = bWidthRight = bWidthLeft =
 	    borderWidth + highlightWidth;
 
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padYObj, &padY);
     bWidthLeft   += padX;
     bWidthRight  += padX;
     bWidthTop    += padY;
@@ -1566,15 +1563,15 @@ DisplayFrame(
 	     * favor a lower border position by rounding up.
 	     */
 
-	    bdY1 += (labelframePtr->labelBox.height-borderWidth+1)/2;
+	    bdY1 += (labelframePtr->labelBox.height - borderWidth+1)/2;
 	    break;
 	case LABELANCHOR_S:
 	case LABELANCHOR_SE:
 	case LABELANCHOR_SW:
-	    bdY2 -= (labelframePtr->labelBox.height-borderWidth) / 2;
+	    bdY2 -= (labelframePtr->labelBox.height - borderWidth) / 2;
 	    break;
 	default:
-	    bdX1 += (labelframePtr->labelBox.width-borderWidth) / 2;
+	    bdX1 += (labelframePtr->labelBox.width - borderWidth) / 2;
 	    break;
 	}
 
@@ -2016,7 +2013,7 @@ FrameRequestProc(
 
 static void
 FrameLostContentProc(
-    void *clientData,	/* Frame structure for content window window that was
+    void *clientData,	/* Frame structure for content window that was
 				 * stolen away. */
     TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window window. */
 {
