@@ -111,21 +111,20 @@ typedef struct {
     XColor *selFgColorPtr;	/* Foreground color for selected text. */
     int state;			/* Normal or disabled. Entry is read-only when
 				 * disabled. */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textVarNameObj;		/* Name of variable (malloc'ed) or NULL. If
 				 * non-NULL, entry's string tracks the
 				 * contents of this variable and vice
 				 * versa. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int prefWidth;		/* Desired width of window, measured in
 				 * average characters. */
-    char *scrollCmd;		/* Command prefix for communicating with
-				 * scrollbar(s). Malloc'ed. NULL means no
-				 * command to issue. */
-    char *showChar;		/* Value of -show option. If non-NULL, first
+    Tcl_Obj *scrollCmdObj;	/* Command prefix for communicating with
+				 * scrollbar(s). NULL means no command to issue. */
+    Tcl_Obj *showCharObj;	/* Value of -show option. If non-NULL, first
 				 * character is used for displaying all
-				 * characters in entry. Malloc'ed. This is
+				 * characters in entry. This is
 				 * only used by the Entry widget. */
 
     /*
@@ -168,17 +167,16 @@ typedef struct {
 				 * definitions. */
 
     int validate;		/* Non-zero means try to validate */
-    char *validateCmd;		/* Command prefix to use when invoking
-				 * validate command. NULL means don't invoke
-				 * commands. Malloc'ed. */
-    char *invalidCmd;		/* Command called when a validation returns 0
+    Tcl_Obj *validateCmdObj;		/* Command prefix to use when invoking
+				 * validate command. NULL means don't invoke commands. */
+    Tcl_Obj *invalidCmdObj;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
     /*
      * Fields used in displaying help text if entry value is empty
      */
 
     Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
-    char *placeholderString;	/* String value of placeholder. */
+    Tcl_Obj *placeholderObj;	/* String value of placeholder. */
     Tcl_Size placeholderChars;	/* Number of chars in placeholder. */
     XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
     GC placeholderGC;		/* For drawing placeholder text. */
@@ -207,7 +205,7 @@ typedef struct {
     Tk_Cursor bCursor;		/* cursor for buttons, or NULL. */
     int bdRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
     int buRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    char *command;		/* Command to invoke for spin buttons. NULL
+    Tcl_Obj *commandObj;	/* Command to invoke for spin buttons. NULL
 				 * means no command to issue. */
 
     /*
@@ -229,7 +227,7 @@ typedef struct {
 				 * multiple of this value. */
     char *formatBuf;		/* string into which to format value.
 				 * Malloc'ed. */
-    char *reqFormat;		/* Snprintf conversion specifier used for the
+    Tcl_Obj *reqFormatObj;	/* Snprintf conversion specifier used for the
 				 * value that the users requests. Malloc'ed */
     char *valueFormat;		/* Snprintf conversion specifier used for the
 				 * value. */
