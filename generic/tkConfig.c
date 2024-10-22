@@ -769,6 +769,11 @@ DoObjConfig(
 	    }
 	    *((char **)oldInternalPtr) = *((char **)internalPtr);
 	    *((char **)internalPtr) = newStr;
+#if 1
+	    Tcl_AppendResult(interp, "STRING should use Tcl_Obj for: \"",
+		    optionPtr->specPtr->optionName+1, "\"", (char *)NULL);
+	    return TCL_ERROR;
+#endif
 	}
 	break;
     }
