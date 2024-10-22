@@ -235,7 +235,7 @@ typedef struct {
 				 * digits and other information; used for the
 				 * value. */
 
-    char *valueStr;		/* Values List. Malloc'ed. */
+    Tcl_Obj *valueObj;		/* Values List. */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
     int eIndex;			/* Holds the current index into elements */
     int nElements;		/* Holds the current count of elements */
