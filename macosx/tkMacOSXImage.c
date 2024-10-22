@@ -1100,8 +1100,8 @@ struct TkMacOSXNSImageModel {
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     char *imageName ;                 /* Malloc'ed image name. */
-    char *source;       	      /* Malloc'ed string describing the image. */
-    char *as;                         /* Malloc'ed interpretation of source */
+    Tcl_Obj *sourceObj;       	      /* Describing the image. */
+    Tcl_Obj *asObj;                   /* Interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
     bool pressed;                     /* Image is for use in a pressed button.*/
     bool templ;                       /* Image is for use as a template.*/
@@ -1163,9 +1163,9 @@ static Tk_ImageType TkMacOSXNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, offsetof(TkMacOSXNSImageModel, source), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, sourceObj), -1, 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, offsetof(TkMacOSXNSImageModel, as), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, asObj), -1, 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
      -1, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
@@ -1296,7 +1296,7 @@ TkMacOSXNSImageConfigureModel(
 	modelPtr->height = oldHeight;
     }
 
-    if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
+    if (modelPtr->sourceObj == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
@@ -1313,7 +1313,7 @@ TkMacOSXNSImageConfigureModel(
 	goto errorExit;
     }
 
-    source = [[NSString alloc] initWithUTF8String: modelPtr->source];
+    source = [[NSString alloc] initWithUTF8String: Tcl_GetString(modelPtr->sourceObj)];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
 	newImage = [[NSImage imageNamed:source] copy];
@@ -1550,8 +1550,8 @@ TkMacOSXNSImageCreate(
     modelPtr->instancePtr = NULL;
     modelPtr->image = NULL;
     modelPtr->darkModeImage = NULL;
-    modelPtr->source = NULL;
-    modelPtr->as = NULL;
+    modelPtr->sourceObj = NULL;
+    modelPtr->asObj = NULL;
 
     /*
      * Process configuration options given in the image create command.
@@ -1736,8 +1736,8 @@ TkMacOSXNSImageDelete(
 
     Tcl_DeleteCommand(modelPtr->interp, modelPtr->imageName);
     ckfree(modelPtr->imageName);
-    ckfree(modelPtr->source);
-    ckfree(modelPtr->as);
+    Tcl_DecrRefCount(modelPtr->sourceObj);
+    Tcl_DecrRefCount(modelPtr->asObj);
     [modelPtr->image release];
     [modelPtr->darkModeImage release];
     ckfree(modelPtr);

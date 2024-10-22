@@ -79,15 +79,15 @@ typedef struct TkScale {
 				 * tick interval. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */
-    char *command;		/* Command prefix to use when invoking Tcl
+    Tcl_Obj *commandObj;	/* Command prefix to use when invoking Tcl
 				 * commands because the scale value changed.
 				 * NULL means don't invoke commands. */
     int repeatDelay;		/* How long to wait before auto-repeating on
 				 * scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
-    char *label;		/* Label to display above or to right of
+    Tcl_Obj *labelObj;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    Tcl_Size labelLength;	/* Number of non-NULL chars. in label. */
+    Tcl_Size labelLength;	/* Not used any more. */
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */
