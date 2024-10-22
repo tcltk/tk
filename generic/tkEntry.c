@@ -1276,7 +1276,7 @@ ConfigureEntry(
 		    Tcl_Obj *newObjPtr;
 		    Tcl_Size nelems;
 
-		    newObjPtr = Tcl_NewStringObj(Tcl_GetString(sbPtr->valueObj), TCL_INDEX_NONE);
+		    newObjPtr = sbPtr->valueObj;
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
 			    != TCL_OK) {
 			valuesChanged = -1;
