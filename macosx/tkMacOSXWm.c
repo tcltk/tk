@@ -3764,8 +3764,7 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(Tcl_GetString(protPtr->commandObj), TCL_INDEX_NONE));
+		Tcl_SetObjResult(interp, protPtr->commandObj);
 		return TCL_OK;
 	    }
 	}
