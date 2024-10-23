@@ -186,7 +186,7 @@ typedef struct {
     int 	first;		/* First visible item */
     int 	last;		/* Last visible item */
     int 	total;		/* Total #items */
-    char 	*scrollCmd;	/* Widget option */
+    Tcl_Obj	*scrollCmdObj;	/* Widget option */
 } Scrollable;
 
 typedef struct ScrollHandleRec *ScrollHandle;
