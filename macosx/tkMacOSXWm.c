@@ -3733,8 +3733,6 @@ WmProtocolCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
-    char *cmd;
-    Tcl_Size cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -3766,8 +3764,7 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(protPtr->command, TCL_INDEX_NONE));
+		Tcl_SetObjResult(interp, protPtr->commandObj);
 		return TCL_OK;
 	    }
 	}
@@ -3787,21 +3784,20 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
-	    if (protPtr->command)
-		ckfree(protPtr->command);
+	    if (protPtr->commandObj)
+		Tcl_DecrRefCount(protPtr->commandObj);
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
-    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
-    if (cmdLength > 0) {
+    if (Tcl_GetString(objv[4])[0]) {
 	protPtr = (ProtocolHandler *)ckalloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	protPtr->command = (char *)ckalloc(cmdLength+1);
-	strcpy(protPtr->command, cmd);
+	protPtr->commandObj = objv[4];
+	Tcl_IncrRefCount(protPtr->commandObj);
     }
     return TCL_OK;
 }
@@ -6071,13 +6067,12 @@ Tk_MacOSXGetTkWindow(
     Window window = None;
     if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
 	window = [(TKWindow *)w tkWindow];
-    }
-    if (window) {
 	TkDisplay *dispPtr = TkGetDisplayList();
-	return Tk_IdToWindow(dispPtr->display, window);
-    } else {
-	return NULL;
+	if (window && dispPtr && dispPtr->display) {
+	    return Tk_IdToWindow(dispPtr->display, window);
+	}
     }
+    return NULL;
 }
 
 /*
@@ -6102,7 +6097,10 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    NSWindow *macWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSWindow *macWindow = nil;
+    if (winPtr && winPtr->window) {
+	macWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    }
     return [macWindow isZoomed];
 }
 
@@ -7162,7 +7160,10 @@ TkpChangeFocus(
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-    if (winPtr->atts.override_redirect) {
+    if (!winPtr ||
+	(winPtr->flags & TK_ALREADY_DEAD) ||
+	!Tk_IsMapped(winPtr) ||
+	winPtr->atts.override_redirect) {
 	return 0;
     }
 

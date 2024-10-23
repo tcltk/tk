@@ -167,14 +167,14 @@ TkpDisplayScale(
      */
 
     Tcl_Preserve(scalePtr);
-    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
+    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
-                scalePtr->value) < 0) {
-            string[TCL_DOUBLE_SPACE - 1] = '\0';
-        }
+	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+		scalePtr->value) < 0) {
+	    string[TCL_DOUBLE_SPACE - 1] = '\0';
+	}
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(scalePtr->commandObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
