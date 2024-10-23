@@ -295,7 +295,6 @@ Tk_ScaleObjCmd(
     scalePtr->repeatDelay	= 0;
     scalePtr->repeatInterval	= 0;
     scalePtr->labelObj		= NULL;
-    scalePtr->labelLength	= 0;
     scalePtr->state		= STATE_NORMAL;
     scalePtr->borderWidth	= 0;
     scalePtr->bgBorder		= NULL;
