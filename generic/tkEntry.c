@@ -139,8 +139,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
-	offsetof(Entry, selBorderWidth),
-	0, DEF_ENTRY_SELECT_BD_MONO, 0},
+	offsetof(Entry, selBorderWidth), 0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
@@ -252,8 +251,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_ENTRY_INSERT_BG, TCL_INDEX_NONE, offsetof(Entry, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
-	offsetof(Entry, insertBorderWidth), 0,
-	DEF_ENTRY_INSERT_BD_MONO, 0},
+	offsetof(Entry, insertBorderWidth), 0, DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_ENTRY_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOffTime),
 	0, 0, 0},
@@ -291,8 +289,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
-	offsetof(Entry, selBorderWidth),
-	0, DEF_ENTRY_SELECT_BD_MONO, 0},
+	offsetof(Entry, selBorderWidth), 0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_ENTRY_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Entry, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
@@ -313,7 +310,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
 	NULL, offsetof(Entry, validateCmdObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-values", "values", "Values",
-	DEF_SPINBOX_VALUES, TCL_INDEX_NONE, offsetof(Spinbox, valueStr),
+	DEF_SPINBOX_VALUES, offsetof(Spinbox, valueObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-validatecommand", 0},
@@ -1118,7 +1115,7 @@ ConfigureEntry(
     Spinbox *sbPtr = (Spinbox *) entryPtr;
 				/* Only used when this widget is of type
 				 * TK_SPINBOX */
-    char *oldValues = NULL;
+    Tcl_Obj *oldValues = NULL;
     Tcl_Obj *oldFormat = NULL;
     int error;
     int oldExport = 0;
@@ -1147,7 +1144,7 @@ ConfigureEntry(
 
     oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
     if (entryPtr->type == TK_SPINBOX) {
-	oldValues = sbPtr->valueStr;
+	oldValues = sbPtr->valueObj;
 	oldFormat = sbPtr->reqFormatObj;
 	oldFrom = sbPtr->fromValue;
 	oldTo = sbPtr->toValue;
@@ -1267,16 +1264,16 @@ ConfigureEntry(
 	     * See if we have to rearrange our listObj data.
 	     */
 
-	    if (oldValues != sbPtr->valueStr) {
+	    if (oldValues != sbPtr->valueObj) {
 		if (sbPtr->listObj != NULL) {
 		    Tcl_DecrRefCount(sbPtr->listObj);
 		}
 		sbPtr->listObj = NULL;
-		if (sbPtr->valueStr != NULL) {
+		if (sbPtr->valueObj != NULL) {
 		    Tcl_Obj *newObjPtr;
 		    Tcl_Size nelems;
 
-		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, TCL_INDEX_NONE);
+		    newObjPtr = sbPtr->valueObj;
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
 			    != TCL_OK) {
 			valuesChanged = -1;
@@ -1379,7 +1376,7 @@ ConfigureEntry(
 	     */
 
 	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
-	} else if ((sbPtr->valueStr == NULL)
+	} else if ((sbPtr->valueObj == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)
 			|| !DOUBLES_EQ(sbPtr->toValue, oldTo))) {
@@ -1727,8 +1724,8 @@ DisplayEntry(
 	    Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->selBorder,
 		    selStartX - entryPtr->selBorderWidth,
 		    baseY - fm.ascent - entryPtr->selBorderWidth,
-		    (selEndX - selStartX) + 2*entryPtr->selBorderWidth,
-		    (fm.ascent + fm.descent) + 2*entryPtr->selBorderWidth,
+		    (selEndX - selStartX) + 2 * entryPtr->selBorderWidth,
+		    (fm.ascent + fm.descent) + 2 * entryPtr->selBorderWidth,
 		    entryPtr->selBorderWidth,
 #ifndef MAC_OSX_TK
 		    TK_RELIEF_RAISED
