@@ -123,8 +123,8 @@ DisplayVerticalScale(
 	drawnAreaPtr->x = scalePtr->vertTickRightX;
 	drawnAreaPtr->y = scalePtr->inset;
 	drawnAreaPtr->width = scalePtr->vertTroughX + scalePtr->width
-		+ 2*scalePtr->borderWidth - scalePtr->vertTickRightX;
-	drawnAreaPtr->height -= 2*scalePtr->inset;
+		+ 2 * scalePtr->borderWidth - scalePtr->vertTickRightX;
+	drawnAreaPtr->height -= 2 * scalePtr->inset;
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -187,25 +187,25 @@ DisplayVerticalScale(
 
     Tk_Draw3DRectangle(tkwin, drawable,
 	    scalePtr->bgBorder, scalePtr->vertTroughX, scalePtr->inset,
-	    scalePtr->width + 2*scalePtr->borderWidth,
-	    Tk_Height(tkwin) - 2*scalePtr->inset, scalePtr->borderWidth,
+	    scalePtr->width + 2 * scalePtr->borderWidth,
+	    Tk_Height(tkwin) - 2 * scalePtr->inset, scalePtr->borderWidth,
 	    TK_RELIEF_SUNKEN);
     XFillRectangle(scalePtr->display, drawable, scalePtr->troughGC,
 	    scalePtr->vertTroughX + scalePtr->borderWidth,
 	    scalePtr->inset + scalePtr->borderWidth,
 	    (unsigned) scalePtr->width,
-	    (unsigned) (Tk_Height(tkwin) - 2*scalePtr->inset
-		- 2*scalePtr->borderWidth));
+	    (unsigned) (Tk_Height(tkwin) - 2 * scalePtr->inset
+		- 2 * scalePtr->borderWidth));
     if (scalePtr->state == STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;
     }
     width = scalePtr->width;
-    height = scalePtr->sliderLength/2;
+    height = scalePtr->sliderLength / 2;
     x = scalePtr->vertTroughX + scalePtr->borderWidth;
     y = TkScaleValueToPixel(scalePtr, scalePtr->value) - height;
-    shadowWidth = scalePtr->borderWidth/2;
+    shadowWidth = scalePtr->borderWidth / 2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
@@ -213,7 +213,7 @@ DisplayVerticalScale(
 	    2*height, shadowWidth, scalePtr->sliderRelief);
     x += shadowWidth;
     y += shadowWidth;
-    width -= 2*shadowWidth;
+    width -= 2 * shadowWidth;
     height -= shadowWidth;
     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y, width,
 	    height, shadowWidth, scalePtr->sliderRelief);
@@ -224,13 +224,15 @@ DisplayVerticalScale(
      * Draw the label to the right of the scale.
      */
 
-    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelLength != 0)) {
+    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
+	Tcl_Size labelLength;
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label,
-		scalePtr->labelLength, scalePtr->vertLabelX,
+		scalePtr->tkfont, label,
+		labelLength, scalePtr->vertLabelX,
 		scalePtr->inset + (3 * fm.ascent) / 2);
     }
 }
@@ -339,7 +341,7 @@ DisplayHorizontalScale(
 	drawnAreaPtr->y = scalePtr->horizValueY;
 	drawnAreaPtr->width -= 2*scalePtr->inset;
 	drawnAreaPtr->height = scalePtr->horizTroughY + scalePtr->width
-		+ 2*scalePtr->borderWidth - scalePtr->horizValueY;
+		+ 2 * scalePtr->borderWidth - scalePtr->horizValueY;
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -410,25 +412,25 @@ DisplayHorizontalScale(
     y = scalePtr->horizTroughY;
     Tk_Draw3DRectangle(tkwin, drawable,
 	    scalePtr->bgBorder, scalePtr->inset, y,
-	    Tk_Width(tkwin) - 2*scalePtr->inset,
-	    scalePtr->width + 2*scalePtr->borderWidth,
+	    Tk_Width(tkwin) - 2 * scalePtr->inset,
+	    scalePtr->width + 2 * scalePtr->borderWidth,
 	    scalePtr->borderWidth, TK_RELIEF_SUNKEN);
     XFillRectangle(scalePtr->display, drawable, scalePtr->troughGC,
 	    scalePtr->inset + scalePtr->borderWidth,
 	    y + scalePtr->borderWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2*scalePtr->inset
-		- 2*scalePtr->borderWidth),
+	    (unsigned) (Tk_Width(tkwin) - 2 * scalePtr->inset
+		- 2 * scalePtr->borderWidth),
 	    (unsigned) scalePtr->width);
     if (scalePtr->state == STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;
     }
-    width = scalePtr->sliderLength/2;
+    width = scalePtr->sliderLength / 2;
     height = scalePtr->width;
     x = TkScaleValueToPixel(scalePtr, scalePtr->value) - width;
     y += scalePtr->borderWidth;
-    shadowWidth = scalePtr->borderWidth/2;
+    shadowWidth = scalePtr->borderWidth / 2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
@@ -447,13 +449,14 @@ DisplayHorizontalScale(
      * Draw the label at the top of the scale.
      */
 
-    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelLength != 0)) {
+    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
+	Tcl_Size labelLength;
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label,
-		scalePtr->labelLength, scalePtr->inset + fm.ascent/2,
+		scalePtr->tkfont, label, labelLength, scalePtr->inset + fm.ascent/2,
 		scalePtr->horizLabelY + fm.ascent);
     }
 }
@@ -565,14 +568,14 @@ TkpDisplayScale(
      */
 
     Tcl_Preserve(scalePtr);
-    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
+    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
 	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(scalePtr->commandObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -628,8 +631,8 @@ TkpDisplayScale(
 	if (scalePtr->relief != TK_RELIEF_FLAT) {
 	    Tk_Draw3DRectangle(tkwin, pixmap, scalePtr->bgBorder,
 		    scalePtr->highlightWidth, scalePtr->highlightWidth,
-		    Tk_Width(tkwin) - 2*scalePtr->highlightWidth,
-		    Tk_Height(tkwin) - 2*scalePtr->highlightWidth,
+		    Tk_Width(tkwin) - 2 * scalePtr->highlightWidth,
+		    Tk_Height(tkwin) - 2 * scalePtr->highlightWidth,
 		    scalePtr->borderWidth, scalePtr->relief);
 	}
 	if (scalePtr->highlightWidth > 0) {
@@ -688,7 +691,7 @@ TkpScaleElement(
 
     if (scalePtr->orient == ORIENT_VERTICAL) {
 	if ((x < scalePtr->vertTroughX)
-		|| (x >= (scalePtr->vertTroughX + 2*scalePtr->borderWidth +
+		|| (x >= (scalePtr->vertTroughX + 2 * scalePtr->borderWidth +
 		scalePtr->width))) {
 	    return OTHER;
 	}
@@ -708,7 +711,7 @@ TkpScaleElement(
     }
 
     if ((y < scalePtr->horizTroughY)
-	    || (y >= (scalePtr->horizTroughY + 2*scalePtr->borderWidth +
+	    || (y >= (scalePtr->horizTroughY + 2 * scalePtr->borderWidth +
 	    scalePtr->width))) {
 	return OTHER;
     }
