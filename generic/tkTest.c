@@ -824,7 +824,7 @@ TestobjconfigObjCmd(
 	    int boolValue;
 	    int integer;
 	    double doubleValue;
-	    Tcl_Obj *stringObj;
+	    char *string;
 	    int index;
 	    XColor *colorPtr;
 	    Tk_Font tkfont;
@@ -851,7 +851,7 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
 		TCL_INDEX_NONE, offsetof(InternalRecord, doubleValue), 0, 0, 0x4},
 	    {TK_OPTION_STRING, "-string", "string", "String", "foo",
-		offsetof(InternalRecord, stringObj), TCL_INDEX_NONE,
+		TCL_INDEX_NONE, offsetof(InternalRecord, string),
 		TK_CONFIG_NULL_OK, 0, 0x8},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable", "one",
@@ -912,7 +912,7 @@ TestobjconfigObjCmd(
 	recordPtr->boolValue = 0;
 	recordPtr->integer = 0;
 	recordPtr->doubleValue = 0.0;
-	recordPtr->stringObj = NULL;
+	recordPtr->string = NULL;
 	recordPtr->index = 0;
 	recordPtr->colorPtr = NULL;
 	recordPtr->tkfont = NULL;
