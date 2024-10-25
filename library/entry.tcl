@@ -308,12 +308,12 @@ proc ::tk::EntryEndIMEMarkedText {w} {
 
 bind Entry <Button-2> {
     if {!$tk_strictMotif} {
-        ::tk::EntryScanMark %W %x
+	::tk::EntryScanMark %W %x
     }
 }
 bind Entry <B2-Motion> {
     if {!$tk_strictMotif} {
-        ::tk::EntryScanDrag %W %x
+	::tk::EntryScanDrag %W %x
      }
 }
 
@@ -415,7 +415,7 @@ proc ::tk::EntryMouseSelect {w x} {
 	}
     }
     if {$Priv(mouseMoved)} {
-        $w icursor $cur
+	$w icursor $cur
     }
     update idletasks
 }

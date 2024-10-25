@@ -347,19 +347,19 @@ proc ::tk::spinbox::ArrowPress {w x y} {
     variable ::tk::Priv
 
     if {[$w cget -state] ne "disabled" && \
-            [string match "button*" $Priv(element)]} {
-        $w selection element $Priv(element)
-        set Priv(repeated) 0
-        set Priv(relief) [$w cget -$Priv(element)relief]
-        catch {after cancel $Priv(afterId)}
-        set delay [$w cget -repeatdelay]
-        if {$delay > 0} {
-            set Priv(afterId) [after $delay \
-                    [list ::tk::spinbox::Invoke $w $Priv(element)]]
-        }
-        if {[info exists Priv(outsideElement)]} {
-            unset Priv(outsideElement)
-        }
+	    [string match "button*" $Priv(element)]} {
+	$w selection element $Priv(element)
+	set Priv(repeated) 0
+	set Priv(relief) [$w cget -$Priv(element)relief]
+	catch {after cancel $Priv(afterId)}
+	set delay [$w cget -repeatdelay]
+	if {$delay > 0} {
+	    set Priv(afterId) [after $delay \
+		    [list ::tk::spinbox::Invoke $w $Priv(element)]]
+	}
+	if {[info exists Priv(outsideElement)]} {
+	    unset Priv(outsideElement)
+	}
     }
 }
 

@@ -100,6 +100,7 @@ TkpDrawEntryBorderAndFocus(
 		kThemeStateActive),
 	.isFocused = (entryPtr->flags & GOT_FOCUS ? 1 : 0),
     };
+    int borderWidth, highlightWidth;
 
     /*
      * I use 6 as the borderwidth. 2 of the 5 go into the actual frame the 3
@@ -107,8 +108,10 @@ TkpDrawEntryBorderAndFocus(
      * than Tk does on X11.
      */
 
-    if (entryPtr->borderWidth != MAC_OSX_ENTRY_BORDER
-	    || entryPtr->highlightWidth != MAC_OSX_FOCUS_WIDTH
+    Tk_GetPixelsFromObj(NULL, tkwin, entryPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, entryPtr->highlightWidthObj, &highlightWidth);
+    if (borderWidth != MAC_OSX_ENTRY_BORDER
+	    || highlightWidth != MAC_OSX_FOCUS_WIDTH
 	    || entryPtr->relief != MAC_OSX_ENTRY_RELIEF) {
 	return 0;
     }

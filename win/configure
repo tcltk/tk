@@ -2410,7 +2410,7 @@ SHELL=/bin/sh
 TK_VERSION=9.0
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=0
-TK_PATCH_LEVEL="b3"
+TK_PATCH_LEVEL=".1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -4048,11 +4048,11 @@ printf "%s\n" "found ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 printf %s "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... " >&6; }
 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: loading" >&5
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: loading" >&5
 printf "%s\n" "loading" >&6; }
 	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
 printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
     fi
 
@@ -4066,9 +4066,9 @@ printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
     #
 
     if test -f $TCL_BIN_DIR/Makefile ; then
-        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
-        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
-        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+	TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+	TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+	TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
     fi
 
     eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
@@ -4320,9 +4320,9 @@ printf "%s\n" "yes" >&6; }
     fi
 
     if test "$CYGPATH" = "echo"; then
-        DEPARG='"$<"'
+	DEPARG='"$<"'
     else
-        DEPARG='"$(shell $(CYGPATH) $<)"'
+	DEPARG='"$(shell $(CYGPATH) $<)"'
     fi
 
     # set various compiler flags depending on whether we are using gcc or cl
@@ -4566,7 +4566,7 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_enable_auto_image_base" >&5
 printf "%s\n" "$ac_cv_enable_auto_image_base" >&6; }
     CFLAGS=$hold_cflags
-    if test "$ac_cv_enable_auto_image_base" == "yes" ; then
+    if test "$ac_cv_enable_auto_image_base" = "yes" ; then
 	extra_ldflags="$extra_ldflags -Wl,--enable-auto-image-base"
     fi
 
@@ -4592,20 +4592,20 @@ printf %s "checking compiler flags... " >&6; }
 
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
 printf "%s\n" "using static flags" >&6; }
 	    runtime=
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
 printf "%s\n" "using shared flags" >&6; }
 
 	    # ad-hoc check to see if CC supports -shared.
 	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
 		as_fn_error $? "${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain." "$LINENO" 5
+		You will need to upgrade to a newer version of the toolchain." "$LINENO" 5
 	    fi
 
 	    runtime=
@@ -4717,14 +4717,14 @@ printf "%s\n" "   Using 64-bit $MACHINE mode" >&6; }
     else
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
 printf "%s\n" "using static flags" >&6; }
 	    runtime=-MT
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
 printf "%s\n" "using shared flags" >&6; }
 	    runtime=-MD
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
@@ -5776,37 +5776,37 @@ else case e in #(
   e)
     search_path=`echo ${PATH} | sed -e 's/:/ /g'`
     for dir in $search_path ; do
-        for j in `ls -r $dir/zip 2> /dev/null` \
-            `ls -r $dir/zip 2> /dev/null` ; do
-        if test x"$ac_cv_path_zip" = x ; then
-            if test -f "$j" ; then
-            ac_cv_path_zip=$j
-            break
-            fi
-        fi
-        done
+	for j in `ls -r $dir/zip 2> /dev/null` \
+	    `ls -r $dir/zip 2> /dev/null` ; do
+	if test x"$ac_cv_path_zip" = x ; then
+	    if test -f "$j" ; then
+	    ac_cv_path_zip=$j
+	    break
+	    fi
+	fi
+	done
     done
      ;;
 esac
 fi
 
     if test -f "$ac_cv_path_zip" ; then
-        ZIP_PROG="$ac_cv_path_zip"
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ZIP_PROG" >&5
+	ZIP_PROG="$ac_cv_path_zip"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ZIP_PROG" >&5
 printf "%s\n" "$ZIP_PROG" >&6; }
-        ZIP_PROG_OPTIONS="-rq"
-        ZIP_PROG_VFSSEARCH="*"
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found INFO Zip in environment" >&5
+	ZIP_PROG_OPTIONS="-rq"
+	ZIP_PROG_VFSSEARCH="*"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found INFO Zip in environment" >&5
 printf "%s\n" "Found INFO Zip in environment" >&6; }
-        # Use standard arguments for zip
+	# Use standard arguments for zip
     else
-        # It is not an error if an installed version of Zip can't be located.
-        # We can use the locally distributed minizip instead
-        ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
-        ZIP_PROG_OPTIONS="-o -r"
-        ZIP_PROG_VFSSEARCH="*"
-        ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: No zip found on PATH building minizip" >&5
+	# It is not an error if an installed version of Zip can't be located.
+	# We can use the locally distributed minizip instead
+	ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
+	ZIP_PROG_OPTIONS="-o -r"
+	ZIP_PROG_VFSSEARCH="*"
+	ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: No zip found on PATH building minizip" >&5
 printf "%s\n" "No zip found on PATH building minizip" >&6; }
     fi
 
@@ -5885,7 +5885,11 @@ else
 fi
 fi
 
-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
+else
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
+fi
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
@@ -5893,7 +5897,7 @@ TK_LIB_FLAG="-l"
 if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
     TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
 fi
-eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
+eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}tk${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 

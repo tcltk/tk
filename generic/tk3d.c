@@ -184,7 +184,7 @@ Tk_Get3DBorder(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
-    Tk_Uid colorName)		/* String giving name of color for window
+    const char *colorName)	/* String giving name of color for window
 				 * background. */
 {
     Tcl_HashEntry *hashPtr;
@@ -677,9 +677,10 @@ Tk_GetRelief(
 	relief = TK_RELIEF_SUNKEN;
     } else {
 	if (interp) {
+	    int ambigeous = (c == 'r' || c == 's') && (name[1] == '\0');
 	    Tcl_SetObjResult(interp,
-		    Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
-		    name, "flat, groove, raised, ridge, solid, or sunken"));
+		    Tcl_ObjPrintf("%s relief \"%.50s\": must be %s",
+		    ambigeous ? "ambigeous" : "bad", name, "flat, groove, raised, ridge, solid, or sunken"));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", (char *)NULL);
 	}
 	return TCL_ERROR;

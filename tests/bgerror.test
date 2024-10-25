@@ -13,8 +13,8 @@ tcltest::loadTestedCommands
 test bgerror-1.1 {bgerror / tkerror compat} -setup {
     set errRes {}
     proc tkerror {err} {
-        global errRes;
-        set errRes $err;
+	global errRes;
+	set errRes $err;
     }
 } -body {
     after 0 {error err1}
@@ -27,8 +27,8 @@ test bgerror-1.1 {bgerror / tkerror compat} -setup {
 test bgerror-1.2 {bgerror / tkerror compat / accumulation} -setup {
     set errRes {}
     proc tkerror {err} {
-        global errRes;
-        lappend errRes $err;
+	global errRes;
+	lappend errRes $err;
     }
 } -body {
     after 0 {error err1}
@@ -43,9 +43,9 @@ test bgerror-1.2 {bgerror / tkerror compat / accumulation} -setup {
 test bgerror-1.3 {bgerror / tkerror compat / accumulation / break} -setup {
     set errRes {}
     proc tkerror {err} {
-        global errRes;
-        lappend errRes $err;
-        return -code break "skip!";
+	global errRes;
+	lappend errRes $err;
+	return -code break "skip!";
     }
 } -body {
     after 0 {error err1}

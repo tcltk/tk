@@ -19,28 +19,28 @@
 /* Compiler support for module scope symbols */
 #undef HAVE_HIDDEN
 
-/* Define to 1 if the system has the type `intptr_t'. */
+/* Define to 1 if the system has the type 'intptr_t'. */
 #undef HAVE_INTPTR_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `Xft' library (-lXft). */
+/* Define to 1 if you have the 'Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
-/* Define to 1 if you have the `lseek64' function. */
+/* Define to 1 if you have the 'lseek64' function. */
 #undef HAVE_LSEEK64
 
-/* Define to 1 if you have the `open64' function. */
+/* Define to 1 if you have the 'open64' function. */
 #undef HAVE_OPEN64
 
-/* Define to 1 if you have the `posix_spawnattr_setflags' function. */
+/* Define to 1 if you have the 'posix_spawnattr_setflags' function. */
 #undef HAVE_POSIX_SPAWNATTR_SETFLAGS
 
-/* Define to 1 if you have the `posix_spawnp' function. */
+/* Define to 1 if you have the 'posix_spawnp' function. */
 #undef HAVE_POSIX_SPAWNP
 
-/* Define to 1 if you have the `posix_spawn_file_actions_adddup2' function. */
+/* Define to 1 if you have the 'posix_spawn_file_actions_adddup2' function. */
 #undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
 
 /* Does struct password have a pw_gecos field? */
@@ -82,17 +82,14 @@
 /* Is off64_t in <sys/types.h>? */
 #undef HAVE_TYPE_OFF64_T
 
-/* Define to 1 if the system has the type `uintptr_t'. */
+/* Define to 1 if the system has the type 'uintptr_t'. */
 #undef HAVE_UINTPTR_T
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the `vfork' function. */
+/* Define to 1 if you have the 'vfork' function. */
 #undef HAVE_VFORK
-
-/* Is weak import available? */
-#undef HAVE_WEAK_IMPORT
 
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
@@ -139,7 +136,7 @@
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
@@ -189,9 +186,6 @@
 /* Are we building with zipfs enabled? */
 #undef ZIPFS_BUILD
 
-/* Are Darwin SUSv3 extensions available? */
-#undef _DARWIN_C_SOURCE
-
 /* Add the _FILE_OFFSET_BITS flag when building */
 #undef _FILE_OFFSET_BITS
 
@@ -219,25 +213,25 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type `char' is unsigned and your compiler does not
+/* Define to 1 if type 'char' is unsigned and your compiler does not
    predefine this macro.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
+/* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #undef inline
 #endif
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define to 'int' if <sys/types.h> does not define. */
 #undef mode_t
 
 /* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
+/* Define as 'unsigned int' if <stddef.h> doesn't define. */
 #undef size_t
 
 

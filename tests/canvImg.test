@@ -29,7 +29,7 @@ test canvImg-1.2 {options for image items} -body {
     .c create image 50 50 -anchor gorp -tags i1
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad anchor position "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
 test canvImg-1.3 {options for image items} -constraints testImageType -setup {
     image create test foo
 	.c delete all
@@ -44,7 +44,7 @@ test canvImg-1.4 {options for image items} -body {
     .c create image 50 50 -image unknown -tags i1
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {image "unknown" doesn't exist}
+} -returnCodes error -result {image "unknown" does not exist}
 test canvImg-1.5 {options for image items} -constraints testImageType -setup {
     image create test foo
 	.c delete all
@@ -60,12 +60,12 @@ test canvImg-2.1 {CreateImage procedure} -body {
     .c create image 40
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {wrong # coordinates: expected 2, got 1}
+} -returnCodes error -result {wrong # coordinates: expected 2, got 1}
 test canvImg-2.2 {CreateImage procedure} -body {
     .c create image 40 50 60
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {unknown option "60"}
+} -returnCodes error -result {unknown option "60"}
 test canvImg-2.3 {CreateImage procedure} -body {
     .c delete all
     set i [.c create image 50 50]
@@ -79,17 +79,17 @@ test canvImg-2.4 {CreateImage procedure} -body {
     .c create image xyz 40
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {expected screen distance but got "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvImg-2.5 {CreateImage procedure} -body {
     .c create image 50 qrs
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {expected screen distance but got "qrs"}
+} -returnCodes error -result {expected screen distance but got "qrs"}
 test canvImg-2.6 {CreateImage procedure} -constraints testImageType -body {
     .c create image 50 50 -gorp foo
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {unknown option "-gorp"}
+} -returnCodes error -result {unknown option "-gorp"}
 
 
 test canvImg-3.1 {ImageCoords procedure} -constraints testImageType -setup {
@@ -109,7 +109,7 @@ test canvImg-3.2 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {expected screen distance but got "dumb"}
+} -returnCodes error -result {expected screen distance but got "dumb"}
 test canvImg-3.3 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
@@ -119,7 +119,7 @@ test canvImg-3.3 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {expected screen distance but got "dumb0"}
+} -returnCodes error -result {expected screen distance but got "dumb0"}
 test canvImg-3.4 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
@@ -129,7 +129,7 @@ test canvImg-3.4 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {wrong # coordinates: expected 2, got 1}
+} -returnCodes error -result {wrong # coordinates: expected 2, got 1}
 test canvImg-3.5 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
@@ -139,7 +139,7 @@ test canvImg-3.5 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {wrong # coordinates: expected 0 or 2, got 3}
+} -returnCodes error -result {wrong # coordinates: expected 0 or 2, got 3}
 
 
 test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
@@ -195,7 +195,7 @@ test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo foo2
-} -returnCodes {error} -result {image "lousy" doesn't exist}
+} -returnCodes error -result {image "lousy" does not exist}
 
 
 test canvImg-5.1 {DeleteImage procedure} -constraints testImageType -setup {

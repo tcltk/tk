@@ -407,7 +407,7 @@ declare 136 {
 }
 declare 137 {
     void TkpSetKeycodeAndState(Tk_Window tkwin, KeySym keySym,
-            XEvent *eventPtr)
+	    XEvent *eventPtr)
 }
 declare 138 {
     KeySym TkpGetKeySym(TkDisplay *dispPtr, XEvent *eventPtr)
@@ -610,7 +610,7 @@ declare 186 {
 # Debugging / testing functions for photo images
 declare 187 {
     int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
-            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
 
@@ -948,9 +948,9 @@ declare 50 aqua {
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }
-declare 52 aqua {
-    void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
-}
+#
+# Slot 52 unused (WAS: TkMacOSXSetDrawingEnabled)
+#
 # Made public as Tk_MacOSXGetNSWindowForDrawable
 #declare 54 aqua {
 #    void *TkMacOSXDrawable(Drawable drawable)
@@ -1249,7 +1249,7 @@ declare 81 win {
 }
 declare 82 win {
     Status XParseColor(Display *display, Colormap map,
-          _Xconst char *spec, XColor *colorPtr)
+	    _Xconst char *spec, XColor *colorPtr)
 }
 declare 83 win {
     GC XCreateGC(Display *display, Drawable d,
@@ -1755,7 +1755,7 @@ declare 81 macosx {
 }
 declare 82 macosx {
     Status XParseColor(Display *display, Colormap map,
-          _Xconst char *spec, XColor *colorPtr)
+	    _Xconst char *spec, XColor *colorPtr)
 }
 declare 83 macosx {
     GC XCreateGC(Display *display, Drawable d,

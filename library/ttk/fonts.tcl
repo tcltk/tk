@@ -20,7 +20,7 @@
 #
 # Windows:
 #	The default system font changed from "MS Sans Serif" to "Tahoma"
-# 	in Windows XP/Windows 2000.
+#	in Windows XP/Windows 2000.
 #
 #	MS documentation says to use "Tahoma 8" in Windows 2000/XP,
 #	although many MS programs still use "MS Sans Serif 8"
@@ -67,20 +67,20 @@ if {!$tip145} {apply {{} {
 global tcl_platform
 switch -- [tk windowingsystem] {
     win32 {
-        # In safe interps there is no osVersion element.
+	# In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
-            if {$tcl_platform(osVersion) >= 5.0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        } else {
-            if {[lsearch -exact [font families] Tahoma] >= 0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        }
+	    if {$tcl_platform(osVersion) >= 5.0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	} else {
+	    if {[lsearch -exact [font families] Tahoma] >= 0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	}
 	set size 8
 
 	font configure TkDefaultFont -family $family -size $size

@@ -10,11 +10,11 @@ namespace eval ttk::theme::default {
 	-foreground		"#000000"
 	-window			"#ffffff"
 	-alternate		"#e8e8e8"
-	-text   		"#000000"
+	-text			"#000000"
 	-activebg		"#ececec"
 	-selectbg		"#4a6984"
 	-selectfg		"#ffffff"
-	-darker 		"#c3c3c3"
+	-darker			"#c3c3c3"
 	-disabledfg		"#a3a3a3"
 	-indicator		"#4a6984"
 	-disabledindicator	"#a3a3a3"
@@ -85,14 +85,14 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
     ttk::style theme settings default {
 
 	ttk::style configure "." \
-	    -borderwidth 	1 \
-	    -background 	$colors(-frame) \
-	    -foreground 	$colors(-foreground) \
-	    -troughcolor 	$colors(-darker) \
-	    -font 		TkDefaultFont \
+	    -borderwidth	1 \
+	    -background		$colors(-frame) \
+	    -foreground		$colors(-foreground) \
+	    -troughcolor	$colors(-darker) \
+	    -font		TkDefaultFont \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
-	    -insertwidth 	1 \
+	    -insertwidth	1 \
 	    -insertcolor	$colors(-foreground) \
 	    -focuscolor		$colors(-text)
 
@@ -189,7 +189,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
-	    -indent 15p
+	    -indent 15p \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
@@ -203,7 +204,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style layout ComboboxPopdownFrame {
 	    ComboboxPopdownFrame.border -sticky nswe
 	}
- 	ttk::style configure ComboboxPopdownFrame \
+	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
 	#
@@ -211,12 +212,13 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
-		Toolbutton.padding -children {
-		    Toolbutton.label
+		Toolbutton.focus -children {
+		    Toolbutton.padding -children {
+			Toolbutton.label
+		    }
 		}
 	    }
 	}
-
 	ttk::style configure Toolbutton \
 	    -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \

@@ -70,7 +70,7 @@ typedef struct TkOption {
     const Tk_OptionSpec *specPtr;
 				/* The original spec from the template passed
 				 * to Tk_CreateOptionTable.*/
-    Tk_Uid dbNameUID;	 	/* The Uid form of the option database
+    Tk_Uid dbNameUID;		/* The Uid form of the option database
 				 * name. */
     Tk_Uid dbClassUID;		/* The Uid form of the option database class
 				 * name. */
@@ -1401,7 +1401,7 @@ int
 Tk_SetOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is returned.*/
-    void *recordPtr,	    	/* The record to configure. */
+    void *recordPtr,		/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
     Tcl_Size objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
@@ -2115,7 +2115,7 @@ GetObjectForOption(
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
 	case TK_OPTION_BOOLEAN: {
-	    int value;
+	    int value = -1;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
@@ -2133,7 +2133,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_INT: {
-	    Tcl_WideInt value;
+	    Tcl_WideInt value = LLONG_MIN;
 	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
@@ -2240,7 +2240,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_RELIEF: {
-	    int value;
+	    int value = TK_RELIEF_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
@@ -2267,7 +2267,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_JUSTIFY: {
-	    Tk_Justify value;
+	    Tk_Justify value = TK_JUSTIFY_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = (Tk_Justify)*((signed char *)internalPtr);
@@ -2285,7 +2285,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_ANCHOR: {
-	    Tk_Anchor value;
+	    Tk_Anchor value = TK_ANCHOR_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = (Tk_Anchor)*((signed char *)internalPtr);

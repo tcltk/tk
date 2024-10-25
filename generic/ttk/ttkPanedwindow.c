@@ -157,7 +157,7 @@ static int ConfigurePane(
      */
     if (pane->weight < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"-weight must be nonnegative", -1));
+		"-weight must be non-negative", -1));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "WEIGHT", NULL);
 	goto error;
     }

@@ -95,8 +95,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(PolygonItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(PolygonItem, outline.offset),
-	TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(PolygonItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(PolygonItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -680,7 +679,7 @@ ComputePolygonBbox(
 	if (index < 0) {
 	    index += (polyPtr->numPoints - polyPtr->autoClosed) * 2;
 	}
- 	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
+	tsoffset->xoffset = (int) (polyPtr->coordPtr[index] + 0.5);
 	tsoffset->yoffset = (int) (polyPtr->coordPtr[index+1] + 0.5);
     } else {
 	if (tsoffset->flags & TK_OFFSET_LEFT) {
@@ -1100,7 +1099,7 @@ PolygonInsert(
 	 * [5fb8145997].
 	 */
 
-    	double width;
+	double width;
 	int j;
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;

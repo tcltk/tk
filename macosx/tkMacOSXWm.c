@@ -556,16 +556,6 @@ static void placeAsTab(TKWindow *macWindow) {
 
 @implementation NSWindow(TKWm)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect = {point, {0,0}};
@@ -577,7 +567,6 @@ static void placeAsTab(TKWindow *macWindow) {
     NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
-#endif
 @end
 
 #pragma mark -
@@ -589,7 +578,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 @end
@@ -610,7 +598,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1740,11 +1727,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolValue != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
-#else
-	    TKLog(@"The fullscreen attribute is ignored on this system.");
-#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -2454,7 +2437,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setTkNeedsDisplay:YES];
+	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -2480,7 +2463,7 @@ WmDeiconifyCmd(
 	}
     }
 
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+    //Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -3003,7 +2986,7 @@ WmIconbitmapCmd(
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	}
     } else {
-	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, Tk_GetUid(str));
+	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
@@ -3801,8 +3784,6 @@ WmProtocolCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
-    char *cmd;
-    Tcl_Size cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -3834,8 +3815,7 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(protPtr->command, TCL_INDEX_NONE));
+		Tcl_SetObjResult(interp, protPtr->commandObj);
 		return TCL_OK;
 	    }
 	}
@@ -3855,21 +3835,20 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
-	    if (protPtr->command)
-		ckfree(protPtr->command);
+	    if (protPtr->commandObj)
+		Tcl_DecrRefCount(protPtr->commandObj);
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
-    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
-    if (cmdLength > 0) {
+    if (Tcl_GetString(objv[4])[0]) {
 	protPtr = (ProtocolHandler *)ckalloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	protPtr->command = (char *)ckalloc(cmdLength+1);
-	strcpy(protPtr->command, cmd);
+	protPtr->commandObj = objv[4];
+	Tcl_IncrRefCount(protPtr->commandObj);
     }
     return TCL_OK;
 }
@@ -6934,7 +6913,6 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view addTkDirtyRect:bounds];
 	[view setNeedsDisplay:YES];
     }
 #endif
@@ -7459,8 +7437,6 @@ ApplyWindowAttributeFlagChanges(
 	}
 	if ((changedAttributes & (kWindowResizableAttribute |
 		kWindowFullZoomAttribute)) || initial) {
-	    [macWindow setShowsResizeIndicator:
-		    !!(newAttributes & kWindowResizableAttribute)];
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];

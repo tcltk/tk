@@ -698,9 +698,9 @@ typedef struct TkMainInfo {
 				 * down, in case it's a Tcl_ObjCmdProc2 */
 #endif
     unsigned int ttkNbTabsStickBit;
-    				/* Information used by ttk::notebook. */
+				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
-    				/* Information used by ttk::scale. */
+				/* Information used by ttk::scale. */
 } TkMainInfo;
 
 /*
@@ -713,7 +713,7 @@ typedef struct {
     const void *source;		/* Bits for bitmap. */
     int width, height;		/* Dimensions of bitmap. */
     int native;			/* 0 means generic (X style) bitmap, 1 means
-    				 * native style bitmap. */
+				 * native style bitmap. */
 } TkPredefBitmap;
 
 /*
@@ -1268,6 +1268,8 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
+MODULE_SCOPE void	TkDrawDottedRect(Display *disp, Drawable d, GC gc,
+			    int x, int y, int width, int height);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
@@ -1328,7 +1330,7 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 # define c_class class
 #endif
 
-#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#if defined(_WIN32) && !defined(STATIC_BUILD) && (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION)
 #   define tcl_CreateFileHandler reserved9
 #endif
 

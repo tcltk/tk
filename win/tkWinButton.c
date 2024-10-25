@@ -543,7 +543,6 @@ TkpDisplayButton(
     int y, relief;
     Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
-    RECT rect;
     int defaultWidth;		/* Width of default ring. */
     int offset;			/* 0 means this is a label widget. 1 means it
 				 * is a flavor of button, so we offset the
@@ -556,6 +555,7 @@ TkpDisplayButton(
     int imageXOffset = 0, imageYOffset = 0;
 				/* Image information that will be used to
 				 * restrict disabled pixmap as well. */
+    int padX, padY, borderWidth, highlightWidth;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -565,10 +565,10 @@ TkpDisplayButton(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &padY);
 
     border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
@@ -627,11 +627,11 @@ TkpDisplayButton(
      */
 
     if (butPtr->type == TYPE_LABEL) {
-	defaultWidth = butPtr->highlightWidth;
+	defaultWidth = highlightWidth;
 	offset = 0;
     } else if (butPtr->type == TYPE_BUTTON) {
 	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
-		? butPtr->highlightWidth : 0);
+		? highlightWidth : 0);
 	offset = 1;
     } else {
 	defaultWidth = 0;
@@ -681,11 +681,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
+		imageYOffset = butPtr->textHeight + padY;
 	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
+	    fullHeight = height + butPtr->textHeight + padY;
 	    fullWidth = (width > butPtr->textWidth ? width :
 		    butPtr->textWidth);
 	    textXOffset = (fullWidth - butPtr->textWidth)/2;
@@ -699,11 +699,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX;
+		textXOffset = width + padX;
 	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
+		imageXOffset = butPtr->textWidth + padX;
 	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
+	    fullWidth = butPtr->textWidth + padX + width;
 	    fullHeight = (height > butPtr->textHeight ? height :
 		    butPtr->textHeight);
 	    textYOffset = (fullHeight - butPtr->textHeight)/2;
@@ -727,7 +727,7 @@ TkpDisplayButton(
 	case COMPOUND_NONE:
 	    break;
 	}
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 
@@ -812,7 +812,7 @@ TkpDisplayButton(
 		XSetClipOrigin(butPtr->display, gc, 0, 0);
 	    }
 	} else {
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	    TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		    butPtr->indicatorSpace + butPtr->textWidth,
 		    butPtr->textHeight,	&x, &y);
 
@@ -853,22 +853,17 @@ TkpDisplayButton(
      */
 
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
 	if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
-	    rect.top = butPtr->borderWidth + 1 + defaultWidth;
-	    rect.left = rect.top;
-	    rect.right = Tk_Width(tkwin) - rect.left;
-	    rect.bottom = Tk_Height(tkwin) - rect.top;
+	    int dottedWidth = borderWidth + 1 + defaultWidth;
+	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
+		    dottedWidth, dottedWidth,
+		    Tk_Width(tkwin) - 2*dottedWidth,
+		    Tk_Height(tkwin) - 2*dottedWidth);
 	} else {
-	    rect.top = y-1 + textYOffset;
-	    rect.left = x-1 + textXOffset;
-	    rect.right = x+butPtr->textWidth + 1 + textXOffset;
-	    rect.bottom = y+butPtr->textHeight + 2 + textYOffset;
+	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
+		    x-1 + textXOffset, y-1 + textYOffset,
+		    butPtr->textWidth + 2, butPtr->textHeight + 3);
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
-	DrawFocusRect(dc, &rect);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
     y += height/2;
@@ -931,7 +926,7 @@ TkpDisplayButton(
 		defaultWidth, defaultWidth,
 		Tk_Width(tkwin) - 2 * defaultWidth,
 		Tk_Height(tkwin) - 2 * defaultWidth,
-		butPtr->borderWidth, relief);
+		borderWidth, relief);
     }
     if (defaultWidth != 0) {
 	int highlightColor;
@@ -1001,14 +996,20 @@ TkpComputeButtonGeometry(
     /* Vertical and horizontal dialog units size in pixels. */
     double vDLU, hDLU;
     Tk_FontMetrics fm;
+    int borderWidth, highlightWidth, wrapLength;
+    int butPtrWidth, butPtrHeight;
+    int padX, padY;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
 
-    butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
+    butPtr->inset = highlightWidth + borderWidth;
     butPtr->indicatorSpace = 0;
 
     if (!tsdPtr->initialized) {
@@ -1039,7 +1040,7 @@ TkpComputeButtonGeometry(
 
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, butPtr->wrapLength,
+	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     txtWidth = butPtr->textWidth;
@@ -1087,8 +1088,8 @@ TkpComputeButtonGeometry(
 	 * = 50 DLU. Therefore, width = -11 -> MWUE compliant buttons.
 	 */
 
-	if (butPtr->width < 0) {
-	    minWidth = -(butPtr->width);	    /* Min width in chars */
+	if (butPtrWidth < 0) {
+	    minWidth = -(butPtrWidth);	    /* Min width in chars */
 	    width = avgWidth * minWidth;	    /* Allow for characters */
 	    width += (int)(0.5 + (6 * hDLU));	    /* Add for padding */
 	}
@@ -1099,7 +1100,7 @@ TkpComputeButtonGeometry(
 	 * suit.
 	 */
 
-	if (butPtr->width == 0
+	if (butPtrWidth == 0
 		|| (txtWidth + (int)(0.5 + (6 * hDLU)) > width)) {
 	    width = txtWidth + (int)(0.5 + (6 * hDLU));
 	}
@@ -1200,8 +1201,8 @@ TkpComputeButtonGeometry(
      * because otherwise it is not really a compound button.
      */
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
 
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
 	switch ((enum compound) butPtr->compound) {
@@ -1214,7 +1215,7 @@ TkpComputeButtonGeometry(
 	    if (imgWidth > width) {
 		width = imgWidth;
 	    }
-	    height += imgHeight + butPtr->padY;
+	    height += imgHeight + padY;
 	    break;
 
 	case COMPOUND_LEFT:
@@ -1227,8 +1228,8 @@ TkpComputeButtonGeometry(
 	     * space of default button width
 	     */
 
-	    if ((imgWidth + txtWidth + butPtr->padX) > width) {
-		width = imgWidth + txtWidth + butPtr->padX;
+	    if ((imgWidth + txtWidth + padX) > width) {
+		width = imgWidth + txtWidth + padX;
 	    }
 
 	    if (imgHeight > height) {
@@ -1256,33 +1257,33 @@ TkpComputeButtonGeometry(
 	 * Fix up for minimum width.
 	 */
 
-	if (butPtr->width < 0) {
+	if (butPtrWidth < 0) {
 	    /*
 	     * minWidth in pixels (because there's an image.
 	     */
 
-	    minWidth = -(butPtr->width);
+	    minWidth = -(butPtrWidth);
 	    if (width < minWidth) {
 		width = minWidth;
 	    }
-	} else if (butPtr->width > 0) {
-	    width = butPtr->width;
+	} else if (butPtrWidth > 0) {
+	    width = butPtrWidth;
 	}
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight;
 	}
 
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     } else if (haveImage) {
-	if (butPtr->width > 0) {
-	    width = butPtr->width;
+	if (butPtrWidth > 0) {
+	    width = butPtrWidth;
 	} else {
 	    width = imgWidth;
 	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight;
 	} else {
 	    height = imgHeight;
 	}
@@ -1296,8 +1297,8 @@ TkpComputeButtonGeometry(
 	 * characters on the face, not in the over-all button width
 	 */
 
-	if (butPtr->width > 0) {
-	    width = butPtr->width * avgWidth;
+	if (butPtrWidth > 0) {
+	    width = butPtrWidth * avgWidth;
 	}
 
 	/*
@@ -1305,8 +1306,8 @@ TkpComputeButtonGeometry(
 	 * lines on the face, not in the over-all button height.
 	 */
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height * fm.linespace;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight * fm.linespace;
 
 	    /*
 	     * Make the same adjustments as above to get same height for e.g.
@@ -1326,8 +1327,8 @@ TkpComputeButtonGeometry(
 	    }
 	}
 
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
 
     /*
