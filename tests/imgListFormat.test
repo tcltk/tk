@@ -112,12 +112,12 @@ test imgListFormat-3.1 {StringMatchDef: data is not a list} -body {
 } -returnCodes error -result {unmatched open quote in list}
 # empty data case tested with imgPhoto-4.95 (imgPhoto.test)
 test imgListFormat-3.2 {StringMatchDef: \
-        list element not a proper list} -body {
+	list element not a proper list} -body {
     testphotostringmatch {{red white} {not "} {blue green}}
     # "
 } -returnCodes error -result {unmatched open quote in list}
 test imgListFormat-3.3 {StringMatchDef: \
-        sublists with differen lengths} -body {
+	sublists with differen lengths} -body {
     testphotostringmatch {{#001122 #334455 #667788}
 		{#99AABB #CCDDEE}
 		{#FF0011 #223344 #556677}}
@@ -141,7 +141,7 @@ test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
 } -body {
     photo1 put {{blue green}
 		{yellow magenta}
-	        {#000000 #FFFFFFFF}}
+		{#000000 #FFFFFFFF}}
     list [image width photo1] [image height photo1] \
 	[photo1 get 0 2 -withalpha]
 } -cleanup {
@@ -334,7 +334,7 @@ test imgListFormat-6.3 {ParseColor: color name too long} -setup {
     image create photo photo1
     set longstr {}
     for {set i 1} {$i <= 100} {incr i} {
-        append longstr "z"
+	append longstr "z"
     }
 } -body {
     photo1 put [list [list blue] [list $longstr]]
@@ -510,7 +510,7 @@ test imgListFormat-8.4 {ParseColor: valid #RGBA color} -setup {
 } -result {{155 213 2 13} {119 170 204 255}}
 
 test imgListFormat-9.1 {ParseColorAsStandard:
-        Tk color, valid suffixes} -setup {
+	Tk color, valid suffixes} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -525,7 +525,7 @@ test imgListFormat-9.1 {ParseColorAsStandard:
     imageCleanup
 } -result {{0 0 255 181} {17 68 51 204} {136 221 68 26} {255 0 255 255}}
 test imgListFormat-9.2 {ParseColorAsStandard:
-        Tk color with and w/o suffixes} -setup {
+	Tk color with and w/o suffixes} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -587,7 +587,7 @@ test imgListFormat-9.8 {ParseColorAsStandard: # suffix, no hex digits} -setup {
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#"}
 test imgListFormat-9.9 {ParseColorAsStandard:
-        '#' suffix, too many digits} -setup {
+	'#' suffix, too many digits} -setup {
     image create photo photo1
 } -body {
     photo1 put {{#ABC#12 #ABC#123}}
@@ -595,7 +595,7 @@ test imgListFormat-9.9 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#123"}
 test imgListFormat-9.10 {ParseColorAsStandard:
-        invalid digit in #X suffix} -setup {
+	invalid digit in #X suffix} -setup {
     image create photo photo1
 } -body {
     photo1 put {#000#a #000#g}
@@ -603,7 +603,7 @@ test imgListFormat-9.10 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#g": expected hex digit}
 test imgListFormat-9.11 {ParseColorAsStandard:
-        invalid digit in #XX suffix} -setup {
+	invalid digit in #XX suffix} -setup {
     image create photo photo1
 } -body {
     photo1 put {green#2 green#2W}
@@ -611,7 +611,7 @@ test imgListFormat-9.11 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#2W": expected hex digit}
 test imgListFormat-9.12 {ParseColorAsStandard:
-        invalid color: not a hex digit} -setup {
+	invalid color: not a hex digit} -setup {
     image create photo photo1
 } -body {
     photo1 put {#ABCDEF@.99 #ABCDEG@.99}

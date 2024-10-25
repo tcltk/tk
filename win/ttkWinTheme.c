@@ -404,14 +404,16 @@ static void ButtonBorderElementDraw(
 	DFC_BUTTON,	/* classId */
 	DFCS_BUTTONPUSH | Ttk_StateTableLookup(pushbutton_statemap, state));
 
+    TkWinReleaseDrawableDC(d, hdc, &dcState);
+
     /* Draw focus ring:
      */
     if (state & TTK_STATE_FOCUS) {
 	short int borderWidth = 3;	/* @@@ Use GetSystemMetrics?*/
-	rc = BoxToRect(Ttk_PadBox(b, Ttk_UniformPadding(borderWidth)));
-    	DrawFocusRect(hdc, &rc);
+	b = Ttk_PadBox(b, Ttk_UniformPadding(borderWidth));
+	TkWinDrawDottedRect(Tk_Display(tkwin), d, -1, b.x, b.y,
+	    b.width, b.height);
     }
-    TkWinReleaseDrawableDC(d, hdc, &dcState);
 }
 
 static const Ttk_ElementSpec ButtonBorderElementSpec = {
@@ -424,7 +426,7 @@ static const Ttk_ElementSpec ButtonBorderElementSpec = {
 
 /*------------------------------------------------------------------------
  * +++ Focus element.
- * 	Draw dashed focus rectangle.
+ * 	Draw dotted focus rectangle.
  */
 
 static void FocusElementSize(
@@ -447,11 +449,8 @@ static void FocusElementDraw(
     Ttk_State state)
 {
     if (state & TTK_STATE_FOCUS) {
-	RECT rc = BoxToRect(b);
-	TkWinDCState dcState;
-	HDC hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
-    	DrawFocusRect(hdc, &rc);
-	TkWinReleaseDrawableDC(d, hdc, &dcState);
+	TkWinDrawDottedRect(Tk_Display(tkwin), d, -1, b.x, b.y,
+	    b.width, b.height);
     }
 }
 
@@ -486,19 +485,14 @@ static void FillFocusElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    FillFocusElement *focus = (FillFocusElement *)elementRecord;
-
     if (state & TTK_STATE_FOCUS) {
-	RECT rc = BoxToRect(b);
-	TkWinDCState dcState;
+	FillFocusElement *focus = (FillFocusElement *)elementRecord;
 	XColor *fillColor = Tk_GetColorFromObj(tkwin, focus->fillColorObj);
 	GC gc = Tk_GCForColor(fillColor, d);
-	HDC hdc;
+	XFillRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width, b.height);
 
-	XFillRectangle(Tk_Display(tkwin),d,gc, b.x,b.y,b.width,b.height);
-	hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
-    	DrawFocusRect(hdc, &rc);
-	TkWinReleaseDrawableDC(d, hdc, &dcState);
+	TkWinDrawDottedRect(Tk_Display(tkwin), d, -1, b.x, b.y,
+	    b.width, b.height);
     }
 }
 
@@ -964,7 +958,7 @@ TtkWinTheme_Init(
     parentPtr = Ttk_GetTheme(interp, "alt");
     themePtr = Ttk_CreateTheme(interp, "winnative", parentPtr);
     if (!themePtr) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Ttk_RegisterElementSpec(themePtr, "border", &BorderElementSpec, NULL);

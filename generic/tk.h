@@ -17,7 +17,7 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
+#if (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 #	error Tk 9.0 must be compiled with tcl.h from Tcl 8.7 or better
 #endif
 
@@ -54,8 +54,7 @@ extern "C" {
  * library/tk.tcl	(1 LOC patch)
  * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.ac	(as above)
- * README		(sections 0 and 1)
- * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
+ * README.md		(sections 0 and 1)
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
  * unix/tk.spec		(1 LOC patch)
@@ -70,11 +69,11 @@ extern "C" {
 #endif
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
-#   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
-#   define TK_RELEASE_SERIAL	3
+#   define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
+#   define TK_RELEASE_SERIAL	1
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0b3"
+#   define TK_PATCH_LEVEL		"9.0.1"
 #endif /* TK_MAJOR_VERSION */
 
 /*
@@ -729,9 +728,9 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
 #define Tk_Depth(tkwin)		(((Tk_FakeWin *) (tkwin))->depth)
 #define Tk_Visual(tkwin)	(((Tk_FakeWin *) (tkwin))->visual)
 #define Tk_WindowId(tkwin)	(((Tk_FakeWin *) (tkwin))->window)
-#define Tk_PathName(tkwin) 	(((Tk_FakeWin *) (tkwin))->pathName)
+#define Tk_PathName(tkwin)	(((Tk_FakeWin *) (tkwin))->pathName)
 #define Tk_Name(tkwin)		(((Tk_FakeWin *) (tkwin))->nameUid)
-#define Tk_Class(tkwin) 	(((Tk_FakeWin *) (tkwin))->classUid)
+#define Tk_Class(tkwin)	(((Tk_FakeWin *) (tkwin))->classUid)
 #define Tk_X(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.x)
 #define Tk_Y(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.y)
 #define Tk_Width(tkwin)		(((Tk_FakeWin *) (tkwin))->changes.width)
@@ -978,7 +977,7 @@ typedef struct Tk_Item {
 				 * this canvas. Later items in list are drawn
 				 * just below earlier ones. */
     Tk_State state;		/* State of item. */
-    char *reserved1;		/* reserved for future use */
+    void *reserved1;		/* reserved for future use */
     int redraw_flags;		/* Some flags used in the canvas */
 
     /*
@@ -996,7 +995,7 @@ typedef struct Tk_Item {
  *
  * TK_ITEM_STATE_DEPENDANT -	1 means that object needs to be redrawn if the
  *				canvas state changes.
- * TK_ITEM_DONT_REDRAW - 	1 means that the object redraw is already been
+ * TK_ITEM_DONT_REDRAW -	1 means that the object redraw is already been
  *				prepared, so the general canvas code doesn't
  *				need to do that any more.
  */
@@ -1155,6 +1154,9 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
+    void *reserved1;		/* reserved for future use */
+    void *reserved2;
+    void *reserved3;
 } Tk_CanvasTextInfo;
 
 /*
@@ -1197,8 +1199,8 @@ typedef struct Tk_Outline {
     Tk_Dash dash;		/* Dash pattern. */
     Tk_Dash activeDash;		/* Dash pattern if state is active. */
     Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */
-    void *reserved1;		/* Reserved for future expansion. */
-    void *reserved2;
+    Tcl_Obj *offsetObj;		/* Dash offset. */
+    void *reserved2;		/* Reserved for future expansion. */
     void *reserved3;
     Tk_TSOffset tsoffset;	/* Stipple offset for outline. */
     XColor *color;		/* Outline color. */

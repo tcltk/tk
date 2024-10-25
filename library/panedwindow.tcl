@@ -188,7 +188,7 @@ proc ::tk::panedwindow::Cursor {w} {
 proc ::tk::panedwindow::Leave {w} {
     variable ::tk::Priv
     if {[info exists Priv($w,panecursor)]} {
-        $w configure -cursor $Priv($w,panecursor)
-        unset Priv($w,panecursor)
+	$w configure -cursor $Priv($w,panecursor)
+	unset Priv($w,panecursor)
     }
 }

@@ -16,8 +16,6 @@
 #include "tkMacOSXFont.h"
 #include "tkMacOSXConstants.h"
 
-#define defaultOrientation kCTFontDefaultOrientation
-#define verticalOrientation kCTFontVerticalOrientation
 #define fixedPitch kCTFontUserFixedPitchFontType
 
 /*
@@ -384,7 +382,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, defaultOrientation, ch, boundingRects, nCh));
+		nsFont, kCTFontOrientationDefault, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }

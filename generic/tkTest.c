@@ -248,8 +248,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
-            TestPhotoStringMatchCmd, Tk_MainWindow(interp),
-            NULL);
+	    TestPhotoStringMatchCmd, Tk_MainWindow(interp),
+	    NULL);
 
 #if defined(_WIN32)
     Tcl_CreateObjCommand2(interp, "testmetrics", TestmetricsObjCmd,
@@ -1554,7 +1554,7 @@ ImageDisplay(
     } else {
 
 	/*
-         * Drawing is not possible on the first call to DisplayImage.
+	 * Drawing is not possible on the first call to DisplayImage.
 	 * Save the message, but do not log it until the actual display.
 	 */
 
@@ -2130,16 +2130,16 @@ TestPhotoStringMatchCmd(
     int width, height;
 
     if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "imageData");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "imageData");
+	return TCL_ERROR;
     }
     if (TkDebugPhotoStringMatchDef(interp, objv[1], dummy, &width, &height)) {
-        resultObj[0] = Tcl_NewWideIntObj(width);
-        resultObj[1] = Tcl_NewWideIntObj(height);
-        Tcl_SetObjResult(interp, Tcl_NewListObj(2, resultObj));
-        return TCL_OK;
+	resultObj[0] = Tcl_NewWideIntObj(width);
+	resultObj[1] = Tcl_NewWideIntObj(height);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resultObj));
+	return TCL_OK;
     } else {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 }
 

@@ -505,11 +505,13 @@ integer pixel value corresponding to \fB2m\fR.  Unfortunately, this loses
 the original screen-independent value. Thus for \fBTK_OPTION_PIXELS\fR options
 it is better to use the \fIobjOffset\fR field.  In this case the original
 value of the option is retained in the object and can be returned when
-the option is retrieved.  In most cases it is convenient to use the
+the option is retrieved.  It might seem convenient to use the
 \fIinternalOffset\fR field as well, so that the integer value is
-immediately available for use in the widget code (alternatively,
-\fBTk_GetPixelsFromObj\fR can be used to extract the integer value from
-the object whenever it is needed).  Note that the problem of losing
+immediately available for use in the widget code. But if scaling is
+involved, \fIinternalOffset\fR won't change value when the scaling
+changes. Therefore it is better always to use
+\fBTk_GetPixelsFromObj\fR to extract the integer value from
+the object whenever it is needed.  Note: the problem of losing
 information on retrievals exists only for \fBTK_OPTION_PIXELS\fR options.
 .PP
 The second reason to use the \fIobjOffset\fR field is in order to
@@ -530,7 +532,7 @@ free, and restore saved copies of the type and creating a structure
 pointing to those procedures:
 .CS
 typedef struct {
-    char *name;
+    const char *\fIname\fR;
     Tk_CustomOptionSetProc *\fIsetProc\fR;
     Tk_CustomOptionGetProc *\fIgetProc\fR;
     Tk_CustomOptionRestoreProc *\fIrestoreProc\fR;

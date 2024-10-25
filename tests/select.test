@@ -20,7 +20,7 @@ tcltest::loadTestedCommands
 testConstraint cliboardManagerPresent 0
 if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
     if {"SAVE_TARGETS" in [selection get -selection CLIPBOARD_MANAGER -type TARGETS]} {
-        testConstraint cliboardManagerPresent 1
+	testConstraint cliboardManagerPresent 1
     }
 }
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
@@ -886,7 +886,7 @@ test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
     set selValue "1024"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
-        .f1 {handler TEST}
+	.f1 {handler TEST}
     update
     set result ""
     lappend result [dobg {selection get TEST}]

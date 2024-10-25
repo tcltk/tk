@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  9.0b3
+package require -exact tk  9.0.1
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -428,7 +428,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
-  	event add <<Undo>>		<Control-z> <Control-Lock-Z>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-y> <Control-Lock-Y>
 
 	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>

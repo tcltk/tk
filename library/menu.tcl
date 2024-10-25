@@ -408,7 +408,7 @@ proc ::tk::MenuUnpost menu {
 #
 # Arguments:
 # w -			The name of the menubutton widget.
-# upDown - 		"down" means button 1 is pressed, "up" means
+# upDown -		"down" means button 1 is pressed, "up" means
 #			it isn't.
 # rootx, rooty -	Coordinates of mouse, in (virtual?) root window.
 
@@ -1199,18 +1199,18 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr x [expr {[winfo width $button]}]
 	    }
 	    default {  # flush
-                if {[$button cget -indicatoron]} {
-                    if {$cx ne ""} {
-                        set x [expr {$cx - [winfo reqwidth $menu] / 2}]
-                        set l [font metrics [$menu cget -font] -linespace]
-                        set y [expr {$cy - $l/2 - 2}]
-                    } else {
-                        incr x [expr {([winfo width $button] - \
+		if {[$button cget -indicatoron]} {
+		    if {$cx ne ""} {
+			set x [expr {$cx - [winfo reqwidth $menu] / 2}]
+			set l [font metrics [$menu cget -font] -linespace]
+			set y [expr {$cy - $l/2 - 2}]
+		    } else {
+			incr x [expr {([winfo width $button] - \
 				[winfo reqwidth $menu])/ 2}]
-                    }
-                } else {
-                    incr y [winfo height $button]
-                }
+		    }
+		} else {
+		    incr y [winfo height $button]
+		}
 	    }
 	}
 	PostOverPoint $menu $x $y $entry

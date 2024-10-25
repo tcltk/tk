@@ -30,8 +30,8 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
-	        {alternate !pressed !background} white
-	        disabled systemDisabledControlTextColor}
+		{alternate !pressed !background} white
+		disabled systemDisabledControlTextColor}
 
 	# Menubutton
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
@@ -152,7 +152,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemControlBackgroundColor \
 	    -stripedbackground systemControlAlternatingRowColor \
-            -foreground systemTextColor \
+	    -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
 	    -background {

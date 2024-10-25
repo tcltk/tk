@@ -22,7 +22,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
-	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
+	NULL, offsetof(TkTextTag, borderWidthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
@@ -36,13 +36,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_JUSTIFY, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, lMargin1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin2Obj), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, lMargin2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -52,7 +52,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_RELIEF, "-relief", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
-	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0,0},
+	NULL, offsetof(TkTextTag, rMarginObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
@@ -60,11 +60,11 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing1Obj), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, spacing1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-spacing2", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing2Obj), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, spacing2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing3Obj), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK,0,0},
+	NULL, offsetof(TkTextTag, spacing3Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
@@ -363,22 +363,44 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
-	    }
-	    if (tagPtr->spacing1 != INT_MIN) {
-		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
+	    if (tagPtr->borderWidthObj) {
+		int borderWidth;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &borderWidth);
+		if (borderWidth < 0) {
+		    borderWidth = 0;
+		    Tcl_DecrRefCount(tagPtr->borderWidthObj);
+		    tagPtr->borderWidthObj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthObj);
 		}
 	    }
-	    if (tagPtr->spacing2 != INT_MIN) {
-		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
+	    if (tagPtr->spacing1Obj) {
+		int spacing1;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &spacing1);
+		if (spacing1 < 0) {
+		    spacing1 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing1Obj);
+		    tagPtr->spacing1Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing1Obj);
 		}
 	    }
-	    if (tagPtr->spacing3 != INT_MIN) {
-		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
+	    if (tagPtr->spacing2Obj) {
+		int spacing2;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing2Obj, &spacing2);
+		if (spacing2 < 0) {
+		    spacing2 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing2Obj);
+		    tagPtr->spacing2Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing2Obj);
+		}
+	    }
+	    if (tagPtr->spacing3Obj) {
+		int spacing3;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing3Obj, &spacing3);
+		if (spacing3 < 0) {
+		    spacing3 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing3Obj);
+		    tagPtr->spacing3Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing3Obj);
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
@@ -416,8 +438,7 @@ TkTextTagCmd(
 		} else {
 		    textPtr->selBorder = tagPtr->selBorder;
 		}
-		textPtr->selBorderWidth = tagPtr->borderWidth;
-		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
+		textPtr->selBorderWidthObj = tagPtr->borderWidthObj;
 		if (tagPtr->selFgColor == NULL) {
 		    textPtr->selFgColorPtr = tagPtr->fgColor;
 		} else {
@@ -430,17 +451,19 @@ TkTextTagCmd(
 	    if ((tagPtr->elide >= 0)
 		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justify != TK_JUSTIFY_NULL)
-		    || (tagPtr->lMargin1 != INT_MIN)
-		    || (tagPtr->lMargin2 != INT_MIN)
-		    || (tagPtr->offset != INT_MIN)
-		    || (tagPtr->rMargin != INT_MIN)
-		    || (tagPtr->spacing1 != INT_MIN)
-		    || (tagPtr->spacing2 != INT_MIN)
-		    || (tagPtr->spacing3 != INT_MIN)
+		    || (tagPtr->lMargin1Obj != NULL)
+		    || (tagPtr->lMargin2Obj != NULL)
+		    || (tagPtr->offsetObj != NULL)
+		    || (tagPtr->rMarginObj != NULL)
+		    || (tagPtr->spacing1Obj != NULL)
+		    || (tagPtr->spacing2Obj != NULL)
+		    || (tagPtr->spacing3Obj != NULL)
 		    || (tagPtr->tabStringPtr != NULL)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
@@ -939,8 +962,7 @@ TkTextCreateTag(
     tagPtr->tagRootPtr = NULL;
     tagPtr->priority = textPtr->sharedTextPtr->numTags;
     tagPtr->border = NULL;
-    tagPtr->borderWidth = 0;
-    tagPtr->borderWidthPtr = NULL;
+    tagPtr->borderWidthObj = NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
@@ -948,25 +970,22 @@ TkTextCreateTag(
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->lMargin1Obj = NULL;
-    tagPtr->lMargin1 = INT_MIN;
+    tagPtr->lMargin1 = 0;
     tagPtr->lMargin2Obj = NULL;
-    tagPtr->lMargin2 = INT_MIN;
+    tagPtr->lMargin2 = 0;
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetObj = NULL;
-    tagPtr->offset = INT_MIN;
+    tagPtr->offset = 0;
     tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginObj = NULL;
-    tagPtr->rMargin = INT_MIN;
+    tagPtr->rMargin = 0;
     tagPtr->rMarginColor = NULL;
     tagPtr->selBorder = NULL;
     tagPtr->selFgColor = NULL;
     tagPtr->spacing1Obj = NULL;
-    tagPtr->spacing1 = INT_MIN;
     tagPtr->spacing2Obj = NULL;
-    tagPtr->spacing2 = INT_MIN;
     tagPtr->spacing3Obj = NULL;
-    tagPtr->spacing3 = INT_MIN;
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;

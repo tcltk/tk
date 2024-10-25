@@ -14,35 +14,35 @@ tcltest::loadTestedCommands
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
-        global scrollInfo
-        set scrollInfo $args
+    global scrollInfo
+    set scrollInfo $args
 }
 # For trace add variable
 proc override args {
-        global x
-        set x 12345
+    global x
+    set x 12345
 }
 
 # Procedures used in widget VALIDATION tests
 proc doval {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        return 1
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    return 1
 }
 proc doval2 {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        set ::e mydata
-        return 1
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    set ::e mydata
+    return 1
 }
 proc doval3 {W d i P s S v V} {
-        set ::vVals [list $W $d $i $P $s $S $v $V]
-        return 0
+    set ::vVals [list $W $d $i $P $s $S $v $V]
+    return 0
 }
 
 set cy [font metrics {Courier -12} -linespace]
 
 test spinbox-1.1 {configuration option: "activebackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	    -relief sunken
     pack .e
     update
 } -body {
@@ -52,19 +52,19 @@ test spinbox-1.1 {configuration option: "activebackground"} -setup {
     destroy .e
 } -result {#ff0000}
 test spinbox-1.2 {configuration option: "activebackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	    -relief sunken
     pack .e
     update
 } -body {
     .e configure -activebackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.3 {configuration option: "background"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	    -relief sunken
     pack .e
     update
 } -body {
@@ -74,19 +74,19 @@ test spinbox-1.3 {configuration option: "background"} -setup {
     destroy .e
 } -result {#ff0000}
 test spinbox-1.4 {configuration option: "background" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -background non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.5 {configuration option: "bd"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -96,19 +96,19 @@ test spinbox-1.5 {configuration option: "bd"} -setup {
     destroy .e
 } -result 4
 test spinbox-1.6 {configuration option: "bd" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test spinbox-1.7 {configuration option: "bg"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -118,19 +118,19 @@ test spinbox-1.7 {configuration option: "bg"} -setup {
     destroy .e
 } -result {#ff0000}
 test spinbox-1.8 {configuration option: "bg" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -bg non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.9 {configuration option: "borderwidth"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -138,21 +138,21 @@ test spinbox-1.9 {configuration option: "borderwidth"} -setup {
     .e cget -borderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test spinbox-1.10 {configuration option: "borderwidth" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test spinbox-1.11 {configuration option: "buttonbackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -162,19 +162,19 @@ test spinbox-1.11 {configuration option: "buttonbackground"} -setup {
     destroy .e
 } -result {#ff0000}
 test spinbox-1.12 {configuration option: "buttonbackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -buttonbackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.13 {configuration option: "buttoncursor"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -184,19 +184,19 @@ test spinbox-1.13 {configuration option: "buttoncursor"} -setup {
     destroy .e
 } -result {arrow}
 test spinbox-1.14 {configuration option: "buttoncursor" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -buttoncursor badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 
 test spinbox-1.15 {configuration option: "command"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -207,8 +207,8 @@ test spinbox-1.15 {configuration option: "command"} -setup {
 } -result {a command}
 
 test spinbox-1.16 {configuration option: "cursor"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -218,19 +218,19 @@ test spinbox-1.16 {configuration option: "cursor"} -setup {
     destroy .e
 } -result {arrow}
 test spinbox-1.17 {configuration option: "cursor" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -cursor badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 
 test spinbox-1.18 {configuration option: "disabledbackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -240,19 +240,19 @@ test spinbox-1.18 {configuration option: "disabledbackground"} -setup {
     destroy .e
 } -result {green}
 test spinbox-1.19 {configuration option: "disabledbackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -disabledbackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.20 {configuration option: "disabledforeground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -262,19 +262,19 @@ test spinbox-1.20 {configuration option: "disabledforeground"} -setup {
     destroy .e
 } -result {#110022}
 test spinbox-1.21 {configuration option: "disabledforeground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -disabledforeground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.22 {configuration option: "exportselection"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -284,19 +284,19 @@ test spinbox-1.22 {configuration option: "exportselection"} -setup {
     destroy .e
 } -result 1
 test spinbox-1.23 {configuration option: "exportselection" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -exportselection xyzzy
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected boolean value but got "xyzzy"}
+} -returnCodes error -result {expected boolean value but got "xyzzy"}
 
 test spinbox-1.24 {configuration option: "fg"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -306,19 +306,19 @@ test spinbox-1.24 {configuration option: "fg"} -setup {
     destroy .e
 } -result {#110022}
 test spinbox-1.25 {configuration option: "fg" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -fg bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.26 {configuration option: "font"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -328,19 +328,19 @@ test spinbox-1.26 {configuration option: "font"} -setup {
     destroy .e
 } -result {-Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*}
 test spinbox-1.27 {configuration option: "font" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test spinbox-1.28 {configuration option: "foreground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -350,19 +350,19 @@ test spinbox-1.28 {configuration option: "foreground"} -setup {
     destroy .e
 } -result {#110022}
 test spinbox-1.29 {configuration option: "foreground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -foreground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.30 {configuration option: "format"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -372,19 +372,19 @@ test spinbox-1.30 {configuration option: "format"} -setup {
     destroy .e
 } -result {%0.5f}
 test spinbox-1.31 {configuration option: "format" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -format %d
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad spinbox format specifier "%d"}
+} -returnCodes error -result {bad spinbox format specifier "%d"}
 
 test spinbox-1.32 {configuration option: "from"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -394,19 +394,19 @@ test spinbox-1.32 {configuration option: "from"} -setup {
     destroy .e
 } -result {-10.0}
 test spinbox-1.33 {configuration option: "from" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -from bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.34 {configuration option: "highlightbackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -416,19 +416,19 @@ test spinbox-1.34 {configuration option: "highlightbackground"} -setup {
     destroy .e
 } -result {#123456}
 test spinbox-1.35 {configuration option: "highlightbackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -highlightbackground ugly
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "ugly"}
+} -returnCodes error -result {unknown color name "ugly"}
 
 test spinbox-1.36 {configuration option: "highlightcolor"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -438,19 +438,19 @@ test spinbox-1.36 {configuration option: "highlightcolor"} -setup {
     destroy .e
 } -result {#123456}
 test spinbox-1.37 {configuration option: "highlightcolor" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -highlightcolor bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.38 {configuration option: "highlightthickness"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -460,19 +460,19 @@ test spinbox-1.38 {configuration option: "highlightthickness"} -setup {
     destroy .e
 } -result 6
 test spinbox-1.39 {configuration option: "highlightthickness" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -highlightthickness bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected screen distance but got "bogus"}
+} -returnCodes error -result {expected screen distance but got "bogus"}
 
 test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -483,8 +483,8 @@ test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
 } -result 0
 
 test spinbox-1.41 {configuration option: "increment"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -494,19 +494,19 @@ test spinbox-1.41 {configuration option: "increment"} -setup {
     destroy .e
 } -result {1.0}
 test spinbox-1.42 {configuration option: "increment" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -increment bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.43 {configuration option: "insertbackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -516,19 +516,19 @@ test spinbox-1.43 {configuration option: "insertbackground"} -setup {
     destroy .e
 } -result {#110022}
 test spinbox-1.44 {configuration option: "insertbackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -insertbackground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.45 {configuration option: "insertborderwidth"} -setup {
-        spinbox .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -536,21 +536,21 @@ test spinbox-1.45 {configuration option: "insertborderwidth"} -setup {
     .e cget -insertborderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test spinbox-1.46 {configuration option: "insertborderwidth" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected screen distance but got "2.6x"}
+} -returnCodes error -result {expected screen distance but got "2.6x"}
 
 test spinbox-1.47 {configuration option: "insertofftime"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -560,19 +560,19 @@ test spinbox-1.47 {configuration option: "insertofftime"} -setup {
     destroy .e
 } -result 100
 test spinbox-1.48 {configuration option: "insertofftime" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -insertofftime 3.2
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3.2"}
+} -returnCodes error -result {expected integer but got "3.2"}
 
 test spinbox-1.49 {configuration option: "insertontime"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -582,19 +582,19 @@ test spinbox-1.49 {configuration option: "insertontime"} -setup {
     destroy .e
 } -result 100
 test spinbox-1.50 {configuration option: "insertontime" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -insertontime 3.2
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3.2"}
+} -returnCodes error -result {expected integer but got "3.2"}
 
 test spinbox-1.51 {configuration option: "invalidcommand"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -605,8 +605,8 @@ test spinbox-1.51 {configuration option: "invalidcommand"} -setup {
 } -result {a command}
 
 test spinbox-1.52 {configuration option: "invcmd"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -617,8 +617,8 @@ test spinbox-1.52 {configuration option: "invcmd"} -setup {
 } -result {a command}
 
 test spinbox-1.53 {configuration option: "justify"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -628,19 +628,19 @@ test spinbox-1.53 {configuration option: "justify"} -setup {
     destroy .e
 } -result {right}
 test spinbox-1.54 {configuration option: "justify" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -justify bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 
 test spinbox-1.55 {configuration option: "readonlybackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -650,19 +650,19 @@ test spinbox-1.55 {configuration option: "readonlybackground"} -setup {
     destroy .e
 } -result {green}
 test spinbox-1.56 {configuration option: "readonlybackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -readonlybackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.57 {configuration option: "relief"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -672,19 +672,19 @@ test spinbox-1.57 {configuration option: "relief"} -setup {
     destroy .e
 } -result {groove}
 test spinbox-1.58 {configuration option: "relief" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -relief 1.5
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 
 test spinbox-1.59 {configuration option: "repeatdelay"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -694,19 +694,19 @@ test spinbox-1.59 {configuration option: "repeatdelay"} -setup {
     destroy .e
 } -result 500
 test spinbox-1.60 {configuration option: "repeatdelay" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -repeatdelay 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.61 {configuration option: "repeatinterval"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -716,19 +716,19 @@ test spinbox-1.61 {configuration option: "repeatinterval"} -setup {
     destroy .e
 } -result -500
 test spinbox-1.62 {configuration option: "repeatinterval" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -repeatinterval 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.63 {configuration option: "selectbackground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -738,19 +738,19 @@ test spinbox-1.63 {configuration option: "selectbackground"} -setup {
     destroy .e
 } -result {#110022}
 test spinbox-1.64 {configuration option: "selectbackground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -selectbackground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.65 {configuration option: "selectborderwidth"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -758,21 +758,21 @@ test spinbox-1.65 {configuration option: "selectborderwidth"} -setup {
     .e cget -selectborderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test spinbox-1.66 {configuration option: "selectborderwidth" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test spinbox-1.67 {configuration option: "selectforeground"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -782,19 +782,19 @@ test spinbox-1.67 {configuration option: "selectforeground"} -setup {
     destroy .e
 } -result {#654321}
 test spinbox-1.68 {configuration option: "selectforeground" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -selectforeground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.69 {configuration option: "state"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -804,19 +804,19 @@ test spinbox-1.69 {configuration option: "state"} -setup {
     destroy .e
 } -result {normal}
 test spinbox-1.70 {configuration option: "state" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -state bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad state "bogus": must be disabled, normal, or readonly}
+} -returnCodes error -result {bad state "bogus": must be disabled, normal, or readonly}
 
 test spinbox-1.71 {configuration option: "takefocus"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -827,8 +827,8 @@ test spinbox-1.71 {configuration option: "takefocus"} -setup {
 } -result {any string}
 
 test spinbox-1.72 {configuration option: "textvariable"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -839,8 +839,8 @@ test spinbox-1.72 {configuration option: "textvariable"} -setup {
 } -result {i}
 
 test spinbox-1.73 {configuration option: "to"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -850,19 +850,19 @@ test spinbox-1.73 {configuration option: "to"} -setup {
     destroy .e
 } -result {14.9}
 test spinbox-1.74 {configuration option: "to" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -to bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.75 {configuration option: "validate"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -872,19 +872,19 @@ test spinbox-1.75 {configuration option: "validate"} -setup {
     destroy .e
 } -result {key}
 test spinbox-1.76 {configuration option: "validate" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -validate "bogus"
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
+} -returnCodes error -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
 
 test spinbox-1.77 {configuration option: "validatecommand"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -895,8 +895,8 @@ test spinbox-1.77 {configuration option: "validatecommand"} -setup {
 } -result {a command}
 
 test spinbox-1.78 {configuration option: "values"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -906,19 +906,19 @@ test spinbox-1.78 {configuration option: "values"} -setup {
     destroy .e
 } -result {mon tue wed thur}
 test spinbox-1.79 {configuration option: "values" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -values {bad {}list}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {list element in braces followed by "list" instead of space}
+} -returnCodes error -result {list element in braces followed by "list" instead of space}
 
 test spinbox-1.80 {configuration option: "validatecommand"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -929,8 +929,8 @@ test spinbox-1.80 {configuration option: "validatecommand"} -setup {
 } -result {a command}
 
 test spinbox-1.81 {configuration option: "width"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -940,19 +940,19 @@ test spinbox-1.81 {configuration option: "width"} -setup {
     destroy .e
 } -result 402
 test spinbox-1.82 {configuration option: "width" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -width 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.83 {configuration option: "wrap"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
@@ -962,19 +962,19 @@ test spinbox-1.83 {configuration option: "wrap"} -setup {
     destroy .e
 } -result 1
 test spinbox-1.84 {configuration option: "wrap" for spinbox} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+    spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+	-relief sunken
     pack .e
     update
 } -body {
     .e configure -wrap xyzzy
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected boolean value but got "xyzzy"}
+} -returnCodes error -result {expected boolean value but got "xyzzy"}
 
 test spinbox-1.85 {configuration option: "xscrollcommand"} -setup {
     spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-        -relief sunken
+	-relief sunken
     pack .e
     update
 } -body {
@@ -2628,12 +2628,12 @@ test spinbox-8.18 {DeleteChars procedure} -setup {
     set XPAD 1
     set buttonWidth [expr { [font measure [.e cget -font] "0"] + 2 * (1 + $XPAD) }]
     if {$buttonWidth < 11} {
-        set buttonWidth 11
+	set buttonWidth 11
     }
     set expected [expr { [font measure [.e cget -font] "xyy"] \
-                          + 2 * ( [.e cget -borderwidth] + \
-                                [.e cget -highlightthickness] + $XPAD ) \
-                          + $buttonWidth } ]
+			  + 2 * ( [.e cget -borderwidth] + \
+				[.e cget -highlightthickness] + $XPAD ) \
+			  + $buttonWidth } ]
     expr {[winfo reqwidth .e] == $expected}
 } -cleanup {
     destroy .e
@@ -2898,7 +2898,7 @@ test spinbox-13.10 {GetSpinboxIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, spinbox widget's internal
 # selection range is reset.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
 	pack .e
 	.e insert 0 012345678901234567890
 	.e xview 4
@@ -2918,11 +2918,11 @@ test spinbox-13.11 {GetSpinboxIndex procedure} -constraints aquaOrWin32 -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2936,11 +2936,11 @@ test spinbox-13.11 {GetSpinboxIndex procedure} -constraints aquaOrWin32 -body {
 
 test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2953,11 +2953,11 @@ test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
 
 test spinbox-13.12.1 {GetSpinboxIndex procedure} -constraints unix -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2970,11 +2970,11 @@ test spinbox-13.12.1 {GetSpinboxIndex procedure} -constraints unix -body {
 
 test spinbox-13.13 {GetSpinboxIndex procedure} -constraints win -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2990,11 +2990,11 @@ test spinbox-13.14 {GetSpinboxIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -3010,11 +3010,11 @@ test spinbox-13.14.1 {GetSpinboxIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -3036,7 +3036,7 @@ test spinbox-13.15 {GetSpinboxIndex procedure} -body {
 
 test spinbox-13.16 {GetSpinboxIndex procedure} -constraints fonts -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3047,7 +3047,7 @@ test spinbox-13.16 {GetSpinboxIndex procedure} -constraints fonts -body {
 } -result 4
 test spinbox-13.17 {GetSpinboxIndex procedure} -constraints fonts -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3058,7 +3058,7 @@ test spinbox-13.17 {GetSpinboxIndex procedure} -constraints fonts -body {
 } -result 4
 test spinbox-13.18 {GetSpinboxIndex procedure} -constraints fonts -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3069,7 +3069,7 @@ test spinbox-13.18 {GetSpinboxIndex procedure} -constraints fonts -body {
 } -result 5
 test spinbox-13.19 {GetSpinboxIndex procedure} -constraints fonts -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3080,7 +3080,7 @@ test spinbox-13.19 {GetSpinboxIndex procedure} -constraints fonts -body {
 } -result 8
 test spinbox-13.20 {GetSpinboxIndex procedure} -constraints fonts -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3091,7 +3091,7 @@ test spinbox-13.20 {GetSpinboxIndex procedure} -constraints fonts -body {
 } -result 9
 test spinbox-13.21 {GetSpinboxIndex procedure} -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3111,7 +3111,7 @@ test spinbox-13.22 {GetSpinboxIndex procedure} -setup {
 } -returnCodes error -result {bad spinbox index "1xyz"}
 test spinbox-13.23 {GetSpinboxIndex procedure} -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3122,7 +3122,7 @@ test spinbox-13.23 {GetSpinboxIndex procedure} -body {
 } -result 0
 test spinbox-13.24 {GetSpinboxIndex procedure} -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3133,7 +3133,7 @@ test spinbox-13.24 {GetSpinboxIndex procedure} -body {
 } -result 12
 test spinbox-13.25 {GetSpinboxIndex procedure} -body {
     spinbox .e -width 5 -relief sunken -highlightthickness 2 -bd 2 \
-        -font {Courier -12}
+	-font {Courier -12}
     pack .e
     .e insert 0 012345678901234567890
     .e xview 4
@@ -3157,7 +3157,7 @@ test spinbox-14.1 {SpinboxFetchSelection procedure} -body {
 test spinbox-14.3 {SpinboxFetchSelection procedure} -setup {
     set x {}
     for {set i 1} {$i <= 500} {incr i} {
-        append x "This is line $i, out of 500\n"
+	append x "This is line $i, out of 500\n"
 }
 } -body {
     spinbox .e
@@ -3283,10 +3283,10 @@ test spinbox-19.1 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 a
     set ::vVals
@@ -3298,10 +3298,10 @@ test spinbox-19.2 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 a   ;# previous settings
     .e insert 1 b
@@ -3314,10 +3314,10 @@ test spinbox-19.3 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
@@ -3330,10 +3330,10 @@ test spinbox-19.4 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
@@ -3346,10 +3346,10 @@ test spinbox-19.5 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
@@ -3362,10 +3362,10 @@ test spinbox-19.6 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
@@ -3379,10 +3379,10 @@ test spinbox-19.7 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focus \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abc                 ;# previous settings
     set ::vVals {}
@@ -3396,10 +3396,10 @@ test spinbox-19.8 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e configure -validate focus    ;# previous settings
     .e insert end abcd              ;# previous settings
@@ -3415,10 +3415,10 @@ test spinbox-19.9 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focus \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd      ;# previous settings
     focus -force .e         ;# previous settings
@@ -3436,10 +3436,10 @@ test spinbox-19.10 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e
@@ -3454,10 +3454,10 @@ test spinbox-19.11 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd          ;# previous settings
     focus -force .e             ;# previous settings
@@ -3475,10 +3475,10 @@ test spinbox-19.12 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focusin \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert 0 abcd              ;# previous settings
     focus -force .e
@@ -3493,10 +3493,10 @@ test spinbox-19.13 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focusin \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}
@@ -3512,10 +3512,10 @@ test spinbox-19.14 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3531,10 +3531,10 @@ test spinbox-19.15 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3554,10 +3554,10 @@ test spinbox-19.16 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::vVals {}                  ;# previous settings
@@ -3577,10 +3577,10 @@ test spinbox-19.17 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate focuso \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::e newdata
@@ -3595,10 +3595,10 @@ test spinbox-19.18 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     set ::e newdata                 ;# previous settings
     .e configure -validate all
@@ -3616,10 +3616,10 @@ test spinbox-19.19 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     set ::e nextdata                 ;# previous settings
 
@@ -3639,10 +3639,10 @@ test spinbox-19.20 {spinbox widget validation} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate all \
-        -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-        -invalidcommand bell \
-        -textvariable ::e \
-        -background red -foreground white
+	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-invalidcommand bell \
+	-textvariable ::e \
+	-background red -foreground white
     pack .e
     set ::e nextdata                 ;# previous settings
     .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V] ;# prev
@@ -3664,8 +3664,8 @@ test spinbox-19.21 {spinbox widget validation - bug 40e4bf6198} -setup {
     unset -nocomplain ::e ::vVals
 } -body {
     spinbox .e -validate key \
-        -validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
-        -textvariable ::e
+	-validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+	-textvariable ::e
     pack .e
     set ::e origdata
     .e insert 0 A
@@ -3707,19 +3707,19 @@ test spinbox-20.5 {spinbox config, -format specifier} -body {
     .e config -format %2e-1f
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "%2e-1f"}
+}  -returnCodes error -result {bad spinbox format specifier "%2e-1f"}
 test spinbox-20.6 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format 2.2
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "2.2"}
+}  -returnCodes error -result {bad spinbox format specifier "2.2"}
 test spinbox-20.7 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format %2.-2f
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "%2.-2f"}
+}  -returnCodes error -result {bad spinbox format specifier "%2.-2f"}
 test spinbox-20.8 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format %-2.02f

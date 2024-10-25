@@ -32,8 +32,8 @@ typedef struct {
 				 * no data. Malloc'ed. */
     char *maskData;		/* Data for bitmap's mask (suitable for input
 				 * to XCreateBitmapFromData). Malloc'ed. */
-    Tk_Uid fgUid;		/* Value of -foreground option (malloc'ed). */
-    Tk_Uid bgUid;		/* Value of -background option (malloc'ed). */
+    Tk_Uid fgUid;		/* Value of -foreground option. */
+    Tk_Uid bgUid;		/* Value of -background option. */
     char *fileString;		/* Value of -file option (malloc'ed). */
     char *dataString;		/* Value of -data option (malloc'ed). */
     char *maskFileString;	/* Value of -maskfile option (malloc'ed). */
@@ -269,9 +269,9 @@ ImgBmapConfigureModel(
 	    || (modelPtr->maskDataString != NULL)) {
 	if (modelPtr->data == NULL) {
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "can't have mask without bitmap", TCL_INDEX_NONE));
+		    "cannot have a mask without a bitmap", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
-		    "NO_BITMAP", NULL);
+		    "NO_BITMAP", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	modelPtr->maskData = TkGetBitmapData(modelPtr->interp,
@@ -287,7 +287,7 @@ ImgBmapConfigureModel(
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
 		    "bitmap and mask have different sizes", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
-		    "MASK_SIZE", NULL);
+		    "MASK_SIZE", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -488,7 +488,7 @@ TkGetBitmapData(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get bitmap data from a file in a safe interpreter",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", (char *)NULL);
 	    return NULL;
 	}
 	expandedFileName = Tcl_TranslateFileName(NULL, fileName, &buffer);
@@ -593,7 +593,7 @@ TkGetBitmapData(
 			"format error in bitmap data; looks like it's an"
 			" obsolete X10 bitmap file", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OBSOLETE",
-			NULL);
+			(char *)NULL);
 	    }
 	    goto errorCleanup;
 	}
@@ -637,7 +637,7 @@ TkGetBitmapData(
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"format error in bitmap data", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "FORMAT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "FORMAT", (char *)NULL);
     }
 
   errorCleanup:
@@ -1210,7 +1210,7 @@ ImgBmapPostscript(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unable to generate postscript for bitmaps larger than 60000"
 		" pixels", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	return TCL_ERROR;
     }
 

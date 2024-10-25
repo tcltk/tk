@@ -187,6 +187,7 @@ TkpDisplayButton(
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
+    int highlightWidth;
 
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -194,7 +195,7 @@ TkpDisplayButton(
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
 	macButtonPtr->useTkText = 0;
@@ -227,7 +228,7 @@ TkpDisplayButton(
 	 * Ask for the highlight border, if needed.
 	 */
 
-	if (butPtr->highlightWidth < 3) {
+	if (highlightWidth < 3) {
 	    needhighlight = 1;
 	}
     }
@@ -244,7 +245,7 @@ TkpDisplayButton(
 	    gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder), pixmap);
 	}
 	if (gc) {
-	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, highlightWidth);
 	}
     }
 }
@@ -276,6 +277,9 @@ TkpComputeButtonGeometry(
     MacButton *mbPtr = (MacButton *) butPtr;
     Tk_FontMetrics fm;
     char *text = Tcl_GetString(butPtr->textPtr);
+    int padX, padY, wrapLength;
+    int butPtrWidth, butPtrHeight;
+    int borderWidth, highlightWidth;
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
@@ -315,17 +319,19 @@ TkpComputeButtonGeometry(
 	haveImage = 1;
     }
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
-
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		text, TCL_INDEX_NONE, butPtr->wrapLength, butPtr->justify, 0,
+		text, TCL_INDEX_NONE, wrapLength, butPtr->justify, 0,
 		&butPtr->textWidth, &butPtr->textHeight);
 
-	txtWidth = butPtr->textWidth + 2 * butPtr->padX;
-	txtHeight = butPtr->textHeight + 2 * butPtr->padY;
+	txtWidth = butPtr->textWidth + 2 * padX;
+	txtHeight = butPtr->textHeight + 2 * padY;
 	haveText = 1;
     }
 
@@ -338,7 +344,7 @@ TkpComputeButtonGeometry(
 		* Image is above or below text.
 		*/
 
-		height += txtHeight + butPtr->padY;
+		height += txtHeight + padY;
 		width = (width > txtWidth ? width : txtWidth);
 		break;
 	    case COMPOUND_LEFT:
@@ -347,7 +353,7 @@ TkpComputeButtonGeometry(
 		* Image is left or right of text.
 		*/
 
-		width += txtWidth + 2 * butPtr->padX;
+		width += txtWidth + 2 * padX;
 		height = (height > txtHeight ? height : txtHeight);
 		break;
 	    case COMPOUND_CENTER:
@@ -363,8 +369,8 @@ TkpComputeButtonGeometry(
 	    }
 	}
 	/* Image with or without text */
-	width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
-	height = butPtr->height > 0 ? butPtr->height : height;
+	width = butPtrWidth > 0 ? butPtrWidth : width + butPtr->indicatorSpace;
+	height = butPtrHeight > 0 ? butPtrHeight : height;
 	if (butPtr->type == TYPE_BUTTON) {
 	    /*
 	     * Allow room to shift the image.
@@ -375,13 +381,13 @@ TkpComputeButtonGeometry(
     } else { /* Text only */
 	width = txtWidth + butPtr->indicatorSpace;
 	height = txtHeight;
-	if (butPtr->width > 0) {
+	if (butPtrWidth > 0) {
 	    charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
-	    width = butPtr->width * charWidth + 2 * butPtr->padX;
+	    width = butPtrWidth * charWidth + 2 * padX;
 	}
-	if (butPtr->height > 0) {
+	if (butPtrHeight > 0) {
 	    Tk_GetFontMetrics(butPtr->tkfont, &fm);
-	    height = butPtr->height * fm.linespace + 2 * butPtr->padY;
+	    height = butPtrHeight * fm.linespace + 2 * padY;
 	}
     }
 
@@ -389,10 +395,10 @@ TkpComputeButtonGeometry(
      * Now figure out the size of the border decorations for the button.
      */
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
-    butPtr->inset = butPtr->borderWidth + butPtr->highlightWidth;
+    butPtr->inset = borderWidth + highlightWidth;
 
     width += butPtr->inset * 2;
     height += butPtr->inset * 2;
@@ -454,6 +460,7 @@ DrawButtonImageAndText(
     int textXOffset = 0, textYOffset = 0;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
+    int padX, padY, borderWidth, highlightWidth;
     DrawParams *dpPtr = &mbPtr->drawParams;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
@@ -477,10 +484,10 @@ DrawButtonImageAndText(
 	pressed = 1;
     }
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) { /* Image and Text */
@@ -491,11 +498,11 @@ DrawButtonImageAndText(
 	case COMPOUND_BOTTOM:
 	    /* Image is above or below text */
 	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
+		imageYOffset = butPtr->textHeight + padY;
 	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
+	    fullHeight = height + butPtr->textHeight + padY;
 	    fullWidth = (width > butPtr->textWidth ? width : butPtr->textWidth);
 	    textXOffset = (fullWidth - butPtr->textWidth)/2;
 	    imageXOffset = (fullWidth - width)/2;
@@ -507,11 +514,11 @@ DrawButtonImageAndText(
 	     */
 
 	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX;
+		textXOffset = width + padX;
 	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
+		imageXOffset = butPtr->textWidth + padX;
 	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
+	    fullWidth = butPtr->textWidth + padX + width;
 	    fullHeight = (height > butPtr->textHeight ? height :
 		    butPtr->textHeight);
 	    textYOffset = (fullHeight - butPtr->textHeight)/2;
@@ -536,8 +543,7 @@ DrawButtonImageAndText(
 	}
 
 	TkComputeAnchor(butPtr->anchor, tkwin,
-		butPtr->padX + butPtr->borderWidth,
-		butPtr->padY + butPtr->borderWidth,
+		padX + borderWidth, padY + borderWidth,
 		fullWidth + butPtr->indicatorSpace, fullHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 
@@ -587,8 +593,7 @@ DrawButtonImageAndText(
 	int x = 0, y;
 
 	TkComputeAnchor(butPtr->anchor, tkwin,
-		butPtr->padX + butPtr->borderWidth,
-		butPtr->padY + butPtr->borderWidth,
+		padX + borderWidth, padY + borderWidth,
 		width + butPtr->indicatorSpace, height, &x, &y);
 	x += butPtr->indicatorSpace;
 	if (pressed) {
@@ -621,7 +626,7 @@ DrawButtonImageAndText(
     } else { /* Text only */
 	int x, y;
 
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		butPtr->textWidth + butPtr->indicatorSpace,
 		butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
@@ -672,11 +677,11 @@ DrawButtonImageAndText(
 	 */
 
 	if (dpPtr->relief != TK_RELIEF_FLAT) {
-	    int inset = butPtr->highlightWidth;
+	    int inset = highlightWidth;
 
 	    Tk_Draw3DRectangle(tkwin, pixmap, dpPtr->border, inset, inset,
 		    Tk_Width(tkwin) - 2 * inset, Tk_Height(tkwin) - 2 * inset,
-		    butPtr->borderWidth, dpPtr->relief);
+		    borderWidth, dpPtr->relief);
 	}
     }
 }
@@ -957,15 +962,16 @@ TkMacOSXComputeButtonParams(
     HIThemeButtonDrawInfo *drawinfo)
 {
     MacButton *mbPtr = (MacButton *) butPtr;
+    int borderWidth, highlightWidth;
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
-    if (butPtr->borderWidth <= 2) {
+    if (borderWidth <= 2) {
 	*btnkind = kThemeSmallBevelButton;
-    } else if (butPtr->borderWidth == 3) {
+    } else if (borderWidth == 3) {
 	*btnkind = kThemeBevelButton;
-    } else if (butPtr->borderWidth == 4) {
+    } else if (borderWidth == 4) {
 	*btnkind = kThemeRoundedBevelButton;
     } else {
 	*btnkind = kThemePushButton;
@@ -977,14 +983,14 @@ TkMacOSXComputeButtonParams(
 	    *btnkind = kThemePushButton;
 	    break;
 	case TYPE_RADIO_BUTTON:
-	    if (butPtr->borderWidth <= 1) {
+	    if (borderWidth <= 1) {
 		*btnkind = kThemeSmallRadioButton;
 	    } else {
 		*btnkind = kThemeRadioButton;
 	    }
 	    break;
 	case TYPE_CHECK_BUTTON:
-	    if (butPtr->borderWidth <= 1) {
+	    if (borderWidth <= 1) {
 		*btnkind = kThemeSmallCheckBox;
 	    } else {
 		*btnkind = kThemeCheckBox;
@@ -996,14 +1002,14 @@ TkMacOSXComputeButtonParams(
     if (butPtr->indicatorOn) {
 	switch (butPtr->type) {
 	case TYPE_RADIO_BUTTON:
-	    if (butPtr->borderWidth <= 1) {
+	    if (borderWidth <= 1) {
 		*btnkind = kThemeSmallRadioButton;
 	    } else {
 		*btnkind = kThemeRadioButton;
 	    }
 	    break;
 	case TYPE_CHECK_BUTTON:
-	    if (butPtr->borderWidth <= 1) {
+	    if (borderWidth <= 1) {
 		*btnkind = kThemeSmallCheckBox;
 	    } else {
 		*btnkind = kThemeCheckBox;
@@ -1068,7 +1074,7 @@ TkMacOSXComputeButtonParams(
     } else if (mbPtr->defaultPulseHandler) {
 	Tcl_DeleteTimerHandler(mbPtr->defaultPulseHandler);
     }
-    if (butPtr->highlightWidth >= 3) {
+    if (highlightWidth >= 3) {
 	if ((butPtr->flags & GOT_FOCUS)) {
 	    drawinfo->adornment |= kThemeAdornmentFocus;
 	}

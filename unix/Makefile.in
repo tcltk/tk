@@ -266,8 +266,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -298,6 +298,10 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 # support for Xft:
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
+
+# support for libcups
+CUPS_CFLAGS		= @CUPS_CFLAGS@
+CUPS_LIBS 		= @CUPS_LIBS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -394,15 +398,16 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
+	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
+	tkUnixPrint.o
 
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
-        tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
 	tkMacOSXMenu.o tkMacOSXMenubutton.o tkMacOSXMenus.o \
-        tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
+	tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
 	tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
 	tkMacOSXSubwindows.o tkMacOSXSysTray.o tkMacOSXWindowEvent.o tkMacOSXWm.o \
 	tkMacOSXXStubs.o tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o \
@@ -516,7 +521,8 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
 	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
-	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c
+	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
+	$(UNIX_DIR)/tkUnixPrint.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
@@ -642,7 +648,7 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	    if test "x$(MACHER)" = "x" ; then \
 		cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
 	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
-	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
 	    ${NATIVE_ZIP} -A ${LIB_FILE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
@@ -684,7 +690,7 @@ ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	    if test "x$(MACHER)" = "x" ; then \
 		cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
 	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
-	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
 	    ${NATIVE_ZIP} -A ${WISH_EXE} \
 	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
@@ -1330,6 +1336,9 @@ tkUnixMenu.o: $(UNIX_DIR)/tkUnixMenu.c
 tkUnixMenubu.o: $(UNIX_DIR)/tkUnixMenubu.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixMenubu.c
 
+tkUnixPrint.o: $(UNIX_DIR)/tkUnixPrint.c
+	$(CC) -c $(CC_SWITCHES) $(CUPS_CFLAGS) $(UNIX_DIR)/tkUnixPrint.c
+
 tkUnixScale.o: $(UNIX_DIR)/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixScale.c
 
@@ -1730,15 +1739,10 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
 		$(MAC_OSX_DIR)/*.icns $(MAC_OSX_DIR)/*.tiff \
 		$(MAC_OSX_DIR)/*.[ch] $(MAC_OSX_DIR)/*.in \
-		$(MAC_OSX_DIR)/*.ac $(MAC_OSX_DIR)/*.xcconfig \
-		$(MAC_OSX_DIR)/*.sdef \
+		$(MAC_OSX_DIR)/*.ac $(MAC_OSX_DIR)/*.sdef \
 		$(DISTDIR)/macosx
 	$(DIST_INSTALL_SCRIPT) $(MAC_OSX_DIR)/configure $(DISTDIR)/macosx
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/macosx
-	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx/Tk.xcodeproj
-	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/Tk.xcodeproj/project.pbxproj \
-		$(MAC_OSX_DIR)/Tk.xcodeproj/default.pbxuser \
-		$(DISTDIR)/macosx/Tk.xcodeproj
 	$(INSTALL_DATA_DIR) $(DISTDIR)/compat
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms \
 		$(TOP_DIR)/compat/stdbool.h $(DISTDIR)/compat
@@ -1806,7 +1810,7 @@ alldist: dist
 # This target creates the HTML folder for Tcl & Tk and places it
 # in DISTDIR/html.  It uses the tcltk-man2html.tcl tool from
 # the Tcl group's tool workspace.  It depends on the Tcl & Tk being
-# in directories called tcl8.3 & tk8.3 up two directories from the
+# in directories called tcl9.0 & tk9.0 up two directories from the
 # TOOL_DIR.
 #
 

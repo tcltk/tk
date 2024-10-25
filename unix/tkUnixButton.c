@@ -449,6 +449,7 @@ TkpDisplayButton(
     int imageXOffset = 0, imageYOffset = 0;
 				/* image information that will be used to
 				 * restrict disabled pixmap as well */
+    int padX, padY, borderWidth, highlightWidth;
 
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -533,10 +534,10 @@ TkpDisplayButton(
     imageWidth = width;
     imageHeight = height;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
 
@@ -554,11 +555,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
+		imageYOffset = butPtr->textHeight + padY;
 	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
+	    fullHeight = height + butPtr->textHeight + padY;
 	    fullWidth = (width > butPtr->textWidth ? width :
 		    butPtr->textWidth);
 	    textXOffset = (fullWidth - butPtr->textWidth)/2;
@@ -571,11 +572,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX;
+		textXOffset = width + padX;
 	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
+		imageXOffset = butPtr->textWidth + padX;
 	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
+	    fullWidth = butPtr->textWidth + padX + width;
 	    fullHeight = (height > butPtr->textHeight ? height :
 		    butPtr->textHeight);
 	    textYOffset = (fullHeight - butPtr->textHeight)/2;
@@ -599,7 +600,7 @@ TkpDisplayButton(
 	    break;
 	}
 
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
 
 	x += butPtr->indicatorSpace;
@@ -709,7 +710,7 @@ TkpDisplayButton(
 	    }
 	    y += height/2;
 	} else {
- 	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+ 	    TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		    butPtr->indicatorSpace + butPtr->textWidth,
 		    butPtr->textHeight, &x, &y);
 
@@ -730,7 +731,7 @@ TkpDisplayButton(
 
     if ((butPtr->type == TYPE_CHECK_BUTTON || butPtr->type == TYPE_RADIO_BUTTON)
 	    && butPtr->indicatorOn
-	    && butPtr->indicatorDiameter > 2 * butPtr->borderWidth) {
+	    && butPtr->indicatorDiameter > 2 * borderWidth) {
 	TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 	XColor *selColor = NULL;
 	int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
@@ -792,7 +793,7 @@ TkpDisplayButton(
      */
 
     if (relief != TK_RELIEF_FLAT) {
-	int inset = butPtr->highlightWidth;
+	int inset = highlightWidth;
 
 	if (butPtr->defaultState == DEFAULT_ACTIVE) {
 	    /*
@@ -833,9 +834,9 @@ TkpDisplayButton(
 
 	Tk_Draw3DRectangle(tkwin, pixmap, border, inset, inset,
 		Tk_Width(tkwin) - 2 * inset, Tk_Height(tkwin) - 2 * inset,
-		butPtr->borderWidth, relief);
+		borderWidth, relief);
     }
-    if (butPtr->highlightWidth > 0) {
+    if (highlightWidth > 0) {
 	if (butPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
 	} else {
@@ -849,10 +850,10 @@ TkpDisplayButton(
 	 */
 
 	if (butPtr->defaultState == DEFAULT_NORMAL) {
-	    TkDrawInsetFocusHighlight(tkwin, gc, butPtr->highlightWidth,
+	    TkDrawInsetFocusHighlight(tkwin, gc, highlightWidth,
 		    pixmap, 5);
 	} else {
-	    Tk_DrawFocusHighlight(tkwin, gc, butPtr->highlightWidth, pixmap);
+	    Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
 	}
     }
 
@@ -892,13 +893,18 @@ TkpComputeButtonGeometry(
     int width, height, avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
+    int padX, padY, borderWidth, highlightWidth, wrapLength;
+    int butPtrWidth, butPtrHeight;
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
 
-    butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
+    butPtr->inset = highlightWidth + borderWidth;
 
     /*
      * Leave room for the default ring if needed.
@@ -927,7 +933,7 @@ TkpComputeButtonGeometry(
 	Tk_FreeTextLayout(butPtr->textLayout);
 
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, butPtr->wrapLength,
+		Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	txtWidth = butPtr->textWidth;
@@ -952,7 +958,7 @@ TkpComputeButtonGeometry(
 	     * Image is above or below text.
 	     */
 
-	    height += txtHeight + butPtr->padY;
+	    height += txtHeight + padY;
 	    width = (width > txtWidth ? width : txtWidth);
 	    break;
 	case COMPOUND_LEFT:
@@ -961,7 +967,7 @@ TkpComputeButtonGeometry(
 	     * Image is left or right of text.
 	     */
 
-	    width += txtWidth + butPtr->padX;
+	    width += txtWidth + padX;
 	    height = (height > txtHeight ? height : txtHeight);
 	    break;
 	case COMPOUND_CENTER:
@@ -975,11 +981,11 @@ TkpComputeButtonGeometry(
 	case COMPOUND_NONE:
 	    break;
 	}
-	if (butPtr->width > 0) {
-	    width = butPtr->width;
+	if (butPtrWidth > 0) {
+	    width = butPtrWidth;
 	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight;
 	}
 
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
@@ -991,15 +997,15 @@ TkpComputeButtonGeometry(
 	    }
 	}
 
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     } else {
 	if (haveImage) {
-	    if (butPtr->width > 0) {
-		width = butPtr->width;
+	    if (butPtrWidth > 0) {
+		width = butPtrWidth;
 	    }
-	    if (butPtr->height > 0) {
-		height = butPtr->height;
+	    if (butPtrHeight > 0) {
+		height = butPtrHeight;
 	    }
 
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
@@ -1014,11 +1020,11 @@ TkpComputeButtonGeometry(
 	    width = txtWidth;
 	    height = txtHeight;
 
-	    if (butPtr->width > 0) {
-		width = butPtr->width * avgWidth;
+	    if (butPtrWidth > 0) {
+		width = butPtrWidth * avgWidth;
 	    }
-	    if (butPtr->height > 0) {
-		height = butPtr->height * fm.linespace;
+	    if (butPtrHeight > 0) {
+		height = butPtrHeight * fm.linespace;
 	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;
@@ -1035,8 +1041,8 @@ TkpComputeButtonGeometry(
      */
 
     if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
     if ((butPtr->type == TYPE_BUTTON) && !Tk_StrictMotif(butPtr->tkwin)) {
 	width += 2;

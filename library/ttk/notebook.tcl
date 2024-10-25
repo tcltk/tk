@@ -170,7 +170,7 @@ proc ttk::notebook::enableTraversal {nb} {
 	#
 	bind $top <Control-Next>             {+ttk::notebook::TLCycleTab %W  1}
 	bind $top <Control-Prior>            {+ttk::notebook::TLCycleTab %W -1}
-	bind $top <Control-Tab> 	     {+ttk::notebook::TLCycleTab %W  1}
+	bind $top <Control-Tab>              {+ttk::notebook::TLCycleTab %W  1}
 	bind $top <Control-Shift-Tab>        {+ttk::notebook::TLCycleTab %W -1}
 	catch {
 	bind $top <Control-ISO_Left_Tab>     {+ttk::notebook::TLCycleTab %W -1}
@@ -199,7 +199,7 @@ proc ttk::notebook::Cleanup {nb} {
     set top [winfo toplevel $nb]
     if {[info exists TLNotebooks($top)]} {
 	set index [lsearch -exact $TLNotebooks($top) $nb]
-        set TLNotebooks($top) [lreplace $TLNotebooks($top) $index $index]
+	set TLNotebooks($top) [lreplace $TLNotebooks($top) $index $index]
     }
 }
 

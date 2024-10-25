@@ -15,6 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
@@ -41,9 +42,8 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
-@synthesize isDrawing = _isDrawing;
-@synthesize isSigned = _isSigned;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
+@synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
@@ -137,6 +137,7 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
 {
+    (void) app;
     return YES;
 }
 
@@ -181,7 +182,6 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
-
     }
 
 
@@ -204,18 +204,7 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
      */
 
     Ttk_MacOSXInit();
-
-    /*
-     * It is not safe to force activation of the NSApp until this method is
-     * called. Activating too early can cause the menu bar to be unresponsive.
-     * The call to activateIgnoringOtherApps was moved here to avoid this.
-     * However, with the release of macOS 10.15 (Catalina) that was no longer
-     * sufficient.  (See ticket bf93d098d7.)  The call to setActivationPolicy
-     * needed to be moved into this function as well.
-     */
-
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp activateIgnoringOtherApps: YES];
 
     /*
      * Add an event monitor so we continue to receive NSMouseMoved and
@@ -230,15 +219,6 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
 	 {
 	     return event;
 	 }];
-
-    /*
-     * Process events to ensure that the root window is fully initialized. See
-     * ticket 56a1823c73.
-     */
-
-    [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -288,12 +268,6 @@ static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
 	}
     }
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
-
-    /*
-     * We are not drawing right now.
-     */
-
-    [NSApp setIsDrawing:NO];
 
     /*
      * Be our own delegate.
@@ -394,7 +368,7 @@ static void closePanels(
 	[[NSFontPanel sharedFontPanel] orderOut:nil];
     }
     if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
+	[[NSColorPanel sharedColorPanel] orderOut:nil];
     }
 }
 
@@ -431,6 +405,21 @@ TCL_NORETURN void TkpExitProc(
     }
 
     /*
+     * At this point it is too late to be looking up the Tk window associated
+     * to any NSWindows, but it can happen.  This makes sure the answer is None
+     * if such a query is attempted.  It is also too late to be running any
+     * event loops, as happens in updateLayer.  Set the tkWillExit flag to
+     * prevent this.
+     */
+
+    [NSApp setTkWillExit:YES];
+    for (TKWindow *w in [NSApp orderedWindows]) {
+	if ([w respondsToSelector: @selector (tkWindow)]) {
+	    [w setTkWindow: None];
+	}
+    }
+
+    /*
      * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
      */
 
@@ -457,6 +446,26 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
+/*
+ * This static function is run as an idle task to order the root window front.
+ * This is only done if the window is in the normal state.  This avoids
+ * flashing the root window on the screen if it was withdrawn immediately after
+ * loading Tk.
+ */
+
+static void showRootWindow(void *clientData) {
+    NSWindow *root = (NSWindow *) clientData;
+    if ([NSApp tkWillExit]) {
+        return;
+    }
+    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->hints.initial_state == NormalState) {
+	[root makeKeyAndOrderFront:NSApp];
+    }
+    [NSApp activateIgnoringOtherApps: YES];
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -471,15 +480,15 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
-        Bool stdinIsNullish = (!isatty(0) &&
+	Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#   error Mac OS X 10.6 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#   error Mac OS X 10.9 required
 #endif
 
 	initialized = 1;
@@ -495,7 +504,7 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
-            # if 0 /* This is not really an error.  Wish still runs fine. */
+	    # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	    # endif
 	}
@@ -517,40 +526,40 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 
-        /*
-         * WARNING: The finishLaunching method runs asynchronously. This
-         * creates a race between the initialization of the NSApplication and
-         * the initialization of Tk.  If Tk wins the race bad things happen
-         * with the root window (see below).  If the NSApplication wins then an
-         * AppleEvent created during launch, e.g. by dropping a file icon on
-         * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is handled in
-         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * AppleEvent later, after the required procedure has been defined.
-         */
+	/*
+	 * WARNING: The finishLaunching method runs asynchronously. This
+	 * creates a race between the initialization of the NSApplication and
+	 * the initialization of Tk.  If Tk wins the race bad things happen
+	 * with the root window (see below).  If the NSApplication wins then an
+	 * AppleEvent created during launch, e.g. by dropping a file icon on
+	 * the application icon, will be delivered before the procedure meant
+	 * to to handle the AppleEvent has been defined.  This is handled in
+	 * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+	 * AppleEvent later, after the required procedure has been defined.
+	 */
 
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
-        /*
-         * Create a Tk event source based on the Appkit event queue.
-         */
+	/*
+	 * Create a Tk event source based on the Appkit event queue.
+	 */
 
 	Tk_MacOSXSetupTkNotifier();
 
 	/*
 	 * If Tk initialization wins the race, the root window is mapped before
-         * the NSApplication is initialized.  This can cause bad things to
-         * happen.  The root window can open off screen with no way to make it
-         * appear on screen until the app icon is clicked.  This will happen if
-         * a Tk application opens a modal window in its startup script (see
-         * ticket 56a1823c73).  In other cases, an empty root window can open
-         * on screen and remain visible for a noticeable amount of time while
-         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
-         * below forces Tk to block until the Appkit event queue has been
-         * created.  This seems to be sufficient to ensure that the
-         * NSApplication initialization wins the race, avoiding these bad
-         * window behaviors.
+	 * the NSApplication is initialized.  This can cause bad things to
+	 * happen.  The root window can open off screen with no way to make it
+	 * appear on screen until the app icon is clicked.  This will happen if
+	 * a Tk application opens a modal window in its startup script (see
+	 * ticket 56a1823c73).  In other cases, an empty root window can open
+	 * on screen and remain visible for a noticeable amount of time while
+	 * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+	 * below forces Tk to block until the Appkit event queue has been
+	 * created.  This seems to be sufficient to ensure that the
+	 * NSApplication initialization wins the race, avoiding these bad
+	 * window behaviors.
 	 */
 
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
@@ -600,6 +609,9 @@ TkpInit(
 #if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
+	} else if (getenv("TK_NO_STDERR") != NULL) {
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDERR_FILENO);
 	}
 
 	/*
@@ -625,14 +637,22 @@ TkpInit(
 	 * The root window has been created and mapped, but XMapWindow deferred its
 	 * call to makeKeyAndOrderFront because the first call to XMapWindow
 	 * occurs too early in the initialization process for that.  Process idle
-	 * tasks now, so the root window is configured, then order it front.
+	 * tasks now, so the root window is configured.
 	 */
 
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
 	    if (winPtr && Tk_IsMapped(winPtr)) {
-		[window makeKeyAndOrderFront:NSApp];
+
+		/*
+		 * Ordering the root window front in an idle task allows
+		 * checking whether it was immediately withdrawn, and
+		 * therefore does not need to be placed on the screen.
+		 */
+		
+		Tcl_DoWhenIdle(showRootWindow, window);
 		break;
 	    }
 	}
@@ -675,7 +695,7 @@ TkpInit(
     Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::mac::macOSVersion",
-           TkMacOSVersionObjCmd, NULL, NULL);
+	    TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
 

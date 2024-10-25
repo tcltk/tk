@@ -223,7 +223,7 @@ Tk_InitConsoleChannels(
      */
 
     if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
-        return;
+	return;
     }
 
     consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));

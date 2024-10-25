@@ -464,7 +464,7 @@ Tk_ChooseColorObjCmd(
 	case COLOR_INITIAL: {
 	    XColor *colorPtr;
 
-	    colorPtr = Tk_GetColor(interp, tkwin, value);
+	    colorPtr = Tk_AllocColorFromObj(interp, tkwin, objv[i + 1]);
 	    if (colorPtr == NULL) {
 		goto end;
 	    }

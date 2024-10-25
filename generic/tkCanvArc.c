@@ -130,7 +130,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(ArcItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -381,7 +381,7 @@ ArcCoords(
 	    }
 	}
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
- 		    &arcPtr->bbox[0]) != TCL_OK)
+		    &arcPtr->bbox[0]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
 		    &arcPtr->bbox[1]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2],
@@ -619,7 +619,7 @@ ComputeArcParametersFromHeight(
      */
 
     if (arcPtr->height == 0)
-        return;
+	return;
 
     /*
      * Calculate the chord length, return early if it is too small.
@@ -629,8 +629,8 @@ ComputeArcParametersFromHeight(
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
 
     if (chordLen < DBL_EPSILON) {
-        arcPtr->start = arcPtr->extent = arcPtr->height = 0;
-        return;
+	arcPtr->start = arcPtr->extent = arcPtr->height = 0;
+	return;
     }
 
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;

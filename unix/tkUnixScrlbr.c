@@ -102,6 +102,7 @@ TkpDisplayScrollbar(
     XPoint points[7];
     Tk_3DBorder border;
     int relief, width, elementBorderWidth;
+    int borderWidth, highlightWidth;
     Pixmap pixmap;
 
     if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -109,13 +110,15 @@ TkpDisplayScrollbar(
     }
 
     if (scrollPtr->vertical) {
-	width = Tk_Width(tkwin) - 2*scrollPtr->inset;
+	width = Tk_Width(tkwin) - 2 * scrollPtr->inset;
     } else {
-	width = Tk_Height(tkwin) - 2*scrollPtr->inset;
+	width = Tk_Height(tkwin) - 2 * scrollPtr->inset;
     }
-    elementBorderWidth = scrollPtr->elementBorderWidth;
-    if (elementBorderWidth < 0) {
-	elementBorderWidth = scrollPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
+    if (scrollPtr->elementBorderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->elementBorderWidthObj, &elementBorderWidth);
+    } else {
+	elementBorderWidth = borderWidth;
     }
 
     /*
@@ -128,7 +131,8 @@ TkpDisplayScrollbar(
     pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 
-    if (scrollPtr->highlightWidth > 0) {
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth > 0) {
 	GC gc;
 
 	if (scrollPtr->flags & GOT_FOCUS) {
@@ -136,18 +140,18 @@ TkpDisplayScrollbar(
 	} else {
 	    gc = Tk_GCForColor(scrollPtr->highlightBgColorPtr, pixmap);
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, scrollPtr->highlightWidth, pixmap);
+	Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
     }
     Tk_Draw3DRectangle(tkwin, pixmap, scrollPtr->bgBorder,
-	    scrollPtr->highlightWidth, scrollPtr->highlightWidth,
-	    Tk_Width(tkwin) - 2*scrollPtr->highlightWidth,
-	    Tk_Height(tkwin) - 2*scrollPtr->highlightWidth,
-	    scrollPtr->borderWidth, scrollPtr->relief);
+	    highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, scrollPtr->relief);
     XFillRectangle(scrollPtr->display, pixmap,
 	    ((UnixScrollbar*)scrollPtr)->troughGC,
 	    scrollPtr->inset, scrollPtr->inset,
-	    (unsigned) (Tk_Width(tkwin) - 2*scrollPtr->inset),
-	    (unsigned) (Tk_Height(tkwin) - 2*scrollPtr->inset));
+	    (unsigned) (Tk_Width(tkwin) - 2 * scrollPtr->inset),
+	    (unsigned) (Tk_Height(tkwin) - 2 * scrollPtr->inset));
 
     /*
      * Draw the top or left arrow. The coordinates of the polygon points
@@ -282,8 +286,11 @@ TkpComputeScrollbarGeometry(
 				 * changed. */
 {
     int width, fieldLength;
+    int borderWidth, highlightWidth;
 
-    scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    scrollPtr->inset = highlightWidth + borderWidth;
     width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
 	    : Tk_Height(scrollPtr->tkwin);
 
@@ -291,10 +298,10 @@ TkpComputeScrollbarGeometry(
      * Next line assumes that the arrow area is a square.
      */
 
-    scrollPtr->arrowLength = width - 2*scrollPtr->inset + 1;
+    scrollPtr->arrowLength = width - 2 * scrollPtr->inset + 1;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
 	    : Tk_Width(scrollPtr->tkwin))
-	    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+	    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -328,15 +335,16 @@ TkpComputeScrollbarGeometry(
      * window, if any). Then arrange for the window to be redisplayed.
      */
 
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		scrollPtr->width + 2*scrollPtr->inset,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		width + 2 * scrollPtr->inset,
+		2 * (scrollPtr->arrowLength + borderWidth
 		+ scrollPtr->inset));
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-		+ scrollPtr->inset), scrollPtr->width + 2*scrollPtr->inset);
+		2 * (scrollPtr->arrowLength + borderWidth
+		+ scrollPtr->inset), width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }

@@ -280,39 +280,39 @@ TKOBJS = \
 !endif
 
 TTK_OBJS = \
-        $(TMP_DIR)\ttkWinMonitor.obj \
-        $(TMP_DIR)\ttkWinTheme.obj \
-        $(TMP_DIR)\ttkWinXPTheme.obj \
-        $(TMP_DIR)\ttkBlink.obj \
-        $(TMP_DIR)\ttkButton.obj \
-        $(TMP_DIR)\ttkCache.obj \
-        $(TMP_DIR)\ttkClamTheme.obj \
-        $(TMP_DIR)\ttkClassicTheme.obj \
-        $(TMP_DIR)\ttkDefaultTheme.obj \
-        $(TMP_DIR)\ttkElements.obj \
-        $(TMP_DIR)\ttkEntry.obj \
-        $(TMP_DIR)\ttkFrame.obj \
-        $(TMP_DIR)\ttkImage.obj \
-        $(TMP_DIR)\ttkInit.obj \
-        $(TMP_DIR)\ttkLabel.obj \
-        $(TMP_DIR)\ttkLayout.obj \
-        $(TMP_DIR)\ttkManager.obj \
-        $(TMP_DIR)\ttkNotebook.obj \
-        $(TMP_DIR)\ttkPanedwindow.obj \
-        $(TMP_DIR)\ttkProgress.obj \
-        $(TMP_DIR)\ttkScale.obj \
-        $(TMP_DIR)\ttkScrollbar.obj \
-        $(TMP_DIR)\ttkScroll.obj \
-        $(TMP_DIR)\ttkSeparator.obj \
-        $(TMP_DIR)\ttkSquare.obj \
-        $(TMP_DIR)\ttkState.obj \
-        $(TMP_DIR)\ttkTagSet.obj \
-        $(TMP_DIR)\ttkTheme.obj \
-        $(TMP_DIR)\ttkTrace.obj \
-        $(TMP_DIR)\ttkTrack.obj \
-        $(TMP_DIR)\ttkTreeview.obj \
-        $(TMP_DIR)\ttkWidget.obj \
-        $(TMP_DIR)\ttkStubInit.obj
+	$(TMP_DIR)\ttkWinMonitor.obj \
+	$(TMP_DIR)\ttkWinTheme.obj \
+	$(TMP_DIR)\ttkWinXPTheme.obj \
+	$(TMP_DIR)\ttkBlink.obj \
+	$(TMP_DIR)\ttkButton.obj \
+	$(TMP_DIR)\ttkCache.obj \
+	$(TMP_DIR)\ttkClamTheme.obj \
+	$(TMP_DIR)\ttkClassicTheme.obj \
+	$(TMP_DIR)\ttkDefaultTheme.obj \
+	$(TMP_DIR)\ttkElements.obj \
+	$(TMP_DIR)\ttkEntry.obj \
+	$(TMP_DIR)\ttkFrame.obj \
+	$(TMP_DIR)\ttkImage.obj \
+	$(TMP_DIR)\ttkInit.obj \
+	$(TMP_DIR)\ttkLabel.obj \
+	$(TMP_DIR)\ttkLayout.obj \
+	$(TMP_DIR)\ttkManager.obj \
+	$(TMP_DIR)\ttkNotebook.obj \
+	$(TMP_DIR)\ttkPanedwindow.obj \
+	$(TMP_DIR)\ttkProgress.obj \
+	$(TMP_DIR)\ttkScale.obj \
+	$(TMP_DIR)\ttkScrollbar.obj \
+	$(TMP_DIR)\ttkScroll.obj \
+	$(TMP_DIR)\ttkSeparator.obj \
+	$(TMP_DIR)\ttkSquare.obj \
+	$(TMP_DIR)\ttkState.obj \
+	$(TMP_DIR)\ttkTagSet.obj \
+	$(TMP_DIR)\ttkTheme.obj \
+	$(TMP_DIR)\ttkTrace.obj \
+	$(TMP_DIR)\ttkTrack.obj \
+	$(TMP_DIR)\ttkTreeview.obj \
+	$(TMP_DIR)\ttkWidget.obj \
+	$(TMP_DIR)\ttkStubInit.obj
 
 TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \

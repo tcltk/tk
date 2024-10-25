@@ -955,9 +955,9 @@ static int GdiOval(
     hDC = printDC;
 
     if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[2], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &y2) != TCL_OK)) {
+	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (x1 > x2) {

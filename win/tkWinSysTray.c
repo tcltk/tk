@@ -375,7 +375,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" doesn't exist", NULL);
+	"\" does not exist", NULL);
     return NULL;
 }
 
@@ -983,7 +983,7 @@ WinSystrayCmd(
 		photo = Tk_FindPhoto(interp, Tcl_GetString(imageObj));
 		if (photo == NULL) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "image \"%s\" doesn't exist", Tcl_GetString(imageObj)));
+			    "image \"%s\" does not exist", Tcl_GetString(imageObj)));
 		    return TCL_ERROR;
 		}
 		Tk_PhotoGetSize(photo, &width, &height);
