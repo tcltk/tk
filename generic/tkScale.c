@@ -52,7 +52,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_BORDER_WIDTH, offsetof(TkScale, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	DEF_SCALE_COMMAND, TCL_INDEX_NONE, offsetof(TkScale, command),
+	DEF_SCALE_COMMAND, offsetof(TkScale, commandObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_SCALE_CURSOR, TCL_INDEX_NONE, offsetof(TkScale, cursor),
@@ -80,7 +80,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, offsetof(TkScale, highlightWidthObj),
 	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-label", "label", "Label",
-	DEF_SCALE_LABEL, TCL_INDEX_NONE, offsetof(TkScale, label),
+	DEF_SCALE_LABEL, offsetof(TkScale, labelObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_SCALE_LENGTH, offsetof(TkScale, lengthObj), TCL_INDEX_NONE, 0, 0, 0},
@@ -291,11 +291,10 @@ Tk_ScaleObjCmd(
     scalePtr->resolution	= 1.0;
     scalePtr->digits		= 0;
     scalePtr->bigIncrement	= 0.0;
-    scalePtr->command		= NULL;
+    scalePtr->commandObj	= NULL;
     scalePtr->repeatDelay	= 0;
     scalePtr->repeatInterval	= 0;
-    scalePtr->label		= NULL;
-    scalePtr->labelLength	= 0;
+    scalePtr->labelObj		= NULL;
     scalePtr->state		= STATE_NORMAL;
     scalePtr->borderWidthObj	= NULL;
     scalePtr->bgBorder		= NULL;
@@ -673,8 +672,6 @@ ConfigureScale(
 	ComputeFormat(scalePtr, 0);
 	ComputeFormat(scalePtr, 1);
 
-	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
-
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
 	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
@@ -1041,7 +1038,7 @@ ComputeScaleGeometry(
     if (scalePtr->orient == ORIENT_HORIZONTAL) {
 	y = scalePtr->inset;
 	extraSpace = 0;
-	if (scalePtr->labelLength != 0) {
+	if (scalePtr->labelObj != NULL) {
 	    scalePtr->horizLabelY = y + SPACING;
 	    y += scalePtr->fontHeight;
 	    extraSpace = SPACING;
@@ -1136,13 +1133,14 @@ ComputeScaleGeometry(
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
     x += 2 * borderWidth + width;
-    if (scalePtr->labelLength == 0) {
+    if (scalePtr->labelObj == NULL) {
 	scalePtr->vertLabelX = 0;
     } else {
+	Tcl_Size labelLength;
+	const char *label= Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 	scalePtr->vertLabelX = x + fm.ascent/2;
 	x = scalePtr->vertLabelX + fm.ascent/2
-	    + Tk_TextWidth(scalePtr->tkfont, scalePtr->label,
-		    scalePtr->labelLength);
+	    + Tk_TextWidth(scalePtr->tkfont, label, labelLength);
     }
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->lengthObj, &length);
     Tk_GeometryRequest(scalePtr->tkwin, x + scalePtr->inset,
@@ -1483,7 +1481,7 @@ TkScaleSetValue(
      * configuring the widget -command option even if the value did not change.
      */
 
-    if ((invokeCommand) && (scalePtr->command != NULL)) {
+    if ((invokeCommand) && (scalePtr->commandObj != NULL)) {
 	scalePtr->flags |= INVOKE_COMMAND;
     }
     TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
