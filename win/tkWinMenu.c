@@ -1238,11 +1238,13 @@ TkWinHandleMenuEvent(
 
 	    interp = menuPtr->interp;
 	    Tcl_Preserve(interp);
+	    Tcl_Preserve(menuPtr);
 	    code = TkInvokeMenu(interp, menuPtr, mePtr->index);
 	    if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
 		Tcl_BackgroundException(interp, code);
 	    }
+	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
 	    *plResult = 0;
 	    returnResult = 1;
@@ -1433,7 +1435,7 @@ TkWinHandleMenuEvent(
 		    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 		} else {
 		    if (mePtr->index >= (int)menuPtr->numEntries) {
-			Tcl_Panic("Trying to activate an entry which doesn't exist");
+			Tcl_Panic("Trying to activate an entry which does not exist");
 		    }
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
 		}
@@ -1598,7 +1600,7 @@ GetMenuIndicatorGeometry(
 	int borderWidth;
 
 	Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-		menuPtr->borderWidthPtr, &borderWidth);
+		menuPtr->borderWidthObj, &borderWidth);
 	*widthPtr = indicatorDimensions[1] - borderWidth;
 
 	/*
@@ -1842,7 +1844,7 @@ DrawMenuEntryIndicator(
 	    rect.top = y;
 	    rect.bottom = y + mePtr->height;
 	    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-		    menuPtr->borderWidthPtr, &borderWidth);
+		    menuPtr->borderWidthObj, &borderWidth);
 	    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	    rect.left = borderWidth + activeBorderWidth + x;
@@ -2942,7 +2944,7 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	    relief = menuPtr->activeRelief;
 	}
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -2988,7 +2990,7 @@ TkpComputeStandardMenuGeometry(
     }
 
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-	    menuPtr->borderWidthPtr, &borderWidth);
+	    menuPtr->borderWidthObj, &borderWidth);
     x = y = borderWidth;
     indicatorSpace = labelWidth = accelWidth = 0;
     windowHeight = 0;

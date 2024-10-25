@@ -1488,6 +1488,74 @@ Tk_DrawHighlightBorder(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWinDrawDottedRect --
+ *
+ *      This function draws a dotted rectangle, used as focus ring of Ttk
+ *      widgets and for rendering the active element of a listbox.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      A dotted rectangle is drawn in the specified Drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinDrawDottedRect(
+    Display *disp,		/* Display containing the dotted rectangle. */
+    Drawable d,			/* Where to draw the rectangle (typically a
+				 * pixmap for double buffering). */
+    long pixel,			/* Color to use for drawing the rectangle.  If
+				 * pixel < 0 then the black color and the
+				 * foreground mix mode R2_NOT are used. */
+    int x, int y,		/* Coordinates of the top-left corner. */
+    int width, int height)	/* Width & height, _including the border_. */
+{
+    TkWinDCState state;
+    HDC dc;
+    LOGBRUSH lb;
+    HPEN pen;
+    int widthMod2 = width % 2, heightMod2 = height % 2;
+    int x2 = x + width - 1, y2 = y + height - 1;
+
+    dc = TkWinGetDrawableDC(disp, d, &state);
+
+    lb.lbStyle = BS_SOLID;
+    lb.lbColor = pixel < 0 ? RGB(0, 0, 0) : (COLORREF)pixel;
+    lb.lbHatch = 0;
+
+    if (pixel < 0) {
+	SetROP2(dc, R2_NOT);
+	SetBkMode(dc, TRANSPARENT);
+    }
+
+    pen = ExtCreatePen(PS_COSMETIC | PS_ALTERNATE, 1, &lb, 0, NULL);
+    SelectObject(dc, pen);
+    SelectObject(dc, GetStockObject(NULL_BRUSH));
+
+    if (widthMod2 == 0 && heightMod2 == 0) {
+	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2,   y);	/* N */
+	MoveToEx(dc, x+2, y2, NULL);	LineTo(dc, x2+1, y2);	/* S */
+	MoveToEx(dc, x,  y+2, NULL);	LineTo(dc, x,  y2+1);	/* W */
+	MoveToEx(dc, x2, y+1, NULL);	LineTo(dc, x2, y2);	/* E */
+    } else {
+	int dx = widthMod2, dy = heightMod2;
+
+	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2+dx, y);	/* N */
+	MoveToEx(dc, x+1, y2, NULL);	LineTo(dc, x2+dx, y2);	/* S */
+	MoveToEx(dc, x,  y+1, NULL);	LineTo(dc, x,  y2+dy);	/* W */
+	MoveToEx(dc, x2, y+1, NULL);	LineTo(dc, x2, y2+dy);	/* E */
+    }
+
+    DeleteObject(pen);
+    TkWinReleaseDrawableDC(d, dc, &state);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpDrawFrameEx --
  *
  *	This function draws the rectangular frame area.

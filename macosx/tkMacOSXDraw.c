@@ -264,8 +264,7 @@ Tk_MacOSXGetCGContextForDrawable(
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	macDraw->context = CGBitmapContextCreate(NULL,
-		(unsigned)macDraw->size.width,
+	macDraw->context = CGBitmapContextCreate(NULL, (unsigned)macDraw->size.width,
 		(unsigned)macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
@@ -1255,13 +1254,6 @@ TkMacOSXSetupDrawingContext(
 	}
 
 	/*
-	 * Mark the view as needing to be redisplayed, since we are drawing
-	 * to its backing layer.
-	 */
-
-	[view setTkNeedsDisplay:YES];
-
-	/*
 	 * Workaround for an Apple bug.
 	 *
 	 * Without the block below, ttk frames, labelframes and labels do not
@@ -1288,6 +1280,7 @@ TkMacOSXSetupDrawingContext(
 	 */
 
 	if (@available(macOS 12.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
 	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
 	    NSAppearance *effective = view.effectiveAppearance;
 	    if( current != effective) {
@@ -1295,6 +1288,7 @@ TkMacOSXSetupDrawingContext(
 		// Deprecations be damned!
 		NSAppearance.currentAppearance = effective;
 	    }
+#endif
 	} else {
 	    /*
 	     *It is not clear if this is a problem before macos 12.0, but
@@ -1447,8 +1441,6 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
-    // The goal is to allow immediate drawing; canDraw == 0 should happen far less often.
-    if (0) fprintf(stderr, "tkmacosxsdc canDraw %d\n", canDraw);
     return canDraw;
 }
 
@@ -1485,6 +1477,13 @@ TkMacOSXRestoreDrawingContext(
 	CFRelease(dcPtr->clipRgn);
 	dcPtr->clipRgn = NULL;
     }
+
+    /*
+     * Mark the view as needing to be redisplayed, since we have drawn on its
+     * backing layer.
+     */
+    
+    [dcPtr->view setNeedsDisplay:YES];
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
@@ -1551,9 +1550,9 @@ TkMacOSXGetClipRgn(
  * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping.bThis is called by the
- *      Text widget to display each DLine, and by the Canvas widget when it
- *      is updating a sub rectangle in the canvas.
+ *	or height are negative, reset to no clipping. This is called by the
+ *	Text widget to display each DLine, and by the Canvas widget when it
+ *	is updating a sub rectangle in the canvas.
  *
  * Results:
  *	None.
@@ -1676,7 +1675,7 @@ TkMacOSXMakeStippleMap(
  *
  *	On the Macintosh, this puts a 1 pixel border in the bgGC color between
  *	the widget and the focus ring, except in the case where highlightWidth
- *	is 1, in which case the border is left out.
+ *	is 0 or 1, in which case the border is left out.
  *
  *	For proper Mac L&F, use highlightWidth of 3.
  *
@@ -1691,19 +1690,19 @@ TkMacOSXMakeStippleMap(
  */
 
 void
-Tk_DrawHighlightBorder (
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
     int highlightWidth,
     Drawable drawable)
 {
-    if (highlightWidth == 1) {
-	TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    if (highlightWidth <= 1) {
+	TkDrawInsetFocusHighlight(tkwin, fgGC, 1, drawable, 0);
     } else {
-	TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
+	TkDrawInsetFocusHighlight(tkwin, bgGC, highlightWidth, drawable, 0);
 	if (fgGC != bgGC) {
-	    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1,
+	    TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth - 1,
 		    drawable, 0);
 	}
     }

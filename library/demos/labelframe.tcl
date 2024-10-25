@@ -40,7 +40,7 @@ grid $w.f -row 0 -column 0 -pady 2m -padx 2m
 
 foreach value {1 2 3 4} {
     radiobutton $w.f.b$value -text "This is value $value" \
-            -variable lfdummy -value $value
+	    -variable lfdummy -value $value
     pack $w.f.b$value -side top -fill x -pady 1.5p
 }
 
@@ -49,18 +49,18 @@ foreach value {1 2 3 4} {
 
 proc lfEnableButtons {w} {
     foreach child [winfo children $w] {
-        if {$child == "$w.cb"} continue
-        if {$::lfdummy2} {
-            $child configure -state normal
-        } else {
-            $child configure -state disabled
-        }
+	if {$child == "$w.cb"} continue
+	if {$::lfdummy2} {
+	    $child configure -state normal
+	} else {
+	    $child configure -state disabled
+	}
     }
 }
 
 labelframe $w.f2 -pady 1.5p -padx 1.5p
 checkbutton $w.f2.cb -text "Use this option." -variable lfdummy2 \
-        -command "lfEnableButtons $w.f2" -padx 0
+	-command "lfEnableButtons $w.f2" -padx 0
 $w.f2 configure -labelwidget $w.f2.cb
 grid $w.f2 -row 0 -column 1 -pady 2m -padx 2m
 

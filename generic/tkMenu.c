@@ -249,8 +249,8 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	offsetof(TkMenu, activeFgPtr), TCL_INDEX_NONE, 0,
 	DEF_MENU_ACTIVE_FG_MONO, 0},
     {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
-	DEF_MENU_ACTIVE_RELIEF, offsetof(TkMenu, activeReliefPtr),
-	TCL_INDEX_NONE, 0, NULL, 0},
+	DEF_MENU_ACTIVE_RELIEF, TCL_INDEX_NONE,
+	offsetof(TkMenu, activeRelief), 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, offsetof(TkMenu, borderPtr), TCL_INDEX_NONE, 0,
 	DEF_MENU_BG_MONO, 0},
@@ -260,7 +260,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_MENU_BORDER_WIDTH,
-	offsetof(TkMenu, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	offsetof(TkMenu, borderWidthObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MENU_CURSOR,
 	offsetof(TkMenu, cursorPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -1008,7 +1008,7 @@ MenuWidgetObjCmd(
  *
  * Side effects:
  *	Commands may get excecuted; variables may get set; sub-menus may get
- *	posted.
+ *	posted, the passed menu may be destroyed.
  *
  *----------------------------------------------------------------------
  */
@@ -1017,8 +1017,12 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
-    Tcl_Size index)			/* The zero based index of the item we are
-    				 * invoking. */
+				/* Must be protected by Tcl_Preserve
+				 * against freeing by the caller.
+				 * Tk Bug [2d3a81c0].
+				 */
+    Tcl_Size index)		/* The zero based index of the item we are
+				 * invoking. */
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
@@ -3039,7 +3043,7 @@ GetIndexFromCoords(
     TkRecomputeMenu(menuPtr);
     p = string + 1;
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-	    menuPtr->borderWidthPtr, &borderwidth);
+	    menuPtr->borderWidthObj, &borderwidth);
     rest = strchr(p, ',');
     if (rest) {
 	Tcl_DString ds;

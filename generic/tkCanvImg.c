@@ -24,12 +24,11 @@ typedef struct ImageItem  {
     double x, y;		/* Coordinates of positioning point for
 				 * image. */
     Tk_Anchor anchor;		/* Where to anchor image relative to (x,y). */
-    char *imageString;		/* String describing -image option
-				 * (malloc-ed). NULL means no image right
-				 * now. */
-    char *activeImageString;	/* String describing -activeimage option.
+    Tcl_Obj *imageObj;		/* -image option.
 				 * NULL means no image right now. */
-    char *disabledImageString;	/* String describing -disabledimage option.
+    Tcl_Obj *activeImageObj;	/* -activeimage option.
+				 * NULL means no image right now. */
+    Tcl_Obj *disabledImageObj;	/* -disabledimage option.
 				 * NULL means no image right now. */
     Tk_Image image;		/* Image to display in window, or NULL if no
 				 * image at present. */
@@ -52,13 +51,13 @@ static const Tk_CustomOption tagsOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-activeimage", NULL, NULL,
-	NULL, offsetof(ImageItem, activeImageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, activeImageObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
 	"center", offsetof(ImageItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_STRING, "-disabledimage", NULL, NULL,
-	NULL, offsetof(ImageItem, disabledImageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, disabledImageObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-image", NULL, NULL,
-	NULL, offsetof(ImageItem, imageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, imageObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
@@ -173,9 +172,9 @@ CreateImage(
 
     imgPtr->canvas = canvas;
     imgPtr->anchor = TK_ANCHOR_CENTER;
-    imgPtr->imageString = NULL;
-    imgPtr->activeImageString = NULL;
-    imgPtr->disabledImageString = NULL;
+    imgPtr->imageObj = NULL;
+    imgPtr->activeImageObj = NULL;
+    imgPtr->disabledImageObj = NULL;
     imgPtr->image = NULL;
     imgPtr->activeImage = NULL;
     imgPtr->disabledImage = NULL;
@@ -256,7 +255,7 @@ ImageCoords(
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
 		    &imgPtr->x) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
-  		    &imgPtr->y) != TCL_OK)) {
+		    &imgPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	ComputeImageBbox(canvas, imgPtr);
@@ -313,13 +312,13 @@ ConfigureImage(
      * changed.
      */
 
-    if (imgPtr->activeImageString != NULL) {
+    if (imgPtr->activeImageObj != NULL) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
     }
-    if (imgPtr->imageString != NULL) {
-	image = Tk_GetImage(interp, tkwin, imgPtr->imageString,
+    if (imgPtr->imageObj != NULL) {
+	image = Tk_GetImage(interp, tkwin, Tcl_GetString(imgPtr->imageObj),
 		ImageChangedProc, imgPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
@@ -331,8 +330,8 @@ ConfigureImage(
 	Tk_FreeImage(imgPtr->image);
     }
     imgPtr->image = image;
-    if (imgPtr->activeImageString != NULL) {
-	image = Tk_GetImage(interp, tkwin, imgPtr->activeImageString,
+    if (imgPtr->activeImageObj != NULL) {
+	image = Tk_GetImage(interp, tkwin, Tcl_GetString(imgPtr->activeImageObj),
 		ImageChangedProc, imgPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
@@ -344,8 +343,8 @@ ConfigureImage(
 	Tk_FreeImage(imgPtr->activeImage);
     }
     imgPtr->activeImage = image;
-    if (imgPtr->disabledImageString != NULL) {
-	image = Tk_GetImage(interp, tkwin, imgPtr->disabledImageString,
+    if (imgPtr->disabledImageObj != NULL) {
+	image = Tk_GetImage(interp, tkwin, Tcl_GetString(imgPtr->disabledImageObj),
 		ImageChangedProc, imgPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
@@ -386,14 +385,14 @@ DeleteImage(
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
 
-    if (imgPtr->imageString != NULL) {
-	ckfree(imgPtr->imageString);
+    if (imgPtr->imageObj != NULL) {
+	Tcl_DecrRefCount(imgPtr->imageObj);
     }
-    if (imgPtr->activeImageString != NULL) {
-	ckfree(imgPtr->activeImageString);
+    if (imgPtr->activeImageObj != NULL) {
+	Tcl_DecrRefCount(imgPtr->activeImageObj);
     }
-    if (imgPtr->disabledImageString != NULL) {
-	ckfree(imgPtr->disabledImageString);
+    if (imgPtr->disabledImageObj != NULL) {
+	Tcl_DecrRefCount(imgPtr->disabledImageObj);
     }
     if (imgPtr->image != NULL) {
 	Tk_FreeImage(imgPtr->image);
@@ -526,7 +525,7 @@ static void
 DisplayImage(
     Tk_Canvas canvas,		/* Canvas that contains item. */
     Tk_Item *itemPtr,		/* Item to be displayed. */
-    Display *display,		/* Display on which to draw item. */
+    TCL_UNUSED(Display *),		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
     int x, int y, int width, int height)
 				/* Describes region of canvas that must be
@@ -536,7 +535,6 @@ DisplayImage(
     short drawableX, drawableY;
     Tk_Image image;
     Tk_State state = itemPtr->state;
-    (void)display;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;

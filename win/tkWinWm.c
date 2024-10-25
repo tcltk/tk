@@ -2463,6 +2463,14 @@ TkpWmGetState(
 
 static void CheckForPointer(TkWindow *winPtr)
 {
+    if (winPtr == NULL || winPtr->mainPtr == NULL) {
+	/*
+	 * Bug [d233f01e2a] - clipboard clean up after main window destroyed
+	 * Nothing to do.
+	 */
+	return;
+    }
+
     POINT mouse;
     int x, y;
     unsigned int state = TkWinGetModifierState();
@@ -3062,7 +3070,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
+		    (void)Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3072,7 +3080,7 @@ WmAttributesCmd(
 			}
 		    } else {
 			XColor *cPtr =
-			    Tk_GetColor(interp, tkwin, Tk_GetUid(crefstr));
+			    Tk_AllocColorFromObj(interp, tkwin, objv[i+1]);
 			if (cPtr == NULL) {
 			    return TCL_ERROR;
 			}

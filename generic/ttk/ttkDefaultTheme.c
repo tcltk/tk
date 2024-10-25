@@ -1040,7 +1040,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS, offsetof(ThumbElement,sizeObj),
-        STRINGIFY(SCROLLBAR_WIDTH) },
+	STRINGIFY(SCROLLBAR_WIDTH) },
     { "-background", TK_OPTION_BORDER, offsetof(ThumbElement,borderObj),
 	DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR, offsetof(ThumbElement,borderColorObj),
@@ -1237,6 +1237,7 @@ static void TreeitemIndicatorSize(
     Ttk_Padding margins;
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
@@ -1259,7 +1260,7 @@ static void TreeitemIndicatorDraw(
 	return;
     }
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     XDrawRectangle(Tk_Display(tkwin), d, gc,

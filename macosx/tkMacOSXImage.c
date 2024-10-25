@@ -674,8 +674,6 @@ CreateCGImageFromDrawableRect(
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
 	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
-	result = CGImageCreateWithImageInRect(cg_image, rect);
-	CGImageRelease(cg_image);
 	if (force_1x_scale && (scaleFactor != 1.0)) {
 	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
 	    // create context, keeping original image properties
@@ -688,15 +686,21 @@ CreateCGImageFromDrawableRect(
 		    CGImageGetAlphaInfo(cg_image));
 	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
-		// draw image to context (resizing it)
+		// Extract the subimage in the specified rectangle.
+		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
+		// Draw the subimage in our context (resizing it to fit).
 		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
-			cg_image);
-		// extract resulting image from context
+			subimage);
+		// We will return the image we just drew.
 		result = CGBitmapContextCreateImage(cg_context);
 		CGContextRelease(cg_context);
+		CGImageRelease(subimage);
 	    }
-	    CGImageRelease(cg_image);
+	} else {
+	    // No resizing is needed.  Just return the subimage
+	    result = CGImageCreateWithImageInRect(cg_image, rect);
 	}
+	CGImageRelease(cg_image);
     }
     return result;
 }
@@ -815,12 +819,13 @@ XGetImage(
     TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
-    NSBitmapImageRep* bitmapRep = nil;
-    NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
+    NSBitmapImageRep* bitmapRep = nil;
+    NSBitmapFormat bitmap_fmt = 0;
     char *bitmap = NULL;
     int depth = 32, offset = 0, bitmap_pad = 0;
-    unsigned int bytes_per_row, size, row, n, m;
+    NSInteger bytes_per_row, samples_per_pixel, size;
+    unsigned int row, n, m;
 
     if (format == ZPixmap) {
 	CGImageRef cgImage;
@@ -841,10 +846,27 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
+	samples_per_pixel = [bitmapRep samplesPerPixel];
+#if 0
+	fprintf(stderr, "XGetImage:\n"
+		"  bitmsp_fmt = %ld\n"
+		"  samples_per_pixel = %ld\n"
+		"  width = %u\n"
+		"  height = %u\n"
+		"  bytes_per_row = %ld\n"
+		"  size = %ld\n",
+		bitmap_fmt, samples_per_pixel, width, height, bytes_per_row, size);
+#endif
+	/*
+	 * Image data with all pixels having alpha value 255 may be reported
+	 * as 3 samples per pixel, even though each row has 4*width pixels and
+	 * the pixels are stored in the default ARGB32 format.
+	 */
+
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
-	    || [bitmapRep samplesPerPixel] != 4
+	    || samples_per_pixel < 3
+	    || samples_per_pixel > 4
 	    || [bitmapRep isPlanar] != 0
-	    || bytes_per_row < 4 * width
 	    || size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    [bitmapRep release];
@@ -874,6 +896,7 @@ XGetImage(
 		}
 	    }
 	}
+
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
 		(char*) bitmap, width, height,
 		bitmap_pad, bytes_per_row);
@@ -1118,8 +1141,8 @@ struct TkMacOSXNSImageModel {
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     char *imageName ;                 /* Malloc'ed image name. */
-    char *source;       	      /* Malloc'ed string describing the image. */
-    char *as;                         /* Malloc'ed interpretation of source */
+    Tcl_Obj *sourceObj;       	      /* Describing the image. */
+    Tcl_Obj *asObj;                   /* Interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
     bool pressed;                     /* Image is for use in a pressed button.*/
     bool templ;                       /* Image is for use as a template.*/
@@ -1181,24 +1204,24 @@ static Tk_ImageType TkMacOSXNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, offsetof(TkMacOSXNSImageModel, source), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, sourceObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, offsetof(TkMacOSXNSImageModel, as), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, asObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
-     -1, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, offsetof(TkMacOSXNSImageModel, height), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, height), 0, NULL, 0},
     {TK_OPTION_INT, "-radius", NULL, NULL, DEF_RADIUS,
-     -1, offsetof(TkMacOSXNSImageModel, radius), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, radius), 0, NULL, 0},
     {TK_OPTION_INT, "-ring", NULL, NULL, DEF_RING,
-     -1, offsetof(TkMacOSXNSImageModel, ring), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, ring), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
-     -1, offsetof(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
-     -1, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, offsetof(TkMacOSXNSImageModel, templ), TK_OPTION_VAR(bool), NULL, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, templ), TK_OPTION_VAR(bool), NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, 0, NULL, 0}
 };
 
 /*
@@ -1314,7 +1337,7 @@ TkMacOSXNSImageConfigureModel(
 	modelPtr->height = oldHeight;
     }
 
-    if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
+    if (modelPtr->sourceObj == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
@@ -1331,7 +1354,7 @@ TkMacOSXNSImageConfigureModel(
 	goto errorExit;
     }
 
-    source = [[NSString alloc] initWithUTF8String: modelPtr->source];
+    source = [[NSString alloc] initWithUTF8String: Tcl_GetString(modelPtr->sourceObj)];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
 	newImage = [[NSImage imageNamed:source] copy];
@@ -1568,8 +1591,8 @@ TkMacOSXNSImageCreate(
     modelPtr->instancePtr = NULL;
     modelPtr->image = NULL;
     modelPtr->darkModeImage = NULL;
-    modelPtr->source = NULL;
-    modelPtr->as = NULL;
+    modelPtr->sourceObj = NULL;
+    modelPtr->asObj = NULL;
 
     /*
      * Process configuration options given in the image create command.
@@ -1754,8 +1777,8 @@ TkMacOSXNSImageDelete(
 
     Tcl_DeleteCommand(modelPtr->interp, modelPtr->imageName);
     ckfree(modelPtr->imageName);
-    ckfree(modelPtr->source);
-    ckfree(modelPtr->as);
+    Tcl_DecrRefCount(modelPtr->sourceObj);
+    Tcl_DecrRefCount(modelPtr->asObj);
     [modelPtr->image release];
     [modelPtr->darkModeImage release];
     ckfree(modelPtr);

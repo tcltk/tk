@@ -123,7 +123,17 @@ namespace eval ttk::theme::classic {
 	#
 	# Toolbar buttons:
 	#
-	ttk::style configure Toolbutton -padding 1.5p -relief flat -shiftrelief 2
+	ttk::style layout Toolbutton {
+	    Toolbutton.focus -children {
+		Toolbutton.border -children {
+		    Toolbutton.padding -children {
+			Toolbutton.label
+		    }
+		}
+	    }
+	}
+	ttk::style configure Toolbutton -padding 1.5p -relief flat \
+	    -shiftrelief 2 -focussolid 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \

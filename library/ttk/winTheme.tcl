@@ -17,7 +17,7 @@ namespace eval ttk::theme::winnative {
 	    -font TkDefaultFont
 
 	ttk::style map "." -foreground {disabled SystemGrayText}
-        ttk::style map "." -embossed {disabled 1}
+	ttk::style map "." -embossed {disabled 1}
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
@@ -81,8 +81,39 @@ namespace eval ttk::theme::winnative {
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
-        ttk::style configure TProgressbar \
+	ttk::style configure TProgressbar \
 	    -background SystemHighlight -borderwidth 0 \
 	    -barsize 22.5p -thickness 11.25p
+    }
+}
+
+# ttk::theme::winnative::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook style $style and the
+# style $style.Tab.  Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::winnative::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style -tabmargins     {2 2 2 0}
+	    ttk::style map $style.Tab -expand {selected {2 2 2 0}}
+	}
+	s {
+	    ttk::style configure $style -tabmargins     {2 0 2 2}
+	    ttk::style map $style.Tab -expand {selected {2 0 2 2}}
+	}
+	w {
+	    ttk::style configure $style -tabmargins     {2 2 0 2}
+	    ttk::style map $style.Tab -expand {selected {2 2 0 2}}
+	}
+	e {
+	    ttk::style configure $style -tabmargins     {0 2 2 2}
+	    ttk::style map $style.Tab -expand {selected {0 2 2 2}}
+	}
+	default {
+	    ttk::style configure $style -tabmargins     {2 2 2 0}
+	    ttk::style map $style.Tab -expand {selected {2 2 2 0}}
+	}
     }
 }

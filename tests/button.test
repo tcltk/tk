@@ -35,7 +35,7 @@ test button-1.2 {configuration option: "activebackground" for label} -setup {
     .l configure -activebackground non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.3 {configuration option: "activebackground" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -54,7 +54,7 @@ test button-1.4 {configuration option: "activebackground" for button} -setup {
     .b configure -activebackground non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.5 {configuration option: "activebackground" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -73,7 +73,7 @@ test button-1.6 {configuration option: "activebackground" for checkbutton} -setu
     .c configure -activebackground non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.7 {configuration option: "activebackground" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -92,7 +92,7 @@ test button-1.8 {configuration option: "activebackground" for radiobutton} -setu
     .r configure -activebackground non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.9 {configuration option: "activeforeground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -112,7 +112,7 @@ test button-1.10 {configuration option: "activeforeground" for label} -setup {
     .l configure -activeforeground non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.11 {configuration option: "activeforeground" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -131,7 +131,7 @@ test button-1.12 {configuration option: "activeforeground" for button} -setup {
     .b configure -activeforeground non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.13 {configuration option: "activeforeground" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -150,7 +150,7 @@ test button-1.14 {configuration option: "activeforeground" for checkbutton} -set
     .c configure -activeforeground non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.15 {configuration option: "activeforeground" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -169,7 +169,7 @@ test button-1.16 {configuration option: "activeforeground" for radiobutton} -set
     .r configure -activeforeground non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.17 {configuration option: "anchor" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -189,7 +189,7 @@ test button-1.18 {configuration option: "anchor" for label} -setup {
     .l configure -anchor bogus
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
 test button-1.19 {configuration option: "anchor" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -208,7 +208,7 @@ test button-1.20 {configuration option: "anchor" for button} -setup {
     .b configure -anchor bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
 test button-1.21 {configuration option: "anchor" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -227,7 +227,7 @@ test button-1.22 {configuration option: "anchor" for checkbutton} -setup {
     .c configure -anchor bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
 test button-1.23 {configuration option: "anchor" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -246,7 +246,7 @@ test button-1.24 {configuration option: "anchor" for radiobutton} -setup {
     .r configure -anchor bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center}
 
 test button-1.25 {configuration option: "background" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -266,7 +266,7 @@ test button-1.26 {configuration option: "background" for label} -setup {
     .l configure -background non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.27 {configuration option: "background" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -285,7 +285,7 @@ test button-1.28 {configuration option: "background" for button} -setup {
     .b configure -background non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.29 {configuration option: "background" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -304,7 +304,7 @@ test button-1.30 {configuration option: "background" for checkbutton} -setup {
     .c configure -background non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.31 {configuration option: "background" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -323,7 +323,7 @@ test button-1.32 {configuration option: "background" for radiobutton} -setup {
     .r configure -background non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.33 {configuration option: "bd" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -343,7 +343,7 @@ test button-1.34 {configuration option: "bd" for label} -setup {
     .l configure -bd badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.35 {configuration option: "bd" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -362,7 +362,7 @@ test button-1.36 {configuration option: "bd" for button} -setup {
     .b configure -bd badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.37 {configuration option: "bd" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -381,7 +381,7 @@ test button-1.38 {configuration option: "bd" for checkbutton} -setup {
     .c configure -bd badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.39 {configuration option: "bd" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -400,7 +400,7 @@ test button-1.40 {configuration option: "bd" for radiobutton} -setup {
     .r configure -bd badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test button-1.41 {configuration option: "bg" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -420,7 +420,7 @@ test button-1.42 {configuration option: "bg" for label} -setup {
     .l configure -bg non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.43 {configuration option: "bg" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -439,7 +439,7 @@ test button-1.44 {configuration option: "bg" for button} -setup {
     .b configure -bg non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.45 {configuration option: "bg" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -458,7 +458,7 @@ test button-1.46 {configuration option: "bg" for checkbutton} -setup {
     .c configure -bg non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.47 {configuration option: "bg" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -477,7 +477,7 @@ test button-1.48 {configuration option: "bg" for radiobutton} -setup {
     .r configure -bg non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.49 {configuration option: "bitmap" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -497,7 +497,7 @@ test button-1.50 {configuration option: "bitmap" for label} -setup {
     .l configure -bitmap badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bitmap "badValue" not defined}
+} -returnCodes error -result {bitmap "badValue" not defined}
 test button-1.51 {configuration option: "bitmap" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -516,7 +516,7 @@ test button-1.52 {configuration option: "bitmap" for button} -setup {
     .b configure -bitmap badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bitmap "badValue" not defined}
+} -returnCodes error -result {bitmap "badValue" not defined}
 test button-1.53 {configuration option: "bitmap" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -535,7 +535,7 @@ test button-1.54 {configuration option: "bitmap" for checkbutton} -setup {
     .c configure -bitmap badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bitmap "badValue" not defined}
+} -returnCodes error -result {bitmap "badValue" not defined}
 test button-1.55 {configuration option: "bitmap" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -554,7 +554,7 @@ test button-1.56 {configuration option: "bitmap" for radiobutton} -setup {
     .r configure -bitmap badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bitmap "badValue" not defined}
+} -returnCodes error -result {bitmap "badValue" not defined}
 
 test button-1.57 {configuration option: "borderwidth" for label} -setup {
     label .l -highlightthickness 2 -font {Helvetica -12 bold}
@@ -574,7 +574,7 @@ test button-1.58 {configuration option: "borderwidth" for label} -setup {
     .l configure -borderwidth badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.59 {configuration option: "borderwidth" for button} -setup {
     button .b -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -593,7 +593,7 @@ test button-1.60 {configuration option: "borderwidth" for button} -setup {
     .b configure -borderwidth badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.61 {configuration option: "borderwidth" for checkbutton} -setup {
     checkbutton .c -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -612,7 +612,7 @@ test button-1.62 {configuration option: "borderwidth" for checkbutton} -setup {
     .c configure -borderwidth badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.63 {configuration option: "borderwidth" for radiobutton} -setup {
     radiobutton .r -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -631,7 +631,7 @@ test button-1.64 {configuration option: "borderwidth" for radiobutton} -setup {
     .r configure -borderwidth badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test button-1.65 {configuration option: "command" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -692,7 +692,7 @@ test button-1.70 {configuration option: "compound" for label} -setup {
     .l configure -compound bogus
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
+} -returnCodes error -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
 test button-1.71 {configuration option: "compound" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -711,7 +711,7 @@ test button-1.72 {configuration option: "compound" for button} -setup {
     .b configure -compound bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
+} -returnCodes error -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
 test button-1.73 {configuration option: "compound" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -730,7 +730,7 @@ test button-1.74 {configuration option: "compound" for checkbutton} -setup {
     .c configure -compound bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
+} -returnCodes error -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
 test button-1.75 {configuration option: "compound" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -749,7 +749,7 @@ test button-1.76 {configuration option: "compound" for radiobutton} -setup {
     .r configure -compound bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
+} -returnCodes error -result {bad compound "bogus": must be bottom, center, left, none, right, or top}
 
 test button-1.77 {configuration option: "cursor" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -769,7 +769,7 @@ test button-1.78 {configuration option: "cursor" for label} -setup {
     .l configure -cursor badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 test button-1.79 {configuration option: "cursor" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -788,7 +788,7 @@ test button-1.80 {configuration option: "cursor" for button} -setup {
     .b configure -cursor badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 test button-1.81 {configuration option: "cursor" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -807,7 +807,7 @@ test button-1.82 {configuration option: "cursor" for checkbutton} -setup {
     .c configure -cursor badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 test button-1.83 {configuration option: "cursor" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -826,7 +826,7 @@ test button-1.84 {configuration option: "cursor" for radiobutton} -setup {
     .r configure -cursor badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 
 test button-1.85 {configuration option: "default" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -846,7 +846,7 @@ test button-1.86 {configuration option: "default" for button} -setup {
     .b configure -default huh?
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad default "huh?": must be active, disabled, or normal}
+} -returnCodes error -result {bad default "huh?": must be active, disabled, or normal}
 
 test button-1.87 {configuration option: "disabledforeground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -866,7 +866,7 @@ test button-1.88 {configuration option: "disabledforeground" for label} -setup {
     .l configure -disabledforeground non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.89 {configuration option: "disabledforeground" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -885,7 +885,7 @@ test button-1.90 {configuration option: "disabledforeground" for button} -setup 
     .b configure -disabledforeground non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.91 {configuration option: "disabledforeground" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -904,7 +904,7 @@ test button-1.92 {configuration option: "disabledforeground" for checkbutton} -s
     .c configure -disabledforeground non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.93 {configuration option: "disabledforeground" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -923,7 +923,7 @@ test button-1.94 {configuration option: "disabledforeground" for radiobutton} -s
     .r configure -disabledforeground non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.95 {configuration option: "fg" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -943,7 +943,7 @@ test button-1.96 {configuration option: "fg" for label} -setup {
     .l configure -fg non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.97 {configuration option: "fg" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -962,7 +962,7 @@ test button-1.98 {configuration option: "fg" for button} -setup {
     .b configure -fg non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.99 {configuration option: "fg" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -981,7 +981,7 @@ test button-1.100 {configuration option: "fg" for checkbutton} -setup {
     .c configure -fg non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.101 {configuration option: "fg" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1000,7 +1000,7 @@ test button-1.102 {configuration option: "fg" for radiobutton} -setup {
     .r configure -fg non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.103 {configuration option: "font" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2
@@ -1020,7 +1020,7 @@ test button-1.104 {configuration option: "activebackground" for label} -setup {
     .l configure -font {}
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.105 {configuration option: "font" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2
     pack .b
@@ -1039,7 +1039,7 @@ test button-1.106 {configuration option: "activebackground" for button} -setup {
     .b configure -font {}
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.107 {configuration option: "font" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2
     pack .c
@@ -1058,7 +1058,7 @@ test button-1.108 {configuration option: "activebackground" for checkbutton} -se
     .c configure -font {}
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.109 {configuration option: "font" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2
     pack .r
@@ -1077,7 +1077,7 @@ test button-1.110 {configuration option: "activebackground" for radiobutton} -se
     .r configure -font {}
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test button-1.111 {configuration option: "foreground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1097,7 +1097,7 @@ test button-1.112 {configuration option: "foreground" for label} -setup {
     .l configure -foreground non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.113 {configuration option: "foreground" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1116,7 +1116,7 @@ test button-1.114 {configuration option: "foreground" for button} -setup {
     .b configure -foreground non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.115 {configuration option: "foreground" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1135,7 +1135,7 @@ test button-1.116 {configuration option: "foreground" for checkbutton} -setup {
     .c configure -foreground non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.117 {configuration option: "foreground" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1154,7 +1154,7 @@ test button-1.118 {configuration option: "foreground" for radiobutton} -setup {
     .r configure -foreground non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.119 {configuration option: "height" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1174,7 +1174,7 @@ test button-1.120 {configuration option: "height" for label} -setup {
     .l configure -height 20.0
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected integer but got "20.0"}
+} -returnCodes error -result {expected integer but got "20.0"}
 test button-1.121 {configuration option: "height" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1193,7 +1193,7 @@ test button-1.122 {configuration option: "height" for button} -setup {
     .b configure -height 20.0
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "20.0"}
+} -returnCodes error -result {expected integer but got "20.0"}
 test button-1.123 {configuration option: "height" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1212,7 +1212,7 @@ test button-1.124 {configuration option: "height" for checkbutton} -setup {
     .c configure -height 20.0
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected integer but got "20.0"}
+} -returnCodes error -result {expected integer but got "20.0"}
 test button-1.125 {configuration option: "height" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1231,7 +1231,7 @@ test button-1.126 {configuration option: "height" for radiobutton} -setup {
     .r configure -height 20.0
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected integer but got "20.0"}
+} -returnCodes error -result {expected integer but got "20.0"}
 
 test button-1.127 {configuration option: "highlightbackground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1251,7 +1251,7 @@ test button-1.128 {configuration option: "highlightbackground" for label} -setup
     .l configure -highlightbackground non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.129 {configuration option: "highlightbackground" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1270,7 +1270,7 @@ test button-1.130 {configuration option: "highlightbackground" for button} -setu
     .b configure -highlightbackground non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.131 {configuration option: "highlightbackground" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1289,7 +1289,7 @@ test button-1.132 {configuration option: "highlightbackground" for checkbutton} 
     .c configure -highlightbackground non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.133 {configuration option: "highlightbackground" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1308,7 +1308,7 @@ test button-1.134 {configuration option: "highlightbackground" for radiobutton} 
     .r configure -highlightbackground non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.135 {configuration option: "highlightcolor" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1328,7 +1328,7 @@ test button-1.136 {configuration option: "highlightcolor" for label} -setup {
     .l configure -highlightcolor non-existent
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.137 {configuration option: "highlightcolor" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1347,7 +1347,7 @@ test button-1.138 {configuration option: "highlightcolor" for button} -setup {
     .b configure -highlightcolor non-existent
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.139 {configuration option: "highlightcolor" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1366,7 +1366,7 @@ test button-1.140 {configuration option: "highlightcolor" for checkbutton} -setu
     .c configure -highlightcolor non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.141 {configuration option: "highlightcolor" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1385,7 +1385,7 @@ test button-1.142 {configuration option: "highlightcolor" for radiobutton} -setu
     .r configure -highlightcolor non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.143 {configuration option: "highlightthickness" for label} -setup {
     label .l -borderwidth 2 -font {Helvetica -12 bold}
@@ -1405,7 +1405,7 @@ test button-1.144 {configuration option: "highlightthickness" for label} -setup 
     .l configure -highlightthickness badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.145 {configuration option: "highlightthickness" for button} -setup {
     button .b -borderwidth 2 -font {Helvetica -12 bold}
     pack .b
@@ -1424,7 +1424,7 @@ test button-1.146 {configuration option: "highlightthickness" for button} -setup
     .b configure -highlightthickness badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.147 {configuration option: "highlightthickness" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -font {Helvetica -12 bold}
     pack .c
@@ -1443,7 +1443,7 @@ test button-1.148 {configuration option: "highlightthickness" for checkbutton} -
     .c configure -highlightthickness badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test button-1.149 {configuration option: "highlightthickness" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -font {Helvetica -12 bold}
     pack .r
@@ -1462,7 +1462,7 @@ test button-1.150 {configuration option: "highlightthickness" for radiobutton} -
     .r configure -highlightthickness badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test button-1.151 {configuration option: "image" for label} -constraints {
     testImageType
@@ -1486,7 +1486,7 @@ test button-1.152 {configuration option: "image" for label} -setup {
     .l configure -image bogus
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.153 {configuration option: "image" for button} -constraints {
     testImageType
 } -setup {
@@ -1509,7 +1509,7 @@ test button-1.154 {configuration option: "image" for button} -setup {
     .b configure -image bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.155 {configuration option: "image" for checkbutton} -constraints {
     testImageType
 } -setup {
@@ -1532,7 +1532,7 @@ test button-1.156 {configuration option: "image" for checkbutton} -setup {
     .c configure -image bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.157 {configuration option: "image" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -1555,7 +1555,7 @@ test button-1.158 {configuration option: "image" for radiobutton} -setup {
     .r configure -image bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.159 {configuration option: "indicatoron" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1575,7 +1575,7 @@ test button-1.160 {configuration option: "indicatoron" for checkbutton} -setup {
     .c configure -indicatoron no_way
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected boolean value but got "no_way"}
+} -returnCodes error -result {expected boolean value but got "no_way"}
 test button-1.161 {configuration option: "indicatoron" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1594,7 +1594,7 @@ test button-1.162 {configuration option: "indicatoron" for radiobutton} -setup {
     .r configure -indicatoron no_way
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected boolean value but got "no_way"}
+} -returnCodes error -result {expected boolean value but got "no_way"}
 
 test button-1.163 {configuration option: "justify" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1614,7 +1614,7 @@ test button-1.164 {configuration option: "justify" for label} -setup {
     .l configure -justify bogus
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 test button-1.165 {configuration option: "justify" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1633,7 +1633,7 @@ test button-1.166 {configuration option: "justify" for button} -setup {
     .b configure -justify bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 test button-1.167 {configuration option: "justify" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1652,7 +1652,7 @@ test button-1.168 {configuration option: "justify" for checkbutton} -setup {
     .c configure -justify bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 test button-1.169 {configuration option: "justify" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1671,7 +1671,7 @@ test button-1.170 {configuration option: "justify" for radiobutton} -setup {
     .r configure -justify bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 
 test button-1.171 {configuration option: "offrelief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1691,7 +1691,7 @@ test button-1.172 {configuration option: "offrelief" for checkbutton} -setup {
     .c configure -offrelief 1.5
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 test button-1.173 {configuration option: "offrelief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1710,7 +1710,7 @@ test button-1.174 {configuration option: "offrelief" for radiobutton} -setup {
     .r configure -offrelief 1.5
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 
 test button-1.175 {configuration option: "offvalue" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1752,7 +1752,7 @@ test button-1.178 {configuration option: "overrelief" for button} -setup {
     .b configure -overrelief 1.5
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1771,7 +1771,7 @@ test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
     .c configure -overrelief 1.5
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1790,7 +1790,7 @@ test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
     .r configure -overrelief 1.5
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 
 test button-1.183 {configuration option: "padx" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1810,7 +1810,7 @@ test button-1.184 {configuration option: "padx" for label} -setup {
     .l configure -padx 420x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.185 {configuration option: "padx" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1829,7 +1829,7 @@ test button-1.186 {configuration option: "padx" for button} -setup {
     .b configure -padx 420x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.187 {configuration option: "padx" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1848,7 +1848,7 @@ test button-1.188 {configuration option: "padx" for checkbutton} -setup {
     .c configure -padx 420x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.189 {configuration option: "padx" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1867,7 +1867,7 @@ test button-1.190 {configuration option: "padx" for radiobutton} -setup {
     .r configure -padx 420x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 
 test button-1.191 {configuration option: "pady" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1887,7 +1887,7 @@ test button-1.192 {configuration option: "pady" for label} -setup {
     .l configure -pady 420x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.193 {configuration option: "pady" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1906,7 +1906,7 @@ test button-1.194 {configuration option: "pady" for button} -setup {
     .b configure -pady 420x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.195 {configuration option: "pady" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1925,7 +1925,7 @@ test button-1.196 {configuration option: "pady" for checkbutton} -setup {
     .c configure -pady 420x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test button-1.197 {configuration option: "pady" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1944,7 +1944,7 @@ test button-1.198 {configuration option: "pady" for radiobutton} -setup {
     .r configure -pady 420x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 
 test button-1.199 {configuration option: "repeatdelay" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1964,7 +1964,7 @@ test button-1.200 {configuration option: "repeatdelay" for button} -setup {
     .b configure -repeatdelay foo
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "foo"}
+} -returnCodes error -result {expected integer but got "foo"}
 
 test button-1.201 {configuration option: "repeatinterval" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1984,7 +1984,7 @@ test button-1.202 {configuration option: "repeatinterval" for button} -setup {
     .b configure -repeatinterval foo
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "foo"}
+} -returnCodes error -result {expected integer but got "foo"}
 
 test button-1.203 {configuration option: "relief" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2004,7 +2004,7 @@ test button-1.204 {configuration option: "relief" for label} -setup {
     .l configure -relief 1.5
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 test button-1.205 {configuration option: "relief" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2023,7 +2023,7 @@ test button-1.206 {configuration option: "relief" for button} -setup {
     .b configure -relief 1.5
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 test button-1.207 {configuration option: "relief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2042,7 +2042,7 @@ test button-1.208 {configuration option: "relief" for checkbutton} -setup {
     .c configure -relief 1.5
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 test button-1.209 {configuration option: "relief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2061,7 +2061,7 @@ test button-1.210 {configuration option: "relief" for radiobutton} -setup {
     .r configure -relief 1.5
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 
 test button-1.211 {configuration option: "selectcolor" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2081,7 +2081,7 @@ test button-1.212 {configuration option: "selectcolor" for checkbutton} -setup {
     .c configure -selectcolor non-existent
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 test button-1.213 {configuration option: "selectcolor" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2100,7 +2100,7 @@ test button-1.214 {configuration option: "selectcolor" for radiobutton} -setup {
     .r configure -selectcolor non-existent
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test button-1.215 {configuration option: "selectimage" for checkbutton} -constraints {
     testImageType
@@ -2124,7 +2124,7 @@ test button-1.216 {configuration option: "selectimage" for checkbutton} -setup {
     .c configure -selectimage bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.217 {configuration option: "selectimage" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -2147,7 +2147,7 @@ test button-1.218 {configuration option: "selectimage" for radiobutton} -setup {
     .r configure -selectimage bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.219 {configuration option: "state" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2167,7 +2167,7 @@ test button-1.220 {configuration option: "state" for label} -setup {
     .l configure -state bogus
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad state "bogus": must be active, disabled, or normal}
+} -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 test button-1.221 {configuration option: "state" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2186,7 +2186,7 @@ test button-1.222 {configuration option: "state" for button} -setup {
     .b configure -state bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad state "bogus": must be active, disabled, or normal}
+} -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 test button-1.223 {configuration option: "state" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2205,7 +2205,7 @@ test button-1.224 {configuration option: "state" for checkbutton} -setup {
     .c configure -state bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad state "bogus": must be active, disabled, or normal}
+} -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 test button-1.225 {configuration option: "state" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2224,7 +2224,7 @@ test button-1.226 {configuration option: "state" for radiobutton} -setup {
     .r configure -state bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad state "bogus": must be active, disabled, or normal}
+} -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 
 test button-1.227 {configuration option: "takefocus" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2371,7 +2371,7 @@ test button-1.240 {configuration option: "tristateimage" for checkbutton} -setup
     .c configure -tristateimage bogus
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.241 {configuration option: "tristateimage" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -2394,7 +2394,7 @@ test button-1.242 {configuration option: "tristateimage" for radiobutton} -setup
     .r configure -tristateimage bogus
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.243 {configuration option: "underline" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2414,7 +2414,7 @@ test button-1.244 {configuration option: "underline" for label} -setup {
     .l configure -underline 3p
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.245 {configuration option: "underline" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2433,7 +2433,7 @@ test button-1.246 {configuration option: "underline" for button} -setup {
     .b configure -underline 3p
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.247 {configuration option: "underline" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2452,7 +2452,7 @@ test button-1.248 {configuration option: "underline" for checkbutton} -setup {
     .c configure -underline 3p
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.249 {configuration option: "underline" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2471,7 +2471,7 @@ test button-1.250 {configuration option: "underline" for radiobutton} -setup {
     .r configure -underline 3p
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 test button-1.251 {configuration option: "tristatevalue" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2523,7 +2523,7 @@ test button-1.255 {configuration option: "width" for label} -setup {
     .l configure -width 3p
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 test button-1.256 {configuration option: "width" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2542,7 +2542,7 @@ test button-1.257 {configuration option: "width" for button} -setup {
     .b configure -width 3p
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 test button-1.258 {configuration option: "width" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2561,7 +2561,7 @@ test button-1.259 {configuration option: "width" for checkbutton} -setup {
     .c configure -width 3p
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 test button-1.260 {configuration option: "width" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2580,7 +2580,7 @@ test button-1.261 {configuration option: "width" for radiobutton} -setup {
     .r configure -width 3p
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test button-1.262 {configuration option: "wraplength" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2600,7 +2600,7 @@ test button-1.263 {configuration option: "wraplength" for label} -setup {
     .l configure -wraplength 6x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected screen distance but got "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 test button-1.264 {configuration option: "wraplength" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2619,7 +2619,7 @@ test button-1.265 {configuration option: "wraplength" for button} -setup {
     .b configure -wraplength 6x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected screen distance but got "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 test button-1.266 {configuration option: "wraplength" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2638,7 +2638,7 @@ test button-1.267 {configuration option: "wraplength" for checkbutton} -setup {
     .c configure -wraplength 6x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected screen distance but got "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 test button-1.268 {configuration option: "wraplength" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2657,7 +2657,7 @@ test button-1.269 {configuration option: "wraplength" for radiobutton} -setup {
     .r configure -wraplength 6x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected screen distance but got "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 
 test button-1.270 {configuration options} -body {
 # Additional check to make sure that -selectcolor may be empty in
@@ -2682,7 +2682,7 @@ test button-1.271 {configuration options: fallback to default} -setup {
 # ex-tests 3.*
 test button-2.1 {ButtonCreate - not enough arguments} -body {
     button
-} -returnCodes {error} -result {wrong # args: should be "button pathName ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be "button pathName ?-option value ...?"}
 
 test button-2.2 {ButtonCreate procedure - setting label class} -body {
     label .x
@@ -2721,7 +2721,7 @@ test button-2.7 {ButtonCreate - bad window name} -body {
     button foo
 } -cleanup {
     destroy foo
-} -returnCodes {error} -result {bad window path name "foo"}
+} -returnCodes error -result {bad window path name "foo"}
 ######### test ex 3.8
 test button-2.8 {ButtonCreate procedure - error in default option value} -body {
     option add *funny.background bogus
@@ -2729,7 +2729,7 @@ test button-2.8 {ButtonCreate procedure - error in default option value} -body {
 } -cleanup {
     option clear
     destroy .funny
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 test button-2.9 {ButtonCreate procedure - error in default option value} -body {
    option add *funny.background bogus
     catch {button .funny}
@@ -2746,7 +2746,7 @@ test button-2.10 {ButtonCreate procedure - option error} -body {
     button .x -gorp foo
 }  -cleanup {
     destroy .x
-} -returnCodes {error} -result {unknown option "-gorp"}
+} -returnCodes error -result {unknown option "-gorp"}
 test button-2.11 {ButtonCreate procedure - option error} -body {
     catch {button .x -gorp foo}
     winfo exists .x
@@ -2767,31 +2767,31 @@ test button-3.1 {ButtonWidgetCmd - too few arguments} -body {
     .b
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {wrong # args: should be ".b option ?arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".b option ?arg ...?"}
 test button-3.2 {ButtonWidgetCmd - bad option name} -body {
     button .b
     .b c
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {ambiguous option "c": must be cget, configure, flash, or invoke}
+} -returnCodes error -result {ambiguous option "c": must be cget, configure, flash, or invoke}
 test button-3.3 {ButtonWidgetCmd - bad option name} -body {
     button .b
     .b bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad option "bogus": must be cget, configure, flash, or invoke}
+} -returnCodes error -result {bad option "bogus": must be cget, configure, flash, or invoke}
 test button-3.4 {ButtonWidgetCmd procedure, "cget" option} -body {
     button .b
     .b cget a b
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {wrong # args: should be ".b cget option"}
+} -returnCodes error -result {wrong # args: should be ".b cget option"}
 test button-3.5 {ButtonWidgetCmd procedure, "cget" option} -body {
     button .b
     .b cget -gorp
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown option "-gorp"}
+} -returnCodes error -result {unknown option "-gorp"}
 
 #ex 4.7
 test button-3.6 {ButtonWidgetCmd procedure, "cget" option} -body {
@@ -2799,45 +2799,45 @@ test button-3.6 {ButtonWidgetCmd procedure, "cget" option} -body {
     .l cget -disabledforeground
 } -cleanup {
     destroy .l
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.7 {ButtonWidgetCmd procedure, "cget" option} -body {
     button .b
     .b cget -disabledforeground
 } -cleanup {
     destroy .b
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.8 {ButtonWidgetCmd procedure, "cget" option} -body {
     button .b
     .b cget -variable
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown option "-variable"}
+} -returnCodes error -result {unknown option "-variable"}
 
 test button-3.9 {ButtonWidgetCmd procedure, "cget" option} -body {
     checkbutton .c
     .c cget -variable
 } -cleanup {
     destroy .c
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.10 {ButtonWidgetCmd procedure, "cget" option} -body {
     checkbutton .c
     .c cget -value
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {unknown option "-value"}
+} -returnCodes error -result {unknown option "-value"}
 
 test button-3.11 {ButtonWidgetCmd procedure, "cget" option} -body {
     radiobutton .r
     .r cget -value
 } -cleanup {
     destroy .r
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.12 {ButtonWidgetCmd procedure, "cget" option} -body {
     radiobutton .r
     .r cget -onvalue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {unknown option "-onvalue"}
+} -returnCodes error -result {unknown option "-onvalue"}
 
 # ex 4.6
 test button-3.13 {ButtonWidgetCmd procedure, "configure" option} -body {
@@ -2857,14 +2857,14 @@ test button-3.15 {ButtonWidgetCmd procedure, "configure" option} -body {
     .b configure -gorp
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown option "-gorp"}
+} -returnCodes error -result {unknown option "-gorp"}
 test button-3.16 {ButtonWidgetCmd procedure, "configure" option} -setup {
     button .b
 } -body {
     .b co -bg #ffffff -fg
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {value for "-fg" missing}
+} -returnCodes error -result {value for "-fg" missing}
 test button-3.17 {ButtonWidgetCmd procedure, "configure" option} -setup {
     button .b
 } -body {
@@ -2879,19 +2879,19 @@ test button-3.18 {ButtonWidgetCmd procedure, "deselect" option} -body {
     .c deselect foo
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {wrong # args: should be ".c deselect"}
+} -returnCodes error -result {wrong # args: should be ".c deselect"}
 test button-3.19 {ButtonWidgetCmd procedure, "deselect" option} -body {
     label .l
     .l deselect
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad option "deselect": must be cget or configure}
+} -returnCodes error -result {bad option "deselect": must be cget or configure}
 test button-3.20 {ButtonWidgetCmd procedure, "deselect" option} -body {
     button .b
     .b deselect
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad option "deselect": must be cget, configure, flash, or invoke}
+} -returnCodes error -result {bad option "deselect": must be cget, configure, flash, or invoke}
 
 test button-3.21 {ButtonWidgetCmd procedure, "deselect" option} -body {
     checkbutton .c -variable checkvar -onvalue 1 -offvalue 0
@@ -2926,7 +2926,7 @@ test button-3.24 {ButtonWidgetCmd procedure, "deselect" option} -body {
 } -cleanup {
     destroy .c
     trace remove variable checkvar write bogusTrace
-} -returnCodes {error} -result {can't set "checkvar": trace aborted}
+} -returnCodes error -result {can't set "checkvar": trace aborted}
 test button-3.25 {ButtonWidgetCmd procedure, "deselect" option} -body {
     checkbutton .c -variable checkvar -onvalue 1 -offvalue 0
     set checkvar 1
@@ -2936,7 +2936,7 @@ test button-3.25 {ButtonWidgetCmd procedure, "deselect" option} -body {
 } -cleanup {
     trace remove variable checkvar write bogusTrace
     destroy .c
-} -match {glob} -result {{*trace aborted
+} -match glob -result {{*trace aborted
     while executing
 *
 ".c deselect"} 0}
@@ -2948,7 +2948,7 @@ test button-3.26 {ButtonWidgetCmd procedure, "deselect" option} -body {
 } -cleanup {
     destroy .r
     trace remove variable radiovar write bogusTrace
-} -match {glob} -returnCodes {error} -result {can't set "radiovar": trace aborted}
+} -match glob -returnCodes error -result {can't set "radiovar": trace aborted}
 test button-3.27 {ButtonWidgetCmd procedure, "deselect" option} -body {
     radiobutton .r -variable radiovar -value red
     set radiovar red
@@ -2968,44 +2968,44 @@ test button-3.28 {ButtonWidgetCmd procedure, "flash" option} -body {
     .b flash foo
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {wrong # args: should be ".b flash"}
+} -returnCodes error -result {wrong # args: should be ".b flash"}
 test button-3.29 {ButtonWidgetCmd procedure, "flash" option} -body {
     label .l
     .l flash
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad option "flash": must be cget or configure}
+} -returnCodes error -result {bad option "flash": must be cget or configure}
 test button-3.30 {ButtonWidgetCmd procedure, "flash" option} -body {
     button .b
     catch {.b flash}
 } -cleanup {
     destroy .b
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.31 {ButtonWidgetCmd procedure, "flash" option} -body {
     checkbutton .c
     catch {.c flash}
 } -cleanup {
     destroy .c
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 test button-3.32 {ButtonWidgetCmd procedure, "flash" option} -body {
     radiobutton .r
     catch {.r f}
 } -cleanup {
     destroy .r
-} -returnCodes {ok} -match {glob} -result {*}
+} -returnCodes {ok} -match glob -result {*}
 
 test button-3.33 {ButtonWidgetCmd procedure, "invoke" option} -body {
     label .l
     .l invoke
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad option "invoke": must be cget or configure}
+} -returnCodes error -result {bad option "invoke": must be cget or configure}
 test button-3.34 {ButtonWidgetCmd procedure, "invoke" option} -body {
     button .b
     .b invoke foo
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {wrong # args: should be ".b invoke"}
+} -returnCodes error -result {wrong # args: should be ".b invoke"}
 test button-3.35 {ButtonWidgetCmd procedure, "invoke" option} -body {
     button .b
     .b configure -command {set x invoked}
@@ -3026,7 +3026,7 @@ test button-3.36 {ButtonWidgetCmd procedure, "invoke" option} -body {
 } -result {not invoked}
 test button-3.37 {ButtonWidgetCmd procedure, "invoke" option} -body {
     checkbutton .c -variable checkvar -onvalue 1 -offvalue 0 \
-        -command {set x invoked}
+	-command {set x invoked}
     set checkvar bogus
     set x "not invoked"
     .c invoke
@@ -3049,19 +3049,19 @@ test button-3.39 {ButtonWidgetCmd procedure, "select" option} -body {
     .l select
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad option "select": must be cget or configure}
+} -returnCodes error -result {bad option "select": must be cget or configure}
 test button-3.40 {ButtonWidgetCmd procedure, "select" option} -body {
     button .b
     .b select
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad option "select": must be cget, configure, flash, or invoke}
+} -returnCodes error -result {bad option "select": must be cget, configure, flash, or invoke}
 test button-3.41 {ButtonWidgetCmd procedure, "select" option} -body {
     checkbutton .c
     .c select foo
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {wrong # args: should be ".c select"}
+} -returnCodes error -result {wrong # args: should be ".c select"}
 test button-3.42 {ButtonWidgetCmd procedure, "select" option} -body {
     checkbutton .c -variable checkvar -onvalue lovely -offvalue 0
     set checkvar bogus
@@ -3086,7 +3086,7 @@ test button-3.44 {ButtonWidgetCmd procedure, "select" option} -body {
 } -cleanup {
     destroy .r
     trace remove variable radiovar write bogusTrace
-} -returnCodes {error} -result {can't set "radiovar": trace aborted}
+} -returnCodes error -result {can't set "radiovar": trace aborted}
 test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
     radiobutton .r -variable radiovar -value red
     set radiovar yellow
@@ -3096,7 +3096,7 @@ test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
 } -cleanup {
     destroy .r
     trace remove variable radiovar write bogusTrace
-} -match {glob} -result {{*trace aborted
+} -match glob -result {{*trace aborted
     while executing
 *
 ".r select"} red}
@@ -3107,25 +3107,25 @@ test button-3.46 {ButtonWidgetCmd procedure, "toggle" option} -body {
     .l toggle
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad option "toggle": must be cget or configure}
+} -returnCodes error -result {bad option "toggle": must be cget or configure}
 test button-3.47 {ButtonWidgetCmd procedure, "toggle" option} -body {
     button .b
     .b toggle
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad option "toggle": must be cget, configure, flash, or invoke}
+} -returnCodes error -result {bad option "toggle": must be cget, configure, flash, or invoke}
 test button-3.48 {ButtonWidgetCmd procedure, "toggle" option} -body {
     radiobutton .r
     .r toggle
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad option "toggle": must be cget, configure, deselect, flash, invoke, or select}
+} -returnCodes error -result {bad option "toggle": must be cget, configure, deselect, flash, invoke, or select}
 test button-3.49 {ButtonWidgetCmd procedure, "toggle" option} -body {
     checkbutton .c
     .c toggle foo
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {wrong # args: should be ".c toggle"}
+} -returnCodes error -result {wrong # args: should be ".c toggle"}
 test button-3.50 {ButtonWidgetCmd procedure, "toggle" option} -body {
     set checkvar bogus
     checkbutton .c -variable checkvar -onvalue sunshine -offvalue rain
@@ -3147,7 +3147,7 @@ test button-3.51 {ButtonWidgetCmd procedure, "toggle" option} -body {
 } -cleanup {
     destroy .c
     trace remove variable checkvar write bogusTrace
-} -returnCodes {error} -result {can't set "checkvar": trace aborted}
+} -returnCodes error -result {can't set "checkvar": trace aborted}
 test button-3.52 {ButtonWidgetCmd procedure, "toggle" option} -body {
     checkbutton .c -variable checkvar -onvalue xyz -offvalue abc
     set checkvar xyz
@@ -3157,7 +3157,7 @@ test button-3.52 {ButtonWidgetCmd procedure, "toggle" option} -body {
 } -cleanup {
     trace remove variable checkvar write bogusTrace
     destroy .c
-} -match {glob} -result {{*trace aborted
+} -match glob -result {{*trace aborted
     while executing
 *
 ".c toggle"} abc}
@@ -3169,7 +3169,7 @@ test button-3.53 {ButtonWidgetCmd procedure, "toggle" option} -body {
 } -cleanup {
     trace remove variable checkvar write bogusTrace
     destroy .c
-} -returnCodes {error} -result {can't set "checkvar": trace aborted}
+} -returnCodes error -result {can't set "checkvar": trace aborted}
 test button-3.54 {ButtonWidgetCmd procedure, "toggle" option} -body {
     checkbutton .c -variable checkvar -onvalue xyz -offvalue abc
     set checkvar abc
@@ -3179,7 +3179,7 @@ test button-3.54 {ButtonWidgetCmd procedure, "toggle" option} -body {
 } -cleanup {
     trace remove variable checkvar write bogusTrace
     destroy .c
-} -match {glob} -result {{*trace aborted
+} -match glob -result {{*trace aborted
     while executing
 *
 ".c toggle"} xyz}
@@ -3192,7 +3192,7 @@ test button-3.55 {ButtonWidgetCmd procedure, "toggle" option} -setup {
     .c toggle
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {can't set "checkvar": variable is array}
+} -returnCodes error -result {can't set "checkvar": variable is array}
 test button-3.56 {ButtonWidgetCmd procedure, "toggle" option} -setup {
     unset -nocomplain checkvar
 } -body {
@@ -3203,7 +3203,7 @@ test button-3.56 {ButtonWidgetCmd procedure, "toggle" option} -setup {
     return $errorInfo
 } -cleanup {
     destroy .c
-} -match {glob} -result {can't set "checkvar": variable is array
+} -match glob -result {can't set "checkvar": variable is array
     while executing
 ".c toggle"}
 
@@ -3232,7 +3232,7 @@ test button-5.1 {ConfigureButton - textvariable trace} -body {
     .b configure -bd 7 -bg red -fg bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 test button-5.2 {ConfigureButton - textvariable trace} -body {
     button .b -bd 4 -bg green
     catch {.b configure -bd 7 -bg red -fg bogus}
@@ -3320,13 +3320,13 @@ test button-5.10 {ConfigureButton - error in setting variable} -setup {
 } -cleanup {
     destroy .r
     trace remove variable x write bogusTrace
-} -returnCodes {error} -result {can't set "x": trace aborted}
+} -returnCodes error -result {can't set "x": trace aborted}
 
 test button-5.11 {ConfigureButton - bad image name} -body {
     button .b -image bogus
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-5.12 {ConfigureButton - setting variable from current text value} -setup {
     unset -nocomplain x
@@ -3353,7 +3353,7 @@ test button-5.14 {ConfigureButton - variable handling} -setup {
 } -cleanup {
     trace remove variable x write bogusTrace
     destroy .r
-} -returnCodes {error} -result {can't set "x": trace aborted}
+} -returnCodes error -result {can't set "x": trace aborted}
 test button-5.15 {ConfigureButton - variable handling} -setup {
     unset -nocomplain x
 } -body {
@@ -3371,7 +3371,7 @@ test button-5.16 {ConfigureButton - -width option} -body {
     .b configure -width 1i
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "1i"}
+} -returnCodes error -result {expected integer but got "1i"}
 test button-5.17 {ConfigureButton - -width option} -body {
     button .b -text "Button 1"
     catch {.b configure -width 1i}
@@ -3387,7 +3387,7 @@ test button-5.18 {ConfigureButton - -height option} -body {
     .b configure -height 0.5c
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "0.5c"}
+} -returnCodes error -result {expected integer but got "0.5c"}
 test button-5.19 {ConfigureButton - -height option} -body {
     button .b -text "Button 1"
     catch {.b configure -height 0.5c}
@@ -3404,7 +3404,7 @@ test button-5.20 {ConfigureButton - -width option} -body {
     .b configure -width abc
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result  {expected screen distance but got "abc"}
+} -returnCodes error -result  {expected screen distance but got "abc"}
 test button-5.21 {ConfigureButton - -width option} -body {
     button .b -bitmap questhead
     catch {.b configure -width abc}
@@ -3425,7 +3425,7 @@ test button-5.22 {ConfigureButton - -height option} -constraints {
 } -cleanup {
     destroy .b
     image delete image1
-} -returnCodes {error} -result {expected screen distance but got "0.5x"}
+} -returnCodes error -result {expected screen distance but got "0.5x"}
 test button-5.23 {ConfigureButton - -height option} -constraints {
     testImageType
 } -setup {
@@ -3447,41 +3447,41 @@ test button-5.24 {ConfigureButton - computing geometry} -constraints {
     fonts
 } -body {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
-                -padx 30 -pady 20
+		-padx 30 -pady 20
     # 1. button with text
     .b configure -text "Sample text"
     pack .b
     set textwidth [font measure [.b cget -font] -displayof .b [.b cget -text]]
     set expectedwidth [expr {$textwidth + 2*[.b cget -borderwidth] \
-            + 2*[.b cget -highlightthickness] + 2*[.b cget -padx]}]
+	    + 2*[.b cget -highlightthickness] + 2*[.b cget -padx]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
     set result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set linespace [lindex [font metrics [.b cget -font] -displayof .b] 5]
     set expectedheight [expr {$linespace + 2*[.b cget -borderwidth] \
-            + 2*[.b cget -highlightthickness] + 2*[.b cget -pady]}]
+	    + 2*[.b cget -highlightthickness] + 2*[.b cget -pady]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
     lappend result [expr {$expectedheight == [winfo reqheight .b]}]
     # 2. button with a bitmap image
     # there is no access to characteristics the predefined bitmaps,
     # so define one as an image (copied from questhead.xbm)
     set myquesthead [image create bitmap -data {
-        #define myquesthead_width 20
-        #define myquesthead_height 22
-        static unsigned char myquesthead_bits[] = {
-           0xf8, 0x1f, 0x00, 0xac, 0x2a, 0x00, 0x56, 0x55, 0x00, 0xeb, 0xaf, 0x00,
-           0xf5, 0x5f, 0x01, 0xfb, 0xbf, 0x00, 0x75, 0x5d, 0x01, 0xfb, 0xbe, 0x02,
-           0x75, 0x5d, 0x05, 0xab, 0xbe, 0x0a, 0x55, 0x5f, 0x07, 0xab, 0xaf, 0x00,
-           0xd6, 0x57, 0x01, 0xac, 0xab, 0x00, 0xd8, 0x57, 0x00, 0xb0, 0xaa, 0x00,
-           0x50, 0x55, 0x00, 0xb0, 0x0b, 0x00, 0xd0, 0x17, 0x00, 0xb0, 0x0b, 0x00,
-           0x58, 0x15, 0x00, 0xa8, 0x2a, 0x00};
+	#define myquesthead_width 20
+	#define myquesthead_height 22
+	static unsigned char myquesthead_bits[] = {
+	   0xf8, 0x1f, 0x00, 0xac, 0x2a, 0x00, 0x56, 0x55, 0x00, 0xeb, 0xaf, 0x00,
+	   0xf5, 0x5f, 0x01, 0xfb, 0xbf, 0x00, 0x75, 0x5d, 0x01, 0xfb, 0xbe, 0x02,
+	   0x75, 0x5d, 0x05, 0xab, 0xbe, 0x0a, 0x55, 0x5f, 0x07, 0xab, 0xaf, 0x00,
+	   0xd6, 0x57, 0x01, 0xac, 0xab, 0x00, 0xd8, 0x57, 0x00, 0xb0, 0xaa, 0x00,
+	   0x50, 0x55, 0x00, 0xb0, 0x0b, 0x00, 0xd0, 0x17, 0x00, 0xb0, 0x0b, 0x00,
+	   0x58, 0x15, 0x00, 0xa8, 0x2a, 0x00};
     }]
     .b configure -image $myquesthead
     set expectedwidth [expr {[image width $myquesthead] + 2*[.b cget -borderwidth] \
-            + 2*[.b cget -highlightthickness]}]
+	    + 2*[.b cget -highlightthickness]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
     lappend result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set expectedheight [expr {[image height $myquesthead] + 2*[.b cget -borderwidth] \
-            + 2*[.b cget -highlightthickness]}]
+	    + 2*[.b cget -highlightthickness]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
     lappend result [expr {$expectedheight == [winfo reqheight .b]}]
 } -cleanup {
@@ -3554,7 +3554,7 @@ test button-8.2 {TkInvokeButton procedure} -setup {
 } -cleanup {
     destroy .c
     trace remove variable x write bogusTrace
-} -returnCodes {error} -result {can't set "x": trace aborted}
+} -returnCodes error -result {can't set "x": trace aborted}
 test button-8.3 {TkInvokeButton procedure} -setup {
     set x 0
 } -body {
@@ -3575,7 +3575,7 @@ test button-8.4 {TkInvokeButton procedure} -setup {
 } -cleanup {
     destroy .c
     trace remove variable x write bogusTrace
-} -returnCodes {error} -result {can't set "x": trace aborted}
+} -returnCodes error -result {can't set "x": trace aborted}
 test button-8.5 {TkInvokeButton procedure} -setup {
     set x 1
 } -body {
@@ -3609,7 +3609,7 @@ test button-8.7 {TkInvokeButton procedure} -body {
 } -cleanup {
     destroy .r
     trace remove variable x write bogusTrace
-} -returnCodes {error} -result {can't set "x": trace aborted}
+} -returnCodes error -result {can't set "x": trace aborted}
 test button-8.8 {TkInvokeButton procedure} -body {
     radiobutton .r -variable x -value red
     set x green
@@ -3619,7 +3619,7 @@ test button-8.8 {TkInvokeButton procedure} -body {
 } -cleanup {
     destroy .r
     trace remove variable x write bogusTrace
-} -match {glob} -result {{*trace aborted
+} -match glob -result {{*trace aborted
     while executing
 *
 ".r invoke"} red}
@@ -3953,9 +3953,9 @@ test button-13.8 {size behavior: checkbutton} -setup {
 
 test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destruction} -body {
     proc destroy_button {} {
-        if {[winfo exists .top.b]} {
-            destroy .top.b
-        }
+	if {[winfo exists .top.b]} {
+	    destroy .top.b
+	}
     }
     toplevel .top
     button .top.b -text Foo -command destroy_button

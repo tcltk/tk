@@ -9,13 +9,13 @@ namespace eval ttk::theme::clam {
     variable colors
     array set colors {
 	-disabledfg		"#999999"
-	-frame  		"#dcdad5"
-	-window  		"#ffffff"
+	-frame			"#dcdad5"
+	-window			"#ffffff"
 	-dark			"#cfcdc8"
-	-darker 		"#bab5ab"
+	-darker			"#bab5ab"
 	-darkest		"#9e9a91"
 	-lighter		"#eeebe7"
-	-lightest 		"#ffffff"
+	-lightest		"#ffffff"
 	-selectbg		"#4a6984"
 	-selectfg		"#ffffff"
 	-altindicator		"#5895bc"
@@ -115,7 +115,7 @@ namespace eval ttk::theme::clam {
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
-            -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
@@ -138,7 +138,8 @@ namespace eval ttk::theme::clam {
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectfg)] \
+	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 3p} \
@@ -154,5 +155,36 @@ namespace eval ttk::theme::clam {
 	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure Sash -sashthickness 4.5p -gripsize 15p
+    }
+}
+
+# ttk::theme::clam::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::clam::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 3p   4.5p 1.5p}}
+	}
+	s {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 1.5p 4.5p 3p  }}
+	}
+	w {
+	    ttk::style configure $style.Tab -padding     {1.5p 4.5p 1.5p 4.5p}
+	    ttk::style map $style.Tab -padding {selected {3p   4.5p 1.5p 4.5p}}
+	}
+	e {
+	    ttk::style configure $style.Tab -padding     {1.5p 4.5p 1.5p 4.5p}
+	    ttk::style map $style.Tab -padding {selected {1.5p 4.5p 3p   4.5p}}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding     {4.5p 1.5p 4.5p 1.5p}
+	    ttk::style map $style.Tab -padding {selected {4.5p 3p   4.5p 1.5p}}
+	}
     }
 }

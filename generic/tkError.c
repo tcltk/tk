@@ -153,6 +153,11 @@ Tk_DeleteErrorHandler(
     errorPtr->lastRequest = NextRequest(dispPtr->display) - 1;
 
     /*
+     * Ensure that no user callback for this handler is invoked any further.
+     */
+    errorPtr->errorProc = NULL;
+
+    /*
      * Every once-in-a-while, cleanup handlers that are no longer active. We
      * probably won't be able to free the handler that was just deleted (need
      * to wait for any outstanding requests to be processed by server), but

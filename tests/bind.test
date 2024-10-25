@@ -342,11 +342,11 @@ test bind-9.2 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {a b c d} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {b d a c} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -357,11 +357,11 @@ test bind-9.3 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {<Button-1> <Meta-Button-1> <Control-Button-1> <Double-Alt-Button-1>} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {<Control-Button-1> <Double-Alt-Button-1> <Button-1> <Meta-Button-1>} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -385,7 +385,7 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <Key-<> <Meta-a> <Â>" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -394,7 +394,7 @@ test bind-11.1 {Tk_GetAllBindings procedure} -body {
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Button-1> <Triple-Button-1> <Meta-Control-a> <Double-Alt-Enter> <Button-1>" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -403,7 +403,7 @@ test bind-11.2 {Tk_GetAllBindings procedure} -body {
 test bind-11.3 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Triple-Button-1> abcd a<Leave>b" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -418,7 +418,7 @@ test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
 test bind-12.2 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i "a b c <Meta-Button-1> <Alt-a> <Control-a>" {
-        bind .t.f $i x
+	bind .t.f $i x
     }
     destroy .t.f
 } -result {}
@@ -490,8 +490,8 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
     (command bound to event)}}
 test bind-13.4 {Tk_BindEvent procedure} -setup {
     proc foo {} {
-        set x 44
-        event generate .t.f <:>
+	set x 44
+	event generate .t.f <:>
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -936,7 +936,7 @@ test bind-13.33 {Tk_BindEvent procedure: many C bindings cause realloc} -setup {
 } -body {
     bindtags .t.f {a b c d e f g h i j k l m n o p}
     foreach p [bindtags .t.f] {
-        bind $p <Button-1> "lappend x $p"
+	bind $p <Button-1> "lappend x $p"
     }
     event generate .t.f <Button-1>
     return $x
@@ -1019,8 +1019,8 @@ test bind-13.43 {Tk_BindEvent procedure: break in script} -setup {
 } -result  {b1}
 test bind-13.45 {Tk_BindEvent procedure: error in script} -setup {
     proc bgerror msg {
-        global x
-        lappend x $msg
+	global x
+	lappend x $msg
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6070,8 +6070,8 @@ test bind-28.15 {keysym names, Emoji} -body {
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6094,12 +6094,12 @@ test bind-29.1 {Tcl_BackgroundError procedure} -setup {
 
 test bind-29.2 {Tcl_BackgroundError procedure} -setup {
     proc do {} {
-        event generate .t.f <Button>
-        event generate .t.f <ButtonRelease>
+	event generate .t.f <Button>
+	event generate .t.f <ButtonRelease>
     }
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6284,7 +6284,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     # that used an event ring overflowed, and the double click was not detected.
     # But new implementation should work properly.
     for {set i 0} {$i < 1000} {incr i} {
-        event generate .t.f <Expose>
+	event generate .t.f <Expose>
     }
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -6857,9 +6857,9 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # pointer should have moved the same amount as the window moved
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
-        if {$pos1 != [expr {$pos2 - 400}]} {
-            set res [list $pointerPos1 $pointerPos2]
-        }
+	if {$pos1 != ($pos2 - 400)} {
+	    set res [list $pointerPos1 $pointerPos2]
+	}
     }
     set res
 } -cleanup {
@@ -6883,31 +6883,31 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     # a hot spot (which would trigger the corresponding action as an
     # unwanted effect) but will warp the pointer to the hot spot limit only.
     if {[tk windowingsystem] eq "x11"} {
-        set halo 1
+	set halo 1
     } else {
-        set halo 0
+	set halo 0
     }
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
     controlPointerWarpTiming
     event generate {} <Motion> -x -1 -y -1 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     set res
 } -cleanup {
@@ -6927,7 +6927,7 @@ proc testKey {window event type mods} {
     update
     event generate $window $event
     if {$keyInfo == {}} {
-        vwait keyInfo
+	vwait keyInfo
     }
     set save $keyInfo
     set keyInfo {}
@@ -6937,7 +6937,7 @@ proc testKey {window event type mods} {
     }
     eval $injectcmd
     if {$keyInfo == {}} {
-        vwait keyInfo
+	vwait keyInfo
     }
     if {$save != $keyInfo} {
 	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
@@ -7051,7 +7051,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     grab release .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
-            -highlightbackground black -bg yellow -text "My label"
+	    -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
     # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
@@ -7073,7 +7073,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping
     expr {$x1==$x2 && $y1==$y2 && $x1==[winfo rootx .top.l]+10 \
-                               && $y1==[winfo rooty .top.l]+10}
+			       && $y1==[winfo rooty .top.l]+10}
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2

@@ -105,10 +105,10 @@ typedef struct {
     int exportSelection;	/* Tie internal selection to X selection? */
 
     VMODE validate;		/* Validation mode */
-    char *validateCmd;		/* Validation script template */
-    char *invalidCmd;		/* Invalid callback script template */
+    Tcl_Obj *validateCmdObj;	/* Validation script template */
+    Tcl_Obj *invalidCmdObj;		/* Invalid callback script template */
 
-    char *showChar;		/* Used to derive displayString */
+    Tcl_Obj *showCharObj;		/* Used to derive displayString */
 
     Tcl_Obj *fontObj;		/* Text font to use */
     Tcl_Obj *widthObj;		/* Desired width of window (in avgchars) */
@@ -160,13 +160,13 @@ typedef struct {
 
 static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
-        "ExportSelection", "1", TCL_INDEX_NONE, offsetof(Entry, entry.exportSelection),
+	"ExportSelection", "1", TCL_INDEX_NONE, offsetof(Entry, entry.exportSelection),
 	0,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, offsetof(Entry, entry.fontObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
-	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.invalidCmd),
+	NULL, offsetof(Entry, entry.invalidCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(Entry, entry.justify),
@@ -175,11 +175,11 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, offsetof(Entry, entry.placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
-        NULL, TCL_INDEX_NONE, offsetof(Entry, entry.showChar),
+	NULL, offsetof(Entry, entry.showCharObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-state", "state", "State",
 	"normal", offsetof(Entry, entry.stateObj), TCL_INDEX_NONE,
-        0,0,STATE_CHANGED},
+	0,0,STATE_CHANGED},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	NULL, offsetof(Entry, entry.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
@@ -187,13 +187,13 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	"none", TCL_INDEX_NONE, offsetof(Entry, entry.validate),
 	TK_OPTION_ENUM_VAR, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
-	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.validateCmd),
+	NULL, offsetof(Entry, entry.validateCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, offsetof(Entry, entry.widthObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.xscroll.scrollCmd),
+	NULL, offsetof(Entry, entry.xscroll.scrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
     /* EntryStyleData options:
@@ -205,8 +205,8 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, offsetof(Entry, entry.styleData.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", NULL,
-        offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_INDEX_NONE,
+	"PlaceholderForeground", NULL,
+	offsetof(Entry, entry.styleData.placeholderForegroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -323,14 +323,14 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
-        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    entryPtr->entry.displayString, entryPtr->entry.numChars,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
-        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+	text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text, length,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
@@ -604,7 +604,7 @@ EntryValidateChange(
     VMODE vmode = entryPtr->entry.validate;
     int code, change_ok;
 
-    if ((entryPtr->entry.validateCmd == NULL)
+    if ((entryPtr->entry.validateCmdObj == NULL)
 	|| (entryPtr->core.flags & VALIDATING)
 	|| !EntryNeedsValidation(vmode, reason))
     {
@@ -616,7 +616,7 @@ EntryValidateChange(
     /* Run -validatecommand and check return value:
      */
     code = RunValidationScript(interp, entryPtr,
-	    entryPtr->entry.validateCmd, "-validatecommand",
+	    Tcl_GetString(entryPtr->entry.validateCmdObj), "-validatecommand",
 	    newValue, index, count, reason);
     if (code != TCL_OK) {
 	goto done;
@@ -632,9 +632,9 @@ EntryValidateChange(
 
     /* Run the -invalidcommand if validation failed:
      */
-    if (!change_ok && entryPtr->entry.invalidCmd != NULL) {
+    if (!change_ok && entryPtr->entry.invalidCmdObj != NULL) {
 	code = RunValidationScript(interp, entryPtr,
-		entryPtr->entry.invalidCmd, "-invalidcommand",
+		Tcl_GetString(entryPtr->entry.invalidCmdObj), "-invalidcommand",
 		newValue, index, count, reason);
 	if (code != TCL_OK) {
 	    goto done;
@@ -686,9 +686,9 @@ static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
     VMODE vmode = entryPtr->entry.validate;
 
     if (EntryNeedsValidation(vmode, reason)) {
-        if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
+	if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
 	    Tcl_BackgroundException(interp, TCL_ERROR);
-        }
+	}
     }
 }
 
@@ -764,8 +764,8 @@ EntryStoreValue(Entry *entryPtr, const char *value)
     entryPtr->entry.numChars = numChars;
 
     entryPtr->entry.displayString
-	= entryPtr->entry.showChar
-	? EntryDisplayString(entryPtr->entry.showChar, numChars)
+	= entryPtr->entry.showCharObj
+	? EntryDisplayString(Tcl_GetString(entryPtr->entry.showCharObj), numChars)
 	: entryPtr->entry.string
 	;
 
@@ -1059,8 +1059,8 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	ckfree(entryPtr->entry.displayString);
 
     entryPtr->entry.displayString
-	= entryPtr->entry.showChar
-	? EntryDisplayString(entryPtr->entry.showChar, entryPtr->entry.numChars)
+	= entryPtr->entry.showCharObj
+	? EntryDisplayString(Tcl_GetString(entryPtr->entry.showCharObj), entryPtr->entry.numChars)
 	: entryPtr->entry.string
 	;
 
@@ -1287,7 +1287,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Draw cursor:
      */
     if (showCursor) {
-        Ttk_Box field = Ttk_ClientRegion(entryPtr->core.layout, "field");
+	Ttk_Box field = Ttk_ClientRegion(entryPtr->core.layout, "field");
 	int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
 	    cursorY = entryPtr->entry.layoutY,
 	    cursorHeight = entryPtr->entry.layoutHeight,
@@ -1333,7 +1333,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
     if (showSelection) {
 
-        /* Draw the selected and unselected portions separately.
+	/* Draw the selected and unselected portions separately.
 	 */
 	if (leftIndex < selFirst) {
 	    Tk_DrawTextLayout(
@@ -1361,8 +1361,8 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     } else {
 
-        /* Draw the entire visible text
-         */
+	/* Draw the entire visible text
+	 */
 	Tk_DrawTextLayout(
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
@@ -1454,7 +1454,7 @@ EntryIndex(
 	*indexPtr = Tk_PointToChar(entryPtr->entry.textLayout,
 		x - entryPtr->entry.layoutX, 0);
 
-        TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
+	TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
 	if (*indexPtr < entryPtr->entry.xscroll.first) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
@@ -1667,7 +1667,7 @@ static int EntrySelectionRangeCommand(
 	return TCL_ERROR;
     }
     if (EntryIndex(interp, entryPtr, objv[3], &start) != TCL_OK
-         || EntryIndex(interp, entryPtr, objv[4], &end) != TCL_OK) {
+	 || EntryIndex(interp, entryPtr, objv[4], &end) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (entryPtr->core.state & TTK_STATE_DISABLED) {
@@ -1805,13 +1805,13 @@ typedef struct {
 
 static const Tk_OptionSpec ComboboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-height", "height", "Height",
-        DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), TCL_INDEX_NONE,
+	DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_STRING, "-postcommand", "postCommand", "PostCommand",
-        "", offsetof(Combobox, combobox.postCommandObj), TCL_INDEX_NONE,
+	"", offsetof(Combobox, combobox.postCommandObj), TCL_INDEX_NONE,
 	0,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", offsetof(Combobox, combobox.valuesObj), TCL_INDEX_NONE,
+	"", offsetof(Combobox, combobox.valuesObj), TCL_INDEX_NONE,
 	0,0,0 },
     WIDGET_INHERIT_OPTIONS(EntryOptionSpecs)
 };
@@ -1891,10 +1891,10 @@ static int ComboboxCurrentCommand(
 
 	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
 	    if (idx < 0 || idx >= nValues) {
-	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
-	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
-	        return TCL_ERROR;
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"index \"%s\" out of range", Tcl_GetString(objv[2])));
+		Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
+		return TCL_ERROR;
 	    }
 	    currentIndex = idx;
 	} else {
@@ -1977,7 +1977,7 @@ typedef struct {
 
 static const Tk_OptionSpec SpinboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", offsetof(Spinbox, spinbox.valuesObj), TCL_INDEX_NONE,
+	"", offsetof(Spinbox, spinbox.valuesObj), TCL_INDEX_NONE,
 	0,0,0 },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From",

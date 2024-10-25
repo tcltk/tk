@@ -754,65 +754,6 @@ XConfigureWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetDrawingEnabled --
- *
- *	This function sets the TK_DO_NOT_DRAW flag for a given window and
- *	all of its children.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The clipping regions for the window and its children are cleared.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetDrawingEnabled(
-    TkWindow *winPtr,
-    int flag)
-{
-    TkWindow *childPtr;
-    MacDrawable *macWin = winPtr->privatePtr;
-
-    if (macWin) {
-	if (flag) {
-	    macWin->flags &= ~TK_DO_NOT_DRAW;
-	} else {
-	    macWin->flags |= TK_DO_NOT_DRAW;
-	}
-    }
-
-    /*
-     * Set the flag for all children & their descendants, excluding Toplevels.
-     * (??? Do we need to exclude Toplevels?)
-     */
-
-    childPtr = winPtr->childList;
-    while (childPtr) {
-	if (!Tk_IsTopLevel(childPtr)) {
-	    TkMacOSXSetDrawingEnabled(childPtr, flag);
-	}
-	childPtr = childPtr->nextPtr;
-    }
-
-    /*
-     * If the window is a container, set the flag for its embedded window.
-     */
-
-    if (Tk_IsContainer(winPtr)) {
-	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
-
-	if (childPtr) {
-	    TkMacOSXSetDrawingEnabled(childPtr, flag);
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXUpdateClipRgn --
  *
  *	This function updates the clipping regions for a given window and all of
@@ -995,8 +936,7 @@ TkMacOSXVisableClipRgn(
 
 #if 0
 //This code is not currently used.  But it shows how to iterate over the
-//rectangles in a region described by an HIShape.  Probably we want to
-//replace the current dirtyRect by such a region.
+//rectangles in a region described by an HIShape.
 
 /*
  *----------------------------------------------------------------------
@@ -1035,10 +975,6 @@ InvalViewRect(
 	break;
     case kHIShapeEnumerateRect:
 	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
-	// Cannot rely on addTkDirtyRect: to force redrawing.
-	//MC This is the only place where the rect is not the view bounds.
-	//And it kills liveResize.
-	//[view generateExposeEvents:dirtyRect];
 	break;
     }
     [view generateExposeEvents:[view bounds]];
@@ -1082,7 +1018,7 @@ TkMacOSXRedrawViewIdleTask(
     TKContentView *view = (TKContentView *) clientData;
     //    fprintf(stderr, "idle redraw for %p\n", view);
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
+    [view setNeedsDisplay:YES];
 }
 
 void
@@ -1103,7 +1039,7 @@ TkMacOSXInvalidateWindow(
      	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
+    [view setNeedsDisplay:YES];
 }
 
 /*

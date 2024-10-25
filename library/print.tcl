@@ -76,7 +76,7 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-        if {[info exists printer_name] && $printer_name ne ""} {
+	if {[info exists printer_name] && $printer_name ne ""} {
 	    set printargs(hDC) $printer_name
 	    set printargs(pw) $paper_width
 	    set printargs(pl) $paper_height
@@ -664,7 +664,7 @@ namespace eval ::tk::print {
 #				print the data (binary) on a given printer
 #				with the provided (supported) options:
 #				-colormode -copies -format -margins
-# 				-media -nup -orientation
+#				-media -nup -orientation
 #				-prettyprint -title -tzoom
 
 # Some output configuration that on other platforms is managed through
@@ -830,7 +830,7 @@ if {[tk windowingsystem] eq "x11"} {
 	    lappend printargs -P $printer
 	    # open temp file
 	    set fd [file tempfile fname tk_print]
-	    chan configure $fd -encoding binary -translation binary
+	    chan configure $fd -translation binary
 	    chan puts $fd $data
 	    chan close $fd
 	    # add -r to automatically delete temp files

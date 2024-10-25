@@ -25,21 +25,21 @@ proc then {cmd} {
 }
 proc afterbody {} {
     if {$::tk_dialog == {}} {
-        if {[incr ::iter_after] > 30} {
-            set ::dialogresult ">30 iterations waiting for tk_dialog"
-            return
-        }
-        after 150 {afterbody}
-        return
+	if {[incr ::iter_after] > 30} {
+	    set ::dialogresult ">30 iterations waiting for tk_dialog"
+	    return
+	}
+	after 150 {afterbody}
+	return
     }
     uplevel #0 {set dialogresult [eval $command]}
 }
 proc Click {button} {
     switch -exact -- $button {
-        ok { $::tk_dialog.ok invoke }
-        cancel { $::tk_dialog.cancel invoke }
-        apply { $::tk_dialog.apply invoke }
-        default { return -code error "invalid button name \"$button\"" }
+	ok { $::tk_dialog.ok invoke }
+	cancel { $::tk_dialog.cancel invoke }
+	apply { $::tk_dialog.apply invoke }
+	default { return -code error "invalid button name \"$button\"" }
     }
 }
 proc ApplyFont {font} {
@@ -96,37 +96,37 @@ testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
 
 test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -title "Hello"
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -title "Hello"
+	tk::fontchooser::Show
     }
     then {
-        set x [wm title $::tk_dialog]
-        Click cancel
+	set x [wm title $::tk_dialog]
+	Click cancel
     }
     set x
 } -result {Hello}
 
 test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure \
-            -title "Привет"
-        tk::fontchooser::Show
+	tk::fontchooser::Configure \
+	    -title "Привет"
+	tk::fontchooser::Show
     }
     then {
-        set x [wm title $::tk_dialog]
-        Click cancel
+	set x [wm title $::tk_dialog]
+	Click cancel
     }
     set x
 } -result "Привет"
 
 test fontchooser-3.0 {fontchooser -parent} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -parent .
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -parent .
+	tk::fontchooser::Show
     }
     then {
-        set x [winfo parent $::tk_dialog]
-        Click cancel
+	set x [winfo parent $::tk_dialog]
+	Click cancel
     }
     set x
 } -result {.}
@@ -137,55 +137,55 @@ test fontchooser-3.1 {fontchooser -parent (invalid)} -constraints scriptImpl -bo
 
 test fontchooser-4.0 {fontchooser -font} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font courier
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -command ApplyFont -font courier
+	tk::fontchooser::Show
     }
     then {
-        Click cancel
+	Click cancel
     }
     set ::testfont
 } -result {}
 
 test fontchooser-4.1 {fontchooser -font} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font courier
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -command ApplyFont -font courier
+	tk::fontchooser::Show
     }
     then {
-        Click ok
+	Click ok
     }
     expr {$::testfont ne {}}
 } -result 1
 
 test fontchooser-4.2 {fontchooser -font} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font TkDefaultFont
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -command ApplyFont -font TkDefaultFont
+	tk::fontchooser::Show
     }
     then {
-        Click ok
+	Click ok
     }
     expr {$::testfont ne {}}
 } -result 1
 
 test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
+	tk::fontchooser::Show
     }
     then {
-        Click ok
+	Click ok
     }
     expr {$::testfont ne {}}
 } -result 1
 
 test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl haveTimes14BoldFont} -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
-        tk::fontchooser::Show
+	tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
+	tk::fontchooser::Show
     }
     then {
-        Click ok
+	Click ok
     }
     lrange $::testfont 1 end
 } -result {14 bold}

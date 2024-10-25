@@ -162,17 +162,17 @@ static Tcl_ThreadDataKey dataKey;
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-data", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	 NULL, offsetof(PhotoModel, fileString), TK_CONFIG_NULL_OK, NULL},
+	 NULL, offsetof(PhotoModel, fileObj), TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-format", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
 	 DEF_PHOTO_GAMMA, offsetof(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
 	 DEF_PHOTO_HEIGHT, offsetof(PhotoModel, userHeight), 0, NULL},
     {TK_CONFIG_STRING, "-metadata", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
 	 DEF_PHOTO_PALETTE, offsetof(PhotoModel, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
@@ -473,8 +473,8 @@ ImgPhotoCmd(
 	}
 	arg = Tcl_GetStringFromObj(objv[2], &length);
 	if (strncmp(arg,"-data", length) == 0) {
-	    if (modelPtr->dataString) {
-		Tcl_SetObjResult(interp, modelPtr->dataString);
+	    if (modelPtr->dataObj) {
+		Tcl_SetObjResult(interp, modelPtr->dataObj);
 	    }
 	} else if (strncmp(arg,"-format", length) == 0) {
 	    if (modelPtr->format) {
@@ -506,8 +506,8 @@ ImgPhotoCmd(
 	    }
 	    obj = Tcl_NewObj();
 	    subobj = Tcl_NewStringObj("-data {} {} {}", 14);
-	    if (modelPtr->dataString) {
-		Tcl_ListObjAppendElement(NULL, subobj, modelPtr->dataString);
+	    if (modelPtr->dataObj) {
+		Tcl_ListObjAppendElement(NULL, subobj, modelPtr->dataObj);
 	    } else {
 		Tcl_AppendStringsToObj(subobj, " {}", (char *)NULL);
 	    }
@@ -535,13 +535,13 @@ ImgPhotoCmd(
 
 	    if (length > 1 && !strncmp(arg, "-data", length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", (char *)NULL);
-		if (modelPtr->dataString) {
+		if (modelPtr->dataObj) {
 		    /*
 		     * TODO: Modifying result is bad!
 		     */
 
 		    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
-			    modelPtr->dataString);
+			    modelPtr->dataObj);
 		} else {
 		    Tcl_AppendResult(interp, " {}", (char *)NULL);
 		}
@@ -613,7 +613,7 @@ ImgPhotoCmd(
 	srcHandle = Tk_FindPhoto(interp, Tcl_GetString(options.name));
 	if (srcHandle == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "image \"%s\" doesn't exist or is not a photo image",
+		    "image \"%s\" does not exist or is not a photo image",
 		    Tcl_GetString(options.name)));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO",
 		    Tcl_GetString(options.name), (char *)NULL);
@@ -1347,6 +1347,7 @@ readCleanup:
 
 	}
 	Tcl_Panic("unexpected fallthrough");
+	break;
     }
 
     case PHOTO_WRITE: {
@@ -1667,8 +1668,8 @@ ParseSubcommandOptions(
 		goto oneValueRequired;
 	    }
 	    *optIndexPtr = ++index;
-	    optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
-		    Tk_GetUid(Tcl_GetString(objv[index])));
+	    optPtr->background = Tk_AllocColorFromObj(interp, Tk_MainWindow(interp),
+		    objv[index]);
 	    if (!optPtr->background) {
 		return TCL_ERROR;
 	    }
@@ -1889,7 +1890,8 @@ ImgPhotoConfigureModel(
 				 * as TK_CONFIG_ARGV_ONLY. */
 {
     PhotoInstance *instancePtr;
-    const char *oldFileString, *oldPaletteString;
+    Tcl_Obj *oldFileObj;
+    const char *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL,
 	    *metadataInObj = NULL, *metadataOutObj = NULL;
     Tcl_Obj *tempdata, *tempformat;
@@ -1947,9 +1949,9 @@ ImgPhotoConfigureModel(
      * the format string influences how "-data" or "-file" is interpreted.
      */
 
-    oldFileString = modelPtr->fileString;
-    if (oldFileString == NULL) {
-	oldData = modelPtr->dataString;
+    oldFileObj = modelPtr->fileObj;
+    if (oldFileObj == NULL) {
+	oldData = modelPtr->dataObj;
 	if (oldData != NULL) {
 	    Tcl_IncrRefCount(oldData);
 	}
@@ -1976,9 +1978,9 @@ ImgPhotoConfigureModel(
      * Regard the empty string for -file, -data, -format or -metadata as the null value.
      */
 
-    if ((modelPtr->fileString != NULL) && (modelPtr->fileString[0] == 0)) {
-	ckfree(modelPtr->fileString);
-	modelPtr->fileString = NULL;
+    if ((modelPtr->fileObj != NULL) && (Tcl_GetString(modelPtr->fileObj)[0] == 0)) {
+	Tcl_DecrRefCount(modelPtr->fileObj);
+	modelPtr->fileObj = NULL;
     }
     if (data) {
 	/*
@@ -1993,10 +1995,10 @@ ImgPhotoConfigureModel(
 	} else {
 	    data = NULL;
 	}
-	if (modelPtr->dataString) {
-	    Tcl_DecrRefCount(modelPtr->dataString);
+	if (modelPtr->dataObj) {
+	    Tcl_DecrRefCount(modelPtr->dataObj);
 	}
-	modelPtr->dataString = data;
+	modelPtr->dataObj = data;
     }
     if (format) {
 	/*
@@ -2059,8 +2061,8 @@ ImgPhotoConfigureModel(
      * -file or -data option.
      */
 
-    if ((modelPtr->fileString != NULL)
-	    && ((modelPtr->fileString != oldFileString)
+    if ((modelPtr->fileObj != NULL)
+	    && ((modelPtr->fileObj != oldFileObj)
 	    || (modelPtr->format != oldFormat))) {
 	/*
 	 * Prevent file system access in a safe interpreter.
@@ -2075,7 +2077,7 @@ ImgPhotoConfigureModel(
 	    goto errorExit;
 	}
 
-	chan = Tcl_OpenFileChannel(interp, modelPtr->fileString, "r", 0);
+	chan = Tcl_OpenFileChannel(interp, Tcl_GetString(modelPtr->fileObj), "rb", 0);
 	if (chan == NULL) {
 	    goto errorExit;
 	}
@@ -2087,9 +2089,7 @@ ImgPhotoConfigureModel(
 	metadataOutObj = Tcl_NewDictObj();
 	Tcl_IncrRefCount(metadataOutObj);
 
-	if ((Tcl_SetChannelOption(interp, chan, "-translation", "binary")
-		!= TCL_OK) ||
-		(MatchFileFormat(interp, chan, modelPtr->fileString,
+	if ((MatchFileFormat(interp, chan, (modelPtr->fileObj ? Tcl_GetString(modelPtr->fileObj) : NULL),
 			modelPtr->format, modelPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,
 			&imageWidth, &imageHeight, &oldformat) != TCL_OK)) {
@@ -2110,12 +2110,12 @@ ImgPhotoConfigureModel(
 	}
 	if (imageFormat != NULL) {
 	    result = imageFormat->fileReadProc(interp, chan,
-		    modelPtr->fileString, tempformat,
+		    (modelPtr->fileObj ? Tcl_GetString(modelPtr->fileObj) : NULL), tempformat,
 		    (Tk_PhotoHandle) modelPtr,
 		    0, 0, imageWidth, imageHeight, 0, 0);
 	} else {
 	    result = imageFormatVersion3->fileReadProc(interp, chan,
-		    modelPtr->fileString, tempformat, modelPtr->metadata,
+		    (modelPtr->fileObj ? Tcl_GetString(modelPtr->fileObj) : NULL), tempformat, modelPtr->metadata,
 		    (Tk_PhotoHandle) modelPtr,
 		    0, 0, imageWidth, imageHeight, 0, 0,
 		    metadataOutObj);
@@ -2130,8 +2130,8 @@ ImgPhotoConfigureModel(
 	modelPtr->flags |= IMAGE_CHANGED;
     }
 
-    if ((modelPtr->fileString == NULL) && (modelPtr->dataString != NULL)
-	    && ((modelPtr->dataString != oldData)
+    if ((modelPtr->fileObj == NULL) && (modelPtr->dataObj != NULL)
+	    && ((modelPtr->dataObj != oldData)
 		    || (modelPtr->format != oldFormat))) {
 
 	/*
@@ -2141,7 +2141,7 @@ ImgPhotoConfigureModel(
 	metadataOutObj = Tcl_NewDictObj();
 	Tcl_IncrRefCount(metadataOutObj);
 
-	if (MatchStringFormat(interp, modelPtr->dataString,
+	if (MatchStringFormat(interp, modelPtr->dataObj,
 		modelPtr->format, modelPtr->metadata, metadataOutObj,
 		&imageFormat, &imageFormatVersion3, &imageWidth,
 		&imageHeight, &oldformat) != TCL_OK) {
@@ -2154,7 +2154,7 @@ ImgPhotoConfigureModel(
 	    goto errorExit;
 	}
 	tempformat = modelPtr->format;
-	tempdata = modelPtr->dataString;
+	tempdata = modelPtr->dataObj;
 	if (oldformat) {
 	    if (tempformat) {
 		tempformat = (Tcl_Obj *) Tcl_GetString(tempformat);
@@ -2321,7 +2321,7 @@ ToggleComplexAlphaIfNeeded(
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
-     	    mPtr->flags |= COMPLEX_ALPHA;
+	    mPtr->flags |= COMPLEX_ALPHA;
 	    break;
 	}
     }
@@ -2370,8 +2370,8 @@ ImgPhotoDelete(
     if (modelPtr->validRegion != NULL) {
 	TkDestroyRegion(modelPtr->validRegion);
     }
-    if (modelPtr->dataString != NULL) {
-	Tcl_DecrRefCount(modelPtr->dataString);
+    if (modelPtr->dataObj != NULL) {
+	Tcl_DecrRefCount(modelPtr->dataObj);
     }
     if (modelPtr->format != NULL) {
 	Tcl_DecrRefCount(modelPtr->format);
@@ -3686,7 +3686,7 @@ Tk_PhotoPutZoomedBlock(
 			    *destPtr++ = srcPtr[blueOffset];
 			    *destPtr++ = 255;
 			    continue;
- 			}
+			}
 
 			if (compRule==TK_PHOTO_COMPOSITE_SET || !destPtr[3]) {
 			    /*
@@ -4257,7 +4257,7 @@ ImgGetPhoto(
 			    blockPtr->width * blockPtr->pixelSize;
 		}
 	    } else {
-	 	int gray = (unsigned char) (((optPtr->background->red>>8) * 11
+		int gray = (unsigned char) (((optPtr->background->red>>8) * 11
 			+ (optPtr->background->green>>8) * 16
 			+ (optPtr->background->blue>>8) * 5 + 16) >> 5);
 
