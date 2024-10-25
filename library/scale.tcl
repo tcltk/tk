@@ -143,10 +143,10 @@ proc ::tk::ScaleButtonDown {w x y} {
 	set coords [$w coords]
 	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
 	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
-        switch -exact -- $Priv($w,relief) {
-            "raised" { $w configure -sliderrelief sunken }
-            "ridge"  { $w configure -sliderrelief groove }
-        }
+	switch -exact -- $Priv($w,relief) {
+	    "raised" { $w configure -sliderrelief sunken }
+	    "ridge"  { $w configure -sliderrelief groove }
+	}
     }
 }
 
@@ -179,8 +179,8 @@ proc ::tk::ScaleEndDrag {w} {
     variable ::tk::Priv
     set Priv(dragging) 0
     if {[info exists Priv($w,relief)]} {
-        $w configure -sliderrelief $Priv($w,relief)
-        unset Priv($w,relief)
+	$w configure -sliderrelief $Priv($w,relief)
+	unset Priv($w,relief)
     }
 }
 
@@ -209,8 +209,8 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
     # the -command script lasts longer than -repeatdelay
     set clockms [clock milliseconds]
     if {$repeat eq "again" &&
-            [expr {$clockms - $Priv(clockms)}] > [expr {[$w cget -repeatinterval] * 1.1}]} {
-        set Priv(clockms) $clockms
+	    [expr {$clockms - $Priv(clockms)}] > [expr {[$w cget -repeatinterval] * 1.1}]} {
+	set Priv(clockms) $clockms
 	set Priv(afterId) [after [$w cget -repeatinterval] \
 		[list tk::ScaleIncrement $w $dir $big again]]
 	return
@@ -228,20 +228,20 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
 	set inc [$w cget -resolution]
     }
     if {([$w cget -from] > [$w cget -to]) ^ ($dir eq "up")} {
-        if {$inc > 0} {
-            set inc [expr {-$inc}]
-        }
+	if {$inc > 0} {
+	    set inc [expr {-$inc}]
+	}
     } else {
-        if {$inc < 0} {
-            set inc [expr {-$inc}]
-        }
+	if {$inc < 0} {
+	    set inc [expr {-$inc}]
+	}
     }
     # this will run the -command script (if any) during the redrawing
     # of the scale at idle time
     $w set [expr {[$w get] + $inc}]
 
     if {$repeat eq "again"} {
-        set Priv(clockms) $clockms
+	set Priv(clockms) $clockms
 	set Priv(afterId) [after [$w cget -repeatinterval] \
 		[list tk::ScaleIncrement $w $dir $big again]]
     } elseif {$repeat eq "initial"} {

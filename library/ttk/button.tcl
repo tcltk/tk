@@ -18,10 +18,10 @@
 
 namespace eval ttk::button {}
 
-bind TButton <Enter> 		{ %W instate !disabled {%W state active} }
+bind TButton <Enter>		{ %W instate !disabled {%W state active} }
 bind TButton <Leave>		{ %W state !active }
 bind TButton <space>		{ ttk::button::activate %W }
-bind TButton <<Invoke>> 	{ ttk::button::activate %W }
+bind TButton <<Invoke>>		{ ttk::button::activate %W }
 
 bind TButton <Button-1> \
     { %W instate !disabled { ttk::clickToFocus %W; %W state pressed } }
@@ -39,8 +39,8 @@ ttk::copyBindings TButton TRadiobutton
 
 # ...plus a few more:
 
-bind TRadiobutton <Up>  		{ ttk::button::RadioTraverse %W -1 }
-bind TRadiobutton <Down> 		{ ttk::button::RadioTraverse %W +1 }
+bind TRadiobutton <Up>			{ ttk::button::RadioTraverse %W -1 }
+bind TRadiobutton <Down>		{ ttk::button::RadioTraverse %W +1 }
 
 # bind TCheckbutton <+> { %W select }
 # bind TCheckbutton <minus> { %W deselect }
@@ -58,7 +58,7 @@ proc ttk::button::activate {w} {
 }
 
 # RadioTraverse -- up/down keyboard traversal for radiobutton groups.
-# 	Set focus to previous/next radiobutton in a group.
+#	Set focus to previous/next radiobutton in a group.
 #	A radiobutton group consists of all the radiobuttons with
 #	the same parent and -variable; this is a pretty good heuristic
 #	that works most of the time.

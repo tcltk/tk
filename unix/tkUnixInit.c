@@ -44,6 +44,7 @@ TkpInit(
     Tktray_Init(interp);
     (void)SysNotify_Init (interp);
     Icu_Init(interp);
+    Cups_Init(interp);
     return TCL_OK;
 }
 
@@ -147,7 +148,7 @@ GetLibraryPath(
 	    "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 	    tkLibPath);
     if (tkLibPath[0] != '\0') {
-        Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
     return foundInFramework;
 }

@@ -145,12 +145,12 @@ bind Scrollbar <Shift-Option-MouseWheel> {
     tk::ScrollByUnits %W hv %D -12.0
 }
 bind Scrollbar <TouchpadScroll> {
-    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
-    if {$deltaX != 0 && [%W cget -orient] eq "horizontal"} {
-	tk::ScrollbarScrollByPixels %W h $deltaX
+    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+    if {$tk::Priv(deltaX) != 0 && [%W cget -orient] eq "horizontal"} {
+	tk::ScrollbarScrollByPixels %W h $tk::Priv(deltaX)
     }
-    if {$deltaY != 0 && [%W cget -orient] eq "vertical"} {
-	tk::ScrollbarScrollByPixels %W v $deltaY
+    if {$tk::Priv(deltaY) != 0 && [%W cget -orient] eq "vertical"} {
+	tk::ScrollbarScrollByPixels %W v $tk::Priv(deltaY)
     }
 }
 
@@ -477,7 +477,7 @@ proc ::tk::ScrollTopBottom {w x y} {
 proc ::tk::ScrollButton2Down {w x y} {
     variable ::tk::Priv
     if {![winfo exists $w]} {
-        return
+	return
     }
     set element [$w identify $x $y]
     if {[string match {arrow[12]} $element]} {
@@ -493,8 +493,8 @@ proc ::tk::ScrollButton2Down {w x y} {
 
     update idletasks
     if {[winfo exists $w]} {
-        $w configure -activerelief sunken
-        $w activate slider
-        ScrollStartDrag $w $x $y
+	$w configure -activerelief sunken
+	$w activate slider
+	ScrollStartDrag $w $x $y
     }
 }

@@ -86,8 +86,8 @@ void Ttk_DeleteTagFromTable(Ttk_TagTable tagTable, Ttk_Tag tag)
 
     entryPtr = Tcl_FindHashEntry(&tagTable->tags, tag->tagName);
     if (entryPtr != NULL) {
-        DeleteTag(tagTable, tag);
-        Tcl_DeleteHashEntry(entryPtr);
+	DeleteTag(tagTable, tag);
+	Tcl_DeleteHashEntry(entryPtr);
     }
 }
 

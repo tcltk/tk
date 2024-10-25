@@ -110,10 +110,8 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Value of -activebackground option: this is
 				 * the color used to draw 3-D border and
 				 * background when widget is active. */
-    Tcl_Obj *borderWidthPtr;	/* Value of -borderWidth option: specifies
+    Tcl_Obj *borderWidthObj;	/* Value of -borderWidth option: specifies
 				 * width of border in pixels. */
-    int borderWidth;		/* Integer value corresponding to
-				 * borderWidthPtr. Always >= 0. */
     int relief;			/* Value of -relief option: specifies 3-d
 				 * effect for border, such as
 				 * TK_RELIEF_RAISED. */
@@ -126,12 +124,10 @@ typedef struct {
 				 * TK_RELIEF_RAISED, to be used when a
 				 * checkbutton or radiobutton without
 				 * indicator is off. */
-    Tcl_Obj *highlightWidthPtr;	/* Value of -highlightthickness option:
+    Tcl_Obj *highlightWidthObj;	/* Value of -highlightthickness option:
 				 * specifies width in pixels of highlight to
 				 * draw around widget when it has the focus.
 				 * <= 0 means don't draw a highlight. */
-    int highlightWidth;		/* Integer value corresponding to
-				 * highlightWidthPtr. Always >= 0. */
     Tk_3DBorder highlightBorder;/* Value of -highlightbackground option:
 				 * specifies background with which to draw 3-D
 				 * default ring and focus highlight area when
@@ -166,26 +162,20 @@ typedef struct {
 				 * disabledFg is NULL. */
     GC copyGC;			/* Used for copying information from an
 				 * off-screen pixmap to the screen. */
-    Tcl_Obj *widthPtr;		/* Value of -width option. */
-    int width;			/* Integer value corresponding to widthPtr. */
-    Tcl_Obj *heightPtr;		/* Value of -height option. */
-    int height;			/* Integer value corresponding to heightPtr. */
-    Tcl_Obj *wrapLengthPtr;	/* Value of -wraplength option: specifies line
+    Tcl_Obj *widthObj;		/* Value of -width option. */
+    Tcl_Obj *heightObj;		/* Value of -height option. */
+    Tcl_Obj *wrapLengthObj;	/* Value of -wraplength option: specifies line
 				 * length (in pixels) at which to wrap onto
 				 * next line. <= 0 means don't wrap except at
 				 * newlines. */
-    int wrapLength;		/* Integer value corresponding to
-				 * wrapLengthPtr. */
-    Tcl_Obj *padXPtr;		/* Value of -padx option: specifies how many
+    Tcl_Obj *padXObj;		/* Value of -padx option: specifies how many
 				 * pixels of extra space to leave on left and
 				 * right of text. Ignored for bitmaps and
 				 * images. */
-    int padX;			/* Integer value corresponding to padXPtr. */
-    Tcl_Obj *padYPtr;		/* Value of -padx option: specifies how many
+    Tcl_Obj *padYObj;		/* Value of -padx option: specifies how many
 				 * pixels of extra space to leave above and
 				 * below text. Ignored for bitmaps and
 				 * images. */
-    int padY;			/* Integer value corresponding to padYPtr. */
     Tk_Anchor anchor;		/* Value of -anchor option: specifies where
 				 * text/bitmap should be displayed inside
 				 * button region. */
@@ -312,7 +302,7 @@ MODULE_SCOPE void	TkButtonWorldChanged(void *instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
 MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
-MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
+MODULE_SCOPE void	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
 MODULE_SCOPE void	TkpDisplayButton(void *clientData);

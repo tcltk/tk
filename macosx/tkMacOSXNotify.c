@@ -189,7 +189,6 @@ void DebugPrintQueue(void)
 - (void) _runBackgroundLoop
 {
     while(Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){
-	TkMacOSXDrawAllViews(NULL);
     }
 }
 @end
@@ -305,88 +304,6 @@ TkMacOSXNotifyExitHandler(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXDrawAllViews --
- *
- *       This static function is meant to be run as an idle task.  It attempts
- *       to redraw all views which have the tkNeedsDisplay property set to YES.
- *       This relies on a feature of [NSApp nextEventMatchingMask: ...] which
- *       is undocumented, namely that it sometimes blocks and calls drawRect
- *       for all views that need display before it returns.  We call it with
- *       deQueue=NO so that it will not change anything on the AppKit event
- *       queue, because we only want the side effect that it runs drawRect. The
- *       only times when any NSViews have the needsDisplay property set to YES
- *       are during execution of this function or in the addTkDirtyRect method
- *       of TKContentView.
- *
- *       The reason for running this function as an idle task is to try to
- *       arrange that all widgets will be fully configured before they are
- *       drawn.  Any idle tasks that might reconfigure them should be higher on
- *       the idle queue, so they should be run before the display procs are run
- *       by drawRect.
- *
- *       If this function is called directly with non-NULL clientData parameter
- *       then the int which it references will be set to the number of windows
- *       that need display, but the needsDisplay property of those windows will
- *       not be changed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Parts of windows may get redrawn.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXDrawAllViews(
-    void *clientData)
-{
-       int count = 0, *dirtyCount = (int *)clientData;
-
-    for (NSWindow *window in [NSApp windows]) {
-	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
-	    TKContentView *view = [window contentView];
-	    if ([view tkNeedsDisplay]) {
-		count++;
-		if (dirtyCount) {
-		   continue;
-		}
-		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
-		[view setNeedsDisplay:YES];
-	    }
-	} else {
-	    [window displayIfNeeded];
-	}
-    }
-    if (dirtyCount) {
-    	*dirtyCount = count;
-    }
-    [NSApp nextEventMatchingMask:NSAnyEventMask
-		       untilDate:[NSDate distantPast]
-			  inMode:GetRunLoopMode(TkMacOSXGetModalSession())
-			 dequeue:NO];
-    for (NSWindow *window in [NSApp windows]) {
-	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
-	    TKContentView *view = [window contentView];
-
-	    /*
-	     * If we did not run drawRect, we set needsDisplay back to NO.
-	     * Note that if drawRect did run it may have added to Tk's dirty
-	     * rect, due to attempts to draw outside of drawRect's dirty rect.
-	     */
-
-	    if ([view needsDisplay]) {
-		[view setNeedsDisplay: NO];
-	    }
-	}
-    }
-    [NSApp setNeedsToDraw:NO];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXEventsSetupProc --
  *
  *	This procedure implements the setup part of the MacOSX event source. It
@@ -448,11 +365,11 @@ TkMacOSXEventsSetupProc(
   	 */
 
 	NSEvent *currentEvent =
-	        [NSApp nextEventMatchingMask:NSAnyEventMask
+		[NSApp nextEventMatchingMask:NSAnyEventMask
 			untilDate:[NSDate distantPast]
 			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			dequeue:NO];
-	if ((currentEvent) || [NSApp needsToDraw] ) {
+	if ((currentEvent)) {
 	    Tcl_SetMaxBlockTime(&zeroBlockTime);
 	    Tcl_DeleteTimerHandler(ticker);
 	    ticker = NULL;
@@ -560,25 +477,6 @@ TkMacOSXEventsCheckProc(
 	 */
 
 	[NSApp _unlockAutoreleasePool];
-
-	/*
-	 * Add an idle task to the end of the idle queue which will redisplay
-	 * all of our dirty windows.  We want this to happen after all other
-	 * idle tasks have run so that all widgets will be configured before
-	 * they are displayed.  The drawRect method "borrows" the idle queue
-	 * while drawing views. That is, it sends expose events which cause
-	 * display procs to be posted as idle tasks and then runs an inner
-	 * event loop to processes those idle tasks.  We are trying to arrange
-	 * for the idle queue to be empty when it starts that process and empty
-	 * when it finishes.
-	 */
-
-	int dirtyCount = 0;
-	TkMacOSXDrawAllViews(&dirtyCount);
-	if (dirtyCount > 0) {
-	    Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
-	    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
-	}
     }
 }
 

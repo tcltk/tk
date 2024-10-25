@@ -353,13 +353,13 @@ GetMenuIndicatorGeometry(
 		}
 	    }
 	} else {
-	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		    &borderWidth);
 	    *heightPtr = 0;
 	    *widthPtr = borderWidth;
 	}
     } else {
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	*heightPtr = 0;
 	*widthPtr = borderWidth;
@@ -444,7 +444,7 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	    relief = menuPtr->activeRelief;
 	}
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -501,7 +501,7 @@ DrawMenuEntryAccelerator(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
@@ -1121,7 +1121,7 @@ TkpComputeMenubarGeometry(
 	    maxWindowWidth = 0x7FFFFFF;
 	}
 	currentRowHeight = 0;
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	x = y = borderWidth;
 	lastRowBreak = 0;
@@ -1695,7 +1695,7 @@ TkpComputeStandardMenuGeometry(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);

@@ -301,7 +301,7 @@ TkTextSetMark(
 
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
-            int nblines;
+	    int nblines;
 
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
@@ -313,12 +313,12 @@ TkTextSetMark(
 
 	    TkTextChanged(NULL, textPtr, &index, &index2);
 
-            /*
-             * The number of lines in the widget is zero if and only if it is
-             * a partial peer with -startline == -endline, i.e. an empty
-             * peer. In this case the mark shall be set exactly at the given
-             * index, and not one character backwards (bug 3487407).
-             */
+	    /*
+	     * The number of lines in the widget is zero if and only if it is
+	     * a partial peer with -startline == -endline, i.e. an empty
+	     * peer. In this case the mark shall be set exactly at the given
+	     * index, and not one character backwards (bug 3487407).
+	     */
 
 	    nblines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
 	    if ((TkBTreeLinesTo(textPtr, indexPtr->linePtr) == nblines)
@@ -436,7 +436,7 @@ TkTextMarkNameToIndex(
     TkTextSegment *segPtr;
 
     if (textPtr == NULL) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     if (!strcmp(name, "insert")) {
@@ -623,10 +623,13 @@ TkTextInsertDisplayProc(
 
     /* TkText *textPtr = chunkPtr->clientData; */
     TkTextIndex index;
-    int halfWidth = textPtr->insertWidth/2;
+    int halfWidth, insertWidth, insertBorderWidth;
     int rightSideWidth;
     int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    halfWidth = insertWidth/2;
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
@@ -658,15 +661,19 @@ TkTextInsertDisplayProc(
     if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
 	} else if (textPtr->selBorder == textPtr->insertBorder) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
+		    x - halfWidth, y, charWidth + insertWidth,
 		    height, 0, TK_RELIEF_FLAT);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_HOLLOW) {
-	if (textPtr->insertBorderWidth < 1) {
+	if (insertBorderWidth > 0) {
+	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
+	} else {
 	    /*
 	     * Hack to work around the fact that a "solid" border always
 	     * paints in black.
@@ -675,17 +682,13 @@ TkTextInsertDisplayProc(
 	    TkBorder *borderPtr = (TkBorder *) textPtr->insertBorder;
 
 	    XDrawRectangle(Tk_Display(textPtr->tkwin), dst, borderPtr->bgGC,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth - 1,
+		    x - halfWidth, y, charWidth + insertWidth - 1,
 		    height - 1);
-	} else {
-	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		x - halfWidth, y, charWidth + textPtr->insertWidth, height,
-		textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		x - halfWidth, y, charWidth + insertWidth, height,
+		insertBorderWidth, TK_RELIEF_RAISED);
     }
 }
 
@@ -749,7 +752,7 @@ MarkCheckProc(
      */
 
     if (markPtr->body.mark.textPtr->insertMarkPtr == markPtr) {
-        return;
+	return;
     }
     if (markPtr->body.mark.textPtr->currentMarkPtr == markPtr) {
 	return;
@@ -933,16 +936,16 @@ MarkFindPrev(
 		seg2Ptr = seg2Ptr->nextPtr) {
 	    if (seg2Ptr->typePtr == &tkTextRightMarkType ||
 		    seg2Ptr->typePtr == &tkTextLeftMarkType) {
-	        if (seg2Ptr->body.mark.hPtr == NULL) {
-                    if (seg2Ptr != textPtr->currentMarkPtr &&
-                            seg2Ptr != textPtr->insertMarkPtr) {
-	                /*
-                         * This is an insert or current mark from a
-                         * peer of textPtr.
-                         */
-                        continue;
-                    }
-	        }
+		if (seg2Ptr->body.mark.hPtr == NULL) {
+		    if (seg2Ptr != textPtr->currentMarkPtr &&
+			    seg2Ptr != textPtr->insertMarkPtr) {
+			/*
+			 * This is an insert or current mark from a
+			 * peer of textPtr.
+			 */
+			continue;
+		    }
+		}
 		prevPtr = seg2Ptr;
 	    }
 	}

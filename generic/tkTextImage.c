@@ -84,16 +84,16 @@ static const char *const alignStrings[] = {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
-	TK_OPTION_ENUM_VAR, alignStrings, 0},
+	(TCL_MAJOR_VERSION > 8) ? TK_OPTION_ENUM_VAR : 0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padXObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padYObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
+	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName),
+	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -247,12 +247,12 @@ TkTextImageCmd(
 	eiPtr->size = 1;
 	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
 	eiPtr->body.ei.linePtr = NULL;
-	eiPtr->body.ei.imageName = NULL;
-	eiPtr->body.ei.imageString = NULL;
+	eiPtr->body.ei.imageNameObj = NULL;
+	eiPtr->body.ei.imageObj = NULL;
 	eiPtr->body.ei.name = NULL;
 	eiPtr->body.ei.image = NULL;
 	eiPtr->body.ei.align = TK_ALIGN_CENTER;
-	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
+	eiPtr->body.ei.padXObj = eiPtr->body.ei.padYObj = NULL;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
@@ -350,9 +350,9 @@ EmbImageConfigure(
      * changed.
      */
 
-    if (eiPtr->body.ei.imageString != NULL) {
+    if (eiPtr->body.ei.imageObj != NULL) {
 	image = Tk_GetImage(textPtr->interp, textPtr->tkwin,
-		eiPtr->body.ei.imageString, EmbImageProc, eiPtr);
+		Tcl_GetString(eiPtr->body.ei.imageObj), EmbImageProc, eiPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
 	}
@@ -365,7 +365,7 @@ EmbImageConfigure(
     eiPtr->body.ei.image = image;
 
     if (eiPtr->body.ei.name != NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -374,11 +374,11 @@ EmbImageConfigure(
      * associated with this image, delete the name.
      */
 
-    name = eiPtr->body.ei.imageName;
-    if (name == NULL) {
-    	name = eiPtr->body.ei.imageString;
-    }
-    if (name == NULL) {
+    if (eiPtr->body.ei.imageNameObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageNameObj);
+    } else if (eiPtr->body.ei.imageObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageObj);
+    } else {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		"Either a \"-name\" or a \"-image\" argument must be"
 		" provided to the \"image create\" subcommand", TCL_INDEX_NONE));
@@ -531,11 +531,18 @@ EmbImageLayoutProc(
 				 * set by the caller. */
 {
     int width, height;
+    int padX = 0, padY = 0;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
     }
 
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
     /*
      * See if there's room for this image on this line.
      */
@@ -545,8 +552,8 @@ EmbImageLayoutProc(
 	height = 0;
     } else {
 	Tk_SizeOfImage(eiPtr->body.ei.image, &width, &height);
-	width += 2*eiPtr->body.ei.padX;
-	height += 2*eiPtr->body.ei.padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
     if ((width > (maxX - chunkPtr->x))
 	    && !noCharsYet && (textPtr->wrapMode != TEXT_WRAPMODE_NONE)) {
@@ -563,8 +570,8 @@ EmbImageLayoutProc(
     chunkPtr->bboxProc = EmbImageBboxProc;
     chunkPtr->numBytes = 1;
     if (eiPtr->body.ei.align == TK_ALIGN_BASELINE) {
-	chunkPtr->minAscent = height - eiPtr->body.ei.padY;
-	chunkPtr->minDescent = eiPtr->body.ei.padY;
+	chunkPtr->minAscent = height - padY;
+	chunkPtr->minDescent = padY;
 	chunkPtr->minHeight = 0;
     } else {
 	chunkPtr->minAscent = 0;
@@ -694,7 +701,7 @@ EmbImageDisplayProc(
 
 static void
 EmbImageBboxProc(
-    TCL_UNUSED(TkText *),
+    TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
     TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
@@ -712,6 +719,7 @@ EmbImageBboxProc(
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     Tk_Image image;
+    int padX = 0, padY = 0;
 
     image = eiPtr->body.ei.image;
     if (image != NULL) {
@@ -721,17 +729,23 @@ EmbImageBboxProc(
 	*heightPtr = 0;
     }
 
-    *xPtr = chunkPtr->x + eiPtr->body.ei.padX;
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
+    *xPtr = chunkPtr->x + padX;
 
     switch (eiPtr->body.ei.align) {
     case TK_ALIGN_BOTTOM:
-	*yPtr = y + (lineHeight - *heightPtr - eiPtr->body.ei.padY);
+	*yPtr = y + (lineHeight - *heightPtr - padY);
 	break;
     case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
     case TK_ALIGN_TOP:
-	*yPtr = y + eiPtr->body.ei.padY;
+	*yPtr = y + padY;
 	break;
     case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);

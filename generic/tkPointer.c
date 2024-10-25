@@ -181,7 +181,7 @@ GenerateEnterLeave(
 		 */
 
 		InitializeEvent(&event, targetPtr, LeaveNotify, x, y, state,
-			NotifyNormal);
+			NotifyAncestor);
 
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
@@ -386,7 +386,7 @@ Tk_UpdatePointer(
 
 	if (targetWinPtr != NULL) {
 	    InitializeEvent(&event, targetWinPtr, MotionNotify, x, y,
-		    tsdPtr->lastState, NotifyNormal);
+		    tsdPtr->lastState, NotifyAncestor);
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	}
 	tsdPtr->lastPos = pos;
@@ -416,23 +416,16 @@ int
 XGrabPointer(
     Display *display,
     Window grab_window,
-    Bool owner_events,
-    unsigned int event_mask,
-    int pointer_mode,
-    int keyboard_mode,
-    Window confine_to,
-    Cursor cursor,
-    Time time)
+    TCL_UNUSED(Bool),	/* owner_events */
+    TCL_UNUSED(unsigned int),	/* event_mask */
+    TCL_UNUSED(int),	/* pointer_mode */
+    TCL_UNUSED(int),	/* keyboard_mode */
+    TCL_UNUSED(Window),	/* confine_to */
+    TCL_UNUSED(Cursor),	/* cursor */
+    TCL_UNUSED(Time))	/* time */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)owner_events;
-    (void)event_mask;
-    (void)pointer_mode;
-    (void)keyboard_mode;
-    (void)confine_to;
-    (void)cursor;
-    (void)time;
 
     LastKnownRequestProcessed(display)++;
     tsdPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(display, grab_window);
@@ -464,11 +457,10 @@ XGrabPointer(
 int
 XUngrabPointer(
     Display *display,
-    Time time)
+    TCL_UNUSED(Time)) /* time */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)time;
 
     LastKnownRequestProcessed(display)++;
     tsdPtr->grabWinPtr = NULL;
@@ -512,14 +504,14 @@ TkPointerDeadWindow(
     }
     if (!(tsdPtr->restrictWinPtr || tsdPtr->grabWinPtr)) {
 
-        /*
-         * Release mouse capture only if the dead window is the capturing
-         * window.
-         */
+	/*
+	 * Release mouse capture only if the dead window is the capturing
+	 * window.
+	 */
 
-        if (winPtr == (TkWindow *)TkpGetCapture()) {
+	if (winPtr == (TkWindow *)TkpGetCapture()) {
 	    TkpSetCapture(NULL);
-        }
+	}
     }
 }
 
@@ -588,12 +580,11 @@ int
 XDefineCursor(
     Display *display,
     Window w,
-    Cursor cursor)
+    TCL_UNUSED(Cursor)) /* cursor */
 {
     TkWindow *winPtr = (TkWindow *) Tk_IdToWindow(display, w);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)cursor;
 
     if (tsdPtr->cursorWinPtr == winPtr) {
 	UpdateCursor(winPtr);

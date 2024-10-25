@@ -361,7 +361,7 @@ InitFont(
 
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-		    -1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
+		    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
@@ -403,7 +403,7 @@ InitFont(
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
 	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-			-1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
+			-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 	errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
 	Tk_DeleteErrorHandler(handler);
@@ -786,7 +786,8 @@ Tk_MeasureChars(
 	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
 	    UNLOCK;
-	} else {
+	}
+	if (errorFlag) {
 	    extents.xOff = 0;
 	    errorFlag = 0;
 	}
@@ -955,7 +956,7 @@ Tk_DrawChars(
     XftGlyphFontSpec specs[NUM_SPEC];
     XGlyphInfo metrics;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
@@ -1088,7 +1089,7 @@ TkDrawAngledChars(
     XftColor *xftcolor;
     int xStart = x, yStart = y;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef XFT_HAS_FIXED_ROTATED_PLACEMENT
     int clen, nglyph;
     FT_UInt glyphs[NUM_SPEC];
@@ -1169,10 +1170,10 @@ TkDrawAngledChars(
 		     * at once (or whole blocks with same font), this requires a
 		     * dynamic 'glyphs' array. In case of overflow the array has to
 		     * be divided until the maximal string will fit. (GC)
-                     * Given the resolution of current displays though, this should
-                     * not be a huge issue since NUM_SPEC is 1024 and thus able to
-                     * cover about 6000 pixels for a 6 pixel wide font (which is
-                     * a very small barely readable font)
+		     * Given the resolution of current displays though, this should
+		     * not be a huge issue since NUM_SPEC is 1024 and thus able to
+		     * cover about 6000 pixels for a 6 pixel wide font (which is
+		     * a very small barely readable font)
 		     */
 
 		    LOCK;
@@ -1428,7 +1429,7 @@ TkUnixSetXftClipRegion(
     Region clipRegion)	/* The clipping region to install. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->clipRegion = clipRegion;
 }

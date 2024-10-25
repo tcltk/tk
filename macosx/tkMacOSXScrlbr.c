@@ -160,10 +160,8 @@ TkpCreateScrollbar(
  *--------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-
 /*
- * This stand-alone drawing function is used on macOS 10.9 and newer because
+ * This stand-alone drawing function is used because
  * the HIToolbox does not draw the scrollbar thumb at the expected size on
  * those systems.  The thumb is drawn too large, causing a mouse click on the
  * thumb to be interpreted as a mouse click in the trough.
@@ -185,7 +183,7 @@ static void drawMacScrollbar(
     if (scrollPtr->vertical) {
 	thumbOrigin.x = troughBounds.origin.x + MIN_GAP;
 	thumbOrigin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
-	thumbSize.width = troughBounds.size.width - 2*MIN_GAP + 1;
+	thumbSize.width = troughBounds.size.width - 2 * MIN_GAP + 1;
 	thumbSize.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
 	inner[0] = troughBounds.origin;
 	inner[1] = CGPointMake(inner[0].x,
@@ -197,7 +195,7 @@ static void drawMacScrollbar(
 	thumbOrigin.x = troughBounds.origin.x + scrollPtr->sliderFirst;
 	thumbOrigin.y = troughBounds.origin.y + MIN_GAP;
 	thumbSize.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	thumbSize.height = troughBounds.size.height - 2*MIN_GAP + 1;
+	thumbSize.height = troughBounds.size.height - 2 * MIN_GAP + 1;
 	inner[0] = troughBounds.origin;
 	inner[1] = CGPointMake(inner[0].x + troughBounds.size.width,
 			       inner[0].y + 1);
@@ -240,7 +238,6 @@ static void drawMacScrollbar(
 	CFRelease(path);
     }
 }
-#endif
 
 void
 TkpDisplayScrollbar(
@@ -251,6 +248,7 @@ TkpDisplayScrollbar(
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXDrawingContext dc;
+    int borderWidth, highlightWidth;
 
     scrollPtr->flags &= ~REDRAW_PENDING;
 
@@ -262,7 +260,6 @@ TkpDisplayScrollbar(
     NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
-	    || (macWin->flags & TK_DO_NOT_DRAW)
 	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
@@ -284,7 +281,8 @@ TkpDisplayScrollbar(
      * Draw a 3D rectangle to provide a base for the native scrollbar.
      */
 
-    if (scrollPtr->highlightWidth > 0) {
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth > 0) {
     	GC fgGC, bgGC;
 
     	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
@@ -293,19 +291,20 @@ TkpDisplayScrollbar(
     	} else {
     	    fgGC = bgGC;
     	}
-    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
+    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
     		(Pixmap) macWin);
     }
 
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
     Tk_Draw3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
-	    scrollPtr->highlightWidth, scrollPtr->highlightWidth,
-	    Tk_Width(tkwin) - 2*scrollPtr->highlightWidth,
-	    Tk_Height(tkwin) - 2*scrollPtr->highlightWidth,
-	    scrollPtr->borderWidth, scrollPtr->relief);
+	    highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, scrollPtr->relief);
     Tk_Fill3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
 	    scrollPtr->inset, scrollPtr->inset,
-	    Tk_Width(tkwin) - 2*scrollPtr->inset,
-	    Tk_Height(tkwin) - 2*scrollPtr->inset, 0, TK_RELIEF_FLAT);
+	    Tk_Width(tkwin) - 2 * scrollPtr->inset,
+	    Tk_Height(tkwin) - 2 * scrollPtr->inset, 0, TK_RELIEF_FLAT);
 
     /*
      * Update values and then draw the native scrollbar over the rectangle.
@@ -320,7 +319,6 @@ TkpDisplayScrollbar(
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 
 	/*
 	 * Switch back to NSView coordinates and draw a modern scrollbar.
@@ -328,7 +326,6 @@ TkpDisplayScrollbar(
 
 	CGContextConcatCTM(dc.context, t);
 	drawMacScrollbar(scrollPtr, msPtr, dc.context);
-#endif
     }
     TkMacOSXRestoreDrawingContext(&dc);
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -372,19 +369,20 @@ TkpComputeScrollbarGeometry(
      */
 
     int fieldLength;
+    int width, borderWidth, highlightWidth;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
-    scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    scrollPtr->inset = highlightWidth + borderWidth;
     if ([NSApp macOSVersion] == 100600) {
-	scrollPtr->arrowLength = scrollPtr->width;
+	scrollPtr->arrowLength = width;
     } else {
 	scrollPtr->arrowLength = 0;
     }
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
 	    : Tk_Width(scrollPtr->tkwin))
-	    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+	    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -422,14 +420,14 @@ TkpComputeScrollbarGeometry(
 
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		scrollPtr->width + 2*scrollPtr->inset,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		width + 2 * scrollPtr->inset,
+		2 * (scrollPtr->arrowLength + borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		2 * (scrollPtr->arrowLength + borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight,
-		scrollPtr->width + 2*scrollPtr->inset);
+		width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
@@ -550,7 +548,7 @@ TkpScrollbarPosition(
     if (y < scrollPtr->sliderLast) {
 	return SLIDER;
     }
-    if (y < length - (2*scrollPtr->arrowLength + inset)) {
+    if (y < length - (2 * scrollPtr->arrowLength + inset)) {
 	return BOTTOM_GAP;
     }
 

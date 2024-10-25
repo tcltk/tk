@@ -95,6 +95,21 @@ proc ::ttk::setTheme {theme} {
     set currentTheme $theme
 }
 
+## ttk::configureNotebookStyle $style --
+#	Sets theme-specific option values for the ttk::notebook style $style
+#	and/or the style $style.Tab.  To be invoked if the -tabposition option
+#	of $style has a non-default value (like "sw", "wn", or "en").
+#
+proc ::ttk::configureNotebookStyle {style} {
+    set theme [ttk::style theme use]
+    if {[llength [info procs theme::${theme}::configureNotebookStyle]] > 0} {
+	theme::${theme}::configureNotebookStyle $style
+	return 1
+    } else {
+	return 0
+    }
+}
+
 ## ttk::setTreeviewRowHeight --
 #	Sets the default height of the ttk::treeview rows for the current theme.
 #	To be invoked from within the library files for the built-in themes.
@@ -154,17 +169,17 @@ proc ttk::LoadThemes {} {
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
-	classic 	classicTheme.tcl
-	alt 		altTheme.tcl
-	clam 		clamTheme.tcl
+	classic		classicTheme.tcl
+	alt		altTheme.tcl
+	clam		clamTheme.tcl
 	winnative	winTheme.tcl
 	xpnative	{xpTheme.tcl vistaTheme.tcl}
-	aqua 		aquaTheme.tcl
+	aqua		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
-            foreach script $scripts {
-                uplevel #0 [list source -encoding utf-8 [file join $library $script]]
-            }
+	    foreach script $scripts {
+		uplevel #0 [list source -encoding utf-8 [file join $library $script]]
+	    }
 	}
     }
 }

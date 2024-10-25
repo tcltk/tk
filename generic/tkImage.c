@@ -259,7 +259,7 @@ Tk_ImageObjCmd(
 	}
 	if (typePtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "image type \"%s\" doesn't exist", arg));
+		    "image type \"%s\" does not exist", arg));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -490,7 +490,7 @@ Tk_ImageObjCmd(
     return TCL_OK;
 
   alreadyDeleted:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("image \"%s\" doesn't exist",arg));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("image \"%s\" does not exist",arg));
     Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, (char *)NULL);
     return TCL_ERROR;
 }
@@ -636,7 +636,7 @@ Tk_GetImage(
   noSuchImage:
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"image \"%s\" doesn't exist", name));
+		"image \"%s\" does not exist", name));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, (char *)NULL);
     }
     return NULL;

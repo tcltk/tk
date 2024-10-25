@@ -46,23 +46,23 @@ proc launch {name windowInfo class} {
     # titled
     if {$class == "nswindow"} {
        ttk::checkbutton $f.stylemask.titled -text titled -variable $name.titled \
-          -command [list setbit $name $f.stylemask.titled titled]
+	  -command [list setbit $name $f.stylemask.titled titled]
        $f.stylemask.titled state selected
        grid $f.stylemask.titled -row 0 -column 0 -sticky w
     }
     # closable
     ttk::checkbutton $f.stylemask.closable -text closable -variable $name.closable \
-        -command [list setbit $name $f.stylemask.closable closable]
+	-command [list setbit $name $f.stylemask.closable closable]
     $f.stylemask.closable state selected
     grid $f.stylemask.closable -row 1 -column 0 -sticky w
     # miniaturizableable
     ttk::checkbutton $f.stylemask.miniaturizable -text miniaturizable \
 	-variable $name.miniaturizable \
-        -command [list setbit $name $f.stylemask.miniaturizable miniaturizable]
+	-command [list setbit $name $f.stylemask.miniaturizable miniaturizable]
     if {$class == "nswindow"} {
-        $f.stylemask.miniaturizable state selected
+	$f.stylemask.miniaturizable state selected
     } else {
-        $f.stylemask.miniaturizable state !alternate
+	$f.stylemask.miniaturizable state !alternate
     }
     grid $f.stylemask.miniaturizable -row 2 -column 0 -sticky w
     # resizable
@@ -124,10 +124,10 @@ proc setbit {win cb bitname} {
     set bits [wm attributes $win -stylemask]
     set index [lsearch $bits $bitname]
     if {$index >= 0 && !$state} {
-        set bits [lreplace $bits $index $index]
+	set bits [lreplace $bits $index $index]
     }
     if {$index < 0 && $state} {
-        lappend bits $bitname
+	lappend bits $bitname
     }
     wm attributes $win -stylemask $bits
 }
@@ -192,8 +192,8 @@ proc launchModernWindow {} {
     frame .mod.left -width 220 -height 400 -background systemWindowBackgroundColor
     catch {
 	font create leftFont -family .AppleSystemUIFont -size 11
-        font create rightFont -family .AppleSystemUIFont -size 16
-        font create codeFont -family Courier -size 16
+	font create rightFont -family .AppleSystemUIFont -size 16
+	font create codeFont -family Courier -size 16
     }
     grid [ttk::label .mod.left.spacer -padding {220 30 0 0}] -row 0 -column 0
     grid [ttk::radiobutton .mod.left.about -text About -style SidebarButton \

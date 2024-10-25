@@ -187,7 +187,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(LineItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(LineItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -704,10 +704,10 @@ ComputeLineBbox(
 	width = 1.0;
     }
     if (linePtr->arrow != ARROWS_NONE) {
-	if (linePtr->arrow != ARROWS_LAST) {
+	if (linePtr->arrow != ARROWS_LAST && linePtr->firstArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->firstArrowPtr);
 	}
-	if (linePtr->arrow != ARROWS_FIRST) {
+	if (linePtr->arrow != ARROWS_FIRST && linePtr->lastArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->lastArrowPtr);
 	}
     }
@@ -1018,7 +1018,7 @@ LineInsert(
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
-        ckfree(linePtr->coordPtr);
+	ckfree(linePtr->coordPtr);
     }
     linePtr->coordPtr = newCoordPtr;
     length += objc ;

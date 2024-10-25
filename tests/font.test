@@ -22,16 +22,16 @@ proc getnondefaultfonts {} {
     global defaultfontlist
     set nondeffonts [list ]
     foreach afont [font names] {
-        if {$afont ni $defaultfontlist} {
-            lappend nondeffonts $afont
-        }
+	if {$afont ni $defaultfontlist} {
+	    lappend nondeffonts $afont
+	}
     }
     set nondeffonts
 }
 
 proc clearnondefaultfonts {} {
     foreach afont [getnondefaultfonts] {
-        font delete $afont
+	font delete $afont
     }
 }
 
@@ -42,7 +42,7 @@ wm geom .t +0+0
 update idletasks
 
 switch [tk windowingsystem] {
-    x11	 	{set fixed "TkFixedFont"}
+    x11		{set fixed "TkFixedFont"}
     win32	{set fixed "courier 12"}
     aqua	{set fixed "monaco 9"}
 }
@@ -97,7 +97,7 @@ test font-2.1 {TkFontPkgFree} -setup {
     lappend x [foo eval {catch {font families} msg; set msg}]
 } -cleanup {
     interp delete foo
-} -result {{named font "wiggles" doesn't exist} {can't invoke "font" command: application has been destroyed}}
+} -result {{named font "wiggles" does not exist} {cannot invoke "font" command: application has been destroyed}}
 
 
 test font-3.1 {font command: general} -body {
@@ -133,7 +133,7 @@ test font-4.6 {font command: actual: arguments} -body {
 test font-4.7 {font command: actual: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
@@ -173,7 +173,7 @@ test font-5.1 {font command: configure} -body {
 test font-5.2 {font command: configure: non-existent font} -body {
     # (namedHashPtr == NULL)
     font configure xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.3 {font command: configure: "deleted" font} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -187,7 +187,7 @@ test font-5.3 {font command: configure: "deleted" font} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.4 {font command: configure: get all options} -setup {
     catch {font delete xyz}
 } -body {
@@ -330,7 +330,7 @@ test font-7.4 {font command: delete: non-existent} -setup {
 } -body {
     # (namedHashPtr == NULL)
     font delete xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.5 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -345,7 +345,7 @@ test font-7.5 {font command: delete: mark for later deletion} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.6 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -405,7 +405,7 @@ test font-9.3 {font command: measure: arguments} -body {
 test font-9.4 {font command: measure: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font measure "\{xyz" abc
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-9.5 {font command: measure} -body {
     # Tk_TextWidth()
     expr {[font measure $fixed "abcdefg"] == [font measure $fixed "a"]*7 }
@@ -443,7 +443,7 @@ test font-10.5 {font command: metrics: arguments} -body {
 test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-10.7 {font command: metrics: get all metrics} -setup {
     catch {unset a}
 } -body {
@@ -707,7 +707,7 @@ test font-15.9 {Tk_AllocFontFromObj procedure: get attribute font} -setup {
 test font-15.10 {Tk_AllocFontFromObj procedure: no match} -constraints noExceed -body {
     # (ParseFontNameObj() != TCL_OK)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-15.11 {Tk_AllocFontFromObj procedure: get attribute font} -body {
     # not (ParseFontNameObj() != TCL_OK)
     lindex [font actual {plan 9}] 0
@@ -946,9 +946,9 @@ test font-21.7 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {avantgarde 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "avantgarde"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x AvantGarde-Book
+	set x AvantGarde-Book
     }
 } -result {AvantGarde-Book}
 test font-21.8 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -956,9 +956,9 @@ test font-21.8 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {avantgarde 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "avantgarde"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x AvantGarde-Demi
+	set x AvantGarde-Demi
     }
 } -result {AvantGarde-Demi}
 test font-21.9 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -966,9 +966,9 @@ test font-21.9 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {avantgarde 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "avantgarde"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x AvantGarde-BookOblique
+	set x AvantGarde-BookOblique
     }
 } -result {AvantGarde-BookOblique}
 test font-21.10 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -976,9 +976,9 @@ test font-21.10 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {avantgarde 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "avantgarde"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x AvantGarde-DemiOblique
+	set x AvantGarde-DemiOblique
     }
 } -result {AvantGarde-DemiOblique}
 
@@ -987,9 +987,9 @@ test font-21.11 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {bookman 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "bookman"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Bookman-Light
+	set x Bookman-Light
     }
 } -result {Bookman-Light}
 test font-21.12 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -997,9 +997,9 @@ test font-21.12 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {bookman 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "bookman"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Bookman-Demi
+	set x Bookman-Demi
     }
 } -result {Bookman-Demi}
 test font-21.13 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1007,9 +1007,9 @@ test font-21.13 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {bookman 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "bookman"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Bookman-LightItalic
+	set x Bookman-LightItalic
     }
 } -result {Bookman-LightItalic}
 test font-21.14 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1017,9 +1017,9 @@ test font-21.14 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {bookman 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "bookman"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Bookman-DemiItalic
+	set x Bookman-DemiItalic
     }
 } -result {Bookman-DemiItalic}
 
@@ -1028,9 +1028,9 @@ test font-21.15 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {courier 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "courier"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Courier
+	set x Courier
     }
 } -result {Courier}
 test font-21.16 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1038,9 +1038,9 @@ test font-21.16 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {courier 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "courier"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Courier-Bold
+	set x Courier-Bold
     }
 } -result {Courier-Bold}
 test font-21.17 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1048,9 +1048,9 @@ test font-21.17 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {courier 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "courier"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Courier-Oblique
+	set x Courier-Oblique
     }
 } -result {Courier-Oblique}
 test font-21.18 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1058,9 +1058,9 @@ test font-21.18 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {courier 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "courier"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Courier-BoldOblique
+	set x Courier-BoldOblique
     }
 } -result {Courier-BoldOblique}
 
@@ -1069,9 +1069,9 @@ test font-21.19 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {helvetica 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "helvetica"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Helvetica
+	set x Helvetica
     }
 } -result {Helvetica}
 test font-21.20 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1079,9 +1079,9 @@ test font-21.20 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {helvetica 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "helvetica"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Helvetica-Bold
+	set x Helvetica-Bold
     }
 } -result {Helvetica-Bold}
 test font-21.21 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1089,9 +1089,9 @@ test font-21.21 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {helvetica 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "helvetica"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Helvetica-Oblique
+	set x Helvetica-Oblique
     }
 } -result {Helvetica-Oblique}
 test font-21.22 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1099,9 +1099,9 @@ test font-21.22 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {helvetica 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "helvetica"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Helvetica-BoldOblique
+	set x Helvetica-BoldOblique
     }
 } -result {Helvetica-BoldOblique}
 
@@ -1110,9 +1110,9 @@ test font-21.23 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {{new century schoolbook} 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "new century schoolbook"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x NewCenturySchlbk-Roman
+	set x NewCenturySchlbk-Roman
     }
 } -result {NewCenturySchlbk-Roman}
 test font-21.24 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1120,9 +1120,9 @@ test font-21.24 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {{new century schoolbook} 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "new century schoolbook"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x NewCenturySchlbk-Bold
+	set x NewCenturySchlbk-Bold
     }
 } -result {NewCenturySchlbk-Bold}
 test font-21.25 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1130,9 +1130,9 @@ test font-21.25 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {{new century schoolbook} 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "new century schoolbook"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x NewCenturySchlbk-Italic
+	set x NewCenturySchlbk-Italic
     }
 } -result {NewCenturySchlbk-Italic}
 test font-21.26 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1140,9 +1140,9 @@ test font-21.26 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {{new century schoolbook} 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "new century schoolbook"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x NewCenturySchlbk-BoldItalic
+	set x NewCenturySchlbk-BoldItalic
     }
 } -result {NewCenturySchlbk-BoldItalic}
 
@@ -1151,9 +1151,9 @@ test font-21.27 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {palatino 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "palatino"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Palatino-Roman
+	set x Palatino-Roman
     }
 } -result {Palatino-Roman}
 test font-21.28 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1161,9 +1161,9 @@ test font-21.28 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {palatino 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "palatino"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Palatino-Bold
+	set x Palatino-Bold
     }
 } -result {Palatino-Bold}
 test font-21.29 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1171,9 +1171,9 @@ test font-21.29 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {palatino 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "palatino"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Palatino-Italic
+	set x Palatino-Italic
     }
 } -result {Palatino-Italic}
 test font-21.30 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1181,9 +1181,9 @@ test font-21.30 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {palatino 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "palatino"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Palatino-BoldItalic
+	set x Palatino-BoldItalic
     }
 } -result {Palatino-BoldItalic}
 
@@ -1192,9 +1192,9 @@ test font-21.31 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {symbol 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "symbol"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Symbol
+	set x Symbol
     }
 } -result {Symbol}
 test font-21.32 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1202,9 +1202,9 @@ test font-21.32 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {symbol 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "symbol"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Symbol
+	set x Symbol
     }
 } -result {Symbol}
 test font-21.33 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1212,9 +1212,9 @@ test font-21.33 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {symbol 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "symbol"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Symbol
+	set x Symbol
     }
 } -result {Symbol}
 test font-21.34 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1222,9 +1222,9 @@ test font-21.34 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {symbol 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "symbol"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Symbol
+	set x Symbol
     }
 } -result {Symbol}
 
@@ -1233,9 +1233,9 @@ test font-21.35 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {times 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "times"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Times-Roman
+	set x Times-Roman
     }
 } -result {Times-Roman}
 test font-21.36 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1243,9 +1243,9 @@ test font-21.36 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {times 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "times"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Times-Bold
+	set x Times-Bold
     }
 } -result {Times-Bold}
 test font-21.37 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1253,9 +1253,9 @@ test font-21.37 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {times 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "times"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Times-Italic
+	set x Times-Italic
     }
 } -result {Times-Italic}
 test font-21.38 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1263,9 +1263,9 @@ test font-21.38 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {times 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "times"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x Times-BoldItalic
+	set x Times-BoldItalic
     }
 } -result {Times-BoldItalic}
 
@@ -1274,9 +1274,9 @@ test font-21.39 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfchancery 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfchancery"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfChancery-MediumItalic
+	set x ZapfChancery-MediumItalic
     }
 } -result {ZapfChancery-MediumItalic}
 test font-21.40 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1284,9 +1284,9 @@ test font-21.40 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfchancery 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfchancery"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfChancery-MediumItalic
+	set x ZapfChancery-MediumItalic
     }
 } -result {ZapfChancery-MediumItalic}
 test font-21.41 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1294,9 +1294,9 @@ test font-21.41 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfchancery 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfchancery"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfChancery-MediumItalic
+	set x ZapfChancery-MediumItalic
     }
 } -result {ZapfChancery-MediumItalic}
 test font-21.42 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1304,9 +1304,9 @@ test font-21.42 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfchancery 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfchancery"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfChancery-MediumItalic
+	set x ZapfChancery-MediumItalic
     }
 } -result {ZapfChancery-MediumItalic}
 
@@ -1315,9 +1315,9 @@ test font-21.43 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfdingbats 12 roman normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfdingbats"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfDingbats
+	set x ZapfDingbats
     }
 } -result {ZapfDingbats}
 test font-21.44 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1325,9 +1325,9 @@ test font-21.44 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfdingbats 12 roman bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfdingbats"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfDingbats
+	set x ZapfDingbats
     }
 } -result {ZapfDingbats}
 test font-21.45 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1335,9 +1335,9 @@ test font-21.45 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfdingbats 12 italic normal}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfdingbats"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfDingbats
+	set x ZapfDingbats
     }
 } -result {ZapfDingbats}
 test font-21.46 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
@@ -1345,9 +1345,9 @@ test font-21.46 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
 } -body {
     set name {zapfdingbats 12 italic bold}
     if {[font actual {avantgarde 12 roman normal} -family] == "zapfdingbats"} {
-        set x [psfontname avantgarde 12 roman normal]
+	set x [psfontname avantgarde 12 roman normal]
     } else {
-        set x ZapfDingbats
+	set x ZapfDingbats
     }
 } -result {ZapfDingbats}
 
@@ -2254,10 +2254,10 @@ test font-38.6 {ParseFontNameObj procedure: begins with *} -body {
 } -result [font actual {times 0} -family]
 test font-38.7 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-38.8 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
     font actual ""
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test font-38.9 {ParseFontNameObj procedure: arguments} -body {
     font actual {times 20 xyz xyz}
 } -returnCodes error -result {unknown font style "xyz"}
@@ -2305,7 +2305,7 @@ test font-40.4 {TkFontParseXLFD procedure: all fields unspecified} -body {
 } -result {-family}
 test font-40.5 {TkFontParseXLFD procedure: all fields specified} -body {
     lindex [font actual \
-        -foundry-times-weight-slant-setwidth-addstyle-10-10-10-10-spacing-avgwidth-registry-encoding] 1
+	-foundry-times-weight-slant-setwidth-addstyle-10-10-10-10-spacing-avgwidth-registry-encoding] 1
 } -result [font actual {times 0} -family]
 
 
@@ -2381,11 +2381,11 @@ test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
 } -result {times}
 test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed failsOnUbuntu} -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
-        # avoid test failure on systems that have a real "times new roman" font
-        set res 1
+	# avoid test failure on systems that have a real "times new roman" font
+	set res 1
     } else {
-        set res [expr {[font actual {{times new roman} 10} -family] eq \
-                       [font actual {times 10} -family]} ]
+	set res [expr {[font actual {{times new roman} 10} -family] eq \
+		       [font actual {times 10} -family]} ]
     }
 } -result 1
 
@@ -2434,15 +2434,15 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     set twidth [font measure MyFont $text]
     set theight [font metrics MyFont -linespace]
     set circid [$c create polygon \
-		    15                    15 \
-		    [expr {15 + $twidth}] 15 \
-		    [expr {15 + $twidth}] [expr {15 + $theight}] \
-		    15                    [expr {15 + $theight}] \
-		    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
+	15                    15 \
+	[expr {15 + $twidth}] 15 \
+	[expr {15 + $twidth}] [expr {15 + $theight}] \
+	15                    [expr {15 + $theight}] \
+	    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
     pack $c -fill both -expand 1 -side top
     update
 
-    # Lamda test functions
+    # Lambda test functions
     set circle_text {{w user_data text circ} {
 	if {[winfo class $w] ne "Canvas"} {
 	    puts "Wrong widget type: $w"
@@ -2468,6 +2468,7 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     apply $circle_text $c FontChanged $textid $circid
     update
     bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    update idletasks
 
     # Begin test:
     set results {}

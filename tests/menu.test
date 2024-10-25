@@ -746,11 +746,11 @@ test menu-2.127 {entry configuration options 0 -image bogus tearoff} -body {
 
 test menu-2.128 {entry configuration options 1 -image bogus command} -body {
     .m1 entryconfigure 1 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.129 {entry configuration options 2 -image bogus cascade} -body {
     .m1 entryconfigure 2 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.130 {entry configuration options 3 -image bogus separator} -body {
     .m1 entryconfigure 3 -image bogus
@@ -758,11 +758,11 @@ test menu-2.130 {entry configuration options 3 -image bogus separator} -body {
 
 test menu-2.131 {entry configuration options 4 -image bogus checkbutton} -body {
     .m1 entryconfigure 4 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.132 {entry configuration options 5 -image bogus radiobutton} -body {
     .m1 entryconfigure 5 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.133 {entry configuration options 0 -image {} tearoff} -body {
     .m1 entryconfigure 0 -image
@@ -1027,11 +1027,11 @@ test menu-2.190 {entry configuration options 3 -selectimage bogus separator} -bo
 
 test menu-2.191 {entry configuration options 4 -selectimage bogus checkbutton} -body {
     .m1 entryconfigure 4 -selectimage bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.192 {entry configuration options 5 -selectimage bogus radiobutton} -body {
     .m1 entryconfigure 5 -selectimage bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.193 {entry configuration options 0 -selectimage {} tearoff} -body {
     .m1 entryconfigure 0 -selectimage
@@ -1865,7 +1865,7 @@ test menu-4.3 {TkInvokeMenu: checkbutton -on} -setup {
     menu .m1
     .m1 add checkbutton -label "test" -variable foo -onvalue on -offvalue off
     list [catch {.m1 invoke 1} msg] $msg [catch {set foo} msg2] $msg2 \
-            [catch {unset foo} msg3] $msg3
+	    [catch {unset foo} msg3] $msg3
 } -cleanup {
     destroy .m1
 } -result {0 {} 0 on 0 {}}
@@ -3098,9 +3098,9 @@ test menu-16.19 {MenuAddOrInsert - Insert a cascade deep into the tree} -setup {
     .menubar.test.cascade add command -label SubItem -command "puts SubItemSelected"
     . configure -menu .menubar
     list [catch {.menubar.test add cascade -label SubMenu \
-            -menu .menubar.test.cascade}] \
-            [info commands .\#menubar.\#menubar\#test.\#menubar\#test\#cascade] \
-            [. configure -menu ""]
+	    -menu .menubar.test.cascade}] \
+	    [info commands .\#menubar.\#menubar\#test.\#menubar\#test\#cascade] \
+	    [. configure -menu ""]
 } -cleanup {
     deleteWindows
 } -result {0 .#menubar.#menubar#test.#menubar#test#cascade {}}
@@ -3113,7 +3113,7 @@ test menu-17.1 {MenuVarProc} -setup {
     menu .m1
     set foo "hello"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
-            [unset foo]
+	    [unset foo]
 } -cleanup {
     deleteWindows
 } -result {e001 {}}
@@ -3124,7 +3124,7 @@ test menu-17.2 {MenuVarProc} -setup {
     catch {unset foo}
     menu .m1
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
-            [set foo ""]
+	    [set foo ""]
 } -cleanup {
     deleteWindows
 } -result {e001 {}}
@@ -3135,7 +3135,7 @@ test menu-17.3 {MenuVarProc} -setup {
     menu .m1
     set foo "hello"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
-            [set foo "hello"] [unset foo]
+	    [set foo "hello"] [unset foo]
 } -cleanup {
     deleteWindows
 } -result {e001 hello {}}
@@ -3145,7 +3145,7 @@ test menu-17.4 {MenuVarProc} -setup {
     menu .m1
     set foo "goodbye"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
-            [set foo "hello"] [unset foo]
+	    [set foo "hello"] [unset foo]
 } -cleanup {
     deleteWindows
 } -result {e001 hello {}}
@@ -3155,7 +3155,7 @@ test menu-17.5 {MenuVarProc} -setup {
     menu .m1
     set foo "hello"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
-            [set foo "goodbye"] [unset foo]
+	    [set foo "goodbye"] [unset foo]
 } -cleanup {
     deleteWindows
 } -result {e001 goodbye {}}
@@ -3167,7 +3167,7 @@ test menu-17.6 {MenuVarProc [5d991b822e]} -setup {
     set var INIT
     .b add checkbutton -variable var
     trace add variable var unset {apply {args {
-        .b entryconfigure 1 -variable {}
+	.b entryconfigure 1 -variable {}
     }}}
     unset var
 } -cleanup {
@@ -3181,7 +3181,7 @@ test menu-17.7 {MenuVarProc [5d991b822e]} -setup {
     set var INIT
     .b add checkbutton -variable var
     trace add variable var unset {apply {args {
-        .b entryconfigure 1 -variable new
+	.b entryconfigure 1 -variable new
     }}}
     unset var
 } -cleanup {
@@ -3580,7 +3580,7 @@ test menu-24.3 {TkNewMenuName} -setup {
     menu .#m
     rename .#m hideme
     list [catch {. configure -menu [menu .m]}] [. configure -menu ""] [destroy .#m] \
-            [destroy .m] [destroy hideme]
+	    [destroy .m] [destroy hideme]
 } -result {0 {} {} {} {}}
 
 
@@ -3937,7 +3937,7 @@ test menu-32.6 {DeleteMenuCloneEntries - reentrancy - crashes tk8.0} -setup {
 } -body {
     menu .m1
     .m1 add command -label test \
-            -command ".m1 delete test ; .m1 add command -label test -command \".m1 delete test\"; .m1 delete test"
+	    -command ".m1 delete test ; .m1 add command -label test -command \".m1 delete test\"; .m1 delete test"
     .m1 invoke test
 } -cleanup {
     deleteWindows
@@ -3960,8 +3960,8 @@ test menu-32.8 {Ensure all menu clone commands are deleted} -setup {
     menu .menubar.test
     .menubar.test add command -label "hi"
     for {set i 0} {$i < 10} {incr i} {
-        .menubar add cascade -menu .menubar.test -label "Test"
-        .menubar delete Test
+	.menubar add cascade -menu .menubar.test -label "Test"
+	.menubar delete Test
     }
 
     info commands .#menubar*test*

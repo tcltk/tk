@@ -620,7 +620,7 @@ test wm-deiconify-1.6 {usage} -constraints !win -setup {
 
 deleteWindows
 test wm-deiconify-2.1 {a window that has never been mapped\
-        should not be mapped by a call to deiconify} -body {
+	should not be mapped by a call to deiconify} -body {
     toplevel .t
     wm deiconify .t
     winfo ismapped .t
@@ -628,7 +628,7 @@ test wm-deiconify-2.1 {a window that has never been mapped\
     deleteWindows
 } -result 0
 test wm-deiconify-2.2 {a window that has already been\
-        mapped should be mapped by deiconify} -body {
+	mapped should be mapped by deiconify} -body {
     toplevel .t
     update idletasks
     wm withdraw .t
@@ -638,8 +638,8 @@ test wm-deiconify-2.2 {a window that has already been\
     deleteWindows
 } -result 1
 test wm-deiconify-2.3 {geometry for an unmapped window\
-        should not be calculated by a call to deiconify,\
-        it should be done at idle time} -setup {
+	should not be calculated by a call to deiconify,\
+	it should be done at idle time} -setup {
     set results {}
 } -body {
     toplevel .t -width 200 -height 200
@@ -648,13 +648,13 @@ test wm-deiconify-2.3 {geometry for an unmapped window\
     lappend results [wm geometry .t]
     update idletasks
     lappend results [lindex [split \
-        [wm geometry .t] +] 0]
+	[wm geometry .t] +] 0]
 } -cleanup {
     deleteWindows
 } -result {1x1+0+0 1x1+0+0 200x200}
 test wm-deiconify-2.4 {invoking destroy after a deiconify\
-        should not result in a crash because of a callback\
-        set on the toplevel} -body {
+	should not result in a crash because of a callback\
+	set on the toplevel} -body {
     toplevel .t
     wm withdraw .t
     wm deiconify .t
@@ -821,10 +821,10 @@ test wm-iconbadge-1.4 {::tk::icons::base_icon($win) must be a Tk photo on X11} -
 } -returnCodes error -result {can't use "book" as iconphoto: not a photo image}
 test wm-iconbadge-1.5 {illegal badge number} -body {
     image create photo book -data {
-        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
-        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
-        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
-        0yv+DVSEUuFxIAOw==
+	R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+	wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+	QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+	0yv+DVSEUuFxIAOw==
     }
     set ::tk::icons::base_icon(.) book
     wm iconbadge . illegal
@@ -833,10 +833,10 @@ test wm-iconbadge-1.5 {illegal badge number} -body {
 } -returnCodes error -result {can't use "illegal" as icon badge}
 test wm-iconbadge-1.6 {non-integer badge number} -body {
     image create photo book -data {
-        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
-        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
-        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
-        0yv+DVSEUuFxIAOw==
+	R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+	wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+	QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+	0yv+DVSEUuFxIAOw==
     }
     set ::tk::icons::base_icon(.) book
     wm iconbadge . 3.2
@@ -845,10 +845,10 @@ test wm-iconbadge-1.6 {non-integer badge number} -body {
 } -returnCodes error -result {can't use "3.2" as icon badge}
 test wm-iconbadge-1.7 {negative or zero badge number} -body {
     image create photo book -data {
-        R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
-        wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
-        QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
-        0yv+DVSEUuFxIAOw==
+	R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
+	wAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IM
+	QCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc
+	0yv+DVSEUuFxIAOw==
     }
     set ::tk::icons::base_icon(.) book
     wm iconbadge . 0
@@ -1016,7 +1016,7 @@ test wm-iconphoto-1.4 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test wm-iconphoto-1.5.1 {usage} -constraints aquaOrWin32 -returnCodes error -body {
     wm iconphoto . -default [image create photo -file {}]
-} -match {glob} -result {failed to create an iconphoto with image *}
+} -match glob -result {failed to create an iconphoto with image *}
 test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
     wm iconphoto . -default [image create photo -file {}]
 } -result {}
@@ -1084,6 +1084,8 @@ test wm-iconwindow-1.5 {usage} -setup {
 } -result {.icon is already an icon for .t2}
 
 test wm-iconwindow-2.1 {setting and reading values} -setup {
+    # without this macOS crashes for unknown reasons
+    wm iconwindow .t {}
     destroy .icon
     set result {}
 } -body {
@@ -1136,7 +1138,7 @@ test wm-maxsize-1.7 {maxsize must be <= screen size} -setup {
 
 destroy .t
 test wm-maxsize-2.1 {setting the maxsize to a value smaller\
-        than the current size will resize a toplevel} -body {
+	than the current size will resize a toplevel} -body {
     toplevel .t -width 300 -height 300
     update
     wm maxsize .t 200 150
@@ -1147,7 +1149,7 @@ test wm-maxsize-2.1 {setting the maxsize to a value smaller\
     destroy .t
 } -result {200 150}
 test wm-maxsize-2.2 {setting the maxsize to a value smaller\
-        than the current size will resize a gridded toplevel} -body {
+	than the current size will resize a gridded toplevel} -body {
     toplevel .t
     wm grid .t 0 0 50 50
     wm geometry .t 6x6
@@ -1160,7 +1162,7 @@ test wm-maxsize-2.2 {setting the maxsize to a value smaller\
     destroy .t
 } -result {4 3}
 test wm-maxsize-2.3 {attempting to resize to a value\
-        bigger than the current maxsize will set it to the max size} -body {
+	bigger than the current maxsize will set it to the max size} -body {
     toplevel .t -width 200 -height 200
     wm maxsize .t 300 250
     update
@@ -1224,7 +1226,7 @@ test wm-minsize-1.6 {usage} -setup {
 } -result {300 200}
 
 test wm-minsize-2.1 {setting the minsize to a value larger\
-        than the current size will resize a toplevel} -body {
+	than the current size will resize a toplevel} -body {
     toplevel .t -width 200 -height 200
     update
     wm minsize .t 400 300
@@ -1235,7 +1237,7 @@ test wm-minsize-2.1 {setting the minsize to a value larger\
     destroy .t
 } -result {400 300}
 test wm-minsize-2.2 {setting the minsize to a value larger\
-        than the current size will resize a gridded toplevel} -body {
+	than the current size will resize a gridded toplevel} -body {
     toplevel .t
     wm grid .t 1 1 50 50
     wm geom .t 4x4
@@ -1248,7 +1250,7 @@ test wm-minsize-2.2 {setting the minsize to a value larger\
     destroy .t
 } -result {8 8}
 test wm-minsize-2.3 {attempting to resize to a value\
-        smaller than the current minsize will set it to the minsize} -body {
+	smaller than the current minsize will set it to the minsize} -body {
     toplevel .t -width 400 -height 400
     wm minsize .t 300 300
     update
@@ -1502,18 +1504,24 @@ test wm-stackorder-2.2 {stacking order} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-2.3 {stacking order} -body {
+    set res {}
     toplevel .t
     tkwait visibility .t
+    raiseDelay
     toplevel .t2
     tkwait visibility .t2
+    raiseDelay
+    lappend res [wm stackorder .] 
     raise .
     raiseDelay
+    lappend res [wm stackorder .] 
     raise .t2
     raiseDelay
-    wm stackorder .
+    lappend res [wm stackorder .]
+    set res
 } -cleanup {
     destroy .t .t2
-} -result {.t . .t2}
+} -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
     toplevel .t ; update
     toplevel .t2 ; update
@@ -1561,7 +1569,9 @@ deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t1 ; update
+    raiseDelay
     toplevel .t2 ; update
+    raiseDelay
     wm iconify .t1
     raiseDelay
     wm stackorder .
@@ -1700,7 +1710,7 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     destroy .t
 } -result 1
 test wm-stackorder-5.3 {An overrideredirect window\
-        can be explicitly lowered} -body {
+	can be explicitly lowered} -body {
     toplevel .t
     wm overrideredirect .t 1
     tkwait visibility .t
@@ -1833,7 +1843,7 @@ test wm-transient-2.2 {first toplevel parent of non-toplevel container window is
 } -result {.top}
 
 test wm-transient-3.1 {transient toplevel is withdrawn
-        when mapped if toplevel is withdrawn} -body {
+	when mapped if toplevel is withdrawn} -body {
     toplevel .top
     wm withdraw .top
     update
@@ -1845,7 +1855,7 @@ test wm-transient-3.1 {transient toplevel is withdrawn
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-3.2 {already mapped transient toplevel
-        takes on withdrawn state of toplevel} -body {
+	takes on withdrawn state of toplevel} -body {
     toplevel .top
     wm withdraw .top
     update
@@ -1858,7 +1868,7 @@ test wm-transient-3.2 {already mapped transient toplevel
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-3.3 {withdraw/deiconify on the toplevel
-        also does a withdraw/deiconify on the transient} -setup {
+	also does a withdraw/deiconify on the transient} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -1876,7 +1886,7 @@ test wm-transient-3.3 {withdraw/deiconify on the toplevel
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-        when mapped if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
+	when mapped if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .top
     wm iconify .top
     update
@@ -1888,7 +1898,7 @@ test wm-transient-4.1 {transient toplevel is withdrawn
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.2 {already mapped transient toplevel
-        is withdrawn if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
+	is withdrawn if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .top
     raiseDelay
     wm iconify .top
@@ -1902,7 +1912,7 @@ test wm-transient-4.2 {already mapped transient toplevel
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.3 {iconify/deiconify on the toplevel
-        does a withdraw/deiconify on the transient} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+	does a withdraw/deiconify on the transient} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -1920,7 +1930,7 @@ test wm-transient-4.3 {iconify/deiconify on the toplevel
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-5.1 {an error during transient command should not
-        cause the map/unmap binding to be deleted} -setup {
+	cause the map/unmap binding to be deleted} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -1939,7 +1949,7 @@ test wm-transient-5.1 {an error during transient command should not
     deleteWindows
 } -result {1 withdrawn normal}
 test wm-transient-5.2 {remove transient property when toplevel
-        is destroyed} -body {
+	is destroyed} -body {
     toplevel .top
     toplevel .subject
     wm transient .subject .top
@@ -1951,7 +1961,7 @@ test wm-transient-5.2 {remove transient property when toplevel
     deleteWindows
 } -result {}
 test wm-transient-5.3 {remove transient property from window
-        that had never been mapped when toplevel is destroyed} -body {
+	that had never been mapped when toplevel is destroyed} -body {
     toplevel .top
     toplevel .subject
     wm transient .subject .top
@@ -1962,7 +1972,7 @@ test wm-transient-5.3 {remove transient property from window
 } -result {}
 
 test wm-transient-6.1 {a withdrawn transient does not track
-        state changes in the toplevel} -body {
+	state changes in the toplevel} -body {
     toplevel .top
     toplevel .subject
     update
@@ -1977,7 +1987,7 @@ test wm-transient-6.1 {a withdrawn transient does not track
     deleteWindows
 } -result {withdrawn}
 test wm-transient-6.2 {a withdrawn transient does not track
-        state changes in the toplevel} -setup {
+	state changes in the toplevel} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -2002,7 +2012,7 @@ test wm-transient-6.2 {a withdrawn transient does not track
     deleteWindows
 } -result {withdrawn normal withdrawn normal}
 test wm-transient-6.3 {a withdrawn transient does not track
-        state changes in the toplevel} -body {
+	state changes in the toplevel} -body {
     toplevel .top
     toplevel .subject
     update
@@ -2059,7 +2069,7 @@ test wm-transient-7.4 {Reassign transient, destroy new toplevel} -body {
     toplevel .transient
     wm transient .transient .t1
     wm transient .transient .t2
-    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t2		;# caused panic in 8.4b1
     destroy .t1
     destroy .transient
 } -cleanup {
@@ -2072,7 +2082,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     wm transient .transient .t1
     wm transient .transient .t2
     destroy .transient
-    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t2		;# caused panic in 8.4b1
     destroy .t1		;# so did this
 } -cleanup {
     deleteWindows

@@ -246,8 +246,6 @@ EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 				unsigned int state);
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
-/* 52 */
-EXTERN void		TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag);
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
@@ -420,7 +418,6 @@ typedef struct TkIntPlatStubs {
     Tk_Window (*tkMacOSXGetContainer) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
-    void (*tkMacOSXSetDrawingEnabled) (TkWindow *winPtr, int flag); /* 52 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
@@ -673,8 +670,6 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 50 */
 #define TkGenWMDestroyEvent \
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
-#define TkMacOSXSetDrawingEnabled \
-	(tkIntPlatStubsPtr->tkMacOSXSetDrawingEnabled) /* 52 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \

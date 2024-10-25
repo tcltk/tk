@@ -74,12 +74,12 @@ test tk-3.9 {tk command: scaling: too big} -body {
 test tk-3.10 {tk command: scaling: widthmm} -body {
     tk scaling 1.25
     expr {int((25.4*[winfo screenwidth .])/(72*1.25) + 0.5) \
-        - [winfo screenmmwidth .]}
+	- [winfo screenmmwidth .]}
 } -result 0
 test tk-3.11 {tk command: scaling: heightmm} -body {
     tk scaling 1.25
     expr {int((25.4*[winfo screenheight .])/(72*1.25) + 0.5) \
-        - [winfo screenmmheight .]}
+	- [winfo screenmmheight .]}
 } -result 0
 tk scaling $scaling
 

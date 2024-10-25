@@ -1,23 +1,19 @@
 # README:  Tk
 
-This is the **Tk 9.0b3** source distribution.
+This is the **Tk 9.0.1** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
 
-8.6 (production release, daily build)
-[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-6-branch)
+9.0 (production release, daily build)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Amain)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Amain)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Amain)
 <br>
-8.7 (in development, daily build))
-[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-branch)
-[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-branch)
-[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-branch)
-9.0 (in development, daily build))
-[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Amain)
-[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Amain)
-[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Amain)
+8.7 (in development, daily build)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-8-branch)
 
 ## <a id="intro">1.</a> Introduction
 

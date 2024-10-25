@@ -189,6 +189,9 @@ proc ::tk_setPalette {args} {
 #			which contains color information.  Each element
 #			is named after a widget configuration option, and
 #			each value is the value for that option.
+# Return Value:
+#                       A list of commands which can be run to update
+#                       the defaults database when exec'ed.
 
 proc ::tk::RecolorTree {w colors} {
     upvar $colors c
@@ -200,11 +203,14 @@ proc ::tk::RecolorTree {w colors} {
     foreach dbOption [array names c] {
 	set option -[string tolower $dbOption]
 	set class [string replace $dbOption 0 0 [string toupper \
-		[string index $dbOption 0]]]
+	     [string index $dbOption 0]]]
+	# Make sure this option is valid for this window.
 	if {![catch {$w configure $option} value]} {
-	    # if the option database has a preference for this
-	    # dbOption, then use it, otherwise use the defaults
-	    # for the widget.
+	    # Update the option for this window.
+	    $w configure $option $c($dbOption)
+	    # Retrieve a default value for this option.  First check
+	    # the option database. If it is not in the database use
+	    # the value for the temporary prototype widget.
 	    set defaultcolor [option get $w $dbOption $class]
 	    if {$defaultcolor eq "" || \
 		    ([info exists prototype] && \
@@ -214,16 +220,15 @@ proc ::tk::RecolorTree {w colors} {
 	    if {$defaultcolor ne ""} {
 		set defaultcolor [winfo rgb . $defaultcolor]
 	    }
-	    set chosencolor [lindex $value 4]
-	    if {$chosencolor ne ""} {
-		set chosencolor [winfo rgb . $chosencolor]
+	    # If the color requested for this option differs from
+	    # the default, append a command to update the default.
+	    set requestcolor [lindex $value 4]
+	    if {$requestcolor ne ""} {
+		set requestcolor [winfo rgb . $requestcolor]
 	    }
-	    if {[string match $defaultcolor $chosencolor]} {
-		# Change the option database so that future windows will get
-		# the same colors.
+	    if {![string match $defaultcolor $requestcolor]} {
 		append result ";\noption add [list \
 		    *[winfo class $w].$dbOption $c($dbOption) 60]"
-		$w configure $option $c($dbOption)
 	    }
 	}
     }
@@ -245,19 +250,19 @@ proc ::tk::RecolorTree {w colors} {
 
 proc ::tk::Darken {color percent} {
     if {$percent < 0} {
-        return #000000
+	return #000000
     } elseif {$percent > 200} {
-        return #ffffff
+	return #ffffff
     } elseif {$percent <= 100} {
-        lassign [winfo rgb . $color] r g b
-        set r [expr {($r/256)*$percent/100}]
-        set g [expr {($g/256)*$percent/100}]
-        set b [expr {($b/256)*$percent/100}]
+	lassign [winfo rgb . $color] r g b
+	set r [expr {($r/256)*$percent/100}]
+	set g [expr {($g/256)*$percent/100}]
+	set b [expr {($b/256)*$percent/100}]
     } elseif {$percent > 100} {
-        lassign [winfo rgb . $color] r g b
-        set r [expr {255 - ((65535-$r)/256)*(200-$percent)/100}]
-        set g [expr {255 - ((65535-$g)/256)*(200-$percent)/100}]
-        set b [expr {255 - ((65535-$b)/256)*(200-$percent)/100}]
+	lassign [winfo rgb . $color] r g b
+	set r [expr {255 - ((65535-$r)/256)*(200-$percent)/100}]
+	set g [expr {255 - ((65535-$g)/256)*(200-$percent)/100}]
+	set b [expr {255 - ((65535-$b)/256)*(200-$percent)/100}]
     }
     return [format #%02x%02x%02x $r $g $b]
 }

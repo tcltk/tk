@@ -82,7 +82,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 
     h->flags &= ~SCROLL_UPDATE_REQUIRED;
 
-    if (s->scrollCmd == NULL) {
+    if (s->scrollCmdObj == NULL) {
 	return TCL_OK;
     }
 
@@ -90,7 +90,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
     Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, s->scrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, Tcl_GetString(s->scrollCmdObj), TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, arg2, TCL_INDEX_NONE);
 
@@ -105,17 +105,17 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 
     if (code != TCL_OK && !Tcl_InterpDeleted(interp)) {
 	/* Add error to stack trace.
-         * Also set the SCROLL_UPDATE_REQUIRED flag so that a later call to
-         * TtkScrolled has an effect. Indeed, the error in the -scrollcommand
-         * callback may later be gone, for instance the callback proc got
-         * defined in the meantime.
+	 * Also set the SCROLL_UPDATE_REQUIRED flag so that a later call to
+	 * TtkScrolled has an effect. Indeed, the error in the -scrollcommand
+	 * callback may later be gone, for instance the callback proc got
+	 * defined in the meantime.
 	 */
 
 	Tcl_AddErrorInfo(interp, /* @@@ "horizontal" / "vertical" */
 		"\n    (scrolling command executed by ");
 	Tcl_AddErrorInfo(interp, Tk_PathName(h->corePtr->tkwin));
 	Tcl_AddErrorInfo(interp, ")");
-        TtkScrollbarUpdateRequired(h);
+	TtkScrollbarUpdateRequired(h);
     }
     return code;
 }
@@ -193,7 +193,7 @@ void TtkScrollbarUpdateRequired(ScrollHandle h)
 void TtkUpdateScrollInfo(ScrollHandle h)
 {
     if (h->corePtr->flags & REDISPLAY_PENDING) {
-        h->corePtr->widgetSpec->layoutProc(h->corePtr);
+	h->corePtr->widgetSpec->layoutProc(h->corePtr);
     }
 }
 
@@ -255,7 +255,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
     Scrollable *s = h->scrollPtr;
 
     if (updateScrollInfo) {
-        TtkUpdateScrollInfo(h);
+	TtkUpdateScrollInfo(h);
     }
 
     if (newFirst >= s->total)

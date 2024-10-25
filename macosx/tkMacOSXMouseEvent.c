@@ -504,8 +504,9 @@ enum {
 	    state |= Tk_GetButtonMask(Button1);
 	}
 	if (eventType == NSMouseEntered) {
-	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
-				 global.x, global.y, state);
+	    Tk_Window new_win = Tk_CoordsToWindow(global.x, global.y,
+		 (Tk_Window) [NSApp tkPointerWindow]);
+	    Tk_UpdatePointer(new_win, global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
 	    if ([NSApp tkDragTarget]) {
 	    	Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
@@ -883,9 +884,9 @@ TkpWarpPointer(
     CGWarpMouseCursorPosition(pt);
 
     if (dispPtr->warpWindow) {
-        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
     } else {
-        TkGenerateButtonEventForXPointer(None);
+	TkGenerateButtonEventForXPointer(None);
     }
 }
 

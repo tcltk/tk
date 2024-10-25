@@ -24,7 +24,7 @@ namespace eval ::tk::dialog::file {
 
     # Based on Vimix/16/actions/go-up.svg
     # See https://github.com/vinceliuice/vimix-icon-theme
-    set updirImageData {
+    variable updirImageData {
 	<?xml version="1.0" encoding="UTF-8"?>
 	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
 	 <path d="m7 14v-9l-4 4-1-1 6-6 6 6-1 1-4-4v9z" fill="#000000"/>
@@ -45,7 +45,7 @@ namespace eval ::tk::dialog::file {
     }
 
     # Based on https://icons8.com/icon/JXYalxb9XWWd/folder
-    set folderImageData {
+    variable folderImageData {
 	<?xml version="1.0" encoding="UTF-8"?>
 	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
 	 <path d="m0.5 13.5v-12h4.293l2 2h8.707v10z" fill="#59afff"/>
@@ -56,7 +56,7 @@ namespace eval ::tk::dialog::file {
     }
 
     # Based on https://icons8.com/icon/mEF_vyjYlnE3/file
-    set fileImageData {
+    variable fileImageData {
 	<?xml version="1.0" encoding="UTF-8"?>
 	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
 	 <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
@@ -650,7 +650,7 @@ proc ::tk::dialog::file::Update {w} {
 
 # ::tk::dialog::file::SetPathSilently --
 #
-# 	Sets data(selectPath) without invoking the trace procedure
+#	Sets data(selectPath) without invoking the trace procedure
 #
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data

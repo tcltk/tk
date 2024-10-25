@@ -30,11 +30,11 @@ pack $w.text -expand yes -fill both
 # TIP 324 Demo: [tk fontchooser]
 proc fontchooserToggle {} {
     tk fontchooser [expr {[tk fontchooser configure -visible] ?
-            "hide" : "show"}]
+	    "hide" : "show"}]
 }
 proc fontchooserVisibility {w} {
     $w configure -text [expr {[tk fontchooser configure -visible] ?
-            "Hide Font Dialog" : "Show Font Dialog"}]
+	    "Hide Font Dialog" : "Show Font Dialog"}]
 }
 proc fontchooserFocus {w} {
     tk fontchooser configure -font [$w cget -font] \
