@@ -228,13 +228,14 @@ DisplayVerticalScale(
      * Draw the label to the right of the scale.
      */
 
-    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelLength != 0)) {
+    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
+	Tcl_Size labelLength;
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label,
-		scalePtr->labelLength, scalePtr->vertLabelX,
+		scalePtr->tkfont, label, labelLength, scalePtr->vertLabelX,
 		scalePtr->inset + (3 * fm.ascent) / 2);
     }
 }
@@ -432,7 +433,7 @@ DisplayHorizontalScale(
     } else {
 	sliderBorder = scalePtr->bgBorder;
     }
-    width = sliderLength/2;
+    width = sliderLength / 2;
     height = scaleWidth;
     x = TkScaleValueToPixel(scalePtr, scalePtr->value) - width;
     y += borderWidth;
@@ -455,13 +456,14 @@ DisplayHorizontalScale(
      * Draw the label at the top of the scale.
      */
 
-    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelLength != 0)) {
+    if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
+	Tcl_Size labelLength;
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label,
-		scalePtr->labelLength, scalePtr->inset + fm.ascent/2,
+		scalePtr->tkfont, label, labelLength, scalePtr->inset + fm.ascent/2,
 		scalePtr->horizLabelY + fm.ascent);
     }
 }
@@ -574,14 +576,14 @@ TkpDisplayScale(
      */
 
     Tcl_Preserve(scalePtr);
-    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
+    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
 	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(scalePtr->commandObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);

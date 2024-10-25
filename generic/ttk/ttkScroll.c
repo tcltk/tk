@@ -82,7 +82,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 
     h->flags &= ~SCROLL_UPDATE_REQUIRED;
 
-    if (s->scrollCmd == NULL) {
+    if (s->scrollCmdObj == NULL) {
 	return TCL_OK;
     }
 
@@ -90,7 +90,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
     Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, s->scrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, Tcl_GetString(s->scrollCmdObj), TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, arg2, TCL_INDEX_NONE);
 
