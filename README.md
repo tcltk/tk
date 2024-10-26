@@ -1,6 +1,6 @@
 # README:  Tk
 
-This is the **Tk 9.0.1** source distribution.
+This is the **Tk 9.1a0** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
@@ -21,7 +21,7 @@ This directory contains the sources and documentation for Tk, a
 cross-platform GUI toolkit implemented with the Tcl scripting language.
 
 For details on features, incompatibilities, and potential problems with
-this release, see [the Tcl/Tk 9.0 Web page](https://www.tcl-lang.org/software/tcltk/9.0.html)
+this release, see [the Tcl/Tk 9.1 Web page](https://www.tcl-lang.org/software/tcltk/9.1.html)
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
 
