@@ -2102,14 +2102,10 @@ TkToplevelWindowForCommand(
     if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
 	return NULL;
     }
-    if (cmdInfo.isNativeObjectProc == 2) {
-	if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
-	    return NULL;
-	}
-	framePtr = (Frame *)cmdInfo.objClientData2;
-    } else {
-	framePtr = (Frame *)cmdInfo.objClientData;
+    if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
+	return NULL;
     }
+    framePtr = (Frame *)cmdInfo.objClientData2;
     if (framePtr->type != TYPE_TOPLEVEL) {
 	return NULL;
     }
