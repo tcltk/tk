@@ -323,12 +323,12 @@ int
 TkAccessibility_Init(
    Tcl_Interp *interp)
 {
-  Tcl_CreateObjCommand(interp, "::tk::accessible::role", Tk_AccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::name", Tk_AccessibleName, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::description", Tk_AccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::value", Tk_AccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::state", Tk_AccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::action", Tk_AccessibleAction, NULL, NULL); 
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_AccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_AccessibleName, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_AccessibleDescription, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_AccessibleValue, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_AccessibleState, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_AccessibleAction, NULL, NULL); 
     return TCL_OK;
 }
 
