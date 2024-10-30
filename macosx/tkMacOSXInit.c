@@ -456,7 +456,7 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 static void showRootWindow(void *clientData) {
     NSWindow *root = (NSWindow *) clientData;
     if ([NSApp tkWillExit]) {
-        return;
+	return;
     }
     TkWindow *winPtr = TkMacOSXGetTkWindow(root);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
