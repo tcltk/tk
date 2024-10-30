@@ -16,9 +16,9 @@ writing Tcl scripts containing Tk commands.
  - The `tk windowingsystem` "aqua" needs macOS 10.9 or later
 
 ## New commands and options
- - `tk sysnotify`: access to the OS notifications system
- - `tk systray`: access to the OS tray facility
- - `tk print`: access to the OS printing facility
+ - `tk sysnotify` — Access to the OS notifications system
+ - `tk systray` — Access to the OS tray facility
+ - `tk print` — Access to the OS printing facility
 
 ## Widget options
  - New `ttk::progressbar` option: **-text**
