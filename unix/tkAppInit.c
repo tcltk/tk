@@ -181,12 +181,13 @@ Tcl_AppInit(
     /*
      * Specify a user-specific startup file to invoke if the application is
      * run interactively. Typically the startup file is "~/.apprc" where "app"
-     * is the name of the application. If this line is deleted then no user-
-     * specific startup file will be run under any conditions.
+     * is the name of the application. If this line is deleted then no
+     * user-specific startup file will be run under any conditions.
      */
 
-    Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
-	    Tcl_NewStringObj("~/.wishrc", -1), TCL_GLOBAL_ONLY);
+    (void) Tcl_EvalEx(interp,
+	    "set tcl_rcFileName [file tildeexpand ~/.wishrc]",
+	    -1, TCL_EVAL_GLOBAL);
     return TCL_OK;
 }
 
