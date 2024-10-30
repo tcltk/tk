@@ -842,9 +842,10 @@ static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
     Tcl_Size index,			/* Insert before this index */
-    const char *value)		/* New characters to add */
+    Tcl_Obj *obj)			/* New characters to add */
 {
     char *string = entryPtr->entry.string;
+    const char *value = Tcl_GetString(obj);
     size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
     int charsAdded = Tcl_NumUtfChars(value, byteCount);
@@ -1616,7 +1617,7 @@ EntryInsertCommand(
 	return TCL_ERROR;
     }
     if (EntryEditable(entryPtr)) {
-	return InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	return InsertChars(entryPtr, index, objv[3]);
     }
     return TCL_OK;
 }

@@ -80,7 +80,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_SCROLLBAR_REPEAT_INTERVAL, offsetof(TkScrollbar, repeatInterval), 0, NULL},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_SCROLLBAR_TAKE_FOCUS, offsetof(TkScrollbar, takeFocusObj),
-	TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-troughcolor", "troughColor", "Background",
 	DEF_SCROLLBAR_TROUGH_COLOR, offsetof(TkScrollbar, troughColorPtr),
 	TK_CONFIG_COLOR_ONLY, NULL},
