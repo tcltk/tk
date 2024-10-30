@@ -203,7 +203,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
-	"", offsetof(TextItem, textObj), TK_CONFIG_OBJS, NULL},
+	"", offsetof(TextItem, textObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
 	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
@@ -1118,9 +1118,12 @@ TextInsert(
     Tcl_DStringAppend(&ds, text, byteIndex);
     Tcl_DStringAppend(&ds, string, byteCount);
     Tcl_DStringAppend(&ds, text + byteIndex, TCL_INDEX_NONE);
-    Tcl_DecrRefCount(textPtr->textObj);
+    if (textPtr->textObj) {
+	Tcl_DecrRefCount(textPtr->textObj);
+    }
     textPtr->textObj = Tcl_DStringToObj(&ds);
-    charsAdded = Tcl_NumUtfChars(string, byteCount);
+    Tcl_IncrRefCount(textPtr->textObj);
+    charsAdded = Tcl_GetCharLength(obj);
 
     /*
      * Inserting characters invalidates indices such as those for the
@@ -1188,11 +1191,6 @@ TextDeleteChars(
     }
     charsRemoved = last + 1 - first;
 
-    if (charsRemoved == numChars) {
-	Tcl_DecrRefCount(textPtr->textObj);
-	textPtr->textObj = NULL;
-	return;
-    }
     text = Tcl_GetString(textPtr->textObj);
     byteIndex = Tcl_UtfAtIndex(text, first) - text;
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved) - (text + byteIndex);
@@ -1203,6 +1201,7 @@ TextDeleteChars(
     Tcl_DStringAppend(&ds, text + byteIndex + byteCount, TCL_INDEX_NONE);
     Tcl_DecrRefCount(textPtr->textObj);
     textPtr->textObj = Tcl_DStringToObj(&ds);
+    Tcl_IncrRefCount(textPtr->textObj);
 
     /*
      * Update indexes for the selection and cursor to reflect the renumbering
