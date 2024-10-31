@@ -16,6 +16,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Aqua: canvas items are not always redrawn](https://core.tcl-lang.org/tk/tktview/5869c2)
  - [Aqua: color rgb values do not behave as expected when appearance is changed](https://core.tcl-lang.org/tk/tktview/01f58b)
  - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
+ - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
@@ -48,7 +49,6 @@ writing Tcl scripts containing Tk commands.
  - Read/write access to photo image metadata
 
 ## Known bugs
- - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
