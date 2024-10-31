@@ -129,7 +129,6 @@ typedef struct PanedWindow {
     int relief;			/* 3D border effect (TK_RELIEF_RAISED, etc) */
     Tcl_Obj *widthObj;		/* Tcl_Obj rep for width. */
     Tcl_Obj *heightObj;		/* Tcl_Obj rep for height. */
-    int width, height;		/* Width and height of the widget. */
     enum orient orient;		/* Orientation of the widget. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
     int resizeOpaque;		/* Boolean indicating whether resize should be
@@ -139,8 +138,9 @@ typedef struct PanedWindow {
     Tcl_Obj *sashPadObj;	/* Tcl_Obj rep for sash padding. */
     int showHandle;		/* Boolean indicating whether sash handles
 				 * should be drawn. */
-    int handlePad;		/* Distance from border to draw handle. */
-    Tcl_Obj *handleSizeObj;	/* Tcl_Obj rep for handle size. */
+    Tcl_Obj *handleSizeObj;	/* Size of one side of a sash handle (handles
+				 * are square), in pixels. */
+    Tcl_Obj *handlePadObj;	/* Distance from border to draw handle. */
     Tk_Cursor sashCursor;	/* Cursor used when mouse is above a sash. */
     GC gc;			/* Graphics context for copying from
 				 * off-screen pixmap onto screen. */
@@ -152,12 +152,8 @@ typedef struct PanedWindow {
     int numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
     int flags;			/* Flags for widget; see below. */
-    Tcl_Obj *handlePadObj;
 #ifdef BUILD_tk
-    int borderWidth;		/* Value of -borderwidth option. */
-    int sashWidth;		/* Width of each sash, in pixels. */
-    int sashPad;		/* Additional padding around each sash. */
-    int proxyBorderWidth;	/* Borderwidth used to draw proxy. */
+    int width, height;		/* Width and height of the widget. */
 #endif
 } PanedWindow;
 
@@ -283,13 +279,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_PANEDWINDOW_BORDERWIDTH, offsetof(PanedWindow, borderWidthObj), offsetof(PanedWindow, borderWidth),
+	DEF_PANEDWINDOW_BORDERWIDTH, offsetof(PanedWindow, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_PANEDWINDOW_CURSOR, TCL_INDEX_NONE, offsetof(PanedWindow, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-handlepad", "handlePad", "HandlePad",
-	DEF_PANEDWINDOW_HANDLEPAD, offsetof(PanedWindow, handlePadObj), offsetof(PanedWindow, handlePad),
+	DEF_PANEDWINDOW_HANDLEPAD, offsetof(PanedWindow, handlePadObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-handlesize", "handleSize", "HandleSize",
 	DEF_PANEDWINDOW_HANDLESIZE, offsetof(PanedWindow, handleSizeObj),
@@ -308,7 +304,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	(void *)DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-proxyborderwidth", "proxyBorderWidth", "ProxyBorderWidth",
 	DEF_PANEDWINDOW_PROXYBORDER, offsetof(PanedWindow, proxyBorderWidthObj),
-	offsetof(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
+	TCL_INDEX_NONE, 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
 	0, TCL_INDEX_NONE, offsetof(PanedWindow, proxyRelief),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -318,14 +314,14 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_PANEDWINDOW_SASHCURSOR, TCL_INDEX_NONE, offsetof(PanedWindow, sashCursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-sashpad", "sashPad", "SashPad",
-	DEF_PANEDWINDOW_SASHPAD, offsetof(PanedWindow, sashPadObj), offsetof(PanedWindow, sashPad),
+	DEF_PANEDWINDOW_SASHPAD, offsetof(PanedWindow, sashPadObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-sashrelief", "sashRelief", "Relief",
 	DEF_PANEDWINDOW_SASHRELIEF, TCL_INDEX_NONE, offsetof(PanedWindow, sashRelief),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-sashwidth", "sashWidth", "Width",
 	DEF_PANEDWINDOW_SASHWIDTH, offsetof(PanedWindow, sashWidthObj),
-	offsetof(PanedWindow, sashWidth), 0, 0, GEOMETRY},
+	TCL_INDEX_NONE, 0, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showhandle", "showHandle", "ShowHandle",
 	DEF_PANEDWINDOW_SHOWHANDLE, TCL_INDEX_NONE, offsetof(PanedWindow, showHandle),
 	0, 0, GEOMETRY},
@@ -1308,6 +1304,7 @@ PanedWindowWorldChanged(
     XGCValues gcValues;
     GC newGC;
     PanedWindow *pwPtr = (PanedWindow *)instanceData;
+    int borderWidth;
 
     /*
      * Allocated a graphics context for drawing the paned window widget
@@ -1326,7 +1323,8 @@ PanedWindowWorldChanged(
      * Issue geometry size requests to Tk.
      */
 
-    Tk_SetInternalBorder(pwPtr->tkwin, pwPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->borderWidthObj, &borderWidth);
+    Tk_SetInternalBorder(pwPtr->tkwin, borderWidth);
     if (pwPtr->width > 0 && pwPtr->height > 0) {
 	Tk_GeometryRequest(pwPtr->tkwin, pwPtr->width, pwPtr->height);
     }
@@ -1461,6 +1459,7 @@ DisplayPanedWindow(
     int i, sashWidth, sashHeight;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int first, last;
+    int borderWidth;
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1486,8 +1485,9 @@ DisplayPanedWindow(
      * Redraw the widget's background and border.
      */
 
+    Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
-	    Tk_Width(tkwin), Tk_Height(tkwin), pwPtr->borderWidth,
+	    Tk_Width(tkwin), Tk_Height(tkwin), borderWidth,
 	    pwPtr->relief);
 
     /*
@@ -1495,12 +1495,12 @@ DisplayPanedWindow(
      * coordinates).
      */
 
-    if (horizontal) {
+    Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->sashWidthObj, &sashWidth);
+	if (horizontal) {
 	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
-	sashWidth = pwPtr->sashWidth;
     } else {
+	sashHeight = sashWidth;
 	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
-	sashHeight = pwPtr->sashWidth;
     }
 
     /*
@@ -1742,7 +1742,7 @@ ArrangePanes(
     int first, last;
     int stretchReserve, stretchAmount;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
-    int handleSize;
+    int handleSize, sashPad, handlePad;
 
     pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
@@ -1781,16 +1781,16 @@ ArrangePanes(
      * and handle offsets.
      */
 
-    sashOffset = handleOffset = pwPtr->sashPad;
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
+	sashOffset = handleOffset = sashPad;
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
-    if (pwPtr->showHandle && handleSize > pwPtr->sashWidth) {
-	sashWidth = (2 * pwPtr->sashPad) + handleSize;
-	sashOffset = ((handleSize - pwPtr->sashWidth) / 2)
-		+ pwPtr->sashPad;
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
+    if (pwPtr->showHandle && handleSize > sashWidth) {
+	sashOffset = ((handleSize - sashWidth) / 2) + sashPad;
+	sashWidth = (2 * sashPad) + handleSize;
     } else {
-	sashWidth = (2 * pwPtr->sashPad) + pwPtr->sashWidth;
-	handleOffset = ((pwPtr->sashWidth - handleSize) / 2)
-		+ pwPtr->sashPad;
+	handleOffset = ((sashWidth - handleSize) / 2) + sashPad;
+	sashWidth = (2 * sashPad) + sashWidth;
     }
 
     for (i = sashCount = 0; i < pwPtr->numPanes; i++) {
@@ -1970,6 +1970,7 @@ ArrangePanes(
 	 * parcel and the location of the next parcel.
 	 */
 
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handlePadObj, &handlePad);
 	if (horizontal) {
 	    x += paneWidth + (2 * padX);
 	    if (x < internalBW) {
@@ -1978,7 +1979,7 @@ ArrangePanes(
 	    panePtr->sashx = x + sashOffset;
 	    panePtr->sashy = y;
 	    panePtr->handlex = x + handleOffset;
-	    panePtr->handley = y + pwPtr->handlePad;
+	    panePtr->handley = y + handlePad;
 	    x += sashWidth;
 	} else {
 	    y += paneHeight + (2 * padY);
@@ -1987,7 +1988,7 @@ ArrangePanes(
 	    }
 	    panePtr->sashx = x;
 	    panePtr->sashy = y + sashOffset;
-	    panePtr->handlex = x + pwPtr->handlePad;
+	    panePtr->handlex = x + handlePad;
 	    panePtr->handley = y + handleOffset;
 	    y += sashWidth;
 	}
@@ -2223,6 +2224,7 @@ ComputeGeometry(
     int reqWidth, reqHeight, dim, handleSize;
     Pane *panePtr;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    int sashPad;
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
@@ -2236,20 +2238,20 @@ ComputeGeometry(
      * blindly (avoiding the extra showHandle, etc, checks).
      */
 
-    sashOffset = handleOffset = pwPtr->sashPad;
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
+    sashOffset = handleOffset = sashPad;
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
-    if (pwPtr->showHandle && handleSize > pwPtr->sashWidth) {
-	sashWidth = (2 * pwPtr->sashPad) + handleSize;
-	sashOffset = ((handleSize - pwPtr->sashWidth) / 2)
-		+ pwPtr->sashPad;
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
+    if (pwPtr->showHandle && handleSize > sashWidth) {
+	sashOffset = ((handleSize - sashWidth) / 2) + sashPad;
+	sashWidth = (2 * sashPad) + handleSize;
     } else {
-	sashWidth = (2 * pwPtr->sashPad) + pwPtr->sashWidth;
-	handleOffset = ((pwPtr->sashWidth - handleSize) / 2)
-		+ pwPtr->sashPad;
+	handleOffset = ((sashWidth - handleSize) / 2) + sashPad;
+	sashWidth = (2 * sashPad) + sashWidth;
     }
 
     for (i = 0; i < pwPtr->numPanes; i++) {
-	int padX, padY, minSize;
+	int padX, padY, minSize, handlePad;
 	panePtr = pwPtr->panes[i];
 
 	if (panePtr->hide) {
@@ -2288,18 +2290,19 @@ ComputeGeometry(
 
 	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->padXObj, &padX);
 	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->padYObj, &padY);
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handlePadObj, &handlePad);
 	if (horizontal) {
 	    x += panePtr->paneWidth + (2 * padX);
 	    panePtr->sashx = x + sashOffset;
 	    panePtr->sashy = y;
 	    panePtr->handlex = x + handleOffset;
-	    panePtr->handley = y + pwPtr->handlePad;
+	    panePtr->handley = y + handlePad;
 	    x += sashWidth;
 	} else {
 	    y += panePtr->paneHeight + (2 * padY);
 	    panePtr->sashx = x;
 	    panePtr->sashy = y + sashOffset;
-	    panePtr->handlex = x + pwPtr->handlePad;
+	    panePtr->handlex = x + handlePad;
 	    panePtr->handley = y + handleOffset;
 	    y += sashWidth;
 	}
@@ -2645,7 +2648,7 @@ MoveSash(
     int stretchReserve = 0;
     int nextSash = sash + 1;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
-    int handleSize;
+    int handleSize, sashPad, sashWidth;
 
     if (diff == 0)
 	return;
@@ -2655,11 +2658,12 @@ MoveSash(
      */
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
-    if (pwPtr->showHandle && handleSize > pwPtr->sashWidth) {
-	sashOffset = ((handleSize - pwPtr->sashWidth) / 2)
-		+ pwPtr->sashPad;
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
+    if (pwPtr->showHandle && handleSize > sashWidth) {
+	sashOffset = ((handleSize - sashWidth) / 2) + sashPad;
     } else {
-	sashOffset = pwPtr->sashPad;
+	sashOffset = sashPad;
     }
     for (i = 0; i < pwPtr->numPanes; i++) {
 	int padX, padY;
@@ -2829,6 +2833,8 @@ DisplayProxyWindow(
     PanedWindow *pwPtr = (PanedWindow *)clientData;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->proxywin;
+    int proxyBorderWidth;
+
     pwPtr->flags &= ~PROXY_REDRAW_PENDING;
     if ((tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -2849,9 +2855,10 @@ DisplayProxyWindow(
      * Redraw the widget's background and border.
      */
 
-    Tk_Fill3DRectangle(tkwin, pixmap,
+    Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->proxyBorderWidthObj, &proxyBorderWidth);
+	Tk_Fill3DRectangle(tkwin, pixmap,
 	    pwPtr->proxyBackground ? pwPtr->proxyBackground : pwPtr->background,
-	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), pwPtr->proxyBorderWidth,
+	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), proxyBorderWidth,
 	    (pwPtr->proxyRelief != TK_RELIEF_NULL) ? pwPtr->proxyRelief : pwPtr->sashRelief);
 
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -2947,6 +2954,7 @@ PanedWindowProxyCommand(
 	}
 
 	internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
@@ -2956,7 +2964,6 @@ PanedWindowProxyCommand(
 		x = pwWidth;
 	    }
 	    y = Tk_InternalBorderLeft(pwPtr->tkwin);
-	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
 		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	} else {
@@ -2968,7 +2975,7 @@ PanedWindowProxyCommand(
 		y = pwHeight;
 	    }
 	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
-	    sashHeight = pwPtr->sashWidth;
+	    sashHeight = sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
 		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	}
@@ -3098,9 +3105,11 @@ PanedWindowIdentifyCoords(
 {
     int i, sashHeight, sashWidth, thisx, thisy;
     int found, isHandle, lpad, rpad, tpad, bpad;
-    int first, last, handleSize;
+    int first, last, handleSize, sashPad;
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
+    Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
     if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	if (Tk_IsMapped(pwPtr->tkwin)) {
 	    sashHeight = Tk_Height(pwPtr->tkwin);
@@ -3108,27 +3117,26 @@ PanedWindowIdentifyCoords(
 	    sashHeight = Tk_ReqHeight(pwPtr->tkwin);
 	}
 	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
-	if (pwPtr->showHandle && handleSize > pwPtr->sashWidth) {
-	    sashWidth = handleSize;
-	    lpad = (handleSize - pwPtr->sashWidth) / 2;
+	if (pwPtr->showHandle && handleSize > sashWidth) {
+	    lpad = (handleSize - sashWidth) / 2;
 	    rpad = handleSize - lpad;
-	    lpad += pwPtr->sashPad;
-	    rpad += pwPtr->sashPad;
+	    lpad += sashPad;
+	    rpad += sashPad;
+	    sashWidth = handleSize;
 	} else {
-	    sashWidth = pwPtr->sashWidth;
-	    lpad = rpad = pwPtr->sashPad;
+	    lpad = rpad = sashPad;
 	}
 	tpad = bpad = 0;
     } else {
-	if (pwPtr->showHandle && handleSize > pwPtr->sashWidth) {
+	if (pwPtr->showHandle && handleSize > sashWidth) {
 	    sashHeight = handleSize;
-	    tpad = (handleSize - pwPtr->sashWidth) / 2;
+	    tpad = (handleSize - sashWidth) / 2;
 	    bpad = handleSize - tpad;
-	    tpad += pwPtr->sashPad;
-	    bpad += pwPtr->sashPad;
+	    tpad += sashPad;
+	    bpad += sashPad;
 	} else {
-	    sashHeight = pwPtr->sashWidth;
-	    tpad = bpad = pwPtr->sashPad;
+	    sashHeight = sashWidth;
+	    tpad = bpad = sashPad;
 	}
 	if (Tk_IsMapped(pwPtr->tkwin)) {
 	    sashWidth = Tk_Width(pwPtr->tkwin);
