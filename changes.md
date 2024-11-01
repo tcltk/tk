@@ -15,6 +15,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Two potentially bogus binding scripts for <TouchpadScroll>](https://core.tcl-lang.org/tk/tktview/73c5e3)
  - [Aqua: canvas items are not always redrawn](https://core.tcl-lang.org/tk/tktview/5869c2)
  - [Aqua: color rgb values do not behave as expected when appearance is changed](https://core.tcl-lang.org/tk/tktview/01f58b)
+ - [Aqua: winfo rgb . systemLabelColor returns a weird result on aqua](https://core.tcl-lang.org/tk/tktview/23b57a)
  - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
  - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
 
