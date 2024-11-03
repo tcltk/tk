@@ -554,33 +554,36 @@ HHC="%ProgramFiles(x86)%\HTML Help Workshop\hhc.exe"
 !else
 HHC="%ProgramFiles%\HTML Help Workshop\hhc.exe"
 !endif
-HTMLDIR=$(ROOT)\html
+HTMLDIR=$(OUT_DIR)\html
 HTMLBASE=TclTk$(TCL_VERSION)
 HHPFILE=$(HTMLDIR)\$(HTMLBASE).hhp
 CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 
-htmlhelp: chmsetup $(CHMFILE)
+htmlhelp: $(CHMFILE)
 
-$(CHMFILE): $(DOCDIR)\*
-	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
+htmldocs: $(DOCDIR)\*
+	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl "--htmldir=$(HTMLDIR)"
+
+$(CHMFILE): htmldocs chmsetup
 	@echo Compiling HTML help project
 	@"$(HHC)" <<$(HHPFILE) >NUL
 [OPTIONS]
 Compatibility=1.1 or later
 Compiled file=$(HTMLBASE).chm
+Default topic=index.html
 Display compile progress=no
 Error log file=$(HTMLBASE).log
 Language=0x409 English (United States)
 Title=Tcl/Tk $(TCL_DOTVERSION) Help
 [FILES]
-contents.htm
+index.html
 docs.css
-Keywords
-TclCmd
-TclLib
-TkCmd
-TkLib
-UserCmd
+Keywords\*.html
+TclCmd\*.html
+TclLib\*.html
+TkCmd\*.html
+TkLib\*.html
+UserCmd\*.html
 <<
 
 chmsetup:
