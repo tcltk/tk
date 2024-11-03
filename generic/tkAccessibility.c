@@ -8,12 +8,24 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
  */
 
 #include "tkInt.h"
 
 
 char *acc_role, *acc_name, *acc_description, *acc_value, *acc_state, *acc_action;
+Tcl_HashTable *TkAccessibilityObject;
+
+//   Tcl_InitHashTable(&TkAccessibilityObject, TCL_STRING_KEYS);
+
+
+
+
+//Tcl_HashTable *TkAccessibilityObject = NULL;
+
+  
+
 
 /*
  *----------------------------------------------------------------------
@@ -46,20 +58,32 @@ Tk_AccessibleRole(
   }
 	
   Tk_Window win;
-  Tcl_Obj *obj;
-  Tcl_Size arg_length;
-  const char *role;
+  char *role;
   
+  Tcl_HashTable *AccessibleAttributes;
+  AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+  Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
+  
+
+  int isNew;
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
   }
-  
-  /* Get accessibility role for window. */
 
-  obj = objv[2];
-  role  =  Tcl_GetStringFromObj(obj, &arg_length);
-  acc_role = (char*)role;
+  Tcl_HashEntry *hPtr, *hPtr2;
+
+  hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
+   
+  Tcl_SetHashValue(hPtr, AccessibleAttributes);
+
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, role, &isNew);
+  if (! isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+  Tcl_SetObjResult(ip, objv[2]);
   return TCL_OK;
 }
 
@@ -323,16 +347,17 @@ int
 TkAccessibility_Init(
    Tcl_Interp *interp)
 {
+ 
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_AccessibleRole, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_AccessibleName, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_AccessibleDescription, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_AccessibleValue, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_AccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_AccessibleAction, NULL, NULL); 
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_AccessibleAction, NULL, NULL);
+  TkAccessibilityObject =   (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+  Tcl_InitHashTable(TkAccessibilityObject, TCL_STRING_KEYS);
     return TCL_OK;
 }
-
-
 
 
 
