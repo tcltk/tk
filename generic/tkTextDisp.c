@@ -24,8 +24,6 @@
 #include "tkMacOSXInt.h"
 #endif
 
-#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
-
 /*
  * "Calculations of line pixel heights and the size of the vertical
  * scrollbar."
@@ -205,20 +203,13 @@ typedef struct TextStyle {
 
 /*
  * Macros to make debugging/testing logging a little easier.
- *
- * On OSX 10.14 Drawing procedures are sometimes run because the system has
- * decided to redraw the window.  This can corrupt the data that a test is
- * trying to collect.  So we don't write to the logging variables when the
- * drawing procedure is being run that way.  Other systems can always log.
  */
 
 #define LOG(toVar,what)							\
-    if (OK_TO_LOG)							\
-	Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),		\
-		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+    Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),			\
+		TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 #define CLEAR(var)							\
-    if (OK_TO_LOG)							\
-	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
+    Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
 
 /*
  * The following structure describes one line of the display, which may be
@@ -4192,22 +4183,6 @@ DisplayText(
 	return;
     }
 
-#ifdef MAC_OSX_TK
-    /*
-     * If the toplevel is being resized it would be dangerous to try redrawing
-     * the widget.  But we can just clear the REDRAW_PENDING flag and return.
-     * This display proc will be called again after the widget has been
-     * reconfigured.
-     */
-
-    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)) {
-	dInfoPtr->flags &= ~REDRAW_PENDING;
-	return;
-    }
-#endif
-
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
@@ -4411,8 +4386,8 @@ DisplayText(
 	Tk_Draw3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		textPtr->border, textPtr->highlightWidth,
 		textPtr->highlightWidth,
-		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
-		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
+		Tk_Width(textPtr->tkwin) - 2 * textPtr->highlightWidth,
+		Tk_Height(textPtr->tkwin) - 2 * textPtr->highlightWidth,
 		textPtr->borderWidth, textPtr->relief);
 	if (textPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
@@ -4433,25 +4408,25 @@ DisplayText(
 	if (textPtr->padY > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders,
-		    Tk_Width(textPtr->tkwin) - 2*borders, textPtr->padY,
+		    Tk_Width(textPtr->tkwin) - 2 * borders, textPtr->padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders,
 		    Tk_Height(textPtr->tkwin) - borders - textPtr->padY,
-		    Tk_Width(textPtr->tkwin) - 2*borders,
+		    Tk_Width(textPtr->tkwin) - 2 * borders,
 		    textPtr->padY, 0, TK_RELIEF_FLAT);
 	}
 	if (textPtr->padX > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders + textPtr->padY,
 		    textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * textPtr->padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border,
 		    Tk_Width(textPtr->tkwin) - borders - textPtr->padX,
 		    borders + textPtr->padY, textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * textPtr->padY,
 		    0, TK_RELIEF_FLAT);
 	}
 	dInfoPtr->flags &= ~REDRAW_BORDERS;

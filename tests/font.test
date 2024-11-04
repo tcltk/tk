@@ -2468,6 +2468,7 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     apply $circle_text $c FontChanged $textid $circid
     update
     bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    update idletasks
 
     # Begin test:
     set results {}

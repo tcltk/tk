@@ -183,7 +183,7 @@ static void drawMacScrollbar(
     if (scrollPtr->vertical) {
 	thumbOrigin.x = troughBounds.origin.x + MIN_GAP;
 	thumbOrigin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
-	thumbSize.width = troughBounds.size.width - 2*MIN_GAP + 1;
+	thumbSize.width = troughBounds.size.width - 2 * MIN_GAP + 1;
 	thumbSize.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
 	inner[0] = troughBounds.origin;
 	inner[1] = CGPointMake(inner[0].x,
@@ -195,7 +195,7 @@ static void drawMacScrollbar(
 	thumbOrigin.x = troughBounds.origin.x + scrollPtr->sliderFirst;
 	thumbOrigin.y = troughBounds.origin.y + MIN_GAP;
 	thumbSize.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	thumbSize.height = troughBounds.size.height - 2*MIN_GAP + 1;
+	thumbSize.height = troughBounds.size.height - 2 * MIN_GAP + 1;
 	inner[0] = troughBounds.origin;
 	inner[1] = CGPointMake(inner[0].x + troughBounds.size.width,
 			       inner[0].y + 1);
@@ -259,7 +259,6 @@ TkpDisplayScrollbar(
     NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
-	    || (macWin->flags & TK_DO_NOT_DRAW)
 	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
@@ -379,7 +378,7 @@ TkpComputeScrollbarGeometry(
     }
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
 	    : Tk_Width(scrollPtr->tkwin))
-	    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+	    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -418,13 +417,13 @@ TkpComputeScrollbarGeometry(
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
 		scrollPtr->width + 2*scrollPtr->inset,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		2 * (scrollPtr->arrowLength + scrollPtr->borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+		2 * (scrollPtr->arrowLength + scrollPtr->borderWidth
 		+ scrollPtr->inset) + metrics.minThumbHeight,
-		scrollPtr->width + 2*scrollPtr->inset);
+		scrollPtr->width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
@@ -545,7 +544,7 @@ TkpScrollbarPosition(
     if (y < scrollPtr->sliderLast) {
 	return SLIDER;
     }
-    if (y < length - (2*scrollPtr->arrowLength + inset)) {
+    if (y < length - (2 * scrollPtr->arrowLength + inset)) {
 	return BOTTOM_GAP;
     }
 
