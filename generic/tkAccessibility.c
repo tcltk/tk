@@ -123,19 +123,20 @@ Tk_AccessibleName(
   }
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
+ if (!hPtr) {
+  hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
     AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
     Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
+ } else {
+   AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, name, &isNew);
     if (!isNew) {
       Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
     }
     Tcl_IncrRefCount(objv[2]);
     Tcl_SetHashValue(hPtr2, objv[2]);
-    //  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+      Tcl_SetObjResult(ip, objv[2]);
     return TCL_OK;
   }
 }
