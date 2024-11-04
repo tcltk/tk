@@ -566,7 +566,7 @@ htmldocs: $(DOCDIR)\*
 
 $(CHMFILE): htmldocs chmsetup
 	@echo Compiling HTML help project
-	@"$(HHC)" <<$(HHPFILE) >NUL
+	-"$(HHC)" <<$(HHPFILE) >NUL
 [OPTIONS]
 Compatibility=1.1 or later
 Compiled file=$(HTMLBASE).chm
