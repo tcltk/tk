@@ -865,6 +865,14 @@ XSetIconName(
     return Success;
 }
 
+Bool
+XFilterEvent(
+    TCL_UNUSED(XEvent *),
+    TCL_UNUSED(Window))
+{
+    return 0;
+}
+
 int
 XForceScreenSaver(
     Display* display,

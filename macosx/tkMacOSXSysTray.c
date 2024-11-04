@@ -205,7 +205,7 @@ MacSystrayObjCmd(
     static const char *modifyOptions[] =
 	{"image", "text", "b1_callback", "b3_callback", NULL};
     typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK
-        } modifyOptionsEnum;
+	} modifyOptionsEnum;
 
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp,
@@ -329,9 +329,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-        /*
-         * Modify the text for the tooltip.
-         */
+	/*
+	 * Modify the text for the tooltip.
+	 */
 
 	case TRAY_TEXT: {
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
@@ -345,9 +345,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-        /*
-         * Modify the proc for the callback.
-         */
+	/*
+	 * Modify the proc for the callback.
+	 */
 
 	case TRAY_B1_CALLBACK: {
 	    [statusItem setB1Callback : objv[3]];
@@ -365,14 +365,14 @@ MacSystrayObjCmd(
 	/*
 	 * Set all properties to nil, and release statusItem.
 	 */
-        [statusItem setImagewithImage: nil];
-        [statusItem setTextwithString: nil];
-        [statusItem setB1Callback : NULL];
-        [statusItem setB3Callback : NULL];
-        [statusItem release];
-        *info = NULL;
-        statusItem = NULL;
-        break;
+	[statusItem setImagewithImage: nil];
+	[statusItem setTextwithString: nil];
+	[statusItem setB1Callback : NULL];
+	[statusItem setB3Callback : NULL];
+	[statusItem release];
+	*info = NULL;
+	statusItem = NULL;
+	break;
     }
     }
 

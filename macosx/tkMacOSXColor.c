@@ -52,7 +52,7 @@ static void initColorTable()
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
 	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+	lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
     }
 #endif
 
@@ -103,7 +103,7 @@ static void initColorTable()
 	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
-        if (!strcmp(name, "WindowBackgroundColor")) {
+	if (!strcmp(name, "WindowBackgroundColor")) {
 
 	    /*
 	     * Avoid black windows on old systems.
@@ -192,8 +192,8 @@ TkMacOSXRGBPixel(
     MacPixel p = {0};
     p.pixel.colortype = rgbColor;
     p.pixel.value = (unsigned int)(((red & 0xff) << 16)  |
-	            ((green & 0xff) << 8) |
-	            (blue & 0xff));
+		    ((green & 0xff) << 8) |
+		    (blue & 0xff));
     return p.ulong;
 }
 
@@ -436,7 +436,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
-        TkWindow *winPtr = (TkWindow*) tkwin;
+	TkWindow *winPtr = (TkWindow*) tkwin;
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {
@@ -583,10 +583,7 @@ TkMacOSXSetColorInContext(
  * TkpGetColor --
  *
  *	Create a new TkColor for the color with the given name, for use in the
- *      specified window. The colormap field is set to lightColormap if the
- *      window has a LightAqua appearance, or darkColormap if the window has a
- *      DarkAqua appearance.  TkColors with different colormaps are managed
- *      separately in the per-display table of TkColors maintained by Tk.
+ *      specified window.
  *
  *      This function is called by Tk_GetColor.
  *
@@ -609,8 +606,9 @@ TkpGetColor(
     Display *display = NULL;
     TkColor *tkColPtr;
     XColor color;
-    Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
+    Colormap colormap = TK_DYNAMIC_COLORMAP;
     NSView *view = nil;
+    Bool haveValidXColor = False;
     static Bool initialized = NO;
 
     if (!initialized) {
@@ -638,27 +636,43 @@ TkpGetColor(
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = (unsigned int)entry->index;
 	    color.pixel = p.ulong;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    NSAppearance *windowAppearance;
+	    /* See comments in tkMacOSXDraw.c */
+	    if (@available(macOS 12.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
+		NSAppearance *current = NSAppearance.currentDrawingAppearance;
+		NSAppearance *effective = view.effectiveAppearance;
+		if( current != effective) {
+		    // printf("Appearances are out of sync!\n");
+		    // Deprecations be damned!
+		    NSAppearance.currentAppearance = effective;
+		}
+#endif
+	    }
+	    if (@available(macOS 10.14, *)) {
+		if (view) {
+		    windowAppearance = [view effectiveAppearance];
+		} else {
+		    windowAppearance = [NSApp effectiveAppearance];
+		}
+	    }
+#endif
+
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *windowAppearance;
-		    if (view) {
-			windowAppearance = [view effectiveAppearance];
-		    } else {
-			windowAppearance = [NSApp effectiveAppearance];
-		    }
-		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-			colormap = darkColormap;
-		    } else {
-			colormap = lightColormap;
-		    }
 		    if (@available(macOS 11.0, *)) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 			CGFloat *rgbaPtr = rgba;
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
+			color.red   = (unsigned short)(rgba[0] * 65535.0);
+			color.green = (unsigned short)(rgba[1] * 65535.0);
+			color.blue  = (unsigned short)(rgba[2] * 65535.0);
 #endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
@@ -671,13 +685,13 @@ TkpGetColor(
 		} else {
 		    GetRGBA(entry, p.ulong, rgba);
 		}
-#else
+#else //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		GetRGBA(entry, p.ulong, rgba);
-#endif
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
-		goto validXColor;
+#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+		haveValidXColor = True;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
@@ -695,15 +709,14 @@ TkpGetColor(
 		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
 		CGColorRelease(c);
-		goto validXColor;
+		haveValidXColor = True;
 	    }
 	}
     }
-    if (TkParseColor(display, colormap, name, &color) == 0) {
+    if (!haveValidXColor && TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
 
-validXColor:
     tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->colormap = colormap;
     tkColPtr->color = color;

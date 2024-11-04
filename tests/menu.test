@@ -746,11 +746,11 @@ test menu-2.127 {entry configuration options 0 -image bogus tearoff} -body {
 
 test menu-2.128 {entry configuration options 1 -image bogus command} -body {
     .m1 entryconfigure 1 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.129 {entry configuration options 2 -image bogus cascade} -body {
     .m1 entryconfigure 2 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.130 {entry configuration options 3 -image bogus separator} -body {
     .m1 entryconfigure 3 -image bogus
@@ -758,11 +758,11 @@ test menu-2.130 {entry configuration options 3 -image bogus separator} -body {
 
 test menu-2.131 {entry configuration options 4 -image bogus checkbutton} -body {
     .m1 entryconfigure 4 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.132 {entry configuration options 5 -image bogus radiobutton} -body {
     .m1 entryconfigure 5 -image bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.133 {entry configuration options 0 -image {} tearoff} -body {
     .m1 entryconfigure 0 -image
@@ -1027,11 +1027,11 @@ test menu-2.190 {entry configuration options 3 -selectimage bogus separator} -bo
 
 test menu-2.191 {entry configuration options 4 -selectimage bogus checkbutton} -body {
     .m1 entryconfigure 4 -selectimage bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.192 {entry configuration options 5 -selectimage bogus radiobutton} -body {
     .m1 entryconfigure 5 -selectimage bogus
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test menu-2.193 {entry configuration options 0 -selectimage {} tearoff} -body {
     .m1 entryconfigure 0 -selectimage
