@@ -18,6 +18,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Aqua: winfo rgb . systemLabelColor returns a weird result on aqua](https://core.tcl-lang.org/tk/tktview/23b57a)
  - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
  - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
+ - [cannot build .chm help file (Windows)](https://core.tcl-lang.org/tk/tktview/bb110c)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
