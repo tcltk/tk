@@ -25,26 +25,6 @@
 */
 
 /*
- * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
- * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
- * tricky to get this function, because we are compiling with
- * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
- */
-#if TCL_MAJOR_VERSION < 9
-#   undef TclNumUtfChars
-#   undef TclUtfAtIndex
-#   ifdef USE_TCL_STUBS
-#	define TclNumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
-#	define TclUtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
-#   else
-#	define TclNumUtfChars Tcl_NumUtfChars
-#	define TclUtfAtIndex Tcl_UtfAtIndex
-#   endif
-#endif
-
-/*
  * The following structure represents our Macintosh-specific implementation
  * of a font object.
  */
@@ -73,7 +53,7 @@ struct SystemFontMapEntry {
 
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
-    ThemeFont(System,			"TkDefaultFont", "TkIconFont"),
+    ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
     ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
     ThemeFont(SmallEmphasizedSystem, NULL, NULL),
@@ -476,7 +456,7 @@ startOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
     len = [S length];
     if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
@@ -490,7 +470,7 @@ startOfClusterObjCmd(
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
 	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
 	idx = newIdx;
     }
@@ -533,7 +513,7 @@ endOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
     len = [S length];
     if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
@@ -923,7 +903,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,			/* Character of interest */
+    int c,	 		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -1082,8 +1062,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = TclNumUtfChars(source, rangeStart);
-    len = TclNumUtfChars(source + rangeStart, rangeLength);
+    start = Tcl_NumUtfChars(source, rangeStart);
+    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1184,7 +1164,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (TclUtfAtIndex(source, index) - source) - rangeStart;
+    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
@@ -1383,8 +1363,8 @@ TkpDrawAngledCharsInContext(
 	     -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = TclNumUtfChars(source, rangeStart);
-    length = TclNumUtfChars(source, rangeStart + rangeLength) - start;
+    start = Tcl_NumUtfChars(source, rangeStart);
+    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 
@@ -1552,7 +1532,7 @@ TkMacOSXUseAntialiasedText(
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-		&antialiasedTextEnabled,
+		(char *)&antialiasedTextEnabled,
 		TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
