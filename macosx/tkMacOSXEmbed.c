@@ -850,12 +850,12 @@ EmbedStructureProc(
     if (eventPtr->type == ConfigureNotify) {
 
 	/*
-         * Send a ConfigureNotify  to the embedded application.
-         */
+	 * Send a ConfigureNotify  to the embedded application.
+	 */
 
-        if (containerPtr->embeddedPtr != NULL) {
-            TkDoConfigureNotify(containerPtr->embeddedPtr);
-        }
+	if (containerPtr->embeddedPtr != NULL) {
+	    TkDoConfigureNotify(containerPtr->embeddedPtr);
+	}
 	if (containerPtr->embedded != None) {
 	    /*
 	     * Ignore errors, since the embedded application could have
@@ -1011,9 +1011,8 @@ EmbedGeometryRequest(
      */
 
     Tk_GeometryRequest((Tk_Window)winPtr, width, height);
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     if ((winPtr->changes.width != width)
-	    || (winPtr->changes.height != height)) {
+	|| (winPtr->changes.height != height)) {
 	EmbedSendConfigure(containerPtr);
     }
 }

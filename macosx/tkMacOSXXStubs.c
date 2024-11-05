@@ -865,6 +865,14 @@ XSetIconName(
     return Success;
 }
 
+Bool
+XFilterEvent(
+    TCL_UNUSED(XEvent *),
+    TCL_UNUSED(Window))
+{
+    return 0;
+}
+
 int
 XForceScreenSaver(
     Display* display,
@@ -1196,7 +1204,7 @@ Tk_GetUserInactiveTime(
      */
     long elapsed = (long)(TkpGetMS() - lastInactivityReset);
     if (ret > elapsed) {
-    	ret = elapsed;
+	ret = elapsed;
     }
 
     return ret;
