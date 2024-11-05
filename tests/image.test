@@ -305,7 +305,7 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -cleanup {
     .c delete all
     imageCleanup
-} -returnCodes error -result {image "myimage" doesn't exist}
+} -returnCodes error -result {image "myimage" does not exist}
 
 
 test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
@@ -603,7 +603,7 @@ test image-13.4 {DeleteImage procedure} -constraints testOldImageType -setup {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" doesn't exist} | {} |}
+} -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" does not exist} | {} |}
 
 test image-14.1 {image command vs hidden commands} -body {
     catch {image delete hidden}
