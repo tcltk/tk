@@ -36,24 +36,24 @@ static const char *Tk_EventName[39] = {
     "",
     "",
     "KeyPress",		/*2*/
-    "KeyRelease",      	/*3*/
-    "ButtonPress",     	/*4*/
+    "KeyRelease",	/*3*/
+    "ButtonPress",	/*4*/
     "ButtonRelease",	/*5*/
-    "MotionNotify",    	/*6*/
-    "EnterNotify",     	/*7*/
-    "LeaveNotify",     	/*8*/
+    "MotionNotify",	/*6*/
+    "EnterNotify",	/*7*/
+    "LeaveNotify",	/*8*/
     "FocusIn",		/*9*/
     "FocusOut",		/*10*/
-    "KeymapNotify",    	/*11*/
+    "KeymapNotify",	/*11*/
     "Expose",		/*12*/
     "GraphicsExpose",	/*13*/
     "NoExpose",		/*14*/
     "VisibilityNotify",	/*15*/
-    "CreateNotify",    	/*16*/
+    "CreateNotify",	/*16*/
     "DestroyNotify",	/*17*/
-    "UnmapNotify",     	/*18*/
-    "MapNotify",       	/*19*/
-    "MapRequest",      	/*20*/
+    "UnmapNotify",	/*18*/
+    "MapNotify",	/*19*/
+    "MapRequest",	/*20*/
     "ReparentNotify",	/*21*/
     "ConfigureNotify",	/*22*/
     "ConfigureRequest",	/*23*/
@@ -68,7 +68,7 @@ static const char *Tk_EventName[39] = {
     "ColormapNotify",	/*32*/
     "ClientMessage",	/*33*/
     "MappingNotify",	/*34*/
-    "VirtualEvent",    	/*35*/
+    "VirtualEvent",	/*35*/
     "ActivateNotify",	/*36*/
     "DeactivateNotify",	/*37*/
     "MouseWheelEvent"	/*38*/
@@ -354,15 +354,15 @@ TkMacOSXEventsSetupProc(
 
 	[NSApp _resetAutoreleasePool];
 
- 	/*
+	/*
 	 * After calling this setup proc, Tcl_DoOneEvent will call
- 	 * Tcl_WaitForEvent.  Then it will call check proc to collect the
- 	 * events and translate them into XEvents.
+	 * Tcl_WaitForEvent.  Then it will call check proc to collect the
+	 * events and translate them into XEvents.
 	 *
- 	 * If we have any events waiting or if there is any drawing to be done
+	 * If we have any events waiting or if there is any drawing to be done
 	 * we want Tcl_WaitForEvent to return immediately.  So we set the block
 	 * time to 0 and stop the heartbeat.
-  	 */
+	 */
 
 	NSEvent *currentEvent =
 		[NSApp nextEventMatchingMask:NSAnyEventMask

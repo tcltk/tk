@@ -1204,7 +1204,7 @@ Tk_GetUserInactiveTime(
      */
     long elapsed = (long)(TkpGetMS() - lastInactivityReset);
     if (ret > elapsed) {
-    	ret = elapsed;
+	ret = elapsed;
     }
 
     return ret;
