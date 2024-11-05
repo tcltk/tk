@@ -76,7 +76,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL 			/* modalProc */
+    NULL			/* modalProc */
 };
 
 static void
@@ -601,7 +601,7 @@ TkpConfigureScrollbar(
  *
  *	This function is invoked in response to a ButtonPress event.
  *	It resends the event to the Scrollbar window procedure,
- * 	which in turn enters a modal loop.
+ *	which in turn enters a modal loop.
  *
  *----------------------------------------------------------------------
  */

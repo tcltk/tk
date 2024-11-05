@@ -9,7 +9,7 @@
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
-VERSION 		= @TK_VERSION@
+VERSION		= @TK_VERSION@
 MAJOR_VERSION		= @TK_MAJOR_VERSION@
 MINOR_VERSION		= @TK_MINOR_VERSION@
 PATCH_LEVEL		= @TK_PATCH_LEVEL@
@@ -301,7 +301,7 @@ XFT_LIBS		= @XFT_LIBS@
 
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
-CUPS_LIBS 		= @CUPS_LIBS@
+CUPS_LIBS		= @CUPS_LIBS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -714,9 +714,9 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # # tktest, and it is not clear where this test.o object file comes from.
 #
 # xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE) ${TK_STUB_LIB_FILE}
-# 	${CC} ${CFLAGS} test.o tkTest.o tkSquare.o \
-# 		@TK_BUILD_LIB_SPEC@ ${LDFLAGS} ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
-# 		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
+#	${CC} ${CFLAGS} test.o tkTest.o tkSquare.o \
+#		@TK_BUILD_LIB_SPEC@ ${LDFLAGS} ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
+#		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
 
 # Note, in the target below TCL_LIBRARY needs to be set or else
 # "make test" won't work in the case where the compilation directory

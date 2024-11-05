@@ -2072,7 +2072,7 @@ EntryComputeGeometry(
 		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
 			- entryPtr->xWidth - totalLength)/2;
 	    }
-    	} else {
+	} else {
 
 	    /*
 	     * The whole string can't fit in the window. Compute the maximum

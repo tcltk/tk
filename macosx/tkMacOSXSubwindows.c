@@ -58,8 +58,8 @@ XDestroyWindow(
     MacDrawable *macWin = (MacDrawable *)window;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
     //fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
-    // 	    Tk_PathName(macWin->winPtr),
-    // 	    Tk_PathName(macWin->winPtr->parentPtr));
+    //	    Tk_PathName(macWin->winPtr),
+    //	    Tk_PathName(macWin->winPtr->parentPtr));
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -472,7 +472,7 @@ XMoveResizeWindow(
 	    CGFloat YOff = (CGFloat) macWin->winPtr->wmInfoPtr->yInParent;
 	    NSRect r = NSMakeRect(
 		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
-	    	    Width, Height);
+		    Width, Height);
 
 	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
@@ -1036,7 +1036,7 @@ TkMacOSXInvalidateWindow(
     Tk_Window parent = (Tk_Window) winPtr->parentPtr;
     TkMacOSXInvalClipRgns(tkwin);
     if ((flag == TK_PARENT_WINDOW) && parent){
-     	TkMacOSXInvalClipRgns(parent);
+	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];
     [view setNeedsDisplay:YES];

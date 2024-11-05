@@ -757,7 +757,7 @@ TkpDisplayButton(
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
 	if ((butPtr->state == STATE_DISABLED) &&
-	       	(butPtr->disabledFg != NULL)) {
+		(butPtr->disabledFg != NULL)) {
 	    COLORREF oldFgColor = gc->foreground;
 
 	    if (gc->background == GetSysColor(COLOR_BTNFACE)) {
@@ -828,10 +828,9 @@ TkpDisplayButton(
 		if (gc->background == GetSysColor(COLOR_BTNFACE)) {
 		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
 		    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		       	butPtr->textLayout,
-			x + 1, y + 1, 0, -1);
+			    butPtr->textLayout, x + 1, y + 1, 0, -1);
 		    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-			butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+			    butPtr->textLayout, x + 1, y + 1, butPtr->underline);
 		    gc->foreground = oldFgColor;
 		}
 	    }
