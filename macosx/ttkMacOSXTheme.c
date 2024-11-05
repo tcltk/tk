@@ -638,7 +638,7 @@ static void DrawEntry(
     CGColorRef backgroundColor;
     CGFloat bgRGBA[4];
     if (isDark) {
-    	GetBackgroundColorRGBA(context, tkwin, 0, NO, bgRGBA);
+	GetBackgroundColorRGBA(context, tkwin, 0, NO, bgRGBA);
 
 	/*
 	 * Lighten the entry background to provide contrast.
@@ -1769,7 +1769,7 @@ static void ButtonElementDraw(
     case kThemeCheckBox:
     case kThemeRadioButton:
     case TkSidebarButton:
-    	break;
+	break;
 
     /*
      * Other buttons have a maximum height.   We have to deal with that.

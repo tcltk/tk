@@ -16,6 +16,7 @@ namespace import -force tcltest::test
 # Procedure to create a bunch of overlapping windows, which should
 # make it easy to detect differences in order.
 
+wm geometry . +400+400
 proc raise_setup {} {
     destroy {*}[winfo children .raise]
     update idletasks

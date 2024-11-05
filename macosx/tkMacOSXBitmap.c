@@ -383,7 +383,7 @@ TkMacOSXIconBitmapObjCmd(
 #if 0
     if ((kind == ICON_TYPE || kind == ICON_SYSTEM)) {
 	Tcl_DString ds;
- 	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
+	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
 	(void)Tcl_UtfToExternalDString(encoding, value, TCL_INDEX_NONE, &ds);
 	len = Tcl_DStringLength(&ds);

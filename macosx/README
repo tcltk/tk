@@ -183,6 +183,15 @@ environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 
+- The Aqua port also supports the environment variable TK_NO_STDERR which, if set
+to a non-empty value, causes stderr to be redirected to /dev/null.  This is
+convenient because Apple sometimes releases a new OS without removing all of
+their commands which log debugging information.  Log messages are written to
+stderr, and hence printed in the terminal, when wish or tclsh is started from
+the terminal, or when running the tests. The messages are not only annoying,
+they can also cause tests to fail if a debugging message is written to stderr
+while a test is running tktest as a subprocess with exec or open.
+
 3. FullScreen, Split View and Tabbed Windows
 --------------------------------------------
 
@@ -470,9 +479,9 @@ https://developer.apple.com/library/mac/documentation/Cocoa/\
 Reference/ApplicationKit/Classes/NSApplication_Class)
 
     void NSApplicationMain(int argc, char *argv[]) {
-        [NSApplication sharedApplication];
-        [NSBundle loadNibNamed:@"myMain" owner:NSApp];
-        [NSApp run];
+	[NSApplication sharedApplication];
+	[NSBundle loadNibNamed:@"myMain" owner:NSApp];
+	[NSApp run];
     }
 Here NSApp is a standard global variable, initialized by the OS, which
 points to an object in a subclass of NSApplication (called
@@ -509,17 +518,6 @@ The event collection process consists of first calling a platform
 specific SetupProc and then a platform specific CheckProc.  In
 the macOS port, these are named TkMacOSXEventsSetupProc and
 TkMacOSXEventsCheckProc.
-
-It is important to understand that the Apple window manager does not
-have the concept of an expose event.  Their replacement for an expose
-event is to have the window manager call the [NSView drawRect] method
-in any situation where an expose event for that NSView would be
-generated in X11.  The [NSView drawRect] method is a no-op which is
-expected to be overridden by any application.  In the case of Tcl, the
-replacement [NSView drawRect] method creates a Tcl expose event
-for each dirty rectangle of the NSView, and then adds the expose
-event to the Tcl queue.
-
 
 5.2 Autorelease pools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
