@@ -11,7 +11,8 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 namespace import ::tk::test::loadTkCommand
 update
-
+# Move the mouse out of the way for window-2.1
+event generate {} <Motion> -warp 1 -x 640 -y 10
 # XXX This file is woefully incomplete.  Right now it only tests
 # a few parts of a few procedures in tkWindow.c
 
