@@ -281,16 +281,16 @@ TkpDisplayScrollbar(
      */
 
     if (scrollPtr->highlightWidth > 0) {
-    	GC fgGC, bgGC;
+	GC fgGC, bgGC;
 
-    	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
-    	if (scrollPtr->flags & GOT_FOCUS) {
-    	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, (Pixmap) macWin);
-    	} else {
-    	    fgGC = bgGC;
-    	}
-    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
-    		(Pixmap) macWin);
+	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
+	if (scrollPtr->flags & GOT_FOCUS) {
+	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, (Pixmap) macWin);
+	} else {
+	    fgGC = bgGC;
+	}
+	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
+		(Pixmap) macWin);
     }
 
     Tk_Draw3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
@@ -641,7 +641,7 @@ UpdateControlValues(
 
     if ((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
 	    || height <= metrics.minHeight) {
-    	msPtr->info.enableState = kThemeTrackHideTrack;
+	msPtr->info.enableState = kThemeTrackHideTrack;
     } else {
 	msPtr->info.enableState = kThemeTrackActive;
 	msPtr->info.attributes =
@@ -776,7 +776,7 @@ ScrollbarEventProc(
     case ButtonRelease:
     case EnterNotify:
     case LeaveNotify:
-    	ScrollbarEvent(scrollPtr, eventPtr);
+	ScrollbarEvent(scrollPtr, eventPtr);
 	break;
     default:
 	TkScrollbarEventProc(scrollPtr, eventPtr);
