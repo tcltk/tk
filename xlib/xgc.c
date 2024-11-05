@@ -768,7 +768,7 @@ XRegisterIMInstantiateCallback(
 
 Bool
 XUnregisterIMInstantiateCallback(
-    TCL_UNUSED(Display *) 		/* dpy */,
+    TCL_UNUSED(Display *)		/* dpy */,
     TCL_UNUSED(struct _XrmHashBucketRec *)	/* rdb */,
     TCL_UNUSED(char *)			/* res_name */,
     TCL_UNUSED(char *)			/* res_class */,
