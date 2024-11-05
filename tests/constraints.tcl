@@ -272,7 +272,6 @@ testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint k
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {"test" in [image types]}]
-testConstraint testOldImageType [expr {"oldtest" in [image types]}]
 testConstraint testbitmap    [llength [info commands testbitmap]]
 testConstraint testborder    [llength [info commands testborder]]
 testConstraint testcbind     [llength [info commands testcbind]]
