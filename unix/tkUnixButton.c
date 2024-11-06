@@ -709,7 +709,7 @@ TkpDisplayButton(
 	    }
 	    y += height/2;
 	} else {
- 	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
 		    butPtr->indicatorSpace + butPtr->textWidth,
 		    butPtr->textHeight, &x, &y);
 

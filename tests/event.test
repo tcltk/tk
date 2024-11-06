@@ -900,7 +900,7 @@ proc waitForWindowEvent {w event {timeout 1000}} {
     if {$late} {
 	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
     } else {
-        after cancel $afterID
+	after cancel $afterID
     }
 }
 proc waitForWindowEvent.signal {counter} {
@@ -928,9 +928,9 @@ proc setup_win_mousepointer {w} {
     set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
     event generate $w <Motion> -warp 1 -x 250 -y 250
     if {($pointerWin ne $w) && ([tk windowingsystem] ne "aqua")} {
-        waitForWindowEvent $w <Enter>
+	waitForWindowEvent $w <Enter>
     } else {
-        controlPointerWarpTiming
+	controlPointerWarpTiming
     }
 }
 
