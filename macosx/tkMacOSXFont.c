@@ -53,7 +53,7 @@ struct SystemFontMapEntry {
 
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
-    ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
+    ThemeFont(System,			"TkDefaultFont", "TkIconFont"),
     ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
     ThemeFont(SmallEmphasizedSystem, NULL, NULL),
@@ -470,7 +470,7 @@ startOfClusterObjCmd(
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
 	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
 	idx = newIdx;
     }
@@ -903,7 +903,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,	 		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
