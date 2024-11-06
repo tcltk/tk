@@ -11,8 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -1231,7 +1229,7 @@ test spinbox-3.23 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 0123457890
-test spinbox-3.24 {SpinboxWidgetCmd procedure, "delete" widget command} -constraints failsOnXQuarz -setup {
+test spinbox-3.24 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
     spinbox .e
     pack .e
     update
@@ -1349,7 +1347,7 @@ test spinbox-3.34 {SpinboxWidgetCmd procedure, "index" widget command} -setup {
 } -cleanup {
     destroy .e
 } -returnCodes {ok} -match glob -result {*}
-test spinbox-3.35 {SpinboxWidgetCmd procedure, "index" widget command} -constraints failsOnXQuarz -setup {
+test spinbox-3.35 {SpinboxWidgetCmd procedure, "index" widget command} -setup {
     spinbox .e
     pack .e
     update

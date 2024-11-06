@@ -252,6 +252,33 @@ static int		UtfToUcs2beProc(void *clientData, const char*src,
 /*
  *-------------------------------------------------------------------------
  *
+ * XLoadQueryFontNoXError --
+ *
+ *	This function is XLoadQueryFont wrapped in a NULL error handler.
+ *	It is a temporary workaround for ticket [36e379c01b],
+ *	"macOS Ventura, X11 build with XQuartz: crash in XLoadQueryFont",
+ *	which actually is issue #216 in XQuartz:
+ *	https://github.com/XQuartz/XQuartz/issues/216
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static XFontStruct *
+XLoadQueryFontNoXError(Display *display, char *name)
+{
+    XFontStruct *fontStructPtr = NULL;
+    Tk_ErrorHandler handler;
+
+    /* 45 is the major opcode of X_OpenFont */
+    handler = Tk_CreateErrorHandler(display, BadValue, 45, -1, NULL, NULL);
+    fontStructPtr = XLoadQueryFont(display, name);
+    Tk_DeleteErrorHandler(handler);
+    return fontStructPtr;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
  * FontPkgCleanup --
  *
  *	This function is called when an application is created. It initializes
@@ -708,7 +735,7 @@ TkpGetNativeFont(
 	return NULL;
     }
 
-    fontStructPtr = XLoadQueryFont(Tk_Display(tkwin), name);
+    fontStructPtr = XLoadQueryFontNoXError(Tk_Display(tkwin), (char *)name);
     if (fontStructPtr == NULL) {
 	/*
 	 * Handle all names that look like XLFDs here. Otherwise, when
@@ -963,7 +990,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     FontAttributes atts;
@@ -2821,11 +2848,11 @@ GetScreenFont(
 	snprintf(buf, sizeof(buf), "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
 		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
-	fontStructPtr = XLoadQueryFont(display, buf);
+	fontStructPtr = XLoadQueryFontNoXError(display, buf);
 	bestScore[1] = INT_MAX;
     }
     if (fontStructPtr == NULL) {
-	fontStructPtr = XLoadQueryFont(display, nameList[bestIdx[0]]);
+	fontStructPtr = XLoadQueryFontNoXError(display, nameList[bestIdx[0]]);
 	if (fontStructPtr == NULL) {
 	    /*
 	     * This shouldn't happen because the font name is one of the names
@@ -2865,9 +2892,9 @@ GetSystemFont(
 {
     XFontStruct *fontStructPtr;
 
-    fontStructPtr = XLoadQueryFont(display, "fixed");
+    fontStructPtr = XLoadQueryFontNoXError(display, "fixed");
     if (fontStructPtr == NULL) {
-	fontStructPtr = XLoadQueryFont(display, "*");
+	fontStructPtr = XLoadQueryFontNoXError(display, "*");
 	if (fontStructPtr == NULL) {
 	    Tcl_Panic("TkpGetFontFromAttributes: cannot get any font");
 	}
