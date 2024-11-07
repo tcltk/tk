@@ -94,7 +94,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 		break;
 	}
 
-    	if (stateNames[j].value == 0) {
+	if (stateNames[j].value == 0) {
 	    if (interp) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Invalid state name %s", stateName));
@@ -191,14 +191,14 @@ int Ttk_GetStateSpecFromObj(
 /*
  * Tk_StateMapLookup --
  *
- * 	A state map is a paired list of StateSpec / value pairs.
+ *	A state map is a paired list of StateSpec / value pairs.
  *	Returns the value corresponding to the first matching state
  *	specification, or NULL if not found or an error occurs.
  */
 Tcl_Obj *Ttk_StateMapLookup(
     Tcl_Interp *interp,		/* Where to leave error messages; may be NULL */
     Ttk_StateMap map,		/* State map */
-    Ttk_State state)    	/* State to look up */
+    Ttk_State state)	/* State to look up */
 {
     Tcl_Obj **specs;
     Tcl_Size j, nSpecs;
@@ -224,9 +224,9 @@ Tcl_Obj *Ttk_StateMapLookup(
 }
 
 /* Ttk_GetStateMapFromObj --
- * 	Returns a Ttk_StateMap from a Tcl_Obj*.
- * 	Since a Ttk_StateMap is just a specially-formatted Tcl_Obj,
- * 	this basically just checks for errors.
+ *	Returns a Ttk_StateMap from a Tcl_Obj*.
+ *	Since a Ttk_StateMap is just a specially-formatted Tcl_Obj,
+ *	this basically just checks for errors.
  */
 Ttk_StateMap Ttk_GetStateMapFromObj(
     Tcl_Interp *interp,		/* Where to leave error messages; may be NULL */
@@ -260,7 +260,7 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
 
 /*
  * Ttk_StateTableLooup --
- * 	Look up an index from a statically allocated state table.
+ *	Look up an index from a statically allocated state table.
  */
 int Ttk_StateTableLookup(const Ttk_StateTable *map, Ttk_State state)
 {
