@@ -68,7 +68,7 @@ typedef struct TkMenuEntry {
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline (-1 means don't
+				 * of character to underline (INT_MIN means don't
 				 * underline anything). */
     Tcl_Obj *underlinePtr;	/* Index of character to underline. */
     Tcl_Obj *bitmapPtr;		/* Bitmap to display in menu entry, or NULL.
@@ -183,8 +183,9 @@ typedef struct TkMenuEntry {
     int index;			/* Need to know which index we are. This is
 				 * zero-based. This is the top-left entry of
 				 * the menu. */
+#if TK_MAJOR_VERSION > 8
     Tcl_HashEntry *entryPtr;	/* Back-pointer to hash table entry */
-
+#endif
     /*
      * Bookeeping for main menus and cascade menus.
      */
@@ -204,6 +205,9 @@ typedef struct TkMenuEntry {
 				/* The data for the specific type of menu.
 				 * Depends on platform and menu type what kind
 				 * of options are in this structure. */
+#if TK_MAJOR_VERSION < 9
+    Tcl_HashEntry *entryPtr;	/* Back-pointer to hash table entry */
+#endif
 } TkMenuEntry;
 
 /*
@@ -279,12 +283,20 @@ typedef struct TkMenu {
 
     Tcl_Obj *borderPtr;		/* Structure used to draw 3-D border and
 				 * background for menu. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of border around whole menu. */
+#else
+    Tcl_Obj *borderWidthPtr;
+#endif
     Tcl_Obj *activeBorderPtr;	/* Used to draw background and border for
 				 * active element (if any). */
     Tcl_Obj *activeBorderWidthPtr;
 				/* Width of border around active element. */
+#if TK_MAJOR_VERSION > 8
     int relief;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
+#else
+    Tcl_Obj *reliefPtr;
+#endif
     Tcl_Obj *fontPtr;		/* Text font for menu entries. */
     Tcl_Obj *fgPtr;		/* Foreground color for entries. */
     Tcl_Obj *disabledFgPtr;	/* Foreground color when disabled. NULL means
