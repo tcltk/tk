@@ -1451,7 +1451,7 @@ SetStyleFromAny(
 
     style = Tk_GetStyle(interp, name);
     if (style == NULL) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     objPtr->typePtr = &styleObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = style;

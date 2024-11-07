@@ -25,26 +25,6 @@
 */
 
 /*
- * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
- * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
- * tricky to get this function, because we are compiling with
- * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
- */
-#if TCL_MAJOR_VERSION < 9
-#   undef TclNumUtfChars
-#   undef TclUtfAtIndex
-#   ifdef USE_TCL_STUBS
-#	define TclNumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
-#	define TclUtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
-#   else
-#	define TclNumUtfChars Tcl_NumUtfChars
-#	define TclUtfAtIndex Tcl_UtfAtIndex
-#   endif
-#endif
-
-/*
  * The following structure represents our Macintosh-specific implementation
  * of a font object.
  */
@@ -73,7 +53,7 @@ struct SystemFontMapEntry {
 
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
-    ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
+    ThemeFont(System,			"TkDefaultFont", "TkIconFont"),
     ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
     ThemeFont(SmallEmphasizedSystem, NULL, NULL),
@@ -923,7 +903,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,	 		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;

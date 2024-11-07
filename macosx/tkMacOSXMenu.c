@@ -345,13 +345,13 @@ static Bool runMenuCommand = true;
 {
     if (!runMenuCommand) {
 
-    	/*
-    	 * We are being called for a menu accelerator.  Tk will handle it.
-    	 * Just update the runMenuCommand flag.
-    	 */
+	/*
+	 * We are being called for a menu accelerator.  Tk will handle it.
+	 * Just update the runMenuCommand flag.
+	 */
 
-    	runMenuCommand = true;
-    	return;
+	runMenuCommand = true;
+	return;
     }
 
     /*
@@ -721,7 +721,7 @@ TkpMenuNewEntry(
 
 int
 TkpConfigureMenuEntry(
-    TkMenuEntry *mePtr) 	/* Information about menu entry; may or may
+    TkMenuEntry *mePtr)	/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
@@ -745,7 +745,7 @@ TkpConfigureMenuEntry(
     }
 
     if (mePtr->image) {
-    	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != NULL) {
@@ -801,7 +801,7 @@ TkpConfigureMenuEntry(
     if (gc->background != defaultBg) {
 	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
 	[attributes setObject:bgcolor
-	 	       forKey:NSBackgroundColorAttributeName];
+		       forKey:NSBackgroundColorAttributeName];
     }
 
 #else
@@ -845,7 +845,7 @@ TkpConfigureMenuEntry(
 	    } else {
 		[submenu setTitle:title];
 
-    		if ([menuItem isEnabled]) {
+		if ([menuItem isEnabled]) {
 
 		    /*
 		     * This menuItem might have been previously disabled which
@@ -973,7 +973,7 @@ TkpPostMenu(
 	return result;
     }
     if (itemIndex >= numItems) {
-    	itemIndex = numItems - 1;
+	itemIndex = numItems - 1;
     }
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
@@ -985,7 +985,7 @@ TkpPostMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     [menu popUpMenuPositioningItem:item
@@ -1039,7 +1039,7 @@ TkpPostTearoffMenu(
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
-    	return result;
+	return result;
     }
 
     /*
@@ -1048,7 +1048,7 @@ TkpPostTearoffMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*

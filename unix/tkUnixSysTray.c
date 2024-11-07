@@ -1,9 +1,9 @@
 /*
  * tkUnixSysTray.c --
  *
- * 	tkUnixSysTray.c implements a "systray" Tcl command which permits to
- * 	change the system tray/taskbar icon of a Tk toplevel window and
- * 	to post system notifications.
+ *	tkUnixSysTray.c implements a "systray" Tcl command which permits to
+ *	change the system tray/taskbar icon of a Tk toplevel window and
+ *	to post system notifications.
  *
  * Copyright © 2005 Anton Kovalenko.
  * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
@@ -233,7 +233,7 @@ int Tktray_Init (Tcl_Interp* interp );
  *
  * TrayIconObjectCmd --
  *
- * 	Manage attributes of tray icon.
+ *	Manage attributes of tray icon.
  *
  * Results:
  *	Various values of the tray icon are set and retrieved.
@@ -370,7 +370,7 @@ TrayIconObjectCmd(
  *
  * QueryTrayOrientation --
  *
- * 	Obtain the orientation of the tray icon.
+ *	Obtain the orientation of the tray icon.
  *
  * Results:
  *	Orientation is returned.
@@ -416,7 +416,7 @@ QueryTrayOrientation(
  *
  * DockSelectionAtomFor --
  *
- * 	Obtain the dock selection atom.
+ *	Obtain the dock selection atom.
  *
  * Results:
  *	Selection returned.
@@ -441,7 +441,7 @@ DockSelectionAtomFor(
  *
  * XembedSetState --
  *
- * 	Set the xembed state.
+ *	Set the xembed state.
  *
  * Results:
  *	Updates the xembed state.
@@ -473,7 +473,7 @@ XembedSetState(
  *
  * XembedRequestDock --
  *
- * 	Obtain the docking window.
+ *	Obtain the docking window.
  *
  * Results:
  *	The dock window is requested.
@@ -510,7 +510,7 @@ XembedRequestDock(
  *
  * CheckArgbVisual --
  *
- * 	Find out if a visual is recommended and if it looks like argb32.
+ *	Find out if a visual is recommended and if it looks like argb32.
  *
  * Results:
  *	Render the visual as needed.
@@ -576,7 +576,7 @@ CheckArgbVisual(
  *
  * CreateTrayIconWindow --
  *
- * 	Create and configure the window for the icon tray.
+ *	Create and configure the window for the icon tray.
  *
  * Results:
  *	The window is created and displayed.
@@ -643,7 +643,7 @@ CreateTrayIconWindow(
  *
  * DockToManager --
  *
- * 	Helper function to manage icon in display.
+ *	Helper function to manage icon in display.
  *
  * Results:
  *	Icon is created and displayed.
@@ -690,7 +690,7 @@ Tk_OptionSpec IconOptionSpec[] = {
  *
  * TrayIconRequestSize --
  *
- * 	Set icon size.
+ *	Set icon size.
  *
  * Results:
  *	Icon size is obtained/set.
@@ -728,7 +728,7 @@ TrayIconRequestSize(
  *
  * TrayIconImageChanged --
  *
- * 	Fires when icon state changes.
+ *	Fires when icon state changes.
  *
  * Results:
  *	Icon changes are rendered.
@@ -780,7 +780,7 @@ TrayIconImageChanged(
  *
  * IgnoreImageChange --
  *
- * 	Currently no-op.
+ *	Currently no-op.
  *
  * Results:
  *	None.
@@ -808,7 +808,7 @@ IgnoreImageChange(
  *
  * ForceImageChange --
  *
- * 	Push icon changes through.
+ *	Push icon changes through.
  *
  * Results:
  *	Icon image is updated.
@@ -835,7 +835,7 @@ TrayIconForceImageChange(
  *
  *  EventuallyRedrawIcon --
  *
- * 	Update image icon.
+ *	Update image icon.
  *
  * Results:
  *	Icon image is updated.
@@ -863,7 +863,7 @@ EventuallyRedrawIcon(
  *
  *  DisplayIcon --
  *
- * 	Main function for displaying icon.
+ *	Main function for displaying icon.
  *
  * Results:
  *	Icon image is displayed.
@@ -998,7 +998,7 @@ DisplayIcon(
  *
  *  RetargetEvent --
  *
- * 	Redirect X events to widgets.
+ *	Redirect X events to widgets.
  *
  * Results:
  *	Icon image is displayed.
@@ -1056,7 +1056,7 @@ RetargetEvent(
  *
  *  TrayIconWrapperEvent --
  *
- * 	Ensure automapping in root window is done in withdrawn state.
+ *	Ensure automapping in root window is done in withdrawn state.
  *
  * Results:
  *	Icon image is displayed.
@@ -1109,7 +1109,7 @@ TrayIconWrapperEvent(
  *
  * TrayIconEvent --
  *
- * 	Handle X events.
+ *	Handle X events.
  *
  * Results:
  *	Events are handled and processed.
@@ -1180,7 +1180,7 @@ TrayIconEvent(
  *
  * UserIconEvent --
  *
- * 	Handle user events.
+ *	Handle user events.
  *
  * Results:
  *	Events are handled and processed.
@@ -1239,7 +1239,7 @@ UserIconEvent(
  *
  * PostBalloon --
  *
- * 	Display tooltip/balloon window over tray icon.
+ *	Display tooltip/balloon window over tray icon.
  *
  * Results:
  *	Window is displayed.
@@ -1304,7 +1304,7 @@ PostBalloon(
  *
  * CancelBalloon --
  *
- * 	Remove balloon from display over tray icon.
+ *	Remove balloon from display over tray icon.
  *
  * Results:
  *	Window is destroyed.
@@ -1349,7 +1349,7 @@ CancelBalloon(
  *
  * IconGenericHandler --
  *
- * 	Process non-tk events.
+ *	Process non-tk events.
  *
  * Results:
  *	Events are processed.
@@ -1397,7 +1397,7 @@ IconGenericHandler(
  *
  * TrayIconUpdate --
  *
- * 	Get in touch with new options that are certainly valid.
+ *	Get in touch with new options that are certainly valid.
  *
  * Results:
  *	Options updated.

@@ -101,11 +101,11 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    nil]];
 
     _defaultWindowsMenuItems = [NSArray arrayWithObjects:
-    	    [NSMenuItem itemWithTitle:@"Minimize"
-    	    	   action:@selector(performMiniaturize:) target:nil
-    	    	   keyEquivalent:@"m"],
-    	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
-    	    	   target:nil],
+	    [NSMenuItem itemWithTitle:@"Minimize"
+		   action:@selector(performMiniaturize:) target:nil
+		   keyEquivalent:@"m"],
+	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
+		   target:nil],
 	    nil];
 
     /*
@@ -117,24 +117,24 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
 		    [NSMenuItem separatorItem],
-    	            [NSMenuItem itemWithTitle:@"Show Previous Tab"
+		    [NSMenuItem itemWithTitle:@"Show Previous Tab"
 			   action:@selector(selectPreviousTab:)
 			   target:nil
 			   keyEquivalent:@"\t"
 			   keyEquivalentModifierMask:
-		    	       NSControlKeyMask|NSShiftKeyMask],
+			       NSControlKeyMask|NSShiftKeyMask],
 		    [NSMenuItem itemWithTitle:@"Show Next Tab"
 			   action:@selector(selectNextTab:)
 			   target:nil
 			   keyEquivalent:@"\t"
 			   keyEquivalentModifierMask:NSControlKeyMask],
-    	            [NSMenuItem itemWithTitle:@"Move Tab To New Window"
-    	    	           action:@selector(moveTabToNewWindow:)
-    	    	           target:nil],
-    	            [NSMenuItem itemWithTitle:@"Merge All Windows"
-    	    	           action:@selector(mergeAllWindows:)
-    	    	           target:nil],
-    	            [NSMenuItem separatorItem],
+		    [NSMenuItem itemWithTitle:@"Move Tab To New Window"
+			   action:@selector(moveTabToNewWindow:)
+			   target:nil],
+		    [NSMenuItem itemWithTitle:@"Merge All Windows"
+			   action:@selector(mergeAllWindows:)
+			   target:nil],
+		    [NSMenuItem separatorItem],
 		    nil]];
     }
     _defaultWindowsMenuItems = [_defaultWindowsMenuItems arrayByAddingObject:
@@ -142,7 +142,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		   action:@selector(arrangeInFront:)]];
     [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
-    				      _defaultWindowsMenuItems];
+				      _defaultWindowsMenuItems];
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]

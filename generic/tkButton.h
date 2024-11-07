@@ -111,7 +111,7 @@ typedef struct {
 				 * the color used to draw 3-D border and
 				 * background when widget is active. */
     Tcl_Obj *borderWidthObj;	/* Value of -borderWidth option: specifies
-				 * width of border in pixels. */
+				 * width of border in pixels. Always >= 0. */
     int relief;			/* Value of -relief option: specifies 3-d
 				 * effect for border, such as
 				 * TK_RELIEF_RAISED. */
@@ -127,7 +127,7 @@ typedef struct {
     Tcl_Obj *highlightWidthObj;	/* Value of -highlightthickness option:
 				 * specifies width in pixels of highlight to
 				 * draw around widget when it has the focus.
-				 * <= 0 means don't draw a highlight. */
+				 * 0 means don't draw a highlight. Always >= 0. */
     Tk_3DBorder highlightBorder;/* Value of -highlightbackground option:
 				 * specifies background with which to draw 3-D
 				 * default ring and focus highlight area when

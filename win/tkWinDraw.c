@@ -154,7 +154,7 @@ TkWinGetDrawableDC(
     if (twdPtr->type == TWD_WINDOW) {
 	TkWindow *winPtr = twdPtr->window.winPtr;
 
- 	dc = GetDC(twdPtr->window.handle);
+	dc = GetDC(twdPtr->window.handle);
 	if (winPtr == NULL) {
 	    cmap = DefaultColormap(display, DefaultScreen(display));
 	} else {

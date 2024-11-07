@@ -1438,11 +1438,7 @@ ListboxGetItemAttributes(
 
 static void
 DestroyListbox(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about listbox widget. */
-#else
-    char *memPtr)
-#endif
 {
     Listbox *listPtr = (Listbox *)memPtr;
     Tcl_HashEntry *entry;
@@ -2724,11 +2720,11 @@ GetListboxIndex(
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if ((idx != TCL_INDEX_NONE) && (idx > listPtr->nElements)) {
-    	    idx = listPtr->nElements;
-    	}
-    	*indexPtr = idx;
-    	return TCL_OK;
+	if ((idx != TCL_INDEX_NONE) && (idx > listPtr->nElements)) {
+	    idx = listPtr->nElements;
+	}
+	*indexPtr = idx;
+	return TCL_OK;
     }
 
     /*

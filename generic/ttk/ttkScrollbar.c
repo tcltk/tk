@@ -15,14 +15,14 @@ typedef struct
 {
     Tcl_Obj	*commandObj;
 
-    int 	orient;
+    int	orient;
     Tcl_Obj	*orientObj;
 
     double	first;			/* top fraction */
     double	last;			/* bottom fraction */
 
     Ttk_Box	troughBox;		/* trough parcel */
-    int 	minSize;		/* minimum size of thumb */
+    int	minSize;		/* minimum size of thumb */
 } ScrollbarPart;
 
 typedef struct
@@ -72,10 +72,10 @@ static Ttk_Layout ScrollbarGetLayout(
 
 /*
  * ScrollbarDoLayout --
- * 	Layout hook.  Adjusts the position of the scrollbar thumb.
+ *	Layout hook.  Adjusts the position of the scrollbar thumb.
  *
  * Side effects:
- * 	Sets sb->troughBox and sb->minSize.
+ *	Sets sb->troughBox and sb->minSize.
  */
 static void ScrollbarDoLayout(void *recordPtr)
 {
@@ -129,7 +129,7 @@ static void ScrollbarDoLayout(void *recordPtr)
  */
 
 /* $sb set $first $last --
- * 	Set the position of the scrollbar.
+ *	Set the position of the scrollbar.
  */
 static int
 ScrollbarSetCommand(
@@ -180,7 +180,7 @@ ScrollbarSetCommand(
 }
 
 /* $sb get --
- * 	Returns the last thing passed to 'set'.
+ *	Returns the last thing passed to 'set'.
  */
 static int
 ScrollbarGetCommand(
@@ -202,8 +202,8 @@ ScrollbarGetCommand(
 }
 
 /* $sb delta $dx $dy --
- * 	Returns the percentage change corresponding to a mouse movement
- * 	of $dx, $dy.
+ *	Returns the percentage change corresponding to a mouse movement
+ *	of $dx, $dy.
  */
 static int
 ScrollbarDeltaCommand(
@@ -242,8 +242,8 @@ ScrollbarDeltaCommand(
 }
 
 /* $sb fraction $x $y --
- * 	Returns a real number between 0 and 1 indicating  where  the
- * 	point given by x and y lies in the trough area of the scrollbar.
+ *	Returns a real number between 0 and 1 indicating  where  the
+ *	point given by x and y lies in the trough area of the scrollbar.
  */
 static int
 ScrollbarFractionCommand(
@@ -284,13 +284,13 @@ ScrollbarFractionCommand(
 static const Ttk_Ensemble ScrollbarCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
-    { "delta",    	ScrollbarDeltaCommand,0 },
-    { "fraction",    	ScrollbarFractionCommand,0 },
-    { "get",    	ScrollbarGetCommand,0 },
+    { "delta",	ScrollbarDeltaCommand,0 },
+    { "fraction",	ScrollbarFractionCommand,0 },
+    { "get",	ScrollbarGetCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "set",  		ScrollbarSetCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "set",		ScrollbarSetCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
@@ -309,7 +309,7 @@ static const WidgetSpec ScrollbarWidgetSpec =
     TtkCoreConfigure,		/* configureProc */
     TtkNullPostConfigure,	/* postConfigureProc */
     ScrollbarGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetSize,		/* sizeProc */
     ScrollbarDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };

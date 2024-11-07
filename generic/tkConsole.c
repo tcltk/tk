@@ -196,9 +196,9 @@ ShouldUseConsoleChannel(
  *
  * Tk_InitConsoleChannels --
  *
- * 	Create the console channels and install them as the standard channels.
- * 	All I/O will be discarded until Tk_CreateConsoleWindow is called to
- * 	attach the console to a text widget.
+ *	Create the console channels and install them as the standard channels.
+ *	All I/O will be discarded until Tk_CreateConsoleWindow is called to
+ *	attach the console to a text widget.
  *
  * Results:
  *	None.
@@ -817,7 +817,7 @@ InterpreterObjCmd(
     Tcl_Preserve(otherInterp);
     switch ((enum option) index) {
     case OTHER_EVAL:
-   	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
+	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 
 	/*
 	 * TODO: Should exceptions be filtered here?
@@ -828,7 +828,7 @@ InterpreterObjCmd(
 	Tcl_SetObjResult(interp, Tcl_GetObjResult(otherInterp));
 	break;
     case OTHER_RECORD:
-   	Tcl_RecordAndEvalObj(otherInterp, objv[2], TCL_EVAL_GLOBAL);
+	Tcl_RecordAndEvalObj(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 
 	/*
 	 * By not setting result, we discard any exceptions or errors here and

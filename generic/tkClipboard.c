@@ -1,9 +1,9 @@
 /*
  * tkClipboard.c --
  *
- * 	This file manages the clipboard for the Tk toolkit, maintaining a
- * 	collection of data buffers that will be supplied on demand to
- * 	requesting applications.
+ *	This file manages the clipboard for the Tk toolkit, maintaining a
+ *	collection of data buffers that will be supplied on demand to
+ *	requesting applications.
  *
  * Copyright © 1994 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.

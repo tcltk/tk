@@ -100,27 +100,27 @@ typedef struct SlotInfo {
 
 typedef struct GridLayout {
     struct Gridder *binNextPtr;	/* The next content window in this bin. Each bin
-    				 * contains a list of all content whose spans
-    				 * are >1 and whose right edges fall in this
-    				 * slot. */
+				 * contains a list of all content whose spans
+				 * are >1 and whose right edges fall in this
+				 * slot. */
     int minSize;		/* Minimum size needed for this slot, in
-    				 * pixels. This is the space required to hold
-    				 * any content contained entirely in this slot,
-    				 * adjusted for any slot constrants, such as
-    				 * size or padding. */
+				 * pixels. This is the space required to hold
+				 * any content contained entirely in this slot,
+				 * adjusted for any slot constrants, such as
+				 * size or padding. */
     int pad;			/* Padding needed for this slot */
     int weight;			/* Slot weight, controls resizing. */
     Tk_Uid uniform;		/* Value of -uniform option. It is used to
 				 * group slots that should have the same
 				 * size. */
     int minOffset;		/* The minimum offset, in pixels, from the
-    				 * beginning of the layout to the bottom/right
-    				 * edge of the slot calculated from top/left
-    				 * to bottom/right. */
+				 * beginning of the layout to the bottom/right
+				 * edge of the slot calculated from top/left
+				 * to bottom/right. */
     int maxOffset;		/* The maximum offset, in pixels, from the
-    				 * beginning of the layout to the bottom/right
-    				 * edge of the slot calculated from
-    				 * bottom/right to top/left. */
+				 * beginning of the layout to the bottom/right
+				 * edge of the slot calculated from
+				 * bottom/right to top/left. */
 } GridLayout;
 
 /*
@@ -133,15 +133,15 @@ typedef struct {
     int columnEnd;		/* The last column occupied by any content. */
     int columnMax;		/* The number of columns with constraints. */
     int columnSpace;		/* The number of slots currently allocated for
-    				 * column constraints. */
+				 * column constraints. */
     int rowEnd;			/* The last row occupied by any content. */
     int rowMax;			/* The number of rows with constraints. */
     int rowSpace;		/* The number of slots currently allocated for
-    				 * row constraints. */
+				 * row constraints. */
     int startX;			/* Pixel offset of this layout within its
-    				 * container. */
+				 * container. */
     int startY;			/* Pixel offset of this layout within its
-    				 * container. */
+				 * container. */
     Tk_Anchor anchor;		/* Value of anchor option: specifies where a
 				 * grid without weight should be placed. */
 } GridContainer;
@@ -201,7 +201,7 @@ typedef struct Gridder {
 
     struct Gridder *binNextPtr;	/* Link to next span>1 content in this bin. */
     int size;			/* Nominal size (width or height) in pixels of
-    				 * the content. This includes the padding. */
+				 * the content. This includes the padding. */
 } Gridder;
 
 /*
@@ -357,7 +357,7 @@ Tk_GridObjCmd(
 	const char *argv1 = Tcl_GetString(objv[1]);
 
 	if ((argv1[0] == '.') || (argv1[0] == REL_SKIP) ||
-    		(argv1[0] == REL_VERT)) {
+		(argv1[0] == REL_VERT)) {
 	    return ConfigureContent(interp, tkwin, objc-1, objv+1);
 	}
     }
@@ -1538,7 +1538,7 @@ AdjustOffsets(
     int weight;			/* Sum of the weights so far. */
     int minSize;		/* Minimum possible layout size. */
     int newDiff;		/* The most pixels that can be added on the
-    				 * current pass. */
+				 * current pass. */
 
     diff = size - slotPtr[slots-1].offset;
 
@@ -1585,7 +1585,7 @@ AdjustOffsets(
 
     minSize = 0;
     for (slot = 0; slot < slots; slot++) {
-    	if (slotPtr[slot].weight > 0) {
+	if (slotPtr[slot].weight > 0) {
 	    slotPtr[slot].temp = slotPtr[slot].minSize;
 	} else if (slot > 0) {
 	    slotPtr[slot].temp = slotPtr[slot].offset - slotPtr[slot-1].offset;
@@ -1601,7 +1601,7 @@ AdjustOffsets(
      */
 
     if (size <= minSize) {
-    	int offset = 0;
+	int offset = 0;
 
 	for (slot = 0; slot < slots; slot++) {
 	    offset += slotPtr[slot].temp;
@@ -1644,17 +1644,17 @@ AdjustOffsets(
 	for (slot = 0; slot < slots; slot++) {
 	    int current;	/* Current size of this slot. */
 	    int maxDiff;	/* Maximum diff that would cause this slot to
-	    			 * equal its minsize. */
+				 * equal its minsize. */
 
 	    if (slotPtr[slot].temp == 0) {
-	    	continue;
+		continue;
 	    }
 	    current = (slot == 0) ? slotPtr[slot].offset :
 		    slotPtr[slot].offset - slotPtr[slot-1].offset;
 	    maxDiff = totalWeight * (slotPtr[slot].minSize - current)
 		    / slotPtr[slot].temp;
 	    if (maxDiff > newDiff) {
-	    	newDiff = maxDiff;
+		newDiff = maxDiff;
 	    }
 	}
 
@@ -1667,7 +1667,7 @@ AdjustOffsets(
 	    weight += slotPtr[slot].temp;
 	    slotPtr[slot].offset += newDiff * weight / totalWeight;
 	}
-    	diff -= newDiff;
+	diff -= newDiff;
     }
     return size;
 }
@@ -1724,10 +1724,10 @@ AdjustForSticky(
 	*heightPtr += diffy;
     }
     if (!(sticky&STICK_WEST)) {
-    	*xPtr += (sticky&STICK_EAST) ? diffx : diffx/2;
+	*xPtr += (sticky&STICK_EAST) ? diffx : diffx/2;
     }
     if (!(sticky&STICK_NORTH)) {
-    	*yPtr += (sticky&STICK_SOUTH) ? diffy : diffy/2;
+	*yPtr += (sticky&STICK_SOUTH) ? diffy : diffy/2;
     }
 }
 
@@ -2680,11 +2680,11 @@ CheckSlotData(
     end = (slotType == ROW) ? containerPtr->containerDataPtr->rowMax :
 	    containerPtr->containerDataPtr->columnMax;
     if (checkOnly == CHECK_ONLY) {
-    	return ((end < slot) ? TCL_ERROR : TCL_OK);
+	return ((end < slot) ? TCL_ERROR : TCL_OK);
     } else {
-    	numSlot = (slotType == ROW) ? containerPtr->containerDataPtr->rowSpace
+	numSlot = (slotType == ROW) ? containerPtr->containerDataPtr->rowSpace
 		: containerPtr->containerDataPtr->columnSpace;
-    	if (slot >= numSlot) {
+	if (slot >= numSlot) {
 	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
@@ -2697,11 +2697,11 @@ CheckSlotData(
 	    memset(newSI+numSlot, 0, newSize - oldSize);
 	    ckfree(oldSI);
 	    if (slotType == ROW) {
-	 	containerPtr->containerDataPtr->rowPtr = newSI;
-	    	containerPtr->containerDataPtr->rowSpace = newNumSlot;
+		containerPtr->containerDataPtr->rowPtr = newSI;
+		containerPtr->containerDataPtr->rowSpace = newNumSlot;
 	    } else {
-	    	containerPtr->containerDataPtr->columnPtr = newSI;
-	    	containerPtr->containerDataPtr->columnSpace = newNumSlot;
+		containerPtr->containerDataPtr->columnPtr = newSI;
+		containerPtr->containerDataPtr->columnSpace = newNumSlot;
 	    }
 	}
 	if (slot >= end && checkOnly != CHECK_SPACE) {
@@ -2711,7 +2711,7 @@ CheckSlotData(
 		containerPtr->containerDataPtr->columnMax = slot+1;
 	    }
 	}
-    	return TCL_OK;
+	return TCL_OK;
     }
 }
 
@@ -2848,11 +2848,7 @@ Unlink(
 
 static void
 DestroyGrid(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about window that is now dead. */
-#else
-    char *memPtr)
-#endif
 {
     Gridder *gridPtr = (Gridder *)memPtr;
 
@@ -3017,7 +3013,7 @@ ConfigureContent(
 	char prevChar = firstChar;
 
 	string = Tcl_GetStringFromObj(objv[i], &length);
-    	firstChar = string[0];
+	firstChar = string[0];
 
 	if (firstChar == '.') {
 	    /*
@@ -3059,14 +3055,14 @@ ConfigureContent(
 	    }
 	    numWindows++;
 	    continue;
-    	}
+	}
 	if (length > 1 && i == 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad argument \"%s\": must be name of window", string));
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_PARAMETER", (char *)NULL);
 	    return TCL_ERROR;
 	}
-    	if (length > 1 && firstChar == '-') {
+	if (length > 1 && firstChar == '-') {
 	    break;
 	}
 	if (length > 1) {
@@ -3166,7 +3162,7 @@ ConfigureContent(
     positionGiven = 0;
     for (j = 0; j < numWindows; j++) {
 	string = Tcl_GetString(objv[j]);
-    	firstChar = string[0];
+	firstChar = string[0];
 
 	/*
 	 * '^' and 'x' cause us to skip a column. '-' is processed as part of
@@ -3349,10 +3345,10 @@ ConfigureContent(
 	 * packed, then leave it in its current location.
 	 */
 
-    	if (!positionGiven && (contentPtr->containerPtr != NULL)) {
+	if (!positionGiven && (contentPtr->containerPtr != NULL)) {
 	    containerPtr = contentPtr->containerPtr;
 	    goto scheduleLayout;
-    	}
+	}
 
 	/*
 	 * If the same -in window is passed in again, then just leave it in
@@ -3370,7 +3366,7 @@ ConfigureContent(
 	 */
 
 	parent = Tk_Parent(content);
-    	if (containerPtr == NULL) {
+	if (containerPtr == NULL) {
 	    if (!(containerPtr = GetGrid(parent))) {
 		continue;
 	    }
@@ -3618,16 +3614,16 @@ StickyToObj(
     char buffer[4];
 
     if (flags & STICK_NORTH) {
-    	buffer[count++] = 'n';
+	buffer[count++] = 'n';
     }
     if (flags & STICK_EAST) {
-    	buffer[count++] = 'e';
+	buffer[count++] = 'e';
     }
     if (flags & STICK_SOUTH) {
-    	buffer[count++] = 's';
+	buffer[count++] = 's';
     }
     if (flags & STICK_WEST) {
-    	buffer[count++] = 'w';
+	buffer[count++] = 'w';
     }
     return Tcl_NewStringObj(buffer, count);
 }

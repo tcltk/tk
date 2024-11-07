@@ -39,7 +39,7 @@ typedef struct RegisteredInterp {
  * "InterpRegistry" on the root window of the display. It is organized as a
  * series of zero or more concatenated strings (in no particular order), each
  * of the form
- * 	window space name '\0'
+ *	window space name '\0'
  * where "window" is the hex id of the comm. window to use to talk to an
  * interpreter named "name".
  *
@@ -1381,7 +1381,7 @@ SendInit(
      */
 
     dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
-    	DefaultScreen(dispPtr->display), NULL);
+	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve(dispPtr->commTkwin);
     ((TkWindow *) dispPtr->commTkwin)->flags |=
 	    TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;

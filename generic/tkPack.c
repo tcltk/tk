@@ -1074,11 +1074,7 @@ Unlink(
 
 static void
 DestroyPacker(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about packed window that is now dead. */
-#else
-    char *memPtr)
-#endif
 {
     Packer *packPtr = (Packer *)memPtr;
 

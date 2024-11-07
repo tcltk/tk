@@ -10,15 +10,15 @@
  * State flags for 'flags' field.
  */
 #define WIDGET_DESTROYED	0x0001
-#define REDISPLAY_PENDING 	0x0002	/* scheduled call to RedisplayWidget */
-#define CURSOR_ON 		0x0020	/* See TtkBlinkCursor() */
+#define REDISPLAY_PENDING	0x0002	/* scheduled call to RedisplayWidget */
+#define CURSOR_ON		0x0020	/* See TtkBlinkCursor() */
 #define WIDGET_USER_FLAG        0x0100  /* 0x0100 - 0x8000 for user flags */
 
 /*
  * Bit fields for OptionSpec 'mask' field:
  */
-#define READONLY_OPTION 	0x1
-#define STYLE_CHANGED   	0x2
+#define READONLY_OPTION	0x1
+#define STYLE_CHANGED	0x2
 #define GEOMETRY_CHANGED	0x4
 
 /*
@@ -33,7 +33,7 @@ typedef struct
     WidgetSpec *widgetSpec;	/* Widget class hooks */
     Tcl_Command widgetCmd;	/* Token for widget command. */
     Tk_OptionTable optionTable;	/* Option table */
-    Ttk_Layout layout;  	/* Widget layout */
+    Ttk_Layout layout;	/* Widget layout */
 
     /*
      * Storage for resources:
@@ -53,20 +53,20 @@ typedef struct
  */
 struct WidgetSpec_
 {
-    const char 		*className;	/* Widget class name */
-    size_t 		recordSize;	/* #bytes in widget record */
+    const char		*className;	/* Widget class name */
+    size_t		recordSize;	/* #bytes in widget record */
     const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
     const Ttk_Ensemble	*commands;	/* Widget instance subcommands */
 
     /*
      * Hooks:
      */
-    void  	(*initializeProc)(Tcl_Interp *, void *recordPtr);
+    void	(*initializeProc)(Tcl_Interp *, void *recordPtr);
     void	(*cleanupProc)(void *recordPtr);
-    int 	(*configureProc)(Tcl_Interp *, void *recordPtr, int flags);
-    int 	(*postConfigureProc)(Tcl_Interp *, void *recordPtr, int flags);
+    int	(*configureProc)(Tcl_Interp *, void *recordPtr, int flags);
+    int	(*postConfigureProc)(Tcl_Interp *, void *recordPtr, int flags);
     Ttk_Layout	(*getLayoutProc)(Tcl_Interp *,Ttk_Theme, void *recordPtr);
-    int 	(*sizeProc)(void *recordPtr, int *widthPtr, int *heightPtr);
+    int	(*sizeProc)(void *recordPtr, int *widthPtr, int *heightPtr);
     void	(*layoutProc)(void *recordPtr);
     void	(*displayProc)(void *recordPtr, Drawable d);
 };
@@ -100,15 +100,9 @@ MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetStyleCommand;
  */
 MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetConstructorObjCmd;
 
-#if TCL_MAJOR_VERSION > 8
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand2(interp, name, \
 	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
-#else
-#define RegisterWidget(interp, name, specPtr) \
-    Tcl_CreateObjCommand2(interp, name, \
-	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
-#endif
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
@@ -177,9 +171,9 @@ MODULE_SCOPE int TtkGetOptionValue(
  * Helper routines for scrolling widgets (see scroll.c).
  */
 typedef struct {
-    int 	first;		/* First visible item */
-    int 	last;		/* Last visible item */
-    int 	total;		/* Total #items */
+    int	first;		/* First visible item */
+    int	last;		/* Last visible item */
+    int	total;		/* Total #items */
     Tcl_Obj	*scrollCmdObj;	/* Widget option */
 } Scrollable;
 
@@ -204,7 +198,7 @@ typedef struct TtkTag *Ttk_Tag;
 typedef struct TtkTagTable *Ttk_TagTable;
 typedef struct TtkTagSet {	/* TODO: make opaque */
     Ttk_Tag	*tags;
-    Tcl_Size 	nTags;
+    Tcl_Size	nTags;
 } *Ttk_TagSet;
 
 MODULE_SCOPE Ttk_TagTable Ttk_CreateTagTable(

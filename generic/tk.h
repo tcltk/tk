@@ -227,11 +227,7 @@ typedef struct Tk_OptionSpec {
  */
 
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
-#if TCL_MAJOR_VERSION > 8
-#    define TK_OPTION_NULL_OK		TCL_NULL_OK
-#else
-#    define TK_OPTION_NULL_OK		(1 << 0)
-#endif
+#define TK_OPTION_NULL_OK		TCL_NULL_OK
 #define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
@@ -285,7 +281,6 @@ typedef struct Tk_SavedOption {
     Tcl_Obj *valuePtr;		/* The old value of the option, in the form of
 				 * a Tcl object; may be NULL if the value was
 				 * not saved as an object. */
-#if TCL_MAJOR_VERSION > 8
     long double internalForm;	/* The old value of the option, in some
 				 * internal representation such as an int or
 				 * (XColor *). Valid only if the field
@@ -296,9 +291,6 @@ typedef struct Tk_SavedOption {
 				 * bytes) is big enough. Also, using a long double
 				 * guarantees that the field is properly aligned
 				 * for storing large values. */
-#else
-    double internalForm;
-#endif
 } Tk_SavedOption;
 
 #ifdef TCL_MEM_DEBUG
@@ -415,11 +407,7 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#if TCL_MAJOR_VERSION > 8
-#    define TK_CONFIG_NULL_OK		TCL_NULL_OK
-#else
-#    define TK_CONFIG_NULL_OK		(1 << 0)
-#endif
+#define TK_CONFIG_NULL_OK		TCL_NULL_OK
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -800,9 +788,7 @@ typedef struct Tk_FakeWin {
     unsigned long dummy7;	/* dirtyAtts */
     unsigned int flags;
     char *dummy8;		/* handlerList */
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC dummy9;			/* inputContext */
-#endif /* TK_USE_INPUT_METHODS */
     void **dummy10;	/* tagPtr */
     Tcl_Size dummy11;		/* numTags */
     Tcl_Size dummy12;		/* optionLevel */
@@ -820,15 +806,9 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int dummy20;
-#endif /* TK_USE_INPUT_METHODS */
     char *dummy21;		/* geomMgrName */
     Tk_Window dummy22;		/* maintainerPtr */
-#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
-    XIC dummy9;			/* inputContext */
-    int dummy20;
-#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

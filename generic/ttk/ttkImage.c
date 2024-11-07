@@ -20,8 +20,8 @@
  */
 
 struct TtkImageSpec {
-    Tk_Image 		baseImage;	/* Base image to use */
-    int 		mapCount;	/* #state-specific overrides */
+    Tk_Image		baseImage;	/* Base image to use */
+    int		mapCount;	/* #state-specific overrides */
     Ttk_StateSpec	*states;	/* array[mapCount] of states ... */
     Tk_Image		*images;	/* ... per-state images to use */
     Tk_ImageChangedProc *imageChanged;
@@ -29,7 +29,7 @@ struct TtkImageSpec {
 };
 
 /* NullImageChanged --
- * 	Do-nothing Tk_ImageChangedProc.
+ *	Do-nothing Tk_ImageChangedProc.
  */
 static void NullImageChanged(
     TCL_UNUSED(void *),
@@ -58,8 +58,8 @@ static void ImageSpecImageChanged(void *clientData,
 }
 
 /* TtkGetImageSpec --
- * 	Constructs a Ttk_ImageSpec * from a Tcl_Obj *.
- * 	Result must be released using TtkFreeImageSpec.
+ *	Constructs a Ttk_ImageSpec * from a Tcl_Obj *.
+ *	Result must be released using TtkFreeImageSpec.
  *
  */
 Ttk_ImageSpec *
@@ -69,10 +69,10 @@ TtkGetImageSpec(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr)
 }
 
 /* TtkGetImageSpecEx --
- * 	Constructs a Ttk_ImageSpec * from a Tcl_Obj *.
- * 	Result must be released using TtkFreeImageSpec.
- * 	imageChangedProc will be called when not NULL when
- * 	the image changes to allow widgets to repaint.
+ *	Constructs a Ttk_ImageSpec * from a Tcl_Obj *.
+ *	Result must be released using TtkFreeImageSpec.
+ *	imageChangedProc will be called when not NULL when
+ *	the image changes to allow widgets to repaint.
  */
 Ttk_ImageSpec *
 TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
@@ -114,7 +114,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     imageSpec->baseImage = Tk_GetImage(
 	    interp, tkwin, Tcl_GetString(objv[0]), ImageSpecImageChanged, imageSpec);
     if (!imageSpec->baseImage) {
-    	goto error;
+	goto error;
     }
 
     /* Extract state and image specifications:
@@ -145,7 +145,7 @@ error:
 }
 
 /* TtkFreeImageSpec --
- * 	Dispose of an image specification.
+ *	Dispose of an image specification.
  */
 void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 {
@@ -163,7 +163,7 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 }
 
 /* TtkSelectImage --
- * 	Return a state-specific image from an ImageSpec
+ *	Return a state-specific image from an ImageSpec
  */
 Tk_Image TtkSelectImage(
     Ttk_ImageSpec *imageSpec,
@@ -184,7 +184,7 @@ Tk_Image TtkSelectImage(
  */
 
 /* LPadding, CPadding, RPadding --
- * 	Split a box+padding pair into left, center, and right boxes.
+ *	Split a box+padding pair into left, center, and right boxes.
  */
 static Ttk_Box LPadding(Ttk_Box b, Ttk_Padding p)
     { return Ttk_MakeBox(b.x, b.y, p.left, b.height); }
@@ -196,7 +196,7 @@ static Ttk_Box RPadding(Ttk_Box b, Ttk_Padding p)
     { return  Ttk_MakeBox(b.x+b.width-p.right, b.y, p.right, b.height); }
 
 /* TPadding, MPadding, BPadding --
- * 	Split a box+padding pair into top, middle, and bottom parts.
+ *	Split a box+padding pair into top, middle, and bottom parts.
  */
 static Ttk_Box TPadding(Ttk_Box b, Ttk_Padding p)
     { return Ttk_MakeBox(b.x, b.y, b.width, p.top); }
@@ -235,7 +235,7 @@ static void Ttk_Fill(
 }
 
 /* Ttk_Stripe --
- * 	Fill a horizontal stripe of the destination drawable.
+ *	Fill a horizontal stripe of the destination drawable.
  */
 static void Ttk_Stripe(
     Tk_Window tkwin, Drawable d, Tk_Image image,
@@ -247,7 +247,7 @@ static void Ttk_Stripe(
 }
 
 /* Ttk_Tile --
- * 	Fill successive horizontal stripes of the destination drawable.
+ *	Fill successive horizontal stripes of the destination drawable.
  */
 static void Ttk_Tile(
     Tk_Window tkwin, Drawable d, Tk_Image image,
