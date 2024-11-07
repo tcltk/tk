@@ -365,9 +365,9 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void 		SetNetWmState(TkWindow*, const char *atomName, int on);
-static void 		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
-static void 		UpdateNetWmState(WmInfo *);
+static void		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
+static void		UpdateNetWmState(WmInfo *);
 static void		WaitForConfigureNotify(TkWindow *winPtr,
 			    unsigned long serial);
 static int		WaitForEvent(Display *display,
@@ -1244,13 +1244,13 @@ WmAspectCmd(
  *
  * WmSetAttribute --
  *
- * 	Helper routine for WmAttributesCmd. Sets the value of the specified
- * 	attribute.
+ *	Helper routine for WmAttributesCmd. Sets the value of the specified
+ *	attribute.
  *
  * Returns:
  *
- * 	TCL_OK if successful, TCL_ERROR otherwise. In case of an error, leaves
- * 	a message in the interpreter's result.
+ *	TCL_OK if successful, TCL_ERROR otherwise. In case of an error, leaves
+ *	a message in the interpreter's result.
  *
  *----------------------------------------------------------------------
  */
@@ -1330,8 +1330,8 @@ WmSetAttribute(
  *
  * WmGetAttribute --
  *
- * 	Helper routine for WmAttributesCmd. Returns the current value of the
- * 	specified attribute.
+ *	Helper routine for WmAttributesCmd. Returns the current value of the
+ *	specified attribute.
  *
  * See also: CheckNetWmState().
  *
@@ -1371,7 +1371,7 @@ WmGetAttribute(
  *
  * Syntax:
  *
- * 	wm attributes $win ?-attribute ?value attribute value...??
+ *	wm attributes $win ?-attribute ?value attribute value...??
  *
  * Notes:
  *
@@ -5040,14 +5040,14 @@ UpdatePhotoIcon(
  *
  * SetNetWmState --
  *
- * 	Sets the specified state property by sending a _NET_WM_STATE
- * 	ClientMessage to the root window.
+ *	Sets the specified state property by sending a _NET_WM_STATE
+ *	ClientMessage to the root window.
  *
  * Preconditions:
- * 	Wrapper window must be created.
+ *	Wrapper window must be created.
  *
  * See also:
- * 	UpdateNetWmState; EWMH spec, section _NET_WM_STATE.
+ *	UpdateNetWmState; EWMH spec, section _NET_WM_STATE.
  *
  *----------------------------------------------------------------------
  */
@@ -5090,15 +5090,15 @@ SetNetWmState(
  *
  * CheckNetWmState --
  *
- * 	Updates the window attributes whenever the _NET_WM_STATE property
- * 	changes.
+ *	Updates the window attributes whenever the _NET_WM_STATE property
+ *	changes.
  *
  * Notes:
  *
- * 	Tk uses a single -zoomed state, while the EWMH spec supports separate
- * 	vertical and horizontal maximization. We consider the window to be
- * 	"zoomed" if _NET_WM_STATE_MAXIMIZED_VERT and
- * 	_NET_WM_STATE_MAXIMIZED_HORZ are both set.
+ *	Tk uses a single -zoomed state, while the EWMH spec supports separate
+ *	vertical and horizontal maximization. We consider the window to be
+ *	"zoomed" if _NET_WM_STATE_MAXIMIZED_VERT and
+ *	_NET_WM_STATE_MAXIMIZED_HORZ are both set.
  *
  *----------------------------------------------------------------------
  */
@@ -5145,8 +5145,8 @@ CheckNetWmState(
  *
  * UpdateNetWmState --
  *
- * 	Sets the _NET_WM_STATE property to match the requested attribute state
- * 	just prior to mapping a withdrawn window.
+ *	Sets the _NET_WM_STATE property to match the requested attribute state
+ *	just prior to mapping a withdrawn window.
  *
  *----------------------------------------------------------------------
  */

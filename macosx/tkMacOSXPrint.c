@@ -68,7 +68,7 @@ int			MacPrint_Init(Tcl_Interp * interp);
  *
  * StartPrint --
  *
- * 	Launch native print dialog.
+ *	Launch native print dialog.
  *
  * Results:
  *	Configures values and starts print process.
@@ -138,7 +138,7 @@ StartPrint(
  *
  * FinishPrint --
  *
- * 	Handles print process based on input from dialog.
+ *	Handles print process based on input from dialog.
  *
  * Results:
  *	Completes print process.
@@ -275,7 +275,7 @@ FinishPrint(
 		     *  Fork and start new process with command string. Thanks to Peter da Silva
 		     *  for assistance.
 		     */
-  		    pid_t pid;
+		    pid_t pid;
 		    if ((pid = fork()) == -1) {
 		      return -1;
 		    } else if (pid == 0) {
@@ -334,7 +334,7 @@ FinishPrint(
  *
  * MakePDF--
  *
- * 	Converts a Tk canvas to PDF data.
+ *	Converts a Tk canvas to PDF data.
  *
  * Results:
  *	Outputs PDF file.
@@ -384,7 +384,7 @@ int MakePDF(
  *
  * MacPrint_Init--
  *
- * 	Initializes the printing module.
+ *	Initializes the printing module.
  *
  * Results:
  *	Printing module initialized.

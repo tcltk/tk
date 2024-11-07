@@ -333,11 +333,7 @@ RefWinEventProc(
 
 static void
 DestroyBusy(
-#if TCL_MAJOR_VERSION > 8
     void *data)			/* Busy window structure record */
-#else
-    char *data)
-#endif
 {
     Busy *busyPtr = (Busy *)data;
 

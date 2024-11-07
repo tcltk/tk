@@ -13,15 +13,15 @@
  */
 
 /* UpdateLayout --
- * 	Call the widget's get-layout hook to recompute corePtr->layout.
- * 	Returns TCL_OK if successful, returns TCL_ERROR and leaves
- * 	the layout unchanged otherwise.
+ *	Call the widget's get-layout hook to recompute corePtr->layout.
+ *	Returns TCL_OK if successful, returns TCL_ERROR and leaves
+ *	the layout unchanged otherwise.
  */
 static int UpdateLayout(Tcl_Interp *interp, WidgetCore *corePtr)
 {
     Ttk_Theme themePtr = Ttk_GetCurrentTheme(interp);
     Ttk_Layout newLayout =
-    	corePtr->widgetSpec->getLayoutProc(interp, themePtr,corePtr);
+	corePtr->widgetSpec->getLayoutProc(interp, themePtr,corePtr);
 
     if (newLayout) {
 	if (corePtr->layout) {
@@ -34,8 +34,8 @@ static int UpdateLayout(Tcl_Interp *interp, WidgetCore *corePtr)
 }
 
 /* SizeChanged --
- * 	Call the widget's sizeProc to compute new requested size
- * 	and pass it to the geometry manager.
+ *	Call the widget's sizeProc to compute new requested size
+ *	and pass it to the geometry manager.
  */
 static void SizeChanged(WidgetCore *corePtr)
 {
@@ -49,7 +49,7 @@ static void SizeChanged(WidgetCore *corePtr)
 #ifndef TK_NO_DOUBLE_BUFFERING
 
 /* BeginDrawing --
- * 	Returns a Drawable for drawing the widget contents.
+ *	Returns a Drawable for drawing the widget contents.
  *	This is normally an off-screen Pixmap, copied to
  *	the window by EndDrawing().
  */
@@ -105,7 +105,7 @@ static void DrawWidget(void *recordPtr)
 }
 
 /* TtkRedisplayWidget --
- * 	Schedule redisplay as an idle handler.
+ *	Schedule redisplay as an idle handler.
  */
 void TtkRedisplayWidget(WidgetCore *corePtr)
 {
@@ -121,9 +121,9 @@ void TtkRedisplayWidget(WidgetCore *corePtr)
 
 /*
  * WidgetWorldChanged --
- * 	Default Tk_ClassWorldChangedProc() for widgets.
- * 	Invoked whenever fonts or other system resources are changed;
- * 	recomputes geometry.
+ *	Default Tk_ClassWorldChangedProc() for widgets.
+ *	Invoked whenever fonts or other system resources are changed;
+ *	recomputes geometry.
  */
 static void WidgetWorldChanged(void *clientData)
 {
@@ -134,7 +134,7 @@ static void WidgetWorldChanged(void *clientData)
 }
 
 /* TtkResizeWidget --
- * 	Recompute widget size, schedule geometry propagation and redisplay.
+ *	Recompute widget size, schedule geometry propagation and redisplay.
  */
 void TtkResizeWidget(WidgetCore *corePtr)
 {
@@ -146,7 +146,7 @@ void TtkResizeWidget(WidgetCore *corePtr)
 }
 
 /* TtkWidgetChangeState --
- * 	Set / clear the specified bits in the 'state' flag,
+ *	Set / clear the specified bits in the 'state' flag,
  */
 void TtkWidgetChangeState(WidgetCore *corePtr,
     unsigned int setBits, unsigned int clearBits)
@@ -195,7 +195,7 @@ WidgetInstanceObjCmd(
  */
 
 /* WidgetInstanceObjCmdDeleted --
- * 	Widget instance command	deletion callback.
+ *	Widget instance command	deletion callback.
  */
 static void
 WidgetInstanceObjCmdDeleted(void *clientData)
@@ -207,7 +207,7 @@ WidgetInstanceObjCmdDeleted(void *clientData)
 }
 
 /* DestroyWidget --
- * 	Main widget destructor; called from <DestroyNotify> event handler.
+ *	Main widget destructor; called from <DestroyNotify> event handler.
  */
 static void
 DestroyWidget(WidgetCore *corePtr)
@@ -378,14 +378,14 @@ int TtkWidgetConstructorObjCmd(
     corePtr = (WidgetCore *)recordPtr;
 
     corePtr->tkwin	= tkwin;
-    corePtr->interp 	= interp;
+    corePtr->interp	= interp;
     corePtr->widgetSpec	= widgetSpec;
     corePtr->widgetCmd	= Tcl_CreateObjCommand2(interp, Tk_PathName(tkwin),
 	WidgetInstanceObjCmd, recordPtr, WidgetInstanceObjCmdDeleted);
     corePtr->optionTable = optionTable;
     corePtr->layout	= NULL;
-    corePtr->flags 	= 0;
-    corePtr->state 	= 0;
+    corePtr->flags	= 0;
+    corePtr->state	= 0;
 
     Tk_SetClass(tkwin, className);
     Tk_SetClassProcs(tkwin, &widgetClassProcs, recordPtr);
@@ -443,7 +443,7 @@ error:
  */
 
 /* TtkWidgetGetLayout --
- * 	Default getLayoutProc.
+ *	Default getLayoutProc.
  *	Looks up the layout based on the -style resource (if specified),
  *	otherwise use the widget class.
  */
@@ -454,10 +454,10 @@ Ttk_Layout TtkWidgetGetLayout(
     const char *styleName = 0;
 
     if (corePtr->styleObj)
-    	styleName = Tcl_GetString(corePtr->styleObj);
+	styleName = Tcl_GetString(corePtr->styleObj);
 
     if (!styleName || *styleName == '\0')
-    	styleName = corePtr->widgetSpec->className;
+	styleName = corePtr->widgetSpec->className;
 
     return Ttk_CreateLayout(interp, themePtr, styleName,
 	recordPtr, corePtr->optionTable, corePtr->tkwin);
@@ -465,9 +465,9 @@ Ttk_Layout TtkWidgetGetLayout(
 
 /*
  * TtkWidgetGetOrientedLayout --
- * 	Helper routine.  Same as TtkWidgetGetLayout, but prefixes
- * 	"Horizontal." or "Vertical." to the style name, depending
- * 	on the value of the 'orient' option.
+ *	Helper routine.  Same as TtkWidgetGetLayout, but prefixes
+ *	"Horizontal." or "Vertical." to the style name, depending
+ *	on the value of the 'orient' option.
  */
 Ttk_Layout TtkWidgetGetOrientedLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr, Tcl_Obj *orientObj)
@@ -491,9 +491,9 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
     /* Add base style name:
      */
     if (corePtr->styleObj)
-    	baseStyleName = Tcl_GetString(corePtr->styleObj);
+	baseStyleName = Tcl_GetString(corePtr->styleObj);
     if (!baseStyleName || *baseStyleName == '\0')
-    	baseStyleName = corePtr->widgetSpec->className;
+	baseStyleName = corePtr->widgetSpec->className;
 
     Tcl_DStringAppend(&styleName, baseStyleName, TCL_INDEX_NONE);
 
@@ -508,7 +508,7 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 }
 
 /* TtkNullInitialize --
- * 	Default widget initializeProc (no-op)
+ *	Default widget initializeProc (no-op)
  */
 void TtkNullInitialize(
     TCL_UNUSED(Tcl_Interp *),
@@ -517,7 +517,7 @@ void TtkNullInitialize(
 }
 
 /* TtkNullPostConfigure --
- * 	Default widget postConfigureProc (no-op)
+ *	Default widget postConfigureProc (no-op)
  */
 int TtkNullPostConfigure(
     TCL_UNUSED(Tcl_Interp *),
@@ -528,8 +528,8 @@ int TtkNullPostConfigure(
 }
 
 /* TtkCoreConfigure --
- * 	Default widget configureProc.
- * 	Handles -style option.
+ *	Default widget configureProc.
+ *	Handles -style option.
  */
 int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
@@ -544,7 +544,7 @@ int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 }
 
 /* TtkNullCleanup --
- * 	Default widget cleanupProc (no-op)
+ *	Default widget cleanupProc (no-op)
  */
 void TtkNullCleanup(
     TCL_UNUSED(void *))
@@ -553,7 +553,7 @@ void TtkNullCleanup(
 }
 
 /* TtkWidgetDoLayout --
- * 	Default widget layoutProc.
+ *	Default widget layoutProc.
  */
 void TtkWidgetDoLayout(void *clientData)
 {
@@ -562,7 +562,7 @@ void TtkWidgetDoLayout(void *clientData)
 }
 
 /* TtkWidgetDisplay --
- * 	Default widget displayProc.
+ *	Default widget displayProc.
  */
 void TtkWidgetDisplay(void *recordPtr, Drawable d)
 {
@@ -571,7 +571,7 @@ void TtkWidgetDisplay(void *recordPtr, Drawable d)
 }
 
 /* TtkWidgetSize --
- * 	Default widget sizeProc()
+ *	Default widget sizeProc()
  */
 int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
@@ -670,10 +670,10 @@ int TtkWidgetConfigureCommand(
 
 /* $w state ? $stateSpec ?
  *
- * 	If $stateSpec is specified, modify the widget state accordingly,
- * 	return a new stateSpec representing the changed bits.
+ *	If $stateSpec is specified, modify the widget state accordingly,
+ *	return a new stateSpec representing the changed bits.
  *
- * 	Otherwise, return a statespec matching all the currently-set bits.
+ *	Otherwise, return a statespec matching all the currently-set bits.
  */
 
 int TtkWidgetStateCommand(
@@ -711,7 +711,7 @@ int TtkWidgetStateCommand(
 
 /* $w instate $stateSpec ?$script?
  *
- * 	Tests if widget state matches $stateSpec.
+ *	Tests if widget state matches $stateSpec.
  *	If $script is specified, execute script if state matches.
  *	Otherwise, return true/false
  */
@@ -745,7 +745,7 @@ int TtkWidgetInstateCommand(
 
 /* $w identify $x $y
  * $w identify element $x $y
- * 	Returns: name of element at $x, $y
+ *	Returns: name of element at $x, $y
  */
 int TtkWidgetIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -783,7 +783,7 @@ int TtkWidgetIdentifyCommand(
 }
 
 /* $w style
- * 	Return the style currently applied to the widget.
+ *	Return the style currently applied to the widget.
  */
 
 int TtkWidgetStyleCommand(

@@ -65,7 +65,7 @@ typedef struct TkCanvas {
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
     Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. <= 0 means
+				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
@@ -173,11 +173,10 @@ typedef struct TkCanvas {
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
-    Tcl_Obj *yScrollIncrementObj;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *yScrollIncrementObj;	/* If >0, defines a grid for vertical
 				 * scrolling. This is the size of the "unit",
-				 * and the left edge of the screen will always
+				 * and the top edge of the screen will always
 				 * lie on an even unit boundary. */
-
     /*
      * Information used for scanning:
      */

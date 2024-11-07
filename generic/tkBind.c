@@ -111,7 +111,7 @@ typedef KeySym Info;
 
 typedef union {
     Info info;		/* This either corresponds to xkey.keycode, or to xbutton.button,
-    			 * or is meaningless, depending on event type. */
+			 * or is meaningless, depending on event type. */
     Tk_Uid name;	/* Tk_Uid of virtual event. */
 } Detail;
 
@@ -123,10 +123,10 @@ typedef struct {
     XEvent xev;		/* The original event from server. */
     Detail detail;	/* Additional information (for hashing). */
     unsigned countAny;	/* Count of multi-events, like multi-clicks, or repeated key pressing,
-    			 * this count does not depend on detail (keySym or button). */
+			 * this count does not depend on detail (keySym or button). */
     unsigned countDetailed;
-    			/* Count of multi-events, like multi-clicks, or repeated key pressing,
-    			 * this count considers the detail (keySym or button). */
+			/* Count of multi-events, like multi-clicks, or repeated key pressing,
+			 * this count considers the detail (keySym or button). */
 } Event;
 
 struct PatSeq; /* forward declaration */
@@ -139,14 +139,14 @@ typedef struct PSEntry {
     Window window;		/* Window of last match. */
     struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     PSModMaskArr *lastModMaskArr;
-    				/* Last matching modifier mask per pattern (except last pattern).
-    				 * Only needed if pattern sequence is not single (more than one
+				/* Last matching modifier mask per pattern (except last pattern).
+				 * Only needed if pattern sequence is not single (more than one
 				 * pattern), and if one of these patterns contains a non-zero
 				 * modifier mask. */
     unsigned count;		/* Only promote to next level if this count has reached count of
-    				 * pattern. */
+				 * pattern. */
     unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
-    				 * from promotion list. */
+				 * from promotion list. */
     unsigned keepIt:1;		/* Whether to keep this entry, even if expired. */
 } PSEntry;
 
@@ -185,13 +185,13 @@ TK_ARRAY_DEFINE(PromArr, PSList);
 
 typedef struct Tk_BindingTable_ {
     Event eventInfo[TK_LASTEVENT];
-    				/* Containing the most recent event for every event type. */
+				/* Containing the most recent event for every event type. */
     PromArr *promArr;		/* Contains the promoted pattern sequences. */
     Event *curEvent;		/* Pointing to most recent event. */
     unsigned curModMask;		/* Containing the current modifier mask. */
     LookupTables lookupTables;	/* Containing hash tables for fast lookup. */
     Tcl_HashTable objectTable;	/* Used to map from an object to a list of patterns associated with
-    				 * that object. Keys are ClientData, values are (PatSeq *). */
+				 * that object. Keys are ClientData, values are (PatSeq *). */
     Tcl_Interp *interp;		/* Interpreter in which commands are executed. */
 } BindingTable;
 
@@ -211,7 +211,7 @@ typedef struct Tk_BindingTable_ {
 typedef struct {
     LookupTables lookupTables;	/* Providing fast lookup tables to lists of pattern sequences. */
     Tcl_HashTable nameTable;	/* Used to map a virtual event name to the array of physical events
-    				 * that can trigger it. Keys are the Tk_Uid names of the virtual
+				 * that can trigger it. Keys are the Tk_Uid names of the virtual
 				 * events, values are PhysOwned structs. */
 } VirtualEventTable;
 
@@ -232,11 +232,11 @@ typedef struct {
 
 typedef struct {
     void *object;		/* For binding table, identifies the binding tag of the object
-    				 * (or class of objects) relative to which the event occurred.
+				 * (or class of objects) relative to which the event occurred.
 				 * For virtual event table, always NULL. */
     unsigned type;		/* Type of event (from X). */
     Detail detail;		/* Additional information, such as keysym, button, Tk_Uid, or zero
-    				 * if nothing additional. */
+				 * if nothing additional. */
 } PatternTableKey;
 
 /*
@@ -251,14 +251,14 @@ typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
     unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
     unsigned modMask;		/* Mask of modifiers that must be present (zero means no modifiers
-    				 * are required). */
+				 * are required). */
     Info info;			/* Additional information that must match event. Normally this is zero,
-    				 * meaning no additional information must match. For KeyPress and
+				 * meaning no additional information must match. For KeyPress and
 				 * KeyRelease events, it may be specified to select a particular
 				 * keystroke (zero means any keystrokes). For button events, specifies
 				 * a particular button (zero means any buttons are OK). */
     Tk_Uid name;		/* Specifies the Tk_Uid of the virtual event name. NULL if not a
-    				 * virtual event. */
+				 * virtual event. */
 } TkPattern;
 
 /*
@@ -291,18 +291,18 @@ typedef struct PatSeq {
     unsigned numPats;		/* Number of patterns in sequence (usually 1). */
     unsigned count;		/* Total number of repetition counts, summed over count in TkPattern. */
     unsigned number;		/* Needed for the decision whether a binding is less recently defined
-    				 * than another, it is guaranteed that the most recently bound event
+				 * than another, it is guaranteed that the most recently bound event
 				 * has the highest number. */
     unsigned added:1;		/* Is this pattern sequence already added to lookup table? */
     unsigned modMaskUsed:1;	/* Does at least one pattern contain a non-zero modifier mask? */
     DEBUG(unsigned owned:1;)	/* For debugging purposes. */
     char *script;		/* Binding script to evaluate when sequence matches (ckalloc()ed) */
     Tcl_Obj* object;		/* Token for object with which binding is associated. For virtual
-    				 * event table this is NULL. */
+				 * event table this is NULL. */
     struct PatSeq *nextSeqPtr;	/* Next in list of all pattern sequences that have the same initial
-    				 * pattern. NULL means end of list. */
+				 * pattern. NULL means end of list. */
     Tcl_HashEntry *hPtr;	/* Pointer to hash table entry for the initial pattern. This is the
-    				 * head of the list of which nextSeqPtr forms a part. */
+				 * head of the list of which nextSeqPtr forms a part. */
     union {
 	VirtOwners *owners;	/* In a binding table it has no meaning. In a virtual event table,
 				 * identifies the array of virtual events that can be triggered
@@ -312,7 +312,7 @@ typedef struct PatSeq {
 				 * Tk_DeleteAllBindings. In a virtual event table it has no meaning. */
     } ptr;
     TkPattern pats[1];		/* Array of "numPats" patterns. Only one element is declared here
-    				 * but in actuality enough space will be allocated for "numPats"
+				 * but in actuality enough space will be allocated for "numPats"
 				 * patterns (but usually 1). */
 } PatSeq;
 
@@ -360,9 +360,9 @@ typedef struct TkBindInfo_ {
     VirtualEventTable virtualEventTable;
 				/* The virtual events that exist in this interpreter. */
     ScreenInfo screenInfo;	/* Keeps track of the current display and screen, so it can be
-    				 * restored after a binding has executed. */
+				 * restored after a binding has executed. */
     int deleted;		/* 1 if the application has been deleted but the structure has been
-    				 * preserved. */
+				 * preserved. */
     Time lastEventTime;		/* Needed for time measurement. */
     Time lastCurrentTime;	/* Needed for time measurement. */
 } BindInfo;
@@ -1475,7 +1475,7 @@ TkBindFree(
 Tk_BindingTable
 Tk_CreateBindingTable(
     Tcl_Interp *interp)		/* Interpreter to associate with the binding table: commands are
-    				 * executed in this interpreter. */
+				 * executed in this interpreter. */
 {
     BindingTable *bindPtr = (BindingTable *)ckalloc(sizeof(BindingTable));
     unsigned i;
@@ -1648,7 +1648,7 @@ Tk_CreateBinding(
     const char *eventString,	/* String describing event sequence that triggers binding. */
     const char *script,		/* Contains Tcl script to execute when binding triggers. */
     int append)			/* 0 means replace any existing binding for eventString;
-    				 * 1 means append to that binding. If the existing binding is
+				 * 1 means append to that binding. If the existing binding is
 				 * for a callback function and not a Tcl command string, the
 				 * existing binding will always be replaced. */
 {
@@ -2169,7 +2169,7 @@ Tk_BindEvent(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
-    				 * locate display information). */
+				 * locate display information). */
     Tcl_Size numObjects,		/* Number of objects at *objArr. */
     void **objArr)		/* Array of one or more objects to check for a matching binding. */
 {
@@ -2667,7 +2667,7 @@ VirtPatIsBound(
     PatSeq *psPtr,		/* Test this pattern. */
     void *object,		/* Check for this binding tag. */
     PatSeq **physPtrPtr)	/* Input: the best physical event.
-    				 * Output: the physical event associated with matching virtual event. */
+				 * Output: the physical event associated with matching virtual event. */
 {
     PatternTableKey key;
     const struct VirtOwners *owners;
@@ -2793,12 +2793,12 @@ MatchPatterns(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PSList *psList,		/* List of potentially matching patterns, can be NULL. */
     PSList *psSuccList,		/* Add all matching higher-level pattern sequences to this list.
-    				 * Can be NULL. */
+				 * Can be NULL. */
     unsigned patIndex,		/* Match only this tag in sequence. */
     const Event *curEvent,	/* Match this event. */
     void *object,		/* Check for this binding tag. */
     PatSeq **physPtrPtr)	/* Input: the best physical event; NULL if we test physical events.
-    				 * Output: the associated physical event for the best matching virtual
+				 * Output: the associated physical event for the best matching virtual
 				 * event; NULL when we match physical events. */
 {
     Window window;
@@ -2989,7 +2989,7 @@ ExpandPercents(
     const char *before,		/* Command containing percent expressions to be replaced. */
     Event *eventPtr,		/* Event containing information to be used in % replacements. */
     unsigned scriptCount,	/* The number of script-based binding patterns matched so far for
-    				 * this event. */
+				 * this event. */
     Tcl_DString *dsPtr)		/* Dynamic string in which to append new command. */
 {
     unsigned flags;
@@ -3647,7 +3647,7 @@ DeleteVirtualEvent(
     VirtualEventTable *vetPtr,	/* Table in which to delete event. */
     char *virtString,		/* String describing event sequence that triggers binding. */
     const char *eventString)	/* The event sequence that should be deleted, or NULL to delete
-    				 * all event sequences for the entire virtual event. */
+				 * all event sequences for the entire virtual event. */
 {
     int iPhys;
     Tk_Uid virtUid;
@@ -4418,7 +4418,7 @@ HandleEventGenerate(
 	    break;
 	}
 
-    	if (badOpt) {
+	if (badOpt) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s event doesn't accept \"%s\" option", name, Tcl_GetString(optionPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", (char *)NULL);
@@ -4680,15 +4680,15 @@ FindSequence(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     LookupTables *lookupTables,	/* Tables used for lookup. */
     void *object,		/* For binding table, token for object with which binding is
-    				 * associated. For virtual event table, NULL. */
+				 * associated. For virtual event table, NULL. */
     const char *eventString,	/* String description of pattern to match on. See user
-    				 * documentation for details. */
+				 * documentation for details. */
     int create,			/* 0 means don't create the entry if it doesn't already exist.
-    				 * 1 means create. */
+				 * 1 means create. */
     int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
-    				 * 1 otherwise. */
+				 * 1 otherwise. */
     unsigned *maskPtr)		/* *maskPtr is filled in with the event types on which this
-    				 * pattern sequence depends. */
+				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
     unsigned numPats;
@@ -4874,7 +4874,7 @@ static unsigned
 ParseEventDescription(
     Tcl_Interp *interp,		/* For error messages. */
     const char **eventStringPtr,/* On input, holds a pointer to start of event string. On exit,
-    				 * gets pointer to rest of string after parsed event. */
+				 * gets pointer to rest of string after parsed event. */
     TkPattern *patPtr,		/* Filled with the pattern parsed from the event string. */
     unsigned *eventMaskPtr)	/* Filled with event mask of matched event. */
 {
@@ -5291,7 +5291,7 @@ TkStringToKeysym(
     size_t len = Tcl_UtfToUniChar(name, &keysym);
     if (name[len] == '\0') {
 	if (!Tcl_UniCharIsPrint(keysym)) {
-    	/* This form not supported */
+	/* This form not supported */
 	} else if ((unsigned)(keysym - 0x21) <= 0x5D) {
 		return (KeySym)keysym;
 	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {

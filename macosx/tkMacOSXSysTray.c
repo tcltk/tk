@@ -149,7 +149,7 @@ typedef TkStatusItem** StatusItemInfo;
  *
  * MacSystrayDestroy --
  *
- * 	Removes an intepreters icon from the status bar.
+ *	Removes an intepreters icon from the status bar.
  *
  * Results:
  *	None.
@@ -176,8 +176,8 @@ MacSystrayDestroy(
  *
  * MacSystrayObjCmd --
  *
- * 	Main command for creating, displaying, and removing icons from the
- * 	status bar.
+ *	Main command for creating, displaying, and removing icons from the
+ *	status bar.
  *
  * Results:
  *
@@ -226,7 +226,7 @@ MacSystrayObjCmd(
 				       sizeof(char *), "command", 0, &idx);
 
     if (result != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     switch((optionsEnum)idx) {
     case TRAY_CREATE: {
@@ -453,7 +453,7 @@ static int SysNotifyObjCmd(
  *
  * MacSystrayInit --
  *
- * 	Initialize this package and create script-level commands.
+ *	Initialize this package and create script-level commands.
  *      This is called from TkpInit for each interpreter.
  *
  * Results:

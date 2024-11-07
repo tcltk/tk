@@ -73,9 +73,9 @@
  * Event(state)		Enter/Leave From -> To
  * ------------		----------------------
  * LastRelease(B | GB): restrict window -> anc(grab window, event window)
- * Grab(U | B): 	event window -> anc(grab window, event window)
+ * Grab(U | B):	event window -> anc(grab window, event window)
  * Grab(G):		anc(old grab window, event window) ->
- * 				anc(new grab window, event window)
+ *				anc(new grab window, event window)
  * Grab(GB):		restrict window -> anc(new grab window, event window)
  * Ungrab(G):		anc(grab window, event window) -> event window
  * Ungrab(GB):		restrict window -> event window

@@ -1221,13 +1221,8 @@ TkMakeEnsemble(
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, (char *)NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
-#if TCL_MAJOR_VERSION > 8
 	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
-#else
-	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
-		    map[i].proc, clientData, NULL);
-#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);
@@ -1279,12 +1274,12 @@ TkScalingLevel(
  *
  * Tk_SendVirtualEvent --
  *
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to:
- * 	    "event generate $target <<$eventName>> -data $detail"
+ *	Send a virtual event notification to the specified target window.
+ *	Equivalent to:
+ *	    "event generate $target <<$eventName>> -data $detail"
  *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
- * 	routine does not reenter the interpreter.
+ *	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
+ *	routine does not reenter the interpreter.
  *
  *----------------------------------------------------------------------
  */

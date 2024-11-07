@@ -272,9 +272,9 @@ MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXIconBitmapObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
-MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
-MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);

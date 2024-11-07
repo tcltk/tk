@@ -575,14 +575,14 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
 			 enum OFNOper oper);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 			    enum OFNOper oper);
-static int 		GetFileName(void *clientData,
+static int		GetFileName(void *clientData,
 				    Tcl_Interp *interp, Tcl_Size objc,
 				    Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	       DWORD *countPtr, TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr,
 	       DWORD *defaultFilterIndexPtr);
 static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr);
-static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
+static int		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
 			    int *indexPtr);
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
@@ -601,24 +601,24 @@ static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
  *	to the window underneath. If the window underneath happens to be a
  *	windows control (eg a button) then it will be activated by accident.
  *
- * 	This problem does not occur in dialog boxes, because windows must do
- * 	some special processing to solve the problem. (separate message
- * 	processing functions are used to cope with keyboard navigation of
- * 	controls.)
+ *	This problem does not occur in dialog boxes, because windows must do
+ *	some special processing to solve the problem. (separate message
+ *	processing functions are used to cope with keyboard navigation of
+ *	controls.)
  *
- * 	Here is one solution. After returning, we flush all mouse events
+ *	Here is one solution. After returning, we flush all mouse events
  *      for 1/4 second. In 8.6.5 and earlier, the code used to
  *      poll the message queue consuming WM_LBUTTONUP messages.
- * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
- * 	must be doing something new. However this early exit does not work
+ *	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
+ *	must be doing something new. However this early exit does not work
  *      on Vista and later because the Windows sends both BUTTONDOWN and
  *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
  *      Rather than try and figure out version specific sequences, we
  *      ignore all mouse events in that interval.
  *
  *      This fix only works for the current application, so the problem will
- * 	still occur if the open dialog happens to be over another applications
- * 	button. However this is a fairly rare occurrance.
+ *	still occur if the open dialog happens to be over another applications
+ *	button. However this is a fairly rare occurrance.
  *
  * Results:
  *	None.
@@ -1815,7 +1815,7 @@ GetFileName(
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
-    enum OFNOper oper)  	/* 1 to call GetOpenFileName(), 0 to call
+    enum OFNOper oper)	/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
     OFNOpts ofnOpts;

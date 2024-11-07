@@ -282,30 +282,6 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result {image "myimage" does not exist}
-test image-5.6 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testOldImageType
-} -setup {
-    imageCleanup
-} -body {
-    image create oldtest myimage
-    image type myimage
-} -cleanup {
-    imageCleanup
-} -result {oldtest}
-test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testOldImageType
-} -setup {
-    .c delete all
-    imageCleanup
-} -body {
-    image create oldtest myimage
-    .c create image 50 50 -image myimage
-    image delete myimage
-    image type myimage
-} -cleanup {
-    .c delete all
-    imageCleanup
-} -returnCodes error -result {image "myimage" doesn't exist}
 
 
 test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
@@ -578,32 +554,6 @@ test image-13.2 {DeleteImage procedure} -constraints testImageType -setup {
 } -cleanup {
     imageCleanup
 } -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" does not exist} | {} |}
-
-test image-13.3 {Tk_SizeOfImage procedure} -constraints testOldImageType -setup {
-    imageCleanup
-} -body {
-    image create oldtest foo -variable x
-    set result [list [image width foo] [image height foo]]
-    foo changed 0 0 0 0 85 60
-    lappend result [image width foo] [image height foo]
-} -cleanup {
-    imageCleanup
-} -result {30 15 85 60}
-
-test image-13.4 {DeleteImage procedure} -constraints testOldImageType -setup {
-    .c delete all
-    imageCleanup
-} -body {
-    image create oldtest foo -variable x
-    .c create image 50 50 -image foo -tags i1
-    .c create image 90 100 -image foo -tags i2
-    set x {}
-    image delete foo
-    lappend x | [imageNames] | [catch {image delete foo} msg] | $msg | [imageNames] |
-} -cleanup {
-    .c delete all
-    imageCleanup
-} -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" doesn't exist} | {} |}
 
 test image-14.1 {image command vs hidden commands} -body {
     catch {image delete hidden}

@@ -897,9 +897,7 @@ TkCreateMainWindow(
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
     mainPtr->tclUpdateObjProc = NULL;
-#if TCL_MAJOR_VERSION > 8
     mainPtr->tclUpdateObjProc2 = NULL;
-#endif
     if (Tcl_LinkVar(interp, "tk_strictMotif", &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -963,15 +961,9 @@ TkCreateMainWindow(
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
 	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
-#if TCL_MAJOR_VERSION > 8
 	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
 	    }
-#else
-	    if (!cmdInfo.objClientData) {
-		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
-	    }
-#endif
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -1052,16 +1044,10 @@ TkCreateMainWindow(
 #endif
 		;
 	if (info.isNativeObjectProc) {
-#if TCL_MAJOR_VERSION > 8
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
 		    info.objProc2, (void *)
 		    version, NULL);
 
-#else
-	    Tcl_CreateObjCommand(interp, "::tk::build-info",
-		    info.objProc, (void *)
-		    version, NULL);
-#endif
 	}
     }
 
@@ -1657,21 +1643,12 @@ Tk_DestroyWindow(
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 		    if (cmdPtr->flags & SAVEUPDATECMD) {
 			/* Restore Tcl's version of [update] */
-#if TCL_MAJOR_VERSION > 8
 			if (winPtr->mainPtr->tclUpdateObjProc2 != NULL) {
 			    Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc2,
 				    NULL, NULL);
 			}
-#else
-			if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
-			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
-				    cmdPtr->name,
-				    winPtr->mainPtr->tclUpdateObjProc,
-				    NULL, NULL);
-			}
-#endif
 		    } else {
 			Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 					     cmdPtr->name, TkDeadAppObjCmd,
@@ -3026,11 +3003,7 @@ TkCygwinMainEx(
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
-#if TCL_MAJOR_VERSION > 8
     memcpy(name+len-12, L"libtcl9tk9", 10 * sizeof(WCHAR));
-#else
-    memcpy(name+len-8, L"libtk9", 6 * sizeof(WCHAR));
-#endif
 
     tkcygwindll = LoadLibraryW(name);
     if (tkcygwindll) {

@@ -143,8 +143,8 @@ typedef struct {
 /*
  * Extra mask bits for Tk_SetOptions()
  */
-#define STATE_CHANGED	 	(0x100)	/* -state option changed */
-#define TEXTVAR_CHANGED	 	(0x200)	/* -textvariable option changed */
+#define STATE_CHANGED		(0x100)	/* -state option changed */
+#define TEXTVAR_CHANGED		(0x200)	/* -textvariable option changed */
 #define SCROLLCMD_CHANGED	(0x400)	/* -xscrollcommand option changed */
 
 /*
@@ -215,12 +215,12 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 
 /*------------------------------------------------------------------------
  * +++ EntryStyleData management.
- * 	This is still more awkward than it should be;
- * 	it should be able to use the Element API instead.
+ *	This is still more awkward than it should be;
+ *	it should be able to use the Element API instead.
  */
 
 /* EntryInitStyleDefaults --
- * 	Initialize EntryStyleData record to fallback values.
+ *	Initialize EntryStyleData record to fallback values.
  */
 static void EntryInitStyleDefaults(EntryStyleData *es)
 {
@@ -250,7 +250,7 @@ static void EntryFreeStyleDefaults(EntryStyleData *es)
 
 /*
  * EntryInitStyleData --
- * 	Look up style-specific data for an entry widget.
+ *	Look up style-specific data for an entry widget.
  */
 static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 {
@@ -265,7 +265,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 
 #   define INIT(member, name) \
     if ((tmp=Ttk_QueryOption(entryPtr->core.layout,name,state))) \
-    	es->member=tmp;
+	es->member=tmp;
     INIT(placeholderForegroundObj, "-placeholderforeground");
     INIT(foregroundObj, "-foreground");
     INIT(selBorderObj, "-selectbackground")
@@ -289,9 +289,9 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
  */
 
 /* EntryDisplayString --
- * 	Return a malloc'ed string consisting of 'numChars' copies
- * 	of (the first character in the string) 'showChar'.
- * 	Used to compute the displayString if -show is non-NULL.
+ *	Return a malloc'ed string consisting of 'numChars' copies
+ *	of (the first character in the string) 'showChar'.
+ *	Used to compute the displayString if -show is non-NULL.
  */
 static char *EntryDisplayString(const char *showChar, int numChars)
 {
@@ -314,8 +314,8 @@ static char *EntryDisplayString(const char *showChar, int numChars)
 }
 
 /* EntryUpdateTextLayout --
- * 	Recompute textLayout, layoutWidth, and layoutHeight
- * 	from displayString and fontObj.
+ *	Recompute textLayout, layoutWidth, and layoutHeight
+ *	from displayString and fontObj.
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
@@ -339,7 +339,7 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 }
 
 /* EntryEditable --
- * 	Returns 1 if the entry widget accepts user changes, 0 otherwise
+ *	Returns 1 if the entry widget accepts user changes, 0 otherwise
  */
 static int
 EntryEditable(Entry *entryPtr)
@@ -398,8 +398,8 @@ static void EntryLostSelection(void *clientData)
 }
 
 /* EntryOwnSelection --
- * 	Assert ownership of the PRIMARY selection,
- * 	if -exportselection set and selection is present and interp is unsafe.
+ *	Assert ownership of the PRIMARY selection,
+ *	if -exportselection set and selection is present and interp is unsafe.
  */
 static void EntryOwnSelection(Entry *entryPtr)
 {
@@ -423,7 +423,7 @@ static void EntryOwnSelection(Entry *entryPtr)
 static void
 ExpandPercents(
      Entry *entryPtr,		/* Entry that needs validation. */
-     const char *templ, 	/* Script template */
+     const char *templ,	/* Script template */
      const char *newValue,		/* Potential new value of entry string */
      Tcl_Size index,			/* index of insert/delete */
      int count,			/* #changed characters */
@@ -525,12 +525,12 @@ ExpandPercents(
 }
 
 /* RunValidationScript --
- * 	Build and evaluate an entry validation script.
- * 	If the script raises an error, disable validation
- * 	by setting '-validate none'
+ *	Build and evaluate an entry validation script.
+ *	If the script raises an error, disable validation
+ *	by setting '-validate none'
  */
 static int RunValidationScript(
-    Tcl_Interp *interp, 	/* Interpreter to use */
+    Tcl_Interp *interp,	/* Interpreter to use */
     Entry *entryPtr,		/* Entry being validated */
     const char *templ,	/* Script template */
     const char *optionName,	/* "-validatecommand", "-invalidcommand" */
@@ -564,8 +564,8 @@ static int RunValidationScript(
 }
 
 /* EntryNeedsValidation --
- * 	Determine whether the specified VREASON should trigger validation
- * 	in the current VMODE.
+ *	Determine whether the specified VREASON should trigger validation
+ *	in the current VMODE.
  */
 static int EntryNeedsValidation(VMODE vmode, VREASON reason)
 {
@@ -654,11 +654,11 @@ done:
 }
 
 /* EntryRevalidate --
- * 	Revalidate the current value of an entry widget,
- * 	update the TTK_STATE_INVALID bit.
+ *	Revalidate the current value of an entry widget,
+ *	update the TTK_STATE_INVALID bit.
  *
  * Returns:
- * 	TCL_OK if valid, TCL_BREAK if invalid, TCL_ERROR on error.
+ *	TCL_OK if valid, TCL_BREAK if invalid, TCL_ERROR on error.
  */
 static int EntryRevalidate(
     TCL_UNUSED(Tcl_Interp *),
@@ -678,7 +678,7 @@ static int EntryRevalidate(
 }
 
 /* EntryRevalidateBG --
- * 	Revalidate in the background (called from event handler).
+ *	Revalidate in the background (called from event handler).
  */
 static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
 {
@@ -697,8 +697,8 @@ static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
  */
 
 /* AdjustIndex --
- * 	Adjust index to account for insertion (nChars > 0)
- * 	or deletion (nChars < 0) at specified index.
+ *	Adjust index to account for insertion (nChars > 0)
+ *	or deletion (nChars < 0) at specified index.
  */
 static int AdjustIndex(int i0, int index, int nChars)
 {
@@ -712,9 +712,9 @@ static int AdjustIndex(int i0, int index, int nChars)
 }
 
 /* AdjustIndices --
- * 	Adjust all internal entry indexes to account for change.
- * 	Note that insertPos, and selectFirst have "right gravity",
- * 	while leftIndex (=xscroll.first) and selectLast have "left gravity".
+ *	Adjust all internal entry indexes to account for change.
+ *	Note that insertPos, and selectFirst have "right gravity",
+ *	while leftIndex (=xscroll.first) and selectLast have "left gravity".
  */
 static void AdjustIndices(Entry *entryPtr, int index, int nChars)
 {
@@ -776,14 +776,14 @@ EntryStoreValue(Entry *entryPtr, const char *value)
 }
 
 /* EntrySetValue --
- * 	Stores a new value in the entry widget and updates the
- * 	linked -textvariable, if any.  The write trace on the
- * 	text variable is temporarily disabled; however, other
- * 	write traces may change the value of the variable.
- * 	If so, the widget is updated again with the new value.
+ *	Stores a new value in the entry widget and updates the
+ *	linked -textvariable, if any.  The write trace on the
+ *	text variable is temporarily disabled; however, other
+ *	write traces may change the value of the variable.
+ *	If so, the widget is updated again with the new value.
  *
  * Returns:
- * 	TCL_OK if successful, TCL_ERROR otherwise.
+ *	TCL_OK if successful, TCL_ERROR otherwise.
  */
 static int EntrySetValue(Entry *entryPtr, const char *value)
 {
@@ -842,9 +842,10 @@ static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
     Tcl_Size index,			/* Insert before this index */
-    const char *value)		/* New characters to add */
+    Tcl_Obj *obj)			/* New characters to add */
 {
     char *string = entryPtr->entry.string;
+    const char *value = Tcl_GetString(obj);
     size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
     int charsAdded = Tcl_NumUtfChars(value, byteCount);
@@ -969,9 +970,9 @@ EntryInitialize(
     TtkBlinkCursor(&entryPtr->core);
 
     entryPtr->entry.string		= (char *)ckalloc(1);
-    *entryPtr->entry.string 		= '\0';
+    *entryPtr->entry.string		= '\0';
     entryPtr->entry.displayString	= entryPtr->entry.string;
-    entryPtr->entry.textVariableTrace 	= 0;
+    entryPtr->entry.textVariableTrace	= 0;
     entryPtr->entry.numBytes = entryPtr->entry.numChars = 0;
 
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
@@ -980,7 +981,7 @@ EntryInitialize(
 	TtkCreateScrollHandle(&entryPtr->core, &entryPtr->entry.xscroll);
 
     entryPtr->entry.insertPos		= 0;
-    entryPtr->entry.selectFirst 	= TCL_INDEX_NONE;
+    entryPtr->entry.selectFirst	= TCL_INDEX_NONE;
     entryPtr->entry.selectLast		= TCL_INDEX_NONE;
 }
 
@@ -1005,7 +1006,7 @@ EntryCleanup(void *recordPtr)
 }
 
 /* EntryConfigure --
- * 	Configure hook for Entry widgets.
+ *	Configure hook for Entry widgets.
  */
 static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
@@ -1071,7 +1072,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 /* EntryPostConfigure --
- * 	Post-configuration hook for entry widgets.
+ *	Post-configuration hook for entry widgets.
  */
 static int EntryPostConfigure(
     TCL_UNUSED(Tcl_Interp *),
@@ -1093,8 +1094,8 @@ static int EntryPostConfigure(
  */
 
 /* EntryCharPosition --
- * 	Return the X coordinate of the specified character index.
- * 	Precondition: textLayout and layoutX up-to-date.
+ *	Return the X coordinate of the specified character index.
+ *	Precondition: textLayout and layoutX up-to-date.
  */
 static int
 EntryCharPosition(Entry *entryPtr, Tcl_Size index)
@@ -1105,14 +1106,14 @@ EntryCharPosition(Entry *entryPtr, Tcl_Size index)
 }
 
 /* EntryDoLayout --
- * 	Layout hook for entry widgets.
+ *	Layout hook for entry widgets.
  *
- * 	Determine position of textLayout based on xscroll.first, justify,
- * 	and display area.
+ *	Determine position of textLayout based on xscroll.first, justify,
+ *	and display area.
  *
- * 	Recalculates layoutX, layoutY, and rightIndex,
- * 	and updates xscroll accordingly.
- * 	May adjust xscroll.first to ensure the maximum #characters are onscreen.
+ *	Recalculates layoutX, layoutY, and rightIndex,
+ *	and updates xscroll accordingly.
+ *	May adjust xscroll.first to ensure the maximum #characters are onscreen.
  */
 static void
 EntryDoLayout(void *recordPtr)
@@ -1482,7 +1483,7 @@ badIndex:
 }
 
 /* $entry bbox $index --
- * 	Return the bounding box of the character at the specified index.
+ *	Return the bounding box of the character at the specified index.
  */
 static int
 EntryBBoxCommand(
@@ -1541,7 +1542,7 @@ EntryDeleteCommand(
 }
 
 /* $entry get --
- * 	Return the current value of the entry widget.
+ *	Return the current value of the entry widget.
  */
 static int
 EntryGetCommand(
@@ -1557,7 +1558,7 @@ EntryGetCommand(
 }
 
 /* $entry icursor $index --
- * 	Set the insert cursor position.
+ *	Set the insert cursor position.
  */
 static int
 EntryICursorCommand(
@@ -1577,7 +1578,7 @@ EntryICursorCommand(
 }
 
 /* $entry index $index --
- * 	Return numeric value (0..numChars) of the specified index.
+ *	Return numeric value (0..numChars) of the specified index.
  */
 static int
 EntryIndexCommand(
@@ -1598,8 +1599,8 @@ EntryIndexCommand(
 }
 
 /* $entry insert $index $text --
- * 	Insert $text after position $index.
- * 	Silent no-op if the entry is disabled or read-only.
+ *	Insert $text after position $index.
+ *	Silent no-op if the entry is disabled or read-only.
  */
 static int
 EntryInsertCommand(
@@ -1616,13 +1617,13 @@ EntryInsertCommand(
 	return TCL_ERROR;
     }
     if (EntryEditable(entryPtr)) {
-	return InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	return InsertChars(entryPtr, index, objv[3]);
     }
     return TCL_OK;
 }
 
 /* $entry selection clear --
- * 	Clear selection.
+ *	Clear selection.
  */
 static int EntrySelectionClearCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1639,7 +1640,7 @@ static int EntrySelectionClearCommand(
 }
 
 /* $entry selection present --
- * 	Returns 1 if any characters are selected, 0 otherwise.
+ *	Returns 1 if any characters are selected, 0 otherwise.
  */
 static int EntrySelectionPresentCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1655,7 +1656,7 @@ static int EntrySelectionPresentCommand(
 }
 
 /* $entry selection range $start $end --
- * 	Explicitly set the selection range.
+ *	Explicitly set the selection range.
  */
 static int EntrySelectionRangeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1693,7 +1694,7 @@ static const Ttk_Ensemble EntrySelectionCommands[] = {
 };
 
 /* $entry set $value
- * 	Sets the value of an entry widget.
+ *	Sets the value of an entry widget.
  */
 static int EntrySetCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1708,8 +1709,8 @@ static int EntrySetCommand(
 }
 
 /* $entry validate --
- * 	Trigger forced validation.  Returns 1/0 if validation succeeds/fails
- * 	or error status from -validatecommand / -invalidcommand.
+ *	Trigger forced validation.  Returns 1/0 if validation succeeds/fails
+ *	or error status from -validatecommand / -invalidcommand.
  */
 static int EntryValidateCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1749,21 +1750,21 @@ static int EntryXViewCommand(
 }
 
 static const Ttk_Ensemble EntryCommands[] = {
-    { "bbox", 		EntryBBoxCommand,0 },
-    { "cget", 		TtkWidgetCgetCommand,0 },
-    { "configure", 	TtkWidgetConfigureCommand,0 },
-    { "delete", 	EntryDeleteCommand,0 },
-    { "get", 		EntryGetCommand,0 },
-    { "icursor", 	EntryICursorCommand,0 },
+    { "bbox",		EntryBBoxCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "delete",	EntryDeleteCommand,0 },
+    { "get",		EntryGetCommand,0 },
+    { "icursor",	EntryICursorCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "index", 		EntryIndexCommand,0 },
-    { "insert", 	EntryInsertCommand,0 },
+    { "index",		EntryIndexCommand,0 },
+    { "insert",	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "selection", 	0,EntrySelectionCommands },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "selection",	0,EntrySelectionCommands },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
-    { "validate", 	EntryValidateCommand,0 },
-    { "xview", 		EntryXViewCommand,0 },
+    { "validate",	EntryValidateCommand,0 },
+    { "xview",		EntryXViewCommand,0 },
     { 0,0,0 }
 };
 
@@ -1773,15 +1774,15 @@ static const Ttk_Ensemble EntryCommands[] = {
 
 static const WidgetSpec EntryWidgetSpec = {
     "TEntry",			/* className */
-    sizeof(Entry), 		/* recordSize */
-    EntryOptionSpecs, 		/* optionSpecs */
-    EntryCommands,  		/* subcommands */
-    EntryInitialize,     	/* initializeProc */
+    sizeof(Entry),		/* recordSize */
+    EntryOptionSpecs,		/* optionSpecs */
+    EntryCommands,		/* subcommands */
+    EntryInitialize,	/* initializeProc */
     EntryCleanup,		/* cleanupProc */
     EntryConfigure,		/* configureProc */
-    EntryPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    EntryPostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
@@ -1817,7 +1818,7 @@ static const Tk_OptionSpec ComboboxOptionSpecs[] = {
 };
 
 /* ComboboxInitialize --
- * 	Initialization hook for combobox widgets.
+ *	Initialization hook for combobox widgets.
  */
 static void
 ComboboxInitialize(Tcl_Interp *interp, void *recordPtr)
@@ -1830,7 +1831,7 @@ ComboboxInitialize(Tcl_Interp *interp, void *recordPtr)
 }
 
 /* ComboboxConfigure --
- * 	Configuration hook for combobox widgets.
+ *	Configuration hook for combobox widgets.
  */
 static int
 ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
@@ -1847,10 +1848,10 @@ ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 /* $cb current ?newIndex? -- get or set current index.
- * 	Setting the current index updates the combobox value,
- * 	but the value and -values may be changed independently
- * 	of the index.  Instead of trying to keep currentIndex
- * 	in sync at all times, [$cb current] double-checks
+ *	Setting the current index updates the combobox value,
+ *	but the value and -values may be changed independently
+ *	of the index.  Instead of trying to keep currentIndex
+ *	in sync at all times, [$cb current] double-checks
  */
 static int ComboboxCurrentCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -1918,37 +1919,37 @@ static int ComboboxCurrentCommand(
  * +++ Combobox widget definition.
  */
 static const Ttk_Ensemble ComboboxCommands[] = {
-    { "bbox", 		EntryBBoxCommand,0 },
-    { "cget", 		TtkWidgetCgetCommand,0 },
-    { "configure", 	TtkWidgetConfigureCommand,0 },
-    { "current", 	ComboboxCurrentCommand,0 },
-    { "delete", 	EntryDeleteCommand,0 },
-    { "get", 		EntryGetCommand,0 },
-    { "icursor", 	EntryICursorCommand,0 },
+    { "bbox",		EntryBBoxCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "current",	ComboboxCurrentCommand,0 },
+    { "delete",	EntryDeleteCommand,0 },
+    { "get",		EntryGetCommand,0 },
+    { "icursor",	EntryICursorCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "index", 		EntryIndexCommand,0 },
-    { "insert", 	EntryInsertCommand,0 },
+    { "index",		EntryIndexCommand,0 },
+    { "insert",	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "selection", 	0,EntrySelectionCommands },
-    { "set", 		EntrySetCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "selection",	0,EntrySelectionCommands },
+    { "set",		EntrySetCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
-    { "xview", 		EntryXViewCommand,0 },
+    { "xview",		EntryXViewCommand,0 },
     { 0,0,0 }
 };
 
 static const WidgetSpec ComboboxWidgetSpec = {
     "TCombobox",		/* className */
-    sizeof(Combobox), 		/* recordSize */
+    sizeof(Combobox),		/* recordSize */
     ComboboxOptionSpecs,	/* optionSpecs */
-    ComboboxCommands,  		/* subcommands */
-    ComboboxInitialize,     	/* initializeProc */
+    ComboboxCommands,		/* subcommands */
+    ComboboxInitialize,	/* initializeProc */
     EntryCleanup,		/* cleanupProc */
     ComboboxConfigure,		/* configureProc */
-    EntryPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    EntryPostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
@@ -2004,7 +2005,7 @@ static const Tk_OptionSpec SpinboxOptionSpecs[] = {
 };
 
 /* SpinboxInitialize --
- * 	Initialization hook for spinbox widgets.
+ *	Initialization hook for spinbox widgets.
  */
 static void
 SpinboxInitialize(Tcl_Interp *interp, void *recordPtr)
@@ -2015,7 +2016,7 @@ SpinboxInitialize(Tcl_Interp *interp, void *recordPtr)
 }
 
 /* SpinboxConfigure --
- * 	Configuration hook for spinbox widgets.
+ *	Configuration hook for spinbox widgets.
  */
 static int
 SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
@@ -2032,36 +2033,36 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 static const Ttk_Ensemble SpinboxCommands[] = {
-    { "bbox", 		EntryBBoxCommand,0 },
-    { "cget", 		TtkWidgetCgetCommand,0 },
-    { "configure", 	TtkWidgetConfigureCommand,0 },
-    { "delete", 	EntryDeleteCommand,0 },
-    { "get", 		EntryGetCommand,0 },
-    { "icursor", 	EntryICursorCommand,0 },
+    { "bbox",		EntryBBoxCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "delete",	EntryDeleteCommand,0 },
+    { "get",		EntryGetCommand,0 },
+    { "icursor",	EntryICursorCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "index", 		EntryIndexCommand,0 },
-    { "insert", 	EntryInsertCommand,0 },
+    { "index",		EntryIndexCommand,0 },
+    { "insert",	EntryInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "selection", 	0,EntrySelectionCommands },
-    { "set", 		EntrySetCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "selection",	0,EntrySelectionCommands },
+    { "set",		EntrySetCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { "validate",	EntryValidateCommand,0 },
-    { "xview", 		EntryXViewCommand,0 },
+    { "xview",		EntryXViewCommand,0 },
     { 0,0,0 }
 };
 
 static const WidgetSpec SpinboxWidgetSpec = {
     "TSpinbox",			/* className */
-    sizeof(Spinbox), 		/* recordSize */
+    sizeof(Spinbox),		/* recordSize */
     SpinboxOptionSpecs,		/* optionSpecs */
-    SpinboxCommands,  		/* subcommands */
-    SpinboxInitialize,     	/* initializeProc */
+    SpinboxCommands,		/* subcommands */
+    SpinboxInitialize,	/* initializeProc */
     EntryCleanup,		/* cleanupProc */
     SpinboxConfigure,		/* configureProc */
-    EntryPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    EntryPostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };

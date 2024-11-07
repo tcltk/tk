@@ -164,7 +164,7 @@ Tk_FocusObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], focusOptions,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -649,14 +649,14 @@ TkSetFocusWin(
 	 * application.
 	 */
 
-    	if (force) {
+	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
 		displayFocusPtr2->focusWinPtr = NULL;
 	    }
-    	}
+	}
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the

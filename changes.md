@@ -9,6 +9,16 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 ## Changes since Tk 9.0.0
  - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
  - [SIGABRT from Tk_DeleteErrorHandler()](https://core.tcl-lang.org/tk/tktview/f52986)
+ - [Tilde file syntax not available on 9.0 but used by "~/.Xdefaults"](https://core.tcl-lang.org/tk/tktview/fcfddc)
+ - [leftover use of tilde in filename string](https://core.tcl-lang.org/tk/tktview/767702)
+ - [build failure on macOS < 10.13](https://core.tcl-lang.org/tk/tktview/d48cbf)
+ - [Two potentially bogus binding scripts for <TouchpadScroll>](https://core.tcl-lang.org/tk/tktview/73c5e3)
+ - [Aqua: canvas items are not always redrawn](https://core.tcl-lang.org/tk/tktview/5869c2)
+ - [Aqua: color rgb values do not behave as expected when appearance is changed](https://core.tcl-lang.org/tk/tktview/01f58b)
+ - [Aqua: winfo rgb . systemLabelColor returns a weird result on aqua](https://core.tcl-lang.org/tk/tktview/23b57a)
+ - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
+ - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
+ - [cannot build .chm help file (Windows)](https://core.tcl-lang.org/tk/tktview/bb110c)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
@@ -41,8 +51,6 @@ writing Tcl scripts containing Tk commands.
  - Read/write access to photo image metadata
 
 ## Known bugs
- - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
- - [Tilde file syntax not available on 9.0 but used by "~/.Xdefaults"](https://core.tcl-lang.org/tk/tktview/fcfddc)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)

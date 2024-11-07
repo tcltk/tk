@@ -438,7 +438,7 @@ static Tcl_ObjCmdProc2 EntryWidgetObjCmd;
 static void		EntryWorldChanged(void *instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
 			    Tcl_Obj *indexObj, Tcl_Size *indexPtr);
-static int		InsertChars(Entry *entryPtr, Tcl_Size index, const char *string);
+static int		InsertChars(Entry *entryPtr, Tcl_Size index, Tcl_Obj *obj);
 
 /*
  * These forward declarations are the spinbox specific ones:
@@ -750,7 +750,7 @@ EntryWidgetObjCmd(
 	    goto error;
 	}
 	if (entryPtr->state == STATE_NORMAL) {
-	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	    code = InsertChars(entryPtr, index, objv[3]);
 	    if (code != TCL_OK) {
 		goto error;
 	    }
@@ -1031,11 +1031,7 @@ EntryWidgetObjCmd(
 
 static void
 DestroyEntry(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about entry widget. */
-#else
-    char *memPtr)
-#endif
 {
     Entry *entryPtr = (Entry *)memPtr;
 
@@ -2072,7 +2068,7 @@ EntryComputeGeometry(
 		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
 			- entryPtr->xWidth - totalLength)/2;
 	    }
-    	} else {
+	} else {
 
 	    /*
 	     * The whole string can't fit in the window. Compute the maximum
@@ -2192,11 +2188,11 @@ InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
     Tcl_Size index,			/* Add the new elements before this character
 				 * index. */
-    const char *value)		/* New characters to add (NULL-terminated
-				 * string). */
+    Tcl_Obj *obj)		/* New characters to add. */
 {
     size_t byteIndex, byteCount, newByteCount, oldChars, charsAdded;
     const char *string;
+    const char *value = Tcl_GetString(obj);
     char *newStr;
 
     string = entryPtr->string;
@@ -4042,7 +4038,7 @@ SpinboxWidgetObjCmd(
 	    goto error;
 	}
 	if (entryPtr->state == STATE_NORMAL) {
-	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	    code = InsertChars(entryPtr, index, objv[3]);
 	    if (code != TCL_OK) {
 		goto error;
 	    }

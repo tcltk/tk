@@ -133,7 +133,7 @@ static const struct gdi_command {
  *
  * GdiArc --
  *
- * 	Map canvas arcs to GDI context.
+ *	Map canvas arcs to GDI context.
  *
  * Results:
  *	Renders arcs.
@@ -290,8 +290,8 @@ static int GdiArc(
  *
  * GdiBitmap --
  *
- * 	Unimplemented for now. Should use the same techniques as
- * 	CanvasPsBitmap (tkCanvPs.c).
+ *	Unimplemented for now. Should use the same techniques as
+ *	CanvasPsBitmap (tkCanvPs.c).
  *
  * Results:
  *	None.
@@ -676,9 +676,9 @@ static int GdiLine(
 	return TCL_ERROR;
     }
     if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }
