@@ -13,17 +13,39 @@
 
 #include "tkInt.h"
 
+/* Data declarations and protoypes of functions used in this file. */
 
-char *acc_role, *acc_name, *acc_description, *acc_value, *acc_state, *acc_action;
 Tcl_HashTable *TkAccessibilityObject;
 
-  
-
+int     Tk_SetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
+			     int objc, Tcl_Obj *const objv[]);
+int     Tk_SetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
+			     int objc, Tcl_Obj *const objv[]);
+int     Tk_SetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
+			     int objc, Tcl_Obj *const objv[]);
+int     Tk_SetAccessibleState (TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_SetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_SetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
+				    int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleState(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
+			      int objc, Tcl_Obj *const objv[]);
+int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
+			       int objc, Tcl_Obj *const objv[]);
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleRole --
+ * Tk_SetAccessibleRole --
  *
  *	This function assigns an accessibility role for a 
  *	specific widget. 
@@ -39,11 +61,11 @@ Tcl_HashTable *TkAccessibilityObject;
  */
 
 int
-Tk_AccessibleRole(
-		  TCL_UNUSED(void *),
-		  Tcl_Interp *ip,		/* Current interpreter. */
-		  int objc,			/* Number of arguments. */
-		  Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleRole(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? role?");
@@ -85,7 +107,7 @@ Tk_AccessibleRole(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleName --
+ * Tk_SetAccessibleName --
  *
  *	This function assigns an accessibility name for a 
  *	specific widget. 
@@ -101,11 +123,11 @@ Tk_AccessibleRole(
  */
 
 int
-Tk_AccessibleName(
-		  TCL_UNUSED(void *),
-		  Tcl_Interp *ip,		/* Current interpreter. */
-		  int objc,			/* Number of arguments. */
-		  Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleName(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? name?");
@@ -149,7 +171,7 @@ Tk_AccessibleName(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleDescription --
+ * Tk_SetAccessibleDescription --
  *
  *	This function assigns a platform-neutral accessibility descrption for a 
  *	specific widget. 
@@ -165,11 +187,11 @@ Tk_AccessibleName(
  */
 
 int
-Tk_AccessibleDescription(
-			 TCL_UNUSED(void *),
-			 Tcl_Interp *ip,		/* Current interpreter. */
-			 int objc,			/* Number of arguments. */
-			 Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleDescription(
+			    TCL_UNUSED(void *),
+			    Tcl_Interp *ip,		/* Current interpreter. */
+			    int objc,			/* Number of arguments. */
+			    Tcl_Obj *const objv[])	/* Argument objects. */
 {	
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? description?");
@@ -187,7 +209,7 @@ Tk_AccessibleDescription(
     return TCL_ERROR;
   }
 
-  /* Get accessibility description for window. */
+  /* Set accessibility description for window. */
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -212,14 +234,14 @@ Tk_AccessibleDescription(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleValue  --
+ * Tk_SetAccessibleValue  --
  *
- *	This function reads the current value/data of the widget for  
+ *	This function sets the current value/data of the widget for  
  *	the accessibility API.
  *	
  *
  * Results:
- *	Returns an accessibility value in string format.
+ *	Assigns  an accessibility value in string format.
  *      Platform-specific API's will convert to the required type, if needed.
  *
  * Side effects:
@@ -229,11 +251,11 @@ Tk_AccessibleDescription(
  */
 
 int
-Tk_AccessibleValue(
-		   TCL_UNUSED(void *),
-		   Tcl_Interp *ip,		/* Current interpreter. */
-		   int objc,			/* Number of arguments. */
-		   Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleValue(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
 	
 {	
   if (objc < 3) {
@@ -252,7 +274,7 @@ Tk_AccessibleValue(
     return TCL_ERROR;
   }
 
-  /* Get accessibility value for window. */
+  /* Set accessibility value for window. */
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -276,7 +298,7 @@ Tk_AccessibleValue(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_AccessibleState  --
+ * Tk_SetAccessibleState  --
  *
  *	This function reads the current state of the widget for  
  *	the accessibility API.
@@ -292,11 +314,11 @@ Tk_AccessibleValue(
  */
 
 int
-Tk_AccessibleState(
-		   TCL_UNUSED(void *),
-		   Tcl_Interp *ip,		/* Current interpreter. */
-		   int objc,			/* Number of arguments. */
-		   Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleState(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
 	
 {	
   if (objc < 3) {
@@ -315,7 +337,7 @@ Tk_AccessibleState(
     return TCL_ERROR;
   }
 
-  /* Get accessibility state for window. */
+  /* Set accessibility state for window. */
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -346,7 +368,7 @@ Tk_AccessibleState(
  *	
  *
  * Results:
- *	Returns an accessibility action for the widget.
+ *	Sets an accessibility action for the widget.
  *
  * Side effects:
  *	None.
@@ -355,11 +377,11 @@ Tk_AccessibleState(
  */
 
 int
-Tk_AccessibleAction(
-		    TCL_UNUSED(void *),
-		    Tcl_Interp *ip,		/* Current interpreter. */
-		    int objc,			/* Number of arguments. */
-		    Tcl_Obj *const objv[])	/* Argument objects. */
+Tk_SetAccessibleAction(
+		       TCL_UNUSED(void *),
+		       Tcl_Interp *ip,		/* Current interpreter. */
+		       int objc,			/* Number of arguments. */
+		       Tcl_Obj *const objv[])	/* Argument objects. */
 	
 {	
   if (objc < 3) {
@@ -378,7 +400,7 @@ Tk_AccessibleAction(
     return TCL_ERROR;
   }
 
-  /* Get accessibility action for window. */
+  /* Set accessibility action for window. */
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -399,6 +421,311 @@ Tk_AccessibleAction(
   return TCL_OK;
 }
 
+ 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleRole --
+ *
+ *	This function assigns an accessibility role for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Assigns an accessibility role.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleRole(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+	
+  Tk_Window win;
+  char *role;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible role for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, role);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleName --
+ *
+ *	This function reads an accessibility name for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Gets an accessibility name.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleName(
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  char *name;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible name for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, name);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleDescription --
+ *
+ *	This function reads a platform-neutral accessibility descrption for a 
+ *	specific widget. 
+ *	
+ *
+ * Results:
+ *	Assigns an accessibility description.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleDescription(
+			    TCL_UNUSED(void *),
+			    Tcl_Interp *ip,		/* Current interpreter. */
+			    int objc,			/* Number of arguments. */
+			    Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+	
+  Tk_Window win;
+  char *description;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible description for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, description);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleValue  --
+ *
+ *	This function reads the current value/data of the widget for  
+ *	the accessibility API.
+ *	
+ *
+ * Results:
+ *	Returns an accessibility value in string format.
+ *      Platform-specific API's will convert to the required type, if needed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleValue(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+	
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  char *value;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible value for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, value);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleState  --
+ *
+ *	This function reads the current state of the widget for  
+ *	the accessibility API.
+ *	
+ *
+ * Results:
+ *	Returns an accessibility state.
+ *      
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleState(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+	
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  char *state;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible state for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, state);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleAction  --
+ *
+ *	This function gets the current accessibility action for the widget. 
+ *	
+ *
+ * Results:
+ *	Returns an accessibility action for the widget.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tk_GetAccessibleAction(
+		       TCL_UNUSED(void *),
+		       Tcl_Interp *ip,		/* Current interpreter. */
+		       int objc,			/* Number of arguments. */
+		       Tcl_Obj *const objv[])	/* Argument objects. */
+	
+{	
+  if (objc < 2) {
+    Tcl_WrongNumArgs(ip, 1, objv, "window?");
+    return TCL_ERROR;
+  }
+
+  Tk_Window win;
+  char *action;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  
+  Tcl_HashTable *AccessibleAttributes;
+
+  win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+  if (win == NULL) {
+    return TCL_ERROR;
+  }
+
+  /* Get accessible action for window.  */
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, action);
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
+  return TCL_OK;
+}
 
 
 /*
@@ -410,12 +737,18 @@ TkAccessibility_Init(
 		     Tcl_Interp *interp)
 {
  
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_AccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_AccessibleName, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_AccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_AccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_AccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_AccessibleAction, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_SetAccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_SetAccessibleName, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_SetAccessibleDescription, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_SetAccessibleValue, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_SetAccessibleState, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_SetAccessibleAction, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_role", Tk_GetAccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_name", Tk_GetAccessibleName, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_description", Tk_GetAccessibleDescription, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_value", Tk_GetAccessibleValue, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
   TkAccessibilityObject =   (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
   Tcl_InitHashTable(TkAccessibilityObject, TCL_STRING_KEYS);
   return TCL_OK;
