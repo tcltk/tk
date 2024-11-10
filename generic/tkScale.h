@@ -102,7 +102,7 @@ typedef struct TkScale {
 #if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
 #else
-    int borderWidth;		/* Width of 3-D border around window. */
+    int borderWidth;
 #endif
     Tk_3DBorder bgBorder;	/* Used for drawing slider and other
 				 * background areas. */

@@ -397,8 +397,8 @@ SetCGColorComponents(
     CGFloat rgba[4] = {0, 0, 0, 1};
 
     if (entry->type == HIBrush) {
-     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
-     	return err == noErr;
+	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+	return err == noErr;
     }
 
     /*

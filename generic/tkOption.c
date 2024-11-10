@@ -1560,7 +1560,7 @@ GetDefaultOptions(
 				 * associated with this. */
 {
     char *regProp, **regPropPtr = &regProp;
-    int result, actualFormat;
+    int result = TCL_OK, actualFormat;
     unsigned long numItems, bytesAfter;
     Atom actualType;
 
@@ -1589,8 +1589,15 @@ GetDefaultOptions(
     if (regProp != NULL) {
 	XFree(regProp);
     }
-    result = ReadOptionFile(interp, (Tk_Window) winPtr, "~/.Xdefaults",
-	    TK_USER_DEFAULT_PRIO);
+    if (Tcl_EvalEx(interp, "file tildeexpand ~/.Xdefaults",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *xdefaults = Tcl_GetObjResult(interp);
+	Tcl_IncrRefCount(xdefaults);
+	Tcl_ResetResult(interp);
+	result = ReadOptionFile(interp, (Tk_Window)winPtr, Tcl_GetString(xdefaults),
+		TK_USER_DEFAULT_PRIO);
+	Tcl_DecrRefCount(xdefaults);
+    }
     return result;
 }
 
