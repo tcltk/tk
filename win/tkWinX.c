@@ -117,7 +117,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
+static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 

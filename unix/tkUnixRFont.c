@@ -39,7 +39,7 @@ typedef struct {
 } UnixFtColorList;
 
 typedef struct {
-    TkFont font;	    	/* Stuff used by generic font package. Must be
+    TkFont font;		/* Stuff used by generic font package. Must be
 				 * first in structure. */
     UnixFtFace *faces;
     int nfaces;
@@ -90,7 +90,7 @@ TCL_DECLARE_MUTEX(xftMutex);
 static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
 {
     if (numBytes >= 6) {
-    	return Tcl_UtfToUniChar(source, (int *)c);
+	return Tcl_UtfToUniChar(source, (int *)c);
     }
     return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
 }
@@ -190,7 +190,7 @@ GetFont(
  *---------------------------------------------------------------------------
  *
  * GetTkFontAttributes --
- * 	Fill in TkFontAttributes from an XftFont.
+ *	Fill in TkFontAttributes from an XftFont.
  */
 
 static void
@@ -245,7 +245,7 @@ GetTkFontAttributes(
  *---------------------------------------------------------------------------
  *
  * GetTkFontMetrics --
- * 	Fill in TkFontMetrics from an XftFont.
+ *	Fill in TkFontMetrics from an XftFont.
  */
 
 static void
@@ -275,7 +275,7 @@ GetTkFontMetrics(
  *	also allocates a new UnixFtFont.
  *
  * Results:
- * 	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
  *
  *---------------------------------------------------------------------------
  */
@@ -665,7 +665,7 @@ TkpGetSubFonts(
     resultPtr = Tcl_NewListObj(0, NULL);
 
     for (i = 0; i < fontPtr->nfaces ; ++i) {
- 	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
+	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
 		fontPtr->faces[i].source);
 
 	XftPatternGetString(pattern, XFT_FAMILY, 0, familyPtr);
@@ -695,7 +695,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;

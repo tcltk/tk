@@ -522,9 +522,9 @@ TestgetwindowinfoObjCmd(
 
     cch = GetClassNameW((HWND)INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
-    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", TCL_INDEX_NONE));
-    	AppendSystemError(interp, GetLastError());
-    	return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", TCL_INDEX_NONE));
+	AppendSystemError(interp, GetLastError());
+	return TCL_ERROR;
     } else {
 	Tcl_DStringInit(&ds);
 	Tcl_WCharToUtfDString(buf, wcslen(buf), &ds);

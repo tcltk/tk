@@ -708,7 +708,7 @@ GetScaleFromParameters(
  *	svg image cache.
  *
  * Results:
- * 	Return a pointer to the used cache.
+ *	Return a pointer to the used cache.
  *
  * Side effects:
  *	Initialize the cache on the first call.

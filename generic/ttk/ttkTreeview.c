@@ -23,18 +23,18 @@
 
 static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
 static const int DEFAULT_INDENT = 20;
-static const int HALO   	= 4;	/* heading separator */
+static const int HALO	= 4;	/* heading separator */
 
-#define STATE_CHANGED	 	(0x100)	/* item state option changed */
+#define STATE_CHANGED		(0x100)	/* item state option changed */
 
 /*------------------------------------------------------------------------
  * +++ Tree items.
  *
  * INVARIANTS:
- * 	item->children	==> item->children->parent == item
+ *	item->children	==> item->children->parent == item
  *	item->next	==> item->next->parent == item->parent
- * 	item->next 	==> item->next->prev == item
- * 	item->prev 	==> item->prev->next == item
+ *	item->next	==> item->next->prev == item
+ *	item->prev	==> item->prev->next == item
  */
 
 typedef struct TreeItemRec TreeItem;
@@ -48,7 +48,7 @@ struct TreeItemRec {
     /*
      * Options and instance data:
      */
-    Ttk_State 	state;
+    Ttk_State	state;
     Tcl_Obj	*textObj;
     Tcl_Obj	*imageObj;
     Tcl_Obj	*valuesObj;
@@ -56,8 +56,8 @@ struct TreeItemRec {
     Tcl_Obj	*tagsObj;
     Tcl_Obj	*selObj;
     Tcl_Obj	*imageAnchorObj;
-    int 	hidden;
-    int		height; 	/* Height is in number of row heights */
+    int	hidden;
+    int		height;	/* Height is in number of row heights */
 
     Ttk_TagSet  *cellTagSets;
     Tcl_Size	nTagSets;
@@ -67,8 +67,8 @@ struct TreeItemRec {
      */
     Ttk_TagSet	tagset;
     Ttk_ImageSpec *imagespec;
-    int itemPos; 		/* Counting items */
-    int visiblePos; 		/* Counting visible items */
+    int itemPos;		/* Counting items */
+    int visiblePos;		/* Counting visible items */
     int rowPos;			/* Counting rows (visible physical space) */
 };
 
@@ -109,7 +109,7 @@ static void RemoveTag(TreeItem *, Ttk_Tag);
 static void RemoveTagFromCellsAtItem(TreeItem *, Ttk_Tag);
 
 /* + NewItem --
- * 	Allocate a new, uninitialized, unlinked item
+ *	Allocate a new, uninitialized, unlinked item
  */
 static TreeItem *NewItem(void)
 {
@@ -138,7 +138,7 @@ static TreeItem *NewItem(void)
 }
 
 /* + FreeItem --
- * 	Destroy an item
+ *	Destroy an item
  */
 static void FreeItem(TreeItem *item)
 {
@@ -168,7 +168,7 @@ static void FreeItem(TreeItem *item)
 static void FreeItemCB(void *clientData) { FreeItem((TreeItem *)clientData); }
 
 /* + DetachItem --
- * 	Unlink an item from the tree.
+ *	Unlink an item from the tree.
  */
 static void DetachItem(TreeItem *item)
 {
@@ -182,11 +182,11 @@ static void DetachItem(TreeItem *item)
 }
 
 /* + InsertItem --
- * 	Insert an item into the tree after the specified item.
+ *	Insert an item into the tree after the specified item.
  *
  * Preconditions:
- * 	+ item is currently detached
- * 	+ prev != NULL ==> prev->parent == parent.
+ *	+ item is currently detached
+ *	+ prev != NULL ==> prev->parent == parent.
  */
 static void InsertItem(TreeItem *parent, TreeItem *prev, TreeItem *item)
 {
@@ -205,7 +205,7 @@ static void InsertItem(TreeItem *parent, TreeItem *prev, TreeItem *item)
 }
 
 /* + NextPreorder --
- * 	Return the next item in preorder traversal order.
+ *	Return the next item in preorder traversal order.
  */
 
 static TreeItem *NextPreorder(TreeItem *item)
@@ -281,9 +281,9 @@ static const Tk_OptionSpec *TagOptionSpecs = &DisplayOptionSpecs[2];
  * and HeadingOptionSpecs is for drawing headings.
  */
 typedef struct {
-    int 	width;		/* Column width, in pixels */
-    int 	minWidth;	/* Minimum column width, in pixels */
-    int 	stretch;	/* Should column stretch while resizing? */
+    int	width;		/* Column width, in pixels */
+    int	minWidth;	/* Minimum column width, in pixels */
+    int	stretch;	/* Should column stretch while resizing? */
     int		separator;	/* Should this column have a separator? */
     Tcl_Obj	*idObj;		/* Column identifier, from -columns option */
 
@@ -291,16 +291,16 @@ typedef struct {
 
     /* Column heading data:
      */
-    Tcl_Obj 	*headingObj;		/* Heading label */
+    Tcl_Obj	*headingObj;		/* Heading label */
     Tcl_Obj	*headingImageObj;	/* Heading image */
-    Tcl_Obj 	*headingAnchorObj;	/* -anchor for heading label */
+    Tcl_Obj	*headingAnchorObj;	/* -anchor for heading label */
     Tcl_Obj	*headingCommandObj;	/* Command to execute */
-    Tcl_Obj 	*headingStateObj;	/* @@@ testing ... */
+    Tcl_Obj	*headingStateObj;	/* @@@ testing ... */
     Ttk_State	headingState;		/* ... */
 
     /* Temporary storage for cell data
      */
-    Tcl_Obj 	*data;
+    Tcl_Obj	*data;
     int		selected;
     Ttk_TagSet	tagset;
 } TreeColumn;
@@ -385,7 +385,7 @@ static const Tk_OptionSpec HeadingOptionSpecs[] = {
  * TODO: Implement SHOW_BRANCHES.
  */
 
-#define SHOW_TREE 	(0x1) 	/* Show tree column? */
+#define SHOW_TREE	(0x1)	/* Show tree column? */
 #define SHOW_HEADINGS	(0x2)	/* Show heading row? */
 
 #define DEFAULT_SHOW	"tree headings"
@@ -425,10 +425,10 @@ static int GetEnumSetFromObj(
  * +++ Treeview widget record.
  *
  * Dependencies:
- * 	columns, columnNames: -columns
- * 	displayColumns:	-columns, -displaycolumns
- * 	headingHeight: [layout]
- * 	rowHeight, indent: style
+ *	columns, columnNames: -columns
+ *	displayColumns:	-columns, -displaycolumns
+ *	headingHeight: [layout]
+ *	rowHeight, indent: style
  */
 typedef struct {
     /* Resources acquired at initialization-time:
@@ -488,7 +488,7 @@ typedef struct {
     /* Derived resources:
      */
     Tcl_HashTable columnNames;	/* Map: column name -> column table entry */
-    Tcl_Size nColumns; 		/* #columns */
+    Tcl_Size nColumns;		/* #columns */
     Tcl_Size nDisplayColumns;	/* #display columns */
     TreeColumn **displayColumns; /* List of columns for display (incl tree) */
     int titleWidth;		/* Width of non-scrolled columns */
@@ -496,7 +496,7 @@ typedef struct {
     int totalRows;		/* Height of non-hidden items, in rows */
     int rowPosNeedsUpdate;	/* Internal rowPos data needs update */
     Ttk_Box headingArea;	/* Display area for column headings */
-    Ttk_Box treeArea;   	/* Display area for tree */
+    Ttk_Box treeArea;	/* Display area for tree */
     int slack;			/* Slack space (see Resizing section) */
     unsigned showFlags;		/* bitmask of subparts to display */
 } TreePart;
@@ -506,11 +506,11 @@ typedef struct {
     TreePart tree;
 } Treeview;
 
-#define USER_MASK 		0x0100
-#define COLUMNS_CHANGED 	(USER_MASK)
+#define USER_MASK		0x0100
+#define COLUMNS_CHANGED	(USER_MASK)
 #define DCOLUMNS_CHANGED	(USER_MASK<<1)
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
-#define SHOW_CHANGED 		(USER_MASK<<3)
+#define SHOW_CHANGED		(USER_MASK<<3)
 
 static const char *const SelectModeStrings[] = { "none", "browse", "extended", NULL };
 static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
@@ -590,8 +590,8 @@ static int CellSelectionClear(Treeview *tv)
 }
 
 /* + unshareObj(objPtr) --
- * 	Ensure that a Tcl_Obj * has refcount 1 -- either return objPtr
- * 	itself,	or a duplicated copy.
+ *	Ensure that a Tcl_Obj * has refcount 1 -- either return objPtr
+ *	itself,	or a duplicated copy.
  */
 static Tcl_Obj *unshareObj(Tcl_Obj *objPtr)
 {
@@ -605,7 +605,7 @@ static Tcl_Obj *unshareObj(Tcl_Obj *objPtr)
 }
 
 /* DisplayLayout --
- * 	Rebind, place, and draw a layout + object combination.
+ *	Rebind, place, and draw a layout + object combination.
  */
 static void DisplayLayout(
     Ttk_Layout layout, void *recordPtr, Ttk_State state, Ttk_Box b, Drawable d)
@@ -643,9 +643,9 @@ static void DisplayLayoutTree(
 }
 
 /* + GetColumn --
- * 	Look up column by name or number.
- * 	Returns: pointer to column table entry, NULL if not found.
- * 	Leaves an error message in interp->result on error.
+ *	Look up column by name or number.
+ *	Returns: pointer to column table entry, NULL if not found.
+ *	Leaves an error message in interp->result on error.
  */
 static TreeColumn *GetColumn(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
@@ -681,7 +681,7 @@ static TreeColumn *GetColumn(
 }
 
 /* + FindColumn --
- * 	Look up column by name, number, or display index.
+ *	Look up column by name, number, or display index.
  */
 static TreeColumn *FindColumn(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
@@ -704,8 +704,8 @@ static TreeColumn *FindColumn(
 }
 
 /* + FindItem --
- * 	Locates the item with the specified identifier in the tree.
- * 	If there is no such item, leaves an error message in interp.
+ *	Locates the item with the specified identifier in the tree.
+ *	If there is no such item, leaves an error message in interp.
  */
 static TreeItem *FindItem(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *itemNameObj)
@@ -723,10 +723,10 @@ static TreeItem *FindItem(
 }
 
 /* + GetItemListFromObj --
- * 	Parse a Tcl_Obj * as a list of items.
- * 	Returns a NULL-terminated array of items; result must
- * 	be ckfree()d. On error, returns NULL and leaves an error
- * 	message in interp.
+ *	Parse a Tcl_Obj * as a list of items.
+ *	Returns a NULL-terminated array of items; result must
+ *	be ckfree()d. On error, returns NULL and leaves an error
+ *	message in interp.
  */
 
 static TreeItem **GetItemListFromObj(
@@ -753,7 +753,7 @@ static TreeItem **GetItemListFromObj(
 }
 
 /* + ItemName --
- * 	Returns the item's ID.
+ *	Returns the item's ID.
  */
 static const char *ItemName(Treeview *tv, TreeItem *item)
 {
@@ -761,8 +761,8 @@ static const char *ItemName(Treeview *tv, TreeItem *item)
 }
 
 /* + ItemID --
- * 	Returns a fresh Tcl_Obj * (refcount 0) holding the
- * 	item identifier of the specified item.
+ *	Returns a fresh Tcl_Obj * (refcount 0) holding the
+ *	item identifier of the specified item.
  */
 static Tcl_Obj *ItemID(Treeview *tv, TreeItem *item)
 {
@@ -774,7 +774,7 @@ static Tcl_Obj *ItemID(Treeview *tv, TreeItem *item)
  */
 
 /* + TreeviewFreeColumns --
- * 	Free column data.
+ *	Free column data.
  */
 static void TreeviewFreeColumns(Treeview *tv)
 {
@@ -840,10 +840,10 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 }
 
 /* + TreeviewInitDisplayColumns --
- * 	Initializes the 'displayColumns' array.
+ *	Initializes the 'displayColumns' array.
  *
- * 	Note that displayColumns[0] is always the tree column,
- * 	even when SHOW_TREE is not set.
+ *	Note that displayColumns[0] is always the tree column,
+ *	even when SHOW_TREE is not set.
  *
  * @@@ TODO: disallow duplicated columns
  */
@@ -886,13 +886,13 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 
 /*------------------------------------------------------------------------
  * +++ Resizing.
- * 	slack invariant: TreeWidth(tree) + slack = treeArea.width
+ *	slack invariant: TreeWidth(tree) + slack = treeArea.width
  */
 
 #define FirstColumn(tv)  ((tv->tree.showFlags&SHOW_TREE) ? 0 : 1)
 
 /* + TreeWidth --
- * 	Compute the requested tree width from the sum of visible column widths.
+ *	Compute the requested tree width from the sum of visible column widths.
  */
 static int TreeWidth(Treeview *tv)
 {
@@ -920,10 +920,10 @@ static void RecomputeSlack(Treeview *tv)
 }
 
 /* + PickupSlack/DepositSlack --
- * 	When resizing columns, distribute extra space to 'slack' first,
- * 	and only adjust column widths if 'slack' goes to zero.
- * 	That is, don't bother changing column widths if the tree
- * 	is already scrolled or short.
+ *	When resizing columns, distribute extra space to 'slack' first,
+ *	and only adjust column widths if 'slack' goes to zero.
+ *	That is, don't bother changing column widths if the tree
+ *	is already scrolled or short.
  */
 static int PickupSlack(Treeview *tv, int extra)
 {
@@ -945,8 +945,8 @@ static void DepositSlack(Treeview *tv, int extra)
 }
 
 /* + Stretch --
- * 	Adjust width of column by N pixels, down to minimum width.
- * 	Returns: #pixels actually moved.
+ *	Adjust width of column by N pixels, down to minimum width.
+ *	Returns: #pixels actually moved.
  */
 static int Stretch(TreeColumn *c, int n)
 {
@@ -961,8 +961,8 @@ static int Stretch(TreeColumn *c, int n)
 }
 
 /* + ShoveLeft --
- * 	Adjust width of (stretchable) columns to the left by N pixels.
- * 	Returns: leftover slack.
+ *	Adjust width of (stretchable) columns to the left by N pixels.
+ *	Returns: leftover slack.
  */
 static int ShoveLeft(Treeview *tv, Tcl_Size i, int n)
 {
@@ -978,8 +978,8 @@ static int ShoveLeft(Treeview *tv, Tcl_Size i, int n)
 }
 
 /* + ShoveRight --
- * 	Adjust width of (stretchable) columns to the right by N pixels.
- * 	Returns: leftover slack.
+ *	Adjust width of (stretchable) columns to the right by N pixels.
+ *	Returns: leftover slack.
  */
 static int ShoveRight(Treeview *tv, Tcl_Size i, int n)
 {
@@ -994,11 +994,11 @@ static int ShoveRight(Treeview *tv, Tcl_Size i, int n)
 }
 
 /* + DistributeWidth --
- * 	Distribute n pixels evenly across all stretchable display columns.
- * 	Returns: leftover slack.
+ *	Distribute n pixels evenly across all stretchable display columns.
+ *	Returns: leftover slack.
  * Notes:
- * 	The "((++w % m) < r)" term is there so that the remainder r = n % m
- * 	is distributed round-robin.
+ *	The "((++w % m) < r)" term is there so that the remainder r = n % m
+ *	is distributed round-robin.
  */
 static int DistributeWidth(Treeview *tv, int n)
 {
@@ -1030,10 +1030,10 @@ static int DistributeWidth(Treeview *tv, int n)
 }
 
 /* + ResizeColumns --
- * 	Recompute column widths based on available width.
- * 	Pick up slack first;
- * 	Distribute the remainder evenly across stretchable columns;
- * 	If any is still left over due to minwidth constraints, shove left.
+ *	Recompute column widths based on available width.
+ *	Pick up slack first;
+ *	Distribute the remainder evenly across stretchable columns;
+ *	If any is still left over due to minwidth constraints, shove left.
  */
 static void ResizeColumns(Treeview *tv, int newWidth)
 {
@@ -1044,8 +1044,8 @@ static void ResizeColumns(Treeview *tv, int newWidth)
 }
 
 /* + DragColumn --
- * 	Move the separator to the right of specified column,
- * 	adjusting other column widths as necessary.
+ *	Move the separator to the right of specified column,
+ *	adjusting other column widths as necessary.
  */
 static void DragColumn(Treeview *tv, Tcl_Size i, int delta)
 {
@@ -1066,7 +1066,7 @@ typedef struct {
 } TreeCell;
 
 /* + GetCellFromObj
- * 	Get Row and Column from a cell ID.
+ *	Get Row and Column from a cell ID.
  */
 static int GetCellFromObj(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
@@ -1118,10 +1118,10 @@ static int GetCellFromObj(
 }
 
 /* + GetCellListFromObj --
- * 	Parse a Tcl_Obj * as a list of cells.
- * 	Returns an array of cells; result must be ckfree()d.
+ *	Parse a Tcl_Obj * as a list of cells.
+ *	Returns an array of cells; result must be ckfree()d.
  *      On error, returns NULL and leaves an error
- * 	message in interp.
+ *	message in interp.
  */
 
 static TreeCell *GetCellListFromObj(
@@ -1358,10 +1358,10 @@ static void TreeviewCleanup(void *recordPtr)
 }
 
 /* + TreeviewConfigure --
- * 	Configuration widget hook.
+ *	Configuration widget hook.
  *
- * 	BUG: If user sets -columns and -displaycolumns, but -displaycolumns
- * 	has an error, the widget is left in an inconsistent state.
+ *	BUG: If user sets -columns and -displaycolumns, but -displaycolumns
+ *	has an error, the widget is left in an inconsistent state.
  */
 static int
 TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
@@ -1419,7 +1419,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 /* + ConfigureItem --
- * 	Set item options.
+ *	Set item options.
  */
 static int ConfigureItem(
     Tcl_Interp *interp, Treeview *tv, TreeItem *item,
@@ -1511,7 +1511,7 @@ error:
 }
 
 /* + ConfigureColumn --
- * 	Set column options.
+ *	Set column options.
  */
 static int ConfigureColumn(
     Tcl_Interp *interp, Treeview *tv, TreeColumn *column,
@@ -1557,7 +1557,7 @@ error:
 }
 
 /* + ConfigureHeading --
- * 	Set heading options.
+ *	Set heading options.
  */
 static int ConfigureHeading(
     Tcl_Interp *interp, Treeview *tv, TreeColumn *column,
@@ -1601,7 +1601,7 @@ error:
  */
 
 /* + UpdatePositionItem --
- * 	Update position data for all visible items.
+ *	Update position data for all visible items.
  */
 static void UpdatePositionItem(
     Treeview *tv, TreeItem *item, int hidden,
@@ -1639,7 +1639,7 @@ static void UpdatePositionItem(
 }
 
 /* + UpdatePositionTree --
- * 	Update position data for all visible items.
+ *	Update position data for all visible items.
  */
 static void UpdatePositionTree(Treeview *tv)
 {
@@ -1652,7 +1652,7 @@ static void UpdatePositionTree(Treeview *tv)
 }
 
 /* + IdentifyItem --
- * 	Locate the item at the specified y position, if any.
+ *	Locate the item at the specified y position, if any.
  */
 static TreeItem *IdentifyItem(Treeview *tv, int y)
 {
@@ -1678,8 +1678,8 @@ static TreeItem *IdentifyItem(Treeview *tv, int y)
 }
 
 /* + IdentifyDisplayColumn --
- * 	Returns the display column number at the specified x position,
- * 	or -1 if x is outside any columns.
+ *	Returns the display column number at the specified x position,
+ *	or -1 if x is outside any columns.
  */
 static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
@@ -1709,8 +1709,8 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 }
 
 /* + ItemDepth -- return the depth of a tree item.
- * 	The depth of an item is equal to the number of proper ancestors,
- * 	not counting the root node.
+ *	The depth of an item is equal to the number of proper ancestors,
+ *	not counting the root node.
  */
 static int ItemDepth(TreeItem *item)
 {
@@ -1723,7 +1723,7 @@ static int ItemDepth(TreeItem *item)
 }
 
 /* + DisplayRow --
- * 	Returns the position row has on screen, or -1 if off-screen.
+ *	Returns the position row has on screen, or -1 if off-screen.
  */
 static int DisplayRow(int row, Treeview *tv)
 {
@@ -1762,7 +1762,7 @@ static int IsItemOrAncestorDetached(Treeview* tv, TreeItem* item)
 }
 
 /* + BoundingBox --
- * 	Compute the parcel of the specified column of the specified item,
+ *	Compute the parcel of the specified column of the specified item,
  *	(or the entire item if column is NULL)
  *	Returns: 0 if item or column is not viewable, 1 otherwise.
  */
@@ -1875,7 +1875,7 @@ static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
  */
 
 /* + GetSublayout --
- * 	Utility routine; acquires a sublayout for items, cells, etc.
+ *	Utility routine; acquires a sublayout for items, cells, etc.
  */
 static Ttk_Layout GetSublayout(
     Tcl_Interp *interp,
@@ -1897,7 +1897,7 @@ static Ttk_Layout GetSublayout(
 }
 
 /* + TreeviewGetLayout --
- * 	GetLayout() widget hook.
+ *	GetLayout() widget hook.
  */
 static Ttk_Layout TreeviewGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
@@ -1968,12 +1968,12 @@ static Ttk_Layout TreeviewGetLayout(
 }
 
 /* + TreeviewDoLayout --
- * 	DoLayout() widget hook.  Computes widget layout.
+ *	DoLayout() widget hook.  Computes widget layout.
  *
  * Side effects:
- * 	Computes headingArea and treeArea.
- * 	Computes subtree height.
- * 	Invokes scroll callbacks.
+ *	Computes headingArea and treeArea.
+ *	Computes subtree height.
+ *	Invokes scroll callbacks.
  */
 static void TreeviewDoLayout(void *clientData)
 {
@@ -2008,8 +2008,8 @@ static void TreeviewDoLayout(void *clientData)
 }
 
 /* + TreeviewSize --
- * 	SizeProc() widget hook.  Size is determined by
- * 	-height option and column widths.
+ *	SizeProc() widget hook.  Size is determined by
+ *	-height option and column widths.
  */
 static int TreeviewSize(void *clientData, int *widthPtr, int *heightPtr)
 {
@@ -2030,8 +2030,8 @@ static int TreeviewSize(void *clientData, int *widthPtr, int *heightPtr)
 }
 
 /* + ItemState --
- * 	Returns the state of the specified item, based
- * 	on widget state, item state, and other information.
+ *	Returns the state of the specified item, based
+ *	on widget state, item state, and other information.
  */
 static Ttk_State ItemState(Treeview *tv, TreeItem *item)
 {
@@ -2117,10 +2117,10 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 }
 
 /* + OverrideStriped --
- * 	Each level of settings might add stripedbackground, and it should
- * 	override background if this is indeed on a striped item.
- * 	By copying it between each level, and NULL-ing stripedBgObj,
- * 	it can be detected if the next level overrides it.
+ *	Each level of settings might add stripedbackground, and it should
+ *	override background if this is indeed on a striped item.
+ *	By copying it between each level, and NULL-ing stripedBgObj,
+ *	it can be detected if the next level overrides it.
  */
  static void OverrideStriped(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem)
@@ -2133,7 +2133,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 }
 
 /* + PrepareItem --
- * 	Fill in a displayItem record.
+ *	Fill in a displayItem record.
  */
 static void PrepareItem(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state)
@@ -2282,7 +2282,7 @@ static void DrawCells(
 }
 
 /* + DrawItem --
- * 	Draw an item (row background, tree label, and cells).
+ *	Draw an item (row background, tree label, and cells).
  */
 static void DrawItem(
     Treeview *tv, TreeItem *item, Drawable d, int depth)
@@ -2398,7 +2398,7 @@ static void DrawItem(
 }
 
 /* + DrawSubtree --
- * 	Draw an item and all of its (viewable) descendants.
+ *	Draw an item and all of its (viewable) descendants.
  */
 
 static void DrawForest(	/* forward */
@@ -2418,7 +2418,7 @@ static void DrawSubtree(
 }
 
 /* + DrawForest --
- * 	Draw a sequence of items and their visible descendants.
+ *	Draw a sequence of items and their visible descendants.
  */
 static void DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth)
@@ -2441,7 +2441,7 @@ static void DrawTreeArea(Treeview *tv, Drawable d) {
 }
 
 /* + TreeviewDisplay --
- * 	Display() widget hook.  Draw the widget contents.
+ *	Display() widget hook.  Draw the widget contents.
  */
 static void TreeviewDisplay(void *clientData, Drawable d)
 {
@@ -2529,10 +2529,10 @@ static void TreeviewDisplay(void *clientData, Drawable d)
  */
 
 /* + InsertPosition --
- * 	Locate the previous sibling for [$tree insert].
+ *	Locate the previous sibling for [$tree insert].
  *
- * 	Returns a pointer to the item just before the specified index,
- * 	or 0 if the item is to be inserted at the beginning.
+ *	Returns a pointer to the item just before the specified index,
+ *	or 0 if the item is to be inserted at the beginning.
  */
 static TreeItem *InsertPosition(TreeItem *parent, int index)
 {
@@ -2548,13 +2548,13 @@ static TreeItem *InsertPosition(TreeItem *parent, int index)
 }
 
 /* + EndPosition --
- * 	Locate the last child of the specified node.
+ *	Locate the last child of the specified node.
  *
- * 	To avoid quadratic-time behavior in the common cases
- * 	where the treeview is populated in breadth-first or
- * 	depth-first order using [$tv insert $parent end ...],
- * 	we cache the result from the last call to EndPosition()
- * 	and start the search from there on a cache hit.
+ *	To avoid quadratic-time behavior in the common cases
+ *	where the treeview is populated in breadth-first or
+ *	depth-first order using [$tv insert $parent end ...],
+ *	we cache the result from the last call to EndPosition()
+ *	and start the search from there on a cache hit.
  *
  */
 static TreeItem *EndPosition(Treeview *tv, TreeItem *parent)
@@ -2579,8 +2579,8 @@ static TreeItem *EndPosition(Treeview *tv, TreeItem *parent)
 }
 
 /* + AncestryCheck --
- * 	Verify that specified item is not an ancestor of the specified parent;
- * 	returns 1 if OK, 0 and leaves an error message in interp otherwise.
+ *	Verify that specified item is not an ancestor of the specified parent;
+ *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
 static int AncestryCheck(
     Tcl_Interp *interp, Treeview *tv, TreeItem *item, TreeItem *parent)
@@ -2600,9 +2600,9 @@ static int AncestryCheck(
 }
 
 /* + DeleteItems --
- * 	Remove an item and all of its descendants from the hash table
- * 	and detach them from the tree; returns a linked list (chained
- * 	along the ->next pointer) of deleted items.
+ *	Remove an item and all of its descendants from the hash table
+ *	and detach them from the tree; returns a linked list (chained
+ *	along the ->next pointer) of deleted items.
  */
 static TreeItem *DeleteItems(TreeItem *item, TreeItem *delq)
 {
@@ -2624,7 +2624,7 @@ static TreeItem *DeleteItems(TreeItem *item, TreeItem *delq)
  */
 
 /* + $tv children $item ?newchildren? --
- * 	Return the list of children associated with $item
+ *	Return the list of children associated with $item
  */
 static int TreeviewChildrenCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2705,7 +2705,7 @@ static int TreeviewChildrenCommand(
 }
 
 /* + $tv parent $item --
- * 	Return the item ID of $item's parent.
+ *	Return the item ID of $item's parent.
  */
 static int TreeviewParentCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2733,7 +2733,7 @@ static int TreeviewParentCommand(
 }
 
 /* + $tv next $item
- * 	Return the ID of $item's next sibling.
+ *	Return the ID of $item's next sibling.
  */
 static int TreeviewNextCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2758,7 +2758,7 @@ static int TreeviewNextCommand(
 }
 
 /* + $tv prev $item
- * 	Return the ID of $item's previous sibling.
+ *	Return the ID of $item's previous sibling.
  */
 static int TreeviewPrevCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2783,7 +2783,7 @@ static int TreeviewPrevCommand(
 }
 
 /* + $tv index $item --
- * 	Return the index of $item within its parent.
+ *	Return the index of $item within its parent.
  */
 static int TreeviewIndexCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2811,7 +2811,7 @@ static int TreeviewIndexCommand(
 }
 
 /* + $tv exists $itemid --
- * 	Test if the specified item id is present in the tree.
+ *	Test if the specified item id is present in the tree.
  */
 static int TreeviewExistsCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2830,7 +2830,7 @@ static int TreeviewExistsCommand(
 }
 
 /* + $tv bbox $itemid ?$column? --
- * 	Return bounding box [x y width height] of specified item.
+ *	Return bounding box [x y width height] of specified item.
  */
 static int TreeviewBBoxCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2861,13 +2861,13 @@ static int TreeviewBBoxCommand(
 }
 
 /* + $tv identify $x $y -- (obsolescent)
- * 	Implements the old, horrible, 2-argument form of [$tv identify].
+ *	Implements the old, horrible, 2-argument form of [$tv identify].
  *
  * Returns: one of
- * 	heading #n
- * 	cell itemid #n
- * 	item itemid element
- * 	row itemid
+ *	heading #n
+ *	cell itemid #n
+ *	item itemid element
+ *	row itemid
  */
 static int TreeviewHorribleIdentify(
     Tcl_Interp *interp,
@@ -2945,7 +2945,7 @@ done:
 }
 
 /* + $tv identify $component $x $y --
- * 	Identify the component at position x,y.
+ *	Identify the component at position x,y.
  */
 
 static int TreeviewIdentifyCommand(
@@ -3070,7 +3070,7 @@ static int TreeviewIdentifyCommand(
  */
 
 /* + $tv item $item ?options ....?
- * 	Query or configure item options.
+ *	Query or configure item options.
  */
 static int TreeviewItemCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3098,7 +3098,7 @@ static int TreeviewItemCommand(
 }
 
 /* + $tv column column ?options ....?
- * 	Column data accessor
+ *	Column data accessor
  */
 static int TreeviewColumnCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3126,7 +3126,7 @@ static int TreeviewColumnCommand(
 }
 
 /* + $tv heading column ?options ....?
- * 	Heading data accessor
+ *	Heading data accessor
  */
 static int TreeviewHeadingCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3156,7 +3156,7 @@ static int TreeviewHeadingCommand(
 }
 
 /* + $tv set $item ?$column ?value??
- * 	Query or configure cell values
+ *	Query or configure cell values
  */
 static int TreeviewSetCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3250,7 +3250,7 @@ static int TreeviewSetCommand(
  */
 
 /* + $tv insert $parent $index ?-id id? ?-option value ...?
- * 	Insert a new item.
+ *	Insert a new item.
  */
 static int TreeviewInsertCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3332,7 +3332,7 @@ static int TreeviewInsertCommand(
 }
 
 /* + $tv detach $items --
- * 	Unlink each item in $items from the tree.
+ *	Unlink each item in $items from the tree.
  */
 static int TreeviewDetachCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3371,8 +3371,8 @@ static int TreeviewDetachCommand(
 }
 
 /* + $tv detached ?$item? --
- * 	List detached items (in arbitrary order) or query the detached state of
- * 	$item.
+ *	List detached items (in arbitrary order) or query the detached state of
+ *	$item.
  */
 static int TreeviewDetachedCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3408,13 +3408,13 @@ static int TreeviewDetachedCommand(
     }
 }
 /* + $tv delete $items --
- * 	Delete each item in $items.
+ *	Delete each item in $items.
  *
- * 	Do this in two passes:
- * 	First detach the item and all its descendants and remove them
- * 	from the hash table.  Free the items themselves in a second pass.
+ *	Do this in two passes:
+ *	First detach the item and all its descendants and remove them
+ *	from the hash table.  Free the items themselves in a second pass.
  *
- * 	It's done this way because an item may appear more than once
+ *	It's done this way because an item may appear more than once
  *	in the list of items to delete (either directly or as a descendant
  *	of a previously deleted item.)
  */
@@ -3486,7 +3486,7 @@ static int TreeviewDeleteCommand(
 }
 
 /* + $tv move $item $parent $index
- * 	Move $item to the specified $index in $parent's child list.
+ *	Move $item to the specified $index in $parent's child list.
  */
 static int TreeviewMoveCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3566,7 +3566,7 @@ static int TreeviewYViewCommand(
 }
 
 /* $tree see $item --
- * 	Ensure that $item is visible.
+ *	Ensure that $item is visible.
  */
 static int TreeviewSeeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3638,7 +3638,7 @@ static int TreeviewSeeCommand(
  */
 
 /* + $tree drag $column $newX --
- * 	Set right edge of display column $column to x position $X
+ *	Set right edge of display column $column to x position $X
  */
 static int TreeviewDragCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -3813,7 +3813,7 @@ static int TreeviewSelectionCommand(
 }
 
 /* + SelObjChangeElement --
- * 	Change an element in a cell selection list.
+ *	Change an element in a cell selection list.
  */
 static int SelObjChangeElement(
     Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
@@ -4081,7 +4081,7 @@ static int TreeviewTagBindCommand(
 
     if (objc == 4) {		/* $tv tag bind $tag */
 	Tk_GetAllBindings(interp, bindingTable, tag);
-    } else if (objc == 5) { 	/* $tv tag bind $tag $sequence */
+    } else if (objc == 5) {	/* $tv tag bind $tag $sequence */
 	/* TODO: distinguish "no such binding" (OK) from "bad pattern" (ERROR)
 	 */
 	const char *script = Tk_GetBinding(interp,
@@ -4515,7 +4515,7 @@ static const Ttk_Ensemble TreeviewCtagCommands[] = {
 static const Ttk_Ensemble TreeviewTagCommands[] = {
     { "add",		TreeviewTagAddCommand,0 },
     { "bind",		TreeviewTagBindCommand,0 },
-    { "cell",    	0,TreeviewCtagCommands },
+    { "cell",	0,TreeviewCtagCommands },
     { "configure",	TreeviewTagConfigureCommand,0 },
     { "delete",		TreeviewTagDeleteCommand,0 },
     { "has",		TreeviewTagHasCommand,0 },
@@ -4528,37 +4528,37 @@ static const Ttk_Ensemble TreeviewTagCommands[] = {
  * +++ Widget commands record.
  */
 static const Ttk_Ensemble TreeviewCommands[] = {
-    { "bbox",  		TreeviewBBoxCommand,0 },
+    { "bbox",		TreeviewBBoxCommand,0 },
     { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "column", 	TreeviewColumnCommand,0 },
+    { "column",	TreeviewColumnCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
-    { "delete", 	TreeviewDeleteCommand,0 },
-    { "detach", 	TreeviewDetachCommand,0 },
-    { "detached", 	TreeviewDetachedCommand,0 },
-    { "drag",   	TreeviewDragCommand,0 },
-    { "drop",   	TreeviewDropCommand,0 },
-    { "exists", 	TreeviewExistsCommand,0 },
-    { "focus", 		TreeviewFocusCommand,0 },
-    { "heading", 	TreeviewHeadingCommand,0 },
-    { "identify",  	TreeviewIdentifyCommand,0 },
-    { "index",  	TreeviewIndexCommand,0 },
-    { "insert", 	TreeviewInsertCommand,0 },
+    { "delete",	TreeviewDeleteCommand,0 },
+    { "detach",	TreeviewDetachCommand,0 },
+    { "detached",	TreeviewDetachedCommand,0 },
+    { "drag",	TreeviewDragCommand,0 },
+    { "drop",	TreeviewDropCommand,0 },
+    { "exists",	TreeviewExistsCommand,0 },
+    { "focus",		TreeviewFocusCommand,0 },
+    { "heading",	TreeviewHeadingCommand,0 },
+    { "identify",	TreeviewIdentifyCommand,0 },
+    { "index",	TreeviewIndexCommand,0 },
+    { "insert",	TreeviewInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "item", 		TreeviewItemCommand,0 },
-    { "move", 		TreeviewMoveCommand,0 },
-    { "next", 		TreeviewNextCommand,0 },
-    { "parent", 	TreeviewParentCommand,0 },
-    { "prev", 		TreeviewPrevCommand,0 },
-    { "see", 		TreeviewSeeCommand,0 },
+    { "item",		TreeviewItemCommand,0 },
+    { "move",		TreeviewMoveCommand,0 },
+    { "next",		TreeviewNextCommand,0 },
+    { "parent",	TreeviewParentCommand,0 },
+    { "prev",		TreeviewPrevCommand,0 },
+    { "see",		TreeviewSeeCommand,0 },
     { "selection",	TreeviewSelectionCommand,0 },
-    { "set",  		TreeviewSetCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "set",		TreeviewSetCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
-    { "tag",    	0,TreeviewTagCommands },
-    { "xview",  	TreeviewXViewCommand,0 },
-    { "yview",  	TreeviewYViewCommand,0 },
+    { "tag",	0,TreeviewTagCommands },
+    { "xview",	TreeviewXViewCommand,0 },
+    { "yview",	TreeviewYViewCommand,0 },
     { 0,0,0 }
 };
 
@@ -4568,15 +4568,15 @@ static const Ttk_Ensemble TreeviewCommands[] = {
 
 static const WidgetSpec TreeviewWidgetSpec = {
     "Treeview",			/* className */
-    sizeof(Treeview),   	/* recordSize */
+    sizeof(Treeview),	/* recordSize */
     TreeviewOptionSpecs,	/* optionSpecs */
-    TreeviewCommands,   	/* subcommands */
-    TreeviewInitialize,   	/* initializeProc */
+    TreeviewCommands,	/* subcommands */
+    TreeviewInitialize,	/* initializeProc */
     TreeviewCleanup,		/* cleanupProc */
-    TreeviewConfigure,    	/* configureProc */
-    TtkNullPostConfigure,  	/* postConfigureProc */
-    TreeviewGetLayout, 		/* getLayoutProc */
-    TreeviewSize, 		/* sizeProc */
+    TreeviewConfigure,	/* configureProc */
+    TtkNullPostConfigure,	/* postConfigureProc */
+    TreeviewGetLayout,		/* getLayoutProc */
+    TreeviewSize,		/* sizeProc */
     TreeviewDoLayout,		/* layoutProc */
     TreeviewDisplay		/* displayProc */
 };

@@ -331,10 +331,10 @@ TkpNewMenu(
 
     winMenuHdl = CreatePopupMenu();
     if (winMenuHdl == NULL) {
-    	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
 		"No more menus can be allocated.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES", NULL);
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     /*
@@ -424,7 +424,7 @@ TkpDestroyMenu(
 		Tcl_DeleteHashEntry(hashEntryPtr);
 	    }
 	}
- 	DestroyMenu(winMenuHdl);
+	DestroyMenu(winMenuHdl);
     }
     menuPtr->platformData = NULL;
 
@@ -580,7 +580,7 @@ ReconfigureWindowsMenu(
     Tcl_DString translatedText;
 
     if (NULL == winMenuHdl) {
-    	return;
+	return;
     }
 
     /*
@@ -796,7 +796,7 @@ TkpPostMenu(
 
     if (menuPtr->tkwin == NULL) {
 	tsdPtr->inPostMenu--;
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     if (NULL == parentWindow) {
@@ -882,7 +882,7 @@ TkpPostTearoffMenu(
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
-    	return result;
+	return result;
     }
 
     /*
@@ -891,7 +891,7 @@ TkpPostTearoffMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
      /*
@@ -973,7 +973,7 @@ TkpMenuNewEntry(
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (GetNewID(mePtr, &commandID) != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     ScheduleMenuReconfigure(menuPtr);
     mePtr->platformEntryData = (TkMenuPlatformEntryData) INT2PTR(commandID);
@@ -1477,17 +1477,17 @@ RecursivelyClearActiveMenu(
     TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     MenuSelectEvent(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
-    	mePtr = menuPtr->entries[i];
+	mePtr = menuPtr->entries[i];
 	if (mePtr->state == ENTRY_ACTIVE) {
 	    mePtr->state = ENTRY_NORMAL;
 	}
 	mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
-    	if (mePtr->type == CASCADE_ENTRY) {
-    	    if ((mePtr->childMenuRefPtr != NULL)
-    	    	    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
-    	    	RecursivelyClearActiveMenu(mePtr->childMenuRefPtr->menuPtr);
-    	    }
-    	}
+	if (mePtr->type == CASCADE_ENTRY) {
+	    if ((mePtr->childMenuRefPtr != NULL)
+		    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
+		RecursivelyClearActiveMenu(mePtr->childMenuRefPtr->menuPtr);
+	    }
+	}
     }
 }
 
@@ -1561,7 +1561,7 @@ Tk_SetMainMenubar(
     TCL_UNUSED(Tcl_Interp *),		/* The interpreter of the application */
     TCL_UNUSED(Tk_Window),		/* The frame we are setting up */
     TCL_UNUSED(const char *))	/* The name of the menu to put in front. If
-    				 * NULL, use the default menu bar. */
+				 * NULL, use the default menu bar. */
 {
     /*
      * Nothing to do.
@@ -1653,7 +1653,7 @@ GetMenuAccelGeometry(
 
 	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
     } else {
-    	*widthPtr = 0;
+	*widthPtr = 0;
     }
 }
 
@@ -1830,7 +1830,7 @@ DrawMenuEntryIndicator(
 {
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
-    	if (mePtr->indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
+	if (mePtr->indicatorOn && (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    RECT rect;
 	    GC whichGC;
 	    int borderWidth, activeBorderWidth;
@@ -2360,7 +2360,7 @@ DrawMenuEntryLabel(
      */
 
     if (mePtr->image != NULL) {
-    	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
@@ -2445,25 +2445,25 @@ DrawMenuEntryLabel(
      */
 
     if (mePtr->image != NULL) {
-    	if ((mePtr->selectImage != NULL)
-	    	&& (mePtr->entryFlags & ENTRY_SELECTED)) {
+	if ((mePtr->selectImage != NULL)
+		&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    Tk_RedrawImage(mePtr->selectImage, 0, 0,
 		    imageWidth, imageHeight, d, leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height-imageHeight)/2 + imageYOffset));
-    	} else {
+	} else {
 	    Tk_RedrawImage(mePtr->image, 0, 0, imageWidth,
 		    imageHeight, d, leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height-imageHeight)/2 + imageYOffset));
-    	}
+	}
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
-    	XCopyPlane(menuPtr->display, bitmap, d,	gc, 0, 0,
+	XCopyPlane(menuPtr->display, bitmap, d,	gc, 0, 0,
 		(unsigned) imageWidth, (unsigned) imageHeight,
 		leftEdge + imageXOffset,
 		(int) (y + (mePtr->height - imageHeight)/2 + imageYOffset), 1);
     }
     if ((mePtr->compound != COMPOUND_NONE) || !haveImage) {
-    	if (mePtr->labelLength > 0) {
+	if (mePtr->labelLength > 0) {
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
@@ -2671,7 +2671,7 @@ TkpDrawMenuEntry(
 
 	memDc = CreateCompatibleDC(menuDc);
 	oldBitmap = (HBITMAP)SelectObject(memDc,
-    			CreateCompatibleBitmap(menuDc, width, height) );
+			CreateCompatibleBitmap(menuDc, width, height) );
 
 	memWinDraw.type = TWD_WINDC;
 	memWinDraw.winDC.hdc = memDc;
@@ -2695,21 +2695,21 @@ TkpDrawMenuEntry(
 	    gc = menuPtr->activeGC;
 	}
     } else {
-    	TkMenuEntry *cascadeEntryPtr;
-    	int parentDisabled = 0;
-    	const char *name;
+	TkMenuEntry *cascadeEntryPtr;
+	int parentDisabled = 0;
+	const char *name;
 
-    	for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
-    		cascadeEntryPtr != NULL;
-    		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
+	for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
+		cascadeEntryPtr != NULL;
+		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	    name = Tcl_GetString(cascadeEntryPtr->namePtr);
-    	    if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
-    	    	if (mePtr->state == ENTRY_DISABLED) {
-    	    	    parentDisabled = 1;
-    	    	}
-    	    	break;
-    	    }
-    	}
+	    if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
+		if (mePtr->state == ENTRY_DISABLED) {
+		    parentDisabled = 1;
+		}
+		break;
+	    }
+	}
 
 	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
@@ -2821,12 +2821,12 @@ GetMenuLabelGeometry(
     int haveImage = 0;
 
     if (mePtr->image != NULL) {
-    	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
+	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
 	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
-    	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
+	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
 	haveImage = 1;
     } else {
 	*heightPtr = 0;
@@ -2842,7 +2842,7 @@ GetMenuLabelGeometry(
 	 * Either it is compound or we don't have an image,
 	 */
 
-    	if (mePtr->labelPtr != NULL) {
+	if (mePtr->labelPtr != NULL) {
 	    int textWidth;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
@@ -2899,7 +2899,7 @@ GetMenuLabelGeometry(
 	     */
 
 	    *heightPtr = fmPtr->linespace;
-    	}
+	}
     }
     *heightPtr += 1;
 }
@@ -3018,9 +3018,9 @@ TkpComputeStandardMenuGeometry(
 	} else {
 	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin,
 		    menuPtr->entries[i]->fontPtr);
-    	    Tk_GetFontMetrics(tkfont, &entryMetrics);
-    	    fmPtr = &entryMetrics;
-    	}
+	    Tk_GetFontMetrics(tkfont, &entryMetrics);
+	    fmPtr = &entryMetrics;
+	}
 	if ((i > 0) && menuPtr->entries[i]->columnBreak) {
 	    if (accelWidth != 0) {
 		labelWidth += accelSpace;
@@ -3042,11 +3042,11 @@ TkpComputeStandardMenuGeometry(
 
 	if (menuPtr->entries[i]->type == SEPARATOR_ENTRY) {
 	    GetMenuSeparatorGeometry(menuPtr, menuPtr->entries[i], tkfont,
-	    	    fmPtr, &width, &height);
+		    fmPtr, &width, &height);
 	    menuPtr->entries[i]->height = height;
 	} else if (menuPtr->entries[i]->type == TEAROFF_ENTRY) {
 	    GetTearoffEntryGeometry(menuPtr, menuPtr->entries[i], tkfont,
-	    	    fmPtr, &width, &height);
+		    fmPtr, &width, &height);
 	    menuPtr->entries[i]->height = height;
 	} else {
 	    /*
@@ -3059,32 +3059,32 @@ TkpComputeStandardMenuGeometry(
 	     */
 
 	    GetMenuLabelGeometry(menuPtr->entries[i], tkfont, fmPtr, &width,
-	    	    &height);
+		    &height);
 	    menuPtr->entries[i]->height = height;
 	    if (width > labelWidth) {
-	    	labelWidth = width;
+		labelWidth = width;
 	    }
 
 	    GetMenuAccelGeometry(menuPtr, menuPtr->entries[i], tkfont,
 		    fmPtr, &width, &height);
 	    if (height > menuPtr->entries[i]->height) {
-	    	menuPtr->entries[i]->height = height;
+		menuPtr->entries[i]->height = height;
 	    }
 	    if (width > accelWidth) {
-	    	accelWidth = width;
+		accelWidth = width;
 	    }
 
 	    GetMenuIndicatorGeometry(menuPtr, menuPtr->entries[i], tkfont,
-	    	    fmPtr, &width, &height);
+		    fmPtr, &width, &height);
 	    if (height > menuPtr->entries[i]->height) {
-	    	menuPtr->entries[i]->height = height;
+		menuPtr->entries[i]->height = height;
 	    }
 	    if (width > indicatorSpace) {
-	    	indicatorSpace = width;
+		indicatorSpace = width;
 	    }
 
 	    menuPtr->entries[i]->height += 2 * activeBorderWidth + 1;
-    	}
+	}
 	menuPtr->entries[i]->y = y;
 	y += menuPtr->entries[i]->height;
 	if (y > windowHeight) {

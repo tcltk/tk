@@ -24,9 +24,9 @@
 #define SCROLLBAR_THICKNESS 14
 
 #define FRAME_COLOR	"#dcdad5"
-#define LIGHT_COLOR  	"#ffffff"
-#define DARK_COLOR  	"#cfcdc8"
-#define DARKER_COLOR 	"#bab5ab"
+#define LIGHT_COLOR	"#ffffff"
+#define DARK_COLOR	"#cfcdc8"
+#define DARKER_COLOR	"#bab5ab"
 #define DARKEST_COLOR	"#9e9a91"
 
 /*------------------------------------------------------------------------
@@ -99,11 +99,11 @@ static GC BackgroundGC(Tk_Window tkwin, Tcl_Obj *backgroundObj)
  */
 
 typedef struct {
-    Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*darkColorObj;
-    Tcl_Obj 	*reliefObj;
-    Tcl_Obj 	*borderWidthObj;	/* See <<NOTE-BORDERWIDTH>> */
+    Tcl_Obj	*borderColorObj;
+    Tcl_Obj	*lightColorObj;
+    Tcl_Obj	*darkColorObj;
+    Tcl_Obj	*reliefObj;
+    Tcl_Obj	*borderWidthObj;	/* See <<NOTE-BORDERWIDTH>> */
 } BorderElement;
 
 static const Ttk_ElementOptionSpec BorderElementOptions[] = {
@@ -199,9 +199,9 @@ static const Ttk_ElementSpec BorderElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*backgroundObj;
+    Tcl_Obj	*borderColorObj;
+    Tcl_Obj	*lightColorObj;
+    Tcl_Obj	*backgroundObj;
 } FieldElement;
 
 static const Ttk_ElementOptionSpec FieldElementOptions[] = {
@@ -254,7 +254,7 @@ static const Ttk_ElementSpec FieldElementSpec = {
 
 /*
  * Modified field element for comboboxes:
- * 	Right edge is expanded to overlap the dropdown button.
+ *	Right edge is expanded to overlap the dropdown button.
  */
 static void ComboboxFieldElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -547,9 +547,9 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*gripSizeObj;
+    Tcl_Obj	*lightColorObj;
+    Tcl_Obj	*borderColorObj;
+    Tcl_Obj	*gripSizeObj;
 } GripElement;
 
 static const Ttk_ElementOptionSpec GripElementOptions[] = {
@@ -627,16 +627,16 @@ static const Ttk_ElementSpec GripElementSpec = {
  */
 
 typedef struct { /* Common element record for scrollbar elements */
-    Tcl_Obj 	*orientObj;
-    Tcl_Obj 	*backgroundObj;
-    Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*troughColorObj;
-    Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*darkColorObj;
-    Tcl_Obj 	*arrowColorObj;
-    Tcl_Obj 	*arrowSizeObj;
-    Tcl_Obj 	*gripSizeObj;
-    Tcl_Obj 	*sliderlengthObj;
+    Tcl_Obj	*orientObj;
+    Tcl_Obj	*backgroundObj;
+    Tcl_Obj	*borderColorObj;
+    Tcl_Obj	*troughColorObj;
+    Tcl_Obj	*lightColorObj;
+    Tcl_Obj	*darkColorObj;
+    Tcl_Obj	*arrowColorObj;
+    Tcl_Obj	*arrowSizeObj;
+    Tcl_Obj	*gripSizeObj;
+    Tcl_Obj	*sliderlengthObj;
 } ScrollbarElement;
 
 static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
@@ -915,7 +915,7 @@ static const Ttk_ElementSpec ArrowElementSpec = {
 
 /*
  * Modified arrow element for spinboxes:
- * 	The width and height are different.
+ *	The width and height are different.
  */
 static void SpinboxArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1158,7 +1158,7 @@ static void ClientElementDraw(
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_FLAT);
     DrawSmoothBorder(tkwin, d, b,
-    	ce->borderColorObj, ce->lightColorObj, ce->darkColorObj);
+	ce->borderColorObj, ce->lightColorObj, ce->darkColorObj);
 }
 
 static const Ttk_ElementSpec ClientElementSpec =
