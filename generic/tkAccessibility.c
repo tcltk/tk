@@ -79,7 +79,6 @@ Tk_SetAccessibleRole(
   Tcl_HashTable *AccessibleAttributes;
   AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
   Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-  
 
   int isNew;
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -98,7 +97,8 @@ Tk_SetAccessibleRole(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-  Tcl_SetObjResult(ip, objv[2]);
+  
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
@@ -149,23 +149,21 @@ Tk_SetAccessibleName(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-    Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, name, &isNew);
-    if (!isNew) {
-      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
-    }
-    Tcl_IncrRefCount(objv[2]);
-    Tcl_SetHashValue(hPtr2, objv[2]);
-    Tcl_SetObjResult(ip, objv[2]);
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
   }
+
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, name, &isNew);
+  if (!isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+    
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
-
 
 
 /*
@@ -213,20 +211,18 @@ Tk_SetAccessibleDescription(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-    Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, description, &isNew);
-    if (!isNew) {
-      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
-    }
-    Tcl_IncrRefCount(objv[2]);
-    Tcl_SetHashValue(hPtr2, objv[2]);
-    Tcl_SetObjResult(ip, objv[2]);
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
   }
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, description, &isNew);
+  if (!isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+    
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
@@ -278,20 +274,18 @@ Tk_SetAccessibleValue(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-    Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, value, &isNew);
-    if (!isNew) {
-      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
-    }
-    Tcl_IncrRefCount(objv[2]);
-    Tcl_SetHashValue(hPtr2, objv[2]);
-    Tcl_SetObjResult(ip, objv[2]);
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
   }
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, value, &isNew);
+  if (!isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+    
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
@@ -341,20 +335,18 @@ Tk_SetAccessibleState(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-    Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, state, &isNew);
-    if (!isNew) {
-      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
-    }
-    Tcl_IncrRefCount(objv[2]);
-    Tcl_SetHashValue(hPtr2, objv[2]);
-    Tcl_SetObjResult(ip, objv[2]);
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
   }
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, state, &isNew);
+  if (!isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+    
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
@@ -404,20 +396,18 @@ Tk_SetAccessibleAction(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
-    Tcl_SetHashValue(hPtr, AccessibleAttributes);
-  } else {
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, action, &isNew);
-    if (!isNew) {
-      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
-    }
-    Tcl_IncrRefCount(objv[2]);
-    Tcl_SetHashValue(hPtr2, objv[2]);
-    Tcl_SetObjResult(ip, objv[2]);
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
   }
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, action, &isNew);
+  if (!isNew) {
+    Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+  }
+  Tcl_IncrRefCount(objv[2]);
+  Tcl_SetHashValue(hPtr2, objv[2]);
+    
+  Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
@@ -466,8 +456,17 @@ Tk_GetAccessibleRole(
 
   /* Get accessible role for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, role);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char*)  role);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No role found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -517,8 +516,17 @@ Tk_GetAccessibleName(
 
   /* Get accessible name for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, name);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) name);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No name found", (char *) NULL);
+    return TCL_ERROR;
+  }
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -568,8 +576,17 @@ Tk_GetAccessibleDescription(
 
   /* Get accessible description for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, description);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) description);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No description found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -620,8 +637,17 @@ Tk_GetAccessibleValue(
 
   /* Get accessible value for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, value);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) value);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No value found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -671,7 +697,17 @@ Tk_GetAccessibleState(
   /* Get accessible state for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, state);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, state); if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) state);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No state found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -721,8 +757,17 @@ Tk_GetAccessibleAction(
 
   /* Get accessible action for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    return TCL_ERROR;
+  }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, action);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) action);
+  if (!hPtr2) {
+    Tcl_AppendResult(ip, "No action found", (char *) NULL);
+    return TCL_ERROR;
+  }
+  
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
