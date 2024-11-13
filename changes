@@ -8228,3 +8228,25 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 	item (bron,nemethi,werner)
 
 - Released 8.6.15, Sep 13, 2024 - https://core.tcl-lang.org/tk/ for details
+
+2024-09-19 (bug) [18e984] Assignment of invalid symbolic constant
+	 NotifyNormal (vogel)
+
+2024-09-20 (bug) [398109] Segmentation fault with bogus resource value
+	(X11) (emiliano)
+
+2024-09-21 [ttk] Improved the appearance of the Treeitem.indicator element
+	(nemethi)
+
+2024-09-27 (bug) [265d4e] macOS Sequoia: warning: 'setShowsResizeIndicator:'
+	is deprecated (vogel)
+
+2024-10-09 (bug) [eb3328] [grid] and [pack] with half-dead argument can cause
+	hangup or even crash (vogel)
+
+2024-10-11 (bug) [f52986] SIGABRT from Tk_DeleteErrorHandler() (vogel)
+
+2024-11-13 (bug) [36e379] [macOS Ventura] Workaround for X11 build with
+	XQuartz: crash in XLoadQueryFont (vogel)
+
+- Released 8.6.16, ??? ??, 2024 - https://core.tcl-lang.org/tk/ for details
