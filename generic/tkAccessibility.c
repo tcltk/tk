@@ -73,7 +73,6 @@ Tk_SetAccessibleRole(
   }
 	
   Tk_Window win;
-  char *role;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -91,7 +90,7 @@ Tk_SetAccessibleRole(
    
   Tcl_SetHashValue(hPtr, AccessibleAttributes);
 
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, role, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "role", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -135,7 +134,6 @@ Tk_SetAccessibleName(
   }
 
   Tk_Window win;
-  char *name;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
@@ -149,12 +147,12 @@ Tk_SetAccessibleName(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
 
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, name, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "name", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -197,7 +195,6 @@ Tk_SetAccessibleDescription(
   }
 	
   Tk_Window win;
-  char *description;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
@@ -211,11 +208,11 @@ Tk_SetAccessibleDescription(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, description, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "description", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -260,7 +257,6 @@ Tk_SetAccessibleValue(
   }
 
   Tk_Window win;
-  char *value;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
@@ -274,11 +270,11 @@ Tk_SetAccessibleValue(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, value, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "value", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -321,7 +317,6 @@ Tk_SetAccessibleState(
   }
 
   Tk_Window win;
-  char *state;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
@@ -335,11 +330,11 @@ Tk_SetAccessibleState(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, state, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "state", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -382,7 +377,6 @@ Tk_SetAccessibleAction(
   }
 
   Tk_Window win;
-  char *action;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
@@ -396,11 +390,11 @@ Tk_SetAccessibleAction(
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, action, &isNew);
+  hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "action", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
   }
@@ -444,7 +438,6 @@ Tk_GetAccessibleRole(
   }
 	
   Tk_Window win;
-  char *role;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -457,11 +450,11 @@ Tk_GetAccessibleRole(
   /* Get accessible role for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char*)  role);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No role found", (char *) NULL);
     return TCL_ERROR;
@@ -504,7 +497,6 @@ Tk_GetAccessibleName(
   }
 
   Tk_Window win;
-  char *name;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -517,11 +509,11 @@ Tk_GetAccessibleName(
   /* Get accessible name for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) name);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No name found", (char *) NULL);
     return TCL_ERROR;
@@ -564,7 +556,6 @@ Tk_GetAccessibleDescription(
   }
 	
   Tk_Window win;
-  char *description;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -577,11 +568,11 @@ Tk_GetAccessibleDescription(
   /* Get accessible description for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) description);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No description found", (char *) NULL);
     return TCL_ERROR;
@@ -625,7 +616,6 @@ Tk_GetAccessibleValue(
   }
 
   Tk_Window win;
-  char *value;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -638,11 +628,11 @@ Tk_GetAccessibleValue(
   /* Get accessible value for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) value);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No value found", (char *) NULL);
     return TCL_ERROR;
@@ -684,7 +674,6 @@ Tk_GetAccessibleState(
   }
 
   Tk_Window win;
-  char *state;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -696,13 +685,12 @@ Tk_GetAccessibleState(
 
   /* Get accessible state for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-  AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, state); if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+  if (!hPtr) {
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) state);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "state");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No state found", (char *) NULL);
     return TCL_ERROR;
@@ -745,7 +733,6 @@ Tk_GetAccessibleAction(
   }
 
   Tk_Window win;
-  char *action;
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
@@ -758,11 +745,11 @@ Tk_GetAccessibleAction(
   /* Get accessible action for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-    Tcl_AppendResult(ip, "No table found", (char *) NULL);
+    Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
     return TCL_ERROR;
   }
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, (char *) action);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
   if (!hPtr2) {
     Tcl_AppendResult(ip, "No action found", (char *) NULL);
     return TCL_ERROR;
