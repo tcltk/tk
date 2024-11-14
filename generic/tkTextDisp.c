@@ -429,7 +429,7 @@ typedef struct TextDInfo {
  * points to one of the following structures:
  */
 
-#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 0 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
@@ -541,7 +541,7 @@ static void		CharDisplayProc(TkText *textPtr,
 static Tcl_Size	CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		CharUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
 static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
@@ -1500,7 +1500,7 @@ LayoutDLine(
 		}
 	    }
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    if (baseCharChunkPtr != NULL) {
 		int expectedX =
 			((BaseCharInfo *) baseCharChunkPtr->clientData)->width
@@ -1642,7 +1642,7 @@ LayoutDLine(
 
 	chunkPtr = NULL;
     }
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     FinalizeBaseChunk(NULL);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
     if (noCharsYet) {
@@ -1701,7 +1701,7 @@ LayoutDLine(
 	    segPtr->typePtr->layoutProc(textPtr, &breakIndex, segPtr,
 		    byteOffset, maxX, breakByteOffset, 0, wrapMode,
 		    breakChunkPtr);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    FinalizeBaseChunk(NULL);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
@@ -7638,7 +7638,7 @@ TkTextCharLayoutProc(
     char *p;
     TkTextSegment *nextPtr;
     Tk_FontMetrics fm;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     const char *line;
     int lineOffset;
     BaseCharInfo *bciPtr;
@@ -7663,7 +7663,7 @@ TkTextCharLayoutProc(
     p = segPtr->body.chars + byteOffset;
     tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     if (baseCharChunkPtr == NULL) {
 	baseCharChunkPtr = chunkPtr;
 	bciPtr = (BaseCharInfo *)ckalloc(sizeof(BaseCharInfo));
@@ -7700,7 +7700,7 @@ TkTextCharLayoutProc(
 	    int ch;
 	    int chLen = Tcl_UtfToUniChar(p, &ch);
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
 		    lineOffset+chLen, lineOffset, -1, chunkPtr->x, -1, 0,
 		    &nextX);
@@ -7744,7 +7744,7 @@ TkTextCharLayoutProc(
 	    bytesThatFit++;
 	}
 	if (bytesThatFit == 0) {
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    chunkPtr->clientData = NULL;
 	    if (chunkPtr == baseCharChunkPtr) {
 		baseCharChunkPtr = NULL;
@@ -7777,7 +7777,7 @@ TkTextCharLayoutProc(
     chunkPtr->width = nextX - chunkPtr->x;
     chunkPtr->breakIndex = -1;
 
-#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 0 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     ciPtr = (CharInfo *)ckalloc(offsetof(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
@@ -7788,7 +7788,7 @@ TkTextCharLayoutProc(
 	ciPtr->numBytes--;
     }
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     /*
      * Final update for the current base chunk data.
      */
@@ -7893,7 +7893,7 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 0 /* TK_LAYOUT_WITH_BASE_CHUNKS */
     if (chars == NULL) {
 	chars = ciPtr->chars;
 	charsLen = ciPtr->numBytes;
@@ -7986,7 +7986,7 @@ CharDisplayProc(
     StyleValues *sValuePtr;
     Tcl_Size numBytes, offsetBytes;
     int offsetX;
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
     BaseCharInfo *bciPtr;
 #endif /* TK_DRAW_IN_CONTEXT */
 
@@ -7998,7 +7998,7 @@ CharDisplayProc(
 	return;
     }
 
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
     bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
     numBytes = Tcl_DStringLength(&bciPtr->baseChars);
     string = Tcl_DStringValue(&bciPtr->baseChars);
@@ -8044,7 +8044,7 @@ CharDisplayProc(
 
     if (!sValuePtr->elide && (numBytes > offsetBytes)
 	    && (stylePtr->fgGC != NULL)) {
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	int start = ciPtr->baseOffset + offsetBytes;
 	int len = ciPtr->numBytes - offsetBytes;
 	int xDisplacement = x - chunkPtr->x;
@@ -8135,7 +8135,7 @@ CharUndisplayProc(
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr) {
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	if (chunkPtr == ciPtr->baseChunkPtr) {
 	    /*
 	     * Basechunks are undisplayed first, when DLines are freed or
@@ -8717,7 +8717,7 @@ MeasureChars(
 	if ((maxX >= 0) && (curX >= maxX)) {
 	    break;
 	}
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	start += TkpMeasureCharsInContext(tkfont, source, maxBytes,
 		start - source, special - start,
 		maxX >= 0 ? maxX - curX : -1, flags, &width);
@@ -8858,7 +8858,7 @@ TextGetScrollInfoObj(
     return TKTEXT_SCROLL_ERROR;
 }
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+#if 1 /* TK_LAYOUT_WITH_BASE_CHUNKS */
 /*
  *----------------------------------------------------------------------
  *
@@ -8889,7 +8889,7 @@ FinalizeBaseChunk(
     const char *baseChars;
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
     int widthAdjust = 0;
     int newwidth;
 #endif /* TK_DRAW_IN_CONTEXT */
@@ -8903,7 +8903,7 @@ FinalizeBaseChunk(
 
     for (chunkPtr = baseCharChunkPtr; chunkPtr != NULL;
 	    chunkPtr = chunkPtr->nextPtr) {
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	chunkPtr->x += widthAdjust;
 #endif /* TK_DRAW_IN_CONTEXT */
 
@@ -8916,7 +8916,7 @@ FinalizeBaseChunk(
 	}
 	ciPtr->chars = baseChars + ciPtr->baseOffset;
 
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	newwidth = 0;
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
 	if (newwidth < chunkPtr->width) {
@@ -8930,7 +8930,7 @@ FinalizeBaseChunk(
 	ciPtr = (CharInfo *)addChunkPtr->clientData;
 	ciPtr->chars = baseChars + ciPtr->baseOffset;
 
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	addChunkPtr->x += widthAdjust;
 	CharChunkMeasureChars(addChunkPtr, NULL, 0, 0, -1, 0, -1, 0,
 		&addChunkPtr->width);
@@ -9028,7 +9028,7 @@ IsSameFGStyle(
 	return 1;
     }
 
-#ifndef TK_DRAW_IN_CONTEXT
+#if 0 /* TK_DRAW_IN_CONTEXT */
     if (
 #ifdef MAC_OSX_TK
 	    !TkMacOSXCompareColors(style1->fgGC->foreground,
@@ -9044,7 +9044,7 @@ IsSameFGStyle(
     sv1 = style1->sValuePtr;
     sv2 = style2->sValuePtr;
 
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
     return sv1->tkfont == sv2->tkfont && sv1->offset == sv2->offset;
 #else
     return sv1->tkfont == sv2->tkfont
