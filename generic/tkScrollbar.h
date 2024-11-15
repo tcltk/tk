@@ -90,6 +90,9 @@ typedef struct TkScrollbar {
      * is provided by the application by invoking the "set" widget command.
      */
 
+#if TK_MAJOR_VERSION < 9
+    int dummy1, dummy2, dummy3, dummy4; /* deprecated, for "old" form. */
+#endif
     double firstFraction;	/* Position of first visible thing in window,
 				 * specified as a fraction between 0 and 1.0. */
     double lastFraction;	/* Position of last visible thing in window,

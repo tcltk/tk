@@ -247,8 +247,6 @@ TK_STUB_LIB_FLAG	= @TK_STUB_LIB_FLAG@
 #TK_STUB_LIB_FLAG	= -ltkstub
 
 TK_LIB_FILE		= @TK_LIB_FILE@
-TK_LIB_FILE_TCL8	= @TK_LIB_FILE_TCL8@
-TK_LIB_FILE_TCL9	= @TK_LIB_FILE_TCL9@
 #TK_LIB_FILE		= libtk.a
 
 # Generic lib name used in rules that apply to tcl and tk
@@ -804,25 +802,13 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "if {![package vsatisfies [package provide Tcl] 8.7-]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
-	    echo "if {[package vsatisfies [package provide Tcl] 9.0]} {";\
-	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL9)]]]";\
-	    echo "} else {";\
-	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL8)]]]";\
-	    echo "}";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]]]";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	    echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
-	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE_TCL9)]]]";\
-	    echo "    } else {";\
-	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE_TCL8)]]]";\
-	    echo "    }";\
+	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]]]";\
 	    echo "} else {";\
-	    echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
-	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
-	    echo "    } else {";\
-	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
-	    echo "    }";\
+	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
 	    echo "}";\
 	    fi; \
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\

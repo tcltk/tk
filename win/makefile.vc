@@ -745,17 +745,9 @@ install-binaries:
 if {![package vsatisfies [package provide Tcl] 8.7-]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
 } else {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME9)]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME8)]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
 package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
