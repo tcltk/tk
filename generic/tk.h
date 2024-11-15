@@ -1155,9 +1155,9 @@ typedef struct Tk_CanvasTextInfo {
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
 #if TK_MAJOR_VERSION > 8
-    void *reserved1;		/* reserved for future use */
-    void *reserved2;
-    void *reserved3;
+    Tcl_Obj *insertBorderWidthObj;
+    Tcl_Obj *insertWidthObj;
+    Tcl_Obj *selBorderWidthObj;
 #endif
 } Tk_CanvasTextInfo;
 
