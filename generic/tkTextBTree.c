@@ -15,7 +15,6 @@
 
 #include "tkInt.h"
 #include "tkText.h"
-#include "tkTextPriv.h"
 #include "tkTextTagSet.h"
 #include <assert.h>
 
