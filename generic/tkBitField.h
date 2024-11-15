@@ -14,6 +14,11 @@
 
 #include "tkInt.h" /* needed for inline support and 64 bit support */
 
+#if (UINTPTR_MAX >= 0xffffffffffffffffu)
+ /* This is a real 64 bit architecture. */
+#   define TK_IS_64_BIT_ARCH
+#endif
+
 #define TK_BIT_NBITS (sizeof(size_t)*8) /* Number of bits in one word. */
 
 struct TkIntSet;
