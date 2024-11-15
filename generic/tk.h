@@ -1134,9 +1134,11 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
+#if TK_MAJOR_VERSION > 8
     void *reserved1;		/* reserved for future use */
     void *reserved2;
     void *reserved3;
+#endif
 } Tk_CanvasTextInfo;
 
 /*

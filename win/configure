@@ -691,8 +691,6 @@ TK_SRC_DIR
 TK_BUILD_STUB_LIB_SPEC
 TK_STUB_LIB_FLAG
 TK_STUB_LIB_FILE
-TK_DLL_FILE_TCL9
-TK_DLL_FILE_TCL8
 TK_DLL_FILE
 TK_LIB_FILE
 TK_PATCH_LEVEL
@@ -5867,22 +5865,11 @@ TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
-eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
-eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
-else
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
-fi
-else
 eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
-fi
 fi
 
 if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
@@ -5944,8 +5931,6 @@ esac
 TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`"
 
 # X86|AMD64|IA64 for manifest
-
-
 
 
 
