@@ -22,7 +22,7 @@ namespace eval ::tk::accessible {
 
     #check to see if attributes have been applied before binding default values 
     proc _checkattributes {w} {
-	if {[catch {info exists [get_acc_role $w]} msg]} {
+	if {[catch {info exists [::tk::accessible::get_acc_role $w]} msg]} {
 	    return
 	}
     }
