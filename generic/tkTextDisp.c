@@ -7172,6 +7172,10 @@ TkTextUpdateLineMetrics(
     assert(endLine <= totalLines);
     assert(textPtr->sharedTextPtr->allowUpdateLineMetrics);
 
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
+
     dInfoPtr->insideLineMetricUpdate = 1;
 
     if ((range = TkRangeListFindNearest(dInfoPtr->lineMetricUpdateRanges, lineNum))) {
