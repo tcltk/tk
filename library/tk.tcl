@@ -501,6 +501,7 @@ if {$::tk_library ne ""} {
 	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
+	SourceLibFile accessibility
 	SourceLibFile icons
 	SourceLibFile iconbadges
 	SourceLibFile button
