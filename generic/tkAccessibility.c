@@ -5,6 +5,7 @@
  *	from the script level.
  *
  * Copyright © 2024 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2024 Emiliano Gavilan.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,6 +42,7 @@ int     Tk_GetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
 			      int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       int objc, Tcl_Obj *const objv[]);
+void    Tk_DeleteAccessibilityTable(ClientData cdata);
 
 /*
  *----------------------------------------------------------------------
@@ -759,6 +761,47 @@ Tk_GetAccessibleAction(
   return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetAccessibleAction  --
+ *
+ *	This function deletes the accessibility table. 
+ *	
+ *
+ * Results:
+ *	Deletes the accessibility table.  
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void Tk_DeleteAccessibilityTable(
+            ClientData cdata)
+{
+  Tcl_HashTable *TkAccessibilityObject = (Tcl_HashTable *) cdata;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  Tcl_HashSearch search, search2;
+  Tcl_HashTable *AccessibleAttributes;
+ 
+  for (hPtr=Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+      hPtr != NULL; hPtr=Tcl_NextHashEntry(&search)) {
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    for(hPtr2 = Tcl_FirstHashEntry(AccessibleAttributes, &search2);
+      hPtr2 != NULL; hPtr2 = Tcl_NextHashEntry(&search2)) {
+      Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
+      Tcl_DeleteHashEntry(hPtr2);
+    }
+    Tcl_DeleteHashTable(AccessibleAttributes);
+    ckfree(AccessibleAttributes);
+    Tcl_DeleteHashEntry(hPtr);
+  }
+  Tcl_DeleteHashTable(TkAccessibilityObject);
+  ckfree(TkAccessibilityObject);
+}
+
 
 /*
  * Register script-level commands to set accessibility attributes. 
@@ -769,18 +812,18 @@ TkAccessibility_Init(
 		     Tcl_Interp *interp)
 {
  
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_SetAccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_SetAccessibleName, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_SetAccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_SetAccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_SetAccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_SetAccessibleAction, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_role", Tk_GetAccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_name", Tk_GetAccessibleName, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_description", Tk_GetAccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_value", Tk_GetAccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_SetAccessibleRole, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_SetAccessibleName, NULL,Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_SetAccessibleDescription, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_value", Tk_SetAccessibleValue, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_state", Tk_SetAccessibleState, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::acc_action", Tk_SetAccessibleAction, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_role", Tk_GetAccessibleRole, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_name", Tk_GetAccessibleName, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_description", Tk_GetAccessibleDescription, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_value", Tk_GetAccessibleValue, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, Tk_DeleteAccessibilityTable);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, Tk_DeleteAccessibilityTable);
   TkAccessibilityObject =   (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
   Tcl_InitHashTable(TkAccessibilityObject, TCL_STRING_KEYS);
   return TCL_OK;
