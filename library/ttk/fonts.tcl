@@ -20,7 +20,7 @@
 #
 # Windows:
 #	The default system font changed from "MS Sans Serif" to "Tahoma"
-# 	in Windows XP/Windows 2000.
+#	in Windows XP/Windows 2000.
 #
 #	MS documentation says to use "Tahoma 8" in Windows 2000/XP,
 #	although many MS programs still use "MS Sans Serif 8"

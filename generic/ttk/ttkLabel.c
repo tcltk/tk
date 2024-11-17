@@ -37,8 +37,8 @@ typedef struct {
      */
     Tk_Font		tkfont;
     Tk_TextLayout	textLayout;
-    int 		width;
-    int 		height;
+    int		width;
+    int		height;
     int			embossed;
 
 } TextElement;
@@ -120,8 +120,8 @@ static void TextCleanup(TextElement *text)
 
 /*
  * TextDraw --
- * 	Draw a text element.
- * 	Called by TextElementDraw() and LabelElementDraw().
+ *	Draw a text element.
+ *	Called by TextElementDraw() and LabelElementDraw().
  */
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
@@ -296,12 +296,12 @@ static const Ttk_ElementSpec cTextElementSpec = {
 
 typedef struct {
     Tcl_Obj	*imageObj;
-    Tcl_Obj 	*stippleObj;	/* For TTK_STATE_DISABLED */
-    Tcl_Obj 	*backgroundObj;	/* " " */
+    Tcl_Obj	*stippleObj;	/* For TTK_STATE_DISABLED */
+    Tcl_Obj	*backgroundObj;	/* " " */
 
     Ttk_ImageSpec *imageSpec;
     Tk_Image	tkimg;
-    int 	width;
+    int	width;
     int		height;
 } ImageElement;
 
@@ -310,7 +310,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec ImageElementOptions[] = {
     { "-image", TK_OPTION_STRING,
 	offsetof(ImageElement,imageObj), "" },
-    { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
+    { "-stipple", TK_OPTION_STRING,	/* Really: TK_OPTION_BITMAP */
 	offsetof(ImageElement,stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
@@ -319,12 +319,12 @@ static const Ttk_ElementOptionSpec ImageElementOptions[] = {
 
 /*
  * ImageSetup() --
- * 	Look up the Tk_Image from the image element's imageObj resource.
- * 	Caller must release the image with ImageCleanup().
+ *	Look up the Tk_Image from the image element's imageObj resource.
+ *	Caller must release the image with ImageCleanup().
  *
  * Returns:
- * 	1 if successful, 0 if there was an error (unreported)
- * 	or the image resource was not specified.
+ *	1 if successful, 0 if there was an error (unreported)
+ *	or the image resource was not specified.
  */
 
 static int ImageSetup(
@@ -356,8 +356,8 @@ static void ImageCleanup(ImageElement *image)
 #ifndef MAC_OSX_TK
 /*
  * StippleOver --
- * 	Draw a stipple over the image area, to make it look "grayed-out"
- * 	when TTK_STATE_DISABLED is set.
+ *	Draw a stipple over the image area, to make it look "grayed-out"
+ *	when TTK_STATE_DISABLED is set.
  */
 static void StippleOver(
     ImageElement *image, Tk_Window tkwin, Drawable d, int x, int y)
@@ -498,15 +498,15 @@ typedef struct {
      */
     Tcl_Obj		*compoundObj;
     Tcl_Obj		*spaceObj;
-    TextElement 	text;
+    TextElement	text;
     ImageElement	image;
 
     /*
      * Computed values (see LabelSetup)
      */
     Ttk_Compound	compound;
-    int  		space;
-    int 		totalWidth, totalHeight;
+    int		space;
+    int		totalWidth, totalHeight;
 } LabelElement;
 
 static const Ttk_ElementOptionSpec LabelElementOptions[] = {
@@ -542,7 +542,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
      */
     { "-image", TK_OPTION_STRING,
 	offsetof(LabelElement,image.imageObj), "" },
-    { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
+    { "-stipple", TK_OPTION_STRING,	/* Really: TK_OPTION_BITMAP */
 	offsetof(LabelElement,image.stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
@@ -551,9 +551,9 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
 
 /*
  * LabelSetup --
- * 	Fills in computed fields of the label element.
+ *	Fills in computed fields of the label element.
  *
- * 	Calculate the text, image, and total width and height.
+ *	Calculate the text, image, and total width and height.
  */
 
 #undef  MAX
@@ -576,7 +576,7 @@ static void LabelSetup(
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     } else if (c->compound != TTK_COMPOUND_TEXT) {
-    	if (!ImageSetup(&c->image, tkwin, state)) {
+	if (!ImageSetup(&c->image, tkwin, state)) {
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     }
@@ -675,8 +675,8 @@ static void LabelElementSize(
 
 /*
  * DrawCompound --
- * 	Helper routine for LabelElementDraw;
- * 	Handles layout for -compound {left,right,top,bottom}
+ *	Helper routine for LabelElementDraw;
+ *	Handles layout for -compound {left,right,top,bottom}
  */
 static void DrawCompound(
     LabelElement *l, Ttk_Box b, Tk_Window tkwin, Drawable d, Ttk_State state,

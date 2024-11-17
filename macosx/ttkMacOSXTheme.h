@@ -528,7 +528,7 @@ static ThemeButtonParams
     RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
 			       NoThemeMetric},
     RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
- 			    NoThemeMetric},
+			    NoThemeMetric},
     SidebarButtonParams = {TkSidebarButton, NoThemeMetric, NoThemeMetric},
     InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight, NoThemeMetric};
 

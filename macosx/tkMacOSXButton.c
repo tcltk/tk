@@ -407,7 +407,7 @@ TkpComputeButtonGeometry(
     }
     if (mbPtr->btnkind == kThemePushButton) {
 	HIRect tmpRect;
-    	HIRect contBounds;
+	HIRect contBounds;
 
 	/*
 	 * A PushButton has a minimum size.  We make sure that we are not

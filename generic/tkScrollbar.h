@@ -33,12 +33,16 @@ typedef struct TkScrollbar {
     Tcl_Command widgetCmd;	/* Token for scrollbar's widget command. */
     int vertical;		/* Non-zero means vertical orientation
 				 * requested, zero means horizontal. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *widthObj;		/* Desired narrow dimension of scrollbar, in
 				 * pixels. */
-    char *command;		/* Command prefix to use when invoking
+#else
+    int width;			/* Desired narrow dimension of scrollbar, in
+				 * pixels. */
+#endif
+    Tcl_Obj *commandObj;		/* Command prefix to use when invoking
 				 * scrolling commands. NULL means don't invoke
-				 * commands. Malloc'ed. */
-    int commandSize;		/* Number of non-NULL bytes in command. */
+				 * commands. */
     int repeatDelay;		/* How long to wait before auto-repeating on
 				 * scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
@@ -48,7 +52,11 @@ typedef struct TkScrollbar {
      * Information used when displaying widget:
      */
 
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of 3-D borders. */
+#else
+    int borderWidth;
+#endif
     Tk_3DBorder bgBorder;	/* Used for drawing background (all flat
 				 * surfaces except for trough). */
     Tk_3DBorder activeBorder;	/* For drawing backgrounds when active (i.e.
@@ -56,9 +64,13 @@ typedef struct TkScrollbar {
     XColor *troughColorPtr;	/* Color for drawing trough. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -68,9 +80,13 @@ typedef struct TkScrollbar {
 				 * Indicates how much interior stuff must be
 				 * offset from outside edges to leave room for
 				 * borders. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *elementBorderWidthObj;	/* Width of border to draw around elements
 				 * inside scrollbar (arrows and slider). -1
 				 * means use borderWidth. */
+#else
+    int elementBorderWidth;
+#endif
     int arrowLength;		/* Length of arrows along long dimension of
 				 * scrollbar, including space for a small gap
 				 * between the arrow and the slider.
@@ -87,21 +103,17 @@ typedef struct TkScrollbar {
 				 * use for active element. */
 
     /*
-     * Information describing the application related to the scrollbar. This
-     * information is provided by the application by invoking the "set" widget
-     * command. This information can now be provided in two ways: the "old"
-     * form (totalUnits, windowUnits, firstUnit, and lastUnit), or the "new"
-     * form (firstFraction and lastFraction). FirstFraction and lastFraction
-     * will always be valid, but the old-style information is only valid if
-     * the OLD_STYLE_COMMANDS flag is 1.
+     * Information describing the application related to the scrollbar, which
+     * is provided by the application by invoking the "set" widget command.
      */
 
+#if TK_MAJOR_VERSION < 9
+    int dummy1, dummy2, dummy3, dummy4; /* deprecated, for "old" form. */
+#endif
     double firstFraction;	/* Position of first visible thing in window,
-				 * specified as a fraction between 0 and
-				 * 1.0. */
+				 * specified as a fraction between 0 and 1.0. */
     double lastFraction;	/* Position of last visible thing in window,
-				 * specified as a fraction between 0 and
-				 * 1.0. */
+				 * specified as a fraction between 0 and 1.0. */
 
     /*
      * Miscellaneous information:
@@ -132,10 +144,6 @@ typedef struct TkScrollbar {
  *
  * REDRAW_PENDING:		Non-zero means a DoWhenIdle handler has
  *				already been queued to redraw this window.
- * OLD_STYLE_COMMANDS:		Non-zero means the old style of commands
- *				should be used to communicate with the widget:
- *				".t yview 40", instead of
- *				".t yview scroll 2 lines", for example.
  * GOT_FOCUS:			Non-zero means this window has the input
  *				focus.
  */

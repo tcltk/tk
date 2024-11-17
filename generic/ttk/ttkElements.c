@@ -186,7 +186,7 @@ static const Ttk_ElementSpec BorderElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Field element.
- * 	Used for editable fields.
+ *	Used for editable fields.
  */
 typedef struct {
     Tcl_Obj	*borderObj;
@@ -355,7 +355,7 @@ static const Ttk_ElementSpec PaddingElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Focus ring element.
- * 	Draws a dashed focus ring, if the widget has keyboard focus.
+ *	Draws a dashed focus ring, if the widget has keyboard focus.
  */
 typedef struct {
     Tcl_Obj	*focusColorObj;
@@ -365,7 +365,7 @@ typedef struct {
 
 /*
  * DrawFocusRing --
- * 	Draw a dotted rectangle to indicate focus.
+ *	Draw a dotted rectangle to indicate focus.
  */
 static void DrawFocusRing(
     Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, int thickness, int solid,
@@ -455,8 +455,8 @@ static const Ttk_ElementSpec FocusElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Separator element.
- * 	Just draws a horizontal or vertical bar.
- * 	Three elements are defined: horizontal, vertical, and general;
+ *	Just draws a horizontal or vertical bar.
+ *	Three elements are defined: horizontal, vertical, and general;
  *	the general separator checks the "-orient" option.
  */
 
@@ -649,18 +649,18 @@ typedef struct {
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='.5' y='.5' width='15' height='15' rx='1.5' fill='#ffffff' stroke='#888888'/>\n\
+     <rect x='.5' y='.5' width='15' height='15' rx='3.5' fill='#ffffff' stroke='#888888'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='4'/>\n\
      <path d='m4.5 8 3 3 4-6' fill='none' stroke='#ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
     </svg>";
 
 static const char checkbtnTriData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='4'/>\n\
      <path d='m4 8h8' fill='none' stroke='#ffffff' stroke-width='2'/>\n\
     </svg>";
 
@@ -902,8 +902,8 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
- * 	Draws a solid triangle inside a box.
- * 	clientData is an enum ArrowDirection pointer.
+ *	Draws a solid triangle inside a box.
+ *	clientData is an enum ArrowDirection pointer.
  */
 
 typedef struct {
@@ -1018,7 +1018,7 @@ static const Ttk_ElementSpec ArrowElementSpec = {
 
 /*
  * Modified arrow element for comboboxes and spinboxes:
- * 	The width and height are different, and the left edge is drawn in the
+ *	The width and height are different, and the left edge is drawn in the
  *	same color as the right one.
  */
 
@@ -1545,12 +1545,12 @@ static const Ttk_ElementSpec SliderElementSpec = {
 #define DEFAULT_PBAR_LENGTH "30"
 
 typedef struct {
-    Tcl_Obj *orientObj; 	/* widget orientation */
+    Tcl_Obj *orientObj;	/* widget orientation */
     Tcl_Obj *thicknessObj;	/* the height/width of the bar */
     Tcl_Obj *lengthObj;		/* default width/height of the bar */
-    Tcl_Obj *reliefObj; 	/* border relief for this object */
-    Tcl_Obj *borderObj; 	/* background color */
-    Tcl_Obj *borderWidthObj; 	/* thickness of the border */
+    Tcl_Obj *reliefObj;	/* border relief for this object */
+    Tcl_Obj *borderObj;	/* background color */
+    Tcl_Obj *borderWidthObj;	/* thickness of the border */
 } PbarElement;
 
 static const Ttk_ElementOptionSpec PbarElementOptions[] = {

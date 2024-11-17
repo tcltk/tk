@@ -4972,7 +4972,7 @@ DumpLine(
 	    } else if ((what & TK_DUMP_IMG) &&
 		    (segPtr->typePtr == &tkTextEmbImageType)) {
 		TkTextEmbImage *eiPtr = &segPtr->body.ei;
-		const char *name = (eiPtr->name == NULL) ? "" : eiPtr->name;
+		const char *name = eiPtr->name;
 
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);

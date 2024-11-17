@@ -9,13 +9,13 @@ namespace eval ttk::theme::clam {
     variable colors
     array set colors {
 	-disabledfg		"#999999"
-	-frame  		"#dcdad5"
-	-window  		"#ffffff"
+	-frame			"#dcdad5"
+	-window			"#ffffff"
 	-dark			"#cfcdc8"
-	-darker 		"#bab5ab"
+	-darker			"#bab5ab"
 	-darkest		"#9e9a91"
 	-lighter		"#eeebe7"
-	-lightest 		"#ffffff"
+	-lightest		"#ffffff"
 	-selectbg		"#4a6984"
 	-selectfg		"#ffffff"
 	-altindicator		"#5895bc"

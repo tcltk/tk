@@ -47,19 +47,19 @@ namespace eval ttk {
 	none		none
 
 	standard	left_ptr
-	text 		xterm
+	text		xterm
 	link		hand2
 	crosshair	crosshair
 	busy		watch
 	forbidden	pirate
 
-	hresize 	sb_h_double_arrow
-	vresize 	sb_v_double_arrow
+	hresize		sb_h_double_arrow
+	vresize		sb_v_double_arrow
 
-	nresize 	top_side
-	sresize 	bottom_side
-	wresize 	left_side
-	eresize 	right_side
+	nresize		top_side
+	sresize		bottom_side
+	wresize		left_side
+	eresize		right_side
 	nwresize	top_left_corner
 	neresize	top_right_corner
 	swresize	bottom_left_corner
@@ -82,13 +82,13 @@ namespace eval ttk {
 		busy		wait
 		forbidden	no
 
-		vresize 	size_ns
-		nresize 	size_ns
+		vresize		size_ns
+		nresize		size_ns
 		sresize		size_ns
 
 		wresize		size_we
 		eresize		size_we
-		hresize 	size_we
+		hresize		size_we
 
 		nwresize	size_nw_se
 		swresize	size_ne_sw
@@ -101,18 +101,18 @@ namespace eval ttk {
 	"aqua" {
 	    array set Cursors {
 		standard	arrow
-		text 	ibeam
-		link	pointinghand
+		text		ibeam
+		link		pointinghand
 		crosshair	crosshair
-		busy	watch
+		busy		watch
 		forbidden	notallowed
 
-		hresize 	resizeleftright
-		vresize 	resizeupdown
-		nresize	resizeup
-		sresize	resizedown
-		wresize	resizeleft
-		eresize	resizeright
+		hresize		resizeleftright
+		vresize		resizeupdown
+		nresize		resizeup
+		sresize		resizedown
+		wresize		resizeleft
+		eresize		resizeright
 	    }
 	}
     }

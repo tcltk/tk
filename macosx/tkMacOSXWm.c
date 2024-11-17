@@ -556,16 +556,6 @@ static void placeAsTab(TKWindow *macWindow) {
 
 @implementation NSWindow(TKWm)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect = {point, {0,0}};
@@ -577,7 +567,6 @@ static void placeAsTab(TKWindow *macWindow) {
     NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
-#endif
 @end
 
 #pragma mark -
@@ -589,7 +578,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 @end
@@ -610,7 +598,6 @@ static void placeAsTab(TKWindow *macWindow) {
 {
     syncLayout(self);
     [[self contentView] setNeedsDisplay:YES];
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1181,12 +1168,12 @@ TkWmDeadWindow(
 
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
-    	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(
+	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(
 	    transientPtr->winPtr);
-    	if (containerPtr == winPtr) {
-    	    wmPtr2 = transientPtr->winPtr->wmInfoPtr;
-    	    wmPtr2->container = NULL;
-    	}
+	if (containerPtr == winPtr) {
+	    wmPtr2 = transientPtr->winPtr->wmInfoPtr;
+	    wmPtr2->container = NULL;
+	}
     }
 
     while (wmPtr->transientPtr != NULL) {
@@ -1740,11 +1727,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolValue != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
-#else
-	    TKLog(@"The fullscreen attribute is ignored on this system.");
-#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -1840,10 +1823,10 @@ WmSetAttribute(
 	    // Calling XMoveResizeWindow twice is a hack to force a relayout
 	    // of the window.
 	    XMoveResizeWindow(winPtr->display, winPtr->window,
-	 		  winPtr->changes.x, winPtr->changes.y,
+			  winPtr->changes.x, winPtr->changes.y,
 			  newFrame.size.width, newHeight - 1);
 	    XMoveResizeWindow(winPtr->display, winPtr->window,
-	 		  winPtr->changes.x, winPtr->changes.y,
+			  winPtr->changes.x, winPtr->changes.y,
 			  newFrame.size.width, newHeight);
 	}
 	break;
@@ -2454,7 +2437,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setTkNeedsDisplay:YES];
+	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -2471,7 +2454,7 @@ WmDeiconifyCmd(
 	WmInfo *wmPtr2 = winPtr2->wmInfoPtr;
 	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
 
-    	if (containerPtr == winPtr) {
+	if (containerPtr == winPtr) {
 	    if ((wmPtr2->hints.initial_state == WithdrawnState) &&
 		    ((transientPtr->flags & WITHDRAWN_BY_CONTAINER) != 0)) {
 		TkpWmSetState(winPtr2, NormalState);
@@ -2480,7 +2463,7 @@ WmDeiconifyCmd(
 	}
     }
 
-    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+    //Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     return TCL_OK;
 }
 
@@ -2573,8 +2556,8 @@ WmForgetCmd(
 
 	macWin = (MacDrawable *)winPtr->window;
 
-    	TkFocusJoin(winPtr);
-    	Tk_UnmapWindow(frameWin);
+	TkFocusJoin(winPtr);
+	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel->referenceCount--;
 	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
@@ -2596,7 +2579,7 @@ WmForgetCmd(
 
 	TkMapTopFrame(frameWin);
     } else {
-    	/*
+	/*
 	 * Already not managed by wm - ignore it.
 	 */
     }
@@ -3084,7 +3067,7 @@ WmIconifyCmd(
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
 	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
-    	if (containerPtr == winPtr &&
+	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
 	    TkpWmSetState(winPtr2, WithdrawnState);
 	    transientPtr->flags |= WITHDRAWN_BY_CONTAINER;
@@ -3272,7 +3255,7 @@ WmIconphotoCmd(
 
     tk_icon = Tk_GetImage(interp, tkwin, icon, NULL, NULL);
     if (tk_icon == NULL) {
-    	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	      "can't use \"%s\" as iconphoto: not a photo image",
 	      icon));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
@@ -3480,8 +3463,8 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    TCL_UNUSED(Tk_Window),	        /* Main window of the application. */
-    TkWindow *winPtr,           	/* Toplevel or Frame to work with */
+    TCL_UNUSED(Tk_Window),			/* Main window of the application. */
+    TkWindow *winPtr,			/* Toplevel or Frame to work with */
     Tcl_Interp *interp,			/* Current interpreter. */
     TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
@@ -3801,8 +3784,6 @@ WmProtocolCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
-    char *cmd;
-    Tcl_Size cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -3834,8 +3815,7 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(protPtr->command, TCL_INDEX_NONE));
+		Tcl_SetObjResult(interp, protPtr->commandObj);
 		return TCL_OK;
 	    }
 	}
@@ -3855,21 +3835,20 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
-	    if (protPtr->command)
-		ckfree(protPtr->command);
+	    if (protPtr->commandObj)
+		Tcl_DecrRefCount(protPtr->commandObj);
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
-    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
-    if (cmdLength > 0) {
+    if (Tcl_GetString(objv[4])[0]) {
 	protPtr = (ProtocolHandler *)ckalloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	protPtr->command = (char *)ckalloc(cmdLength+1);
-	strcpy(protPtr->command, cmd);
+	protPtr->commandObj = objv[4];
+	Tcl_IncrRefCount(protPtr->commandObj);
     }
     return TCL_OK;
 }
@@ -4543,7 +4522,7 @@ WmWithdrawCmd(
 	TkWindow *winPtr2 = transientPtr->winPtr;
 	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
 
-    	if (containerPtr == winPtr &&
+	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
 	    TkpWmSetState(winPtr2, WithdrawnState);
 	    transientPtr->flags |= WITHDRAWN_BY_CONTAINER;
@@ -6821,7 +6800,7 @@ TkMacOSXMakeRealWindowExist(
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
     if (!window) {
-    	Tcl_Panic("couldn't allocate new Mac window");
+	Tcl_Panic("couldn't allocate new Mac window");
     }
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
     if (tabbingId) {
@@ -6882,10 +6861,10 @@ TkMacOSXMakeRealWindowExist(
 
     macWin->flags |= TK_HOST_EXISTS;
     if (overrideRedirect) {
-    	XSetWindowAttributes atts;
+	XSetWindowAttributes atts;
 
-    	atts.override_redirect = True;
-    	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
+	atts.override_redirect = True;
+	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
 	if ([NSApp macOSVersion] >= 101300) {
 	    window.styleMask |= NSWindowStyleMaskDocModalWindow;
 	} else {
@@ -6934,7 +6913,6 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    [view bounds].size.height - tkBounds.bottom,
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
-	[view addTkDirtyRect:bounds];
 	[view setNeedsDisplay:YES];
     }
 #endif
@@ -7263,12 +7241,12 @@ TkpChangeFocus(
     }
 
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {
-    	NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
-    	TkWmRestackToplevel(winPtr, Above, NULL);
-    	if (force) {
-    	    [NSApp activateIgnoringOtherApps:YES];
-    	}
+	TkWmRestackToplevel(winPtr, Above, NULL);
+	if (force) {
+	    [NSApp activateIgnoringOtherApps:YES];
+	}
 	if (win && [win canBecomeKeyWindow]) {
 	    [win makeKeyAndOrderFront:NSApp];
 	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];

@@ -41,19 +41,16 @@ typedef struct {
     Tcl_Command widgetCmd;	/* Token for frame's widget command. */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
-    char *className;		/* Class name for widget (from configuration
-				 * option). Malloc-ed. */
+    Tcl_Obj *classNameObj;	/* Class name for widget (from configuration
+				 * option). May be NULL. */
     int type;			/* Type of widget, such as TYPE_FRAME. */
-    char *screenName;		/* Screen on which widget is created. Non-null
-				 * only for top-levels. Malloc-ed, may be
-				 * NULL. */
-    char *visualName;		/* Textual description of visual for window,
-				 * from -visual option. Malloc-ed, may be
-				 * NULL. */
-    char *colormapName;		/* Textual description of colormap for window,
-				 * from -colormap option. Malloc-ed, may be
-				 * NULL. */
-    char *menuName;		/* Textual description of menu to use for
+    Tcl_Obj *screenNameObj;	/* Screen on which widget is created. Non-null
+				 * only for top-levels. May be NULL. */
+    Tcl_Obj *visualNameObj;	/* Textual description of visual for window,
+				 * from -visual option. May be NULL. */
+    Tcl_Obj *colormapNameObj;	/* Textual description of colormap for window,
+				 * from -colormap option. May be NULL. */
+    Tcl_Obj *menuNameObj;	/* Textual description of menu to use for
 				 * menubar. Malloc-ed, may be NULL. */
     Colormap colormap;		/* If not None, identifies a colormap
 				 * allocated for this window, which must be
@@ -75,15 +72,14 @@ typedef struct {
     Tcl_Obj *heightObj;		/* Height to request for window. <= 0 means
 				 * don't request any size. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int isContainer;		/* 1 means this window is a container, 0 means
 				 * that it isn't. */
-    char *useThis;		/* If the window is embedded, this points to
+    Tcl_Obj *useThisObj;	/* If the window is embedded, this points to
 				 * the name of the window in which it is
-				 * embedded (malloc'ed). For non-embedded
-				 * windows this is NULL. */
+				 * embedded. For non-embedded windows this is NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
     Tcl_Obj *padXObj;		/* Value of -padx option: specifies how many
@@ -187,7 +183,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_STRING, "-colormap", "colormap", "Colormap",
-	DEF_FRAME_COLORMAP, TCL_INDEX_NONE, offsetof(Frame, colormapName),
+	DEF_FRAME_COLORMAP, offsetof(Frame, colormapNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     /*
      * Having -container is useless in a labelframe since a container has
@@ -214,10 +210,10 @@ static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	DEF_FRAME_PADY, offsetof(Frame, padYObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_FRAME_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Frame, takeFocus),
+	DEF_FRAME_TAKE_FOCUS, offsetof(Frame, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-visual", "visual", "Visual",
-	DEF_FRAME_VISUAL, TCL_INDEX_NONE, offsetof(Frame, visualName),
+	DEF_FRAME_VISUAL, offsetof(Frame, visualNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_FRAME_WIDTH, offsetof(Frame, widthObj), TCL_INDEX_NONE, 0, 0, 0},
@@ -235,7 +231,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_FRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
+	DEF_FRAME_CLASS, offsetof(Frame, classNameObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
@@ -255,19 +251,19 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_TOPLEVEL_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
+	DEF_TOPLEVEL_CLASS, offsetof(Frame, classNameObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
-	DEF_TOPLEVEL_MENU, TCL_INDEX_NONE, offsetof(Frame, menuName),
+	DEF_TOPLEVEL_MENU, offsetof(Frame, menuNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-screen", "screen", "Screen",
-	DEF_TOPLEVEL_SCREEN, TCL_INDEX_NONE, offsetof(Frame, screenName),
+	DEF_TOPLEVEL_SCREEN, offsetof(Frame, screenNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
 	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
     {TK_OPTION_STRING, "-use", "use", "Use",
-	DEF_TOPLEVEL_USE, TCL_INDEX_NONE, offsetof(Frame, useThis),
+	DEF_TOPLEVEL_USE, offsetof(Frame, useThisObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
@@ -280,7 +276,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
 	DEF_LABELFRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_LABELFRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
+	DEF_LABELFRAME_CLASS, offsetof(Frame, classNameObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -558,7 +554,7 @@ TkCreateFrame(
      * Mark Tk frames as suitable candidates for [wm manage].
      */
 
-    ((TkWindow *) newWin)->flags |= TK_WM_MANAGEABLE;
+    ((TkWindow *)newWin)->flags |= TK_WM_MANAGEABLE;
 
     if (className == NULL) {
 	className = Tk_GetOption(newWin, "class", "Class");
@@ -657,7 +653,7 @@ TkCreateFrame(
 	goto error;
     }
     if (framePtr->isContainer) {
-	if (framePtr->useThis != NULL) {
+	if (framePtr->useThisObj != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "windows cannot have both the -use and the -container"
 		    " option set", TCL_INDEX_NONE));
@@ -924,7 +920,7 @@ ConfigureFrame(
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
-    char *oldMenuName;
+    Tcl_Obj *oldMenuNameObj;
     Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
     Tk_Image image = NULL;
@@ -935,11 +931,9 @@ ConfigureFrame(
      * Need the old menubar name for the menu code to delete it.
      */
 
-    if (framePtr->menuName == NULL) {
-    	oldMenuName = NULL;
-    } else {
-    	oldMenuName = (char *)ckalloc(strlen(framePtr->menuName) + 1);
-    	strcpy(oldMenuName, framePtr->menuName);
+    oldMenuNameObj = framePtr->menuNameObj;
+    if (oldMenuNameObj) {
+	Tcl_IncrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->type == TYPE_LABELFRAME) {
@@ -948,8 +942,8 @@ ConfigureFrame(
     if (Tk_SetOptions(interp, framePtr,
 	    framePtr->optionTable, objc, objv,
 	    framePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
-	if (oldMenuName != NULL) {
-	    ckfree(oldMenuName);
+	if (oldMenuNameObj != NULL) {
+	    Tcl_DecrRefCount(oldMenuNameObj);
 	}
 	return TCL_ERROR;
     }
@@ -973,17 +967,17 @@ ConfigureFrame(
      * A few of the options require additional processing.
      */
 
-    if ((((oldMenuName == NULL) && (framePtr->menuName != NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuName == NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuName != NULL)
-	    && strcmp(oldMenuName, framePtr->menuName) != 0))
+    if ((((oldMenuNameObj == NULL) && (framePtr->menuNameObj != NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj == NULL))
+	    || ((oldMenuNameObj != NULL) && (framePtr->menuNameObj != NULL)
+	    && strcmp(Tcl_GetString(oldMenuNameObj), Tcl_GetString(framePtr->menuNameObj)) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
-	Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName,
-		framePtr->menuName);
+	Tk_SetWindowMenubar(interp, framePtr->tkwin, (oldMenuNameObj ? Tcl_GetString(oldMenuNameObj) : NULL),
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 
-    if (oldMenuName != NULL) {
-    	ckfree(oldMenuName);
+    if (oldMenuNameObj != NULL) {
+	Tcl_DecrRefCount(oldMenuNameObj);
     }
 
     if (framePtr->border != NULL) {
@@ -1207,13 +1201,12 @@ FrameWorldChanged(
      * Calculate individual border widths.
      */
 
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padXObj, &padX);
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padYObj, &padY);
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
-
     bWidthBottom = bWidthTop = bWidthRight = bWidthLeft =
 	    borderWidth + highlightWidth;
 
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padYObj, &padY);
     bWidthLeft   += padX;
     bWidthRight  += padX;
     bWidthTop    += padY;
@@ -1570,15 +1563,15 @@ DisplayFrame(
 	     * favor a lower border position by rounding up.
 	     */
 
-	    bdY1 += (labelframePtr->labelBox.height-borderWidth+1)/2;
+	    bdY1 += (labelframePtr->labelBox.height - borderWidth+1)/2;
 	    break;
 	case LABELANCHOR_S:
 	case LABELANCHOR_SE:
 	case LABELANCHOR_SW:
-	    bdY2 -= (labelframePtr->labelBox.height-borderWidth) / 2;
+	    bdY2 -= (labelframePtr->labelBox.height - borderWidth) / 2;
 	    break;
 	default:
-	    bdX1 += (labelframePtr->labelBox.width-borderWidth) / 2;
+	    bdX1 += (labelframePtr->labelBox.width - borderWidth) / 2;
 	    break;
 	}
 
@@ -1731,11 +1724,11 @@ FrameEventProc(
 	ComputeFrameGeometry(framePtr);
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
-	if (framePtr->menuName != NULL) {
+	if (framePtr->menuNameObj != NULL) {
 	    Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin,
-		    framePtr->menuName, NULL);
-	    ckfree(framePtr->menuName);
-	    framePtr->menuName = NULL;
+		    Tcl_GetString(framePtr->menuNameObj), NULL);
+	    Tcl_DecrRefCount(framePtr->menuNameObj);
+	    framePtr->menuNameObj = NULL;
 	}
 	if (framePtr->tkwin != NULL) {
 	    /*
@@ -1785,8 +1778,8 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == ActivateNotify) {
-    	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
-    		framePtr->menuName);
+	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
     return;
 
@@ -1822,11 +1815,11 @@ FrameCmdDeletedProc(
     Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
 
-    if (framePtr->menuName != NULL) {
+    if (framePtr->menuNameObj != NULL) {
 	Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin,
-		framePtr->menuName, NULL);
-	ckfree(framePtr->menuName);
-	framePtr->menuName = NULL;
+		Tcl_GetString(framePtr->menuNameObj), NULL);
+	Tcl_DecrRefCount(framePtr->menuNameObj);
+	framePtr->menuNameObj = NULL;
     }
 
     /*
@@ -1922,7 +1915,7 @@ void
 TkInstallFrameMenu(
     Tk_Window tkwin)		/* The window that was just created. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
 
     if (winPtr->mainPtr != NULL) {
 	Frame *framePtr = (Frame *)winPtr->instanceData;
@@ -1931,7 +1924,7 @@ TkInstallFrameMenu(
 	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
 	}
 	TkpMenuNotifyToplevelCreate(winPtr->mainPtr->interp,
-		framePtr->menuName);
+		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     }
 }
 
@@ -2020,7 +2013,7 @@ FrameRequestProc(
 
 static void
 FrameLostContentProc(
-    void *clientData,	/* Frame structure for content window window that was
+    void *clientData,	/* Frame structure for content window that was
 				 * stolen away. */
     TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window window. */
 {
@@ -2048,15 +2041,15 @@ void
 TkMapTopFrame(
      Tk_Window tkwin)
 {
-    Frame *framePtr = (Frame *)((TkWindow *) tkwin)->instanceData;
+    Frame *framePtr = (Frame *)((TkWindow *)tkwin)->instanceData;
     Tk_OptionTable optionTable;
 
     if (Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_FRAME) {
 	framePtr->type = TYPE_TOPLEVEL;
 	Tcl_DoWhenIdle(MapFrame, framePtr);
-	if (framePtr->menuName != NULL) {
+	if (framePtr->menuNameObj != NULL) {
 	    Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin, NULL,
-		    framePtr->menuName);
+		    Tcl_GetString(framePtr->menuNameObj));
 	}
     } else if (!Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_TOPLEVEL) {
 	framePtr->type = TYPE_FRAME;

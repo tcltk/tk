@@ -76,7 +76,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL 			/* modalProc */
+    NULL			/* modalProc */
 };
 
 static void
@@ -506,14 +506,13 @@ ScrollbarProc(
 	 * Bail out immediately if there isn't a command to invoke.
 	 */
 
-	if (scrollPtr->info.commandSize == 0) {
+	if (!scrollPtr->info.commandObj) {
 	    Tcl_ServiceAll();
 	    return 0;
 	}
 
 	Tcl_DStringInit(&cmdString);
-	Tcl_DStringAppend(&cmdString, scrollPtr->info.command,
-		scrollPtr->info.commandSize);
+	Tcl_DStringAppend(&cmdString, Tcl_GetString(scrollPtr->info.commandObj), TCL_INDEX_NONE);
 
 	if (command == SB_LINELEFT || command == SB_LINERIGHT) {
 	    Tcl_DStringAppendElement(&cmdString, "scroll");
@@ -602,7 +601,7 @@ TkpConfigureScrollbar(
  *
  *	This function is invoked in response to a ButtonPress event.
  *	It resends the event to the Scrollbar window procedure,
- * 	which in turn enters a modal loop.
+ *	which in turn enters a modal loop.
  *
  *----------------------------------------------------------------------
  */

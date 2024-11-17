@@ -288,8 +288,6 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-@synthesize tkDirtyRect = _tkDirtyRect;
-@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -324,7 +322,7 @@ static NSUInteger textInputModifiers;
 
     if (privateWorkingText != nil) {
 	sendingIMEText = YES;
-    	[self deleteWorkingText];
+	[self deleteWorkingText];
     }
 
     /*
@@ -387,8 +385,8 @@ static NSUInteger textInputModifiers;
 	    macKC.v.o_s |= INDEX_OPTION;
 	}
 	xEvent.xkey.keycode = macKC.uint;
-    	xEvent.xany.type = KeyPress;
-    	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	xEvent.xany.type = KeyPress;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xkey.state = state;
     }
 }

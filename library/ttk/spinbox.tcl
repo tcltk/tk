@@ -12,18 +12,18 @@ namespace eval ttk::spinbox { }
 ttk::copyBindings TEntry TSpinbox
 
 bind TSpinbox <Motion>			{ ttk::spinbox::Motion %W %x %y }
-bind TSpinbox <Button-1> 		{ ttk::spinbox::Press %W %x %y }
-bind TSpinbox <ButtonRelease-1> 	{ ttk::spinbox::Release %W }
-bind TSpinbox <Double-Button-1> 	{ ttk::spinbox::DoubleClick %W %x %y }
-bind TSpinbox <Triple-Button-1> 	{} ;# disable TEntry triple-click
+bind TSpinbox <Button-1>		{ ttk::spinbox::Press %W %x %y }
+bind TSpinbox <ButtonRelease-1>		{ ttk::spinbox::Release %W }
+bind TSpinbox <Double-Button-1>		{ ttk::spinbox::DoubleClick %W %x %y }
+bind TSpinbox <Triple-Button-1>		{} ;# disable TEntry triple-click
 
 bind TSpinbox <Up>			{ event generate %W <<Increment>> }
-bind TSpinbox <Down> 			{ event generate %W <<Decrement>> }
+bind TSpinbox <Down>			{ event generate %W <<Decrement>> }
 
 bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
-bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }
+bind TSpinbox <<Decrement>>		{ ttk::spinbox::Spin %W -1 }
 
-ttk::bindMouseWheel TSpinbox 		{ ttk::spinbox::Spin %W }
+ttk::bindMouseWheel TSpinbox		{ ttk::spinbox::Spin %W }
 bind TSpinbox <Shift-MouseWheel> {
     # Ignore the event
 }
@@ -58,7 +58,7 @@ proc ttk::spinbox::Press {w x y} {
     switch -glob -- [$w identify $x $y] {
 	*textarea	{ ttk::entry::Press $w $x }
 	*rightarrow	-
-	*uparrow 	{ ttk::Repeatedly event generate $w <<Increment>> }
+	*uparrow	{ ttk::Repeatedly event generate $w <<Increment>> }
 	*leftarrow	-
 	*downarrow	{ ttk::Repeatedly event generate $w <<Decrement>> }
 	*spinbutton {
@@ -90,7 +90,7 @@ proc ttk::spinbox::Release {w} {
 
 ## MouseWheel --
 #	Mousewheel callback.  Turn these into <<Increment>> (-1, up)
-# 	or <<Decrement> (+1, down) events. Not used any more.
+#	or <<Decrement> (+1, down) events. Not used any more.
 #
 proc ttk::spinbox::MouseWheel {w dir {factor 1.0}} {
     if {[$w instate disabled]} { return }

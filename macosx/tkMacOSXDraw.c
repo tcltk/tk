@@ -1254,13 +1254,6 @@ TkMacOSXSetupDrawingContext(
 	}
 
 	/*
-	 * Mark the view as needing to be redisplayed, since we are drawing
-	 * to its backing layer.
-	 */
-
-	[view setTkNeedsDisplay:YES];
-
-	/*
 	 * Workaround for an Apple bug.
 	 *
 	 * Without the block below, ttk frames, labelframes and labels do not
@@ -1287,6 +1280,7 @@ TkMacOSXSetupDrawingContext(
 	 */
 
 	if (@available(macOS 12.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
 	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
 	    NSAppearance *effective = view.effectiveAppearance;
 	    if( current != effective) {
@@ -1294,6 +1288,7 @@ TkMacOSXSetupDrawingContext(
 		// Deprecations be damned!
 		NSAppearance.currentAppearance = effective;
 	    }
+#endif
 	} else {
 	    /*
 	     *It is not clear if this is a problem before macos 12.0, but
@@ -1482,6 +1477,13 @@ TkMacOSXRestoreDrawingContext(
 	CFRelease(dcPtr->clipRgn);
 	dcPtr->clipRgn = NULL;
     }
+
+    /*
+     * Mark the view as needing to be redisplayed, since we have drawn on its
+     * backing layer.
+     */
+    
+    [dcPtr->view setNeedsDisplay:YES];
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

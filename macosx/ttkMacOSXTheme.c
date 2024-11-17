@@ -136,7 +136,6 @@ static inline HIThemeButtonDrawInfo ComputeButtonDrawInfo(
  * define it to return nil.
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
 static CGColorRef
 CGColorFromRGBA(
     CGFloat *rgba)
@@ -161,15 +160,6 @@ CGColorFromGray(
 }
 
 #define CGCOLOR(nscolor) (nscolor).CGColor
-
-#else
-
-#define CGCOLOR(nscolor) NULL
-#define CGColorFromRGBA(rgba) NULL
-#define CGColorFromGray(gray) NULL
-#define CGPathCreateWithRoundedRect(w, x, y, z) NULL
-
-#endif
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
@@ -648,7 +638,7 @@ static void DrawEntry(
     CGColorRef backgroundColor;
     CGFloat bgRGBA[4];
     if (isDark) {
-    	GetBackgroundColorRGBA(context, tkwin, 0, NO, bgRGBA);
+	GetBackgroundColorRGBA(context, tkwin, 0, NO, bgRGBA);
 
 	/*
 	 * Lighten the entry background to provide contrast.
@@ -1779,7 +1769,7 @@ static void ButtonElementDraw(
     case kThemeCheckBox:
     case kThemeRadioButton:
     case TkSidebarButton:
-    	break;
+	break;
 
     /*
      * Other buttons have a maximum height.   We have to deal with that.

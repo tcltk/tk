@@ -118,14 +118,11 @@ typedef struct TkTextEmbWindow {
 				 * means no such script. */
 #if TK_MAJOR_VERSION > 8
     Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of window. */
-#else
-    int padX, padY;
 #endif
-#if TCL_MAJOR_VERSION > 8
     TkAlignMode align;		/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
-#else
-    int align;
+#if TK_MAJOR_VERSION < 9
+    int padX, padY;
 #endif
     int stretch;		/* Should window stretch to fill vertical
 				 * space of line (except for pady)? 0 or 1. */
@@ -147,8 +144,8 @@ typedef struct TkTextEmbImage {
 				 * text widget. This is used when the image
 				 * changes or is deleted. */
     TkTextLine *linePtr;	/* Line structure that contains this image. */
-    char *imageString;		/* Name of the image for this segment. */
-    char *imageName;		/* Name used by text widget to identify this
+    Tcl_Obj *imageObj;		/* Name of the image for this segment. */
+    Tcl_Obj *imageNameObj;	/* Name used by text widget to identify this
 				 * image. May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by
 				 * "image names" to identify this instance of
@@ -158,14 +155,11 @@ typedef struct TkTextEmbImage {
 #if TK_MAJOR_VERSION > 8
     Tcl_Obj *padXObj, *padYObj;	/* Padding to leave around each side of image,
 				 * in pixels. */
-#else
-    int padX, padY;
 #endif
-#if TCL_MAJOR_VERSION > 8
     TkAlignMode align;		/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
-#else
-    int align;
+#if TK_MAJOR_VERSION < 9
+    int padX, padY;
 #endif
     int chunkCount;		/* Number of display chunks that refer to this
 				 * image. */
@@ -358,14 +352,7 @@ typedef struct TkTextTag {
 
     Tk_3DBorder border;		/* Used for drawing background. NULL means no
 				 * value specified here. */
-#if TK_MAJOR_VERSION < 9
-    int borderWidth;		/* Width of 3-D border for background. */
-#endif
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border for background. */
-#if TK_MAJOR_VERSION < 9
-    Tcl_Obj *reliefObj;		/* -relief option. NULL
-				 * means option not specified. */
-#endif
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
@@ -376,10 +363,6 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-#if TK_MAJOR_VERSION < 9
-    Tcl_Obj *justifyObj;	/* -justify option. NULL
-				 * means option not specified. */
-#endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
 				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
     Tcl_Obj *lMargin1Obj;	/* Left margin for first display line of each
@@ -414,24 +397,15 @@ typedef struct TkTextTag {
 				 * no value specified here. */
     Tcl_Obj *spacing1Obj;	/* -spacing1 option object. NULL
 				 * means option not specified. */
-#if TK_MAJOR_VERSION < 9
-    int spacing1;
-#endif
     Tcl_Obj *spacing2Obj;	/* -spacing2 option object. NULL
 				 * means option not specified. */
-#if TK_MAJOR_VERSION < 9
-    int spacing2;
-#endif
     Tcl_Obj *spacing3Obj;	/* -spacing3 option object. NULL
 				 * means option not specified. */
-#if TK_MAJOR_VERSION < 9
-    int spacing3;
-#endif
-    Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
+    Tcl_Obj *tabStringPtr;	/* -tabs option. NULL means option not
 				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
-				 * NULL. Corresponds to tabString. */
+				 * NULL. Corresponds to tabStringPtr. */
     TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
 #if TK_MAJOR_VERSION < 9
@@ -450,7 +424,7 @@ typedef struct TkTextTag {
     Tcl_Obj *elideObj;		/* -elide option. NULL
 				 * means option not specified. */
 #endif
-    int elide;			/* > 0 means that data under this tag
+    int elide;			/* Non-zero means that data under this tag
 				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
