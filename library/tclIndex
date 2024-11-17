@@ -6,6 +6,7 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
+set auto_index(::tk::dialog::error::Return) [list source [file join $dir accessibility.tcl]]
 set auto_index(::tk::dialog::error::Return) [list source [file join $dir bgerror.tcl]]
 set auto_index(::tk::dialog::error::Details) [list source [file join $dir bgerror.tcl]]
 set auto_index(::tk::dialog::error::SaveToLog) [list source [file join $dir bgerror.tcl]]
