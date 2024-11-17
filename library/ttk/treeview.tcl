@@ -7,19 +7,19 @@ namespace eval ttk::treeview {
 
     # Enter/Leave/Motion
     #
-    set State(activeWidget) 	{}
-    set State(activeHeading) 	{}
+    set State(activeWidget)	{}
+    set State(activeHeading)	{}
 
     # Press/drag/release:
     #
-    set State(pressMode) 	none
+    set State(pressMode)	none
     set State(pressX)		0
 
     # For pressMode == "resize"
     set State(resizeColumn)	#0
 
     # For pressmode == "heading"
-    set State(heading)  	{}
+    set State(heading)		{}
 
     set State(cellAnchor)	{}
     set State(cellAnchorOp)	"set"
@@ -28,19 +28,19 @@ namespace eval ttk::treeview {
 ### Widget bindings.
 #
 
-bind Treeview	<Motion> 		{ ttk::treeview::Motion %W %x %y }
+bind Treeview	<Motion>		{ ttk::treeview::Motion %W %x %y }
 bind Treeview	<B1-Leave>		{ #nothing }
 bind Treeview	<Leave>			{ ttk::treeview::ActivateHeading {} {}}
-bind Treeview	<Button-1> 		{ ttk::treeview::Press %W %x %y }
-bind Treeview	<Double-Button-1> 	{ ttk::treeview::DoubleClick %W %x %y }
-bind Treeview	<ButtonRelease-1> 	{ ttk::treeview::Release %W %x %y }
-bind Treeview	<B1-Motion> 		{ ttk::treeview::Drag %W %x %y }
-bind Treeview 	<Up>    		{ ttk::treeview::Keynav %W up }
-bind Treeview 	<Down>  		{ ttk::treeview::Keynav %W down }
-bind Treeview 	<Right> 		{ ttk::treeview::Keynav %W right }
-bind Treeview 	<Left>  		{ ttk::treeview::Keynav %W left }
+bind Treeview	<Button-1>		{ ttk::treeview::Press %W %x %y }
+bind Treeview	<Double-Button-1>	{ ttk::treeview::DoubleClick %W %x %y }
+bind Treeview	<ButtonRelease-1>	{ ttk::treeview::Release %W %x %y }
+bind Treeview	<B1-Motion>		{ ttk::treeview::Drag %W %x %y }
+bind Treeview	<Up>			{ ttk::treeview::Keynav %W up }
+bind Treeview	<Down>			{ ttk::treeview::Keynav %W down }
+bind Treeview	<Right>			{ ttk::treeview::Keynav %W right }
+bind Treeview	<Left>			{ ttk::treeview::Keynav %W left }
 bind Treeview	<Prior>			{ %W yview scroll -1 pages }
-bind Treeview	<Next> 			{ %W yview scroll  1 pages }
+bind Treeview	<Next>			{ %W yview scroll  1 pages }
 bind Treeview	<Return>		{ ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ttk::treeview::ToggleFocus %W }
 

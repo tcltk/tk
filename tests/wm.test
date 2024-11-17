@@ -1504,18 +1504,24 @@ test wm-stackorder-2.2 {stacking order} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-2.3 {stacking order} -body {
+    set res {}
     toplevel .t
     tkwait visibility .t
+    raiseDelay
     toplevel .t2
     tkwait visibility .t2
+    raiseDelay
+    lappend res [wm stackorder .] 
     raise .
     raiseDelay
+    lappend res [wm stackorder .] 
     raise .t2
     raiseDelay
-    wm stackorder .
+    lappend res [wm stackorder .]
+    set res
 } -cleanup {
     destroy .t .t2
-} -result {.t . .t2}
+} -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
     toplevel .t ; update
     toplevel .t2 ; update
@@ -2063,7 +2069,7 @@ test wm-transient-7.4 {Reassign transient, destroy new toplevel} -body {
     toplevel .transient
     wm transient .transient .t1
     wm transient .transient .t2
-    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t2		;# caused panic in 8.4b1
     destroy .t1
     destroy .transient
 } -cleanup {
@@ -2076,7 +2082,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     wm transient .transient .t1
     wm transient .transient .t2
     destroy .transient
-    destroy .t2 	;# caused panic in 8.4b1
+    destroy .t2		;# caused panic in 8.4b1
     destroy .t1		;# so did this
 } -cleanup {
     deleteWindows

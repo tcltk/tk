@@ -180,7 +180,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
     fileSpecDesc = [event aeDesc];
     if (fileSpecDesc == nil ) {
-    	return;
+	return;
     }
 
     /*
@@ -195,12 +195,12 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     /* Get a copy of the AppleEvent's descriptor. */
     AEGetParamDesc(fileSpecDesc, keyDirectObject, typeWildCard, &contents);
     if (contents.descriptorType == typeAEList) {
-    	fileSpecDesc = &contents;
+	fileSpecDesc = &contents;
     }
 
     if (AECountItems(fileSpecDesc, &count) != noErr) {
 	AEDisposeDesc(&contents);
-    	return;
+	return;
     }
 
     /*
@@ -296,10 +296,10 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     }
 
     if (MissedAnyParameters((AppleEvent*)theDesc)) {
-    	snprintf(errString, sizeof(errString), "AEDoScriptHandler: extra parameters");
-    	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
+	snprintf(errString, sizeof(errString), "AEDoScriptHandler: extra parameters");
+	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
 		      typeChar,errString, strlen(errString));
-    	return;
+	return;
     }
 
     if (initialType == typeFileURL || initialType == typeAlias) {

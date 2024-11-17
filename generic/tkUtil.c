@@ -1279,12 +1279,12 @@ TkScalingLevel(
  *
  * Tk_SendVirtualEvent --
  *
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to:
- * 	    "event generate $target <<$eventName>> -data $detail"
+ *	Send a virtual event notification to the specified target window.
+ *	Equivalent to:
+ *	    "event generate $target <<$eventName>> -data $detail"
  *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
- * 	routine does not reenter the interpreter.
+ *	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
+ *	routine does not reenter the interpreter.
  *
  *----------------------------------------------------------------------
  */

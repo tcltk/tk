@@ -664,7 +664,7 @@ namespace eval ::tk::print {
 #				print the data (binary) on a given printer
 #				with the provided (supported) options:
 #				-colormode -copies -format -margins
-# 				-media -nup -orientation
+#				-media -nup -orientation
 #				-prettyprint -title -tzoom
 
 # Some output configuration that on other platforms is managed through

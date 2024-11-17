@@ -6,12 +6,12 @@ namespace eval ttk::theme::alt {
 
     variable colors
     array set colors {
-	-frame 		"#d9d9d9"
+	-frame		"#d9d9d9"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
-	-darker 	"#c3c3c3"
+	-darker		"#c3c3c3"
 	-border		"#414141"
-	-activebg 	"#ececec"
+	-activebg	"#ececec"
 	-disabledfg	"#a3a3a3"
 	-selectbg	"#4a6984"
 	-selectfg	"#ffffff"
@@ -21,13 +21,13 @@ namespace eval ttk::theme::alt {
     ttk::style theme settings alt {
 
 	ttk::style configure "." \
-	    -background 	$colors(-frame) \
-	    -foreground 	black \
+	    -background		$colors(-frame) \
+	    -foreground		black \
 	    -troughcolor	$colors(-darker) \
 	    -bordercolor	$colors(-border) \
-	    -selectbackground 	$colors(-selectbg) \
-	    -selectforeground 	$colors(-selectfg) \
-	    -font 		TkDefaultFont
+	    -selectbackground	$colors(-selectbg) \
+	    -selectforeground	$colors(-selectfg) \
+	    -font		TkDefaultFont
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]

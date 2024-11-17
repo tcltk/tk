@@ -272,10 +272,10 @@ MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXIconBitmapObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
-MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXRegisterServiceWidgetObjCmd;
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
-MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
@@ -321,6 +321,7 @@ VISIBILITY_HIDDEN
 @property int poolLock;
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
+@property Bool tkWillExit;
 
 /*
  * Persistent state variables used by processMouseEvent.
@@ -402,12 +403,8 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    Bool _tkNeedsDisplay;
-    NSRect _tkDirtyRect;
     NSTrackingArea *trackingArea;
 }
-@property Bool tkNeedsDisplay;
-@property NSRect tkDirtyRect;
 @property CGContextRef tkLayerBitmapContext;
 @end
 
@@ -417,8 +414,6 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) addTkDirtyRect: (NSRect) rect;
-- (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
 - (void) resetTkLayerBitmapContext;

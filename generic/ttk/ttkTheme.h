@@ -28,7 +28,7 @@ extern "C" {
 /*------------------------------------------------------------------------
  * +++ Defaults for element option specifications.
  */
-#define DEFAULT_FONT 		"TkDefaultFont"
+#define DEFAULT_FONT		"TkDefaultFont"
 #ifdef MAC_OSX_TK
 #define DEFAULT_BACKGROUND	"systemTextBackgroundColor"
 #define DEFAULT_FOREGROUND	"systemTextColor"
@@ -38,7 +38,7 @@ extern "C" {
 #endif
 /*------------------------------------------------------------------------
  * +++ Widget states.
- * 	Keep in sync with stateNames[] in tkstate.c.
+ *	Keep in sync with stateNames[] in tkstate.c.
  */
 
 typedef unsigned int Ttk_State;
@@ -51,7 +51,7 @@ typedef unsigned int Ttk_State;
 #define TTK_STATE_BACKGROUND	(1<<5)
 #define TTK_STATE_ALTERNATE	(1<<6)
 #define TTK_STATE_INVALID	(1<<7)
-#define TTK_STATE_READONLY 	(1<<8)
+#define TTK_STATE_READONLY	(1<<8)
 #define TTK_STATE_HOVER		(1<<9)
 #define TTK_STATE_USER6		(1<<10)
 #define TTK_STATE_USER5		(1<<11)
@@ -92,7 +92,7 @@ typedef struct
 
 /*------------------------------------------------------------------------
  * +++ Padding.
- * 	Used to represent internal padding and borders.
+ *	Used to represent internal padding and borders.
  */
 typedef struct
 {
@@ -110,9 +110,9 @@ typedef struct
 
 /*------------------------------------------------------------------------
  * +++ Boxes.
- * 	Used to represent rectangular regions
+ *	Used to represent rectangular regions
  */
-typedef struct 	/* Hey, this is an XRectangle! */
+typedef struct	/* Hey, this is an XRectangle! */
 {
     int x;
     int y;
@@ -206,7 +206,7 @@ typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
 typedef struct Ttk_ElementOptionSpec
 {
     const char *optionName;		/* Command-line name of the widget option */
-    Tk_OptionType type; 	/* Accepted option types */
+    Tk_OptionType type;	/* Accepted option types */
     Tcl_Size offset;			/* Offset of Tcl_Obj* field in element record */
     const char *defaultValue;		/* Default value to used if resource missing */
 } Ttk_ElementOptionSpec;
@@ -218,7 +218,7 @@ typedef struct Ttk_ElementSpec {
     size_t elementSize;			/* Size of element record */
     const Ttk_ElementOptionSpec *options;	/* List of options, NULL-terminated */
     Ttk_ElementSizeProc *size;		/* Compute min size and padding */
-    Ttk_ElementDrawProc *draw;  	/* Draw the element */
+    Ttk_ElementDrawProc *draw;	/* Draw the element */
 } Ttk_ElementSpec;
 
 typedef int (*Ttk_ElementFactory)
@@ -261,7 +261,7 @@ typedef struct {
 #define TTK_END_LAYOUT_TABLE	{ 0, _TTK_LAYOUT | _TTK_LAYOUT_END } };
 
 #define TTK_BEGIN_LAYOUT(name)	static TTKLayoutInstruction name[] = {
-#define TTK_END_LAYOUT 		{ 0, _TTK_LAYOUT_END } };
+#define TTK_END_LAYOUT		{ 0, _TTK_LAYOUT_END } };
 
 TTKAPI void Ttk_RegisterLayouts(
     Ttk_Theme theme, Ttk_LayoutSpec layoutTable);
@@ -309,7 +309,7 @@ TTKAPI Tcl_Obj *Ttk_StyleMap(Ttk_Style, const char *optionName, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Resource cache.
- * 	See resource.c for explanation.
+ *	See resource.c for explanation.
  */
 
 typedef struct Ttk_ResourceCache_ *Ttk_ResourceCache;
@@ -337,9 +337,9 @@ TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Tk_Window, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Miscellaneous enumerations.
- * 	Other stuff that element implementations need to know about.
+ *	Other stuff that element implementations need to know about.
  */
-typedef enum 			/* -default option values */
+typedef enum			/* -default option values */
 {
     TTK_BUTTON_DEFAULT_ACTIVE,	/* currently the default widget */
     TTK_BUTTON_DEFAULT_DISABLED,	/* not defaultable */
@@ -348,21 +348,21 @@ typedef enum 			/* -default option values */
 
 TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);
 
-typedef enum 			/* -compound option values */
+typedef enum			/* -compound option values */
 {
-    TTK_COMPOUND_NONE,  	/* image if specified, otherwise text */
-    TTK_COMPOUND_TEXT,  	/* text only */
-    TTK_COMPOUND_IMAGE,  	/* image only */
+    TTK_COMPOUND_NONE,	/* image if specified, otherwise text */
+    TTK_COMPOUND_TEXT,	/* text only */
+    TTK_COMPOUND_IMAGE,	/* image only */
     TTK_COMPOUND_CENTER,	/* text overlays image */
-    TTK_COMPOUND_TOP,   	/* image above text */
+    TTK_COMPOUND_TOP,	/* image above text */
     TTK_COMPOUND_BOTTOM,	/* image below text */
-    TTK_COMPOUND_LEFT,   	/* image to left of text */
-    TTK_COMPOUND_RIGHT  	/* image to right of text */
+    TTK_COMPOUND_LEFT,	/* image to left of text */
+    TTK_COMPOUND_RIGHT	/* image to right of text */
 } Ttk_Compound;
 
 TTKAPI int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_Compound *);
 
-typedef enum { 		/* -orient option values */
+typedef enum {		/* -orient option values */
     TTK_ORIENT_HORIZONTAL,
     TTK_ORIENT_VERTICAL
 } Ttk_Orient;
@@ -373,7 +373,7 @@ typedef enum { 		/* -orient option values */
 
 typedef struct TtkEnsemble {
     const char *name;			/* subcommand name */
-    Tcl_ObjCmdProc2 *command; 		/* subcommand implementation, OR: */
+    Tcl_ObjCmdProc2 *command;		/* subcommand implementation, OR: */
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 

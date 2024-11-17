@@ -155,8 +155,8 @@ struct PhotoModel {
     Tk_Uid palette;		/* User-specified default palette for
 				 * instances of this image. */
     double gamma;		/* Display gamma value to correct for. */
-    char *fileString;		/* Name of file to read into image. */
-    Tcl_Obj *dataString;	/* Object to use as contents of image. */
+    Tcl_Obj *fileObj;		/* Name of file to read into image. */
+    Tcl_Obj *dataObj;		/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
     Tcl_Obj *metadata;		/* User-specified metadata dict or read from

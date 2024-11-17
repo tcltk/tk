@@ -160,10 +160,8 @@ TkpCreateScrollbar(
  *--------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-
 /*
- * This stand-alone drawing function is used on macOS 10.9 and newer because
+ * This stand-alone drawing function is used because
  * the HIToolbox does not draw the scrollbar thumb at the expected size on
  * those systems.  The thumb is drawn too large, causing a mouse click on the
  * thumb to be interpreted as a mouse click in the trough.
@@ -240,7 +238,6 @@ static void drawMacScrollbar(
 	CFRelease(path);
     }
 }
-#endif
 
 void
 TkpDisplayScrollbar(
@@ -286,16 +283,16 @@ TkpDisplayScrollbar(
 
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
     if (highlightWidth > 0) {
-    	GC fgGC, bgGC;
+	GC fgGC, bgGC;
 
-    	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
-    	if (scrollPtr->flags & GOT_FOCUS) {
-    	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, (Pixmap) macWin);
-    	} else {
-    	    fgGC = bgGC;
-    	}
-    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
-    		(Pixmap) macWin);
+	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
+	if (scrollPtr->flags & GOT_FOCUS) {
+	    fgGC = Tk_GCForColor(scrollPtr->highlightColorPtr, (Pixmap) macWin);
+	} else {
+	    fgGC = bgGC;
+	}
+	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
+		(Pixmap) macWin);
     }
 
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
@@ -322,7 +319,6 @@ TkpDisplayScrollbar(
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 
 	/*
 	 * Switch back to NSView coordinates and draw a modern scrollbar.
@@ -330,7 +326,6 @@ TkpDisplayScrollbar(
 
 	CGContextConcatCTM(dc.context, t);
 	drawMacScrollbar(scrollPtr, msPtr, dc.context);
-#endif
     }
     TkMacOSXRestoreDrawingContext(&dc);
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -650,7 +645,7 @@ UpdateControlValues(
 
     if ((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
 	    || height <= metrics.minHeight) {
-    	msPtr->info.enableState = kThemeTrackHideTrack;
+	msPtr->info.enableState = kThemeTrackHideTrack;
     } else {
 	msPtr->info.enableState = kThemeTrackActive;
 	msPtr->info.attributes =
@@ -785,7 +780,7 @@ ScrollbarEventProc(
     case ButtonRelease:
     case EnterNotify:
     case LeaveNotify:
-    	ScrollbarEvent(scrollPtr, eventPtr);
+	ScrollbarEvent(scrollPtr, eventPtr);
 	break;
     default:
 	TkScrollbarEventProc(scrollPtr, eventPtr);
