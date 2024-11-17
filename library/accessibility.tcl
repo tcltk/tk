@@ -74,7 +74,7 @@ namespace eval ::tk::accessible {
 	}
     }
 
-    namespace export *
+    namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action
     namespace ensemble create
 }
 
