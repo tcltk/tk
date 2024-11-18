@@ -70,6 +70,16 @@ namespace eval ::tk::accessible {
 		::tk::accessible::acc_state %W  [%W cget -state]
 		::tk::accessible::acc_action %W  {}
 	    }
+	    Menu {
+		::tk::accessible::_checkattributes %W
+		::tk::accessible::acc_role %%W Menu
+		::tk::accessible::acc_name %W Menu
+		::tk::accessible::acc_description %W [%W cget -title]
+		::tk::accessible::acc_value %W [%W get [%W curselection]]
+		::tk::accessible::acc_state %W  [%W cget -state]
+		::tk::accessible::acc_action %W  {%W invoke}
+		
+	    }
 
 	}
     }
