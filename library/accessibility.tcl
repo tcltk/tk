@@ -63,7 +63,7 @@ namespace eval ::tk::accessible {
 	    }
 	    Listbox {
 		::tk::accessible::_checkattributes %W
-		::tk::accessible::acc_role %%W Table
+		::tk::accessible::acc_role %W Table
 		::tk::accessible::acc_name %W Table
 		::tk::accessible::acc_description %W Table
 		::tk::accessible::acc_value %W [%W get [%W curselection]]
