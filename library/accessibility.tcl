@@ -33,7 +33,8 @@ namespace eval ::tk::accessible {
 	set acc_class [winfo class %W]
 	
 	switch -- $acc_class {
-	    Button {
+	    Button -
+	    TButton {
 		::tk::accessible::_checkattributes %W
 		::tk::accessible::acc_role %W Button
 		::tk::accessible::acc_name %W Button
@@ -52,7 +53,8 @@ namespace eval ::tk::accessible {
 		::tk::accessible::acc_state %W  {}
 		::tk::accessible::acc_action %W  {}
 	    }
-	    Entry {
+	    Entry -
+	    TEntry {
 		::tk::accessible::_checkattributes %W
 		::tk::accessible::acc_role %W Entry
 		::tk::accessible::acc_name %W Entry
@@ -74,17 +76,26 @@ namespace eval ::tk::accessible {
 	        #menus on macOS are native and accessibility-ready
 		if {[tk windowingsystem] ne "aqua"} {
 		    ::tk::accessible::_checkattributes %W
-		    ::tk::accessible::acc_role %%W Menu
+		    ::tk::accessible::acc_role %W Menu
 		    ::tk::accessible::acc_name %W [%W entrycget active -label]
 		    ::tk::accessible::acc_description %W [%W entrycget active\
 							      -label]
 		    ::tk::accessible::acc_value %W {}
 		    ::tk::accessible::acc_state %W  [%W cget -state]
 		    ::tk::accessible::acc_action %W  {%W invoke}
-		}
-		
+		}	
 	    }
-
+	    
+	    Scale -
+	    TScale {
+		::tk::accessible::_checkattributes %W
+		::tk::accessible::acc_role %W Scale
+		::tk::accessible::acc_name %W Scale
+		::tk::accessible::acc_description %W Scale
+		::tk::accessible::acc_value %W [%W get]
+		::tk::accessible::acc_state %W  [%W cget -state]
+		::tk::accessible::acc_action %W  {%W invoke}
+	    }
 	}
     }
 
