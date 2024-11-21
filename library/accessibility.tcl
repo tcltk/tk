@@ -86,16 +86,44 @@ namespace eval ::tk::accessible {
 		}	
 	    }
 	    
-	    Scale -
-	    TScale {
+	    Scale 
+	    {
 		::tk::accessible::_checkattributes %W
 		::tk::accessible::acc_role %W Scale
 		::tk::accessible::acc_name %W Scale
 		::tk::accessible::acc_description %W Scale
 		::tk::accessible::acc_value %W [%W get]
 		::tk::accessible::acc_state %W  [%W cget -state]
-		::tk::accessible::acc_action %W  {%W invoke}
+		::tk::accessible::acc_action %W  {%W set}
 	    }
+	    TScale {
+		::tk::accessible::_checkattributes %W
+		::tk::accessible::acc_role %W Scale
+		::tk::accessible::acc_name %W Scale
+		::tk::accessible::acc_description %W Scale
+		::tk::accessible::acc_value %W [%W get]
+		::tk::accessible::acc_state %W  [%W state]
+		::tk::accessible::acc_action %W  {%W set}
+	    }
+	    Scrollbar  {
+		::tk::accessible::_checkattributes %W
+		::tk::accessible::acc_role %W Scrollbar
+		::tk::accessible::acc_name %W Scrollbar
+		::tk::accessible::acc_description %W Scrollbar
+		::tk::accessible::acc_value %W [%W get]
+		::tk::accessible::acc_state %W  [%W cget -state]
+		::tk::accessible::acc_action %W  {%W cget -command}
+	    }
+	    TScrollbar  {
+		::tk::accessible::_checkattributes %W
+		::tk::accessible::acc_role %W Scrollbar
+		::tk::accessible::acc_name %W Scrollbar
+		::tk::accessible::acc_description %W Scrollbar
+		::tk::accessible::acc_value %W [%W get]
+		::tk::accessible::acc_state %W  [%W state]
+		::tk::accessible::acc_action %W  {%W cget -command}
+	    }
+	    
 	}
     }
 
