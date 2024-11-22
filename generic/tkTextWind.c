@@ -643,7 +643,7 @@ MakeWindow(
     TkTextEmbWindowClient *client;
 
     ewPtr = (TkTextSegment *)ckalloc(SEG_SIZE(TkTextEmbWindow));
-    memset(ewPtr, 0, SEG_SIZE(TkTextEmbWindow))
+    memset(ewPtr, 0, SEG_SIZE(TkTextEmbWindow));
     NEW_SEGMENT(ewPtr);
     ewPtr->typePtr = &tkTextEmbWindowType;
     ewPtr->size = 1;

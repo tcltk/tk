@@ -6134,7 +6134,7 @@ MakeCharSeg(
 
     capacity = CSEG_CAPACITY(newSize);
     newPtr = (TkTextSegment *)ckalloc(CSEG_SIZE(capacity));
-    memset(newPtr, 0, CSEG_SIZE(capacity))
+    memset(newPtr, 0, CSEG_SIZE(capacity));
     NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
     newPtr->sectionPtr = sectionPtr;
