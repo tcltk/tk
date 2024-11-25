@@ -1253,7 +1253,6 @@ MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
-MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
