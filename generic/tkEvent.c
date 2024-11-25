@@ -993,40 +993,6 @@ Tk_DeleteClientMessageHandler(
 /*
  *----------------------------------------------------------------------
  *
- * TkEventInit --
- *
- *	This functions initializes all the event module structures used by the
- *	current thread. It must be called before any other function in this
- *	file is called.
- *
- * Results:
- *	None.
- *
- * Side Effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkEventInit(void)
-{
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    tsdPtr->handlersActive	= 0;
-    tsdPtr->pendingPtr		= NULL;
-    tsdPtr->genericList		= NULL;
-    tsdPtr->lastGenericPtr	= NULL;
-    tsdPtr->cmList		= NULL;
-    tsdPtr->lastCmPtr		= NULL;
-    tsdPtr->restrictProc	= NULL;
-    tsdPtr->restrictArg		= NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkXErrorHandler --
  *
  *	TkXErrorHandler is an error handler, to be installed via
