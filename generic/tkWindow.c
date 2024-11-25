@@ -878,7 +878,6 @@ TkCreateMainWindow(
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
     mainPtr->deletionEpoch = 0l;
-    TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
     TkStylePkgInit(mainPtr);
