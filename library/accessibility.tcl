@@ -47,38 +47,141 @@ namespace eval ::tk::accessible {
     }
 
     #Button bindings
-    bind Button <Map> {+::tk::accessible::_init %W Button Button [%W cget -text] {} [%W cget -state] {%W invoke}}
+    bind Button <Map> {+::tk::accessible::_init \
+			   %W \
+			   Button \
+			   Button \
+			   [%W cget -text] \
+			   {} \
+			   [%W cget -state] \
+			   {%W invoke}\
+		       }
     #Canvas bindings
-    bind Canvas <Map> {+::tk::accessible::_init %W Canvas Canvas Canvas {} {} {}}
+    bind Canvas <Map> {+::tk::accessible::_init \
+			   %W \
+			   Canvas \
+			   Canvas \
+			   Canvas \
+			   {} \
+			   {} \
+			   {}\
+		       }
 
     #Dialog bindings
-    bind Dialog <Map> {+::tk::accessible::_init %W Dialog [wm title %W] [::tk::accessible::_getdialogtext %W] {} {} {}}
+    bind Dialog <Map> {+::tk::accessible::_init\
+			   %W \
+			   Dialog \
+			   [wm title %W] \
+			   [::tk::accessible::_getdialogtext %W] \
+			   {} \
+			   {} \
+			   {}\
+		       }
 
     #Entry/TEntry bindings
-    bind Entry <Map> {+::tk::accessible::_init %W Entry Entry Entry [%W get 0 end] [%W cget -state] {} }
-    bind TEntry <Map> {+::tk::accessible::_init %W Entry Entry Entry [%W get 0 end] [%W cget -state] {} }
+    bind Entry <Map> {+::tk::accessible::_init \
+			  %W \
+			  Entry \
+			  Entry \
+			  Entry \
+			  [%W get 0 end] \
+			  [%W cget -state] \
+			  {} \
+		      }
+    bind TEntry <Map> {+::tk::accessible::_init \
+			   %W \
+			   Entry \
+			   Entry \
+			   Entry \
+			   [%W get 0 end] \
+			   [%W cget -state]\
+			   {} \
+		       }
 
     #Listbox bindings
-    bind Listbox <Map> {+::tk::accessible::_init %W Table Table Table [%W get [%W curselection]] [%W cget -state] {}}
+    bind Listbox <Map> {+::tk::accessible::_init \
+			    %W \
+			    Table \
+			    Table \
+			    Table\
+			    [%W get [%W curselection]] \
+			    [%W cget -state]\
+			    {}\
+			}
 
     #Radiobutton bindings
-    bind Radiobutton <Map> {+::tk::accessible::_init %W Radiobutton Radiobutton Radiobutton [set [%W cget -variable]] [%W cget -state] {}}
+    bind Radiobutton <Map> {+::tk::accessible::_init \
+				%W \
+				Radiobutton \
+				Radiobutton \
+				Radiobutton \
+				[set [%W cget -variable]] \
+				[%W cget -state] \
+				{}\
+			    }
 
     #Scale/TScale bindings
-    bind Scale <Map> {+::tk::accessible::_init %W Scale Scale Scale [%W get] [%W cget -state] {%W set}}
-    bind TScale <Map> {+::tk::accessible::_init %W Scale Scale Scale [%W get] [%W state] {%W set}}
+    bind Scale <Map> {+::tk::accessible::_init \
+			  %W \
+			  Scale \
+			  Scale \
+			  Scale \
+			  [%W get] [%W cget -state]\
+			  {%W set}\
+		      }
+    bind TScale <Map> {+::tk::accessible::_init \
+			   %W \
+			   Scale \
+			   Scale \
+			   Scale \
+			   [%W get] \
+			   [%W state] \
+			   {%W set} \
+		       }
 
     #Menu bindings - macOS menus are native and already accessible-enabled
     if {[tk windowingsystem] ne "aqua"} {
-	bind Menu <Map> {+::tk::accessible::_init %W Menu [%W entrycget active -label]  [%W entrycget active -label] {} [%W cget -state] {%W invoke}}
+	bind Menu <Map> {+::tk::accessible::_init \
+			     %W \
+			     Menu \
+			     [%W entrycget active -label] \
+			     [%W entrycget active -label] \
+			     {} \
+			     [%W cget -state] \
+			     {%W invoke}\
+			 }
     }
 
     #Scrollbar/TScrollbar bindings
-    bind Scrollbar <Map> {+::tk::accessible::_init %W Scrollbar Scrollbar Scrollbar [%W get] [%W cget -state] {%W cget -command}}
-    bind TScrollbar <Map> {+::tk::accessible::_init %W Scrollbar Scrollbar Scrollbar [%W get] [%W cget -state] {%W cget -command}}
+    bind Scrollbar <Map> {+::tk::accessible::_init \
+			      %W \
+			      Scrollbar \
+			      Scrollbar \
+			      Scrollbar \
+			      [%W get] \
+			      [%W cget -state] \
+			      {%W cget -command}\
+			  }
+    bind TScrollbar <Map> {+::tk::accessible::_init \
+			       %W \
+			       Scrollbar \
+			       Scrollbar \
+			       Scrollbar \
+			       [%W get] \
+			       [%W cget -state] \
+			       {%W cget -command}\
+			   }
 
     #Text bindings
-    bind Text <Map> {+::tk::accessible::_init %W Text Text Text [::tk::accessible::_gettext %W] [%W cget -state] {}}
+    bind Text <Map> {+::tk::accessible::_init \
+			 %W \
+			 Text \
+			 Text \
+			 Text \
+			 [::tk::accessible::_gettext %W] \
+			 [%W cget -state] \
+			 {}\
+		     }
 
 
     #Export the main commands.
