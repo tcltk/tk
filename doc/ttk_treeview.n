@@ -1034,6 +1034,8 @@ See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
+.SH "KEYWORDS"
+tree, treeview, widget
 '\" Local Variables:
 '\" mode: nroff
 '\" End:
