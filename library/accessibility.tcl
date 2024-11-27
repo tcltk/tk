@@ -22,12 +22,14 @@ namespace eval ::tk::accessible {
 
     #get text in text widget
     proc _gettext {w} {
-	set data [$w get sel.first sel.last]
-	if {$data eq ""} {
-	    set data [$w get 1.0 end]
-	}
+	if {[$w tag ranges sel] eq ""} {
+		set data [$w get 1.0 end]	
+	    }  else {  
+		set data [$w get sel.first sel.last]
+	    }
 	return $data
     }
+
 
     #Set initial accessible attributes and add binding to <Map> event. If the accessibility role is already set,
     #return because we only want these to fire once.
@@ -93,7 +95,7 @@ namespace eval ::tk::accessible {
 			   Entry \
 			   Entry \
 			   Entry \
-			   [%W get 0 end] \
+			   [%W get] \
 			   [%W cget -state]\
 			   {} \
 		       }
@@ -171,6 +173,25 @@ namespace eval ::tk::accessible {
 			       [%W cget -state] \
 			       {%W cget -command}\
 			   }
+    #Spinbox/TSpinbox bindings
+    bind  Spinbox <Map> {+::tk::accessible::_init \
+			     %W \
+			     Spinbox \
+			     Spinbox \
+			     Spinbox \
+			     [%W get] \
+			     [%W cget -state] \
+			     {%W cget -command}\
+			 }
+    bind  TSpinbox <Map> {+::tk::accessible::_init \
+			      %W \
+			      Spinbox \
+			      Spinbox \
+			      Spinbox \
+			      [%W get] \
+			      [%W state] \
+			      {%W cget -command}\
+			  }
 
     #Text bindings
     bind Text <Map> {+::tk::accessible::_init \
