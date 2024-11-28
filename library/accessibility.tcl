@@ -23,16 +23,37 @@ namespace eval ::tk::accessible {
     #get text in text widget
     proc _gettext {w} {
 	if {[$w tag ranges sel] eq ""} {
-		set data [$w get 1.0 end]	
-	    }  else {  
-		set data [$w get sel.first sel.last]
-	    }
+	    set data [$w get 1.0 end]	
+	}  else {  
+	    set data [$w get sel.first sel.last]
+	}
+	return $data
+    }
+
+    #check if tree or table
+    proc _checktree {w} {
+	if {[expr {"tree" in [$w cget -show]}] eq 1} {
+	    return Tree
+	} else {
+	    return Table
+	}
+    }
+
+    proc _gettreeviewdata {w} {
+	if {[::tk::accessible::_checktree $w] eq "Tree"} {
+	    #Tree
+	    set data [$w item [$w selection] -text]
+	} else {
+	    #Table
+	    set data [$w item [$w selection] -values]
+	}
 	return $data
     }
 
 
-    #Set initial accessible attributes and add binding to <Map> event. If the accessibility role is already set,
-    #return because we only want these to fire once.
+    #Set initial accessible attributes and add binding to <Map> event.
+    #If the accessibility role is already set, return because
+    #we only want these to fire once.
     
     proc _init {w role name description value state action} {
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
@@ -68,6 +89,25 @@ namespace eval ::tk::accessible {
 			   {} \
 			   {}\
 		       }
+    #Checkbutton/TCheckbutton bindings
+    bind Checkbutton <Map> {+::tk::accessible::_init \
+				%W \
+				Radiobutton \
+				Radiobutton \
+				[%W cget -text] \
+				[catch {[set [%W cget -variable]]}] \
+				[%W cget -state] \
+				{}\
+			    }
+    bind TCheckbutton <Map> {+::tk::accessible::_init \
+				 %W \
+				 Radiobutton \
+				 Radiobutton \
+				 [%W cget -text] \
+				 [catch {[set [%W cget -variable]]}] \
+				 [%W state] \
+				 {}\
+			     }
 
     #Dialog bindings
     bind Dialog <Map> {+::tk::accessible::_init\
@@ -111,16 +151,25 @@ namespace eval ::tk::accessible {
 			    {}\
 			}
 
-    #Radiobutton bindings
+    #Radiobutton/TRadiobutton bindings
     bind Radiobutton <Map> {+::tk::accessible::_init \
 				%W \
 				Radiobutton \
 				Radiobutton \
-				Radiobutton \
-				[set [%W cget -variable]] \
+				[%W cget -text] \
+				[catch {[set [%W cget -variable]]}] \
 				[%W cget -state] \
 				{}\
 			    }
+    bind TRadiobutton <Map> {+::tk::accessible::_init \
+				 %W \
+				 Radiobutton \
+				 Radiobutton \
+				 [%W cget -text] \
+				 [catch {set [%W cget -variable]}] \
+				 [%W state] \
+				 {}\
+			     }
 
     #Scale/TScale bindings
     bind Scale <Map> {+::tk::accessible::_init \
@@ -154,6 +203,21 @@ namespace eval ::tk::accessible {
 			 }
     }
 
+    #Notebook bindings
+    #make keyboard navigation the default behavior
+    bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
+    
+    bind TNotebook <Map> {+::tk::accessible::_init \
+			      %W \
+			      Notebook \
+			      Notebook \
+			      Notebook \
+			      [%W tab current -text] \
+			      [%W state] \
+			      {}\
+			  }
+    
+
     #Scrollbar/TScrollbar bindings
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \
@@ -170,28 +234,28 @@ namespace eval ::tk::accessible {
 			       Scrollbar \
 			       Scrollbar \
 			       [%W get] \
-			       [%W cget -state] \
+			       [%W state] \
 			       {%W cget -command}\
 			   }
     #Spinbox/TSpinbox bindings
-    bind  Spinbox <Map> {+::tk::accessible::_init \
+    bind Spinbox <Map> {+::tk::accessible::_init \
+			    %W \
+			    Spinbox \
+			    Spinbox \
+			    Spinbox \
+			    [%W get] \
+			    [%W cget -state] \
+			    {%W cget -command}\
+			}
+    bind TSpinbox <Map> {+::tk::accessible::_init \
 			     %W \
 			     Spinbox \
 			     Spinbox \
 			     Spinbox \
 			     [%W get] \
-			     [%W cget -state] \
+			     [%W state] \
 			     {%W cget -command}\
 			 }
-    bind  TSpinbox <Map> {+::tk::accessible::_init \
-			      %W \
-			      Spinbox \
-			      Spinbox \
-			      Spinbox \
-			      [%W get] \
-			      [%W state] \
-			      {%W cget -command}\
-			  }
 
     #Text bindings
     bind Text <Map> {+::tk::accessible::_init \
@@ -203,6 +267,18 @@ namespace eval ::tk::accessible {
 			 [%W cget -state] \
 			 {}\
 		     }
+
+    #Treeview bindings
+    bind Treeview <Map> {+::tk::accessible::_init \
+			     %W \
+			     [::tk::accessible::_checktree %W] \
+			     [::tk::accessible::_checktree %W] \
+			     [::tk::accessible::_checktree %W] \
+			     [::tk::accessible::_gettreeviewdata %W] \
+			     [%W state] \
+			     {}\
+			 }
+
 
 
     #Export the main commands.
