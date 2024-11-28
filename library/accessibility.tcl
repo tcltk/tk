@@ -92,8 +92,8 @@ namespace eval ::tk::accessible {
     #Checkbutton/TCheckbutton bindings
     bind Checkbutton <Map> {+::tk::accessible::_init \
 				%W \
-				Radiobutton \
-				Radiobutton \
+				Checkbutton \
+				Checkbutton \
 				[%W cget -text] \
 				[catch {[set [%W cget -variable]]}] \
 				[%W cget -state] \
@@ -101,8 +101,8 @@ namespace eval ::tk::accessible {
 			    }
     bind TCheckbutton <Map> {+::tk::accessible::_init \
 				 %W \
-				 Radiobutton \
-				 Radiobutton \
+				 Checkbutton \
+				 Checkbutton \
 				 [%W cget -text] \
 				 [catch {[set [%W cget -variable]]}] \
 				 [%W state] \
