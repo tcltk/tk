@@ -72,22 +72,28 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
+	    -indicatorforeground "#000000" \
 	    -indicatormargin {1 1 4 1} \
 	    -padding 2
 	ttk::style configure TRadiobutton \
 	    -indicatorbackground "#ffffff" \
+	    -indicatorforeground "#000000" \
 	    -indicatormargin {1 1 4 1} \
 	    -padding 2
-	ttk::style map TCheckbutton -indicatorbackground \
-	    [list  pressed $colors(-frame) \
-			{!disabled alternate} $colors(-altindicator) \
-			{disabled alternate} $colors(-disabledaltindicator) \
-			disabled $colors(-frame)]
-	ttk::style map TRadiobutton -indicatorbackground \
-	    [list  pressed $colors(-frame) \
-			{!disabled alternate} $colors(-altindicator) \
-			{disabled alternate} $colors(-disabledaltindicator) \
-			disabled $colors(-frame)]
+	ttk::style map TCheckbutton \
+	    -indicatorbackground [list \
+		    pressed		  $colors(-frame) \
+		    {alternate disabled}  $colors(-disabledaltindicator) \
+		    alternate		  $colors(-altindicator) \
+		    disabled		  $colors(-frame)] \
+	    -indicatorforeground [list disabled $colors(-disabledfg)]
+	ttk::style map TRadiobutton \
+	    -indicatorbackground [list \
+		    pressed		  $colors(-frame) \
+		    {alternate disabled}  $colors(-disabledaltindicator) \
+		    alternate		  $colors(-altindicator) \
+		    disabled		  $colors(-frame)] \
+	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 5 -relief raised
