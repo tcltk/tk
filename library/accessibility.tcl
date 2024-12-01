@@ -89,6 +89,7 @@ namespace eval ::tk::accessible {
 			   {} \
 			   {}\
 		       }
+    
     #Checkbutton/TCheckbutton bindings
     bind Checkbutton <Map> {+::tk::accessible::_init \
 				%W \
@@ -126,7 +127,7 @@ namespace eval ::tk::accessible {
 			  Entry \
 			  Entry \
 			  Entry \
-			  [%W get 0 end] \
+			  [%W get] \
 			  [%W cget -state] \
 			  {} \
 		      }
@@ -136,7 +137,7 @@ namespace eval ::tk::accessible {
 			   Entry \
 			   Entry \
 			   [%W get] \
-			   [%W cget -state]\
+			   [%W state]\
 			   {} \
 		       }
 
@@ -216,8 +217,6 @@ namespace eval ::tk::accessible {
 			      [%W state] \
 			      {}\
 			  }
-    
-
     #Scrollbar/TScrollbar bindings
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \
