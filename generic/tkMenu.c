@@ -1026,6 +1026,7 @@ TkInvokeMenu(
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
+    Tcl_Obj *commandPtr = NULL, *namePtr = NULL;
 
     if (index < 0) {
 	goto done;
@@ -1035,7 +1036,18 @@ TkInvokeMenu(
 	goto done;
     }
 
-    Tcl_Preserve(mePtr);
+    if (mePtr->commandPtr != NULL) {
+	commandPtr = mePtr->commandPtr;
+	Tcl_IncrRefCount(commandPtr);
+    }
+    if ((mePtr->type == CHECK_BUTTON_ENTRY) ||
+	    (mePtr->type == RADIO_BUTTON_ENTRY)) {
+	if (mePtr->namePtr != NULL) {
+	    namePtr = mePtr->namePtr;
+	    Tcl_IncrRefCount(namePtr);
+	}
+    }
+
     if (mePtr->type == TEAROFF_ENTRY) {
 	Tcl_DString ds;
 
@@ -1045,7 +1057,7 @@ TkInvokeMenu(
 	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&ds);
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
-	    && (mePtr->namePtr != NULL)) {
+	    && (namePtr != NULL)) {
 	Tcl_Obj *valuePtr;
 
 	if (mePtr->entryFlags & ENTRY_SELECTED) {
@@ -1057,20 +1069,20 @@ TkInvokeMenu(
 	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
-	if (Tcl_ObjSetVar2(interp, mePtr->namePtr, NULL, valuePtr,
+	if (Tcl_ObjSetVar2(interp, namePtr, NULL, valuePtr,
 		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
 	    result = TCL_ERROR;
 	}
 	Tcl_DecrRefCount(valuePtr);
     } else if ((mePtr->type == RADIO_BUTTON_ENTRY)
-	    && (mePtr->namePtr != NULL)) {
+	    && (namePtr != NULL)) {
 	Tcl_Obj *valuePtr = mePtr->onValuePtr;
 
 	if (valuePtr == NULL) {
 	    valuePtr = Tcl_NewObj();
 	}
 	Tcl_IncrRefCount(valuePtr);
-	if (Tcl_ObjSetVar2(interp, mePtr->namePtr, NULL, valuePtr,
+	if (Tcl_ObjSetVar2(interp, namePtr, NULL, valuePtr,
 		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
 	    result = TCL_ERROR;
 	}
@@ -1084,14 +1096,15 @@ TkInvokeMenu(
      */
 
     if ((menuPtr->numEntries != 0) && (result == TCL_OK)
-	    && (mePtr->commandPtr != NULL)) {
-	Tcl_Obj *commandPtr = mePtr->commandPtr;
-
-	Tcl_IncrRefCount(commandPtr);
+	    && (commandPtr != NULL)) {
 	result = Tcl_EvalObjEx(interp, commandPtr, TCL_EVAL_GLOBAL);
+    }
+    if (commandPtr != NULL) {
 	Tcl_DecrRefCount(commandPtr);
     }
-    Tcl_Release(mePtr);
+    if (namePtr != NULL) {
+	Tcl_DecrRefCount(namePtr);
+    }
 
   done:
     return result;
