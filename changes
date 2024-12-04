@@ -8252,4 +8252,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-11-25 (bug) [bcbf4c] Tk intialization overwrites thread specific data
 	(emiliano)
 
-- Released 8.6.16, ??? ??, 2024 - https://core.tcl-lang.org/tk/ for details
+- Released 8.6.16, Dec 9, 2024 - https://core.tcl-lang.org/tk/ for details
