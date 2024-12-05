@@ -440,7 +440,7 @@ static void									\
 LT##_Free(struct ElemType *elem)						\
 {										\
     LT##_Remove(elem);								\
-    ckfree((void *)elem);							\
+    ckfree((char *)elem);							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -508,7 +508,7 @@ LT##_Clear(LT *head)								\
     assert(head);								\
     for (p = head->first; p; p = next) {					\
 	next = LT##_Next(p);							\
-	ckfree((void *)p);							\
+	ckfree((char *)p);							\
     }										\
     LT##_Init(head);								\
 }										\

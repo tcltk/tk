@@ -76,7 +76,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL 			/* modalProc */
+    NULL			/* modalProc */
 };
 
 static void
@@ -403,7 +403,7 @@ TkpComputeScrollbarGeometry(
 	fieldLength = Tk_Width(scrollPtr->tkwin);
 	minThumbSize = hThumb;
     }
-    fieldLength -= 2*scrollPtr->arrowLength;
+    fieldLength -= 2 * scrollPtr->arrowLength;
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -442,10 +442,10 @@ TkpComputeScrollbarGeometry(
 
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		scrollPtr->width, 2*scrollPtr->arrowLength + minThumbSize);
+		scrollPtr->width, 2 * scrollPtr->arrowLength + minThumbSize);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*scrollPtr->arrowLength + minThumbSize, scrollPtr->width);
+		2 * scrollPtr->arrowLength + minThumbSize, scrollPtr->width);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, 0);
 }
@@ -599,7 +599,7 @@ TkpConfigureScrollbar(
  *
  *	This function is invoked in response to a ButtonPress event.
  *	It resends the event to the Scrollbar window procedure,
- * 	which in turn enters a modal loop.
+ *	which in turn enters a modal loop.
  *
  *----------------------------------------------------------------------
  */
