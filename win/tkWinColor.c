@@ -180,9 +180,9 @@ TkpGetColor(
 
 	XAllocColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 		&winColPtr->info.color);
- 	return (TkColor *) winColPtr;
+	return (TkColor *)winColPtr;
     }
-    return (TkColor *) NULL;
+    return (TkColor *)NULL;
 }
 
 /*
