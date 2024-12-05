@@ -674,8 +674,6 @@ $(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES) ${TK_ZIP_FILE}
 	@VC_MANIFEST_EMBED_EXE@
 	@if test "${ZIPFS_BUILD}" = "2" ; then \
 		cat ${TK_ZIP_FILE} >> ${WISH}; \
-		${NATIVE_ZIP} -A ${WISH} \
-		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
 
 tktest: $(TKTEST)
@@ -745,8 +743,6 @@ ${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TK_ZIP_FILE}
 	@VC_MANIFEST_EMBED_DLL@
 	@if test "${ZIPFS_BUILD}" = "1" ; then \
 		cat ${TK_ZIP_FILE} >> ${TK_DLL_FILE}; \
-		${NATIVE_ZIP} -A ${TK_DLL_FILE} \
-		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
 
 ${TK_LIB_FILE}: ${TK_OBJS}
