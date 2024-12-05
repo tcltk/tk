@@ -133,7 +133,7 @@ static const struct gdi_command {
  *
  * GdiArc --
  *
- * 	Map canvas arcs to GDI context.
+ *	Map canvas arcs to GDI context.
  *
  * Results:
  *	Renders arcs.
@@ -290,8 +290,8 @@ static int GdiArc(
  *
  * GdiBitmap --
  *
- * 	Unimplemented for now. Should use the same techniques as
- * 	CanvasPsBitmap (tkCanvPs.c).
+ *	Unimplemented for now. Should use the same techniques as
+ *	CanvasPsBitmap (tkCanvPs.c).
  *
  * Results:
  *	None.
@@ -676,9 +676,9 @@ static int GdiLine(
 	return TCL_ERROR;
     }
     if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	|| 	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
+	||	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }
@@ -1366,7 +1366,8 @@ static int GdiCharWidths(
 
     HDC hDC;
     LOGFONTW lf;
-    HFONT hfont, oldfont;
+    HFONT hfont;
+    HGDIOBJ oldfont;
     int made_font = 0;
     const char *aryvarname = "GdiCharWidths";
     /* For now, assume 256 characters in the font.... */
@@ -1481,9 +1482,10 @@ int GdiText(
     const char *string = 0;
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
-    Tk_Anchor anchor = 0;
+    Tk_Anchor anchor = TK_ANCHOR_N;
     LOGFONTW lf;
-    HFONT hfont, oldfont;
+    HFONT hfont;
+    HGDIOBJ oldfont;
     int made_font = 0;
     int retval;
     int dotextcolor = 0;
@@ -3114,7 +3116,7 @@ static HBITMAP CopyScreenToBitmap(
     LPRECT lpRect)
 {
     HDC     hScrDC, hMemDC;	/* Screen DC and memory DC. */
-    HBITMAP hBitmap, hOldBitmap; /* Handles to deice-dependent bitmaps. */
+    HGDIOBJ hBitmap, hOldBitmap; /* Handles to deice-dependent bitmaps. */
     int     nX, nY, nX2, nY2;	/* Coordinates of rectangle to grab. */
     int     nWidth, nHeight;	/* DIB width and height */
     int     xScrn, yScrn;	/* Screen resolution. */
@@ -3186,7 +3188,7 @@ static HBITMAP CopyScreenToBitmap(
 
     /* Return handle to the bitmap. */
 
-    return hBitmap;
+    return (HBITMAP)hBitmap;
 }
 
 /*
@@ -3230,7 +3232,7 @@ static HANDLE BitmapToDIB(
     /* Ff no palette is specified, use default palette. */
 
     if (hPal == NULL) {
-	hPal = GetStockObject(DEFAULT_PALETTE);
+	hPal = (HPALETTE)GetStockObject(DEFAULT_PALETTE);
     }
 
     /* Calculate bits per pixel. */

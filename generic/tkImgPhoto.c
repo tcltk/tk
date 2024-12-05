@@ -257,13 +257,13 @@ PhotoFormatThreadExitProc(
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
-	ckfree((void *)freePtr->name);
+	ckfree((char *)freePtr->name);
 	ckfree(freePtr);
     }
     while (tsdPtr->formatListVersion3 != NULL) {
 	freePtrVersion3 = tsdPtr->formatListVersion3;
 	tsdPtr->formatListVersion3 = tsdPtr->formatListVersion3->nextPtr;
-	ckfree((void *)freePtrVersion3->name);
+	ckfree((char *)freePtrVersion3->name);
 	ckfree(freePtrVersion3);
     }
 }

@@ -290,7 +290,7 @@ Tk_UseWindow(
     id = SendMessageW(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
     if (id == PTR2INT(hwnd)) {
 	if (!SendMessageW(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
-    	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "The container is already in use", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
 	    return TCL_ERROR;
@@ -312,7 +312,7 @@ Tk_UseWindow(
 	wsprintfW(msg, L"Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
 	if (IDCANCEL == MessageBoxW(hwnd, msg, L"Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
-    	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Operation has been canceled", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CANCEL", NULL);
 	    return TCL_ERROR;
