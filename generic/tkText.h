@@ -14,6 +14,8 @@
 #ifndef _TKTEXT
 #define _TKTEXT
 
+/* #define TK_CHECK_ALLOCS */
+
 #ifndef _TKINT
 # include "tkInt.h"
 #endif

@@ -853,7 +853,7 @@ typedef struct Statistic {
 static Statistic stats;
 
 static void
-PerfStatistic()
+PerfStatistic(void)
 {
     if (!tkBTreeDebug) {
 	return;
@@ -903,7 +903,7 @@ extern unsigned tkRangeListCountDestroy;
 static int hookStatFunc = 1;
 
 static void
-AllocStatistic()
+AllocStatistic(void)
 {
     if (!tkBTreeDebug) {
 	return;
@@ -1662,9 +1662,7 @@ TkTextCreateDInfo(
 #endif
 #ifndef NDEBUG
     if (!stats.perfFuncIsHooked) {
-#ifndef _MSC_VER	/* MSVC erroneously triggers warning warning C4113 */
 	atexit(PerfStatistic);
-#endif
 	stats.perfFuncIsHooked = 1;
     }
 #endif
