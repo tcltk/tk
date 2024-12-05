@@ -312,9 +312,6 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macOSVersion] <= 100800) {
-	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
-			 kHIThemeOrientationNormal);
     } else {
 
 	/*
