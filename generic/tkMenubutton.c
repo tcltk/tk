@@ -935,7 +935,7 @@ MenuButtonTextVarProc(
 static void
 MenuButtonImageProc(
     void *clientData,	/* Pointer to widget record. */
-    TCL_UNUSED(int), /* x, 		Upper left pixel (within image) that must */
+    TCL_UNUSED(int), /* x,		Upper left pixel (within image) that must */
     TCL_UNUSED(int), /* y,		be redisplayed. */
     TCL_UNUSED(int), /* width,	Dimensions of area to redisplay (may be <= */
     TCL_UNUSED(int), /* height,	0). */
