@@ -627,7 +627,7 @@ static unsigned widgetNumber = 0;
 static WatchShared *watchShared;
 
 static void
-AllocStatistic()
+AllocStatistic(void)
 {
     const WatchShared *wShared;
 
@@ -639,7 +639,7 @@ AllocStatistic()
 	const TkText *peer;
 
 	for (peer = wShared->sharedTextPtr->peers; peer; peer = peer->next) {
-	    fprintf(stderr, "Unreleased text widget %d\n", peer->widgetNumber);
+	    fprintf(stderr, "Unreleased text widget %zd\n", peer->widgetNumber);
 	}
     }
 

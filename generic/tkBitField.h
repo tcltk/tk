@@ -12,6 +12,8 @@
 #ifndef _TKBITFIELD
 #define _TKBITFIELD
 
+/* #define TK_CHECK_ALLOCS */
+
 #include "tkInt.h" /* needed for inline support and 64 bit support */
 
 #if (UINTPTR_MAX >= 0xffffffffffffffffu)

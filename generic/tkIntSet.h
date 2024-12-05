@@ -12,6 +12,8 @@
 #ifndef _TKINTSET
 #define _TKINTSET
 
+/* #define TK_CHECK_ALLOCS */
+
 #include "tkInt.h" /* required for inline support */
 
 #if defined(__GNUC__) || defined(__clang__)
