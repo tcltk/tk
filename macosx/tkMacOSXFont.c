@@ -466,7 +466,9 @@ startOfClusterObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (idx > 0 && len != ulen) {
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
 	for (Tcl_Size i = 0; i < idx; i++) {
@@ -523,7 +525,9 @@ endOfClusterObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (idx > 0 && len != ulen) {
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
 	for (Tcl_Size i = 0; i < idx; i++) {
