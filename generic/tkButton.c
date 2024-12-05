@@ -1181,7 +1181,7 @@ ConfigureButton(
 		 * selected.
 		 */
 
- 		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
+		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
 			(*Tcl_GetString(butPtr->onValuePtr) == '\0')) {
 		    butPtr->flags |= SELECTED;
 		}
@@ -1725,14 +1725,12 @@ static char *
 ButtonTextVarProc(
     void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    TCL_UNUSED(const char *),		/* name1 */
+    TCL_UNUSED(const char *),		/* name2 */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = (TkButton *)clientData;
     Tcl_Obj *valuePtr;
-    (void)name1;
-    (void)name2;
 
     if (butPtr->flags & BUTTON_DELETED) {
 	return NULL;
@@ -1820,19 +1818,14 @@ ButtonTextVarProc(
 static void
 ButtonImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
@@ -1864,19 +1857,14 @@ ButtonImageProc(
 static void
 ButtonSelectImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {
@@ -1917,19 +1905,14 @@ ButtonSelectImageProc(
 static void
 ButtonTristateImageProc(
     void *clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (might be
-				 * <= 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (might be */
+    TCL_UNUSED(int),	/* height, <= 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
     TkButton *butPtr = (TkButton *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imgWidth;
-    (void)imgHeight;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {

@@ -1,8 +1,8 @@
 /*
  * tkIcu.c --
  *
- * 	tkIcu.c implements various Tk commands which can find
- * 	grapheme cluster and workchar bounderies in Unicode strings.
+ *	tkIcu.c implements various Tk commands which can find
+ *	grapheme cluster and workchar bounderies in Unicode strings.
  *
  * Copyright © 2021 Jan Nijtmans
  *
@@ -100,17 +100,17 @@ startEndOfCmd(
 	return TCL_ERROR;
     }
     it = icu_open((UBreakIteratorTypex)(flags&3), locale,
-    		NULL, -1, &errorCode);
+		NULL, -1, &errorCode);
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
 	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
 	icu_setText(it, ustr, len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
-    	Tcl_DStringFree(&ds);
-    	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
-    	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", (char *)NULL);
-    	return TCL_ERROR;
+	Tcl_DStringFree(&ds);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
+	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", (char *)NULL);
+	return TCL_ERROR;
     }
     if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
@@ -158,7 +158,7 @@ startEndOfCmd(
 	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	    Tcl_Size newIdx = 1;
 	    for (Tcl_Size i = 1; i < idx; i++) {
-    	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
+	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
 	    }
 	    idx = newIdx;
 	}
