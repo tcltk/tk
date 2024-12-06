@@ -509,11 +509,11 @@ GetEntryText(
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
-	Tcl_UniChar ch = 0;
+	int ch = 0;
 
 	/*
-	 * We have to construct the string with an ampersand preceeding the
-	 * underline character, and a tab seperating the text and the accel
+	 * We have to construct the string with an ampersand preceding the
+	 * underline character, and a tab separating the text and the accel
 	 * text. We have to be careful with ampersands in the string.
 	 */
 
