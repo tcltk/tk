@@ -631,7 +631,7 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	    cp ${TCL_BIN_DIR}/tclsh ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
-		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
+		cd ${TK_VFS_ROOT} && $$zip -A ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
 	fi
 	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
 	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
