@@ -644,7 +644,7 @@ AllocStatistic(void)
     }
 
     fprintf(stderr, "---------------------------------\n");
-    fprintf(stderr, "ALLOCATION:        new    destroy\n");
+    fprintf(stderr, "tkText ALLOCS:     new    destroy\n");
     fprintf(stderr, "---------------------------------\n");
     fprintf(stderr, "Shared:       %8u - %8u\n", tkTextCountNewShared, tkTextCountDestroyShared);
     fprintf(stderr, "Peer:         %8u - %8u\n", tkTextCountNewPeer, tkTextCountDestroyPeer);
@@ -4605,7 +4605,7 @@ ProcessDestroyNotify(
     textPtr->flags |= DESTROYED;
 
     /*
-     * Call 'DestroyTest' to handle the deletion for us. The actual
+     * Call 'DestroyText' to handle the deletion for us. The actual
      * textPtr may still exist after this, if there are some outstanding
      * references. But we have flagged it as DESTROYED just above, so
      * nothing will try to make use of it very extensively.

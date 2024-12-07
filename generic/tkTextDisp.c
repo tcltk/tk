@@ -910,7 +910,7 @@ AllocStatistic(void)
     }
 
     fprintf(stderr, "--------------------------------\n");
-    fprintf(stderr, "ALLOCATION:       new    destroy\n");
+    fprintf(stderr, "tkTextDisp ALLOCS:new    destroy\n");
     fprintf(stderr, "--------------------------------\n");
     fprintf(stderr, "DLine:       %8u - %8u\n", tkTextCountNewDLine, tkTextCountDestroyDLine);
     fprintf(stderr, "Chunk:       %8u - %8u\n", tkTextCountNewChunk, tkTextCountDestroyChunk);
