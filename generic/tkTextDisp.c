@@ -2321,7 +2321,7 @@ IsStartOfNotMergedLine(
  *	elide, "offset" and foreground stipple. Do *not* consider: background
  *	color, border, relief or background stipple.
  *
- *	If we use TkpDrawCharsInContext, we also don't need to check
+ *	If we use Tk_DrawCharsInContext, we also don't need to check
  *	foreground color, font decorations, elide, offset and foreground
  *	stipple, so all that is left is font (including font size and font
  *	style) and "offset".
@@ -13539,7 +13539,7 @@ TkpMeasureChars(
     int flags,
     int *lengthPtr)
 {
-    return TkpMeasureCharsInContext(tkfont, source, numBytes, rangeStart,
+    return Tk_MeasureCharsInContext(tkfont, source, numBytes, rangeStart,
 	    rangeLength, maxLength, flags, lengthPtr);
 }
 
@@ -14742,7 +14742,7 @@ DrawCharsInContext(
 			 * string when drawing. */
     TCL_UNUSED(int))	/* Offset to x-coordinate, not needed here. */
 {
-    TkpDrawCharsInContext(display, drawable, gc, tkfont,
+    Tk_DrawCharsInContext(display, drawable, gc, tkfont,
 	    source, numBytes, rangeStart, rangeLength, x, y);
 }
 
@@ -14801,7 +14801,7 @@ DrawChars(
 		chunkPtr->x + textPtr->dInfoPtr->x);
 
 	if (sValuePtr->underline) {
-	    TkUnderlineCharsInContext(display, dst, stylePtr->ulGC, sValuePtr->tkfont, string,
+	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ulGC, sValuePtr->tkfont, string,
 		    numBytes, baseChunkPtr->x + xDisplacement, y - sValuePtr->offset,
 		    start, start + len);
 	}
@@ -14809,7 +14809,7 @@ DrawChars(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    TkUnderlineCharsInContext(display, dst, stylePtr->ovGC, sValuePtr->tkfont, string,
+	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ovGC, sValuePtr->tkfont, string,
 		    numBytes, baseChunkPtr->x + xDisplacement,
 		    y - sValuePtr->offset - fm.descent - (fm.ascent*3)/10,
 		    start, start + len);

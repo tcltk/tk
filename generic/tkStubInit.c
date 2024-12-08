@@ -1253,6 +1253,9 @@ const TkStubs tkStubs = {
     Tk_GetOtherWindow, /* 288 */
     Tk_Get3DBorderColors, /* 289 */
     Tk_MakeWindow, /* 290 */
+    Tk_UnderlineCharsInContext, /* 291 */
+    Tk_DrawCharsInContext, /* 292 */
+    Tk_MeasureCharsInContext, /* 293 */
 };
 
 /* !END!: Do not edit above this line. */

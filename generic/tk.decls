@@ -1067,6 +1067,26 @@ declare 290 {
     Window Tk_MakeWindow(Tk_Window tkwin, Window parent)
 }
 
+# TIP#706
+declare 291 {
+    void Tk_UnderlineCharsInContext(Display *display,
+           Drawable drawable, GC gc, Tk_Font tkfont,
+           const char *string, Tcl_Size numBytes, int x, int y,
+           Tcl_Size firstByte, Tcl_Size lastByte)
+}
+declare 292 {
+    void Tk_DrawCharsInContext(Display * display,
+           Drawable drawable, GC gc, Tk_Font tkfont,
+           const char *string, Tcl_Size numBytes, Tcl_Size rangeStart,
+           Tcl_Size rangeLength, int x, int y)
+}
+declare 293 {
+    int Tk_MeasureCharsInContext(Tk_Font tkfont,
+           const char *string, Tcl_Size numBytes, Tcl_Size rangeStart,
+           Tcl_Size rangeLength, int maxPixels, int flags,
+           int *lengthPtr)
+}
+
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
