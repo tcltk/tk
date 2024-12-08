@@ -54,6 +54,8 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkBTreeNumLines TkrBTreeNumLines
 #define TkTextInsertDisplayProc TkrTextInsertDisplayProc
 
+#define TkUnusedStubEntry 0
+
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
@@ -1256,6 +1258,7 @@ const TkStubs tkStubs = {
     Tk_UnderlineCharsInContext, /* 291 */
     Tk_DrawCharsInContext, /* 292 */
     Tk_MeasureCharsInContext, /* 293 */
+    TkUnusedStubEntry, /* 294 */
 };
 
 /* !END!: Do not edit above this line. */
