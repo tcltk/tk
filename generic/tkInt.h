@@ -1029,10 +1029,10 @@ typedef struct TkpClipMask {
 #endif
 
 #ifndef Button6Mask
-# define Button6Mask (1<<13)
+# define Button6Mask (AnyModifier<<6)
 #endif
 #ifndef Button7Mask
-# define Button7Mask (1<<14)
+# define Button7Mask (AnyModifier<<7)
 #endif
 #ifndef Button8Mask
 # define Button8Mask (AnyModifier<<4)
