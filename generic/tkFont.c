@@ -13,9 +13,6 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#if defined(MAC_OSX_TK)
-#include "tkMacOSXInt.h"    /* Defines TK_DRAW_IN_CONTEXT */
-#endif
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -2341,7 +2338,7 @@ Tk_DrawTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	    Tk_DrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
 		    chunkPtr->start, chunkPtr->numBytes,
 		    firstByte - chunkPtr->start, lastByte - firstByte,
@@ -2411,7 +2408,7 @@ TkDrawAngledTextLayout(
 		numDisplayChars = lastChar;
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
-#ifdef TK_DRAW_IN_CONTEXT
+#if 1 /* TK_DRAW_IN_CONTEXT */
 	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
