@@ -19,6 +19,9 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
  - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
  - [cannot build .chm help file (Windows)](https://core.tcl-lang.org/tk/tktview/bb110c)
+ - [Tk intialization overwrites thread specific data](https://core.tcl-lang.org/tk/tktview/bcbf4c)
+ - [File clamTheme.tcl misses code related to the -indicatorforeground option](https://core.tcl-lang.org/tk/tktview/a69fd7)
+ - [Segfault when using menu(button) with the -font option](https://core.tcl-lang.org/tk/tktview/8ce672)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 

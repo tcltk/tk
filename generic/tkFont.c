@@ -1858,7 +1858,7 @@ Tk_TextWidth(
 /*
  *---------------------------------------------------------------------------
  *
- * Tk_UnderlineChars, TkUnderlineCharsInContext --
+ * Tk_UnderlineChars, Tk_UnderlineCharsInContext --
  *
  *	These procedures draw an underline for a given range of characters in
  *	a given string. They don't draw the characters (which are assumed to
@@ -1894,12 +1894,12 @@ Tk_UnderlineChars(
     Tcl_Size lastByte)		/* Index of first byte after the last
 				 * character. */
 {
-    TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
+    Tk_UnderlineCharsInContext(display, drawable, gc, tkfont, string,
 	    lastByte, x, y, firstByte, lastByte);
 }
 
 void
-TkUnderlineCharsInContext(
+Tk_UnderlineCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for actually drawing
@@ -1919,9 +1919,9 @@ TkUnderlineCharsInContext(
     TkFont *fontPtr = (TkFont *) tkfont;
     int startX, endX;
 
-    TkpMeasureCharsInContext(tkfont, string, numBytes, 0, firstByte, -1, 0,
+    Tk_MeasureCharsInContext(tkfont, string, numBytes, 0, firstByte, -1, 0,
 	    &startX);
-    TkpMeasureCharsInContext(tkfont, string, numBytes, 0, lastByte, -1, 0,
+    Tk_MeasureCharsInContext(tkfont, string, numBytes, 0, lastByte, -1, 0,
 	    &endX);
 
     XFillRectangle(display, drawable, gc, x + startX,
@@ -2345,7 +2345,7 @@ Tk_DrawTextLayout(
 	    }
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 #ifdef TK_DRAW_IN_CONTEXT
-	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
+	    Tk_DrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
 		    chunkPtr->start, chunkPtr->numBytes,
 		    firstByte - chunkPtr->start, lastByte - firstByte,
 		    x+chunkPtr->x, y+chunkPtr->y);
@@ -2418,7 +2418,7 @@ TkDrawAngledTextLayout(
 	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
 	    if (angle == 0.0) {
-		TkpDrawCharsInContext(display, drawable, gc,
+		Tk_DrawCharsInContext(display, drawable, gc,
 			layoutPtr->tkfont, chunkPtr->start, chunkPtr->numBytes,
 			firstByte - chunkPtr->start, lastByte - firstByte,
 			(int)(x + dx), (int)(y + dy));

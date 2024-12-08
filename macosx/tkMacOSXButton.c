@@ -1067,7 +1067,7 @@ TkMacOSXComputeButtonParams(
 	 * the button periodically.
 	 */
 
-	if (!mbPtr->defaultPulseHandler && ([NSApp macOSVersion] <= 100900)) {
+	if (!mbPtr->defaultPulseHandler && ([NSApp macOSVersion] < 101000)) {
 	    mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
 		    PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
 	}
