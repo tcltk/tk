@@ -551,6 +551,7 @@ typedef struct Tk_FontMetrics {
 #define TK_WHOLE_WORDS		1
 #define TK_AT_LEAST_ONE		2
 #define TK_PARTIAL_OK		4
+#define TK_ISOLATE_END		32
 
 /*
  * Flags passed to Tk_ComputeTextLayout:

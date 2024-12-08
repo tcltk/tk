@@ -777,7 +777,7 @@ Tk_GetOpenFileObjCmd(
 	 * panel.  Prepend the title to the message in this case.
 	 */
 
-	if ([NSApp macOSVersion] > 101000) {
+	if ([NSApp macOSVersion] >= 101100) {
 	    if (message) {
 		NSString *fullmessage =
 		    [[NSString alloc] initWithFormat:@"%@\n%@", title, message];

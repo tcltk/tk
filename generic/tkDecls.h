@@ -888,6 +888,24 @@ EXTERN void		Tk_Get3DBorderColors(Tk_3DBorder border,
 				XColor *lightColorPtr);
 /* 290 */
 EXTERN Window		Tk_MakeWindow(Tk_Window tkwin, Window parent);
+/* 291 */
+EXTERN void		Tk_UnderlineCharsInContext(Display *display,
+				Drawable drawable, GC gc, Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes, int x,
+				int y, Tcl_Size firstByte, Tcl_Size lastByte);
+/* 292 */
+EXTERN void		Tk_DrawCharsInContext(Display *display,
+				Drawable drawable, GC gc, Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes,
+				Tcl_Size rangeStart, Tcl_Size rangeLength,
+				int x, int y);
+/* 293 */
+EXTERN int		Tk_MeasureCharsInContext(Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes,
+				Tcl_Size rangeStart, Tcl_Size rangeLength,
+				int maxPixels, int flags, int *lengthPtr);
+/* 294 */
+EXTERN void		TkUnusedStubEntry(void);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1191,6 +1209,10 @@ typedef struct TkStubs {
     Tk_Window (*tk_GetOtherWindow) (Tk_Window tkwin); /* 288 */
     void (*tk_Get3DBorderColors) (Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
     Window (*tk_MakeWindow) (Tk_Window tkwin, Window parent); /* 290 */
+    void (*tk_UnderlineCharsInContext) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *string, Tcl_Size numBytes, int x, int y, Tcl_Size firstByte, Tcl_Size lastByte); /* 291 */
+    void (*tk_DrawCharsInContext) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *string, Tcl_Size numBytes, Tcl_Size rangeStart, Tcl_Size rangeLength, int x, int y); /* 292 */
+    int (*tk_MeasureCharsInContext) (Tk_Font tkfont, const char *string, Tcl_Size numBytes, Tcl_Size rangeStart, Tcl_Size rangeLength, int maxPixels, int flags, int *lengthPtr); /* 293 */
+    void (*tkUnusedStubEntry) (void); /* 294 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1770,6 +1792,14 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_Get3DBorderColors) /* 289 */
 #define Tk_MakeWindow \
 	(tkStubsPtr->tk_MakeWindow) /* 290 */
+#define Tk_UnderlineCharsInContext \
+	(tkStubsPtr->tk_UnderlineCharsInContext) /* 291 */
+#define Tk_DrawCharsInContext \
+	(tkStubsPtr->tk_DrawCharsInContext) /* 292 */
+#define Tk_MeasureCharsInContext \
+	(tkStubsPtr->tk_MeasureCharsInContext) /* 293 */
+#define TkUnusedStubEntry \
+	(tkStubsPtr->tkUnusedStubEntry) /* 294 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1794,5 +1824,7 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */

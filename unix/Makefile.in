@@ -629,7 +629,7 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	    cp ${TCL_BIN_DIR}/tclsh ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
-		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
+		cd ${TK_VFS_ROOT} && $$zip -A ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
 	fi
 	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
 	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
@@ -648,8 +648,6 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
 		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
-	    ${NATIVE_ZIP} -A ${LIB_FILE} \
-	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
@@ -690,8 +688,6 @@ ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
 		 mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
 	    fi; \
-	    ${NATIVE_ZIP} -A ${WISH_EXE} \
-	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
 	fi
 
 # Resetting the LIB_RUNTIME_DIR below is required so that

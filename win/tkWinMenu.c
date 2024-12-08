@@ -512,8 +512,8 @@ GetEntryText(
 	Tcl_UniChar ch = 0;
 
 	/*
-	 * We have to construct the string with an ampersand preceeding the
-	 * underline character, and a tab seperating the text and the accel
+	 * We have to construct the string with an ampersand preceding the
+	 * underline character, and a tab separating the text and the accel
 	 * text. We have to be careful with ampersands in the string.
 	 */
 

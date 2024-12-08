@@ -468,7 +468,7 @@ static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 static void             RemoveTransient(TkWindow *winPtr);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101300
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 
 /*
  * Add a window as a tab in the group specified by its tabbingid, or
@@ -6285,12 +6285,6 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
     case TKMWS_APPEARANCE:
-	if ([NSApp macOSVersion] < 100900) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"Window appearances did not exist until OSX 10.9.", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
-	    return TCL_ERROR;
-	}
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
@@ -6538,7 +6532,7 @@ WmWinAppearance(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     (void) interp;
     (void) winPtr;
     (void) objc;
@@ -6802,7 +6796,7 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
 	Tcl_Panic("couldn't allocate new Mac window");
     }
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (tabbingId) {
 	identifier = [NSString stringWithUTF8String:tabbingId];
     } else {
