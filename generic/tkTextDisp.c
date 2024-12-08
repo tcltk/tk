@@ -6389,8 +6389,15 @@ DisplayDLine(
 		x = -chunkPtr->width;
 	    }
 
+	    /*
+	     * Refcount gymnastics here to prevent the resource from being released
+	     * in case the displayProc destroys the widget.
+	     */
+
+	    textPtr->refCount += 1;
 	    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
 		    baseline, display, pixmap, screenY);
+	    textPtr->refCount -= 1;
 
 	    if (TkTextReleaseIfDestroyed(textPtr)) {
 		/*
