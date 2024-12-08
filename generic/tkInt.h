@@ -75,7 +75,7 @@
 #   endif
 #endif
 
-#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
+#if (TCL_MAJOR_VERSION == 8) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int, Tcl_DString *))Tcl_UtfToUniCharDString)
 # define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
@@ -118,7 +118,7 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 #   define Tcl_GetParent Tcl_GetMaster
 #endif
 
@@ -1058,14 +1058,6 @@ typedef struct TkpClipMask {
 #define TK_GRAB_EXCLUDED	3
 
 /*
- * Additional flag for TkpMeasureCharsInContext. Coordinate with other flags
- * for this routine, but don't make public until TkpMeasureCharsInContext is
- * made public, too.
- */
-
-#define TK_ISOLATE_END		32
-
-/*
  * The macro below is used to modify a "char" value (e.g. by casting it to an
  * unsigned character) so that it can be used safely with macros such as
  * isspace().
@@ -1309,22 +1301,10 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
-			    Tcl_Size rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
 			    Tcl_Size rangeLength, double x, double y, double angle);
-MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
-			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
-			    Tcl_Size rangeLength, int maxLength, int flags,
-			    int *lengthPtr);
-MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *string, Tcl_Size numBytes, int x, int y,
-			    Tcl_Size firstByte, Tcl_Size lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,

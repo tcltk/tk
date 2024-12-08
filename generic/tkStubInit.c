@@ -51,6 +51,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkMacOSXIsCharacterMissing (int (*)(Tk_Font, unsigned int))(void *)doNothing
 #undef TkMacOSXSetDrawingEnabled
 #define TkMacOSXSetDrawingEnabled (void (*)(TkWindow *, int))(void *)doNothing
+#define TkUnusedStubEntry 0
 
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
@@ -1345,6 +1346,10 @@ const TkStubs tkStubs = {
     Tk_GetOtherWindow, /* 288 */
     Tk_Get3DBorderColors, /* 289 */
     Tk_MakeWindow, /* 290 */
+    Tk_UnderlineCharsInContext, /* 291 */
+    Tk_DrawCharsInContext, /* 292 */
+    Tk_MeasureCharsInContext, /* 293 */
+    TkUnusedStubEntry, /* 294 */
 };
 
 /* !END!: Do not edit above this line. */

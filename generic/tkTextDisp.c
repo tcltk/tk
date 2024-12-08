@@ -8036,13 +8036,13 @@ CharDisplayProc(
 	    return;
 	}
 
-	TkpDrawCharsInContext(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
+	Tk_DrawCharsInContext(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
 		string, numBytes, start, len,
 		ciPtr->baseChunkPtr->x + xDisplacement,
 		y + baseline - sValuePtr->offset);
 
 	if (sValuePtr->underline) {
-	    TkUnderlineCharsInContext(display, dst, stylePtr->ulGC,
+	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ulGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset,
@@ -8052,7 +8052,7 @@ CharDisplayProc(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    TkUnderlineCharsInContext(display, dst, stylePtr->ovGC,
+	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ovGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset
@@ -8698,7 +8698,7 @@ MeasureChars(
 	    break;
 	}
 #ifdef TK_DRAW_IN_CONTEXT
-	start += TkpMeasureCharsInContext(tkfont, source, maxBytes,
+	start += Tk_MeasureCharsInContext(tkfont, source, maxBytes,
 		start - source, special - start,
 		maxX >= 0 ? maxX - curX : -1, flags, &width);
 #else
@@ -8982,7 +8982,7 @@ FreeBaseChunk(
  *	elide, "offset" and foreground stipple. Do *not* consider: background
  *	color, border, relief or background stipple.
  *
- *	If we use TkpDrawCharsInContext(), we also don't need to check
+ *	If we use Tk_DrawCharsInContext(), we also don't need to check
  *	foreground color, font decorations, elide, offset and foreground
  *	stipple, so all that is left is font (including font size and font
  *	style) and "offset".
