@@ -152,9 +152,6 @@ typedef struct PanedWindow {
     int numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
     int flags;			/* Flags for widget; see below. */
-#ifdef BUILD_tk
-    int width, height;		/* Width and height of the widget. */
-#endif
 } PanedWindow;
 
 /*
@@ -292,7 +289,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, 0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_PANEDWINDOW_HEIGHT, offsetof(PanedWindow, heightObj),
-	offsetof(PanedWindow, height), TK_OPTION_NULL_OK, 0, GEOMETRY},
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-opaqueresize", "opaqueResize", "OpaqueResize",
 	DEF_PANEDWINDOW_OPAQUERESIZE, TCL_INDEX_NONE,
 	offsetof(PanedWindow, resizeOpaque), 0, 0, 0},
@@ -327,7 +324,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthObj),
-	offsetof(PanedWindow, width), TK_OPTION_NULL_OK, 0, GEOMETRY},
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -1304,7 +1301,7 @@ PanedWindowWorldChanged(
     XGCValues gcValues;
     GC newGC;
     PanedWindow *pwPtr = (PanedWindow *)instanceData;
-    int borderWidth;
+    int borderWidth, width = -1, height = -1;
 
     /*
      * Allocated a graphics context for drawing the paned window widget
@@ -1325,8 +1322,14 @@ PanedWindowWorldChanged(
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->borderWidthObj, &borderWidth);
     Tk_SetInternalBorder(pwPtr->tkwin, borderWidth);
-    if (pwPtr->width > 0 && pwPtr->height > 0) {
-	Tk_GeometryRequest(pwPtr->tkwin, pwPtr->width, pwPtr->height);
+    if (pwPtr->widthObj) {
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->widthObj, &width);
+    }
+    if (pwPtr->heightObj) {
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->heightObj, &height);
+    }
+    if (width > 0 && height > 0) {
+	Tk_GeometryRequest(pwPtr->tkwin, width, height);
     }
 
     /*
@@ -2225,6 +2228,7 @@ ComputeGeometry(
     Pane *panePtr;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int sashPad;
+    int width = -1, height = -1;
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
@@ -2365,16 +2369,22 @@ ComputeGeometry(
      * otherwise, use the requested width/height.
      */
 
+    if (pwPtr->widthObj) {
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->widthObj, &width);
+    }
+    if (pwPtr->heightObj) {
+	Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->heightObj, &height);
+    }
     if (horizontal) {
-	reqWidth = (pwPtr->width > 0 ?
-		pwPtr->width : x - sashWidth + internalBw);
-	reqHeight = (pwPtr->height > 0 ?
-		pwPtr->height : reqHeight + (2 * internalBw));
+	reqWidth = (width > 0 ?
+		width : x - sashWidth + internalBw);
+	reqHeight = (height > 0 ?
+		height : reqHeight + (2 * internalBw));
     } else {
-	reqWidth = (pwPtr->width > 0 ?
-		pwPtr->width : reqWidth + (2 * internalBw));
-	reqHeight = (pwPtr->height > 0 ?
-		pwPtr->height : y - sashWidth + internalBw);
+	reqWidth = (width > 0 ?
+		width : reqWidth + (2 * internalBw));
+	reqHeight = (height > 0 ?
+		height : y - sashWidth + internalBw);
     }
     Tk_GeometryRequest(pwPtr->tkwin, reqWidth, reqHeight);
     if (Tk_IsMapped(pwPtr->tkwin) && !(pwPtr->flags & REDRAW_PENDING)) {
