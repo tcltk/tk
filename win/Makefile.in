@@ -142,7 +142,7 @@ TK_DLL_FILE_TCL9	= @TK_DLL_FILE_TCL9@
 TEST_DLL_FILE		= tktest$(VER)${DLLSUFFIX}
 TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${DLLSUFFIX}${LIBSUFFIX}
 
-SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
+SHARED_LIBRARIES	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
@@ -216,7 +216,7 @@ NO_DEPRECATED_FLAGS	=
 # required just to do a normal build although it can be required to run
 # make dist.
 TCL_EXE			= @TCLSH_PROG@
-WINE    		= @WINE@
+WINE		= @WINE@
 
 ###
 # Tip 430 - ZipFS Modifications

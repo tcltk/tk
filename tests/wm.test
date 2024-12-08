@@ -1511,10 +1511,10 @@ test wm-stackorder-2.3 {stacking order} -body {
     toplevel .t2
     tkwait visibility .t2
     raiseDelay
-    lappend res [wm stackorder .] 
+    lappend res [wm stackorder .]
     raise .
     raiseDelay
-    lappend res [wm stackorder .] 
+    lappend res [wm stackorder .]
     raise .t2
     raiseDelay
     lappend res [wm stackorder .]

@@ -117,7 +117,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
 	0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_MESSAGE_BORDER_WIDTH, TCL_INDEX_NONE, 
+	DEF_MESSAGE_BORDER_WIDTH, TCL_INDEX_NONE,
 	offsetof(Message, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
