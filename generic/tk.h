@@ -17,7 +17,7 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
+#if (TCL_MAJOR_VERSION < 8) || (defined(TCL_MINOR_VERSION) && (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6))
 #	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
@@ -146,7 +146,7 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
 
 typedef const char *Tk_Uid;
 
-#if (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#if (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 #   ifndef Tcl_Size
 #	define Tcl_Size int
 #   endif
@@ -585,6 +585,7 @@ typedef struct Tk_FontMetrics {
 #define TK_WHOLE_WORDS		1
 #define TK_AT_LEAST_ONE		2
 #define TK_PARTIAL_OK		4
+#define TK_ISOLATE_END		32
 
 /*
  * Flags passed to Tk_ComputeTextLayout:

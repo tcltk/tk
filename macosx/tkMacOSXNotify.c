@@ -37,7 +37,7 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #endif
 #define Tcl_MacOSXNotifierAddRunLoopMode \
 	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
-#elif TCL_MINOR_VERSION < 7
+#elif defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
     extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
 #   define Tcl_MacOSXNotifierAddRunLoopMode TclMacOSXNotifierAddRunLoopMode
 #else

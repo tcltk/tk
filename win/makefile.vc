@@ -134,7 +134,7 @@ TK_NO_DEPRECATED = 1
 !endif
 !endif
 
-WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
+WISHC		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
@@ -642,7 +642,7 @@ $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) /DUNICODE /D_UNICODE -Fo$@ $?
 
 $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
-	$(cc32) $(pkgcflags) 		\
+	$(cc32) $(pkgcflags)		\
 		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
 		-Fo$@ $?
 
