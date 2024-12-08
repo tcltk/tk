@@ -651,7 +651,7 @@ TkpInit(
 		 * checking whether it was immediately withdrawn, and
 		 * therefore does not need to be placed on the screen.
 		 */
-		
+
 		Tcl_DoWhenIdle(showRootWindow, window);
 		break;
 	    }
