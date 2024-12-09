@@ -69,7 +69,7 @@ namespace eval ::tk::accessible {
 	::tk::accessible::acc_action $w $action
     }
 
-    #Button bindings
+    #Button/TButton bindings
     bind Button <Map> {+::tk::accessible::_init \
 			   %W \
 			   Button \
@@ -79,6 +79,15 @@ namespace eval ::tk::accessible {
 			   [%W cget -state] \
 			   {%W invoke}\
 		       }
+    bind TButton <Map> {+::tk::accessible::_init \
+			    %W \
+			    Button \
+			    Button \
+			    [%W cget -text] \
+			    {} \
+			    [%W cget -state] \
+			    {%W invoke}\
+			}
     #Canvas bindings
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
@@ -96,7 +105,7 @@ namespace eval ::tk::accessible {
 				Checkbutton \
 				Checkbutton \
 				[%W cget -text] \
-				[catch {[set [%W cget -variable]]}] \
+				[%W cget -variable] \
 				[%W cget -state] \
 				{}\
 			    }
@@ -105,8 +114,8 @@ namespace eval ::tk::accessible {
 				 Checkbutton \
 				 Checkbutton \
 				 [%W cget -text] \
-				 [catch {[set [%W cget -variable]]}] \
-				 [%W state] \
+				 [%W cget -variable] \
+				 [%W cget -state] \
 				 {}\
 			     }
 
@@ -151,6 +160,16 @@ namespace eval ::tk::accessible {
 			    [%W cget -state]\
 			    {}\
 			}
+    #Progressbar
+    bind TProgressbar <Map> {+::tk::accessible::_init \
+				 %W \
+				 Progressbar \
+				 Progressbar \
+				 Progressbar \
+				 [%W cget -value] \
+				 [%W state] \
+				 {}\
+			     }
 
     #Radiobutton/TRadiobutton bindings
     bind Radiobutton <Map> {+::tk::accessible::_init \
@@ -158,7 +177,7 @@ namespace eval ::tk::accessible {
 				Radiobutton \
 				Radiobutton \
 				[%W cget -text] \
-				[catch {[set [%W cget -variable]]}] \
+				[%W cget -variable] \
 				[%W cget -state] \
 				{}\
 			    }
@@ -167,8 +186,8 @@ namespace eval ::tk::accessible {
 				 Radiobutton \
 				 Radiobutton \
 				 [%W cget -text] \
-				 [catch {set [%W cget -variable]}] \
-				 [%W state] \
+				 [%W cget -variable] \
+				 [%W cget -state] \
 				 {}\
 			     }
 
@@ -187,7 +206,7 @@ namespace eval ::tk::accessible {
 			   Scale \
 			   Scale \
 			   [%W get] \
-			   [%W state] \
+			   [%W cget -state] \
 			   {%W set} \
 		       }
 
@@ -214,7 +233,7 @@ namespace eval ::tk::accessible {
 			      Notebook \
 			      Notebook \
 			      [%W tab current -text] \
-			      [%W state] \
+			      {} \
 			      {}\
 			  }
     #Scrollbar/TScrollbar bindings
@@ -224,7 +243,7 @@ namespace eval ::tk::accessible {
 			      Scrollbar \
 			      Scrollbar \
 			      [%W get] \
-			      [%W cget -state] \
+			      {} \
 			      {%W cget -command}\
 			  }
     bind TScrollbar <Map> {+::tk::accessible::_init \
