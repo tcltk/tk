@@ -2651,7 +2651,7 @@ MoveSash(
 {
     int i;
     int expandPane, reduceFirst, reduceLast, reduceIncr, paneSize, sashOffset;
-    Pane *panePtr;
+    Pane *panePtr = NULL;
     int stretchReserve = 0;
     int nextSash = sash + 1;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
