@@ -24,6 +24,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Segfault when using menu(button) with the -font option](https://core.tcl-lang.org/tk/tktview/8ce672)
  - [TIP #706: Expose three Tk "In Context" functions via stubs table](https://core.tcl-lang.org/tips/doc/trunk/tip/706.md)
  - [Bind mechanism vs. GNOME](https://core.tcl-lang.org/tk/tktview/6bdf1a)
+ - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
@@ -56,7 +57,6 @@ writing Tcl scripts containing Tk commands.
  - Read/write access to photo image metadata
 
 ## Known bugs
- - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
  - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
  - [Enter key works differently in Windows and Linux](https://core.tcl-lang.org/tk/tktview/b3a1b9)
