@@ -1488,8 +1488,7 @@ DisplayPanedWindow(
 
     Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
-	    Tk_Width(tkwin), Tk_Height(tkwin), borderWidth,
-	    pwPtr->relief);
+	    Tk_Width(tkwin), Tk_Height(tkwin), borderWidth, pwPtr->relief);
 
     /*
      * Set up boilerplate geometry values for sashes (width, height, common
@@ -1497,7 +1496,7 @@ DisplayPanedWindow(
      */
 
     Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->sashWidthObj, &sashWidth);
-	if (horizontal) {
+    if (horizontal) {
 	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
     } else {
 	sashHeight = sashWidth;
@@ -1783,7 +1782,7 @@ ArrangePanes(
      */
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
-	sashOffset = handleOffset = sashPad;
+    sashOffset = handleOffset = sashPad;
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashWidthObj, &sashWidth);
     if (pwPtr->showHandle && handleSize > sashWidth) {
