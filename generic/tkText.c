@@ -2064,7 +2064,7 @@ ConfigureText(
     int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     int mask = 0;
     int selBorderWidth = INT_MIN, spacing1, spacing2, spacing3;
-    int insertBorderWidth, insertWidth;
+    int insertBorderWidth, insertWidth, padX, padY;
 
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
 	    objc, objv, textPtr->tkwin, &savedOptions, &mask) != TCL_OK) {
@@ -2204,6 +2204,18 @@ ConfigureText(
      * Don't allow negative spacings.
      */
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    if (padX < 0) {
+	Tcl_DecrRefCount(textPtr->padXObj);
+	textPtr->padXObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->padXObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+    if (padY < 0) {
+	Tcl_DecrRefCount(textPtr->padYObj);
+	textPtr->padYObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->padYObj);
+    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &spacing1);
     if (spacing1 < 0) {
 	spacing1 = 0;
