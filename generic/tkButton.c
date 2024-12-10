@@ -1299,6 +1299,22 @@ ConfigureButton(
 		goto heightError;
 	    }
 	}
+	if (butPtrWidth < 0) {
+	    butPtrWidth = 0;
+	    if (butPtr->widthObj) {
+		Tcl_DecrRefCount(butPtr->widthObj);
+	    }
+	    butPtr->widthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->widthObj);
+	}
+	if (butPtrHeight < 0) {
+	    butPtrHeight = 0;
+	    if (butPtr->heightObj) {
+		Tcl_DecrRefCount(butPtr->heightObj);
+	    }
+	    butPtr->heightObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->heightObj);
+	}
 	break;
     }
     if (!error) {
