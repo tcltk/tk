@@ -991,9 +991,23 @@ EmbWinLayoutProc(
     } else {
 	if (ewPtr->body.ew.padXObj) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+	    if (padX < 0) {
+		if (ewPtr->body.ew.padXObj) {
+		    Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
+		}
+		ewPtr->body.ew.padXObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(ewPtr->body.ew.padXObj);
+	    }
 	}
 	if (ewPtr->body.ew.padYObj) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+	    if (padY < 0) {
+		if (ewPtr->body.ew.padYObj) {
+		    Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
+		}
+		ewPtr->body.ew.padYObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(ewPtr->body.ew.padYObj);
+	    }
 	}
 	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2 * padX;
 	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2 * padY;
@@ -1261,9 +1275,23 @@ EmbWinBboxProc(
     }
     if (ewPtr->body.ew.padXObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+	if (padX < 0) {
+	    if (ewPtr->body.ew.padXObj) {
+		Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
+	    }
+	    ewPtr->body.ew.padXObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(ewPtr->body.ew.padXObj);
+	}
     }
     if (ewPtr->body.ew.padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+	if (padY < 0) {
+	    if (ewPtr->body.ew.padYObj) {
+		Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
+	    }
+	    ewPtr->body.ew.padYObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(ewPtr->body.ew.padYObj);
+	}
     }
     *xPtr = chunkPtr->x + padX;
     if (ewPtr->body.ew.stretch) {
