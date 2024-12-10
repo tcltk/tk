@@ -2651,7 +2651,7 @@ MoveSash(
 {
     int i;
     int expandPane, reduceFirst, reduceLast, reduceIncr, paneSize, sashOffset;
-    Pane *panePtr = NULL;
+    Pane *panePtr;
     int stretchReserve = 0;
     int nextSash = sash + 1;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
@@ -2674,6 +2674,7 @@ MoveSash(
     }
     for (i = 0; i < pwPtr->numPanes; i++) {
 	int padX, padY;
+
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
 	    continue;
@@ -2720,15 +2721,14 @@ MoveSash(
      * Calculate how much room we have to stretch in and adjust diff value
      * accordingly.
      */
-    int minSize;
-
-    Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
     for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	int minSize;
 
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
 	    continue;
 	}
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
 	if (horizontal) {
 	    stretchReserve += panePtr->width - minSize;
 	} else {
@@ -2758,6 +2758,8 @@ MoveSash(
      */
 
     for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	int minSize;
+
 	panePtr = pwPtr->panes[i];
 	if (panePtr->hide) {
 	    continue;
@@ -2767,6 +2769,7 @@ MoveSash(
 	} else {
 	    paneSize = panePtr->height;
 	}
+	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
 	if (diff > (paneSize - minSize)) {
 	    diff -= paneSize - minSize;
 	    paneSize = minSize;
