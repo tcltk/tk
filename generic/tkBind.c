@@ -50,16 +50,6 @@
  */
 
 /*
- * Traditionally motion events can be combined with buttons in this way: <B1-B2-Motion>.
- * However it should be allowed to express this as <Motion-1-2> in addition. This is achieved
- * by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
- */
-
-#ifndef SUPPORT_ADDITIONAL_MOTION_SYNTAX
-# define SUPPORT_ADDITIONAL_MOTION_SYNTAX 1
-#endif
-
-/*
  * The output for motion events is of the type <B1-Motion>. This can be changed to become
  * <Motion-1> instead by setting PRINT_SHORT_MOTION_SYNTAX to 1, however this would be a
  * backwards incompatibility.
@@ -67,11 +57,6 @@
 
 #ifndef PRINT_SHORT_MOTION_SYNTAX
 # define PRINT_SHORT_MOTION_SYNTAX 0 /* set to 1 if wanted */
-#endif
-
-#if !SUPPORT_ADDITIONAL_MOTION_SYNTAX
-# undef PRINT_SHORT_MOTION_SYNTAX
-# define PRINT_SHORT_MOTION_SYNTAX 0
 #endif
 
 /*
@@ -3015,7 +3000,7 @@ ExpandPercents(
 	for (string = before; *string && *string != '%'; ++string)
 	    ;
 	if (string != before) {
-	    Tcl_DStringAppend(dsPtr, before, (Tcl_Size)(string - before));
+	    Tcl_DStringAppend(dsPtr, before, string - before);
 	    before = string;
 	}
 	if (!*before) {
@@ -4991,6 +4976,7 @@ ParseEventDescription(
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
 		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
+
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];
 		eventMask = eiPtr->eventMask;
@@ -5001,7 +4987,7 @@ ParseEventDescription(
 
 		if ((eventFlags & BUTTON)
 			|| (button && eventFlags == 0)
-			|| (SUPPORT_ADDITIONAL_MOTION_SYNTAX && (eventFlags & MOTION) && button == 0)) {
+			|| ((eventFlags & MOTION) && button == 0)) {
 		    /* This must be a button (or bad motion) event. */
 		    if (button == 0) {
 			return FinalizeParseEventDescription(
@@ -5028,14 +5014,13 @@ ParseEventDescription(
 			eventMask = KeyPressMask;
 		    }
 		} else if (button) {
-		    if (!SUPPORT_ADDITIONAL_MOTION_SYNTAX || patPtr->eventType != MotionNotify) {
+		    if (patPtr->eventType != MotionNotify) {
 			return FinalizeParseEventDescription(
 				interp,
 				patPtr, 0,
 				Tcl_ObjPrintf("specified button \"%s\" for non-button event", field),
 				"NON_BUTTON");
 		    }
-#if SUPPORT_ADDITIONAL_MOTION_SYNTAX
 		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
@@ -5049,7 +5034,6 @@ ParseEventDescription(
 			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
-#endif
 		} else {
 		    return FinalizeParseEventDescription(
 			    interp,
