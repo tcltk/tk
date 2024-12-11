@@ -100,7 +100,7 @@ Tk_BellObjCmd(
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
     int index, nice = 0;
     Tk_ErrorHandler handler;
 
@@ -490,7 +490,7 @@ Tk_DestroyObjCmd(
 {
     Tk_Window window;
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
 
     for (i = 1; i < objc; i++) {
 	window = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
@@ -1302,7 +1302,7 @@ Tk_WinfoObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
-    int skip;
+    Tcl_Size skip;
     const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1678,7 +1678,7 @@ Tk_WinfoObjCmd(
 	if ((winPtr == NULL) ||
 		(winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window id \"%s\" doesn't exist in this application",
+		    "window id \"%s\" does not exist in this application",
 		    string));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, (char *)NULL);
 	    return TCL_ERROR;

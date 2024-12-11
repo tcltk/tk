@@ -239,7 +239,7 @@ test winfo-7.5 {"winfo pathname" command} -body {
 } -returnCodes error -result {expected integer but got "xyz"}
 test winfo-7.6 {"winfo pathname" command} -body {
     winfo pathname 224
-} -returnCodes error -result {window id "224" doesn't exist in this application}
+} -returnCodes error -result {window id "224" does not exist in this application}
 test winfo-7.7 {"winfo pathname" command} -setup {
     destroy .b
     button .b -text "Help"

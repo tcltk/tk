@@ -50,18 +50,6 @@
  */
 
 /*
- * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
- * equivalent sequences. However it is logical to give <Double-1> higher precedence
- * since it is more specific. Indeed <Double-1> includes time and space requirements,
- * which is not the case for <1><1>.
- * This is achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
- */
-
-#ifndef PREFER_MOST_SPECIALIZED_EVENT
-# define PREFER_MOST_SPECIALIZED_EVENT 1
-#endif
-
-/*
  * Traditionally motion events can be combined with buttons in this way: <B1-B2-Motion>.
  * However it should be allowed to express this as <Motion-1-2> in addition. This is achieved
  * by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
@@ -2131,13 +2119,12 @@ IsBetterMatch(
     if (diff > 0) { return 1; }
     if (diff < 0) { return 0; }
 
-#if PREFER_MOST_SPECIALIZED_EVENT
     {	/* local scope */
-#define M (Tcl_WideUInt)1000000
-	static const Tcl_WideUInt weight[5] = { 0, 1, M, M*M, M*M*M };
+#define M 1000000ULL
+	static const unsigned long long weight[5] = { 0, 1, M, M*M, M*M*M };
 #undef M
-	Tcl_WideUInt fstCount = 0;
-	Tcl_WideUInt sndCount = 0;
+	unsigned long long fstCount = 0;
+	unsigned long long sndCount = 0;
 	unsigned i;
 
 	/*
@@ -2159,7 +2146,6 @@ IsBetterMatch(
 	if (sndCount > fstCount) { return 1; }
 	if (sndCount < fstCount) { return 0; }
     }
-#endif
 
     return sndMatchPtr->number > fstMatchPtr->number;
 }
@@ -3938,7 +3924,7 @@ HandleEventGenerate(
     mainPtr = (TkWindow *) mainWin;
     if (!tkwin || mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"window id \"%s\" doesn't exist in this application",
+		"window id \"%s\" does not exist in this application",
 		Tcl_GetString(objv[0])));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), (char *)NULL);
 	return TCL_ERROR;
