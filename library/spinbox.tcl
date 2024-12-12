@@ -213,9 +213,9 @@ bind Spinbox <Key> {
 bind Spinbox <Alt-Key> {# nothing}
 bind Spinbox <Meta-Key> {# nothing}
 bind Spinbox <Control-Key> {# nothing}
+bind Spinbox <Num-Key> {# nothing}
 bind Spinbox <Escape> {# nothing}
 bind Spinbox <Return> {# nothing}
-bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}

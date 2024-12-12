@@ -1014,7 +1014,9 @@ typedef struct TkpClipMask {
 
 #define META_MASK	(AnyModifier<<1)
 #define ALT_MASK	(AnyModifier<<2)
-#define EXTENDED_MASK	(AnyModifier<<3)
+#ifndef TK_NO_DEPRECATED
+#   define EXTENDED_MASK	Mod3Mask
+#endif
 
 /*
  * Buttons 8 and 9 are the Xbuttons (left and right side-buttons). On Windows/Mac, those
