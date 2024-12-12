@@ -343,10 +343,10 @@ KeycodeToKeysym(
 	/*
 	 * Windows only gives us an undifferentiated VK_CONTROL code (for
 	 * example) when either Control key is pressed. To distinguish between
-	 * left and right, we use the Extended flag. Indeed, the right Control
+	 * left and right, we use the Num flag. Indeed, the right Control
 	 * and Alt (aka Menu) keys are such extended keys (which their left
 	 * counterparts are not).
-	 * Regarding the shift case, Windows does not set the Extended flag for
+	 * Regarding the shift case, Windows does not set the Num flag for
 	 * the neither the left nor the right shift key. As a consequence another
 	 * way to distinguish between the two keys is to query the state of one
 	 * of the two to determine which was actually pressed. So if the keycode
@@ -358,7 +358,7 @@ KeycodeToKeysym(
 	 */
 
     case VK_CONTROL:
-	if (state & EXTENDED_MASK) {
+	if (state & Mod3Mask) {
 	    return XK_Control_R;
 	}
 	break;
@@ -368,7 +368,7 @@ KeycodeToKeysym(
 	}
 	break;
     case VK_MENU:
-	if (state & EXTENDED_MASK) {
+	if (state & Mod3Mask) {
 	    return XK_Alt_R;
 	}
 	break;

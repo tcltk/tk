@@ -1408,7 +1408,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    state |= EXTENDED_MASK;
+	    state |= Mod3Mask;
 	}
     }
     return state;

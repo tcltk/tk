@@ -401,7 +401,6 @@ static const ModInfo modArray[] = {
     {"M",		META_MASK,	0},
 #endif
     {"Alt",		ALT_MASK,	0},
-    {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
     {"Button1",		Button1Mask,	0},
     {"B2",		Button2Mask,	0},
@@ -436,11 +435,12 @@ static const ModInfo modArray[] = {
 #else
     {"Option",		ALT_MASK,	0},
 #endif
+    {"Num",		Mod3Mask,	0},
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
-    {"Num",		Mod3Mask,	0},
-    {"Mod4",		Mod4Mask,	0},
+    {"Extended",	Mod3Mask,	0},
     {"Fn",		Mod4Mask,	0},
+    {"Mod4",		Mod4Mask,	0},
     {"M4",		Mod4Mask,	0},
     {"Mod5",		Mod5Mask,	0},
     {"M5",		Mod5Mask,	0},
@@ -451,6 +451,53 @@ static const ModInfo modArray[] = {
     {NULL,		0,		0}
 };
 static Tcl_HashTable modTable;
+
+#ifndef TK_NO_DEPRECATED
+/* Keycodes belonging to KP_Space up to KP_Equal */
+static const unsigned short kpTable[] = {
+    /* KP_Space */ 0x20,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    /* KP_Tab */ XK_Tab,
+	0, 0, 0,
+    /* KP_Enter */ XK_Return,
+	0, 0, 0,
+    /* KP_F1 */ XK_F1,
+    /* KP_F2 */ XK_F2,
+    /* KP_F3 */ XK_F3,
+    /* KP_F4 */ XK_F4,
+    /* KP_Home */ XK_Home,
+    /* KP_Left */ XK_Left,
+    /* KP_Up */ XK_Up,
+    /* KP_Right */ XK_Right,
+    /* KP_Down */ XK_Down,
+    /* KP_Prior */ XK_Prior,
+    /* KP_Next */ XK_Next,
+    /* KP_End */ XK_End,
+    /* KP_Begin */ XK_Begin,
+    /* KP_Insert */ XK_Insert,
+    /* KP_Delete */ XK_Delete,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* KP_Multiply */ XK_asterisk,
+    /* KP_Add */ XK_plus,
+    /* KP_Separator */ XK_comma,
+    /* KP_Subtract */ XK_minus,
+    /* KP_Decimal */ XK_period,
+    /* KP_Divide */ XK_slash,
+    /* KP_0 */ XK_0,
+    /* KP_1 */ XK_1,
+    /* KP_2 */ XK_2,
+    /* KP_3 */ XK_3,
+    /* KP_4 */ XK_4,
+    /* KP_5 */ XK_5,
+    /* KP_6 */ XK_6,
+    /* KP_7 */ XK_7,
+    /* KP_8 */ XK_8,
+    /* KP_9 */ XK_9,
+    0, 0, 0,
+    /* KP_Equal */ XK_equal,
+    0
+};
+#endif /* TK_NO_DEPRECATED */
 
 /*
  * This module also keeps a hash table mapping from event names to information
@@ -4153,6 +4200,11 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 
+#ifndef TK_NO_DEPRECATED
+	    if (IsKeypadKey(keysym)) {
+		keysym = kpTable[keysym - XK_KP_Space];
+	    }
+#endif /* TK_NO_DEPRECATED */
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("no keycode for keysym \"%s\"", value));
@@ -5009,6 +5061,12 @@ ParseEventDescription(
 				patPtr, 0,
 				Tcl_ObjPrintf("bad event type or keysym \"%s\"", field), "KEYSYM");
 		    }
+#ifndef TK_NO_DEPRECATED
+		    if (IsKeypadKey(patPtr->info)) {
+			patPtr->info = kpTable[patPtr->info - XK_KP_Space];
+			patPtr->modMask |= Mod3Mask;
+		    }
+#endif /* TK_NO_DEPRECATED */
 		    if (!(eventFlags & KEY)) {
 			patPtr->eventType = KeyPress;
 			eventMask = KeyPressMask;

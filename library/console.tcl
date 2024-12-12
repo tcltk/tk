@@ -449,7 +449,6 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_Tab>>			<Control-i>
 	<<Console_Tab>>			<Meta-i>
 	<<Console_Eval>>		<Return>
-	<<Console_Eval>>		<KP_Enter>
 
 	<<Console_Clear>>		<Control-l>
 	<<Console_KillLine>>		<Control-k>
