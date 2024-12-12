@@ -7,19 +7,19 @@ namespace eval ttk::treeview {
 
     # Enter/Leave/Motion
     #
-    set State(activeWidget) 	{}
-    set State(activeHeading) 	{}
+    set State(activeWidget)	{}
+    set State(activeHeading)	{}
 
     # Press/drag/release:
     #
-    set State(pressMode) 	none
+    set State(pressMode)	none
     set State(pressX)		0
 
     # For pressMode == "resize"
     set State(resizeColumn)	#0
 
     # For pressmode == "heading"
-    set State(heading)  	{}
+    set State(heading)	{}
 
     set State(cellAnchor)	{}
     set State(cellAnchorOp)	"set"
@@ -51,19 +51,19 @@ namespace eval ttk::treeview {
 #
 
 # Mouse button bindings
-bind Treeview	<Motion> 		{ ::ttk::treeview::Motion %W %x %y }
+bind Treeview	<Motion>		{ ::ttk::treeview::Motion %W %x %y }
 bind Treeview	<B1-Leave>		{ #nothing }
 bind Treeview	<Leave>			{ ::ttk::treeview::ActivateHeading {} {}}
-bind Treeview	<Button-1> 		{ ::ttk::treeview::Press %W %x %y }
-bind Treeview	<Double-Button-1> 	{ ::ttk::treeview::DoubleClick %W %x %y }
-bind Treeview	<ButtonRelease-1> 	{ ::ttk::treeview::Release %W %x %y }
-bind Treeview	<B1-Motion> 		{ ::ttk::treeview::Drag %W %x %y }
-bind Treeview	<Shift-Button-1> 	{ ::ttk::treeview::Select %W %x %y extend }
+bind Treeview	<Button-1>		{ ::ttk::treeview::Press %W %x %y }
+bind Treeview	<Double-Button-1>	{ ::ttk::treeview::DoubleClick %W %x %y }
+bind Treeview	<ButtonRelease-1>	{ ::ttk::treeview::Release %W %x %y }
+bind Treeview	<B1-Motion>		{ ::ttk::treeview::Drag %W %x %y }
+bind Treeview	<Shift-Button-1>	{ ::ttk::treeview::Select %W %x %y extend }
 bind Treeview	<<ToggleSelection>>	{ ::ttk::treeview::Select %W %x %y toggle }
 
 # Left/Right arrow key bindings (none, shift, control, control+shift)
-bind Treeview 	<<PrevChar>> 		{ ::ttk::treeview::KeyNav %W left }
-bind Treeview 	<<NextChar>> 		{ ::ttk::treeview::KeyNav %W right }
+bind Treeview	<<PrevChar>>		{ ::ttk::treeview::KeyNav %W left }
+bind Treeview	<<NextChar>>		{ ::ttk::treeview::KeyNav %W right }
 bind Treeview	<<SelectPrevChar>>	{ ::ttk::treeview::SelectionExtend %W left }
 bind Treeview	<<SelectNextChar>>	{ ::ttk::treeview::SelectionExtend %W right }
 bind Treeview	<<PrevWord>>		{ ::ttk::treeview::KeyNav %W first }
@@ -72,8 +72,8 @@ bind Treeview	<<SelectPrevWord>>	{ ::ttk::treeview::SelectionExtend %W first }
 bind Treeview	<<SelectNextWord>>	{ ::ttk::treeview::SelectionExtend %W last }
 
 # Up/down arrow key bindings (none, shift, control, control+shift)
-bind Treeview 	<<PrevLine>>    	{ ::ttk::treeview::KeyNav %W up }
-bind Treeview 	<<NextLine>>  		{ ::ttk::treeview::KeyNav %W down }
+bind Treeview	<<PrevLine>>		{ ::ttk::treeview::KeyNav %W up }
+bind Treeview	<<NextLine>>		{ ::ttk::treeview::KeyNav %W down }
 bind Treeview	<<SelectPrevLine>>	{ ::ttk::treeview::SelectionExtend %W up }
 bind Treeview	<<SelectNextLine>>	{ ::ttk::treeview::SelectionExtend %W down }
 bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W top }
@@ -93,15 +93,15 @@ bind Treeview	<Control-Shift-End>	{ ::ttk::treeview::SelectionExtend %W bottom }
 
 # Page Up/Down key bindings (none, shift, control, control+shift)
 bind Treeview	<Prior>			{ ::ttk::treeview::ScrollPage %W up }
-bind Treeview	<Next> 			{ ::ttk::treeview::ScrollPage %W down }
+bind Treeview	<Next>			{ ::ttk::treeview::ScrollPage %W down }
 bind Treeview	<Shift-Prior>		{ ::ttk::treeview::ScrollPage %W left }
-bind Treeview	<Shift-Next> 		{ ::ttk::treeview::ScrollPage %W right }
+bind Treeview	<Shift-Next>		{ ::ttk::treeview::ScrollPage %W right }
 bind Treeview	<Control-Prior>		{ ::ttk::treeview::ScrollPage %W top }
-bind Treeview	<Control-Next> 		{ ::ttk::treeview::ScrollPage %W bottom }
+bind Treeview	<Control-Next>		{ ::ttk::treeview::ScrollPage %W bottom }
 bind Treeview	<Control-Shift-Prior>	{ ::ttk::treeview::ScrollPage %W pageTop }
-bind Treeview	<Control-Shift-Next> 	{ ::ttk::treeview::ScrollPage %W pageBottom }
+bind Treeview	<Control-Shift-Next>	{ ::ttk::treeview::ScrollPage %W pageBottom }
 bind Treeview	<Alt-Prior>		{ ::ttk::treeview::ScrollPage %W left; break }
-bind Treeview	<Alt-Next> 		{ ::ttk::treeview::ScrollPage %W right; break }
+bind Treeview	<Alt-Next>		{ ::ttk::treeview::ScrollPage %W right; break }
 
 # Scroll Lock bindings
 bind Treeview	<Mod3-Up>		{ %w yview scroll -1 units }
@@ -120,8 +120,8 @@ bind Treeview	<Mod3-Control-End>	{ %W xview moveto 1.0 }
 # Other keys
 bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W }
-bind Treeview 	<Tab> 			{ ::ttk::treeview::KeyNav %W right; break }
-bind Treeview 	<Shift-Tab> 		{ ::ttk::treeview::KeyNav %W left; break }
+bind Treeview	<Tab>			{ ::ttk::treeview::KeyNav %W right; break }
+bind Treeview	<Shift-Tab>		{ ::ttk::treeview::KeyNav %W left; break }
 #bind Treeview	<Return>		{ ::ttk::treeview::KeyNav %W down; break }
 #bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up; break }
 bind Treeview	<Control-Return>	{ ::ttk::treeview::ToggleFocus %W }
@@ -240,9 +240,9 @@ proc ::ttk::treeview::KeyNav {w dir} {
 		    incr colNum -1
 		}
 	    } elseif {[$w item $focus -open] && [$w haschildren $focus]} {
-	    	CloseItem $w $focus
+		CloseItem $w $focus
 	    } else {
-	    	set focus [$w parent $focus]
+		set focus [$w parent $focus]
 	    }
 	}
 	right {
@@ -253,7 +253,7 @@ proc ::ttk::treeview::KeyNav {w dir} {
 		    incr colNum
 		}
 	    } elseif {![$w item $focus -open] && [$w haschildren $focus]} {
-	    	OpenItem $w $focus
+		OpenItem $w $focus
 	    }
 	}
 	first {
