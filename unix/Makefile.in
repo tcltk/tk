@@ -1563,7 +1563,8 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(TOP_DIR)/manifest.uuid $(DISTDIR)
-	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
+	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/tkUnixDefault.h \
+		$(UNIX_DIR)/tkUnixInt.h $(UNIX_DIR)/tkUnixPort.h $(DISTDIR)/unix
 	cp $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	chmod 664 $(DISTDIR)/unix/Makefile.in
 	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
@@ -1592,14 +1593,15 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 		$(TTK_DIR)/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
-	cp $(TOP_DIR)/win/configure \
+	cp -p $(TOP_DIR)/win/configure \
 		$(TOP_DIR)/win/*.in \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
-		$(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.vc $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
+		$(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.bat \
+		$(TOP_DIR)/win/tkWin.h $(TOP_DIR)/win/tkWinDefault.h \
+		$(TOP_DIR)/win/tkWinInt.h \
+		$(TOP_DIR)/win/tkWinPort.h $(TOP_DIR)/win/tkWinSendCom.h \
+		$(TOP_DIR)/win/*.vc $(TOP_DIR)/win/README \
+		$(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
 	cp -p $(TOP_DIR)/win/wish.exe.manifest.in $(DISTDIR)/win/
 	cp -p $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
