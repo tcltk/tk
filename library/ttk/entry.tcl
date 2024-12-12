@@ -128,7 +128,6 @@ bind TEntry <Meta-Key>			{# nothing}
 bind TEntry <Control-Key>		{# nothing}
 bind TEntry <Escape>			{# nothing}
 bind TEntry <Return>			{# nothing}
-bind TEntry <KP_Enter>			{# nothing}
 bind TEntry <Tab>			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
 bind TEntry <Fn-Key>			{# nothing}

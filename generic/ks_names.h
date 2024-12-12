@@ -89,6 +89,7 @@
 { "Greek_switch", 0xFF7E },
 { "Hebrew_switch", 0xFF7E },
 { "Num_Lock", 0xFF7F },
+#ifndef TK_NO_DEPRECATED
 { "KP_Space", 0xFF80 },
 { "KP_Tab", 0xFF89 },
 { "KP_Enter", 0xFF8D },
@@ -126,6 +127,7 @@
 { "KP_8", 0xFFB8 },
 { "KP_9", 0xFFB9 },
 { "KP_Equal", 0xFFBD },
+#endif
 { "F1", 0xFFBE },
 { "F2", 0xFFBF },
 { "F3", 0xFFC0 },

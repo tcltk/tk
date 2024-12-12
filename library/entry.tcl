@@ -206,7 +206,6 @@ bind Entry <Meta-Key> {# nothing}
 bind Entry <Control-Key> {# nothing}
 bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
-bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
 bind Entry <Prior> {# nothing}
 bind Entry <Next> {# nothing}

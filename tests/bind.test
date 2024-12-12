@@ -5338,7 +5338,7 @@ test bind-25.36 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod3-Key-a>
+} -result <Num-Key-a>
 
 test bind-25.37 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5347,7 +5347,7 @@ test bind-25.37 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod4-Key-a>
+} -result <Fn-Key-a>
 
 test bind-25.38 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5383,7 +5383,7 @@ test bind-25.41 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod3-Key-a>
+} -result <Num-Key-a>
 
 test bind-25.42 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5392,7 +5392,7 @@ test bind-25.42 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod4-Key-a>
+} -result <Fn-Key-a>
 
 test bind-25.43 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5446,16 +5446,16 @@ test bind-25.48 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Control-B1-Mod1-Mod2-Mod3-Mod4-Key-a>
+} -result <Control-B1-Mod1-Mod2-Num-Fn-Key-a>
 
 test bind-25.49 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
-} -body {
-    bind .t.f <Extended-Return> foo
+} -constraints deprecated -body {
+    bind .t.f <KP_Enter> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Extended-Key-Return>
+} -result <Num-Key-Return>
 
 test bind-25.50 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5500,7 +5500,7 @@ test bind-25.54 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod3-Key-a>
+} -result <Num-Key-a>
 
 test bind-25.55 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5509,7 +5509,7 @@ test bind-25.55 {modifier names} -setup {
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Mod4-Key-a>
+} -result <Fn-Key-a>
 
 
 test bind-26.1 {event names} -setup {

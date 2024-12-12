@@ -307,7 +307,7 @@ bind Text <Alt-Key> {# nothing }
 bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
-bind Text <KP_Enter> {# nothing}
+bind Text <Num-Return> {# nothing}
 bind Text <Command-Key> {# nothing}
 bind Text <Fn-Key> {# nothing}
 
