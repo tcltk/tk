@@ -249,7 +249,7 @@ KeycodeToKeysym(
     if (state & LockMask) {
 	keys[VK_CAPITAL] = 1;
     }
-    if (state & Mod3Mask) {
+    if (state & Mod5Mask) {
 	keys[VK_SCROLL] = 1;
     }
     if (state & Mod1Mask) {
