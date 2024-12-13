@@ -5496,7 +5496,7 @@ test bind-25.53 {modifier names} -setup {
 test bind-25.54 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
-    bind .t.f <Num-a> foo
+    bind .t.f <Mod3-a> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
@@ -5505,7 +5505,7 @@ test bind-25.54 {modifier names} -setup {
 test bind-25.55 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
-    bind .t.f <Fn-a> foo
+    bind .t.f <Mod4-a> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
