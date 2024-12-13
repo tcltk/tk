@@ -5237,7 +5237,7 @@ GetPatternObj(
 	    modMask = patPtr->modMask;
 #if PRINT_SHORT_MOTION_SYNTAX
 	    if (patPtr->eventType == MotionNotify) {
-		modMask &= ~(ModMask)ALL_BUTTONS;
+		modMask &= ~(unsigned)ALL_BUTTONS;
 	    }
 #endif
 
