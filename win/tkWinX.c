@@ -1397,7 +1397,7 @@ GetState(
 	    break;
 	case VK_SCROLL:
 	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		mask = Mod3Mask;
+		mask = Mod5Mask;
 		prevState = ((state & mask) ^ prevState) ? 0 : 1;
 	    }
 	    break;

@@ -70,7 +70,7 @@ TkWinGetModifierState(void)
 	state |= Mod1Mask;
     }
     if (GetKeyState(VK_SCROLL) & 0x0001) {
-	state |= Mod3Mask;
+	state |= Mod5Mask;
     }
     if (GetKeyState(VK_LBUTTON) & 0x8000) {
 	state |= Button1Mask;
