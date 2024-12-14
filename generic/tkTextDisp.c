@@ -6397,9 +6397,7 @@ DisplayDLine(
 	    textPtr->refCount += 1;
 	    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
 		    baseline, display, pixmap, screenY);
-	    textPtr->refCount -= 1;
-
-	    if (TkTextReleaseIfDestroyed(textPtr)) {
+	    if (TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
 		/*
 		 * The displayProc invoked a binding that caused the widget
 		 * to be deleted. Don't do anything.
@@ -8859,8 +8857,9 @@ DisplayText(
 		    TkrTextPrintIndex(textPtr, &dlPtr->index, string);
 		    LOG("tk_textRedraw", string);
 		}
+		textPtr->refCount += 1;
 		DisplayDLine(textPtr, dlPtr, dlPtr->prevPtr, pixmap);
-		if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+		if (TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
 		    /*
 		     * DisplayDLine called a displayProc which invoked a binding
 		     * that caused the widget to be deleted. Don't do anything.
