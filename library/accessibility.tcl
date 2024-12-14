@@ -50,6 +50,15 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
+    proc _whighlight {w} {
+	$w configure -highlightthickness 3
+	$w configure -highlightcolor LightSkyblue1
+    }
+
+    proc _wunhighlight {w} {
+	$w configure -highlightthickness 0
+    }
+
 
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
@@ -297,7 +306,10 @@ namespace eval ::tk::accessible {
 			     {}\
 			 }
 
-
+    foreach item {Button Canvas Checkbutton Entry Listbox Menubutton Radiobutton Scale Spinbox Text} {
+	bind $item <FocusIn> {+::tk::accessible::_whighlight %W}
+	bind $item <FocusOut> {+::tk::accessible::_wunhighlight %W}
+    }
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action
