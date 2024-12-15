@@ -39,7 +39,7 @@ typedef struct TkHalfdeadWindow {
 } TkHalfdeadWindow;
 
 typedef struct {
-    int numMainWindows;		/* Count of numver of main windows currently
+    int numMainWindows;		/* Count of number of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
 				/* First in list of all main windows managed
@@ -886,7 +886,6 @@ TkCreateMainWindow(
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
     mainPtr->deletionEpoch = 0l;
-    TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
     TkStylePkgInit(mainPtr);
