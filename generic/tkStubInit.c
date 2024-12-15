@@ -41,6 +41,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef TkPutImage
 #undef XPutImage
+#define TkUnusedStubEntry 0
 
 #if !defined(MAC_OSX_TK)
 static int
@@ -1241,6 +1242,10 @@ const TkStubs tkStubs = {
     Tk_GetOtherWindow, /* 288 */
     Tk_Get3DBorderColors, /* 289 */
     Tk_MakeWindow, /* 290 */
+    Tk_UnderlineCharsInContext, /* 291 */
+    Tk_DrawCharsInContext, /* 292 */
+    Tk_MeasureCharsInContext, /* 293 */
+    TkUnusedStubEntry, /* 294 */
 };
 
 /* !END!: Do not edit above this line. */

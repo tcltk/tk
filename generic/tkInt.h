@@ -992,14 +992,6 @@ typedef struct TkpClipMask {
 #define TK_GRAB_EXCLUDED	3
 
 /*
- * Additional flag for TkpMeasureCharsInContext. Coordinate with other flags
- * for this routine, but don't make public until TkpMeasureCharsInContext is
- * made public, too.
- */
-
-#define TK_ISOLATE_END		32
-
-/*
  * The macro below is used to modify a "char" value (e.g. by casting it to an
  * unsigned character) so that it can be used safely with macros such as
  * isspace().
@@ -1036,17 +1028,25 @@ typedef struct TkpClipMask {
 # define Button9 9
 #endif
 
+/*
+ * The Button<B>Mask modifiers for <B> in {6 7 8 9}
+ * are internally used by Tk. They must be above the
+ * AnyModifier bit since anything below is reserved
+ * for the X protocol. If a future X11 version
+ * defines these, we adhere.
+ */
+
 #ifndef Button6Mask
-# define Button6Mask (1<<13)
+# define Button6Mask (AnyModifier<<6)
 #endif
 #ifndef Button7Mask
-# define Button7Mask (1<<14)
+# define Button7Mask (AnyModifier<<7)
 #endif
 #ifndef Button8Mask
-# define Button8Mask (AnyModifier<<4)
+# define Button8Mask (AnyModifier<<8)
 #endif
 #ifndef Button9Mask
-# define Button9Mask (AnyModifier<<5)
+# define Button9Mask (AnyModifier<<9)
 #endif
 
 /*
@@ -1207,7 +1207,6 @@ MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
-MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE Tcl_ObjCmdProc TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
@@ -1237,22 +1236,10 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
-			    Tcl_Size rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
 			    Tcl_Size rangeLength, double x, double y, double angle);
-MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
-			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
-			    Tcl_Size rangeLength, int maxLength, int flags,
-			    int *lengthPtr);
-MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *string, Tcl_Size numBytes, int x, int y,
-			    Tcl_Size firstByte, Tcl_Size lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
