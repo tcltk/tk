@@ -8,7 +8,8 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_MeasureChars, Tk_TextWidth, Tk_DrawChars, Tk_UnderlineChars \- routines to measure and display simple single-line strings.
+Tk_MeasureChars, Tk_MeasureCharsInContext, Tk_TextWidth, Tk_DrawChars, Tk_DrawCharsInContext,
+Tk_UnderlineChars, Tk_UnderlineCharsInContext \- routines to measure and display simple single-line strings.
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -17,11 +18,18 @@ int
 \fBTk_MeasureChars\fR(\fItkfont, string, numBytes, maxPixels, flags, lengthPtr\fR)
 .sp
 int
+\fBTk_MeasureCharsInContext\fR(\fItkfont, string, numBytes, rangeStart, rangeLength, maxPixels, flags, lengthPtr\fR)
+.sp
+int
 \fBTk_TextWidth\fR(\fItkfont, string, numBytes\fR)
 .sp
 \fBTk_DrawChars\fR(\fIdisplay, drawable, gc, tkfont, string, numBytes, x, y\fR)
 .sp
+\fBTk_DrawCharsInContext\fR(\fIdisplay, drawable, gc, tkfont, string, numBytes, rangeStart, rangeLength, x, y\fR)
+.sp
 \fBTk_UnderlineChars\fR(\fIdisplay, drawable, gc, tkfont, string, x, y, firstByte, lastByte\fR)
+.sp
+\fBTk_UnderlineCharsInContext\fR(\fIdisplay, drawable, gc, tkfont, string, numBytes, x, y, firstByte, lastByte\fR)
 .fi
 .SH ARGUMENTS
 .AS "const char" firstChar
@@ -52,6 +60,9 @@ characters could fit in the length given by \fImaxPixels\fR.  If
 that if not even one word fits on the line, return the first few letters of the
 word that did fit; if not even one letter of the word fit, then the first
 letter will still be returned.
+\fBTK_ISOLATE_END\fR means that the last character should not be considered in
+context with the rest of the string (used for breaking lines, with the
+Tk_*InContext variants of the functions only).
 .AP int *lengthPtr out
 Filled with the number of pixels occupied by the number of characters
 returned as the result of \fBTk_MeasureChars\fR.
@@ -72,6 +83,10 @@ The index of the first byte of the first character to underline in the
 The index of the first byte of the last character up to which the
 underline will be drawn.  The character specified by \fIlastByte\fR
 will not itself be underlined.
+.AP Tcl_Size rangeStart in
+Index of first byte to draw or to measure.
+.AP Tcl_Size rangeLength in
+Length of range to draw or to measure, in bytes.
 .BE
 .SH DESCRIPTION
 .PP
@@ -121,6 +136,13 @@ have been displayed previously by \fBTk_DrawChars\fR); it just draws the
 underline.  This procedure is used to underline a few characters without
 having to construct an underlined font.  To produce natively underlined
 text, the appropriate underlined font should be constructed and used.
+.PP
+\fBTk_MeasureCharsInContext\fR, \fBTk_DrawCharsInContext\fR,
+\fBTk_UnderlineCharsInContext\fR are variants of respectively
+\fBTk_MeasureChars\fR, \fBTk_DrawChars\fR and \fBTk_UnderlineChars\fR,
+but with access to all the characters on the line for context. Except
+on macOS, this context isn't actually consulted (meaning the out of
+context variants are called).
 .SH "SEE ALSO"
 font(n), FontId(3)
 .SH KEYWORDS

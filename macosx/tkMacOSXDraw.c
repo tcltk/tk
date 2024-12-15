@@ -1482,7 +1482,7 @@ TkMacOSXRestoreDrawingContext(
      * Mark the view as needing to be redisplayed, since we have drawn on its
      * backing layer.
      */
-    
+
     [dcPtr->view setNeedsDisplay:YES];
 
 #ifdef TK_MAC_DEBUG

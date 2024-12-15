@@ -112,7 +112,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macOSVersion] > 101200) {
+    if ([NSApp macOSVersion] >= 101300) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:

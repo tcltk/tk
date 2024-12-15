@@ -241,6 +241,27 @@ namespace eval tk {
 	}
 	namespace export controlPointerWarpTiming
 
+	# On macOS windows are not allowed to overlap the menubar at the top of the
+	# screen or the dock.  So tests which move a window and then check whether it
+	# got moved to the requested location should use a y coordinate larger than the
+	# height of the menubar (normally 23 pixels) and an x coordinate larger than the
+	# width of the dock, if it happens to be on the left.
+	# menubarheight deals with this issue but may not be available from the test
+	# environment, therefore provide a fallback here
+	if {[llength [info procs menubarheight]] == 0} {
+	    if {[tk windowingsystem] ne "aqua"} {
+		# Windows may overlap the menubar
+		proc menubarheight {} {
+		    return 0
+		}
+	    } else {
+		# Windows may not overlap the menubar
+		proc menubarheight {} {
+		    return 30 ;  # arbitrary value known to be larger than the menubar height
+		}
+	    }
+	    namespace export menubarheight
+	}
     }
 }
 

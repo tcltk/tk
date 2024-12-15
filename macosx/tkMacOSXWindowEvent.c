@@ -438,7 +438,7 @@ static void RefocusGrabWindow(void *data) {
 @end
 
 #pragma mark -
- 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -470,7 +470,7 @@ TkpWillDrawWidget(Tk_Window tkwin) {
     (void) tkwin;
     return false;
 }
- 
+
 /*
  *----------------------------------------------------------------------
  *
