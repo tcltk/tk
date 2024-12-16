@@ -55,6 +55,7 @@ namespace import -force tcltest::cleanupTests
 #       and we use [tcltest::configure -loadfile] instead.
 #
 set mainTestDir [file dirname [tcltest::configure -loadfile]]
+source [file join $mainTestDir testutils.tcl]
 source [file join $mainTestDir constraints.tcl]
 unset mainTestDir
 
