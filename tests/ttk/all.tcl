@@ -14,7 +14,7 @@ package require tcltest 2.2
 tcltest::configure {*}$argv
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
 tcltest::configure -loadfile \
-    [file join [file dirname [tcltest::testsDirectory]] constraints.tcl]
+    [file join [file dirname [tcltest::testsDirectory]] main.tcl]
 tcltest::configure -singleproc 1
 set ErrorOnFailures [info exists env(ERROR_ON_FAILURES)]
 encoding system utf-8
