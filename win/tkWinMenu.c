@@ -2115,7 +2115,7 @@ DrawMenuUnderline(
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	    Tk_UnderlineChars(menuPtr->display, d,
-		    gc, tkfont, label, x + mePtr->indicatorSpace+ activeBorderWidth,
+		    gc, tkfont, label, x + mePtr->indicatorSpace + activeBorderWidth,
 		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,
 		    (int) (start - label), (int) (end - label));
 	}
