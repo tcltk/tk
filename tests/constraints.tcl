@@ -1,3 +1,11 @@
+# constraints.tcl --
+#
+# This file holds test constraints that are used by several test files
+# in the Tk test suite.
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
 namespace import -force tcltest::testConstraint
 testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
