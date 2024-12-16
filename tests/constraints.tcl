@@ -1,24 +1,3 @@
-if {[namespace exists tk::test]} {
-    deleteWindows
-    wm geometry . {}
-    raise .
-    return
-}
-
-package require tk
-tk appname tktest
-wm title . tktest
-# If the main window isn't already mapped (e.g. because the tests are
-# being run automatically) , specify a precise size for it so that the
-# user won't have to position it manually.
-
-if {![winfo ismapped .]} {
-    wm geometry . +0+0
-    update
-}
-
-package require tcltest 2.2
-
 namespace eval tk {
     namespace eval test {
 
@@ -395,16 +374,4 @@ if {[llength [info commands send]]} {
 }
 cleanupbg
 
-eval tcltest::configure $argv
-namespace import -force tcltest::test
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
-namespace import -force tcltest::makeDirectory
-namespace import -force tcltest::removeDirectory
-namespace import -force tcltest::interpreter
-namespace import -force tcltest::testsDirectory
-namespace import -force tcltest::cleanupTests
-
-deleteWindows
-wm geometry . {}
-raise .
+# EOF
