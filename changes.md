@@ -25,6 +25,7 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [TIP #706: Expose three Tk "In Context" functions via stubs table](https://core.tcl-lang.org/tips/doc/trunk/tip/706.md)
  - [Bind mechanism vs. GNOME](https://core.tcl-lang.org/tk/tktview/6bdf1a)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
+ - [Menu entry underline does not consider activeborderwidth](https://core.tcl-lang.org/tk/tktview/844c0b)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
