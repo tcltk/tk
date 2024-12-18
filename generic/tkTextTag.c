@@ -42,7 +42,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -363,46 +363,6 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidthObj) {
-		int borderWidth;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &borderWidth);
-		if (borderWidth < 0) {
-		    borderWidth = 0;
-		    Tcl_DecrRefCount(tagPtr->borderWidthObj);
-		    tagPtr->borderWidthObj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->borderWidthObj);
-		}
-	    }
-	    if (tagPtr->spacing1Obj) {
-		int spacing1;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing1Obj, &spacing1);
-		if (spacing1 < 0) {
-		    spacing1 = 0;
-		    Tcl_DecrRefCount(tagPtr->spacing1Obj);
-		    tagPtr->spacing1Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing1Obj);
-		}
-	    }
-	    if (tagPtr->spacing2Obj) {
-		int spacing2;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing2Obj, &spacing2);
-		if (spacing2 < 0) {
-		    spacing2 = 0;
-		    Tcl_DecrRefCount(tagPtr->spacing2Obj);
-		    tagPtr->spacing2Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing2Obj);
-		}
-	    }
-	    if (tagPtr->spacing3Obj) {
-		int spacing3;
-		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->spacing3Obj, &spacing3);
-		if (spacing3 < 0) {
-		    spacing3 = 0;
-		    Tcl_DecrRefCount(tagPtr->spacing3Obj);
-		    tagPtr->spacing3Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing3Obj);
-		}
-	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
 		ckfree(tagPtr->tabArrayPtr);
 		tagPtr->tabArrayPtr = NULL;

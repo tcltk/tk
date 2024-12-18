@@ -5250,12 +5250,6 @@ TkTextRelayoutWindow(
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	highlightWidth = 0;
-	Tcl_DecrRefCount(textPtr->highlightWidthObj);
-	textPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->highlightWidthObj);
-    }
     dInfoPtr->x = highlightWidth + borderWidth + padX;
     dInfoPtr->y = highlightWidth + borderWidth + padY;
     dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - highlightWidth

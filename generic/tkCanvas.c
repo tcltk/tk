@@ -2293,61 +2293,7 @@ ConfigureCanvas(
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
-    if (borderWidth < 0) {
-	borderWidth = 0;
-	Tcl_DecrRefCount(canvasPtr->borderWidthObj);
-	canvasPtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->borderWidthObj);
-    }
-    if (height < 0) {
-	height = 0;
-	Tcl_DecrRefCount(canvasPtr->heightObj);
-	canvasPtr->heightObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->heightObj);
-    }
-    if (highlightWidth < 0) {
-	highlightWidth = 0;
-	Tcl_DecrRefCount(canvasPtr->highlightWidthObj);
-	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
-    }
-    if (width < 0) {
-	width = 0;
-	Tcl_DecrRefCount(canvasPtr->widthObj);
-	canvasPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->widthObj);
-    }
-    if (xScrollIncrement < 0) {
-	xScrollIncrement = 0;
-	Tcl_DecrRefCount(canvasPtr->xScrollIncrementObj);
-	canvasPtr->xScrollIncrementObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->xScrollIncrementObj);
-    }
-    if (yScrollIncrement < 0) {
-	yScrollIncrement = 0;
-	Tcl_DecrRefCount(canvasPtr->yScrollIncrementObj);
-	canvasPtr->yScrollIncrementObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->yScrollIncrementObj);
-    }
     canvasPtr->inset = borderWidth + highlightWidth;
-    if (canvasPtr->textInfo.insertBorderWidth < 0) {
-	canvasPtr->textInfo.insertBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-	canvasPtr->textInfo.reserved1 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-    }
-    if (canvasPtr->textInfo.insertWidth < 0) {
-	canvasPtr->textInfo.insertWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-	canvasPtr->textInfo.reserved2 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-    }
-    if (canvasPtr->textInfo.selBorderWidth < 0) {
-	canvasPtr->textInfo.selBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-	canvasPtr->textInfo.reserved3 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-    }
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
