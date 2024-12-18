@@ -987,41 +987,11 @@ ConfigureFrame(
     }
 
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->widthObj, &width);
-    if (width < 0) {
-	Tcl_DecrRefCount(framePtr->widthObj);
-	framePtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->widthObj);
-    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->heightObj, &height);
-    if (height < 0) {
-	Tcl_DecrRefCount(framePtr->heightObj);
-	framePtr->heightObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->heightObj);
-    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
-    if (borderWidth < 0) {
-	Tcl_DecrRefCount(framePtr->borderWidthObj);
-	framePtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->borderWidthObj);
-    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	Tcl_DecrRefCount(framePtr->highlightWidthObj);
-	framePtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->highlightWidthObj);
-    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padXObj, &padX);
-    if (padX < 0) {
-	Tcl_DecrRefCount(framePtr->padXObj);
-	framePtr->padXObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->padXObj);
-    }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->padYObj, &padY);
-    if (padY < 0) {
-	Tcl_DecrRefCount(framePtr->padYObj);
-	framePtr->padYObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->padYObj);
-    }
 
     /*
      * If a -labelwidget is specified, check that it is valid and set up
