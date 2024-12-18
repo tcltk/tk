@@ -2205,52 +2205,13 @@ ConfigureText(
      */
 
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &spacing1);
-    if (spacing1 < 0) {
-	spacing1 = 0;
-	Tcl_DecrRefCount(textPtr->spacing1Obj);
-	textPtr->spacing1Obj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->spacing1Obj);
-    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing2Obj, &spacing2);
-    if (spacing2 < 0) {
-	spacing2 = 0;
-	Tcl_DecrRefCount(textPtr->spacing2Obj);
-	textPtr->spacing2Obj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->spacing2Obj);
-    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing3Obj, &spacing3);
-    if (spacing3 < 0) {
-	spacing3 = 0;
-	Tcl_DecrRefCount(textPtr->spacing3Obj);
-	textPtr->spacing3Obj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->spacing3Obj);
-    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
-    if (insertBorderWidth < 0) {
-	insertBorderWidth = 0;
-	Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
-	textPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->insertBorderWidthObj);
-    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
-    if (insertWidth < 0) {
-	insertWidth = 0;
-	Tcl_DecrRefCount(textPtr->insertWidthObj);
-	textPtr->insertWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->insertWidthObj);
-    }
     if (textPtr->selBorderWidthObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->selBorderWidthObj, &selBorderWidth);
     }
-    if (selBorderWidth < 0) {
-	selBorderWidth = 0;
-	if (textPtr->selBorderWidthObj) {
-	    Tcl_DecrRefCount(textPtr->selBorderWidthObj);
-	}
-	textPtr->selBorderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->selBorderWidthObj);
-    }
-
 
     /*
      * Parse tab stops.
