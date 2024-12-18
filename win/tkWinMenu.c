@@ -2107,13 +2107,15 @@ DrawMenuUnderline(
 	len = TkGetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
-	    int ch;
+	    int activeBorderWidth, ch;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = TkUtfAtIndex(label, mePtr->underline);
 	    end = start + TkUtfToUniChar(start, &ch);
+	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	    Tk_UnderlineChars(menuPtr->display, d,
-		    gc, tkfont, label, x + mePtr->indicatorSpace,
+		    gc, tkfont, label, x + mePtr->indicatorSpace + activeBorderWidth,
 		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,
 		    (int) (start - label), (int) (end - label));
 	}
