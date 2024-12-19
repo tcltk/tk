@@ -11,10 +11,8 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
-}
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::scroll::*
 
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
@@ -137,7 +135,7 @@ test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
     destroy .s
 } -result .s
 
-scrollbar .s -orient vertical -command scroll -highlightthickness 2 -bd 2
+scrollbar .s -orient vertical -command [list scrollInfo set] -highlightthickness 2 -bd 2
 pack .s -side right -fill y
 update
 test scrollbar-3.1 {ScrollbarWidgetCmd procedure} {
@@ -756,6 +754,10 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
 catch {destroy .s}
 catch {destroy .t}
 
-# cleanup
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::scroll::*
 cleanupTests
 return

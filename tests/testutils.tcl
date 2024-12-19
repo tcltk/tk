@@ -272,6 +272,30 @@ namespace import -force tk::test::*
 # these functional areas.
 #
 
+namespace eval ::tk::test::scroll {
+
+    # scrollInfo --
+    #
+    #	Used as the scrolling command for widgets, set with "-[xy]scrollcommand".
+    #	It saves the scrolling information in, or retrieves it from a namespace
+    #	variable "scrollInfo".
+    #
+    variable scrollInfo {}
+    proc scrollInfo {mode args} {
+	variable scrollInfo
+	switch -- $mode {
+	    get {
+		return $scrollInfo
+	    }
+	    set {
+		set scrollInfo $args
+	    }
+	}
+    }
+
+    namespace export *
+}
+
 namespace eval ::tk::test::select {
 
     proc errHandler args {
