@@ -439,7 +439,6 @@ ConfigureMessage(
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    int width, borderWidth, highlightWidth, padX, padY;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
