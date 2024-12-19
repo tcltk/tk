@@ -272,23 +272,10 @@ namespace import -force tk::test::*
 # these functional areas.
 #
 
-# Example namespace. Will be replaced by relocations from test files.
-namespace eval ::tk::test::dummy {
+namespace eval ::tk::test::select {
 
-    variable dummy_ns_var 1023
-    proc dummy_proc {mode {value "_invalid_"}} {
-	variable dummy_ns_var
-	switch -- $mode {
-	    get {
-		return $dummy_ns_var
-	    }
-	    set {
-		if {$value eq "_invalid_"} {
-		    return -code error "invalid argument \"value\""
-		}
-		set dummy_ns_var $value
-	    }
-	}
+    proc errHandler args {
+	error "selection handler aborted"
     }
 
     namespace export *
