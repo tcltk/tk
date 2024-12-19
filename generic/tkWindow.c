@@ -39,7 +39,7 @@ typedef struct TkHalfdeadWindow {
 } TkHalfdeadWindow;
 
 typedef struct {
-    int numMainWindows;		/* Count of numver of main windows currently
+    int numMainWindows;		/* Count of number of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
 				/* First in list of all main windows managed
