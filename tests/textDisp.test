@@ -11,20 +11,15 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::scroll::*
+
 # The delay procedure needs to wait long enough for the asynchronous updates
 # performed by the text widget to run.
 proc delay {} {
     update
     after 100
     update
-}
-
-# The procedure below is used as the scrolling command for the text;
-# it just saves the scrolling information in a variable "scrollInfo".
-
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
 }
 
 # The procedure below is used to generate errors during scrolling commands.
@@ -97,7 +92,7 @@ Some of the upcoming tests will probably fail."
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
 # Also  -height 10  (lines) is an important assumption
-text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
+text .t -font $fixedFont -width 20 -height 10 -yscrollcommand [list scrollInfo set]
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
@@ -1079,32 +1074,32 @@ test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
     update
     .t count -update -ypixels 1.0 end
     update
-    set scrollInfo
+    scrollInfo get
 } {0.0 1.0}
 test textDisp-6.8 {DisplayText, vertical scrollbar updates} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
     update
-    set scrollInfo "unchanged"
+    scrollInfo set "unchanged"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13} {
 	.t insert end "\nLine $i"
     }
     update
     .t count -update -ypixels 1.0 end ; update
-    set scrollInfo
+    scrollInfo get
 } [list 0.0 [expr {10.0/13}]]
-.t configure -yscrollcommand {} -xscrollcommand scroll
+.t configure -yscrollcommand {} -xscrollcommand [list scrollInfo set]
 test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t configure -wrap none
     .t delete 1.0 end
     update
-    set scrollInfo unchanged
+    scrollInfo set unchanged
     .t insert end xxxxxxxxx\n
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     update
-    set scrollInfo
+    scrollInfo get
 } [list 0.0 [expr {4.0/11}]]
 test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua} {
     # For this test to pass line 8 must be out of the text widget.
@@ -1336,9 +1331,9 @@ test textDisp-8.10 {TkTextChanged} haveBigFontTwiceLargerThanTextFont {
 test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-screen} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n"
-    .t configure -yscrollcommand scroll
+    .t configure -yscrollcommand [list scrollInfo set]
     update
-    set scrollInfo ""
+    scrollInfo set ""
     .t insert end "a\nb\nc\n"
     # We need to wait for our asychronous callbacks to update the
     # scrollbar
@@ -1346,7 +1341,7 @@ test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-s
     .t count -update -ypixels 1.0 end
     update
     .t configure -yscrollcommand ""
-    set scrollInfo
+    scrollInfo get
 } {0.0 0.625}
 test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past and new lines} {
     .t delete 1.0 end
@@ -2671,7 +2666,7 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     update
     lequal [list $x [.t index @0,0]] $expected
 } {1}
-.t configure -xscrollcommand scroll -yscrollcommand {}
+.t configure -xscrollcommand [list scrollInfo set] -yscrollcommand {}
 
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
@@ -2680,7 +2675,7 @@ test textDisp-18.1 {GetXView procedure} {
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     update
-    set scrollInfo
+    scrollInfo get
 } [list 0.0 [expr {4.0/11}]]
 test textDisp-18.2 {GetXView procedure} {
     .t configure -wrap char
@@ -2689,13 +2684,13 @@ test textDisp-18.2 {GetXView procedure} {
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     update
-    set scrollInfo
+    scrollInfo get
 } {0.0 1.0}
 test textDisp-18.3 {GetXView procedure} {
     .t configure -wrap none
     .t delete 1.0 end
     update
-    set scrollInfo
+    scrollInfo get
 } {0.0 1.0}
 test textDisp-18.4 {GetXView procedure} {
     .t configure -wrap none
@@ -2704,7 +2699,7 @@ test textDisp-18.4 {GetXView procedure} {
     .t insert end xxxxxx\n
     .t insert end xxxxxxxxxxxxxxxxx
     update
-    set scrollInfo
+    scrollInfo get
 } {0.0 1.0}
 test textDisp-18.5 {GetXView procedure} {
     .t configure -wrap none
@@ -2714,7 +2709,7 @@ test textDisp-18.5 {GetXView procedure} {
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     .t xview scroll 31 units
     update
-    set scrollInfo
+    scrollInfo get
 } [list [expr {31.0/55}] [expr {51.0/55}]]
 test textDisp-18.6 {GetXView procedure} {
     .t configure -wrap none
@@ -2726,26 +2721,26 @@ test textDisp-18.6 {GetXView procedure} {
     .t xview scroll 31 units
     update
     set x {}
-    lappend x $scrollInfo
+    lappend x [scrollInfo get]
     .t configure -wrap char
     update
-    lappend x $scrollInfo
+    lappend x [scrollInfo get]
     .t configure -wrap word
     update
-    lappend x $scrollInfo
+    lappend x [scrollInfo get]
     .t configure -wrap none
     update
-    lappend x $scrollInfo
+    lappend x [scrollInfo get]
 } [list [list [expr {31.0/56}] [expr {51.0/56}]] {0.0 1.0} {0.0 1.0} [list 0.0 [expr {5.0/14}]]]
 test textDisp-18.7 {GetXView procedure} {
     .t configure -wrap none
     .t delete 1.0 end
     update
-    set scrollInfo unchanged
+    scrollInfo set unchanged
     .t insert end xxxxxx\n
     .t insert end xxx
     update
-    set scrollInfo
+    scrollInfo get
 } {unchanged}
 test textDisp-18.8 {GetXView procedure} {
     proc bgerror msg {
@@ -2773,42 +2768,42 @@ test textDisp-18.8 {GetXView procedure} {
 catch {rename bgerror {}}
 catch {rename bogus {}}
 
-.t configure -xscrollcommand {} -yscrollcommand scroll
+.t configure -xscrollcommand {} -yscrollcommand [list scrollInfo set]
 test textDisp-19.1 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
     update
-    set scrollInfo
+    scrollInfo get
 } {0.0 1.0}
 test textDisp-19.2 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
     update
-    set scrollInfo "unchanged"
+    scrollInfo set "unchanged"
     .t insert 1.0 "Line1\nLine2"
     update
-    set scrollInfo
+    scrollInfo get
 } {unchanged}
 test textDisp-19.3 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
     update
-    set scrollInfo "unchanged"
+    scrollInfo set "unchanged"
     .t insert 1.0 "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
-    set scrollInfo
+    scrollInfo get
 } {unchanged}
 test textDisp-19.4 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
     update
-    set scrollInfo "unchanged"
+    scrollInfo set "unchanged"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13} {
 	.t insert end "\nLine $i"
     }
     update
-    set scrollInfo
+    scrollInfo get
 } [list 0.0 [expr {70.0/91}]]
 test textDisp-19.5 {GetYView procedure} {
     .t configure -wrap char
@@ -2819,7 +2814,7 @@ test textDisp-19.5 {GetYView procedure} {
     }
     .t insert 2.end " is really quite long; in fact it's so long that it wraps three times"
     update
-    set x $scrollInfo
+    set x [scrollInfo get]
 } {0.0 0.625}
 test textDisp-19.6 {GetYView procedure} {
     .t configure -wrap char
@@ -2831,7 +2826,7 @@ test textDisp-19.6 {GetYView procedure} {
     .t insert 2.end " is really quite long; in fact it's so long that it wraps three times"
     .t yview 4.0
     update
-    set x $scrollInfo
+    set x [scrollInfo get]
 } {0.375 1.0}
 test textDisp-19.7 {GetYView procedure} {
     .t configure -wrap char
@@ -2843,7 +2838,7 @@ test textDisp-19.7 {GetYView procedure} {
     .t insert 2.end " is really quite long; in fact it's so long that it wraps three times"
     .t yview 2.26
     update
-    set x $scrollInfo
+    set x [scrollInfo get]
 } {0.125 0.75}
 test textDisp-19.8 {GetYView procedure} {
     .t configure -wrap char
@@ -2856,7 +2851,7 @@ test textDisp-19.8 {GetYView procedure} {
     .t yview 2.0
     update
     .t count -update -ypixels 1.0 end
-    set x $scrollInfo
+    set x [scrollInfo get]
 } {0.0625 0.6875}
 test textDisp-19.9 {GetYView procedure} {
     .t configure -wrap char
@@ -2867,7 +2862,7 @@ test textDisp-19.9 {GetYView procedure} {
     }
     .t yview 3.0
     update
-    set scrollInfo
+    scrollInfo get
 } [list [expr {4.0/30}] 0.8]
 test textDisp-19.10 {GetYView procedure} {
     .t configure -wrap char
@@ -2878,7 +2873,7 @@ test textDisp-19.10 {GetYView procedure} {
     }
     .t yview 11.0
     update
-    set scrollInfo
+    scrollInfo get
 } [list [expr {1.0/3}] 1.0]
 test textDisp-19.10.1 {Widget manipulation causes height miscount} {
     .t configure -wrap char
@@ -2900,7 +2895,7 @@ test textDisp-19.10.1 {Widget manipulation causes height miscount} {
     .t yview insert
     update
     .t count -update -ypixels 1.0 end
-    set scrollInfo
+    scrollInfo get
 } {0.5 1.0}
 test textDisp-19.11 {GetYView procedure} {
     .t configure -wrap word
@@ -2914,7 +2909,7 @@ test textDisp-19.11 {GetYView procedure} {
     .t yview insert
     update
     .t count -update -ypixels 1.0 end
-    set scrollInfo
+    scrollInfo get
 } {0.5 1.0}
 test textDisp-19.11.2 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 1.0 end
@@ -3084,13 +3079,13 @@ test textDisp-19.14 {GetYView procedure} {
     update
     .t count -update -ypixels 1.0 end
     delay
-    set scrollInfo "unchanged"
+    scrollInfo set "unchanged"
     .t mark set insert 3.0
     .t tag configure x -background red
     .t tag add x 1.0 5.0
     update
     .t tag delete x
-    set scrollInfo
+    scrollInfo get
 } {unchanged}
 test textDisp-19.15 {GetYView procedure} {
     .t configure -wrap word
@@ -3110,7 +3105,7 @@ test textDisp-19.15 {GetYView procedure} {
     .t delete 1.0 end
     update
     rename bgerror {}
-    .t configure -yscrollcommand scroll
+    .t configure -yscrollcommand [list scrollInfo set]
     set x
 } {{{scrolling error}} {scrolling error
     while executing
@@ -4924,9 +4919,12 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
     destroy .t1
 } -result {}
 
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::scroll::*
 deleteWindows
 option clear
-
-# cleanup
 cleanupTests
 return
