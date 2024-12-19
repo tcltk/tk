@@ -527,9 +527,20 @@ DoConfig(
 			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
 			*(Tcl_Obj **)ptr = NULL;
 		    }
-		} else if (Tk_GetPixelsFromObj(interp, tkwin, arg, &dummy)
+		} else if (Tk_GetPixelsFromObj(((specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1)) ? NULL : interp), tkwin, arg, &dummy)
 			!= TCL_OK) {
+		    if (interp && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
+			Tcl_AppendResult(interp, "expected screen distance or \"\" but got \"",
+				Tcl_GetString(arg), "\"", (char *)NULL);
+		    }
 		    return TCL_ERROR;
+		} else if (!(specPtr->specFlags & TK_OPTION_NEG_OK) && (dummy < 0)) {
+			if (interp) {
+			    Tcl_AppendResult(interp, "expected screen distance ",
+				    (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1)) ? " or \"\"" : "",
+				    "but got \"", Tcl_GetString(arg), "\"", (char *)NULL);
+			}
+			return TCL_ERROR;
 		} else {
 		    Tcl_IncrRefCount(arg);
 		    if (*(Tcl_Obj **)ptr != NULL) {
