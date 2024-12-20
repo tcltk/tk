@@ -14,8 +14,6 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::scroll::*
 
-scrollInfo set {}
-
 # For trace add variable
 proc override args {
     global x
