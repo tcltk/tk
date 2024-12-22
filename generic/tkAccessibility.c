@@ -761,24 +761,6 @@ Tk_GetAccessibleAction(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * Tk_GetAccessibleAction  --
- *
- *	This function deletes the accessibility table. 
- *	
- *
- * Results:
- *	Deletes the accessibility table.  
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-/*
  * Register script-level commands to set accessibility attributes. 
  */
 
