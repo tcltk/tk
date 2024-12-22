@@ -468,7 +468,7 @@ static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 static void             RemoveTransient(TkWindow *winPtr);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
 /*
  * Add a window as a tab in the group specified by its tabbingid, or
