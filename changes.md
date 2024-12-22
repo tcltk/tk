@@ -17,6 +17,8 @@ to the userbase.
 
 # Bug fixes
  - [inaccurate scrollbar error-message](https://core.tcl-lang.org/tk/tktview/f88118)
+ - [Build tk 9.0.1 failed on macos 10.13](https://core.tcl-lang.org/tk/tktview/cb5d77)
+ - [image svg upstream out of bound read nanosvg#262](https://core.tcl-lang.org/tk/tktview/121786)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
