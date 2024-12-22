@@ -8,7 +8,7 @@ Version:       9.0a1
 Release:       2
 License:       BSD
 Group:         Development/Languages
-Source:        http://prdownloads.sourceforge.net/tcl/tk%{version}-src.tar.gz
+Source:        https://prdownloads.sourceforge.net/tcl/tk%{version}-src.tar.gz
 URL:           https://www.tcl-lang.org/
 Buildroot:     /var/tmp/%{name}%{version}
 Buildrequires: XFree86-devel tcl >= 9.0.0

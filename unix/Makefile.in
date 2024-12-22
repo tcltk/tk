@@ -1681,7 +1681,8 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	rm -rf $(DISTDIR)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/manifest.uuid $(DISTDIR)
-	$(DIST_INSTALL_DATA) $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
+	$(DIST_INSTALL_DATA) $(UNIX_DIR)/*.c $(UNIX_DIR)/tkUnixDefault.h \
+		$(UNIX_DIR)/tkUnixInt.h $(UNIX_DIR)/tkUnixPort.h $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
@@ -1710,7 +1711,10 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/*.in $(DISTDIR)/win
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/configure.ac \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
-		$(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat \
+		$(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.bat \
+		$(TOP_DIR)/win/tkWin.h $(TOP_DIR)/win/tkWinDefault.h \
+		$(TOP_DIR)/win/tkWinIco.h $(TOP_DIR)/win/tkWinInt.h \
+		$(TOP_DIR)/win/tkWinPort.h $(TOP_DIR)/win/tkWinSendCom.h \
 		$(TOP_DIR)/win/*.vc $(TOP_DIR)/win/README \
 		$(TOP_DIR)/license.terms \
 		$(DISTDIR)/win

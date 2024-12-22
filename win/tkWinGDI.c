@@ -36,18 +36,18 @@ typedef BOOL WINAPI (*DrawFunc) (
 #endif
 
 /* Real functions. */
-static Tcl_ObjCmdProc GdiArc;
-static Tcl_ObjCmdProc GdiBitmap;
-static Tcl_ObjCmdProc GdiCharWidths;
-static Tcl_ObjCmdProc GdiImage;
-static Tcl_ObjCmdProc GdiPhoto;
-static Tcl_ObjCmdProc GdiLine;
-static Tcl_ObjCmdProc GdiOval;
-static Tcl_ObjCmdProc GdiPolygon;
-static Tcl_ObjCmdProc GdiRectangle;
-static Tcl_ObjCmdProc GdiText;
-static Tcl_ObjCmdProc GdiMap;
-static Tcl_ObjCmdProc GdiCopyBits;
+static Tcl_ObjCmdProc2 GdiArc;
+static Tcl_ObjCmdProc2 GdiBitmap;
+static Tcl_ObjCmdProc2 GdiCharWidths;
+static Tcl_ObjCmdProc2 GdiImage;
+static Tcl_ObjCmdProc2 GdiPhoto;
+static Tcl_ObjCmdProc2 GdiLine;
+static Tcl_ObjCmdProc2 GdiOval;
+static Tcl_ObjCmdProc2 GdiPolygon;
+static Tcl_ObjCmdProc2 GdiRectangle;
+static Tcl_ObjCmdProc2 GdiText;
+static Tcl_ObjCmdProc2 GdiMap;
+static Tcl_ObjCmdProc2 GdiCopyBits;
 
 /* Local copies of similar routines elsewhere in Tcl/Tk. */
 static int		GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
@@ -84,7 +84,7 @@ static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
-			    const char *str[], int numargs);
+			    const char *str[], Tcl_Size numargs);
 static Tcl_ObjCmdProc2 PrintSelectPrinter;
 static Tcl_ObjCmdProc2 PrintOpenPrinter;
 static Tcl_ObjCmdProc2 PrintClosePrinter;
@@ -2424,9 +2424,9 @@ static int GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
     LOGFONTW *lf,
     const char *str[],
-    int numargs)
+    Tcl_Size numargs)
 {
-    int i;
+    Tcl_Size i;
     int retval = 0; /* Number of words that could not be parsed. */
 
     for (i=0; i<numargs; i++) {
@@ -3538,7 +3538,7 @@ int Winprint_Init(
 	char buffer[100];
 
 	snprintf(buffer, sizeof(buffer), "%s::%s", gdiName, gdi_commands[i].command_string);
-	Tcl_CreateObjCommand(interp, buffer, gdi_commands[i].command,
+	Tcl_CreateObjCommand2(interp, buffer, gdi_commands[i].command,
 		NULL, (Tcl_CmdDeleteProc *) 0);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
     }
