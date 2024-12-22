@@ -12,7 +12,7 @@
  * +++ Internal data structures.
  */
 struct TtkTag {
-    Tcl_Size 	priority;		/* 1=>highest */
+    Tcl_Size	priority;		/* 1=>highest */
     const char	*tagName;		/* Back-pointer to hash table entry */
     void	*tagRecord;		/* User data */
 };
@@ -21,8 +21,8 @@ struct TtkTagTable {
     Tk_Window		tkwin;		/* owner window */
     const Tk_OptionSpec	*optionSpecs;	/* ... */
     Tk_OptionTable	optionTable;	/* ... */
-    size_t         	recordSize;	/* size of tag record */
-    Tcl_Size 		nTags;		/* #tags defined so far */
+    size_t				recordSize;	/* size of tag record */
+    Tcl_Size		nTags;		/* #tags defined so far */
     Tcl_HashTable	tags;		/* defined tags */
 };
 
@@ -114,8 +114,8 @@ Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable tagTable, Tcl_Obj *objPtr)
  */
 
 /* Ttk_GetTagSetFromObj --
- * 	Extract an array of pointers to Ttk_Tags from a Tcl_Obj.
- * 	objPtr may be NULL, in which case a new empty tag set is returned.
+ *	Extract an array of pointers to Ttk_Tags from a Tcl_Obj.
+ *	objPtr may be NULL, in which case a new empty tag set is returned.
  *
  * Returns NULL and leaves an error message in interp->result on error.
  *
@@ -136,7 +136,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	ckfree(tagset);
-    	return NULL;
+	return NULL;
     }
 
     tagset->tags = (Ttk_Tag *)ckalloc((objc+1) * sizeof(Ttk_Tag));
@@ -150,7 +150,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 }
 
 /* Ttk_NewTagSetObj --
- * 	Construct a fresh Tcl_Obj * from a tag set.
+ *	Construct a fresh Tcl_Obj * from a tag set.
  */
 Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet tagset)
 {
