@@ -46,6 +46,7 @@ const struct MacRoleMap roleMap[] = {
   {NULL, 0}
 };
 
+/*Utility procedures.*/
 NSAccessibilityRole 	GetMacRole(Tk_Window win);
 NSString 	*GetMacName(Tk_Window win);
 NSString 	*GetMacTitle(Tk_Window win);
@@ -288,8 +289,27 @@ NSString *GetMacAction(
 
 
 
+@interface TkAccessibleElement: NSView
+
+@end
+
+@implementation TkAccessibleElement
+
+- (NSString *)accessibilityLabel {
+}
 
 
-		       
 
-	      
+- (BOOL)accessibilityPerformPress {
+}
+
+- (NSAccessibilityRole)accessibilityRole {
+
+}
+
+- (BOOL)isAccessibilityElement {
+    return YES;
+}
+
+
+@end
