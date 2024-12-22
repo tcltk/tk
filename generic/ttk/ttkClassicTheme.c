@@ -13,7 +13,7 @@
 
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
- * 	Draw a solid highlight border to indicate focus.
+ *	Draw a solid highlight border to indicate focus.
  */
 
 typedef struct {
@@ -472,9 +472,9 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] =
     { "-arrowsize", TK_OPTION_PIXELS, offsetof(ArrowElement,sizeObj),
 	DEFAULT_ARROW_SIZE },
     { "-background", TK_OPTION_BORDER, offsetof(ArrowElement,borderObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, offsetof(ArrowElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+	DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, offsetof(ArrowElement,reliefObj),"raised" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -518,17 +518,17 @@ static void ArrowElementDraw(
     switch (direction)
     {
 	case ARROW_UP:
-	    points[2].x = b.x; 		points[2].y = b.y + size;
+	    points[2].x = b.x;		points[2].y = b.y + size;
 	    points[1].x = b.x + size/2;	points[1].y = b.y;
 	    points[0].x = b.x + size;	points[0].y = b.y + size;
 	    break;
 	case ARROW_DOWN:
-	    points[0].x = b.x; 		points[0].y = b.y;
+	    points[0].x = b.x;		points[0].y = b.y;
 	    points[1].x = b.x + size/2;	points[1].y = b.y + size;
 	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
 	case ARROW_LEFT:
-	    points[0].x = b.x; 		points[0].y = b.y + size / 2;
+	    points[0].x = b.x;		points[0].y = b.y + size / 2;
 	    points[1].x = b.x + size;	points[1].y = b.y + size;
 	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
@@ -681,7 +681,7 @@ static const Ttk_ElementSpec SliderElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj *borderObj; 	/* background color */
+    Tcl_Obj *borderObj;	/* background color */
     Tcl_Obj *sashReliefObj;	/* sash relief */
     Tcl_Obj *sashThicknessObj;	/* overall thickness of sash */
     Tcl_Obj *sashPadObj;	/* padding on either side of handle */
@@ -877,7 +877,7 @@ TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
  * TtkClassicTheme_Init --
- * 	Install classic theme.
+ *	Install classic theme.
  */
 
 MODULE_SCOPE int
