@@ -4,13 +4,43 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
+Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
+
+Tk 9.0.2 continues the Tk 9.0 series of releases.  The Tk 9.0 series
+does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
+To make use of Tk 9.0.2, first a Tcl 9.0 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [inaccurate scrollbar error-message](https://core.tcl-lang.org/tk/tktview/f88118)
+ - [Build tk 9.0.1 failed on macos 10.13](https://core.tcl-lang.org/tk/tktview/cb5d77)
+ - [image svg upstream out of bound read nanosvg#262](https://core.tcl-lang.org/tk/tktview/121786)
+
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
-## Changes since Tk 9.0.0
- - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
- - [SIGABRT from Tk_DeleteErrorHandler()](https://core.tcl-lang.org/tk/tktview/f52986)
+Tk 9.0.1 continues the Tk 9.0 series of releases.  The Tk 9.0 series
+does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
+To make use of Tk 9.0.1, first a Tcl 9.0 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.  As the first patch release in the Tk 9.0 series,
+Tk 9.0.1 also includes a small number of interface changes that complete
+some incomplete features first delivered in Tk 9.0.0.
+
+# Completed 9.0 Features and Interfaces
+ - [TIP #706: Expose three Tk "In Context" functions via stubs table](https://core.tcl-lang.org/tips/doc/trunk/tip/706.md)
  - [Tilde file syntax not available on 9.0 but used by "~/.Xdefaults"](https://core.tcl-lang.org/tk/tktview/fcfddc)
  - [leftover use of tilde in filename string](https://core.tcl-lang.org/tk/tktview/767702)
+
+# Bug fixes
+ - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
+ - [SIGABRT from Tk_DeleteErrorHandler()](https://core.tcl-lang.org/tk/tktview/f52986)
  - [build failure on macOS < 10.13](https://core.tcl-lang.org/tk/tktview/d48cbf)
  - [Two potentially bogus binding scripts for <TouchpadScroll>](https://core.tcl-lang.org/tk/tktview/73c5e3)
  - [Aqua: canvas items are not always redrawn](https://core.tcl-lang.org/tk/tktview/5869c2)
@@ -19,12 +49,12 @@ Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
  - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
  - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
  - [cannot build .chm help file (Windows)](https://core.tcl-lang.org/tk/tktview/bb110c)
- - [Tk intialization overwrites thread specific data](https://core.tcl-lang.org/tk/tktview/bcbf4c)
+ - [Tk initialization overwrites thread specific data](https://core.tcl-lang.org/tk/tktview/bcbf4c)
  - [File clamTheme.tcl misses code related to the -indicatorforeground option](https://core.tcl-lang.org/tk/tktview/a69fd7)
  - [Segfault when using menu(button) with the -font option](https://core.tcl-lang.org/tk/tktview/8ce672)
- - [TIP #706: Expose three Tk "In Context" functions via stubs table](https://core.tcl-lang.org/tips/doc/trunk/tip/706.md)
  - [Bind mechanism vs. GNOME](https://core.tcl-lang.org/tk/tktview/6bdf1a)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
+ - [Menu entry underline does not consider activeborderwidth](https://core.tcl-lang.org/tk/tktview/844c0b)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 
