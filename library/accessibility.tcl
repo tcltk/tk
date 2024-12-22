@@ -118,7 +118,17 @@ namespace eval ::tk::accessible {
 				 [%W cget -state] \
 				 {}\
 			     }
-
+	#combobox bindings			    
+    bind TCombobox <Map> {+::tk::accessible::_init \
+			      %W \
+			      Combobox \
+			      Combobox \
+			      Combobox \
+			      [%W get] \
+			      [%W cget -state] \
+			      {} \
+			  }
+			      
     #Dialog bindings
     bind Dialog <Map> {+::tk::accessible::_init\
 			   %W \
