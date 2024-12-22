@@ -1004,17 +1004,25 @@ typedef struct TkpClipMask {
 # define Button9 9
 #endif
 
+/*
+ * The Button<B>Mask modifiers for <B> in {6 7 8 9}
+ * are internally used by Tk. They must be above the
+ * AnyModifier bit since anything below is reserved
+ * for the X protocol. If a future X11 version
+ * defines these, we adhere.
+ */
+
 #ifndef Button6Mask
-# define Button6Mask (1<<13)
+# define Button6Mask (AnyModifier<<6)
 #endif
 #ifndef Button7Mask
-# define Button7Mask (1<<14)
+# define Button7Mask (AnyModifier<<7)
 #endif
 #ifndef Button8Mask
-# define Button8Mask (AnyModifier<<4)
+# define Button8Mask (AnyModifier<<8)
 #endif
 #ifndef Button9Mask
-# define Button9Mask (AnyModifier<<5)
+# define Button9Mask (AnyModifier<<9)
 #endif
 
 /*
