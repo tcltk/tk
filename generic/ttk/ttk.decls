@@ -1,6 +1,6 @@
-library 	ttk
-interface 	ttk
-epoch  		0
+library	ttk
+interface	ttk
+epoch		0
 scspec		TTKAPI
 
 declare 0 {
@@ -56,15 +56,15 @@ declare 8 {
 #
 declare 10 {
     int Ttk_GetStateSpecFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_StateSpec *spec_rtn)
+	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_StateSpec *spec_rtn)
 }
 declare 11 {
     Tcl_Obj *Ttk_NewStateSpecObj(
-    	unsigned int onbits, unsigned int offbits)
+	unsigned int onbits, unsigned int offbits)
 }
 declare 12 {
     Ttk_StateMap Ttk_GetStateMapFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr)
+	Tcl_Interp *interp, Tcl_Obj *objPtr)
 }
 declare 13 {
     Tcl_Obj *Ttk_StateMapLookup(
@@ -72,7 +72,7 @@ declare 13 {
 }
 declare 14 {
     int Ttk_StateTableLookup(
-    	const Ttk_StateTable *map, Ttk_State state)
+	const Ttk_StateTable *map, Ttk_State state)
 }
 
 
@@ -81,35 +81,35 @@ declare 14 {
 #
 declare 20 {
     int Ttk_GetPaddingFromObj(
-    	Tcl_Interp *interp,
+	Tcl_Interp *interp,
 	Tk_Window tkwin,
 	Tcl_Obj *objPtr,
 	Ttk_Padding *pad_rtn)
 }
 declare 21 {
     int Ttk_GetBorderFromObj(
-    	Tcl_Interp *interp,
+	Tcl_Interp *interp,
 	Tcl_Obj *objPtr,
 	Ttk_Padding *pad_rtn)
 }
 declare 22 {
     int Ttk_GetStickyFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Sticky *sticky_rtn)
+	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Sticky *sticky_rtn)
 }
 declare 23 {
     Ttk_Padding Ttk_MakePadding(
-    	short l, short t, short r, short b)
+	short l, short t, short r, short b)
 }
 declare 24 {
     Ttk_Padding Ttk_UniformPadding(
-    	short borderWidth)
+	short borderWidth)
 }
 declare 25 {
     Ttk_Padding Ttk_AddPadding(Ttk_Padding pad1, Ttk_Padding pad2)
 }
 declare 26 {
     Ttk_Padding Ttk_RelievePadding(
-    	Ttk_Padding padding, int relief, int n)
+	Ttk_Padding padding, int relief, int n)
 }
 declare 27 {
     Ttk_Box Ttk_MakeBox(int x, int y, int width, int height)

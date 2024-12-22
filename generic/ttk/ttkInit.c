@@ -70,7 +70,7 @@ int TtkGetOrientFromObj(
 {
     int orient = (int)TTK_ORIENT_HORIZONTAL;
     int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
-    	    "orientation", 0, &orient);
+	    "orientation", 0, &orient);
 
     *resultPtr = (Ttk_Orient)orient;
     return result;
@@ -91,7 +91,7 @@ enum {
 };
 
 /* TtkCheckStateOption --
- * 	Handle -state compatibility option.
+ *	Handle -state compatibility option.
  *
  *	NOTE: setting -state disabled / -state enabled affects the
  *	widget state, but the internal widget state does *not* affect

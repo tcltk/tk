@@ -45,24 +45,24 @@
  */
 typedef struct
 {
-    Tk_Window 		window;
-    Ttk_Manager 	*manager;
-    void 		*data;
+    Tk_Window		window;
+    Ttk_Manager	*manager;
+    void		*data;
     unsigned		flags;
 } Ttk_Content;
 
 /* content->flags bits:
  */
-#define CONTENT_MAPPED 	0x1	/* content windows to be mapped when container is */
+#define CONTENT_MAPPED	0x1	/* content windows to be mapped when container is */
 
 struct TtkManager_
 {
     const Ttk_ManagerSpec	*managerSpec;
-    void 		*managerData;
-    Tk_Window   	window;
+    void		*managerData;
+    Tk_Window	window;
     unsigned		flags;
-    Tcl_Size 	 	nContent;
-    Ttk_Content 		**content;
+    Tcl_Size		nContent;
+    Ttk_Content		**content;
 };
 
 /* manager->flags bits:
@@ -74,7 +74,7 @@ struct TtkManager_
 static void ManagerIdleProc(void *);	/* forward */
 
 /* ++ ScheduleUpdate --
- * 	Schedule a call to recompute the size and/or layout,
+ *	Schedule a call to recompute the size and/or layout,
  *	depending on flags.
  */
 static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
@@ -87,8 +87,8 @@ static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
 }
 
 /* ++ RecomputeSize --
- * 	Recomputes the required size of the container window,
- * 	makes geometry request.
+ *	Recomputes the required size of the container window,
+ *	makes geometry request.
  */
 static void RecomputeSize(Ttk_Manager *mgr)
 {
@@ -102,7 +102,7 @@ static void RecomputeSize(Ttk_Manager *mgr)
 }
 
 /* ++ RecomputeLayout --
- * 	Recompute geometry of all content windows.
+ *	Recompute geometry of all content windows.
  */
 static void RecomputeLayout(Ttk_Manager *mgr)
 {
@@ -111,7 +111,7 @@ static void RecomputeLayout(Ttk_Manager *mgr)
 }
 
 /* ++ ManagerIdleProc --
- * 	DoWhenIdle procedure for deferred updates.
+ *	DoWhenIdle procedure for deferred updates.
  */
 static void ManagerIdleProc(void *clientData)
 {
@@ -135,8 +135,8 @@ static void ManagerIdleProc(void *clientData)
  */
 
 /* ++ ManagerEventHandler --
- * 	Recompute content layout when container widget is resized.
- * 	Keep the content's map state in sync with the container's.
+ *	Recompute content layout when container widget is resized.
+ *	Keep the content's map state in sync with the container's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(void *clientData, XEvent *eventPtr)
@@ -167,8 +167,8 @@ static void ManagerEventHandler(void *clientData, XEvent *eventPtr)
 }
 
 /* ++ ContentLostEventHandler --
- * 	Notifies manager when a content window is destroyed
- * 	(see <<NOTE-LOSTCONTENT>>).
+ *	Notifies manager when a content window is destroyed
+ *	(see <<NOTE-LOSTCONTENT>>).
  */
 static void ContentLostEventHandler(void *clientData, XEvent *eventPtr)
 {
@@ -210,12 +210,12 @@ Ttk_Manager *Ttk_CreateManager(
 {
     Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
 
-    mgr->managerSpec 	= managerSpec;
+    mgr->managerSpec	= managerSpec;
     mgr->managerData	= managerData;
     mgr->window	= window;
-    mgr->nContent 	= 0;
-    mgr->content 	= NULL;
-    mgr->flags  	= 0;
+    mgr->nContent	= 0;
+    mgr->content	= NULL;
+    mgr->flags	= 0;
 
     Tk_CreateEventHandler(
 	mgr->window, ManagerEventMask, ManagerEventHandler, mgr);
@@ -245,7 +245,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
  */
 
 /* ++ InsertContent --
- * 	Adds content to the list of managed windows.
+ *	Adds content to the list of managed windows.
  */
 static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, Tcl_Size index)
 {
@@ -269,7 +269,7 @@ static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, Tcl_Size index
 }
 
 /* RemoveContent --
- * 	Unmanage and delete the content window.
+ *	Unmanage and delete the content window.
  *
  * NOTES/ASSUMPTIONS:
  *
@@ -339,7 +339,7 @@ void Ttk_LostContentProc(void *clientData, Tk_Window window)
  */
 
 /* ++ Ttk_InsertContent --
- * 	Add a new content window at the specified index.
+ *	Add a new content window at the specified index.
  */
 void Ttk_InsertContent(
     Ttk_Manager *mgr, Tcl_Size index, Tk_Window tkwin, void *data)
@@ -349,7 +349,7 @@ void Ttk_InsertContent(
 }
 
 /* ++ Ttk_ForgetContent --
- * 	Unmanage the specified content window.
+ *	Unmanage the specified content window.
  */
 void Ttk_ForgetContent(Ttk_Manager *mgr, Tcl_Size index)
 {
@@ -359,11 +359,11 @@ void Ttk_ForgetContent(Ttk_Manager *mgr, Tcl_Size index)
 }
 
 /* ++ Ttk_PlaceContent --
- * 	Set the position and size of the specified content window.
+ *	Set the position and size of the specified content window.
  *
  * NOTES:
- * 	Contrary to documentation, Tk_MaintainGeometry doesn't always
- * 	map the content window.
+ *	Contrary to documentation, Tk_MaintainGeometry doesn't always
+ *	map the content window.
  */
 void Ttk_PlaceContent(
     Ttk_Manager *mgr, Tcl_Size index, int x, int y, int width, int height)
@@ -377,7 +377,7 @@ void Ttk_PlaceContent(
 }
 
 /* ++ Ttk_UnmapContent --
- * 	Unmap the specified content window, but leave it managed.
+ *	Unmap the specified content window, but leave it managed.
  */
 void Ttk_UnmapContent(Ttk_Manager *mgr, Tcl_Size index)
 {
@@ -391,7 +391,7 @@ void Ttk_UnmapContent(Ttk_Manager *mgr, Tcl_Size index)
 }
 
 /* LayoutChanged, SizeChanged --
- * 	Schedule a relayout, resp. resize request.
+ *	Schedule a relayout, resp. resize request.
  */
 void Ttk_ManagerLayoutChanged(Ttk_Manager *mgr)
 {
@@ -423,7 +423,7 @@ Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, Tcl_Size index)
  */
 
 /* ++ Ttk_ContentIndex --
- * 	Returns the index of specified content window, TCL_INDEX_NONE if not found.
+ *	Returns the index of specified content window, TCL_INDEX_NONE if not found.
  */
 Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 {
@@ -435,16 +435,16 @@ Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 }
 
 /* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, lastOK, indexPtr) --
- * 	Return the index of the content window specified by objPtr.
- * 	Content windows may be specified as an integer index or
- * 	as the name of the managed window.
+ *	Return the index of the content window specified by objPtr.
+ *	Content windows may be specified as an integer index or
+ *	as the name of the managed window.
  *
  *  The parameter lastOK should be non-0 if the resolved index can be equal to
  *  the current size (i.e. one more than the current highest index) and 0
  *  otherwise.
  *
  * Returns:
- * 	Standard Tcl completion code.  Leaves an error message in case of error.
+ *	Standard Tcl completion code.  Leaves an error message in case of error.
  */
 
 int Ttk_GetContentIndexFromObj(
@@ -495,7 +495,7 @@ int Ttk_GetContentIndexFromObj(
 }
 
 /* ++ Ttk_ReorderContent(mgr, fromIndex, toIndex) --
- * 	Change content window order.
+ *	Change content window order.
  */
 void Ttk_ReorderContent(Ttk_Manager *mgr, Tcl_Size fromIndex, Tcl_Size toIndex)
 {
@@ -521,13 +521,13 @@ void Ttk_ReorderContent(Ttk_Manager *mgr, Tcl_Size fromIndex, Tcl_Size toIndex)
 }
 
 /* ++ Ttk_Maintainable(interp, window, container) --
- * 	Utility routine.  Verifies that 'container' may be used to maintain
+ *	Utility routine.  Verifies that 'container' may be used to maintain
  *	the geometry of 'window' via Tk_MaintainGeometry:
  *
- * 	+ 'container' is either 'window's parent -OR-
- * 	+ 'container is a descendant of 'window's parent.
- * 	+ 'window' is not a toplevel window
- * 	+ 'window' belongs to the same toplevel as 'container'
+ *	+ 'container' is either 'window's parent -OR-
+ *	+ 'container is a descendant of 'window's parent.
+ *	+ 'window' is not a toplevel window
+ *	+ 'window' belongs to the same toplevel as 'container'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */

@@ -134,7 +134,7 @@ static void DrawFieldBorder(
 
 /*
  * ArrowPoints --
- * 	Compute points of arrow polygon.
+ *	Compute points of arrow polygon.
  */
 static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
 {
@@ -147,35 +147,35 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
 	    cy = b.y;
 	    if (b.height <= h) h = b.height - 1;
 	    points[0].x = cx;		points[0].y = cy;
-	    points[1].x = cx - h;  	points[1].y = cy + h;
-	    points[2].x = cx + h; 	points[2].y = cy + h;
+	    points[1].x = cx - h;	points[1].y = cy + h;
+	    points[2].x = cx + h;	points[2].y = cy + h;
 	    break;
 	case ARROW_DOWN:
 	    h = (b.width - 1)/2;
 	    cx = b.x + h;
 	    cy = b.y + b.height - 1;
 	    if (b.height <= h) h = b.height - 1;
-	    points[0].x = cx; 		points[0].y = cy;
+	    points[0].x = cx;		points[0].y = cy;
 	    points[1].x = cx - h;	points[1].y = cy - h;
-	    points[2].x = cx + h; 	points[2].y = cy - h;
+	    points[2].x = cx + h;	points[2].y = cy - h;
 	    break;
 	case ARROW_LEFT:
 	    h = (b.height - 1)/2;
 	    cx = b.x;
 	    cy = b.y + h;
 	    if (b.width <= h) h = b.width - 1;
-	    points[0].x = cx; 		points[0].y = cy;
+	    points[0].x = cx;		points[0].y = cy;
 	    points[1].x = cx + h;	points[1].y = cy - h;
-	    points[2].x = cx + h; 	points[2].y = cy + h;
+	    points[2].x = cx + h;	points[2].y = cy + h;
 	    break;
 	case ARROW_RIGHT:
 	    h = (b.height - 1)/2;
 	    cx = b.x + b.width - 1;
 	    cy = b.y + h;
 	    if (b.width <= h) h = b.width - 1;
-	    points[0].x = cx; 		points[0].y = cy;
+	    points[0].x = cx;		points[0].y = cy;
 	    points[1].x = cx - h;	points[1].y = cy - h;
-	    points[2].x = cx - h; 	points[2].y = cy + h;
+	    points[2].x = cx - h;	points[2].y = cy + h;
 	    break;
     }
 
@@ -196,7 +196,7 @@ void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr
 
 /*
  * TtkDrawArrow, TtkFillArrow --
- * 	Draw an arrow in the indicated direction inside the specified box.
+ *	Draw an arrow in the indicated direction inside the specified box.
  */
 /*public*/
 void TtkFillArrow(
@@ -244,15 +244,15 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-background", TK_OPTION_BORDER, offsetof(BorderElement,borderObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-bordercolor",TK_OPTION_COLOR,
 	offsetof(BorderElement,borderColorObj), "black" },
     { "-default", TK_OPTION_ANY, offsetof(BorderElement,defaultStateObj),
-    	"disabled" },
+	"disabled" },
     { "-borderwidth",TK_OPTION_PIXELS, offsetof(BorderElement,borderWidthObj),
-    	STRINGIFY(BORDERWIDTH) },
+	STRINGIFY(BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF, offsetof(BorderElement,reliefObj),
-    	"flat" },
+	"flat" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -323,7 +323,7 @@ static const Ttk_ElementSpec BorderElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Field element:
- * 	Used for editable fields.
+ *	Used for editable fields.
  */
 typedef struct {
     Tcl_Obj	*borderObj;
@@ -334,7 +334,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-fieldbackground", TK_OPTION_BORDER, offsetof(FieldElement,borderObj),
-    	"white" },
+	"white" },
     { "-bordercolor",TK_OPTION_COLOR, offsetof(FieldElement,borderColorObj),
 	"black" },
     { "-focuswidth", TK_OPTION_PIXELS, offsetof(FieldElement,focusWidthObj),
@@ -718,8 +718,8 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
- * 	Draws a solid triangle, inside a box.
- * 	clientData is an enum ArrowDirection pointer.
+ *	Draws a solid triangle, inside a box.
+ *	clientData is an enum ArrowDirection pointer.
  */
 
 typedef struct {
@@ -840,7 +840,7 @@ static const Ttk_ElementSpec ArrowElementSpec = {
 
 /*
  * Modified arrow element for comboboxes and spinboxes:
- * 	The width and height are different, and the left edge is drawn in the
+ *	The width and height are different, and the left edge is drawn in the
  *	same color as the inner part of the right one.
  */
 
@@ -919,7 +919,7 @@ static const Ttk_ElementSpec BoxArrowElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Menubutton indicator:
- * 	Draw an arrow in the direction where the menu will be posted.
+ *	Draw an arrow in the direction where the menu will be posted.
  */
 
 #define MENUBUTTON_ARROW_SIZE 5
@@ -1286,7 +1286,7 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
 
 /*------------------------------------------------------------------------
  * TtkAltTheme_Init --
- * 	Install alternate theme.
+ *	Install alternate theme.
  */
 
 MODULE_SCOPE int

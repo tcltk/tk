@@ -2,13 +2,13 @@
  * Copyright 2004, Joe English.
  *
  * Usage:
- * 	TtkBlinkCursor(corePtr), usually called in a widget's Init hook,
- * 	arranges to periodically toggle the corePtr->flags CURSOR_ON bit
- * 	on and off (and schedule a redisplay) whenever the widget has focus.
+ *	TtkBlinkCursor(corePtr), usually called in a widget's Init hook,
+ *	arranges to periodically toggle the corePtr->flags CURSOR_ON bit
+ *	on and off (and schedule a redisplay) whenever the widget has focus.
  *
- * 	Note: Widgets may have additional logic to decide whether
- * 	to display the cursor or not (e.g., readonly or disabled states);
- * 	TtkBlinkCursor() does not account for this.
+ *	Note: Widgets may have additional logic to decide whether
+ *	to display the cursor or not (e.g., readonly or disabled states);
+ *	TtkBlinkCursor() does not account for this.
  *
  */
 
@@ -23,14 +23,14 @@
  */
 typedef struct
 {
-    WidgetCore		*owner; 	/* Widget that currently has cursor */
+    WidgetCore		*owner;	/* Widget that currently has cursor */
     Tcl_TimerToken	timer;		/* Blink timer */
-    int 		onTime;		/* #milliseconds to blink cursor on */
-    int 		offTime;	/* #milliseconds to blink cursor off */
+    int		onTime;		/* #milliseconds to blink cursor on */
+    int		offTime;	/* #milliseconds to blink cursor off */
 } CursorManager;
 
 /* CursorManagerDeleteProc --
- * 	InterpDeleteProc for cursor manager.
+ *	InterpDeleteProc for cursor manager.
  */
 static void CursorManagerDeleteProc(
     void *clientData,
@@ -45,7 +45,7 @@ static void CursorManagerDeleteProc(
 }
 
 /* GetCursorManager --
- * 	Look up and create if necessary the interp's cursor manager.
+ *	Look up and create if necessary the interp's cursor manager.
  */
 static CursorManager *GetCursorManager(Tcl_Interp *interp)
 {
@@ -108,7 +108,7 @@ CursorBlinkProc(void *clientData)
 }
 
 /* LoseCursor --
- * 	Turn cursor off, disable blink timer.
+ *	Turn cursor off, disable blink timer.
  */
 static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 {
@@ -126,7 +126,7 @@ static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 }
 
 /* ClaimCursor --
- * 	Claim ownership of the insert cursor and blink on.
+ *	Claim ownership of the insert cursor and blink on.
  */
 static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
 {
@@ -144,9 +144,9 @@ static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
 
 /*
  * CursorEventProc --
- * 	Event handler for FocusIn and FocusOut events;
- * 	claim/lose ownership of the insert cursor when the widget
- * 	acquires/loses keyboard focus.
+ *	Event handler for FocusIn and FocusOut events;
+ *	claim/lose ownership of the insert cursor when the widget
+ *	acquires/loses keyboard focus.
  */
 
 #define CursorEventMask (FocusChangeMask|StructureNotifyMask)
@@ -195,10 +195,10 @@ void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
 
 /*
  * TtkSetBlinkCursorTimes --
- * 	Set cursor blink on and off times from the "." style defaults
- * 	-insertontime and -insertofftime - For instance to set cursor
- * 	blinking off:
- * 	    ttk::style configure . -insertofftime 0
+ *	Set cursor blink on and off times from the "." style defaults
+ *	-insertontime and -insertofftime - For instance to set cursor
+ *	blinking off:
+ *	    ttk::style configure . -insertofftime 0
  */
 void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
 {
@@ -222,8 +222,8 @@ void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
 }
 /*
  * TtkBlinkCursor (main routine) --
- * 	Arrange to blink the cursor on and off whenever the
- * 	widget has focus.
+ *	Arrange to blink the cursor on and off whenever the
+ *	widget has focus.
  */
 void TtkBlinkCursor(WidgetCore *corePtr)
 {
