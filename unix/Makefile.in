@@ -401,7 +401,7 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
 	tkUnixPrint.o
 
-AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
+AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
@@ -525,6 +525,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixPrint.c
 
 AQUA_SRCS = \
+	$(MAC_OSX_DIR)/tkMacOSXAccessibility.c \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
 	$(MAC_OSX_DIR)/tkMacOSXClipboard.c $(MAC_OSX_DIR)/tkMacOSXColor.c \
 	$(MAC_OSX_DIR)/tkMacOSXConfig.c $(MAC_OSX_DIR)/tkMacOSXCursor.c \
@@ -1362,6 +1363,9 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+
+tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 
 tkMacOSXBitmap.o: $(MAC_OSX_DIR)/tkMacOSXBitmap.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXBitmap.c
