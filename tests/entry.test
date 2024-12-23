@@ -14,6 +14,8 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::scroll::*
 
+set scrollCmdPrefix [list scrollInfo set]
+
 # For trace add variable
 proc override args {
     global x
@@ -1684,7 +1686,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
     entry .e -font {Helvetica -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
 } -body {
-    .e configure -font {Courier -12} -width 4 -xscrollcommand [list scrollInfo set]
+    .e configure -font {Courier -12} -width 4 -xscrollcommand $scrollCmdPrefix
     .e insert end "01234567890"
     update
     scrollInfo set wrong
@@ -1930,7 +1932,7 @@ test entry-7.1 {InsertChars procedure} -setup {
     pack .e ; update idletasks
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     update
     scrollInfo set wrong
     .e insert 0 abcde
@@ -1947,7 +1949,7 @@ test entry-7.2 {InsertChars procedure} -setup {
     pack .e ; update idletasks
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     update
     scrollInfo set wrong
     .e insert 0 abcde
@@ -2017,7 +2019,7 @@ test entry-7.7 {InsertChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e ; update idletasks
 } -body {
-    .e configure -xscrollcommand [list scrollInfo set]
+    .e configure -xscrollcommand $scrollCmdPrefix
     .e insert 0 0123456789
     .e icursor 4
     .e insert 4 XXX
@@ -2081,7 +2083,7 @@ test entry-8.1 {DeleteChars procedure} -setup {
     pack .e ; update idletasks
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     update
     scrollInfo set wrong
     .e insert 0 abcde
@@ -2097,7 +2099,7 @@ test entry-8.2 {DeleteChars procedure} -setup {
     pack .e ; update idletasks
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     update
     scrollInfo set wrong
     .e insert 0 abcde
@@ -2113,7 +2115,7 @@ test entry-8.3 {DeleteChars procedure} -setup {
     pack .e ; update idletasks
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     update
     scrollInfo set wrong
     .e insert 0 abcde
@@ -2960,7 +2962,7 @@ test entry-16.4 {EntryVisibleRange procedure} -body {
 
 
 test entry-17.1 {EntryUpdateScrollbar procedure} -body {
-    entry .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    entry .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     update
     scrollInfo set wrong
@@ -2972,7 +2974,7 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     destroy .e
 } -result {0.000000 1.000000}
 test entry-17.2 {EntryUpdateScrollbar procedure} -body {
-    entry .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    entry .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     update
     scrollInfo set wrong
@@ -2984,7 +2986,7 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     destroy .e
 } -result {0.187500 0.812500}
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
-    entry .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    entry .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     update
     scrollInfo set wrong
@@ -3627,6 +3629,7 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
 #
 
 # option clear
+unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
 cleanupTests
 return

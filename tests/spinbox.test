@@ -14,6 +14,8 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::scroll::*
 
+set scrollCmdPrefix [list scrollInfo set]
+
 # For trace add variable
 proc override args {
     global x
@@ -2009,7 +2011,7 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
     spinbox .e -font {Helvetica -12} -borderwidth 2 -highlightthickness 2
     pack .e
 } -body {
-    .e configure -font {Courier -12} -width 4 -xscrollcommand [list scrollInfo set]
+    .e configure -font {Courier -12} -width 4 -xscrollcommand $scrollCmdPrefix
     .e insert end "01234567890"
     update
     scrollInfo set wrong
@@ -2215,7 +2217,7 @@ test spinbox-7.1 {InsertChars procedure} -setup {
     pack .e
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     .e insert 0 abcde
     update
     scrollInfo set wrong
@@ -2232,7 +2234,7 @@ test spinbox-7.2 {InsertChars procedure} -setup {
     pack .e
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     .e insert 0 abcde
     update
     scrollInfo set wrong
@@ -2302,7 +2304,7 @@ test spinbox-7.7 {InsertChars procedure} -setup {
     spinbox .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
 } -body {
-    .e configure -xscrollcommand [list scrollInfo set]
+    .e configure -xscrollcommand $scrollCmdPrefix
     .e insert 0 0123456789
     .e icursor 4
     .e insert 4 XXX
@@ -2366,7 +2368,7 @@ test spinbox-8.1 {DeleteChars procedure} -setup {
     pack .e
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     .e insert 0 abcde
     update
     scrollInfo set wrong
@@ -2382,7 +2384,7 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
     pack .e
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     .e insert 0 abcde
     update
     scrollInfo set wrong
@@ -2398,7 +2400,7 @@ test spinbox-8.3 {DeleteChars procedure} -setup {
     pack .e
     focus .e
 } -body {
-    .e configure -textvariable contents -xscrollcommand [list scrollInfo set]
+    .e configure -textvariable contents -xscrollcommand $scrollCmdPrefix
     .e insert 0 abcde
     update
     scrollInfo set wrong
@@ -3199,7 +3201,7 @@ test spinbox-16.2 {SpinboxVisibleRange procedure} -body {
 
 
 test spinbox-17.1 {SpinboxUpdateScrollbar procedure} -body {
-    spinbox .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    spinbox .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     update
     scrollInfo set wrong
@@ -3211,7 +3213,7 @@ test spinbox-17.1 {SpinboxUpdateScrollbar procedure} -body {
     destroy .e
 } -result {0.000000 1.000000}
 test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
-    spinbox .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    spinbox .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     .e insert 0 0123456789abcdef
     update
@@ -3223,7 +3225,7 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
     destroy .e
 } -result {0.187500 0.812500}
 test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
-    spinbox .e -width 10 -xscrollcommand [list scrollInfo set] -font {Courier -12}
+    spinbox .e -width 10 -xscrollcommand $scrollCmdPrefix -font {Courier -12}
     pack .e
     update
     scrollInfo set wrong
@@ -3918,6 +3920,7 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 #
 
 # option clear
+unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
 cleanupTests
 return
