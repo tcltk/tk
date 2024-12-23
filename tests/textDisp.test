@@ -14,6 +14,8 @@ namespace import -force tcltest::test
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::scroll::*
 
+set scrollCmdPrefix [list scrollInfo set]
+
 # The delay procedure needs to wait long enough for the asynchronous updates
 # performed by the text widget to run.
 proc delay {} {
@@ -92,7 +94,7 @@ Some of the upcoming tests will probably fail."
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
 # Also  -height 10  (lines) is an important assumption
-text .t -font $fixedFont -width 20 -height 10 -yscrollcommand [list scrollInfo set]
+text .t -font $fixedFont -width 20 -height 10 -yscrollcommand $scrollCmdPrefix
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
@@ -1089,7 +1091,7 @@ test textDisp-6.8 {DisplayText, vertical scrollbar updates} {
     .t count -update -ypixels 1.0 end ; update
     scrollInfo get
 } [list 0.0 [expr {10.0/13}]]
-.t configure -yscrollcommand {} -xscrollcommand [list scrollInfo set]
+.t configure -yscrollcommand {} -xscrollcommand $scrollCmdPrefix
 test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -1331,7 +1333,7 @@ test textDisp-8.10 {TkTextChanged} haveBigFontTwiceLargerThanTextFont {
 test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-screen} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n"
-    .t configure -yscrollcommand [list scrollInfo set]
+    .t configure -yscrollcommand $scrollCmdPrefix
     update
     scrollInfo set ""
     .t insert end "a\nb\nc\n"
@@ -2666,7 +2668,7 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     update
     lequal [list $x [.t index @0,0]] $expected
 } {1}
-.t configure -xscrollcommand [list scrollInfo set] -yscrollcommand {}
+.t configure -xscrollcommand $scrollCmdPrefix -yscrollcommand {}
 
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
@@ -2768,7 +2770,7 @@ test textDisp-18.8 {GetXView procedure} {
 catch {rename bgerror {}}
 catch {rename bogus {}}
 
-.t configure -xscrollcommand {} -yscrollcommand [list scrollInfo set]
+.t configure -xscrollcommand {} -yscrollcommand $scrollCmdPrefix
 test textDisp-19.1 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3105,7 +3107,7 @@ test textDisp-19.15 {GetYView procedure} {
     .t delete 1.0 end
     update
     rename bgerror {}
-    .t configure -yscrollcommand [list scrollInfo set]
+    .t configure -yscrollcommand $scrollCmdPrefix
     set x
 } {{{scrolling error}} {scrolling error
     while executing
@@ -4923,6 +4925,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 # CLEANUP
 #
 
+unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
 deleteWindows
 option clear
