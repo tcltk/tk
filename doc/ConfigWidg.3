@@ -108,7 +108,7 @@ typedef struct {
     const char *\fIdbName\fR;
     const char *\fIdbClass\fR;
     const char *\fIdefValue\fR;
-    size_t \fIoffset\fR;
+    Tcl_Size \fIoffset\fR;
     int \fIspecFlags\fR;
     const Tk_CustomOption *\fIcustomPtr\fR;
 } \fBTk_ConfigSpec\fR;
@@ -562,7 +562,7 @@ typedef int \fBTk_OptionParseProc\fR(
         void *\fIclientData\fR,
         Tcl_Interp *\fIinterp\fR,
         Tk_Window \fItkwin\fR,
-        char *\fIvalue\fR,
+        const char *\fIvalue\fR,
         char *\fIwidgRec\fR,
         Tcl_Size \fIoffset\fR);
 
