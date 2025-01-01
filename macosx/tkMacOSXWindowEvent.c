@@ -1342,8 +1342,10 @@ NSMutableArray *_tkAccessibleElements;
 - (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
 
     if (!_tkAccessibleElements) {
-	_tkAccessibleElements = [NSMutableArray array];
+	_tkAccessibleElements = [[NSMutableArray alloc ] init];
     }
+
+    NSLog(@"adding object");
     if (element) {
 	[_tkAccessibleElements addObject:element];
 
