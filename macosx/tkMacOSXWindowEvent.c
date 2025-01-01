@@ -1331,7 +1331,6 @@ NSMutableArray *_tkAccessibleElements;
 }
 
 - (void)accessibilityChildrenChanged {
-    NSLog(@"added!");
     NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
 }
 
@@ -1344,16 +1343,13 @@ NSMutableArray *_tkAccessibleElements;
     if (!_tkAccessibleElements) {
 	_tkAccessibleElements = [[NSMutableArray alloc ] init];
     }
-
-    NSLog(@"adding object");
+    
     if (element) {
 	[_tkAccessibleElements addObject:element];
-
         [self accessibilityChildrenChanged];
-	 NSLog(@"%@", _tkAccessibleElements);
-	 NSLog(@"%@", element.accessibilityLabel);
-	 NSLog(@"%@", element.accessibilityRole);
     }
+
+    [self setNeedsDisplay: YES];
 }
 
 - (void)setAccessibilityParentView:(NSView *)parentView {
