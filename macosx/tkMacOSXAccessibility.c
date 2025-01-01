@@ -95,7 +95,9 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 - (NSAccessibilityRole)accessibilityRole {
     NSLog(@"role");
-    return @"NSAccessibilityRoleButton";
+
+    NSAccessibilityRole *macrole = nil;
+    int i;
 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -114,10 +116,14 @@ extern Tcl_HashTable *TkAccessibilityObject;
 	return nil;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    NSString  *macrole = [NSString stringWithUTF8String:result];
+    for (i = 0; roleMap[i].tkrole != NULL; i++) {
+    if(strcmp(roleMap[i].tkrole, result) == 0) {
+      macrole = roleMap[i].macrole;
+    }
     return macrole;
-    
+    }
 }
+    
 
 - (BOOL)isAccessibilityElement {
     NSLog(@"yes is accessible");
