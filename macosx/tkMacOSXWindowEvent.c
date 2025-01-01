@@ -26,6 +26,7 @@
 #endif
 */
 
+extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
  */
@@ -930,8 +931,9 @@ ExposeRestrictProc(
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
-@implementation TKContentView(TKWindowEvent)
 
+@implementation TKContentView(TKWindowEvent)
+    
 - (id)initWithFrame:(NSRect)frame
 {
     self = [super initWithFrame:frame];
@@ -1313,6 +1315,56 @@ static const char *const accentNames[] = {
     // The context is also released in TkWmDeadWindow.
     CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
+}
+
+
+/*Add support for accessibility in TKContentView.*/
+
+NSMutableArray *_tkAccessibleElements;
+
++ (BOOL)isAccessibilityElement {
+    return NO;
+}
+
+- (NSArray *)accessibilityChildren {
+    return [_tkAccessibleElements copy]; 
+}
+
+- (void)accessibilityChildrenChanged {
+    NSLog(@"added!");
+    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return NO;
+}
+
+- (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
+
+    if (!_tkAccessibleElements) {
+	_tkAccessibleElements = [NSMutableArray array];
+    }
+    if (element) {
+	[_tkAccessibleElements addObject:element];
+
+        [self accessibilityChildrenChanged];
+	 NSLog(@"%@", _tkAccessibleElements);
+	 NSLog(@"%@", element.accessibilityLabel);
+	 NSLog(@"%@", element.accessibilityRole);
+    }
+}
+
+- (void)setAccessibilityParentView:(NSView *)parentView {
+    [self setAccessibilityParent:self];
+}
+
+- (id)accessibilityHitTest:(NSPoint)point {
+    for (TkAccessibilityElement *element in self.accessibilityChildren) {
+        if (NSPointInRect(point, [element accessibilityFrame])) {
+            return element;
+        }
+    }
+    return [super accessibilityHitTest:point];
 }
 
 @end

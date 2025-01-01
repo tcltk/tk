@@ -20,296 +20,202 @@
 #include <Cocoa/Cocoa.h>
 #include <tkInt.h>
 #include <tkMacOSXInt.h>
+#include "tkMacOSXImage.h"
+#include "tkMacOSXPrivate.h"
 
 /* Data declarations and protoypes of functions used in this file. */
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
-  const char *tkrole;
-  NSAccessibilityRole  macrole;
+    const char *tkrole;
+    NSAccessibilityRole  macrole;
 };
 
 const struct MacRoleMap roleMap[] = {
-  {"Button", @"NSAccessibilityButtonRole"},
-  {"Canvas", @"NSAccessibilityUnknownRole"},
-  {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
-  {"Combobox",  @"NSAccessibilityComboBoxRole"},
-  {"Entry",  @"NSAccessibilityTextFieldRole"},
-  {"Notebook", @"NSAccessibilityTabGroupRole"},
-  {"Progressbar",  @"NSAccessibilityProgressIndicatorRole"},
-  {"Radiobutton",  @"NSAccessibilityRadioButtonRole"},
-  {"Scale", @"NSAccessibilitySliderRole"},
-  {"Scrollbar",   @"NSAccessibilityScrollBarRole"},
-  {"Spinbox", @"NSAccessibilityIncrementorRole"},
-  {"Table",  @"NSAccessibilityTableRole"}, 
-  {"Text",  @"NSAccessibilityTextAreaRole"},
-  {NULL, 0}
+    {"Button", @"NSAccessibilityButtonRole"},
+    {"Canvas", @"NSAccessibilityUnknownRole"},
+    {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
+    {"Combobox",  @"NSAccessibilityComboBoxRole"},
+    {"Entry",  @"NSAccessibilityTextFieldRole"},
+    {"Notebook", @"NSAccessibilityTabGroupRole"},
+    {"Progressbar",  @"NSAccessibilityProgressIndicatorRole"},
+    {"Radiobutton",  @"NSAccessibilityRadioButtonRole"},
+    {"Scale", @"NSAccessibilitySliderRole"},
+    {"Scrollbar",   @"NSAccessibilityScrollBarRole"},
+    {"Spinbox", @"NSAccessibilityIncrementorRole"},
+    {"Table",  @"NSAccessibilityTableRole"}, 
+    {"Text",  @"NSAccessibilityTextAreaRole"},
+    {NULL, 0}
 };
 
-/*Utility procedures.*/
-NSAccessibilityRole 	GetMacRole(Tk_Window win);
-NSString 	*GetMacName(Tk_Window win);
-NSString 	*GetMacTitle(Tk_Window win);
-NSString 	*GetMacDescription(Tk_Window win);
-NSString 	*GetMacValue(Tk_Window win);
-NSString 	*GetMacState(Tk_Window win);
 
-/*
- *----------------------------------------------------------------------
- *
- * GetMacRole  --
- *
- *	This function maps a widget accessibility role to an
- *      NSAccessibility role. 
- *	
- *
- * Results:
- *	Assigns the accessibility role.  
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
+extern Tcl_HashTable *TkAccessibilityObject;
 
-NSAccessibilityRole GetMacRole(
-		      Tk_Window win)
-{	
-  char *scriptrole;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  int i;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_role", pathname, (char*)NULL);
-  scriptrole =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  for (i = 0; roleMap[i].tkrole != NULL; i++) {
-    if(strcmp(roleMap[i].tkrole, scriptrole) == 0) {
-      return roleMap[i].macrole;
-    }
-  }
+@implementation TkAccessibilityElement : NSAccessibilityElement
+
+
+- (id) init {
+    self = [super init];
+    return self;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * GetMacName  --
- *
- *	This function maps a widget accessibility name to an
- *      NSAccessibility name. 
- *	
- *
- * Results:
- *	Assigns the accessibility name. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-NSString *GetMacName(
-		       Tk_Window win)
-{
-  char *scriptname;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_name", pathname, (char*)NULL);
-  scriptname =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *macname = [NSString stringWithUTF8String:scriptname];
-  return macname;
-  
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GetMacTitle  --
- *
- *	This function maps a widget accessibility title to an
- *      NSAccessibility title. 
- *	
- *
- * Results:
- *	Assigns the accessibility title. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-NSString *GetMacTitle(
-			Tk_Window win)
-{
-  char *scripttitle;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_title", pathname, (char*)NULL);
-  scripttitle =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *mactitle = [NSString stringWithUTF8String:scripttitle];
-  return mactitle; 
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * GetMacDescription  --
- *
- *	This function maps a widget accessibility description to an
- *      NSAccessibility description. 
- *	
- *
- * Results:
- *	Assigns the accessibility description. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-NSString *GetMacDescription(
-			      Tk_Window win)
-{
-  char *scriptdescription;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_description", pathname, (char*)NULL);
-  scriptdescription =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *macdescription = [NSString stringWithUTF8String:scriptdescription];
-  return macdescription;
-}
-
-
-/*----------------------------------------------------------------------
- *
- * GetMacValue  --
- *
- *	This function maps a widget accessibility value to an
- *      NSAccessibility value. 
- *	
- *
- * Results:
- *	Assigns the accessibility value. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-NSString *GetMacValue(
-			Tk_Window win)
-{
-  char *scriptvalue;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_value", pathname, (char*)NULL);
-  scriptvalue =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *macvalue = [NSString stringWithUTF8String:scriptvalue];
-  return macvalue;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * GetMacState  --
- *
- *	This function maps a widget accessibility state to an
- *      NSAccessibility state. 
- *	
- *
- * Results:
- *	Assigns the accessibility state. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-NSString *GetMacState(
-			Tk_Window win)
-{
-  char *scriptstate;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_state", pathname, (char*)NULL);
-  scriptstate =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *macstate = [NSString stringWithUTF8String:scriptstate];
-  return macstate;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GetMacAction  --
- *
- *	This function maps a widget accessibility action to an
- *      NSAccessibility action. 
- *	
- *
- * Results:
- *	Assigns the accessibility action. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-NSString *GetMacAction(
-			 Tk_Window win)
-{
-  char *scriptaction;
-  char *pathname;
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_Interp *acc_ip=info->interp;
-  pathname = Tk_PathName(win);
-  Tcl_VarEval(acc_ip, "tk accessible", "get_acc_action", pathname, (char*)NULL);
-  scriptaction =  Tcl_GetString(Tcl_GetObjResult(acc_ip));
-  NSString *macaction = [NSString stringWithUTF8String:scriptaction];
-  return macaction;
-}
-
-
-
-@interface TkAccessibleElement: NSView
-
-@end
-
-@implementation TkAccessibleElement
 
 - (NSString *)accessibilityLabel {
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return nil;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
+    if (!hPtr2) {
+	NSLog(@"No label found.");
+	return nil;
+    }
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    NSString  *macdescription = [NSString stringWithUTF8String:result];
+    return macdescription;
+  
 }
+  
 
-
+-(id) accessibilityValue {
+    return nil;
+}
 
 - (BOOL)accessibilityPerformPress {
-}
-
-- (NSAccessibilityRole)accessibilityRole {
-
-}
-
-- (BOOL)isAccessibilityElement {
+    // [super performPress];
+    NSLog(@"press");
     return YES;
 }
 
+- (NSAccessibilityRole)accessibilityRole {
+    NSLog(@"role");
+    return @"NSAccessibilityRoleButton";
 
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return nil;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
+    if (!hPtr2) {
+	NSLog(@"No label found.");
+	return nil;
+    }
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    NSString  *macrole = [NSString stringWithUTF8String:result];
+    return macrole;
+    
+}
+
+- (BOOL)isAccessibilityElement {
+    NSLog(@"yes is accessible");
+    return YES;
+}
+
+- (NSRect)accessibilityFrame {
+    NSLog(@"frame");
+    Tk_Window win = self.tk_win;
+    NSRect frame = self.parentView.bounds;
+    return  [self.parentView.window convertRectToScreen:frame];
+}
+
+- (id)accessibilityParent {
+    Tk_Window win = self.tk_win;
+    TkWindow *winPtr = (TkWindow *)win;
+    NSWindow *w = nil;
+    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TKContentView *view = [w contentView];
+    self.parentView = view;
+    return self.parentView;
+}
+
+- (BOOL)becomeFirstResponder {
+    return TRUE;
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return NO; 
+}
+
+ 
 @end
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacAccessibleObjCmd --
+ *
+ *	Main command for creating, displaying, and removing icons from the
+ *	status bar.
+ *
+ * Results:
+ *
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *
+ *	Management of icon display in the status bar.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacAccessibleObjCmd(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+    if (objc < 2) {
+	Tcl_WrongNumArgs(ip, 1, objv, "window?");
+	return TCL_ERROR;
+    }
+    Tk_Window path;
+  
+    path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    if (path == NULL) {
+	Tk_MakeWindowExist(path);
+    }
+
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
+    widget.tk_win = path;
+    [widget.accessibilityParent accessibilityAddChildElement: widget];
+    [pool drain];
+    return TCL_OK;
+
+  
+}
+
+
+int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
+    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacAccessibleObjCmd, NULL, NULL);
+    [pool release];
+    return TCL_OK;
+}
+
+
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

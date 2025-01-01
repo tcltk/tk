@@ -23,17 +23,17 @@ int     Tk_SetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
 int     Tk_SetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+				    int objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleState (TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			       int objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
 			      int objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			       int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			     int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			     int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
 				    int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleState(TCL_UNUSED(void *),Tcl_Interp *ip,
@@ -464,8 +464,6 @@ Tk_GetAccessibleRole(
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
-
-
 
 /*
  *----------------------------------------------------------------------
