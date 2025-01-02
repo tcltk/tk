@@ -1348,8 +1348,6 @@ NSMutableArray *_tkAccessibleElements;
 	[_tkAccessibleElements addObject:element];
         [self accessibilityChildrenChanged];
     }
-
-    [self setNeedsDisplay: YES];
 }
 
 - (void)setAccessibilityParentView:(NSView *)parentView {
@@ -1363,6 +1361,12 @@ NSMutableArray *_tkAccessibleElements;
         }
     }
     return [super accessibilityHitTest:point];
+}
+
+- (void)windowDidResize:(NSNotification *)notification {
+    for (TkAccessibilityElement *element in self.accessibilityChildren) {
+	[element updateAccessibilityElementFrame];
+    }
 }
 
 @end
