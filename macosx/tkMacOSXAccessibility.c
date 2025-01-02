@@ -95,7 +95,7 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 - (NSAccessibilityRole)accessibilityRole {
 
-    NSAccessibilityRole *macrole = nil;
+    NSAccessibilityRole macrole = nil;
     int i;
 
     Tk_Window win = self.tk_win;
@@ -129,13 +129,29 @@ extern Tcl_HashTable *TkAccessibilityObject;
     return YES;
 }
 
-// - (NSRect)accessibilityFrame {
-//     NSLog(@"frame");
-//     Tk_Window win = self.tk_win;
-//     NSRect frame = self.parentView.bounds;
-//     return  [self.parentView.window convertRectToScreen:frame];
+ - (NSRect)accessibilityFrame {
+   Tk_Window path;
+    Drawable d;
+    unsigned int width, height, x, y;
+    
+    path = self.tk_win;
+    d = Tk_WindowId(path);
+    width = Tk_Width(path);
+    height = Tk_Height(path);
+    x=Tk_X(path);
+    y=Tk_Y(path);
+    Tk_Window win = self.tk_win;
+    TkWindow *winPtr = (TkWindow *)win;
+    NSWindow *w = nil;
+    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSRect windowFrame = [w frame];
+    NSRect elementFrame = NSMakeRect(windowFrame.origin.x + x,
+				     windowFrame.origin.y + y,
+				     width,
+				     height);
+    return elementFrame;
 
-// }
+ }
 
 - (id)accessibilityParent {
     Tk_Window win = self.tk_win;
