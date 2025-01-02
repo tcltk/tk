@@ -38,7 +38,7 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
  *----------------------------------------------------------------------
  *
  * XDestroyWindow --
-xr *
+ *
  *	Deallocates the given X Window.
  *
  * Results:
