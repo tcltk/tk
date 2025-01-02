@@ -155,6 +155,31 @@ extern Tcl_HashTable *TkAccessibilityObject;
     return NO; 
 }
 
+- (void) updateAccessibilityElementFrame {
+
+    Tk_Window path;
+    Drawable d;
+    unsigned int width, height, x, y;
+    
+    path = self.tk_win;
+    d = Tk_WindowId(path);
+    width = Tk_Width(path);
+    height = Tk_Height(path);
+    x=Tk_X(path);
+    y=Tk_Y(path);
+    Tk_Window win = self.tk_win;
+    TkWindow *winPtr = (TkWindow *)win;
+    NSWindow *w = nil;
+    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSRect windowFrame = [w frame];
+    NSRect elementFrame = NSMakeRect(windowFrame.origin.x + x,
+				     windowFrame.origin.y + y,
+				     width,
+				     height);
+    self.accessibilityFrame = elementFrame;
+    [self setAccessibilityFrameInParentSpace:elementFrame];
+
+}
  
 @end
 
@@ -191,11 +216,7 @@ TkMacAccessibleObjCmd(
 	return TCL_ERROR;
     }
     Tk_Window path;
-    Drawable d;
-    unsigned int width, height, x, y;
-    NSRect bounds, viewSrcRect;
-
-  
+   
     path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (path == NULL) {
 	Tk_MakeWindowExist(path);
@@ -206,23 +227,7 @@ TkMacAccessibleObjCmd(
     widget.tk_win = path;
     [widget.accessibilityParent accessibilityAddChildElement: widget];
 
-    d = Tk_WindowId(path);
-    MacDrawable *mac_drawable = (MacDrawable*)d;
-    width = Tk_Width(path);
-    height = Tk_Height(path);
-    x=0;
-    y=0;
-
-    /*
-     * Get the child window area in NSView coordinates
-     * (origin at bottom left).
-     */
-
-    bounds = [widget.parentView bounds];
-    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
-			     bounds.size.height - height - (mac_drawable->yOff + y),
-			     width, height);
-    [widget setAccessibilityFrameInParentSpace:viewSrcRect];
+    [widget updateAccessibilityElementFrame];
     
     [pool drain];
     return TCL_OK;
