@@ -55,6 +55,7 @@ some incomplete features first delivered in Tk 9.0.0.
  - [Bind mechanism vs. GNOME](https://core.tcl-lang.org/tk/tktview/6bdf1a)
  - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
  - [Menu entry underline does not consider activeborderwidth](https://core.tcl-lang.org/tk/tktview/844c0b)
+ - [wm iconbitmap does not correctly set the icon pixmap hint on macOS](https://core.tcl-lang.org/tk/tktview/13ac26)
 
 Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
 

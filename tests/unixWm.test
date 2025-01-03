@@ -815,15 +815,9 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-if {[tk windowingsystem] eq "aqua"} {
-    set result_22_3 {0 {}}
-} else {
-    set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
-}
-test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option for unix only} \
-unix {
+test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option} unix {
     list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
-} $result_22_3
+} {1 {bitmap "bad-bitmap" not defined}}
 
 test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} unix {
     list [catch {wm iconify .t 12} msg] $msg
