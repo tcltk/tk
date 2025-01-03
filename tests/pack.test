@@ -1,9 +1,9 @@
-# This file is a Tcl script to test out the "pack" command
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "pack" command of Tk.  It is
+# organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1993 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1993 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -594,7 +594,7 @@ test pack-6.1 {-expand option} -setup {
     pack .pack.a .pack.b .pack.c .pack.d -side left
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+0+80 50x30+20+85 80x80+70+60 40x30+150+85}
 test pack-6.2 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -604,7 +604,7 @@ test pack-6.2 {-expand option} -setup {
     pack .pack.c .pack.d -side left -expand 1
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+18+80 50x30+56+85 80x80+124+60 40x30+241+85}
 test pack-6.3 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -612,7 +612,7 @@ test pack-6.3 {-expand option} -setup {
     pack .pack.a .pack.b .pack.c .pack.d -side top
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+140+0 50x30+125+40 80x80+110+70 40x30+130+150}
 test pack-6.4 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -622,7 +622,7 @@ test pack-6.4 {-expand option} -setup {
     pack .pack.c .pack.d -side top -expand 1
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+140+3 50x30+125+46 80x80+110+79 40x30+130+166}
 test pack-6.5 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -630,7 +630,7 @@ test pack-6.5 {-expand option} -setup {
     pack .pack.a .pack.b .pack.c .pack.d -side right
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+280+80 50x30+230+85 80x80+150+60 40x30+110+85}
 test pack-6.6 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -640,7 +640,7 @@ test pack-6.6 {-expand option} -setup {
     pack .pack.c .pack.d -side right -expand 1
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+262+80 50x30+194+85 80x80+95+60 40x30+18+85}
 test pack-6.7 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -648,7 +648,7 @@ test pack-6.7 {-expand option} -setup {
     pack .pack.a .pack.b .pack.c .pack.d -side bottom
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+140+160 50x30+125+130 80x80+110+50 40x30+130+20}
 test pack-6.8 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -658,7 +658,7 @@ test pack-6.8 {-expand option} -setup {
     pack .pack.c .pack.d -side bottom -expand 1
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {20x40+140+157 50x30+125+124 80x80+110+40 40x30+130+3}
 test pack-6.9 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -669,7 +669,7 @@ test pack-6.9 {-expand option} -setup {
     pack .pack.d -side left
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {300x65+0+135 50x30+250+52 250x105+0+0 40x30+0+105}
 test pack-6.10 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -680,7 +680,7 @@ test pack-6.10 {-expand option} -setup {
     pack .pack.d -side bottom
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {100x200+0+0 50x30+175+0 160x170+140+30 40x30+100+170}
 test pack-6.11 {-expand option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -691,16 +691,16 @@ test pack-6.11 {-expand option} -setup {
     pack .pack.d -side bottom -expand yes -fill both
     update
     list [winfo geometry .pack.a] [winfo geometry .pack.b] \
-        [winfo geometry .pack.c] [winfo geometry .pack.d]
+	[winfo geometry .pack.c] [winfo geometry .pack.d]
 } -result {100x200+0+0 200x100+100+0 160x100+140+100 40x100+100+100}
 test pack-6.12 {-expand option} -setup {
     toplevel .pack2 -height 400 -width 400
     wm geometry .pack2 +0+0
     pack propagate .pack2 0
     foreach i {w1 w2 w3} {
-        frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
-        label .pack2.$i.l -text $i
-        place .pack2.$i.l -relwidth 1.0 -relheight 1.0
+	frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
+	label .pack2.$i.l -text $i
+	place .pack2.$i.l -relwidth 1.0 -relheight 1.0
     }
 } -body {
     pack .pack2.w1 .pack2.w2 .pack2.w3 -padx 5 -ipadx 4 -pady 2 -ipady 6 -expand 1 -side left
@@ -714,13 +714,13 @@ test pack-6.13 {-expand option} -setup {
     wm geometry .pack2 +0+0
     pack propagate .pack2 0
     foreach i {w1 w2 w3} {
-        frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
-        label .pack2.$i.l -text $i
-        place .pack2.$i.l -relwidth 1.0 -relheight 1.0
+	frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
+	label .pack2.$i.l -text $i
+	place .pack2.$i.l -relwidth 1.0 -relheight 1.0
     }
 } -body {
     pack .pack2.w1 .pack2.w2 .pack2.w3 -padx 5 -ipadx 4 -pady 2 \
-        -ipady 6 -expand 1 -side top
+	-ipady 6 -expand 1 -side top
     update
     list [winfo geometry .pack2.w1] [winfo geometry .pack2.w2] [winfo geometry .pack2.w3]
 } -cleanup {
@@ -800,29 +800,29 @@ pack .pack.a .pack.b .pack.c -side top
 update
 test pack-8.1 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+30+0 1 50x30+15+40 1 80x80+0+70 1}
 wm geom .pack 270x250
 update
 test pack-8.2 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+25+0 1 50x30+10+40 1 70x30+0+70 1}
 wm geom .pack 240x220
 update
 test pack-8.3 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+10+0 1 40x30+0+40 1 70x30+0+70 0}
 wm geom .pack 350x350
 update
 test pack-8.4 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+65+0 1 50x30+50+40 1 80x80+35+70 1}
 wm geom .pack {}
 pack .pack.a -side left
@@ -831,37 +831,37 @@ pack .pack.c -side left
 update
 test pack-8.5 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+0+20 1 50x30+100+25 1 80x80+20+0 1}
 wm geom .pack 320x180
 update
 test pack-8.6 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 50x30+70+0 1 50x30+20+0 1}
 wm geom .pack 250x180
 update
 test pack-8.7 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 30x30+20+0 1 50x30+20+0 0}
 pack forget .pack.b
 update
 test pack-8.8 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 30x30+20+0 0 30x30+20+0 1}
 pack .pack.b -side right -after .pack.a
 wm geom .pack {}
 update
 test pack-8.9 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
-        [winfo geometry .pack.b] [winfo ismapped .pack.b] \
-        [winfo geometry .pack.c] [winfo ismapped .pack.c]
+	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
+	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+0+20 1 50x30+100+25 1 80x80+20+0 1}
 pack forget .pack.right .pack.bottom
 
@@ -966,7 +966,7 @@ test pack-10.4 {bad -in window does not change container window} -setup {
 } -body {
     winfo manager .pack.a
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack .pack.a inside itself}
+} -returnCodes error -result {can't pack ".pack.a" inside itself}
 test pack-10.5 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -975,7 +975,7 @@ test pack-10.5 {prevent management loops} -body {
 } -cleanup {
     destroy .f1
     destroy .f2
-} -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}
+} -returnCodes error -result {can't put ".f2" inside ".f1": would cause management loop}
 test pack-10.6 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -987,8 +987,7 @@ test pack-10.6 {prevent management loops} -body {
     destroy .f1
     destroy .f2
     destroy .f3
-} -returnCodes error -result {can't put .f3 inside .f1, would cause management loop}
-
+} -returnCodes error -result {can't put ".f3" inside ".f1": would cause management loop}
 
 test pack-11.1 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -1177,8 +1176,8 @@ test pack-12.11 {command options and errors} -setup {
 test pack-12.12 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
-    pack .pack.a -expand "who cares?"
-} -returnCodes error -result {expected boolean value but got "who cares?"}
+    pack .pack.a -expand "who_cares?"
+} -returnCodes error -result {expected boolean value but got "who_cares?"}
 test pack-12.13 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1264,7 +1263,7 @@ test pack-12.29 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side bac
-} -returnCodes error -result {bad side "bac": must be top, bottom, left, or right}
+} -returnCodes error -result {bad side "bac": must be bottom, left, right, or top}
 test pack-12.30 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1284,18 +1283,18 @@ test pack-12.33 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .
-} -returnCodes error -result {can't pack .pack.a inside .}
+} -returnCodes error -result {can't pack ".pack.a" inside "."}
 test pack-12.34 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     frame .pack.a.a
     pack .pack.a.a -in .pack.b
-} -returnCodes error -result {can't pack .pack.a.a inside .pack.b}
+} -returnCodes error -result {can't pack ".pack.a.a" inside ".pack.b"}
 test pack-12.35 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack .pack.a inside itself}
+} -returnCodes error -result {can't pack ".pack.a" inside itself}
 test pack-12.36 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1363,7 +1362,7 @@ test pack-12.46 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack lousy .pack
-} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, propagate, or slaves}
+} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, or propagate}
 
 test pack-13.1 {window deletion} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d .pack.right .pack.bottom
@@ -1375,7 +1374,7 @@ test pack-13.1 {window deletion} -setup {
     destroy .pack.d
     update
     set result [list [pack content .pack] [winfo geometry .pack.a] \
-        [winfo geometry .pack.b] [winfo geometry .pack.c]]
+	[winfo geometry .pack.b] [winfo geometry .pack.c]]
 } -result {{.pack.right .pack.bottom .pack.a .pack.b .pack.c} 20x40+30+0 50x30+15+40 80x80+0+70}
 
 test pack-14.1 {respond to changes in expansion} -setup {
@@ -1461,10 +1460,10 @@ test pack-15.4 {managing geometry with -in option} -setup {
     destroy .pack.f1 .pack.f2
 } -body {
     foreach i {1 2} {
-        frame .pack.f$i -width 100 -height 40 -bd 2 -relief raised
-        lower .pack.f$i
-        pack propagate .pack.f$i 0
-        pack .pack.f$i -side top
+	frame .pack.f$i -width 100 -height 40 -bd 2 -relief raised
+	lower .pack.f$i
+	pack propagate .pack.f$i 0
+	pack .pack.f$i -side top
     }
     pack .pack.b -in .pack.f1 -side right
     update
@@ -1487,10 +1486,10 @@ test pack-15.5 {managing geometry with -in option} -setup {
     destroy .pack.f1 .pack.f2
 } -body {
     foreach i {1 2} {
-        frame .pack.f$i -width 100 -height 20 -bd 2 -relief raised
-        lower .pack.f$i
-        pack propagate .pack.f$i 0
-        pack .pack.f$i -side top
+	frame .pack.f$i -width 100 -height 20 -bd 2 -relief raised
+	lower .pack.f$i
+	pack propagate .pack.f$i 0
+	pack .pack.f$i -side top
     }
     pack .pack.b -in .pack.f2 -side top
     update
@@ -1554,6 +1553,11 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # into account while the window is unmapped.
 # pack-18.1.2 checks that, on Windows, width/height changes are taken into
 # account on window remapping.
+#
+# While these tests pass on macOS, one can see by watching the tests
+# that the window .pack is sometimes black, even though the frame is
+# colored.  So, evidently, even though the size changes are honored,
+# the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
     macOrUnix failsOnUbuntu failsOnXQuarz
 } -setup {
@@ -1563,7 +1567,8 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
 } -body {
-    frame .pack.a -width 100 -height 50 -relief raised -bd 2
+    frame .pack.a -width 100 -height 50 -relief raised -bd 2 -bg green
+    after 100
     pack .pack.a
     update
     set result [winfo ismapped .pack.a]
@@ -1572,7 +1577,7 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
     .pack.a configure -width 200 -height 75
     update
     lappend result [winfo width .pack.a] [winfo height .pack.a] \
-            [winfo ismapped .pack.a]
+	    [winfo ismapped .pack.a]
     wm deiconify .pack
     update
     lappend result [winfo ismapped .pack.a]
@@ -1586,7 +1591,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
 } -body {
-    frame .pack.a -width 100 -height 50 -relief raised -bd 2
+    frame .pack.a -width 100 -height 50 -relief raised -bd 2 -bg green
     pack .pack.a
     update
     set result [winfo ismapped .pack.a]
@@ -1607,8 +1612,8 @@ test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbun
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
 } -body {
-    frame .pack.a -relief raised -bd 2
-    frame .pack.b -width 70 -height 30 -relief sunken -bd 2
+    frame .pack.a -relief raised -bd 2 -bg green
+    frame .pack.b -width 70 -height 30 -relief sunken -bd 2 -bg red
     pack .pack.a
     pack .pack.b -in .pack.a
     update
@@ -1618,7 +1623,7 @@ test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbun
     .pack.b configure -width 100 -height 30
     update
     lappend result [winfo width .pack.b] [winfo height .pack.b] \
-            [winfo ismapped .pack.b]
+	    [winfo ismapped .pack.b]
     wm deiconify .pack
     update
     lappend result [winfo ismapped .pack.b]
@@ -1661,7 +1666,94 @@ test pack-19.2 {test support for minreqsize} -setup {
     destroy .pack.l .pack.lf
 } -result {162x127+0+0 172x112+0+0}
 
-
+test pack-20.1 {<<NoManagedChild>> fires on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 1
+test pack-20.2 {<<NoManagedChild>> fires on last packed child destruction} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {incr A}
+    destroy .1
+    update
+    set A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 1
+test pack-20.3 {<Configure> does not fire on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1
+} -result 0
+test pack-20.4 {<<NoManagedChild>> does not fire on forelast pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1 .2
+} -result 0
+test pack-20.5 {<Configure> does not fire on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1 .2
+} -result 1
+test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagation is off} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack propagate . 0
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 0
+
 # cleanup
 cleanupTests
 return

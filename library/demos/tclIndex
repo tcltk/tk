@@ -65,3 +65,6 @@ set auto_index(showMessageBox) [list source -encoding utf-8 [file join $dir msgb
 set auto_index(setColor) [list source -encoding utf-8 [file join $dir clrpick.tcl]]
 set auto_index(setColor_helper) [list source -encoding utf-8 [file join $dir clrpick.tcl]]
 set auto_index(fileDialog) [list source -encoding utf-8 [file join $dir filebox.tcl]]
+set auto_index(systray) [list source -encoding utf-8 [file join $dir systray.tcl]]
+set auto_index(windoicons [list source -encoding utf-8 [file join $dir windowicons.tcl]]
+

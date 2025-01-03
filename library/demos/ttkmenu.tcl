@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ttkmenu
 catch {destroy $w}
@@ -35,7 +35,7 @@ menu $w.m3.menu -tearoff 0
 menu $w.m4.menu -tearoff 0
 menu $w.m5.menu -tearoff 0
 
-foreach theme [ttk::themes] {
+foreach theme [lsort [ttk::themes]] {
     $w.m1.menu add command -label $theme -command [list ttk::setTheme $theme]
     $w.m2.menu add command -label $theme -command [list ttk::setTheme $theme]
     $w.m3.menu add command -label $theme -command [list ttk::setTheme $theme]
@@ -48,6 +48,6 @@ pack [ttk::frame $w.f1] -fill both -expand yes
 lower $w.f
 
 grid anchor $w.f center
-grid   x   $w.m1   x    -in $w.f -padx 3 -pady 2
-grid $w.m2 $w.m4 $w.m3  -in $w.f -padx 3 -pady 2
-grid   x   $w.m5   x    -in $w.f -padx 3 -pady 2
+grid   x   $w.m1   x    -in $w.f -padx 2.25p -pady 1.5p
+grid $w.m2 $w.m4 $w.m3  -in $w.f -padx 2.25p -pady 1.5p
+grid   x   $w.m5   x    -in $w.f -padx 2.25p -pady 1.5p

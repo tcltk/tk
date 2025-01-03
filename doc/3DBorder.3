@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_Alloc3DBorderFromObj, Tk_Get3DBorder, Tk_Get3DBorderFromObj, Tk_Draw3DRectangle, Tk_Fill3DRectangle, Tk_Draw3DPolygon, Tk_Fill3DPolygon, Tk_3DVerticalBevel, Tk_3DHorizontalBevel, Tk_SetBackgroundFromBorder, Tk_NameOf3DBorder, Tk_3DBorderColor, Tk_3DBorderGC, Tk_Free3DBorderFromObj, Tk_Free3DBorder \- draw borders with three-dimensional appearance
+Tk_Alloc3DBorderFromObj, Tk_ClipDrawableToRect, Tk_DrawHighlightBorder, Tk_Get3DBorder, Tk_Get3DBorderColors, Tk_Get3DBorderFromObj, Tk_Draw3DRectangle, Tk_Fill3DRectangle, Tk_Draw3DPolygon, Tk_Fill3DPolygon, Tk_3DVerticalBevel, Tk_3DHorizontalBevel, Tk_SetBackgroundFromBorder, Tk_NameOf3DBorder, Tk_3DBorderColor, Tk_3DBorderGC, Tk_Free3DBorderFromObj, Tk_Free3DBorder \- draw borders with three-dimensional appearance
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -17,8 +17,14 @@ Tk_Alloc3DBorderFromObj, Tk_Get3DBorder, Tk_Get3DBorderFromObj, Tk_Draw3DRectang
 Tk_3DBorder
 \fBTk_Alloc3DBorderFromObj\fR(\fIinterp, tkwin, objPtr\fR)
 .sp
+\fBTk_ClipDrawableToRect\fR(\fIdisplay, drawable, x, y, width, height\fR)
+.sp
+\fBTk_DrawHighlightBorder\fR(\fItkwin, fgGC, bgGC, highlightWidth, drawable\fR)
+.sp
 Tk_3DBorder
 \fBTk_Get3DBorder\fR(\fIinterp, tkwin, colorName\fR)
+.sp
+\fBTk_Get3DBorderColors\fR(\fIborder, bgColorPtr, darkColorPtr, lightColorPtr\fR)
 .sp
 Tk_3DBorder
 \fBTk_Get3DBorderFromObj\fR(\fItkwin, objPtr\fR)
@@ -84,6 +90,9 @@ Height of rectangle describing border or bevel, in pixels.
 Width of border in pixels. Positive means border is inside rectangle
 given by \fIx\fR, \fIy\fR, \fIwidth\fR, \fIheight\fR, negative means
 border is outside rectangle.
+.AP int highlightWidth in
+Width of ring around the outside of the widget if the widget has received the
+input focus.
 .AP int relief in
 Indicates 3-D position of interior of value relative to exterior;
 should be \fBTK_RELIEF_RAISED\fR, \fBTK_RELIEF_SUNKEN\fR, \fBTK_RELIEF_GROOVE\fR,
@@ -127,6 +136,18 @@ it forms the bottom side.
 .AP int which in
 Specifies which of the border's graphics contexts is desired.
 Must be \fBTK_3D_FLAT_GC\fR, \fBTK_3D_LIGHT_GC\fR, or \fBTK_3D_DARK_GC\fR.
+.AP XColor *bgColorPtr out
+Pointer to location in which to store the background color of the given border.
+.AP XColor *darkColorPtr out
+Pointer to location in which to store the color for darker areas of the
+given border.
+.AP XColor *lightColorPtr out
+Pointer to location in which to store the color for lighter areas of the
+given border.
+.AP GC fgGC in
+Foreground X graphics context.
+.AP GC fgGC in
+Background X graphics context.
 .BE
 .SH DESCRIPTION
 .PP
@@ -153,10 +174,26 @@ information about the return value in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_Alloc3DBorderFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
 .PP
+\fBTk_ClipDrawableToRect\fR will clip all drawing into the drawable \fId\fR
+to the given rectangle. If \fIwidth\fR or \fIheight\fR are negative, reset
+to no clipping.
+Subsequent drawing into \fId\fR is offset and clipped as specified.
+The function is only used when \fBTK_NO_DOUBLE_BUFFERING\fR is specified at
+compile time.
+.PP
+\fBTk_DrawHighlightBorder\fR draws a rectangular ring around the outside of
+a widget to indicate that it has received the input focus.
+On the Macintosh, this puts a 1 pixel border in the bgGC color between
+the widget and the focus ring, except in the case where highlightWidth
+is 0 or 1, in which case the border is left out.
+For proper Mac L&F, use highlightWidth of 3.
+.PP
 \fBTk_Get3DBorder\fR is identical to \fBTk_Alloc3DBorderFromObj\fR except
 that the color is specified with a string instead of a value.  This
 prevents \fBTk_Get3DBorder\fR from caching the return value, so
 \fBTk_Get3DBorder\fR is less efficient than \fBTk_Alloc3DBorderFromObj\fR.
+.PP
+\fBTk_Get3DBorderColors\fR returns the used colors of the given border.
 .PP
 \fBTk_Get3DBorderFromObj\fR returns the token for an existing border, given
 the window and color name used to create the border.

@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -11,13 +11,13 @@ test labelframe-2.1 "Can't use indirect descendant as labelwidget" -body {
     ttk::frame .lf.t
     ttk::checkbutton .lf.t.cb
     .lf configure -labelwidget .lf.t.cb
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t.cb" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.2 "Can't use toplevel as labelwidget" -body {
     toplevel .lf.t
     .lf configure -labelwidget .lf.t
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.3 "Can't use non-windows as -labelwidget" -body {
@@ -127,5 +127,19 @@ test labelframe-6.1 "Stacking order" -body {
 } -cleanup {
     destroy .t
 } -result [list .t.x1 .t.lf .t.lb .t.x2]
+
+test labelframe-7.1 "style command" -body {
+    ttk::labelframe .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TLabelframe TLabelframe}
+test labelframe-7.2 "style command" -body {
+    ttk::style configure customStyle.TLabelframe
+    ttk::labelframe .w -style customStyle.TLabelframe
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TLabelframe customStyle.TLabelframe TLabelframe}
 
 tcltest::cleanupTests

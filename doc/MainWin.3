@@ -17,12 +17,25 @@ Tk_MainWindow, Tk_GetNumMainWindows \- functions for querying main window inform
 Tk_Window
 \fBTk_MainWindow\fR(\fIinterp\fR)
 .sp
+\fBTk_SetMainMenubar\fR(\fIinterp, tkwin, menuName\fR)
+.sp
+\fBTk_SetWindowMenubar\fR(\fIinterp, tkwin, oldMenuName, menuName\fR)
+.sp
 int
 \fBTk_GetNumMainWindows\fR()
+.fi
 .SH ARGUMENTS
 .AS Tcl_Interp *pathName
 .AP Tcl_Interp *interp in/out
 Interpreter associated with the application.
+.AP Tk_Window tkwin in
+Token for main window.
+.AP const char *menuName in
+The name of the new menubar that the toplevel needs to be set to.
+NULL means that their is no menu now.
+.AP const char *oldMenuName in
+The name of the menubar previously set in this toplevel.
+NULL means no menu was set previously.
 .BE
 .SH DESCRIPTION
 .PP
@@ -36,5 +49,12 @@ leaves an error message in interpreter \fIinterp\fR's result.
 .PP
 \fBTk_GetNumMainWindows\fR returns a count of the number of main
 windows currently open in the current thread.
+\fBTk_SetMainMenubar\fR
+Called when a toplevel widget is brought to front. On the Macintosh,
+sets up the menubar that goes across the top of the main monitor. On
+other platforms, nothing is necessary.
+\fBTk_SetWindowMenubar\fR associates a menu with a window.
+The old menu clones for the menubar are thrown away, and a handler is
+set up to allocate the new ones.
 .SH KEYWORDS
 application, main window

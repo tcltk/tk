@@ -12,7 +12,7 @@
 .SH NAME
 radiobutton \- Create and manipulate 'radiobutton' pick-one widgets
 .SH SYNOPSIS
-\fBradiobutton\fR \fIpathName \fR?\fIoptions\fR?
+\fBradiobutton\fI pathName \fR?\fIoptions\fR?
 .SO
 \-activebackground	\-disabledforeground	\-padx
 \-activeforeground	\-font	\-pady
@@ -65,8 +65,8 @@ The empty string is the default value.
 Specifies a background color to use when the button is selected.
 If \fBindicatorOn\fR is true then the color is used as the background for
 the indicator regardless of the select state.
-If \fB\-indicatoron\fR is false, this color is used as the background
-for the entire widget, in place of \fB\-background\fR or \fB\-activeBackground\fR,
+If \fB\-indicatoron\fR is false, this color is used as the background for the
+entire widget, in place of \fB\-background\fR or \fB\-activeBackground\fR,
 whenever the widget is selected.
 If specified as an empty string then no special color is used for
 displaying when the widget is selected.
@@ -176,18 +176,20 @@ name is \fIpathName\fR.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for radiobutton widgets:
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBradiobutton\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -203,6 +205,7 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBradiobutton\fR
 command.
+.\" METHOD: deselect
 .TP
 \fIpathName \fBdeselect\fR
 .
@@ -210,6 +213,7 @@ Deselects the radiobutton and sets the associated variable to an
 empty string.
 If this radiobutton was not currently selected, the command has
 no effect.
+.\" METHOD: flash
 .TP
 \fIpathName \fBflash\fR
 .
@@ -218,6 +222,7 @@ several times, alternating between active and normal colors.  At
 the end of the flash the radiobutton is left in the same normal/active
 state as when the command was invoked.
 This command is ignored if the radiobutton's state is \fBdisabled\fR.
+.\" METHOD: invoke
 .TP
 \fIpathName \fBinvoke\fR
 .
@@ -227,6 +232,7 @@ its associated Tcl command, if there is one.
 The return value is the return value from the Tcl command, or an
 empty string if there is no command associated with the radiobutton.
 This command is ignored if the radiobutton's state is \fBdisabled\fR.
+.\" METHOD: select
 .TP
 \fIpathName \fBselect\fR
 .
@@ -257,7 +263,8 @@ actions occur:  the radiobutton is completely non-responsive.
 The behavior of radiobuttons can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
 .SH "SEE ALSO"
-checkbutton(n), labelframe(n), listbox(n), options(n), scale(n), ttk::radiobutton(n)
+checkbutton(n), labelframe(n), listbox(n), options(n), scale(n),
+ttk::radiobutton(n)
 .SH KEYWORDS
 radiobutton, widget
 '\" Local Variables:

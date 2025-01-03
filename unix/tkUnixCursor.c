@@ -3,7 +3,7 @@
  *
  *	This file contains X specific cursor manipulation routines.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -180,7 +180,7 @@ static const struct TkCursorName {
 #endif
 
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
-			    Tk_Window tkwin, int argc, const char **argv,
+			    Tk_Window tkwin, Tcl_Size argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
 
 /*
@@ -210,7 +210,7 @@ TkGetCursorByName(
 {
     TkUnixCursor *cursorPtr = NULL;
     Cursor cursor = None;
-    int argc;
+    Tcl_Size argc;
     const char **argv = NULL;
     Display *display = Tk_Display(tkwin);
     int inTkTable = 0;
@@ -296,7 +296,7 @@ TkGetCursorByName(
 	    dispPtr->cursorFont = XLoadFont(display, CURSORFONT);
 	    if (dispPtr->cursorFont == None) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"couldn't load cursor font", -1));
+			"couldn't load cursor font", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CURSOR", "FONT", NULL);
 		goto cleanup;
 	    }
@@ -311,8 +311,8 @@ TkGetCursorByName(
 
 	if (!inTkTable && Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get cursor from a file in a safe interpreter",
-		    -1));
+		    "cannot get cursor from a file in a safe interpreter",
+		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", NULL);
 	    cursorPtr = NULL;
 	    goto cleanup;
@@ -338,7 +338,7 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -381,7 +381,7 @@ static Cursor
 CreateCursorFromTableOrFile(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    int argc,
+    Tcl_Size argc,
     const char **argv,		/* Cursor spec parsed into elements. */
     const struct TkCursorName *tkCursorPtr)
 				/* Non-NULL when cursor is defined in Tk
@@ -432,7 +432,7 @@ CreateCursorFromTableOrFile(
 	    goto cleanup;
 	}
 
-	source = XCreateBitmapFromData(display, drawable, data, width,height);
+	source = XCreateBitmapFromData(display, drawable, data, (unsigned)width, (unsigned)height);
 	ckfree(data);
     } else {
 	if (TkReadBitmapFile(display, drawable, &argv[0][1],
@@ -530,8 +530,8 @@ CreateCursorFromTableOrFile(
 	    goto cleanup;
 	}
 
-	mask = XCreateBitmapFromData(display, drawable, data, maskWidth,
-		maskHeight);
+	mask = XCreateBitmapFromData(display, drawable, data, (unsigned)maskWidth,
+		(unsigned)maskHeight);
 
 	ckfree(data);
     } else {
@@ -547,7 +547,7 @@ CreateCursorFromTableOrFile(
 
     if ((maskWidth != width) || (maskHeight != height)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"source and mask bitmaps have different sizes", -1));
+		"source and mask bitmaps have different sizes", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CURSOR", "SIZE_MATCH", NULL);
 	goto cleanup;
     }
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }

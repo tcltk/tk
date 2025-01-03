@@ -4,7 +4,7 @@
  *	Process the -filetypes option for the file dialogs on Windows and the
  *	Mac.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -79,9 +79,8 @@ TkGetFileFilters(
     Tcl_Obj *types,		/* Value of the -filetypes option. */
     int isWindows)		/* True if we are running on Windows. */
 {
-    int listObjc;
+    Tcl_Size i, listObjc;
     Tcl_Obj ** listObjv = NULL;
-    int i;
 
     if (types == NULL) {
 	return TCL_OK;
@@ -110,7 +109,7 @@ TkGetFileFilters(
 	 * third is the Mac OSType ID, but we don't care about them here.
 	 */
 
-	int count;
+	Tcl_Size count;
 	FileFilter *filterPtr;
 	Tcl_Obj **typeInfo;
 
@@ -233,7 +232,8 @@ AddClause(
 				 * two platforms */
 {
     Tcl_Obj **globList = NULL, **ostypeList = NULL;
-    int globCount, ostypeCount, i, code = TCL_OK;
+    Tcl_Size globCount, ostypeCount, i;
+    int code = TCL_OK;
     FileFilterClause *clausePtr;
     Tcl_Encoding macRoman = NULL;
 
@@ -262,7 +262,7 @@ AddClause(
 	 */
 
 	for (i=0; i<ostypeCount; i++) {
-	    int len;
+	    Tcl_Size len;
 	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
 	    /*
@@ -286,7 +286,7 @@ AddClause(
 		 * be 4 macRoman characters long
 		 */
 
-		Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		(void)Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
 		len = Tcl_DStringLength(&osTypeDS);
 		Tcl_DStringFree(&osTypeDS);
 	    }
@@ -305,7 +305,7 @@ AddClause(
      * Add the clause into the list of clauses
      */
 
-    clausePtr = ckalloc(sizeof(FileFilterClause));
+    clausePtr = (FileFilterClause *)ckalloc(sizeof(FileFilterClause));
     clausePtr->patterns = NULL;
     clausePtr->patternsTail = NULL;
     clausePtr->macTypes = NULL;
@@ -321,8 +321,8 @@ AddClause(
 
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
-	    GlobPattern *globPtr = ckalloc(sizeof(GlobPattern));
-	    int len;
+	    GlobPattern *globPtr = (GlobPattern *)ckalloc(sizeof(GlobPattern));
+	    Tcl_Size len;
 	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
@@ -331,12 +331,12 @@ AddClause(
 		 * Prepend a "*" to patterns that do not have a leading "*"
 		 */
 
-		globPtr->pattern = ckalloc(len + 1);
+		globPtr->pattern = (char *)ckalloc(len + 1);
 		globPtr->pattern[0] = '*';
 		strcpy(globPtr->pattern+1, str);
 	    } else if (isWindows) {
 		if (strcmp(str, "*") == 0) {
-		    globPtr->pattern = ckalloc(4);
+		    globPtr->pattern = (char *)ckalloc(4);
 		    strcpy(globPtr->pattern, "*.*");
 		} else if (strcmp(str, "") == 0) {
 		    /*
@@ -345,14 +345,14 @@ AddClause(
 		     * TODO: "*." actually matches with all files on Win95
 		     */
 
-		    globPtr->pattern = ckalloc(3);
+		    globPtr->pattern = (char *)ckalloc(3);
 		    strcpy(globPtr->pattern, "*.");
 		} else {
-		    globPtr->pattern = ckalloc(len);
+		    globPtr->pattern = (char *)ckalloc(len);
 		    strcpy(globPtr->pattern, str);
 		}
 	    } else {
-		globPtr->pattern = ckalloc(len);
+		globPtr->pattern = (char *)ckalloc(len);
 		strcpy(globPtr->pattern, str);
 	    }
 
@@ -375,8 +375,8 @@ AddClause(
 	}
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
-	    int len;
-	    MacFileType *mfPtr = ckalloc(sizeof(MacFileType));
+	    Tcl_Size len;
+	    MacFileType *mfPtr = (MacFileType *)ckalloc(sizeof(MacFileType));
 	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 	    char *string;
 
@@ -385,8 +385,7 @@ AddClause(
 	     * macRoman characters long
 	     */
 
-	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
-	    string = Tcl_DStringValue(&osTypeDS);
+	    string = Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];
 	    Tcl_DStringFree(&osTypeDS);
@@ -445,11 +444,11 @@ GetFilter(
 	}
     }
 
-    filterPtr = ckalloc(sizeof(FileFilter));
+    filterPtr = (FileFilter *)ckalloc(sizeof(FileFilter));
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
     len = strlen(name) + 1;
-    filterPtr->name = ckalloc(len);
+    filterPtr->name = (char *)ckalloc(len);
     memcpy(filterPtr->name, name, len);
 
     if (flistPtr->filters == NULL) {

@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .button
 catch {destroy $w}
@@ -44,4 +44,4 @@ button $w.b3 -text "Sea Green" -width 10 \
     -command [list colorrefresh $w SeaGreen2]
 button $w.b4 -text "Yellow" -width 10 \
     -command [list colorrefresh $w Yellow1]
-pack $w.b1 $w.b2 $w.b3 $w.b4 -side top -expand yes -pady 2
+pack $w.b1 $w.b2 $w.b3 $w.b4 -side top -expand yes -pady 1.5p

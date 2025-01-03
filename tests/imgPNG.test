@@ -2,10 +2,10 @@
 # and write PNG-format image files for photo widgets. The files is organized
 # in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
-# Copyright (c) 1998 Willem van Schaik (images only)
-# Copyright (c) 2008 Donal K. Fellows
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 1998 Willem van Schaik (images only)
+# Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1056,7 +1056,10 @@ duFtaSrZF3pfCpiGjN2imToJJ39m6BjG1XZRwrkAI8YUKSZWlEZQDAIrNArHnyvpXtmM/B7wJeAbwO
 fBcxKuQMrzfLdBoz29fX9led5v6u1XnBJW7vnr/YlrXEoNo22LRYOYlxZ1S6rkOfDcLvPAY/hGmWC7
 H68uFI+x0oSPg2MAN/L5/M/vtqSED/T5cMu9J4Wf7HMGsB/4TEv/DFwe3Y/NPN57VXh+5BWApwFLlh
 r661tV1eju/ne8YJrkWtES0tmRe2VOviv2j2aBp5nHihiRaz/A4oCnsAsje/+AAAAAElFTkSuQmCC"
-    }
+    dpi100aspect2
+"iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA9hAAAewgEw8YEEAAAA
+FklEQVR4nGP4+vXrP11lJgYGhj9xSQAzOwXsETZ69QAAAABJRU5ErkJggg=="
+	}
 
 # $encoded(basn0g08), $encoded(basn2c08), $encoded(basn3p08), $encoded(basn6a08)
 test imgPNG-1.1 {reading basic images; grayscale} -setup {
@@ -1113,7 +1116,51 @@ test imgPNG-3.1 {reading image with unknown ancillary chunk - bug [1c659ef0f1]} 
     catch {set i [image create photo -file $fileName]}
 } -cleanup {
     image delete $i
-} -result {0}
+} -result 0
+
+test imgPNG-4.1 {data image with metadata} -body {
+    image create photo i1 -data $encoded(dpi100aspect2)
+    i1 cget -metadata
+} -cleanup {
+    image delete i1
+} -result {DPI 99.9998 aspect 2.0}
+
+test imgPNG-4.2 {file image with metadata} -setup {
+    set path [file join [configure -tmpdir] test.png]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts -nonewline $h [binary decode base64 $encoded(dpi100aspect2)]
+    close $h
+} -body {
+    image create photo i1 -file $path
+    i1 cget -metadata
+} -cleanup {
+    image delete i1
+    file delete $path
+} -result {DPI 99.9998 aspect 2.0}
+
+test imgPNG-4.3 {data output with metadata} -setup {
+    image create photo i1 -data $encoded(dpi100aspect2)
+} -body {
+    set imgData [i1 data -format png]
+    image delete i1
+    image create photo i1 -data $imgData
+    i1 cget -metadata
+} -cleanup {
+    image delete i1
+} -result {DPI 99.9998 aspect 2.0}
+
+test imgPNG-4.4 {file output with metadata} -setup {
+    image create photo i1 -data $encoded(dpi100aspect2)
+    set path [file join [configure -tmpdir] test.png]
+} -body {
+    i1 write $path -format png
+    image delete i1
+    image create photo i1 -file $path
+    i1 cget -metadata
+} -cleanup {
+    image delete i1
+    file delete $path
+} -result {DPI 99.9998 aspect 2.0}
 
 }
 

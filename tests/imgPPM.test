@@ -2,8 +2,8 @@
 # which reads and write PPM-format image files for photo widgets.
 # The files is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -56,8 +56,7 @@ test imgPPM-1.8 {FileReadPPM procedure} -body {
 } -returnCodes error -result {error reading PPM image file "test.ppm": not enough data}
 test imgPPM-1.9 {FileReadPPM procedure} -body {
     put test.ppm "P6\n5 4\n150\n012345678901234567890123456789012345678901234567890123456789"
-    list [image create photo p1 -file test.ppm] \
-        [image width p1] [image height p1]
+    list [image create photo p1 -file test.ppm] [image width p1] [image height p1]
 } -returnCodes ok -result {p1 5 4}
 
 
@@ -67,7 +66,7 @@ test imgPPM-2.1 {FileWritePPM procedure} -setup {
     put test.ppm "P6\n5 4\n255\n012345678901234567890123456789012345678901234567890123456789"
     image create photo p1 -file test.ppm
     list [catch {p1 write not_a_dir/bar/baz/gorp} msg] [string tolower $msg] \
-        [string tolower $errorCode]
+	    [string tolower $errorCode]
 } -cleanup {
     image delete p1
 } -result {1 {couldn't open "not_a_dir/bar/baz/gorp": no such file or directory} {posix enoent {no such file or directory}}}

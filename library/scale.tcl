@@ -3,8 +3,8 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -34,7 +34,7 @@ bind Scale <Leave> {
 	%W configure -state normal
     }
 }
-bind Scale <1> {
+bind Scale <Button-1> {
     tk::ScaleButtonDown %W %x %y
 }
 bind Scale <B1-Motion> {
@@ -47,7 +47,7 @@ bind Scale <ButtonRelease-1> {
     tk::ScaleEndDrag %W
     tk::ScaleActivate %W %x %y
 }
-bind Scale <2> {
+bind Scale <Button-2> {
     tk::ScaleButton2Down %W %x %y
 }
 bind Scale <B2-Motion> {
@@ -60,15 +60,7 @@ bind Scale <ButtonRelease-2> {
     tk::ScaleEndDrag %W
     tk::ScaleActivate %W %x %y
 }
-if {[tk windowingsystem] eq "win32"} {
-    # On Windows do the same with button 3, as that is the right mouse button
-    bind Scale <3>		[bind Scale <2>]
-    bind Scale <B3-Motion>	[bind Scale <B2-Motion>]
-    bind Scale <B3-Leave>	[bind Scale <B2-Leave>]
-    bind Scale <B3-Enter>	[bind Scale <B2-Enter>]
-    bind Scale <ButtonRelease-3> [bind Scale <ButtonRelease-2>]
-}
-bind Scale <Control-1> {
+bind Scale <Control-Button-1> {
     tk::ScaleControlPress %W %x %y
 }
 bind Scale <<PrevLine>> {
@@ -151,10 +143,10 @@ proc ::tk::ScaleButtonDown {w x y} {
 	set coords [$w coords]
 	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
 	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
-        switch -exact -- $Priv($w,relief) {
-            "raised" { $w configure -sliderrelief sunken }
-            "ridge"  { $w configure -sliderrelief groove }
-        }
+	switch -exact -- $Priv($w,relief) {
+	    "raised" { $w configure -sliderrelief sunken }
+	    "ridge"  { $w configure -sliderrelief groove }
+	}
     }
 }
 
@@ -187,8 +179,8 @@ proc ::tk::ScaleEndDrag {w} {
     variable ::tk::Priv
     set Priv(dragging) 0
     if {[info exists Priv($w,relief)]} {
-        $w configure -sliderrelief $Priv($w,relief)
-        unset Priv($w,relief)
+	$w configure -sliderrelief $Priv($w,relief)
+	unset Priv($w,relief)
     }
 }
 
@@ -217,8 +209,8 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
     # the -command script lasts longer than -repeatdelay
     set clockms [clock milliseconds]
     if {$repeat eq "again" &&
-            [expr {$clockms - $Priv(clockms)}] > [expr {[$w cget -repeatinterval] * 1.1}]} {
-        set Priv(clockms) $clockms
+	    [expr {$clockms - $Priv(clockms)}] > [expr {[$w cget -repeatinterval] * 1.1}]} {
+	set Priv(clockms) $clockms
 	set Priv(afterId) [after [$w cget -repeatinterval] \
 		[list tk::ScaleIncrement $w $dir $big again]]
 	return
@@ -236,20 +228,20 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
 	set inc [$w cget -resolution]
     }
     if {([$w cget -from] > [$w cget -to]) ^ ($dir eq "up")} {
-        if {$inc > 0} {
-            set inc [expr {-$inc}]
-        }
+	if {$inc > 0} {
+	    set inc [expr {-$inc}]
+	}
     } else {
-        if {$inc < 0} {
-            set inc [expr {-$inc}]
-        }
+	if {$inc < 0} {
+	    set inc [expr {-$inc}]
+	}
     }
     # this will run the -command script (if any) during the redrawing
     # of the scale at idle time
     $w set [expr {[$w get] + $inc}]
 
     if {$repeat eq "again"} {
-        set Priv(clockms) $clockms
+	set Priv(clockms) $clockms
 	set Priv(afterId) [after [$w cget -repeatinterval] \
 		[list tk::ScaleIncrement $w $dir $big again]]
     } elseif {$repeat eq "initial"} {

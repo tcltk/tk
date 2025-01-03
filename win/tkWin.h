@@ -4,7 +4,7 @@
  *	Declarations of public types and interfaces that are only
  *	available under Windows.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,14 +18,18 @@
  * the SystemParametersInfo API doesn't like to receive structures that
  * are larger than it expects which affects the font assignments.
  *
- * WINVER = 0x0500 means Windows 2000 and above
+ * WINVER = 0x0600 means Windows Vista and above. Even though we still
+ * support Windows XP, but the Vista-specifics are tested at runtime.
  */
 
 #ifndef WINVER
-#define WINVER 0x0500
+#   define WINVER 0x0601
 #endif
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
+#   define _WIN32_WINNT 0x0601
+#endif
+#ifndef _WIN32_IE
+#   define _WIN32_IE 0x0800
 #endif
 
 #ifndef _TK

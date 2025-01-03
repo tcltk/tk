@@ -12,7 +12,7 @@
 .SH NAME
 message \- Create and manipulate 'message' non-interactive text widgets
 .SH SYNOPSIS
-\fBmessage\fR \fIpathName \fR?\fIoptions\fR?
+\fBmessage\fI pathName \fR?\fIoptions\fR?
 .SO
 \-anchor	\-background	\-borderwidth
 \-cursor	\-font	\-foreground
@@ -57,7 +57,7 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If this option has a value greater than zero then the \fB\-aspect\fR
 option is ignored and the \fB\-width\fR option determines the line
 length.
-If this option has a value less than or equal to zero, then
+If this option value is negative or zero, then
 the \fB\-aspect\fR option determines the line length.
 .BE
 .SH DESCRIPTION
@@ -106,11 +106,12 @@ name is \fIpathName\fR.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for message widgets:
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -118,6 +119,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBmessage\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

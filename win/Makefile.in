@@ -71,11 +71,8 @@ MAN3_INSTALL_DIR = $(MAN_INSTALL_DIR)/man3
 # Directory in which to install manual entries for the built-in Tk commands:
 MANN_INSTALL_DIR = $(MAN_INSTALL_DIR)/mann
 
-# Libraries built with optimization switches have this additional extension
-TK_DBGX = @TK_DBGX@
-
 # Directory in which to install the pkgIndex.tcl file for loadable Tk
-PKG_INSTALL_DIR		= $(LIB_INSTALL_DIR)/tk$(VERSION)$(TK_DBGX)
+PKG_INSTALL_DIR		= $(LIB_INSTALL_DIR)/tk$(VERSION)
 
 # Package index file for loadable Tk
 PKG_INDEX		= $(PKG_INSTALL_DIR)/pkgIndex.tcl
@@ -129,16 +126,23 @@ TCL_SRC_DIR_NATIVE		= $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
 EXESUFFIX		= @EXESUFFIX@
+TCLVER			= @TCL_MAJOR_VERSION@@TCL_MINOR_VERSION@
 VER			= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER			= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
 
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 TK_LIB_FILE		= @TK_LIB_FILE@
 TK_DLL_FILE		= @TK_DLL_FILE@
+TK_DLL_FILE_TCL8	= @TK_DLL_FILE_TCL8@
+TK_DLL_FILE_TCL9	= @TK_DLL_FILE_TCL9@
 TEST_DLL_FILE		= tktest$(VER)${DLLSUFFIX}
-TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${DLLSUFFIX}.a
+TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${DLLSUFFIX}${LIBSUFFIX}
 
-SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
+SHARED_LIBRARIES	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
 
 WISH			= wish$(VER)${EXESUFFIX}
@@ -170,7 +174,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -D_ATL_XP_TARGETING=1 -D__USE_MINGW_ANSI_STDIO=0
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -D__USE_MINGW_ANSI_STDIO=0
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -198,14 +202,13 @@ MKDIR		= mkdir -p
 SHELL		= @SHELL@
 RM		= rm -f
 COPY		= cp
-
-BUILD_TCLSH	= @BUILD_TCLSH@
+LN		= ln
 
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
 NO_DEPRECATED_FLAGS	=
-#NO_DEPRECATED_FLAGS	= -DTK_NO_DEPRECATED
+#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # TCL_EXE is the name of a tclsh executable that is available *BEFORE*
 # running make for the first time. Certain build targets (make genstubs)
@@ -213,12 +216,52 @@ NO_DEPRECATED_FLAGS	=
 # required just to do a normal build although it can be required to run
 # make dist.
 TCL_EXE			= @TCLSH_PROG@
+WINE		= @WINE@
+
+###
+# Tip 430 - ZipFS Modifications
+###
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+
+HOST_CC		        = @CC_FOR_BUILD@
+HOST_EXEEXT             = @EXEEXT_FOR_BUILD@
+HOST_OBJEXT             = @OBJEXT_FOR_BUILD@
+ZIPFS_BUILD	        = @ZIPFS_BUILD@
+NATIVE_ZIP		= @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+INSTALL_MSGS            = @INSTALL_MSGS@
+INSTALL_LIBRARIES       = @INSTALL_LIBRARIES@
+
+# Minizip
+MINIZIP_OBJS = \
+	adler32.$(HOST_OBJEXT) \
+	compress.$(HOST_OBJEXT) \
+	crc32.$(HOST_OBJEXT) \
+	deflate.$(HOST_OBJEXT) \
+	infback.$(HOST_OBJEXT) \
+	inffast.$(HOST_OBJEXT) \
+	inflate.$(HOST_OBJEXT) \
+	inftrees.$(HOST_OBJEXT) \
+	ioapi.$(HOST_OBJEXT) \
+	iowin32.$(HOST_OBJEXT)  \
+	trees.$(HOST_OBJEXT) \
+	uncompr.$(HOST_OBJEXT) \
+	zip.$(HOST_OBJEXT) \
+	zutil.$(HOST_OBJEXT) \
+	minizip.$(HOST_OBJEXT)
+
+ZIP_INSTALL_OBJS =  @ZIP_INSTALL_OBJS@
 
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
 -I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" \
-${AC_FLAGS} $(NO_DEPRECATED_FLAGS) -DUSE_TCL_STUBS
+${AC_FLAGS} $(NO_DEPRECATED_FLAGS) -DTCL_UTF_MAX=4 -DUSE_TCL_STUBS
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
@@ -238,7 +281,6 @@ WISH_OBJS = \
 TKTEST_OBJS = \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT) \
-	tkOldTest.$(OBJEXT) \
 	tkWinTest.$(OBJEXT)
 
 XLIB_OBJS = \
@@ -264,6 +306,8 @@ TK_OBJS = \
 	tkWinDraw.$(OBJEXT) \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
+	tkWinGDI.$(OBJEXT) \
+	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
 	tkWinKey.$(OBJEXT) \
@@ -274,6 +318,7 @@ TK_OBJS = \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \
 	tkWinSendCom.$(OBJEXT) \
+	tkWinSysTray.$(OBJEXT) \
 	tkWinWindow.$(OBJEXT) \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
@@ -312,11 +357,14 @@ TK_OBJS = \
 	tkGet.$(OBJEXT) \
 	tkGrab.$(OBJEXT) \
 	tkGrid.$(OBJEXT) \
+	tkIcu.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
+	tkImgListFormat.$(OBJEXT) \
 	tkImgGIF.$(OBJEXT) \
 	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
+	tkImgSVGnano.$(OBJEXT) \
 	tkImgPhoto.$(OBJEXT) \
 	tkImgPhInstance.$(OBJEXT) \
 	tkImgUtil.$(OBJEXT) \
@@ -333,6 +381,7 @@ TK_OBJS = \
 	tkOldConfig.$(OBJEXT) \
 	tkOption.$(OBJEXT) \
 	tkPack.$(OBJEXT) \
+	tkPkgConfig.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
 	tkRectOval.$(OBJEXT) \
@@ -436,23 +485,23 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 test: test-classic test-ttk
 
 test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
-	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
-	$(TESTFLAGS) | ./$(CAT32)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
+	$(TESTFLAGS) | $(WINE) ./$(CAT32)
 
 test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
-	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
-	$(TESTFLAGS) | ./$(CAT32)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
+	$(TESTFLAGS) | $(WINE) ./$(CAT32)
 
 runtest: binaries $(TKTEST) $(TEST_DLL_FILE)
-	$(SHELL_ENV) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=foo.tcl`
 shell: binaries
-	$(SHELL_ENV) ./$(WISH) $(SCRIPT)
+	$(SHELL_ENV) $(WINE) ./$(WISH) $(SCRIPT)
 
 demo: $(WISH)
-	$(SHELL_ENV) ./$(WISH) $(ROOT_DIR)/library/demos/widget
+	$(SHELL_ENV) $(WINE) ./$(WISH) $(ROOT_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
 gdb: binaries
@@ -484,13 +533,22 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {![package vsatisfies [package provide Tcl] 8.6.0]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.7-]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
+	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtcl9tk$(VERSION).dll]]]";\
+	echo "    } else {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
+	echo "    }";\
 	echo "} else {";\
-	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
+	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL9)]]]";\
+	echo "    } else {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL8)]]]";\
+	echo "    }";\
 	echo "}";\
+	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
@@ -608,11 +666,14 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
+$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES) ${TK_ZIP_FILE}
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+		cat ${TK_ZIP_FILE} >> ${WISH}; \
+	fi
 
 tktest: $(TKTEST)
 
@@ -643,6 +704,30 @@ cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
 
+tkzipfile: ${TK_ZIP_FILE}
+
+${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
+	@$(RMDIR) ${TK_VFS_ROOT}
+	@mkdir -p ${TK_VFS_PATH}
+	@echo "creating ${TK_VFS_PATH} (prepare compression)"
+	@( \
+	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+	)
+	@$(RMDIR) $(TK_VFS_PATH)/demos
+	-@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cp ${TCL_BIN_DIR}/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && $$zip -A ../${TK_ZIP_FILE} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
+	(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+	  (echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+	  cd ${TK_VFS_ROOT} && \
+	  $$zip ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH} >/dev/null && \
+	  echo "${TK_ZIP_FILE} successful created with $$zip" && \
+	  cd ..)
+
+
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
 
@@ -651,10 +736,13 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_STUB_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
-${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TK_ZIP_FILE}
 	@$(RM) ${TK_DLL_FILE}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
+	@if test "${ZIPFS_BUILD}" = "1" ; then \
+		cat ${TK_ZIP_FILE} >> ${TK_DLL_FILE}; \
+	fi
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
@@ -670,9 +758,6 @@ testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) -DTK_TEST -DUNICODE=1 -D_UNICODE=1 @DEPARG@ $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
-	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
-
-tkOldTest.$(OBJEXT): tkOldTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkWinTest.$(OBJEXT): tkWinTest.c
@@ -695,6 +780,12 @@ tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
 
 tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
+tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)	 -DBUILD_tk -DBUILD_ttk		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_DLL_FILE)\"" \
+		@DEPARG@ $(CC_OBJNAME)
+
 
 tkWindow.$(OBJEXT): ${GENERIC_DIR}/tkWindow.c configure Makefile tkUuid.h
 	$(CC) -c $(CC_SWITCHES) -I. -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
@@ -752,7 +843,7 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
 	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
-	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
 	    "$(TTK_DIR)" \
 	    "$(TTK_DIR)/ttk.decls"
 

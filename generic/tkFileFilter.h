@@ -4,7 +4,7 @@
  *	Declarations for the file filter processing routines needed by the
  *	file selection dialogs.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,6 +12,10 @@
 
 #ifndef _TK_FILE_FILTER
 #define _TK_FILE_FILTER
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define OSType long
 
@@ -72,7 +76,11 @@ typedef struct FileFilterList {
 MODULE_SCOPE void	TkFreeFileFilters(FileFilterList *flistPtr);
 MODULE_SCOPE void	TkInitFileFilters(FileFilterList *flistPtr);
 MODULE_SCOPE int	TkGetFileFilters(Tcl_Interp *interp,
-    			    FileFilterList *flistPtr, Tcl_Obj *valuePtr,
+			    FileFilterList *flistPtr, Tcl_Obj *valuePtr,
 			    int isWindows);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* _TK_FILE_FILTER */

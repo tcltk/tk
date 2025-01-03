@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -71,39 +71,68 @@ test scrollbar-1.3 "Change orientation" -body {
     expr {$h < $w}
 } -result 1
 
-#
-# Scale tests:
-#
-
-test scale-1.0 "Self-destruction" -body {
-    trace add variable v write { destroy .s ;# }
-    ttk::scale .s -variable v
-    pack .s ; update
-    .s set 1 ; update
-} -returnCodes error -match glob -result "*"
-
-test scale-2.1 "-state option" -setup {
-    ttk::scale .s
-    set res ""
+test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
+    destroy .t .s
 } -body {
-    # defaults
-    lappend res [.s instate disabled] [.s cget -state]
-    # set -state: instate returns accordingly
-    .s configure -state disabled
-    lappend res [.s instate disabled] [.s cget -state]
-    # back to normal
-    .s configure -state normal
-    lappend res [.s instate disabled] [.s cget -state]
-    # use state command: -state does NOT reflect it
-    .s state disabled
-    lappend res [.s instate disabled] [.s cget -state]
-    # further use state command
-    .s state readonly
-    lappend res [.s state] [.s cget -state]
+    pack [text .t -yscrollcommand {.s set}] -side left
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}
+    pack [ttk::scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
+    update
+    focus -force .s
+    event generate .s <Enter>
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
 } -cleanup {
-    destroy .s
-    unset -nocomplain res
-} -result {0 normal 1 disabled 0 normal 1 normal {disabled readonly} normal}
+    destroy .t .s
+} -result {4.0}
+
+test scrollbar-10.2.1 {<Shift-MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <Enter>
+    event generate .s <Shift-MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.3}
+test scrollbar-10.2.2 {<MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <Enter>
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.3}
+
+test scrollbar-11.1 "style command" -body {
+    ttk::scrollbar .wv  ; # default is  -orient vertical
+    ttk::scrollbar .wh -orient horizontal
+    list [.wv cget -style] [.wv style] [winfo class .wv] \
+	    [.wh cget -style] [.wh style] [winfo class .wh]
+} -cleanup {
+    destroy .wv .wh
+} -result {{} Vertical.TScrollbar TScrollbar {} Horizontal.TScrollbar TScrollbar}
+test scrollbar-11.2 "style command" -body {
+    ttk::style configure customStyle.Horizontal.TScrollbar
+    ttk::scrollbar .w -orient horizontal -style customStyle.Horizontal.TScrollbar
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
 
 tcltest::cleanupTests
 

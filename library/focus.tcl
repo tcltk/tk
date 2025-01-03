@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.

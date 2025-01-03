@@ -7,22 +7,22 @@
  *
  * Scrollable interface:
  *
- * 	+ 'first' is controlled by [xy]view widget command
- * 	  and other scrolling commands like 'see';
+ *	+ 'first' is controlled by [xy]view widget command
+ *	  and other scrolling commands like 'see';
  *      + 'total' depends on widget contents;
  *      + 'last' depends on first, total, and widget size.
  *
  * Choreography (typical usage):
  *
- * 	1. User adjusts scrollbar, scrollbar widget calls its -command
- * 	2. Scrollbar -command invokes the scrollee [xy]view widget method
- * 	3. TtkScrollviewCommand calls TtkScrollTo(), which updates
- * 	   'first' and schedules a redisplay.
- * 	4. Once the scrollee knows 'total' and 'last' (typically in
- * 	   the LayoutProc), call TtkScrolled(h,first,last,total) to
- * 	   synchronize the scrollbar.
- * 	5. The scrollee -[xy]scrollcommand is called (in an idle callback)
- * 	6. Which calls the scrollbar 'set' method and redisplays the scrollbar.
+ *	1. User adjusts scrollbar, scrollbar widget calls its -command
+ *	2. Scrollbar -command invokes the scrollee [xy]view widget method
+ *	3. TtkScrollviewCommand calls TtkScrollTo(), which updates
+ *	   'first' and schedules a redisplay.
+ *	4. Once the scrollee knows 'total' and 'last' (typically in
+ *	   the LayoutProc), call TtkScrolled(h,first,last,total) to
+ *	   synchronize the scrollbar.
+ *	5. The scrollee -[xy]scrollcommand is called (in an idle callback)
+ *	6. Which calls the scrollbar 'set' method and redisplays the scrollbar.
  *
  * If the scrollee has internal scrolling (e.g., a 'see' method),
  * it should TtkScrollTo() directly (step 2).
@@ -45,17 +45,17 @@
 
 struct ScrollHandleRec
 {
-    unsigned 	flags;
+    unsigned	flags;
     WidgetCore	*corePtr;
     Scrollable	*scrollPtr;
 };
 
 /* TtkCreateScrollHandle --
- * 	Initialize scroll handle.
+ *	Initialize scroll handle.
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;
@@ -69,7 +69,7 @@ ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 
 /* UpdateScrollbar --
  *	Call the -scrollcommand callback to sync the scrollbar.
- * 	Returns: Whatever the -scrollcommand does.
+ *	Returns: Whatever the -scrollcommand does.
  */
 static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 {
@@ -82,7 +82,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 
     h->flags &= ~SCROLL_UPDATE_REQUIRED;
 
-    if (s->scrollCmd == NULL) {
+    if (s->scrollCmdObj == NULL) {
 	return TCL_OK;
     }
 
@@ -90,9 +90,9 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
     Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, s->scrollCmd, -1);
-    Tcl_DStringAppend(&buf, arg1, -1);
-    Tcl_DStringAppend(&buf, arg2, -1);
+    Tcl_DStringAppend(&buf, Tcl_GetString(s->scrollCmdObj), TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg2, TCL_INDEX_NONE);
 
     Tcl_Preserve(corePtr);
     code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
@@ -105,41 +105,41 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 
     if (code != TCL_OK && !Tcl_InterpDeleted(interp)) {
 	/* Add error to stack trace.
-         * Also set the SCROLL_UPDATE_REQUIRED flag so that a later call to
-         * TtkScrolled has an effect. Indeed, the error in the -scrollcommand
-         * callback may later be gone, for instance the callback proc got
-         * defined in the meantime.
+	 * Also set the SCROLL_UPDATE_REQUIRED flag so that a later call to
+	 * TtkScrolled has an effect. Indeed, the error in the -scrollcommand
+	 * callback may later be gone, for instance the callback proc got
+	 * defined in the meantime.
 	 */
 
 	Tcl_AddErrorInfo(interp, /* @@@ "horizontal" / "vertical" */
 		"\n    (scrolling command executed by ");
 	Tcl_AddErrorInfo(interp, Tk_PathName(h->corePtr->tkwin));
 	Tcl_AddErrorInfo(interp, ")");
-        TtkScrollbarUpdateRequired(h);
+	TtkScrollbarUpdateRequired(h);
     }
     return code;
 }
 
 /* UpdateScrollbarBG --
- * 	Idle handler to update the scrollbar.
+ *	Idle handler to update the scrollbar.
  */
-static void UpdateScrollbarBG(ClientData clientData)
+static void UpdateScrollbarBG(void *clientData)
 {
     ScrollHandle h = (ScrollHandle)clientData;
     Tcl_Interp *interp = h->corePtr->interp;
     int code;
 
     h->flags &= ~SCROLL_UPDATE_PENDING;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {
 	Tcl_BackgroundException(interp, code);
     }
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 /* TtkScrolled --
- * 	Update scroll info, schedule scrollbar update.
+ *	Update scroll info, schedule scrollbar update.
  */
 void TtkScrolled(ScrollHandle h, int first, int last, int total)
 {
@@ -167,16 +167,16 @@ void TtkScrolled(ScrollHandle h, int first, int last, int total)
 	s->total = total;
 
 	if (!(h->flags & SCROLL_UPDATE_PENDING)) {
-	    Tcl_DoWhenIdle(UpdateScrollbarBG, (ClientData)h);
+	    Tcl_DoWhenIdle(UpdateScrollbarBG, h);
 	    h->flags |= SCROLL_UPDATE_PENDING;
 	}
     }
 }
 
 /* TtkScrollbarUpdateRequired --
- * 	Force a scrollbar update at the next call to TtkScrolled(),
- * 	even if scroll parameters haven't changed (e.g., if
- * 	-yscrollcommand has changed).
+ *	Force a scrollbar update at the next call to TtkScrolled(),
+ *	even if scroll parameters haven't changed (e.g., if
+ *	-yscrollcommand has changed).
  */
 
 void TtkScrollbarUpdateRequired(ScrollHandle h)
@@ -185,20 +185,20 @@ void TtkScrollbarUpdateRequired(ScrollHandle h)
 }
 
 /* TtkUpdateScrollInfo --
- * 	Call the layoutProc to update the scroll info first, last, and total.
- * 	Do it only if needed, that is when a redisplay is pending (which
- * 	indicates scroll info are possibly out of date).
+ *	Call the layoutProc to update the scroll info first, last, and total.
+ *	Do it only if needed, that is when a redisplay is pending (which
+ *	indicates scroll info are possibly out of date).
  */
 
 void TtkUpdateScrollInfo(ScrollHandle h)
 {
     if (h->corePtr->flags & REDISPLAY_PENDING) {
-        h->corePtr->widgetSpec->layoutProc(h->corePtr);
+	h->corePtr->widgetSpec->layoutProc(h->corePtr);
     }
 }
 
 /* TtkScrollviewCommand --
- * 	Widget [xy]view command implementation.
+ *	Widget [xy]view command implementation.
  *
  *  $w [xy]view -- return current view region
  *  $w [xy]view $index -- set topmost item
@@ -206,7 +206,7 @@ void TtkUpdateScrollInfo(ScrollHandle h)
  *  $w [xy]view scroll $number $what -- scrollbar interface
  */
 int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
+    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
     int newFirst;
@@ -255,7 +255,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
     Scrollable *s = h->scrollPtr;
 
     if (updateScrollInfo) {
-        TtkUpdateScrollInfo(h);
+	TtkUpdateScrollInfo(h);
     }
 
     if (newFirst >= s->total)
@@ -274,7 +274,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 void TtkFreeScrollHandle(ScrollHandle h)
 {
     if (h->flags & SCROLL_UPDATE_PENDING) {
-	Tcl_CancelIdleCall(UpdateScrollbarBG, (ClientData)h);
+	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
     ckfree(h);
 }

@@ -1,5 +1,5 @@
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -135,8 +135,10 @@ test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
 #
 # Basic tests.
 #
-test ttk-1.1 "Create button" -body {
-    pack [ttk::button .t] -expand true -fill both
+test ttk-1.1 "Create multiline button showing justified text" -body {
+    wm geometry . +100+100
+    event generate . <Motion> -warp 1 -x 600 -y 600
+    pack [ttk::button .t -text "Hello\nWorld!!" -justify center] -expand true -fill both
     update
 }
 
@@ -152,6 +154,8 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
+# Tests using this will fail if the top-level window contains the cursor
+
 proc checkstate {w} {
     foreach statespec {
 	{!active !disabled}
@@ -166,7 +170,6 @@ proc checkstate {w} {
     set result
 }
 
-# NB: this will fail if the top-level window pops up underneath the cursor
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]
@@ -248,7 +251,7 @@ test ttk-3.2 "Propagate errors from variable traces" -body {
     .cb invoke
 } -cleanup {
     unset ::A ; destroy .cb
-} -returnCodes error -match glob -result {can*t set "A": failure}
+} -returnCodes error -result {can't set "A": failure}
 
 test ttk-3.3 "Constructor failure with cursor" -body {
     ttk::button .b -cursor bottom_right_corner -style BadStyle
@@ -342,7 +345,7 @@ test ttk-8.1 "Test -compound options" -body {
     # Exhaustively test each combination.
     # Main goal is to make sure no code paths crash.
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
 		update; tick
@@ -357,7 +360,7 @@ test ttk-8.2 "Test -compound options with regular button" -body {
     pack .rtb
 
     foreach image {"" icon} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound [lrange $::compoundStrings 2 end] {
 		.rtb configure -image $image -text $text -compound $compound
 		update; tick
@@ -369,7 +372,7 @@ tock
 
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
 		update; tick
@@ -388,12 +391,12 @@ test ttk-8.4 "ImageChanged" -body {
 
 test ttk-9.1 "Traces on nonexistant namespaces" -body {
     ttk::checkbutton .tcb -variable foo::bar
-} -returnCodes error -result "*parent namespace does*t exist" -match glob
+} -returnCodes error -result {can't trace "foo::bar": parent namespace doesn't exist}
 
 test ttk-9.2 "Traces on nonexistant namespaces II" -body {
     ttk::checkbutton .tcb -variable X
     .tcb configure -variable foo::bar
-} -returnCodes error -result "*parent namespace does*t exist" -match glob
+} -returnCodes error -result {can't trace "foo::bar": parent namespace doesn't exist}
 
 test ttk-9.3 "Restore saved options on configure error" -body {
     .tcb cget -variable
@@ -582,17 +585,17 @@ test ttk-13.5 "Custom layouts -- missing element definition" -body {
 
 test ttk-14.1 "-variable in nonexistant namespace" -body {
     ttk::checkbutton .tw -variable ::nsn::foo
-} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
+} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.2 "-textvariable in nonexistant namespace" -body {
     ttk::label .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
+} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.3 "-textvariable in nonexistant namespace" -body {
     ttk::entry .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
+} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-15.1 {Bug 3062331} -setup {
@@ -663,6 +666,17 @@ test ttk-ensemble-4 "style element create: insufficient args" -body {
 test ttk-ensemble-5 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""
+
+test ttk-16.1 {ttk::style theme styles - no such theme} -body {
+    ttk::style theme styles noSuchTheme
+} -returnCodes 1 -result {theme "noSuchTheme" does not exist}
+test ttk-16.2 {ttk::style theme styles - theme exists} -body {
+    # simply check this produces a list with some style names,
+    # without checking exact content (not needed, and may vary
+    # depending on platform, versions, improvements...)
+    expr {[llength [ttk::style theme styles alt]] > 0}
+} -result 1
+
 
 destroy {*}[winfo children .]
 

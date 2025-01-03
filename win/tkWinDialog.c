@@ -3,7 +3,7 @@
  *
  *	Contains the Windows implementation of the common dialog boxes.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -177,9 +177,9 @@ typedef struct OFNOpts {
     int mustExist;              /* Used only for  */
     int forceXPStyle;          /* XXX - Force XP style even on newer systems */
     WCHAR file[TK_MULTI_MAX_PATH]; /* File name
-                                      XXX - fixed size because it was so
-                                      historically. Why not malloc'ed ?
-                                   */
+				      XXX - fixed size because it was so
+				      historically. Why not malloc'ed ?
+				   */
 } OFNOpts;
 
 /* Define the operation for which option parsing is to be done. */
@@ -254,26 +254,26 @@ typedef struct IShellItemArrayVtbl
     BEGIN_INTERFACE
 
     HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
-        IShellItemArray *, REFIID riid,void **ppvObject);
+	IShellItemArray *, REFIID riid,void **ppvObject);
     ULONG ( STDMETHODCALLTYPE *AddRef )(IShellItemArray *);
     ULONG ( STDMETHODCALLTYPE *Release )(IShellItemArray *);
     HRESULT ( STDMETHODCALLTYPE *BindToHandler )(IShellItemArray *,
-        IBindCtx *, REFGUID, REFIID, void **);
+	IBindCtx *, REFGUID, REFIID, void **);
     /* flags is actually is enum GETPROPERTYSTOREFLAGS */
     HRESULT ( STDMETHODCALLTYPE *GetPropertyStore )(
-        IShellItemArray *, int,  REFIID, void **);
+	IShellItemArray *, int,  REFIID, void **);
     /* keyType actually REFPROPERTYKEY */
     HRESULT ( STDMETHODCALLTYPE *GetPropertyDescriptionList )(
-         IShellItemArray *, void *, REFIID, void **);
+	 IShellItemArray *, void *, REFIID, void **);
     HRESULT ( STDMETHODCALLTYPE *GetAttributes )(IShellItemArray *,
-        SIATTRIBFLAGS, SFGAOF, SFGAOF *);
+	SIATTRIBFLAGS, SFGAOF, SFGAOF *);
     HRESULT ( STDMETHODCALLTYPE *GetCount )(
-        IShellItemArray *, DWORD *);
+	IShellItemArray *, DWORD *);
     HRESULT ( STDMETHODCALLTYPE *GetItemAt )(
-        IShellItemArray *, DWORD, IShellItem **);
+	IShellItemArray *, DWORD, IShellItem **);
     /* ppenumShellItems actually (IEnumShellItems **) */
     HRESULT ( STDMETHODCALLTYPE *EnumItems )(
-        IShellItemArray *, void **);
+	IShellItemArray *, void **);
 
     END_INTERFACE
 } IShellItemArrayVtbl;
@@ -354,56 +354,56 @@ typedef struct IFileDialogVtbl
     BEGIN_INTERFACE
 
     HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
-         IFileDialog *, REFIID, void **);
+	 IFileDialog *, REFIID, void **);
     ULONG ( STDMETHODCALLTYPE *AddRef )( IFileDialog *);
     ULONG ( STDMETHODCALLTYPE *Release )( IFileDialog *);
     HRESULT ( STDMETHODCALLTYPE *Show )( IFileDialog *, HWND);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileDialog *,
-        UINT, const TCLCOMDLG_FILTERSPEC *);
+	UINT, const TCLCOMDLG_FILTERSPEC *);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(IFileDialog *, UINT);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(IFileDialog *, UINT *);
     /* XXX - Actually pfde is IFileDialogEvents* but we do not use
        this call and do not want to define IFileDialogEvents as that
        pulls in a whole bunch of other stuff. */
     HRESULT ( STDMETHODCALLTYPE *Advise )(
-        IFileDialog *, void *, DWORD *);
+	IFileDialog *, void *, DWORD *);
     HRESULT ( STDMETHODCALLTYPE *Unadvise )(IFileDialog *, DWORD);
     HRESULT ( STDMETHODCALLTYPE *SetOptions )(
-        IFileDialog *, FILEOPENDIALOGOPTIONS);
+	IFileDialog *, FILEOPENDIALOGOPTIONS);
     HRESULT ( STDMETHODCALLTYPE *GetOptions )(
-        IFileDialog *, FILEOPENDIALOGOPTIONS *);
+	IFileDialog *, FILEOPENDIALOGOPTIONS *);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
-        IFileDialog *, IShellItem *);
+	IFileDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetFolder )(
-        IFileDialog *, IShellItem *);
+	IFileDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *GetFolder )(
-        IFileDialog *, IShellItem **);
+	IFileDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
-        IFileDialog *, IShellItem **);
+	IFileDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *SetFileName )(
-        IFileDialog *,  LPCWSTR);
+	IFileDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetFileName )(
-        IFileDialog *,  LPWSTR *);
+	IFileDialog *,  LPWSTR *);
     HRESULT ( STDMETHODCALLTYPE *SetTitle )(
-        IFileDialog *, LPCWSTR);
+	IFileDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
-        IFileDialog *, LPCWSTR);
+	IFileDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
-        IFileDialog *,  LPCWSTR);
+	IFileDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetResult )(
-        IFileDialog *, IShellItem **);
+	IFileDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *AddPlace )(
-        IFileDialog *, IShellItem *, FDAP);
+	IFileDialog *, IShellItem *, FDAP);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
-         IFileDialog *, LPCWSTR);
+	 IFileDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *Close )( IFileDialog *, HRESULT);
     HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
-        IFileDialog *, REFGUID);
+	IFileDialog *, REFGUID);
     HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileDialog *);
     /* pFilter actually IShellItemFilter. But deprecated in Win7 AND we do
        not use it anyways. So define as void* */
     HRESULT ( STDMETHODCALLTYPE *SetFilter )(
-         IFileDialog *, void *);
+	 IFileDialog *, void *);
 
     END_INTERFACE
 } IFileDialogVtbl;
@@ -418,67 +418,67 @@ typedef struct IFileSaveDialogVtbl {
     BEGIN_INTERFACE
 
     HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
-        IFileSaveDialog *, REFIID, void **);
+	IFileSaveDialog *, REFIID, void **);
     ULONG ( STDMETHODCALLTYPE *AddRef )( IFileSaveDialog *);
     ULONG ( STDMETHODCALLTYPE *Release )( IFileSaveDialog *);
     HRESULT ( STDMETHODCALLTYPE *Show )(
-        IFileSaveDialog *, HWND);
+	IFileSaveDialog *, HWND);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileSaveDialog *,
-        UINT, const TCLCOMDLG_FILTERSPEC *);
+	UINT, const TCLCOMDLG_FILTERSPEC *);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(
-        IFileSaveDialog *, UINT);
+	IFileSaveDialog *, UINT);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(
-         IFileSaveDialog *, UINT *);
+	 IFileSaveDialog *, UINT *);
     /* Actually pfde is IFileSaveDialogEvents* */
     HRESULT ( STDMETHODCALLTYPE *Advise )(
-         IFileSaveDialog *, void *, DWORD *);
+	 IFileSaveDialog *, void *, DWORD *);
     HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileSaveDialog *, DWORD);
     HRESULT ( STDMETHODCALLTYPE *SetOptions )(
-         IFileSaveDialog *, FILEOPENDIALOGOPTIONS);
+	 IFileSaveDialog *, FILEOPENDIALOGOPTIONS);
     HRESULT ( STDMETHODCALLTYPE *GetOptions )(
-         IFileSaveDialog *, FILEOPENDIALOGOPTIONS *);
+	 IFileSaveDialog *, FILEOPENDIALOGOPTIONS *);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
-         IFileSaveDialog *, IShellItem *);
+	 IFileSaveDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetFolder )(
-        IFileSaveDialog *, IShellItem *);
+	IFileSaveDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *GetFolder )(
-         IFileSaveDialog *, IShellItem **);
+	 IFileSaveDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
-         IFileSaveDialog *, IShellItem **);
+	 IFileSaveDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *SetFileName )(
-         IFileSaveDialog *,  LPCWSTR);
+	 IFileSaveDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetFileName )(
-         IFileSaveDialog *,  LPWSTR *);
+	 IFileSaveDialog *,  LPWSTR *);
     HRESULT ( STDMETHODCALLTYPE *SetTitle )(
-         IFileSaveDialog *, LPCWSTR);
+	 IFileSaveDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
-         IFileSaveDialog *,  LPCWSTR);
+	 IFileSaveDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
-         IFileSaveDialog *,  LPCWSTR);
+	 IFileSaveDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetResult )(
-         IFileSaveDialog *, IShellItem **);
+	 IFileSaveDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *AddPlace )(
-         IFileSaveDialog *, IShellItem *, FDAP);
+	 IFileSaveDialog *, IShellItem *, FDAP);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
-         IFileSaveDialog *, LPCWSTR);
+	 IFileSaveDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *Close )( IFileSaveDialog *, HRESULT);
     HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
-        IFileSaveDialog *, REFGUID);
+	IFileSaveDialog *, REFGUID);
     HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileSaveDialog *);
     /* pFilter Actually IShellItemFilter* */
     HRESULT ( STDMETHODCALLTYPE *SetFilter )(
-        IFileSaveDialog *, void *);
+	IFileSaveDialog *, void *);
     HRESULT ( STDMETHODCALLTYPE *SetSaveAsItem )(
-        IFileSaveDialog *, IShellItem *);
+	IFileSaveDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetProperties )(
-        IFileSaveDialog *, IPropertyStore *);
+	IFileSaveDialog *, IPropertyStore *);
     HRESULT ( STDMETHODCALLTYPE *SetCollectedProperties )(
-        IFileSaveDialog *, IPropertyDescriptionList *, BOOL);
+	IFileSaveDialog *, IPropertyDescriptionList *, BOOL);
     HRESULT ( STDMETHODCALLTYPE *GetProperties )(
-        IFileSaveDialog *, IPropertyStore **);
+	IFileSaveDialog *, IPropertyStore **);
     HRESULT ( STDMETHODCALLTYPE *ApplyProperties )(
-        IFileSaveDialog *, IShellItem *, IPropertyStore *,
-        HWND, IFileOperationProgressSink *);
+	IFileSaveDialog *, IShellItem *, IPropertyStore *,
+	HWND, IFileOperationProgressSink *);
 
     END_INTERFACE
 
@@ -493,61 +493,61 @@ typedef struct IFileOpenDialogVtbl {
     BEGIN_INTERFACE
 
     HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
-        IFileOpenDialog *, REFIID, void **);
+	IFileOpenDialog *, REFIID, void **);
     ULONG ( STDMETHODCALLTYPE *AddRef )( IFileOpenDialog *);
     ULONG ( STDMETHODCALLTYPE *Release )( IFileOpenDialog *);
     HRESULT ( STDMETHODCALLTYPE *Show )( IFileOpenDialog *, HWND);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileOpenDialog *,
-        UINT, const TCLCOMDLG_FILTERSPEC *);
+	UINT, const TCLCOMDLG_FILTERSPEC *);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(
-        IFileOpenDialog *, UINT);
+	IFileOpenDialog *, UINT);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(
-        IFileOpenDialog *, UINT *);
+	IFileOpenDialog *, UINT *);
     /* Actually pfde is IFileDialogEvents* */
     HRESULT ( STDMETHODCALLTYPE *Advise )(
-        IFileOpenDialog *, void *, DWORD *);
+	IFileOpenDialog *, void *, DWORD *);
     HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileOpenDialog *, DWORD);
     HRESULT ( STDMETHODCALLTYPE *SetOptions )(
-        IFileOpenDialog *, FILEOPENDIALOGOPTIONS);
+	IFileOpenDialog *, FILEOPENDIALOGOPTIONS);
     HRESULT ( STDMETHODCALLTYPE *GetOptions )(
-        IFileOpenDialog *, FILEOPENDIALOGOPTIONS *);
+	IFileOpenDialog *, FILEOPENDIALOGOPTIONS *);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
-        IFileOpenDialog *, IShellItem *);
+	IFileOpenDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetFolder )(
-        IFileOpenDialog *, IShellItem *);
+	IFileOpenDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *GetFolder )(
-        IFileOpenDialog *, IShellItem **);
+	IFileOpenDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
-        IFileOpenDialog *, IShellItem **);
+	IFileOpenDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *SetFileName )(
-        IFileOpenDialog *,  LPCWSTR);
+	IFileOpenDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetFileName )(
-        IFileOpenDialog *, LPWSTR *);
+	IFileOpenDialog *, LPWSTR *);
     HRESULT ( STDMETHODCALLTYPE *SetTitle )(
-        IFileOpenDialog *, LPCWSTR);
+	IFileOpenDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
-        IFileOpenDialog *, LPCWSTR);
+	IFileOpenDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
-        IFileOpenDialog *, LPCWSTR);
+	IFileOpenDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetResult )(
-        IFileOpenDialog *, IShellItem **);
+	IFileOpenDialog *, IShellItem **);
     HRESULT ( STDMETHODCALLTYPE *AddPlace )(
-        IFileOpenDialog *, IShellItem *, FDAP);
+	IFileOpenDialog *, IShellItem *, FDAP);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
-        IFileOpenDialog *, LPCWSTR);
+	IFileOpenDialog *, LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *Close )( IFileOpenDialog *, HRESULT);
     HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
-        IFileOpenDialog *, REFGUID);
+	IFileOpenDialog *, REFGUID);
     HRESULT ( STDMETHODCALLTYPE *ClearClientData )(
-        IFileOpenDialog *);
+	IFileOpenDialog *);
     HRESULT ( STDMETHODCALLTYPE *SetFilter )(
-        IFileOpenDialog *,
-        /* pFilter is actually IShellItemFilter */
-        void *);
+	IFileOpenDialog *,
+	/* pFilter is actually IShellItemFilter */
+	void *);
     HRESULT ( STDMETHODCALLTYPE *GetResults )(
-        IFileOpenDialog *, IShellItemArray **);
+	IFileOpenDialog *, IShellItemArray **);
     HRESULT ( STDMETHODCALLTYPE *GetSelectedItems )(
-        IFileOpenDialog *, IShellItemArray **);
+	IFileOpenDialog *, IShellItemArray **);
 
     END_INTERFACE
 } IFileOpenDialogVtbl;
@@ -569,20 +569,20 @@ static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
 static int              ParseOFNOptions(void *clientData,
-                            Tcl_Interp *interp, int objc,
-                            Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
-                         enum OFNOper oper);
+			 enum OFNOper oper);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
-                            enum OFNOper oper);
-static int 		GetFileName(void *clientData,
-                                    Tcl_Interp *interp, int objc,
-                                    Tcl_Obj *const objv[], enum OFNOper oper);
+			    enum OFNOper oper);
+static int		GetFileName(void *clientData,
+				    Tcl_Interp *interp, int objc,
+				    Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
-               DWORD *countPtr, TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr,
-               DWORD *defaultFilterIndexPtr);
+	       DWORD *countPtr, TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr,
+	       DWORD *defaultFilterIndexPtr);
 static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr);
-static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
+static int		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
 			    int *indexPtr);
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
@@ -590,63 +590,7 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
-static void             LoadShellProcs(void);
 
-
-/* Definitions of dynamically loaded Win32 calls */
-typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
-    PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
-struct ShellProcPointers {
-    SHCreateItemFromParsingNameProc *SHCreateItemFromParsingName;
-} ShellProcs;
-
-
-/*
- *-------------------------------------------------------------------------
- *
- * LoadShellProcs --
- *
- *     Some shell functions are not available on older versions of
- *     Windows. This function dynamically loads them and stores pointers
- *     to them in ShellProcs. Any function that is not available has
- *     the corresponding pointer set to NULL.
- *
- *     Note this call never fails. Unavailability of a function is not
- *     a reason for failure. Caller should check whether a particular
- *     function pointer is NULL or not. Once loaded a function stays
- *     forever loaded.
- *
- *     XXX - we load the function pointers into global memory. This implies
- *     there is a potential (however small) for race conditions between
- *     threads. However, Tk is in any case meant to be loaded in exactly
- *     one thread so this should not be an issue and saves us from
- *     unnecessary bookkeeping.
- *
- * Return value:
- *     None.
- *
- * Side effects:
- *     ShellProcs is populated.
- *-------------------------------------------------------------------------
- */
-static void LoadShellProcs(void)
-{
-    static HMODULE shell32_handle = NULL;
-
-    if (shell32_handle != NULL) {
-	return; /* We have already been through here. */
-    }
-
-    shell32_handle = GetModuleHandleW(L"shell32.dll");
-    if (shell32_handle == NULL) { /* Should never happen but check anyways. */
-	return;
-    }
-
-    ShellProcs.SHCreateItemFromParsingName = (SHCreateItemFromParsingNameProc*)
-	    (void *)GetProcAddress(shell32_handle, "SHCreateItemFromParsingName");
-}
-
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -657,24 +601,24 @@ static void LoadShellProcs(void)
  *	to the window underneath. If the window underneath happens to be a
  *	windows control (eg a button) then it will be activated by accident.
  *
- * 	This problem does not occur in dialog boxes, because windows must do
- * 	some special processing to solve the problem. (separate message
- * 	processing functions are used to cope with keyboard navigation of
- * 	controls.)
+ *	This problem does not occur in dialog boxes, because windows must do
+ *	some special processing to solve the problem. (separate message
+ *	processing functions are used to cope with keyboard navigation of
+ *	controls.)
  *
- * 	Here is one solution. After returning, we flush all mouse events
+ *	Here is one solution. After returning, we flush all mouse events
  *      for 1/4 second. In 8.6.5 and earlier, the code used to
  *      poll the message queue consuming WM_LBUTTONUP messages.
- * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
- * 	must be doing something new. However this early exit does not work
+ *	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
+ *	must be doing something new. However this early exit does not work
  *      on Vista and later because the Windows sends both BUTTONDOWN and
  *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
  *      Rather than try and figure out version specific sequences, we
  *      ignore all mouse events in that interval.
  *
  *      This fix only works for the current application, so the problem will
- * 	still occur if the open dialog happens to be over another applications
- * 	button. However this is a fairly rare occurrance.
+ *	still occur if the open dialog happens to be over another applications
+ *	button. However this is a fairly rare occurrance.
  *
  * Results:
  *	None.
@@ -923,7 +867,7 @@ ColorDlgHookProc(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
+	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, TCL_INDEX_NONE, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1040,7 +984,7 @@ ParseOFNOptions(
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
 	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW,
-        FILE_MUSTEXIST,
+	FILE_MUSTEXIST,
     };
     struct Options {
 	const char *name;
@@ -1098,31 +1042,31 @@ ParseOFNOptions(
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
 		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
-            /*
-             * XXX -xpstyle is explicitly checked for as it is undocumented
-             * and we do not want it to show in option error messages.
-             */
-            if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
-                goto error_return;
-            if (i + 1 == objc) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
-                Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
-                goto error_return;
-            }
+	    /*
+	     * XXX -xpstyle is explicitly checked for as it is undocumented
+	     * and we do not want it to show in option error messages.
+	     */
+	    if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
+		goto error_return;
+	    if (i + 1 == objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", TCL_INDEX_NONE));
+		Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+		goto error_return;
+	    }
 	    if (Tcl_GetBooleanFromObj(interp, objv[i+1],
-                                      &optsPtr->forceXPStyle) != TCL_OK)
-                goto error_return;
+				      &optsPtr->forceXPStyle) != TCL_OK)
+		goto error_return;
 
-            continue;
+	    continue;
 
 	} else if (i + 1 == objc) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                                 "value for \"%s\" missing", options[index].name));
-            Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
-            goto error_return;
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+				 "value for \"%s\" missing", options[index].name));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+	    goto error_return;
 	}
 
-        valuePtr = objv[i + 1];
+	valuePtr = objv[i + 1];
 	string = Tcl_GetString(valuePtr);
 	switch (options[index].value) {
 	case FILE_DEFAULT:
@@ -1134,15 +1078,16 @@ ParseOFNOptions(
 	case FILE_INITDIR:
 	    Tcl_DStringFree(&optsPtr->utfDirString);
 	    if (Tcl_TranslateFileName(interp, string,
-                                      &optsPtr->utfDirString) == NULL)
+				      &optsPtr->utfDirString) == NULL)
 		goto error_return;
 	    break;
 	case FILE_INITFILE:
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
 		goto error_return;
 	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
-		    Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0,
-		    NULL, (char *)&optsPtr->file[0], sizeof(optsPtr->file), NULL, NULL, NULL);
+			      Tcl_DStringValue(&ds), Tcl_DStringLength(&ds),
+			      TCL_ENCODING_PROFILE_TCL8, NULL, (char *)&optsPtr->file[0],
+			      sizeof(optsPtr->file), NULL, NULL, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:
@@ -1156,23 +1101,23 @@ ParseOFNOptions(
 	case FILE_TYPEVARIABLE:
 	    optsPtr->typeVariableObj = valuePtr;
 	    optsPtr->initialTypeObj = Tcl_ObjGetVar2(interp, valuePtr,
-                                                     NULL, TCL_GLOBAL_ONLY);
+						     NULL, TCL_GLOBAL_ONLY);
 	    break;
 	case FILE_MULTIPLE:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->multi) != TCL_OK)
-                goto error_return;
+				      &optsPtr->multi) != TCL_OK)
+		goto error_return;
 	    break;
 	case FILE_CONFIRMOW:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->confirmOverwrite) != TCL_OK)
-                goto error_return;
+				      &optsPtr->confirmOverwrite) != TCL_OK)
+		goto error_return;
 	    break;
-        case FILE_MUSTEXIST:
+	case FILE_MUSTEXIST:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->mustExist) != TCL_OK)
-                goto error_return;
-            break;
+				      &optsPtr->mustExist) != TCL_OK)
+		goto error_return;
+	    break;
 	}
     }
 
@@ -1206,29 +1151,26 @@ static int VistaFileDialogsAvailable(void)
     HRESULT hr;
     IFileDialog *fdlgPtr = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->newFileDialogsState == FDLG_STATE_INIT) {
 	tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
-	LoadShellProcs();
-	if (ShellProcs.SHCreateItemFromParsingName != NULL) {
-	    hr = CoInitialize(0);
-	    /* XXX - need we schedule CoUninitialize at thread shutdown ? */
+	hr = CoInitialize(0);
+	/* XXX - need we schedule CoUninitialize at thread shutdown ? */
 
-	    /* Ensure all COM interfaces we use are available */
+	/* Ensure all COM interfaces we use are available */
+	if (SUCCEEDED(hr)) {
+	    hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+		    CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
 	    if (SUCCEEDED(hr)) {
-		hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-			CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
+		fdlgPtr->lpVtbl->Release(fdlgPtr);
+		hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+			CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgPtr);
 		if (SUCCEEDED(hr)) {
 		    fdlgPtr->lpVtbl->Release(fdlgPtr);
-		    hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
-			    CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgPtr);
-		    if (SUCCEEDED(hr)) {
-			fdlgPtr->lpVtbl->Release(fdlgPtr);
 
-			/* Looks like we have all we need */
-			tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
-		    }
+		    /* Looks like we have all we need */
+		    tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
 		}
 	    }
 	}
@@ -1256,7 +1198,7 @@ static int VistaFileDialogsAvailable(void)
  *----------------------------------------------------------------------
  */
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
-                            enum OFNOper oper)
+			    enum OFNOper oper)
 {
     HRESULT hr;
     HWND hWnd;
@@ -1290,8 +1232,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      * is the filter specification so do that before creating
      */
     if (MakeFilterVista(interp, optsPtr, &nfilters, &filterPtr,
-                        &defaultFilterIndex) != TCL_OK)
-        return TCL_ERROR;
+			&defaultFilterIndex) != TCL_OK)
+	return TCL_ERROR;
 
     /*
      * Beyond this point, do not just return on error as there will be
@@ -1299,14 +1241,14 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      */
 
     if (oper == OFN_FILE_OPEN || oper == OFN_DIR_CHOOSE)
-        hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-                              CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgIf);
+	hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+			      CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgIf);
     else
-        hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
-                              CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgIf);
+	hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+			      CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgIf);
 
     if (FAILED(hr))
-        goto vamoose;
+	goto vamoose;
 
     /*
      * Get current settings first because we want to preserve existing
@@ -1315,20 +1257,20 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      */
     hr = fdlgIf->lpVtbl->GetOptions(fdlgIf, &flags);
     if (FAILED(hr))
-        goto vamoose;
+	goto vamoose;
 
     if (filterPtr) {
-        /*
-         * Causes -filetypes {{All *}} -defaultextension ext to return
-         * foo.ext.ext when foo is typed into the entry box
-         *     flags |= FOS_STRICTFILETYPES;
-         */
-        hr = fdlgIf->lpVtbl->SetFileTypes(fdlgIf, nfilters, filterPtr);
-        if (FAILED(hr))
-            goto vamoose;
-        hr = fdlgIf->lpVtbl->SetFileTypeIndex(fdlgIf, defaultFilterIndex);
-        if (FAILED(hr))
-            goto vamoose;
+	/*
+	 * Causes -filetypes {{All *}} -defaultextension ext to return
+	 * foo.ext.ext when foo is typed into the entry box
+	 *     flags |= FOS_STRICTFILETYPES;
+	 */
+	hr = fdlgIf->lpVtbl->SetFileTypes(fdlgIf, nfilters, filterPtr);
+	if (FAILED(hr))
+	    goto vamoose;
+	hr = fdlgIf->lpVtbl->SetFileTypeIndex(fdlgIf, defaultFilterIndex);
+	if (FAILED(hr))
+	    goto vamoose;
     }
 
     /* Flags are equivalent to those we used in the older API */
@@ -1339,88 +1281,88 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      * semantics than OFN_NOVALIDATE in the old API.
      */
     flags |=
-        FOS_FORCEFILESYSTEM | /* Only want files, not other shell items */
-        FOS_NOVALIDATE |           /* Don't check for access denied etc. */
-        FOS_PATHMUSTEXIST;           /* The *directory* path must exist */
+	FOS_FORCEFILESYSTEM | /* Only want files, not other shell items */
+	FOS_NOVALIDATE |           /* Don't check for access denied etc. */
+	FOS_PATHMUSTEXIST;           /* The *directory* path must exist */
 
 
     if (oper == OFN_DIR_CHOOSE) {
-        flags |= FOS_PICKFOLDERS;
-        if (optsPtr->mustExist)
-            flags |= FOS_FILEMUSTEXIST; /* XXX - check working */
+	flags |= FOS_PICKFOLDERS;
+	if (optsPtr->mustExist)
+	    flags |= FOS_FILEMUSTEXIST; /* XXX - check working */
     } else
-        flags &= ~ FOS_PICKFOLDERS;
+	flags &= ~ FOS_PICKFOLDERS;
 
     if (optsPtr->multi)
-        flags |= FOS_ALLOWMULTISELECT;
+	flags |= FOS_ALLOWMULTISELECT;
     else
-        flags &= ~FOS_ALLOWMULTISELECT;
+	flags &= ~FOS_ALLOWMULTISELECT;
 
     if (optsPtr->confirmOverwrite)
-        flags |= FOS_OVERWRITEPROMPT;
+	flags |= FOS_OVERWRITEPROMPT;
     else
-        flags &= ~FOS_OVERWRITEPROMPT;
+	flags &= ~FOS_OVERWRITEPROMPT;
 
     hr = fdlgIf->lpVtbl->SetOptions(fdlgIf, flags);
     if (FAILED(hr))
-        goto vamoose;
+	goto vamoose;
 
     if (optsPtr->extObj != NULL) {
-        Tcl_DString ds;
-        const char *src;
+	Tcl_DString ds;
+	const char *src;
 
-        src = Tcl_GetString(optsPtr->extObj);
-        Tcl_DStringInit(&ds);
-        wstr = Tcl_UtfToWCharDString(src, optsPtr->extObj->length, &ds);
-        if (wstr[0] == '.')
-            ++wstr;
-        hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
-        Tcl_DStringFree(&ds);
-        if (FAILED(hr))
-            goto vamoose;
+	src = Tcl_GetString(optsPtr->extObj);
+	Tcl_DStringInit(&ds);
+	wstr = Tcl_UtfToWCharDString(src, optsPtr->extObj->length, &ds);
+	if (wstr[0] == '.')
+	    ++wstr;
+	hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
+	Tcl_DStringFree(&ds);
+	if (FAILED(hr))
+	    goto vamoose;
     }
 
     if (optsPtr->titleObj != NULL) {
-        Tcl_DString ds;
-        const char *src;
+	Tcl_DString ds;
+	const char *src;
 
-        src = Tcl_GetString(optsPtr->titleObj);
-        Tcl_DStringInit(&ds);
-        wstr = Tcl_UtfToWCharDString(src, optsPtr->titleObj->length, &ds);
-        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
-        Tcl_DStringFree(&ds);
-        if (FAILED(hr))
-            goto vamoose;
+	src = Tcl_GetString(optsPtr->titleObj);
+	Tcl_DStringInit(&ds);
+	wstr = Tcl_UtfToWCharDString(src, optsPtr->titleObj->length, &ds);
+	hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
+	Tcl_DStringFree(&ds);
+	if (FAILED(hr))
+	    goto vamoose;
     }
 
     if (optsPtr->file[0]) {
-        hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, optsPtr->file);
-        if (FAILED(hr))
-            goto vamoose;
+	hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, optsPtr->file);
+	if (FAILED(hr))
+	    goto vamoose;
     }
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
-        Tcl_Obj *normPath, *iniDirPath;
-        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), -1);
-        Tcl_IncrRefCount(iniDirPath);
-        normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
-        /* XXX - Note on failures do not raise error, simply ignore ini dir */
-        if (normPath) {
-            LPCWSTR nativePath;
-            Tcl_IncrRefCount(normPath);
-            nativePath = (LPCWSTR)Tcl_FSGetNativePath(normPath); /* Points INTO normPath*/
-            if (nativePath) {
-                hr = ShellProcs.SHCreateItemFromParsingName(
-                    nativePath, NULL,
-                    &IIDIShellItem, (void **) &dirIf);
-                if (SUCCEEDED(hr)) {
-                    /* Note we use SetFolder, not SetDefaultFolder - see MSDN */
-                    fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
-                }
-            }
-            Tcl_DecrRefCount(normPath); /* ALSO INVALIDATES nativePath !! */
-        }
-        Tcl_DecrRefCount(iniDirPath);
+	Tcl_Obj *normPath, *iniDirPath;
+	iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), TCL_INDEX_NONE);
+	Tcl_IncrRefCount(iniDirPath);
+	normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
+	/* XXX - Note on failures do not raise error, simply ignore ini dir */
+	if (normPath) {
+	    LPCWSTR nativePath;
+	    Tcl_IncrRefCount(normPath);
+	    nativePath = (LPCWSTR)Tcl_FSGetNativePath(normPath); /* Points INTO normPath*/
+	    if (nativePath) {
+		hr = SHCreateItemFromParsingName(
+		    nativePath, NULL,
+		    &IIDIShellItem, (void **) &dirIf);
+		if (SUCCEEDED(hr)) {
+		    /* Note we use SetFolder, not SetDefaultFolder - see MSDN */
+		    fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
+		}
+	    }
+	    Tcl_DecrRefCount(normPath); /* ALSO INVALIDATES nativePath !! */
+	}
+	Tcl_DecrRefCount(iniDirPath);
     }
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
@@ -1435,7 +1377,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      */
 
     if (hWnd)
-        EnableWindow(hWnd, 1);
+	EnableWindow(hWnd, 1);
 
     /*
      * Clear interp result since it might have been set during the modal loop.
@@ -1444,108 +1386,108 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     Tcl_ResetResult(interp);
 
     if (SUCCEEDED(hr)) {
-        if ((oper == OFN_FILE_OPEN) && optsPtr->multi) {
-            IShellItemArray *multiIf;
-            DWORD dw, count;
-            IFileOpenDialog *fodIf = (IFileOpenDialog *) fdlgIf;
-            hr = fodIf->lpVtbl->GetResults(fodIf, &multiIf);
-            if (SUCCEEDED(hr)) {
-                Tcl_Obj *multiObj;
-                hr = multiIf->lpVtbl->GetCount(multiIf, &count);
-                multiObj = Tcl_NewListObj(count, NULL);
-                if (SUCCEEDED(hr)) {
-                    IShellItem *itemIf;
-                    for (dw = 0; dw < count; ++dw) {
-                        hr = multiIf->lpVtbl->GetItemAt(multiIf, dw, &itemIf);
-                        if (FAILED(hr))
-                            break;
-                        hr = itemIf->lpVtbl->GetDisplayName(itemIf,
-                                        SIGDN_FILESYSPATH, &wstr);
-                        if (SUCCEEDED(hr)) {
-                            Tcl_DString fnds;
+	if ((oper == OFN_FILE_OPEN) && optsPtr->multi) {
+	    IShellItemArray *multiIf;
+	    DWORD dw, count;
+	    IFileOpenDialog *fodIf = (IFileOpenDialog *) fdlgIf;
+	    hr = fodIf->lpVtbl->GetResults(fodIf, &multiIf);
+	    if (SUCCEEDED(hr)) {
+		Tcl_Obj *multiObj;
+		hr = multiIf->lpVtbl->GetCount(multiIf, &count);
+		multiObj = Tcl_NewListObj(count, NULL);
+		if (SUCCEEDED(hr)) {
+		    IShellItem *itemIf;
+		    for (dw = 0; dw < count; ++dw) {
+			hr = multiIf->lpVtbl->GetItemAt(multiIf, dw, &itemIf);
+			if (FAILED(hr))
+			    break;
+			hr = itemIf->lpVtbl->GetDisplayName(itemIf,
+					SIGDN_FILESYSPATH, &wstr);
+			if (SUCCEEDED(hr)) {
+			    Tcl_DString fnds;
 
-                            ConvertExternalFilename(wstr, &fnds);
-                            CoTaskMemFree(wstr);
-                            Tcl_ListObjAppendElement(
-                                interp, multiObj,
-                                Tcl_NewStringObj(Tcl_DStringValue(&fnds),
-                                                 Tcl_DStringLength(&fnds)));
-                            Tcl_DStringFree(&fnds);
-                        }
-                        itemIf->lpVtbl->Release(itemIf);
-                        if (FAILED(hr))
-                            break;
-                    }
-                }
-                multiIf->lpVtbl->Release(multiIf);
-                if (SUCCEEDED(hr))
-                    resultObj = multiObj;
-                else
-                    Tcl_DecrRefCount(multiObj);
-            }
-        } else {
-            IShellItem *resultIf;
-            hr = fdlgIf->lpVtbl->GetResult(fdlgIf, &resultIf);
-            if (SUCCEEDED(hr)) {
-                hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
-                                                      &wstr);
-                if (SUCCEEDED(hr)) {
-                    Tcl_DString fnds;
+			    ConvertExternalFilename(wstr, &fnds);
+			    CoTaskMemFree(wstr);
+			    Tcl_ListObjAppendElement(
+				interp, multiObj,
+				Tcl_NewStringObj(Tcl_DStringValue(&fnds),
+						 Tcl_DStringLength(&fnds)));
+			    Tcl_DStringFree(&fnds);
+			}
+			itemIf->lpVtbl->Release(itemIf);
+			if (FAILED(hr))
+			    break;
+		    }
+		}
+		multiIf->lpVtbl->Release(multiIf);
+		if (SUCCEEDED(hr))
+		    resultObj = multiObj;
+		else
+		    Tcl_DecrRefCount(multiObj);
+	    }
+	} else {
+	    IShellItem *resultIf;
+	    hr = fdlgIf->lpVtbl->GetResult(fdlgIf, &resultIf);
+	    if (SUCCEEDED(hr)) {
+		hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
+						      &wstr);
+		if (SUCCEEDED(hr)) {
+		    Tcl_DString fnds;
 
-                    ConvertExternalFilename(wstr, &fnds);
-                    resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
-                                                 Tcl_DStringLength(&fnds));
-                    CoTaskMemFree(wstr);
-                    Tcl_DStringFree(&fnds);
-                }
-                resultIf->lpVtbl->Release(resultIf);
-            }
-        }
-        if (SUCCEEDED(hr)) {
-            if (filterPtr && optsPtr->typeVariableObj) {
-                UINT ftix;
+		    ConvertExternalFilename(wstr, &fnds);
+		    resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
+						 Tcl_DStringLength(&fnds));
+		    CoTaskMemFree(wstr);
+		    Tcl_DStringFree(&fnds);
+		}
+		resultIf->lpVtbl->Release(resultIf);
+	    }
+	}
+	if (SUCCEEDED(hr)) {
+	    if (filterPtr && optsPtr->typeVariableObj) {
+		UINT ftix;
 
-                hr = fdlgIf->lpVtbl->GetFileTypeIndex(fdlgIf, &ftix);
-                if (SUCCEEDED(hr)) {
-                    /* Note ftix is a 1-based index */
-                    if (ftix > 0 && ftix <= nfilters) {
-                        Tcl_DString ftds;
-                        Tcl_Obj *ftobj;
+		hr = fdlgIf->lpVtbl->GetFileTypeIndex(fdlgIf, &ftix);
+		if (SUCCEEDED(hr)) {
+		    /* Note ftix is a 1-based index */
+		    if (ftix > 0 && ftix <= nfilters) {
+			Tcl_DString ftds;
+			Tcl_Obj *ftobj;
 
-                        Tcl_DStringInit(&ftds);
-                        Tcl_WCharToUtfDString(filterPtr[ftix-1].pszName, wcslen(filterPtr[ftix-1].pszName), &ftds);
-                        ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
-                                Tcl_DStringLength(&ftds));
-                        Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-                                ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
-                        Tcl_DStringFree(&ftds);
-                    }
-                }
-            }
-        }
+			Tcl_DStringInit(&ftds);
+			Tcl_WCharToUtfDString(filterPtr[ftix-1].pszName, wcslen(filterPtr[ftix-1].pszName), &ftds);
+			ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
+				Tcl_DStringLength(&ftds));
+			Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
+				ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+			Tcl_DStringFree(&ftds);
+		    }
+		}
+	    }
+	}
     } else {
-        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
-            hr = 0;             /* User cancelled, return empty string */
+	if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+	    hr = 0;             /* User cancelled, return empty string */
     }
 
 vamoose: /* (hr != 0) => error */
     if (dirIf)
-        dirIf->lpVtbl->Release(dirIf);
+	dirIf->lpVtbl->Release(dirIf);
     if (fdlgIf)
-        fdlgIf->lpVtbl->Release(fdlgIf);
+	fdlgIf->lpVtbl->Release(fdlgIf);
 
     if (filterPtr)
-        FreeFilterVista(nfilters, filterPtr);
+	FreeFilterVista(nfilters, filterPtr);
 
     if (hr == 0) {
-        if (resultObj)          /* May be NULL if user cancelled */
-            Tcl_SetObjResult(interp, resultObj);
-        return TCL_OK;
+	if (resultObj)          /* May be NULL if user cancelled */
+	    Tcl_SetObjResult(interp, resultObj);
+	return TCL_OK;
     } else {
-        if (resultObj)
-            Tcl_DecrRefCount(resultObj);
-        Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
-        return TCL_ERROR;
+	if (resultObj)
+	    Tcl_DecrRefCount(resultObj);
+	Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
+	return TCL_ERROR;
     }
 }
 
@@ -1576,16 +1518,16 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     Tcl_DString extString, filterString, dirString, titleString;
     const char *str;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     memset(&ofnData, 0, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&dirString); /* XXX - original code was missing this
-                                    leaving dirString uninitialized for
-                                    the unlikely code path where cwd failed */
+				    leaving dirString uninitialized for
+				    the unlikely code path where cwd failed */
 
     if (MakeFilter(interp, optsPtr->filterObj, &utfFilterString,
-                   optsPtr->initialTypeObj, &filterIndex) != TCL_OK) {
+		   optsPtr->initialTypeObj, &filterIndex) != TCL_OK) {
 	goto end;
     }
 
@@ -1629,7 +1571,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    ++str;
 	}
 	Tcl_DStringInit(&extString);
-	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, -1, &extString);
+	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, TCL_INDEX_NONE, &extString);
     }
 
     Tcl_DStringInit(&filterString);
@@ -1652,11 +1594,11 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	Tcl_DStringFree(&optsPtr->utfDirString);
 	if ((Tcl_GetCwd(interp, &optsPtr->utfDirString) == NULL) ||
 		(Tcl_TranslateFileName(interp,
-                     Tcl_DStringValue(&optsPtr->utfDirString), &cwd) == NULL)) {
+		     Tcl_DStringValue(&optsPtr->utfDirString), &cwd) == NULL)) {
 	    Tcl_ResetResult(interp);
 	} else {
-	    Tcl_DStringInit(&dirString);
-	    Tcl_UtfToWCharDString(Tcl_DStringValue(&cwd),
+		Tcl_DStringInit(&dirString);
+		Tcl_UtfToWCharDString(Tcl_DStringValue(&cwd),
 		    Tcl_DStringLength(&cwd), &dirString);
 	}
 	Tcl_DStringFree(&cwd);
@@ -1665,7 +1607,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
     if (optsPtr->titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
+	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), TCL_INDEX_NONE, &titleString);
     }
 
     /*
@@ -1754,7 +1696,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 			    Tcl_DStringLength(&ds));
-		    Tcl_AppendToObj(fullnameObj, "/", -1);
+		    Tcl_AppendToObj(fullnameObj, "/", TCL_INDEX_NONE);
 		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
 			    Tcl_DStringLength(&filenameBuf));
 		    gotFilename = 1;
@@ -1777,14 +1719,14 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    Tcl_DStringFree(&ds);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    ConvertExternalFilename(ofn.lpstrFile, &ds), -1));
+		    ConvertExternalFilename(ofn.lpstrFile, &ds), TCL_INDEX_NONE));
 	    gotFilename = (Tcl_DStringLength(&ds) > 0);
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
 	if ((ofn.nFilterIndex > 0) && gotFilename && optsPtr->typeVariableObj
 		&& optsPtr->filterObj) {
-	    int listObjc, count;
+	    Tcl_Size listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
 
@@ -1796,23 +1738,23 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else {
-                /*
-                 * BUGFIX for d43a10ce2fed950e00890049f3c273f2cdd12583
-                 * The original code was broken because it passed typeinfo[0]
-                 * directly into Tcl_ObjSetVar2. In the case of typeInfo[0]
-                 * pointing into a list which is also referenced by
-                 * typeVariableObj, TOSV2 shimmers the object into
-                 * variable intrep which loses the list representation.
-                 * This invalidates typeInfo[0] which is freed but
-                 * nevertheless stored as the value of the variable.
-                 */
-                Tcl_Obj *selFilterObj = typeInfo[0];
-                Tcl_IncrRefCount(selFilterObj);
-                if (Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-                                   selFilterObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
-                    result = TCL_ERROR;
-                }
-                Tcl_DecrRefCount(selFilterObj);
+		/*
+		 * BUGFIX for d43a10ce2fed950e00890049f3c273f2cdd12583
+		 * The original code was broken because it passed typeinfo[0]
+		 * directly into Tcl_ObjSetVar2. In the case of typeInfo[0]
+		 * pointing into a list which is also referenced by
+		 * typeVariableObj, TOSV2 shimmers the object into
+		 * variable intrep which loses the list representation.
+		 * This invalidates typeInfo[0] which is freed but
+		 * nevertheless stored as the value of the variable.
+		 */
+		Tcl_Obj *selFilterObj = typeInfo[0];
+		Tcl_IncrRefCount(selFilterObj);
+		if (Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
+				   selFilterObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
+		    result = TCL_ERROR;
+		}
+		Tcl_DecrRefCount(selFilterObj);
 	    }
 	}
     } else if (cdlgerr == FNERR_INVALIDFILENAME) {
@@ -1830,8 +1772,8 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	Tcl_DStringFree(&titleString);
     }
     if (ofn.lpstrInitialDir != NULL) {
-        /* XXX - huh? lpstrInitialDir is set from Tcl_DStringValue which
-           can never return NULL */
+	/* XXX - huh? lpstrInitialDir is set from Tcl_DStringValue which
+	   can never return NULL */
 	Tcl_DStringFree(&dirString);
     }
     Tcl_DStringFree(&filterString);
@@ -1872,7 +1814,7 @@ GetFileName(
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
-    enum OFNOper oper)  	/* 1 to call GetOpenFileName(), 0 to call
+    enum OFNOper oper)	/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
     OFNOpts ofnOpts;
@@ -1880,12 +1822,12 @@ GetFileName(
 
     result = ParseOFNOptions(clientData, interp, objc, objv, oper, &ofnOpts);
     if (result != TCL_OK)
-        return result;
+	return result;
 
     if (VistaFileDialogsAvailable() && ! ofnOpts.forceXPStyle)
-        result = GetFileNameVista(interp, &ofnOpts, oper);
+	result = GetFileNameVista(interp, &ofnOpts, oper);
     else
-        result = GetFileNameXP(interp, &ofnOpts, oper);
+	result = GetFileNameXP(interp, &ofnOpts, oper);
 
     CleanupOFNOptions(&ofnOpts);
     return result;
@@ -2037,7 +1979,7 @@ OFNHookProc(
 	 * information every time it gets a WM_WINDOWPOSCHANGED message.
 	 */
 
-	ofnPtr = (OPENFILENAME *)TkWinGetUserData(hdlg);
+	ofnPtr = (OPENFILENAME *) TkWinGetUserData(hdlg);
 	if (ofnPtr != NULL) {
 	    ofnData = (OFNData *) ofnPtr->lCustData;
 	    if (ofnData->interp != NULL) {
@@ -2112,7 +2054,7 @@ MakeFilter(
 	*p = '\0';
 
     } else {
-	int len;
+	Tcl_Size len;
 
 	if (valuePtr == NULL) {
 	    len = 0;
@@ -2221,14 +2163,14 @@ MakeFilter(
 static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
 {
     if (dlgFilterPtr != NULL) {
-        DWORD dw;
-        for (dw = 0; dw < count; ++dw) {
-            if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree(dlgFilterPtr[dw].pszName);
-            if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree(dlgFilterPtr[dw].pszSpec);
-        }
-        ckfree(dlgFilterPtr);
+	DWORD dw;
+	for (dw = 0; dw < count; ++dw) {
+	    if (dlgFilterPtr[dw].pszName != NULL)
+		ckfree((void *)dlgFilterPtr[dw].pszName);
+	    if (dlgFilterPtr[dw].pszSpec != NULL)
+		ckfree((void *)dlgFilterPtr[dw].pszSpec);
+	}
+	ckfree(dlgFilterPtr);
     }
 }
 
@@ -2253,9 +2195,9 @@ static int MakeFilterVista(
     OFNOpts *optsPtr,           /* Caller specified options */
     DWORD *countPtr,            /* Will hold number of filters */
     TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr, /* Will hold pointer to filter array.
-                                         Set to NULL if no filters specified.
-                                         Must be freed by calling
-                                         FreeFilterVista */
+					 Set to NULL if no filters specified.
+					 Must be freed by calling
+					 FreeFilterVista */
     DWORD *initialIndexPtr)     /* Will hold index of default type */
 {
     TCLCOMDLG_FILTERSPEC *dlgFilterPtr;
@@ -2267,9 +2209,9 @@ static int MakeFilterVista(
     int       i;
 
     if (optsPtr->filterObj == NULL) {
-        *dlgFilterPtrPtr = NULL;
-        *countPtr = 0;
-        return TCL_OK;
+	*dlgFilterPtrPtr = NULL;
+	*countPtr = 0;
+	return TCL_OK;
     }
 
     if (optsPtr->initialTypeObj)
@@ -2280,9 +2222,9 @@ static int MakeFilterVista(
 	return TCL_ERROR;
 
     if (flist.filters == NULL) {
-        *dlgFilterPtrPtr = NULL;
-        *countPtr = 0;
-        return TCL_OK;
+	*dlgFilterPtrPtr = NULL;
+	*countPtr = 0;
+	return TCL_OK;
     }
 
     Tcl_DStringInit(&ds);
@@ -2290,19 +2232,19 @@ static int MakeFilterVista(
     dlgFilterPtr = (TCLCOMDLG_FILTERSPEC *)ckalloc(flist.numFilters * sizeof(*dlgFilterPtr));
 
     for (i = 0, filterPtr = flist.filters;
-         filterPtr;
-         filterPtr = filterPtr->next, ++i) {
+	 filterPtr;
+	 filterPtr = filterPtr->next, ++i) {
 	const char *sep;
 	FileFilterClause *clausePtr;
-	int nbytes;
+	size_t nbytes;
 
 	/* Check if this entry should be shown as the default */
 	if (initial && strcmp(initial, filterPtr->name) == 0)
-            initialIndex = i+1; /* Windows filter indices are 1-based */
+	    initialIndex = i+1; /* Windows filter indices are 1-based */
 
 	/* First stash away the text description of the pattern */
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToWCharDString(filterPtr->name, -1, &ds);
+	Tcl_UtfToWCharDString(filterPtr->name, TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszName = (LPCWSTR)ckalloc(nbytes);
@@ -2323,15 +2265,15 @@ static int MakeFilterVista(
 	    GlobPattern *globPtr;
 	    for (globPtr = clausePtr->patterns; globPtr;
 		    globPtr = globPtr->next) {
-		Tcl_DStringAppend(&patterns, sep, -1);
-		Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+		Tcl_DStringAppend(&patterns, sep, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&patterns, globPtr->pattern, TCL_INDEX_NONE);
 		sep = ";";
 	    }
 	}
 
 	/* Again we need a Unicode form of the string */
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), -1, &ds);
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszSpec = (LPCWSTR)ckalloc(nbytes);
@@ -2445,15 +2387,15 @@ Tk_ChooseDirectoryObjCmd(
     const char *utfDir;
 
     result = ParseOFNOptions(clientData, interp, objc, objv,
-                 OFN_DIR_CHOOSE, &ofnOpts);
+		 OFN_DIR_CHOOSE, &ofnOpts);
     if (result != TCL_OK)
-        return result;
+	return result;
 
     /* Use new dialogs if available */
     if (VistaFileDialogsAvailable() && ! ofnOpts.forceXPStyle) {
-        result = GetFileNameVista(interp, &ofnOpts, OFN_DIR_CHOOSE);
-        CleanupOFNOptions(&ofnOpts);
-        return result;
+	result = GetFileNameVista(interp, &ofnOpts, OFN_DIR_CHOOSE);
+	CleanupOFNOptions(&ofnOpts);
+	return result;
     }
 
     /* Older dialogs */
@@ -2468,8 +2410,8 @@ Tk_ChooseDirectoryObjCmd(
 	LPCWSTR uniStr;
 
 	Tcl_DStringInit(&tempString);
-	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
-                          &tempString);
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), TCL_INDEX_NONE,
+			  &tempString);
 	uniStr = (WCHAR *) Tcl_DStringValue(&tempString);
 
 	/* Convert possible relative path to full path to keep dialog happy. */
@@ -2501,7 +2443,7 @@ Tk_ChooseDirectoryObjCmd(
 
     if (ofnOpts.titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
+	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), TCL_INDEX_NONE, &titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }
@@ -2538,10 +2480,10 @@ Tk_ChooseDirectoryObjCmd(
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     GetCurrentDirectoryW(MAX_PATH, saveDir);
     if (SHGetMalloc(&pMalloc) == NOERROR) {
-        /*
-         * XXX - MSDN says CoInitialize must have been called before
-         * SHBrowseForFolder can be used but don't see that called anywhere.
-         */
+	/*
+	 * XXX - MSDN says CoInitialize must have been called before
+	 * SHBrowseForFolder can be used but don't see that called anywhere.
+	 */
 	pidl = SHBrowseForFolderW(&bInfo);
 
 	/*
@@ -2559,7 +2501,7 @@ Tk_ChooseDirectoryObjCmd(
 	if (pidl != NULL) {
 	    if (!SHGetPathFromIDListW(pidl, path)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error: not a file system folder", -1));
+			"error: not a file system folder", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
 	    }
 	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
@@ -2589,7 +2531,7 @@ Tk_ChooseDirectoryObjCmd(
 	Tcl_DString ds;
 
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		ConvertExternalFilename(path, &ds), -1));
+		ConvertExternalFilename(path, &ds), TCL_INDEX_NONE));
 	Tcl_DStringFree(&ds);
     }
 
@@ -2657,7 +2599,7 @@ ChooseDirectoryValidateProc(
 	    return 1;
 	}
 	Tcl_DStringSetLength(&initDirString, 0);
-	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), -1, &initDirString),
+	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), TCL_INDEX_NONE, &initDirString),
 		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 	Tcl_DStringFree(&tempString);
@@ -2678,7 +2620,7 @@ ChooseDirectoryValidateProc(
 		 */
 
 		wsprintfW(selDir, L"Directory '%s' does not exist,\n"
-		        L"please select or enter an existing directory.",
+			L"please select or enter an existing directory.",
 			chooseDirSharedData->retDir);
 		MessageBoxW(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
 		chooseDirSharedData->retDir[0] = '\0';
@@ -2962,7 +2904,7 @@ Tk_MessageBoxObjCmd(
 
     Tcl_DecrRefCount(tmpObj);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    TkFindStateString(buttonMap, winCode), -1));
+	    TkFindStateString(buttonMap, winCode), TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -3079,24 +3021,24 @@ GetFontObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(plf->lfFaceName, wcslen(plf->lfFaceName), &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
-	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
+	    Tcl_NewStringObj(Tcl_DStringValue(&ds), TCL_INDEX_NONE));
     Tcl_DStringFree(&ds);
     pt = -MulDiv(plf->lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
-    Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewIntObj(pt));
+    Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewWideIntObj(pt));
     if (plf->lfWeight >= 700) {
-	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", -1));
+	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", TCL_INDEX_NONE));
     }
     if (plf->lfItalic) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("italic", -1));
+		Tcl_NewStringObj("italic", TCL_INDEX_NONE));
     }
     if (plf->lfUnderline) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("underline", -1));
+		Tcl_NewStringObj("underline", TCL_INDEX_NONE));
     }
     if (plf->lfStrikeOut) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("overstrike", -1));
+		Tcl_NewStringObj("overstrike", TCL_INDEX_NONE));
     }
     return resObj;
 }
@@ -3108,7 +3050,7 @@ ApplyLogfont(
     HDC hdc,
     LOGFONTW *logfontPtr)
 {
-    int objc;
+    Tcl_Size objc;
     Tcl_Obj **objv, **tmpv;
 
     Tcl_ListObjGetElements(NULL, cmdObj, &objc, &objv);
@@ -3164,7 +3106,7 @@ HookProc(
 	    Tcl_DString title;
 
 	    Tcl_DStringInit(&title);
-	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), -1, &title);
+	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), TCL_INDEX_NONE, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
 		SetWindowTextW(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
@@ -3183,13 +3125,13 @@ HookProc(
 	if (IsWindow(hwndCtrl)) {
 	    EnableWindow(hwndCtrl, FALSE);
 	}
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
+	Tk_SendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 1; /* we handled the message */
     }
 
     if (WM_DESTROY == msg) {
 	phd->hwnd = NULL;
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
+	Tk_SendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 0;
     }
 
@@ -3207,7 +3149,7 @@ HookProc(
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
 	if (phd && phd->parent) {
-	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
+	    Tk_SendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
 	}
 	return 1;
     }
@@ -3220,7 +3162,7 @@ HookProc(
  */
 
 enum FontchooserOption {
-    FontchooserParent, FontchooserTitle, FontchooserFont, FontchooserCmd,
+    FontchooserCmd, FontchooserFont, FontchooserParent, FontchooserTitle,
     FontchooserVisible
 };
 
@@ -3290,15 +3232,15 @@ static int
 FontchooserConfigureCmd(
     void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     HookData *hdPtr = NULL;
-    int i;
+    Tcl_Size i;
     int r = TCL_OK;
     static const char *const optionStrings[] = {
-	"-parent", "-title", "-font", "-command", "-visible", NULL
+	"-command", "-font", "-parent", "-title", "-visible", NULL
     };
 
     hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
@@ -3312,7 +3254,7 @@ FontchooserConfigureCmd(
 	Tcl_Obj *dictObj = Tcl_NewDictObj();
 
 	for (i = 0; r == TCL_OK && optionStrings[i] != NULL; ++i) {
-	    keyObj = Tcl_NewStringObj(optionStrings[i], -1);
+	    keyObj = Tcl_NewStringObj(optionStrings[i], TCL_INDEX_NONE);
 	    valueObj = FontchooserCget(hdPtr, i);
 	    r = Tcl_DictObjPut(interp, dictObj, keyObj, valueObj);
 	}
@@ -3348,7 +3290,7 @@ FontchooserConfigureCmd(
 	    static const char *msg = "cannot change read-only option "
 		    "\"-visible\": use the show or hide command";
 
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
 	    return TCL_ERROR;
 	}
@@ -3434,7 +3376,7 @@ static int
 FontchooserShowCmd(
     void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     Tcl_DString ds;
@@ -3483,7 +3425,7 @@ FontchooserShowCmd(
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
 	Tcl_DStringInit(&ds);
-	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, -1, &ds),
+	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, TCL_INDEX_NONE, &ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
@@ -3505,7 +3447,7 @@ FontchooserShowCmd(
     }
 
     if (TCL_OK == r && hdPtr->cmdObj != NULL) {
-	int len = 0;
+	Tcl_Size len = 0;
 
 	r = Tcl_ListObjLength(interp, hdPtr->cmdObj, &len);
 	if (len > 0) {
@@ -3520,7 +3462,7 @@ FontchooserShowCmd(
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
 	    if (hdPtr->parent) {
-		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
+		Tk_SendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);
@@ -3548,7 +3490,7 @@ static int
 FontchooserHideCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);

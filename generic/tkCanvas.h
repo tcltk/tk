@@ -3,9 +3,9 @@
  *
  *	Declarations shared among all the files that implement canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 1998 Scriptics Corporation.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -60,13 +60,21 @@ typedef struct TkCanvas {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D border around window. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
+#else
+    int borderWidth;
+#endif
     Tk_3DBorder bgBorder;	/* Used for canvas background. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. <= 0 means
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -78,8 +86,12 @@ typedef struct TkCanvas {
 				 * borders. */
     GC pixmapGC;		/* Used to copy bits from a pixmap to the
 				 * screen and also to clear the pixmap. */
-    int width, height;		/* Dimensions to request for canvas window,
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *widthObj, *heightObj;		/* Dimensions to request for canvas window,
 				 * specified in pixels. */
+#else
+    int width, height;
+#endif
     int redrawX1, redrawY1;	/* Upper left corner of area to redraw, in
 				 * pixel coordinates. Border pixels are
 				 * included. Only valid if REDRAW_PENDING flag
@@ -147,7 +159,7 @@ typedef struct TkCanvas {
 				 * currentItem is based. Must be saved so that
 				 * if the currentItem is deleted, can pick
 				 * another. */
-    int state;			/* Last known modifier state. Used to defer
+    unsigned int state;		/* Last known modifier state. Used to defer
 				 * picking a new current object while buttons
 				 * are down. */
 
@@ -155,29 +167,33 @@ typedef struct TkCanvas {
      * Information used for managing scrollbars:
      */
 
-    char *xScrollCmd;		/* Command prefix for communicating with
+    Tcl_Obj *xScrollCmdObj;		/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no
-				 * horizontal scrollbar. Malloc'ed. */
-    char *yScrollCmd;		/* Command prefix for communicating with
+				 * horizontal scrollbar. */
+    Tcl_Obj *yScrollCmdObj;		/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no vertical
-				 * scrollbar. Malloc'ed. */
+				 * scrollbar. */
     int scrollX1, scrollY1, scrollX2, scrollY2;
 				/* These four coordinates define the region
 				 * that is the 100% area for scrolling (i.e.
 				 * these numbers determine the size and
 				 * location of the sliders on scrollbars).
 				 * Units are pixels in canvas coords. */
-    char *regionString;		/* The option string from which scrollX1 etc.
-				 * are derived. Malloc'ed. */
-    int xScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *regionObj;		/* The option string from which scrollX1 etc.
+				 * are derived. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *xScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
 				 * lie on an even unit boundary. */
-    int yScrollIncrement;	/* If >0, defines a grid for horizontal
+    Tcl_Obj *yScrollIncrementObj;	/* If >0, defines a grid for vertical
 				 * scrolling. This is the size of the "unit",
-				 * and the left edge of the screen will always
+				 * and the top edge of the screen will always
 				 * lie on an even unit boundary. */
-
+#else
+    int xScrollIncrement;
+    int yScrollIncrement;
+#endif
     /*
      * Information used for scanning:
      */
@@ -207,14 +223,14 @@ typedef struct TkCanvas {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     double pixelsPerMM;		/* Scale factor between MM and pixels; used
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    int nextId;			/* Number to use as id for next item created
+    Tcl_Size nextId;			/* Number to use as id for next item created
 				 * in widget. */
     Tk_PostscriptInfo psInfo;	/* Pointer to information used for generating
 				 * Postscript for the canvas. NULL means no
@@ -290,8 +306,8 @@ typedef struct TkCanvas {
  * to the outside world:
  */
 
-MODULE_SCOPE int	TkCanvPostscriptCmd(TkCanvas *canvasPtr,
-			    Tcl_Interp *interp, int argc, const char **argv);
+MODULE_SCOPE int	TkCanvPostscriptObjCmd(TkCanvas *canvasPtr,
+			    Tcl_Interp *interp, Tcl_Size argc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvTranslatePath(TkCanvas *canvPtr,
 			    int numVertex, double *coordPtr, int closed,
 			    XPoint *outPtr);

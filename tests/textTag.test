@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkTextTag.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -78,7 +78,7 @@ test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -returnCodes error -result {bad screen distance "46q"}
+} -returnCodes error -result {expected screen distance or "" but got "46q"}
 test textTag-1.7 {tag configuration options} -body {
     .t tag configure x -fgstipple gray25
     .t tag cget x -fgstipple
@@ -119,7 +119,7 @@ test textTag-1.13 {configuration options, bug [026e2bb685]} -body {
     list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
-} -result {{bad justification "middle": must be left, right, or center} {-justify {} {} {} right}}
+} -result {{bad justification "middle": must be left, right, center, or ""} {-justify {} {} {} right}}
 test textTag-1.14 {tag configuration options} -body {
     .t tag configure x -lmargin1 10
     .t tag cget x -lmargin1
@@ -130,7 +130,7 @@ test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.16 {tag configuration options} -body {
     .t tag configure x -lmargin2 10
     .t tag cget x -lmargin2
@@ -141,7 +141,7 @@ test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.17a {tag configuration options} -body {
     .t tag configure x -lmargincolor lightgreen
     .t tag cget x -lmargincolor
@@ -163,18 +163,18 @@ test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -returnCodes error -result {bad screen distance "100xyz"}
+} -returnCodes error -result {expected screen distance or "" but got "100xyz"}
 test textTag-1.20 {tag configuration options} -body {
     .t tag configure x -overstrike on
     .t tag cget x -overstrike
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -result {on}
+} -result 1
 test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.21a {tag configuration options} -body {
     .t tag configure x -overstrikefg red
     .t tag cget x -overstrikefg
@@ -196,7 +196,7 @@ test textTag-1.23 {configuration options} -body {
     .t tag configure x -relief stupid
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
-} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test textTag-1.24 {tag configuration options} -body {
     .t tag configure x -rmargin 10
     .t tag cget x -rmargin
@@ -207,7 +207,7 @@ test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.25a {tag configuration options} -body {
     .t tag configure x -rmargincolor darkblue
     .t tag cget x -rmargincolor
@@ -251,7 +251,7 @@ test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.28 {tag configuration options} -body {
     .t tag configure x -spacing2 10
     .t tag cget x -spacing2
@@ -263,7 +263,7 @@ test textTag-1.29 {configuration options, bug [026e2bb685]} -body {
     list $msg [.t tag configure x -spacing1] [.t tag configure x -spacing2] [.t tag configure x -spacing3]
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3] -spacing2 [lindex [.t tag configure x -spacing2] 3] -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -result {{bad screen distance "bad"} {-spacing1 {} {} {} {}} {-spacing2 {} {} {} {}} {-spacing3 {} {} {} 5}}
+} -result {{expected screen distance or "" but got "bad"} {-spacing1 {} {} {} {}} {-spacing2 {} {} {} {}} {-spacing3 {} {} {} 5}}
 test textTag-1.30 {tag configuration options} -body {
     .t tag configure x -spacing3 10
     .t tag cget x -spacing3
@@ -274,7 +274,7 @@ test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.32 {tag configuration options} -body {
     .t tag configure x -tabs {10 20 30}
     .t tag cget x -tabs
@@ -291,12 +291,12 @@ test textTag-1.34 {tag configuration options} -body {
     .t tag cget x -underline
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -result {no}
+} -result 0
 test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.36 {tag configuration options} -body {
     .t tag configure x -underlinefg red
     .t tag cget x -underlinefg
@@ -388,7 +388,7 @@ test textTag-2.12 {TkTextTagCmd - "add" option} -body {
 test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     text .tt
     for {set i 1} {$i <10} {incr i} {
-        .tt insert end "Line $i\n"
+	.tt insert end "Line $i\n"
     }
     .tt tag configure mytag -offset 2
     .tt peer create .ptt
@@ -486,7 +486,7 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -body {
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} -body {
     .t tag configure
-} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option value ...?"}
 test textTag-5.2 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -foo
 } -returnCodes error -result {unknown option "-foo"}
@@ -501,7 +501,7 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -underline
 } -cleanup {
     .t tag delete x
-} -result {-underline {} {} {} yes}
+} -result {-underline {} {} {} 1}
 test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underlinefg lightgreen
@@ -515,7 +515,7 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag cget x -overstrike
 } -cleanup {
     .t tag delete x
-} -result {on}
+} -result 1
 test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrikefg lightgreen
@@ -527,13 +527,13 @@ test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test textTag-5.7 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify left
@@ -542,18 +542,18 @@ test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
 } -result {-justify {} {} {} left}
 test textTag-5.9 {TkTextTagCmd - "configure" option, bug [026e2bb685]} -body {
-    .t tag delete x
+   .t tag delete x
     catch {.t tag configure x -justify bogus} msg
     list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag delete x
-} -result {{bad justification "bogus": must be left, right, or center} {-justify {} {} {} {}}}
+} -result {{bad justification "bogus": must be left, right, center, or ""} {-justify {} {} {} {}}}
 test textTag-5.10 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify fill
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad justification "fill": must be left, right, or center}
+} -returnCodes error -result {bad justification "fill": must be left, right, center, or ""}
 test textTag-5.11 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -offset 2
@@ -566,32 +566,32 @@ test textTag-5.12 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -offset 1.0q
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "1.0q"}
+} -returnCodes error -result {expected screen distance or "" but got "1.0q"}
 test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5 \
-        -lmargincolor darkblue -rmargincolor lightgreen
+	-lmargincolor darkblue -rmargincolor lightgreen
     list [.t tag configure x -lmargin1] [.t tag configure x -lmargin2] \
-        [.t tag configure x -rmargin] [.t tag configure x -lmargincolor] \
-        [.t tag configure x -rmargincolor]
+	[.t tag configure x -rmargin] [.t tag configure x -lmargincolor] \
+	[.t tag configure x -rmargincolor]
 } -cleanup {
     .t tag delete x
 } -result [list {-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} \
-                {-rmargin {} {} {} 5} \
-                {-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
-          ]
+		{-rmargin {} {} {} 5} \
+		{-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
+	  ]
 test textTag-5.14 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2.0x
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "2.0x"}
+} -returnCodes error -result {expected screen distance or "" but got "2.0x"}
 test textTag-5.15 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin2 gorp
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "gorp"}
+} -returnCodes error -result {expected screen distance or "" but got "gorp"}
 test textTag-5.15a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargincolor rainbow
@@ -603,7 +603,7 @@ test textTag-5.16 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -rmargin 140.1.1
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "140.1.1"}
+} -returnCodes error -result {expected screen distance or "" but got "140.1.1"}
 test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -rmargincolor rainbow
@@ -615,7 +615,7 @@ test textTag-5.17 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 2 -spacing2 4 -spacing3 6
     list [.t tag configure x -spacing1] [.t tag configure x -spacing2] \
-        [.t tag configure x -spacing3]
+	[.t tag configure x -spacing3]
 } -cleanup {
     .t tag delete x
 } -result {{-spacing1 {} {} {} 2} {-spacing2 {} {} {} 4} {-spacing3 {} {} {} 6}}
@@ -624,26 +624,26 @@ test textTag-5.18 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -spacing1 2.0x
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "2.0x"}
+} -returnCodes error -result {expected screen distance or "" but got "2.0x"}
 test textTag-5.19 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 lousy
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "lousy"}
+} -returnCodes error -result {expected screen distance or "" but got "lousy"}
 test textTag-5.20 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 4.2.3
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "4.2.3"}
+} -returnCodes error -result {expected screen distance or "" but got "4.2.3"}
 test textTag-5.21 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectborderwidth 2 -selectforeground blue \
-        -selectbackground black
+	-selectbackground black
     .t tag configure sel -borderwidth 4 -foreground green -background yellow
     set x {}
     foreach i {-selectborderwidth -selectforeground -selectbackground} {
-        lappend x [lindex [.t configure $i] 4]
+	lappend x [lindex [.t configure $i] 4]
     }
     return $x
 } -result {4 green yellow}
@@ -748,7 +748,7 @@ test textTag-7.4 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower c
@@ -760,7 +760,7 @@ test textTag-7.5 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower d b
@@ -772,7 +772,7 @@ test textTag-7.6 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag lower a c
@@ -791,7 +791,7 @@ test textTag-8.2 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag names
@@ -802,7 +802,7 @@ test textTag-8.3 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag add "a b" 2.1 2.6
@@ -1070,7 +1070,7 @@ test textTag-11.4 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise c
@@ -1082,7 +1082,7 @@ test textTag-11.5 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise d b
@@ -1094,7 +1094,7 @@ test textTag-11.6 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
 } -body {
     .t tag raise a c
@@ -1164,7 +1164,7 @@ test textTag-14.1 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
-        .t tag add $i 2.0 2.2
+	.t tag add $i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1175,10 +1175,10 @@ test textTag-14.2 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
-        .t tag configure $i -background black
+	.t tag configure $i -background black
     }
     foreach i {d c b a} {
-        .t tag add $i 2.0 2.2
+	.t tag add $i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1188,7 +1188,7 @@ test textTag-14.3 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
-        .t tag add x$i 2.0 2.2
+	.t tag add x$i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1198,10 +1198,10 @@ test textTag-14.4 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
-        .t tag configure x$i -background black
+	.t tag configure x$i -background black
     }
     for {set i 29} {$i >= 0} {incr i -1} {
-        .t tag add x$i 2.0 2.2
+	.t tag add x$i 2.0 2.2
     }
     .t tag names 2.1
 } -cleanup {
@@ -1252,11 +1252,11 @@ test textTag-15.2 {TkTextBindProc} -setup {
     controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <ButtonPress> {lappend x x-down}
+    .t tag bind x <Button> {lappend x x-down}
     .t tag bind x <ButtonRelease> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <ButtonPress> {lappend x y-down}
+    .t tag bind y <Button> {lappend x y-down}
     .t tag bind y <ButtonRelease> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
@@ -1282,12 +1282,12 @@ test textTag-15.3 {TkTextBindProc} -setup {
     controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <Any-ButtonPress-1> {lappend x x-down}
-    .t tag bind x <Any-ButtonRelease-1> {lappend x x-up}
+    .t tag bind x <Button-1> {lappend x x-down}
+    .t tag bind x <ButtonRelease-1> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <Any-ButtonPress-1> {lappend x y-down}
-    .t tag bind y <Any-ButtonRelease-1> {lappend x y-up}
+    .t tag bind y <Button-1> {lappend x y-down}
+    .t tag bind y <ButtonRelease-1> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
     set x {}
@@ -1315,13 +1315,13 @@ test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -set
 } -body {
     set res {}
     .t tag add tag1 1.0 end
-    .t tag bind tag1 <KeyPress> {lappend res %K}
+    .t tag bind tag1 <Key> {lappend res %K}
     .t mark set insert 1.2
     update
     event generate .t <Motion> -warp 1 -x -50 -y -50
     controlPointerWarpTiming
     focus -force .t
-    event generate .t <KeyPress> -keysym a
+    event generate .t <Key> -keysym a
     set res
 } -cleanup {
     .t tag delete tag1
@@ -1373,15 +1373,15 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
 
 test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
-        .t tag bind $i <Enter> "lappend x enter-$i"
-        .t tag bind $i <Leave> "lappend x leave-$i"
+	.t tag bind $i <Enter> "lappend x enter-$i"
+	.t tag bind $i <Leave> "lappend x leave-$i"
     }
     .t tag lower b
     .t tag lower a
@@ -1402,15 +1402,15 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
 
 test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
-        .t tag bind $i <Enter> "lappend x enter-$i"
-        .t tag bind $i <Leave> "lappend x leave-$i"
+	.t tag bind $i <Enter> "lappend x enter-$i"
+	.t tag bind $i <Leave> "lappend x leave-$i"
     }
     .t tag lower b
     .t tag lower a
@@ -1430,7 +1430,7 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
 
 test textTag-16.5 {TkTextPickCurrent procedure} -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1450,7 +1450,7 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
     haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1471,7 +1471,7 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
     haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
-        .t tag remove $i 1.0 end
+	.t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5

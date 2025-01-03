@@ -4,9 +4,9 @@
  *	Contains commands for platform specific tests for the Windows
  *	platform.
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 Scriptics Corporation.
- * Copyright (c) 2001 ActiveState Corporation.
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2000 Scriptics Corporation.
+ * Copyright © 2001 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -98,10 +98,10 @@ HWND TestFindControl(HWND root, int id)
 
     fcs.control = GetDlgItem(root, id);
     if (fcs.control == NULL) {
-        /* Control is not a direct child. Look in descendents */
-        fcs.id = id;
-        fcs.control = NULL;
-        EnumChildWindows(root, TestFindControlCallback, (LPARAM) &fcs);
+	/* Control is not a direct child. Look in descendents */
+	fcs.id = id;
+	fcs.control = NULL;
+	EnumChildWindows(root, TestFindControlCallback, (LPARAM) &fcs);
     }
     return fcs.control;
 }
@@ -280,6 +280,16 @@ TestwineventObjCmd(
     static const TkStateMap messageMap[] = {
 	{WM_LBUTTONDOWN,	"WM_LBUTTONDOWN"},
 	{WM_LBUTTONUP,		"WM_LBUTTONUP"},
+	{WM_LBUTTONDBLCLK,		"WM_LBUTTONDBLCLK"},
+	{WM_MBUTTONDOWN,	"WM_MBUTTONDOWN"},
+	{WM_MBUTTONUP,		"WM_MBUTTONUP"},
+	{WM_MBUTTONDBLCLK,		"WM_MBUTTONDBLCLK"},
+	{WM_RBUTTONDOWN,	"WM_RBUTTONDOWN"},
+	{WM_RBUTTONUP,		"WM_RBUTTONUP"},
+	{WM_RBUTTONDBLCLK,		"WM_RBUTTONDBLCLK"},
+	{WM_XBUTTONDOWN,	"WM_XBUTTONDOWN"},
+	{WM_XBUTTONUP,		"WM_XBUTTONUP"},
+	{WM_XBUTTONDBLCLK,		"WM_XBUTTONDBLCLK"},
 	{WM_CHAR,		"WM_CHAR"},
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
@@ -305,7 +315,7 @@ TestwineventObjCmd(
     if (rest == Tcl_GetString(objv[1])) {
 	hwnd = FindWindowA(NULL, Tcl_GetString(objv[1]));
 	if (hwnd == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", TCL_INDEX_NONE));
 	    return TCL_ERROR;
 	}
     }
@@ -350,17 +360,17 @@ TestwineventObjCmd(
 #if 0
 	GetDlgItemTextA(hwnd, id, buf, 256);
 #else
-        control = TestFindControl(hwnd, id);
-        if (control == NULL) {
-            Tcl_SetObjResult(interp,
-                             Tcl_ObjPrintf("Could not find control with id %d", id));
-            return TCL_ERROR;
-        }
-        buf[0] = 0;
-        SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
-                     (LPARAM) buf);
+	control = TestFindControl(hwnd, id);
+	if (control == NULL) {
+	    Tcl_SetObjResult(interp,
+			     Tcl_ObjPrintf("Could not find control with id %d", id));
+	    return TCL_ERROR;
+	}
+	buf[0] = 0;
+	SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
+		     (LPARAM) buf);
 #endif
-	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, -1, &ds), NULL);
+	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, TCL_INDEX_NONE, &ds), NULL);
 	Tcl_DStringFree(&ds);
 	break;
     }
@@ -373,11 +383,11 @@ TestwineventObjCmd(
 		    Tcl_ObjPrintf("Could not find control with id %d", id));
 	    return TCL_ERROR;
 	}
-	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
+	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
 	result = SendMessageA(control, WM_SETTEXT, 0, (LPARAM)Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", TCL_INDEX_NONE));
 	    AppendSystemError(interp, GetLastError());
 	    return TCL_ERROR;
 	}
@@ -390,7 +400,7 @@ TestwineventObjCmd(
 	    lParam = (LPARAM)child;
 	}
 	snprintf(buf, sizeof(buf), "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
     default: {
@@ -398,7 +408,7 @@ TestwineventObjCmd(
 
 	snprintf(buf, sizeof(buf), "%d",
 		(int) SendDlgItemMessageA(hwnd, id, message, wParam, lParam));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
     }
@@ -407,7 +417,7 @@ TestwineventObjCmd(
 
 /*
  *  testfindwindow title ?class?
- *	Find a Windows window using the FindWindowW API call. This takes the window
+ *	Find a Windows window using the FindWindow API call. This takes the window
  *	title and optionally the window class and if found returns the HWND and
  *	raises an error if the window is not found.
  *	eg: testfindwindow Console TkTopLevel
@@ -433,42 +443,42 @@ TestfindwindowObjCmd(
     Tcl_DStringInit(&titleString);
 
     if (objc < 2 || objc > 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "title ?class?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "title ?class?");
+	return TCL_ERROR;
     }
 
     Tcl_DStringInit(&titleString);
-    title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), -1, &titleString);
+    title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), TCL_INDEX_NONE, &titleString);
     if (objc == 3) {
 	Tcl_DStringInit(&classString);
-	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), -1, &classString);
+	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), TCL_INDEX_NONE, &classString);
     }
     if (title[0] == 0)
-        title = NULL;
+	title = NULL;
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
     while (1) {
-        DWORD pid, tid;
-        hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
-        if (hwnd == NULL)
-            break;
-        tid = GetWindowThreadProcessId(hwnd, &pid);
-        if (tid == 0) {
-            /* Window has gone */
-            hwnd = NULL;
-            break;
-        }
-        if (pid == myPid)
-            break;              /* Found it */
+	DWORD pid, tid;
+	hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
+	if (hwnd == NULL)
+	    break;
+	tid = GetWindowThreadProcessId(hwnd, &pid);
+	if (tid == 0) {
+	    /* Window has gone */
+	    hwnd = NULL;
+	    break;
+	}
+	if (pid == myPid)
+	    break;              /* Found it */
     }
 
     if (hwnd == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", TCL_INDEX_NONE));
 	AppendSystemError(interp, GetLastError());
 	r = TCL_ERROR;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     }
 
     Tcl_DStringFree(&titleString);
@@ -512,9 +522,9 @@ TestgetwindowinfoObjCmd(
 
     cch = GetClassNameW((HWND)INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
-    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", -1));
-    	AppendSystemError(interp, GetLastError());
-    	return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", TCL_INDEX_NONE));
+	AppendSystemError(interp, GetLastError());
+	return TCL_ERROR;
     } else {
 	Tcl_DStringInit(&ds);
 	Tcl_WCharToUtfDString(buf, wcslen(buf), &ds);
@@ -525,7 +535,7 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	    Tcl_NewWideIntObj(GetWindowLongPtrW((HWND)INT2PTR(hwnd), GWL_ID)));
+	    Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
     cch = GetWindowTextW((HWND)INT2PTR(hwnd), buf, cchBuf);
 	Tcl_DStringInit(&ds);
@@ -535,11 +545,11 @@ TestgetwindowinfoObjCmd(
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
-	    Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)INT2PTR(hwnd)))));
+	    Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
-    EnumChildWindows((HWND)INT2PTR(hwnd), EnumChildrenProc, (LPARAM)childrenObj);
-    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
+    EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", TCL_INDEX_NONE), childrenObj);
 
     Tcl_SetObjResult(interp, dictObj);
     return TCL_OK;

@@ -1,9 +1,9 @@
 # This file is a Tcl script to test entry widgets in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -63,24 +63,24 @@ proc ::_test_tmp::unsafeInterp {name} {
 
 
 set ::_test_tmp::script {
-    package require Tk
+    package require tk
     namespace eval ::_test_tmp {}
 
     proc ::_test_tmp::getPrimarySelection {} {
-        if {[catch {::tk::GetSelection . PRIMARY} sel]} {
-            set sel {}
-        }
-        return $sel
+	if {[catch {::tk::GetSelection . PRIMARY} sel]} {
+	    set sel {}
+	}
+	return $sel
     }
 
     proc ::_test_tmp::setPrimarySelection {} {
-        destroy .preset
-        text .preset -exportselection 1
-        .preset insert end OLD_VALUE
-        # pack .preset
-        .preset tag add sel 1.0 end-1c
-        update
-        return
+	destroy .preset
+	text .preset -exportselection 1
+	.preset insert end OLD_VALUE
+	# pack .preset
+	.preset tag add sel 1.0 end-1c
+	update
+	return
     }
 
     # Clearing the PRIMARY selection is troublesome.
@@ -88,123 +88,123 @@ set ::_test_tmp::script {
     # However, the window must continue to exist, or some X11 servers
     # will set the PRIMARY selection to something else.
     proc ::_test_tmp::clearPrimarySelection {} {
-        destroy .clear
-        text .clear -exportselection 1
-        .clear insert end TMP_VALUE
-        # pack .clear
-        .clear tag add sel 1.0 end-1c
-        update
-        .clear tag remove sel 1.0 end-1c
-        update
-        return
+	destroy .clear
+	text .clear -exportselection 1
+	.clear insert end TMP_VALUE
+	# pack .clear
+	.clear tag add sel 1.0 end-1c
+	update
+	.clear tag remove sel 1.0 end-1c
+	update
+	return
     }
 
     # If this interpreter can write to the PRIMARY
     # selection, the commands below will do so.
 
     proc ::_test_tmp::tryText {} {
-        text .t -exportselection 1
-        .t insert end PAYLOAD
-        pack .t
-        .t tag add sel 1.0 end-1c
-        update
-        return
+	text .t -exportselection 1
+	.t insert end PAYLOAD
+	pack .t
+	.t tag add sel 1.0 end-1c
+	update
+	return
     }
 
     proc ::_test_tmp::tryEntry {} {
-        entry .t -exportselection 1
-        .t insert end PAYLOAD
-        pack .t
-        .t selection range 0 end
-        update
-        return
+	entry .t -exportselection 1
+	.t insert end PAYLOAD
+	pack .t
+	.t selection range 0 end
+	update
+	return
     }
 
     proc ::_test_tmp::tryTtkEntry {} {
-        ::ttk::entry .t -exportselection 1
-        .t insert end PAYLOAD
-        pack .t
-        .t selection range 0 end
-        update
-        return
+	::ttk::entry .t -exportselection 1
+	.t insert end PAYLOAD
+	pack .t
+	.t selection range 0 end
+	update
+	return
     }
 
     proc ::_test_tmp::tryListbox {} {
-        listbox .t -exportselection 1
-        .t insert end list1 PAYLOAD list3
-        pack .t
-        .t selection set 1
-        update
-        return
+	listbox .t -exportselection 1
+	.t insert end list1 PAYLOAD list3
+	pack .t
+	.t selection set 1
+	update
+	return
     }
 
     proc ::_test_tmp::trySpinbox {ver} {
-        if {$ver == 1} {
-            # spinbox as entry
-            spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            .t delete 0 end
-            .t insert end PAYLOAD
-            pack .t
-            .t selection range 0 end
-            update
-            return
-            # selects PAYLOAD
-        } elseif {$ver == 2} {
-            # spinbox spun
-            spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            .t invoke buttonup
-            pack .t
-            .t selection range 0 end
-            update
-            return
-            # selects 2
-        } else {
-            # spinbox spun/selected/spun
-            spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            .t invoke buttonup
-            pack .t
-            .t selection range 0 end
-            update
-            .t invoke buttonup
-            update
-            return
-            # selects 3
-        }
+	if {$ver == 1} {
+	    # spinbox as entry
+	    spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    .t delete 0 end
+	    .t insert end PAYLOAD
+	    pack .t
+	    .t selection range 0 end
+	    update
+	    return
+	    # selects PAYLOAD
+	} elseif {$ver == 2} {
+	    # spinbox spun
+	    spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    .t invoke buttonup
+	    pack .t
+	    .t selection range 0 end
+	    update
+	    return
+	    # selects 2
+	} else {
+	    # spinbox spun/selected/spun
+	    spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    .t invoke buttonup
+	    pack .t
+	    .t selection range 0 end
+	    update
+	    .t invoke buttonup
+	    update
+	    return
+	    # selects 3
+	}
     }
 
     proc ::_test_tmp::tryTtkSpinbox {ver} {
-        if {$ver == 1} {
-            # ttk::spinbox as entry
-            ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            .t delete 0 end
-            .t insert end PAYLOAD
-            pack .t
-            .t selection range 0 end
-            update
-            return
-        } elseif {$ver == 2} {
-            # ttk::spinbox spun
-            ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            ::ttk::spinbox::Spin .t +1
-            ::ttk::spinbox::Spin .t +1
-            pack .t
-            # ttk::spinbox::Spin sets selection
-            update
-            return
-            # selects 2
-        } else {
-            # ttk::spinbox spun/selected/spun
-            ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
-            ::ttk::spinbox::Spin .t +1
-            ::ttk::spinbox::Spin .t +1
-            pack .t
-            # ttk::spinbox::Spin sets selection
-            update
-            ::ttk::spinbox::Spin .t +1
-            update
-            return
-            # selects 3
-        }
+	if {$ver == 1} {
+	    # ttk::spinbox as entry
+	    ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    .t delete 0 end
+	    .t insert end PAYLOAD
+	    pack .t
+	    .t selection range 0 end
+	    update
+	    return
+	} elseif {$ver == 2} {
+	    # ttk::spinbox spun
+	    ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    ::ttk::spinbox::Spin .t +1
+	    ::ttk::spinbox::Spin .t +1
+	    pack .t
+	    # ttk::spinbox::Spin sets selection
+	    update
+	    return
+	    # selects 2
+	} else {
+	    # ttk::spinbox spun/selected/spun
+	    ::ttk::spinbox .t -exportselection 1 -values {1 2 3 4 5}
+	    ::ttk::spinbox::Spin .t +1
+	    ::ttk::spinbox::Spin .t +1
+	    pack .t
+	    # ttk::spinbox::Spin sets selection
+	    update
+	    ::ttk::spinbox::Spin .t +1
+	    update
+	    return
+	    # selects 3
+	}
     }
 }
 

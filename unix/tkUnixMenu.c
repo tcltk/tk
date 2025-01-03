@@ -3,13 +3,12 @@
  *
  *	This module implements the UNIX platform-specific features of menus.
  *
- * Copyright (c) 1996-1998 Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkUnixInt.h"
 #include "tkMenu.h"
 
@@ -229,7 +228,7 @@ TkpConfigureMenuEntry(
  *	store the indicator diameter for radio button and check box entries.
  *
  * Results:
- * 	Standard TCL error.
+ *	Standard TCL error.
  *
  * Side effects:
  *	None on Unix.
@@ -291,7 +290,7 @@ TkpSetWindowMenuBar(
  */
 
 void
-TkpSetMainMenubar(
+Tk_SetMainMenubar(
     TCL_UNUSED(Tcl_Interp *),
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(const char *))
@@ -321,12 +320,12 @@ TkpSetMainMenubar(
 
 static void
 GetMenuIndicatorGeometry(
-    TkMenu *menuPtr,		/* The menu we are drawing. */
-    TkMenuEntry *mePtr,		/* The entry we are interested in. */
+    TkMenu *menuPtr,			/* The menu we are drawing. */
+    TkMenuEntry *mePtr,			/* The entry we are interested in. */
     TCL_UNUSED(Tk_Font),		/* The precalculated font */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The precalculated metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The precalculated metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     int borderWidth;
 
@@ -354,13 +353,13 @@ GetMenuIndicatorGeometry(
 		}
 	    }
 	} else {
-	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		    &borderWidth);
 	    *heightPtr = 0;
 	    *widthPtr = borderWidth;
 	}
     } else {
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	*heightPtr = 0;
 	*widthPtr = borderWidth;
@@ -392,15 +391,17 @@ GetMenuAccelGeometry(
     int *widthPtr,		/* The width of the acclerator area */
     int *heightPtr)		/* The height of the accelerator area */
 {
+    double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-    	*widthPtr = 2 * CASCADE_ARROW_WIDTH;
+	*widthPtr = 2 * CASCADE_ARROW_WIDTH * scalingLevel;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
 	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
     } else {
-    	*widthPtr = 0;
+	*widthPtr = 0;
     }
 }
 
@@ -436,14 +437,14 @@ DrawMenuEntryBackground(
 	int relief;
 	int activeBorderWidth;
 
-    	bgBorder = activeBorder;
+	bgBorder = activeBorder;
 
 	if ((menuPtr->menuType == MENUBAR)
 		&& ((menuPtr->postedCascade == NULL)
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    relief = TK_RELIEF_RAISED;
+	    relief = menuPtr->activeRelief;
 	}
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -489,6 +490,8 @@ DrawMenuEntryAccelerator(
 {
     XPoint points[3];
     int borderWidth, activeBorderWidth;
+    int arrowWidth = CASCADE_ARROW_WIDTH, arrowHeight = CASCADE_ARROW_HEIGHT;
+    double scalingLevel = TkScalingLevel(menuPtr->tkwin);
 
     /*
      * Draw accelerator or cascade arrow.
@@ -498,23 +501,25 @@ DrawMenuEntryAccelerator(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-    	points[0].x = x + width - borderWidth - activeBorderWidth
-		- CASCADE_ARROW_WIDTH;
-    	points[0].y = y + (height - CASCADE_ARROW_HEIGHT)/2;
-    	points[1].x = points[0].x;
-    	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
-    	points[2].x = points[0].x + CASCADE_ARROW_WIDTH;
-    	points[2].y = points[0].y + CASCADE_ARROW_HEIGHT/2;
-    	Tk_Fill3DPolygon(menuPtr->tkwin, d,
+	arrowWidth *= scalingLevel;
+	arrowHeight *= scalingLevel;
+
+	points[0].x = x + width - borderWidth - activeBorderWidth - arrowWidth;
+	points[0].y = y + (height - arrowHeight)/2;
+	points[1].x = points[0].x;
+	points[1].y = points[0].y + arrowHeight;
+	points[2].x = points[0].x + arrowWidth;
+	points[2].y = points[0].y + arrowHeight/2;
+	Tk_Fill3DPolygon(menuPtr->tkwin, d,
 		(mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder,
 		points, 3, DECORATION_BORDER_WIDTH,
-	    	(menuPtr->postedCascade == mePtr)
-	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
+		(menuPtr->postedCascade == mePtr) ?
+		TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
     } else if (mePtr->accelPtr != NULL) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
@@ -547,18 +552,18 @@ DrawMenuEntryAccelerator(
 
 static void
 DrawMenuEntryIndicator(
-    TkMenu *menuPtr,		/* The menu we are drawing */
-    TkMenuEntry *mePtr,		/* The entry we are drawing */
-    Drawable d,			/* The drawable to draw into */
-    Tk_3DBorder border,		/* The background color */
-    XColor *indicatorColor,	/* The color to draw indicators with */
-    XColor *disableColor,	/* The color use use when disabled */
+    TkMenu *menuPtr,			/* The menu we are drawing */
+    TkMenuEntry *mePtr,			/* The entry we are drawing */
+    Drawable d,				/* The drawable to draw into */
+    Tk_3DBorder border,			/* The background color */
+    XColor *indicatorColor,		/* The color to draw indicators with */
+    XColor *disableColor,		/* The color use use when disabled */
     TCL_UNUSED(Tk_Font),		/* The font to draw with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The font metrics of the font */
-    int x,			/* The left of the entry rect */
-    int y,			/* The top of the entry rect */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The font metrics of the font */
+    int x,				/* The left of the entry rect */
+    int y,				/* The top of the entry rect */
     TCL_UNUSED(int),			/* Width of menu entry */
-    int height)			/* Height of menu entry */
+    int height)				/* Height of menu entry */
 {
     /*
      * Draw check-button indicator.
@@ -621,18 +626,17 @@ DrawMenuEntryIndicator(
 
 static void
 DrawMenuSeparator(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are drawing */
-    Drawable d,			/* The drawable we are using */
+    Drawable d,				/* The drawable we are using */
     TCL_UNUSED(GC),			/* The gc to draw into */
     TCL_UNUSED(Tk_Font),		/* The font to draw with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The font metrics from the font */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The font metrics from the font */
     int x, int y,
     int width, int height)
 {
     XPoint points[2];
     Tk_3DBorder border;
-
     if (menuPtr->menuType == MENUBAR) {
 	return;
     }
@@ -694,7 +698,7 @@ DrawMenuEntryLabel(
      */
 
     if (mePtr->image != NULL) {
-    	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
@@ -779,16 +783,16 @@ DrawMenuEntryLabel(
      */
 
     if (mePtr->image != NULL) {
-    	if ((mePtr->selectImage != NULL)
-	    	&& (mePtr->entryFlags & ENTRY_SELECTED)) {
+	if ((mePtr->selectImage != NULL)
+		&& (mePtr->entryFlags & ENTRY_SELECTED)) {
 	    Tk_RedrawImage(mePtr->selectImage, 0, 0,
 		    imageWidth, imageHeight, d, leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height-imageHeight)/2 + imageYOffset));
-    	} else {
+	} else {
 	    Tk_RedrawImage(mePtr->image, 0, 0, imageWidth,
 		    imageHeight, d, leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height-imageHeight)/2 + imageYOffset));
-    	}
+	}
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
@@ -800,7 +804,7 @@ DrawMenuEntryLabel(
     if ((mePtr->compound != COMPOUND_NONE) || !haveImage) {
 	int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 
-    	if (mePtr->labelLength > 0) {
+	if (mePtr->labelLength > 0) {
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
@@ -809,7 +813,7 @@ DrawMenuEntryLabel(
 	    DrawMenuUnderline(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		    x + textXOffset, y + textYOffset,
 		    width, height);
-    	}
+	}
     }
 
     if (mePtr->state == ENTRY_DISABLED) {
@@ -853,17 +857,17 @@ DrawMenuUnderline(
     int x, int y,
     TCL_UNUSED(int), int height)
 {
-    if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
+    if (mePtr->labelPtr != NULL) {
 	int len;
 
 	len = Tcl_GetCharLength(mePtr->labelPtr);
-	if (mePtr->underline < len) {
+	if (mePtr->underline < len && mePtr->underline >= -len) {
 	    int activeBorderWidth, leftEdge, ch;
 	    const char *label, *start, *end;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = TkUtfAtIndex(label, mePtr->underline);
-	    end = start + TkUtfToUniChar(start, &ch);
+	    start = Tcl_UtfAtIndex(label, (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
+	    end = start + Tcl_UtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
@@ -902,7 +906,7 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y, int index)
+    int x, int y, Tcl_Size index)
 {
     return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 }
@@ -932,17 +936,17 @@ int
 TkpPostTearoffMenu(
     TCL_UNUSED(Tcl_Interp *),	/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int index)	/* The root X,Y coordinates where the
+    int x, int y, Tcl_Size index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
-    	return result;
+	return result;
     }
 
     /*
@@ -951,7 +955,7 @@ TkpPostTearoffMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -1028,9 +1032,9 @@ GetMenuSeparatorGeometry(
     TCL_UNUSED(TkMenu *),		/* The menu we are measuring */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are measuring */
     TCL_UNUSED(Tk_Font),		/* The precalculated font */
-    const Tk_FontMetrics *fmPtr,/* The precalcualted font metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    const Tk_FontMetrics *fmPtr,	/* The precalcualted font metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     *widthPtr = 0;
     *heightPtr = fmPtr->linespace;
@@ -1054,12 +1058,12 @@ GetMenuSeparatorGeometry(
 
 static void
 GetTearoffEntryGeometry(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are measuring */
-    Tk_Font tkfont,		/* The precalculated font */
-    const Tk_FontMetrics *fmPtr,/* The precalculated font metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    Tk_Font tkfont,			/* The precalculated font */
+    const Tk_FontMetrics *fmPtr,	/* The precalculated font metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
@@ -1094,8 +1098,9 @@ TkpComputeMenubarGeometry(
 {
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
-    int width, height, i, j, x, y, currentRowHeight, maxWidth;
-    int maxWindowWidth, lastRowBreak, lastEntry;
+    int width, height, x, y, currentRowHeight, maxWidth;
+    Tcl_Size i, j, lastRowBreak;
+    int maxWindowWidth, lastEntry;
     int activeBorderWidth, helpMenuIndex = -1;
     TkMenuEntry *mePtr;
 
@@ -1116,7 +1121,7 @@ TkpComputeMenubarGeometry(
 	    maxWindowWidth = 0x7FFFFFF;
 	}
 	currentRowHeight = 0;
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	x = y = borderWidth;
 	lastRowBreak = 0;
@@ -1270,12 +1275,12 @@ TkpComputeMenubarGeometry(
 
 static void
 DrawTearoffEntry(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are drawing */
-    Drawable d,			/* The drawable we are drawing into */
+    Drawable d,				/* The drawable we are drawing into */
     TCL_UNUSED(GC),			/* The gc we are drawing with */
     TCL_UNUSED(Tk_Font),		/* The font we are drawing with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The metrics we are drawing with */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The metrics we are drawing with */
     int x, int y,
     int width, int height)
 {
@@ -1327,8 +1332,7 @@ DrawTearoffEntry(
 void
 TkpInitializeMenuBindings(
     TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
-    TCL_UNUSED(Tk_BindingTable))
-				/* The table to add to. */
+    TCL_UNUSED(Tk_BindingTable))	/* The table to add to. */
 {
     /*
      * Nothing to do.
@@ -1375,16 +1379,16 @@ SetHelpMenu(
 	    cascadeEntryPtr != NULL;
 	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if ((cascadeEntryPtr->menuPtr->menuType == MENUBAR)
-		&& (cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin != NULL)
-		&& (menuPtr->masterMenuPtr->tkwin != NULL)) {
-	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
+		&& (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL)
+		&& (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
 	    char *helpMenuName = (char *)ckalloc(strlen(Tk_PathName(
-		    masterMenuPtr->tkwin)) + strlen(".help") + 1);
+		    mainMenuPtr->tkwin)) + strlen(".help") + 1);
 
-	    strcpy(helpMenuName, Tk_PathName(masterMenuPtr->tkwin));
+	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin));
 	    strcat(helpMenuName, ".help");
 	    if (strcmp(helpMenuName,
-		    Tk_PathName(menuPtr->masterMenuPtr->tkwin)) == 0) {
+		    Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
 		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU;
 	    } else {
 		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU;
@@ -1446,12 +1450,12 @@ TkpDrawMenuEntry(
 	    gc = menuPtr->activeGC;
 	}
     } else {
-    	TkMenuEntry *cascadeEntryPtr;
-    	int parentDisabled = 0;
+	TkMenuEntry *cascadeEntryPtr;
+	int parentDisabled = 0;
 
-    	for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
-    		cascadeEntryPtr != NULL;
-    		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
+	for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
+		cascadeEntryPtr != NULL;
+		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	    if (cascadeEntryPtr->namePtr != NULL) {
 		const char *name = Tcl_GetString(cascadeEntryPtr->namePtr);
 
@@ -1460,9 +1464,9 @@ TkpDrawMenuEntry(
 			parentDisabled = 1;
 		    }
 		    break;
-    	    	}
-    	    }
-    	}
+		}
+	    }
+	}
 
 	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
@@ -1575,12 +1579,12 @@ GetMenuLabelGeometry(
     int haveImage = 0;
 
     if (mePtr->image != NULL) {
-    	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
+	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
 	haveImage = 1;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
-    	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
+	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
 	haveImage = 1;
     } else {
 	*heightPtr = 0;
@@ -1596,7 +1600,7 @@ GetMenuLabelGeometry(
 	 * Either it is compound or we don't have an image.
 	 */
 
-    	if (mePtr->labelPtr != NULL) {
+	if (mePtr->labelPtr != NULL) {
 	    int textWidth;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
@@ -1652,7 +1656,7 @@ GetMenuLabelGeometry(
 	     */
 
 	    *heightPtr = fmPtr->linespace;
-    	}
+	}
     }
     *heightPtr += 1;
 }
@@ -1682,7 +1686,8 @@ TkpComputeStandardMenuGeometry(
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int x, y, height, width, indicatorSpace, labelWidth, accelWidth;
-    int windowWidth, windowHeight, accelSpace, i, j, lastColumnBreak = 0;
+    int windowWidth, windowHeight, accelSpace;
+    Tcl_Size i, j, lastColumnBreak = 0;
     TkMenuEntry *mePtr;
     int borderWidth, activeBorderWidth;
 
@@ -1690,7 +1695,7 @@ TkpComputeStandardMenuGeometry(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
@@ -1768,35 +1773,35 @@ TkpComputeStandardMenuGeometry(
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > labelWidth) {
-	    	labelWidth = width;
+		labelWidth = width;
 	    }
 
 	    GetMenuAccelGeometry(menuPtr, mePtr, tkfont,
 		    fmPtr, &width, &height);
 	    if (height > mePtr->height) {
-	    	mePtr->height = height;
+		mePtr->height = height;
 	    }
 	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > accelWidth) {
-	    	accelWidth = width;
+		accelWidth = width;
 	    }
 
 	    GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
 		    &width, &height);
 	    if (height > mePtr->height) {
-	    	mePtr->height = height;
+		mePtr->height = height;
 	    }
 	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
 	    }
 	    if (width > indicatorSpace) {
-	    	indicatorSpace = width;
+		indicatorSpace = width;
 	    }
 
 	    mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT;
-    	}
+	}
 	mePtr->y = y;
 	y += mePtr->height;
 	if (y > windowHeight) {
@@ -1854,7 +1859,7 @@ TkpComputeStandardMenuGeometry(
 
 void
 TkpMenuNotifyToplevelCreate(
-    TCL_UNUSED(Tcl_Interp *),		/* The interp the menu lives in. */
+    TCL_UNUSED(Tcl_Interp *),	/* The interp the menu lives in. */
     TCL_UNUSED(const char *))	/* The name of the menu to reconfigure. */
 {
     /*

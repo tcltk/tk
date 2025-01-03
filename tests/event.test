@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in tkEvent.c.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -20,53 +20,6 @@ namespace import -force tcltest::test
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
-    scan A %c start
-    scan Z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-	set l [format %c $i]
-	set keypress_lookup($l) $l
-    }
-
-    scan a %c start
-    scan z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-	set l [format %c $i]
-	set keypress_lookup($l) $l
-    }
-
-    scan 0 %c start
-    scan 9 %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-	set l [format %c $i]
-	set keypress_lookup($l) $l
-    }
-
-    # Most punctuation
-    array set keypress_lookup {
-	! exclam
-	% percent
-	& ampersand
-	( parenleft
-	) parenright
-	* asterisk
-	+ plus
-	, comma
-	. period
-	/ slash
-	: colon
-	< less
-	= equal
-	? question
-	@ at
-	^ asciicircum
-	_ underscore
-	| bar
-	~ asciitilde
-	' apostrophe
-    }
     # Characters with meaning to Tcl...
     array set keypress_lookup [list \
 	    -    minus \
@@ -871,8 +824,9 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     _pause 200
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
-    _pause 200
+    update idletasks
     wm deiconify .top2
+    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
@@ -880,13 +834,20 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     bind . <Enter> {lappend res %W}
     set res [list ]
     destroy .top2
+    update idletasks
     _pause 200
     set res
 } -cleanup {
     deleteWindows
     bind . <Enter> $EnterBind
 } -result {.}
-test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
+
+# This test fails sporadically when run on the macOS CI runner. It does
+# not seem to fail on real computers.  It is not needed since the same
+# thing is tested by 9.13.  So it is simpler to constrain it as notAqua.
+test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} \
+-constraints { notAqua} \
+-setup {
     set iconified false
     if {[winfo ismapped .]} {
 	wm iconify .
@@ -899,10 +860,10 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     wm deiconify .top1
     _pause 200
     toplevel .top2 -width 200 -height 200
-    _pause 200
     wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
     _pause 200
     wm deiconify .top2
+    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
@@ -920,7 +881,313 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
+proc waitForWindowEvent {w event {timeout 1000}} {
+# This proc is intended to overcome latency of windowing system
+# notifications when toplevel windows are involved. These latencies vary
+# considerably with the window manager in use, with the system load,
+# with configured scheduling priorities for processes, etc ...
+# Waiting for the corresponding window events evades the trouble that is
+# associated with the alternative: waiting or halting the Tk process for a
+# fixed amount of time (using "after ms"). With the latter strategy it's
+# always a gamble how much waiting time is enough on an end user's system.
+# It also leads to long fixed waiting times in order to be on the safe side.
+
+    variable _windowEvent
+
+    # Use counter as a unique ID to prevent subsequent waits
+    # from interfering with each other.
+    set counter [incr _windowEvent(counter)]
+    set _windowEvent($counter) 1
+    set savedBinding [bind $w $event]
+    bind $w $event [list +waitForWindowEvent.signal $counter]
+    set afterID [after $timeout [list set _windowEvent($counter) -1]]
+    vwait _windowEvent($counter)
+    set late [expr {$_windowEvent($counter) == -1}]
+    bind $w $event $savedBinding
+    unset _windowEvent($counter)
+    if {$late} {
+	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
+    } else {
+	after cancel $afterID
+    }
+}
+proc waitForWindowEvent.signal {counter} {
+# Helper proc that records the triggering of a window event.
+    incr ::_windowEvent($counter)
+}
+
+proc create_and_pack_frames {{w {}}} {
+    frame $w.f1 -bg blue -width 200 -height 200
+    pack propagate $w.f1 0
+    frame $w.f1.f2 -bg yellow -width 100 -height 100
+    pack $w.f1.f2 $w.f1 -side bottom -anchor se
+    update idletasks
+}
+
+proc setup_win_mousepointer {w} {
+# Position the window and the mouse pointer as an initial state for some tests.
+# The so-called "pointer window" is the $w window that will now contain the mouse pointer.
+    wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
+    toplevel $w
+    pack propagate $w 0
+    wm geometry $w 300x300+100+100
+    tkwait visibility $w
+    update; # service remaining screen drawing events (e.g. <Expose>)
+    set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
+    event generate $w <Motion> -warp 1 -x 250 -y 250
+    if {($pointerWin ne $w) && ([tk windowingsystem] ne "aqua")} {
+	waitForWindowEvent $w <Enter>
+    } else {
+	controlPointerWarpTiming
+    }
+}
+
+test event-9.11 {pointer window container = parent} -setup {
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
+    _pause 200; # needed for Windows
+    update idletasks; # finish display of window
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one.f1.f2
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyInferior .one.f1|}
+
+test event-9.12 {pointer window container != parent} -setup {
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    pack propagate .one.f1.f2 0
+    pack [frame .one.g -bg orange -width 80 -height 80] -anchor se -side bottom -in .one.f1.f2
+    wm deiconify .one
+    tkwait visibility .one.g
+    event generate .one <Motion> -warp 1 -x 250 -y 250
+    _pause 200; # needed for Windows
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one.g
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
+
+test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
+    setup_win_mousepointer .one
+    toplevel .two
+    wm geometry .two 300x300+150+150
+    wm withdraw .two
+    wm deiconify .two
+    waitForWindowEvent .two <Enter>
+    update idletasks; # finish displaying windows
+    set result |
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .two
+    waitForWindowEvent .one <Enter>
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyNonlinear .one|}
+
+test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    toplevel .two
+    wm geometry .two 300x300+150+150
+    wm withdraw .two
+    wm deiconify .one
+    wm deiconify .two
+    waitForWindowEvent .two <Enter>
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .two
+    waitForWindowEvent .one.f1.f2 <Enter>
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
+
+test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+#    destroy .one
+    toplevel .two
+    wm geometry .two 300x300+150+150
+    wm deiconify .two
+    waitForWindowEvent .two <Enter>
+    update idletasks; # finish displaying .two
+    event generate .two <Motion> -warp 1 -x 275 -y 275
+    controlPointerWarpTiming
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .two
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|}
+
+test event-9.16 {Successive destructions (pointer window + parent), single generation of crossing events} -setup {
+    # Tests correctness of overwriting the dead window struct in
+    # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
+    update idletasks; # finish displaying window
+    _pause 200; # needed for Windows
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one.f1
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyInferior .one|}
+
+test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
+    # Tests correctness of overwriting the dead window struct in
+    # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
+    update idletasks; # finish displaying window
+    _pause 200; # needed for Windows
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one.f1.f2
+    update; # make sure window is gone
+    destroy .one.f1
+    update; # make sure window is gone
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
+
+test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
+    setup_win_mousepointer .one
+    toplevel .two
+    pack propagate .two 0
+    wm geometry .two 300x300+100+100
+    create_and_pack_frames .two
+    wm deiconify .two
+    waitForWindowEvent .two.f1.f2 <Enter>
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .two
+    waitForWindowEvent .one <Enter>
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    unset result
+} -result {|<Enter> NotifyNonlinear .one|}
+
+test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+#    destroy .one
+    toplevel .two
+    pack propagate .two 0
+    wm geometry .two 300x300+100+100
+    create_and_pack_frames .two
+    wm deiconify .two
+    toplevel .three
+    pack propagate .three 0
+    wm geometry .three 300x300+110+110
+    create_and_pack_frames .three
+    wm deiconify .three
+    waitForWindowEvent .three.f1.f2 <Enter>
+    update idletasks; # finish displaying windows
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .three
+    waitForWindowEvent .two.f1.f2 <Enter>
+    update idletasks; #finish destroying .two
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .one
+    destroy .two
+    unset result
+} -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
+
+test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+    destroy .one
+    toplevel .two
+    pack propagate .two 0
+    wm geometry .two 300x300+100+100
+    create_and_pack_frames .two
+    wm deiconify .two
+    waitForWindowEvent .two.f1.f2 <Enter>
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .two
+    update idletasks; #finish destroying .two
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    unset result
+} -result {|}
+
 # cleanup
+# macOS sometimes has trouble deleting the test window,
+# causing a failure in focus.test.
+_pause 200;
+deleteWindows
 update
 unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
@@ -929,6 +1196,8 @@ rename _keypress {}
 rename _pause {}
 rename _text_ind_to_x_y {}
 rename _get_selection {}
+rename create_and_pack_frames {}
+rename setup_win_mousepointer {}
 
 cleanupTests
 return

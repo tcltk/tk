@@ -1,21 +1,23 @@
 # This file is a Tcl script to test the tk command.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
-# Copyright (c) 2002 ActiveState Corporation.
+# Copyright © 1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2002 ActiveState Corporation.
 
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+testConstraint testprintf [llength [info command testprintf]]
+
 test tk-1.1 {tk command: general} -body {
     tk
 } -returnCodes error -result {wrong # args: should be "tk subcommand ?arg ...?"}
 test tk-1.2 {tk command: general} -body {
     tk xyz
-} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, scaling, useinputmethods, or windowingsystem}
+} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
 
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
@@ -72,12 +74,12 @@ test tk-3.9 {tk command: scaling: too big} -body {
 test tk-3.10 {tk command: scaling: widthmm} -body {
     tk scaling 1.25
     expr {int((25.4*[winfo screenwidth .])/(72*1.25) + 0.5) \
-        - [winfo screenmmwidth .]}
+	- [winfo screenmmwidth .]}
 } -result 0
 test tk-3.11 {tk command: scaling: heightmm} -body {
     tk scaling 1.25
     expr {int((25.4*[winfo screenheight .])/(72*1.25) + 0.5) \
-        - [winfo screenmmheight .]}
+	- [winfo screenmmheight .]}
 } -result 0
 tk scaling $scaling
 
@@ -176,6 +178,10 @@ test tk-7.2 {tk inactive reset in a safe interpreter} -body {
 } -cleanup {
     ::safe::interpDelete foo
 } -returnCodes 1 -result {resetting the user inactivity timer is not allowed in a safe interpreter}
+
+test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expected on all platforms} -constraints testprintf -body {
+    testprintf -21474836480
+} -result {-21474836480 18446744052234715136}
 
 # tests of [tk busy] in busy.test
 

@@ -3,7 +3,7 @@
  *
  *	This file contains X specific drawing routines.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,7 +24,7 @@ typedef struct ScrollInfo {
     int done;			/* Flag is 0 until filtering is done. */
     Display *display;		/* Display to filter. */
     Window window;		/* Window to filter. */
-    TkRegion region;		/* Region into which damage is accumulated. */
+    Region region;		/* Region into which damage is accumulated. */
     int dx, dy;			/* Amount by which window was shifted. */
 } ScrollInfo;
 
@@ -61,10 +61,10 @@ TkScrollWindow(
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     Tk_RestrictProc *prevProc;
-    ClientData prevArg;
+    void *prevArg;
     ScrollInfo info;
 
     XCopyArea(Tk_Display(tkwin), Tk_WindowId(tkwin), Tk_WindowId(tkwin), gc,
@@ -90,7 +90,7 @@ TkScrollWindow(
     }
     Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
-    if (XEmptyRegion((Region) damageRgn)) {
+    if (XEmptyRegion(damageRgn)) {
 	return 0;
     } else {
 	return 1;
@@ -119,7 +119,7 @@ TkScrollWindow(
 
 static Tk_RestrictAction
 ScrollRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     ScrollInfo *info = (ScrollInfo *) arg;
@@ -141,8 +141,8 @@ ScrollRestrictProc(
 	rect.y = eventPtr->xgraphicsexpose.y;
 	rect.width = eventPtr->xgraphicsexpose.width;
 	rect.height = eventPtr->xgraphicsexpose.height;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
 
 	if (eventPtr->xgraphicsexpose.count == 0) {
 	    info->done = 1;
@@ -160,12 +160,12 @@ ScrollRestrictProc(
 	rect.y = eventPtr->xexpose.y;
 	rect.width = eventPtr->xexpose.width;
 	rect.height = eventPtr->xexpose.height;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
 	rect.x += info->dx;
 	rect.y += info->dy;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
     } else {
 	return TK_DEFER_EVENT;
     }
@@ -175,7 +175,7 @@ ScrollRestrictProc(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -195,20 +195,22 @@ ScrollRestrictProc(
  */
 
 void
-TkpDrawHighlightBorder(
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
     int highlightWidth,
     Drawable drawable)
 {
+    (void)bgGC;
+
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawFrame --
+ * TkpDrawFrameEx --
  *
  *	This function draws the rectangular frame area.
  *
@@ -222,14 +224,15 @@ TkpDrawHighlightBorder(
  */
 
 void
-TkpDrawFrame(
+TkpDrawFrameEx(
     Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
     int relief)
 {
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, highlightWidth,
+    Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
 	    highlightWidth, Tk_Width(tkwin) - 2*highlightWidth,
 	    Tk_Height(tkwin) - 2*highlightWidth, borderWidth, relief);
 }

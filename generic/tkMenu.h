@@ -4,7 +4,7 @@
  *	Declarations shared among all of the files that implement menu
  *	widgets.
  *
- * Copyright (c) 1996-1998 Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -64,11 +64,11 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-    int labelLength;		/* Number of non-NULL characters in label. */
+    Tcl_Size labelLength;	/* Number of non-NULL characters in label. */
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline (<0 means don't
+				 * of character to underline (INT_MIN means don't
 				 * underline anything). */
     Tcl_Obj *underlinePtr;	/* Index of character to underline. */
     Tcl_Obj *bitmapPtr;		/* Bitmap to display in menu entry, or NULL.
@@ -85,7 +85,7 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-    int accelLength;		/* Number of non-NULL characters in
+    Tcl_Size accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
@@ -116,15 +116,15 @@ typedef struct TkMenuEntry {
 				 * always 0 for tearoff and separator
 				 * entries. */
     int hideMargin;		/* If this is 0, then the item has enough
-    				 * margin to accommodate a standard check mark
-    				 * and a default right margin. If this is 1,
-    				 * then the item has no such margins, and
-    				 * checkbuttons and radiobuttons with this set
-    				 * will have a rectangle drawn in the
-    				 * indicator around the item if the item is
-    				 * checked. This is useful for palette menus.
-    				 * This field is ignored for separators and
-    				 * tearoffs. */
+				 * margin to accommodate a standard check mark
+				 * and a default right margin. If this is 1,
+				 * then the item has no such margins, and
+				 * checkbuttons and radiobuttons with this set
+				 * will have a rectangle drawn in the
+				 * indicator around the item if the item is
+				 * checked. This is useful for palette menus.
+				 * This field is ignored for separators and
+				 * tearoffs. */
     int indicatorSpace;		/* The width of the indicator space for this
 				 * entry. */
     int labelWidth;		/* Number of pixels to allow for displaying
@@ -181,28 +181,33 @@ typedef struct TkMenuEntry {
     int entryFlags;		/* Various flags. See below for
 				 * definitions. */
     int index;			/* Need to know which index we are. This is
-    				 * zero-based. This is the top-left entry of
-    				 * the menu. */
-
+				 * zero-based. This is the top-left entry of
+				 * the menu. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_HashEntry *entryPtr;	/* Back-pointer to hash table entry */
+#endif
     /*
      * Bookeeping for main menus and cascade menus.
      */
 
     struct TkMenuReferences *childMenuRefPtr;
-    				/* A pointer to the hash table entry for the
-    				 * child menu. Stored here when the menu entry
-    				 * is configured so that a hash lookup is not
-    				 * necessary later.*/
+				/* A pointer to the hash table entry for the
+				 * child menu. Stored here when the menu entry
+				 * is configured so that a hash lookup is not
+				 * necessary later.*/
     struct TkMenuEntry *nextCascadePtr;
-    				/* The next cascade entry that is a parent of
-    				 * this entry's child cascade menu. NULL end
-    				 * of list, this is not a cascade entry, or
-    				 * the menu that this entry point to does not
-    				 * yet exist. */
+				/* The next cascade entry that is a parent of
+				 * this entry's child cascade menu. NULL end
+				 * of list, this is not a cascade entry, or
+				 * the menu that this entry point to does not
+				 * yet exist. */
     TkMenuPlatformEntryData platformEntryData;
-    				/* The data for the specific type of menu.
+				/* The data for the specific type of menu.
 				 * Depends on platform and menu type what kind
 				 * of options are in this structure. */
+#if TK_MAJOR_VERSION < 9
+    Tcl_HashEntry *entryPtr;	/* Back-pointer to hash table entry */
+#endif
 } TkMenuEntry;
 
 /*
@@ -244,8 +249,8 @@ typedef struct TkMenuEntry {
  */
 
 #define ENTRY_ACTIVE 0
-#define ENTRY_NORMAL 1
-#define ENTRY_DISABLED 2
+#define ENTRY_DISABLED 1
+#define ENTRY_NORMAL 2
 
 /*
  * A data structure of the following type is kept for each menu widget:
@@ -263,11 +268,11 @@ typedef struct TkMenu {
     Tcl_Command widgetCmd;	/* Token for menu's widget command. */
     TkMenuEntry **entries;	/* Array of pointers to all the entries in the
 				 * menu. NULL means no entries. */
-    int numEntries;		/* Number of elements in entries. */
-    int active;			/* Index of active entry. -1 means nothing
-				 * active. */
+    Tcl_Size numEntries;		/* Number of elements in entries. */
+    Tcl_Size active;			/* Index of active entry. TCL_INDEX_NONE means
+				 * nothing active. */
     int menuType;		/* MAIN_MENU, TEAROFF_MENU, or MENUBAR. See
-    				 * below for definitions. */
+				 * below for definitions. */
     Tcl_Obj *menuTypePtr;	/* Used to control whether created tkwin is a
 				 * toplevel or not. "normal", "menubar", or
 				 * "toplevel" */
@@ -278,12 +283,20 @@ typedef struct TkMenu {
 
     Tcl_Obj *borderPtr;		/* Structure used to draw 3-D border and
 				 * background for menu. */
-    Tcl_Obj *borderWidthPtr;	/* Width of border around whole menu. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *borderWidthObj;	/* Width of border around whole menu. */
+#else
+    Tcl_Obj *borderWidthPtr;
+#endif
     Tcl_Obj *activeBorderPtr;	/* Used to draw background and border for
 				 * active element (if any). */
     Tcl_Obj *activeBorderWidthPtr;
 				/* Width of border around active element. */
-    Tcl_Obj *reliefPtr;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
+#if TK_MAJOR_VERSION > 8
+    int relief;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
+#else
+    Tcl_Obj *reliefPtr;
+#endif
     Tcl_Obj *fontPtr;		/* Text font for menu entries. */
     Tcl_Obj *fgPtr;		/* Foreground color for entries. */
     Tcl_Obj *disabledFgPtr;	/* Foreground color when disabled. NULL means
@@ -321,16 +334,16 @@ typedef struct TkMenu {
      */
 
     int tearoff;		/* 1 means this menu can be torn off. On some
-    				 * platforms, the user can drag an outline of
-    				 * the menu by just dragging outside of the
-    				 * menu, and the tearoff is created where the
-    				 * mouse is released. On others, an indicator
-    				 * (such as a dashed stripe) is drawn, and
-    				 * when the menu is selected, the tearoff is
-    				 * created. */
+				 * platforms, the user can drag an outline of
+				 * the menu by just dragging outside of the
+				 * menu, and the tearoff is created where the
+				 * mouse is released. On others, an indicator
+				 * (such as a dashed stripe) is drawn, and
+				 * when the menu is selected, the tearoff is
+				 * created. */
     Tcl_Obj *titlePtr;		/* The title to use when this menu is torn
-    				 * off. If this is NULL, a default scheme will
-    				 * be used to generate a title for tearoff. */
+				 * off. If this is NULL, a default scheme will
+				 * be used to generate a title for tearoff. */
     Tcl_Obj *tearoffCommandPtr;	/* If non-NULL, points to a command to run
 				 * whenever the menu is torn-off. */
     Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option; not used in the
@@ -338,9 +351,9 @@ typedef struct TkMenu {
 				 * scripts. Malloc'ed, but may be NULL. */
     Tcl_Obj *cursorPtr;		/* Current cursor for window, or NULL. */
     Tcl_Obj *postCommandPtr;	/* Used to detect cycles in cascade hierarchy
-    				 * trees when preprocessing postcommands on
-    				 * some platforms. See PostMenu for more
-    				 * details. */
+				 * trees when preprocessing postcommands on
+				 * some platforms. See PostMenu for more
+				 * details. */
     int postCommandGeneration;	/* Need to do pre-invocation post command
 				 * traversal. */
     int menuFlags;		/* Flags for use by X; see below for
@@ -349,25 +362,25 @@ typedef struct TkMenu {
 				 * that is currently posted or NULL if no
 				 * submenu posted. */
     struct TkMenu *nextInstancePtr;
-    				/* The next instance of this menu in the
-    				 * chain. */
-    struct TkMenu *masterMenuPtr;
-    				/* A pointer to the original menu for this
-    				 * clone chain. Points back to this structure
-    				 * if this menu is a main menu. */
+				/* The next instance of this menu in the
+				 * chain. */
+    struct TkMenu *mainMenuPtr;
+				/* A pointer to the original menu for this
+				 * clone chain. Points back to this structure
+				 * if this menu is a main menu. */
     void *reserved1; /* not used any more. */
     Tk_Window parentTopLevelPtr;/* If this menu is a menubar, this is the
-    				 * toplevel that owns the menu. Only
-    				 * applicable for menubar clones. */
+				 * toplevel that owns the menu. Only
+				 * applicable for menubar clones. */
     struct TkMenuReferences *menuRefPtr;
-    				/* Each menu is hashed into a table with the
-    				 * name of the menu's window as the key. The
-    				 * information in this hash table includes a
-    				 * pointer to the menu (so that cascades can
-    				 * find this menu), a pointer to the list of
-    				 * toplevel widgets that have this menu as its
-    				 * menubar, and a list of menu entries that
-    				 * have this menu specified as a cascade. */
+				/* Each menu is hashed into a table with the
+				 * name of the menu's window as the key. The
+				 * information in this hash table includes a
+				 * pointer to the menu (so that cascades can
+				 * find this menu), a pointer to the list of
+				 * toplevel widgets that have this menu as its
+				 * menubar, and a list of menu entries that
+				 * have this menu specified as a cascade. */
     TkMenuPlatformData platformData;
 				/* The data for the specific type of menu.
 				 * Depends on platform and menu type what kind
@@ -378,6 +391,9 @@ typedef struct TkMenu {
 				/* We actually have to allocate these because
 				 * multiple menus get changed during one
 				 * ConfigureMenu call. */
+    int activeRelief;	/* 3-d effect for active element. */
+    Tcl_HashTable items;	/* Map: id -> entry */
+    int serial;			/* Next item # for autogenerated ids */
 } TkMenu;
 
 /*
@@ -388,7 +404,7 @@ typedef struct TkMenu {
 
 typedef struct TkMenuTopLevelList {
     struct TkMenuTopLevelList *nextPtr;
-    				/* The next window in the list. */
+				/* The next window in the list. */
     Tk_Window tkwin;		/* The window that has this menu as its
 				 * menubar. */
 } TkMenuTopLevelList;
@@ -409,18 +425,18 @@ typedef struct TkMenuTopLevelList {
 
 typedef struct TkMenuReferences {
     struct TkMenu *menuPtr;	/* The menu data structure. This is NULL if
-    				 * the menu does not exist. */
+				 * the menu does not exist. */
     TkMenuTopLevelList *topLevelListPtr;
-    				/* First in the list of all toplevels that
-    				 * have this menu as its menubar. NULL if no
-    				 * toplevel widgets have this menu as its
-    				 * menubar. */
+				/* First in the list of all toplevels that
+				 * have this menu as its menubar. NULL if no
+				 * toplevel widgets have this menu as its
+				 * menubar. */
     TkMenuEntry *parentEntryPtr;/* First in the list of all cascade menu
-    				 * entries that have this menu as their child.
-    				 * NULL means no cascade entries. */
+				 * entries that have this menu as their child.
+				 * NULL means no cascade entries. */
     Tcl_HashEntry *hashEntryPtr;/* This is needed because the pathname of the
-    				 * window (which is what we hash on) may not
-    				 * be around when we are deleting. */
+				 * window (which is what we hash on) may not
+				 * be around when we are deleting. */
 } TkMenuReferences;
 
 /*
@@ -460,10 +476,9 @@ typedef struct TkMenuReferences {
  */
 
 #define UNKNOWN_TYPE		-1
-#define MAIN_MENU 		0
-#define MASTER_MENU 		0
-#define TEAROFF_MENU 		1
-#define MENUBAR 		2
+#define MENUBAR		0
+#define MAIN_MENU		1
+#define TEAROFF_MENU		2
 
 /*
  * Various geometry definitions:
@@ -478,7 +493,7 @@ typedef struct TkMenuReferences {
  * the outside world:
  */
 
-MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, Tcl_Size index);
 MODULE_SCOPE void	TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
 MODULE_SCOPE TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
 			    const char *name);
@@ -491,24 +506,22 @@ MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 			    Tcl_Obj *namePtr);
 MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
 MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
-MODULE_SCOPE int	TkGetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
-			    Tcl_Obj *objPtr, int lastOK, int *indexPtr);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int index);
+			    Tcl_Size index);
 MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
-			    TkMenuEntry *mePtr, int index);
+			    TkMenuEntry *mePtr, Tcl_Size index);
 MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
-MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,
-    			    XEvent *eventPtr);
-MODULE_SCOPE void	TkMenuImageProc(ClientData clientData, int x, int y,
+MODULE_SCOPE void	TkMenuEventProc(void *clientData,
+			    XEvent *eventPtr);
+MODULE_SCOPE void	TkMenuImageProc(void *clientData, int x, int y,
 			    int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE void	TkMenuInit(void);
-MODULE_SCOPE void	TkMenuSelectImageProc(ClientData clientData, int x,
+MODULE_SCOPE void	TkMenuSelectImageProc(void *clientData, int x,
 			    int y, int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE Tcl_Obj *	TkNewMenuName(Tcl_Interp *interp,
@@ -540,9 +553,9 @@ MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y, int index);
+			    int x, int y, Tcl_Size index);
 MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y, int index);
+			    int x, int y, Tcl_Size index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */

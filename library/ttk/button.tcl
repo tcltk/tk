@@ -18,10 +18,10 @@
 
 namespace eval ttk::button {}
 
-bind TButton <Enter> 		{ %W instate !disabled {%W state active} }
+bind TButton <Enter>		{ %W instate !disabled {%W state active} }
 bind TButton <Leave>		{ %W state !active }
 bind TButton <space>		{ ttk::button::activate %W }
-bind TButton <<Invoke>> 	{ ttk::button::activate %W }
+bind TButton <<Invoke>>		{ ttk::button::activate %W }
 
 bind TButton <Button-1> \
     { %W instate !disabled { ttk::clickToFocus %W; %W state pressed } }
@@ -39,10 +39,10 @@ ttk::copyBindings TButton TRadiobutton
 
 # ...plus a few more:
 
-bind TRadiobutton <Up>  		{ ttk::button::RadioTraverse %W -1 }
-bind TRadiobutton <Down> 		{ ttk::button::RadioTraverse %W +1 }
+bind TRadiobutton <Up>			{ ttk::button::RadioTraverse %W -1 }
+bind TRadiobutton <Down>		{ ttk::button::RadioTraverse %W +1 }
 
-# bind TCheckbutton <plus> { %W select }
+# bind TCheckbutton <+> { %W select }
 # bind TCheckbutton <minus> { %W deselect }
 
 # activate --
@@ -58,7 +58,7 @@ proc ttk::button::activate {w} {
 }
 
 # RadioTraverse -- up/down keyboard traversal for radiobutton groups.
-# 	Set focus to previous/next radiobutton in a group.
+#	Set focus to previous/next radiobutton in a group.
 #	A radiobutton group consists of all the radiobuttons with
 #	the same parent and -variable; this is a pretty good heuristic
 #	that works most of the time.
@@ -66,7 +66,7 @@ proc ttk::button::activate {w} {
 proc ttk::button::RadioTraverse {w dir} {
     set group [list]
     foreach sibling [winfo children [winfo parent $w]] {
-    	if {   [winfo class $sibling] eq "TRadiobutton"
+	if {   [winfo class $sibling] eq "TRadiobutton"
 	    && [$sibling cget -variable] eq [$w cget -variable]
 	    && ![$sibling instate disabled]
 	} {
@@ -75,7 +75,7 @@ proc ttk::button::RadioTraverse {w dir} {
     }
 
     if {![llength $group]} {	 # Shouldn't happen, but can.
-    	return
+	return
     }
 
     set pos [expr {([lsearch -exact $group $w] + $dir) % [llength $group]}]

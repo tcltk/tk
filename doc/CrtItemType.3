@@ -17,10 +17,12 @@ Tk_CreateItemType, Tk_GetItemTypes \- define new kind of canvas item
 .sp
 Tk_ItemType *
 \fBTk_GetItemTypes\fR()
+.fi
 .SH ARGUMENTS
 .AS Tk_ItemType *typePtr
 .AP Tk_ItemType *typePtr in
 Structure that defines the new type of canvas item.
+Note that this is not \fIconst\fR; Tk may write to these structures.
 .BE
 .SH INTRODUCTION
 .PP
@@ -64,14 +66,14 @@ the standard procedures implemented by the type manager:
 .CS
 typedef struct Tk_ItemType {
     const char *\fIname\fR;
-    int \fIitemSize\fR;
+    Tcl_Size \fIitemSize\fR;
     Tk_ItemCreateProc *\fIcreateProc\fR;
     const Tk_ConfigSpec *\fIconfigSpecs\fR;
     Tk_ItemConfigureProc *\fIconfigProc\fR;
     Tk_ItemCoordProc *\fIcoordProc\fR;
     Tk_ItemDeleteProc *\fIdeleteProc\fR;
     Tk_ItemDisplayProc *\fIdisplayProc\fR;
-    int \fIalwaysRedraw\fR;
+    int \fIflags\fR;
     Tk_ItemPointProc *\fIpointProc\fR;
     Tk_ItemAreaProc *\fIareaProc\fR;
     Tk_ItemPostscriptProc *\fIpostscriptProc\fR;
@@ -82,7 +84,10 @@ typedef struct Tk_ItemType {
     Tk_ItemSelectionProc *\fIselectionProc\fR;
     Tk_ItemInsertProc *\fIinsertProc\fR;
     Tk_ItemDCharsProc *\fIdCharsProc\fR;
-    Tk_ItemType *\fInextPtr\fR;
+    struct Tk_ItemType *\fInextPtr\fR;
+.VS "8.7, TIP164"
+    Tk_ItemRotateProc *\fIrotateProc\fR;
+.VE "8.7, TIP164"
 } \fBTk_ItemType\fR;
 .CE
 .PP
@@ -110,7 +115,7 @@ the first field.
 For example, the item record for bitmap items is defined as follows:
 .PP
 .CS
-typedef struct BitmapItem {
+typedef struct {
     Tk_Item \fIheader\fR;
     double \fIx\fR, \fIy\fR;
     Tk_Anchor \fIanchor\fR;
@@ -166,24 +171,16 @@ If there already existed an item type by this name then
 the new item type replaces the old one.
 .SS "FLAGS (IN ALWAYSREDRAW)"
 .PP
-The \fItypePtr\->alwaysRedraw\fR field (so named for historic reasons)
+The \fItypePtr\->flags\fR field
 contains a collection of flag bits that modify how the canvas core interacts
 with the item. The following bits are defined:
 .TP
-\fB1\fR
+\fBTK_ALWAYS_REDRAW\fR
 .
 Indicates that the item should always be redrawn when any part of the canvas
 is redrawn, rather than only when the bounding box of the item overlaps the
 area being redrawn. This is used by window items, for example, which need to
 unmap subwindows that are not on the screen.
-.TP
-\fBTK_CONFIG_OBJS\fR
-.
-Indicates that operations which would otherwise take a string (or array of
-strings) actually take a Tcl_Obj reference (or an array of such references).
-The operations to which this applies are the \fIconfigProc\fR, the
-\fIcoordProc\fR, the \fIcreateProc\fR, the \fIindexProc\fR and the
-\fIinsertProc\fR.
 .TP
 \fBTK_MOVABLE_POINTS\fR
 .VS 8.6
@@ -226,9 +223,6 @@ Tk has already initialized the item's header (the first
 The \fIobjc\fR and \fIobjv\fR arguments describe all of the
 arguments to the \fBcreate\fR command after the \fItype\fR
 argument.
-Note that if \fBTK_CONFIG_OBJS\fR is not set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIobjv\fR parameter will actually
-contain a pointer to an array of constant strings.
 For example, in the widget command:
 .PP
 .CS
@@ -258,7 +252,8 @@ to retrieve option information in the \fBitemcget\fR and
 \fBitemconfigure\fR widget commands.
 \fItypePtr\->configSpecs\fR must point to the configuration table
 for this type.
-Note: Tk provides a custom option type \fBtk_CanvasTagsOption\fR
+.PP
+Note that Tk provides a custom option type \fBtk_CanvasTagsOption\fR
 for implementing the \fB\-tags\fR option; see an existing type
 manager for an example of how to use it in \fIconfigSpecs\fR.
 .SS CONFIGPROC
@@ -282,9 +277,6 @@ The \fIinterp\fR argument identifies the interpreter in which the
 widget command was invoked, \fIcanvas\fR is a handle for the canvas
 widget, and \fIitemPtr\fR is a pointer to the item being configured.
 \fIobjc\fR and \fIobjv\fR contain the configuration options.
-Note that if \fBTK_CONFIG_OBJS\fR is not set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIobjv\fR parameter will actually
-contain a pointer to an array of constant strings.
 For example, if the following command is invoked:
 .PP
 .CS
@@ -321,9 +313,6 @@ typedef int \fBTk_ItemCoordProc\fR(
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR
 all have the standard meanings, and \fIobjc\fR and \fIobjv\fR
 describe the coordinate arguments.
-Note that if \fBTK_CONFIG_OBJS\fR is not set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIobjv\fR parameter will actually
-contain a pointer to an array of constant strings.
 For example, if the following widget command is invoked:
 .PP
 .CS
@@ -398,9 +387,9 @@ of \fIdst\fR.
 .PP
 Normally an item's \fIdisplayProc\fR is only invoked if the item
 overlaps the area being displayed.
-However, if bit zero of \fItypePtr\->alwaysRedraw\fR is 1,
+However, if bit zero of \fItypePtr\->flags\fR is 1,
 (i.e.\|
-.QW "\fItypePtr\->alwaysRedraw & 1 == 1\fR" )
+.QW "\fItypePtr\->flags & 1 == 1\fR" )
 then \fIdisplayProc\fR is invoked during every redisplay operation,
 even if the item does not overlap the area of redisplay; this is useful for
 cases such as window items, where the subwindow needs to be unmapped when it
@@ -549,6 +538,46 @@ and \fIdeltaX\fR and \fIdeltaY\fR give the amounts that should be
 added to each x and y coordinate within the item.
 The type manager should adjust the item's coordinates and
 update the bounding box in the item's header.
+.SS ROTATEPROC
+.VS "8.7, TIP164"
+.PP
+\fItypePtr\->rotateProc\fR is invoked by Tk to rotate a canvas item
+during the \fBrotate\fR widget command.
+The procedure must match the following prototype:
+.PP
+.CS
+typedef void \fBTk_ItemRotateProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double \fIoriginX\fR,
+        double \fIoriginY\fR,
+        double \fIangleRad\fR);
+.CE
+.PP
+The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual meaning.
+\fIoriginX\fR and \fIoriginY\fR specify an origin relative to which
+the item is to be rotated, and \fIangleRad\fR gives the anticlockwise
+rotation to be applied in radians.
+The item should adjust the coordinates of its control points so that where
+they used to have coordinates \fIx\fR and \fIy\fR, they will have new
+coordinates \fIx\(fm\fR and \fIy\(fm\fR, where
+.PP
+.CS
+\fIrelX\fR = \fIx\fR \(mi \fIoriginX\fR
+\fIrelY\fR = \fIy\fR \(mi \fIoriginY\fR
+\fIx\(fm\fR = \fIoriginX\fR + \fIrelX\fR \(mu cos(\fIangleRad\fR) + \fIrelY\fR \(mu sin(\fIangleRad\fR)
+\fIy\(fm\fR = \fIoriginY\fR \(mi \fIrelX\fR \(mu sin(\fIangleRad\fR) + \fIrelY\fR \(mu cos(\fIangleRad\fR)
+.CE
+.PP
+The control points for an item are not necessarily the coordinates provided to
+the item when it is created (or via the \fItypePtr\->coordProc\fR), but could
+instead be derived from them.
+\fIrotateProc\fR must also update the bounding box in the item's header.
+.PP
+Item types do not need to provide a \fItypePtr\->rotateProc\fR. If the
+\fItypePtr\->rotateProc\fR is NULL, the \fItypePtr\->coordProc\fR will be
+used instead to retrieve and update the list of coordinates.
+.VE "8.7, TIP164"
 .SS INDEXPROC
 .PP
 \fItypePtr\->indexProc\fR is invoked by Tk to translate a string
@@ -573,9 +602,6 @@ have the usual meaning.
 \fIindexObj\fR contains a textual description of an index,
 and \fIindexPtr\fR points to an integer value that should be
 filled in with a numerical index.
-Note that if \fBTK_CONFIG_OBJS\fR is not set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIindexObj\fR parameter will
-actually contain a pointer to a constant string.
 It is up to the type manager to decide what forms of index
 are supported (e.g., numbers, \fBinsert\fR, \fBsel.first\fR,
 \fBend\fR, etc.).
@@ -659,9 +685,6 @@ typedef void \fBTk_ItemInsertProc\fR(
 previous call to \fItypePtr\->insertProc\fR, and \fIobj\fR
 contains new text to insert just before the character given
 by \fIindex\fR.
-Note that if \fBTK_CONFIG_OBJS\fR is not set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIobj\fR parameter will
-actually contain a pointer to a constant string to be inserted.
 If the item supports modification of the coordinates list by this
 .PP
 The type manager should insert the text and recompute the bounding

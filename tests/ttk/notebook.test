@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -25,7 +25,7 @@ test notebook-1.3 "Cannot add toplevel" -body {
     .nb add [toplevel .nb.t]
 } -cleanup {
     destroy .t.nb
-} -returnCodes error -match glob -result "can't add .nb.t*"
+} -returnCodes error -result {cannot add ".nb.t" as content of ".nb"}
 
 test notebook-1.4 "Try to select bad tab" -body {
     .nb select @6000,6000
@@ -539,6 +539,20 @@ test notebook-198376af5a {moving tab position to a different edge} -body {
     expr {[winfo y .nb.f1] < 10}
 } -result 1
 
+test notebook-8.1 "style command" -body {
+    ttk::notebook .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TNotebook TNotebook}
+test notebook-8.2 "style command" -body {
+    ttk::style configure customStyle.TNotebook
+    ttk::notebook .w -style customStyle.TNotebook
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TNotebook customStyle.TNotebook TNotebook}
+
 test notebook-9.1 "move last tab by numerical index" -body {
     ::ttk::notebook .n
     foreach tabs {TabA TabB TabC} {
@@ -549,7 +563,7 @@ test notebook-9.1 "move last tab by numerical index" -body {
    .n insert 0 3  ; # not allowed: position 3 is after last tab
 } -cleanup {
     destroy .n
-} -result {Slave index 3 out of bounds} -returnCodes error
+} -result {Managed window index "3" out of bounds} -returnCodes error
 test notebook-9.2 "move first tab to last position by numerical index" -body {
     ::ttk::notebook .n
     foreach tabs {TabA TabB TabC} {
@@ -560,6 +574,6 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
    .n insert 3 0  ; # not allowed: position 3 is after last tab
 } -cleanup {
     destroy .n
-} -result {Slave index 3 out of bounds} -returnCodes error
+} -result {Managed window index "3" out of bounds} -returnCodes error
 
 tcltest::cleanupTests

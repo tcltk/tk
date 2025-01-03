@@ -20,7 +20,7 @@
 #
 # Windows:
 #	The default system font changed from "MS Sans Serif" to "Tahoma"
-# 	in Windows XP/Windows 2000.
+#	in Windows XP/Windows 2000.
 #
 #	MS documentation says to use "Tahoma 8" in Windows 2000/XP,
 #	although many MS programs still use "MS Sans Serif 8"
@@ -50,10 +50,6 @@
 #	Most other toolkits use medium weight for all UI elements,
 #	which is what we do now.
 #
-#	Font size specified in pixels on X11, not points.
-#	This is Theoretically Wrong, but in practice works better; using
-#	points leads to huge inconsistencies across different servers.
-#
 
 namespace eval ttk {
 
@@ -67,87 +63,89 @@ catch {font create TkIconFont}
 catch {font create TkMenuFont}
 catch {font create TkSmallCaptionFont}
 
-if {!$tip145} {
-variable F	;# miscellaneous platform-specific font parameters
+if {!$tip145} {apply {{} {
+global tcl_platform
 switch -- [tk windowingsystem] {
     win32 {
-        # In safe interps there is no osVersion element.
+	# In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
-            if {$tcl_platform(osVersion) >= 5.0} {
-                set F(family) "Tahoma"
-            } else {
-                set F(family) "MS Sans Serif"
-            }
-        } else {
-            if {[lsearch -exact [font families] Tahoma] >= 0} {
-                set F(family) "Tahoma"
-            } else {
-                set F(family) "MS Sans Serif"
-            }
-        }
-	set F(size) 8
+	    if {$tcl_platform(osVersion) >= 5.0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	} else {
+	    if {[lsearch -exact [font families] Tahoma] >= 0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	}
+	set size 8
 
-	font configure TkDefaultFont -family $F(family) -size $F(size)
-	font configure TkTextFont    -family $F(family) -size $F(size)
-	font configure TkHeadingFont -family $F(family) -size $F(size)
-	font configure TkCaptionFont -family $F(family) -size $F(size) \
-	    -weight bold
-	font configure TkTooltipFont -family $F(family) -size $F(size)
+	font configure TkDefaultFont -family $family -size $size
+	font configure TkTextFont    -family $family -size $size
+	font configure TkHeadingFont -family $family -size $size
+	font configure TkCaptionFont -family $family -size $size -weight bold
+	font configure TkTooltipFont -family $family -size $size
 	font configure TkFixedFont   -family Courier -size 10
-	font configure TkIconFont    -family $F(family) -size $F(size)
-	font configure TkMenuFont    -family $F(family) -size $F(size)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(size)
+	font configure TkIconFont    -family $family -size $size
+	font configure TkMenuFont    -family $family -size $size
+	font configure TkSmallCaptionFont -family $family -size $size
     }
     aqua {
-	set F(family) "Lucida Grande"
-	set F(fixed) "Monaco"
-	set F(menusize) 14
-	set F(size) 13
-	set F(viewsize) 12
-	set F(smallsize) 11
-	set F(labelsize) 10
-	set F(fixedsize) 11
+	set family "Lucida Grande"
+	set fixed "Monaco"
+	set menusize 14
+	set size 13
+	set viewsize 12
+	set smallsize 11
+	set labelsize 10
+	set fixedsize 11
 
-	font configure TkDefaultFont -family $F(family) -size $F(size)
-	font configure TkTextFont    -family $F(family) -size $F(size)
-	font configure TkHeadingFont -family $F(family) -size $F(smallsize)
-	font configure TkCaptionFont -family $F(family) -size $F(size) \
-					-weight bold
-	font configure TkTooltipFont -family $F(family) -size $F(smallsize)
-	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
-	font configure TkIconFont    -family $F(family) -size $F(size)
-	font configure TkMenuFont    -family $F(family) -size $F(menusize)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)
+	font configure TkDefaultFont -family $family -size $size
+	font configure TkTextFont    -family $family -size $size
+	font configure TkHeadingFont -family $family -size $smallsize
+	font configure TkCaptionFont -family $family -size $size -weight bold
+	font configure TkTooltipFont -family $family -size $smallsize
+	font configure TkFixedFont   -family $fixed  -size $fixedsize
+	font configure TkIconFont    -family $family -size $size
+	font configure TkMenuFont    -family $family -size $menusize
+	font configure TkSmallCaptionFont -family $family -size $labelsize
     }
     default -
     x11 {
-	if {![catch {tk::pkgconfig get fontsystem} F(fs)] && $F(fs) eq "xft"} {
-	    set F(family) "sans-serif"
-	    set F(fixed)  "monospace"
+	if {![catch {tk::pkgconfig get fontsystem} fs] && $fs eq "xft"} {
+	    set family "sans-serif"
+	    set fixed  "monospace"
 	} else {
-	    set F(family) "Helvetica"
-	    set F(fixed)  "courier"
+	    set family "Helvetica"
+	    set fixed  "courier"
 	}
-	set F(size) -12
-	set F(ttsize) -10
-	set F(capsize) -14
-	set F(fixedsize) -12
+	if {[::tk::FontScalingFactor] == 1} {
+	    set size 10
+	    set ttsize 9
+	    set capsize 12
+	    set fixedsize 10
+	} else {
+	    set size 20
+	    set ttsize 18
+	    set capsize 24
+	    set fixedsize 20
+	}
 
-	font configure TkDefaultFont -family $F(family) -size $F(size)
-	font configure TkTextFont    -family $F(family) -size $F(size)
-	font configure TkHeadingFont -family $F(family) -size $F(size) \
-			-weight bold
-	font configure TkCaptionFont -family $F(family) -size $F(capsize) \
-			-weight bold
-	font configure TkTooltipFont -family $F(family) -size $F(ttsize)
-	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
-	font configure TkIconFont    -family $F(family) -size $F(size)
-	font configure TkMenuFont    -family $F(family) -size $F(size)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(ttsize)
+	font configure TkDefaultFont -family $family -size $size
+	font configure TkTextFont    -family $family -size $size
+	font configure TkHeadingFont -family $family -size $size    -weight bold
+	font configure TkCaptionFont -family $family -size $capsize -weight bold
+	font configure TkTooltipFont -family $family -size $ttsize
+	font configure TkFixedFont   -family $fixed  -size $fixedsize
+	font configure TkIconFont    -family $family -size $size
+	font configure TkMenuFont    -family $family -size $size
+	font configure TkSmallCaptionFont -family $family -size $ttsize
     }
 }
-unset -nocomplain F
-}
+} ::ttk}}
 
 }
 

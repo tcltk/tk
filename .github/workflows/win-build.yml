@@ -26,17 +26,16 @@ jobs:
           - ""
           - "OPTS=symbols"
           - "OPTS=static"
-          - "OPTS=static,staticpkg"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl 8.6
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: main
           path: tcl
       - name: Init MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -119,14 +118,14 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          install: git mingw-w64-x86_64-toolchain make
+          install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
         uses: actions/checkout@v4
-      - name: Checkout Tcl 8.6
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: main
           path: tcl
       - name: Prepare
         run: |

@@ -49,7 +49,7 @@ typedef struct MacMenuButton {
  * Forward declarations for static functions defined later in this file:
  */
 
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		MenuButtonBackgroundDrawCB(MacMenuButton *ptr,
 			    SInt16 depth, Boolean isColorDev);
@@ -57,7 +57,7 @@ static void		MenuButtonContentDrawCB(ThemeButtonKind kind,
 			    const HIThemeButtonDrawInfo *info,
 			    MacMenuButton *ptr, SInt16 depth,
 			    Boolean isColorDev);
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		TkMacOSXComputeMenuButtonParams(TkMenuButton *butPtr,
 			    ThemeButtonKind *btnkind,
@@ -163,17 +163,18 @@ TkpCreateMenuButton(
 
 void
 TkpDisplayMenuButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     MacMenuButton *mbPtr = (MacMenuButton *)clientData;
     TkMenuButton *butPtr = (TkMenuButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams *dpPtr = &mbPtr->drawParams;
+    int highlightWidth;
 
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
-        return;
+	return;
     }
 
     pixmap = (Pixmap) Tk_WindowId(tkwin);
@@ -190,10 +191,11 @@ TkpDisplayMenuButton(
      * Draw highlight border, if needed.
      */
 
-    if (butPtr->highlightWidth < 3) {
-        if (butPtr->flags & GOT_FOCUS) {
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth < 3) {
+	if (butPtr->flags & GOT_FOCUS) {
 	    GC gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
-	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, highlightWidth);
 	}
     }
 }
@@ -246,7 +248,8 @@ TkpComputeMenuButtonGeometry(
     int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
-    int highlightWidth = butPtr->highlightWidth > 0 ? butPtr->highlightWidth : 0;
+    int borderWidth, highlightWidth;
+    int padX, padY;
 
     /*
      * First compute the size of the contents of the button.
@@ -259,23 +262,26 @@ TkpComputeMenuButtonGeometry(
     avgWidth = 0;
 
     if (butPtr->image != NULL) {
-        Tk_SizeOfImage(butPtr->image, &width, &height);
-        haveImage = 1;
+	Tk_SizeOfImage(butPtr->image, &width, &height);
+	haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-        haveImage = 1;
+	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+	haveImage = 1;
     }
 
-    if (butPtr->text && strlen(butPtr->text) > 0) {
+    if (butPtr->textObj && Tcl_GetString(butPtr->textObj)[0]) {
+	int wrapLength;
+
 	haveText = 1;
-        Tk_FreeTextLayout(butPtr->textLayout);
-        butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-                butPtr->text, -1, butPtr->wrapLength,
-                butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
-        txtWidth = butPtr->textWidth;
-        txtHeight = butPtr->textHeight;
-        avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
-        Tk_GetFontMetrics(butPtr->tkfont, &fm);
+	Tk_FreeTextLayout(butPtr->textLayout);
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
+		Tcl_GetString(butPtr->textObj), TCL_INDEX_NONE, wrapLength,
+		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+	txtWidth = butPtr->textWidth;
+	txtHeight = butPtr->textHeight;
+	avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
+	Tk_GetFontMetrics(butPtr->tkfont, &fm);
     }
 
     /*
@@ -285,15 +291,19 @@ TkpComputeMenuButtonGeometry(
      * otherwise it is not really a compound button.
      */
 
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtr->width);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtr->height);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
     if (haveImage && haveText) {
-        switch ((enum compound) butPtr->compound) {
+	switch ((enum compound) butPtr->compound) {
 	case COMPOUND_TOP:
 	case COMPOUND_BOTTOM:
 	    /*
 	     * Image is above or below text
 	     */
 
-	    height += txtHeight + butPtr->padY;
+	    height += txtHeight + padY;
 	    width = (width > txtWidth ? width : txtWidth);
 	    break;
 	case COMPOUND_LEFT:
@@ -302,7 +312,7 @@ TkpComputeMenuButtonGeometry(
 	     * Image is left or right of text
 	     */
 
-	    width += txtWidth + butPtr->padX;
+	    width += txtWidth + padX;
 	    height = (height > txtHeight ? height : txtHeight);
 	    break;
 	case COMPOUND_CENTER:
@@ -315,36 +325,38 @@ TkpComputeMenuButtonGeometry(
 	    break;
 	case COMPOUND_NONE:
 	    break;
-        }
+	}
 
-        if (butPtr->width > 0) {
-            width = butPtr->width;
-        }
-        if (butPtr->height > 0) {
-            height = butPtr->height;
-        }
+	if (butPtr->width > 0) {
+	    width = butPtr->width;
+	}
+	if (butPtr->height > 0) {
+	    height = butPtr->height;
+	}
 
     } else {
-        if (haveImage) { /* Image only */
-            if (butPtr->width > 0) {
-                width = butPtr->width;
-            }
-            if (butPtr->height > 0) {
-                height = butPtr->height;
-            }
-        } else { /* Text only */
-            width = txtWidth;
-            height = txtHeight;
-            if (butPtr->width > 0) {
-                width = butPtr->width * avgWidth + 2*butPtr->padX;
-            }
-            if (butPtr->height > 0) {
-                height = butPtr->height * fm.linespace + 2*butPtr->padY;
-            }
-        }
+	if (haveImage) { /* Image only */
+	    if (butPtr->width > 0) {
+		width = butPtr->width;
+	    }
+	    if (butPtr->height > 0) {
+		height = butPtr->height;
+	    }
+	} else { /* Text only */
+	    width = txtWidth;
+	    height = txtHeight;
+	    if (butPtr->width > 0) {
+		width = butPtr->width * avgWidth + 2 * padX;
+	    }
+	    if (butPtr->height > 0) {
+		height = butPtr->height * fm.linespace + 2 * padY;
+	    }
+	}
     }
 
-    butPtr->inset = highlightWidth + butPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    butPtr->inset = highlightWidth + borderWidth;
     width += LEFT_INSET + RIGHT_INSET + 2*butPtr->inset;
     height += 2*butPtr->inset;
     height = height < MIN_HEIGHT ? MIN_HEIGHT : height;
@@ -379,32 +391,35 @@ DrawMenuButtonImageAndText(
     int textXOffset = 0, textYOffset = 0;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
+    int padX, padY;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
-        return;
+	return;
     }
 
     DrawParams *dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
     if (butPtr->image != NULL) {
-        Tk_SizeOfImage(butPtr->image, &width, &height);
-        haveImage = 1;
+	Tk_SizeOfImage(butPtr->image, &width, &height);
+	haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-        haveImage = 1;
+	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+	haveImage = 1;
     }
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
-        int x = 0, y = 0;
+	int x = 0, y = 0;
 
-        textXOffset = 0;
-        textYOffset = 0;
-        fullWidth = 0;
-        fullHeight = 0;
+	textXOffset = 0;
+	textYOffset = 0;
+	fullWidth = 0;
+	fullHeight = 0;
 
-        switch ((enum compound) butPtr->compound) {
+	switch ((enum compound) butPtr->compound) {
 	case COMPOUND_TOP:
 	case COMPOUND_BOTTOM:
 	    /*
@@ -412,11 +427,11 @@ DrawMenuButtonImageAndText(
 	     */
 
 	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
+		imageYOffset = butPtr->textHeight + padY;
 	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
+	    fullHeight = height + butPtr->textHeight + padY;
 	    fullWidth = (width > butPtr->textWidth ?
 		     width : butPtr->textWidth);
 	    textXOffset = (fullWidth - butPtr->textWidth)/2;
@@ -429,13 +444,13 @@ DrawMenuButtonImageAndText(
 	     */
 
 	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX - 2;
+		textXOffset = width + padX - 2;
 	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
+		imageXOffset = butPtr->textWidth + padX;
 	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
+	    fullWidth = butPtr->textWidth + padX + width;
 	    fullHeight = (height > butPtr->textHeight ? height :
-                    butPtr->textHeight);
+		    butPtr->textHeight);
 	    textYOffset = (fullHeight - butPtr->textHeight)/2;
 	    imageYOffset = (fullHeight - height)/2;
 	    break;
@@ -446,7 +461,7 @@ DrawMenuButtonImageAndText(
 
 	    fullWidth = (width > butPtr->textWidth ? width : butPtr->textWidth);
 	    fullHeight = (height > butPtr->textHeight ? height :
-                    butPtr->textHeight);
+		    butPtr->textHeight);
 	    textXOffset = (fullWidth - butPtr->textWidth) / 2;
 	    imageXOffset = (fullWidth - width) / 2;
 	    textYOffset = (fullHeight - butPtr->textHeight) / 2;
@@ -456,56 +471,59 @@ DrawMenuButtonImageAndText(
 	    break;
 	}
 
-        TkComputeAnchor(butPtr->anchor, tkwin,
-                butPtr->padX + butPtr->inset, butPtr->padY + butPtr->inset,
-                fullWidth, fullHeight, &x, &y);
-        imageXOffset = LEFT_INSET;
-        imageYOffset += y;
-        textYOffset -= 1;
+	TkComputeAnchor(butPtr->anchor, tkwin,
+		padX + butPtr->inset, padY + butPtr->inset,
+		fullWidth, fullHeight, &x, &y);
+	imageXOffset = LEFT_INSET;
+	imageYOffset += y;
+	textYOffset -= 1;
 
-        if (butPtr->image != NULL) {
+	if (butPtr->image != NULL) {
 	    Tk_RedrawImage(butPtr->image, 0, 0, width,
-                    height, pixmap, imageXOffset, imageYOffset);
-        } else {
-            XSetClipOrigin(butPtr->display, dpPtr->gc,
-                    imageXOffset, imageYOffset);
-            XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, dpPtr->gc,
-                    0, 0, (unsigned int) width, (unsigned int) height,
-                    imageXOffset, imageYOffset, 1);
-            XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
-        }
+		    height, pixmap, imageXOffset, imageYOffset);
+	} else {
+	    XSetClipOrigin(butPtr->display, dpPtr->gc,
+		    imageXOffset, imageYOffset);
+	    XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, dpPtr->gc,
+		    0, 0, (unsigned int) width, (unsigned int) height,
+		    imageXOffset, imageYOffset, 1);
+	    XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
+	}
 
-        Tk_DrawTextLayout(butPtr->display, pixmap,
-                dpPtr->gc, butPtr->textLayout,
-                x + textXOffset, y + textYOffset, 0, -1);
-        Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
-                butPtr->textLayout, x + textXOffset, y + textYOffset,
-                butPtr->underline);
+	Tk_DrawTextLayout(butPtr->display, pixmap,
+		dpPtr->gc, butPtr->textLayout,
+		x + textXOffset, y + textYOffset, 0, -1);
+	Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		butPtr->textLayout, x + textXOffset, y + textYOffset,
+		butPtr->underline);
     } else {
 	int x, y;
 
-        if (haveImage) {
-            TkComputeAnchor(butPtr->anchor, tkwin,
-                    butPtr->padX + butPtr->borderWidth,
-                    butPtr->padY + butPtr->borderWidth,
-                    width, height, &x, &y);
+	if (haveImage) {
+	    int borderWidth;
+
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+	    TkComputeAnchor(butPtr->anchor, tkwin,
+		    padX + borderWidth,
+		    padY + borderWidth,
+		    width, height, &x, &y);
 	    imageXOffset = LEFT_INSET;
 	    imageYOffset += y;
 	    if (butPtr->image != NULL) {
 		Tk_RedrawImage(butPtr->image, 0, 0, width, height,
 			       pixmap, imageXOffset, imageYOffset);
-            } else {
-                XSetClipOrigin(butPtr->display, dpPtr->gc, x, y);
-                XCopyPlane(butPtr->display, butPtr->bitmap,
+	    } else {
+		XSetClipOrigin(butPtr->display, dpPtr->gc, x, y);
+		XCopyPlane(butPtr->display, butPtr->bitmap,
 			   pixmap, dpPtr->gc,
 			   0, 0, (unsigned int) width,
 			   (unsigned int) height,
 			   imageXOffset, imageYOffset, 1);
-                XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
-            }
-        } else {
+		XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
+	    }
+	} else {
 	    textXOffset = LEFT_INSET;
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	    TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		    butPtr->textWidth, butPtr->textHeight, &x, &y);
 	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
 		    butPtr->textLayout, textXOffset, y, 0, -1);
@@ -537,7 +555,7 @@ TkMacOSXDrawMenuButton(
     MacMenuButton *mbPtr, /* Mac menubutton. */
     TCL_UNUSED(GC),       /* The GC we are drawing into - not used */
     Pixmap pixmap)        /* The pixmap we are drawing into - needed for the
-                           * bevel button */
+			   * bevel button */
 {
     TkMenuButton *butPtr = (TkMenuButton *) mbPtr;
     TkWindow *winPtr = (TkWindow *) butPtr->tkwin;
@@ -552,23 +570,23 @@ TkMacOSXDrawMenuButton(
 	    Tk_Width(butPtr->tkwin), Tk_Height(butPtr->tkwin));
 
     if (useNewerHITools == 1) {
-        HIRect contHIRec;
-        static HIThemeButtonDrawInfo hiinfo;
+	HIRect contHIRec;
+	static HIThemeButtonDrawInfo hiinfo;
 
-        MenuButtonBackgroundDrawCB(mbPtr, 32, true);
+	MenuButtonBackgroundDrawCB(mbPtr, 32, true);
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
-        hiinfo.version = 0;
-        hiinfo.state = mbPtr->drawinfo.state;
-        hiinfo.kind = mbPtr->btnkind;
-        hiinfo.value = mbPtr->drawinfo.value;
-        hiinfo.adornment = mbPtr->drawinfo.adornment;
-        hiinfo.animation.time.current = CFAbsoluteTimeGetCurrent();
-        if (hiinfo.animation.time.start == 0) {
-            hiinfo.animation.time.start = hiinfo.animation.time.current;
-        }
+	hiinfo.version = 0;
+	hiinfo.state = mbPtr->drawinfo.state;
+	hiinfo.kind = mbPtr->btnkind;
+	hiinfo.value = mbPtr->drawinfo.value;
+	hiinfo.adornment = mbPtr->drawinfo.adornment;
+	hiinfo.animation.time.current = CFAbsoluteTimeGetCurrent();
+	if (hiinfo.animation.time.start == 0) {
+	    hiinfo.animation.time.start = hiinfo.animation.time.current;
+	}
 
 	/*
 	 * To avoid menubuttons with white text on a white background, we
@@ -581,10 +599,10 @@ TkMacOSXDrawMenuButton(
 	    hiinfo.state = kThemeStateInactive;
 	}
 
-        HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
+	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
 		kHIThemeOrientationNormal, &contHIRec);
 	TkMacOSXRestoreDrawingContext(&dc);
-        MenuButtonContentDrawCB(mbPtr->btnkind, &mbPtr->drawinfo,
+	MenuButtonContentDrawCB(mbPtr->btnkind, &mbPtr->drawinfo,
 		mbPtr, 32, true);
     } else {
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
@@ -623,11 +641,11 @@ MenuButtonBackgroundDrawCB (
     Pixmap pixmap;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
-        return;
+	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
     Tk_Fill3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
-            Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+	    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 }
 
 /*
@@ -658,7 +676,7 @@ MenuButtonContentDrawCB (
     Tk_Window tkwin = butPtr->tkwin;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
-        return;
+	return;
     }
     DrawMenuButtonImageAndText(butPtr);
 }
@@ -682,7 +700,7 @@ MenuButtonContentDrawCB (
 
 static void
 MenuButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkMenuButton *buttonPtr = (TkMenuButton *)clientData;
@@ -730,8 +748,9 @@ TkMacOSXComputeMenuButtonParams(
     HIThemeButtonDrawInfo *drawinfo)
 {
     MacMenuButton *mbPtr = (MacMenuButton *) butPtr;
+    int highlightWidth;
 
-    if (butPtr->image || butPtr->bitmap || butPtr->text) {
+    if (butPtr->image || butPtr->bitmap || butPtr->textObj) {
 	/* TODO: allow for Small and Mini menubuttons. */
 	*btnkind = kThemePopupButton;
     } else { /* This should never happen. */
@@ -749,22 +768,23 @@ TkMacOSXComputeMenuButtonParams(
 
     drawinfo->state = kThemeStateInactive;
     if ((mbPtr->flags & ACTIVE) == 0) {
-        if (butPtr->state == STATE_DISABLED) {
-            drawinfo->state = kThemeStateUnavailableInactive;
-        } else {
-            drawinfo->state = kThemeStateInactive;
-        }
+	if (butPtr->state == STATE_DISABLED) {
+	    drawinfo->state = kThemeStateUnavailableInactive;
+	} else {
+	    drawinfo->state = kThemeStateInactive;
+	}
     } else if (butPtr->state == STATE_DISABLED) {
-        drawinfo->state = kThemeStateUnavailable;
+	drawinfo->state = kThemeStateUnavailable;
     } else {
-        drawinfo->state = kThemeStateActive;
+	drawinfo->state = kThemeStateActive;
     }
 
     drawinfo->adornment = kThemeAdornmentNone;
-    if (butPtr->highlightWidth >= 3) {
-        if ((butPtr->flags & GOT_FOCUS)) {
-            drawinfo->adornment |= kThemeAdornmentFocus;
-        }
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth >= 3) {
+	if ((butPtr->flags & GOT_FOCUS)) {
+	    drawinfo->adornment |= kThemeAdornmentFocus;
+	}
     }
     drawinfo->adornment |= kThemeAdornmentArrowDoubleArrow;
 }
@@ -795,12 +815,12 @@ TkMacOSXComputeMenuButtonDrawParams(
 	    ((butPtr->image != NULL) || (butPtr->bitmap != None));
     dpPtr->border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
-        dpPtr->gc = butPtr->disabledGC;
+	dpPtr->gc = butPtr->disabledGC;
     } else if (butPtr->state == STATE_ACTIVE) {
-        dpPtr->gc = butPtr->activeTextGC;
-        dpPtr->border = butPtr->activeBorder;
+	dpPtr->gc = butPtr->activeTextGC;
+	dpPtr->border = butPtr->activeBorder;
     } else {
-        dpPtr->gc = butPtr->normalTextGC;
+	dpPtr->gc = butPtr->normalTextGC;
     }
 }
 

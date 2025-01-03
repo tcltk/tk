@@ -2,8 +2,8 @@
 # plus the procedures in tkFont.c.  It is organized in the
 # standard white-box fashion for Tcl tests.
 #
-# Copyright (c) 1996-1998 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996-1998 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
-
+testConstraint utfcompat [expr {([string length "\U10000"] == 2) && [package vsatisfies [package provide Tcl] 8]}]
 set defaultfontlist [font names]
 
 proc getnondefaultfonts {} {
@@ -95,7 +95,7 @@ test font-2.1 {TkFontPkgFree} -setup {
     lappend x [foo eval {catch {font families} msg; set msg}]
 } -cleanup {
     interp delete foo
-} -result {{named font "wiggles" doesn't exist} {can't invoke "font" command: application has been destroyed}}
+} -result {{named font "wiggles" does not exist} {cannot invoke "font" command: application has been destroyed}}
 
 
 test font-3.1 {font command: general} -body {
@@ -113,11 +113,11 @@ test font-4.1 {font command: actual: arguments} -body {
 test font-4.2 {font command: actual: arguments} -body {
     # (objc < 3)
     font actual
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.3 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 0
     font actual xyz abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.4 {font command: actual: displayof specified, so skip to next} -body {
     catch {font actual xyz -displayof . -size}
 } -result 0
@@ -127,11 +127,11 @@ test font-4.5 {font command: actual: displayof specified, so skip to next} -body
 test font-4.6 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 2
     font actual xyz -displayof . abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.7 {font command: actual: arguments} -body {
     # (tkfont == NULL)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
@@ -143,25 +143,25 @@ test font-4.9 {font command: actual} -constraints {haveTimesFamilyFont} -body {
 test font-4.10 {font command: actual} -constraints win -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     font actual {-family times} -family
-} -result {Times New Roman}
+} -result {times}
 test font-4.11 {font command: bad option} -body {
     font actual xyz -style
 } -returnCodes error -result {bad option "-style": must be -family, -size, -weight, -slant, -underline, or -overstrike}
 test font-4.12 {font command: actual} -body {
-    font actual {-family times} -- \ud800
+    font actual {-family times} -- \uD800
 } -match glob -result {*}
 test font-4.13 {font command: actual} -body {
-    font actual {-family times} -- \udc00
+    font actual {-family times} -- \uDC00
 } -match glob -result {*}
-test font-4.14 {font command: actual} -constraints win -body {
+test font-4.14 {font command: actual} -constraints {utfcompat win knownBug} -body {
     font actual {-family times} -family -- \uD800\uDC00
-} -result {Times New Roman}
+} -result {times}
 test font-4.15 {font command: actual} -body {
-    font actual {-family times} -- \udc00\ud800
+    font actual {-family times} -- \uDC00\uD800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
-test font-4.16 {font command: actual} -constraints {fullutf win} -body {
+test font-4.16 {font command: actual} -constraints {fullutf win knownBug} -body {
     font actual {-family times} -family -- \U10000
-} -result {Times New Roman}
+} -result {times}
 
 
 test font-5.1 {font command: configure} -body {
@@ -171,7 +171,7 @@ test font-5.1 {font command: configure} -body {
 test font-5.2 {font command: configure: non-existent font} -body {
     # (namedHashPtr == NULL)
     font configure xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.3 {font command: configure: "deleted" font} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -185,7 +185,7 @@ test font-5.3 {font command: configure: "deleted" font} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.4 {font command: configure: get all options} -setup {
     catch {font delete xyz}
 } -body {
@@ -328,7 +328,7 @@ test font-7.4 {font command: delete: non-existent} -setup {
 } -body {
     # (namedHashPtr == NULL)
     font delete xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.5 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -343,7 +343,7 @@ test font-7.5 {font command: delete: mark for later deletion} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.6 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -403,7 +403,7 @@ test font-9.3 {font command: measure: arguments} -body {
 test font-9.4 {font command: measure: arguments} -body {
     # (tkfont == NULL)
     font measure "\{xyz" abc
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-9.5 {font command: measure} -body {
     # Tk_TextWidth()
     expr {[font measure $fixed "abcdefg"] == [font measure $fixed "a"]*7 }
@@ -429,19 +429,19 @@ test font-10.2 {font command: metrics: arguments} -body {
 test font-10.3 {font command: metrics: arguments} -body {
     # (objc < 3)
     font metrics
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.4 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 0
     font metrics xyz abc def
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
-} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.6 {font command: metrics: bad font} -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-10.7 {font command: metrics: get all metrics} -setup {
     catch {unset a}
 } -body {
@@ -454,7 +454,7 @@ test font-10.7 {font command: metrics: get all metrics} -setup {
 test font-10.8 {font command: metrics: bad metric} -body {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     font metrics $fixed -xyz
-} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.9 {font command: metrics: get individual metrics} -body {
     font metrics $fixed -ascent
     font metrics $fixed -descent
@@ -705,7 +705,7 @@ test font-15.9 {Tk_AllocFontFromObj procedure: get attribute font} -setup {
 test font-15.10 {Tk_AllocFontFromObj procedure: no match} -body {
     # (ParseFontNameObj() != TCL_OK)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-15.11 {Tk_AllocFontFromObj procedure: get attribute font} -body {
     # not (ParseFontNameObj() != TCL_OK)
     lindex [font actual {plan 9}] 0
@@ -1692,14 +1692,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -underline -1
+    .t.f config -text "foo" -underline {}
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline -1
+    .t.f config -wrap -1 -underline {}
 } -result {}
 destroy .t.f
 
@@ -1774,7 +1774,7 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
-    .t.f config -text "000" -underline -1
+    .t.f config -text "000" -underline {}
 } -result {}
 test font-29.2 {Tk_CharBBox procedure: loop} -body {
     .t.f config -text "000\t000\t000\t000" -underline 9
@@ -2256,10 +2256,10 @@ test font-38.6 {ParseFontNameObj procedure: begins with *} -body {
 } -result [font actual {times 0} -family]
 test font-38.7 {ParseFontNameObj procedure: arguments} -body {
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-38.8 {ParseFontNameObj procedure: arguments} -body {
     font actual ""
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test font-38.9 {ParseFontNameObj procedure: arguments} -body {
     font actual {times 20 xyz xyz}
 } -returnCodes error -result {unknown font style "xyz"}
@@ -2381,7 +2381,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 } -result [font actual {-size 10} -family]
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
-} -result {Times New Roman}
+} -result {times}
 test font-45.3 {TkFontGetAliasList: match} -constraints haveTimesFamilyFont -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
 	# avoid test failure on systems that have a real "times new roman" font
@@ -2471,6 +2471,7 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     apply $circle_text $c FontChanged $textid $circid
     update
     bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    update idletasks
 
     # Begin test:
     set results {}

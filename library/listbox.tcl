@@ -3,9 +3,9 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -14,7 +14,7 @@
 # tk::Priv elements used in this file:
 #
 # afterId -		Token returned by "after" for autoscanning.
-# listboxPrev -	The last element to be selected or deselected
+# listboxPrev -		The last element to be selected or deselected
 #			during a selection operation.
 # listboxSelection -	All of the items that were selected before the
 #			current selection operation (such as a mouse
@@ -31,7 +31,7 @@
 # can put "break"s in their bindings to avoid the error, but this check
 # makes that unnecessary.
 
-bind Listbox <1> {
+bind Listbox <Button-1> {
     if {[winfo exists %W]} {
 	tk::ListboxBeginSelect %W [%W index @%x,%y] 1
     }
@@ -41,7 +41,7 @@ bind Listbox <1> {
 # Among other things, this prevents errors if the user deletes the
 # listbox on a double click.
 
-bind Listbox <Double-1> {
+bind Listbox <Double-Button-1> {
     # Empty script
 }
 
@@ -54,10 +54,10 @@ bind Listbox <ButtonRelease-1> {
     tk::CancelRepeat
     %W activate @%x,%y
 }
-bind Listbox <Shift-1> {
+bind Listbox <Shift-Button-1> {
     tk::ListboxBeginExtend %W [%W index @%x,%y]
 }
-bind Listbox <Control-1> {
+bind Listbox <Control-Button-1> {
     tk::ListboxBeginToggle %W [%W index @%x,%y]
 }
 bind Listbox <B1-Leave> {
@@ -163,76 +163,38 @@ bind Listbox <<SelectAll>> {
 bind Listbox <<SelectNone>> {
     if {[%W cget -selectmode] ne "browse"} {
 	%W selection clear 0 end
-        tk::FireListboxSelectEvent %W
+	tk::FireListboxSelectEvent %W
     }
 }
 
 # Additional Tk bindings that aren't part of the Motif look and feel:
 
-bind Listbox <2> {
+bind Listbox <Button-2> {
     %W scan mark %x %y
 }
 bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
-
-# The MouseWheel will typically only fire on Windows and Mac OS X.
-# However, someone could use the "event generate" command to produce
-# one on other platforms.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Listbox <MouseWheel> {
-        %W yview scroll [expr {-(%D)}] units
-    }
-    bind Listbox <Option-MouseWheel> {
-        %W yview scroll [expr {-10 * (%D)}] units
-    }
-    bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {-(%D)}] units
-    }
-    bind Listbox <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-10 * (%D)}] units
-    }
-} else {
-    bind Listbox <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/30}] units
-	} else {
-	    %W yview scroll [expr {(29-%D)/30}] units
-	}
-    }
-    bind Listbox <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/30}] units
-	} else {
-	    %W xview scroll [expr {(29-%D)/30}] units
-	}
-    }
+bind Listbox <MouseWheel> {
+    tk::MouseWheel %W y %D -40.0 units
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	https://linuxreviews.org/HOWTO_change_the_mouse_speed_in_X
-    bind Listbox <4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -5 units
+bind Listbox <Option-MouseWheel> {
+    tk::MouseWheel %W y %D -12.0 units
+}
+bind Listbox <Shift-MouseWheel> {
+    tk::MouseWheel %W x %D -40.0 units
+}
+bind Listbox <Shift-Option-MouseWheel> {
+    tk::MouseWheel %W x %D -12.0 units
+}
+bind Listbox <TouchpadScroll> {
+    if {%# %% 5 == 0} {
+	lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	if {$tk::Priv(deltaX) != 0} {
+	    %W xview scroll [expr {-$tk::Priv(deltaX)}] units
 	}
-    }
-    bind Listbox <Shift-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -5 units
-	}
-    }
-    bind Listbox <5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 5 units
-	}
-    }
-    bind Listbox <Shift-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 5 units
+	if {$tk::Priv(deltaY) != 0} {
+	    %W yview scroll [expr {-$tk::Priv(deltaY)}] units
 	}
     }
 }
@@ -480,7 +442,7 @@ proc ::tk::ListboxDataExtend {w el} {
     if {$mode eq "extended"} {
 	$w activate $el
 	$w see $el
-        if {[$w selection includes anchor]} {
+	if {[$w selection includes anchor]} {
 	    ListboxMotion $w $el
 	}
     } elseif {$mode eq "multiple"} {
@@ -506,7 +468,7 @@ proc ::tk::ListboxCancel w {
     }
     set first [$w index anchor]
     set last $Priv(listboxPrev)
-    if {$last eq ""} {
+    if {$last < 0} {
 	# Not actually doing any selection right now
 	return
     }
@@ -555,6 +517,6 @@ proc ::tk::ListboxSelectAll w {
 
 proc ::tk::FireListboxSelectEvent w {
     if {[$w cget -state] eq "normal"} {
-        event generate $w <<ListboxSelect>>
+	event generate $w <<ListboxSelect>>
     }
 }

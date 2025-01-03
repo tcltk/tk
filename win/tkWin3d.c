@@ -4,7 +4,7 @@
  *	This file contains the platform specific routines for drawing 3D
  *	borders in the Windows 95 style.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -43,7 +43,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    WinBorder *borderPtr = ckalloc(sizeof(WinBorder));
+    WinBorder *borderPtr = (WinBorder *)ckalloc(sizeof(WinBorder));
 
     borderPtr->light2ColorPtr = NULL;
     borderPtr->dark2ColorPtr = NULL;
@@ -350,17 +350,17 @@ TkpGetShadows(
     if ((TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_3DFACE)
 	    || (TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_WINDOW)) {
 	borderPtr->darkColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("SystemButtonShadow"));
+		"SystemButtonShadow");
 	gcValues.foreground = borderPtr->darkColorPtr->pixel;
 	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 	borderPtr->lightColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("SystemButtonHighlight"));
+		"SystemButtonHighlight");
 	gcValues.foreground = borderPtr->lightColorPtr->pixel;
 	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 	((WinBorder*)borderPtr)->dark2ColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("System3dDarkShadow"));
+		"System3dDarkShadow");
 	((WinBorder*)borderPtr)->light2ColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("System3dLight"));
+		"System3dLight");
 	return;
     }
     darkColor.red = 0;
@@ -466,8 +466,7 @@ TkpGetShadows(
     }
 
     if (borderPtr->shadow == None) {
-	borderPtr->shadow = Tk_GetBitmap((Tcl_Interp *) NULL, tkwin,
-		Tk_GetUid("gray50"));
+	borderPtr->shadow = Tk_GetBitmap(NULL, tkwin, "gray50");
 	if (borderPtr->shadow == None) {
 	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
 	}

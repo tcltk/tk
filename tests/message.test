@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the "message" command
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -90,7 +90,7 @@ test message-1.8 {configuration option: "bd"} -setup {
     .m configure -bd badValue
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test message-1.9 {configuration option: "bg"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -121,7 +121,7 @@ test message-1.11 {configuration option: "borderwidth"} -setup {
     .m cget -borderwidth
 } -cleanup {
     destroy .m
-} -result 1
+} -result 1.3
 test message-1.12 {configuration option: "borderwidth"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
@@ -130,7 +130,7 @@ test message-1.12 {configuration option: "borderwidth"} -setup {
     .m configure -borderwidth badValue
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test message-1.13 {configuration option: "cursor"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -190,7 +190,7 @@ test message-1.18 {configuration option: "font"} -setup {
     .m configure -font {}
 } -cleanup {
     destroy .m
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test message-1.19 {configuration option: "-foreground"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -270,7 +270,7 @@ test message-1.26 {configuration option: "highlightthickness"} -setup {
     .m configure -highlightthickness  badValue
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test message-1.27 {configuration option: "justify"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -310,7 +310,7 @@ test message-1.30 {configuration option: "padx"} -setup {
     .m configure -padx 420x
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance or "" but got "420x"}
 
 test message-1.31 {configuration option: "pady"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -330,7 +330,7 @@ test message-1.32 {configuration option: "pady"} -setup {
     .m configure -pady 420x
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance or "" but got "420x"}
 
 test message-1.33 {configuration option: "relief"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -392,7 +392,17 @@ test message-1.38 {configuration option: "width"} -setup {
     .m configure -width badValue
 } -cleanup {
     destroy .m
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
+test message-1.39 {configuration options, fallback to default} -setup {
+    message .m -borderwidth -2 -highlightthickness -2 -font {Helvetica -12 bold}
+    pack .m
+    update
+} -body {
+    .m configure -padx -2 -pady -2 -width -2
+    list [.m cget -padx] [.m cget -pady] [.m cget -borderwidth] [.m cget -highlightthickness]  [.m cget -width]
+} -cleanup {
+    destroy .m
+} -result {{} {} 0 0 0}
 
 
 test message-2.1 {Tk_MessageObjCmd procedure} -body {
@@ -476,7 +486,7 @@ test message-4.1 {Bug [5d991b822e]} {
     set var INIT
     message .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable {}
+	.b configure -textvariable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -489,7 +499,7 @@ test message-4.2 {Bug [5d991b822e]} {
     set var INIT
     message .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable new
+	.b configure -textvariable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}

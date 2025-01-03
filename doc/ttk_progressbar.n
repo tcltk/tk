@@ -10,7 +10,7 @@
 .SH NAME
 ttk::progressbar \- Provide progress feedback
 .SH SYNOPSIS
-\fBttk::progressbar\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::progressbar\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -19,14 +19,22 @@ operation.  They can operate in two modes: \fIdeterminate\fR mode shows the
 amount completed relative to the total amount of work to be done, and
 \fIindeterminate\fR mode provides an animated display to let the user know
 that something is happening.
+.PP
+If the value of \fB\-orient\fR is \fBhorizontal\fR a text string can be
+displayed inside the progressbar. This string can be configured using
+the \fB\-anchor\fR, \fB\-font\fR, \fB\-foreground\fR, \fB\-justify\fR,
+\fB\-text\fR and \fB\-wraplength\fR options. If the value of \fB\-orient\fR
+is \fBvertical\fR then these options are ignored.
 .SO ttk_widget
-\-class	\-cursor	\-takefocus
-\-style
+\-anchor	\-class	\-cursor
+\-font	\-foreground	\-justify	\-style
+\-takefocus	\-text	\-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-length length Length
 Specifies the length of the long axis of the progress bar
-(width if horizontal, height if vertical).
+(width if horizontal, height if vertical). The value may have any of the forms
+acceptable to \fBTk_GetPixels\fR.
 .OP \-maximum maximum Maximum
 A floating point number specifying the maximum \fB\-value\fR.
 Defaults to 100.
@@ -58,34 +66,29 @@ automatically set to the value of the variable whenever
 the latter is modified.
 .SH "WIDGET COMMAND"
 .PP
-.TP
-\fIpathName \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR.
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+progressbar widgets support the following additional commands:
+.\" METHOD: start
 .TP
 \fIpathName \fBstart\fR ?\fIinterval\fR?
+.
 Begin autoincrement mode:
 schedules a recurring timer event that calls \fBstep\fR
 every \fIinterval\fR milliseconds.
 If omitted, \fIinterval\fR defaults to 50 milliseconds (20 steps/second).
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
+.\" METHOD: step
 .TP
 \fIpathName \fBstep\fR ?\fIamount\fR?
+.
 Increments the \fB\-value\fR by \fIamount\fR.
 \fIamount\fR defaults to 1.0 if omitted.
+.\" METHOD: stop
 .TP
 \fIpathName \fBstop\fR
+.
 Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
 .SH "STYLING OPTIONS"

@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .paned2
 catch {destroy $w}
@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 
 # Create the pane itself
 panedwindow $w.pane -orient vertical
-pack $w.pane -side top -expand yes -fill both -pady 2 -padx 2m
+pack $w.pane -side top -expand yes -fill both -pady 1.5p -padx 2m
 
 # The top window is a listbox with scrollbar
 set paneList {
@@ -71,4 +71,4 @@ grid rowconfigure    $f 0 -weight 1
 $f.text insert 1.0 "This is just a normal text widget"
 
 # Now add our contents to the paned window
-$w.pane add $w.pane.top $w.pane.bottom
+$w.pane add $w.pane.top $w.pane.bottom -stretch always

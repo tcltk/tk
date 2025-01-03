@@ -2,8 +2,8 @@
 # especially the "clipboard" command.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 #

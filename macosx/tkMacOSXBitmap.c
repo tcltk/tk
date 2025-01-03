@@ -57,12 +57,12 @@ typedef struct {
 } IconBitmap;
 
 static const char *const iconBitmapOptionStrings[] = {
-    "-file", "-fileType", "-osType", "-systemType", "-namedImage",
-    "-imageFile", NULL
+    "-file", "-fileType", "-imageFile", "-namedImage", "-osType",
+    "-systemType", NULL
 };
 enum iconBitmapOptions {
-    ICON_FILE, ICON_FILETYPE, ICON_OSTYPE, ICON_SYSTEMTYPE, ICON_NAMEDIMAGE,
-    ICON_IMAGEFILE,
+    ICON_FILE, ICON_FILETYPE, ICON_IMAGEFILE, ICON_NAMEDIMAGE, ICON_OSTYPE,
+    ICON_SYSTEMTYPE
 };
 
 
@@ -202,7 +202,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_DString ds;
     Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-    Tcl_UtfToExternalDString(encoding, s, -1, &ds);
+    (void)Tcl_UtfToExternalDString(encoding, s, TCL_INDEX_NONE, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
 	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
@@ -348,7 +348,7 @@ TkMacOSXIconBitmapObjCmd(
 {
     Tcl_HashEntry *hPtr;
     int isNew, result = TCL_ERROR;
-    int i = 1, len;
+    Tcl_Size i = 1, len;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
 
@@ -360,7 +360,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
 	goto end;
     }
@@ -376,22 +376,22 @@ TkMacOSXIconBitmapObjCmd(
     }
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
 	goto end;
     }
 #if 0
     if ((kind == ICON_TYPE || kind == ICON_SYSTEM)) {
 	Tcl_DString ds;
- 	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
+	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-	Tcl_UtfToExternalDString(encoding, value, -1, &ds);
+	(void)Tcl_UtfToExternalDString(encoding, value, TCL_INDEX_NONE, &ds);
 	len = Tcl_DStringLength(&ds);
 	Tcl_DStringFree(&ds);
 	Tcl_FreeEncoding(encoding);
 	if (len > 4) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid bitmap value", -1));
+		    "invalid bitmap value", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
 	    goto end;
 	}

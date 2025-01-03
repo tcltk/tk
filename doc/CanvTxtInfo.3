@@ -15,6 +15,7 @@ Tk_CanvasTextInfo \- additional information for managing text items in canvases
 .sp
 Tk_CanvasTextInfo *
 \fBTk_CanvasGetTextInfo\fR(\fIcanvas\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_Canvas canvas
 .AP Tk_Canvas canvas in
@@ -31,15 +32,15 @@ a structure that is shared between Tk and all the items that display
 text.
 The structure has the following form:
 .CS
-typedef struct Tk_CanvasTextInfo {
+typedef struct {
     Tk_3DBorder \fIselBorder\fR;
     int \fIselBorderWidth\fR;
     XColor *\fIselFgColorPtr\fR;
     Tk_Item *\fIselItemPtr\fR;
-    int \fIselectFirst\fR;
-    int \fIselectLast\fR;
+    Tcl_Size \fIselectFirst\fR;
+    Tcl_Size \fIselectLast\fR;
     Tk_Item *\fIanchorItemPtr\fR;
-    int \fIselectAnchor\fR;
+    Tcl_Size \fIselectAnchor\fR;
     Tk_3DBorder \fIinsertBorder\fR;
     int \fIinsertWidth\fR;
     int \fIinsertBorderWidth\fR;

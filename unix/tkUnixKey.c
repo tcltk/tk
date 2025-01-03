@@ -4,7 +4,7 @@
  *	This file contains routines for dealing with international keyboard
  *	input.
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,28 +12,10 @@
 
 #include "tkInt.h"
 
-#ifdef __GNUC__
-/*
- * We know that XKeycodeToKeysym is deprecated, nothing we can do about it.
- */
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-/*
-** Bug [3607830]: Before using Xkb, it must be initialized.  TkpOpenDisplay
-**                does this and sets the USE_XKB flag if xkb is supported.
-**                (should this be function ptr?)
-*/
-
-#ifdef HAVE_XKBKEYCODETOKEYSYM
-#  include <X11/XKBlib.h>
-#else
-#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
-#endif
-#define TkKeycodeToKeysym(D,K,G,L)		\
-    ((D)->flags & TK_DISPLAY_USE_XKB) ?		\
-      XkbKeycodeToKeysym((D)->display,K,G,L) :	\
-      XKeycodeToKeysym((D)->display,K,L)
+#undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
+#include <X11/XKBlib.h>
+#undef XkbOpenDisplay
 
 /*
  * Prototypes for local functions defined in this file:
@@ -118,7 +100,7 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
-    int len;
+    Tcl_Size len;
     Tcl_DString buf;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
@@ -151,8 +133,8 @@ TkpGetString(
 
 #if X_HAVE_UTF8_STRING
 	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
-	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+	len = (Tcl_Size)Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		Tcl_DStringValue(dsPtr), (int)Tcl_DStringLength(dsPtr),
 		&kePtr->keysym, &status);
 
 	if (status == XBufferOverflow) {
@@ -161,8 +143,8 @@ TkpGetString(
 	     */
 
 	    Tcl_DStringSetLength(dsPtr, len);
-	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+	    len =(Tcl_Size) Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		    Tcl_DStringValue(dsPtr), (int)Tcl_DStringLength(dsPtr),
 		    &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
@@ -209,12 +191,12 @@ TkpGetString(
 
 	Tcl_DStringInit(&buf);
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
+	len = (Tcl_Size)XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
 		TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
 	Tcl_DStringValue(&buf)[len] = '\0';
 
 	if (len == 1) {
-	    len = TkUniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
+	    len = Tcl_UniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
 		    Tcl_DStringValue(dsPtr));
 	    Tcl_DStringSetLength(dsPtr, len);
 	} else {
@@ -243,7 +225,7 @@ done:
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state to be used so that when they call TkKeycodeToKeysym taking
+ * modifier state to be used so that when they call XbkKeycodeToKeysym taking
  * into account the xkey.state, they will get back the original keysym.
  */
 
@@ -313,10 +295,6 @@ TkpSetKeycodeAndState(
  *----------------------------------------------------------------------
  */
 
-#ifdef __GNUC__
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
 KeySym
 TkpGetKeySym(
     TkDisplay *dispPtr,		/* Display in which to map keycode. */
@@ -381,7 +359,7 @@ TkpGetKeySym(
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
+    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0,
 	    index);
 
     /*
@@ -400,7 +378,7 @@ TkpGetKeySym(
 		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
 		|| ((sym >= XK_Oslash) && (sym <= XK_Thorn)))) {
 	    index &= ~1;
-	    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+	    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		    0, index);
 	}
     }
@@ -411,7 +389,7 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		0, index & ~1);
     }
     return sym;
@@ -444,7 +422,7 @@ TkpInitKeymapInfo(
     KeyCode *codePtr;
     KeySym keysym;
     int count, i, max;
-    int j, arraySize;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;
@@ -462,7 +440,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 	if (keysym == XK_Shift_Lock) {
 	    dispPtr->lockUsage = LU_SHIFT;
 	    break;
@@ -488,7 +466,7 @@ TkpInitKeymapInfo(
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);

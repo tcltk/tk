@@ -13,13 +13,13 @@ proc ttk::progressbar::Autoincrement {pb steptime stepsize} {
     variable Timers
 
     if {![winfo exists $pb]} {
-    	# widget has been destroyed -- cancel timer
+	# widget has been destroyed -- cancel timer
 	unset -nocomplain Timers($pb)
 	return
     }
 
     set Timers($pb) [after $steptime \
-    	[list ttk::progressbar::Autoincrement $pb $steptime $stepsize] ]
+	[list ttk::progressbar::Autoincrement $pb $steptime $stepsize] ]
 
     $pb step $stepsize
 }
@@ -31,6 +31,9 @@ proc ttk::progressbar::start {pb {steptime 50} {stepsize 1}} {
     variable Timers
     if {![info exists Timers($pb)]} {
 	Autoincrement $pb $steptime $stepsize
+    }
+    if {[tk windowingsystem] eq "aqua"} {
+	$pb state selected
     }
 }
 
@@ -44,6 +47,9 @@ proc ttk::progressbar::stop {pb} {
 	unset Timers($pb)
     }
     $pb configure -value 0
+    if {[tk windowingsystem] eq "aqua"} {
+	$pb state !selected
+    }
 }
 
 

@@ -12,7 +12,7 @@
 .SH NAME
 selection \- Manipulate the X selection
 .SH SYNOPSIS
-\fBselection \fIoption\fR ?\fIarg arg ...\fR?
+\fBselection \fIoption\fR ?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -26,8 +26,9 @@ Note that for management of the \fBCLIPBOARD\fR selection (see below), the
 The first argument to \fBselection\fR determines the format of the
 rest of the arguments and the behavior of the command.  The following
 forms are currently supported:
+.\" METHOD: clear
 .TP
-\fBselection clear\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-selection\fR \fIselection\fR?
+\fBselection clear\fR ?\fB\-displayof\fI window\fR? ?\fB\-selection\fI selection\fR?
 .
 If \fIselection\fR exists anywhere on \fIwindow\fR's display, clear it
 so that no window owns the selection anymore.  \fISelection\fR
@@ -37,8 +38,9 @@ Communication Conventions Manual for complete details.
 \fISelection\fR defaults to \fBPRIMARY\fR and \fIwindow\fR defaults to
 .QW . .
 Returns an empty string.
+.\" METHOD: get
 .TP
-\fBselection get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-selection\fR \fIselection\fR? ?\fB\-type\fR \fItype\fR?
+\fBselection get\fR ?\fB\-displayof\fI window\fR? ?\fB\-selection\fI selection\fR? ?\fB\-type\fI type\fR?
 .
 Retrieves the value of \fIselection\fR from \fIwindow\fR's display and
 returns it as a result.  \fISelection\fR defaults to \fBPRIMARY\fR and
@@ -61,8 +63,9 @@ collection of fields separated by spaces: atoms are converted to their
 textual names, and anything else is converted to hexadecimal integers.
 Note that \fBselection get\fR does not retrieve the selection in the
 \fBUTF8_STRING\fR format unless told to.
+.\" METHOD: handle
 .TP
-\fBselection handle\fR ?\fB\-selection\fR \fIs\fR? ?\fB\-type\fR \fIt\fR? ?\fB\-format\fR \fIf\fR? \fIwindow command\fR
+\fBselection handle\fR ?\fB\-selection\fI s\fR? ?\fB\-type\fI t\fR? ?\fB\-format\fI f\fR? \fIwindow command\fR
 .
 Creates a handler for selection requests, such that \fIcommand\fR will
 be executed whenever selection \fIs\fR is owned by \fIwindow\fR and
@@ -119,10 +122,11 @@ used to retrieve the selection then the value is converted back to
 a string at the requesting end, so \fIformat\fR is
 irrelevant.
 .RE
+.\" METHOD: own
 .TP
-\fBselection own\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-selection\fR \fIselection\fR?
+\fBselection own\fR ?\fB\-displayof\fI window\fR? ?\fB\-selection\fI selection\fR?
 .TP
-\fBselection own\fR ?\fB\-command\fR \fIcommand\fR? ?\fB\-selection\fR \fIselection\fR? \fIwindow\fR
+\fBselection own\fR ?\fB\-command\fI command\fR? ?\fB\-selection\fI selection\fR? \fIwindow\fR
 .
 The first form of \fBselection own\fR returns the path name of the
 window in this application that owns \fIselection\fR on the display
@@ -142,23 +146,42 @@ some other window claims ownership of the selection away from
 .RE
 .SH WIDGET FACILITIES
 .PP
-The \fBtext\fR, \fBentry\fR, \fBttk::entry\fR, \fBlistbox\fR, \fBspinbox\fR and \fBttk::spinbox\fR widgets have the option \fB\-exportselection\fR.  If a widget has this option set to boolean \fBtrue\fR, then (in an unsafe interpreter) a selection made in the widget is automatically written to the \fBPRIMARY\fR selection.
+The \fBtext\fR, \fBentry\fR, \fBttk::entry\fR, \fBlistbox\fR, \fBspinbox\fR
+and \fBttk::spinbox\fR widgets have the option \fB\-exportselection\fR.  If a
+widget has this option set to boolean \fBtrue\fR, then (in an unsafe
+interpreter) a selection made in the widget is automatically written to the
+\fBPRIMARY\fR selection.
 .PP
-A GUI event, for example \fB<<PasteSelection>>\fR, can copy the \fBPRIMARY\fR selection to certain widgets.  This copy is implemented by a widget binding to the event.  The binding script makes appropriate calls to the \fBselection\fR command.
+A GUI event, for example \fB<<PasteSelection>>\fR, can copy the \fBPRIMARY\fR
+selection to certain widgets.  This copy is implemented by a widget binding to
+the event.  The binding script makes appropriate calls to the \fBselection\fR
+command.
 .PP
 .SH PORTABILITY ISSUES
 .PP
-On X11, the \fBPRIMARY\fR selection is a system-wide feature of the X server, allowing communication between different processes that are X11 clients.
+On X11, the \fBPRIMARY\fR selection is a system-wide feature of the X server,
+allowing communication between different processes that are X11 clients.
 .PP
-On Windows, the \fBPRIMARY\fR selection is not provided by the system, but only by Tk, and so it is shared only between windows of a parent interpreter and its child interpreters.  It is not shared between interpreters in different processes or different threads.  Each parent interpreter has a separate \fBPRIMARY\fR selection that is shared only with its child interpreters which are not safe interpreters.
+On Windows, the \fBPRIMARY\fR selection is not provided by the system, but
+only by Tk, and so it is shared only between windows of a parent interpreter
+and its child interpreters.  It is not shared between interpreters in
+different processes or different threads.  Each parent interpreter has a
+separate \fBPRIMARY\fR selection that is shared only with its child
+interpreters which are not safe interpreters.
 .PP
 .SH SECURITY
 .PP
-A safe interpreter cannot read from the \fBPRIMARY\fR selection because its \fBselection\fR command is hidden.  For this reason the \fBPRIMARY\fR selection cannot be written to the Tk widgets of a safe interpreter.
+A safe interpreter cannot read from the \fBPRIMARY\fR selection because its
+\fBselection\fR command is hidden.  For this reason the \fBPRIMARY\fR
+selection cannot be written to the Tk widgets of a safe interpreter.
 .PP
-A Tk widget can have its option \fB\-exportselection\fR set to boolean \fBtrue\fR, but in a safe interpreter this option has no effect: writing from the widget to the \fBPRIMARY\fR selection is disabled.
+A Tk widget can have its option \fB\-exportselection\fR set to boolean
+\fBtrue\fR, but in a safe interpreter this option has no effect: writing
+from the widget to the \fBPRIMARY\fR selection is disabled.
 .PP
-These are security features.  A safe interpreter may run untrusted code, and it is a security risk if this untrusted code can read or write the \fBPRIMARY\fR selection used by other interpreters.
+These are security features.  A safe interpreter may run untrusted code, and
+it is a security risk if this untrusted code can read or write the
+\fBPRIMARY\fR selection used by other interpreters.
 .PP
 .SH EXAMPLES
 .PP
@@ -167,14 +190,14 @@ On X11 platforms, one of the standard selections available is the
 it using Tk:
 .PP
 .CS
-set selContents [\fBselection get\fR \-selection SECONDARY]
+set selContents [\fBselection get\fR -selection SECONDARY]
 .CE
 .PP
 Many different types of data may be available for a selection; the
 special type \fBTARGETS\fR allows you to get a list of available types:
 .PP
 .CS
-foreach type [\fBselection get\fR \-type TARGETS] {
+foreach type [\fBselection get\fR -type TARGETS] {
    puts "Selection PRIMARY supports type $type"
 }
 .CE
@@ -184,7 +207,7 @@ data for the selection. Then you have to claim the selection...
 .CS
 # Set up the data handler ready for incoming requests
 set foo "This is a string with some data in it... blah blah"
-\fBselection handle\fR \-selection SECONDARY . getData
+\fBselection handle\fR -selection SECONDARY . getData
 proc getData {offset maxChars} {
    puts "Retrieving selection starting at $offset"
    return [string range $::foo $offset [expr {$offset+$maxChars-1}]]
@@ -192,7 +215,7 @@ proc getData {offset maxChars} {
 
 # Now we grab the selection itself
 puts "Claiming selection"
-\fBselection own\fR \-command lost \-selection SECONDARY .
+\fBselection own\fR -command lost -selection SECONDARY .
 proc lost {} {
    puts "Lost selection"
 }

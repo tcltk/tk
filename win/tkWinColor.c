@@ -3,8 +3,8 @@
  *
  *	Functions to map color names to system color values.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 1994 Software Research Associates, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 1994 Software Research Associates, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -58,6 +58,7 @@ static const SystemColorEntry sysColors[] = {
     {"InfoText",		COLOR_INFOTEXT},
     {"Menu",			COLOR_MENU},
     {"MenuText",		COLOR_MENUTEXT},
+    {"PlaceHolderText",		COLOR_GRAYTEXT},
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
@@ -179,9 +180,9 @@ TkpGetColor(
 
 	XAllocColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 		&winColPtr->info.color);
- 	return (TkColor *) winColPtr;
+	return (TkColor *)winColPtr;
     }
-    return (TkColor *) NULL;
+    return (TkColor *)NULL;
 }
 
 /*
@@ -308,13 +309,13 @@ XAllocColor(
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
 
-    entry.peRed = (color->red) >> 8;
-    entry.peGreen = (color->green) >> 8;
-    entry.peBlue = (color->blue) >> 8;
+    entry.peRed = (BYTE)((color->red) >> 8);
+    entry.peGreen = (BYTE)((color->green) >> 8);
+    entry.peBlue = (BYTE)((color->blue) >> 8);
     entry.peFlags = 0;
 
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	unsigned long sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
+	unsigned long sizePalette = (unsigned long)GetDeviceCaps(dc, SIZEPALETTE);
 	UINT newPixel, closePixel;
 	int isNew;
 	size_t refCount;

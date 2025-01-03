@@ -8,8 +8,8 @@
 # fonts having or not having certain properties, which may not be valid
 # at all sites.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -78,7 +78,7 @@ proc getsize {} {
 
 test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
     list [catch {font measure {} xyz} msg] $msg
-} {1 {font "" doesn't exist}}
+} {1 {font "" does not exist}}
 test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 haveFixedFamilyFont} {
     font measure fixed 0
 } 6
@@ -271,7 +271,7 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
 # - with Xft the problem is identical for \u4000, and moreover the width
 #   of, say, \002 depends on which fonts are installed.
     set x 0
-    incr x [font measure $courier "\u4000"]   ;# 6
+    incr x [font measure $courier "䀀"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
     incr x [font measure $courier "\012"]   ;# 2
     incr x [font measure $courier "\101"]   ;# 1

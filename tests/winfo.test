@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the "winfo" command.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -29,12 +29,12 @@ proc eatColors {w {options ""}} {
     canvas $w.c -width 400 -height 200 -bd 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
-        for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
-            $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
-                [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
-                -fill $color
-        }
+	for {set x 0} {$x < 40} {incr x} {
+	    set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
+	    $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
+		[expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
+		-fill $color
+	}
     }
     update
 }
@@ -173,7 +173,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
     update
 
     set x [winfo containing -display .t.f [expr {[winfo rootx .t]+600}] \
-        [expr {[winfo rooty .t.f]+450}]]
+	[expr {[winfo rooty .t.f]+450}]]
     expr {($x == ".") || ($x == "")}
 } -cleanup {
     destroy .t
@@ -239,7 +239,7 @@ test winfo-7.5 {"winfo pathname" command} -body {
 } -returnCodes error -result {expected integer but got "xyz"}
 test winfo-7.6 {"winfo pathname" command} -body {
     winfo pathname 224
-} -returnCodes error -result {window id "224" doesn't exist in this application}
+} -returnCodes error -result {window id "224" does not exist in this application}
 test winfo-7.7 {"winfo pathname" command} -setup {
     destroy .b
     button .b -text "Help"
@@ -392,7 +392,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
     update
 
     list rootx [expr {[winfo rootx .emb] == [winfo rootx .con]}] \
-        rooty [expr {[winfo rooty .emb] == [winfo rooty .con]}]
+	rooty [expr {[winfo rooty .emb] == [winfo rooty .con]}]
 } -cleanup {
     deleteWindows
 } -result {rootx 1 rooty 1}
@@ -441,8 +441,10 @@ test winfo-13.3 {destroying container window} -setup {
 test winfo-13.4 {[winfo containing] with embedded windows} -setup {
     deleteWindows
 } -body {
+    wm geometry . +100+100
     frame .con -container 1
     pack .con -expand yes -fill both
+    update
     toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
@@ -452,7 +454,7 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
     pack .b -expand yes -fill both
     update
     string compare .emb.b \
-        [winfo containing [winfo rootx .emb.b] [winfo rooty .emb.b]]
+	[winfo containing [winfo rootx .emb.b] [winfo rooty .emb.b]]
 } -cleanup {
     deleteWindows
 } -result 0

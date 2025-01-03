@@ -1,11 +1,11 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
 test image-1.1 "Bad image element" -body {
     ttk::style element create BadImage image badimage
-} -returnCodes error -result {image "badimage" doesn't exist}
+} -returnCodes error -result {image "badimage" does not exist}
 
 test image-1.2 "Duplicate element" -setup {
     image create photo test.element -width 10 -height 10

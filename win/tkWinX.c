@@ -3,9 +3,9 @@
  *
  *	This file contains Windows emulation procedures for X routines.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1998-2000 Scriptics Corporation.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1994 Software Research Associates, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -14,21 +14,12 @@
 #define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
 #   pragma comment (lib, "advapi32.lib")
 #endif
+
 
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
@@ -44,6 +35,31 @@
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL 0x020E
 #endif
+
+/* A WM_MOUSEWHEEL message sent by a trackpad contains the number of pixels as
+ * the delta value, while low precision scrollwheels always send an integer
+ * multiple of WHEELDELTA (= 120) as the delta value.
+ */
+
+#define WHEELDELTA 120
+
+/*
+ * Our heuristic for deciding whether a WM_MOUSEWHEEL message
+ * comes from a high resolution scrolling device is that we
+ * assume it is high resolution unless there are two consecutive
+ * delta values that are both multiples of 120.  This is static,
+ * rather than thread-specific, since input devices are shared
+ * by all threads.
+ */
+
+static int lastMod = 0;
+
+/*
+ * The serial field of TouchpadScroll events is a counter for
+ * events of this type only.
+ */
+
+static unsigned long scrollCounter = 0;
 
 /*
  * imm.h is needed by HandleIMEComposition
@@ -91,10 +107,6 @@ typedef struct {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD vWheelTickPrev;	/* For high resolution wheels (vertical). */
-    DWORD hWheelTickPrev;	/* For high resolution wheels (horizontal). */
-    short vWheelAcc;		/* For high resolution wheels (vertical). */
-    short hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -105,7 +117,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
+static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -138,13 +150,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
-		(void *)GetProcAddress(handle, "RtlGetVersion");
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	if (!getversion || getversion(&os)) {
-	    GetVersionExW(&os);
-	}
+	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
 	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
@@ -299,7 +305,7 @@ TkWinXInit(
 
 void
 TkWinXCleanup(
-    ClientData clientData)
+    void *clientData)
 {
     HINSTANCE hInstance = (HINSTANCE)clientData;
 
@@ -391,30 +397,6 @@ TkWinGetPlatformTheme(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
- *
- *	Determines whether running under NT, 95, or Win32s, to allow runtime
- *	conditional code. Win32s is no longer supported.
- *
- * Results:
- *	The return value is always:
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformId(void)
-{
-    return VER_PLATFORM_WIN32_NT;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkGetDefaultScreenName --
  *
  *	Returns the name of the screen that Tk should use during
@@ -464,10 +446,10 @@ TkWinDisplayChanged(
     HDC dc;
     Screen *screen;
 
-    if (display == NULL || ScreenOfDisplay(display, 0) == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = ScreenOfDisplay(display, 0);
+    screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
     WidthOfScreen(screen) = GetDeviceCaps(dc, HORZRES);
@@ -487,13 +469,13 @@ TkWinDisplayChanged(
      */
 
     screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
-    DefaultDepthOfScreen(screen) = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
+    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
 
-    if (DefaultVisualOfScreen(screen) != NULL) {
-	ckfree(DefaultVisualOfScreen(screen));
+    if (screen->root_visual != NULL) {
+	ckfree(screen->root_visual);
     }
-    DefaultVisualOfScreen(screen) = (Visual *)ckalloc(sizeof(Visual));
-    DefaultVisualOfScreen(screen)->visualid = 0;
+    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
+    screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
 	DefaultVisualOfScreen(screen)->c_class = PseudoColor;
@@ -538,7 +520,7 @@ TkWinDisplayChanged(
 /*
  *----------------------------------------------------------------------
  *
- * TkpOpenDisplay --
+ * TkpOpenDisplay/XkbOpenDisplay --
  *
  *	Create the Display structure and fill it with device specific
  *	information.
@@ -557,46 +539,53 @@ TkpOpenDisplay(
     const char *display_name)
 {
     Display *display;
-    Screen *screen;
-    TkWinDrawable *twdPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    DWORD initialWheelTick;
 
     if (tsdPtr->winDisplay != NULL) {
-	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
+	if (!strcmp(DisplayString(tsdPtr->winDisplay->display), display_name)) {
 	    return tsdPtr->winDisplay;
 	} else {
 	    return NULL;
 	}
     }
 
-    display = ckalloc(sizeof(Display));
-    memset(display, 0, sizeof(Display));
+    display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
+    TkWinDisplayChanged(display);
 
-    display->display_name = ckalloc(strlen(display_name) + 1);
-    strcpy(display->display_name, display_name);
-
-    display->nscreens = 1;
-    LastKnownRequestProcessed(display) = 1;
-    display->qlen = 0;
-
-    screen = ckalloc(sizeof(Screen));
-    memset(screen, 0, sizeof(Screen));
-    DisplayOfScreen(screen) = display;
+    tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
+    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
+    tsdPtr->winDisplay->display = display;
+    tsdPtr->updatingClipboard = FALSE;
 
     /*
-     * Set up the root window.
+     * Key map info must be available immediately, because of "send event".
      */
+    TkpInitKeymapInfo(tsdPtr->winDisplay);
 
-    twdPtr = ckalloc(sizeof(TkWinDrawable));
-    if (twdPtr == NULL) {
-	return NULL;
-    }
-    twdPtr->type = TWD_WINDOW;
-    twdPtr->window.winPtr = NULL;
-    twdPtr->window.handle = NULL;
-    RootWindowOfScreen(screen) = (Window)twdPtr;
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(tsdPtr->winDisplay);
+
+    return tsdPtr->winDisplay;
+}
+
+Display *
+XkbOpenDisplay(
+	const char *name,
+	int *ev_rtrn,
+	int *err_rtrn,
+	int *major_rtrn,
+	int *minor_rtrn,
+	int *reason)
+{
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
+    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
+    TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
+
+    memset(screen, 0, sizeof(Screen));
+    memset(display, 0, sizeof(Display));
 
     /*
      * Note that these pixel values are not palette relative.
@@ -610,24 +599,26 @@ TkpOpenDisplay(
     display->nscreens		= 1;
     display->default_screen	= 0;
 
-    TkWinDisplayChanged(display);
+    twdPtr->type = TWD_WINDOW;
+    twdPtr->window.winPtr = NULL;
+    twdPtr->window.handle = NULL;
+    screen->root = (Window)twdPtr;
+    screen->display = (Display *)display;
 
-    tsdPtr->winDisplay = ckalloc(sizeof(TkDisplay));
-    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
-    tsdPtr->winDisplay->display = display;
-    tsdPtr->updatingClipboard = FALSE;
-    initialWheelTick = GetTickCount();
-    tsdPtr->vWheelTickPrev = initialWheelTick;
-    tsdPtr->hWheelTickPrev = initialWheelTick;
-    tsdPtr->vWheelAcc = 0;
-    tsdPtr->hWheelAcc = 0;
+    display->display_name = (char  *)ckalloc(strlen(name) + 1);
+    strcpy(display->display_name, name);
 
-    /*
-     * Key map info must be available immediately, because of "send event".
-     */
-    TkpInitKeymapInfo(tsdPtr->winDisplay);
+    display->nscreens = 1;
+    display->request = 1;
+    display->qlen = 0;
 
-    return tsdPtr->winDisplay;
+    if (ev_rtrn) *ev_rtrn = 0;
+    if (err_rtrn) *err_rtrn = 0;
+    if (major_rtrn) *major_rtrn = 0;
+    if (minor_rtrn) *minor_rtrn = 0;
+    if (reason) *reason = 0;
+
+    return (Display *)display;
 }
 
 /*
@@ -651,7 +642,7 @@ void
 TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
-    Display *display = dispPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -670,7 +661,7 @@ TkpCloseDisplay(
 	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
-	    ckfree(RootWindowOfScreen(ScreenOfDisplay(display, 0)));
+	    ckfree((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
 	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
@@ -815,22 +806,22 @@ TkWinChildProc(
 	break;
 
     case WM_UNICHAR:
-        if (wParam == UNICODE_NOCHAR) {
+	if (wParam == UNICODE_NOCHAR) {
 	    /* If wParam is UNICODE_NOCHAR and the application processes
 	     * this message, then return TRUE. */
 	    result = 1;
 	} else {
 	    /* If the event was translated, we must return 0 */
-            if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-                result = 0;
+	    if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+		result = 0;
 	    } else {
-	        result = 1;
+		result = 1;
 	    }
 	}
 	break;
 
     default:
-	if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
@@ -847,7 +838,7 @@ TkWinChildProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_TranslateWinEvent --
+ * TkTranslateWinEvent --
  *
  *	This function is called by widget window functions to handle the
  *	translation from Win32 events to Tk events.
@@ -862,7 +853,7 @@ TkWinChildProc(
  */
 
 int
-Tk_TranslateWinEvent(
+TkTranslateWinEvent(
     HWND hwnd,
     UINT message,
     WPARAM wParam,
@@ -881,20 +872,20 @@ Tk_TranslateWinEvent(
     }
 
     case WM_RENDERALLFORMATS: {
-        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
-        if (winPtr && OpenClipboard(hwnd)) {
-            /*
-             * Make sure that nobody had taken ownership of the clipboard
-             * before we opened it.
-             */
+	if (winPtr && OpenClipboard(hwnd)) {
+	    /*
+	     * Make sure that nobody had taken ownership of the clipboard
+	     * before we opened it.
+	     */
 
-            if (GetClipboardOwner() == hwnd) {
-                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
-            }
-            CloseClipboard();
-        }
-        return 1;
+	    if (GetClipboardOwner() == hwnd) {
+		TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+	    }
+	    CloseClipboard();
+	}
+	return 1;
     }
 
     case WM_COMMAND:
@@ -931,7 +922,7 @@ Tk_TranslateWinEvent(
     case WM_RBUTTONUP:
     case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
-	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
+	TkWinPointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
     case WM_SYSKEYDOWN:
@@ -1155,68 +1146,65 @@ GenerateXEvent(
 
 	switch (message) {
 	case WM_MOUSEWHEEL: {
-	    /*
-	     * Support for high resolution wheels (vertical).
-	     */
-
-	    DWORD wheelTick = GetTickCount();
-
-	    if (wheelTick - tsdPtr->vWheelTickPrev < 1500) {
-		tsdPtr->vWheelAcc += (short) HIWORD(wParam);
-	    } else {
-		tsdPtr->vWheelAcc = (short) HIWORD(wParam);
-	    }
-	    tsdPtr->vWheelTickPrev = wheelTick;
-	    if (abs(tsdPtr->vWheelAcc) < WHEEL_DELTA) {
-		return;
-	    }
 
 	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events. The Y delta
+	     * is stored in the low order 16 bits of the keycode field.  Set
+	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
-	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = (unsigned int) (delta & 0xffff);
+	    } else {
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.keycode = (unsigned int) delta;
+	    }
+	    lastMod = mod;
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
+
 	    /*
-	     * Support for high resolution wheels (horizontal).
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events.  For low
+	     * resolution scrolls the X delta is stored in the keycode field
+	     * and For high resolution scrolls the X delta is in the high word
+	     * of the keycode.  Set nbytes to 0 to prevent conversion of the
+	     * keycode to a keysym in TkpGetString. [Bug 1118340].
 	     */
 
-	    DWORD wheelTick = GetTickCount();
-
-	    if (wheelTick - tsdPtr->hWheelTickPrev < 1500) {
-		tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = (unsigned int)(-(delta << 16));
 	    } else {
-		tsdPtr->hWheelAcc = -((short) HIWORD(wParam));
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state |= ShiftMask;
+		event.x.xkey.keycode = delta;
 	    }
-	    tsdPtr->hWheelTickPrev = wheelTick;
-	    if (abs(tsdPtr->hWheelAcc) < WHEEL_DELTA) {
-		return;
-	    }
-
-	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
-	     */
-
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
-	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
+	    lastMod = mod;
 	    break;
 	}
 	case WM_SYSKEYDOWN:
@@ -1233,7 +1221,7 @@ GenerateXEvent(
 	    event.x.xany.send_event = -1;
 	    event.x.xkey.keycode = wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
-	            WM_SYSCHAR);
+		    WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1306,7 +1294,7 @@ GenerateXEvent(
 		    MSG msg;
 
 		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
-		            PM_NOREMOVE) != 0)
+			    PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
 			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.key.nbytes = 2;
@@ -1718,30 +1706,6 @@ HandleIMEComposition(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinResendEvent --
  *
  *	This function converts an X event into a Windows event and invokes the
@@ -1783,11 +1747,11 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
-    case Button4:
+    case Button8:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
 	break;
-    case Button5:
+    case Button9:
 	msg = WM_XBUTTONDOWN;
 	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
 	break;

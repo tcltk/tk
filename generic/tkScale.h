@@ -4,8 +4,8 @@
  *	Declarations of types and functions used to implement the scale
  *	widget.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
- * Copyright (c) 1999-2000 Scriptics Corporation.
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 1999-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -53,10 +53,14 @@ typedef struct TkScale {
 				 * available for this widget. */
     enum orient orient;		/* Orientation for window (vertical or
 				 * horizontal). */
-    int width;			/* Desired narrow dimension of scale, in
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *widthObj;		/* Desired narrow dimension of scale, in
 				 * pixels. */
-    int length;			/* Desired long dimension of scale, in
+    Tcl_Obj *lengthObj;	/* Desired long dimension of scale, in
 				 * pixels. */
+#else
+    int width, length;
+#endif
     double value;		/* Current value of scale. */
     Tcl_Obj *varNamePtr;	/* Name of variable or NULL. If non-NULL,
 				 * scale's value tracks the contents of this
@@ -79,15 +83,14 @@ typedef struct TkScale {
 				 * tick interval. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */
-    char *command;		/* Command prefix to use when invoking Tcl
+    Tcl_Obj *commandObj;	/* Command prefix to use when invoking Tcl
 				 * commands because the scale value changed.
 				 * NULL means don't invoke commands. */
     int repeatDelay;		/* How long to wait before auto-repeating on
 				 * scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
-    char *label;		/* Label to display above or to right of
+    Tcl_Obj *labelObj;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    int labelLength;		/* Number of non-NULL chars. in label. */
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */
@@ -96,7 +99,11 @@ typedef struct TkScale {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D border around window. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
+#else
+    int borderWidth;
+#endif
     Tk_3DBorder bgBorder;	/* Used for drawing slider and other
 				 * background areas. */
     Tk_3DBorder activeBorder;	/* For drawing the slider when active. */
@@ -110,9 +117,13 @@ typedef struct TkScale {
     GC textGC;			/* GC for drawing text in normal mode. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     Tk_3DBorder highlightBorder;/* Value of -highlightbackground option:
 				 * specifies background with which to draw 3-D
 				 * default ring and focus highlight area when
@@ -123,8 +134,12 @@ typedef struct TkScale {
 				 * Indicates how much interior stuff must be
 				 * offset from outside edges to leave room for
 				 * borders. */
-    int sliderLength;		/* Length of slider, measured in pixels along
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *sliderLengthObj;	/* Length of slider, measured in pixels along
 				 * long dimension of scale. */
+#else
+    int sliderLength;
+#endif
     int showValue;		/* Non-zero means to display the scale value
 				 * below or to the left of the slider; zero
 				 * means don't display the value. */
@@ -233,7 +248,7 @@ MODULE_SCOPE double	TkRoundValueToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE double	TkRoundIntervalToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE TkScale *	TkpCreateScale(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDestroyScale(TkScale *scalePtr);
-MODULE_SCOPE void	TkpDisplayScale(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayScale(void *clientData);
 MODULE_SCOPE int	TkpScaleElement(TkScale *scalePtr, int x, int y);
 MODULE_SCOPE void	TkScaleSetValue(TkScale *scalePtr, double value,
 			    int setVar, int invokeCommand);

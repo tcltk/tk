@@ -1,0 +1,264 @@
+# This file is a Tcl script to test out the code in tkImgSVGnano.c, which reads
+# and write SVG-format image files for photo widgets. The files is organized
+# in the standard fashion for Tcl tests.
+#
+# Copyright © 2018 Rene Zaumseil
+# All rights reserved.
+
+package require tcltest 2.2
+namespace import ::tcltest::*
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+imageInit
+
+namespace eval svgnano {
+
+    variable data
+
+    set data(plus) {\
+	    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+		<path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
+		<path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
+		<circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
+		<ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
+		<line x1="10" y1="90" x2="50" y2="99"/>
+		<rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
+		<polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
+		<polygon fill ="yellow" points="80,80 70,85 90,90"/>
+		</svg>}
+		set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w">
+	    </svg>\
+    }
+
+    tcltest::makeFile $data(plus) plus.svg
+    set data(plusFilePath) [file join [tcltest::configure -tmpdir] plus.svg]
+
+    tcltest::makeFile $data(bad) bad.svg
+    set data(badFilePath) [file join [tcltest::configure -tmpdir] bad.svg]
+
+
+test imgSVGnano-1.1 {reading simple image} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+
+test imgSVGnano-1.2 {simple image with options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus) -format {svg -dpi 100 -scale 3}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {300 300}
+
+# test on crash found by Koen Danckaert
+test imgSVGnano-1.3 {reformat image options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    catch {foo configure -format {svg -scale}}
+    list {}
+} -cleanup {
+    rename foo ""
+} -result {{}}
+
+test imgSVGnano-1.4 {image options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    foo configure -format {svg -scale 2}
+    foo configure -format {svg -dpi 600}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+
+test imgSVGnano-1.5 {reading simple image from file} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -file $data(plusFilePath)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+test imgSVGnano-1.6 {simple image from file with options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -file $data(plusFilePath) -format {svg -dpi 100 -scale 3}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {300 300}
+
+test imgSVGnano-1.7 {very small scale gives 1x1 image} -body {
+    image create photo foo -format "svg -scale 0.000001"\
+	    -data $data(plus)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {1 1}
+test imgSVGnano-1.8 {very small scale gives 1x1 image, from file} -body {
+    image create photo foo -format "svg -scale 0.000001"\
+	    -file $data(plusFilePath)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {1 1}
+
+test imgSVGnano-2.1 {reading a bad image} -body {
+    image create photo foo -format svg -data $data(bad)
+} -returnCodes error -result {couldn't recognize image data}
+test imgSVGnano-2.2 {using bad option} -body {
+    image create photo foo -data $data(plus) -format {svg -scale 0}
+} -returnCodes error -result {-scale value must be positive}
+test imgSVGnano-2.3 {using bad option} -body {
+    image create photo foo -data $data(plus)
+    foo configure -format {svg 1.0}
+} -cleanup {
+    rename foo ""
+} -returnCodes error -result {bad option "1.0": must be -dpi, -scale, -scaletoheight, or -scaletowidth}
+test imgSVGnano-2.4 {reading a bad image from file} -body {
+    image create photo foo -format svg -file $data(badFilePath)
+} -returnCodes error -match glob\
+    -result {couldn't recognize data in image file "*/bad.svg"}
+
+# -scaletoheight and -scaletowidth options
+test imgSVGnano-3.1 {multiple scale options} -body {
+    image create photo foo -format "svg -scale 1 -scaletowidth 20"\
+	    -data $data(bad)
+} -returnCodes error -result {only one of -scale, -scaletoheight, -scaletowidth may be given}
+
+test imgSVGnano-3.2 {no number parameter to -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {expected integer but got "invalid"}
+
+test imgSVGnano-3.3 {no number parameter to -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {expected integer but got "invalid"}
+
+test imgSVGnano-3.4 {zero parameter to -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth 0"\
+	    -data $data(plus)
+} -returnCodes error -result {-scaletowidth value must be positive}
+
+test imgSVGnano-3.5 {zero parameter to -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight 0"\
+	    -data $data(plus)
+} -returnCodes error -result {-scaletoheight value must be positive}
+
+test imgSVGnano-3.6 {no number parameter to -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {expected integer but got "invalid"}
+
+test imgSVGnano-3.7 {option -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth 20"\
+	    -data $data(plus)
+    image width foo
+} -cleanup {
+    rename foo ""
+} -result 20
+
+test imgSVGnano-3.8 {option -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight 20"\
+	    -data $data(plus)
+    image height foo
+} -cleanup {
+    rename foo ""
+} -result 20
+
+test imgSVGnano-3.10 {change from -scaletoheight to -scale} -body {
+    set res {}
+    image create photo foo -format "svg -scaletoheight 16"\
+	    -data $data(plus)
+    lappend res [image width foo] [image height foo]
+    foo configure -format "svg -scale 2"
+    lappend res [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+    unset res
+} -result {16 16 200 200}
+
+# svg file access
+test imgSVGnano-4.1 {reread file on configure -scale} -setup {
+    catch {rename foo ""}
+    set res {}
+} -body {
+    image create photo foo -file $data(plusFilePath)
+    lappend res [image width foo] [image height foo]
+    foo configure -format "svg -scale 2"
+    lappend res [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+    unset res
+} -result {100 100 200 200}
+
+test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -setup {
+    catch {rename foo ""}
+    tcltest::makeFile $data(plus) tmpplus.svg
+    image create photo foo -file [file join [tcltest::configure -tmpdir] tmpplus.svg]
+    tcltest::removeFile tmpplus.svg
+} -body {
+    foo configure -format "svg -scale 2"
+} -cleanup {
+    rename foo ""
+} -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
+
+# Special images
+test imgSVGnano-5.0 {image without any of  "width", "height" and "viewbox"} -body {
+    image create photo foo -data\
+			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
+			"-//W3C//DTD SVG 1.0//EN\"\
+			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
+			<svg xmlns="http://www.w3.org/2000/svg">\
+			<g style="fill-opacity:0.7;">\
+			<circle cx="6.5cm" cy="2cm" r="100" style="fill:green;\
+			stroke:black; stroke-width:0.1cm" transform="translate(-70,150)"/>\
+			</g></svg>}
+} -cleanup {
+    rename foo ""
+} -result {foo}
+
+test imgSVGnano-5.1 {bug ea665e08f3 - too many values in parameters of the transform attribute} -body {
+    # shall not loop endlessly
+    image create photo foo -data\
+			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
+			"-//W3C//DTD SVG 1.0//EN\"\
+			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
+			<svg xmlns="http://www.w3.org/2000/svg">\
+			<circle cx="6.5cm" cy="2cm" r="100" transform="skewX(1 1)"/>\
+			</g></svg>}
+} -cleanup {
+    rename foo ""
+} -result {foo}
+
+test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
+    image create photo foo -format svg -data\
+			{<?xml version="1.0"?><!DOCTYPE svg PUBLIC\
+			"-//W3C//DTD SVG 1.0//EN\" \
+			"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">\
+			<sERRORvBADFILEg xmlns="http://www.w3.org/2000/svg">\
+			<circle cx="6.5cm" cy="2cm" r="100" transform="skewX(1 1)"/>\
+			</g></svg>}
+} -returnCodes error -result {couldn't recognize image data}
+
+    tcltest::removeFile plus.svg
+    tcltest::removeFile bad.svg
+
+};# end of namespace svgnano
+
+namespace delete svgnano
+imageFinish
+cleanupTests
+return
+
+# Local Variables:
+# mode: tcl
+# fill-column: 78
+# End:

@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out the "place" command.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -37,8 +37,8 @@ test place-1.2 {Tk_PlaceCmd procedure, "info" option} -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -x 1 -y 2 -width 3 -height 4 -relx 0.1 -rely 0.2 \
-        -relwidth 0.3 -relheight 0.4 -anchor se -in .t.f  \
-        -bordermode outside
+	-relwidth 0.3 -relheight 0.4 -anchor se -in .t.f  \
+	-bordermode outside
     place info .t.f2
 } -result {-in .t.f -x 1 -relx 0.1 -y 2 -rely 0.2 -width 3 -relwidth 0.3 -height 4 -relheight 0.4 -anchor se -bordermode outside}
 test place-1.3 {Tk_PlaceCmd procedure, "info" option} -setup {
@@ -48,8 +48,8 @@ test place-1.3 {Tk_PlaceCmd procedure, "info" option} -setup {
     # Make sure the result is built as a proper list by using a space in parent
     frame ".t.a b"
     place .t.f2 -x 1 -y 2 -width {} -height 4 -relx 0.2 -rely 0.2 \
-        -relwidth 0.3 -relheight {} -anchor w -in ".t.a b"  \
-        -bordermode ignore
+	-relwidth 0.3 -relheight {} -anchor w -in ".t.a b"  \
+	-bordermode ignore
     place info .t.f2
 } -cleanup {
     destroy ".t.a.b"
@@ -58,7 +58,7 @@ test place-1.3 {Tk_PlaceCmd procedure, "info" option} -setup {
 
 test place-2.1 {ConfigureContent procedure, -height option} -body {
     place .t.f2 -height abcd
-} -returnCodes error -result {bad screen distance "abcd"}
+} -returnCodes error -result {expected screen distance or "" but got "abcd"}
 test place-2.2 {ConfigureContent procedure, -height option} -setup {
     place forget .t.f2
 } -body {
@@ -79,7 +79,7 @@ test place-2.3 {ConfigureContent procedure, -height option} -setup {
 
 test place-3.1 {ConfigureContent procedure, -relheight option} -body {
     place .t.f2 -relheight abcd
-} -returnCodes error -result {expected floating-point number but got "abcd"}
+} -returnCodes error -result {expected floating-point number or "" but got "abcd"}
 test place-3.2 {ConfigureContent procedure, -relheight option} -setup {
     place forget .t.f2
 } -body {
@@ -102,7 +102,7 @@ test place-4.1 {ConfigureContent procedure, bad -in options} -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -in .t.f2
-} -returnCodes error -result {can't place .t.f2 relative to itself}
+} -returnCodes error -result {can't place ".t.f2" relative to itself}
 test place-4.2 {ConfigureContent procedure, bad -in option} -setup {
     place forget .t.f2
 } -body {
@@ -115,23 +115,23 @@ test place-4.3 {ConfigureContent procedure, bad -in option} -setup {
 } -body {
     winfo manager .t.f2
     place .t.f2 -in .t.f2
-} -returnCodes error -result {can't place .t.f2 relative to itself}
+} -returnCodes error -result {can't place ".t.f2" relative to itself}
 test place-4.4 {ConfigureContent procedure, bad -in option} -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -in .
-} -returnCodes error -result {can't place .t.f2 relative to .}
+} -returnCodes error -result {can't place ".t.f2" relative to "."}
 test place-4.5 {ConfigureContent procedure, bad -in option} -setup {
 } -body {
     frame .t.f1
     place .t.f1 -in .t.f1
-} -returnCodes error -result {can't place .t.f1 relative to itself}
+} -returnCodes error -result {can't place ".t.f1" relative to itself}
 test place-4.6 {prevent management loops} -setup {
     place forget .t.f1
 } -body {
     place .t.f1 -in .t.f2
     place .t.f2 -in .t.f1
-} -returnCodes error -result {can't put .t.f2 inside .t.f1, would cause management loop}
+} -returnCodes error -result {can't put ".t.f2" inside ".t.f1": would cause management loop}
 test place-4.7 {prevent management loops} -setup {
     place forget .t.f1
     place forget .t.f2
@@ -140,11 +140,11 @@ test place-4.7 {prevent management loops} -setup {
     place .t.f1 -in .t.f2
     place .t.f2 -in .t.f3
     place .t.f3 -in .t.f1
-} -returnCodes error -result {can't put .t.f3 inside .t.f1, would cause management loop}
+} -returnCodes error -result {can't put ".t.f3" inside ".t.f1": would cause management loop}
 
 test place-5.1 {ConfigureContent procedure, -relwidth option} -body {
     place .t.f2 -relwidth abcd
-} -returnCodes error -result {expected floating-point number but got "abcd"}
+} -returnCodes error -result {expected floating-point number or "" but got "abcd"}
 test place-5.2 {ConfigureContent procedure, -relwidth option} -setup {
     place forget .t.f2
 } -body {
@@ -164,7 +164,7 @@ test place-5.3 {ConfigureContent procedure, -relwidth option} -setup {
 
 test place-6.1 {ConfigureContent procedure, -width option} -body {
     place .t.f2 -width abcd
-} -returnCodes error -result {bad screen distance "abcd"}
+} -returnCodes error -result {expected screen distance or "" but got "abcd"}
 test place-6.2 {ConfigureContent procedure, -width option} -setup {
     place forget .t.f2
 } -body {
@@ -332,7 +332,7 @@ test place-9.5 {PlaceObjCmd} -setup {
     place badopt .foo
 } -cleanup {
     destroy .foo
-} -returnCodes error -result {bad option "badopt": must be configure, content, forget, info, or slaves}
+} -returnCodes error -result {bad option "badopt": must be configure, content, forget, or info}
 test place-9.6 {PlaceObjCmd, configure errors} -setup {
     destroy .foo
 } -body {
@@ -357,7 +357,7 @@ test place-9.8 {PlaceObjCmd, configure} -setup {
     place configure .foo
 } -cleanup {
     destroy .foo
-} -result [list {-anchor {} {} nw nw} {-bordermode {} {} inside inside} {-height {} {} {} {}} {-in {} {} {} .} {-relheight {} {} {} {}} {-relwidth {} {} {} {}} {-relx {} {} 0 0.0} {-rely {} {} 0 0.0} {-width {} {} {} {}} {-x {} {} 0 0} {-y {} {} 0 0}]
+} -result [list {-anchor {} {} nw nw} {-bordermode {} {} inside inside} {-height {} {} {} {}} {-in {} {} {} .} {-relheight {} {} {} {}} {-relwidth {} {} {} {}} {-relx {} {} 0.0 0.0} {-rely {} {} 0.0 0.0} {-width {} {} {} {}} {-x {} {} 0 0} {-y {} {} 0 0}]
 test place-9.9 {PlaceObjCmd, configure} -setup {
     destroy .foo
 } -body {
@@ -416,7 +416,7 @@ test place-10.3 {ConfigureContent} -setup {
     place .foo -bordermode j
 } -cleanup {
     destroy .foo
-} -returnCodes error -result {bad bordermode "j": must be inside, outside, or ignore}
+} -returnCodes error -result {bad bordermode "j": must be inside, ignore, or outside}
 test place-10.4 {ConfigureContent} -setup {
     destroy .foo
 } -body {
@@ -485,22 +485,22 @@ test place-13.1 {test respect for internalborder} -setup {
 test place-14.1 {memory leak testing} -constraints memory -setup {
     destroy .f
     proc getbytes {} {
-        set lines [split [memory info] "\n"]
-        lindex [lindex $lines 3] 3
+	set lines [split [memory info] "\n"]
+	lindex [lindex $lines 3] 3
     }
     # Repeat each body checking that memory does not increase
     proc stress {args} {
-        set res {}
-        foreach body $args {
-            set end 0
-            for {set i 0} {$i < 5} {incr i} {
-                uplevel 1 $body
-                set tmp $end
-                set end [getbytes]
-            }
-            lappend res [expr {$end - $tmp}]
-        }
-        return $res
+	set res {}
+	foreach body $args {
+	    set end 0
+	    for {set i 0} {$i < 5} {incr i} {
+		uplevel 1 $body
+		set tmp $end
+		set end [getbytes]
+	    }
+	    lappend res [expr {$end - $tmp}]
+	}
+	return $res
     }
 } -body {
     # Test all manners of forgetting content

@@ -1,0 +1,53 @@
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
+loadTestedCommands
+
+test scale-1.0 "Self-destruction" -body {
+    trace add variable v write { destroy .s ;# }
+    ttk::scale .s -variable v
+    pack .s ; update
+    .s set 1 ; update
+} -returnCodes error -match glob -result "*"
+
+test scale-2.1 "-state option" -setup {
+    ttk::scale .s
+    set res ""
+} -body {
+    # defaults
+    lappend res [.s instate disabled] [.s cget -state]
+    # set -state: instate returns accordingly
+    .s configure -state disabled
+    lappend res [.s instate disabled] [.s cget -state]
+    # back to normal
+    .s configure -state normal
+    lappend res [.s instate disabled] [.s cget -state]
+    # use state command: -state does NOT reflect it
+    .s state disabled
+    lappend res [.s instate disabled] [.s cget -state]
+    # further use state command
+    .s state readonly
+    lappend res [.s state] [.s cget -state]
+} -cleanup {
+    destroy .s
+    unset -nocomplain res
+} -result {0 normal 1 disabled 0 normal 1 normal {disabled readonly} normal}
+
+test scale-3.1 "style command" -body {
+    ttk::scale .wh  ; # default is  -orient horizontal
+    ttk::scale .wv -orient vertical
+    list [.wh cget -style] [.wh style] [winfo class .wh] \
+	    [.wv cget -style] [.wv style] [winfo class .wv]
+} -cleanup {
+    destroy .wh .wv
+} -result {{} Horizontal.TScale TScale {} Vertical.TScale TScale}
+test scale-3.2 "style command" -body {
+    ttk::style configure customStyle.Vertical.TScale
+    ttk::scale .w -orient vertical -style customStyle.Vertical.TScale
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Vertical.TScale Vertical.customStyle.Vertical.TScale TScale}
+
+tcltest::cleanupTests
+

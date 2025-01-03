@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .labelframe
 catch {destroy $w}
@@ -35,13 +35,13 @@ set w $w.f
 
 # A group of radiobuttons in a labelframe
 
-labelframe $w.f -text "Value" -padx 2 -pady 2
+labelframe $w.f -text "Value" -padx 1.5p -pady 1.5p
 grid $w.f -row 0 -column 0 -pady 2m -padx 2m
 
 foreach value {1 2 3 4} {
     radiobutton $w.f.b$value -text "This is value $value" \
-            -variable lfdummy -value $value
-    pack $w.f.b$value -side top -fill x -pady 2
+	    -variable lfdummy -value $value
+    pack $w.f.b$value -side top -fill x -pady 1.5p
 }
 
 
@@ -49,25 +49,25 @@ foreach value {1 2 3 4} {
 
 proc lfEnableButtons {w} {
     foreach child [winfo children $w] {
-        if {$child == "$w.cb"} continue
-        if {$::lfdummy2} {
-            $child configure -state normal
-        } else {
-            $child configure -state disabled
-        }
+	if {$child == "$w.cb"} continue
+	if {$::lfdummy2} {
+	    $child configure -state normal
+	} else {
+	    $child configure -state disabled
+	}
     }
 }
 
-labelframe $w.f2 -pady 2 -padx 2
+labelframe $w.f2 -pady 1.5p -padx 1.5p
 checkbutton $w.f2.cb -text "Use this option." -variable lfdummy2 \
-        -command "lfEnableButtons $w.f2" -padx 0
+	-command "lfEnableButtons $w.f2" -padx 0
 $w.f2 configure -labelwidget $w.f2.cb
 grid $w.f2 -row 0 -column 1 -pady 2m -padx 2m
 
 set t 0
 foreach str {Option1 Option2 Option3} {
     checkbutton $w.f2.b$t -text $str
-    pack $w.f2.b$t -side top -fill x -pady 2
+    pack $w.f2.b$t -side top -fill x -pady 1.5p
     incr t
 }
 lfEnableButtons $w.f2

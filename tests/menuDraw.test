@@ -1,8 +1,8 @@
 # This file is a Tcl script to test drawing of menus in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -27,7 +27,7 @@ test menuDraw-2.1 {TkInitializeMenuEntryDrawingFields} -setup {
     .m1 add command
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 
 
 test menuDraw-3.1 {TkMenuFreeDrawOptions} -setup {
@@ -50,7 +50,7 @@ test menuDraw-4.2 {TkMenuEntryFreeDrawOptions} -setup {
 } -body {
     menu .m1
     .m1 add checkbutton -label "This is a test." -font "Courier 12" \
-        -activeforeground red -background green -selectcolor purple
+	-activeforeground red -background green -selectcolor purple
     destroy .m1
 } -result {}
 
@@ -86,7 +86,7 @@ test menuDraw-6.1 {TkMenuConfigureEntryDrawOptions - no tkfont specified} -setup
     .m1 add command -label "foo"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     deleteWindows
 } -body {
@@ -94,7 +94,7 @@ test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.3 {TkMenuConfigureEntryDrawOptions - active state - wrong entry} -setup {
     deleteWindows
 } -body {
@@ -132,7 +132,7 @@ test menuDraw-6.6 {TkMenuConfigureEntryDrawOptions - bad state} -setup {
     .m1 entryconfigure 1 -state foo
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {bad state "foo": must be active, normal, or disabled}
+} -returnCodes error -result {bad state "foo": must be active, disabled, or normal}
 test menuDraw-6.7 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     deleteWindows
 } -body {
@@ -140,7 +140,7 @@ test menuDraw-6.7 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     deleteWindows
 } -body {
@@ -148,7 +148,7 @@ test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     .m1 add command -label "foo" -background "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setup {
     deleteWindows
 } -body {
@@ -156,7 +156,7 @@ test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setu
     .m1 add command -label "foo" -foreground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -setup {
     deleteWindows
 } -body {
@@ -164,7 +164,7 @@ test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -s
     .m1 add command -label "foo" -activebackground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified} -setup {
     deleteWindows
 } -body {
@@ -172,7 +172,7 @@ test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified
     .m1 add command -label "foo" -activeforeground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -setup {
     deleteWindows
 } -body {
@@ -180,7 +180,7 @@ test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -se
     .m1 add radiobutton -label "foo" -selectcolor "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.13 {TkMenuConfigureEntryDrawOptions - textGC disposal} -setup {
     deleteWindows
 } -body {
@@ -558,10 +558,10 @@ test menuDraw-15.2 {TkPostTearoffMenu - Deactivation} -setup {
     menu .m1
     .m1 add command -label "foo" -state active
     set tearoff [tk::TearOffMenu .m1 40 40]
-    $tearoff index active
+    expr {[$tearoff index active]<0}
 } -cleanup {
     deleteWindows
-} -result none
+} -result 1
 test menuDraw-15.3 {TkPostTearoffMenu - post command} -setup {
     deleteWindows
 } -body {
@@ -683,9 +683,9 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     .m2 add command -label foo
     . configure -menu .m1
     foreach w [winfo children .] {
-        if {[$w cget -type] == "menubar"} {
-            break
-        }
+	if {[$w cget -type] == "menubar"} {
+	    break
+	}
     }
     list [$w postcascade 0] [. configure -menu ""]
 } -cleanup {

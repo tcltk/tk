@@ -2,8 +2,8 @@
 # tkBitmap.c.  It is organized in the standard white-box fashion for
 # Tcl tests.
 #
-# Copyright (c) 1998 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1998 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2

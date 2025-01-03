@@ -3,8 +3,8 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# Copyright (c) 1992-1993 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1992-1993 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -109,7 +109,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	    $w.button$i configure -default normal
 	}
 	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew \
-		-padx 10 -pady 4
+		-padx 7.5p -pady 3p
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
 	if {$windowingsystem eq "aqua"} {
@@ -149,9 +149,9 @@ proc ::tk_dialog {w title text bitmap default args} {
     # 7. Set a grab and claim the focus too.
 
     if {$default >= 0} {
-        set focus $w.button$default
+	set focus $w.button$default
     } else {
-        set focus $w
+	set focus $w
     }
     tk::SetFocusGrab $w $focus
 

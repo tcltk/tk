@@ -103,6 +103,34 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 at \fB{}\fR.
 .PP
 On macOS, the following attributes may be set.
+.\" OPTION: -appearance
+.TP
+\fB\-appearance\fR
+.
+Specifies whether the window is rendered in "dark mode".  Allowed
+values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
+is auto then the appearance of the window is controlled by the
+System Settings.
+.\" OPTION: -class
+.TP
+\fB\-class\fR
+.
+Specifies whether the underlying Aqua window for a toplevel is an
+object of the NSWindow class or the NSPanel class.  The two allowed
+values for this option are \fBnswindow\fR and \fBnspanel\fR.  It is
+not possible to change the class of the underlying Aqua window once
+that window has been instantiated, and attempting to do that is an
+error.  However it is allowed to set this option for a pathname that
+does not correspond to an existing window.  Doing that causes the
+class name to be cached for later use.  When a toplevel with that
+pathname is eventually created, the cached class name will determine which
+class is used for the underlying Aqua window.
+.\" OPTION: -isdark
+.TP
+\fB\-isdark\fR
+.
+Returns a boolean value which is true if the window is currently in
+dark mode.
 .\" OPTION: -modified
 .TP
 \fB\-modified\fR
@@ -115,6 +143,48 @@ proxy icon is draggable).
 \fB\-notify\fR
 .
 Specifies process notification state (bouncing of the application dock icon).
+.\" OPTION: -stylemask
+.TP
+\fB\-stylemask\fR
+.
+Specifies an integer to be assigned as the styleMask of the underlying
+Aqua window.  (See the Apple documentation for styleMask property of
+the NSWindow class.) The value of this option should be a list of
+bitnames.  Each bit named in the list will be set to 1, and all other
+bits will be set to 0.  The allowed bitnames are: \fBtitled\fR,
+\fBclosable\fR, \fBminiaturizable\fR, \fBresizable\fR,
+\fBfullsizecontentview\fR, \fBdocmodal\fR, \fButility\fR,
+\fBnonactivatingpanel\fR, and \fBHUDwindow\fR.  Note that a side
+effect of setting the fullsizecontentview bit is that the window title
+bar becomes transparent.
+.\" OPTION: -tabbingid
+.TP
+\fB\-tabbingid\fR
+.
+Controls how tabbed toplevel windows are grouped together.  Two tabs
+in the same group must correspond to toplevels with the same
+tabbingid, which can be an arbitrary UTF8 string.  In the Tk
+implementation, changing the tabbingid of a toplevel in a tab group
+will cause it to be moved into a different group, in which all tabs
+have the new tabbingid or, if the new tabbingid is unique, to become
+a normal non-tabbed toplevel.   It is allowed to set the tabbingid before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
+.\" OPTION: -tabbingmode
+.TP
+\fB\-tabbingmode\fR
+.
+Controls whether a toplevel can be opened as a tab within a tab group.
+The allowed values are \fBauto\fR, \fBpreferred\fR or
+\fBdisallowed\fR.  A toplevel can be opened as a tab in exactly two
+situations: if its tabbingmode is \fBpreferred\fR; or if its
+tabbingmode is \fBauto\fR and the user has selected "prefer tabs when
+opening documents" in the Desktop and Dock panel of the System
+Settings application.  It is allowed to set the tabbingmode before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
 .\" OPTION: -titlepath
 .TP
 \fB\-titlepath\fR
@@ -402,6 +472,38 @@ remove \fIwindow\fR from any group association.  If \fIpathName\fR is
 specified then the command returns an empty string;  otherwise it
 returns the path name of \fIwindow\fR's current group leader, or an empty
 string if \fIwindow\fR is not part of any group.
+.\" METHOD: iconbadge
+.TP
+\fBwm iconbadge \fIwindow badge\fR
+.
+Sets a badge for the icon of the \fIwindow\fR. The badge can be a positive
+integer number, for instance the number of new or unread messages, or
+an exclamation point denoting attention needed. If the badge is an empty
+string, the badge image is removed from the application icon. Managing
+these changes through bindings, such as <FocusIn>, is the responsibility
+of the developer.
+.RS
+.PP
+On X11, for this command to work,
+the variable \fB::tk::icons::base_icon($window)\fR must be set to the image
+that is being used for the window icon of $window. On Windows and X11, the
+iconphoto images work best at 32x32 or a similar dimension, as
+the badge images are provided by Tk and drawn to overlay the icon images
+using native (Windows) API's or Tk rendering. On macOS, the icon badge is
+rendered by a system API and is not provided by Tk. The icon image itself
+should be higher-resolution, preferably 512 pixels, to avoid being blurry.
+.PP
+The icon badge is intended for display in the Dock (macOS), taskbar
+(Windows) or app panel (X11). On macOS, the last badge called will be
+displayed in the Dock, regardless of how many different icon badges may be
+assigned to different windows. On Windows, the taskbar display depends on
+whether the taskbar buttons are combined or not (this is an OS setting
+available to the user): if combined, the behavior is the same as on macOS,
+otherwise each button in the taskbar shows the badge it was assigned.
+Badge display on macOS is configured in the system preferences. App
+panel display behavior on X11 will depend on the window manager and/or
+desktop environment.
+.RE
 .\" METHOD: iconbitmap
 .TP
 \fBwm iconbitmap \fIwindow\fR ?\fIbitmap\fR?
@@ -482,12 +584,13 @@ manager may scale provided icons to an appropriate size.
 .PP
 On Windows, the images are packed into a Windows icon structure.
 This will override an ico specified to \fBwm iconbitmap\fR, and
-vice versa.
+vice versa. This command sets the taskbar icon for the window.
 .PP
 On X, the images are arranged into the _NET_WM_ICON X property, which
 most modern window managers support.  A \fBwm iconbitmap\fR may exist
 simultaneously.  It is recommended to use not more than 2 icons, placing
-the larger icon first.
+the larger icon first. This command also sets the panel icon for the
+application if the window manager or desktop environment supports it.
 .PP
 On Macintosh, the first image called is loaded into an OS-native icon
 format, and becomes the application icon in dialogs, the Dock, and
@@ -792,7 +895,8 @@ However, you can use the \fBwm minsize\fR and \fBwm maxsize\fR commands
 to limit the range of allowable sizes.
 The range set by \fBwm minsize\fR and \fBwm maxsize\fR applies to
 all forms of resizing, including the window's natural size as
-well as manual resizes and the \fBwm geometry\fR command.
+well as manual resizes and the \fBwm geometry\fR command.  You
+can use any value accepted by \fBTk_GetPixels\fR.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
 .PP
