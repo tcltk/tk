@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -82,5 +82,82 @@ test progressbar-2.5 "error in write trace" -body {
 test progressbar-end "Cleanup" -body {
     destroy .pb
 }
+
+# check existence and default value of each non-core option of the widget
+test progressbar-3.1 "progressbar non-core options" -setup {
+    set res {}
+    ttk::progressbar .defaultpb
+} -body {
+    foreach option {-anchor -foreground -justify -style -text -wraplength \
+		    -length -maximum -mode -orient -phase -value -variable} {
+	lappend res [.defaultpb cget $option]
+    }
+    set res
+} -cleanup {
+    unset res
+    destroy .defaultpb
+} -result {w black left {} {} 0 75p 100.0 determinate horizontal 0 0.0 {}}
+
+test progressbar-3.2 "TIP #442 options are taken into account" -setup {
+    set res {}
+    pack [ttk::progressbar .p -value 0 -maximum 50 -orient horizontal -mode determinate -length 500]
+    set thefont [font actual {Arial 10}]
+} -body {
+    .p configure -anchor c -foreground blue -justify right \
+	    -text "TIP #442\noptions are now tested" -wraplength 100
+    update
+    .p step 10
+    .p configure -anchor e -font $thefont -foreground green -justify center \
+	    -text "Changing the value of each option\nfrom TIP #442" -wraplength 250
+    update
+    .p step 20
+    .p configure -orient vertical -text "Cannot be seen"
+    update
+    foreach option {-anchor -foreground -justify -text -wraplength} {
+	lappend res [list $option [.p cget $option]]
+    }
+    set res
+} -cleanup {
+    unset res thefont
+    destroy .p
+} -result {{-anchor e} {-foreground green} {-justify center} {-text {Cannot be seen}} {-wraplength 250}}
+
+test progressbar-3.3 {horizontal progressbar height with no -text (TIP #442) specified - Bug [8bee4b2009]} -setup {
+    set res {}
+    set oldTheme [ttk::style theme use]
+} -body {
+    ttk::style theme use default
+    set imga [image create photo -file [file join [file dirname [info script]] pb_image.svg] -format {svg -scale 0.8}]
+    ::ttk::style element create Horizontal.Progressbar.pbar image $imga
+    # -text "": progressbar height does not depend on font height
+    pack [ttk::progressbar .p -orient horizontal -font {TkDefaultFont 24}]
+    .p step 25
+    update
+    set res [expr {[winfo reqheight .p] == [image height $imga] + 2}]
+    # -text "something": progressbar height adjusts to contain the font height
+    .p configure -text Hello -font {TkDefaultFont 24}
+    update
+    lappend res [expr {[winfo reqheight .p] == [font metrics [.p cget -font] -linespace] + 2}]
+} -cleanup {
+    destroy .p
+    ttk::style theme use $oldTheme
+    # there's no way I know to undo  '::ttk::style element create...'
+} -result {1 1}
+
+test progressbar-4.1 "style command" -body {
+    ttk::progressbar .wh  ; # default is  -orient horizontal
+    ttk::progressbar .wv -orient vertical
+    list [.wh cget -style] [.wh style] [winfo class .wh]\
+	 [.wv cget -style] [.wv style] [winfo class .wv]
+} -cleanup {
+    destroy .wh .wv
+} -result {{} Horizontal.TProgressbar TProgressbar {} Vertical.TProgressbar TProgressbar}
+test progressbar-4.2 "style command" -body {
+    ttk::style configure customStyle.Vertical.TProgressbar
+    ttk::progressbar .w -orient vertical -style customStyle.Vertical.TProgressbar
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Vertical.TProgressbar Vertical.customStyle.Vertical.TProgressbar TProgressbar}
 
 tcltest::cleanupTests

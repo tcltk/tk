@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 /* Bit fields for OptionSpec mask field:
  */
-#define STATE_CHANGED	 	(0x100)		/* -state option changed */
+#define STATE_CHANGED		(0x100)		/* -state option changed */
 #define DEFAULTSTATE_CHANGED	(0x200)		/* -default option changed */
 
 /*------------------------------------------------------------------------
@@ -22,6 +22,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
+    Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -53,45 +54,46 @@ typedef struct
     BasePart	base;
 } Base;
 
-static Tk_OptionSpec BaseOptionSpecs[] =
+static const Tk_OptionSpec BaseOptionSpecs[] =
 {
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+	"left", offsetof(Base,base.justifyObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Base,base.textObj), -1,
+	offsetof(Base,base.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable", "",
-	Tk_Offset(Base,base.textVariableObj), -1,
+	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", Tk_Offset(Base,base.underlineObj), -1,
-	0,0,0 },
-    /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TTK_OPTION_UNDERLINE_DEF(Base, base.underlineObj), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
-	NULL, Tk_Offset(Base,base.widthObj), -1,
+	NULL, offsetof(Base,base.widthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     /*
      * Image options
      */
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	Tk_Offset(Base,base.imageObj), -1,
+	offsetof(Base,base.imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     /*
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	NULL, Tk_Offset(Base,base.compoundObj), -1,
+	NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, ttkCompoundStrings,
 	GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
-	NULL, Tk_Offset(Base,base.paddingObj), -1,
+	NULL, offsetof(Base,base.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
 
     /*
      * Compatibility/legacy options
      */
     {TK_OPTION_STRING, "-state", "state", "State",
-	"normal", Tk_Offset(Base,base.stateObj), -1,
+	"normal", offsetof(Base,base.stateObj), TCL_INDEX_NONE,
 	0,0,STATE_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -133,10 +135,12 @@ static void
 BaseCleanup(void *recordPtr)
 {
     Base *basePtr = (Base *)recordPtr;
-    if (basePtr->base.textVariableTrace)
+    if (basePtr->base.textVariableTrace) {
 	Ttk_UntraceVariable(basePtr->base.textVariableTrace);
-    if (basePtr->base.imageSpec)
-    	TtkFreeImageSpec(basePtr->base.imageSpec);
+    }
+    if (basePtr->base.imageSpec) {
+	TtkFreeImageSpec(basePtr->base.imageSpec);
+    }
 }
 
 static void
@@ -227,7 +231,6 @@ typedef struct
     Tcl_Obj *borderWidthObj;
     Tcl_Obj *reliefObj;
     Tcl_Obj *anchorObj;
-    Tcl_Obj *justifyObj;
     Tcl_Obj *wrapLengthObj;
 } LabelPart;
 
@@ -238,31 +241,28 @@ typedef struct
     LabelPart	label;
 } Label;
 
-static Tk_OptionSpec LabelOptionSpecs[] =
+static const Tk_OptionSpec LabelOptionSpecs[] =
 {
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor",
-	NULL, Tk_Offset(Label,label.backgroundObj), -1,
+	NULL, offsetof(Label,label.backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	NULL, Tk_Offset(Label,label.foregroundObj), -1,
+	NULL, offsetof(Label,label.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
-	NULL, Tk_Offset(Label,label.fontObj), -1,
+	NULL, offsetof(Label,label.fontObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	NULL, Tk_Offset(Label,label.borderWidthObj), -1,
+	NULL, offsetof(Label,label.borderWidthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	NULL, Tk_Offset(Label,label.reliefObj), -1,
+	NULL, offsetof(Label,label.reliefObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"w", Tk_Offset(Label,label.anchorObj), -1,
+	"w", offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED},
-    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", Tk_Offset(Label, label.justifyObj), -1,
-	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	NULL, Tk_Offset(Label, label.wrapLengthObj), -1,
+	NULL, offsetof(Label, label.wrapLengthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED /*SB: SIZE_CHANGED*/ },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -270,15 +270,16 @@ static Tk_OptionSpec LabelOptionSpecs[] =
 };
 
 static const Ttk_Ensemble LabelCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
-static WidgetSpec LabelWidgetSpec =
+static const WidgetSpec LabelWidgetSpec =
 {
     "TLabel",			/* className */
     sizeof(Label),		/* recordSize */
@@ -288,8 +289,8 @@ static WidgetSpec LabelWidgetSpec =
     BaseCleanup,		/* cleanupProc */
     BaseConfigure,		/* configureProc */
     BasePostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -321,12 +322,12 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec ButtonOptionSpecs[] =
+static const Tk_OptionSpec ButtonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Button, button.commandObj), -1, 0,0,0},
+	"", offsetof(Button, button.commandObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
-	"normal", Tk_Offset(Button, button.defaultStateObj), -1,
+	"normal", offsetof(Button, button.defaultStateObj), TCL_INDEX_NONE,
 	0, ttkDefaultStrings, DEFAULTSTATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -344,7 +345,7 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Handle "-default" option:
      */
     if (mask & DEFAULTSTATE_CHANGED) {
-	int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+	Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 	Ttk_GetButtonDefaultStateFromObj(
 	    NULL, buttonPtr->button.defaultStateObj, &defaultState);
 	if (defaultState == TTK_BUTTON_DEFAULT_ACTIVE) {
@@ -357,11 +358,11 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 /* $button invoke --
- * 	Evaluate the button's -command.
+ *	Evaluate the button's -command.
  */
 static int
 ButtonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Button *buttonPtr = (Button *)recordPtr;
     if (objc > 2) {
@@ -375,16 +376,17 @@ ButtonInvokeCommand(
 }
 
 static const Ttk_Ensemble ButtonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		ButtonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		ButtonInvokeCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
-static WidgetSpec ButtonWidgetSpec =
+static const WidgetSpec ButtonWidgetSpec =
 {
     "TButton",			/* className */
     sizeof(Button),		/* recordSize */
@@ -395,7 +397,7 @@ static WidgetSpec ButtonWidgetSpec =
     ButtonConfigure,		/* configureProc */
     BasePostConfigure,		/* postConfigureProc */
     TtkWidgetGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetSize,		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -404,7 +406,7 @@ TTK_BEGIN_LAYOUT(ButtonLayout)
     TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
 	TTK_GROUP("Button.focus", TTK_FILL_BOTH,
 	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Button.label", TTK_FILL_BOTH))))
+		TTK_NODE("Button.label", TTK_FILL_BOTH))))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------
@@ -431,19 +433,19 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec CheckbuttonOptionSpecs[] =
+static const Tk_OptionSpec CheckbuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	NULL, Tk_Offset(Checkbutton, checkbutton.variableObj), -1,
+	NULL, offsetof(Checkbutton, checkbutton.variableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-onvalue", "onValue", "OnValue",
-	"1", Tk_Offset(Checkbutton, checkbutton.onValueObj), -1,
+	"1", offsetof(Checkbutton, checkbutton.onValueObj), TCL_INDEX_NONE,
 	0,0,0},
     {TK_OPTION_STRING, "-offvalue", "offValue", "OffValue",
-	"0", Tk_Offset(Checkbutton, checkbutton.offValueObj), -1,
+	"0", offsetof(Checkbutton, checkbutton.offValueObj), TCL_INDEX_NONE,
 	0,0,0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Checkbutton, checkbutton.commandObj), -1,
+	"", offsetof(Checkbutton, checkbutton.commandObj), TCL_INDEX_NONE,
 	0,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -505,11 +507,11 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Ttk_TraceHandle *vt = NULL;
 
     if (varName != NULL && *Tcl_GetString(varName) != '\0') {
-        vt = Ttk_TraceVariable(interp, varName,
+	vt = Ttk_TraceVariable(interp, varName,
 	    CheckbuttonVariableChanged, checkPtr);
-        if (!vt) {
+	if (!vt) {
 	    return TCL_ERROR;
-        }
+	}
     }
 
     if (BaseConfigure(interp, recordPtr, mask) != TCL_OK){
@@ -518,7 +520,7 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
 
     if (checkPtr->checkbutton.variableTrace) {
-        Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
+	Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
     }
     checkPtr->checkbutton.variableTrace = vt;
 
@@ -540,11 +542,11 @@ CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
 /*
  * Checkbutton 'invoke' subcommand:
- * 	Toggles the checkbutton state.
+ *	Toggles the checkbutton state.
  */
 static int
 CheckbuttonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     WidgetCore *corePtr = &checkPtr->core;
@@ -566,11 +568,11 @@ CheckbuttonInvokeCommand(
 	newValue = checkPtr->checkbutton.onValueObj;
 
     if (checkPtr->checkbutton.variableObj == NULL ||
-        *Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
-        CheckbuttonVariableChanged(checkPtr, Tcl_GetString(newValue));
+	*Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
+	CheckbuttonVariableChanged(checkPtr, Tcl_GetString(newValue));
     else if (Tcl_ObjSetVar2(interp,
-	        checkPtr->checkbutton.variableObj, NULL, newValue,
-	        TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+		checkPtr->checkbutton.variableObj, NULL, newValue,
+		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 	    == NULL)
 	return TCL_ERROR;
 
@@ -582,17 +584,18 @@ CheckbuttonInvokeCommand(
 }
 
 static const Ttk_Ensemble CheckbuttonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		CheckbuttonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		CheckbuttonInvokeCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect, toggle */
     { 0,0,0 }
 };
 
-static WidgetSpec CheckbuttonWidgetSpec =
+static const WidgetSpec CheckbuttonWidgetSpec =
 {
     "TCheckbutton",		/* className */
     sizeof(Checkbutton),	/* recordSize */
@@ -602,8 +605,8 @@ static WidgetSpec CheckbuttonWidgetSpec =
     CheckbuttonCleanup,		/* cleanupProc */
     CheckbuttonConfigure,	/* configureProc */
     CheckbuttonPostConfigure,	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -639,16 +642,16 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec RadiobuttonOptionSpecs[] =
+static const Tk_OptionSpec RadiobuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	"::selectedButton", Tk_Offset(Radiobutton, radiobutton.variableObj),-1,
+	"::selectedButton", offsetof(Radiobutton, radiobutton.variableObj),TCL_INDEX_NONE,
 	0,0,0},
     {TK_OPTION_STRING, "-value", "Value", "Value",
-	"1", Tk_Offset(Radiobutton, radiobutton.valueObj), -1,
+	"1", offsetof(Radiobutton, radiobutton.valueObj), TCL_INDEX_NONE,
 	0,0,0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Radiobutton, radiobutton.commandObj), -1,
+	"", offsetof(Radiobutton, radiobutton.commandObj), TCL_INDEX_NONE,
 	0,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -727,11 +730,11 @@ RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
 /*
  * Radiobutton 'invoke' subcommand:
- * 	Sets the radiobutton -variable to the -value, evaluates the -command.
+ *	Sets the radiobutton -variable to the -value, evaluates the -command.
  */
 static int
 RadiobuttonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     WidgetCore *corePtr = &radioPtr->core;
@@ -758,17 +761,18 @@ RadiobuttonInvokeCommand(
 }
 
 static const Ttk_Ensemble RadiobuttonCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "invoke",		RadiobuttonInvokeCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "invoke",		RadiobuttonInvokeCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     /* MISSING: select, deselect */
     { 0,0,0 }
 };
 
-static WidgetSpec RadiobuttonWidgetSpec =
+static const WidgetSpec RadiobuttonWidgetSpec =
 {
     "TRadiobutton",		/* className */
     sizeof(Radiobutton),	/* recordSize */
@@ -778,8 +782,8 @@ static WidgetSpec RadiobuttonWidgetSpec =
     RadiobuttonCleanup,		/* cleanupProc */
     RadiobuttonConfigure,	/* configureProc */
     RadiobuttonPostConfigure,	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -812,14 +816,14 @@ typedef struct
  * Option specifications:
  */
 static const char *const directionStrings[] = {
-    "above", "below", "left", "right", "flush", NULL
+    "above", "below", "flush", "left", "right", NULL
 };
-static Tk_OptionSpec MenubuttonOptionSpecs[] =
+static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
-	"", Tk_Offset(Menubutton, menubutton.menuObj), -1, 0,0,0},
+	"", offsetof(Menubutton, menubutton.menuObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
-	"below", Tk_Offset(Menubutton, menubutton.directionObj), -1,
+	"below", offsetof(Menubutton, menubutton.directionObj), TCL_INDEX_NONE,
 	0, directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -830,23 +834,24 @@ static const Ttk_Ensemble MenubuttonCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
-static WidgetSpec MenubuttonWidgetSpec =
+static const WidgetSpec MenubuttonWidgetSpec =
 {
     "TMenubutton",		/* className */
-    sizeof(Menubutton), 	/* recordSize */
-    MenubuttonOptionSpecs, 	/* optionSpecs */
-    MenubuttonCommands,  	/* subcommands */
-    BaseInitialize,     	/* initializeProc */
+    sizeof(Menubutton),	/* recordSize */
+    MenubuttonOptionSpecs,	/* optionSpecs */
+    MenubuttonCommands,	/* subcommands */
+    BaseInitialize,		/* initializeProc */
     BaseCleanup,		/* cleanupProc */
     BaseConfigure,		/* configureProc */
-    BasePostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    BasePostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout,	/* getLayoutProc */
+    TtkWidgetSize,		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -856,7 +861,7 @@ TTK_BEGIN_LAYOUT(MenubuttonLayout)
 	TTK_GROUP("Menubutton.focus", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
 	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
+		TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------

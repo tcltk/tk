@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the option-handling facilities
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1991-1993 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1991-1993 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -401,7 +401,7 @@ test option-15.10 {database files} -body {
 } -returnCodes error -result {missing colon on line 2}
 set option3 [file join [testsDirectory] option.file3]
 option read $option3
-test option-15.11 {database files} {option get . {x 4} color} br\xf3wn
+test option-15.11 {database files} {option get . {x 4} color} brówn
 
 test option-16.1 {ReadOptionFile} -body {
     set option4 [makeFile {} option.file4]

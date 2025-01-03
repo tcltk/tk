@@ -4,7 +4,7 @@
  *	This file contains the platform specific routines for drawing 3d
  *	borders in the Motif style.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -446,7 +446,7 @@ TkpGetShadows(
 
     if (borderPtr->shadow == None) {
 	borderPtr->shadow = Tk_GetBitmap(NULL, tkwin,
-		Tk_GetUid("gray50"));
+		"gray50");
 	if (borderPtr->shadow == None) {
 	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
 	}

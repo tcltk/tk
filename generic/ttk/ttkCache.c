@@ -1,7 +1,7 @@
 /*
  *      Theme engine resource cache.
  *
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * The problem:
  *
@@ -48,11 +48,11 @@ struct Ttk_ResourceCache_ {
 
 /*
  * Ttk_CreateResourceCache --
- * 	Initialize a new resource cache.
+ *	Initialize a new resource cache.
  */
 Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
 {
-    Ttk_ResourceCache cache = ckalloc(sizeof(*cache));
+    Ttk_ResourceCache cache = (Ttk_ResourceCache)ckalloc(sizeof(*cache));
 
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
@@ -67,7 +67,7 @@ Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
 
 /*
  * Ttk_ClearCache --
- * 	Release references to all cached resources.
+ *	Release references to all cached resources.
  */
 static void Ttk_ClearCache(Ttk_ResourceCache cache)
 {
@@ -79,7 +79,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->fontTable, &search);
     while (entryPtr != NULL) {
-	Tcl_Obj *fontObj = Tcl_GetHashValue(entryPtr);
+	Tcl_Obj *fontObj = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 	if (fontObj) {
 	    Tk_FreeFontFromObj(cache->tkwin, fontObj);
 	    Tcl_DecrRefCount(fontObj);
@@ -94,7 +94,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->colorTable, &search);
     while (entryPtr != NULL) {
-	Tcl_Obj *colorObj = Tcl_GetHashValue(entryPtr);
+	Tcl_Obj *colorObj = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 	if (colorObj) {
 	    Tk_FreeColorFromObj(cache->tkwin, colorObj);
 	    Tcl_DecrRefCount(colorObj);
@@ -109,7 +109,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->borderTable, &search);
     while (entryPtr != NULL) {
-	Tcl_Obj *borderObj = Tcl_GetHashValue(entryPtr);
+	Tcl_Obj *borderObj = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 	if (borderObj) {
 	    Tk_Free3DBorderFromObj(cache->tkwin, borderObj);
 	    Tcl_DecrRefCount(borderObj);
@@ -124,7 +124,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->imageTable, &search);
     while (entryPtr != NULL) {
-	Tk_Image image = Tcl_GetHashValue(entryPtr);
+	Tk_Image image = (Tk_Image)Tcl_GetHashValue(entryPtr);
 	if (image) {
 	    Tk_FreeImage(image);
 	}
@@ -138,7 +138,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 
 /*
  * Ttk_FreeResourceCache --
- * 	Release references to all cached resources, delete the cache.
+ *	Release references to all cached resources, delete the cache.
  */
 
 void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
@@ -157,7 +157,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->namedColors, &search);
     while (entryPtr != NULL) {
-	Tcl_Obj *colorNameObj = Tcl_GetHashValue(entryPtr);
+	Tcl_Obj *colorNameObj = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 	Tcl_DecrRefCount(colorNameObj);
 	entryPtr = Tcl_NextHashEntry(&search);
     }
@@ -168,11 +168,11 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
 
 /*
  * CacheWinEventHandler --
- * 	Detect when the cache window is destroyed, clear cache.
+ *	Detect when the cache window is destroyed, clear cache.
  */
-static void CacheWinEventHandler(ClientData clientData, XEvent *eventPtr)
+static void CacheWinEventHandler(void *clientData, XEvent *eventPtr)
 {
-    Ttk_ResourceCache cache = clientData;
+    Ttk_ResourceCache cache = (Ttk_ResourceCache)clientData;
 
     if (eventPtr->type != DestroyNotify) {
 	return;
@@ -185,9 +185,9 @@ static void CacheWinEventHandler(ClientData clientData, XEvent *eventPtr)
 
 /*
  * InitCacheWindow --
- * 	Specify the cache window if not already set.
- * 	@@@ SHOULD: use separate caches for each combination
- * 	@@@ of display, visual, and colormap.
+ *	Specify the cache window if not already set.
+ *	@@@ SHOULD: use separate caches for each combination
+ *	@@@ of display, visual, and colormap.
  */
 static void InitCacheWindow(Ttk_ResourceCache cache, Tk_Window tkwin)
 {
@@ -214,13 +214,13 @@ void Ttk_RegisterNamedColor(
     Tcl_Obj *colorNameObj;
 
     snprintf(nameBuf, sizeof(nameBuf), "#%04X%04X%04X",
-    	colorPtr->red, colorPtr->green, colorPtr->blue);
+	colorPtr->red, colorPtr->green, colorPtr->blue);
     colorNameObj = Tcl_NewStringObj(nameBuf, -1);
     Tcl_IncrRefCount(colorNameObj);
 
     entryPtr = Tcl_CreateHashEntry(&cache->namedColors, colorName, &newEntry);
     if (!newEntry) {
-    	Tcl_Obj *oldColor = Tcl_GetHashValue(entryPtr);
+	Tcl_Obj *oldColor = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 	Tcl_DecrRefCount(oldColor);
     }
 
@@ -236,9 +236,9 @@ void Ttk_RegisterNamedColor(
 static Tcl_Obj *CheckNamedColor(Ttk_ResourceCache cache, Tcl_Obj *objPtr)
 {
     Tcl_HashEntry *entryPtr =
-    	Tcl_FindHashEntry(&cache->namedColors, Tcl_GetString(objPtr));
+	Tcl_FindHashEntry(&cache->namedColors, Tcl_GetString(objPtr));
     if (entryPtr) {	/* Use named color instead */
-    	objPtr = Tcl_GetHashValue(entryPtr);
+	objPtr = (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
     }
     return objPtr;
 }
@@ -271,7 +271,7 @@ static Tcl_Obj *Ttk_Use(
     Tcl_Obj *cacheObj;
 
     if (!newEntry) {
-	return Tcl_GetHashValue(entryPtr);
+	return (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
     }
 
     cacheObj = Tcl_DuplicateObj(objPtr);
@@ -290,7 +290,7 @@ static Tcl_Obj *Ttk_Use(
 
 /*
  * Ttk_UseFont --
- * 	Acquire a font from the cache.
+ *	Acquire a font from the cache.
  */
 Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
@@ -301,7 +301,7 @@ Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 
 /*
  * Ttk_UseColor --
- * 	Acquire a color from the cache.
+ *	Acquire a color from the cache.
  */
 Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
@@ -313,7 +313,7 @@ Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 
 /*
  * Ttk_UseBorder --
- * 	Acquire a Tk_3DBorder from the cache.
+ *	Acquire a Tk_3DBorder from the cache.
  */
 Tcl_Obj *Ttk_UseBorder(
     Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
@@ -325,16 +325,23 @@ Tcl_Obj *Ttk_UseBorder(
 }
 
 /* NullImageChanged --
- * 	Tk_ImageChangedProc for Ttk_UseImage
+ *	Tk_ImageChangedProc for Ttk_UseImage
  */
 
-static void NullImageChanged(ClientData clientData,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
-{ /* No-op */ }
+static void NullImageChanged(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
+{ /* No-op */
+}
 
 /*
  * Ttk_UseImage --
- * 	Acquire a Tk_Image from the cache.
+ *	Acquire a Tk_Image from the cache.
  */
 Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
@@ -347,7 +354,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     InitCacheWindow(cache, tkwin);
 
     if (!newEntry) {
-	return Tcl_GetHashValue(entryPtr);
+	return (Tk_Image)Tcl_GetHashValue(entryPtr);
     }
 
     image = Tk_GetImage(cache->interp, tkwin, imageName, NullImageChanged,0);

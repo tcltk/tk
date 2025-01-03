@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -13,19 +13,19 @@ test panedwindow-1.0 "Setup" -body {
 
 test panedwindow-1.0.1 "Make sure pane 0 command doesn't crash on empty pane - bug e6140f3404" -body {
     .pw pane 0
-} -result {Slave index 0 out of bounds} -returnCodes error
+} -result {Managed window index "0" out of bounds} -returnCodes error
 
-test panedwindow-1.0.2 "Make sure pane -1 command doesn't crash on empty pane - bug e6140f3404" -body {
-    .pw pane -1
-} -result {Slave index -1 out of bounds} -returnCodes error
+test panedwindow-1.0.2 "Make sure pane end command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw pane end
+} -result {Managed window index "end" out of bounds} -returnCodes error
 
 test panedwindow-1.0.3 "Make sure forget 0 command doesn't crash on empty pane - bug e6140f3404" -body {
     .pw forget 0
-} -result {Slave index 0 out of bounds} -returnCodes error
+} -result {Managed window index "0" out of bounds} -returnCodes error
 
-test panedwindow-1.0.4 "Make sure forget -1 command doesn't crash on empty pane - bug e6140f3404" -body {
-    .pw forget -1
-} -result {Slave index -1 out of bounds} -returnCodes error
+test panedwindow-1.0.4 "Make sure forget end command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw forget end
+} -result {Managed window index "end" out of bounds} -returnCodes error
 
 test panedwindow-1.1 "Make sure empty panedwindow doesn't crash" -body {
     pack .pw -expand true -fill both
@@ -135,11 +135,11 @@ test panedwindow-3.0 "configure pane" -body {
 
 test panedwindow-3.1 "configure pane -- errors" -body {
     .pw pane 1 -weight -4
-} -returnCodes error -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be non-negative"
 
 test panedwindow-3.2 "add pane -- errors" -body {
     .pw add [ttk::label .pw.l] -weight -1
-} -returnCodes error -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be non-negative"
 
 
 test panedwindow-3.end "cleanup" -body { destroy .pw }
@@ -304,5 +304,23 @@ test paned-propagation-5 "Pane change after map, on-axis" -body {
 } -result [list 100 155 100]
 
 test paned-propagation-cleanup "Clean up." -body { destroy .pw }
+
+test panedwindow-6.1 "style command" -body {
+    # Contrary to ttk::scrollbar, ttk::progressbar and ttk::scale,
+    # ttk::panedwindow has same style TPanedwindow whatever -orient is
+    ttk::panedwindow .wv  ; # default is  -orient vertical
+    ttk::panedwindow .wh -orient horizontal
+    list [.wv cget -style] [.wv style] [winfo class .wv]\
+	    [.wh cget -style] [.wh style] [winfo class .wh]
+} -cleanup {
+    destroy .wv .wh
+} -result {{} TPanedwindow TPanedwindow {} TPanedwindow TPanedwindow}
+test panedwindow-6.2 "style command" -body {
+    ttk::style configure customStyle.TPanedwindow
+    ttk::panedwindow .w -style customStyle.TPanedwindow
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
 
 tcltest::cleanupTests

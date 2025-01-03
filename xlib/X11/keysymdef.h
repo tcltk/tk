@@ -257,11 +257,6 @@ SOFTWARE.
 #define XK_End                           0xff57  /* EOL */
 #define XK_Begin                         0xff58  /* BOL */
 
-/* Special Windows keyboard keys */
-
-#define XK_Win_L		0xFF5B	/* Left-hand Windows */
-#define XK_Win_R		0xFF5C	/* Right-hand Windows */
-#define XK_App			0xFF5D	/* Menu key */
 
 /* Misc functions */
 
@@ -2587,16 +2582,3 @@ SOFTWARE.
 #define XK_Sinh_luu2                  0x1000df3  /* U+0DF3 SINHALA VOWEL SIGN DIGA GAYANUKITTA */
 #define XK_Sinh_kunddaliya            0x1000df4  /* U+0DF4 SINHALA PUNCTUATION KUNDDALIYA */
 #endif /* XK_SINHALA */
-
-/* Multimedia keys, defined same as on Linux
- * /usr/include/pkg/libxkbcommon/xkbcommon/xkbcommon-keysyms.h
- */
-
-#define XK_XF86AudioLowerVolume	0x1008FF11   /* Volume control down        */
-#define XK_XF86AudioMute	0x1008FF12   /* Mute sound from the system */
-#define XK_XF86AudioRaiseVolume	0x1008FF13   /* Volume control up          */
-#define XK_XF86AudioPlay	0x1008FF14   /* Start playing of audio >   */
-#define XK_XF86AudioStop	0x1008FF15   /* Stop playing audio         */
-#define XK_XF86AudioPrev	0x1008FF16   /* Previous track             */
-#define XK_XF86AudioNext	0x1008FF17   /* Next track                 */
-

@@ -10,7 +10,7 @@
 #	"Directory" option menu.  The user can select files by clicking on the
 #	file icons or by entering a filename in the "Filename:" entry.
 #
-# Copyright (c) 1994-1998 Sun Microsystems, Inc.
+# Copyright © 1994-1998 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -22,64 +22,74 @@ namespace eval ::tk::dialog::file {
     variable showHiddenBtn 0
     variable showHiddenVar 1
 
+    # Based on Vimix/16/actions/go-up.svg
+    # See https://github.com/vinceliuice/vimix-icon-theme
+    variable updirImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m7 14v-9l-4 4-1-1 6-6 6 6-1 1-4-4v9z" fill="#000000"/>
+	</svg>
+    }
+
+    proc UpdateUpdirImageData {} {
+	variable updirImageData
+	set idx1 [string first "#000000" $updirImageData]
+	set idx2 [expr {$idx1 + 6}]
+
+	set fgColor [ttk::style lookup . -foreground {} black]
+	lassign [winfo rgb . $fgColor] r g b
+	set fgColor [format "#%02x%02x%02x" \
+		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+	return [string replace $updirImageData $idx1 $idx2 $fgColor]
+    }
+
+    # Based on https://icons8.com/icon/JXYalxb9XWWd/folder
+    variable folderImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m0.5 13.5v-12h4.293l2 2h8.707v10z" fill="#59afff"/>
+	 <path d="m4.586 2 2 2h8.414v9h-14v-11h3.586m0.414-1h-5v13h16v-11h-9l-2-2z" fill="#2d8cff"/>
+	 <path d="m0.5 14.5v-10h4.618l2-1h8.382v11z" fill="#8cc5ff"/>
+	 <path d="m15 4v10h-14v-9h4.236l0.211-0.106 1.789-0.894h7.764m1-1h-9l-2 1h-5v11h16z" fill="#2d8cff"/>
+	</svg>
+    }
+
+    # Based on https://icons8.com/icon/mEF_vyjYlnE3/file
+    variable fileImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
+	 <path d="m3 2h6.5l3.5 3.5v9.5h-10z" fill="#f0f0f0"/>
+	 <path d="m9 1v5h5v-1h-4v-4h-1z" fill="#808080"/>
+	</svg>
+    }
+
     # Create the images if they did not already exist.
-    if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage) [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/gD+AP7rGN
-	    SCAAAACXBIWXMAAA3WAAAN1gGQb3mcAAAACXZwQWcAAAAWAAAAFgDcxelYAAAENUlE
-	    QVQ4y7WUbWiVZRjHf/f9POcc9+Kc5bC2aIq5sGG0XnTzNU13zAIlFMNc9CEhTCKwCC
-	    JIgt7AglaR0RcrolAKg14+GBbiGL6xZiYyy63cmzvu7MVznnOe537rw7bDyvlBoT/c
-	    n+6L3/3nf13XLZLJJP+HfICysjKvqqpq+rWKysvLR1tbW+11g+fPn/+bEGIe4KYqCs
-	    Owu66u7oG2trah6wJrrRc0NTVhjME5h7Vj5pxzCCE4duxYZUdHx/aGhoZmgJ+yb+wF
-	    uCO19RmAffv25f8LFslkktraWtvU1CS6u7vRWmOtxVpbAPu+T0tLS04pFU/J34Wd3S
-	    cdFtlfZWeZBU4IcaS5uXn1ZLAEMMY4ay1aa4wx/zpKKYIgoL6+vmjxqoXe5ZLTcsPq
-	    bTyycjODpe1y3WMrvDAMV14jCuW0VhhjiJQpOJ5w7Zwjk8/y9R+vsHHNNq6oFMrkeX
-	    BxI+8d2sktap3YvOPD0lRQrH+Z81fE7t3WB4gihVKazsuaA20aKSUgAG/seQdy2l6W
-	    37+EyopqTv39I6HJUT2zlnlza2jLdgiTaxwmDov6alLHcZUTzXPGGAauWJbfO4dHl9
-	    bgJs3HyfNf0N4ZsOa+jbT3/ownY/hO09p1kBULtjBw+Tvq7xzwauds4dWPDleAcP5E
-	    xlprgtBRUZRgYCRPTzoHwEi2g6OnX+eFrW/RM9qBE4p43CeTz5ATaU6nDrFm2cPs/+
-	    E1SopqkZ7MFJqntXZaa7IKppckwIEvJbg8LWd28OT6nVihCPQQ8UScWCLGqO4hXuQx
-	    qDtJ204eWrqWb1ufRspwtABWaqx5gRKUFSdwDnxPcuLcyyxbuIyaqntIBV34MY9YzC
-	    Owg+S9YeJFkniRpGPkCLMrZzG3+jbktA/KClMxFoUhiKC0OAbAhd79CO8i6xe/STyW
-	    4O7KVRgUJ/sP0heeJV4kEVKw/vZd40sFKxat4mLvp6VLdvnb/XHHGGPIKwBBpC1/9n
-	    3DpfRZnn9/AwCxRII9O79kVPdjvByxuET6Ai8mePeTt4lyheXzhOSpCcdWa00uckTG
-	    kckbGu76nEhbIm2xznH4VB3OWYaiXqQn8GKSWGIMHuXyPL76LBcupmhp69pz4uMnXi
-	    w4VloTGcdQRtGdzmHs1f+RdYZslMZJhzUOHVnceN1ooEiP5JUzdqCQMWCD0JCIeQzn
-	    NNpO+clhrCYf5rC+A2cxWmDUWG2oHEOZMEKIwclgMnnLrTeXUV7sUzpNXgU9DmijWV
-	    v9LEKCkAIhKIBnlvpks6F21qUZ31u/sbExPa9h0/RzwzMov2nGlG5TmW1YOzzlnSfL
-	    mVnyGf19Q7lwZHBp+1fPtflAIgiC7389n9qkihP+lWyeqfUO15ZwQTqlw9H+o2cOvN
-	    QJCAHEgEqgYnI0NyALjAJdyWQy7wMa6AEujUdzo3LjcAXwD/XCTKIRjWytAAAAJXRF
-	    WHRjcmVhdGUtZGF0ZQAyMDA5LTA0LTA2VDIxOjI1OjQxLTAzOjAw8s+uCAAAACV0RV
-	    h0bW9kaWZ5LWRhdGUAMjAwOC0wMS0wM1QxNTowODoyMS0wMjowMJEc/44AAAAZdEVY
-	    dFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC
-	}]
+    if {![info exists ::tk::Priv(updirImage)] ||
+	    $::tk::Priv(updirImage) ni [image names]} {
+	set ::tk::Priv(updirImage)  [image create photo \
+		-format $::tk::svgFmt -data [UpdateUpdirImageData]]
+
+	if {"TkFileDialog" ni [bindtags .]} {
+	    bindtags . [linsert [bindtags .] 1 TkFileDialog]
+	    bind TkFileDialog <<ThemeChanged>> {
+		if {$::tk::Priv(updirImage) in [image names]} {
+		    $::tk::Priv(updirImage) configure \
+			    -data [::tk::dialog::file::UpdateUpdirImageData]
+		}
+	    }
+	}
     }
-    if {![info exists ::tk::Priv(folderImage)]} {
-	set ::tk::Priv(folderImage) [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiA
-	    AAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBl
-	    Lm9yZ5vuPBoAAAHCSURBVDiNpZAxa5NRFIafc+9XLCni4BC6FBycMnbrLpkcgtDVX6
-	    C70D/g4lZX/4coxLlgxFkpiiSSUGm/JiXfveee45AmNlhawXc53HvPee55X+l2u/yP
-	    qt3d3Tfu/viatwt3fzIYDI5uBJhZr9fr3TMzzAx3B+D09PR+v98/7HQ6z5fNOWdCCG
-	    U4HH6s67oAVDlnV1UmkwmllBUkhMD29nYHeLuEAkyn06qU8qqu64MrgIyqYmZrkHa7
-	    3drc3KTVahFjJITAaDRiPB4/XFlQVVMtHH5IzJo/P4EA4MyB+erWPQB7++zs7ccYvl
-	    U5Z08pMW2cl88eIXLZeDUpXzsBkNQ5eP1+p0opmaoCTgzw6fjs6gLLsp58FB60t0Dc
-	    K1Ul54yIEIMQ43Uj68pquDmCeJVztpwzuBNE2LgBoMVpslHMCUEAFgDVxQbzVAiA+a
-	    K5uGPmmDtZF3VpoUm2ArhqQaRiUjcMf81p1G60UEVhcjZfAFTVUkrgkS+jc06mDX9n
-	    vq4YhJ9nlxZExMwMEaHJRutOdWuIIsJFUoBSuTvHJ4YIfP46unV4qdlsjsBRZRtb/X
-	    fHd5+C8+P7+J8BIoxFwovfRxYhnhxjpzEAAAAASUVORK5CYII=
-	}]
+    if {![info exists ::tk::Priv(folderImage)] ||
+	    $::tk::Priv(folderImage) ni [image names]} {
+	set ::tk::Priv(folderImage) [image create photo \
+		-format $::tk::svgFmt -data $folderImageData]
     }
-    if {![info exists ::tk::Priv(fileImage)]} {
-	set ::tk::Priv(fileImage)   [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gva
-	    eTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQWFA84umAmQgAAANpJREFU
-	    OMutkj1uhDAQhb8HSLtbISGfgZ+zbJkix0HmFhwhUdocBnMBGvqtTIqIFSReWKK8ai
-	    x73nwzHrVt+zEMwwvH9FrX9TsA1trpqKy10+yUzME4jnjvAZB0LzXHkojjmDRNVyh3
-	    A+89zrlVwlKSqKrqVy/J8lAUxSZBSMny4ZLgp54iyPM8UPHGNJ2IomibAKDv+9VlWZ
-	    bABbgB5/0WQgSSkC4PF2JF4JzbHN430c4vhAm0TyCJruuClefph4yCBCGT3T3Isoy/
-	    KDHGfDZNcz2SZIx547/0BVRRX7n8uT/sAAAAAElFTkSuQmCC
-	}]
+    if {![info exists ::tk::Priv(fileImage)] ||
+	    $::tk::Priv(fileImage) ni [image names]} {
+	set ::tk::Priv(fileImage)   [image create photo \
+		-format $::tk::svgFmt -data $fileImageData]
     }
 }
 
@@ -363,9 +373,9 @@ proc ::tk::dialog::file::Create {w class} {
 
     $f1.menu configure -takefocus 1;# -highlightthickness 2
 
-    pack $data(upBtn) -side right -padx 4 -fill both
-    pack $f1.lab -side left -padx 4 -fill both
-    pack $f1.menu -expand yes -fill both -padx 4
+    pack $data(upBtn) -side right -padx 3p -fill both
+    pack $f1.lab -side left -padx 3p -fill both
+    pack $f1.menu -expand yes -fill both -padx 3p
 
     # data(icons): the IconList that list the files and directories.
     #
@@ -425,7 +435,7 @@ proc ::tk::dialog::file::Create {w class} {
 	    -text $text -state disabled \
 	    -variable ::tk::dialog::file::showHiddenVar \
 	    -command [list ::tk::dialog::file::UpdateWhenIdle $w]]
-# -anchor w -padx 3
+# -anchor w -padx 2p
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order, and add binding so that we find out when the
@@ -434,30 +444,30 @@ proc ::tk::dialog::file::Create {w class} {
     # once will do). [Bug 987169]
 
     set data(okBtn)     [::tk::AmpWidget ttk::button $f2.ok \
-	    -text [mc "&OK"]     -default active];# -pady 3]
+	    -text [mc "&OK"]     -default active];# -pady 2p]
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget ttk::button $f2.cancel \
-	    -text [mc "&Cancel"] -default normal];# -pady 3]
+	    -text [mc "&Cancel"] -default normal];# -pady 2p]
 
     # grid the widgets in f2
     #
-    grid $f2.lab $f2.ent $data(okBtn) -padx 4 -pady 3 -sticky ew
-    grid configure $f2.ent -padx 2
+    grid $f2.lab $f2.ent $data(okBtn) -padx 3p -pady 2p -sticky ew
+    grid configure $f2.ent -padx 1.5p
     if {$class eq "TkFDialog"} {
 	grid $data(typeMenuLab) $data(typeMenuBtn) $data(cancelBtn) \
-		-padx 4 -sticky ew
+		-padx 3p -sticky ew
 	grid configure $data(typeMenuBtn) -padx 0
-	grid $data(hiddenBtn) -columnspan 2 -padx 4 -sticky ew
+	grid $data(hiddenBtn) -columnspan 2 -padx 3p -sticky ew
     } else {
-	grid $data(hiddenBtn) - $data(cancelBtn) -padx 4 -sticky ew
+	grid $data(hiddenBtn) - $data(cancelBtn) -padx 3p -sticky ew
     }
     grid columnconfigure $f2 1 -weight 1
 
     # Pack all the frames together. We are done with widget construction.
     #
-    pack $f1 -side top -fill x -pady 4
-    pack $f2 -side bottom -pady 4 -fill x
-    pack $data(icons) -expand yes -fill both -padx 4 -pady 1
+    pack $f1 -side top -fill x -pady 3p
+    pack $f2 -side bottom -pady 3p -fill x
+    pack $data(icons) -expand yes -fill both -padx 3p -pady 1p
 
     # Set up the event handlers that are common to Directory and File Dialogs
     #
@@ -640,7 +650,7 @@ proc ::tk::dialog::file::Update {w} {
 
 # ::tk::dialog::file::SetPathSilently --
 #
-# 	Sets data(selectPath) without invoking the trace procedure
+#	Sets data(selectPath) without invoking the trace procedure
 #
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data

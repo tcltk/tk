@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkTextDisp.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -38,10 +38,10 @@ proc scrollError args {
 
 proc lequal {res expected} {
     if {[llength $res] != [llength $expected]} {
-        return [list "Lengths differ"  result: $res - expected: $expected]
+	return [list "Lengths differ"  result: $res - expected: $expected]
     }
     for {set i 0} {$i < [llength $res]} {incr i} {
-        if {[lindex $res $i] ne [lindex $expected $i]} {
+	if {[lindex $res $i] ne [lindex $expected $i]} {
 	    return [list result: $res - expected: $expected]
 	}
     }
@@ -286,7 +286,7 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {
     .t tag add y 1.end 2.2
     lappend result [.t bbox 2.20]
 } [list [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
-        [list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
 	    {}]
 .t tag delete x y
 
@@ -296,35 +296,35 @@ test textDisp-2.1 {LayoutDLine, basics} {
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.2 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.3 {LayoutDLine, basics} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.4 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.5 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
     list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
 } [list [list [xchar 13] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
 	    [list [xchar 20] [yline 1] 0  $fixedHeight] \
 	    [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.6 {LayoutDLine, word wrap} {
@@ -333,7 +333,7 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     .t insert 1.0 "This isxxx some sample text for testing."
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -342,7 +342,7 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
     .t mark set insert 1.8
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
 } [list [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
 	    [list [xchar 11] [yline 1] $fixedWidth $fixedHeight]]
 foreach m [.t mark names] {
     catch {.t mark unset $m}
@@ -361,14 +361,14 @@ test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
     wm geom . {}
     update
 } -result [list [list [xchar 19] [yline 1] [expr {$fixedWidth+1}] $fixedHeight] \
-                [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.9 {LayoutDLine, marks and tags} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
     list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
 } [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t configure -wrap word
@@ -380,7 +380,7 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.19
     list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
 } [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
@@ -388,7 +388,7 @@ test textDisp-2.11 {LayoutDLine, newline width} {
     .t insert 1.0 "a\nbb\nccc\ndddd"
     list [.t bbox 2.2] [.t bbox 3.3]
 } [list [list [xchar 2] [yline 2] [xe 2] $fixedHeight] \
-        [list [xchar 3] [yline 3] [xe 3] $fixedHeight]]
+	[list [xchar 3] [yline 3] [xe 3] $fixedHeight]]
 test textDisp-2.12 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -398,9 +398,9 @@ test textDisp-2.12 {LayoutDLine, justification} {
     .t tag add y 3.0 3.2
     list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
 } [list [list [expr {[bo]+[xe 0]/2}] [yline 1] [expr {[xe 0]-[xe 0]/2}] $fixedHeight] \
-        [list [expr {[bo]+[xe 1]/2}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 3]/2}] [yline 4] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 3]/2+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
+	[list [expr {[bo]+[xe 1]/2}] [yline 2] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+[xe 3]/2}] [yline 4] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+[xe 3]/2+[xw 2]}] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.13 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -410,9 +410,9 @@ test textDisp-2.13 {LayoutDLine, justification} {
     .t tag add y 3.0 3.2
     list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 4.0] [.t bbox 4.2]
 } [list [list [xcharr 0] [yline 1] 0 $fixedHeight] \
-        [list [xcharr 1] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xcharr 3] [yline 4] $fixedWidth $fixedHeight] \
-        [list [xcharr 1] [yline 4] $fixedWidth $fixedHeight]]
+	[list [xcharr 1] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xcharr 3] [yline 4] $fixedWidth $fixedHeight] \
+	[list [xcharr 1] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.14 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -424,9 +424,9 @@ test textDisp-2.14 {LayoutDLine, justification} {
     .t tag raise y
     list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
 } [list [list [expr {[bo]+[xe 1]/2}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xcharr 2] [yline 3] $fixedWidth $fixedHeight] \
-        [list [xcharr 0] [yline 3] 0 $fixedHeight] \
-        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+	[list [xcharr 2] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xcharr 0] [yline 3] 0 $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.15 {LayoutDLine, justification} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -438,9 +438,9 @@ test textDisp-2.15 {LayoutDLine, justification} {
     .t tag lower y
     list [.t bbox 2.0] [.t bbox 3.0] [.t bbox 3.end] [.t bbox 4.0]
 } [list [list [expr {[bo]+[xe 1]/2}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 2]/2}] [yline 3] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 2]/2+[xw 2]}] [yline 3] [expr {[xe 2]/2}] $fixedHeight] \
-        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+	[list [expr {[bo]+[xe 2]/2}] [yline 3] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+[xe 2]/2+[xw 2]}] [yline 3] [expr {[xe 2]/2}] $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.16 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -450,9 +450,9 @@ test textDisp-2.16 {LayoutDLine, justification} {
     .t tag add x 1.21 1.end
     list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 4]/2}] [yline 3] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+[xe 4]/2}] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.17 {LayoutDLine, justification} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -461,9 +461,9 @@ test textDisp-2.17 {LayoutDLine, justification} {
     .t tag add x 1.18
     list [.t bbox 1.0] [.t bbox 1.18] [.t bbox 1.35] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 17]/2}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
+	[list [expr {[bo]+[xe 17]/2}] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.18 {LayoutDLine, justification} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -476,7 +476,7 @@ test textDisp-2.18 {LayoutDLine, justification} {
     .t xview scroll 5 units
     list [.t bbox 2.0] [.t bbox 3.0]
 } [list [list [expr {[bo]+[xe 4]/2-[xw 5]}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[xcharr 10]-[xw 5]}] [yline 3] $fixedWidth $fixedHeight]]
+	[list [expr {[xcharr 10]-[xw 5]}] [yline 3] $fixedWidth $fixedHeight]]
 .t tag delete x
 .t tag delete y
 test textDisp-2.19 {LayoutDLine, margins} {
@@ -490,9 +490,9 @@ test textDisp-2.19 {LayoutDLine, margins} {
     .t tag configure x -lmargin1 $lm1 -lmargin2 $lm2 -rmargin $rm
     .t tag add x 1.0 end
     set expected [list [list [expr {[bo]+$lm1}] [yline 1] $fixedWidth $fixedHeight] \
-                       [list [expr {[bo]+$lm1+[xw 12]}] [yline 1] [expr {[xe 12]-$lm1}] $fixedHeight] \
-                       [list [expr {[bo]+$lm2}] [yline 2] $fixedWidth $fixedHeight] \
-                       [list [expr {[bo]+$lm1}] [yline 6] $fixedWidth $fixedHeight]]
+		       [list [expr {[bo]+$lm1+[xw 12]}] [yline 1] [expr {[xe 12]-$lm1}] $fixedHeight] \
+		       [list [expr {[bo]+$lm2}] [yline 2] $fixedWidth $fixedHeight] \
+		       [list [expr {[bo]+$lm1}] [yline 6] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.0] [.t bbox 1.12] [.t bbox 1.13] [.t bbox 2.0]] $expected
 } {1}
 test textDisp-2.20 {LayoutDLine, margins} {
@@ -506,9 +506,9 @@ test textDisp-2.20 {LayoutDLine, margins} {
     .t tag add y 1.13
     list [.t bbox 1.0] [.t bbox 1.13] [.t bbox 1.30] [.t bbox 2.0]
 } [list [list [expr {[bo]+20}] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+5}] [yline 2] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+10}] [yline 3] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+20}] [yline 4] $fixedWidth $fixedHeight]]
+	[list [expr {[bo]+5}] [yline 2] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+10}] [yline 3] $fixedWidth $fixedHeight] \
+	[list [expr {[bo]+20}] [yline 4] $fixedWidth $fixedHeight]]
 test textDisp-2.21 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -517,8 +517,8 @@ test textDisp-2.21 {LayoutDLine, margins} {
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
 } [list [list [expr {[bo]+80}] [yline 1] [expr {[xe 0]-80}] $fixedHeight] \
-        [list [expr {[bo]+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
-        [list [expr {[bo]+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
+	[list [expr {[bo]+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
+	[list [expr {[bo]+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
 .t tag delete x
 .t tag delete y
 test textDisp-2.22 {LayoutDLine, spacing options} {
@@ -602,7 +602,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t tag add x 1.0 end
     set expected [list [expr {[bo]+$tw}] [expr {[bo]+2*$tw}] [expr {[bo]+3*$tw}] [expr {[bo]+4*$tw}]]
     set res [list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.4] 0] \
-	          [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]]
+		  [lindex [.t bbox 1.6] 0] [lindex [.t bbox 1.8] 0]]
     lequal $res $expected
 } {1}
 # Next test is currently constrained to not run on mac (aqua) because on
@@ -653,7 +653,7 @@ test textDisp-3.1 {different character sizes} haveBigFontTwiceLargerThanTextFont
     .t tag add big 2.11 2.14
     list [.t bbox 1.1] [.t bbox 1.6] [.t dlineinfo 1.0] [.t dlineinfo 3.0]
 } [list [list [xchar 1] [expr {[yline 1]+$ascentDiff}] $fixedWidth $fixedHeight] \
-        [list [expr {[xchar 5]+[font measure $bigFont s]}] [yline 1] [font measure $bigFont a] $bigHeight] \
+	[list [expr {[xchar 5]+[font measure $bigFont s]}] [yline 1] [font measure $bigFont a] $bigHeight] \
 	[list [bo] [yline 1] [expr {[xw 5]+[font measure $bigFont sampl]+[xw 2]}] $bigHeight $bigAscent] \
 	[list [bo] [expr {[bo]+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
 .t configure -wrap char
@@ -669,7 +669,7 @@ test textDisp-4.1 {UpdateDisplayInfo, basic} {
     update
     lappend res [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk_textRelayout
 } [list 2.0 \
-        [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
 	2.0]
@@ -685,7 +685,7 @@ test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {
     update
     lappend res [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
 } [list 2.0 2.20 \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 1] [yline 3] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight] \
 	{2.0 2.20}]
@@ -698,7 +698,7 @@ test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {
     update
     list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight] \
 	{2.0 2.20}]
 .t mark unset x
@@ -709,7 +709,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
     update
     list [.t bbox 2.0] [.t bbox 2.25] [.t bbox 3.0] $tk_textRelayout
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-        {} \
+	{} \
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
@@ -724,7 +724,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
     update
     list [.t bbox 2.0] [.t bbox 2.1] [.t bbox 3.0] $tk_textRelayout
 } [list [list [xchar 0] [yline 2] 1 $fixedHeight] \
-        {} \
+	{} \
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
 if {[tk windowingsystem] eq "win32"} {
@@ -880,8 +880,8 @@ test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.0] [.t bbox 2.5] \
 	    [.t bbox 2.23]
 } [list {} {1.0 2.0 3.0 4.0} \
-        {} \
-        [list [expr {[xchar 5]-[xw 3]}] [yline 2] $fixedWidth $fixedHeight] \
+	{} \
+	[list [expr {[xchar 5]-[xw 3]}] [yline 2] $fixedWidth $fixedHeight] \
 	{}]
 test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
@@ -893,7 +893,7 @@ test textDisp-4.18 {UpdateDisplayInfo, horizontal scrolling} {
     update
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
 } [list {} {1.0 2.0 3.0 4.0} \
-        [list [xcharr 19] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xcharr 19] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-4.19 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -918,7 +918,7 @@ test textDisp-4.20 {UpdateDisplayInfo, horizontal scrolling} {
     update
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.25]
 } [list 2.0 {1.0 2.0 3.0 4.0} \
-        [list [xcharr 5] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xcharr 5] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-4.21 {UpdateDisplayInfo, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -940,7 +940,7 @@ test textDisp-4.22 {UpdateDisplayInfo, no horizontal scrolling except for -wrap 
     .t configure -wrap word
     list [.t bbox 2.0] [.t bbox 2.16]
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xchar 1] [yline 3] $fixedWidth $fixedHeight]]
+	[list [xchar 1] [yline 3] $fixedWidth $fixedHeight]]
 test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap none} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -971,7 +971,7 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {
     list [winfo geometry .t.f1] [winfo geometry .t.f2] \
 	    [winfo geometry .t.f3] [winfo geometry .t.f4]
 } [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
-        10x4+[expr {[xchar 6]+10}]+[expr {[yline 1]+8+($fixedHeight-4)/2}] \
+	10x4+[expr {[xchar 6]+10}]+[expr {[yline 1]+8+($fixedHeight-4)/2}] \
 	10x4+[xchar 1]+[expr {[yline 2]+8+2+8+($fixedHeight-4)}] \
 	10x4+[expr {[xchar 9]+10}]+[expr {[yline 2]+8+2+8+($fixedAscent-4)}]]
 .t tag delete spacing
@@ -1107,22 +1107,28 @@ test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     set scrollInfo
 } [list 0.0 [expr {4.0/11}]]
 test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua} {
+    # For this test to pass line 8 must be out of the text widget.
+    # With macOS 14 this requires making the buttons a little larger.
+    # So we set the pady option.  This may depend on the OS version.
     .t configure -wrap char
+    update
     .t delete 1.0 end
+    update
     .t insert 1.0 "Line 1"
     foreach i {2 3 4} {
 	.t insert end "\nLine $i"
     }
     .t insert end "\n"
     .t window create end -create {
-	button %W.button_one -text "Button 1"}
+	button %W.button_one -text "Button 1" -pady 5}
     .t insert end "\nLine 6\n"
     .t window create end -create {
-	button %W.button_two -text "Button 2"}
+	button %W.button_two -text "Button 2" -pady 5}
     .t insert end "\nLine 8\n"
     .t window create end -create {
-	button %W.button_three -text "Button 3"}
+	button %W.button_three -text "Button 3" -pady 5}
     update
+    set tk_textEmbWinDisplay {}
     .t delete 2.0 3.0
     update
     list $tk_textEmbWinDisplay
@@ -1346,7 +1352,7 @@ test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past an
     .t delete 1.0 end
     .t configure -wrap none
     for {set i 1} {$i < 25} {incr i} {
-        .t insert end "Line $i Line $i\n"
+	.t insert end "Line $i Line $i\n"
     }
     .t tag add hidden 5.0 8.0
     .t tag configure hidden -elide true
@@ -1529,7 +1535,7 @@ test textDisp-9.13 {TkTextRedrawTag} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - This is Line [format %c [expr {64+$i}]]\n"
+	.t insert end "Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 2.8 2.17
     .t tag add hidden 6.8 7.17
@@ -1543,24 +1549,24 @@ test textDisp-9.13 {TkTextRedrawTag} {
 test textDisp-9.14 {TkTextRedrawTag} {
     pack [text .tnocrash]
     for {set i 1} {$i < 6} {incr i} {
-        .tnocrash insert end \nfoo$i
+	.tnocrash insert end \nfoo$i
     }
     .tnocrash tag configure mytag1 -relief raised
     .tnocrash tag configure mytag2 -relief solid
     update
     proc doit {} {
-        .tnocrash tag add mytag1 4.0 5.0
-        .tnocrash tag add mytag2 4.0 5.0
-        after idle {
-            .tnocrash tag remove mytag1 1.0 end
-            .tnocrash tag remove mytag2 1.0 end
-        }
-        .tnocrash delete 1.0 2.0
+	.tnocrash tag add mytag1 4.0 5.0
+	.tnocrash tag add mytag2 4.0 5.0
+	after idle {
+	    .tnocrash tag remove mytag1 1.0 end
+	    .tnocrash tag remove mytag2 1.0 end
+	}
+	.tnocrash delete 1.0 2.0
     }
     doit  ; # must not crash
     after 500 {
-        destroy .tnocrash
-        set done 1
+	destroy .tnocrash
+	set done 1
     }
     vwait done
 } {}
@@ -1750,8 +1756,8 @@ test textDisp-11.17 {TkTextSetYView, only a few lines visible} {
 test textDisp-11.18 {TkTextSetYView, see in elided lines} {
     .top.t delete 1.0 end
     for {set i 1} {$i < 20} {incr i} {
-        .top.t insert end [string repeat "Line $i" 10]
-        .top.t insert end "\n"
+	.top.t insert end [string repeat "Line $i" 10]
+	.top.t insert end "\n"
     }
     .top.t yview 4.0
     .top.t tag add hidden 4.10 "4.10 lineend"
@@ -1765,7 +1771,7 @@ test textDisp-11.18 {TkTextSetYView, see in elided lines} {
 test textDisp-11.19 {TkTextSetYView, see in elided lines} {
     .top.t delete 1.0 end
     for {set i 1} {$i < 50} {incr i} {
-        .top.t insert end "Line $i\n"
+	.top.t insert end "Line $i\n"
     }
     # button just for having a line with a larger height
     button .top.t.b -text "Test" -bd 2 -highlightthickness 2
@@ -1797,8 +1803,8 @@ test textDisp-11.20 {TkTextSetYView, see in elided lines} {
     .top.t delete 1.0 end
     .top.t configure -wrap none
     for {set i 1} {$i < 5} {incr i} {
-        .top.t insert end [string repeat "Line $i " 50]
-        .top.t insert end "\n"
+	.top.t insert end [string repeat "Line $i " 50]
+	.top.t insert end "\n"
     }
     .top.t delete 3.11 3.14
     .top.t tag add hidden 3.0 4.0
@@ -1808,7 +1814,7 @@ test textDisp-11.20 {TkTextSetYView, see in elided lines} {
 test textDisp-11.21 {TkTextSetYView, window height smaller than the line height} {
     .top.t delete 1.0 end
     for {set i 1} {$i <= 10} {incr i} {
-        .top.t insert end "Line $i\n"
+	.top.t insert end "Line $i\n"
     }
     set lineheight [font metrics [.top.t cget -font] -linespace]
     wm geometry .top 200x[expr {$lineheight / 2}]
@@ -1819,7 +1825,7 @@ test textDisp-11.21 {TkTextSetYView, window height smaller than the line height}
 test textDisp-11.22 {TkTextSetYView, peer has -startline} {
     .top.t delete 1.0 end
     for {set i 1} {$i <= 50} {incr i} {
-        .top.t insert end "Line $i\n"
+	.top.t insert end "Line $i\n"
     }
     pack [.top.t peer create .top.p] -side left
     pack [scrollbar .top.sb -command {.top.p yview}] -side left -fill y
@@ -1951,9 +1957,9 @@ test textDisp-13.8 {TkTextSeeCmd procedure} {
     # therefore take into account that the top line is partially hidden
     set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
     set expected [list [list [xchar 10] $y $fixedWidth $fixedHeight] \
-                       [list [xchar 19] $y $fixedWidth $fixedHeight] \
-                       [list [xchar 19] $y $fixedWidth $fixedHeight] \
-                       [list [xchar 10] $y $fixedWidth $fixedHeight]]
+		       [list [xchar 19] $y $fixedWidth $fixedHeight] \
+		       [list [xchar 19] $y $fixedWidth $fixedHeight] \
+		       [list [xchar 10] $y $fixedWidth $fixedHeight]]
     lequal $x $expected
 } {1}
 test textDisp-13.9 {TkTextSeeCmd procedure} {
@@ -1975,9 +1981,9 @@ test textDisp-13.9 {TkTextSeeCmd procedure} {
     # therefore take into account that the top line is partially hidden
     set y [expr {[yline 6] + [lindex [.t bbox @0,0] 1] - [bo]}]
     set expected [list [list [expr {[bo]+round([winfo width .t]-2*[bo])/2}] $y $fixedWidth $fixedHeight] \
-                       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
-                       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
-                       [list [expr {[bo]+round([winfo width .t]-2*[bo])/2}] $y $fixedWidth $fixedHeight]]
+		       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
+		       [list [xcharr 1] $y $fixedWidth $fixedHeight] \
+		       [list [expr {[bo]+round([winfo width .t]-2*[bo])/2}] $y $fixedWidth $fixedHeight]]
     lequal $x $expected
 } {1}
 test textDisp-13.10 {TkTextSeeCmd procedure} {
@@ -1998,7 +2004,7 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     toplevel .top2
     pack [text .top2.t2 -wrap none]
     for {set i 1} {$i < 5} {incr i} {
-        .top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
+	.top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
     }
     wm geometry .top2 300x200+0+0
     update
@@ -2078,13 +2084,13 @@ test textDisp-14.9 {TkTextXviewCmd procedure} {
 } [list [expr {(56.0-20)/56}] 1.0]
 test textDisp-14.10 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll a} msg] $msg
-} {1 {wrong # args: should be ".t xview scroll number units|pages|pixels"}}
+} {1 {wrong # args: should be ".t xview scroll number pages|pixels|units"}}
 test textDisp-14.11 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll a b c} msg] $msg
-} {1 {wrong # args: should be ".t xview scroll number units|pages|pixels"}}
+} {1 {wrong # args: should be ".t xview scroll number pages|pixels|units"}}
 test textDisp-14.12 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll gorp units} msg] $msg
-} {1 {expected integer but got "gorp"}}
+} {1 {expected floating-point number but got "gorp"}}
 test textDisp-14.13 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
@@ -2115,7 +2121,7 @@ test textDisp-14.14 {TkTextXviewCmd procedure} {
 } {2.21 2.20 2.99 2.84}
 test textDisp-14.15 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll 14 globs} msg] $msg
-} {1 {bad argument "globs": must be units, pages, or pixels}}
+} {1 {bad argument "globs": must be pages, pixels, or units}}
 test textDisp-14.16 {TkTextXviewCmd procedure} {
     list [catch {.t xview flounder} msg] $msg
 } {1 {bad option "flounder": must be moveto or scroll}}
@@ -2279,7 +2285,7 @@ test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} {
     set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
     set expected 151.0
     while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix)}]} {
-        incr ytargetline $fixedHeight
+	incr ytargetline $fixedHeight
 	set expected [.t index "$expected + 1 display line"]
     }
     lequal [.t index @0,0] $expected
@@ -2294,7 +2300,7 @@ test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} {
     set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
     set expected 151.0
     while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix + ($pixtonextline-1))}]} {
-        incr ytargetline $fixedHeight
+	incr ytargetline $fixedHeight
 	set expected [.t index "$expected + 1 display line"]
     }
     lequal [.t index @0,0] $expected
@@ -2309,7 +2315,7 @@ test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
     set ytargetline [expr {150*$fixedHeight+5*$heightDiff}]
     set expected 151.0
     while {[expr {$ytargetline+$fixedHeight}] <= [expr {round(0.75*$totpix + $pixtonextline)}]} {
-        incr ytargetline $fixedHeight
+	incr ytargetline $fixedHeight
 	set expected [.t index "$expected + 1 display line"]
     }
     lequal [.t index @0,0] $expected
@@ -2335,16 +2341,16 @@ test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {
 } [list [expr {1.0/3}] [expr {5.0/6}]]
 test textDisp-16.19 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll a} msg] $msg
-} {1 {wrong # args: should be ".t yview scroll number units|pages|pixels"}}
+} {1 {wrong # args: should be ".t yview scroll number pages|pixels|units"}}
 test textDisp-16.20 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll a b c} msg] $msg
-} {1 {wrong # args: should be ".t yview scroll number units|pages|pixels"}}
+} {1 {wrong # args: should be ".t yview scroll number pages|pixels|units"}}
 test textDisp-16.21 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt bogus} msg] $msg
-} {1 {bad argument "bogus": must be units, pages, or pixels}}
+    list [catch {.t yview scroll bogus bogus} msg] $msg
+} {1 {bad argument "bogus": must be pages, pixels, or units}}
 test textDisp-16.21.2 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt units} msg] $msg
-} {1 {expected integer but got "badInt"}}
+    list [catch {.t yview scroll bogus units} msg] $msg
+} {1 {expected floating-point number but got "bogus"}}
 test textDisp-16.22 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     update
@@ -2353,7 +2359,7 @@ test textDisp-16.22 {TkTextYviewCmd procedure, "scroll" option, back pages} {
 } {42.0}
 test textDisp-16.22.1 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     list [catch {.t yview scroll -3 p} res] $res
-} {1 {ambiguous argument "p": must be units, pages, or pixels}}
+} {1 {ambiguous argument "p": must be pages, pixels, or units}}
 test textDisp-16.23 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     update
@@ -2432,7 +2438,7 @@ test textDisp-16.31 {TkTextYviewCmd procedure, "scroll units" option} {
 } {151.40}
 test textDisp-16.32 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 12 bogoids} msg] $msg
-} {1 {bad argument "bogoids": must be units, pages, or pixels}}
+} {1 {bad argument "bogoids": must be pages, pixels, or units}}
 test textDisp-16.33 {TkTextYviewCmd procedure} {
     list [catch {.t yview bad_arg 1 2} msg] $msg
 } {1 {bad option "bad_arg": must be moveto or scroll}}
@@ -2483,7 +2489,7 @@ test textDisp-16.37 {TkTextYviewCmd procedure} {
 } {0 {}}
 test textDisp-16.38 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3blah pixels} msg] $msg
-} {1 {bad screen distance "1.3blah"}}
+} {1 {expected screen distance but got "1.3blah"}}
 test textDisp-16.39 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3i pixels} msg] $msg
 } {0 {}}
@@ -2501,8 +2507,8 @@ test textDisp-16.41 {text count -xpixels with indices in elided lines} {
     set res {}
     .t delete 1.0 end
     for {set i 1} {$i < 40} {incr i} {
-        .t insert end [string repeat "Line $i" 20]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
     }
     .t configure -wrap none
     .t tag add hidden 5.15 20.15
@@ -2524,8 +2530,8 @@ test textDisp-16.42 {TkTextYviewCmd procedure with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
-        .t insert end [string repeat "Line $i" 20]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
     }
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
@@ -2538,8 +2544,8 @@ test textDisp-16.43 {TkTextYviewCmd procedure with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
-        .t insert end [string repeat "Line $i" 20]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
     }
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
@@ -2582,7 +2588,7 @@ test textDisp-17.4 {TkTextScanCmd procedure} {
 } {1 {expected integer but got "bogus"}}
 test textDisp-17.5 {TkTextScanCmd procedure} {
     list [catch {.t scan stupid 123 456} msg] $msg
-} {1 {bad scan option "stupid": must be mark or dragto}}
+} {1 {bad scan option "stupid": must be dragto or mark}}
 test textDisp-17.6 {TkTextScanCmd procedure} {
     .t yview 1.0
     .t xview moveto 0
@@ -3135,7 +3141,7 @@ test textDisp-19.16 {count -ypixels} {
       [.t count -ypixels 16.0 "16.0 displaylineend +1c"] \
       [.t count -ypixels "16.0 +1 displaylines" "16.0 +4 displaylines +3c"] ]
 } [list [expr {20 * $fixedHeight}] \
-        [expr {20 * $fixedHeight}] \
+	[expr {20 * $fixedHeight}] \
 	$fixedHeight \
 	[expr {2*$fixedHeight}] \
 	$fixedHeight \
@@ -3144,8 +3150,8 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
-        .t insert end [string repeat "Line $i" 20]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
     }
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
@@ -3168,7 +3174,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     .t yview 35.0
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] \
-        [expr {3 * $fixedHeight}] \
+	[expr {3 * $fixedHeight}] \
 	0 0 0 0 0 0 \
 	[expr {5 * $fixedHeight}] \
 	[expr {- 5 * $fixedHeight}] \
@@ -3179,8 +3185,8 @@ test textDisp-19.18 {count -ypixels with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 100} {incr i} {
-        .t insert end [string repeat "Line $i" 20]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
     }
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
@@ -3197,8 +3203,8 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 25} {incr i} {
-        .t insert end [string repeat "Line $i -" 6]
-        .t insert end "\n"
+	.t insert end [string repeat "Line $i -" 6]
+	.t insert end "\n"
     }
     .t tag add hidden 5.27 11.0
     .t tag configure hidden -elide true
@@ -3225,8 +3231,8 @@ test textDisp-20.2 {FindDLine} {
     set centlineY [lindex [.t bbox 53.0] 1]
     set expectedY [expr {$centlineY - int(($centlineY-[bo])/$fixedHeight)*$fixedHeight - $fixedHeight}]
     set expected [list [list [bo] $expectedY [xw 20] $fixedHeight $fixedAscent] \
-                       [list [bo] $expectedY [xw 20] $fixedHeight $fixedAscent] \
-	               [list [bo] [expr {$expectedY+$fixedHeight}] [xw 19] $fixedHeight $fixedAscent]]
+		       [list [bo] $expectedY [xw 20] $fixedHeight $fixedAscent] \
+		       [list [bo] [expr {$expectedY+$fixedHeight}] [xw 19] $fixedHeight $fixedAscent]]
     set res [list [.t dlineinfo 50.0] [.t dlineinfo 50.14] [.t dlineinfo 50.21]]
     lequal $res $expected
 } {1}
@@ -3235,14 +3241,14 @@ test textDisp-20.3 {FindDLine} {
     .t yview 49.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.24] [.t dlineinfo 57.0]
 } [list [list [bo] [yline 2] [xw 20] $fixedHeight $fixedAscent] \
-        [list [bo] [yline 3] [xw 19] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 3] [xw 19] $fixedHeight $fixedAscent] \
 	{}]
 test textDisp-20.4 {FindDLine} {
     .t yview 100.0
     .t yview 42.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.24] [.t dlineinfo 50.40]
 } [list [list [bo] [yline 9] [xw 20] $fixedHeight $fixedAscent] \
-        [list [bo] [yline 10] [xw 19] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 10] [xw 19] $fixedHeight $fixedAscent] \
 	{}]
 .t config -wrap none
 test textDisp-20.5 {FindDLine} {
@@ -3250,7 +3256,7 @@ test textDisp-20.5 {FindDLine} {
     .t yview 48.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]
 } [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-        [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 
 .t config -wrap word
@@ -3265,7 +3271,7 @@ test textDisp-21.2 {TkTextPixelIndex} {
     .t yview 195.0
     set off [expr {[xchar 1]+1}]
     list [.t index @$off,[expr {[yline 6]+2}]] \
-         [.t index @$off,[expr {[yline 7]+2}]] \
+	 [.t index @$off,[expr {[yline 7]+2}]] \
 	 [.t index @$off,[expr {[yline 8]+2}]] \
 	 [.t index @$off,1002]
 } {197.1 198.1 199.1 201.0}
@@ -3320,8 +3326,8 @@ test textDisp-22.1 {TkTextCharBbox} {
     list [.t bbox 47.2] [.t bbox 48.0] [.t bbox 50.5] [.t bbox 50.40] \
 	    [.t bbox 58.0]
 } [list {} \
-        [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 5] $fixedWidth $fixedHeight] \
 	{}]
 test textDisp-22.2 {TkTextCharBbox} {
@@ -3329,7 +3335,7 @@ test textDisp-22.2 {TkTextCharBbox} {
     .t yview 48.0
     list [.t bbox 50.5] [.t bbox 50.40] [.t bbox 57.0]
 } [list [list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
-        {} \
+	{} \
 	[list [xchar 0] [yline 10] $fixedWidth $fixedHeight]]
 test textDisp-22.3 {TkTextCharBbox, cut-off lines} {
     wm geometry . {}
@@ -3340,7 +3346,7 @@ test textDisp-22.3 {TkTextCharBbox, cut-off lines} {
     wm geom . ${width}x[expr {$height-1}]
     update
     set expected [list [list [xchar 1] [yline 10] $fixedWidth $fixedHeight] \
-                       [list [xchar 1] [yline 11] $fixedWidth [expr {($height-1)-$oriHeight}]]]
+		       [list [xchar 1] [yline 11] $fixedWidth [expr {($height-1)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1]] $expected
 } {1}
 test textDisp-22.4 {TkTextCharBbox, cut-off lines} {
@@ -3352,7 +3358,7 @@ test textDisp-22.4 {TkTextCharBbox, cut-off lines} {
     wm geom . ${width}x[expr {$height+1}]
     update
     set expected [list [list [xchar 1] [yline 10] $fixedWidth $fixedHeight] \
-                       [list [xchar 1] [yline 11] $fixedWidth [expr {($height+1)-$oriHeight}]]]
+		       [list [xchar 1] [yline 11] $fixedWidth [expr {($height+1)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1]] $expected
 } {1}
 test textDisp-22.5 {TkTextCharBbox, cut-off char} {
@@ -3374,8 +3380,8 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} haveBigFontTwiceL
     wm geom . ${width}x[expr {$height+3}]
     update
     set expected [list [list [xchar 1] [yline 10] $fixedWidth $fixedHeight] \
-                       {} \
-	               [list [xchar 2] [yline 11] [font measure $bigFont "n"] [expr {($height+3)-$oriHeight}]]]
+		       {} \
+		       [list [xchar 2] [yline 11] [font measure $bigFont "n"] [expr {($height+3)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1] [.t bbox 20.2]] $expected
 } {1}
 wm geom . {}
@@ -3387,7 +3393,7 @@ test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceL
     update
     list [.t bbox 12.1] [.t bbox 12.2]
 } [list [list [xchar 1] [expr {[yline 3]+$ascentDiff}] $fixedWidth $fixedHeight] \
-        [list [xchar 2] [yline 3] [font measure $bigFont "n"] $bigHeight]]
+	[list [xchar 2] [yline 3] [font measure $bigFont "n"] $bigHeight]]
 .t tag remove big 1.0 end
 test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
     .t configure -wrap none
@@ -3398,7 +3404,7 @@ test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
     list [.t bbox 1.3] [.t bbox 1.4] [.t bbox 2.3] [.t bbox 2.4] \
 	    [.t bbox 2.23] [.t bbox 2.24]
 } [list {} \
-        [list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 1] $fixedWidth $fixedHeight] \
 	{} \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 19] [yline 2] $fixedWidth $fixedHeight] \
@@ -3421,7 +3427,7 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} {
     list [.t bbox .t.f1] [.t bbox .t.f2] [.t bbox .t.f3] [.t bbox .t.f4] \
 	    [.t bbox 1.1] [.t bbox 2.9]
 } [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
-        [list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
+	[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
 	[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
 	[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
 	[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
@@ -3431,37 +3437,37 @@ test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - Line [format %c [expr {64+$i}]]\n"
+	.t insert end "Line $i - Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 2.8 2.13
     .t tag add hidden 6.8 7.13
     .t tag configure hidden -elide true
     update
     list \
-        [expr {[lindex [.t bbox 2.9]  0] - [lindex [.t bbox 2.8] 0]}] \
-        [expr {[lindex [.t bbox 2.10] 0] - [lindex [.t bbox 2.8] 0]}] \
-        [expr {[lindex [.t bbox 2.13] 0] - [lindex [.t bbox 2.8] 0]}] \
-        [expr {[lindex [.t bbox 6.9]  0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 6.10] 0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 6.13] 0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 6.14] 0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 6.15] 0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 7.0]  0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 7.1]  0] - [lindex [.t bbox 6.8] 0]}] \
-        [expr {[lindex [.t bbox 7.12] 0] - [lindex [.t bbox 6.8] 0]}]
+	[expr {[lindex [.t bbox 2.9]  0] - [lindex [.t bbox 2.8] 0]}] \
+	[expr {[lindex [.t bbox 2.10] 0] - [lindex [.t bbox 2.8] 0]}] \
+	[expr {[lindex [.t bbox 2.13] 0] - [lindex [.t bbox 2.8] 0]}] \
+	[expr {[lindex [.t bbox 6.9]  0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 6.10] 0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 6.13] 0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 6.14] 0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 6.15] 0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 7.0]  0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 7.1]  0] - [lindex [.t bbox 6.8] 0]}] \
+	[expr {[lindex [.t bbox 7.12] 0] - [lindex [.t bbox 6.8] 0]}]
 } [list 0 0 0 0 0 0 0 0 0 0 0]
 test textDisp-22.11 {TkTextCharBbox, handling of wrapped elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - Line _$i - Lines .$i - Line [format %c [expr {64+$i}]]\n"
+	.t insert end "Line $i - Line _$i - Lines .$i - Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 1.30 2.5
     .t tag configure hidden -elide true
     update
     list \
-        [expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.4]  0]}] \
-        [expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.5]  0]}]
+	[expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.4]  0]}] \
+	[expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.5]  0]}]
 } [list 0 0]
 
 .t delete 1.0 end
@@ -3479,7 +3485,7 @@ test textDisp-23.1 {TkTextDLineInfo} {
     list [.t dlineinfo 47.3] [.t dlineinfo 48.0] [.t dlineinfo 50.40] \
 	    [.t dlineinfo 56.0]
 } [list {} \
-        [list [bo] [yline 1] [xw 7] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 1] [xw 7] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent] \
 	{}]
 .t config -bd 4
@@ -3496,7 +3502,7 @@ test textDisp-23.3 {TkTextDLineInfo} {
     .t yview 48.0
     list [.t dlineinfo 50.40] [.t dlineinfo 57.3]
 } [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-        [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent]]
+	[list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent]]
 test textDisp-23.4 {TkTextDLineInfo, cut-off lines} {
     wm geometry . {}
     update
@@ -3506,7 +3512,7 @@ test textDisp-23.4 {TkTextDLineInfo, cut-off lines} {
     wm geom . ${width}x[expr {$height-1}]
     update
     set expected [list [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent] \
-                       [list [bo] [yline 11] [xw 7] [expr {($height-1)-$oriHeight}] $fixedAscent]]
+		       [list [bo] [yline 11] [xw 7] [expr {($height-1)-$oriHeight}] $fixedAscent]]
     lequal [list [.t dlineinfo 19.0] [.t dlineinfo 20.0]] $expected
 } {1}
 test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {
@@ -3518,7 +3524,7 @@ test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {
     wm geom . ${width}x[expr {$height+1}]
     update
     set expected [list [list [bo] [yline 10] [xw 7] $fixedHeight $fixedAscent] \
-                       [list [bo] [yline 11] [xw 7] [expr {($height+1)-$oriHeight}] $fixedAscent]]
+		       [list [bo] [yline 11] [xw 7] [expr {($height+1)-$oriHeight}] $fixedAscent]]
     lequal [list [.t dlineinfo 19.0] [.t dlineinfo 20.0]] $expected
 } {1}
 wm geom . {}
@@ -3533,7 +3539,7 @@ test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {
     update
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
 } [list [list [expr {[xw -6]+[bo]}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
-        [list [expr {[xw -6]+[bo]}] [yline 2] [xw 52] $fixedHeight $fixedAscent] \
+	[list [expr {[xw -6]+[bo]}] [yline 2] [xw 52] $fixedHeight $fixedAscent] \
 	[list [expr {[xw -6]+[bo]}] [yline 3] [xw 5] $fixedHeight $fixedAscent]]
 .t xview moveto 0
 test textDisp-23.7 {TkTextDLineInfo, centering} {
@@ -3548,7 +3554,7 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {
     .t tag add y 3.0
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
 } [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
-        [list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
 	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
 .t tag delete x y
 
@@ -3558,7 +3564,7 @@ test textDisp-24.1 {TkTextCharLayoutProc} {
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.2 {TkTextCharLayoutProc} {
     wm geometry . {}
     update
@@ -3569,12 +3575,12 @@ test textDisp-24.2 {TkTextCharLayoutProc} {
     # be tolerant about borderwidth et al. - don't let another char fit on the line
     set wi $width
     while {$wi+1-$oriWidth >= $fixedWidth} {
-        incr wi -$fixedWidth
+	incr wi -$fixedWidth
     }
     wm geom . [expr {$wi+1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($wi+1-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.3 {TkTextCharLayoutProc} {
@@ -3587,7 +3593,7 @@ test textDisp-24.3 {TkTextCharLayoutProc} {
     wm geom . [expr {$width-1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-1-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {
@@ -3598,7 +3604,7 @@ test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {
     update
     list [.t bbox 1.19] [.t bbox 1.20] [.t bbox 2.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 20] [yline 1] 0 $fixedHeight] \
+	[list [xchar 20] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight]]
 test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {nonwin} {
     .t configure -wrap char
@@ -3611,7 +3617,7 @@ test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible}
     update
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 2.0]
 } [list [list [xchar 0] [yline 1] [expr {$fixedWidth-[bo]}] $fixedHeight] \
-        [list [expr {[xchar 1]-[bo]}] [yline 1] 0 $fixedHeight] \
+	[list [expr {[xchar 1]-[bo]}] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 2] [expr {$fixedWidth-[bo]}] $fixedHeight]]
 test textDisp-24.6 {TkTextCharLayoutProc, line ends with space} {
     .t configure -wrap char
@@ -3621,7 +3627,7 @@ test textDisp-24.6 {TkTextCharLayoutProc, line ends with space} {
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {
     wm geometry . {}
     update
@@ -3632,12 +3638,12 @@ test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {
     # be tolerant about borderwidth et al. - don't let another char fit on the line
     set wi $width
     while {$wi+1-$oriWidth >= $fixedWidth} {
-        incr wi -$fixedWidth
+	incr wi -$fixedWidth
     }
     wm geom . [expr {$wi+1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($wi+1-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.8 {TkTextCharLayoutProc, line ends with space} {
@@ -3650,7 +3656,7 @@ test textDisp-24.8 {TkTextCharLayoutProc, line ends with space} {
     wm geom . [expr {$width-1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-1-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {
@@ -3663,7 +3669,7 @@ test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {
     wm geom . [expr {$width-6}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-6-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {
@@ -3676,7 +3682,7 @@ test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {
     wm geom . [expr {$width-7}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] [expr {$fixedWidth+($width-7-$oriWidth)}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't quite fit} {
@@ -3691,7 +3697,7 @@ test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't qui
     .t mark set insert 1.21
     lappend result [.t bbox 1.21] [.t bbox 2.0]
 } [list [list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 wm geom . {}
@@ -3703,7 +3709,7 @@ test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {
     .t mark set insert 1.4
     .t insert insert \t\t\t
     set expected [list [list [expr {[xchar 0]+2*8*$fixedWidth}] [yline 1] [expr {[winfo width .t]-([xchar 0]+2*8*$fixedWidth)-[bo]}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox {insert -1c}] [.t bbox insert]] $expected
 } {1}
 test textDisp-24.13 {TkTextCharLayoutProc, -wrap none} {
@@ -3724,7 +3730,7 @@ test textDisp-24.14 {TkTextCharLayoutProc, -wrap none} {
     wm geom . [expr {$width+1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-                       [list [xchar 20] [yline 1] [expr {$width+1-$oriWidth}] $fixedHeight]]
+		       [list [xchar 20] [yline 1] [expr {$width+1-$oriWidth}] $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
@@ -3737,7 +3743,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     wm geom . [expr {$width-1}]x$height
     update
     set expected [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-                       [list [xchar 20] [yline 1] [expr {$width-1-$oriWidth}] $fixedHeight]]
+		       [list [xchar 20] [yline 1] [expr {$width-1-$oriWidth}] $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
@@ -3753,7 +3759,7 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
     update
     list [.t bbox 1.0] [.t bbox 1.1] [.t bbox 1.2]
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
-        [list [xchar 0] [yline 2] 1 $fixedHeight] \
+	[list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
 if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
@@ -3766,7 +3772,7 @@ test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.18 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -3775,7 +3781,7 @@ test textDisp-24.18 {TkTextCharLayoutProc, -wrap word} {
     update
     list [.t bbox 1.15] [.t bbox 1.16] [.t bbox 1.17] [.t bbox 1.21]
 } [list [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 16] [yline 1] [xe 16] $fixedHeight] \
+	[list [xchar 16] [yline 1] [xe 16] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 4] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-24.19 {TkTextCharLayoutProc, -wrap word} {
@@ -3786,7 +3792,7 @@ test textDisp-24.19 {TkTextCharLayoutProc, -wrap word} {
     update
     list [.t bbox 1.14] [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 14] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 16] [yline 1] [xe 16] $fixedHeight]]
 test textDisp-24.20 {TkTextCharLayoutProc, vertical offset} {
     .t configure -wrap none
@@ -3802,11 +3808,11 @@ test textDisp-24.20 {TkTextCharLayoutProc, vertical offset} {
     .t tag delete up
     set result
 } [list [list [xchar 1] [yline 2] $fixedWidth $fixedHeight] \
-        [list [bo] [yline 2] [xw 6] $fixedHeight $fixedAscent] \
+	[list [bo] [yline 2] [xw 6] $fixedHeight $fixedAscent] \
 	[list [xchar 1] [yline 2] $fixedWidth $fixedHeight] \
-        [list [bo] [yline 2] [xw 6] [expr {$fixedHeight+6}] [expr {$fixedAscent+6}]] \
+	[list [bo] [yline 2] [xw 6] [expr {$fixedHeight+6}] [expr {$fixedAscent+6}]] \
 	[list [xchar 1] [expr {[yline 2]+2}] $fixedWidth $fixedHeight] \
-        [list [bo] [yline 2] [xw 6] [expr {$fixedHeight+2}] $fixedAscent]]
+	[list [bo] [yline 2] [xw 6] [expr {$fixedHeight+2}] $fixedAscent]]
 .t configure -width 30
 update
 test textDisp-24.21 {TkTextCharLayoutProc, word breaks} {
@@ -3849,7 +3855,7 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} notAqua {
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.10]
 } [list [list [expr {[bo]+[xe 8]/2}] [yline 1] $fixedWidth $fixedHeight] \
-        [list [expr {[bo]+[xe 8]/2+[xw 7]}] [yline 1] $fixedWidth $fixedHeight]]
+	[list [expr {[bo]+[xe 8]/2+[xw 7]}] [yline 1] $fixedWidth $fixedHeight]]
 test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     text .tt -tabs {40 right} -wrap none -font $fixedFont
     pack .tt
@@ -3857,8 +3863,8 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     .tt insert end \t9\n\t99\n\t999
     update
     set expected [list [list [expr {[bo .tt]+40-$fixedWidth}] [yline 1 .tt] $fixedWidth $fixedHeight] \
-                       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 2 .tt] $fixedWidth $fixedHeight] \
-                       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 3 .tt] $fixedWidth $fixedHeight]]
+		       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 2 .tt] $fixedWidth $fixedHeight] \
+		       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 3 .tt] $fixedWidth $fixedHeight]]
     lequal [list [.tt bbox 1.1] [.tt bbox 2.2] [.tt bbox 3.3]] $expected
 } -cleanup {
     destroy .tt
@@ -3872,7 +3878,7 @@ test textDisp-25.1 {CharBboxProc procedure, check tab width} {
     .t insert 1.0 abc\td\tfgh
     list [.t bbox 1.3] [.t bbox 1.5] [.t bbox 1.6]
 } [list [list [xchar 3] [yline 1] [expr {100-3*$fixedWidth}] $fixedHeight] \
-        [list [expr {[bo]+100+$fixedWidth}] [yline 1] [expr {200-(100+$fixedWidth)}] $fixedHeight] \
+	[list [expr {[bo]+100+$fixedWidth}] [yline 1] [expr {200-(100+$fixedWidth)}] $fixedHeight] \
 	[list [expr {[bo]+200}] [yline 1] $fixedWidth $fixedHeight]]
 
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 -pady 0 \
@@ -3884,7 +3890,7 @@ test textDisp-26.1 {AdjustForTab procedure, no tabs} {
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.12] 0] \
 	    [lindex [.t bbox 1.14] 0]
 } [list [expr {[bo]+8*$fixedWidth}] \
-        [expr {[bo]+2*8*$fixedWidth+2*$fixedWidth}] \
+	[expr {[bo]+2*8*$fixedWidth+2*$fixedWidth}] \
 	[expr {[bo]+3*8*$fixedWidth}]]
 test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {
     .t delete 1.0 end
@@ -3895,7 +3901,7 @@ test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {
     .t configure -tabstyle tabular
     set res
 } [list [expr {[bo]+8*$fixedWidth}] \
-        [expr {[bo]+3*8*$fixedWidth}] \
+	[expr {[bo]+3*8*$fixedWidth}] \
 	[expr {[bo]+4*8*$fixedWidth}]]
 test textDisp-26.2 {AdjustForTab procedure, not enough tabs specified} {
     .t delete 1.0 end
@@ -4019,7 +4025,7 @@ test textDisp-26.13 {AdjustForTab procedure, not enough space} {
     .t tag add x 1.0 end
     set expected [list [xchar 4] [xchar 8] [xchar 12] $t4]
     set res [list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
-            [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]]
+	    [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]]
     lequal $res $expected
 } {1}
 test textDisp-26.13.2 {AdjustForTab procedure, not enough space} {
@@ -4068,7 +4074,7 @@ test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {
     .t insert 1.0 a\tbcdefghij\tc\td
     list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]
 } [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar [expr {8+8+1+1}]] [yline 1] $fixedWidth $fixedHeight]]
 test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
@@ -4078,7 +4084,7 @@ test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {
     .t configure -tabstyle tabular
     set res
 } [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
-        [list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {
     .t delete 1.0 end
@@ -4090,7 +4096,7 @@ test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {
     .t tag configure x -tabs $tw
     .t tag add x 1.0 end
     set expected [list [list [expr {[bo]+$tw+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+[xw 1])-[bo]}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.3] [.t bbox 1.4]] $expected
 } {1}
 test textDisp-27.3 {SizeOfTab procedure, choosing tabX and alignment} {
@@ -4103,7 +4109,7 @@ test textDisp-27.3 {SizeOfTab procedure, choosing tabX and alignment} {
     .t tag configure x -tabs $tw
     .t tag add x 1.0 end
     set expected [list [list [expr {[bo]+3*$tw+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+3*$tw+[xw 1])-[bo]}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.5] [.t bbox 1.6]] $expected
 } {1}
 test textDisp-27.4 {SizeOfTab procedure, choosing tabX and alignment} {
@@ -4116,7 +4122,7 @@ test textDisp-27.4 {SizeOfTab procedure, choosing tabX and alignment} {
     .t tag configure x -tabs "20 center $tw left"
     .t tag add x 1.0 end
     set expected [list [list [expr {[bo]+$tw+($tw-20)+[xw 1]}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+($tw-20)+[xw 1])-[bo]}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.5] [.t bbox 1.6]] $expected
 } {1}
 test textDisp-27.5 {SizeOfTab procedure, center alignment} {
@@ -4129,7 +4135,7 @@ test textDisp-27.5 {SizeOfTab procedure, center alignment} {
     .t tag configure x -tabs "$tw center"
     .t tag add x 1.0 end
     set expected [list [list [expr {[bo]+$tw+round(1.5*$fixedWidth)}] [yline 1] [expr {[winfo width .t]-([bo]+$tw+round(1.5*$fixedWidth))-[bo]}] $fixedHeight] \
-                       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+		       [list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
     lequal [list [.t bbox 1.6] [.t bbox 1.7]] $expected
 } {1}
 test textDisp-27.6 {SizeOfTab procedure, center alignment} {
@@ -4140,7 +4146,7 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list [xchar 4] [yline 2] $fixedWidth $fixedHeight] \
-        [list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
+	[list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
     set cm [winfo fpixels .t 1c]
@@ -4210,7 +4216,7 @@ test textDisp-27.8 {SizeOfTab procedure, right alignment} {
     .t tag add x 1.0 end
     list [.t bbox 1.6] [.t bbox 1.7]
 } [list [list [xcharr 1] [yline 1] $fixedWidth $fixedHeight] \
-        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.9 {SizeOfTab procedure, left alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\txyzzyabc
@@ -4219,7 +4225,7 @@ test textDisp-27.9 {SizeOfTab procedure, left alignment} {
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
 } [list [list [expr {round([bo]+17.14*$fixedWidth+$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth+$fixedWidth)-[bo]}] $fixedHeight] \
-        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t123.4
@@ -4228,7 +4234,7 @@ test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
 } [list [list [expr {round([bo]+17.14*$fixedWidth-$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth-$fixedWidth)-[bo]}] $fixedHeight] \
-        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a space} {
     .t delete 1.0 end
     .t insert 1.0 abc\tdefghijklmnopqrst
@@ -4237,7 +4243,7 @@ test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a spac
     .t tag add x 1.0 end
     list [.t bbox 1.5] [.t bbox 1.6]
 } [list [list [expr {round([bo]+17.14*$fixedWidth+$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth+$fixedWidth)-[bo]}] $fixedHeight] \
-        [list [bo] [yline 2] $fixedWidth $fixedHeight]]
+	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 
 proc bizarre_scroll args {
     .t2.t delete 5.0 end
@@ -4275,8 +4281,8 @@ test textDisp-29.1 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t window create 1.1 -window .t2.t.f
     update
     set expected [list [list 0.0 [expr {20.0*$fixedWidth/300}]] \
-                       300x50+[bo .t2.t]+[yline 2 .t2.t] \
-	               [list [xchar 1 .t2.t] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+		       300x50+[bo .t2.t]+[yline 2 .t2.t] \
+		       [list [xchar 1 .t2.t] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4298,8 +4304,8 @@ test textDisp-29.2 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t xview scroll 1 unit
     update
     set expected [list [list [expr {1.0*$fixedWidth/300}] [expr {21.0*$fixedWidth/300}]] \
-                       300x50+[expr {[bo .t2.t]-$fixedWidth}]+[yline 2 .t2.t] \
-	               [list [expr {[bo .t2.t]-$fixedWidth+$fixedWidth}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+		       300x50+[expr {[bo .t2.t]-$fixedWidth}]+[yline 2 .t2.t] \
+		       [list [expr {[bo .t2.t]-$fixedWidth+$fixedWidth}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4340,8 +4346,8 @@ test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t xview scroll 2 unit
     update
     set expected [list [list [expr {2.0*$fixedWidth/300}] [expr {22.0*$fixedWidth/300}]] \
-                       300x50+[expr {[bo .t2.t]-2*$fixedWidth}]+[yline 2 .t2.t] \
-	               {}]
+		       300x50+[expr {[bo .t2.t]-2*$fixedWidth}]+[yline 2 .t2.t] \
+		       {}]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4363,8 +4369,8 @@ test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t xview scroll 7 pixels
     update
     set expected [list [list [expr {7.0/300}] [expr {(20.0*$fixedWidth+7)/300}]] \
-                       300x50+[expr {[bo .t2.t]-7}]+[yline 2 .t2.t] \
-	               [list [expr {[bo .t2.t]+$fixedWidth-7}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
+		       300x50+[expr {[bo .t2.t]-7}]+[yline 2 .t2.t] \
+		       [list [expr {[bo .t2.t]+$fixedWidth-7}] [expr {[yline 2 .t2.t]+50}] $fixedWidth $fixedHeight]]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4386,8 +4392,8 @@ test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t xview scroll 17 pixels
     update
     set expected [list [list [expr {17.0/300}] [expr {(20.0*$fixedWidth+17)/300}]] \
-                       300x50+[expr {[bo .t2.t]-17}]+[yline 2 .t2.t] \
-	               {}]
+		       300x50+[expr {[bo .t2.t]-17}]+[yline 2 .t2.t] \
+		       {}]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4439,8 +4445,8 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} -setup {
     .t2.t xview scroll 200 units
     update
     set expected [list [list [expr {double(300-20*$fixedWidth)/300}] 1.0] \
-                       300x50+[expr {-(300-20*$fixedWidth-[bo .t2.t])}]+[yline 2 .t2.t] \
-	               {}]
+		       300x50+[expr {-(300-20*$fixedWidth-[bo .t2.t])}]+[yline 2 .t2.t] \
+		       {}]
     lequal [list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]] $expected
 } -cleanup {
     destroy .t2
@@ -4492,7 +4498,7 @@ test textDisp-31.1 {line embedded window height update} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*6}] \
+	[expr {100+$fixedHeight*6}] \
 	[expr {$fixedHeight*7}]]
 test textDisp-31.2 {line update index shifting} {
     set res {}
@@ -4509,7 +4515,7 @@ test textDisp-31.2 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     lappend res [.t count -update -ypixels 1.0 end]
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*8}] \
+	[expr {100+$fixedHeight*8}] \
 	[expr {$fixedHeight*9}] \
 	[expr {$fixedHeight*7}] \
 	[expr {100+$fixedHeight*6}]]
@@ -4536,7 +4542,7 @@ test textDisp-31.3 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*8}] \
+	[expr {100+$fixedHeight*8}] \
 	[expr {$fixedHeight*9}] \
 	[expr {$fixedHeight*7}] \
 	[expr {100+$fixedHeight*6}]]
@@ -4552,7 +4558,7 @@ test textDisp-31.4 {line embedded image height update} {
     lappend res [.t count -update -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*6}] \
+	[expr {100+$fixedHeight*6}] \
 	[expr {$fixedHeight*7}]]
 test textDisp-31.5 {line update index shifting} {
     set res {}
@@ -4570,7 +4576,7 @@ test textDisp-31.5 {line update index shifting} {
     lappend res [.t count -update -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*8}] \
+	[expr {100+$fixedHeight*8}] \
 	[expr {$fixedHeight*9}] \
 	[expr {$fixedHeight*7}] \
 	[expr {100+$fixedHeight*6}]]
@@ -4596,7 +4602,7 @@ test textDisp-31.6 {line update index shifting} {
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {100+$fixedHeight*6}] \
-        [expr {100+$fixedHeight*8}] \
+	[expr {100+$fixedHeight*8}] \
 	[expr {$fixedHeight*9}] \
 	[expr {$fixedHeight*7}] \
 	[expr {100+$fixedHeight*6}]]
@@ -4620,7 +4626,7 @@ test textDisp-31.7 {line update index shifting, elided} {
     lappend res [.t count -ypixels 1.0 end]
     set res
 } [list [expr {$fixedHeight*1}] \
-        [expr {$fixedHeight*3}] \
+	[expr {$fixedHeight*3}] \
 	[expr {$fixedHeight*3}] \
 	[expr {$fixedHeight*2}] \
 	[expr {$fixedHeight*1}] \
@@ -4856,7 +4862,7 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
     pack [text .t1] -expand 1 -fill both
     set txt ""
     for {set i 1} {$i < 100} {incr i} {
-        append txt "Line $i\n"
+	append txt "Line $i\n"
     }
     set result {}
 } -body {

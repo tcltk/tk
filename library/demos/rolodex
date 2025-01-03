@@ -8,7 +8,7 @@ exec wish "$0" ${1+"$@"}
 # feel of a rolodex program, although it's lifeless and doesn't
 # actually do the rolodex application.
 
-package require Tk
+package require tk
 
 foreach i [winfo children .] {
     catch {destroy $i}
@@ -27,17 +27,17 @@ set names {{} Name: Address: {} {} {Home Phone:} {Work Phone:} Fax:}
 foreach i {1 2 3 4 5 6 7} {
     label .frame.label$i -text [lindex $names $i] -anchor e
     entry .frame.entry$i -width 35
-    grid .frame.label$i .frame.entry$i -sticky ew -pady 2 -padx 1
+    grid .frame.label$i .frame.entry$i -sticky ew -pady 1.5p -padx 0.75p
 }
 
 frame .buttons
-pack .buttons -side bottom -pady 2 -anchor center
+pack .buttons -side bottom -pady 1.5p -anchor center
 button .buttons.clear -text Clear
 button .buttons.add -text Add
 button .buttons.search -text Search
 button .buttons.delete -text "Delete ..."
 pack .buttons.clear .buttons.add .buttons.search .buttons.delete \
-	-side left -padx 2
+	-side left -padx 1.5p
 
 #------------------------------------------
 # Phase 1: Add menus, dialog boxes

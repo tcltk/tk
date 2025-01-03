@@ -13,9 +13,18 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
+#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
 
 #endif
+
+#if !defined(BUILD_tk)
+# define TTK_DEPRECATED(msg) TTKAPI TCL_DEPRECATED_API(msg)
+#elif defined(TK_NO_DEPRECATED)
+# define TTK_DEPRECATED(msg) MODULE_SCOPE
+#else
+# define TTK_DEPRECATED(msg) TTKAPI
+#endif
+
 
 
 /* !BEGIN!: Do not edit below this line. */
@@ -47,12 +56,12 @@ TTKAPI void		Ttk_RegisterCleanup(Tcl_Interp *interp,
 /* 5 */
 TTKAPI int		Ttk_RegisterElementSpec(Ttk_Theme theme,
 				const char *elementName,
-				Ttk_ElementSpec *elementSpec,
+				const Ttk_ElementSpec *elementSpec,
 				void *clientData);
 /* 6 */
 TTKAPI Ttk_ElementClass * Ttk_RegisterElement(Tcl_Interp *interp,
 				Ttk_Theme theme, const char *elementName,
-				Ttk_ElementSpec *elementSpec,
+				const Ttk_ElementSpec *elementSpec,
 				void *clientData);
 /* 7 */
 TTKAPI int		Ttk_RegisterElementFactory(Tcl_Interp *interp,
@@ -77,7 +86,7 @@ TTKAPI Ttk_StateMap	Ttk_GetStateMapFromObj(Tcl_Interp *interp,
 TTKAPI Tcl_Obj *	Ttk_StateMapLookup(Tcl_Interp *interp,
 				Ttk_StateMap map, Ttk_State state);
 /* 14 */
-TTKAPI int		Ttk_StateTableLookup(Ttk_StateTable map[],
+TTKAPI int		Ttk_StateTableLookup(const Ttk_StateTable *map,
 				Ttk_State state);
 /* Slot 15 is reserved */
 /* Slot 16 is reserved */
@@ -131,7 +140,7 @@ TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
 /* Slot 39 is reserved */
 /* 40 */
 TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *orient);
+				Tcl_Obj *objPtr, Ttk_Orient *orient);
 
 typedef struct TtkStubs {
     int magic;
@@ -144,8 +153,8 @@ typedef struct TtkStubs {
     Ttk_Theme (*ttk_GetCurrentTheme) (Tcl_Interp *interp); /* 2 */
     Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp *interp, const char *name, Ttk_Theme parent); /* 3 */
     void (*ttk_RegisterCleanup) (Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc); /* 4 */
-    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
-    Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp *interp, Ttk_Theme theme, const char *elementName, Ttk_ElementSpec *elementSpec, void *clientData); /* 6 */
+    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
+    Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp *interp, Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 6 */
     int (*ttk_RegisterElementFactory) (Tcl_Interp *interp, const char *name, Ttk_ElementFactory factoryProc, void *clientData); /* 7 */
     void (*ttk_RegisterLayout) (Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec); /* 8 */
     void (*reserved9)(void);
@@ -153,7 +162,7 @@ typedef struct TtkStubs {
     Tcl_Obj * (*ttk_NewStateSpecObj) (unsigned int onbits, unsigned int offbits); /* 11 */
     Ttk_StateMap (*ttk_GetStateMapFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 12 */
     Tcl_Obj * (*ttk_StateMapLookup) (Tcl_Interp *interp, Ttk_StateMap map, Ttk_State state); /* 13 */
-    int (*ttk_StateTableLookup) (Ttk_StateTable map[], Ttk_State state); /* 14 */
+    int (*ttk_StateTableLookup) (const Ttk_StateTable *map, Ttk_State state); /* 14 */
     void (*reserved15)(void);
     void (*reserved16)(void);
     void (*reserved17)(void);
@@ -179,7 +188,7 @@ typedef struct TtkStubs {
     void (*reserved37)(void);
     void (*reserved38)(void);
     void (*reserved39)(void);
-    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
+    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;

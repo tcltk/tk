@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .unicodeout
 catch {destroy $w}
@@ -21,9 +21,7 @@ label $w.msg -font $font -wraplength 4i -anchor w -justify left \
 	non-Western character sets.  However, what you will actually see\
 	below depends largely on what character sets you have installed,\
 	and what you see for characters that are not present varies greatly\
-	between platforms as well.  The strings are written in Tcl using\
-	UNICODE characters using the \\uXXXX escape so as to do so in a\
-	portable fashion."
+	between platforms as well."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
@@ -98,46 +96,29 @@ update
 ## Add the samples...
 if {[usePresentationFormsFor Arabic]} {
     # Using presentation forms (pre-layouted)
-    addSample $w Arabic \
-	    "\uFE94\uFEF4\uFE91\uFEAE\uFECC\uFEDF\uFE8D " \
-	    "\uFE94\uFEE4\uFEE0\uFEDC\uFEDF\uFE8D"
+    addSample $w Arabic "ﺔﻴﺑﺮﻌﻟﺍ ﺔﻤﻠﻜﻟﺍ"
 } else {
     # Using standard text characters
-    addSample $w Arabic \
-	    "\u0627\u0644\u0643\u0644\u0645\u0629 " \
-	    "\u0627\u0644\u0639\u0631\u0628\u064A\u0629"
+    addSample $w Arabic "الكلمة العربية"
 }
-addSample $w "Trad. Chinese"  "\u4E2D\u570B\u7684\u6F22\u5B57"
-addSample $w "Simpl. Chinese" "\u6C49\u8BED"
-addSample $w French "Langue fran\xE7aise"
-addSample $w Greek \
-	"\u0395\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AE " \
-	"\u03B3\u03BB\u03CE\u03C3\u03C3\u03B1"
+addSample $w "Trad. Chinese"  "中國的漢字"
+addSample $w "Simpl. Chinese" "汉语"
+addSample $w French "Langue française"
+addSample $w Greek "Ελληνική γλώσσα"
 if {[usePresentationFormsFor Hebrew]} {
     # Visual order (pre-layouted)
-    addSample $w Hebrew \
-	    "\u05EA\u05D9\u05E8\u05D1\u05E2 \u05D1\u05EA\u05DB"
+    addSample $w Hebrew "תירבע בתכ"
 } else {
     # Standard logical order
-    addSample $w Hebrew \
-	    "\u05DB\u05EA\u05D1 \u05E2\u05D1\u05E8\u05D9\u05EA"
+    addSample $w Hebrew "כתב עברית"
 }
-addSample $w Hindi \
-    "\u0939\u093F\u0928\u094D\u0926\u0940 \u092D\u093E\u0937\u093E"
-addSample $w Icelandic "\xCDslenska"
-addSample $w Japanese \
-	"\u65E5\u672C\u8A9E\u306E\u3072\u3089\u304C\u306A, " \
-	"\u6F22\u5B57\u3068\u30AB\u30BF\u30AB\u30CA"
-addSample $w Korean "\uB300\uD55C\uBBFC\uAD6D\uC758 \uD55C\uAE00"
-addSample $w Russian \
-	"\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A"
+addSample $w Hindi "हिन्दी भाषा"
+addSample $w Icelandic "Íslenska"
+addSample $w Japanese "日本語のひらがな, 漢字とカタカナ"
+addSample $w Korean "대한민국의 한글"
+addSample $w Russian "Русский язык"
 if {([tk windowingsystem] ne "x11") || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))} {
-    if {[package vsatisfies [package provide Tcl] 8.7-]} {
-	addSample $w Emoji "😀💩👍🇳🇱"
-    } else {
-	addSample $w Emoji \
-		"\uD83D\uDE00\uD83D\uDCA9\uD83D\uDC4D\uD83C\uDDF3\uD83C\uDDF1"
-    }
+    addSample $w Emoji "😀💩👍🇳🇱"
 }
 
 ## We're done processing, so change things back to normal running...

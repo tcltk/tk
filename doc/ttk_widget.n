@@ -71,6 +71,12 @@ See the description of \fB\-xscrollcommand\fR above for details.
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
+.OP \-anchor anchor Anchor
+Specifies how the information in the widget is positioned
+relative to the inner margins.  Legal values are
+\fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
+\fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, and \fBcenter\fR.
+See also \fB\-justify\fR (for widgets supporting this option).
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
 in the case both \fB\-text\fR and \fB\-image\fR are present.
@@ -106,6 +112,11 @@ The rest of the list is a sequence of \fIstatespec / value\fR pairs
 as per \fBstyle map\fR, specifying different images to use when
 the widget is in a particular state or combination of states.
 All images in the list should have the same size.
+.OP \-justify justify Justify
+If there are multiple lines of text, specifies how
+the lines are laid out relative to one another.
+One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+See also \fB\-anchor\fR (for widgets supporting this option).
 .OP \-padding padding Padding
 Specifies the internal padding for the widget.
 The padding is a list of up to four length specifications
@@ -125,13 +136,31 @@ Specifies the name of a global variable whose value will be used
 in place of the \fB\-text\fR resource.
 .OP \-underline underline Underline
 If set, specifies the integer index (0-based) of a character to underline
-in the text string.
+in the text string. \fBend\fR corresponds to the last character,
+\fBend\fR-1 to the before last character, and so on.
 The underlined character is used for mnemonic activation.
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths,
 to allocate for the text label.
 If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
+Note that some themes may specify a non-zero \fB\-width\fR
+in the style.
+.OP \-wraplength wrapLength WrapLength
+Specifies the maximum line length. The value may have any of the forms
+acceptable to \fBTk_GetPixels\fR. If this option is less than or equal
+to zero, then automatic wrapping is not performed; otherwise
+the text is split into lines such that no line is longer
+than the specified value.
+.SH "ENTRY OPTIONS"
+The following options are supported by entry, spinbox and combobox:
+.OP \-placeholder placeHolder PlaceHolder
+Specifies a help text string to display if no text is otherwise displayed,
+that is when the widget is empty. The placeholder text is displayed using
+the values of the \fB\-font\fR, \fB\-justify\fR and
+\fB\-placeholderforeground\fR options.
+.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
+Specifies the foreground color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
 This option is only available for themed widgets that have
 .QW corresponding
@@ -206,6 +235,11 @@ will restore \fIpathName\fR to the original state.
 If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
 .RE
+.\" METHOD: style
+.TP
+\fIpathName \fBstyle\fR
+.
+Return the style used by the widget.
 .\" METHOD: xview
 .TP
 \fIpathName \fBxview \fIargs\fR
@@ -241,15 +275,17 @@ way through the content appears at the left edge of the window.
 .
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 '\" or an abbreviation of one of these, but we don't document that.
-If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
-\fInumber\fR average-width characters on the display;  if it is
+If \fIwhat\fR is
 \fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
 If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
+\fInumber\fR average-width characters on the display.
 .RE
 .\" METHOD: yview
 .TP
@@ -286,15 +322,17 @@ way through the content appears at the top edge of the window.
 .
 This command shifts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 '\" or an abbreviation of one of these, but we don't document that.
-If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
-\fInumber\fR average-width characters on the display;  if it is
+If \fIwhat\fR is
 \fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
 If \fInumber\fR is negative then items farther to the top
 become visible;  if it is positive then items farther to the bottom
 become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
+\fInumber\fR average-width characters on the display.
 .RE
 .SH "WIDGET STATES"
 The widget state is a bitmap of independent state flags.
@@ -349,7 +387,7 @@ it is used in some themes for widgets that
 provide distinct visual feedback for
 the active widget in addition to the active element
 within the widget.
-.IP \fBuser1\fR-\fBuser3\fR
+.IP \fBuser1\fR-\fBuser6\fR
 Freely usable for other purposes
 .PP
 A \fIstate specification\fR or \fIstateSpec\fR is a list

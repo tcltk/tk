@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -123,6 +123,9 @@ static unsigned char w3_bits[] = {
 #	Color icons are used on Unix displays that have a color
 #	depth of 4 or more and $tk_strictMotif is not on.
 #
+#	Uses ::tk::Priv.${disp}(button) instead of ::tk::Priv(button) to
+#	avoid adverse effects of [::tk::ScreenChanged]. Bug [e2cec2fa41].
+#
 #	This procedure is a private procedure shouldn't be called
 #	directly. Call tk_messageBox instead.
 #
@@ -144,11 +147,11 @@ proc ::tk::MessageBox {args} {
     set specs {
 	{-default "" "" ""}
 	{-detail "" "" ""}
-        {-icon "" "" "info"}
-        {-message "" "" ""}
-        {-parent "" "" .}
-        {-title "" "" " "}
-        {-type "" "" "ok"}
+	{-icon "" "" "info"}
+	{-message "" "" ""}
+	{-parent "" "" .}
+	{-title "" "" " "}
+	{-type "" "" "ok"}
     }
 
     tclParseConfigSpec $w $specs "" $args
@@ -170,6 +173,30 @@ proc ::tk::MessageBox {args} {
 	return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
 	    "bad window path name \"$data(-parent)\""
     }
+
+    # Select the vwait variable carefully.
+    set oldScreen $Priv(screen)
+    set screen [winfo screen $data(-parent)]
+
+    # Extract the display name (cf. ScreenChanged, including [Bug 2912473] fix).
+    set disp [string range $screen 0 [string last . $screen]-1]
+
+    # Ensure that namespace separators never occur in the display name (as
+    # they cause problems in variable names). Double-colons exist in some VNC
+    # display names. [Bug 2912473]
+    set disp [string map {:: _doublecolon_} $disp]
+
+    if {![info exists ::tk::Priv.${disp}]} {
+	# Use ScreenChanged to create ::tk::Priv.${disp}, then change back to old
+	# screen to avoid interfering with Tk expectations for bindings.
+	ScreenChanged $screen
+	ScreenChanged $oldScreen
+    }
+
+    variable ::tk::Priv.${disp}
+    # Now in place of ::tk::Priv(button), use ::tk::Priv.${disp}(button) which
+    # is the intended target variable of upvar and will not be redefined when
+    # ::tk::ScreenChanged is called.
 
     switch -- $data(-type) {
 	abortretryignore {
@@ -270,7 +297,7 @@ proc ::tk::MessageBox {args} {
     if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     } elseif {$windowingsystem eq "x11"} {
-        wm attributes $w -type dialog
+	wm attributes $w -type dialog
     }
 
     ttk::frame $w.bot
@@ -298,18 +325,18 @@ proc ::tk::MessageBox {args} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
 	    switch $data(-icon) {
-                error {
-                    ttk::label $w.bitmap -image ::tk::icons::error
-                }
-                info {
-                    ttk::label $w.bitmap -image ::tk::icons::information
-                }
-                question {
-                    ttk::label $w.bitmap -image ::tk::icons::question
-                }
-                default {
-                    ttk::label $w.bitmap -image ::tk::icons::warning
-                }
+		error {
+		    ttk::label $w.bitmap -image ::tk::icons::error
+		}
+		info {
+		    ttk::label $w.bitmap -image ::tk::icons::information
+		}
+		question {
+		    ttk::label $w.bitmap -image ::tk::icons::question
+		}
+		default {
+		    ttk::label $w.bitmap -image ::tk::icons::warning
+		}
 	    }
 	}
     }
@@ -336,7 +363,7 @@ proc ::tk::MessageBox {args} {
 	}
 
 	eval [list tk::AmpWidget ttk::button $w.$name] $opts \
-		[list -command [list set tk::Priv(button) $name]]
+		[list -command [list set tk::Priv.${disp}(button) $name]]
 
 	if {$name eq $data(-default)} {
 	    $w.$name configure -default active
@@ -355,16 +382,16 @@ proc ::tk::MessageBox {args} {
 	    }
 	    grid configure $w.$name -pady 7
 	}
-        incr i
+	incr i
 
 	# create the binding for the key accelerator, based on the underline
 	#
-        # set underIdx [$w.$name cget -under]
-        # if {$underIdx >= 0} {
-        #     set key [string index [$w.$name cget -text] $underIdx]
-        #     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
-        #     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
-        # }
+	# set underIdx [$w.$name cget -under]
+	# if {$underIdx >= 0} {
+	#     set key [string index [$w.$name cget -text] $underIdx]
+	#     bind $w <Alt-[string tolower $key]>  [list $w.$name invoke]
+	#     bind $w <Alt-[string toupper $key]>  [list $w.$name invoke]
+	# }
     }
     bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
@@ -393,7 +420,7 @@ proc ::tk::MessageBox {args} {
     bind $w <Escape> [list $w.$cancel invoke]
 
     # At <Destroy> the buttons have vanished, so must do this directly.
-    bind $w.msg <Destroy> [list set tk::Priv(button) $cancel]
+    bind $w.msg <Destroy> [list set tk::Priv.${disp}(button) $cancel]
 
     # 7. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -416,10 +443,10 @@ proc ::tk::MessageBox {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(button)
+    vwait ::tk::Priv.${disp}(button)
     # Copy the result now so any <Destroy> that happens won't cause
     # trouble
-    set result $Priv(button)
+    set result [set Priv.${disp}(button)]
 
     ::tk::RestoreFocusGrab $w $focus
 

@@ -2,7 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <tkWinInt.h>
+#include "tkWinInt.h"
 #include "ttk/ttkTheme.h"
 
 #if !defined(WM_THEMECHANGED)
@@ -22,7 +22,7 @@ typedef struct {
     int index;
 } SystemColorEntry;
 
-static SystemColorEntry sysColors[] = {
+static const SystemColorEntry sysColors[] = {
 	{ "System3dDarkShadow",		COLOR_3DDKSHADOW },
 	{ "System3dLight",		COLOR_3DLIGHT },
 	{ "SystemActiveBorder",		COLOR_ACTIVEBORDER },
@@ -55,7 +55,7 @@ static SystemColorEntry sysColors[] = {
 static void RegisterSystemColors(Tcl_Interp *interp)
 {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
-    SystemColorEntry *sysColor;
+    const SystemColorEntry *sysColor;
 
     for (sysColor = sysColors; sysColor->name; ++sysColor) {
 	DWORD pixel = GetSysColor(sysColor->index);
@@ -122,12 +122,12 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_THEMECHANGED:
 	/*
-         * Reset the application theme.
-         * On windows, it is possible to sign in as a second user, change
-         * the theme to 'winnative' (by setting the ui to 'best performance'),
-         * which is a machine-wide change, and then sign back on to the original user.
-         * Ttk_UseTheme needs to be executed again in order to process the fallback
-         * from vista/xpnative to winnative.
+	 * Reset the application theme.
+	 * On windows, it is possible to sign in as a second user, change
+	 * the theme to 'winnative' (by setting the ui to 'best performance'),
+	 * which is a machine-wide change, and then sign back on to the original user.
+	 * Ttk_UseTheme needs to be executed again in order to process the fallback
+	 * from vista/xpnative to winnative.
 	 */
 
 	theme = Ttk_GetCurrentTheme(interp);
@@ -146,13 +146,14 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp);
 
 MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 {
     HWND hwnd;
 
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
-    Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
+    Ttk_RegisterCleanup(interp, hwnd, DestroyThemeMonitorWindow);
 
     TtkWinTheme_Init(interp, hwnd);
     TtkXPTheme_Init(interp, hwnd);

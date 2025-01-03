@@ -4,8 +4,8 @@
  *	This module implements button-like widgets that are used to invoke
  *	pull-down menus.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,7 +13,6 @@
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
-#include "default.h"
 
 /*
  * The structure below defines menubutton class behavior by means of
@@ -42,100 +41,99 @@ static const char *const directionStrings[] = {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_MENUBUTTON_ACTIVE_BG_COLOR, -1,
-	Tk_Offset(TkMenuButton, activeBorder), 0,
-	(ClientData) DEF_MENUBUTTON_ACTIVE_BG_MONO, 0},
+	DEF_MENUBUTTON_ACTIVE_BG_COLOR, TCL_INDEX_NONE,
+	offsetof(TkMenuButton, activeBorder), 0,
+	DEF_MENUBUTTON_ACTIVE_BG_MONO, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
-	DEF_MENUBUTTON_ACTIVE_FG_COLOR, -1,
-	Tk_Offset(TkMenuButton, activeFg),
+	DEF_MENUBUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE,
+	offsetof(TkMenuButton, activeFg),
 	0, DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	DEF_MENUBUTTON_ANCHOR, -1,
-	Tk_Offset(TkMenuButton, anchor), 0, 0, 0},
+	DEF_MENUBUTTON_ANCHOR, TCL_INDEX_NONE,
+	offsetof(TkMenuButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_MENUBUTTON_BG_COLOR, -1, Tk_Offset(TkMenuButton, normalBorder),
+	DEF_MENUBUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkMenuButton, normalBorder),
 	0, DEF_MENUBUTTON_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1,
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE,
 	0, "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1,
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE,
 	0, "-background", 0},
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
-	DEF_MENUBUTTON_BITMAP, -1, Tk_Offset(TkMenuButton, bitmap),
+	DEF_MENUBUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkMenuButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_MENUBUTTON_BORDER_WIDTH, -1,
-	Tk_Offset(TkMenuButton, borderWidth), 0, 0, 0},
+	DEF_MENUBUTTON_BORDER_WIDTH, offsetof(TkMenuButton, borderWidthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_MENUBUTTON_CURSOR, -1, Tk_Offset(TkMenuButton, cursor),
+	DEF_MENUBUTTON_CURSOR, TCL_INDEX_NONE, offsetof(TkMenuButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
-	DEF_MENUBUTTON_DIRECTION, -1, Tk_Offset(TkMenuButton, direction),
+	DEF_MENUBUTTON_DIRECTION, TCL_INDEX_NONE, offsetof(TkMenuButton, direction),
 	TK_OPTION_ENUM_VAR, directionStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
-	-1, Tk_Offset(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL, NULL, 0, -1,
+	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
+	DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL, NULL, 0, TCL_INDEX_NONE,
 	0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_MENUBUTTON_FONT, -1, Tk_Offset(TkMenuButton, tkfont), 0, 0, 0},
+	DEF_MENUBUTTON_FONT, TCL_INDEX_NONE, offsetof(TkMenuButton, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_MENUBUTTON_FG, -1, Tk_Offset(TkMenuButton, normalFg), 0, 0, 0},
+	DEF_MENUBUTTON_FG, TCL_INDEX_NONE, offsetof(TkMenuButton, normalFg), 0, 0, 0},
     {TK_OPTION_STRING, "-height", "height", "Height",
-	DEF_MENUBUTTON_HEIGHT, -1, Tk_Offset(TkMenuButton, heightString),
-	0, 0, 0},
+	DEF_MENUBUTTON_HEIGHT, offsetof(TkMenuButton, heightObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR,
-	-1, Tk_Offset(TkMenuButton, highlightBgColorPtr), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuButton, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_MENUBUTTON_HIGHLIGHT, -1,
-	Tk_Offset(TkMenuButton, highlightColorPtr),	0, 0, 0},
+	DEF_MENUBUTTON_HIGHLIGHT, TCL_INDEX_NONE,
+	offsetof(TkMenuButton, highlightColorPtr),	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_MENUBUTTON_HIGHLIGHT_WIDTH,
-	-1, Tk_Offset(TkMenuButton, highlightWidth), 0, 0, 0},
+	offsetof(TkMenuButton, highlightWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
-	DEF_MENUBUTTON_IMAGE, -1, Tk_Offset(TkMenuButton, imageString),
+	DEF_MENUBUTTON_IMAGE, offsetof(TkMenuButton, imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-indicatoron", "indicatorOn", "IndicatorOn",
-	DEF_MENUBUTTON_INDICATOR, -1, Tk_Offset(TkMenuButton, indicatorOn),
+	DEF_MENUBUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkMenuButton, indicatorOn),
 	0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_MENUBUTTON_JUSTIFY, -1, Tk_Offset(TkMenuButton, justify), 0, 0, 0},
+	DEF_MENUBUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkMenuButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
-	DEF_MENUBUTTON_MENU, -1, Tk_Offset(TkMenuButton, menuName),
+	DEF_MENUBUTTON_MENU, offsetof(TkMenuButton, menuNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_MENUBUTTON_PADX, -1, Tk_Offset(TkMenuButton, padX),
+	DEF_MENUBUTTON_PADX, offsetof(TkMenuButton, padXObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_MENUBUTTON_PADY, -1, Tk_Offset(TkMenuButton, padY),
+	DEF_MENUBUTTON_PADY, offsetof(TkMenuButton, padYObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MENUBUTTON_RELIEF, -1, Tk_Offset(TkMenuButton, relief),
+	DEF_MENUBUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkMenuButton, relief),
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkMenuButton, compound),
+	DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuButton, compound),
 	0, tkCompoundStrings, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_MENUBUTTON_STATE, -1, Tk_Offset(TkMenuButton, state),
+	DEF_MENUBUTTON_STATE, TCL_INDEX_NONE, offsetof(TkMenuButton, state),
 	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_MENUBUTTON_TAKE_FOCUS, -1,
-	Tk_Offset(TkMenuButton, takeFocus), TK_OPTION_NULL_OK, 0, 0},
+	DEF_MENUBUTTON_TAKE_FOCUS, offsetof(TkMenuButton, takeFocusObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
-	DEF_MENUBUTTON_TEXT, -1, Tk_Offset(TkMenuButton, text), 0, 0, 0},
+	DEF_MENUBUTTON_TEXT, offsetof(TkMenuButton, textObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_MENUBUTTON_TEXT_VARIABLE, -1,
-	Tk_Offset(TkMenuButton, textVarName), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	DEF_MENUBUTTON_UNDERLINE, -1, Tk_Offset(TkMenuButton, underline),
-	0, 0, 0},
+	DEF_MENUBUTTON_TEXT_VARIABLE, offsetof(TkMenuButton, textVarNameObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(TkMenuButton, underline), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
-	DEF_MENUBUTTON_WIDTH, -1, Tk_Offset(TkMenuButton, widthString),
-	0, 0, 0},
+	DEF_MENUBUTTON_WIDTH, offsetof(TkMenuButton, widthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	DEF_MENUBUTTON_WRAP_LENGTH, -1, Tk_Offset(TkMenuButton, wrapLength),
-	0, 0, 0},
+	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -157,22 +155,20 @@ enum command {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		MenuButtonCmdDeletedProc(ClientData clientData);
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonCmdDeletedProc(void *clientData);
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		MenuButtonImageProc(ClientData clientData,
+static void		MenuButtonImageProc(void *clientData,
 			    int x, int y, int width, int height, int imgWidth,
 			    int imgHeight);
-static char *		MenuButtonTextVarProc(ClientData clientData,
+static char *		MenuButtonTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MenuButtonWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc MenuButtonWidgetObjCmd;
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
 			    Tcl_Obj *const objv[]);
-static void		DestroyMenuButton(char *memPtr);
+static void		DestroyMenuButton(void *memPtr);
 
 /*
  *--------------------------------------------------------------
@@ -194,7 +190,7 @@ static void		DestroyMenuButton(char *memPtr);
 
 int
 Tk_MenubuttonObjCmd(
-    ClientData clientData,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -241,19 +237,19 @@ Tk_MenubuttonObjCmd(
 	    Tk_PathName(mbPtr->tkwin), MenuButtonWidgetObjCmd, mbPtr,
 	    MenuButtonCmdDeletedProc);
     mbPtr->optionTable = optionTable;
-    mbPtr->menuName = NULL;
-    mbPtr->text = NULL;
-    mbPtr->underline = -1;
-    mbPtr->textVarName = NULL;
+    mbPtr->menuNameObj = NULL;
+    mbPtr->textObj = NULL;
+    mbPtr->underline = INT_MIN;
+    mbPtr->textVarNameObj = NULL;
     mbPtr->bitmap = None;
-    mbPtr->imageString = NULL;
+    mbPtr->imageObj = NULL;
     mbPtr->image = NULL;
     mbPtr->state = STATE_NORMAL;
     mbPtr->normalBorder = NULL;
     mbPtr->activeBorder = NULL;
-    mbPtr->borderWidth = 0;
+    mbPtr->borderWidthObj = NULL;
     mbPtr->relief = TK_RELIEF_FLAT;
-    mbPtr->highlightWidth = 0;
+    mbPtr->highlightWidthObj = 0;
     mbPtr->highlightBgColorPtr = NULL;
     mbPtr->highlightColorPtr = NULL;
     mbPtr->inset = 0;
@@ -268,13 +264,13 @@ Tk_MenubuttonObjCmd(
     mbPtr->stippleGC = NULL;
     mbPtr->leftBearing = 0;
     mbPtr->rightBearing = 0;
-    mbPtr->widthString = NULL;
-    mbPtr->heightString = NULL;
+    mbPtr->widthObj = NULL;
+    mbPtr->heightObj = NULL;
     mbPtr->width = 0;
-    mbPtr->width = 0;
-    mbPtr->wrapLength = 0;
-    mbPtr->padX = 0;
-    mbPtr->padY = 0;
+    mbPtr->height = 0;
+    mbPtr->wrapLengthObj = 0;
+    mbPtr->padXObj = NULL;
+    mbPtr->padYObj = NULL;
     mbPtr->anchor = TK_ANCHOR_CENTER;
     mbPtr->justify = TK_JUSTIFY_CENTER;
     mbPtr->textLayout = NULL;
@@ -283,14 +279,19 @@ Tk_MenubuttonObjCmd(
     mbPtr->indicatorHeight = 0;
     mbPtr->direction = DIRECTION_FLUSH;
     mbPtr->cursor = NULL;
-    mbPtr->takeFocus = NULL;
+    mbPtr->takeFocusObj = NULL;
     mbPtr->flags = 0;
+    mbPtr->borderWidthObj = NULL;
+    mbPtr->highlightWidthObj = NULL;
+    mbPtr->padXObj = NULL;
+    mbPtr->padYObj = NULL;
+    mbPtr->wrapLengthObj = NULL;
 
     Tk_CreateEventHandler(mbPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MenuButtonEventProc, mbPtr);
 
-    if (Tk_InitOptions(interp, (char *) mbPtr, optionTable, tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, mbPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(mbPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -300,7 +301,7 @@ Tk_MenubuttonObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(mbPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(mbPtr->tkwin));
     return TCL_OK;
 }
 
@@ -324,12 +325,12 @@ Tk_MenubuttonObjCmd(
 
 static int
 MenuButtonWidgetObjCmd(
-    ClientData clientData,	/* Information about button widget. */
+    void *clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     int result, index;
     Tcl_Obj *objPtr;
 
@@ -351,7 +352,7 @@ MenuButtonWidgetObjCmd(
 	    goto error;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) mbPtr,
+	objPtr = Tk_GetOptionValue(interp, mbPtr,
 		mbPtr->optionTable, objv[2], mbPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -361,7 +362,7 @@ MenuButtonWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) mbPtr,
+	    objPtr = Tk_GetOptionInfo(interp, mbPtr,
 		    mbPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    mbPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -402,9 +403,9 @@ MenuButtonWidgetObjCmd(
 
 static void
 DestroyMenuButton(
-    char *memPtr)		/* Info about button widget. */
+    void *memPtr)		/* Info about button widget. */
 {
-    TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
+    TkMenuButton *mbPtr = (TkMenuButton *)memPtr;
     TkpDestroyMenuButton(mbPtr);
 
     if (mbPtr->flags & REDRAW_PENDING) {
@@ -417,8 +418,8 @@ DestroyMenuButton(
      */
 
     Tcl_DeleteCommandFromToken(mbPtr->interp, mbPtr->widgetCmd);
-    if (mbPtr->textVarName != NULL) {
-	Tcl_UntraceVar2(mbPtr->interp, mbPtr->textVarName, NULL,
+    if (mbPtr->textVarNameObj != NULL) {
+	Tcl_UntraceVar2(mbPtr->interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
@@ -443,7 +444,7 @@ DestroyMenuButton(
     if (mbPtr->textLayout != NULL) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
     }
-    Tk_FreeConfigOptions((char *) mbPtr, mbPtr->optionTable, mbPtr->tkwin);
+    Tk_FreeConfigOptions(mbPtr, mbPtr->optionTable, mbPtr->tkwin);
     mbPtr->tkwin = NULL;
     Tcl_EventuallyFree(mbPtr, TCL_DYNAMIC);
 }
@@ -482,13 +483,15 @@ ConfigureMenuButton(
     Tcl_Obj *errorResult = NULL;
     int error;
     Tk_Image image;
+    int borderWidth, highlightWidth;
+    int padX, padY;
 
     /*
      * Eliminate any existing trace on variables monitored by the menubutton.
      */
 
-    if (mbPtr->textVarName != NULL) {
-	Tcl_UntraceVar2(interp, mbPtr->textVarName, NULL,
+    if (mbPtr->textVarNameObj != NULL) {
+	Tcl_UntraceVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
@@ -506,7 +509,7 @@ ConfigureMenuButton(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) mbPtr,
+	    if (Tk_SetOptions(interp, mbPtr,
 		    mbPtr->optionTable, objc, objv,
 		    mbPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -534,15 +537,33 @@ ConfigureMenuButton(
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
 	}
 
-	if (mbPtr->highlightWidth < 0) {
-	    mbPtr->highlightWidth = 0;
+	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->borderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
+	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padXObj, &padX);
+	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
+	if (borderWidth < 0) {
+	    borderWidth = 0;
+	    Tcl_DecrRefCount(mbPtr->borderWidthObj);
+	    mbPtr->borderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->borderWidthObj);
 	}
-
-	if (mbPtr->padX < 0) {
-	    mbPtr->padX = 0;
+	if (highlightWidth < 0) {
+	    highlightWidth = 0;
+	    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
+	    mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->highlightWidthObj);
 	}
-	if (mbPtr->padY < 0) {
-	    mbPtr->padY = 0;
+	if (padX < 0) {
+	    padX = 0;
+	    Tcl_DecrRefCount(mbPtr->padXObj);
+	    mbPtr->padXObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->padXObj);
+	}
+	if (padY < 0) {
+	    padY = 0;
+	    Tcl_DecrRefCount(mbPtr->padYObj);
+	    mbPtr->padYObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*
@@ -551,9 +572,9 @@ ConfigureMenuButton(
 	 * doesn't go to zero and cause image data to be discarded.
 	 */
 
-	if (mbPtr->imageString != NULL) {
+	if (mbPtr->imageObj != NULL) {
 	    image = Tk_GetImage(mbPtr->interp, mbPtr->tkwin,
-		    mbPtr->imageString, MenuButtonImageProc, mbPtr);
+		    Tcl_GetString(mbPtr->imageObj), MenuButtonImageProc, mbPtr);
 	    if (image == NULL) {
 		return TCL_ERROR;
 	    }
@@ -570,24 +591,24 @@ ConfigureMenuButton(
 	 */
 
 	if ((mbPtr->bitmap != None) || (mbPtr->image != NULL)) {
-	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->widthString,
+	    if (Tk_GetPixelsFromObj(interp, mbPtr->tkwin, mbPtr->widthObj,
 		    &mbPtr->width) != TCL_OK) {
 	    widthError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -width option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
-	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->heightString,
+	    if (Tk_GetPixelsFromObj(interp, mbPtr->tkwin, mbPtr->heightObj,
 		    &mbPtr->height) != TCL_OK) {
 	    heightError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -height option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
 	    }
 	} else {
-	    if (Tcl_GetInt(interp, mbPtr->widthString, &mbPtr->width)
+	    if (Tcl_GetIntFromObj(interp, mbPtr->widthObj, &mbPtr->width)
 		    != TCL_OK) {
 		goto widthError;
 	    }
-	    if (Tcl_GetInt(interp, mbPtr->heightString, &mbPtr->height)
+	    if (Tcl_GetIntFromObj(interp, mbPtr->heightObj, &mbPtr->height)
 		    != TCL_OK) {
 		goto heightError;
 	    }
@@ -599,7 +620,7 @@ ConfigureMenuButton(
 	Tk_FreeSavedOptions(&savedOptions);
     }
 
-    if (mbPtr->textVarName != NULL) {
+    if (mbPtr->textVarNameObj != NULL) {
 	/*
 	 * If no image or -compound is used, display the value of a variable.
 	 * Set up a trace to watch for any changes in it, create the variable
@@ -607,18 +628,18 @@ ConfigureMenuButton(
 	 */
 	const char *value;
 
-	value = Tcl_GetVar2(interp, mbPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
-	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
+	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
 		    TCL_GLOBAL_ONLY);
 	} else {
-	    if (mbPtr->text != NULL) {
-		ckfree(mbPtr->text);
+	    if (mbPtr->textObj != NULL) {
+		Tcl_DecrRefCount(mbPtr->textObj);
 	    }
-	    mbPtr->text = ckalloc(strlen(value) + 1);
-	    strcpy(mbPtr->text, value);
+	    mbPtr->textObj = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+	    Tcl_IncrRefCount(mbPtr->textObj);
 	}
-	Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
+	Tcl_TraceVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
@@ -652,12 +673,12 @@ ConfigureMenuButton(
 
 void
 TkMenuButtonWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc;
     unsigned long mask;
-    TkMenuButton *mbPtr = instanceData;
+    TkMenuButton *mbPtr = (TkMenuButton *)instanceData;
 
     gcValues.font = Tk_FontId(mbPtr->tkfont);
     gcValues.foreground = mbPtr->normalFg->pixel;
@@ -755,10 +776,11 @@ TkMenuButtonWorldChanged(
 
 static void
 MenuButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
+    int highlightWidth;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
@@ -770,18 +792,20 @@ MenuButtonEventProc(
 
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyMenuButton((char *) mbPtr);
+	DestroyMenuButton(mbPtr);
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    mbPtr->flags |= GOT_FOCUS;
-	    if (mbPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    mbPtr->flags &= ~GOT_FOCUS;
-	    if (mbPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
@@ -815,9 +839,9 @@ MenuButtonEventProc(
 
 static void
 MenuButtonCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     Tk_Window tkwin = mbPtr->tkwin;
 
     /*
@@ -850,18 +874,16 @@ MenuButtonCmdDeletedProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 MenuButtonTextVarProc(
-    ClientData clientData,	/* Information about button. */
+    void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),		/* Name of variable. */
+    TCL_UNUSED(const char *),		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     const char *value;
-    unsigned len;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -869,46 +891,45 @@ MenuButtonTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
-            ClientData probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && mbPtr->textVarNameObj) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        mbPtr->textVarName,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        MenuButtonTextVarProc, probe);
-                if (probe == (ClientData)mbPtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * textVarName, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
-	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(mbPtr->textVarNameObj),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			MenuButtonTextVarProc, probe);
+		if (probe == (void *)mbPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarName, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
+	    Tcl_SetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
 		    TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
+	    Tcl_TraceVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuButtonTextVarProc, clientData);
 	}
 	return NULL;
     }
 
-    value = Tcl_GetVar2(interp, mbPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, Tcl_GetString(mbPtr->textVarNameObj), NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }
-    if (mbPtr->text != NULL) {
-	ckfree(mbPtr->text);
+    if (mbPtr->textObj != NULL) {
+	Tcl_DecrRefCount(mbPtr->textObj);
     }
-    len = 1 + (unsigned) strlen(value);
-    mbPtr->text = ckalloc(len);
-    memcpy(mbPtr->text, value, len);
+    mbPtr->textObj= Tcl_NewStringObj(value, TCL_INDEX_NONE);
+	Tcl_IncrRefCount(mbPtr->textObj);
     TkpComputeMenuButtonGeometry(mbPtr);
 
     if ((mbPtr->tkwin != NULL) && Tk_IsMapped(mbPtr->tkwin)
@@ -939,14 +960,15 @@ MenuButtonTextVarProc(
 
 static void
 MenuButtonImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
-    int x, int y,		/* Upper left pixel (within image) that must
-				 * be redisplayed. */
-    int width, int height,	/* Dimensions of area to redisplay (may be <=
-				 * 0). */
-    int imgWidth, int imgHeight)/* New dimensions of image. */
+    void *clientData,	/* Pointer to widget record. */
+    TCL_UNUSED(int),	/* x, Upper left pixel (within image) that must */
+    TCL_UNUSED(int),	/* y, be redisplayed. */
+    TCL_UNUSED(int),	/* width, Dimensions of area to redisplay (may be <= */
+    TCL_UNUSED(int),	/* height, 0). */
+    TCL_UNUSED(int),	/* imgWidth, New dimensions of image. */
+    TCL_UNUSED(int))	/* imgHeight */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
 
     if (mbPtr->tkwin != NULL) {
 	TkpComputeMenuButtonGeometry(mbPtr);

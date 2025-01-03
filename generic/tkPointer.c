@@ -6,7 +6,7 @@
  *	to generate appropriate enter/leave events, and to update the global
  *	grab window information.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -20,7 +20,6 @@
 
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define Cursor XCursor
 #endif
 
 typedef struct {
@@ -126,7 +125,7 @@ GenerateEnterLeave(
     int state)			/* State flags. */
 {
     int crossed = 0;		/* 1 if mouse crossed a window boundary */
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *restrictWinPtr = tsdPtr->restrictWinPtr;
     TkWindow *lastWinPtr = tsdPtr->lastWinPtr;
@@ -219,7 +218,7 @@ Tk_UpdatePointer(
     int x, int y,		/* Pointer location in root coords. */
     int state)			/* Modifier state mask. */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *targetWinPtr;
@@ -255,8 +254,8 @@ Tk_UpdatePointer(
      * between the current button state and the last known button state.
      */
 
-    for (b = Button1; b <= Button5; b++) {
-	mask = TkGetButtonMask(b);
+    for (b = Button1; b <= Button9; b++) {
+	mask = Tk_GetButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {
 		type = ButtonPress;
@@ -417,15 +416,15 @@ int
 XGrabPointer(
     Display *display,
     Window grab_window,
-    Bool owner_events,
-    unsigned int event_mask,
-    int pointer_mode,
-    int keyboard_mode,
-    Window confine_to,
-    Cursor cursor,
-    Time time)
+    TCL_UNUSED(Bool),	/* owner_events */
+    TCL_UNUSED(unsigned int),	/* event_mask */
+    TCL_UNUSED(int),	/* pointer_mode */
+    TCL_UNUSED(int),	/* keyboard_mode */
+    TCL_UNUSED(Window),	/* confine_to */
+    TCL_UNUSED(Cursor),	/* cursor */
+    TCL_UNUSED(Time))	/* time */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     LastKnownRequestProcessed(display)++;
@@ -458,9 +457,9 @@ XGrabPointer(
 int
 XUngrabPointer(
     Display *display,
-    Time time)
+    TCL_UNUSED(Time)) /* time */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     LastKnownRequestProcessed(display)++;
@@ -491,7 +490,7 @@ void
 TkPointerDeadWindow(
     TkWindow *winPtr)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
@@ -505,14 +504,14 @@ TkPointerDeadWindow(
     }
     if (!(tsdPtr->restrictWinPtr || tsdPtr->grabWinPtr)) {
 
-        /*
-         * Release mouse capture only if the dead window is the capturing
-         * window.
-         */
+	/*
+	 * Release mouse capture only if the dead window is the capturing
+	 * window.
+	 */
 
-        if (winPtr == (TkWindow *)TkpGetCapture()) {
+	if (winPtr == (TkWindow *)TkpGetCapture()) {
 	    TkpSetCapture(NULL);
-        }
+	}
     }
 }
 
@@ -538,7 +537,7 @@ UpdateCursor(
     TkWindow *winPtr)
 {
     Cursor cursor = None;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -581,10 +580,10 @@ int
 XDefineCursor(
     Display *display,
     Window w,
-    Cursor cursor)
+    TCL_UNUSED(Cursor)) /* cursor */
 {
     TkWindow *winPtr = (TkWindow *) Tk_IdToWindow(display, w);
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->cursorWinPtr == winPtr) {

@@ -2,9 +2,9 @@
 # implements generic code for canvases. It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2008 Donal K. Fellows
+# Copyright © 1995-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
 package require tcltest 2.2
@@ -40,14 +40,14 @@ test canvas-1.5 {configuration options: good value for "bd"} -body {
 } -result 4
 test canvas-1.6 {configuration options: bad value for "bd"} -body {
     .c configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
     .c cget -borderwidth
-} -result 1
+} -result 1.3
 test canvas-1.8 {configuration options: bad value for "borderwidth"} -body {
     .c configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.9 {configuration options: good value for "closeenough"} -body {
     .c configure -closeenough 24
     .c cget -closeenough
@@ -72,10 +72,10 @@ test canvas-1.14 {configuration options: bad value for "cursor"} -body {
 test canvas-1.15 {configuration options: good value for "height"} -body {
     .c configure -height 2.1
     .c cget -height
-} -result 2
+} -result 2.1
 test canvas-1.16 {configuration options: bad value for "height"} -body {
     .c configure -height x42
-} -returnCodes error -result {bad screen distance "x42"}
+} -returnCodes error -result {expected screen distance but got "x42"}
 test canvas-1.17 {configuration options: good value for "highlightbackground"} -body {
     .c configure -highlightbackground #112233
     .c cget -highlightbackground
@@ -96,7 +96,7 @@ test canvas-1.21 {configuration options: good value for "highlightthickness"} -b
 } -result 18
 test canvas-1.22 {configuration options: bad value for "highlightthickness"} -body {
     .c configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.23 {configuration options: good value for "insertbackground"} -body {
     .c configure -insertbackground #110022
     .c cget -insertbackground
@@ -107,10 +107,10 @@ test canvas-1.24 {configuration options: bad value for "insertbackground"} -body
 test canvas-1.25 {configuration options: good value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 1.3
     .c cget -insertborderwidth
-} -result 1
+} -result 1.3
 test canvas-1.26 {configuration options: bad value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 2.6x
-} -returnCodes error -result {bad screen distance "2.6x"}
+} -returnCodes error -result {expected screen distance but got "2.6x"}
 test canvas-1.27 {configuration options: good value for "insertofftime"} -body {
     .c configure -insertofftime 100
     .c cget -insertofftime
@@ -128,17 +128,17 @@ test canvas-1.30 {configuration options: bad value for "insertontime"} -body {
 test canvas-1.31 {configuration options: good value for "insertwidth"} -body {
     .c configure -insertwidth 1.3
     .c cget -insertwidth
-} -result 1
+} -result 1.3
 test canvas-1.32 {configuration options: bad value for "insertwidth"} -body {
     .c configure -insertwidth 6x
-} -returnCodes error -result {bad screen distance "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 test canvas-1.33 {configuration options: good value for "relief"} -body {
     .c configure -relief g
     .c cget -relief
 } -result {groove}
 test canvas-1.34 {configuration options: bad value for "relief"} -body {
     .c configure -relief r
-} -returnCodes error -result {bad relief "r": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {ambiguous relief "r": must be flat, groove, raised, ridge, solid, or sunken}
 test canvas-1.35 {configuration options: good value for "selectbackground"} -body {
     .c configure -selectbackground #110022
     .c cget -selectbackground
@@ -149,10 +149,10 @@ test canvas-1.36 {configuration options: bad value for "selectbackground"} -body
 test canvas-1.37 {configuration options: good value for "selectborderwidth"} -body {
     .c configure -selectborderwidth 1.3
     .c cget -selectborderwidth
-} -result 1
+} -result 1.3
 test canvas-1.38 {configuration options: bad value for "selectborderwidth"} -body {
     .c configure -selectborderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.39 {configuration options: good value for "selectforeground"} -body {
     .c configure -selectforeground #654321
     .c cget -selectforeground
@@ -170,7 +170,7 @@ test canvas-1.42 {configuration options: good value for "width"} -body {
 } -result 402
 test canvas-1.43 {configuration options: bad value for "width"} -body {
     .c configure -width xyz
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvas-1.44 {configuration options: good value for "xscrollcommand"} -body {
     .c configure -xscrollcommand {Some command}
     .c cget -xscrollcommand
@@ -225,6 +225,16 @@ test canvas-2.4 {CanvasWidgetCmd, xview option} -body {
     update
     lappend x [.c xview]
 } -result {{0.6 0.9} {0.66 0.96}}
+test canvas-2.5 {CanvasWidgetCmd, raise/lower option, no error on non-existing tags} -setup {
+    .c create line 0 0 10 10 -tags aline
+} -body {
+    .c raise aline noline
+    .c raise bline aline
+    .c lower aline noline
+    .c lower bline aline
+} -cleanup {
+    .c delete aline
+} -result {}
 catch {destroy .c}
 
 # Canvas used in 3.* test cases
@@ -338,8 +348,26 @@ test canvas-8.1 {canvas arc bbox} -setup {
     set coordBox [.c bbox arc2]
     .c create arc 300 10 500 210 -start 10 -extent 50 -style pieslice -tags arc3
     set pieBox [.c bbox arc3]
-    list $arcBox $coordBox $pieBox
-} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112}}
+    .c create arc 100 200 300 200 -height [expr {(1-0.5*sqrt(3))*200}] -style arc -tags arc4
+    set arcSegBox [.c bbox arc4]
+    list $arcBox $coordBox $pieBox $arcSegBox
+} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112} {98 171 302 202}}
+test canvas-8.2 {canvas very small arc} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    # no Inf or NaN must be generated even for very small arcs
+    .c create arc 0 100 0 100 -height 100 -style arc -outline "" -tags arc1
+    set arcBox [.c bbox arc1]
+    .c create arc 0 100 0 100 -height 100 -style arc -outline blue -tags arc2
+    set outlinedArcBox [.c bbox arc2]
+    set coords [.c coords arc1]
+    set start [.c itemcget arc1 -start]
+    set extent [.c itemcget arc1 -extent]
+    set width [.c itemcget arc1 -width]
+    set height [.c itemcget arc1 -height]
+    list $arcBox $outlinedArcBox $coords $start $extent $width $height
+} -result {{-1 99 1 101} {-2 98 2 102} {0.0 100.0 0.0 100.0} 0.0 0.0 1.0 0.0}
 
 test canvas-9.1 {canvas id creation and deletion} -setup {
     catch {destroy .c}
@@ -577,7 +605,7 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     set ::x {}
     # do this many times to improve chances of triggering the crash
     for {set i 0} {$i < 30} {incr i} {
-	event generate .c <1> -x 100 -y 100
+	event generate .c <Button-1> -x 100 -y 100
 	event generate .c <ButtonRelease-1> -x 100 -y 100
     }
     return $::x
@@ -863,7 +891,7 @@ test canvas-18.10 {imove method - errors} -setup {
     .c imove $id 0 foobar 4
 } -cleanup {
     destroy .c
-} -returnCodes error -result {bad screen distance "foobar"}
+} -returnCodes error -result {expected screen distance but got "foobar"}
 test canvas-18.11 {imove method - errors} -setup {
     canvas .c
 } -body {
@@ -871,7 +899,7 @@ test canvas-18.11 {imove method - errors} -setup {
     .c imove $id 0 4 foobar
 } -cleanup {
     destroy .c
-} -returnCodes error -result {bad screen distance "foobar"}
+} -returnCodes error -result {expected screen distance but got "foobar"}
 
 test canvas-19.1 {rchars method - lines} -setup {
     canvas .c
@@ -976,7 +1004,7 @@ test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
     .c create text 100 100 -text Hello
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-        .c addtag tag$i all
+	.c addtag tag$i all
     }
     # [.c addtags] only adds tags that are not already present
     .c addtag tag1 all   ; # no effect
@@ -1012,6 +1040,277 @@ test canvas-20.3 {tag deletion - all tags match} -setup {
 } -cleanup {
     destroy .c
 } -result {{tagA tagA tagA tagA tagA tagA} {}}
+
+destroy .c
+test canvas-21.1 {canvas rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 100 100
+    .c rotate all 75 75 90
+    lmap c [.c coords all] {format %.2f $c}
+} -cleanup {
+    destroy .c
+} -result {50.00 100.00 100.00 100.00 100.00 50.00}
+test canvas-21.2 {canvas rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 100 100
+    .c rotate all 75 75 -10
+    lmap c [.c coords all] {format %.2f $c}
+} -cleanup {
+    destroy .c
+} -result {54.72 46.04 46.04 95.28 95.28 103.96}
+test canvas-21.3 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {wrong # args: should be ".c rotate tagOrId x y angle"}
+test canvas-21.4 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75 123 123
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {wrong # args: should be ".c rotate tagOrId x y angle"}
+test canvas-21.5 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate {!} 1 1 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {missing tag in tag search expression}
+test canvas-21.6 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all x 1 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {expected screen distance but got "x"}
+test canvas-21.7 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 1 x 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {expected screen distance but got "x"}
+test canvas-21.8 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 1 1 x
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {expected floating-point number but got "x"}
+test canvas-21.9 {canvas rotate: nothing to rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75 10
+} -cleanup {
+    destroy .c
+} -result {}
+test canvas-21.10 {canvas rotate: multiple things to rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 -tag a
+    .c create line 50 50 100 50 -tag b
+    .c rotate all 75 75 45
+    list [lmap c [.c coords a] {format %.2f $c}] [lmap c [.c coords b] {format %.2f $c}]
+} -cleanup {
+    destroy .c
+} -result {{39.64 75.00 75.00 110.36} {39.64 75.00 75.00 39.64}}
+
+test canvas-22.1 {canvas rotate: arc item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create arc 50 50 75 75 -start 45 -extent 90
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-start -extent} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 125.00 75.00 150.00} {45.0 90.0} {52 123 73 140}}
+test canvas-22.2 {canvas rotate: bitmap item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create bitmap 50 50 -bitmap info -anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-bitmap -anchor} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {info se} {42 129 50 150}}
+test canvas-22.3 {canvas rotate: image item rotation behaviour} -setup {
+    pack [canvas .c]
+    image create photo dummy -width 50 -height 50
+} -body {
+    .c create image 50 50 -image dummy -anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-image -anchor} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+    image delete dummy
+} -result {{50.00 150.00} {dummy se} {0 100 50 150}}
+test canvas-22.4 {canvas rotate: line item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 75 50 50 75 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {48 123 77 152}}
+test canvas-22.5 {canvas rotate: oval item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create oval 50 50 65 85
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{60.00 125.00 75.00 160.00} {} {59 124 76 161}}
+test canvas-22.6 {canvas rotate: polygon item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create polygon 50 50 75 50 50 75 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {48 123 77 152}}
+test canvas-22.7 {canvas rotate: rectangle item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create rectangle 50 50 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 125.00 75.00 150.00} {} {49 124 76 151}}
+test canvas-22.8 {canvas rotate: text item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create text 50 50 -text foo -angle 45
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-text -angle} {.c itemcget all $o}]
+    # [.c bbox all]
+    # No testing of text bounding box; fonts too variable!
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {foo 45.0}}
+test canvas-22.9 {canvas rotate: window item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create window 50 50 -window [frame .c.f -width 25 -height 25] \
+	-anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {} {25 125 50 150}}
+
+# Procedure used in test cases 23.1 23.2 23.3
+proc matchPixels {pixels expected} {
+    set matched 1
+    foreach pline $pixels eline $expected {
+	foreach ppixel $pline epixel $eline {
+	    if {$ppixel != $epixel} {
+		set matched 0
+		break
+	    }
+	}
+    }
+    return $matched
+}
+
+test canvas-23.1 {canvas image} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
+    .c image testimage
+    matchPixels [testimage data] { \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	    {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-23.2 {canvas image with subsample} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 1 9 -fill #008000 -outline #008000
+    .c image testimage 2
+    matchPixels [testimage data] { \
+	{#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-23.3 {canvas image with subsample and zoom} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 9 0 -fill #800000 -outline #800000
+    .c image testimage 1 2
+    matchPixels [testimage data] { \
+	{#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+	{#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+	{#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
 
 # cleanup
 imageCleanup

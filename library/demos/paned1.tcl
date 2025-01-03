@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .paned1
 catch {destroy $w}
@@ -24,9 +24,9 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 panedwindow $w.pane
-pack $w.pane -side top -expand yes -fill both -pady 2 -padx 2m
+pack $w.pane -side top -expand yes -fill both -pady 1.5p -padx 2m
 
 label $w.pane.left  -text "This is the\nleft side"  -fg black -bg yellow
 label $w.pane.right -text "This is the\nright side" -fg black -bg cyan
 
-$w.pane add $w.pane.left $w.pane.right
+$w.pane add $w.pane.left $w.pane.right -stretch always

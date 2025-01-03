@@ -4,14 +4,33 @@
  *	Provides a default version of the main program and Tcl_AppInit
  *	procedure for wish and other Tk-based applications.
  *
- * Copyright (c) 1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/*
+ * Explanation on following undef USE_TCL_STUBS by JN 2023-12-19 on the core list:
+ * What's going on is related to TIP #596:
+ *  Stubs support for Embedding Tcl in other applications
+ *
+ * If an application using Tcl_Main() is compiled with USE_TCL_STUBS,
+ * Tcl_Main() will be replaced by a stub function, which loads
+ * libtcl9.0.so/tcl90.dll and then calls its Tcl_MainEx(). If
+ * libtcl9.0.so/tcl90.dll is not present (at runtime), a crash is what happens.
+ *
+ * So ... tkAppInit.c should not be compiled with USE_TCL_STUBS
+ * (unless you want to use the TIP #596 functionality)
+ *
+ * The proper solution is to make sure that Makefile.in doesn't use
+ * TCL_USE_STUBS when compiling tkAppInit.c. But that's a
+ * quite big re-organization just before a b1 release. Simpler
+ * is just to #undef'ine USE_TCL_STUBS, it has the same effect.
+ */
+#undef USE_TCL_STUBS
 #include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -19,7 +38,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>
-#if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
+#if (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 #   define Tcl_LibraryInitProc Tcl_PackageInitProc
 #   define Tcl_StaticLibrary Tcl_StaticPackage
 #endif
@@ -28,15 +47,16 @@
 int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
-#ifdef TK_TEST
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef TK_TEST
 extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
 #if !defined(TCL_USE_STATIC_PACKAGES)
-#   if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 6
+#   if TCL_MAJOR_VERSION > 8 || !defined(TCL_MINOR_VERSION) || TCL_MINOR_VERSION > 6
 #	define TCL_USE_STATIC_PACKAGES 1
 #   else
 #	define TCL_USE_STATIC_PACKAGES 0
@@ -171,6 +191,9 @@ _tWinMain(
 
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#elif defined(UNICODE) && ((TCL_MAJOR_VERSION > 8) || !defined(TCL_MINOR_VERSION) || (TCL_MINOR_VERSION > 6))
+    /* This doesn't work on Windows without UNICODE, neither does it work with Tcl 8.6 */
+    TclZipfs_AppHook(&argc, &argv);
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
@@ -256,12 +279,13 @@ Tcl_AppInit(
     /*
      * Specify a user-specific startup file to invoke if the application is
      * run interactively. Typically the startup file is "~/.apprc" where "app"
-     * is the name of the application. If this line is deleted then no user-
-     * specific startup file will be run under any conditions.
+     * is the name of the application. If this line is deleted then no
+     * user-specific startup file will be run under any conditions.
      */
 
-    Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
-	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
+    (void) Tcl_EvalEx(interp,
+	    "set tcl_rcFileName [file tildeexpand ~/wishrc.tcl]",
+	    -1, TCL_EVAL_GLOBAL);
     return TCL_OK;
 }
 

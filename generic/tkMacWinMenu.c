@@ -4,7 +4,7 @@
  *	This module implements the common elements of the Mac and Windows
  *	specific features of menus. This file is not used for UNIX.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -43,7 +43,7 @@ PreprocessMenu(
     TkMenu *menuPtr)
 {
     int index, result, finished;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_Preserve(menuPtr);
@@ -129,7 +129,7 @@ int
 TkPreprocessMenu(
     TkMenu *menuPtr)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->postCommandGeneration++;

@@ -10,7 +10,7 @@
 .SH NAME
 ttk::labelframe \- Container widget with optional label
 .SH SYNOPSIS
-\fBttk::labelframe\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::labelframe\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -62,9 +62,10 @@ sets the keyboard focus to the first child of the \fBttk::labelframe\fR widget.
 If specified, the widget's requested width in pixels.
 .SH "WIDGET COMMAND"
 .PP
-Supports the standard widget commands
-\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
-see \fIttk::widget(n)\fR.
+Labelframe widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::labelframe\fP is \fBTLabelframe\fP.

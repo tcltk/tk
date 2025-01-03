@@ -15,6 +15,7 @@ Tk_ManageGeometry \- arrange to handle geometry requests for a window
 \fB#include <tk.h>\fR
 .sp
 \fBTk_ManageGeometry\fR(\fItkwin, mgrPtr, clientData\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_GeometryProc clientData
 .AP Tk_Window tkwin in
@@ -25,7 +26,7 @@ geometry manager, or NULL to indicate that \fItkwin\fR's geometry
 should not be managed anymore.
 The data structure pointed to by \fImgrPtr\fR must be static:
 Tk keeps a reference to it as long as the window is managed.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to geometry manager callbacks.
 .BE
 .SH DESCRIPTION
@@ -44,7 +45,7 @@ the geometry manager:
 typedef struct {
     const char *\fIname\fR;
     Tk_GeomRequestProc *\fIrequestProc\fR;
-    Tk_GeomLostSlaveProc *\fIlostSlaveProc\fR;
+    Tk_GeomLostContentProc *\fIlostContentProc\fR;
 } \fBTk_GeomMgr\fR;
 .CE
 The \fIname\fR field is the textual name for the geometry manager,
@@ -58,7 +59,7 @@ content window to change its desired geometry.
 type \fBTk_GeomRequestProc\fR:
 .CS
 typedef void \fBTk_GeomRequestProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tk_Window \fItkwin\fR);
 .CE
 The parameters to \fIrequestProc\fR will be identical to the
@@ -67,24 +68,24 @@ corresponding parameters passed to \fBTk_ManageGeometry\fR.
 structure containing application-specific information about
 how to manage \fItkwin\fR's geometry.
 .PP
-The \fIlostSlaveProc\fR field of \fImgrPtr\fR points to another
+The \fIlostContentProc\fR field of \fImgrPtr\fR points to another
 procedure in the geometry manager.
-Tk will invoke \fIlostSlaveProc\fR if some other manager
+Tk will invoke \fIlostContentProc\fR if some other manager
 calls \fBTk_ManageGeometry\fR to claim
 \fItkwin\fR away from the current geometry manager.
-\fIlostSlaveProc\fR is not invoked if \fBTk_ManageGeometry\fR is
+\fIlostContentProc\fR is not invoked if \fBTk_ManageGeometry\fR is
 called with a NULL value for \fImgrPtr\fR (presumably the current
 geometry manager has made this call, so it already knows that the
 window is no longer managed), nor is it called if \fImgrPtr\fR
 is the same as the window's current geometry manager.
-\fIlostSlaveProc\fR should have
+\fIlostContentProc\fR should have
 arguments and results that match the following prototype:
 .CS
-typedef void \fBTk_GeomLostSlaveProc\fR(
-        ClientData \fIclientData\fR,
+typedef void \fBTk_GeomLostContentProc\fR(
+        void *\fIclientData\fR,
         Tk_Window \fItkwin\fR);
 .CE
-The parameters to \fIlostSlaveProc\fR will be identical to the
+The parameters to \fIlostContentProc\fR will be identical to the
 corresponding parameters passed to \fBTk_ManageGeometry\fR.
 .SH KEYWORDS
 callback, geometry, managed, request, unmanaged

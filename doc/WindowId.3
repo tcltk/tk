@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_MinReqWidth, Tk_MinReqHeight, Tk_InternalBorderLeft, Tk_InternalBorderRight, Tk_InternalBorderTop, Tk_InternalBorderBottom, Tk_Visual, Tk_Depth, Tk_Colormap, Tk_Interp  \- retrieve information from Tk's local data structure
+Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_AlwaysShowSelection, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_MinReqWidth, Tk_MinReqHeight, Tk_InternalBorderLeft, Tk_InternalBorderRight, Tk_InternalBorderTop, Tk_InternalBorderBottom, Tk_Visual, Tk_Depth, Tk_Colormap, Tk_Interp, Tk_NewWindowObj  \- retrieve information from Tk's local data structure
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -28,6 +28,9 @@ const char *
 .sp
 int
 \fBTk_ScreenNumber\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_AlwaysShowSelection\fR(\fItkwin\fR)
 .sp
 Screen *
 \fBTk_Screen\fR(\fItkwin\fR)
@@ -97,6 +100,10 @@ Colormap
 .sp
 Tcl_Interp *
 \fBTk_Interp\fR(\fItkwin\fR)
+.sp
+Tcl_Obj *
+\fBTk_NewWindowObj\fR(\fItkwin\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_Window tkwin
 .AP Tk_Window tkwin in
@@ -127,6 +134,8 @@ ASCII string identifying \fItkwin\fR's display.  \fBTk_ScreenNumber\fR
 returns the index of \fItkwin\fR's screen among all the screens
 of \fItkwin\fR's display.  \fBTk_Screen\fR returns a pointer to
 the Xlib structure corresponding to \fItkwin\fR's screen.
+\fBTk_AlwaysShowSelection\fR indicates whether text/entry widgets
+should always display their selection, regardless of window focus.
 .PP
 \fBTk_X\fR, \fBTk_Y\fR, \fBTk_Width\fR, and \fBTk_Height\fR
 return information about \fItkwin's\fR location within its
@@ -139,7 +148,7 @@ information plus a few other fields.  \fBTk_Attributes\fR
 returns a pointer to an XSetWindowAttributes structure describing
 all of the attributes of the \fItkwin\fR's window, such as background
 pixmap, event mask, and so on (Tk keeps track of all this information
-as it is changed by the application).  Note: it is essential that
+as it is changed by the application).  Note that it is essential that
 applications use Tk procedures like \fBTk_ResizeWindow\fR instead
 of X procedures like \fBXResizeWindow\fR, so that Tk can keep its
 data structures up-to-date.
@@ -182,6 +191,8 @@ and \fBTk_Colormap\fR returns the current
 colormap for the window.  The visual characteristics are
 normally set from the defaults for the window's screen, but
 they may be overridden by calling \fBTk_SetWindowVisual\fR.
+.PP
+\fBTk_NewWindowObj\fR creates a new \fBTcl_Obj\fR from the window.
 .SH KEYWORDS
 attributes, colormap, depth, display, height, geometry manager,
 identifier, mapped, requested size, screen, top-level,

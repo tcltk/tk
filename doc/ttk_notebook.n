@@ -11,10 +11,10 @@
 ttk::notebook \- Multi-paned container widget
 .SH SYNOPSIS
 .nf
-\fBttk::notebook\fR \fIpathname \fR?\fIoptions...\fR?
+\fBttk::notebook\fI pathname \fR?\fIoptions...\fR?
 .br
-\fIpathname \fBadd\fR \fIwindow\fR ?\fIoptions...\fR?
-\fIpathname \fBinsert\fR \fIindex\fR \fIwindow\fR ?\fIoptions...\fR?
+\fIpathname \fBadd\fI window\fR ?\fIoptions...\fR?
+\fIpathname \fBinsert\fI index window\fR ?\fIoptions...\fR?
 .fi
 .BE
 .SH DESCRIPTION
@@ -41,8 +41,8 @@ If fewer than four elements are specified,
 \fIbottom\fR defaults to \fItop\fR,
 \fIright\fR defaults to \fIleft\fR, and
 \fItop\fR defaults to \fIleft\fR.
-In other words, a list of three numbers specify the left, vertical, and right padding;
-a list of two numbers specify the horizontal and the vertical padding;
+In other words, a list of three numbers specify the left, vertical, and right
+padding; a list of two numbers specify the horizontal and the vertical padding;
 a single number specifies the same padding all the way around the widget.
 .OP \-width width Width
 If present and greater than zero,
@@ -101,70 +101,86 @@ The literal string
 which returns the number of tabs
 (only valid for
 .QW "\fIpathname \fBindex\fR" ).
+.PP
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .SH "WIDGET COMMAND"
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+notebook widgets support the following additional commands:
+.\" METHOD: add
 .TP
 \fIpathname \fBadd \fIwindow\fR ?\fIoptions...\fR?
+.
 Adds a new tab to the notebook.
 See \fBTAB OPTIONS\fR for the list of available \fIoptions\fR.
 If \fIwindow\fR is currently managed by the notebook but hidden,
 it is restored to its previous position.
-.TP
-\fIpathname \fBconfigure\fR ?\fIoptions\fR?
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathname \fBcget \fIoption\fR
-See \fIttk::widget(n)\fR.
+.\" METHOD: forget
 .TP
 \fIpathname \fBforget \fItabid\fR
+.
 Removes the tab specified by \fItabid\fR,
 unmaps and unmanages the associated window.
+.\" METHOD: hide
 .TP
 \fIpathname \fBhide \fItabid\fR
+.
 Hides the tab specified by \fItabid\fR.
 The tab will not be displayed, but the associated window
 remains managed by the notebook and its configuration remembered.
 Hidden tabs may be restored with the \fBadd\fR command.
+.\" METHOD: identify
 .TP
 \fIpathname \fBidentify\fI component x y\fR
+.
 Returns the name of the element under the point given by \fIx\fR and \fIy\fR,
 or the empty string if no component is present at that location.
 The following subcommands are supported:
 .RS
 .TP
-\fIpathname \fBidentify element\fR \fIx y\fR
+\fIpathname \fBidentify element\fI x y\fR
+.
 Returns the name of the element at the specified location.
 .TP
-\fIpathname \fBidentify tab\fR \fIx y\fR
+\fIpathname \fBidentify tab\fI x y\fR
+.
 Returns the index of the tab at the specified location.
 .RE
+.\" METHOD: index
 .TP
 \fIpathname \fBindex \fItabid\fR
+.
 Returns the numeric index of the tab specified by \fItabid\fR,
 or the total number of tabs if \fItabid\fR is the string
 .QW \fBend\fR .
+.\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIpos subwindow options...\fR
+.
 Inserts a pane at the specified position.
 \fIpos\fR is either the string \fBend\fR, an integer index,
 or the name of a managed subwindow.
 If \fIsubwindow\fR is already managed by the notebook,
 moves it to the specified position.
 See \fBTAB OPTIONS\fR for the list of available options.
-.TP
-\fIpathname \fBinstate \fIstatespec \fR?\fIscript...\fR?
-See \fIttk::widget(n)\fR.
+.\" METHOD: select
 .TP
 \fIpathname \fBselect\fR ?\fItabid\fR?
+.
 Selects the specified tab.
 The associated content window will be displayed,
 and the previously-selected window (if different) is unmapped.
 If \fItabid\fR is omitted, returns the widget name of the
 currently selected pane.
-.TP
-\fIpathname \fBstate\fR ?\fIstatespec\fR?
-See \fIttk::widget(n)\fR.
+.\" METHOD: tab
 .TP
 \fIpathname \fBtab \fItabid\fR ?\fI\-option \fR?\fIvalue ...\fR
+.
 Query or modify the options of the specific tab.
 If no \fI\-option\fR is specified,
 returns a dictionary of the tab option values.
@@ -172,8 +188,10 @@ If one \fI\-option\fR is specified,
 returns the value of that \fIoption\fR.
 Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 See \fBTAB OPTIONS\fR for the available options.
+.\" METHOD: tabs
 .TP
 \fIpathname \fBtabs\fR
+.
 Returns the list of windows managed by the notebook, in the index order of
 their associated tabs.
 .SH "KEYBOARD TRAVERSAL"
@@ -203,8 +221,8 @@ virtual event after a new tab is selected.
 .SH "EXAMPLE"
 .CS
 pack [\fBttk::notebook\fR .nb]
-\&.nb add [frame .nb.f1] \-text "First tab"
-\&.nb add [frame .nb.f2] \-text "Second tab"
+\&.nb add [frame .nb.f1] -text "First tab"
+\&.nb add [frame .nb.f2] -text "Second tab"
 \&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE
@@ -287,8 +305,10 @@ setting the style's \fB\-tabposition\fP option.
 Some themes use a different \fIpadding\fP for the selected tab.  For example,
 the Ttk library file \fBclamTheme.tcl\fP contains the lines
 .CS
-ttk::style configure TNotebook.Tab -padding {6 2 6 2}
-ttk::style map TNotebook.Tab -padding {selected {6 4 6 2}}
+ttk::style configure TNotebook.Tab \\
+    -padding {4.5p 1.5p 4.5p 1.5p}
+ttk::style map TNotebook.Tab \\
+    -padding {selected {4.5p 3p 4.5p 1.5p}}
 .CE
 which are valid for the default value \fBnw\fP of the \fB\-tabposition\fP
 style option.  For a \fBttk::notebook\fP style having a different tab position

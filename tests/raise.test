@@ -3,9 +3,9 @@
 # stacking order.  It is organized in the standard fashion
 # for Tcl tests.
 #
-# Copyright (c) 1993-1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1993-1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -16,6 +16,7 @@ namespace import -force tcltest::test
 # Procedure to create a bunch of overlapping windows, which should
 # make it easy to detect differences in order.
 
+wm geometry . +400+400
 proc raise_setup {} {
     destroy {*}[winfo children .raise]
     update idletasks

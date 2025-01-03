@@ -4,7 +4,7 @@
 # commands. Sourcing this file runs the tests and generates output for errors.
 # No output means no errors were found.
 #
-# Copyright (c) 1998-2000 Jos Decoster. All rights reserved.
+# Copyright © 1998-2000 Jos Decoster. All rights reserved.
 
 package require tcltest 2.2
 tcltest::configure {*}$argv
@@ -17,59 +17,65 @@ namespace import -force tcltest::test
 
 test busy-1.1 {Tk_BusyObjCmd} -returnCodes error -body {
     tk busy
-} -result {wrong # args: should be "tk busy options ?arg arg ...?"}
+} -result {wrong # args: should be "tk busy options ?arg ...?"}
 
 test busy-2.1 {tk busy hold} -returnCodes error -body {
     tk busy hold
-} -result {wrong # args: should be "tk busy hold window ?option value ...?"}
+} -result {wrong # args: should be "tk busy hold window ?-option value ...?"}
 test busy-2.2 {tk busy hold root window} -body {
-    tk busy hold .
+    set res [tk busy hold .]
     update
+    set res
 } -cleanup {
     tk busy forget .
-} -result {}
+} -result {._Busy}
 test busy-2.3 {tk busy hold root window with shortcut} -body {
-    tk busy .
+    set res [tk busy .]
     update
+    set res
 } -cleanup {
     tk busy forget .
-} -result {}
+} -result {._Busy}
 test busy-2.4 {tk busy hold nested window} -setup {
     pack [frame .f]
 } -body {
-    tk busy hold .f
+    set res [tk busy hold .f]
     update
+    set res
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {}
+} -result {.f_Busy}
 test busy-2.5 {tk busy hold nested window with shortcut} -setup {
     pack [frame .f]
 } -body {
-    tk busy .f
+    set res [tk busy .f]
     update
+    set res
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {}
+} -result {.f_Busy}
 test busy-2.6 {tk busy hold toplevel window} -setup {
     toplevel .f
 } -body {
-    tk busy hold .f
+    set res [tk busy hold .f]
     update
+    set res
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {}
+} -result {.f._Busy}
 test busy-2.7 {tk busy hold toplevel window with shortcut} -setup {
     toplevel .f
 } -body {
-    tk busy .f
+    set res [tk busy .f]
     update
+    set res
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {}
+} -result {.f._Busy}
 test busy-2.8 {tk busy hold non existing window} -body {
     tk busy hold .f
     update
@@ -79,17 +85,19 @@ test busy-2.9 {tk busy hold (shortcut) non existing window} -body {
     update
 } -returnCodes error -result {bad window path name ".f"}
 test busy-2.10 {tk busy hold root window with cursor} -body {
-    tk busy hold . -cursor arrow
+    set res [tk busy hold . -cursor arrow]
     update
+    set res
 } -cleanup {
     tk busy forget .
-} -result {}
+} -result {._Busy}
 test busy-2.11 {tk busy hold (shortcut) root window, cursor} -body {
-    tk busy . -cursor arrow
+    set res [tk busy . -cursor arrow]
     update
+    set res
 } -cleanup {
     tk busy forget .
-} -result {}
+} -result {._Busy}
 test busy-2.12 {tk busy hold root window, invalid cursor} -body {
     tk busy hold . -cursor nonExistingCursor
     update
@@ -130,7 +138,7 @@ test busy-3.4 {tk busy cget non-busy window} -setup {
     tk busy cget .f -cursor
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 test busy-3.5 {tk busy cget invalid option} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -174,7 +182,7 @@ test busy-3.7 {tk busy cget unix} -setup {
 
 test busy-4.1 {tk busy configure no window} -returnCodes error -body {
     tk busy configure
-} -result {wrong # args: should be "tk busy configure window ?option? ?value ...?"}
+} -result {wrong # args: should be "tk busy configure window ?-option value ...?"}
 
 test busy-4.2 {tk busy configure invalid window} -body {
     tk busy configure .f
@@ -186,7 +194,7 @@ test busy-4.3 {tk busy configure non-busy window} -setup {
     tk busy configure .f
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 
 test busy-4.4 {tk busy configure} -constraints {nonwin} -setup {
     pack [frame .f]
@@ -324,7 +332,7 @@ test busy-5.3 {tk busy forget non busy window} -setup {
     tk busy forget .f
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 test busy-5.4 {tk busy forget window} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -472,6 +480,30 @@ test busy-7.9 {tk busy current 2 busy with non matching filter after forget} -se
     tk busy forget .f2
     destroy .f1 .f2
 } -result {}
+
+test busy-8.1 {tk busy busywindow with a busy toplevel} -body {
+    toplevel .top
+    tk busy .top
+    tk busy busywindow .top
+} -cleanup {
+    tk busy forget .top
+    destroy .top
+} -result {.top._Busy}
+test busy-8.2 {tk busy busywindow with a busy widget} -body {
+    pack [frame .f]
+    tk busy .f
+    tk busy busywindow .f
+} -cleanup {
+    tk busy forget .f
+    destroy .f
+} -result {.f_Busy}
+test busy-8.3 {tk busy busywindow with a nonexisting widget} -body {
+    tk busy .
+    tk busy busywindow .nonExistingWidget
+} -cleanup {
+    tk busy forget .
+} -result {}
+
 
 ::tcltest::cleanupTests
 return

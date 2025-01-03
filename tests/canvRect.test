@@ -2,8 +2,8 @@
 # which implement canvas "rectangle" and "oval" items.  It is organized
 # in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -53,7 +53,7 @@ test canvRect-1.9 {configuration options: good value for -width} -body {
 } -result {6.0 6.0}
 test canvRect-1.10 {configuration options: bad value for -width} -body {
     .c itemconfigure test -width abc
-} -returnCodes error -result {bad screen distance "abc"}
+} -returnCodes error -result {expected screen distance but got "abc"}
 .c delete withtag all
 
 
@@ -65,16 +65,16 @@ test canvRect-2.2 {CreateRectOval procedure} -body {
 } -returnCodes error -result {wrong # coordinates: expected 0 or 4, got 3}
 test canvRect-2.3 {CreateRectOval procedure} -body {
     .c create rectangle x 2 3 4
-} -returnCodes error -result {bad screen distance "x"}
+} -returnCodes error -result {expected screen distance but got "x"}
 test canvRect-2.4 {CreateRectOval procedure} -body {
     .c create rectangle 1 y 3 4
-} -returnCodes error -result {bad screen distance "y"}
+} -returnCodes error -result {expected screen distance but got "y"}
 test canvRect-2.5 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 z 4
-} -returnCodes error -result {bad screen distance "z"}
+} -returnCodes error -result {expected screen distance but got "z"}
 test canvRect-2.6 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 q
-} -returnCodes error -result {bad screen distance "q"}
+} -returnCodes error -result {expected screen distance but got "q"}
 test canvRect-2.7 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 4 -tags x
     set result {}
@@ -104,25 +104,25 @@ test canvRect-3.2 {RectOvalCoords procedure} -body {
     .c coords x a 2 3 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "a"}
+} -returnCodes error -result {expected screen distance but got "a"}
 test canvRect-3.3 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 b 3 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "b"}
+} -returnCodes error -result {expected screen distance but got "b"}
 test canvRect-3.4 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 2 c 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "c"}
+} -returnCodes error -result {expected screen distance but got "c"}
 test canvRect-3.5 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 2 3 d
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "d"}
+} -returnCodes error -result {expected screen distance but got "d"}
 test canvRect-3.6 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 10 25 15 40
@@ -143,7 +143,7 @@ test canvRect-4.1 {ConfigureRectOval procedure} -body {
     .c itemconfigure x -width abc
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "abc"}
+} -returnCodes error -result {expected screen distance but got "abc"}
 test canvRect-4.2 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     catch {.c itemconfigure x -width abc}
@@ -156,7 +156,7 @@ test canvRect-4.3 {ConfigureRectOval procedure} -body {
     .c itemconfigure x -width -5
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "-5"}
+} -returnCodes error -result {expected screen distance but got "-5"}
 test canvRect-4.4 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     .c itemconfigure x -width 10

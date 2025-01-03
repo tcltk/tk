@@ -29,7 +29,7 @@ typedef struct ProtocolHandler {
 				 * same top-level window, or NULL for end of
 				 * list. */
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char* command;		/* Tcl command to invoke when a client message
+    Tcl_Obj* commandObj;		/* Tcl command to invoke when a client message
 				 * for this protocol arrives. The actual size
 				 * of the structure varies to accommodate the
 				 * needs of the actual command. THIS MUST BE
@@ -47,7 +47,6 @@ typedef struct Transient {
 } Transient;
 
 #define WITHDRAWN_BY_CONTAINER 0x1
-#define WITHDRAWN_BY_MASTER 0x1
 
 /*
  * A data structure of the following type holds window-manager-related
@@ -172,7 +171,7 @@ typedef struct TkWmInfo {
      */
 
     TkWindow **cmapList;	/* Array of window with private colormaps. */
-    int cmapCount;		/* Number of windows in array. */
+    Tcl_Size cmapCount;		/* Number of windows in array. */
 
     /*
      * Miscellaneous information.

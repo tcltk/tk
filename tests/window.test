@@ -1,8 +1,8 @@
 # This file is a Tcl script to test the procedures in the file
 # tkWindow.c.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -11,7 +11,8 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 namespace import ::tk::test::loadTkCommand
 update
-
+# Move the mouse out of the way for window-2.1
+event generate {} <Motion> -warp 1 -x 640 -y 10
 # XXX This file is woefully incomplete.  Right now it only tests
 # a few parts of a few procedures in tkWindow.c
 
@@ -21,8 +22,8 @@ test window-1.1 {Tk_CreateWindowFromPath procedure, parent dead} -setup {
     destroy .t
 } -body {
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
 
     set x unchanged
@@ -90,15 +91,15 @@ test window-2.4 {Tk_DestroyWindow, cleanup half dead window at exit} -constraint
 } -body {
     set code [loadTkCommand]
     append code {
-        update
-        bind . <Destroy> exit
-        destroy .
+	update
+	bind . <Destroy> exit
+	destroy .
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -109,16 +110,16 @@ test window-2.5 {Tk_DestroyWindow, cleanup half dead windows at exit} -constrain
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t
-        update
-        bind .t <Destroy> exit
-        destroy .t
+	toplevel .t
+	update
+	bind .t <Destroy> exit
+	destroy .t
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -129,16 +130,16 @@ test window-2.6 {Tk_DestroyWindow, cleanup half dead windows at exit} -constrain
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t
-        update
-        bind .t <Destroy> exit
-        destroy .
+	toplevel .t
+	update
+	bind .t <Destroy> exit
+	destroy .
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -149,17 +150,17 @@ test window-2.7 {Tk_DestroyWindow, cleanup half dead windows at exit} -constrain
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t
-        toplevel .t.f
-        update
-        bind .t.f <Destroy> exit
-        destroy .
+	toplevel .t
+	toplevel .t.f
+	update
+	bind .t.f <Destroy> exit
+	destroy .
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -170,20 +171,20 @@ test window-2.8 {Tk_DestroyWindow, cleanup half dead windows at exit} -constrain
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t1
-        toplevel .t2
-        toplevel .t3
-        update
-        bind .t3 <Destroy> {destroy .t2}
-        bind .t2 <Destroy> {destroy .t1}
-        bind .t1 <Destroy> {exit 0}
-        destroy .t3
+	toplevel .t1
+	toplevel .t2
+	toplevel .t3
+	update
+	bind .t3 <Destroy> {destroy .t2}
+	bind .t2 <Destroy> {destroy .t1}
+	bind .t1 <Destroy> {exit 0}
+	destroy .t3
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -194,18 +195,18 @@ test window-2.9 {Tk_DestroyWindow, Destroy bindings evaluated after exit} -const
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t1
-        toplevel .t2
-        update
-        bind .t2 <Destroy> {puts "Destroy .t2" ; exit 1}
-        bind .t1 <Destroy> {puts "Destroy .t1" ; exit 0}
-        destroy .t2
+	toplevel .t1
+	toplevel .t2
+	update
+	bind .t2 <Destroy> {puts "Destroy .t2" ; exit 1}
+	bind .t1 <Destroy> {puts "Destroy .t1" ; exit 0}
+	destroy .t2
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -217,19 +218,19 @@ test window-2.10 {Tk_DestroyWindow, Destroy binding evaluated once} -constraints
 } -body {
     set code [loadTkCommand]
     append code {
-        update
-        bind . <Destroy> {
-            puts "Destroy ."
-            bind . <Destroy> {puts "Re-Destroy ."}
-            exit 0
-        }
-        destroy .
+	update
+	bind . <Destroy> {
+	    puts "Destroy ."
+	    bind . <Destroy> {puts "Re-Destroy ."}
+	    exit 0
+	}
+	destroy .
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -240,24 +241,24 @@ test window-2.11 {Tk_DestroyWindow, don't reanimate a half-dead window} -constra
 } -body {
     set code [loadTkCommand]
     append code {
-        toplevel .t1
-        toplevel .t2
-        update
-        bind .t1 <Destroy> {
-            if {[catch {entry .t2.newchild}]} {
-                puts YES
-            } else {
-                puts NO
-            }
-        }
-        bind .t2 <Destroy> {exit}
-        destroy .t2
+	toplevel .t1
+	toplevel .t2
+	update
+	bind .t1 <Destroy> {
+	    if {[catch {entry .t2.newchild}]} {
+		puts YES
+	    } else {
+		puts NO
+	    }
+	}
+	bind .t2 <Destroy> {exit}
+	destroy .t2
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
@@ -283,16 +284,16 @@ test window-2.12 {Test for ticket [9b6065d1fd] - restore Tcl [update] command} -
     }
     set script [makeFile $code script]
     if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
-        set error 1
+	set error 1
     } else {
-        set error 0
+	set error 0
     }
     removeFile script
     list $error $msg
 } -result {0 {waiting
-ringing the bell -> can't invoke "bell" command: application has been destroyed
+ringing the bell -> cannot invoke "bell" command: application has been destroyed
 done waiting
-bell -> can't invoke "bell" command: application has been destroyed
+bell -> cannot invoke "bell" command: application has been destroyed
 update -> }}
 
 

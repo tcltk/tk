@@ -4,9 +4,9 @@
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,7 +39,7 @@ typedef struct RegisteredInterp {
  * "InterpRegistry" on the root window of the display. It is organized as a
  * series of zero or more concatenated strings (in no particular order), each
  * of the form
- * 	window space name '\0'
+ *	window space name '\0'
  * where "window" is the hex id of the comm. window to use to talk to an
  * interpreter named "name".
  *
@@ -203,12 +203,12 @@ static struct {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		AppendErrorProc(ClientData clientData,
+static int		AppendErrorProc(void *clientData,
 			    XErrorEvent *errorPtr);
 static void		AppendPropCarefully(Display *display,
 			    Window window, Atom property, char *value,
 			    int length, PendingCommand *pendingPtr);
-static void		DeleteProc(ClientData clientData);
+static Tcl_CmdDeleteProc DeleteProc;
 static void		RegAddName(NameRegistry *regPtr,
 			    const char *name, Window commWindow);
 static void		RegClose(NameRegistry *regPtr);
@@ -216,7 +216,7 @@ static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static Window		RegFindName(NameRegistry *regPtr, const char *name);
 static NameRegistry *	RegOpen(Tcl_Interp *interp,
 			    TkDisplay *dispPtr, int lock);
-static void		SendEventProc(ClientData clientData, XEvent *eventPtr);
+static void		SendEventProc(void *clientData, XEvent *eventPtr);
 static int		SendInit(Tcl_Interp *interp, TkDisplay *dispPtr);
 static Tk_RestrictProc SendRestrictProc;
 static int		ServerSecure(TkDisplay *dispPtr);
@@ -309,7 +309,7 @@ RegOpen(
 	XDeleteProperty(dispPtr->display,
 		RootWindow(dispPtr->display, 0),
 		dispPtr->registryProperty);
-        XSync(dispPtr->display, False);
+	XSync(dispPtr->display, False);
     }
 
     Tk_DeleteErrorHandler(handler);
@@ -523,7 +523,7 @@ RegClose(
     Tk_ErrorHandler handler;
 
     handler = Tk_CreateErrorHandler(regPtr->dispPtr->display, -1, -1, -1,
-            NULL, NULL);
+	    NULL, NULL);
 
     if (regPtr->modified) {
 	if (!regPtr->locked && !localData.sendDebug) {
@@ -593,7 +593,8 @@ ValidateName(
 				 * like an old-style (pre-4.0) one; 0 means
 				 * consider these invalid. */
 {
-    int result, actualFormat, argc, i;
+    int result, actualFormat;
+    Tcl_Size argc, i;
     unsigned long length, bytesAfter;
     Atom actualType;
     char *property, **propertyPtr = &property;
@@ -759,7 +760,7 @@ ServerSecure(
 #endif /* FamilyServerInterpreted */
     }
     if (addrPtr != NULL) {
-	XFree((char *) addrPtr);
+	XFree(addrPtr);
     }
     return secure;
 #endif /* TK_NO_SECURITY */
@@ -869,7 +870,7 @@ Tk_SetAppName(
 	if (i > 1) {
 	    if (i == 2) {
 		Tcl_DStringInit(&dString);
-		Tcl_DStringAppend(&dString, name, -1);
+		Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
@@ -955,14 +956,14 @@ Tk_SendObjCmd(
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
+    const char *stringRep, *destName;
     TkWindow *winPtr;
     Window commWindow;
     PendingCommand pending;
     RegisteredInterp *riPtr;
-    const char *destName;
-    int result, index, async, i, firstArg;
+    int result, async, i, firstArg, index;
     Tk_RestrictProc *prevProc;
-    ClientData prevArg;
+    void *prevArg;
     TkDisplay *dispPtr;
     Tcl_Time timeout;
     NameRegistry *regPtr;
@@ -981,26 +982,36 @@ Tk_SendObjCmd(
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], sendOptions,
-		sizeof(char *), "option", 0, &index) != TCL_OK) {
-	    break;
-	}
-	if (index == SEND_ASYNC) {
-	    ++async;
-	} else if (index == SEND_DISPLAYOF) {
-	    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[++i]),
-		    (Tk_Window) winPtr);
-	    if (winPtr == NULL) {
+
+    /*
+     * Process the command options.
+     */
+
+    for (i = 1; i < (objc - 1); i++) {
+	stringRep = Tcl_GetString(objv[i]);
+	if (stringRep[0] == '-') {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	} else if (index == SEND_LAST) {
-	    i++;
+	    if (index == SEND_ASYNC) {
+		++async;
+	    } else if (index == SEND_DISPLAYOF) {
+		winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[++i]),
+			(Tk_Window) winPtr);
+		if (winPtr == NULL) {
+		    return TCL_ERROR;
+		}
+	    } else /* if (index == SEND_LAST) */ {
+		i++;
+		break;
+	    }
+	} else {
 	    break;
 	}
     }
 
-    if (objc < (i+2)) {
+    if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-option value ...? interpName arg ?arg ...?");
 	return TCL_ERROR;
@@ -1030,15 +1041,15 @@ Tk_SendObjCmd(
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
 	if (firstArg == (objc-1)) {
-	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]), -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
 	    Tcl_DStringInit(&request);
-	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), -1);
+	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
 	    for (i = firstArg+1; i < objc; i++) {
 		Tcl_DStringAppend(&request, " ", 1);
-		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), -1);
+		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
 	    }
-	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request), -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(&request);
 	}
 	if (interp != localInterp) {
@@ -1092,7 +1103,7 @@ Tk_SendObjCmd(
     localData.sendSerial++;
     Tcl_DStringInit(&request);
     Tcl_DStringAppend(&request, "\0c\0-n ", 6);
-    Tcl_DStringAppend(&request, destName, -1);
+    Tcl_DStringAppend(&request, destName, TCL_INDEX_NONE);
     if (!async) {
 	char buffer[TCL_INTEGER_SPACE * 2];
 
@@ -1100,13 +1111,13 @@ Tk_SendObjCmd(
 		(unsigned) Tk_WindowId(dispPtr->commTkwin),
 		localData.sendSerial);
 	Tcl_DStringAppend(&request, "\0-r ", 4);
-	Tcl_DStringAppend(&request, buffer, -1);
+	Tcl_DStringAppend(&request, buffer, TCL_INDEX_NONE);
     }
     Tcl_DStringAppend(&request, "\0-s ", 4);
-    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), -1);
+    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
     for (i = firstArg+1; i < objc; i++) {
 	Tcl_DStringAppend(&request, " ", 1);
-	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), -1);
+	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
     }
 
     if (!async) {
@@ -1208,10 +1219,10 @@ Tk_SendObjCmd(
 	ckfree(pending.errorInfo);
     }
     if (pending.errorCode != NULL) {
-	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, -1));
+	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, TCL_INDEX_NONE));
 	ckfree(pending.errorCode);
     }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, TCL_INDEX_NONE));
     ckfree(pending.result);
     return pending.code;
 }
@@ -1280,7 +1291,7 @@ TkGetInterpNames(
 	     */
 
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    Tcl_NewStringObj(entryName, -1));
+		    Tcl_NewStringObj(entryName, TCL_INDEX_NONE));
 	} else {
 	    int count;
 
@@ -1369,7 +1380,7 @@ SendInit(
      */
 
     dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
-    	DefaultScreen(dispPtr->display), NULL);
+	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve(dispPtr->commTkwin);
     ((TkWindow *) dispPtr->commTkwin)->flags |=
 	    TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
@@ -1416,7 +1427,7 @@ SendInit(
 
 static void
 SendEventProc(
-    ClientData clientData,	/* Display information. */
+    void *clientData,	/* Display information. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
@@ -1533,7 +1544,7 @@ SendEventProc(
 	    if (commWindow != None) {
 		Tcl_DStringInit(&reply);
 		Tcl_DStringAppend(&reply, "\0r\0-s ", 6);
-		Tcl_DStringAppend(&reply, serial, -1);
+		Tcl_DStringAppend(&reply, serial, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&reply, "\0-r ", 4);
 	    }
 
@@ -1541,7 +1552,7 @@ SendEventProc(
 		if (commWindow != None) {
 		    Tcl_DStringAppend(&reply,
 			    "X server insecure (must use xauth-style "
-			    "authorization); command ignored", -1);
+			    "authorization); command ignored", TCL_INDEX_NONE);
 		}
 		result = TCL_ERROR;
 		goto returnResult;
@@ -1555,8 +1566,8 @@ SendEventProc(
 		if (riPtr == NULL) {
 		    if (commWindow != None) {
 			Tcl_DStringAppend(&reply,
-				"receiver never heard of interpreter \"", -1);
-			Tcl_DStringAppend(&reply, interpName, -1);
+				"receiver never heard of interpreter \"", TCL_INDEX_NONE);
+			Tcl_DStringAppend(&reply, interpName, TCL_INDEX_NONE);
 			Tcl_DStringAppend(&reply, "\"", 1);
 		    }
 		    result = TCL_ERROR;
@@ -1576,7 +1587,7 @@ SendEventProc(
 	    remoteInterp = riPtr->interp;
 	    Tcl_Preserve(remoteInterp);
 
-	    result = Tcl_EvalEx(remoteInterp, script, -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(remoteInterp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 
 	    /*
 	     * The call to Tcl_Release may have released the interpreter which
@@ -1595,13 +1606,13 @@ SendEventProc(
 			    NULL, TCL_GLOBAL_ONLY);
 		    if (varValue != NULL) {
 			Tcl_DStringAppend(&reply, "\0-i ", 4);
-			Tcl_DStringAppend(&reply, varValue, -1);
+			Tcl_DStringAppend(&reply, varValue, TCL_INDEX_NONE);
 		    }
 		    varValue = Tcl_GetVar2(remoteInterp, "errorCode",
 			    NULL, TCL_GLOBAL_ONLY);
 		    if (varValue != NULL) {
 			Tcl_DStringAppend(&reply, "\0-e ", 4);
-			Tcl_DStringAppend(&reply, varValue, -1);
+			Tcl_DStringAppend(&reply, varValue, TCL_INDEX_NONE);
 		    }
 		}
 	    }
@@ -1622,7 +1633,7 @@ SendEventProc(
 
 		    snprintf(buffer, sizeof(buffer), "%d", result);
 		    Tcl_DStringAppend(&reply, "\0-c ", 4);
-		    Tcl_DStringAppend(&reply, buffer, -1);
+		    Tcl_DStringAppend(&reply, buffer, TCL_INDEX_NONE);
 		}
 		(void) AppendPropCarefully(dispPtr->display, commWindow,
 			dispPtr->commProperty, Tcl_DStringValue(&reply),
@@ -1776,7 +1787,7 @@ AppendPropCarefully(
 
 static int
 AppendErrorProc(
-    ClientData clientData,	/* Command to mark complete, or NULL. */
+    void *clientData,	/* Command to mark complete, or NULL. */
     TCL_UNUSED(XErrorEvent *))	/* Information about error. */
 {
     PendingCommand *pendingPtr = (PendingCommand *)clientData;
@@ -1825,8 +1836,7 @@ AppendErrorProc(
 
 static void
 DeleteProc(
-    ClientData clientData)	/* Info about registration, passed as
-				 * ClientData. */
+    void *clientData)	/* Info about registration */
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     RegisteredInterp *riPtr2;
@@ -1954,9 +1964,9 @@ UpdateCommWindow(
 
 int
 TkpTestsendCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     enum {
@@ -1980,14 +1990,14 @@ TkpTestsendCmd(
 	return TCL_ERROR;
     }
     if (index == TESTSEND_BOGUS) {
-        handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
-                NULL, NULL);
+	handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
+		NULL, NULL);
 	XChangeProperty(winPtr->dispPtr->display,
 		RootWindow(winPtr->dispPtr->display, 0),
 		winPtr->dispPtr->registryProperty, XA_INTEGER, 32,
 		PropModeReplace,
 		(unsigned char *) "This is bogus information", 6);
-        Tk_DeleteErrorHandler(handler);
+	Tk_DeleteErrorHandler(handler);
     } else if (index == TESTSEND_PROP) {
 	int result, actualFormat;
 	unsigned long length, bytesAfter;
@@ -2020,16 +2030,16 @@ TkpTestsendCmd(
 			*p = '\n';
 		    }
 		}
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, TCL_INDEX_NONE));
 	    }
 	    if (property != NULL) {
 		XFree(property);
 	    }
 	} else if (Tcl_GetString(objv[4])[0] == 0) {
-            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
-                    -1, -1, -1, NULL, NULL);
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
 	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
-            Tk_DeleteErrorHandler(handler);
+	    Tk_DeleteErrorHandler(handler);
 	} else {
 	    Tcl_DString tmp;
 
@@ -2040,16 +2050,16 @@ TkpTestsendCmd(
 		    *p = 0;
 		}
 	    }
-            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
-                    -1, -1, -1, NULL, NULL);
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
 	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
 		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
 		    p-Tcl_DStringValue(&tmp));
-            Tk_DeleteErrorHandler(handler);
+	    Tk_DeleteErrorHandler(handler);
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (index == TESTSEND_SERIAL) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(localData.sendSerial+1));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(localData.sendSerial+1));
     }
     return TCL_OK;
 }

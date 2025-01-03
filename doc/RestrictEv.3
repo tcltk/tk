@@ -16,14 +16,15 @@ Tk_RestrictEvents \- filter and selectively delay X events
 .sp
 Tk_RestrictProc *
 \fBTk_RestrictEvents\fR(\fIproc, arg, prevArgPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_RestrictProc **prevArgPtr
 .AP Tk_RestrictProc *proc in
 Predicate procedure to call to filter incoming X events.
 NULL means do not restrict events at all.
-.AP ClientData arg in
+.AP void *arg in
 Arbitrary argument to pass to \fIproc\fR.
-.AP ClientData *prevArgPtr out
+.AP void **prevArgPtr out
 Pointer to place to save argument to previous restrict procedure.
 .BE
 .SH DESCRIPTION
@@ -40,7 +41,7 @@ is a procedure with arguments and result that match
 the type \fBTk_RestrictProc\fR:
 .CS
 typedef Tk_RestrictAction \fBTk_RestrictProc\fR(
-        ClientData \fIarg\fR,
+        void *\fIarg\fR,
         XEvent *\fIeventPtr\fR);
 .CE
 The \fIarg\fR argument is a copy of the \fIarg\fR passed

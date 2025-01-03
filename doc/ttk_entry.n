@@ -12,7 +12,7 @@
 .SH NAME
 ttk::entry \- Editable text field widget
 .SH SYNOPSIS
-\fBttk::entry\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::entry\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -26,7 +26,7 @@ standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor
 \-font	\-foreground
 \-style
-\-takefocus	\-xscrollcommand
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -82,7 +82,7 @@ See \fBVALIDATION\fR below.
 .OP \-width width Width
 Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
-.\" Not in ttk: If the value is less than or equal to zero, the widget picks a
+.\" Not in ttk: If the value is negative or zero, the widget picks a
 .\" Not in ttk: size just large enough to hold its current text.
 .SH NOTES
 .PP
@@ -137,11 +137,20 @@ or
 .QW \fBsel.l\fR .
 In general, out-of-range indices are automatically rounded to the
 nearest legal value.
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .SH "WIDGET COMMAND"
 .PP
-The following subcommands are possible for entry widgets:
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR, \fBstyle\fR and \fBxview\fR
+commands (see \fBttk::widget\fR),
+entry widgets support the following additional commands:
+.\" METHOD: bbox
 .TP
 \fIpathName \fBbbox \fIindex\fR
+.
 Returns a list of four numbers describing the bounding box of the
 character given by \fIindex\fR.
 The first two elements of the list give the x and y coordinates of
@@ -150,16 +159,10 @@ the upper-left corner of the screen area covered by the character
 the width and height of the character, in pixels.
 The bounding box may refer to a region outside the visible area
 of the window.
-'\".TP
-'\"\fIpathName \fBcget\fR \fIoption\fR
-'\"Returns the current value of the specified \fIoption\fR.
-'\"See \fIttk::widget(n)\fR.
-'\".TP
-'\"\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-'\"Modify or query widget options.
-'\"See \fIttk::widget(n)\fR.
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
+.
 Delete one or more elements of the entry.
 \fIFirst\fR is the index of the first character to delete, and
 \fIlast\fR is the index of the character just after the last
@@ -167,69 +170,64 @@ one to delete.
 If \fIlast\fR is not specified it defaults to \fIfirst\fR+1,
 i.e. a single character is deleted.
 This command returns the empty string.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the entry's string.
+.\" METHOD: icursor
 .TP
 \fIpathName \fBicursor \fIindex\fR
+.
 Arrange for the insert cursor to be displayed just before the character
 given by \fIindex\fR.  Returns the empty string.
-'\".TP
-'\"\fIpathName \fBidentify \fIx y\fR
-'\"Returns the name of the element at position \fIx\fR, \fIy\fR,
-'\"or the empty string if the coordinates are outside the window.
+.\" METHOD: index
 .TP
 \fIpathName \fBindex\fI index\fR
+.
 Returns the numerical index corresponding to \fIindex\fR.
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex string\fR
+.
 Insert \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns the empty string.
-'\".TP
-'\"\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-'\"Test the widget state.
-'\"See \fIttk::widget(n)\fR.
+.\" METHOD: selection
 .TP
 \fIpathName \fBselection \fIoption arg\fR
+.
 This command is used to adjust the selection within an entry.  It
 has several forms, depending on \fIoption\fR:
 .RS
 .TP
 \fIpathName \fBselection clear\fR
+.
 Clear the selection if it is currently in this widget.
 If the selection is not in this widget then the command has no effect.
 Returns the empty string.
 .TP
 \fIpathName \fBselection present\fR
+.
 Returns 1 if there is are characters selected in the entry,
 0 if nothing is selected.
 .TP
-\fIpathName \fBselection range \fIstart\fR \fIend\fR
+\fIpathName \fBselection range \fIstart end\fR
+.
 Sets the selection to include the characters starting with
 the one indexed by \fIstart\fR and ending with the one just
 before \fIend\fR.
 If \fIend\fR refers to the same character as \fIstart\fR or an
 earlier one, then the entry's selection is cleared.
 .RE
-'\".TP
-'\"\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-'\"Modify or query the widget state.
-'\"See \fIttk::widget(n)\fR.
+.\" METHOD: validate
 .TP
 \fIpathName \fBvalidate\fR
+.
 Force revalidation, independent of the conditions specified
 by the \fB\-validate\fR option.
 Returns 0 if validation fails, 1 if it succeeds.
 Sets or clears the \fBinvalid\fR state accordingly.
 See \fBVALIDATION\fR below for more details.
-.PP
-The entry widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBcget\fR	\fBconfigure\fR	\fBidentify\fR
-\fBinstate\fR	\fBstate\fR	\fBxview\fR
-.DE
 .SH VALIDATION
 .PP
 The \fB\-validate\fR, \fB\-validatecommand\fR, and \fB\-invalidcommand\fR
@@ -444,7 +442,8 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 .br
 \fB\-fieldbackground\fP \fIcolor\fP
 .RS
-Some themes use a graphical background and their field background colors cannot be changed.
+Some themes use a graphical background and their field background colors
+cannot be changed.
 .RE
 \fB\-foreground\fP \fIcolor\fP
 .br
@@ -455,6 +454,8 @@ Some themes use a graphical background and their field background colors cannot 
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-relief\fP \fIrelief\fP
 .br

@@ -6,8 +6,8 @@
 # built-in commands.  Sourcing this file into Tcl runs the tests and
 # generates output for errors.  No output means no errors were found.
 #
-# Copyright (c) 1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Scriptics Corporation.
+# Copyright © 1997 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -59,7 +59,7 @@ test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     set map [list "\r" "\\r" "\n" "\\n"]
     clipboard append "line 1\nline 2"
     list [string map $map [selection get -selection CLIPBOARD]]\
-        [string map $map [testclipboard]]
+	[string map $map [testclipboard]]
 } -cleanup {
     clipboard clear
 } -result [list "line 1\\nline 2" "line 1\\nline 2"]
@@ -70,24 +70,23 @@ test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     clipboard clear
 } -body {
     set map [list "\r" "\\r" "\n" "\\n"]
-    clipboard append "line 1\u00c7\nline 2"
+    clipboard append "line 1Ç\nline 2"
     list [string map $map [selection get -selection CLIPBOARD]]\
-        [string map $map [testclipboard]]
+	[string map $map [testclipboard]]
 } -cleanup {
     clipboard clear
-} -result [list "line 1\u00c7\\nline 2" "line 1\u00c7\\nline 2"]
+} -result [list "line 1Ç\\nline 2" "line 1Ç\\nline 2"]
 
 test winClipboard-1.6 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     win testclipboard
 } -setup {
     clipboard clear
 } -body {
-    clipboard append "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"
+    clipboard append "привет миф"
     list [selection get -selection CLIPBOARD] [testclipboard]
 } -cleanup {
     clipboard clear
-} -result [list "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"\
-              "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"]
+} -result [list "привет миф" "привет миф"]
 
 test winClipboard-2.1 {TkSelUpdateClipboard reentrancy problem} -constraints {
     win testclipboard

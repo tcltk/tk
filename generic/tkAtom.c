@@ -6,8 +6,8 @@
  *	cleaner interface (caller doesn't have to provide permanent storage
  *	for atom names, for example).
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -156,7 +156,7 @@ Tk_GetAtomName(
 	}
 	name = (const char *)Tcl_GetHashKey(&dispPtr->nameTable, hPtr);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->atomTable, INT2PTR(atom), &isNew);
-	Tcl_SetHashValue(hPtr, name);
+	Tcl_SetHashValue(hPtr, (char *)name);
     }
     return (const char *)Tcl_GetHashValue(hPtr);
 }
@@ -202,7 +202,7 @@ AtomInit(
 	Tcl_SetHashValue(hPtr, INT2PTR(atom));
 	name = (const char *)Tcl_GetHashKey(&dispPtr->nameTable, hPtr);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->atomTable, INT2PTR(atom), &isNew);
-	Tcl_SetHashValue(hPtr, name);
+	Tcl_SetHashValue(hPtr, (char *)name);
     }
 }
 

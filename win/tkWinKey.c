@@ -4,7 +4,7 @@
  *	This file contains X emulation routines for keyboard related
  *	functions.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -44,7 +44,7 @@ static const KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*75 0x4B*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*80 0x50*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*85 0x55*/
-    NoSymbol, XK_Win_L, XK_Win_R, XK_App, NoSymbol, /*90 0x5A*/
+    NoSymbol, XK_Super_L, XK_Super_R, XK_Menu, NoSymbol, /*90 0x5A*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*95 0x5F*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*100 0x64*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*105 0x69*/
@@ -104,7 +104,7 @@ TkpGetString(
     if (keyEv->send_event == -1) {
 	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
 	if (ev->nbytes > 0) {
-	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
+	    (void)Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
 		    ev->trans_chars, ev->nbytes, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
@@ -113,7 +113,7 @@ TkpGetString(
 	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
-	len = TkUniCharToUtf(keyEv->keycode, buf);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else {
 	/*
@@ -125,7 +125,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = TkUniCharToUtf(keysym & 255, buf);
+	    len = Tcl_UniCharToUtf(keysym & 255, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
@@ -153,6 +153,21 @@ KeySym
 XKeycodeToKeysym(
     TCL_UNUSED(Display *),
     unsigned int keycode,
+    int index)
+{
+    int state = 0;
+
+    if (index & 0x01) {
+	state |= ShiftMask;
+    }
+    return KeycodeToKeysym(keycode, state, 0);
+}
+
+KeySym
+XkbKeycodeToKeysym(
+    TCL_UNUSED(Display *),
+    unsigned int keycode,
+    TCL_UNUSED(int),
     int index)
 {
     int state = 0;
@@ -343,9 +358,9 @@ KeycodeToKeysym(
 	 */
 
     case VK_CONTROL:
-        if (state & EXTENDED_MASK) {
-            return XK_Control_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Control_R;
+	}
 	break;
     case VK_SHIFT:
 	if (GetKeyState(VK_RSHIFT) & 0x80) {
@@ -353,9 +368,9 @@ KeycodeToKeysym(
 	}
 	break;
     case VK_MENU:
-        if (state & EXTENDED_MASK) {
-            return XK_Alt_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Alt_R;
+	}
 	break;
     }
     return keymap[keycode];
@@ -440,7 +455,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;
@@ -543,7 +559,7 @@ TkpInitKeymapInfo(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state that should be used so that when they call XKeycodeToKeysym
+ * modifier state that should be used so that when they call XkbKeycodeToKeysym
  * taking into account the xkey.state, they will get back the original keysym.
  */
 

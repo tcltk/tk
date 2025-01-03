@@ -118,7 +118,7 @@ TkSelGetSelection(
 				 * returned. */
     Tk_GetSelProc *proc,	/* Procedure to call to process the selection,
 				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -126,8 +126,8 @@ TkSelGetSelection(
 	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
-	        && selection == dispPtr->clipboardAtom
-	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
+	    && selection == dispPtr->clipboardAtom
+	    && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:

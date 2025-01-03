@@ -10,7 +10,7 @@
 .SH NAME
 ttk::spinbox \- Selecting text field widget
 .SH SYNOPSIS
-\fBttk::spinbox\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::spinbox\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -23,6 +23,7 @@ to a Tcl variable.
 .SO ttk_widget
 \-class	\-cursor	\-state
 \-style	\-takefocus	\-xscrollcommand
+\-placeholder	\-placeholderforeground
 .SE
 .SO ttk_entry
 \-validate	\-validatecommand
@@ -36,15 +37,15 @@ when using the \fB\-from\fR and \fB\-to\fR range.
 This must be a format specifier of the form \fB%<pad>.<pad>f\fR,
 as it will format a floating-point number.
 .OP \-from from From
-A floating\-point value specifying the lowest value for the spinbox. This is
+A floating-point value specifying the lowest value for the spinbox. This is
 used in conjunction with \fB\-to\fR and \fB\-increment\fR to set a numerical
 range.
 .OP \-increment increment Increment
-A floating\-point value specifying the change in value to be applied each
+A floating-point value specifying the change in value to be applied each
 time one of the widget spin buttons is pressed. The up button applies a
 positive increment, the down button applies a negative increment.
 .OP \-to to To
-A floating\-point value specifying the highest permissible value for the
+A floating-point value specifying the highest permissible value for the
 widget. See also \fB\-from\fR and \fB\-increment\fR.
 range.
 .OP \-values values Values
@@ -66,11 +67,15 @@ See the \fBttk::entry\fR manual for information about using the
 .PP
 The following subcommands are possible for spinbox widgets in addition to
 the commands described for the \fBttk::entry\fR widget:
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the spinbox's current value.
+.\" METHOD: set
 .TP
 \fIpathName \fBset \fIvalue\fR
+.
 Set the spinbox string to \fIvalue\fR. If a \fB\-format\fR option has
 been configured then this format will be applied. If formatting fails
 or is not set or the \fB\-values\fR option has been used then the value
@@ -114,6 +119,8 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
 .br

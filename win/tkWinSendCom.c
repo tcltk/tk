@@ -13,7 +13,7 @@
  * In other words the Send methods takes a string and evaluates this in the
  * Tcl interpreter. The result is returned as another string.
  *
- * Copyright (C) 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -144,7 +144,7 @@ static void
 TkWinSendCom_Destroy(
     LPDISPATCH pdisp)
 {
-    CoTaskMemFree((void *) pdisp);
+    CoTaskMemFree(pdisp);
 }
 
 /*
@@ -391,7 +391,7 @@ Async(
     hr = VariantChangeType(&vCmd, &Cmd, 0, VT_BSTR);
     if (FAILED(hr)) {
 	Tcl_SetObjResult(obj->interp, Tcl_NewStringObj(
-		"invalid args: Async(command)", -1));
+		"invalid args: Async(command)", TCL_INDEX_NONE));
 	TkWinSend_SetExcepInfo(obj->interp, pExcepInfo);
 	hr = DISP_E_EXCEPTION;
     }
@@ -432,7 +432,7 @@ Async(
 
 static HRESULT
 Send(
-    TkWinSendCom *obj,
+    TkWinSendCom *comobj,
     VARIANT vCmd,
     VARIANT *pvResult,
     EXCEPINFO *pExcepInfo,
@@ -441,7 +441,7 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    Tcl_Interp *interp = obj->interp;
+    Tcl_Interp *interp = comobj->interp;
     Tcl_Obj *scriptPtr;
     Tcl_DString ds;
     (void)puArgErr;

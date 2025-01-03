@@ -10,7 +10,7 @@
 .SH NAME
 ttk::separator \- Separator bar
 .SH SYNOPSIS
-\fBttk::separator\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::separator\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -26,9 +26,10 @@ One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the separator.
 .SH "WIDGET COMMAND"
 .PP
-Separator widgets support the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-methods.  No other widget methods are used.
+Separator widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .PP
 .SH "STYLING OPTIONS"
 .PP

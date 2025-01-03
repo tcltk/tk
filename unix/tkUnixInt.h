@@ -4,7 +4,7 @@
  *	This file contains declarations that are shared among the
  *	UNIX-specific parts of Tk but aren't used by the rest of Tk.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,7 +24,12 @@
 
 #include "tkIntPlatDecls.h"
 
+MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       Cups_Init (Tcl_Interp* interp);
+
 #endif /* _TKUNIXINT */
+
 
 /*
  * Local Variables:

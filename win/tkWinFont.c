@@ -4,9 +4,9 @@
  *	Contains the Windows implementation of the platform-independent font
  *	package interface.
  *
- * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1994 Software Research Associates, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -702,7 +702,7 @@ TkpGetSubFonts(
     fontPtr = (WinFont *) tkfont;
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	familyPtr = fontPtr->subFontArray[i].familyPtr;
-	strPtr = Tcl_NewStringObj(familyPtr->faceName, -1);
+	strPtr = Tcl_NewStringObj(familyPtr->faceName, TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
     }
     Tcl_SetObjResult(interp, resultPtr);
@@ -729,7 +729,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     WinFont *fontPtr = (WinFont *) tkfont;
@@ -790,9 +790,9 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
-    int maxLength,		/* If >= 0, maxLength specifies the longest
+	int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
 				 * consider any character that would cross
 				 * this x-position. If < 0, then line length
@@ -845,15 +845,14 @@ Tk_MeasureChars(
     start = source;
     end = start + numBytes;
     for (p = start; p < end; ) {
-	next = p + TkUtfToUniChar(p, &ch);
+	next = p + Tcl_UtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
-	    Tcl_UtfToExternalDString(familyPtr->encoding, start,
+	    WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		    p - start, &runString);
 	    size.cx = 0;
-	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    (WCHAR *)Tcl_DStringValue(&runString),
+	    familyPtr->getTextExtentPoint32Proc(hdc, wstr,
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    Tcl_DStringFree(&runString);
@@ -877,10 +876,10 @@ Tk_MeasureChars(
 	 */
 
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, start,
+	WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		p - start, &runString);
 	size.cx = 0;
-	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
+	familyPtr->getTextExtentPoint32Proc(hdc, wstr,
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		&size);
 	Tcl_DStringFree(&runString);
@@ -907,9 +906,9 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_DStringInit(&runString);
 	for (p = start; p < end; ) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
-		    (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
+		    (int) (next - p), TCL_ENCODING_PROFILE_TCL8, NULL, buf, sizeof(buf), NULL,
 		    &dstWrote, NULL);
 	    Tcl_DStringAppend(&runString,buf,dstWrote);
 	    size.cx = 0;
@@ -962,7 +961,7 @@ Tk_MeasureChars(
 	p = source;
 	ch = ' ';
 	while (p < end) {
-	    next = p + TkUtfToUniChar(p, &ch2);
+	    next = p + Tcl_UtfToUniChar(p, &ch2);
 	    if ((ch != ' ') && (ch2 == ' ')) {
 		lastWordBreak = p;
 	    }
@@ -989,11 +988,11 @@ Tk_MeasureChars(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpMeasureCharsInContext --
+ * Tk_MeasureCharsInContext --
  *
  *	Determine the number of bytes from the string that will fit in the
  *	given horizontal span. The measurement is done under the assumption
- *	that TkpDrawCharsInContext() will be used to actually display the
+ *	that Tk_DrawCharsInContext() will be used to actually display the
  *	characters.
  *
  *	This one is almost the same as Tk_MeasureChars(), but with access to
@@ -1012,14 +1011,14 @@ Tk_MeasureChars(
  */
 
 int
-TkpMeasureCharsInContext(
+Tk_MeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    TCL_UNUSED(int),		/* Maximum number of bytes to consider from
+    TCL_UNUSED(Tcl_Size),		/* Maximum number of bytes to consider from
 				 * source string in all. */
-    int rangeStart,		/* Index of first byte to measure. */
-    int rangeLength,		/* Length of range to measure in bytes. */
+    Tcl_Size rangeStart,		/* Index of first byte to measure. */
+    Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
 				 * character that would cross this x-position.
@@ -1072,7 +1071,7 @@ Tk_DrawChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
@@ -1219,7 +1218,7 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)
@@ -1356,14 +1355,14 @@ TkDrawAngledChars(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpDrawCharsInContext --
+ * Tk_DrawCharsInContext --
  *
  *	Draw a string of characters on the screen like Tk_DrawChars(), but
  *	with access to all the characters on the line for context. On Windows
  *	this context isn't consulted, so we just call Tk_DrawChars().
   *
  *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
- *            function is unused (and possibly unfinished). See [7655f65ae7].
+ *            function is unused.
 *
  * Results:
  *	None.
@@ -1375,7 +1374,7 @@ TkDrawAngledChars(
  */
 
 void
-TkpDrawCharsInContext(
+Tk_DrawCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
@@ -1388,9 +1387,9 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    TCL_UNUSED(int),		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1416,9 +1415,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    TCL_UNUSED(int),		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1479,7 +1478,7 @@ MultiFontTextOut(
 
     end = source + numBytes;
     for (p = source; p < end; ) {
-	next = p + TkUtfToUniChar(p, &ch);
+	next = p + Tcl_UtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 
 	/*
@@ -1492,14 +1491,12 @@ MultiFontTextOut(
 	if ((thisSubFontPtr != lastSubFontPtr) || (p-source > 200)) {
 	    if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
- 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
 		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-			(WCHAR *)Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
-			(WCHAR *)Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
 		x += cosA*size.cx;
 		y -= sinA*size.cx;
@@ -1514,11 +1511,10 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
- 	Tcl_UtfToExternalDString(familyPtr->encoding, source,
+	WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		p - source, &runString);
 	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-		(WCHAR *)Tcl_DStringValue(&runString),
-		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+		wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
     }
     SelectObject(hdc, oldFont);
@@ -1626,7 +1622,7 @@ InitFont(
     fmPtr->maxWidth	= tm.tmMaxCharWidth;
     fmPtr->fixed	= !(tm.tmPitchAndFamily & TMPF_FIXED_PITCH);
 
-    fontPtr->numSubFonts 	= 1;
+    fontPtr->numSubFonts	= 1;
     fontPtr->subFontArray	= fontPtr->staticSubFonts;
     InitSubFont(hdc, hFont, 1, &fontPtr->subFontArray[0]);
 
@@ -1698,7 +1694,7 @@ InitSubFont(
     int base,			/* Non-zero if this SubFont is being used as
 				 * the base font for a font object. */
     SubFont *subFontPtr)	/* Filled with SubFont constructed from above
-    				 * attributes. */
+				 * attributes. */
 {
     subFontPtr->hFont0	    = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
@@ -1887,7 +1883,7 @@ FreeFontFamily(
 	return;
     }
     if (familyPtr->refCount-- > 1) {
-    	return;
+	return;
     }
     for (i = 0; i < FONTMAP_PAGES; i++) {
 	if (familyPtr->fontMap[i] != NULL) {
@@ -2265,7 +2261,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
+		    Tcl_UniCharToUtf(i, src), TCL_ENCODING_PROFILE_STRICT, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }
@@ -2447,7 +2443,7 @@ CanUseFallback(
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 
-    	newPtr = (SubFont *)ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
+	newPtr = (SubFont *)ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
@@ -2546,24 +2542,8 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
-    /*
-     * Just immediately rule out the following fonts, because they look so
-     * ugly on windows. The caller's fallback mechanism will cause the
-     * corresponding appropriate TrueType fonts to be selected.
-     */
-
-    if (strcasecmp(faceName, "Courier") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Times") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Helvetica") == 0) {
-	return 0;
-    }
-
     Tcl_DStringInit(&faceString);
-    Tcl_UtfToWCharDString(faceName, -1, &faceString);
+    Tcl_UtfToWCharDString(faceName, TCL_INDEX_NONE, &faceString);
 
     /*
      * If the family exists, WinFontExistProc() will be called and
@@ -2747,7 +2727,8 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, j, k, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, segCount;
+    size_t cbData, offset;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;

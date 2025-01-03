@@ -12,29 +12,29 @@ switch -- [tk windowingsystem] {
 	option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
     }
     aqua {
-    	# Aqua sizegrips use default Arrow cursor.
+	# Aqua sizegrips use default Arrow cursor.
     }
 }
 
 namespace eval ttk::sizegrip {
     variable State
     array set State {
-	pressed 	0
-	pressX 		0
-	pressY 		0
-	width 		0
-	height 		0
+	pressed		0
+	pressX		0
+	pressY		0
+	width		0
+	height		0
 	widthInc	1
 	heightInc	1
-        resizeX         1
-        resizeY         1
-	toplevel 	{}
+	resizeX         1
+	resizeY         1
+	toplevel	{}
     }
 }
 
-bind TSizegrip <Button-1> 		{ ttk::sizegrip::Press	%W %X %Y }
-bind TSizegrip <B1-Motion> 		{ ttk::sizegrip::Drag 	%W %X %Y }
-bind TSizegrip <ButtonRelease-1> 	{ ttk::sizegrip::Release %W %X %Y }
+bind TSizegrip <Button-1>		{ ttk::sizegrip::Press	%W %X %Y }
+bind TSizegrip <B1-Motion>		{ ttk::sizegrip::Drag	%W %X %Y }
+bind TSizegrip <ButtonRelease-1>	{ ttk::sizegrip::Release %W %X %Y }
 
 proc ttk::sizegrip::Press {W X Y} {
     variable State
@@ -46,7 +46,7 @@ proc ttk::sizegrip::Press {W X Y} {
     # If the toplevel is not resizable then bail
     foreach {State(resizeX) State(resizeY)} [wm resizable $top] break
     if {!$State(resizeX) && !$State(resizeY)} {
-        return
+	return
     }
 
     # Sanity-checks:
@@ -54,7 +54,7 @@ proc ttk::sizegrip::Press {W X Y} {
     #   just bail out -- there's no way to handle this cleanly.
     #
     if {[scan [wm geometry $top] "%dx%d+%d+%d" width height x y] != 4} {
-	return
+	return;
     }
 
     # Account for gridded geometry:
@@ -83,10 +83,10 @@ proc ttk::sizegrip::Drag {W X Y} {
     set w $State(width)
     set h $State(height)
     if {$State(resizeX)} {
-        set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
+	set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
     }
     if {$State(resizeY)} {
-        set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
+	set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
     }
     if {$w <= 0} { set w 1 }
     if {$h <= 0} { set h 1 }

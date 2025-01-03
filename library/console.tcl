@@ -4,9 +4,9 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1995-1997 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -38,7 +38,7 @@ interp alias {} EvalAttached {} consoleinterp eval
 # This procedure constructs and configures the console windows.
 #
 # Arguments:
-# 	None.
+#	None.
 
 proc ::tk::ConsoleInit {} {
     if {![consoleinterp eval {set tcl_interactive}]} {
@@ -424,7 +424,7 @@ proc ::tk::ConsoleBind {w} {
     # gets and overhaul of how it handles input -- hobbs
     bind Console <Control-t> {}
 
-    # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+    # Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
     # <Keypress> class binding will also fire and insert the character
     # which is wrong.
@@ -432,10 +432,8 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Alt-Key> {# nothing }
     bind Console <Meta-Key> {# nothing}
     bind Console <Control-Key> {# nothing}
-    if {[tk windowingsystem] eq "aqua"} {
-	bind Console <Command-Key> {# nothing}
-	bind Console <Mod4-Key> {# nothing}
-    }
+    bind Console <Command-Key> {# nothing}
+    bind Console <Fn-Key> {# nothing}
 
     foreach {ev key} {
 	<<Console_NextImmediate>>	<Control-n>
@@ -458,23 +456,16 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_Transpose>>		<Control-t>
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
-	<<Console_FontSizeIncr>>	<Control-plus>
+	<<Console_FontSizeIncr>>	<Control-+>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeDecr>>	<Command-minus>
     } {
 	event add $ev $key
 	bind Console $key {}
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	foreach {ev key} {
-	    <<Console_FontSizeIncr>>	<Command-plus>
-	    <<Console_FontSizeDecr>>	<Command-minus>
-	} {
-	    event add $ev $key
-	    bind Console $key {}
-	}
-	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-t> [list ::tk::console::FontchooserToggle]
-	}
+    if {$::tk::console::useFontchooser} {
+	bind Console <Command-t> [list ::tk::console::FontchooserToggle]
     }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {
@@ -598,10 +589,8 @@ proc ::tk::ConsoleBind {w} {
 	destroy {*}[winfo children .]
 	source -encoding utf-8 [file join $tk_library console.tcl]
     }
-    if {[tk windowingsystem] eq "aqua"} {
-	bind Console <Command-q> {
-	    exit
-	}
+    bind Console <Command-q> {
+	exit
     }
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
@@ -633,7 +622,7 @@ proc ::tk::ConsoleBind {w} {
     ##
     ## Bindings for doing special things based on certain keys
     ##
-    bind PostConsole <parenright> {
+    bind PostConsole <)> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \( \) promptEnd
 	}
@@ -733,7 +722,7 @@ Tk $::tk_patchLevel"
 }
 
 # ::tk::console::Fontchooser* --
-# 	Let the user select the console font (TIP 324).
+#	Let the user select the console font (TIP 324).
 
 proc ::tk::console::FontchooserToggle {} {
     if {[tk fontchooser configure -visible]} {
@@ -806,8 +795,8 @@ proc ::tk::console::TagProc w {
 #
 # Arguments:
 #	w	- console text widget
-# 	c1	- first char of pair
-# 	c2	- second char of pair
+#	c1	- first char of pair
+#	c2	- second char of pair
 #
 # Calls:	::tk::console::Blink
 
@@ -898,9 +887,9 @@ proc ::tk::console::MatchQuote {w {lim 1.0}} {
 #
 # Arguments:
 #	w	- console text widget
-# 	i1	- start index to blink region
-# 	i2	- end index of blink region
-# 	dur	- duration in usecs to blink for
+#	i1	- start index to blink region
+#	i2	- end index of blink region
+#	dur	- duration in usecs to blink for
 #
 # Outputs:
 #	blinks selected characters in $w
@@ -932,7 +921,7 @@ proc ::tk::console::ConstrainBuffer {w size} {
 #
 # Arguments:
 # ARGS:	w	- text widget in which to expand str
-# 	type	- type of expansion (path / proc / variable)
+#	type	- type of expansion (path / proc / variable)
 #
 # Calls:	::tk::console::Expand(Pathname|Procname|Variable)
 #
@@ -1132,7 +1121,7 @@ proc ::tk::console::ExpandVariable str {
 #
 # Arguments:
 #	l	- list to find best unique match in
-# 	e	- currently best known unique match
+#	e	- currently best known unique match
 #
 # Returns:	longest unique match in the list
 

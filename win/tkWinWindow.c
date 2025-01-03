@@ -4,7 +4,7 @@
  *	Xlib emulation routines for Windows related to creating, displaying
  *	and destroying windows.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -232,7 +232,7 @@ TkpScanWindowId(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Creates a Windows window object based on the current attributes of the
  *	specified TkWindow.
@@ -247,13 +247,14 @@ TkpScanWindowId(
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,
+Tk_MakeWindow(
+    Tk_Window tkwin,
     Window parent)
 {
     HWND parentWin;
     int style;
     HWND hwnd;
+    TkWindow *winPtr = (TkWindow *)tkwin;
 
     if (parent != None) {
 	parentWin = Tk_GetHWND(parent);
@@ -759,33 +760,6 @@ XChangeWindowAttributes(
 	XDefineCursor(display, w, attributes->cursor);
     }
     return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XReparentWindow --
- *
- *	TODO: currently placeholder to satisfy Xlib stubs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	TODO.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XReparentWindow(
-    Display *display,
-    Window w,
-    Window parent,
-    int x,
-    int y)
-{
-    return BadWindow;
 }
 
 /*

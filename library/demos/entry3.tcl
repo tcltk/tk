@@ -8,7 +8,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .entry3
 catch {destroy $w}
@@ -64,13 +64,13 @@ proc focusAndFlash {W fg bg {count 9}} {
 labelframe $w.l1 -text "Integer Entry"
 # Alternatively try using {string is digit} for arbitrary length numbers,
 # and not just 32-bit ones.
-entry $w.l1.e -validate focus -vcmd {string is integer %P}
+entry $w.l1.e -validate focus -validatecommand {string is integer %P}
 $w.l1.e configure -invalidcommand \
 	"focusAndFlash %W [$w.l1.e cget -fg] [$w.l1.e cget -bg]"
 pack $w.l1.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l2 -text "Length-Constrained Entry"
-entry $w.l2.e -validate key -invcmd bell -vcmd {expr {[string length %P]<10}}
+entry $w.l2.e -validate key -invcmd bell -validatecommand {expr {[string length %P]<10}}
 pack $w.l2.e -fill x -expand 1 -padx 1m -pady 1m
 
 ### PHONE NUMBER ENTRY ###
@@ -161,7 +161,7 @@ proc phoneSkipRight {W {add 0}} {
 
 labelframe $w.l3 -text "US Phone-Number Entry"
 entry $w.l3.e -validate key  -invcmd bell  -textvariable entry3content \
-	-vcmd {validatePhoneChange %W %v %i %S}
+	-validatecommand {validatePhoneChange %W %v %i %S}
 # Click to focus goes to the first editable character...
 bind $w.l3.e <FocusIn> {
     if {"%d" ne "NotifyAncestor"} {
@@ -174,7 +174,7 @@ bind $w.l3.e <<NextChar>> {phoneSkipRight %W}
 pack $w.l3.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l4 -text "Password Entry"
-entry $w.l4.e -validate key -show "*" -vcmd {expr {[string length %P]<=8}}
+entry $w.l4.e -validate key -show "*" -validatecommand {expr {[string length %P]<=8}}
 pack $w.l4.e -fill x -expand 1 -padx 1m -pady 1m
 
 lower [frame $w.mid]

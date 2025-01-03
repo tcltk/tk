@@ -4,8 +4,8 @@
  *	This file defines the defaults for all options for all of
  *	the Tk widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -22,6 +22,7 @@
  * TROUGH -		Background color for troughs in scales and scrollbars.
  * INDICATOR -		Color for indicator when button is selected.
  * DISABLED -		Foreground color when widget is disabled.
+ * PLACEHOLDER_FG -	Foreground color for placeholder text.
  */
 
 #define BLACK		"#000000"
@@ -33,6 +34,7 @@
 #define TROUGH		"#b3b3b3"
 #define INDICATOR	WHITE
 #define DISABLED	"#a3a3a3"
+#define PLACEHOLDER_FG	"#b3b3b3"	/* grey70 */
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -64,7 +66,7 @@
 #define DEF_BUTTON_HIGHLIGHT		BLACK
 #define DEF_LABEL_HIGHLIGHT_WIDTH	"0"
 #define DEF_BUTTON_HIGHLIGHT_WIDTH	"1"
-#define DEF_BUTTON_IMAGE		((char *) NULL)
+#define DEF_BUTTON_IMAGE		NULL
 #define DEF_BUTTON_INDICATOR		"1"
 #define DEF_BUTTON_JUSTIFY		"center"
 #define DEF_BUTTON_OFF_VALUE		"0"
@@ -81,13 +83,12 @@
 #define DEF_BUTTON_REPEAT_INTERVAL	"0"
 #define DEF_BUTTON_SELECT_COLOR		INDICATOR
 #define DEF_BUTTON_SELECT_MONO		BLACK
-#define DEF_BUTTON_SELECT_IMAGE		((char *) NULL)
+#define DEF_BUTTON_SELECT_IMAGE		NULL
 #define DEF_BUTTON_STATE		"normal"
 #define DEF_LABEL_TAKE_FOCUS		"0"
-#define DEF_BUTTON_TAKE_FOCUS		((char *) NULL)
+#define DEF_BUTTON_TAKE_FOCUS		NULL
 #define DEF_BUTTON_TEXT			""
 #define DEF_BUTTON_TEXT_VARIABLE	""
-#define DEF_BUTTON_UNDERLINE		"-1"
 #define DEF_BUTTON_VALUE		""
 #define DEF_BUTTON_WIDTH		"0"
 #define DEF_BUTTON_WRAP_LENGTH		"0"
@@ -122,7 +123,7 @@
 #define DEF_CANVAS_SELECT_BD_MONO	"0"
 #define DEF_CANVAS_SELECT_FG_COLOR	BLACK
 #define DEF_CANVAS_SELECT_FG_MONO	WHITE
-#define DEF_CANVAS_TAKE_FOCUS		((char *) NULL)
+#define DEF_CANVAS_TAKE_FOCUS		NULL
 #define DEF_CANVAS_WIDTH		"10c"
 #define DEF_CANVAS_X_SCROLL_CMD		""
 #define DEF_CANVAS_X_SCROLL_INCREMENT	"0"
@@ -153,6 +154,8 @@
 #define DEF_ENTRY_INSERT_ON_TIME	"600"
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
+#define DEF_ENTRY_PLACEHOLDER		""
+#define DEF_ENTRY_PLACEHOLDERFG		PLACEHOLDER_FG
 #define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
@@ -163,9 +166,9 @@
 #define DEF_ENTRY_SELECT_BD_MONO	"0"
 #define DEF_ENTRY_SELECT_FG_COLOR	BLACK
 #define DEF_ENTRY_SELECT_FG_MONO	WHITE
-#define DEF_ENTRY_SHOW			((char *) NULL)
+#define DEF_ENTRY_SHOW			NULL
 #define DEF_ENTRY_STATE			"normal"
-#define DEF_ENTRY_TAKE_FOCUS		((char *) NULL)
+#define DEF_ENTRY_TAKE_FOCUS		NULL
 #define DEF_ENTRY_TEXT_VARIABLE		""
 #define DEF_ENTRY_WIDTH			"20"
 
@@ -174,7 +177,9 @@
  */
 
 #define DEF_FRAME_BG_COLOR		NORMAL_BG
+#define DEF_FRAME_BG_IMAGE		NULL
 #define DEF_FRAME_BG_MONO		WHITE
+#define DEF_FRAME_BG_TILE		"0"
 #define DEF_FRAME_BORDER_WIDTH		"0"
 #define DEF_FRAME_CLASS			"Frame"
 #define DEF_FRAME_COLORMAP		""
@@ -233,37 +238,36 @@
 #define DEF_LISTBOX_SELECT_MODE		"browse"
 #define DEF_LISTBOX_SET_GRID		"0"
 #define DEF_LISTBOX_STATE		"normal"
-#define DEF_LISTBOX_TAKE_FOCUS		((char *) NULL)
+#define DEF_LISTBOX_TAKE_FOCUS		NULL
 #define DEF_LISTBOX_WIDTH		"20"
 
 /*
  * Defaults for individual entries of menus:
  */
 
-#define DEF_MENU_ENTRY_ACTIVE_BG	((char *) NULL)
-#define DEF_MENU_ENTRY_ACTIVE_FG	((char *) NULL)
-#define DEF_MENU_ENTRY_ACCELERATOR	((char *) NULL)
-#define DEF_MENU_ENTRY_BG		((char *) NULL)
+#define DEF_MENU_ENTRY_ACTIVE_BG	NULL
+#define DEF_MENU_ENTRY_ACTIVE_FG	NULL
+#define DEF_MENU_ENTRY_ACCELERATOR	NULL
+#define DEF_MENU_ENTRY_BG		NULL
 #define DEF_MENU_ENTRY_BITMAP		NULL
 #define DEF_MENU_ENTRY_COLUMN_BREAK	"0"
-#define DEF_MENU_ENTRY_COMMAND		((char *) NULL)
-#define DEF_MENU_ENTRY_COMPOUND 	"none"
-#define DEF_MENU_ENTRY_FG		((char *) NULL)
-#define DEF_MENU_ENTRY_FONT		((char *) NULL)
+#define DEF_MENU_ENTRY_COMMAND		NULL
+#define DEF_MENU_ENTRY_COMPOUND	"none"
+#define DEF_MENU_ENTRY_FG		NULL
+#define DEF_MENU_ENTRY_FONT		NULL
 #define DEF_MENU_ENTRY_HIDE_MARGIN	"0"
-#define DEF_MENU_ENTRY_IMAGE		((char *) NULL)
+#define DEF_MENU_ENTRY_IMAGE		NULL
 #define DEF_MENU_ENTRY_INDICATOR	"1"
-#define DEF_MENU_ENTRY_LABEL		((char *) NULL)
-#define DEF_MENU_ENTRY_MENU		((char *) NULL)
+#define DEF_MENU_ENTRY_LABEL		NULL
+#define DEF_MENU_ENTRY_MENU		NULL
 #define DEF_MENU_ENTRY_OFF_VALUE	"0"
 #define DEF_MENU_ENTRY_ON_VALUE		"1"
-#define DEF_MENU_ENTRY_SELECT_IMAGE	((char *) NULL)
+#define DEF_MENU_ENTRY_SELECT_IMAGE	NULL
 #define DEF_MENU_ENTRY_STATE		"normal"
-#define DEF_MENU_ENTRY_VALUE		((char *) NULL)
-#define DEF_MENU_ENTRY_CHECK_VARIABLE	((char *) NULL)
+#define DEF_MENU_ENTRY_VALUE		NULL
+#define DEF_MENU_ENTRY_CHECK_VARIABLE	NULL
 #define DEF_MENU_ENTRY_RADIO_VARIABLE	"selectedButton"
-#define DEF_MENU_ENTRY_SELECT		((char *) NULL)
-#define DEF_MENU_ENTRY_UNDERLINE	"-1"
+#define DEF_MENU_ENTRY_SELECT		NULL
 
 /*
  * Defaults for menus overall:
@@ -274,6 +278,7 @@
 #define DEF_MENU_ACTIVE_BORDER_WIDTH	"1"
 #define DEF_MENU_ACTIVE_FG_COLOR	BLACK
 #define DEF_MENU_ACTIVE_FG_MONO		WHITE
+#define DEF_MENU_ACTIVE_RELIEF		"raised"
 #define DEF_MENU_BG_COLOR		NORMAL_BG
 #define DEF_MENU_BG_MONO		WHITE
 #define DEF_MENU_BORDER_WIDTH		"1"
@@ -287,8 +292,8 @@
 #define DEF_MENU_SELECT_COLOR		BLACK
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-#define DEF_MENU_TEAROFF		"1"
-#define DEF_MENU_TEAROFF_CMD		((char *) NULL)
+#define DEF_MENU_TEAROFF		"0"
+#define DEF_MENU_TEAROFF_CMD		NULL
 #define DEF_MENU_TITLE			""
 #define DEF_MENU_TYPE			"normal"
 
@@ -316,7 +321,7 @@
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_MONO  DEF_MENUBUTTON_BG_MONO
 #define DEF_MENUBUTTON_HIGHLIGHT	BLACK
 #define DEF_MENUBUTTON_HIGHLIGHT_WIDTH	"0"
-#define DEF_MENUBUTTON_IMAGE		((char *) NULL)
+#define DEF_MENUBUTTON_IMAGE		NULL
 #define DEF_MENUBUTTON_INDICATOR	"0"
 #define DEF_MENUBUTTON_JUSTIFY		"center"
 #define DEF_MENUBUTTON_MENU		""
@@ -327,7 +332,6 @@
 #define DEF_MENUBUTTON_TAKE_FOCUS	"0"
 #define DEF_MENUBUTTON_TEXT		""
 #define DEF_MENUBUTTON_TEXT_VARIABLE	""
-#define DEF_MENUBUTTON_UNDERLINE	"-1"
 #define DEF_MENUBUTTON_WIDTH		"0"
 #define DEF_MENUBUTTON_WRAP_LENGTH	"0"
 
@@ -347,8 +351,8 @@
 #define DEF_MESSAGE_HIGHLIGHT		BLACK
 #define DEF_MESSAGE_HIGHLIGHT_WIDTH	"0"
 #define DEF_MESSAGE_JUSTIFY		"left"
-#define DEF_MESSAGE_PADX		"-1"
-#define DEF_MESSAGE_PADY		"-1"
+#define DEF_MESSAGE_PADX		NULL
+#define DEF_MESSAGE_PADY		NULL
 #define DEF_MESSAGE_RELIEF		"flat"
 #define DEF_MESSAGE_TAKE_FOCUS		"0"
 #define DEF_MESSAGE_TEXT		""
@@ -400,7 +404,7 @@
 #define DEF_SCALE_ACTIVE_BG_MONO	BLACK
 #define DEF_SCALE_BG_COLOR		NORMAL_BG
 #define DEF_SCALE_BG_MONO		WHITE
-#define DEF_SCALE_BIG_INCREMENT		"0"
+#define DEF_SCALE_BIG_INCREMENT		"0.0"
 #define DEF_SCALE_BORDER_WIDTH		"1"
 #define DEF_SCALE_COMMAND		""
 #define DEF_SCALE_CURSOR		""
@@ -408,7 +412,7 @@
 #define DEF_SCALE_FONT			"TkDefaultFont"
 #define DEF_SCALE_FG_COLOR		BLACK
 #define DEF_SCALE_FG_MONO		BLACK
-#define DEF_SCALE_FROM			"0"
+#define DEF_SCALE_FROM			"0.0"
 #define DEF_SCALE_HIGHLIGHT_BG_COLOR	DEF_SCALE_BG_COLOR
 #define DEF_SCALE_HIGHLIGHT_BG_MONO	DEF_SCALE_BG_MONO
 #define DEF_SCALE_HIGHLIGHT		BLACK
@@ -419,16 +423,16 @@
 #define DEF_SCALE_RELIEF		"flat"
 #define DEF_SCALE_REPEAT_DELAY		"300"
 #define DEF_SCALE_REPEAT_INTERVAL	"100"
-#define DEF_SCALE_RESOLUTION		"1"
+#define DEF_SCALE_RESOLUTION		"1.0"
 #define DEF_SCALE_TROUGH_COLOR		TROUGH
 #define DEF_SCALE_TROUGH_MONO		WHITE
 #define DEF_SCALE_SHOW_VALUE		"1"
 #define DEF_SCALE_SLIDER_LENGTH		"30"
 #define DEF_SCALE_SLIDER_RELIEF		"raised"
 #define DEF_SCALE_STATE			"normal"
-#define DEF_SCALE_TAKE_FOCUS		((char *) NULL)
-#define DEF_SCALE_TICK_INTERVAL		"0"
-#define DEF_SCALE_TO			"100"
+#define DEF_SCALE_TAKE_FOCUS		NULL
+#define DEF_SCALE_TICK_INTERVAL		"0.0"
+#define DEF_SCALE_TO			"100.0"
 #define DEF_SCALE_VARIABLE		""
 #define DEF_SCALE_WIDTH			"15"
 
@@ -444,7 +448,7 @@
 #define DEF_SCROLLBAR_BORDER_WIDTH	"1"
 #define DEF_SCROLLBAR_COMMAND		""
 #define DEF_SCROLLBAR_CURSOR		""
-#define DEF_SCROLLBAR_EL_BORDER_WIDTH	"-1"
+#define DEF_SCROLLBAR_EL_BORDER_WIDTH	NULL
 #define DEF_SCROLLBAR_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_SCROLLBAR_HIGHLIGHT		BLACK
 #define DEF_SCROLLBAR_HIGHLIGHT_WIDTH	"0"
@@ -453,7 +457,7 @@
 #define DEF_SCROLLBAR_RELIEF		"sunken"
 #define DEF_SCROLLBAR_REPEAT_DELAY	"300"
 #define DEF_SCROLLBAR_REPEAT_INTERVAL	"100"
-#define DEF_SCROLLBAR_TAKE_FOCUS	((char *) NULL)
+#define DEF_SCROLLBAR_TAKE_FOCUS	NULL
 #define DEF_SCROLLBAR_TROUGH_COLOR	TROUGH
 #define DEF_SCROLLBAR_TROUGH_MONO	WHITE
 #define DEF_SCROLLBAR_WIDTH		"11"
@@ -501,7 +505,7 @@
 #define DEF_TEXT_STATE			"normal"
 #define DEF_TEXT_TABS			""
 #define DEF_TEXT_TABSTYLE		"tabular"
-#define DEF_TEXT_TAKE_FOCUS		((char *) NULL)
+#define DEF_TEXT_TAKE_FOCUS		NULL
 #define DEF_TEXT_UNDO			"0"
 #define DEF_TEXT_WIDTH			"80"
 #define DEF_TEXT_WRAP			"char"

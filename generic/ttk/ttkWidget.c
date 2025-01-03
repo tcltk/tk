@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003, Joe English
  *
  * Core widget utilities.
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 /*------------------------------------------------------------------------
@@ -13,15 +13,15 @@
  */
 
 /* UpdateLayout --
- * 	Call the widget's get-layout hook to recompute corePtr->layout.
- * 	Returns TCL_OK if successful, returns TCL_ERROR and leaves
- * 	the layout unchanged otherwise.
+ *	Call the widget's get-layout hook to recompute corePtr->layout.
+ *	Returns TCL_OK if successful, returns TCL_ERROR and leaves
+ *	the layout unchanged otherwise.
  */
 static int UpdateLayout(Tcl_Interp *interp, WidgetCore *corePtr)
 {
     Ttk_Theme themePtr = Ttk_GetCurrentTheme(interp);
     Ttk_Layout newLayout =
-    	corePtr->widgetSpec->getLayoutProc(interp, themePtr,corePtr);
+	corePtr->widgetSpec->getLayoutProc(interp, themePtr,corePtr);
 
     if (newLayout) {
 	if (corePtr->layout) {
@@ -34,8 +34,8 @@ static int UpdateLayout(Tcl_Interp *interp, WidgetCore *corePtr)
 }
 
 /* SizeChanged --
- * 	Call the widget's sizeProc to compute new requested size
- * 	and pass it to the geometry manager.
+ *	Call the widget's sizeProc to compute new requested size
+ *	and pass it to the geometry manager.
  */
 static void SizeChanged(WidgetCore *corePtr)
 {
@@ -49,7 +49,7 @@ static void SizeChanged(WidgetCore *corePtr)
 #ifndef TK_NO_DOUBLE_BUFFERING
 
 /* BeginDrawing --
- * 	Returns a Drawable for drawing the widget contents.
+ *	Returns a Drawable for drawing the widget contents.
  *	This is normally an off-screen Pixmap, copied to
  *	the window by EndDrawing().
  */
@@ -81,15 +81,19 @@ static void EndDrawing(Tk_Window tkwin, Drawable d)
 #else
 /* No double-buffering: draw directly into the window. */
 static Drawable BeginDrawing(Tk_Window tkwin) { return Tk_WindowId(tkwin); }
-static void EndDrawing(Tk_Window tkwin, Drawable d) { }
+static void EndDrawing(
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Drawable))
+{
+}
 #endif
 
 /* DrawWidget --
  *	Redraw a widget.  Called as an idle handler.
  */
-static void DrawWidget(ClientData recordPtr)
+static void DrawWidget(void *recordPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
 
     corePtr->flags &= ~REDISPLAY_PENDING;
     if (Tk_IsMapped(corePtr->tkwin)) {
@@ -101,7 +105,7 @@ static void DrawWidget(ClientData recordPtr)
 }
 
 /* TtkRedisplayWidget --
- * 	Schedule redisplay as an idle handler.
+ *	Schedule redisplay as an idle handler.
  */
 void TtkRedisplayWidget(WidgetCore *corePtr)
 {
@@ -117,19 +121,20 @@ void TtkRedisplayWidget(WidgetCore *corePtr)
 
 /*
  * WidgetWorldChanged --
- * 	Default Tk_ClassWorldChangedProc() for widgets.
- * 	Invoked whenever fonts or other system resources are changed;
- * 	recomputes geometry.
+ *	Default Tk_ClassWorldChangedProc() for widgets.
+ *	Invoked whenever fonts or other system resources are changed;
+ *	recomputes geometry.
  */
-static void WidgetWorldChanged(ClientData clientData)
+static void WidgetWorldChanged(void *clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
+    (void)UpdateLayout(corePtr->interp, corePtr);
     SizeChanged(corePtr);
     TtkRedisplayWidget(corePtr);
 }
 
 /* TtkResizeWidget --
- * 	Recompute widget size, schedule geometry propagation and redisplay.
+ *	Recompute widget size, schedule geometry propagation and redisplay.
  */
 void TtkResizeWidget(WidgetCore *corePtr)
 {
@@ -141,7 +146,7 @@ void TtkResizeWidget(WidgetCore *corePtr)
 }
 
 /* TtkWidgetChangeState --
- * 	Set / clear the specified bits in the 'state' flag,
+ *	Set / clear the specified bits in the 'state' flag,
  */
 void TtkWidgetChangeState(WidgetCore *corePtr,
     unsigned int setBits, unsigned int clearBits)
@@ -158,9 +163,9 @@ void TtkWidgetChangeState(WidgetCore *corePtr,
  */
 static int
 WidgetInstanceObjCmd(
-    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     const Ttk_Ensemble *commands = corePtr->widgetSpec->commands;
     int status;
 
@@ -190,19 +195,19 @@ WidgetInstanceObjCmd(
  */
 
 /* WidgetInstanceObjCmdDeleted --
- * 	Widget instance command	deletion callback.
+ *	Widget instance command	deletion callback.
  */
 static void
-WidgetInstanceObjCmdDeleted(ClientData clientData)
+WidgetInstanceObjCmdDeleted(void *clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     corePtr->widgetCmd = NULL;
     if (corePtr->tkwin != NULL)
 	Tk_DestroyWindow(corePtr->tkwin);
 }
 
 /* DestroyWidget --
- * 	Main widget destructor; called from <DestroyNotify> event handler.
+ *	Main widget destructor; called from <DestroyNotify> event handler.
  */
 static void
 DestroyWidget(WidgetCore *corePtr)
@@ -212,7 +217,7 @@ DestroyWidget(WidgetCore *corePtr)
     corePtr->widgetSpec->cleanupProc(corePtr);
 
     Tk_FreeConfigOptions(
-	(ClientData)corePtr, corePtr->optionTable, corePtr->tkwin);
+	    corePtr, corePtr->optionTable, corePtr->tkwin);
 
     if (corePtr->layout) {
 	Ttk_FreeLayout(corePtr->layout);
@@ -257,7 +262,7 @@ static const unsigned CoreEventMask
     | LeaveWindowMask
     ;
 
-static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
+static void CoreEventProc(void *clientData, XEvent *eventPtr)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
 
@@ -309,7 +314,6 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	case VirtualEvent: {
 	    const char *name = ((XVirtualEvent *)eventPtr)->name;
 	    if ((name != NULL) && !strcmp("ThemeChanged", name)) {
-		(void)UpdateLayout(corePtr->interp, corePtr);
 		WidgetWorldChanged(corePtr);
 	    }
 	    break;
@@ -320,7 +324,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
-static Tk_ClassProcs widgetClassProcs = {
+static const Tk_ClassProcs widgetClassProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     WidgetWorldChanged,		/* worldChangedProc */
     NULL,			/* createProc */
@@ -333,9 +337,9 @@ static Tk_ClassProcs widgetClassProcs = {
  *	ClientData is a WidgetSpec *.
  */
 int TtkWidgetConstructorObjCmd(
-    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetSpec *widgetSpec = clientData;
+    WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
     const char *className = widgetSpec->className;
     Tk_OptionTable optionTable =
 	Tk_CreateOptionTable(interp, widgetSpec->optionSpecs);
@@ -343,7 +347,7 @@ int TtkWidgetConstructorObjCmd(
     void *recordPtr;
     WidgetCore *corePtr;
     Tk_SavedOptions savedOptions;
-    int i;
+    Tcl_Size i;
 
     if (objc < 2 || objc % 2 == 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -371,17 +375,17 @@ int TtkWidgetConstructorObjCmd(
      */
     recordPtr = ckalloc(widgetSpec->recordSize);
     memset(recordPtr, 0, widgetSpec->recordSize);
-    corePtr = recordPtr;
+    corePtr = (WidgetCore *)recordPtr;
 
     corePtr->tkwin	= tkwin;
-    corePtr->interp 	= interp;
+    corePtr->interp	= interp;
     corePtr->widgetSpec	= widgetSpec;
     corePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(tkwin),
 	WidgetInstanceObjCmd, recordPtr, WidgetInstanceObjCmdDeleted);
     corePtr->optionTable = optionTable;
     corePtr->layout	= NULL;
-    corePtr->flags 	= 0;
-    corePtr->state 	= 0;
+    corePtr->flags	= 0;
+    corePtr->state	= 0;
 
     Tk_SetClass(tkwin, className);
     Tk_SetClassProcs(tkwin, &widgetClassProcs, recordPtr);
@@ -439,21 +443,21 @@ error:
  */
 
 /* TtkWidgetGetLayout --
- * 	Default getLayoutProc.
+ *	Default getLayoutProc.
  *	Looks up the layout based on the -style resource (if specified),
  *	otherwise use the widget class.
  */
 Ttk_Layout TtkWidgetGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     const char *styleName = 0;
 
     if (corePtr->styleObj)
-    	styleName = Tcl_GetString(corePtr->styleObj);
+	styleName = Tcl_GetString(corePtr->styleObj);
 
     if (!styleName || *styleName == '\0')
-    	styleName = corePtr->widgetSpec->className;
+	styleName = corePtr->widgetSpec->className;
 
     return Ttk_CreateLayout(interp, themePtr, styleName,
 	recordPtr, corePtr->optionTable, corePtr->tkwin);
@@ -461,17 +465,17 @@ Ttk_Layout TtkWidgetGetLayout(
 
 /*
  * TtkWidgetGetOrientedLayout --
- * 	Helper routine.  Same as TtkWidgetGetLayout, but prefixes
- * 	"Horizontal." or "Vertical." to the style name, depending
- * 	on the value of the 'orient' option.
+ *	Helper routine.  Same as TtkWidgetGetLayout, but prefixes
+ *	"Horizontal." or "Vertical." to the style name, depending
+ *	on the value of the 'orient' option.
  */
 Ttk_Layout TtkWidgetGetOrientedLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr, Tcl_Obj *orientObj)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     const char *baseStyleName = 0;
     Tcl_DString styleName;
-    int orient = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
     Ttk_Layout layout;
 
     Tcl_DStringInit(&styleName);
@@ -480,18 +484,18 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
      */
     Ttk_GetOrientFromObj(NULL, orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL)
-	Tcl_DStringAppend(&styleName, "Horizontal.", -1);
+	Tcl_DStringAppend(&styleName, "Horizontal.", TCL_INDEX_NONE);
     else
-	Tcl_DStringAppend(&styleName, "Vertical.", -1);
+	Tcl_DStringAppend(&styleName, "Vertical.", TCL_INDEX_NONE);
 
     /* Add base style name:
      */
     if (corePtr->styleObj)
-    	baseStyleName = Tcl_GetString(corePtr->styleObj);
+	baseStyleName = Tcl_GetString(corePtr->styleObj);
     if (!baseStyleName || *baseStyleName == '\0')
-    	baseStyleName = corePtr->widgetSpec->className;
+	baseStyleName = corePtr->widgetSpec->className;
 
-    Tcl_DStringAppend(&styleName, baseStyleName, -1);
+    Tcl_DStringAppend(&styleName, baseStyleName, TCL_INDEX_NONE);
 
     /* Create layout:
      */
@@ -504,27 +508,32 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 }
 
 /* TtkNullInitialize --
- * 	Default widget initializeProc (no-op)
+ *	Default widget initializeProc (no-op)
  */
-void TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
+void TtkNullInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(void *))
 {
 }
 
 /* TtkNullPostConfigure --
- * 	Default widget postConfigureProc (no-op)
+ *	Default widget postConfigureProc (no-op)
  */
-int TtkNullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
+int TtkNullPostConfigure(
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int))
 {
     return TCL_OK;
 }
 
 /* TtkCoreConfigure --
- * 	Default widget configureProc.
- * 	Handles -style option.
+ *	Default widget configureProc.
+ *	Handles -style option.
  */
 int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     int status = TCL_OK;
 
     if (mask & STYLE_CHANGED) {
@@ -535,37 +544,38 @@ int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 }
 
 /* TtkNullCleanup --
- * 	Default widget cleanupProc (no-op)
+ *	Default widget cleanupProc (no-op)
  */
-void TtkNullCleanup(void *recordPtr)
+void TtkNullCleanup(
+    TCL_UNUSED(void *))
 {
     return;
 }
 
 /* TtkWidgetDoLayout --
- * 	Default widget layoutProc.
+ *	Default widget layoutProc.
  */
 void TtkWidgetDoLayout(void *clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
 }
 
 /* TtkWidgetDisplay --
- * 	Default widget displayProc.
+ *	Default widget displayProc.
  */
 void TtkWidgetDisplay(void *recordPtr, Drawable d)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_DrawLayout(corePtr->layout, corePtr->state, d);
 }
 
 /* TtkWidgetSize --
- * 	Default widget sizeProc()
+ *	Default widget sizeProc()
  */
 int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_LayoutSize(corePtr->layout, corePtr->state, widthPtr, heightPtr);
     return 1;
 }
@@ -577,9 +587,9 @@ int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 /* $w cget -option
  */
 int TtkWidgetCgetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
 
     if (objc != 3) {
@@ -597,9 +607,9 @@ int TtkWidgetCgetCommand(
 /* $w configure ?-option ?value ....??
  */
 int TtkWidgetConfigureCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
 
     if (objc == 2) {
@@ -660,16 +670,16 @@ int TtkWidgetConfigureCommand(
 
 /* $w state ? $stateSpec ?
  *
- * 	If $stateSpec is specified, modify the widget state accordingly,
- * 	return a new stateSpec representing the changed bits.
+ *	If $stateSpec is specified, modify the widget state accordingly,
+ *	return a new stateSpec representing the changed bits.
  *
- * 	Otherwise, return a statespec matching all the currently-set bits.
+ *	Otherwise, return a statespec matching all the currently-set bits.
  */
 
 int TtkWidgetStateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_StateSpec spec;
     int status;
     Ttk_State oldState, changed;
@@ -701,15 +711,15 @@ int TtkWidgetStateCommand(
 
 /* $w instate $stateSpec ?$script?
  *
- * 	Tests if widget state matches $stateSpec.
+ *	Tests if widget state matches $stateSpec.
  *	If $script is specified, execute script if state matches.
  *	Otherwise, return true/false
  */
 
 int TtkWidgetInstateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_State state = corePtr->state;
     Ttk_StateSpec spec;
     int status = TCL_OK;
@@ -735,12 +745,12 @@ int TtkWidgetInstateCommand(
 
 /* $w identify $x $y
  * $w identify element $x $y
- * 	Returns: name of element at $x, $y
+ *	Returns: name of element at $x, $y
  */
 int TtkWidgetIdentifyCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_Element element;
     static const char *const whatTable[] = { "element", NULL };
     int x, y, what;
@@ -768,6 +778,26 @@ int TtkWidgetIdentifyCommand(
 	const char *elementName = Ttk_ElementName(element);
 	Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
     }
+
+    return TCL_OK;
+}
+
+/* $w style
+ *	Return the style currently applied to the widget.
+ */
+
+int TtkWidgetStyleCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 2, objv, "");
+	return TCL_ERROR;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    Ttk_StyleName(Ttk_LayoutStyle(corePtr->layout)), -1));
 
     return TCL_OK;
 }

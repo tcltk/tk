@@ -5,8 +5,8 @@
 # built-in commands.  Sourcing this file into Tcl runs the tests and
 # generates output for errors.  No output means no errors were found.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -284,7 +284,7 @@ test winWm-6.3 {wm attributes} -constraints win -setup {
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad attribute "-foo": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
@@ -324,14 +324,14 @@ test winWm-6.6 {wm attributes -alpha} -constraints win -setup {
     update
     if {$::tcl_platform(osVersion) >= 5.0} {
     for {set i 0.2} {$i < 0.99} {set i [expr {$i+0.02}]} {
-        wm attributes .t -alpha $i
-        update idle
-        after 20
+	wm attributes .t -alpha $i
+	update idle
+	after 20
     }
     for {set i 0.99} {$i > 0.2} {set i [expr {$i-0.02}]} {
-        wm attributes .t -alpha $i
-        update idle
-        after 20
+	wm attributes .t -alpha $i
+	update idle
+	after 20
     }
     }
 } -cleanup {
@@ -366,7 +366,7 @@ test winWm-6.8 {wm attributes -transparentcolor} -constraints win -setup {
 
 
 test winWm-7.1 {deiconify on an unmapped toplevel will raise \
-        the window and set the focus} -constraints {
+	the window and set the focus} -constraints {
     win
 } -setup {
     destroy .t
@@ -382,7 +382,7 @@ test winWm-7.1 {deiconify on an unmapped toplevel will raise \
 } -result {1 .t}
 
 test winWm-7.2 {deiconify on an already mapped toplevel\
-        will raise the window and set the focus} -constraints {
+	will raise the window and set the focus} -constraints {
     win
 } -setup {
     destroy .t
@@ -446,31 +446,31 @@ test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -setup 
 
 test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constraints win -setup {
     proc winwm90click {w} {
-        if {![winfo ismapped $w]} { update }
-        event generate $w <Enter>
-        focus -force $w
-        event generate $w <ButtonPress-1> -x 5 -y 5
-        event generate $w <ButtonRelease-1> -x 5 -y 5
+	if {![winfo ismapped $w]} { update }
+	event generate $w <Enter>
+	focus -force $w
+	event generate $w <Button-1> -x 5 -y 5
+	event generate $w <ButtonRelease-1> -x 5 -y 5
     }
     proc winwm90proc3 {} {
-        global winwm90done winwm90check
-        set w .sd
-        toplevel $w
-        pack [button $w.b -text "OK" -command {set winwm90check 1}]
-        bind $w.b <Map> {after idle {winwm90click %W}}
-        update idletasks
-        tkwait visibility $w
-        grab $w
-        tkwait variable winwm90check
-        grab release $w
-        destroy $w
-        after idle {set winwm90done ok}
+	global winwm90done winwm90check
+	set w .sd
+	toplevel $w
+	pack [button $w.b -text "OK" -command {set winwm90check 1}]
+	bind $w.b <Map> {after idle {winwm90click %W}}
+	update idletasks
+	tkwait visibility $w
+	grab $w
+	tkwait variable winwm90check
+	grab release $w
+	destroy $w
+	after idle {set winwm90done ok}
     }
     proc winwm90proc2 {w} { winwm90proc3; destroy $w }
     proc winwm90proc1 {w} {
-        toplevel $w
-        pack [button $w.b -text "Do dialog" -command [list winwm90proc2 $w]]
-        bind $w.b <Map> {bind %W <Map> {}; after idle {winwm90click %W}}
+	toplevel $w
+	pack [button $w.b -text "Do dialog" -command [list winwm90proc2 $w]]
+	bind $w.b <Map> {bind %W <Map> {}; after idle {winwm90click %W}}
     }
     global winwm90done
     set winwm90done wait
@@ -483,38 +483,38 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
     set winwm90done
 } -cleanup {
     foreach cmd {proc1 proc2 proc3 click} {
-        rename winwm90$cmd {}
+	rename winwm90$cmd {}
     }
     destroy .tx .t .sd
 } -result ok
 
 test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win -setup {
     proc winwm91click {w} {
-        if {![winfo ismapped $w]} { update }
-        event generate $w <Enter>
-        focus -force $w
-        event generate $w <ButtonPress-1> -x 5 -y 5
-        event generate $w <ButtonRelease-1> -x 5 -y 5
+	if {![winfo ismapped $w]} { update }
+	event generate $w <Enter>
+	focus -force $w
+	event generate $w <Button-1> -x 5 -y 5
+	event generate $w <ButtonRelease-1> -x 5 -y 5
     }
     proc winwm91proc3 {} {
-        global winwm91done winwm91check
-        set w .sd
-        toplevel $w
-        pack [button $w.b -text "OK" -command {set winwm91check 1}]
-        bind $w.b <Map> {after idle {winwm91click %W}}
-        update idletasks
-        tkwait visibility $w
-        grab $w
-        tkwait variable winwm91check
-        #skip the release:  #grab release $w
-        destroy $w
-        after idle {set winwm91done ok}
+	global winwm91done winwm91check
+	set w .sd
+	toplevel $w
+	pack [button $w.b -text "OK" -command {set winwm91check 1}]
+	bind $w.b <Map> {after idle {winwm91click %W}}
+	update idletasks
+	tkwait visibility $w
+	grab $w
+	tkwait variable winwm91check
+	#skip the release:  #grab release $w
+	destroy $w
+	after idle {set winwm91done ok}
     }
     proc winwm91proc2 {w} { winwm91proc3; destroy $w }
     proc winwm91proc1 {w} {
-        toplevel $w
-        pack [button $w.b -text "Do dialog" -command [list winwm91proc2 $w]]
-        bind $w.b <Map> {bind %W <Map> {}; after idle {winwm91click %W}}
+	toplevel $w
+	pack [button $w.b -text "Do dialog" -command [list winwm91proc2 $w]]
+	bind $w.b <Map> {bind %W <Map> {}; after idle {winwm91click %W}}
     }
     destroy .t
     global winwm91done
@@ -528,7 +528,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     set winwm91done
 } -cleanup {
     foreach cmd {proc1 proc2 proc3 click} {
-        rename winwm91$cmd {}
+	rename winwm91$cmd {}
     }
     destroy .tx .t .sd
 } -result ok
@@ -543,18 +543,18 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constr
     pack .t.f.x
     pack .t.f
     lappend aid [after 5000 {set ::winwm92 timeout}] [after 500 {
-        wm manage .t.f
-        wm iconify .t
-        lappend aid [after 500 {
-            wm forget .t.f
-            wm deiconify .t
-            lappend aid [after 500 {
-                pack .t.f
-                lappend aid [after 500 {
+	wm manage .t.f
+	wm iconify .t
+	lappend aid [after 500 {
+	    wm forget .t.f
+	    wm deiconify .t
+	    lappend aid [after 500 {
+		pack .t.f
+		lappend aid [after 500 {
 		    set ::winwm92 [expr {
 			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
-            }]
-        }]
+	    }]
+	}]
     }]
     vwait ::winwm92
     foreach id $aid {

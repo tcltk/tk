@@ -12,7 +12,7 @@ keysyms \- keysyms recognized by Tk
 .SH DESCRIPTION
 .PP
 Tk recognizes many keysyms when specifying key bindings (e.g.,
-.QW "\fBbind\fR \fB. <Key-\fR\fIkeysym\fR\fB>\fR" ).
+.QW "\fBbind\fR \fB. <\fR\fIkeysym\fR\fB>\fR" ).
 The following list enumerates the
 keysyms that will be recognized by Tk.  Note that not all keysyms will
 be valid on all platforms, and some keysyms are also available on
@@ -24,21 +24,21 @@ decimal and hexadecimal values.
 .PP
 .CS
 space                               32     0x20
-exclam                              33     0x21
+! (exclam)                          33     0x21
 quotedbl                            34     0x22
 numbersign                          35     0x23
 dollar                              36     0x24
-percent                             37     0x25
-ampersand                           38     0x26
-apostrophe                          39     0x27
-parenleft                           40     0x28
-parenright                          41     0x29
-asterisk                            42     0x2A
-plus                                43     0x2B
-comma                               44     0x2C
+% (percent)                         37     0x25
+& (ampersand)                       38     0x26
+' (apostrophe)                      39     0x27
+( (parenleft)                       40     0x28
+) (parenright)                      41     0x29
+* (asterisk)                        42     0x2A
++ (plus)                            43     0x2B
+, (comma)                           44     0x2C
 minus                               45     0x2D
-period                              46     0x2E
-slash                               47     0x2F
+. (period)                          46     0x2E
+/ (slash)                           47     0x2F
 0                                   48     0x30
 1                                   49     0x31
 2                                   50     0x32
@@ -49,13 +49,13 @@ slash                               47     0x2F
 7                                   55     0x37
 8                                   56     0x38
 9                                   57     0x39
-colon                               58     0x3A
+: (colon)                           58     0x3A
 semicolon                           59     0x3B
 less                                60     0x3C
-equal                               61     0x3D
+= (equal)                           61     0x3D
 greater                             62     0x3E
-question                            63     0x3F
-at                                  64     0x40
+? (question)                        63     0x3F
+@ (at)                              64     0x40
 A                                   65     0x41
 B                                   66     0x42
 C                                   67     0x43
@@ -85,9 +85,9 @@ Z                                   90     0x5A
 bracketleft                         91     0x5B
 backslash                           92     0x5C
 bracketright                        93     0x5D
-asciicircum                         94     0x5E
-underscore                          95     0x5F
-grave                               96     0x60
+^ (asciicircum)                     94     0x5E
+_ (underscore)                      95     0x5F
+` (grave)                           96     0x60
 a                                   97     0x61
 b                                   98     0x62
 c                                   99     0x63
@@ -115,105 +115,105 @@ x                                  120     0x78
 y                                  121     0x79
 z                                  122     0x7A
 braceleft                          123     0x7B
-bar                                124     0x7C
+| (bar)                            124     0x7C
 braceright                         125     0x7D
-asciitilde                         126     0x7E
+~ (asciitilde)                     126     0x7E
 nobreakspace                       160     0xA0
-exclamdown                         161     0xA1
-cent                               162     0xA2
-sterling                           163     0xA3
-currency                           164     0xA4
-yen                                165     0xA5
-brokenbar                          166     0xA6
-section                            167     0xA7
-diaeresis                          168     0xA8
-copyright                          169     0xA9
-ordfeminine                        170     0xAA
-guillemetleft                      171     0xAB
-notsign                            172     0xAC
+\(r! (exclamdown)                     161     0xA1
+\(ct (cent)                           162     0xA2
+\(Po (sterling)                       163     0xA3
+\(Cs (currency)                       164     0xA4
+\(Ye (yen)                            165     0xA5
+\(bb (brokenbar)                      166     0xA6
+\(sc (section)                        167     0xA7
+\(ad (diaeresis)                      168     0xA8
+\(co (copyright)                      169     0xA9
+\(Of (ordfeminine)                    170     0xAA
+\(Fo (guillemetleft)                  171     0xAB
+\(no (notsign)                        172     0xAC
 hyphen                             173     0xAD
-registered                         174     0xAE
-macron                             175     0xAF
-degree                             176     0xB0
-plusminus                          177     0xB1
-twosuperior                        178     0xB2
-threesuperior                      179     0xB3
-acute                              180     0xB4
-mu                                 181     0xB5
-paragraph                          182     0xB6
-periodcentered                     183     0xB7
-cedilla                            184     0xB8
-onesuperior                        185     0xB9
-ordmasculine                       186     0xBA
-guillemetright                     187     0xBB
-onequarter                         188     0xBC
-onehalf                            189     0xBD
-threequarters                      190     0xBE
-questiondown                       191     0xBF
-Agrave                             192     0xC0
-Aacute                             193     0xC1
-Acircumflex                        194     0xC2
-Atilde                             195     0xC3
-Adiaeresis                         196     0xC4
-Aring                              197     0xC5
-AE                                 198     0xC6
-Ccedilla                           199     0xC7
-Egrave                             200     0xC8
-Eacute                             201     0xC9
-Ecircumflex                        202     0xCA
-Ediaeresis                         203     0xCB
-Igrave                             204     0xCC
-Iacute                             205     0xCD
-Icircumflex                        206     0xCE
-Idiaeresis                         207     0xCF
-ETH                                208     0xD0
-Ntilde                             209     0xD1
-Ograve                             210     0xD2
-Oacute                             211     0xD3
-Ocircumflex                        212     0xD4
-Otilde                             213     0xD5
-Odiaeresis                         214     0xD6
-multiply                           215     0xD7
-Oslash                             216     0xD8
-Ugrave                             217     0xD9
-Uacute                             218     0xDA
-Ucircumflex                        219     0xDB
-Udiaeresis                         220     0xDC
-Yacute                             221     0xDD
-THORN                              222     0xDE
-ssharp                             223     0xDF
-agrave                             224     0xE0
-aacute                             225     0xE1
-acircumflex                        226     0xE2
-atilde                             227     0xE3
-adiaeresis                         228     0xE4
-aring                              229     0xE5
-ae                                 230     0xE6
-ccedilla                           231     0xE7
-egrave                             232     0xE8
-eacute                             233     0xE9
-ecircumflex                        234     0xEA
-ediaeresis                         235     0xEB
-igrave                             236     0xEC
-iacute                             237     0xED
-icircumflex                        238     0xEE
-idiaeresis                         239     0xEF
-eth                                240     0xF0
-ntilde                             241     0xF1
-ograve                             242     0xF2
-oacute                             243     0xF3
-ocircumflex                        244     0xF4
-otilde                             245     0xF5
-odiaeresis                         246     0xF6
-division                           247     0xF7
-oslash                             248     0xF8
-ugrave                             249     0xF9
-uacute                             250     0xFA
-ucircumflex                        251     0xFB
-udiaeresis                         252     0xFC
-yacute                             253     0xFD
-thorn                              254     0xFE
-ydiaeresis                         255     0xFF
+\(rg (registered)                     174     0xAE
+\(a- (macron)                         175     0xAF
+\(de (degree)                         176     0xB0
+\(+- (plusminus)                      177     0xB1
+\(S2 (twosuperior)                    178     0xB2
+\(S3 (threesuperior)                  179     0xB3
+\(aa (acute)                          180     0xB4
+\(mc (mu)                             181     0xB5
+\(ps (paragraph)                      182     0xB6
+\(pc (periodcentered)                 183     0xB7
+\(ac (cedilla)                        184     0xB8
+\(S1 (onesuperior)                    185     0xB9
+\(Om (ordmasculine)                   186     0xBA
+\(Fc (guillemetright)                 187     0xBB
+\(14 (onequarter)                     188     0xBC
+\(12 (onehalf)                        189     0xBD
+\(34 (threequarters)                  190     0xBE
+\(r? (questiondown)                   191     0xBF
+\(`A (Agrave)                         192     0xC0
+\('A (Aacute)                         193     0xC1
+\(^A (Acircumflex)                    194     0xC2
+\(~A (Atilde)                         195     0xC3
+\(:A (Adiaeresis)                     196     0xC4
+\(oA (Aring)                          197     0xC5
+\(AE (AE)                             198     0xC6
+\(,C (Ccedilla)                       199     0xC7
+\(`E (Egrave)                         200     0xC8
+\('E (Eacute)                         201     0xC9
+\(^E (Ecircumflex)                    202     0xCA
+\(:E (Ediaeresis)                     203     0xCB
+\(`I (Igrave)                         204     0xCC
+\('I (Iacute)                         205     0xCD
+\(^I (Icircumflex)                    206     0xCE
+\(:I (Idiaeresis)                     207     0xCF
+\(-D (ETH)                            208     0xD0
+\(~N (Ntilde)                         209     0xD1
+\(`O (Ograve)                         210     0xD2
+\('O (Oacute)                         211     0xD3
+\(^O (Ocircumflex)                    212     0xD4
+\(~O (Otilde)                         213     0xD5
+\(:O (Odiaeresis)                     214     0xD6
+\(mu (multiply)                       215     0xD7
+\(/O (Oslash)                         216     0xD8
+\(`U (Ugrave)                         217     0xD9
+\('U (Uacute)                         218     0xDA
+\(^U (Ucircumflex)                    219     0xDB
+\(:U (Udiaeresis)                     220     0xDC
+\('Y (Yacute)                         221     0xDD
+\(TP (THORN)                          222     0xDE
+\(ss (ssharp)                         223     0xDF
+\(`a (agrave)                         224     0xE0
+\('a (aacute)                         225     0xE1
+\(^a (acircumflex)                    226     0xE2
+\(~a (atilde)                         227     0xE3
+\(:a (adiaeresis)                     228     0xE4
+\(oa (aring)                          229     0xE5
+\(ae (ae)                             230     0xE6
+\(,c (ccedilla)                       231     0xE7
+\(`e (egrave)                         232     0xE8
+\('e (eacute)                         233     0xE9
+\(^e (ecircumflex)                    234     0xEA
+\(:e (ediaeresis)                     235     0xEB
+\(`i (igrave)                         236     0xEC
+\('i (iacute)                         237     0xED
+\(^i (icircumflex)                    238     0xEE
+\(:i (idiaeresis)                     239     0xEF
+\(Sd (eth)                            240     0xF0
+\(~n (ntilde)                         241     0xF1
+\(`o (ograve)                         242     0xF2
+\('o (oacute)                         243     0xF3
+\(^o (ocircumflex)                    244     0xF4
+\(~o (otilde)                         245     0xF5
+\(:o (odiaeresis)                     246     0xF6
+\(di (division)                       247     0xF7
+\(/o (oslash)                         248     0xF8
+\(`u (ugrave)                         249     0xF9
+\('u (uacute)                         250     0xFA
+\(^u (ucircumflex)                    251     0xFB
+\(:u (udiaeresis)                     252     0xFC
+\('y (yacute)                         253     0xFD
+\(Tp (thorn)                          254     0xFE
+\(:y (ydiaeresis)                     255     0xFF
 .CE
 .CS
 Aogonek                            417     0x1A1
@@ -573,7 +573,7 @@ Greek_ETA                         1991     0x7C7
 Greek_THETA                       1992     0x7C8
 Greek_IOTA                        1993     0x7C9
 Greek_KAPPA                       1994     0x7CA
-Greek_LAMDA                       1995     0x7CB
+Greek_LAMBDA                      1995     0x7CB
 Greek_MU                          1996     0x7CC
 Greek_NU                          1997     0x7CD
 Greek_XI                          1998     0x7CE
@@ -597,7 +597,7 @@ Greek_eta                         2023     0x7E7
 Greek_theta                       2024     0x7E8
 Greek_iota                        2025     0x7E9
 Greek_kappa                       2026     0x7EA
-Greek_lamda                       2027     0x7EB
+Greek_lambda                      2027     0x7EB
 Greek_mu                          2028     0x7EC
 Greek_nu                          2029     0x7ED
 Greek_xi                          2030     0x7EE
@@ -998,6 +998,7 @@ Korean_Won                        3839     0xEFF
 OE                                5052     0x13BC
 oe                                5053     0x13BD
 Ydiaeresis                        5054     0x13BE
+\(eu (EuroSign)                      8364     0x20AC
 .CE
 .CS
 ISO_Lock                         65025     0xFE01
@@ -1155,7 +1156,7 @@ Escape                           65307     0xFF1B
 Multi_key                        65312     0xFF20
 Kanji                            65313     0xFF21
 Muhenkan                         65314     0xFF22
-Henkan_Mode                      65315     0xFF23
+Henkan                           65315     0xFF23
 Romaji                           65316     0xFF24
 Hiragana                         65317     0xFF25
 Katakana                         65318     0xFF26
@@ -1193,16 +1194,13 @@ Prior                            65365     0xFF55
 Next                             65366     0xFF56
 End                              65367     0xFF57
 Begin                            65368     0xFF58
-Win_L                            65371     0xFF5B
-Win_R                            65372     0xFF5C
-App                              65373     0xFF5D
 Select                           65376     0xFF60
 Print                            65377     0xFF61
 Execute                          65378     0xFF62
 Insert                           65379     0xFF63
 Undo                             65381     0xFF65
 Redo                             65382     0xFF66
-Menu                             65383     0xFF67
+Menu (App)                       65383     0xFF67
 Find                             65384     0xFF68
 Cancel                           65385     0xFF69
 Help                             65386     0xFF6A
@@ -1289,8 +1287,8 @@ Meta_L                           65511     0xFFE7
 Meta_R                           65512     0xFFE8
 Alt_L                            65513     0xFFE9
 Alt_R                            65514     0xFFEA
-Super_L                          65515     0xFFEB
-Super_R                          65516     0xFFEC
+Super_L (Win_L)                  65515     0xFFEB
+Super_R (Win_R)                  65516     0xFFEC
 Hyper_L                          65517     0xFFED
 Hyper_R                          65518     0xFFEE
 braille_dot_1                    65521     0xFFF1

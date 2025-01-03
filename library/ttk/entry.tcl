@@ -1,9 +1,9 @@
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 2004, Joe English
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 2004, Joe English
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -60,21 +60,21 @@ option add *TEntry.cursor [ttk::cursor text] widgetDefault
 
 ## Clipboard events:
 #
-bind TEntry <<Cut>> 			{ ttk::entry::Cut %W }
-bind TEntry <<Copy>> 			{ ttk::entry::Copy %W }
-bind TEntry <<Paste>> 			{ ttk::entry::Paste %W }
-bind TEntry <<Clear>> 			{ ttk::entry::Clear %W }
+bind TEntry <<Cut>>			{ ttk::entry::Cut %W }
+bind TEntry <<Copy>>			{ ttk::entry::Copy %W }
+bind TEntry <<Paste>>			{ ttk::entry::Paste %W }
+bind TEntry <<Clear>>			{ ttk::entry::Clear %W }
 
 ## Button1 bindings:
 #	Used for selection and navigation.
 #
-bind TEntry <Button-1> 			{ ttk::entry::Press %W %x }
+bind TEntry <Button-1>			{ ttk::entry::Press %W %x }
 bind TEntry <Shift-Button-1>		{ ttk::entry::Shift-Press %W %x }
-bind TEntry <Double-Button-1> 		{ ttk::entry::Select %W %x word }
-bind TEntry <Triple-Button-1> 		{ ttk::entry::Select %W %x line }
+bind TEntry <Double-Button-1>		{ ttk::entry::Select %W %x word }
+bind TEntry <Triple-Button-1>		{ ttk::entry::Select %W %x line }
 bind TEntry <B1-Motion>			{ ttk::entry::Drag %W %x }
 
-bind TEntry <B1-Leave> 			{ ttk::entry::DragOut %W %m }
+bind TEntry <B1-Leave>			{ ttk::entry::DragOut %W %m }
 bind TEntry <B1-Enter>			{ ttk::entry::DragIn %W }
 bind TEntry <ButtonRelease-1>		{ ttk::entry::Release %W }
 
@@ -82,67 +82,57 @@ bind TEntry <<ToggleSelection>> {
     %W instate {!readonly !disabled} { %W icursor @%x ; focus %W }
 }
 
-## Button2 (Button3 on Aqua) bindings:
+## Button2 bindings:
 #	Used for scanning and primary transfer.
-#	Note: ButtonRelease-2 (ButtonRelease-3 on Aqua)
+#	Note: ButtonRelease-2
 #	is mapped to <<PasteSelection>> in tk.tcl.
 #
-if {[tk windowingsystem] ne "aqua"} {
-    bind TEntry <Button-2> 		{ ttk::entry::ScanMark %W %x }
-    bind TEntry <B2-Motion> 		{ ttk::entry::ScanDrag %W %x }
-    bind TEntry <ButtonRelease-2>	{ ttk::entry::ScanRelease %W %x }
-} else {
-    bind TEntry <Button-3> 		{ ttk::entry::ScanMark %W %x }
-    bind TEntry <B3-Motion> 		{ ttk::entry::ScanDrag %W %x }
-    bind TEntry <ButtonRelease-3>	{ ttk::entry::ScanRelease %W %x }
-}
+bind TEntry <Button-2>			{ ttk::entry::ScanMark %W %x }
+bind TEntry <B2-Motion>			{ ttk::entry::ScanDrag %W %x }
+bind TEntry <ButtonRelease-2>		{ ttk::entry::ScanRelease %W %x }
 bind TEntry <<PasteSelection>>		{ ttk::entry::ScanRelease %W %x }
 
 ## Keyboard navigation bindings:
 #
 bind TEntry <<PrevChar>>		{ ttk::entry::Move %W prevchar }
-bind TEntry <<NextChar>> 		{ ttk::entry::Move %W nextchar }
+bind TEntry <<NextChar>>		{ ttk::entry::Move %W nextchar }
 bind TEntry <<PrevWord>>		{ ttk::entry::Move %W prevword }
 bind TEntry <<NextWord>>		{ ttk::entry::Move %W nextword }
 bind TEntry <<LineStart>>		{ ttk::entry::Move %W home }
 bind TEntry <<LineEnd>>			{ ttk::entry::Move %W end }
 
-bind TEntry <<SelectPrevChar>> 		{ ttk::entry::Extend %W prevchar }
+bind TEntry <<SelectPrevChar>>		{ ttk::entry::Extend %W prevchar }
 bind TEntry <<SelectNextChar>>		{ ttk::entry::Extend %W nextchar }
 bind TEntry <<SelectPrevWord>>		{ ttk::entry::Extend %W prevword }
-bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W nextword }
+bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W selectnextword }
 bind TEntry <<SelectLineStart>>		{ ttk::entry::Extend %W home }
 bind TEntry <<SelectLineEnd>>		{ ttk::entry::Extend %W end }
 
-bind TEntry <<SelectAll>> 		{ %W selection range 0 end }
-bind TEntry <<SelectNone>> 		{ %W selection clear }
+bind TEntry <<SelectAll>>		{ %W selection range 0 end }
+bind TEntry <<SelectNone>>		{ %W selection clear }
 
-bind TEntry <<TraverseIn>> 	{ %W selection range 0 end; %W icursor end }
+bind TEntry <<TraverseIn>>	{ %W selection range 0 end; %W icursor end }
 
 ## Edit bindings:
 #
-bind TEntry <Key> 			{ ttk::entry::Insert %W %A }
+bind TEntry <Key>			{ ttk::entry::Insert %W %A }
 bind TEntry <Delete>			{ ttk::entry::Delete %W }
-bind TEntry <BackSpace> 		{ ttk::entry::Backspace %W }
+bind TEntry <BackSpace>			{ ttk::entry::Backspace %W }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, the <Key> class binding will fire and insert the character.
 # Ditto for Escape, Return, and Tab.
 #
 bind TEntry <Alt-Key>			{# nothing}
 bind TEntry <Meta-Key>			{# nothing}
-bind TEntry <Control-Key> 		{# nothing}
-bind TEntry <Escape> 			{# nothing}
-bind TEntry <Return> 			{# nothing}
-bind TEntry <KP_Enter> 			{# nothing}
-bind TEntry <Tab> 			{# nothing}
+bind TEntry <Control-Key>		{# nothing}
+bind TEntry <Escape>			{# nothing}
+bind TEntry <Return>			{# nothing}
+bind TEntry <KP_Enter>			{# nothing}
+bind TEntry <Tab>			{# nothing}
+bind TEntry <Command-Key>		{# nothing}
+bind TEntry <Fn-Key>			{# nothing}
 
-# Argh.  Apparently on Windows, the NumLock modifier is interpreted
-# as a Command modifier.
-if {[tk windowingsystem] eq "aqua"} {
-    bind TEntry <Command-Key>		{# nothing}
-    bind TEntry <Mod4-Key>		{# nothing}
-}
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
 bind TEntry <<NextLine>>		{# nothing}
@@ -172,6 +162,19 @@ bind TEntry <<TkAccentBackspace>> {
     ttk::entry::Backspace %W
 }
 
+## EndIMEMarkedText -- Handle the end of input method selection.
+#
+proc ::ttk::entry::EndIMEMarkedText {w} {
+    variable ::tk::Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w selection range $mark insert
+}
+
 ### Clipboard procedures.
 #
 
@@ -180,7 +183,7 @@ bind TEntry <<TkAccentBackspace>> {
 #
 proc ttk::entry::EntrySelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]
@@ -224,7 +227,7 @@ proc ttk::entry::Cut {w} {
 #
 
 ## ClosestGap -- Find closest boundary between characters.
-# 	Returns the index of the character just after the boundary.
+#	Returns the index of the character just after the boundary.
 #
 proc ttk::entry::ClosestGap {w x} {
     set pos [$w index @$x]
@@ -245,24 +248,35 @@ proc ttk::entry::See {w {index insert}} {
     }
 }
 
-## NextWord -- Find the next word position.
-#	Note: The "next word position" follows platform conventions:
-#	either the next end-of-word position, or the start-of-word
-#	position following the next end-of-word position.
+## NextWord --
+# Returns the index of the next start-of-word position after the next
+# end-of-word position after a given position in the text.
 #
-set ::ttk::entry::State(startNext) \
-	[string equal [tk windowingsystem] "win32"]
-
 proc ttk::entry::NextWord {w start} {
     # the check on [winfo class] is because the spinbox and combobox also use this proc
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return end
     }
-    variable State
-    set pos [tcl_endOfWord [$w get] [$w index $start]]
-    if {$pos >= 0 && $State(startNext)} {
-	set pos [tcl_startOfNextWord [$w get] $pos]
+    set pos [tk::endOfWord [$w get] [$w index $start]]
+    if {$pos >= 0} {
+	set pos [tk::startOfNextWord [$w get] $pos]
     }
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+## SelectNextWord --
+# Returns the index of the next end-of-word position after a given
+# position in the text.
+#
+proc ttk::entry::SelectNextWord {w start} {
+    # the check on [winfo class] is because the spinbox and combobox also use this proc
+    if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
+	return end
+    }
+    set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
     }
@@ -276,7 +290,28 @@ proc ttk::entry::PrevWord {w start} {
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return 0
     }
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
+## NextChar -- Find the next char position.
+#
+proc ttk::entry::NextChar {w start} {
+    variable State
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+## PrevChar -- Find the previous char position.
+#
+proc ttk::entry::PrevChar {w start} {
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }
@@ -287,10 +322,11 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ expr {[$w index $index] - 1} }
-    	nextchar	{ expr {[$w index $index] + 1} }
+	prevchar	{ PrevChar $w $index }
+	nextchar	{ NextChar $w $index }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
+	selectnextword	{ SelectNextWord $w $index }
 	home		{ return 0 }
 	end		{ $w index end }
 	default		{ error "Bad relative index $index" }
@@ -329,9 +365,9 @@ proc ttk::entry::ExtendTo {w index} {
 
     # Figure out selection anchor:
     if {![$w selection present]} {
-    	set anchor $insert
+	set anchor $insert
     } else {
-    	set selfirst [$w index sel.first]
+	set selfirst [$w index sel.first]
 	set sellast  [$w index sel.last]
 
 	if {   ($index < $selfirst)
@@ -347,7 +383,7 @@ proc ttk::entry::ExtendTo {w index} {
     if {$anchor < $index} {
 	$w selection range $anchor $index
     } else {
-    	$w selection range $index $anchor
+	$w selection range $index $anchor
     }
 
     $w icursor $index
@@ -407,8 +443,8 @@ proc ttk::entry::Select {w x mode} {
     set cur [ClosestGap $w $x]
 
     switch -- $mode {
-    	word	{ WordSelect $w $cur $cur }
-    	line	{ LineSelect $w $cur $cur }
+	word	{ WordSelect $w $cur $cur }
+	line	{ LineSelect $w $cur $cur }
 	char	{ # no-op }
     }
 
@@ -449,7 +485,7 @@ proc ttk::entry::DragOut {w mode} {
 }
 
 ## <B1-Enter> binding
-# 	Suspend autoscroll.
+#	Suspend autoscroll.
 #
 proc ttk::entry::DragIn {w} {
     ttk::CancelRepeat
@@ -460,7 +496,7 @@ proc ttk::entry::DragIn {w} {
 proc ttk::entry::Release {w} {
     variable State
     set State(selectMode) none
-    ttk::CancelRepeat 	;# suspend autoscroll
+    ttk::CancelRepeat	;# suspend autoscroll
 }
 
 ## AutoScroll
@@ -513,12 +549,12 @@ proc ttk::entry::WordSelect {w from to} {
 
 ## WordBack, WordForward -- helper routines for WordSelect.
 #
-proc ttk::entry::WordBack {text index} {
-    if {[set pos [tcl_wordBreakBefore $text $index]] < 0} { return 0 }
+proc ttk::entry::WordBack {text index {locale {}}} {
+    if {[set pos [tk::wordBreakBefore $text $index $locale]] < 0} { return 0 }
     return $pos
 }
-proc ttk::entry::WordForward {text index} {
-    if {[set pos [tcl_wordBreakAfter $text $index]] < 0} { return end }
+proc ttk::entry::WordForward {text index {locale {}}} {
+    if {[set pos [tk::wordBreakAfter $text $index $locale]] < 0} { return end }
     return $pos
 }
 
@@ -556,7 +592,7 @@ proc ttk::entry::ScanDrag {w x} {
     $w xview $left
 
     if {$left != [set newLeft [$w index @0]]} {
-    	# We've scanned past one end of the entry;
+	# We've scanned past one end of the entry;
 	# reset the mark so that the text will start dragging again
 	# as soon as the mouse reverses direction.
 	#
@@ -613,13 +649,13 @@ proc ttk::entry::Insert {w s} {
 #
 proc ttk::entry::Backspace {w} {
     if {[PendingDelete $w]} {
-    	See $w
+	See $w
 	return
     }
     set x [expr {[$w index insert] - 1}]
     if {$x < 0} { return }
 
-    $w delete $x
+    $w delete [tk::startOfCluster [$w get] $x] [tk::endOfCluster [$w get] $x]
 
     if {[$w index @0] >= [$w index insert]} {
 	set range [$w xview]
@@ -634,7 +670,8 @@ proc ttk::entry::Backspace {w} {
 #
 proc ttk::entry::Delete {w} {
     if {![PendingDelete $w]} {
-	$w delete insert
+	$w delete [tk::startOfCluster [$w get] [$w index insert]] \
+		[tk::endOfCluster [$w get] [$w index insert]]
     }
 }
 

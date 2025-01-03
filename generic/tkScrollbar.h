@@ -4,7 +4,7 @@
  *	Declarations of types and functions used to implement the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -33,12 +33,16 @@ typedef struct TkScrollbar {
     Tcl_Command widgetCmd;	/* Token for scrollbar's widget command. */
     int vertical;		/* Non-zero means vertical orientation
 				 * requested, zero means horizontal. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *widthObj;		/* Desired narrow dimension of scrollbar, in
+				 * pixels. */
+#else
     int width;			/* Desired narrow dimension of scrollbar, in
 				 * pixels. */
-    char *command;		/* Command prefix to use when invoking
+#endif
+    Tcl_Obj *commandObj;		/* Command prefix to use when invoking
 				 * scrolling commands. NULL means don't invoke
-				 * commands. Malloc'ed. */
-    int commandSize;		/* Number of non-NULL bytes in command. */
+				 * commands. */
     int repeatDelay;		/* How long to wait before auto-repeating on
 				 * scrolling actions (in ms). */
     int repeatInterval;		/* Interval between autorepeats (in ms). */
@@ -48,7 +52,11 @@ typedef struct TkScrollbar {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D borders. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D borders. */
+#else
+    int borderWidth;
+#endif
     Tk_3DBorder bgBorder;	/* Used for drawing background (all flat
 				 * surfaces except for trough). */
     Tk_3DBorder activeBorder;	/* For drawing backgrounds when active (i.e.
@@ -56,9 +64,13 @@ typedef struct TkScrollbar {
     XColor *troughColorPtr;	/* Color for drawing trough. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -68,9 +80,13 @@ typedef struct TkScrollbar {
 				 * Indicates how much interior stuff must be
 				 * offset from outside edges to leave room for
 				 * borders. */
-    int elementBorderWidth;	/* Width of border to draw around elements
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *elementBorderWidthObj;	/* Width of border to draw around elements
 				 * inside scrollbar (arrows and slider). -1
 				 * means use borderWidth. */
+#else
+    int elementBorderWidth;
+#endif
     int arrowLength;		/* Length of arrows along long dimension of
 				 * scrollbar, including space for a small gap
 				 * between the arrow and the slider.
@@ -87,42 +103,26 @@ typedef struct TkScrollbar {
 				 * use for active element. */
 
     /*
-     * Information describing the application related to the scrollbar. This
-     * information is provided by the application by invoking the "set" widget
-     * command. This information can now be provided in two ways: the "old"
-     * form (totalUnits, windowUnits, firstUnit, and lastUnit), or the "new"
-     * form (firstFraction and lastFraction). FirstFraction and lastFraction
-     * will always be valid, but the old-style information is only valid if
-     * the NEW_STYLE_COMMANDS flag is 0.
+     * Information describing the application related to the scrollbar, which
+     * is provided by the application by invoking the "set" widget command.
      */
 
-    int totalUnits;		/* Total dimension of application, in units.
-				 * Valid only if the NEW_STYLE_COMMANDS flag
-				 * isn't set. */
-    int windowUnits;		/* Maximum number of units that can be
-				 * displayed in the window at once. Valid only
-				 * if the NEW_STYLE_COMMANDS flag isn't set. */
-    int firstUnit;		/* Number of last unit visible in
-				 * application's window. Valid only if the
-				 * NEW_STYLE_COMMANDS flag isn't set. */
-    int lastUnit;		/* Index of last unit visible in window.
-				 * Valid only if the NEW_STYLE_COMMANDS flag
-				 * isn't set. */
+#if TK_MAJOR_VERSION < 9
+    int dummy1, dummy2, dummy3, dummy4; /* deprecated, for "old" form. */
+#endif
     double firstFraction;	/* Position of first visible thing in window,
-				 * specified as a fraction between 0 and
-				 * 1.0. */
+				 * specified as a fraction between 0 and 1.0. */
     double lastFraction;	/* Position of last visible thing in window,
-				 * specified as a fraction between 0 and
-				 * 1.0. */
+				 * specified as a fraction between 0 and 1.0. */
 
     /*
      * Miscellaneous information:
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
 } TkScrollbar;
@@ -144,16 +144,11 @@ typedef struct TkScrollbar {
  *
  * REDRAW_PENDING:		Non-zero means a DoWhenIdle handler has
  *				already been queued to redraw this window.
- * NEW_STYLE_COMMANDS:		Non-zero means the new style of commands
- *				should be used to communicate with the widget:
- *				".t yview scroll 2 lines", instead of
- *				".t yview 40", for example.
  * GOT_FOCUS:			Non-zero means this window has the input
  *				focus.
  */
 
 #define REDRAW_PENDING		1
-#define NEW_STYLE_COMMANDS	2
 #define GOT_FOCUS		4
 
 /*
@@ -169,13 +164,13 @@ MODULE_SCOPE char tkDefScrollbarWidth[TCL_INTEGER_SPACE];
  * widget.
  */
 
-MODULE_SCOPE void	TkScrollbarEventProc(ClientData clientData,
+MODULE_SCOPE void	TkScrollbarEventProc(void *clientData,
 			    XEvent *eventPtr);
 MODULE_SCOPE void	TkScrollbarEventuallyRedraw(TkScrollbar *scrollPtr);
 MODULE_SCOPE void	TkpComputeScrollbarGeometry(TkScrollbar *scrollPtr);
 MODULE_SCOPE TkScrollbar *TkpCreateScrollbar(Tk_Window tkwin);
-MODULE_SCOPE void 	TkpDestroyScrollbar(TkScrollbar *scrollPtr);
-MODULE_SCOPE void	TkpDisplayScrollbar(ClientData clientData);
+MODULE_SCOPE void	TkpDestroyScrollbar(TkScrollbar *scrollPtr);
+MODULE_SCOPE void	TkpDisplayScrollbar(void *clientData);
 MODULE_SCOPE void	TkpConfigureScrollbar(TkScrollbar *scrollPtr);
 MODULE_SCOPE int	TkpScrollbarPosition(TkScrollbar *scrollPtr,
 			    int x, int y);

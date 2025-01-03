@@ -3,9 +3,9 @@
 # several file with additional tests for other features of text widgets.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -53,7 +53,7 @@ proc setupBig {} {
     # Level 1: 2002 = 54*36 + 58
     # Level 0: 2002 = 332*6 + 10
     for {set i 0} {$i < 2000} {incr i} {
-        append x "Line $i abcd efgh ijkl\n"
+	append x "Line $i abcd efgh ijkl\n"
     }
     .t insert insert $x
     .t debug 1
@@ -261,7 +261,7 @@ test btree-2.22 {deleting into beginning of elided range} -setup {
     .t delete 1.0 end
 } -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .t insert end "Line $n\n"
+	.t insert end "Line $n\n"
     }
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 end
@@ -273,7 +273,7 @@ test btree-2.22 {deleting into beginning of elided range} -setup {
 } -result "Line 4\nine 6\nLine 7\n"
 test btree-2.23 {deleting from within elided range} -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .t insert end "Line $n\n"
+	.t insert end "Line $n\n"
     }
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 8.0
@@ -285,7 +285,7 @@ test btree-2.23 {deleting from within elided range} -body {
 } -result "Line 6\nLine 9\n"
 test btree-2.24 {deleting whole elided range} -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .t insert end "Line $n\n"
+	.t insert end "Line $n\n"
     }
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 8.0
@@ -297,7 +297,7 @@ test btree-2.24 {deleting whole elided range} -body {
 } -result "Line 4\nLine 9\n"
 test btree-2.25 {deleting several elided ranges} -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .t insert end "Line $n\n"
+	.t insert end "Line $n\n"
     }
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 6.2 6.4 6.5 7.2 7.6
@@ -309,7 +309,7 @@ test btree-2.25 {deleting several elided ranges} -body {
 } -result "Line 4\nLine 9\nLine 10\n"
 test btree-2.26 {deleting first char of elided range} -body {
     for {set n 1} {$n <= 10} {incr n} {
-        .t insert end "Line $n\n"
+	.t insert end "Line $n\n"
     }
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 end
@@ -398,7 +398,7 @@ test btree-4.8 {deleting with tags} -body {
 test btree-5.1 {very large inserts, with tags} -setup {
     set bigText1 {}
     for {set i 0} {$i < 10} {incr i} {
-        append bigText1 "Line $i\n"
+	append bigText1 "Line $i\n"
     }
 } -body {
     setup
@@ -408,7 +408,7 @@ test btree-5.1 {very large inserts, with tags} -setup {
 test btree-5.2 {very large inserts, with tags} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -418,17 +418,17 @@ test btree-5.2 {very large inserts, with tags} -setup {
 test btree-5.3 {very large inserts, with tags} -body {
     setup
     for {set i 0} {$i < 200} {incr i} {
-        .t insert 1.8 "longer line $i\n"
+	.t insert 1.8 "longer line $i\n"
     }
     list [.t tag ranges x] [.t tag ranges y] [.t get 1.0 1.100] \
-        [.t get 198.0 198.100]
+	[.t get 198.0 198.100]
 } -result {{1.1 1.2 1.5 201.5 202.2 202.6} {1.5 1.6} {Text forlonger line 199} {longer line 2}}
 
 
 test btree-6.1 {very large deletes, with tags}  -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -439,20 +439,20 @@ test btree-6.1 {very large deletes, with tags}  -setup {
 test btree-6.2 {very large deletes, with tags}  -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
     .t insert 1.1 $bigText2
     for {set i 0} {$i < 200} {incr i} {
-        .t delete 1.2 2.2
+	.t delete 1.2 2.2
     }
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{1.4 1.12 2.2 2.6} {1.4 1.5}}
 test btree-6.3 {very large deletes, with tags}  -setup {
     set bigText2 {}
      for {set i 0} {$i < 200} {incr i} {
-            append bigText2 "Line $i\n"
+	    append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -465,29 +465,29 @@ Lin
 test btree-6.4 {very large deletes, with tags} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
     .t insert 1.1 $bigText2
     for {set i 0} {$i < 100} {incr i} {
-        .t delete 30.0 31.0
+	.t delete 30.0 31.0
     }
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{101.0 101.1 101.4 101.12 102.2 102.6} {101.4 101.5}}
 test btree-6.5 {very large deletes, with tags} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
     .t insert 1.1 $bigText2
     for {set i 0} {$i < 100} {incr i} {
-        set j [expr {$i+2}]
-        set k [expr {1+2*$i}]
-        .t tag add x $j.1 $j.3
-        .t tag add y $k.1 $k.6
+	set j [expr {$i+2}]
+	set k [expr {1+2*$i}]
+	.t tag add x $j.1 $j.3
+	.t tag add y $k.1 $k.6
     }
     .t delete 2.0 200.0
     list [.t tag ranges x] [.t tag ranges y]
@@ -495,19 +495,19 @@ test btree-6.5 {very large deletes, with tags} -setup {
 test btree-6.6 {very large deletes, with tags} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
     .t insert 1.1 $bigText2
     for {set i 0} {$i < 100} {incr i} {
-        set j [expr {$i+2}]
-        set k [expr {1+2*$i}]
-        .t tag add x $j.1 $j.3
-        .t tag add y $k.1 $k.6
+	set j [expr {$i+2}]
+	set k [expr {1+2*$i}]
+	.t tag add x $j.1 $j.3
+	.t tag add y $k.1 $k.6
     }
     for {set i 199} {$i >= 2} {incr i -1} {
-        .t delete $i.0 [expr {$i+1}].0
+	.t delete $i.0 [expr {$i+1}].0
     }
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{3.0 3.1 3.4 3.12 4.2 4.6} {1.1 1.6 3.4 3.5}}
@@ -520,8 +520,8 @@ test btree-7.1 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.3 1.6 1.7 2.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.3 1.6 1.7 2.0}
@@ -532,8 +532,8 @@ test btree-7.2 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.3 1.6 1.6 2.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.3 2.0}
@@ -544,8 +544,8 @@ test btree-7.3 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.3 1.6 1.4 2.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.3 2.0}
@@ -556,8 +556,8 @@ test btree-7.4 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {2.0 4.3 1.4 1.10}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.4 1.10 2.0 4.3}
@@ -568,8 +568,8 @@ test btree-7.5 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {2.0 4.3 1.4 1.end}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.4 1.19 2.0 4.3}
@@ -580,8 +580,8 @@ test btree-7.6 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {2.0 4.3 1.4 2.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.4 4.3}
@@ -592,8 +592,8 @@ test btree-7.7 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {2.0 4.3 1.4 3.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.4 4.3}
@@ -604,8 +604,8 @@ test btree-7.8 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.2 1.3 1.6 1.7 1.end 2.0 2.4 2.7 3.0 4.0 1.1 4.2}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.1 4.2}
@@ -616,8 +616,8 @@ test btree-7.9 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.2 1.3 1.6 1.7 1.end 2.0 2.4 2.7 3.0 4.0 1.3 4.2}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.2 4.2}
@@ -628,8 +628,8 @@ test btree-7.10 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.2 1.3 1.6 1.7 1.end 2.0 2.4 2.7 3.0 4.0 1.1 3.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.1 4.0}
@@ -640,8 +640,8 @@ test btree-7.11 {tag addition and removal} -setup {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     set check {1.2 1.3 1.6 1.7 1.end 2.0 2.4 2.7 3.0 4.0 1.2 3.0}
     while {[llength $check]} {
-        .t tag add x [lindex $check 0] [lindex $check 1]
-        set check [lrange $check 2 end]
+	.t tag add x [lindex $check 0] [lindex $check 1]
+	set check [lrange $check 2 end]
     }
     .t tag ranges x
 } -result {1.2 4.0}
@@ -719,7 +719,7 @@ test btree-9.2 {tag names} -body {
 test btree-9.3 {lots of tag names} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -735,7 +735,7 @@ test btree-9.3 {lots of tag names} -setup {
 test btree-9.4 {lots of tag names} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -893,7 +893,7 @@ test btree-13.7 {tag searching} -setup {
 test btree-13.8 {tag searching} -setup {
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -909,7 +909,7 @@ test btree-14.1 {check tag presence} -setup {
     text .t
     set bigText2 {}
     for {set i 0} {$i < 200} {incr i} {
-        append bigText2 "Line $i\n"
+	append bigText2 "Line $i\n"
     }
 } -body {
     setup
@@ -1026,13 +1026,13 @@ test btree-16.6 {two node splits at once pushes root up} -setup {
     text .t
 } -body {
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
     .t tag add x 8.0 8.end
     .t tag add y 9.0 end
     set x {}
     for {} {$i < 50} {incr i} {
-        append x "Line $i\n"
+	append x "Line $i\n"
     }
     .t insert end $x y
     list [.t tag ranges x] [.t tag ranges y]
@@ -1044,7 +1044,7 @@ test btree-16.7 {Partial tag remove from before first range} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 2.0 2.6
@@ -1057,7 +1057,7 @@ test btree-16.8 {Partial tag remove from before first range} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 2.0 2.6
@@ -1070,7 +1070,7 @@ test btree-16.9 {Partial tag remove from before first range} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 2.0 2.6
@@ -1083,7 +1083,7 @@ test btree-16.10 {Partial tag remove from before first range} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 1.0 2.6
@@ -1096,7 +1096,7 @@ test btree-16.11 {StartSearchBack boundary case} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 1.3 1.4
@@ -1108,7 +1108,7 @@ test btree-16.12 {StartSearchBack boundary case} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 1.3 1.4
@@ -1120,7 +1120,7 @@ test btree-16.13 {StartSearchBack boundary case} -setup {
     destroy .t
     text .t
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i\n"
+	.t insert end "Line $i\n"
     }
 } -body {
     .t tag add x 1.0 1.4

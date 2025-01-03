@@ -12,7 +12,7 @@
 .SH NAME
 scale \- Create and manipulate 'scale' value-controlled slider widgets
 .SH SYNOPSIS
-\fBscale\fR \fIpathName \fR?\fIoptions\fR?
+\fBscale\fI pathName \fR?\fIoptions\fR?
 .SO
 \-activebackground	\-foreground	\-relief
 \-background	\-highlightbackground	\-repeatdelay
@@ -36,7 +36,7 @@ new value of the scale.
 .OP \-digits digits Digits
 An integer specifying how many significant digits should be retained
 when converting the value of the scale to a string.
-If the number is less than or equal to zero, then the scale picks
+If the number is negative or zero, then the scale picks
 the smallest value that guarantees that every possible slider
 position prints as a different string.
 .OP \-from from From
@@ -56,7 +56,7 @@ it is the scale's width.
 A real value specifying the resolution for the scale.
 If this value is greater than zero then the scale's value will always be
 rounded to an even multiple of this value, as will
-the endpoints of the scale.  If the value is less than zero then no
+the endpoints of the scale.  If the value is negative then no
 rounding occurs.  Defaults to 1 (i.e., the value will be integral).
 .OP \-showvalue showValue ShowValue
 Specifies a boolean value indicating whether or not the current
@@ -78,7 +78,9 @@ specified by the \fB\-activebackground\fR option.
 .OP \-tickinterval tickInterval TickInterval
 Must be a real value.
 Determines the spacing between numerical
-tick marks displayed below or to the left of the slider. The values will all be displayed with the same number of decimal places, which will be enough to ensure they are all accurate to within 20% of a tick interval.
+tick marks displayed below or to the left of the slider. The values will all
+be displayed with the same number of decimal places, which will be enough to
+ensure they are all accurate to within 20% of a tick interval.
 If 0, no tick marks will be displayed.
 .OP \-to to To
 Specifies a real value corresponding
@@ -138,18 +140,20 @@ name is \fIpathName\fR.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for scale widgets:
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBscale\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -165,6 +169,7 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBscale\fR
 command.
+.\" METHOD: coords
 .TP
 \fIpathName \fBcoords \fR?\fIvalue\fR?
 .
@@ -172,6 +177,7 @@ Returns a list whose elements are the x and y coordinates of
 the point along the centerline of the trough that corresponds
 to \fIvalue\fR.
 If \fIvalue\fR is omitted then the scale's current value is used.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR ?\fIx y\fR?
 .
@@ -181,6 +187,7 @@ pixel coordinates within the widget;  the command returns
 the scale value corresponding to the given pixel.
 Only one of \fIx\fR or \fIy\fR is used:  for horizontal scales
 \fIy\fR is ignored, and for vertical scales \fIx\fR is ignored.
+.\" METHOD: identify
 .TP
 \fIpathName \fBidentify \fIx y\fR
 .
@@ -193,6 +200,7 @@ and \fBtrough2\fR means that the point is over the portion
 of the slider below or to the right of the slider.
 If the point is not over one of these elements, an empty string
 is returned.
+.\" METHOD: set
 .TP
 \fIpathName \fBset \fIvalue\fR
 .

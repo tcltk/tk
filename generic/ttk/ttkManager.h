@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Joe English.  Freely redistributable.
+ * Copyright © 2005 Joe English.  Freely redistributable.
  *
  * Geometry manager utilities.
  */
@@ -16,57 +16,57 @@ typedef struct TtkManager_ Ttk_Manager;
  *
  * RequestedSize computes the requested size of the container window.
  *
- * PlaceSlaves sets the position and size of all managed content windows
+ * PlaceContent sets the position and size of all managed content windows
  * by calling Ttk_PlaceContent().
  *
- * SlaveRemoved() is called immediately before a content window is removed.
+ * ContentRemoved() is called immediately before a content window is removed.
  * NB: the associated content window may have been destroyed when this
  * routine is called.
  *
- * SlaveRequest() is called when a content window requests a size change.
+ * ContentRequest() is called when a content window requests a size change.
  * It should return 1 if the request should propagate, 0 otherwise.
  */
 typedef struct {			/* Manager hooks */
     Tk_GeomMgr tkGeomMgr;		/* "real" Tk Geometry Manager */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
-    void (*PlaceSlaves)(void *managerData);
-    int  (*SlaveRequest)(void *managerData, int index, int w, int h);
-    void (*SlaveRemoved)(void *managerData, int index);
+    void (*PlaceContent)(void *managerData);
+    int  (*ContentRequest)(void *managerData, Tcl_Size index, int width, int height);
+    void (*ContentRemoved)(void *managerData, Tcl_Size index);
 } Ttk_ManagerSpec;
 
 /*
  * Default implementations for Tk_GeomMgr hooks:
  */
-#define Ttk_LostContentProc Ttk_LostSlaveProc
-MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window window);
-MODULE_SCOPE void Ttk_LostContentProc(ClientData, Tk_Window window);
+#define Ttk_LostSlaveProc Ttk_LostContentProc
+MODULE_SCOPE void Ttk_GeometryRequestProc(void *, Tk_Window window);
+MODULE_SCOPE void Ttk_LostContentProc(void *, Tk_Window window);
 
 /*
  * Public API:
  */
 MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
-	Ttk_ManagerSpec *, void *managerData, Tk_Window window);
+	const Ttk_ManagerSpec *, void *managerData, Tk_Window window);
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
-#define Ttk_InsertContent  Ttk_InsertSlave
+#define  Ttk_InsertSlave Ttk_InsertContent
 MODULE_SCOPE void Ttk_InsertContent(
-    Ttk_Manager *, int position, Tk_Window, void *data);
+    Ttk_Manager *, Tcl_Size position, Tk_Window, void *clientData);
 
-#define Ttk_ForgetContent Ttk_ForgetSlave
-MODULE_SCOPE void Ttk_ForgetContent(Ttk_Manager *, int index);
+#define Ttk_ForgetSlave Ttk_ForgetContent
+MODULE_SCOPE void Ttk_ForgetContent(Ttk_Manager *, Tcl_Size index);
 
-#define Ttk_ReorderContent Ttk_ReorderSlave
-MODULE_SCOPE void Ttk_ReorderContent(Ttk_Manager *, int fromIndex, int toIndex);
+#define Ttk_ReorderSlave Ttk_ReorderContent
+MODULE_SCOPE void Ttk_ReorderContent(Ttk_Manager *, Tcl_Size fromIndex, Tcl_Size toIndex);
     /* Rearrange content window positions */
 
-#define Ttk_PlaceContent Ttk_PlaceSlave
+#define Ttk_PlaceSlave Ttk_PlaceContent
 MODULE_SCOPE void Ttk_PlaceContent(
-    Ttk_Manager *, int index, int x, int y, int width, int height);
+    Ttk_Manager *, Tcl_Size index, int x, int y, int width, int height);
     /* Position and map the content window */
 
-#define Ttk_UnmapContent Ttk_UnmapSlave
-MODULE_SCOPE void Ttk_UnmapContent(Ttk_Manager *, int index);
+#define Ttk_UnmapSlave Ttk_UnmapContent
+MODULE_SCOPE void Ttk_UnmapContent(Ttk_Manager *, Tcl_Size index);
     /* Unmap the content window */
 
 MODULE_SCOPE void Ttk_ManagerSizeChanged(Ttk_Manager *);
@@ -75,26 +75,26 @@ MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);
 
 /* Utilities:
  */
-#define Ttk_ContentIndex Ttk_SlaveIndex
-MODULE_SCOPE int Ttk_ContentIndex(Ttk_Manager *, Tk_Window);
-    /* Returns: index in content array of specified window, -1 if not found */
+#define Ttk_SlaveIndex Ttk_ContentIndex
+MODULE_SCOPE Tcl_Size Ttk_ContentIndex(Ttk_Manager *, Tk_Window);
+    /* Returns: index in content array of specified window, TCL_INDEX_NONE if not found */
 
-#define Ttk_GetContentIndexFromObj Ttk_GetSlaveIndexFromObj
+#define Ttk_GetSlaveIndexFromObj Ttk_GetContentIndexFromObj
 MODULE_SCOPE int Ttk_GetContentIndexFromObj(
-    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, int *indexPtr);
+    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, int lastOK, Tcl_Size *indexPtr);
 
 /* Accessor functions:
  */
-#define Ttk_NumberContent Ttk_NumberSlaves
-MODULE_SCOPE int Ttk_NumberContent(Ttk_Manager *);
+#define Ttk_NumberSlaves Ttk_NumberContent
+MODULE_SCOPE Tcl_Size Ttk_NumberContent(Ttk_Manager *);
     /* Returns: number of managed content windows */
 
-#define Ttk_ContentData Ttk_SlaveData
-MODULE_SCOPE void *Ttk_ContentData(Ttk_Manager *, int index);
+#define Ttk_SlaveData Ttk_ContentData
+MODULE_SCOPE void *Ttk_ContentData(Ttk_Manager *, Tcl_Size index);
     /* Returns: client data associated with content window */
 
-#define Ttk_ContentWindow Ttk_SlaveWindow
-MODULE_SCOPE Tk_Window Ttk_ContentWindow(Ttk_Manager *, int index);
+#define Ttk_SlaveWindow Ttk_ContentWindow
+MODULE_SCOPE Tk_Window Ttk_ContentWindow(Ttk_Manager *, Tcl_Size index);
     /* Returns: content window */
 
 MODULE_SCOPE int Ttk_Maintainable(Tcl_Interp *, Tk_Window content, Tk_Window container);

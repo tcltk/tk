@@ -4,7 +4,7 @@
 # built-in commands.  Sourcing this file into Tcl runs the tests and
 # generates output for errors.  No output means no errors were found.
 #
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -123,8 +123,8 @@ test textImage-1.11 {basic argument checking} -setup {
     destroy .t
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -150,8 +150,8 @@ test textImage-1.13 {names argument checking} -setup {
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -181,8 +181,8 @@ test textImage-1.15 {align argument checking} -setup {
     destroy .t
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -196,8 +196,8 @@ test textImage-1.16 {configure} -setup {
     destroy .t
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -206,43 +206,43 @@ test textImage-1.16 {configure} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {{-align {} {} center center} {-padx {} {} 0 0} {-pady {} {} 0 0} {-image {} {} {} small} {-name {} {} {} {}}}
+} -result {{-align {} {} center center} {-padx {} {} 0 {}} {-pady {} {} 0 {}} {-image {} {} {} small} {-name {} {} {} {}}}
 
 test textImage-1.17 {basic cget options} -setup {
     destroy .t
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
     .t image create end -image small
     foreach i {align padx pady image name} {
-        lappend result $i:[.t image cget small -$i]
+	lappend result $i:[.t image cget small -$i]
     }
     return $result
 } -cleanup {
     destroy .t
     image delete small
-} -result {align:center padx:0 pady:0 image:small name:}
+} -result {align:center padx: pady: image:small name:}
 
 test textImage-1.18 {basic configure options} -setup {
     destroy .t
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
-        image create photo large -width 50 -height 50
-        large put green -to 0 0 50 50
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
     .t image create end -image small
     foreach {option value}  {align top padx 5 pady 7 image large name none} {
-        .t image configure small -$option $value
+	.t image configure small -$option $value
     }
     update
     .t image configure small
@@ -255,8 +255,8 @@ test textImage-1.19 {basic image naming} -setup {
     destroy .t
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -274,8 +274,8 @@ test textImage-2.1 {debug} -setup {
     destroy .t
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -297,8 +297,8 @@ test textImage-3.1 {image change propagation} -setup {
     set result ""
 } -body {
     catch {
-        image create photo vary -width 5 -height 5
-        vary put red -to 0 0 4 4
+	image create photo vary -width 5 -height 5
+	vary put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -306,9 +306,9 @@ test textImage-3.1 {image change propagation} -setup {
     update
     lappend result base:[.t bbox vary]
     foreach i {10 20 40} {
-        vary configure -width $i -height $i
-        update
-        lappend result $i:[.t bbox vary]
+	vary configure -width $i -height $i
+	update
+	lappend result $i:[.t bbox vary]
     }
     return $result
 } -cleanup {
@@ -321,8 +321,8 @@ test textImage-3.2 {delayed image management, see also bug 1591493} -setup {
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -347,10 +347,10 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
-        image create photo large -width 50 -height 50
-        large put green -to 0 0 50 50
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -360,9 +360,9 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
     update
     lappend result default:[.t bbox small]
     foreach i {top bottom center} {
-        .t image configure small -align $i
-        update
-        lappend result [.t image cget small -align]:[.t bbox small]
+	.t image configure small -align $i
+	update
+	lappend result [.t image cget small -align]:[.t bbox small]
     }
     return $result
 } -cleanup {
@@ -375,10 +375,10 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
-        image create photo large -width 50 -height 50
-        large put green -to 0 0 50 50
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
     }
     font create test_font2 -size 5
     text .t -font test_font2 -bd 0 -highlightthickness 0 -padx 0 -pady 0
@@ -390,16 +390,16 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     # Sizes larger than 25 can be too big and lead to a negative 'norm',
     # at least on Windows XP with certain settings.
     foreach size {10 15 20 25} {
-        font configure test_font2 -size $size
-        array set Metrics [font metrics test_font2]
-        update  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
-        update  ; # services the queued "TkWorldChanged" events
-        foreach {x y w h} [.t bbox small] {}
-        set norm [expr {
-                (([image height large] - $Metrics(-linespace))/2
-                + $Metrics(-ascent) - [image height small] - $y)
-        }]
-        lappend result "$size $norm"
+	font configure test_font2 -size $size
+	array set Metrics [font metrics test_font2]
+	update  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
+	update  ; # services the queued "TkWorldChanged" events
+	foreach {x y w h} [.t bbox small] {}
+	set norm [expr {
+		(([image height large] - $Metrics(-linespace))/2
+		+ $Metrics(-ascent) - [image height small] - $y)
+	}]
+	lappend result "$size $norm"
     }
     return $result
 } -cleanup {
@@ -416,10 +416,10 @@ test textImage-4.3 {alignment and padding checking} -constraints {
     set result ""
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
-        image create photo large -width 50 -height 50
-        large put green -to 0 0 50 50
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
     }
     text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
     pack .t
@@ -429,9 +429,9 @@ test textImage-4.3 {alignment and padding checking} -constraints {
     update
     lappend result default:[.t bbox small]
     foreach i {top bottom center baseline} {
-        .t image configure small -align $i
-        update
-        lappend result $i:[.t bbox small]
+	.t image configure small -align $i
+	update
+	lappend result $i:[.t bbox small]
     }
     return $result
 } -cleanup {
@@ -444,10 +444,10 @@ test textImage-5.1 {peer widget images} -setup {
     destroy .t .tt
 } -body {
     catch {
-        image create photo small -width 5 -height 5
-        small put red -to 0 0 4 4
-        image create photo large -width 50 -height 50
-        large put green -to 0 0 50 50
+	image create photo small -width 5 -height 5
+	small put red -to 0 0 4 4
+	image create photo large -width 50 -height 50
+	large put green -to 0 0 50 50
     }
     pack [text .t]
     toplevel .tt
