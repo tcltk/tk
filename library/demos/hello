@@ -6,7 +6,7 @@ exec wish "$0" ${1+"$@"}
 # Simple Tk script to create a button that prints "Hello, world".
 # Click on the button to terminate the program.
 
-package require Tk
+package require tk
 
 # The first line below creates the button, and the second line
 # asks the packer to shrink-wrap the application's main window

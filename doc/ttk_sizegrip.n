@@ -10,7 +10,7 @@
 .SH NAME
 ttk::sizegrip \- Bottom-right corner resize widget
 .SH SYNOPSIS
-\fBttk::sizegrip\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::sizegrip\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -23,9 +23,10 @@ by pressing and dragging the grip.
 .SE
 .SH "WIDGET COMMAND"
 .PP
-Sizegrip widgets support the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-methods.  No other widget methods are used.
+Sizegrip widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .SH "PLATFORM-SPECIFIC NOTES"
 .PP
 On macOS, toplevel windows automatically include a built-in
@@ -36,14 +37,14 @@ the built-in grip will just mask the widget.
 .PP
 Using pack:
 .CS
-pack [ttk::frame $top.statusbar] \-side bottom \-fill x
-pack [\fBttk::sizegrip\fR $top.statusbar.grip] \-side right \-anchor se
+pack [ttk::frame $top.statusbar] -side bottom -fill x
+pack [\fBttk::sizegrip\fR $top.statusbar.grip] -side right -anchor se
 .CE
 .PP
 Using grid:
 .CS
 grid [\fBttk::sizegrip\fR $top.statusbar.grip] \e
-    \-row $lastRow \-column $lastColumn \-sticky se
+    -row $lastRow -column $lastColumn -sticky se
 # ... optional: add vertical scrollbar in $lastColumn,
 # ... optional: add horizontal scrollbar in $lastRow
 .CE

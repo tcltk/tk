@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-.TH Tk_CreatePhotoImageFormat 3 8.5 Tk "Tk Library Procedures"
+.TH Tk_CreatePhotoImageFormat 3 9.0 Tk "Tk Library Procedures"
 .so man.macros
 .BS
 .SH NAME
@@ -18,15 +18,23 @@ Tk_CreatePhotoImageFormat \- define new file format for photo images
 .nf
 \fB#include <tk.h>\fR
 .sp
+.VS 8.7
+\fBTk_CreatePhotoImageFormatVersion3\fR(\fIformatVersion3Ptr\fR)
+.VE 8.7
+.sp
 \fBTk_CreatePhotoImageFormat\fR(\fIformatPtr\fR)
 .SH ARGUMENTS
-.AS "const Tk_PhotoImageFormat" *formatPtr
+.AS "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr
+.VS 8.7
+.AP "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr in
+Structure that defines the new file format including metadata functionality.
+.VE 8.7
 .AP "const Tk_PhotoImageFormat" *formatPtr in
 Structure that defines the new file format.
 .BE
 .SH DESCRIPTION
 .PP
-\fBTk_CreatePhotoImageFormat\fR is invoked to define a new file format
+\fBTk_CreatePhotoImageFormatVersion3\fR is invoked to define a new file format
 for image data for use with photo images.  The code that implements an
 image file format is called an image file format handler, or
 handler for short.  The photo image code
@@ -38,22 +46,29 @@ The user can specify which handler to use with the \fB\-format\fR
 image configuration option or the \fB\-format\fR option to the
 \fBread\fR and \fBwrite\fR photo image subcommands.
 .PP
+The alternate version 2 function \fBTk_CreatePhotoImageFormat\fR has
+identical functionality, but does not allow the handler to get or return
+the metadata dictionary of the image.
+It is described in section \fBVERSION 2 INTERFACE\fR below.
+.PP
 An image file format handler consists of a collection of procedures
-plus a Tk_PhotoImageFormat structure, which contains the name of the
-image file format and pointers to six procedures provided by the
-handler to deal with files and strings in this format.  The
-Tk_PhotoImageFormat structure contains the following fields:
+plus a \fBTk_PhotoImageFormatVersion3\fR structure, which contains the
+name of the image file format and pointers to six procedures provided
+by the handler to deal with files and strings in this format.  The
+Tk_PhotoImageFormatVersion3 structure contains the following fields:
+.VS 8.7
 .CS
-typedef struct Tk_PhotoImageFormat {
+typedef struct {
     const char *\fIname\fR;
-    Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
-    Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
-    Tk_ImageFileReadProc *\fIfileReadProc\fR;
-    Tk_ImageStringReadProc *\fIstringReadProc\fR;
-    Tk_ImageFileWriteProc *\fIfileWriteProc\fR;
-    Tk_ImageStringWriteProc *\fIstringWriteProc\fR;
-} \fBTk_PhotoImageFormat\fR;
+    Tk_ImageFileMatchProcVersion3 *\fIfileMatchProc\fR;
+    Tk_ImageStringMatchProcVersion3 *\fIstringMatchProc\fR;
+    Tk_ImageFileReadProcVersion3 *\fIfileReadProc\fR;
+    Tk_ImageStringReadProcVersion3 *\fIstringReadProc\fR;
+    Tk_ImageFileWriteProcVersion3 *\fIfileWriteProc\fR;
+    Tk_ImageStringWriteProcVersion3 *\fIstringWriteProc\fR;
+} \fBTk_PhotoImageFormatVersion3\fR;
 .CE
+.VE 8.7
 .PP
 The handler need not provide implementations of all six procedures.
 For example, the procedures that handle string data would not be
@@ -67,14 +82,16 @@ procedure, and the \fIstringMatchProc\fR procedure if it provides the
 .SS NAME
 .PP
 \fIformatPtr->name\fR provides a name for the image type.
-Once \fBTk_CreatePhotoImageFormat\fR returns, this name may be used
-in the \fB\-format\fR photo image configuration and subcommand option.
+Once \fBTk_CreatePhotoImageFormatVersion3\fR returns, this name may be
+used in the \fB\-format\fR photo image configuration and subcommand
+option.
 The manual page for the photo image (photo(n)) describes how image
 file formats are chosen based on their names and the value given to
 the \fB\-format\fR option. The first character of \fIformatPtr->name\fR
 must not be an uppercase character from the ASCII character set
 (that is, one of the characters \fBA\fR-\fBZ\fR).  Such names are used
 only for legacy interface support (see below).
+.VS 8.7
 .SS FILEMATCHPROC
 .PP
 \fIformatPtr->fileMatchProc\fR provides the address of a procedure for
@@ -82,39 +99,47 @@ Tk to call when it is searching for an image file format handler
 suitable for reading data in a given file.
 \fIformatPtr->fileMatchProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageFileMatchProc\fR(
+typedef int \fBTk_ImageFileMatchProcVersion3\fR(
+        Tcl_Interp *\fIinterp\fR,
         Tcl_Channel \fIchan\fR,
         const char *\fIfileName\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         int *\fIwidthPtr\fR,
         int *\fIheightPtr\fR,
-        Tcl_Interp *\fIinterp\fR);
+        Tcl_Obj *\fImetadataOut\fR);
 .CE
 The \fIfileName\fR argument is the name of the file containing the
 image data, which is open for reading as \fIchan\fR.  The
 \fIformat\fR argument contains the value given for the
 \fB\-format\fR option, or NULL if the option was not specified.
+\fBmetadataIn\fR and \fBmetadataOut\fR inputs and returns a metadata
+dictionary as described in section \fBMETADATA INTERFACE\fR below.
 If the data in the file appears to be in the format supported by this
 handler, the \fIformatPtr->fileMatchProc\fR procedure should store the
 width and height of the image in *\fIwidthPtr\fR and *\fIheightPtr\fR
 respectively, and return 1.  Otherwise it should return 0.
 .SS STRINGMATCHPROC
 .PP
-\fIformatPtr->stringMatchProc\fR provides the address of a procedure for
-Tk to call when it is searching for an image file format handler for
+\fIformatPtr->stringMatchProc\fR provides the address of a procedure
+for Tk to call when it is searching for an image file format handler
 suitable for reading data from a given string.
 \fIformatPtr->stringMatchProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageStringMatchProc\fR(
+typedef int \fBTk_ImageStringMatchProcVersion3\fR(
+        Tcl_Interp *\fIinterp\fR,
         Tcl_Obj *\fIdata\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         int *\fIwidthPtr\fR,
         int *\fIheightPtr\fR,
-        Tcl_Interp *\fIinterp\fR);
+        Tcl_Obj *\fImetadataOut\fR);
 .CE
 The \fIdata\fR argument points to the object containing the image
 data.  The \fIformat\fR argument contains the value given for
 the \fB\-format\fR option, or NULL if the option was not specified.
+\fBmetadataIn\fR and \fBmetadataOut\fR inputs and returns a metadata
+dictionary as described in section \fBMETADATA INTERFACE\fR below.
 If the data in the string appears to be in the format supported by
 this handler, the \fIformatPtr->stringMatchProc\fR procedure should
 store the width and height of the image in *\fIwidthPtr\fR and
@@ -126,15 +151,17 @@ return 0.
 Tk to call to read data from an image file into a photo image.
 \fIformatPtr->fileReadProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageFileReadProc\fR(
+typedef int \fBTk_ImageFileReadProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Channel \fIchan\fR,
         const char *\fIfileName\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         PhotoHandle \fIimageHandle\fR,
         int \fIdestX\fR, int \fIdestY\fR,
         int \fIwidth\fR, int \fIheight\fR,
-        int \fIsrcX\fR, int \fIsrcY\fR);
+        int \fIsrcX\fR, int \fIsrcY\fR,
+        Tcl_Obj *\fImetadataOut\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to read the image; it should be used for reporting errors.
@@ -148,34 +175,40 @@ dimensions \fIwidth\fR x \fIheight\fR and has its top-left corner at
 coordinates (\fIsrcX\fR,\fIsrcY\fR).  It is to be stored in the photo
 image with its top-left corner at coordinates
 (\fIdestX\fR,\fIdestY\fR) using the \fBTk_PhotoPutBlock\fR procedure.
+\fBmetadataIn\fR and \fBmetadataOut\fR inputs and returns a metadata
+dictionary as described in section \fBMETADATA INTERFACE\fR below.
 The return value is a standard Tcl return value.
 .SS STRINGREADPROC
 .PP
-\fIformatPtr->stringReadProc\fR provides the address of a procedure for
-Tk to call to read data from a string into a photo image.
+\fIformatPtr->stringReadProc\fR provides the address of a procedure
+for Tk to call to read data from a string into a photo image.
 \fIformatPtr->stringReadProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageStringReadProc\fR(
+typedef int \fBTk_ImageStringReadProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Obj *\fIdata\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         PhotoHandle \fIimageHandle\fR,
         int \fIdestX\fR, int \fIdestY\fR,
         int \fIwidth\fR, int \fIheight\fR,
-        int \fIsrcX\fR, int \fIsrcY\fR);
+        int \fIsrcX\fR, int \fIsrcY\fR,
+        Tcl_Obj *\fImetadataOut\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
 invoked to read the image; it should be used for reporting errors.
 The \fIdata\fR argument points to the image data in object form.
 The \fIformat\fR argument contains the
 value given for the \fB\-format\fR option, or NULL if the option was
-not specified.  The image data in the string, or a subimage of it, is to
-be read into the photo image identified by the handle
+not specified.  The image data in the string, or a subimage of it, is
+to be read into the photo image identified by the handle
 \fIimageHandle\fR.  The subimage of the data in the string is of
 dimensions \fIwidth\fR x \fIheight\fR and has its top-left corner at
 coordinates (\fIsrcX\fR,\fIsrcY\fR).  It is to be stored in the photo
 image with its top-left corner at coordinates
 (\fIdestX\fR,\fIdestY\fR) using the \fBTk_PhotoPutBlock\fR procedure.
+\fBmetadataIn\fR and \fBmetadataOut\fR inputs and returns a metadata
+dictionary as described in section \fBMETADATA INTERFACE\fR below.
 The return value is a standard Tcl return value.
 .SS FILEWRITEPROC
 .PP
@@ -183,10 +216,11 @@ The return value is a standard Tcl return value.
 Tk to call to write data from a photo image to a file.
 \fIformatPtr->fileWriteProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageFileWriteProc\fR(
+typedef int \fBTk_ImageFileWriteProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         const char *\fIfileName\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
@@ -201,16 +235,20 @@ not specified.  The format string can contain extra characters
 after the name of the format.  If appropriate, the
 \fIformatPtr->fileWriteProc\fR procedure may interpret these
 characters to specify further details about the image file.
+\fBmetadataIn\fR may contain metadata keys that a driver may include
+into the output data.
 The return value is a standard Tcl return value.
 .SS STRINGWRITEPROC
 .PP
-\fIformatPtr->stringWriteProc\fR provides the address of a procedure for
-Tk to call to translate image data from a photo image into a string.
+\fIformatPtr->stringWriteProc\fR provides the address of a procedure
+for Tk to call to translate image data from a photo image into a
+string.
 \fIformatPtr->stringWriteProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageStringWriteProc\fR(
+typedef int \fBTk_ImageStringWriteProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Obj *\fIformat\fR,
+        Tcl_Obj *\fImetadataIn\fR,
         Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the command was
@@ -225,45 +263,201 @@ not specified.  The format string can contain extra characters
 after the name of the format.  If appropriate, the
 \fIformatPtr->stringWriteProc\fR procedure may interpret these
 characters to specify further details about the image file.
+\fBmetadataIn\fR may contain metadata keys that a driver may include
+into the output data.
 The return value is a standard Tcl return value.
-.SH "LEGACY INTERFACE SUPPORT"
 .PP
-In Tk 8.2 and earlier, the definition of all the function pointer
-types stored in fields of a \fBTk_PhotoImageFormat\fR struct were
-incompatibly different.  Legacy programs and libraries dating from
-those days may still contain code that defines extended Tk photo image
-formats using the old interface.  The Tk header file will still support
-this legacy interface if the code is compiled with the
-macro \fBUSE_OLD_IMAGE\fR defined.  Alternatively, the legacy interfaces
-are used if the first character of \fIformatPtr->name\fR is an
-uppercase ASCII character (\fBA\fR-\fBZ\fR), and explicit casts
-are used to forgive the type mismatch.  For example,
+.SH "METADATA INTERFACE"
+.PP
+Image formats contain a description of the image bitmap and may
+contain additional information like image resolution or comments.
+Image metadata may be read from image files and passed to the script
+level by including dictionary keys into the metadata property of the
+image. Image metadata may be written to image data on file write or
+image data output.
+.PP
+.SS "METADATA KEYS"
+.PP
+The metadata may contain any key.
+A driver will handle only a set of dictionary keys documented in the
+documentation. See the photo image manual page for currently defined
+keys for the system drivers.
+.PP
+The following rules may give guidance to name metadata keys:
+.IP \(bu
+Abbreviations are in upper case.
+.IP \(bu
+Words are in US English in small case (except proper nouns)
+.IP \(bu
+Vertical DPI is expressed as DPI/aspect. The reason is, that some
+image formats may feature aspect and no resolution value.
+.SS "METADATA INPUT"
+.PP
+Each driver function gets a Tcl object pointer \fBmetadataIn\fR as
+parameter. This parameter serves to input a metadata dict to the
+driver function.
+It may be NULL to flag that the metadata dict is empty.
+.PP
+A typical driver code snipped to check for a metadata key is:
 .CS
-static Tk_PhotoImageFormat myFormat = {
-    "MyFormat",
-    (Tk_ImageFileMatchProc *) FileMatch,
-    NULL,
-    (Tk_ImageFileReadProc *) FileRead,
-    NULL,
-    NULL,
-    NULL
-};
+if (NULL != metadataIn) {
+    Tcl_Obj *itemData;
+    Tcl_DictObjGet(interp, metadataIn, Tcl_NewStringObj("Comment",-1),
+            &itemData));
+    // use value reference in itemData
+}
 .CE
-would define a minimal \fBTk_PhotoImageFormat\fR that operates provide
-only file reading capability, where \fBFileMatch\fR and \fBFileRead\fR
-are written according to the legacy interfaces of Tk 8.2 or earlier.
 .PP
-Any stub-enabled extension providing an extended photo image format
-via the legacy interface enabled by the \fBUSE_OLD_IMAGE\fR macro
-that is compiled against Tk 8.5 headers and linked against the
-Tk 8.5 stub library will produce a file that can be loaded only
-into interps with Tk 8.5 or later; that is, the normal stub-compatibility
-rules.  If a developer needs to generate from such code a file
-that is loadable into interps with Tk 8.4 or earlier, they must
-use Tk 8.4 headers and stub libraries to do so.
+The \fB\-metadata\fR command option data of the following commands is passed
+to the driver: \fBimage create\fR, \fBconfigure\fR, \fBput\fR,
+\fBread\fR, \fBdata\fR and \fBwrite\fR.
+If no \fB\-metadata\fR command option available or not given, the metadata
+property of the image is passed to the driver using the following
+commands: \fBcget\fR, \fBconfigure\fR, \fBdata\fR and \fBwrite\fR.
 .PP
-Any new code written today should not make use of the legacy
-interfaces.  Expect their support to go away in Tk 9.
+Note that setting the \fB\-metadata\fR property of an image using
+\fBconfigure\fR without any other option does not invoke any driver
+function.
+.PP
+The metadata dictionary is not suited to pass options to the driver
+related to the bitmap representation, as the image bitmap is not
+recreated on a metadata change. The format string should be used for
+this purpose.
+.PP
+.SS "METADATA OUTPUT"
+.PP
+The image match and read driver functions may set keys in a prepared
+metadata dict to return them.
+Those functions get a Tcl object pointer \fImetadataOut\fR as
+parameter.
+\fImetadataOut\fR may be NULL to indicate, that no metadata return is
+required (\fBput\fR, \fBread\fR subcommands). The variable pointed to
+by \fImetadataOut\fR is initialized to an empty unshared dict object if
+metadata return is attended (\fBimage create\fR command, \fBconfigure\fR
+subcommand). The driver may set dict keys in this object to return
+metadata.
+If a match function succeeds, the metadataOut pointer is passed to the
+corresponding read function.
+.PP
+A sample driver code snippet is:
+.CS
+if (NULL != metadataOut) {
+    Tcl_DictObjPut(NULL, metadataOut, Tcl_NewStringObj("XMP",-1),
+            Tcl_NewStringObj(xmpMetadata));
+}
+.CE
+.PP
+The metadata keys returned by the driver are merged into the present
+metadata property of the image or into the metadata dict given by the
+\fB\-metadata\fR command line option.
+At the script level, the command \fBimage create\fR and the
+\fBconfigure\fR method may return metadata from the driver.
+.PP
+Format string options or metadata keys may influence the creation of
+metadata within the driver.
+For example, the creation of an expensive metadata key may depend on a
+format string option or on a metadata input key.
+.PP
+.VE 8.7
+.SH "VERSION 2 INTERFACE"
+.PP
+Version 2 Interface does not include the possibility for the driver to
+use the metadata dict for input or output.
+.SS SYNOPSIS
+\fB#include <tk.h>\fR
+.sp
+\fBTk_CreatePhotoImageFormat\fR(\fIformatPtr\fR)
+.SS ARGUMENTS
+.AS "const Tk_PhotoImageFormat" *formatPtr
+.AP "const Tk_PhotoImageFormat" *formatPtr in
+Structure that defines the new file format.
+.BE
+.SS DESCRIPTION
+A driver using the version 2 interface invokes \fBTk_CreatePhotoImageFormat\fR
+for driver registration. The Tk_PhotoImageFormat structure
+contains the following fields:
+.CS
+typedef struct {
+    const char *\fIname\fR;
+    Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
+    Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
+    Tk_ImageFileReadProc *\fIfileReadProc\fR;
+    Tk_ImageStringReadProc *\fIstringReadProc\fR;
+    Tk_ImageFileWriteProc *\fIfileWriteProc\fR;
+    Tk_ImageStringWriteProc *\fIstringWriteProc\fR;
+} \fBTk_PhotoImageFormat\fR;
+.CE
+.PP
+.SS FILEMATCHPROC
+.PP
+\fIformatPtr->fileMatchProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageFileMatchProc\fR(
+        Tcl_Channel \fIchan\fR,
+        const char *\fIfileName\fR,
+        Tcl_Obj *\fIformat\fR,
+        int *\fIwidthPtr\fR,
+        int *\fIheightPtr\fR,
+        Tcl_Interp *\fIinterp\fR);
+.CE
+.PP
+.SS STRINGMATCHPROC
+.PP
+\fIformatPtr->stringMatchProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageStringMatchProc\fR(
+        Tcl_Obj *\fIdata\fR,
+        Tcl_Obj *\fIformat\fR,
+        int *\fIwidthPtr\fR,
+        int *\fIheightPtr\fR,
+        Tcl_Interp *\fIinterp\fR);
+.CE
+.SS FILEREADPROC
+.PP
+\fIformatPtr->fileReadProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageFileReadProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tcl_Channel \fIchan\fR,
+        const char *\fIfileName\fR,
+        Tcl_Obj *\fIformat\fR,
+        PhotoHandle \fIimageHandle\fR,
+        int \fIdestX\fR, int \fIdestY\fR,
+        int \fIwidth\fR, int \fIheight\fR,
+        int \fIsrcX\fR, int \fIsrcY\fR);
+.CE
+.SS STRINGREADPROC
+.PP
+\fIformatPtr->stringReadProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageStringReadProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tcl_Obj *\fIdata\fR,
+        Tcl_Obj *\fIformat\fR,
+        PhotoHandle \fIimageHandle\fR,
+        int \fIdestX\fR, int \fIdestY\fR,
+        int \fIwidth\fR, int \fIheight\fR,
+        int \fIsrcX\fR, int \fIsrcY\fR);
+.CE
+.SS FILEWRITEPROC
+.PP
+\fIformatPtr->fileWriteProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageFileWriteProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        const char *\fIfileName\fR,
+        Tcl_Obj *\fIformat\fR,
+        Tk_PhotoImageBlock *\fIblockPtr\fR);
+.CE
+.SS STRINGWRITEPROC
+.PP
+\fIformatPtr->stringWriteProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImageStringWriteProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tcl_Obj *\fIformat\fR,
+        Tk_PhotoImageBlock *\fIblockPtr\fR);
+.CE
 .SH "SEE ALSO"
 Tk_FindPhoto, Tk_PhotoPutBlock
 .SH KEYWORDS

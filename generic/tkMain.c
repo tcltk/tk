@@ -7,8 +7,8 @@
  *	can be used as a template for creating new main programs for Tk
  *	applications.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -17,7 +17,7 @@
 #include "tkInt.h"
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
-MODULE_SCOPE void TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+MODULE_SCOPE void TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 #endif
 
 /*
@@ -40,7 +40,7 @@ extern "C" {
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
-typedef struct {
+typedef struct TclIntPlatStubs {
     int magic;
     void *hooks;
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
@@ -104,7 +104,7 @@ static int WinIsTty(int fd) {
      */
 
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9 && tclIntPlatStubsPtr->tclpIsAtty) {
+	if (tclStubsPtr->tcl_CreateFileHandler && tclIntPlatStubsPtr->tclpIsAtty) {
 	    /* We are running on Cygwin */
 	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
@@ -163,9 +163,9 @@ static void		StdinProc(void *clientData, int mask);
  *----------------------------------------------------------------------
  */
 
-TCL_NORETURN1 void
+void
 Tk_MainEx(
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization
@@ -189,7 +189,7 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	    abort();
 	} else {
@@ -199,17 +199,17 @@ Tk_MainEx(
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
 
-    if (tclStubsPtr->reserved9) {
+    if (tclStubsPtr->tcl_CreateFileHandler) {
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtk8.?.dll, not this one. */
+	 * Tk_MainEx function of libtcl9tk9.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
 	    TkCygwinMainEx(argc, argv, appInitProc, interp);
 	    /* Only returns when Tk_MainEx() was not found */
 	} else {
-	    int j;
+	    Tcl_Size j;
 
 	    for (j = 1; j < argc; ++j) {
 		if (!strcmp(argv[j], "-display")) {
@@ -229,7 +229,7 @@ Tk_MainEx(
 #if defined(_WIN32)
 #if !defined(STATIC_BUILD)
     /* If compiled for Win32 but running on Cygwin, don't use console */
-    if (!tclStubsPtr->reserved9)
+    if (!tclStubsPtr->tcl_CreateFileHandler)
 #endif
     Tk_InitConsoleChannels(interp);
 #endif
@@ -247,7 +247,6 @@ Tk_MainEx(
      */
 
     if (NULL == Tcl_GetStartupScript(NULL)) {
-	size_t length;
 
 	/*
 	 * Check whether first 3 args (argv[1] - argv[3]) look like
@@ -255,14 +254,15 @@ Tk_MainEx(
 	 * or like
 	 *  FILENAME
 	 * or like
-	 *  -file FILENAME		(ancient history support only)
+	 *  -file FILENAME (ancient history support only, removed with Tcl 9.0)
 	 */
 
 	/* mind argc is being adjusted as we proceed */
 	if ((argc >= 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& ('-' != argv[3][0])) {
 	    Tcl_Obj *value = NewNativeObj(argv[2]);
-	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
+	    Tcl_SetStartupScript(NewNativeObj(argv[3]),
+		    Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    i += 3;
@@ -270,12 +270,6 @@ Tk_MainEx(
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
 	    i++;
-	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
-		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
-		&& ('-' != argv[2][0])) {
-	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
-	    argc -= 2;
-	    i += 2;
 	}
     }
 
@@ -287,7 +281,7 @@ Tk_MainEx(
     }
     Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj((Tcl_WideInt)argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -314,7 +308,7 @@ Tk_MainEx(
     }
 #endif
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewBooleanObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewWideIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -410,15 +404,14 @@ Tk_MainEx(
 static void
 StdinProc(
     void *clientData,	/* The state of interactive cmd line */
-    int mask)			/* Not used. */
+    TCL_UNUSED(int) /*mask*/)
 {
     char *cmd;
     int code;
-    int length;
+    Tcl_Size length;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
-    (void)mask;
 
     length = Tcl_Gets(chan, &isPtr->line);
 
@@ -436,8 +429,8 @@ StdinProc(
 	return;
     }
 
-    Tcl_DStringAppend(&isPtr->command, Tcl_DStringValue(&isPtr->line), -1);
-    cmd = Tcl_DStringAppend(&isPtr->command, "\n", -1);
+    Tcl_DStringAppend(&isPtr->command, Tcl_DStringValue(&isPtr->line), TCL_INDEX_NONE);
+    cmd = Tcl_DStringAppend(&isPtr->command, "\n", TCL_INDEX_NONE);
     Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
 	isPtr->gotPartial = 1;

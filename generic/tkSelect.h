@@ -4,7 +4,7 @@
  *	Declarations of types shared among the files that implement selection
  *	support.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,14 +25,18 @@
 typedef struct TkSelectionInfo {
     Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Tk_Window owner;		/* Current owner of this selection. */
-    int serial;			/* Serial number of last XSelectionSetOwner
+#if TCL_MAJOR_VERSION > 8
+    unsigned long serial;	/* Serial number of last XSelectionSetOwner
 				 * request made to server for this selection
 				 * (used to filter out redundant
 				 * SelectionClear events). */
+#else
+    int serial;
+#endif
     Time time;			/* Timestamp used to acquire selection. */
     Tk_LostSelProc *clearProc;	/* Procedure to call when owner loses
 				 * selection. */
-    ClientData clearData;	/* Info to pass to clearProc. */
+    void *clearData;	/* Info to pass to clearProc. */
     struct TkSelectionInfo *nextPtr;
 				/* Next in list of current selections on this
 				 * display. NULL means end of list. */
@@ -52,8 +56,8 @@ typedef struct TkSelHandler {
 				 * returned, such as STRING or ATOM. */
     Tk_SelectionProc *proc;	/* Procedure to generate selection in this
 				 * format. */
-    ClientData clientData;	/* Argument to pass to proc. */
-    int size;			/* Size of units returned by proc (8 for
+    void *clientData;	/* Argument to pass to proc. */
+    Tcl_Size size;			/* Size of units returned by proc (8 for
 				 * STRING, 32 for almost anything else). */
     struct TkSelHandler *nextPtr;
 				/* Next selection handler associated with same
@@ -77,7 +81,7 @@ typedef struct TkSelRetrievalInfo {
     Atom target;		/* Desired form for selection. */
     Tk_GetSelProc *proc;	/* Procedure to call to handle pieces of
 				 * selection. */
-    ClientData clientData;	/* Argument for proc. */
+    void *clientData;	/* Argument for proc. */
     int result;			/* Initially -1. Set to a Tcl return value
 				 * once the selection has been retrieved. */
     Tcl_TimerToken timeout;	/* Token for current timeout procedure. */
@@ -103,7 +107,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    long length;		/* Length of string in buffer. */
+    Tcl_Size length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */
@@ -156,8 +160,8 @@ typedef struct TkSelInProgress {
 MODULE_SCOPE TkSelInProgress *TkSelGetInProgress(void);
 MODULE_SCOPE void	TkSelSetInProgress(TkSelInProgress *pendingPtr);
 MODULE_SCOPE void	TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
-MODULE_SCOPE int	TkSelDefaultSelection(TkSelectionInfo *infoPtr,
-			    Atom target, char *buffer, int maxBytes,
+MODULE_SCOPE Tcl_Size TkSelDefaultSelection(TkSelectionInfo *infoPtr,
+			    Atom target, char *buffer, Tcl_Size maxBytes,
 			    Atom *typePtr);
 #ifndef TkSelUpdateClipboard
 MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,

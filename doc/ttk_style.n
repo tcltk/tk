@@ -10,7 +10,7 @@
 .SH NAME
 ttk::style \- Manipulate style database
 .SH SYNOPSIS
-\fBttk::style\fR \fIoption\fR ?\fIargs\fR?
+\fBttk::style\fI option\fR ?\fIargs\fR?
 .BE
 .SH NOTES
 .PP
@@ -27,17 +27,29 @@ this may be overridden by the \fB\-style\fR option.
 .PP
 A \fItheme\fR is a collection of elements and styles
 which controls the overall look and feel of an application.
+The
+.QW .
+style is the theme root style on which derived styles are based.
 .SH DESCRIPTION
 .PP
 The \fBttk::style\fR command takes the following arguments:
+.\" METHOD: configure
 .TP
 \fBttk::style configure \fIstyle\fR ?\fI\-option\fR ?\fIvalue option value...\fR? ?
+.
 Sets the default value of the specified option(s) in \fIstyle\fR.
+If \fIstyle\fR does not exist, it is created.
+If only \fIstyle\fR and \fI\-option\fR are specified, get the default value
+for option \fI\-option\fR of style \fIstyle\fR.
+If only \fIstyle\fR is specified, get the default value for all options
+of style \fIstyle\fR.
+.\" METHOD: element
 .TP
-\fBttk::style element\fR \fIargs\fR
+\fBttk::style element\fI args\fR
 .RS
 .TP
-\fBttk::style element create\fR \fIelementName\fR \fItype\fR ?\fIargs...\fR?
+\fBttk::style element create\fI elementName type\fR ?\fIargs...\fR?
+.
 Creates a new element in the current theme of type \fItype\fR.
 The only cross-platform built-in element type is \fIimage\fR
 (see \fBttk_image\fR(n)) but themes may define other element types
@@ -46,19 +58,25 @@ an element factory is registered to create Windows theme elements
 (see \fBttk_vsapi\fR(n)).
 .TP
 \fBttk::style element names\fR
+.
 Returns the list of elements defined in the current theme.
 .TP
 \fBttk::style element options \fIelement\fR
+.
 Returns the list of \fIelement\fR's options.
 .RE
+.\" METHOD: layout
 .TP
 \fBttk::style layout \fIstyle\fR ?\fIlayoutSpec\fR?
+.
 Define the widget layout for style \fIstyle\fR.
 See \fBLAYOUTS\fR below for the format of \fIlayoutSpec\fR.
 If \fIlayoutSpec\fR is omitted, return the layout specification
 for style \fIstyle\fR.
+.\" METHOD: lookup
 .TP
-\fBttk::style lookup \fIstyle\fR \fI\-option \fR?\fIstate \fR?\fIdefault\fR??
+\fBttk::style lookup \fIstyle \-option \fR?\fIstate \fR?\fIdefault\fR??
+.
 Returns the value specified for \fI\-option\fR in style \fIstyle\fR
 in state \fIstate\fR, using the standard lookup rules for element options.
 \fIstate\fR is a list of state names; if omitted,
@@ -68,17 +86,27 @@ state).
 If the \fIdefault\fR argument is present, it is used as a fallback
 value in case no specification for \fI\-option\fR is found.
 .\" Otherwise -- signal error? return empty string? Leave unspecified for now.
+If \fIstyle\fR does not exist, it is created.
+.\" METHOD: map
 .TP
 \fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value...\fB }\fR?
-Sets dynamic values of the specified option(s) in \fIstyle\fR.
+.
+Sets dynamic (state dependent) values of the specified option(s) in \fIstyle\fR.
 Each \fIstatespec / value\fR pair is examined in order;
 the value corresponding to the first matching \fIstatespec\fR
 is used.
+If \fIstyle\fR does not exist, it is created.
+If only \fIstyle\fR and \fI\-option\fR are specified, get the dynamic values
+for option \fI\-option\fR of style \fIstyle\fR.
+If only \fIstyle\fR is specified, get the dynamic values for all options
+of style \fIstyle\fR.
+.\" METHOD: theme
 .TP
-\fBttk::style theme\fR \fIargs\fR
+\fBttk::style theme\fI args\fR
 .RS
 .TP
-\fBttk::style theme create\fR \fIthemeName\fR ?\fB\-parent \fIbasedon\fR? ?\fB\-settings \fIscript...\fR ?
+\fBttk::style theme create\fI themeName\fR ?\fB\-parent \fIbasedon\fR? ?\fB\-settings \fIscript...\fR ?
+.
 Creates a new theme.  It is an error if \fIthemeName\fR already exists.
 If \fB\-parent\fR is specified, the new theme will inherit
 styles, elements, and layouts from the parent theme \fIbasedon\fR.
@@ -86,15 +114,23 @@ If \fB\-settings\fR is present, \fIscript\fR is evaluated in the
 context of the new theme as per \fBttk::style theme settings\fR.
 .TP
 \fBttk::style theme names\fR
+.
 Returns a list of all known themes.
 .TP
-\fBttk::style theme settings \fIthemeName\fR \fIscript\fR
+\fBttk::style theme settings \fIthemeName script\fR
+.
 Temporarily sets the current theme to \fIthemeName\fR,
 evaluate \fIscript\fR, then restore the previous theme.
 Typically \fIscript\fR simply defines styles and elements,
 though arbitrary Tcl code may appear.
 .TP
+\fBttk::style theme styles\fR ?\fIthemeName\fR?
+.
+Returns a list of all styles in \fIthemeName\fR. If \fIthemeName\fR
+is omitted, the current theme is used.
+.TP
 \fBttk::style theme use\fR ?\fIthemeName\fR?
+.
 Without an argument the result is the name of the current theme.
 Otherwise this command sets the current theme to \fIthemeName\fR,
 and refreshes all widgets.
@@ -111,18 +147,25 @@ the allocated parcel.
 Valid options are:
 .\" -border should remain undocumented for now (dubious usefulness)
 .\" .TP
-.\" \fB\-border\fR \fIboolean\fR
+.\" \fB\-border\fI boolean\fR
+.\" .
 .\" Specifies whether the element is drawn after its children. Defaults to 0.
+.\" OPTION: -children
 .TP
 \fB\-children { \fIsublayout...\fB }\fR
+.
 Specifies a list of elements to place inside the element.
+.\" OPTION: -expand
 .TP
-\fB\-expand\fR \fIboolean\fR
+\fB\-expand\fI boolean\fR
+.
 Specifies whether the allocated parcel is the entire cavity. If so,
 simultaneous specification of \fB\-side\fR is ignored.
 Defaults to 0.
+.\" OPTION: -side
 .TP
 \fB\-side \fIside\fR
+.
 Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 For instance, \fB\-side top\fR allocates the parcel along the top of
@@ -130,27 +173,57 @@ the cavity having width and height respectively the width of the cavity
 and the height of the element.
 If omitted, the allocated parcel is the entire cavity (same effect
 as \fB\-expand\fR 1).
+.\" OPTION: -sticky
 .TP
 \fB\-sticky\fR \fB[\fInswe\fB]\fR
+.
 Specifies the actual parcel position and size inside the allocated parcel.
 If specified as an empty string then the actual parcel is centered in
 the allocated parcel. Default is \fBnswe\fR.
 .\" -unit should remain undocumented for now (dubious usefulness)
 .\" .TP
-.\" \fB\-unit\fR \fIboolean\fR
+.\" \fB\-unit\fI boolean\fR
+.\" .
 .\" Specifies whether the element propagates its state to its children.
 .\" Defaults to 0.
 .PP
 For example:
 .CS
 ttk::style layout Horizontal.TScrollbar {
-    Scrollbar.trough \-children {
-        Scrollbar.leftarrow \-side left
-        Scrollbar.rightarrow \-side right
-        Horizontal.Scrollbar.thumb \-side left \-sticky ew
+    Scrollbar.trough -children {
+        Scrollbar.leftarrow -side left
+        Scrollbar.rightarrow -side right
+        Horizontal.Scrollbar.thumb -side left -sticky ew
     }
 }
 .CE
+.SH ROOT STYLE
+.PP
+The
+.QW .
+theme root style can be configured like any other style, providing defaults
+for its derived styles. In addition to the usual options,
+.QW .
+styling options configurable with \fBttk::style\fP are:
+.PP
+\fB\-insertofftime\fP \fIamount\fP
+.RS
+Specifies a non-negative integer value indicating the number of milliseconds
+the insertion cursor should remain
+.QW off
+in each blink cycle. If this option is zero then the cursor does not blink:
+it is on all the time. Defaults to 300 ms, unless overriden with a
+\fBRESOURCE_MANAGER\fR property or \fB.Xdefaults\fR file.
+.RE
+.PP
+\fB\-insertontime\fP \fIamount\fP
+.RS
+Specifies a non-negative integer value indicating the number of milliseconds
+the insertion cursor should remain
+.QW on
+in each blink cycle. Defaults to 600 ms, unless overriden with a
+\fBRESOURCE_MANAGER\fR property or \fB.Xdefaults\fR file.
+.RE
 .SH "SEE ALSO"
 ttk::intro(n), ttk::widget(n), photo(n), ttk_image(n)
 .SH KEYWORDS

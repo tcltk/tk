@@ -1,5 +1,5 @@
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -9,7 +9,7 @@ loadTestedCommands
 
 proc assert {expr {message ""}} {
     if {![uplevel 1 [list expr $expr]]} {
-        error "PANIC: $message ($expr failed)"
+	error "PANIC: $message ($expr failed)"
     }
 }
 
@@ -114,6 +114,12 @@ test treetags-1.10 "tag names - tag configured" -body {
     lsort [$tv tag names]
 } -result [list tag1 tag2 tag3 tag4 tag5]
 
+test treetags-1.11 "tag delete" -body {
+    $tv tag delete tag5
+    $tv tag delete tag4
+    lsort [$tv tag names]
+} -result [list tag1 tag2 tag3]
+
 test treetags-1.end "cleanup" -body {
     $tv item item1 -tags tag1
     $tv item item2 -tags tag2
@@ -123,28 +129,28 @@ test treetags-1.end "cleanup" -body {
 } -result [list [list item1] [list item2] [list]]
 
 test treetags-2.0 "tag bind" -body {
-    $tv tag bind tag1 <KeyPress> {set ::KEY %A}
-    $tv tag bind tag1 <KeyPress>
+    $tv tag bind tag1 <Key> {set ::KEY %A}
+    $tv tag bind tag1 <Key>
 } -cleanup {
     treeConstraints $tv
 } -result {set ::KEY %A}
 
 test treetags-2.1 "Events delivered to tags" -body {
-    focus -force $tv ; update	;# needed so [event generate] delivers KeyPress
+    focus -force $tv ; update	;# needed so [event generate] delivers Key
     $tv focus item1
-    event generate $tv <KeyPress-a>
+    event generate $tv <a>
     set ::KEY
 } -cleanup {
     treeConstraints $tv
 } -result a
 
 test treetags-2.2 "Events delivered to correct tags" -body {
-    $tv tag bind tag2 <KeyPress> [list set ::KEY2 %A]
+    $tv tag bind tag2 <Key> [list set ::KEY2 %A]
 
     $tv focus item1
-    event generate $tv <KeyPress-b>
+    event generate $tv <b>
     $tv focus item2
-    event generate $tv <KeyPress-c>
+    event generate $tv <c>
 
     list $::KEY $::KEY2
 } -cleanup {
@@ -185,8 +191,60 @@ test treetags-3.2 "tag configure - enumerate" -body {
 } -cleanup {
     treeConstraints $tv
 } -result [list \
-    -text {} -image {} -anchor {} -background red -foreground blue -font {} \
-]
+	-image {} -imageanchor {} -background red -stripedbackground {} -foreground blue \
+	-font {} -padding {} ]
+test treetags-4.1 "tag cell add" -body {
+    $tv tag cell add _thetag
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell add tagName cells"}
+
+test treetags-4.2 "tag cell remove" -body {
+    $tv tag cell remove _thetag
+    $tv tag cell remove
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell remove tagName ?cells?"}
+
+test treetags-4.3 "tag cell has" -body {
+    $tv tag cell has _thetag
+    $tv tag cell has
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell has tagName ?cell?"}
+
+test treetags-4.3.1 "tag cell has" -body {
+    $tv tag cell add tag1 "item1 #2"
+    set res [$tv tag cell has tag1 "item1 #2"]
+    lappend res [$tv tag cell has tag1 "item1 #1"]
+    lappend res [$tv tag cell has tag1 "item1 #3"]
+    lappend res {*}[$tv tag cell has tag1]
+    $tv tag cell remove tag1 "item1 B"
+    lappend res {*}[$tv tag cell has tag1]
+    lappend res [$tv tag cell has tag1 "item1 #2"]
+} -result {1 0 0 {item1 B} 0}
+
+test treetags-4.4 "tag cell add" -body {
+    $tv tag cell add tag1 "item1 A"
+    $tv tag cell add tag1 "item1 #3"
+    $tv tag cell has tag1
+} -result {{item1 A} {item1 C}}
+
+test treetags-4.5 "tag cell add" -body {
+    $tv tag cell add tag2 "item1 A"
+    $tv tag cell add tag2 "item1 #2"
+    $tv tag cell has tag2
+} -result {{item1 A} {item1 B}}
+
+test treetags-4.6 "tag cell remove" -body {
+    $tv tag cell remove tag1 "item1 A"
+    $tv tag cell has tag1
+} -result {{item1 C}}
+
+test treetags-4.7 "tag cell remove" -body {
+    $tv tag cell remove tag2
+    $tv tag cell has tag2
+} -result {}
+
+test treetags-4.8 "tag delete with tagged cells" -body {
+    $tv tag cell add tag6 "item1 A"
+    $tv tag delete tag6
+    $tv tag cell has tag6
+} -result {}
 
 # The next test exercises tag resource management.
 # If options are not properly freed, the message:

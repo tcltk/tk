@@ -53,9 +53,9 @@ foreach v [winfo visualsavailable .] {
     # The hack below is necessary for some systems, which have more than one
     # visual of the same type...
     if {![winfo exists .t.$v]} {
-        radiobutton .t.$v -text $v -variable visual -value $v \
+	radiobutton .t.$v -text $v -variable visual -value $v \
 		-command BuildTestImage
-        pack .t.$v -in .t.top.l -anchor w
+	pack .t.$v -in .t.top.l -anchor w
     }
 }
 

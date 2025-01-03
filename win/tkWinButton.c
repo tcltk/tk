@@ -4,7 +4,7 @@
  *	This file implements the Windows specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996-1998 Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -36,41 +36,72 @@ typedef struct WinButton {
 } WinButton;
 
 /*
- * The following macro reverses the order of RGB bytes to convert between
- * RGBQUAD and COLORREF values.
- */
-
-#define FlipColor(rgb) (RGB(GetBValue(rgb),GetGValue(rgb),GetRValue(rgb)))
-
-/*
- * The following enumeration defines the meaning of the palette entries in the
- * "buttons" image used to draw checkbox and radiobutton indicators.
- */
-
-enum {
-    PAL_CHECK = 0,
-    PAL_TOP_OUTER = 1,
-    PAL_BOTTOM_OUTER = 2,
-    PAL_BOTTOM_INNER = 3,
-    PAL_INTERIOR = 4,
-    PAL_TOP_INNER = 5,
-    PAL_BACKGROUND = 6
-};
-
-/*
- * Cached information about the boxes bitmap, and the default border width for
- * a button in string form for use in Tk_OptionSpec for the various button
- * widget classes.
+ * Cached information about the checkbutton and radiobutton indicator boxes
  */
 
 typedef struct {
-    BITMAPINFOHEADER *boxesPtr;	/* Information about the bitmap. */
-    DWORD *boxesPalette;	/* Pointer to color palette. */
-    LPSTR boxesBits;		/* Pointer to bitmap data. */
-    DWORD boxHeight;		/* Height of each sub-image. */
-    DWORD boxWidth;		/* Width of each sub-image. */
+    BOOLEAN initialized;
+    int boxSize;		/* Width & height of the box. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+/*
+ * Data of the SVG images used for drawing the indicators
+ */
+
+static const char checkbtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+    </svg>";
+
+static const char checkbtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
+    </svg>";
+
+static const char radiobtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <defs>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#a0a0a0' offset='0'/>\n\
+       <stop stop-color='#eeeeee' offset='1'/>\n\
+      </linearGradient>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#696969' offset='0'/>\n\
+       <stop stop-color='#e3e3e3' offset='1'/>\n\
+      </linearGradient>\n\
+     </defs>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+    </svg>";
+
+static const char radiobtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <defs>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#a0a0a0' offset='0'/>\n\
+       <stop stop-color='#eeeeee' offset='1'/>\n\
+      </linearGradient>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#696969' offset='0'/>\n\
+       <stop stop-color='#e3e3e3' offset='1'/>\n\
+      </linearGradient>\n\
+     </defs>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+     <circle cx='8' cy='8' r='3' fill='#000000'/>\n\
+    </svg>";
 
 /*
  * Declarations for functions defined in this file.
@@ -79,8 +110,14 @@ static Tcl_ThreadDataKey dataKey;
 static LRESULT CALLBACK	ButtonProc(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static Window		CreateProc(Tk_Window tkwin, Window parent,
-			    ClientData instanceData);
-static void		InitBoxes(void);
+			    void *instanceData);
+static void		InitBoxes(Tk_Window tkwin);
+static void		ColorToStr(COLORREF color, char *colorStr);
+static void		ImageChanged(void *clientData,
+			    int x, int y, int width, int height,
+			    int imageWidth, int imageHeight);
+static void		TkpDrawIndicator(TkButton *butPtr, Drawable d,
+			    Tk_3DBorder border, GC gc, int dim, int x, int y);
 
 /*
  * The class procedure table for the button widgets.
@@ -90,7 +127,7 @@ const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL					/* modalProc */
+    NULL			/* modalProc */
 };
 
 
@@ -99,68 +136,27 @@ const Tk_ClassProcs tkpButtonProcs = {
  *
  * InitBoxes --
  *
- *	This function load the Tk 3d button bitmap. "buttons" is a 16 color
- *	bitmap that is laid out such that the top row contains the 4 checkbox
- *	images, and the bottom row contains the radio button images. Note that
- *	the bitmap is stored in bottom-up format. Also, the first seven
- *	palette entries are used to identify the different parts of the
- *	bitmaps so we can do the appropriate color mappings based on the
- *	current button colors.
+ *	This function computes the size of the checkbutton and radiobutton
+ *	indicator boxes, according to the display's scaling percentage.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Loads the "buttons" resource.
+ *	Populates the thread-private data.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-InitBoxes(void)
+InitBoxes(Tk_Window tkwin)
 {
-    /*
-     * For DLLs like Tk, the HINSTANCE is the same as the HMODULE.
-     */
-
-    HMODULE module = (HINSTANCE) Tk_GetHINSTANCE();
-    HRSRC hrsrc;
-    HGLOBAL hblk;
-    LPBITMAPINFOHEADER newBitmap;
-    size_t size;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    double scalingLevel = TkScalingLevel(tkwin);
 
-    hrsrc = FindResourceW(module, L"buttons", (LPWSTR) RT_BITMAP);
-    if (hrsrc == NULL) {
-	Tcl_Panic("FindResourceW() failed for buttons bitmap resource, "
-            "resources in tk_base.rc must be linked into Tk dll or static executable");
-    } else {
-	hblk = LoadResource(module, hrsrc);
-	tsdPtr->boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
-    }
-
-    /*
-     * Copy the DIBitmap into writable memory.
-     */
-
-    if (tsdPtr->boxesPtr != NULL && !(tsdPtr->boxesPtr->biWidth % 4)
-	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
-	size = tsdPtr->boxesPtr->biSize
-		+ (sizeof(RGBQUAD) << tsdPtr->boxesPtr->biBitCount)
-		+ tsdPtr->boxesPtr->biSizeImage;
-	newBitmap = (LPBITMAPINFOHEADER)ckalloc(size);
-	memcpy(newBitmap, tsdPtr->boxesPtr, size);
-	tsdPtr->boxesPtr = newBitmap;
-	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
-	tsdPtr->boxHeight = tsdPtr->boxesPtr->biHeight / 2;
-	tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr)
-		+ tsdPtr->boxesPtr->biSize);
-	tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
-		+ (sizeof(RGBQUAD) << tsdPtr->boxesPtr->biBitCount);
-    } else {
-	tsdPtr->boxesPtr = NULL;
-    }
+    tsdPtr->boxSize = (int)(16.0 * scalingLevel);
+    tsdPtr->initialized = TRUE;
 }
 
 /*
@@ -238,7 +234,7 @@ static Window
 CreateProc(
     Tk_Window tkwin,		/* Token for window. */
     Window parentWin,		/* Parent of new window. */
-    ClientData instanceData)	/* Button instance data. */
+    void *instanceData)		/* Button instance data. */
 {
     Window window;
     HWND parent;
@@ -296,6 +292,228 @@ TkpDestroyButton(
 /*
  *----------------------------------------------------------------------
  *
+ * ColorToStr --
+ *
+ *	Writes a given color to a string, in the format "RRGGBB".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Changes the content of the memory area pointed to by the 2nd argument.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ColorToStr(
+    COLORREF color,	/* specifies a color */
+    char *colorStr)	/* memory area to which the color is to be
+			   output in the format "RRGGBB" */
+{
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     GetRValue(color), GetGValue(color), GetBValue(color));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImageChanged --
+ *
+ *	Dummy function to be passed to Tk_GetImage().
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ImageChanged(
+    void *clientData,
+    int x, int y, int width, int height,
+    int imageWidth, int imageHeight)
+{
+    (void)clientData;
+    (void)x; (void)y; (void)width; (void)height;
+    (void)imageWidth; (void)imageHeight;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawIndicator -
+ *
+ *      Draws the indicator image in the drawable at the (x,y) location.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      An image is drawn in the drawable at the given location.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkpDrawIndicator(
+    TkButton *butPtr,		/* checkbutton or radiobutton */
+    Drawable d,			/* what to draw on */
+    Tk_3DBorder border,		/* colors of the border */
+    GC gc,			/* graphics context */
+    int dim,			/* width & height of the indicator */
+    int x, int y)		/* where to draw */
+{
+    Tk_Window tkwin = butPtr->tkwin;
+    char topOuterColorStr[7], btmOuterColorStr[7], topInnerColorStr[7],
+	 btmInnerColorStr[7], interiorColorStr[7], checkColorStr[7];
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    char imgName[80];
+    Tk_Image img;
+    const char *svgDataPtr;
+    size_t svgDataLen;
+    char *svgDataCopy;
+    char *topOuterColorPtr, *btmOuterColorPtr, *topInnerColorPtr,
+	 *btmInnerColorPtr, *interiorColorPtr, *checkColorPtr;
+    const char *cmdFmt;
+    size_t scriptSize;
+    char *script;
+    int code;
+
+    /*
+     * Construct the color strings topOuterColorStr, btmOuterColorStr,
+     * topInnerColorStr, btmInnerColorStr, interiorColorStr, and checkColorStr
+     */
+
+    ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_DARK_GC),
+	       topOuterColorStr);
+    ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_LIGHT_GC),
+	       btmOuterColorStr);
+    ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_DARK2),
+	       topInnerColorStr);
+    ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_LIGHT2),
+	       btmInnerColorStr);
+
+    if (butPtr->state == STATE_ACTIVE) {
+	ColorToStr(TkWinGetBorderPixels(tkwin, butPtr->activeBorder,
+		   TK_3D_FLAT_GC), interiorColorStr);
+    } else if (butPtr->state == STATE_DISABLED || (butPtr->flags & TRISTATED)) {
+	ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_LIGHT2),
+		   interiorColorStr);
+    } else if (butPtr->selectBorder != NULL) {
+	ColorToStr(TkWinGetBorderPixels(tkwin, butPtr->selectBorder,
+		   TK_3D_FLAT_GC), interiorColorStr);
+    } else {
+	ColorToStr(GetSysColor(COLOR_WINDOW), interiorColorStr);
+    }
+
+    if (butPtr->state == STATE_DISABLED && butPtr->disabledFg == NULL) {
+	ColorToStr(TkWinGetBorderPixels(tkwin, border, TK_3D_DARK_GC),
+		   checkColorStr);
+    } else {
+	ColorToStr(gc->foreground, checkColorStr);
+    }
+
+    /*
+    * Check whether there is an SVG image of this size for the indicator's
+    * type (0 = checkbtn, 1 = radiobtn) and these color strings
+    */
+
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::indicator%d_%d_%s_%s_%s_%s_%s_%s",
+	     dim, butPtr->type == TYPE_RADIO_BUTTON,
+	     topOuterColorStr, btmOuterColorStr, topInnerColorStr,
+	     btmInnerColorStr, interiorColorStr,
+	     (butPtr->flags & (SELECTED|TRISTATED)) ? checkColorStr : "XXXXXX");
+    img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    if (img == NULL) {
+	/*
+	 * Determine the SVG data to use for the photo image
+	 */
+
+	if (butPtr->type == TYPE_CHECK_BUTTON) {
+	    svgDataPtr = ((butPtr->flags & (SELECTED|TRISTATED)) ?
+			  checkbtnOnData : checkbtnOffData);
+	} else {
+	    svgDataPtr = ((butPtr->flags & (SELECTED|TRISTATED)) ?
+			  radiobtnOnData : radiobtnOffData);
+	}
+
+	/*
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
+	 */
+
+	svgDataLen = strlen(svgDataPtr);
+	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	if (svgDataCopy == NULL) {
+	    return;
+	}
+	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
+	svgDataCopy[svgDataLen] = '\0';
+
+	/*
+	 * Update the colors within svgDataCopy
+	 */
+
+	topOuterColorPtr = strstr(svgDataCopy, "a0a0a0");
+	btmOuterColorPtr = strstr(svgDataCopy, "eeeeee");
+	topInnerColorPtr = strstr(svgDataCopy, "696969");
+	btmInnerColorPtr = strstr(svgDataCopy, "e3e3e3");
+	interiorColorPtr = strstr(svgDataCopy, "ffffff");
+	checkColorPtr =    strstr(svgDataCopy, "000000");
+
+	assert(topOuterColorPtr);
+	assert(btmOuterColorPtr);
+	assert(topInnerColorPtr);
+	assert(btmInnerColorPtr);
+	assert(interiorColorPtr);
+
+	memcpy(topOuterColorPtr, topOuterColorStr, 6);
+	memcpy(btmOuterColorPtr, btmOuterColorStr, 6);
+	memcpy(topInnerColorPtr, topInnerColorStr, 6);
+	memcpy(btmInnerColorPtr, btmInnerColorStr, 6);
+	memcpy(interiorColorPtr, interiorColorStr, 6);
+	if (checkColorPtr != NULL) {
+	    memcpy(checkColorPtr, checkColorStr, 6);
+	}
+
+	/*
+	 * Create an SVG photo image from svgDataCopy
+	 */
+
+	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
+	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
+	script = (char *)attemptckalloc(scriptSize);
+	if (script == NULL) {
+	    ckfree(svgDataCopy);
+	    return;
+	}
+	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
+	ckfree(svgDataCopy);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	ckfree(script);
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
+	    return;
+	}
+	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    }
+
+    /*
+     * Display the image
+     */
+
+    Tk_RedrawImage(img, 0, 0, dim, dim, d, x, y);
+    Tk_FreeImage(img);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpDisplayButton --
  *
  *	This procedure is invoked to display a button widget. It is normally
@@ -312,7 +530,7 @@ TkpDestroyButton(
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkWinDCState state;
     HDC dc;
@@ -337,16 +555,20 @@ TkpDisplayButton(
     int imageXOffset = 0, imageYOffset = 0;
 				/* Image information that will be used to
 				 * restrict disabled pixmap as well. */
-    DWORD *boxesPalette;
+    int padX, padY, borderWidth, highlightWidth;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    boxesPalette= tsdPtr->boxesPalette;
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
+
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &padY);
 
     border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
@@ -405,11 +627,11 @@ TkpDisplayButton(
      */
 
     if (butPtr->type == TYPE_LABEL) {
-	defaultWidth = butPtr->highlightWidth;
-        offset = 0;
+	defaultWidth = highlightWidth;
+	offset = 0;
     } else if (butPtr->type == TYPE_BUTTON) {
 	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
-		? butPtr->highlightWidth : 0);
+		? highlightWidth : 0);
 	offset = 1;
     } else {
 	defaultWidth = 0;
@@ -459,11 +681,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
+		textYOffset = height + padY;
 	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
+		imageYOffset = butPtr->textHeight + padY;
 	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
+	    fullHeight = height + butPtr->textHeight + padY;
 	    fullWidth = (width > butPtr->textWidth ? width :
 		    butPtr->textWidth);
 	    textXOffset = (fullWidth - butPtr->textWidth)/2;
@@ -477,11 +699,11 @@ TkpDisplayButton(
 	     */
 
 	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX;
+		textXOffset = width + padX;
 	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
+		imageXOffset = butPtr->textWidth + padX;
 	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
+	    fullWidth = butPtr->textWidth + padX + width;
 	    fullHeight = (height > butPtr->textHeight ? height :
 		    butPtr->textHeight);
 	    textYOffset = (fullHeight - butPtr->textHeight)/2;
@@ -505,7 +727,7 @@ TkpDisplayButton(
 	case COMPOUND_NONE:
 	    break;
 	}
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 
@@ -535,7 +757,7 @@ TkpDisplayButton(
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
 	if ((butPtr->state == STATE_DISABLED) &&
-	       	(butPtr->disabledFg != NULL)) {
+		(butPtr->disabledFg != NULL)) {
 	    COLORREF oldFgColor = gc->foreground;
 
 	    if (gc->background == GetSysColor(COLOR_BTNFACE)) {
@@ -590,7 +812,7 @@ TkpDisplayButton(
 		XSetClipOrigin(butPtr->display, gc, 0, 0);
 	    }
 	} else {
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+	    TkComputeAnchor(butPtr->anchor, tkwin, padX, padY,
 		    butPtr->indicatorSpace + butPtr->textWidth,
 		    butPtr->textHeight,	&x, &y);
 
@@ -606,10 +828,9 @@ TkpDisplayButton(
 		if (gc->background == GetSysColor(COLOR_BTNFACE)) {
 		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
 		    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		       	butPtr->textLayout,
-			x + 1, y + 1, 0, -1);
+			    butPtr->textLayout, x + 1, y + 1, 0, -1);
 		    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-			butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+			    butPtr->textLayout, x + 1, y + 1, butPtr->underline);
 		    gc->foreground = oldFgColor;
 		}
 	    }
@@ -632,7 +853,7 @@ TkpDisplayButton(
 
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
 	if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
-	    int dottedWidth = butPtr->borderWidth + 1 + defaultWidth;
+	    int dottedWidth = borderWidth + 1 + defaultWidth;
 	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
 		    dottedWidth, dottedWidth,
 		    Tk_Width(tkwin) - 2*dottedWidth,
@@ -647,65 +868,16 @@ TkpDisplayButton(
     y += height/2;
 
     /*
-     * Draw the indicator for check buttons and radio buttons. At this point x
-     * and y refer to the top-left corner of the text or image or bitmap.
+     * Draw the indicator for check buttons and radio buttons. At this point
+     * x and y refer to the top-left corner of the text or image or bitmap.
      */
 
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn
-	    && tsdPtr->boxesPtr) {
-	int xSrc, ySrc;
-
+	    && tsdPtr->initialized) {
 	x -= butPtr->indicatorSpace;
 	y -= butPtr->indicatorDiameter / 2;
 
-	xSrc = (butPtr->flags & (SELECTED|TRISTATED)) ? tsdPtr->boxWidth : 0;
-	if (butPtr->state == STATE_ACTIVE) {
-	    xSrc += tsdPtr->boxWidth*2;
-	}
-	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : tsdPtr->boxHeight;
-
-	/*
-	 * Update the palette in the boxes bitmap to reflect the current
-	 * button colors. Note that this code relies on the layout of the
-	 * bitmap's palette. Also, all of the colors used to draw the bitmap
-	 * must be in the palette that is selected into the DC of the
-	 * offscreen pixmap. This requires that the static colors be placed
-	 * into the palette.
-	 */
-
-	if ((butPtr->state == STATE_DISABLED)
-		&& (butPtr->disabledFg == NULL)) {
-	    boxesPalette[PAL_CHECK] = FlipColor(TkWinGetBorderPixels(tkwin,
-		    border, TK_3D_DARK_GC));
-	} else {
-	    boxesPalette[PAL_CHECK] = FlipColor(gc->foreground);
-	}
-	boxesPalette[PAL_TOP_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_DARK_GC));
-	boxesPalette[PAL_TOP_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_DARK2));
-	boxesPalette[PAL_BOTTOM_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT2));
-	boxesPalette[PAL_BOTTOM_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT_GC));
-	if ((butPtr->state == STATE_DISABLED) || (butPtr->flags & TRISTATED)) {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT2));
-	} else if (butPtr->selectBorder != NULL) {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
-		    butPtr->selectBorder, TK_3D_FLAT_GC));
-	} else {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(GetSysColor(COLOR_WINDOW));
-	}
-	boxesPalette[PAL_BACKGROUND] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_FLAT_GC));
-
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	StretchDIBits(dc, x, y, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
-		xSrc, ySrc, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
-		tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr,
-		DIB_RGB_COLORS, SRCCOPY);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
+	TkpDrawIndicator(butPtr, pixmap, border, gc, tsdPtr->boxSize, x, y + 1);
     }
 
     /*
@@ -751,19 +923,19 @@ TkpDisplayButton(
     if (relief != TK_RELIEF_FLAT) {
 	Tk_Draw3DRectangle(tkwin, pixmap, border,
 		defaultWidth, defaultWidth,
-		Tk_Width(tkwin) - 2*defaultWidth,
-		Tk_Height(tkwin) - 2*defaultWidth,
-		butPtr->borderWidth, relief);
+		Tk_Width(tkwin) - 2 * defaultWidth,
+		Tk_Height(tkwin) - 2 * defaultWidth,
+		borderWidth, relief);
     }
     if (defaultWidth != 0) {
-        int highlightColor;
+	int highlightColor;
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-        if (butPtr->type == TYPE_LABEL) {
-            highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
-        } else {
-            highlightColor = (int) butPtr->highlightColorPtr->pixel;
-        }
+	if (butPtr->type == TYPE_LABEL) {
+	    highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+	} else {
+	    highlightColor = (int) butPtr->highlightColorPtr->pixel;
+	}
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
 		highlightColor);
 	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
@@ -823,18 +995,24 @@ TkpComputeButtonGeometry(
     /* Vertical and horizontal dialog units size in pixels. */
     double vDLU, hDLU;
     Tk_FontMetrics fm;
+    int borderWidth, highlightWidth, wrapLength;
+    int butPtrWidth, butPtrHeight;
+    int padX, padY;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (butPtr->highlightWidth < 0) {
-	butPtr->highlightWidth = 0;
-    }
-    butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
+
+    butPtr->inset = highlightWidth + borderWidth;
     butPtr->indicatorSpace = 0;
 
-    if (!tsdPtr->boxesPtr) {
-	InitBoxes();
+    if (!tsdPtr->initialized) {
+	InitBoxes(butPtr->tkwin);
     }
 
     /*
@@ -861,7 +1039,7 @@ TkpComputeButtonGeometry(
 
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     txtWidth = butPtr->textWidth;
@@ -909,8 +1087,8 @@ TkpComputeButtonGeometry(
 	 * = 50 DLU. Therefore, width = -11 -> MWUE compliant buttons.
 	 */
 
-	if (butPtr->width < 0) {
-	    minWidth = -(butPtr->width);	    /* Min width in chars */
+	if (butPtrWidth < 0) {
+	    minWidth = -(butPtrWidth);	    /* Min width in chars */
 	    width = avgWidth * minWidth;	    /* Allow for characters */
 	    width += (int)(0.5 + (6 * hDLU));	    /* Add for padding */
 	}
@@ -921,7 +1099,7 @@ TkpComputeButtonGeometry(
 	 * suit.
 	 */
 
-	if (butPtr->width == 0
+	if (butPtrWidth == 0
 		|| (txtWidth + (int)(0.5 + (6 * hDLU)) > width)) {
 	    width = txtWidth + (int)(0.5 + (6 * hDLU));
 	}
@@ -1022,6 +1200,9 @@ TkpComputeButtonGeometry(
      * because otherwise it is not really a compound button.
      */
 
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
+
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
 	switch ((enum compound) butPtr->compound) {
 	case COMPOUND_TOP:
@@ -1033,7 +1214,7 @@ TkpComputeButtonGeometry(
 	    if (imgWidth > width) {
 		width = imgWidth;
 	    }
-	    height += imgHeight + butPtr->padY;
+	    height += imgHeight + padY;
 	    break;
 
 	case COMPOUND_LEFT:
@@ -1046,8 +1227,8 @@ TkpComputeButtonGeometry(
 	     * space of default button width
 	     */
 
-	    if ((imgWidth + txtWidth + butPtr->padX) > width) {
-		width = imgWidth + txtWidth + butPtr->padX;
+	    if ((imgWidth + txtWidth + padX) > width) {
+		width = imgWidth + txtWidth + padX;
 	    }
 
 	    if (imgHeight > height) {
@@ -1075,33 +1256,33 @@ TkpComputeButtonGeometry(
 	 * Fix up for minimum width.
 	 */
 
-	if (butPtr->width < 0) {
+	if (butPtrWidth < 0) {
 	    /*
 	     * minWidth in pixels (because there's an image.
 	     */
 
-	    minWidth = -(butPtr->width);
+	    minWidth = -(butPtrWidth);
 	    if (width < minWidth) {
 		width = minWidth;
 	    }
-	} else if (butPtr->width > 0) {
-	    width = butPtr->width;
+	} else if (butPtrWidth > 0) {
+	    width = butPtrWidth;
 	}
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight;
 	}
 
-	width += 2*butPtr->padX;
-	height += 2*butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     } else if (haveImage) {
-	if (butPtr->width > 0) {
-	    width = butPtr->width;
+	if (butPtrWidth > 0) {
+	    width = butPtrWidth;
 	} else {
 	    width = imgWidth;
 	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight;
 	} else {
 	    height = imgHeight;
 	}
@@ -1115,8 +1296,8 @@ TkpComputeButtonGeometry(
 	 * characters on the face, not in the over-all button width
 	 */
 
-	if (butPtr->width > 0) {
-	    width = butPtr->width * avgWidth;
+	if (butPtrWidth > 0) {
+	    width = butPtrWidth * avgWidth;
 	}
 
 	/*
@@ -1124,8 +1305,8 @@ TkpComputeButtonGeometry(
 	 * lines on the face, not in the over-all button height.
 	 */
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height * fm.linespace;
+	if (butPtrHeight > 0) {
+	    height = butPtrHeight * fm.linespace;
 
 	    /*
 	     * Make the same adjustments as above to get same height for e.g.
@@ -1145,8 +1326,8 @@ TkpComputeButtonGeometry(
 	    }
 	}
 
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
 
     /*
@@ -1156,7 +1337,7 @@ TkpComputeButtonGeometry(
     if (butPtr->type == TYPE_RADIO_BUTTON
 	    || butPtr->type == TYPE_CHECK_BUTTON) {
 	if (butPtr->indicatorOn) {
-	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
+	    butPtr->indicatorDiameter = tsdPtr->boxSize;
 
 	    /*
 	     * Make sure we can see the whole indicator, even if the text or
@@ -1196,8 +1377,8 @@ TkpComputeButtonGeometry(
  *
  * ButtonProc --
  *
- *	This function is call by Windows whenever an event occurs on a button
- *	control created by Tk.
+ *	This function is called by Windows whenever an event occurs on a
+ *	button control created by Tk.
  *
  * Results:
  *	Standard Windows return value.
@@ -1276,7 +1457,7 @@ ButtonProc(
 	 * causes all buttons to fire once a second, so we need to make sure
 	 * that we are not dealing with the chromium life check.
 	*/
-        if (wParam != 0 || lParam != 0) {
+	if (wParam != 0 || lParam != 0) {
 	    int code;
 	    Tcl_Interp *interp = butPtr->info.interp;
 
@@ -1296,7 +1477,7 @@ ButtonProc(
     }
     /* FALLTHRU */
     default:
-	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    return result;
 	}
     }

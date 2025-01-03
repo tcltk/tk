@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkTextIndex.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -30,7 +30,7 @@ wm deiconify .
 abcdefghijklm
 12345
 Line 4
-b\u4e4fy GIrl .#@? x_yz
+b乏y GIrl .#@? x_yz
 !@#$%
 Line 7"
 
@@ -118,7 +118,7 @@ test textIndex-1.16 {TkTextMakeByteIndex: UTF-8 characters} {testtext} {
 test textIndex-1.17 {TkTextMakeByteIndex: prevent splitting UTF-8 character} \
 	{testtext} {
     # ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType))
-    # Wrong answer would be \xb9 (the 2nd byte of UTF rep of 0x4e4f).
+    # Wrong answer would be ¹ (the 2nd byte of UTF rep of 0x4e4f).
 
     set x [testtext .t byteindex 5 2]
     list $x [.t get insert]
@@ -128,7 +128,7 @@ test textIndex-1.18 {TkTextMakeByteIndex: prevent splitting UTF-8 character} \
     # ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType))
     testtext .t byteindex 5 1
     .t get insert
-} "\u4e4f"
+} "乏"
 
 test textIndex-2.1 {TkTextMakeCharIndex} {
     # (lineIndex < 0)
@@ -183,7 +183,7 @@ test textIndex-2.11 {TkTextMakeCharIndex: verify index is in range} {
 } 3.4
 test textIndex-2.12 {TkTextMakeCharIndex: verify index is in range} {
     # (segPtr->typePtr == &tkTextCharType)
-    # Wrong answer would be \xb9 (the 2nd byte of UTF rep of 0x4e4f).
+    # Wrong answer would be ¹ (the 2nd byte of UTF rep of 0x4e4f).
 
     .t mark set insert 5.2
     .t get insert
@@ -608,7 +608,7 @@ test textIndex-14.15 {TkTextIndexBackChars: UTF} {
 } y
 test textIndex-14.16 {TkTextIndexBackChars: UTF} {
     .t get {5.3 - 2 chars}
-} \u4e4f
+} 乏
 test textIndex-14.17 {TkTextIndexBackChars: UTF} {
     .t get {5.3 - 3 chars}
 } b
@@ -884,19 +884,19 @@ test textIndex-21.9 {text index wordend} {
     text_test_word worde "x.y" end-1
 } 2
 test textIndex-21.10 {text index wordend, unicode} {
-    text_test_word wordend "xyz\u00c7de fg" 0
+    text_test_word wordend "xyzÇde fg" 0
 } 6
 test textIndex-21.11 {text index wordend, unicode} {
-    text_test_word wordend "xyz\uc700de fg" 0
+    text_test_word wordend "xyz윀de fg" 0
 } 6
 test textIndex-21.12 {text index wordend, unicode} {
-    text_test_word wordend "xyz\u203fde fg" 0
+    text_test_word wordend "xyz‿de fg" 0
 } 6
 test textIndex-21.13 {text index wordend, unicode} {
-    text_test_word wordend "xyz\u2045de fg" 0
+    text_test_word wordend "xyz⁅de fg" 0
 } 3
 test textIndex-21.14 {text index wordend, unicode} {
-    text_test_word wordend "\uc700\uc700 abc" 8
+    text_test_word wordend "윀윀 abc" 8
 } 6
 
 test textIndex-22.5 {text index wordstart} {
@@ -918,19 +918,19 @@ test textIndex-22.10 {text index wordstart} {
     text_test_word wordstart "one two three" end-5
 } 7
 test textIndex-22.11 {text index wordstart, unicode} {
-    text_test_word wordstart "one tw\u00c7o three" 7
+    text_test_word wordstart "one twÇo three" 7
 } 4
 test textIndex-22.12 {text index wordstart, unicode} {
-    text_test_word wordstart "ab\uc700\uc700 cdef ghi" 12
+    text_test_word wordstart "ab윀윀 cdef ghi" 12
 } 10
 test textIndex-22.13 {text index wordstart, unicode} {
-    text_test_word wordstart "\uc700\uc700 abc" 8
+    text_test_word wordstart "윀윀 abc" 8
 } 3
 test textIndex-22.14 {text index wordstart, unicode, start index at internal segment start} {
     catch {destroy .t}
     text .t
-    .t insert end "C'est du texte en fran\u00e7ais\n"
-    .t insert end "\u042D\u0442\u043E\u0020\u0442\u0435\u043A\u0441\u0442\u0020\u043D\u0430\u0020\u0440\u0443\u0441\u0441\u043A\u043E\u043C"
+    .t insert end "C'est du texte en français\n"
+    .t insert end "Это текст на русском"
     .t mark set insert 1.23
     set res [.t index "1.23 wordstart"]
     .t mark set insert 2.16

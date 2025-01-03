@@ -3,8 +3,8 @@
 # file tests the Macintosh-specific features of the menu
 # system.
 #
-# Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1995-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -93,91 +93,91 @@ test winMenu-6.2 {GetEntryText} -constraints {
     menu .m1
     image create test image1
     list [catch {.m1 add command -image image1} msg] $msg [destroy .m1] [image delete image1]
-} -result {0 {} {} {}}
+} -result {0 e001 {} {}}
 test winMenu-6.3 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -bitmap questhead} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.4 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.5 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.6 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.7 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.8 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.9 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo" -accel "bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.10 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it" -accel "bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.11 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4 -accel "bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.12 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4 -accel "bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.13 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo" -accel "&bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.14 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it" -accel "&bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.15 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4 -accel "&bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 test winMenu-6.16 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4 -accel "&bar"} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 
 test winMenu-7.1 {ReconfigureWindowsMenu - system menu item removal} -constraints {
     win
@@ -427,7 +427,7 @@ test winMenu-9.1 {TkpMenuNewEntry} -constraints win -setup {
 } -body {
     menu .m1
     list [catch {.m1 add command} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e001 {}}
 
 
 test winMenu-10.1 {TkwinMenuProc} -constraints {
@@ -470,8 +470,8 @@ test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} -constraints {
 } -body {
     catch {unset foo}
     proc bgerror {args} {
-        global foo errorInfo
-        set foo [list $args $errorInfo]
+	global foo errorInfo
+	set foo [list $args $errorInfo]
     }
     menu .m1
     .m1 add command -command {error 1} -label "winMenu-11.2: Please select this menu item."
@@ -562,7 +562,7 @@ test winMenu-12.3 {TkpSetWindowMenuBar - no update pending} -constraints {
 } -result {0 {} {} {}}
 
 
-test winMenu-13.1 {TkpSetMainMenubar - nothing to do} -constraints {
+test winMenu-13.1 {Tk_SetMainMenubar - nothing to do} -constraints {
     emptyTest win
 } -body {}
 
@@ -859,7 +859,7 @@ test winMenu-28.1 {TkpConfigureMenuEntry - update pending} -constraints {
     menu .m1 -tearoff 0
     .m1 add command -label Hello
     list [catch {.m1 add command -label Two} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e002 {}}
 test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -constraints {
     win
 } -setup {
@@ -869,7 +869,7 @@ test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -constraints {
     .m1 add command -label One
     update idletasks
     list [catch {.m1 add command -label Two} msg] $msg [destroy .m1]
-} -result {0 {} {}}
+} -result {0 e002 {}}
 
 
 test winMenu-29.1 {TkpDrawMenuEntry - gc for active and not strict motif} -constraints {

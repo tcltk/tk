@@ -15,7 +15,8 @@ Tk_GetVisual \- translate from string to visual
 \fB#include <tk.h>\fR
 .sp
 Visual *
-\fBTk_GetVisual(\fIinterp, tkwin, string, depthPtr, colormapPtr\fB)\fR
+\fBTk_GetVisual\fR(\fIinterp, tkwin, string, depthPtr, colormapPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tcl_Interp" *colormapPtr
 .AP Tcl_Interp *interp in
@@ -48,6 +49,7 @@ The \fIstring\fR argument specifies the desired visual in one
 of the following ways:
 .TP 15
 \fIclass depth\fR
+.
 The string consists of a class name followed by an integer depth,
 with any amount of white space (including none) in between.
 \fIclass\fR selects what sort of visual is desired and must be one of
@@ -62,17 +64,21 @@ looks first for a visual with greater depth, then one with less
 depth.
 .TP 15
 \fBdefault\fR
+.
 Use the default visual for \fItkwin\fR's screen.
 .TP 15
 \fIpathName\fR
+.
 Use the visual for the window given by \fIpathName\fR.
 \fIpathName\fR must be the name of a window on the same screen
 as \fItkwin\fR.
 .TP 15
 \fInumber\fR
+.
 Use the visual whose X identifier is \fInumber\fR.
 .TP 15
 \fBbest\fR ?\fIdepth\fR?
+.
 Choose the
 .QW "best possible"
 visual, using the following rules, in decreasing order of priority:

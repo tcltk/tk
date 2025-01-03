@@ -13,7 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXKeysyms.h"
 
@@ -268,7 +268,7 @@ UpdateKeymaps()
      */
 
     for (index = 3; index >= 0; index--) {
-        for (virt = 0; virt < 128; virt++) {
+	for (virt = 0; virt < 128; virt++) {
 	    MacKeycode macKC;
 	    macKC.v = (keycode_v) {.virt = virt, .o_s = index, .keychar = 0};
 	    int modifiers = INDEX2CARBON(index);
@@ -288,7 +288,7 @@ UpdateKeymaps()
 		hPtr = Tcl_CreateHashEntry(&unichar2xvirtual,
 					   INT2PTR(macKC.x.keychar), &dummy);
 		Tcl_SetHashValue(hPtr, INT2PTR(macKC.x.xvirtual));
-            }
+	    }
 	    xvirtual2unichar[macKC.x.xvirtual] = macKC.x.keychar;
 	}
     }
@@ -464,7 +464,7 @@ XkbKeycodeToKeysym(
 KeySym
 XKeycodeToKeysym(
     TCL_UNUSED(Display *),
-    KeyCode keycode,
+    unsigned int keycode,
     int index)
 {
     return XkbKeycodeToKeysym(NULL, keycode, 0, index);
@@ -501,7 +501,7 @@ TkpGetString(
 
     macKC.uint = eventPtr->xkey.keycode;
     if (IS_PRINTABLE(macKC.v.keychar)) {
-	length = TkUniCharToUtf(macKC.v.keychar, utfChars);
+	length = Tcl_UniCharToUtf(macKC.v.keychar, utfChars);
     }
     utfChars[length] = 0;
 

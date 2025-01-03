@@ -9,32 +9,25 @@ namespace eval ttk::scrollbar {
     # State(first)	-- value of -first at start of drag.
 }
 
-bind TScrollbar <Button-1> 		{ ttk::scrollbar::Press %W %x %y }
+bind TScrollbar <Button-1>		{ ttk::scrollbar::Press %W %x %y }
 bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
 
-bind TScrollbar <Button-2> 		{ ttk::scrollbar::Jump %W %x %y }
+bind TScrollbar <Button-2>		{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
-# Redirect scrollwheel bindings to the scrollbar widget
+# Copy the mouse wheel event bindings from Scrollbar to TScrollbar
 #
-# The shift-bindings scroll left/right (not up/down)
-# if a widget has both possibilities
-set eventList [list <MouseWheel> <Shift-MouseWheel>]
-switch [tk windowingsystem] {
-    aqua {
-        lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
-    }
-    x11 {
-        lappend eventList <Button-4> <Button-5> \
-                <Shift-Button-4> <Shift-Button-5>
-    }
+bind TScrollbar <Enter> {
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
 }
-foreach event $eventList {
+foreach event {<MouseWheel> <Option-MouseWheel>
+	       <Shift-MouseWheel> <Shift-Option-MouseWheel>
+	       <TouchpadScroll>} {
     bind TScrollbar $event [bind Scrollbar $event]
 }
-unset eventList event
+unset event
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
@@ -88,9 +81,9 @@ proc ttk::scrollbar::Press {w x y} {
 proc ttk::scrollbar::Drag {w x y} {
     variable State
     if {![info exists State(first)]} {
-    	# Initial buttonpress was not on the thumb,
+	# Initial buttonpress was not on the thumb,
 	# or something screwy has happened.  In either case, ignore:
-	return
+	return;
     }
     set xDelta [expr {$x - $State(xPress)}]
     set yDelta [expr {$y - $State(yPress)}]
@@ -104,7 +97,7 @@ proc ttk::scrollbar::Release {w x y} {
 }
 
 # scrollbar::Jump -- Button-2 binding for scrollbars.
-# 	Behaves exactly like scrollbar::Press, except that
+#	Behaves exactly like scrollbar::Press, except that
 #	clicking in the trough jumps to the the selected position.
 #
 proc ttk::scrollbar::Jump {w x y} {

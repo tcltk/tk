@@ -51,7 +51,7 @@ static ControlActionUPP scaleActionProc = NULL; /* Pointer to func. */
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		MacScaleEventProc(ClientData clientData,
+static void		MacScaleEventProc(void *clientData,
 			    XEvent *eventPtr);
 static pascal void	ScaleActionProc(ControlRef theControl,
 			    ControlPartCode partCode);
@@ -139,7 +139,7 @@ TkpDestroyScale(
 
 void
 TkpDisplayScale(
-    ClientData clientData)	/* Widget record for scale. */
+    void *clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -167,17 +167,17 @@ TkpDisplayScale(
      */
 
     Tcl_Preserve(scalePtr);
-    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
+    if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
-                scalePtr->value) < 0) {
-            string[TCL_DOUBLE_SPACE - 1] = '\0';
-        }
+	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+		scalePtr->value) < 0) {
+	    string[TCL_DOUBLE_SPACE - 1] = '\0';
+	}
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, Tcl_GetString(scalePtr->commandObj), TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
@@ -197,7 +197,7 @@ TkpDisplayScale(
      * vertical scales: border and traversal highlight.
      */
 
-    if (scalePtr->highlightWidth != 0) {
+    if (scalePtr->highlightWidth > 0) {
 	GC gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
 
 	Tk_DrawFocusHighlight(tkwin, gc, scalePtr->highlightWidth,
@@ -378,7 +378,7 @@ TkpScaleElement(
 
 static void
 MacScaleEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     MacScale *macScalePtr = (MacScale *) clientData;
@@ -390,10 +390,12 @@ MacScaleEventProc(
     fprintf(stderr,"MacScaleEventProc\n" );
 #endif
 
-    TkMacOSXWinBounds((TkWindow *) macScalePtr->info.tkwin, &bounds);
-    where.h = eventPtr->xbutton.x + bounds.left;
-    where.v = eventPtr->xbutton.y + bounds.top;
-#ifdef TK_MAC_DEBUG_SCALE
+    /*
+     * To call Macintosh control routines we must have the port set to the
+     * window containing the control. We will then test which part of the
+     * control was hit and act accordingly.
+     */
+
     TkMacOSXDbgMsg("calling TestControl");
 #endif
     part = TestControl(macScalePtr->scaleHandle, where);

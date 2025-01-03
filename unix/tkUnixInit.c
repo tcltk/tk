@@ -3,7 +3,7 @@
  *
  *	This file contains Unix-specific interpreter initialization functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,6 +41,10 @@ TkpInit(
 {
     TkCreateXEventSource();
     GetLibraryPath(interp);
+    Tktray_Init(interp);
+    (void)SysNotify_Init (interp);
+    Icu_Init(interp);
+    Cups_Init(interp);
     return TCL_OK;
 }
 
@@ -78,7 +82,7 @@ TkpGetAppName(
 	    name = p+1;
 	}
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
 }
 
 /*
@@ -106,9 +110,9 @@ TkpDisplayWarning(
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 
     if (errChannel) {
-	Tcl_WriteChars(errChannel, title, -1);
+	Tcl_WriteChars(errChannel, title, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, ": ", 2);
-	Tcl_WriteChars(errChannel, msg, -1);
+	Tcl_WriteChars(errChannel, msg, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }
@@ -132,11 +136,11 @@ TkpDisplayWarning(
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_FRAMEWORK
 static int
 GetLibraryPath(
     Tcl_Interp *interp)
 {
-#ifdef TK_FRAMEWORK
     int foundInFramework = TCL_ERROR;
     char tkLibPath[PATH_MAX + 1];
 
@@ -147,10 +151,15 @@ GetLibraryPath(
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
     return foundInFramework;
-#else
-    return TCL_ERROR;
-#endif
 }
+#else
+static int
+GetLibraryPath(
+    TCL_UNUSED(Tcl_Interp *))
+{
+    return TCL_ERROR;
+}
+#endif
 #endif /* HAVE_COREFOUNDATION */
 
 /*

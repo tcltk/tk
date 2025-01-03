@@ -5,7 +5,7 @@
  *	have access to a console. It uses the Text widget and provides special
  *	access via a console command.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,7 +24,7 @@
 typedef struct ConsoleInfo {
     Tcl_Interp *consoleInterp;	/* Interpreter displaying the console. */
     Tcl_Interp *interp;		/* Interpreter controlled by console. */
-    int refCount;
+    size_t refCount;
 } ConsoleInfo;
 
 /*
@@ -43,23 +43,21 @@ typedef struct ChannelData {
  * Prototypes for local procedures defined in this file:
  */
 
-static int	ConsoleClose(ClientData instanceData, Tcl_Interp *interp);
-static int	Console2Close(ClientData instanceData, Tcl_Interp *interp, int flags);
-static void	ConsoleDeleteProc(ClientData clientData);
-static void	ConsoleEventProc(ClientData clientData, XEvent *eventPtr);
-static int	ConsoleHandle(ClientData instanceData, int direction,
-		    ClientData *handlePtr);
-static int	ConsoleInput(ClientData instanceData, char *buf, int toRead,
+static int	ConsoleClose(void *instanceData, Tcl_Interp *interp);
+static int	Console2Close(void *instanceData, Tcl_Interp *interp, int flags);
+static void	ConsoleDeleteProc(void *clientData);
+static void	ConsoleEventProc(void *clientData, XEvent *eventPtr);
+static int	ConsoleHandle(void *instanceData, int direction,
+		    void **handlePtr);
+static int	ConsoleInput(void *instanceData, char *buf, int toRead,
 		    int *errorCode);
-static int	ConsoleObjCmd(ClientData clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
-static int	ConsoleOutput(ClientData instanceData, const char *buf,
+static Tcl_ObjCmdProc ConsoleObjCmd;
+static int	ConsoleOutput(void *instanceData, const char *buf,
 		    int toWrite, int *errorCode);
-static void	ConsoleWatch(ClientData instanceData, int mask);
-static void	DeleteConsoleInterp(ClientData clientData);
-static void	InterpDeleteProc(ClientData clientData, Tcl_Interp *interp);
-static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
+static void	ConsoleWatch(void *instanceData, int mask);
+static void	DeleteConsoleInterp(void *clientData);
+static void	InterpDeleteProc(void *clientData, Tcl_Interp *interp);
+static Tcl_ObjCmdProc InterpreterObjCmd;
 
 /*
  * This structure describes the channel type structure for file based IO:
@@ -68,7 +66,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
     TCL_CHANNEL_VERSION_5,	/* v5 channel */
-    ConsoleClose,		/* Close proc. */
+    (Tcl_DriverCloseProc *)ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
     NULL,			/* Seek proc. */
@@ -198,9 +196,9 @@ ShouldUseConsoleChannel(
  *
  * Tk_InitConsoleChannels --
  *
- * 	Create the console channels and install them as the standard channels.
- * 	All I/O will be discarded until Tk_CreateConsoleWindow is called to
- * 	attach the console to a text widget.
+ *	Create the console channels and install them as the standard channels.
+ *	All I/O will be discarded until Tk_CreateConsoleWindow is called to
+ *	attach the console to a text widget.
  *
  * Results:
  *	None.
@@ -224,8 +222,8 @@ Tk_InitConsoleChannels(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
-        return;
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
+	return;
     }
 
     consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));
@@ -443,8 +441,8 @@ Tk_CreateConsoleWindow(
     }
 
     Tcl_Preserve(consoleInterp);
-    result = Tcl_EvalEx(consoleInterp, "source -encoding utf-8 $tk_library/console.tcl",
-	    -1, TCL_EVAL_GLOBAL);
+    result = Tcl_EvalEx(consoleInterp, "source $tk_library/console.tcl",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (result == TCL_ERROR) {
 	Tcl_SetReturnOptions(interp,
 		Tcl_GetReturnOptions(consoleInterp, result));
@@ -493,7 +491,7 @@ Tk_CreateConsoleWindow(
 
 static int
 ConsoleOutput(
-    ClientData instanceData,	/* Indicates which device to use. */
+    void *instanceData,	/* Indicates which device to use. */
     const char *buf,		/* The data buffer. */
     int toWrite,		/* How many bytes to write? */
     int *errorCode)		/* Where to store error code. */
@@ -517,19 +515,18 @@ ConsoleOutput(
 	     * Assumption is utf-8 Tcl_Encoding is reliably present.
 	     */
 
-	    const char *bytes
-		    = Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
-	    int numBytes = Tcl_DStringLength(&ds);
-	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", -1);
+	    const char *bytes = Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
+	    Tcl_Size numBytes = Tcl_DStringLength(&ds);
+	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", TCL_INDEX_NONE);
 
 	    Tcl_FreeEncoding(utf8);
 
 	    if (data->type == TCL_STDERR) {
 		Tcl_ListObjAppendElement(NULL, cmd,
-			Tcl_NewStringObj("stderr", -1));
+			Tcl_NewStringObj("stderr", TCL_INDEX_NONE));
 	    } else {
 		Tcl_ListObjAppendElement(NULL, cmd,
-			Tcl_NewStringObj("stdout", -1));
+			Tcl_NewStringObj("stdout", TCL_INDEX_NONE));
 	    }
 	    Tcl_ListObjAppendElement(NULL, cmd,
 		    Tcl_NewStringObj(bytes, numBytes));
@@ -588,7 +585,7 @@ ConsoleInput(
 
 static int
 ConsoleClose(
-    ClientData instanceData,
+    void *instanceData,
     TCL_UNUSED(Tcl_Interp *))
 {
     ChannelData *data = (ChannelData *)instanceData;
@@ -609,7 +606,7 @@ ConsoleClose(
 
 static int
 Console2Close(
-    ClientData instanceData,	/* Unused. */
+    void *instanceData,	/* Unused. */
     Tcl_Interp *interp,		/* Unused. */
     int flags)
 {
@@ -693,7 +690,7 @@ ConsoleHandle(
 
 static int
 ConsoleObjCmd(
-    ClientData clientData,	/* Access to the console interp */
+    void *clientData,	/* Access to the console interp */
     Tcl_Interp *interp,		/* Current interpreter */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
@@ -728,21 +725,21 @@ ConsoleObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    return TCL_ERROR;
 	}
-	cmd = Tcl_NewStringObj("wm withdraw .", -1);
+	cmd = Tcl_NewStringObj("wm withdraw .", TCL_INDEX_NONE);
 	break;
     case CON_SHOW:
 	if (objc != 2) {
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    return TCL_ERROR;
 	}
-	cmd = Tcl_NewStringObj("wm deiconify .", -1);
+	cmd = Tcl_NewStringObj("wm deiconify .", TCL_INDEX_NONE);
 	break;
     case CON_TITLE:
 	if (objc > 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?title?");
 	    return TCL_ERROR;
 	}
-	cmd = Tcl_NewStringObj("wm title .", -1);
+	cmd = Tcl_NewStringObj("wm title .", TCL_INDEX_NONE);
 	if (objc == 3) {
 	    Tcl_ListObjAppendElement(NULL, cmd, objv[2]);
 	}
@@ -761,7 +758,7 @@ ConsoleObjCmd(
 	Tcl_Release(consoleInterp);
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no active console interp", -1));
+		"no active console interp", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NONE", NULL);
 	result = TCL_ERROR;
     }
@@ -785,7 +782,7 @@ ConsoleObjCmd(
 
 static int
 InterpreterObjCmd(
-    ClientData clientData,	/* */
+    void *clientData,	/* */
     Tcl_Interp *interp,		/* Current interpreter */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
@@ -812,7 +809,7 @@ InterpreterObjCmd(
 
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no active parent interp", -1));
+		"no active parent interp", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
 	return TCL_ERROR;
     }
@@ -820,7 +817,7 @@ InterpreterObjCmd(
     Tcl_Preserve(otherInterp);
     switch ((enum option) index) {
     case OTHER_EVAL:
-   	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
+	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 
 	/*
 	 * TODO: Should exceptions be filtered here?
@@ -831,7 +828,7 @@ InterpreterObjCmd(
 	Tcl_SetObjResult(interp, Tcl_GetObjResult(otherInterp));
 	break;
     case OTHER_RECORD:
-   	Tcl_RecordAndEvalObj(otherInterp, objv[2], TCL_EVAL_GLOBAL);
+	Tcl_RecordAndEvalObj(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 
 	/*
 	 * By not setting result, we discard any exceptions or errors here and
@@ -859,7 +856,7 @@ InterpreterObjCmd(
 
 static void
 DeleteConsoleInterp(
-    ClientData clientData)
+    void *clientData)
 {
     Tcl_Interp *interp = (Tcl_Interp *)clientData;
 
@@ -885,7 +882,7 @@ DeleteConsoleInterp(
 
 static void
 InterpDeleteProc(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp)
 {
     ConsoleInfo *info = (ConsoleInfo *)clientData;
@@ -918,7 +915,7 @@ InterpDeleteProc(
 
 static void
 ConsoleDeleteProc(
-    ClientData clientData)
+    void *clientData)
 {
     ConsoleInfo *info = (ConsoleInfo *)clientData;
 
@@ -951,7 +948,7 @@ ConsoleDeleteProc(
 
 static void
 ConsoleEventProc(
-    ClientData clientData,
+    void *clientData,
     XEvent *eventPtr)
 {
     if (eventPtr->type == DestroyNotify) {
@@ -959,7 +956,7 @@ ConsoleEventProc(
 	Tcl_Interp *consoleInterp = info->consoleInterp;
 
 	if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
-	    Tcl_EvalEx(consoleInterp, "tk::ConsoleExit", -1, TCL_EVAL_GLOBAL);
+	    Tcl_EvalEx(consoleInterp, "tk::ConsoleExit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 
 	if (info->refCount-- <= 1) {

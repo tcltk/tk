@@ -32,6 +32,7 @@ busy \- Make Tk widgets busy, temporarily blocking user interactions
 .SH SYNOPSIS
 .nf
 \fBtk busy\fI window \fR?\fIoptions\fR?
+\fBtk busy busywindow \fIwindow\fR
 \fBtk busy hold\fI window \fR?\fIoptions\fR?
 \fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
 \fBtk busy forget\fI window \fR?\fIwindow \fR?...
@@ -124,6 +125,13 @@ The following operations are available for the \fBtk busy\fR command:
 \fBtk busy \fIwindow\fR ?\fIoption value\fR?...
 .
 Shortcut for \fBtk busy hold\fR command.
+.\" METHOD: busywindow
+.TP
+\fBtk busy busywindow \fIwindow\fR
+.
+Returns the pathname of the busy window (i.e. the transparent window
+shielding the window appearing busy) created by the \fBtk busy hold\fR
+command for \fIwindow\fR, or the empty string if \fIwindow\fR is not busy.
 .\" METHOD: cget
 .TP
 \fBtk busy cget \fIwindow option\fR
@@ -187,7 +195,9 @@ window is mapped the next time idle tasks are processed, and the specified
 window and its descendants will be blocked from user interactions. Normally
 \fBupdate\fR should be called immediately afterward to insure that the hold
 operation is in effect before the application starts its processing. The
-following configuration options are valid:
+command returns the pathname of the busy window that was created (i.e. the
+transparent window shielding the window appearing busy). The following
+configuration options are valid:
 .RS
 .\" OPTION: -cursor
 .TP
@@ -215,27 +225,13 @@ events in the busy window:
 .PP
 .CS
 \fBtk busy\fR hold .frame.canvas
-bind .frame.canvas_Busy <Enter> { ... }
+bind [\fBtk busy\fR busywindow .frame.canvas] <Enter> { ... }
 .CE
 .PP
-Normally the busy window is a sibling of the widget. The name of the busy
-window is
-.QW \fIwidget\fB_Busy\fR
-where \fIwidget\fR is the name of the widget to be made busy. In the previous
-example, the pathname of the busy window is
-.QW \fB.frame.canvas_Busy\fR .
-The exception is when the widget is a toplevel widget (such as
-.QW . )
-where the busy window can't be made a sibling. The busy window is then a child
-of the widget named
-.QW \fIwidget\fB._Busy\fR
-where \fIwidget\fR is the name of the toplevel widget. In the following
-example, the pathname of the busy window is
-.QW \fB._Busy\fR .
-.PP
+or
 .CS
-\fBtk busy\fR hold .
-bind ._Busy <Enter> { ... }
+set busyWin [\fBtk busy\fR hold .frame.canvas]
+bind $busyWin <Enter> { ... }
 .CE
 .SS "ENTER/LEAVE EVENTS"
 .PP

@@ -23,8 +23,8 @@
 { "Multi_key", 0xFF20 },
 { "Kanji", 0xFF21 },
 { "Muhenkan", 0xFF22 },
-{ "Henkan_Mode", 0xFF23 },
 { "Henkan", 0xFF23 },
+{ "Henkan_Mode", 0xFF23 },
 { "Romaji", 0xFF24 },
 { "Hiragana", 0xFF25 },
 { "Katakana", 0xFF26 },
@@ -59,14 +59,15 @@
 { "Right", 0xFF53 },
 { "Down", 0xFF54 },
 { "Prior", 0xFF55 },
+#ifndef TK_NO_DEPRECATED
 { "Page_Up", 0xFF55 },
+#endif
 { "Next", 0xFF56 },
+#ifndef TK_NO_DEPRECATED
 { "Page_Down", 0xFF56 },
+#endif
 { "End", 0xFF57 },
 { "Begin", 0xFF58 },
-{ "Win_L", 0xFF5B },
-{ "Win_R", 0xFF5C },
-{ "App", 0xFF5D },
 { "Select", 0xFF60 },
 { "Print", 0xFF61 },
 { "Execute", 0xFF62 },
@@ -74,6 +75,9 @@
 { "Undo", 0xFF65 },
 { "Redo", 0xFF66 },
 { "Menu", 0xFF67 },
+#ifndef TK_NO_DEPRECATED
+{ "App", 0xFF67 },
+#endif
 { "Find", 0xFF68 },
 { "Cancel", 0xFF69 },
 { "Help", 0xFF6A },
@@ -133,55 +137,105 @@
 { "F9", 0xFFC6 },
 { "F10", 0xFFC7 },
 { "F11", 0xFFC8 },
+#ifndef TK_NO_DEPRECATED
 { "L1", 0xFFC8 },
+#endif
 { "F12", 0xFFC9 },
+#ifndef TK_NO_DEPRECATED
 { "L2", 0xFFC9 },
+#endif
 { "F13", 0xFFCA },
+#ifndef TK_NO_DEPRECATED
 { "L3", 0xFFCA },
+#endif
 { "F14", 0xFFCB },
+#ifndef TK_NO_DEPRECATED
 { "L4", 0xFFCB },
+#endif
 { "F15", 0xFFCC },
+#ifndef TK_NO_DEPRECATED
 { "L5", 0xFFCC },
+#endif
 { "F16", 0xFFCD },
+#ifndef TK_NO_DEPRECATED
 { "L6", 0xFFCD },
+#endif
 { "F17", 0xFFCE },
+#ifndef TK_NO_DEPRECATED
 { "L7", 0xFFCE },
+#endif
 { "F18", 0xFFCF },
+#ifndef TK_NO_DEPRECATED
 { "L8", 0xFFCF },
+#endif
 { "F19", 0xFFD0 },
+#ifndef TK_NO_DEPRECATED
 { "L9", 0xFFD0 },
+#endif
 { "F20", 0xFFD1 },
+#ifndef TK_NO_DEPRECATED
 { "L10", 0xFFD1 },
+#endif
 { "F21", 0xFFD2 },
+#ifndef TK_NO_DEPRECATED
 { "R1", 0xFFD2 },
+#endif
 { "F22", 0xFFD3 },
+#ifndef TK_NO_DEPRECATED
 { "R2", 0xFFD3 },
+#endif
 { "F23", 0xFFD4 },
+#ifndef TK_NO_DEPRECATED
 { "R3", 0xFFD4 },
+#endif
 { "F24", 0xFFD5 },
+#ifndef TK_NO_DEPRECATED
 { "R4", 0xFFD5 },
+#endif
 { "F25", 0xFFD6 },
+#ifndef TK_NO_DEPRECATED
 { "R5", 0xFFD6 },
+#endif
 { "F26", 0xFFD7 },
+#ifndef TK_NO_DEPRECATED
 { "R6", 0xFFD7 },
+#endif
 { "F27", 0xFFD8 },
+#ifndef TK_NO_DEPRECATED
 { "R7", 0xFFD8 },
+#endif
 { "F28", 0xFFD9 },
+#ifndef TK_NO_DEPRECATED
 { "R8", 0xFFD9 },
+#endif
 { "F29", 0xFFDA },
+#ifndef TK_NO_DEPRECATED
 { "R9", 0xFFDA },
+#endif
 { "F30", 0xFFDB },
+#ifndef TK_NO_DEPRECATED
 { "R10", 0xFFDB },
+#endif
 { "F31", 0xFFDC },
+#ifndef TK_NO_DEPRECATED
 { "R11", 0xFFDC },
+#endif
 { "F32", 0xFFDD },
+#ifndef TK_NO_DEPRECATED
 { "R12", 0xFFDD },
+#endif
 { "F33", 0xFFDE },
+#ifndef TK_NO_DEPRECATED
 { "R13", 0xFFDE },
+#endif
 { "F34", 0xFFDF },
+#ifndef TK_NO_DEPRECATED
 { "R14", 0xFFDF },
+#endif
 { "F35", 0xFFE0 },
+#ifndef TK_NO_DEPRECATED
 { "R15", 0xFFE0 },
+#endif
 { "Shift_L", 0xFFE1 },
 { "Shift_R", 0xFFE2 },
 { "Control_L", 0xFFE3 },
@@ -193,7 +247,13 @@
 { "Alt_L", 0xFFE9 },
 { "Alt_R", 0xFFEA },
 { "Super_L", 0xFFEB },
+#ifndef TK_NO_DEPRECATED
+{ "Win_L", 0xFFEB },
+#endif
 { "Super_R", 0xFFEC },
+#ifndef TK_NO_DEPRECATED
+{ "Win_R", 0xFFEC },
+#endif
 { "Hyper_L", 0xFFED },
 { "Hyper_R", 0xFFEE },
 { "braille_dot_1", 0xFFF1 },
@@ -304,9 +364,13 @@
 { "dead_u", 0xFE88 },
 { "dead_U", 0xFE89 },
 { "dead_schwa", 0xFE8A },
+#ifndef TK_NO_DEPRECATED
 { "dead_small_schwa", 0xFE8A },
+#endif
 { "dead_SCHWA", 0xFE8B },
+#ifndef TK_NO_DEPRECATED
 { "dead_capital_schwa", 0xFE8B },
+#endif
 { "dead_greek", 0xFE8C },
 { "dead_hamza", 0xFE8D },
 { "dead_lowline", 0xFE90 },
@@ -355,10 +419,13 @@
 { "Pointer_DfltBtnPrev", 0xFEFC },
 { "Pointer_Drag5", 0xFEFD },
 { "space", 0x20 },
+#ifndef TK_NO_DEPRECATED
 { "exclam", 0x21 },
+#endif
 { "quotedbl", 0x22 },
 { "numbersign", 0x23 },
 { "dollar", 0x24 },
+#ifndef TK_NO_DEPRECATED
 { "percent", 0x25 },
 { "ampersand", 0x26 },
 { "apostrophe", 0x27 },
@@ -368,7 +435,9 @@
 { "asterisk", 0x2A },
 { "plus", 0x2B },
 { "comma", 0x2C },
+#endif
 { "minus", 0x2D },
+#ifndef TK_NO_DEPRECATED
 { "period", 0x2E },
 { "slash", 0x2F },
 { "0", 0x30 },
@@ -382,10 +451,14 @@
 { "8", 0x38 },
 { "9", 0x39 },
 { "colon", 0x3A },
+#endif
 { "semicolon", 0x3B },
 { "less", 0x3C },
+#ifndef TK_NO_DEPRECATED
 { "equal", 0x3D },
+#endif
 { "greater", 0x3E },
+#ifndef TK_NO_DEPRECATED
 { "question", 0x3F },
 { "at", 0x40 },
 { "A", 0x41 },
@@ -414,9 +487,11 @@
 { "X", 0x58 },
 { "Y", 0x59 },
 { "Z", 0x5A },
+#endif
 { "bracketleft", 0x5B },
 { "backslash", 0x5C },
 { "bracketright", 0x5D },
+#ifndef TK_NO_DEPRECATED
 { "asciicircum", 0x5E },
 { "underscore", 0x5F },
 { "grave", 0x60 },
@@ -447,11 +522,17 @@
 { "x", 0x78 },
 { "y", 0x79 },
 { "z", 0x7A },
+#endif
 { "braceleft", 0x7B },
+#ifndef TK_NO_DEPRECATED
 { "bar", 0x7C },
+#endif
 { "braceright", 0x7D },
+#ifndef TK_NO_DEPRECATED
 { "asciitilde", 0x7E },
+#endif
 { "nobreakspace", 0xA0 },
+#ifndef TK_NO_DEPRECATED
 { "exclamdown", 0xA1 },
 { "cent", 0xA2 },
 { "sterling", 0xA3 },
@@ -512,7 +593,9 @@
 { "Odiaeresis", 0xD6 },
 { "multiply", 0xD7 },
 { "Oslash", 0xD8 },
+#ifndef TK_NO_DEPRECATED
 { "Ooblique", 0xD8 },
+#endif
 { "Ugrave", 0xD9 },
 { "Uacute", 0xDA },
 { "Ucircumflex", 0xDB },
@@ -546,7 +629,9 @@
 { "odiaeresis", 0xF6 },
 { "division", 0xF7 },
 { "oslash", 0xF8 },
+#ifndef TK_NO_DEPRECATED
 { "ooblique", 0xF8 },
+#endif
 { "ugrave", 0xF9 },
 { "uacute", 0xFA },
 { "ucircumflex", 0xFB },
@@ -554,6 +639,7 @@
 { "yacute", 0xFD },
 { "thorn", 0xFE },
 { "ydiaeresis", 0xFF },
+#endif
 { "Aogonek", 0x1A1 },
 { "breve", 0x1A2 },
 { "Lstroke", 0x1A3 },
@@ -634,7 +720,9 @@
 { "ubreve", 0x2FD },
 { "scircumflex", 0x2FE },
 { "kra", 0x3A2 },
+#ifndef TK_NO_DEPRECATED
 { "kappa", 0x3A2 },
+#endif
 { "Rcedilla", 0x3A3 },
 { "Itilde", 0x3A5 },
 { "Lcedilla", 0x3A6 },
@@ -646,7 +734,9 @@
 { "lcedilla", 0x3B6 },
 { "emacron", 0x3BA },
 { "gcedilla", 0x3BB },
+#ifndef TK_NO_DEPRECATED
 { "gacute", 0x3BB },
+#endif
 { "tslash", 0x3BC },
 { "ENG", 0x3BD },
 { "eng", 0x3BF },
@@ -679,7 +769,9 @@
 { "kana_closingbracket", 0x4A3 },
 { "kana_comma", 0x4A4 },
 { "kana_conjunctive", 0x4A5 },
+#ifndef TK_NO_DEPRECATED
 { "kana_middledot", 0x4A5 },
+#endif
 { "kana_WO", 0x4A6 },
 { "kana_a", 0x4A7 },
 { "kana_i", 0x4A8 },
@@ -690,7 +782,9 @@
 { "kana_yu", 0x4AD },
 { "kana_yo", 0x4AE },
 { "kana_tsu", 0x4AF },
+#ifndef TK_NO_DEPRECATED
 { "kana_tu", 0x4AF },
+#endif
 { "prolongedsound", 0x4B0 },
 { "kana_A", 0x4B1 },
 { "kana_I", 0x4B2 },
@@ -709,9 +803,13 @@
 { "kana_SO", 0x4BF },
 { "kana_TA", 0x4C0 },
 { "kana_CHI", 0x4C1 },
+#ifndef TK_NO_DEPRECATED
 { "kana_TI", 0x4C1 },
+#endif
 { "kana_TSU", 0x4C2 },
+#ifndef TK_NO_DEPRECATED
 { "kana_TU", 0x4C2 },
+#endif
 { "kana_TE", 0x4C3 },
 { "kana_TO", 0x4C4 },
 { "kana_NA", 0x4C5 },
@@ -722,7 +820,9 @@
 { "kana_HA", 0x4CA },
 { "kana_HI", 0x4CB },
 { "kana_FU", 0x4CC },
+#ifndef TK_NO_DEPRECATED
 { "kana_HU", 0x4CC },
+#endif
 { "kana_HE", 0x4CD },
 { "kana_HO", 0x4CE },
 { "kana_MA", 0x4CF },
@@ -779,7 +879,9 @@
 { "Arabic_meem", 0x5E5 },
 { "Arabic_noon", 0x5E6 },
 { "Arabic_ha", 0x5E7 },
+#ifndef TK_NO_DEPRECATED
 { "Arabic_heh", 0x5E7 },
+#endif
 { "Arabic_waw", 0x5E8 },
 { "Arabic_alefmaksura", 0x5E9 },
 { "Arabic_yeh", 0x5EA },
@@ -795,47 +897,75 @@
 { "Macedonia_gje", 0x6A2 },
 { "Cyrillic_io", 0x6A3 },
 { "Ukrainian_ie", 0x6A4 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_je", 0x6A4 },
+#endif
 { "Macedonia_dse", 0x6A5 },
 { "Ukrainian_i", 0x6A6 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_i", 0x6A6 },
+#endif
 { "Ukrainian_yi", 0x6A7 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_yi", 0x6A7 },
+#endif
 { "Cyrillic_je", 0x6A8 },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_je", 0x6A8 },
+#endif
 { "Cyrillic_lje", 0x6A9 },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_lje", 0x6A9 },
+#endif
 { "Cyrillic_nje", 0x6AA },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_nje", 0x6AA },
+#endif
 { "Serbian_tshe", 0x6AB },
 { "Macedonia_kje", 0x6AC },
 { "Ukrainian_ghe_with_upturn", 0x6AD },
 { "Byelorussian_shortu", 0x6AE },
 { "Cyrillic_dzhe", 0x6AF },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_dze", 0x6AF },
+#endif
 { "numerosign", 0x6B0 },
 { "Serbian_DJE", 0x6B1 },
 { "Macedonia_GJE", 0x6B2 },
 { "Cyrillic_IO", 0x6B3 },
 { "Ukrainian_IE", 0x6B4 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_JE", 0x6B4 },
+#endif
 { "Macedonia_DSE", 0x6B5 },
 { "Ukrainian_I", 0x6B6 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_I", 0x6B6 },
+#endif
 { "Ukrainian_YI", 0x6B7 },
+#ifndef TK_NO_DEPRECATED
 { "Ukranian_YI", 0x6B7 },
+#endif
 { "Cyrillic_JE", 0x6B8 },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_JE", 0x6B8 },
+#endif
 { "Cyrillic_LJE", 0x6B9 },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_LJE", 0x6B9 },
+#endif
 { "Cyrillic_NJE", 0x6BA },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_NJE", 0x6BA },
+#endif
 { "Serbian_TSHE", 0x6BB },
 { "Macedonia_KJE", 0x6BC },
 { "Ukrainian_GHE_WITH_UPTURN", 0x6BD },
 { "Byelorussian_SHORTU", 0x6BE },
 { "Cyrillic_DZHE", 0x6BF },
+#ifndef TK_NO_DEPRECATED
 { "Serbian_DZE", 0x6BF },
+#endif
 { "Cyrillic_yu", 0x6C0 },
 { "Cyrillic_a", 0x6C1 },
 { "Cyrillic_be", 0x6C2 },
@@ -905,7 +1035,9 @@
 { "Greek_ETAaccent", 0x7A3 },
 { "Greek_IOTAaccent", 0x7A4 },
 { "Greek_IOTAdieresis", 0x7A5 },
+#ifndef TK_NO_DEPRECATED
 { "Greek_IOTAdiaeresis", 0x7A5 },
+#endif
 { "Greek_IOTAaccentdiaeresis", 0x7A6 },
 { "Greek_OMICRONaccent", 0x7A7 },
 { "Greek_UPSILONaccent", 0x7A8 },
@@ -935,8 +1067,8 @@
 { "Greek_THETA", 0x7C8 },
 { "Greek_IOTA", 0x7C9 },
 { "Greek_KAPPA", 0x7CA },
-{ "Greek_LAMDA", 0x7CB },
 { "Greek_LAMBDA", 0x7CB },
+{ "Greek_LAMDA", 0x7CB },
 { "Greek_MU", 0x7CC },
 { "Greek_NU", 0x7CD },
 { "Greek_XI", 0x7CE },
@@ -960,8 +1092,8 @@
 { "Greek_theta", 0x7E8 },
 { "Greek_iota", 0x7E9 },
 { "Greek_kappa", 0x7EA },
-{ "Greek_lamda", 0x7EB },
 { "Greek_lambda", 0x7EB },
+{ "Greek_lamda", 0x7EB },
 { "Greek_mu", 0x7EC },
 { "Greek_nu", 0x7ED },
 { "Greek_xi", 0x7EE },
@@ -1155,19 +1287,31 @@
 { "hebrew_doublelowline", 0xCDF },
 { "hebrew_aleph", 0xCE0 },
 { "hebrew_bet", 0xCE1 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_beth", 0xCE1 },
+#endif
 { "hebrew_gimel", 0xCE2 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_gimmel", 0xCE2 },
+#endif
 { "hebrew_dalet", 0xCE3 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_daleth", 0xCE3 },
+#endif
 { "hebrew_he", 0xCE4 },
 { "hebrew_waw", 0xCE5 },
 { "hebrew_zain", 0xCE6 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_zayin", 0xCE6 },
+#endif
 { "hebrew_chet", 0xCE7 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_het", 0xCE7 },
+#endif
 { "hebrew_tet", 0xCE8 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_teth", 0xCE8 },
+#endif
 { "hebrew_yod", 0xCE9 },
 { "hebrew_finalkaph", 0xCEA },
 { "hebrew_kaph", 0xCEB },
@@ -1177,20 +1321,30 @@
 { "hebrew_finalnun", 0xCEF },
 { "hebrew_nun", 0xCF0 },
 { "hebrew_samech", 0xCF1 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_samekh", 0xCF1 },
+#endif
 { "hebrew_ayin", 0xCF2 },
 { "hebrew_finalpe", 0xCF3 },
 { "hebrew_pe", 0xCF4 },
 { "hebrew_finalzade", 0xCF5 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_finalzadi", 0xCF5 },
+#endif
 { "hebrew_zade", 0xCF6 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_zadi", 0xCF6 },
+#endif
 { "hebrew_qoph", 0xCF7 },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_kuf", 0xCF7 },
+#endif
 { "hebrew_resh", 0xCF8 },
 { "hebrew_shin", 0xCF9 },
 { "hebrew_taw", 0xCFA },
+#ifndef TK_NO_DEPRECATED
 { "hebrew_taf", 0xCFA },
+#endif
 { "Thai_kokai", 0xDA1 },
 { "Thai_khokhai", 0xDA2 },
 { "Thai_khokhuat", 0xDA3 },

@@ -57,9 +57,9 @@ Height of \fIsource\fR and \fImask\fR.
 X-location of cursor hot-spot.
 .AP "int" yHot in
 Y-location of cursor hot-spot.
-.AP Tk_Uid fg in
+.AP "const char" *fg in
 Textual description of foreground color for cursor.
-.AP Tk_Uid bg in
+.AP "const char" *bg in
 Textual description of background color for cursor.
 .AP Display *display in
 Display for which \fIcursor\fR was allocated.
@@ -174,7 +174,7 @@ Tk_Cursor cursor;
 #include "mask.cursor"
 cursor = Tk_GetCursorFromData(interp, tkwin, source_bits,
     mask_bits, source_width, source_height, source_x_hot,
-    source_y_hot, Tk_GetUid("red"), Tk_GetUid("blue"));
+    source_y_hot, "red", "blue");
 .CE
 .PP
 Under normal conditions \fBTk_GetCursorFromData\fR

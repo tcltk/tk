@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 Joe English.  Freely redistributable.
+ * Copyright © 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
  */
@@ -28,7 +28,7 @@ extern "C" {
 /*------------------------------------------------------------------------
  * +++ Defaults for element option specifications.
  */
-#define DEFAULT_FONT 		"TkDefaultFont"
+#define DEFAULT_FONT		"TkDefaultFont"
 #ifdef MAC_OSX_TK
 #define DEFAULT_BACKGROUND	"systemTextBackgroundColor"
 #define DEFAULT_FOREGROUND	"systemTextColor"
@@ -38,7 +38,7 @@ extern "C" {
 #endif
 /*------------------------------------------------------------------------
  * +++ Widget states.
- * 	Keep in sync with stateNames[] in tkstate.c.
+ *	Keep in sync with stateNames[] in tkstate.c.
  */
 
 typedef unsigned int Ttk_State;
@@ -51,7 +51,7 @@ typedef unsigned int Ttk_State;
 #define TTK_STATE_BACKGROUND	(1<<5)
 #define TTK_STATE_ALTERNATE	(1<<6)
 #define TTK_STATE_INVALID	(1<<7)
-#define TTK_STATE_READONLY 	(1<<8)
+#define TTK_STATE_READONLY	(1<<8)
 #define TTK_STATE_HOVER		(1<<9)
 #define TTK_STATE_USER6		(1<<10)
 #define TTK_STATE_USER5		(1<<11)
@@ -75,16 +75,10 @@ typedef struct
 #define Ttk_ModifyState(state, spec) \
     (((state) & ~(spec)->offbits) | (spec)->onbits)
 
-TTKAPI int Ttk_GetStateSpecFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_StateSpec *);
-TTKAPI Tcl_Obj *Ttk_NewStateSpecObj(unsigned int onbits,unsigned int offbits);
-
 /*------------------------------------------------------------------------
  * +++ State maps and state tables.
  */
 typedef Tcl_Obj *Ttk_StateMap;
-
-TTKAPI Ttk_StateMap Ttk_GetStateMapFromObj(Tcl_Interp *, Tcl_Obj *);
-TTKAPI Tcl_Obj *Ttk_StateMapLookup(Tcl_Interp*, Ttk_StateMap, Ttk_State);
 
 /*
  * Table for looking up an integer index based on widget state:
@@ -96,11 +90,9 @@ typedef struct
     unsigned int offBits;	/* Bits which must be cleared */
 } Ttk_StateTable;
 
-TTKAPI int Ttk_StateTableLookup(Ttk_StateTable map[], Ttk_State);
-
 /*------------------------------------------------------------------------
  * +++ Padding.
- * 	Used to represent internal padding and borders.
+ *	Used to represent internal padding and borders.
  */
 typedef struct
 {
@@ -110,14 +102,6 @@ typedef struct
     short bottom;
 } Ttk_Padding;
 
-TTKAPI int Ttk_GetPaddingFromObj(Tcl_Interp*,Tk_Window,Tcl_Obj*,Ttk_Padding*);
-TTKAPI int Ttk_GetBorderFromObj(Tcl_Interp*,Tcl_Obj*,Ttk_Padding*);
-
-TTKAPI Ttk_Padding Ttk_MakePadding(short l, short t, short r, short b);
-TTKAPI Ttk_Padding Ttk_UniformPadding(short borderWidth);
-TTKAPI Ttk_Padding Ttk_AddPadding(Ttk_Padding, Ttk_Padding);
-TTKAPI Ttk_Padding Ttk_RelievePadding(Ttk_Padding, int relief, int n);
-
 #define Ttk_PaddingWidth(p) ((p).left + (p).right)
 #define Ttk_PaddingHeight(p) ((p).top + (p).bottom)
 
@@ -126,18 +110,15 @@ TTKAPI Ttk_Padding Ttk_RelievePadding(Ttk_Padding, int relief, int n);
 
 /*------------------------------------------------------------------------
  * +++ Boxes.
- * 	Used to represent rectangular regions
+ *	Used to represent rectangular regions
  */
-typedef struct 	/* Hey, this is an XRectangle! */
+typedef struct	/* Hey, this is an XRectangle! */
 {
     int x;
     int y;
     int width;
     int height;
 } Ttk_Box;
-
-TTKAPI Ttk_Box Ttk_MakeBox(int x, int y, int width, int height);
-TTKAPI int Ttk_BoxContains(Ttk_Box, int x, int y);
 
 #define Ttk_WinBox(tkwin) Ttk_MakeBox(0,0,Tk_Width(tkwin),Tk_Height(tkwin))
 
@@ -165,7 +146,6 @@ typedef unsigned int Ttk_Sticky;
 #define TTK_FILL_Y	(0xC)	/* -sticky ns */
 #define TTK_FILL_BOTH	(0xF)	/* -sticky nswe */
 
-TTKAPI int Ttk_GetStickyFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_Sticky *);
 TTKAPI Tcl_Obj *Ttk_NewStickyObj(Ttk_Sticky);
 
 /*
@@ -192,12 +172,6 @@ typedef unsigned int Ttk_PositionSpec;	/* See below */
 #define _TTK_MASK_STICK (0x0F)	/* See Ttk_UnparseLayout() */
 #define _TTK_MASK_PACK	(0xF0)	/* See Ttk_UnparseLayout(), packStrings */
 
-TTKAPI Ttk_Box Ttk_PackBox(Ttk_Box *cavity, int w, int h, Ttk_Side side);
-TTKAPI Ttk_Box Ttk_StickBox(Ttk_Box parcel, int w, int h, Ttk_Sticky sticky);
-TTKAPI Ttk_Box Ttk_AnchorBox(Ttk_Box parcel, int w, int h, Tk_Anchor anchor);
-TTKAPI Ttk_Box Ttk_PadBox(Ttk_Box b, Ttk_Padding p);
-TTKAPI Ttk_Box Ttk_ExpandBox(Ttk_Box b, Ttk_Padding p);
-TTKAPI Ttk_Box Ttk_PlaceBox(Ttk_Box *cavity, int w,int h, Ttk_Side,Ttk_Sticky);
 TTKAPI Ttk_Box Ttk_PositionBox(Ttk_Box *cavity, int w, int h, Ttk_PositionSpec);
 
 /*------------------------------------------------------------------------
@@ -211,21 +185,12 @@ typedef struct Ttk_Layout_ *Ttk_Layout;
 typedef struct Ttk_LayoutNode_ *Ttk_Element;
 typedef struct Ttk_Style_ *Ttk_Style;
 
-TTKAPI Ttk_Theme Ttk_GetTheme(Tcl_Interp *interp, const char *name);
-TTKAPI Ttk_Theme Ttk_GetDefaultTheme(Tcl_Interp *interp);
-TTKAPI Ttk_Theme Ttk_GetCurrentTheme(Tcl_Interp *interp);
-
-TTKAPI Ttk_Theme Ttk_CreateTheme(
-    Tcl_Interp *interp, const char *name, Ttk_Theme parent);
-
 typedef int (Ttk_ThemeEnabledProc)(Ttk_Theme theme, void *clientData);
 MODULE_SCOPE void Ttk_SetThemeEnabledProc(Ttk_Theme, Ttk_ThemeEnabledProc, void *);
 
 MODULE_SCOPE int Ttk_UseTheme(Tcl_Interp *, Ttk_Theme);
 
 typedef void (Ttk_CleanupProc)(void *clientData);
-TTKAPI void Ttk_RegisterCleanup(
-    Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc);
 
 /*------------------------------------------------------------------------
  * +++ Elements.
@@ -234,15 +199,15 @@ TTKAPI void Ttk_RegisterCleanup(
 enum TTKStyleVersion2 { TK_STYLE_VERSION_2 = 2 };
 
 typedef void (Ttk_ElementSizeProc)(void *clientData, void *elementRecord,
-        Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding*);
+	Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding*);
 typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
-        Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
+	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 typedef struct Ttk_ElementOptionSpec
 {
     const char *optionName;		/* Command-line name of the widget option */
-    Tk_OptionType type; 	/* Accepted option types */
-    int offset;			/* Offset of Tcl_Obj* field in element record */
+    Tk_OptionType type;	/* Accepted option types */
+    Tcl_Size offset;			/* Offset of Tcl_Obj* field in element record */
     const char *defaultValue;		/* Default value to used if resource missing */
 } Ttk_ElementOptionSpec;
 
@@ -251,21 +216,14 @@ typedef struct Ttk_ElementOptionSpec
 typedef struct Ttk_ElementSpec {
     enum TTKStyleVersion2 version;	/* Version of the style support. */
     size_t elementSize;			/* Size of element record */
-    Ttk_ElementOptionSpec *options;	/* List of options, NULL-terminated */
+    const Ttk_ElementOptionSpec *options;	/* List of options, NULL-terminated */
     Ttk_ElementSizeProc *size;		/* Compute min size and padding */
-    Ttk_ElementDrawProc *draw;  	/* Draw the element */
+    Ttk_ElementDrawProc *draw;	/* Draw the element */
 } Ttk_ElementSpec;
-
-TTKAPI Ttk_ElementClass *Ttk_RegisterElement(
-	Tcl_Interp *interp, Ttk_Theme theme, const char *elementName,
-	Ttk_ElementSpec *, void *clientData);
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
-	 Ttk_Theme, const char *elementName, int objc, Tcl_Obj *const objv[]);
-
-TTKAPI int Ttk_RegisterElementFactory(
-	Tcl_Interp *, const char *name, Ttk_ElementFactory, void *clientData);
+	 Ttk_Theme, const char *elementName, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * Null element implementation:
@@ -276,11 +234,9 @@ typedef struct {
     Tcl_Obj	*unused;
 } NullElement;
 
-MODULE_SCOPE void TtkNullElementSize
-	(void *, void *, Tk_Window, int *, int *, Ttk_Padding *);
-MODULE_SCOPE void TtkNullElementDraw
-	(void *, void *, Tk_Window, Drawable, Ttk_Box, Ttk_State);
-MODULE_SCOPE Ttk_ElementOptionSpec TtkNullElementOptions[];
+MODULE_SCOPE Ttk_ElementSizeProc TtkNullElementSize;
+MODULE_SCOPE Ttk_ElementDrawProc TtkNullElementDraw;
+MODULE_SCOPE const Ttk_ElementOptionSpec TtkNullElementOptions[];
 MODULE_SCOPE Ttk_ElementSpec ttkNullElementSpec;
 
 /*------------------------------------------------------------------------
@@ -305,10 +261,7 @@ typedef struct {
 #define TTK_END_LAYOUT_TABLE	{ 0, _TTK_LAYOUT | _TTK_LAYOUT_END } };
 
 #define TTK_BEGIN_LAYOUT(name)	static TTKLayoutInstruction name[] = {
-#define TTK_END_LAYOUT 		{ 0, _TTK_LAYOUT_END } };
-
-TTKAPI void Ttk_RegisterLayout(
-    Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec);
+#define TTK_END_LAYOUT		{ 0, _TTK_LAYOUT_END } };
 
 TTKAPI void Ttk_RegisterLayouts(
     Ttk_Theme theme, Ttk_LayoutSpec layoutTable);
@@ -345,6 +298,7 @@ MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_Element);
 MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_Element, int *w, int *h);
 
 MODULE_SCOPE void Ttk_PlaceElement(Ttk_Layout, Ttk_Element, Ttk_Box);
+MODULE_SCOPE void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_Element,unsigned set,unsigned clr);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
@@ -355,7 +309,7 @@ TTKAPI Tcl_Obj *Ttk_StyleMap(Ttk_Style, const char *optionName, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Resource cache.
- * 	See resource.c for explanation.
+ *	See resource.c for explanation.
  */
 
 typedef struct Ttk_ResourceCache_ *Ttk_ResourceCache;
@@ -377,38 +331,38 @@ MODULE_SCOPE void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor
 typedef struct TtkImageSpec Ttk_ImageSpec;
 TTKAPI Ttk_ImageSpec *TtkGetImageSpec(Tcl_Interp *, Tk_Window, Tcl_Obj *);
 TTKAPI Ttk_ImageSpec *TtkGetImageSpecEx(Tcl_Interp *, Tk_Window, Tcl_Obj *,
-					Tk_ImageChangedProc *, ClientData);
+					Tk_ImageChangedProc *, void *);
 TTKAPI void TtkFreeImageSpec(Ttk_ImageSpec *);
 TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Tk_Window, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Miscellaneous enumerations.
- * 	Other stuff that element implementations need to know about.
+ *	Other stuff that element implementations need to know about.
  */
-typedef enum 			/* -default option values */
+typedef enum			/* -default option values */
 {
-    TTK_BUTTON_DEFAULT_NORMAL,	/* widget defaultable */
     TTK_BUTTON_DEFAULT_ACTIVE,	/* currently the default widget */
-    TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
+    TTK_BUTTON_DEFAULT_DISABLED,	/* not defaultable */
+    TTK_BUTTON_DEFAULT_NORMAL	/* widget defaultable */
 } Ttk_ButtonDefaultState;
 
-TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);
 
-typedef enum 			/* -compound option values */
+typedef enum			/* -compound option values */
 {
-    TTK_COMPOUND_NONE,  	/* image if specified, otherwise text */
-    TTK_COMPOUND_TEXT,  	/* text only */
-    TTK_COMPOUND_IMAGE,  	/* image only */
+    TTK_COMPOUND_NONE,	/* image if specified, otherwise text */
+    TTK_COMPOUND_TEXT,	/* text only */
+    TTK_COMPOUND_IMAGE,	/* image only */
     TTK_COMPOUND_CENTER,	/* text overlays image */
-    TTK_COMPOUND_TOP,   	/* image above text */
+    TTK_COMPOUND_TOP,	/* image above text */
     TTK_COMPOUND_BOTTOM,	/* image below text */
-    TTK_COMPOUND_LEFT,   	/* image to left of text */
-    TTK_COMPOUND_RIGHT  	/* image to right of text */
+    TTK_COMPOUND_LEFT,	/* image to left of text */
+    TTK_COMPOUND_RIGHT	/* image to right of text */
 } Ttk_Compound;
 
-TTKAPI int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+TTKAPI int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_Compound *);
 
-typedef enum { 		/* -orient option values */
+typedef enum {		/* -orient option values */
     TTK_ORIENT_HORIZONTAL,
     TTK_ORIENT_VERTICAL
 } Ttk_Orient;
@@ -419,13 +373,13 @@ typedef enum { 		/* -orient option values */
 
 typedef struct TtkEnsemble {
     const char *name;			/* subcommand name */
-    Tcl_ObjCmdProc *command; 		/* subcommand implementation, OR: */
+    Tcl_ObjCmdProc2 *command;		/* subcommand implementation, OR: */
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 
 MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *commands, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+    const Ttk_Ensemble *commands, Tcl_Size cmdIndex,
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 

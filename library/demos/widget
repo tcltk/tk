@@ -10,7 +10,7 @@ exec wish "$0" ${1+"$@"}
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 
-package require Tk	8.5-
+package require tk	8.7-
 package require msgcat
 
 destroy {*}[winfo children .]
@@ -31,73 +31,98 @@ if {[tk windowingsystem] eq "x11"} {
 if {"defaultFont" ni [font names]} {
     # TIP #145 defines some standard named fonts
     if {"TkDefaultFont" in [font names] && "TkFixedFont" in [font names]} {
-        # FIX ME: the following technique of cloning the font to copy it works
-        #         fine but means that if the system font is changed by Tk
-        #         cannot update the copied font. font alias might be useful
-        #         here -- or fix the app to use TkDefaultFont etc.
-        font create mainFont   {*}[font configure TkDefaultFont]
-        font create fixedFont  {*}[font configure TkFixedFont]
-        font create boldFont   {*}[font configure TkDefaultFont] -weight bold
-        font create titleFont  {*}[font configure TkDefaultFont] -weight bold
-        font create statusFont {*}[font configure TkDefaultFont]
-        font create varsFont   {*}[font configure TkDefaultFont]
+	# FIX ME: the following technique of cloning the font to copy it works
+	#         fine but means that if the system font is changed by Tk
+	#         cannot update the copied font. font alias might be useful
+	#         here -- or fix the app to use TkDefaultFont etc.
+	font create mainFont   {*}[font configure TkDefaultFont]
+	font create fixedFont  {*}[font configure TkFixedFont]
+	font create boldFont   {*}[font configure TkDefaultFont] -weight bold
+	font create titleFont  {*}[font configure TkDefaultFont] -weight bold
+	font create statusFont {*}[font configure TkDefaultFont]
+	font create varsFont   {*}[font configure TkDefaultFont]
 	if {[tk windowingsystem] eq "aqua"} {
 	    font configure titleFont -size 17
 	}
     } else {
-        font create mainFont   -family Helvetica -size 12
-        font create fixedFont  -family Courier   -size 10
-        font create boldFont   -family Helvetica -size 12 -weight bold
-        font create titleFont  -family Helvetica -size 18 -weight bold
-        font create statusFont -family Helvetica -size 10
-        font create varsFont   -family Helvetica -size 14
+	font create mainFont   -family Helvetica -size 12
+	font create fixedFont  -family Courier   -size 10
+	font create boldFont   -family Helvetica -size 12 -weight bold
+	font create titleFont  -family Helvetica -size 18 -weight bold
+	font create statusFont -family Helvetica -size 10
+	font create varsFont   -family Helvetica -size 14
     }
 }
 
 set widgetDemo 1
 set font mainFont
 
-image create photo ::img::refresh -format GIF -data {
-    R0lGODlhEAAQAJEDAP///wAAACpnKv///yH5BAEAAAMALAAAAAAQABAAAAI63IKp
-    xgcPH2ouwgBCw1HIxHCQ4F3hSJKmwZXqWrmWxj7lKJ2dndcon9EBUq+gz3brVXAR
-    2tICU0gXBQA7
+# The SVG images used below are based on some icons provided by the
+# official open source SVG icon library for the Bootstrap project,
+# licensed under the MIT license (https://opensource.org/licenses/MIT).
+#
+# See https://github.com/twbs/icons.
+
+set viewData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="#000000"/>
+    </svg>
 }
 
-image create photo ::img::view -format GIF -data {
-    R0lGODlhEAAQAKIHAP///wwMDAAAAMDAwNnZ2SYmJmZmZv///yH5BAEAAAcALAAA
-    AAAQABAAAANMKLos90+ASamDRxJCgw9YVnlDOXiQBgRDBRgHKE6sW8QR3doPKK27
-    yg33q/GIOhdg6OsEJzeZykiBSUcs06e56Xx6np8ScIkFGuhQAgA7
+set refreshData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z" fill="#000000"/>
+    </svg>
 }
 
-image create photo ::img::delete -format GIF -data {
-    R0lGODlhEAAQAIABAIQAAP///yH5BAEAAAEALAAAAAAQABAAAAIjjI+pmwAc3HGy
-    PUSvqYpuvWQg40FfSVacBa5nN6JYDI3mzRQAOw==
+set printData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" fill="#000000"/>
+     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" fill="#000000"/>
+    </svg>
 }
 
-image create photo ::img::print -format GIF -data {
-    R0lGODlhEAAQALMKAAAAAP///52VunNkl8C82Yl+qldBgq+pyrOzs1fYAP///wAA
-    AAAAAAAAAAAAAAAAACH5BAEAAAoALAAAAAAQABAAAARGUMlJKwU4AztB+ODGeUiJ
-    fGLlgeEYmGWQXmx7aXgmAUTv/74N4EAsGhOJg1DAbDqbwoJ0Sp0KB9isNis0eL/g
-    ryhH5pgnEQA7
+proc images {arg} {
+    set fgColor [ttk::style lookup . -foreground {} black]
+    lassign [winfo rgb . $fgColor] r g b
+    set fgColor [format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+    foreach action {view refresh print} {
+	upvar ${action}Data imgData
+	for {set data $imgData; set startIdx 0} \
+		{[set idx1 [string first "#000000" $data $startIdx]] >= 0} \
+		{set startIdx [expr {$idx1 + 7}]} {
+	    set idx2 [expr {$idx1 + 6}]
+	    set data [string replace $data $idx1 $idx2 $fgColor]
+	}
+
+	switch $arg {
+	    create {
+		image create photo ::img::$action -format $::tk::svgFmt \
+			-data $data
+	    }
+	    configure { ::img::$action configure -data $data }
+	}
+    }
 }
 
-# Note that this is run through the message catalog! This is because this is
-# actually an image of a word.
-image create photo ::img::new -format PNG -data [mc {
-    iVBORw0KGgoAAAANSUhEUgAAAB4AAAAOCAYAAAA45qw5AAACMElEQVR4AeVTAwxd
-    QRCc2tZHGtQ2w9q2bdsOa9u2bUW1bdt2Z372JZe6DapJLqtb3h7+T8yKi5j4CsYD
-    EUQXxETclT7kWOlH2VV+tFkdQHPSwksSISF+BauCqL0qgOcMWgGfgEkaMsHxqUBk
-    3plE/sOnh/qDPAPJH/CKFBivGHWzFwBRnHhlqbu1Mh6CoFNnC/JshQ9p4YC2lrKt
-    DCAV+THiVejyhMjAbrNSrroiEfKR9g7ZfCgOog8QfnUQV62wAk68ndQ9ZbyoWO1H
-    Y6eDY1LCQL6a9ApOp9Hi1T0+gQq2JKMlky/oTKQliKWxEZvyG575kpW4pl1aZnQK
-    CLOVt45Lkp8uXp2SL8KO6uitNTZLdpK6s+I/eZbhpmsmWeOGOVQNKYLITzpKPAO3
-    tY7LSNZ7ccSLxX9y3uuOxRkg3dKESMoCHvL+GRVCutXsB3guLgDCeXOv4iWWkvwG
-    BaS+PmlpK6SI9ApI2oC2UtrwZQEkhkH+NtolVlQXJl1I+QltuU3XEc721bIRFpa8
-    IA5iqTo6vNNWmkNBLQbPeXwF2g17Q94nTQAfY3YzeY+WSu8MDzQ2kpELUhSGJUHE
-    0zeR3rY1L+Xl5G/re+jbiK6KhThwwInsts1fbMUUcpZszKeVtggZEiGdZDe5AtHh
-    7vL4CGiRvvKPS8FAvq9Nr4ZkFadR2y6kggu1z4vlyIbBp6BugQ8JLEg4bTkD9eMZ
-    QZ8hpJ3VvTtuvbWrY/ElvP/9R+Aj3603+iE3fkEAAAAASUVORK5CYII=
-}]
+images create
+set mainClass [winfo class .]
+foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
+    bind $mainClass $event { images configure }
+}
+unset mainClass event
+
+image create photo ::img::delete -format $::tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#d00000"/>
+    </svg>
+}
 
 #----------------------------------------------------------------
 # The code below creates the main window, consisting of a menu bar and a text
@@ -117,7 +142,7 @@ if {[tk windowingsystem] ne "aqua"} {
 	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
     bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
-    if {[string match win* [tk windowingsystem]]} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Windows doesn't usually have a Meta key
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
 		-command {exit} -accelerator [mc "Ctrl+Q"]
@@ -136,12 +161,12 @@ if {[tk windowingsystem] eq "aqua"} {
     ttk::separator .statusBar.sep
     pack .statusBar.sep -side top -expand yes -fill x -pady 0
 }
-pack .statusBar.lab -side left -padx 2 -expand yes -fill both
+pack .statusBar.lab -side left -padx 1.5p -expand yes -fill both
 if {[tk windowingsystem] ne "aqua"} {
     ttk::sizegrip .statusBar.foo
-    pack .statusBar.foo -side left -padx 2
+    pack .statusBar.foo -side left -padx 1.5p
 }
-pack .statusBar -side bottom -fill x -pady 2
+pack .statusBar -side bottom -fill x -pady 1.5p
 
 set textheight 30
 catch {
@@ -156,7 +181,7 @@ ttk::scrollbar .s -orient vertical -command {.t yview} -takefocus 1
 pack .s -in .textFrame -side right -fill y
 text .t -yscrollcommand {.s set} -wrap word -width 70 -height $textheight \
 	-font mainFont -setgrid 1 -highlightthickness 0 \
-	-padx 4 -pady 2 -takefocus 0
+	-padx 3p -pady 1.5p -takefocus 0
 pack .t -in .textFrame -expand y -fill both -padx 1
 pack .textFrame -expand yes -fill both
 if {[tk windowingsystem] eq "aqua"} {
@@ -200,6 +225,11 @@ if {[winfo depth .] == 1} {
     }
     .t tag configure hot -foreground red -underline 1
 }
+
+# The tag "new" must be the one having the highest priority.
+#
+.t tag configure new -foreground #c00000 -underline 0 -font boldFont
+
 .t tag bind demo <ButtonRelease-1> {
     invoke [.t index {@%x,%y}]
 }
@@ -275,7 +305,7 @@ proc addFormattedText {formattedText} {
 		    .t insert end "[incr demoCount]. [mc $description]" \
 			    [list demo demo-$name]
 		    if {$new} {
-			.t image create end -image ::img::new -padx 5
+			.t insert end " [mc NEW]" new
 			set new 0
 		    }
 		    .t insert end " \n " demospace
@@ -329,7 +359,21 @@ addFormattedText {
     @@demo image2	A simple user interface for viewing images
     @@demo labelframe	Labelled frames
     @@demo ttkbut	The simple Themed Tk widgets
+}
 
+if {[tk windowingsystem] eq "aqua"} {
+    addFormattedText {
+	@@subtitle Mac-Specific Widgets and Window Styles
+	@@new
+	@@demo mac_styles	Special widgets for macOS
+	@@new
+	@@demo mac_wm	Window styles for macOS
+	@@new
+	@@demo mac_tabs	Tabbed Windows on macOS
+    }
+}
+
+addFormattedText {
     @@subtitle	Listboxes and Trees
     @@demo states	The 50 states
     @@demo colors	Colors: change the color scheme for the application
@@ -367,7 +411,6 @@ addFormattedText {
     @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
     @@demo vscale	Vertical scale
-    @@new
     @@demo ttkscale	Themed scale linked to a label with traces
     @@demo ttkprogress	Progress bar
 
@@ -388,6 +431,10 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
+    @@new
+    @@demo systray      System tray icon and notification
+    @@new
+    @@demo print        Printing from canvas and text widgets
 
     @@subtitle	Animation
     @@demo anilabel	Animated labels
@@ -399,6 +446,8 @@ addFormattedText {
     @@demo bitmap	The built-in bitmaps
     @@demo dialog1	A dialog box with a local grab
     @@demo dialog2	A dialog box with a global grab
+    @@new
+    @@demo windowicons  Window icons and badges
 }
 
 ##############################################################################
@@ -415,9 +464,9 @@ focus .s
 proc addSeeDismiss {w show {vars {}} {extra {}}} {
     ## See Code / Dismiss buttons
     ttk::frame $w
-    ttk::separator $w.sep
     #ttk::frame $w.sep -height 2 -relief sunken
-    grid $w.sep -columnspan 4 -row 0 -sticky ew -pady 2
+    ttk::separator $w.sep
+    grid $w.sep -columnspan 4 -row 0 -sticky ew -pady 1.5p
     ttk::button $w.dismiss -text [mc "Dismiss"] \
 	-image ::img::delete -compound left \
 	-command [list destroy [winfo toplevel $w]]
@@ -434,7 +483,7 @@ proc addSeeDismiss {w show {vars {}} {extra {}}} {
     if {$extra ne ""} {
 	set buttons [linsert $buttons 1 [uplevel 1 $extra]]
     }
-    grid {*}$buttons -padx 4 -pady 4
+    grid {*}$buttons -padx 3p -pady 3p
     grid columnconfigure $w 0 -weight 1
     if {[tk windowingsystem] eq "aqua"} {
 	foreach b [lrange $buttons 1 end] {$b configure -takefocus 0}
@@ -477,15 +526,15 @@ proc showVars {w args} {
     foreach var $args {
 	ttk::label $f.n$var -text "$var:" -anchor w
 	ttk::label $f.v$var -textvariable $var -anchor w
-	grid $f.n$var $f.v$var -padx 2 -pady 2 -sticky w
+	grid $f.n$var $f.v$var -padx 1.5p -pady 1.5p -sticky w
     }
     ttk::button $b.ok -text [mc "OK"] \
 	-command [list destroy $w] -default active
     bind $w <Return> [list $b.ok invoke]
     bind $w <Escape> [list $b.ok invoke]
 
-    grid $f -sticky news -padx 4
-    grid $b.ok -sticky e -padx 4 -pady {6 4}
+    grid $f -sticky news -padx 3p
+    grid $b.ok -sticky e -padx 3p -pady {4.5p 3p}
     if {[tk windowingsystem] eq "aqua"} {
 	$b.ok configure -takefocus 0
 	grid configure $b.ok -pady {10 12} -padx {16 18}
@@ -576,7 +625,8 @@ proc showCode w {
 	set text [text $t.text -font fixedFont -height 24 -wrap word \
 		      -xscrollcommand [list $t.xscroll set] \
 		      -yscrollcommand [list $t.yscroll set] \
-		      -setgrid 1 -highlightthickness 0 -pady 2 -padx 3]
+		      -setgrid 1 -highlightthickness 0 -padx 3p -pady 1.5p \
+		      -tabstyle wordprocessor]
 	ttk::scrollbar $t.xscroll -command [list $t.text xview] \
 	    -orient horizontal
 	ttk::scrollbar $t.yscroll -command [list $t.text yview] \
@@ -589,7 +639,7 @@ proc showCode w {
 
 	set btns [ttk::frame $top.btns]
 	ttk::separator $btns.sep
-	grid $btns.sep -columnspan 4 -row 0 -sticky ew -pady 2
+	grid $btns.sep -columnspan 4 -row 0 -sticky ew -pady 1.5p
 	ttk::button $btns.dismiss -text [mc "Dismiss"] \
 	    -default active -command [list destroy $top] \
 	    -image ::img::delete -compound left
@@ -600,7 +650,7 @@ proc showCode w {
 	    -command [list evalShowCode $text] \
 	    -image ::img::refresh -compound left
 	set buttons [list x $btns.rerun $btns.print $btns.dismiss]
-	grid {*}$buttons -padx 4 -pady 4
+	grid {*}$buttons -padx 3p -pady 3p
 	grid columnconfigure $btns 0 -weight 1
 	if {[tk windowingsystem] eq "aqua"} {
 	    foreach b [lrange $buttons 1 end] {$b configure -takefocus 0}
@@ -641,80 +691,7 @@ proc showCode w {
 # file -		Name of the original file (implicitly for title)
 
 proc printCode {w file} {
-    set code [$w get 1.0 end-1c]
-
-    set dir "."
-    if {[info exists ::env(HOME)]} {
-	set dir "$::env(HOME)"
-    }
-    if {[info exists ::env(TMP)]} {
-	set dir $::env(TMP)
-    }
-    if {[info exists ::env(TEMP)]} {
-	set dir $::env(TEMP)
-    }
-
-    set filename [file join $dir "tkdemo-$file"]
-    set outfile [open $filename "w"]
-    puts $outfile $code
-    close $outfile
-
-    switch -- $::tcl_platform(platform) {
-	unix {
-	    if {[catch {exec lp -c $filename} msg]} {
-		tk_messageBox -title "Print spooling failure" \
-			-message "Print spooling probably failed: $msg"
-	    }
-	}
-	windows {
-	    if {[catch {PrintTextWin32 $filename} msg]} {
-		tk_messageBox -title "Print spooling failure" \
-			-message "Print spooling probably failed: $msg"
-	    }
-	}
-	default {
-	    tk_messageBox -title "Operation not Implemented" \
-		    -message "Wow! Unknown platform: $::tcl_platform(platform)"
-	}
-    }
-
-    #
-    # Be careful to throw away the temporary file in a gentle manner ...
-    #
-    if {[file exists $filename]} {
-	catch {file delete $filename}
-    }
-}
-
-# PrintTextWin32 --
-#    Print a file under Windows using all the "intelligence" necessary
-#
-# Arguments:
-# filename -		Name of the file
-#
-# Note:
-# Taken from the Wiki page by Keith Vetter, "Printing text files under
-# Windows".
-# Note:
-# Do not execute the command in the background: that way we can dispose of the
-# file smoothly.
-#
-proc PrintTextWin32 {filename} {
-    package require registry
-    set app [auto_execok notepad.exe]
-    set pcmd "$app /p %1"
-    catch {
-	set app [registry get {HKEY_CLASSES_ROOT\.txt} {}]
-	set pcmd [registry get \
-		{HKEY_CLASSES_ROOT\\$app\\shell\\print\\command} {}]
-    }
-
-    regsub -all {%1} $pcmd $filename pcmd
-    puts $pcmd
-
-    regsub -all {\\} $pcmd {\\\\} pcmd
-    set command "[auto_execok start] /min $pcmd"
-    eval exec $command
+    tk print $w
 }
 
 # tkAboutDialog --
@@ -724,10 +701,11 @@ proc PrintTextWin32 {filename} {
 proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
 	    -message [mc "Tk widget demonstration application"] -detail \
-"[mc "Copyright \xA9 %s" {1996-1997 Sun Microsystems, Inc.}]
-[mc "Copyright \xA9 %s" {1997-2000 Ajuba Solutions, Inc.}]
-[mc "Copyright \xA9 %s" {2001-2009 Donal K. Fellows}]
-[mc "Copyright \xA9 %s" {2002-2007 Daniel A. Steffen}]"
+"[mc "Copyright © %s" {1996-1997 Sun Microsystems, Inc.}]
+[mc "Copyright © %s" {1997-2000 Ajuba Solutions, Inc.}]
+[mc "Copyright © %s" {2001-2009 Donal K. Fellows}]
+[mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]
+[mc "Copyright © %s" {2021 Kevin Walzer}]"
 }
 
 # Local Variables:

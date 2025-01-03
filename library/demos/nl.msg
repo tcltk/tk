@@ -1,5 +1,5 @@
 ::msgcat::mcset nl "Widget Demonstration" "Demonstratie van widgets"
-::msgcat::mcset nl "tkWidgetDemo" "tkWidgetDemo"
+::msgcat::mcset nl "tkWidgetDemo"
 ::msgcat::mcset nl "&File"     "&Bestand"
 ::msgcat::mcset nl "About..."  "Info..."
 ::msgcat::mcset nl "&About..." "&Info..."
@@ -9,11 +9,13 @@
 ::msgcat::mcset nl "Meta-q"    "Meta-e"		;# Actual binding sequence
 ::msgcat::mcset nl "Ctrl+Q"    "Ctrl+E"		;# Displayed hotkey
 ::msgcat::mcset nl "Control-q" "Control-e"	;# Actual binding sequence
-::msgcat::mcset nl "Dismiss"   "Sluiten"
 ::msgcat::mcset nl "See Variables"    "Bekijk Variabelen"
-::msgcat::mcset nl "Variable Values"  "Waarden Variabelen"
-::msgcat::mcset nl "OK"        "OK"
+::msgcat::mcset nl "Variable values"  "Waarden variabelen"
+::msgcat::mcset nl "Variable values:"  "Waarden variabelen"
+::msgcat::mcset nl "OK"
 ::msgcat::mcset nl "Run the \"%s\" sample program" "Start voorbeeld \"%s\""
+::msgcat::mcset nl "Dismiss"   "Sluiten"
+::msgcat::mcset nl "Rerun Demo" "Herstart Demo"	;# This is also button text!
 ::msgcat::mcset nl "Print Code" "Code Afdrukken"
 ::msgcat::mcset nl "Demo code: %s" "Code van Demo %s"
 ::msgcat::mcset nl "About Widget Demo" "Over deze demonstratie"
@@ -36,7 +38,6 @@
     "drukken om de achterliggende Tcl/Tk code te zien.  Als je dat wilt,"
 ::msgcat::mcset nl "you wish, you can edit the code and click the" \
     "kun je de code wijzigen en op de knop"
-::msgcat::mcset nl "Rerun Demo" "Herstart Demo"	;# This is also button text!
 ::msgcat::mcset nl "button in the code window to reinvoke the demonstration with the" \
     "drukken in het codevenster om de demonstratie uit te voeren met de"
 ::msgcat::mcset nl "modified code." \
@@ -44,7 +45,6 @@
 
 ::msgcat::mcset nl "Labels, buttons, checkbuttons, and radiobuttons" \
     "Labels, knoppen, vinkjes/aankruishokjes en radioknoppen"
-
 ::msgcat::mcset nl "Labels (text and bitmaps)" "Labels (tekst en plaatjes)"
 ::msgcat::mcset nl "Labels and UNICODE text"   "Labels en tekst in UNICODE"
 ::msgcat::mcset nl "Buttons" "Buttons (drukknoppen)"
@@ -66,15 +66,15 @@
 ::msgcat::mcset nl "Listboxes" "Keuzelijsten"
 ::msgcat::mcset nl "The 50 states" "De 50 staten van de VS"
 ::msgcat::mcset nl "Colors: change the color scheme for the application" \
-         "Kleuren: verander het kleurenschema voor het programma"
+    "Kleuren: verander het kleurenschema voor het programma"
 ::msgcat::mcset nl "A collection of famous and infamous sayings" \
-         "Beroemde en beruchte citaten en gezegden"
+    "Beroemde en beruchte citaten en gezegden"
 
 ::msgcat::mcset nl "Entries and Spin-boxes"     "Invulvelden en Spinboxen"
 ::msgcat::mcset nl "Entries without scrollbars" "Invulvelden zonder schuifbalk"
 ::msgcat::mcset nl "Entries with scrollbars"    "Invulvelden met schuifbalk"
 ::msgcat::mcset nl "Validated entries and password fields" \
-         "Invulvelden met controle of wachtwoorden"
+    "Invulvelden met controle of wachtwoorden"
 ::msgcat::mcset nl "Spin-boxes" "Spinboxen"
 ::msgcat::mcset nl "Simple Rolodex-like form" "Simpel kaartsysteem"
 
@@ -106,20 +106,27 @@
 ::msgcat::mcset nl "Paned Windows" "Vensters opgedeeld in stukken"
 ::msgcat::mcset nl "Horizontal paned window"   "Horizontaal gedeeld venster"
 ::msgcat::mcset nl "Vertical paned window"     "Verticaal gedeeld venster"
-
 ::msgcat::mcset nl "Menus" "Menu's"
 ::msgcat::mcset nl "Menus and cascades (sub-menus)" \
     "Menu's en cascades (submenu's)"
 ::msgcat::mcset nl "Menu-buttons" "Menu-buttons"
-
 ::msgcat::mcset nl "Common Dialogs" "Veel voorkomende dialoogvensters"
 ::msgcat::mcset nl "Message boxes"  "Mededeling (message box)"
 ::msgcat::mcset nl "File selection dialog"     "Selectie van bestanden"
 ::msgcat::mcset nl "Color picker"              "Kleurenpalet"
-
+::msgcat::mcset nl "Font selection dialog"     "Selectie van fonts"
+::msgcat::mcset nl "System tray icon and notification" "Systeemvakpictogram en melding"
+::msgcat::mcset nl "Printing from canvas and text widgets" "Afdrukken van canvas en tekst widgets"
+::msgcat::mcset nl "Animation" "Animaties"
+::msgcat::mcset nl "Animated labels" "Geanimeerde labels"
+::msgcat::mcset nl "Animated wave" "Geanimeerde golf"
+::msgcat::mcset nl "Pendulum simulation" "Pendulum simulatie"
+::msgcat::mcset nl "A celebration of Rube Goldberg" "Een viering van Rube Goldberg"
 ::msgcat::mcset nl "Miscellaneous"             "Diversen"
 ::msgcat::mcset nl "The built-in bitmaps"      "Ingebouwde plaatjes"
 ::msgcat::mcset nl "A dialog box with a local grab" \
     "Een dialoogvenster met een locale \"grab\""
 ::msgcat::mcset nl "A dialog box with a global grab" \
     "Een dialoogvenster met een globale \"grab\""
+::msgcat::mcset nl "Window icons and badges" "Vensterpictogrammen en badges"
+

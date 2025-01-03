@@ -4,8 +4,8 @@
  *	This file contains generic Tk code for geometry management (stuff
  *	that's used by all geometry managers).
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -53,10 +53,10 @@ typedef struct MaintainContainer {
  * Prototypes for static procedures in this file:
  */
 
-static void		MaintainCheckProc(ClientData clientData);
-static void		MaintainContainerProc(ClientData clientData,
+static void		MaintainCheckProc(void *clientData);
+static void		MaintainContainerProc(void *clientData,
 			    XEvent *eventPtr);
-static void		MaintainContentProc(ClientData clientData,
+static void		MaintainContentProc(void *clientData,
 			    XEvent *eventPtr);
 
 /*
@@ -75,7 +75,7 @@ static void		MaintainContentProc(ClientData clientData,
  *	previous geometry manager. The geometry manager will be notified (by
  *	calling procedures in *mgrPtr) when interesting things happen in the
  *	future. If there was an existing geometry manager for tkwin different
- *	from the new one, it is notified by calling its lostSlaveProc.
+ *	from the new one, it is notified by calling its lostContentProc.
  *
  *--------------------------------------------------------------
  */
@@ -87,7 +87,7 @@ Tk_ManageGeometry(
     const Tk_GeomMgr *mgrPtr,	/* Static structure describing the geometry
 				 * manager. This structure must never go
 				 * away. */
-    ClientData clientData)	/* Arbitrary one-word argument to pass to
+    void *clientData)	/* Arbitrary one-word argument to pass to
 				 * geometry manager procedures. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -95,8 +95,8 @@ Tk_ManageGeometry(
     if ((winPtr->geomMgrPtr != NULL) && (mgrPtr != NULL)
 	    && ((winPtr->geomMgrPtr != mgrPtr)
 		|| (winPtr->geomData != clientData))
-	    && (winPtr->geomMgrPtr->lostSlaveProc != NULL)) {
-	winPtr->geomMgrPtr->lostSlaveProc(winPtr->geomData, tkwin);
+	    && (winPtr->geomMgrPtr->lostContentProc != NULL)) {
+	winPtr->geomMgrPtr->lostContentProc(winPtr->geomData, tkwin);
     }
 
     winPtr->geomMgrPtr = mgrPtr;
@@ -333,10 +333,10 @@ TkSetGeometryContainer(
     if (winPtr->geomMgrName != NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "cannot use geometry manager %s inside %s which already"
-		    " has slaves managed by %s",
+		    "cannot use geometry manager \"%s\" inside \"%s\":"
+		    " %s is already managing its content windows",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -654,7 +654,7 @@ Tk_UnmaintainGeometry(
 
 static void
 MaintainContainerProc(
-    ClientData clientData,	/* Pointer to MaintainContainer structure for the
+    void *clientData,	/* Pointer to MaintainContainer structure for the
 				 * container window. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -708,7 +708,7 @@ MaintainContainerProc(
 
 static void
 MaintainContentProc(
-    ClientData clientData,	/* Pointer to MaintainContent structure for
+    void *clientData,	/* Pointer to MaintainContent structure for
 				 * container-window pair. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -741,7 +741,7 @@ MaintainContentProc(
 
 static void
 MaintainCheckProc(
-    ClientData clientData)	/* Pointer to MaintainContainer structure for the
+    void *clientData)	/* Pointer to MaintainContainer structure for the
 				 * container window. */
 {
     MaintainContainer *containerPtr = (MaintainContainer *)clientData;

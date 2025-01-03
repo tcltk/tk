@@ -3,8 +3,8 @@
 # tk_focusPrev, among other things.  This file is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -18,33 +18,33 @@ option add *highlightThickness 2
 
 proc setup1 w {
     if {$w == "."} {
-        set w ""
+	set w ""
     }
     foreach i {a b c d} {
-        destroy $w.$i
-        frame  $w.$i -width 200 -height 50 -bd 2 -relief raised
-        pack $w.$i
+	destroy $w.$i
+	frame  $w.$i -width 200 -height 50 -bd 2 -relief raised
+	pack $w.$i
     }
     .b configure -width 0 -height 0
     foreach i {x y z} {
-        destroy $w.b.$i
-        button $w.b.$i -text "Button $w.b.$i"
-        pack $w.b.$i -side left
+	destroy $w.b.$i
+	button $w.b.$i -text "Button $w.b.$i"
+	pack $w.b.$i -side left
     }
     if {![winfo ismapped $w.b.z]} {
-        tkwait visibility $w.b.z
+	tkwait visibility $w.b.z
     }
 }
 
 proc cleanup1 w {
     if {$w == "."} {
-        set w ""
+	set w ""
     }
     foreach i {a b c d} {
-        destroy $w.$i
+	destroy $w.$i
     }
     foreach i {x y z} {
-        destroy $w.b.$i
+	destroy $w.b.$i
     }
 }
 
@@ -105,7 +105,7 @@ test focusTcl-1.9 {tk_focusNext procedure, basic tree traversal} -body {
 test focusTcl-1.10 {tk_focusNext procedure, basic tree traversal} -body {
     setup1 .
     foreach w {.b .b.x .b.y .c .d} {
-        $w configure -takefocus 0
+	$w configure -takefocus 0
     }
     tk_focusNext .a
 } -cleanup {
@@ -114,7 +114,7 @@ test focusTcl-1.10 {tk_focusNext procedure, basic tree traversal} -body {
 test focusTcl-1.11 {tk_focusNext procedure, basic tree traversal} -body {
     setup1 .
     foreach w {.b .b.x .b.y .c .d} {
-        $w configure -takefocus 0
+	$w configure -takefocus 0
     }
     tk_focusNext .b.z
 } -cleanup {
@@ -373,9 +373,9 @@ test focusTcl-5.2 {tkFocusOK procedure, -takefocus 1} -body {
 test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} -body {
     proc t w {
     if {$w == ".b.x"} {
-        return 1
+	return 1
     } elseif {$w == ".b.y"} {
-        return ""
+	return ""
     }
     return 0
     }
@@ -385,7 +385,7 @@ test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} -body {
     update
     .b configure -takefocus ""
     foreach w {.b.x .b.y .b.z .c} {
-        $w configure -takefocus t
+	$w configure -takefocus t
     }
     list [tk_focusNext .a] [tk_focusNext .b.x]
 } -cleanup {
@@ -411,7 +411,7 @@ test focusTcl-5.5 {tkFocusOK procedure, -takefocus "", not mapped} -body {
 test focusTcl-5.6 {tkFocusOK procedure, -takefocus "", not mapped} -body {
     setup1 .
     foreach w {.b.x .b.y .b.z} {
-        $w configure -takefocus ""
+	$w configure -takefocus ""
     }
     pack forget .b
     update
@@ -441,7 +441,7 @@ test focusTcl-5.8 {tkFocusOK procedure, -takefocus "", not mapped} -body {
 test focusTcl-5.9 {tkFocusOK procedure, -takefocus "", window disabled} -body {
     setup1 .
     foreach w {.b.x .b.y .b.z} {
-        $w configure -takefocus ""
+	$w configure -takefocus ""
     }
     update
     .b.x configure -state disabled
@@ -452,7 +452,7 @@ test focusTcl-5.9 {tkFocusOK procedure, -takefocus "", window disabled} -body {
 test focusTcl-5.10 {tkFocusOK procedure, -takefocus "", check for bindings} -body {
     setup1 .
     foreach w {.a .b .c .d} {
-        $w configure -takefocus ""
+	$w configure -takefocus ""
     }
     update
     bind .a <Key> {foo}
@@ -463,7 +463,7 @@ test focusTcl-5.10 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
 test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -body {
     setup1 .
     foreach w {.a .b .c .d} {
-        $w configure -takefocus ""
+	$w configure -takefocus ""
     }
     update
     bind Frame <Key> {foo}

@@ -2,9 +2,9 @@
 # commands plus the procedures in tkBind.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -342,11 +342,11 @@ test bind-9.2 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {a b c d} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {b d a c} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -357,11 +357,11 @@ test bind-9.3 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {<Button-1> <Meta-Button-1> <Control-Button-1> <Double-Alt-Button-1>} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {<Control-Button-1> <Double-Alt-Button-1> <Button-1> <Meta-Button-1>} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -384,17 +384,17 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f
-    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <less> <Meta-a> <Acircumflex>" {
-        bind .t.f $i Test
+    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <Key-<> <Meta-a> <Â>" {
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
     destroy .t.f
-} -result {! <<Paste>> <Key-Acircumflex> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-less> <Key-space> <Meta-Key-a> a \{ ~}
+} -result "! <<Paste>> <Key-<> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-space> <Key-Â> <Meta-Key-a> a \\\{ ~"
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Button-1> <Triple-Button-1> <Meta-Control-a> <Double-Alt-Enter> <Button-1>" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -403,7 +403,7 @@ test bind-11.2 {Tk_GetAllBindings procedure} -body {
 test bind-11.3 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Triple-Button-1> abcd a<Leave>b" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -418,7 +418,7 @@ test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
 test bind-12.2 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i "a b c <Meta-Button-1> <Alt-a> <Control-a>" {
-        bind .t.f $i x
+	bind .t.f $i x
     }
     destroy .t.f
 } -result {}
@@ -430,15 +430,15 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     update
     set x {}
 } -body {
-    bind Test <Key> {lappend x "%W %K Test KeyPress"}
-    bind all <Key> {lappend x "%W %K all KeyPress"}
+    bind Test <Key> {lappend x "%W %K Test Key"}
+    bind all <Key> {lappend x "%W %K all Key"}
     bind Test : {lappend x "%W %K Test :"}
     bind all  _ {lappend x "%W %K all _"}
     bind .t.f : {lappend x "%W %K .t.f :"}
 
-    event generate .t.f <Key-colon>
-    event generate .t.f <Key-plus>
-    event generate .t.f <Key-underscore>
+    event generate .t.f <:>
+    event generate .t.f <+>
+    event generate .t.f <_>
     return $x
 } -cleanup {
     destroy .t.f
@@ -446,7 +446,7 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     bind Test <Key> {}
     bind all _ {}
     bind Test : {}
-} -result {{.t.f colon .t.f :} {.t.f colon Test :} {.t.f colon all KeyPress} {.t.f plus Test KeyPress} {.t.f plus all KeyPress} {.t.f underscore Test KeyPress} {.t.f underscore all _}}
+} -result {{.t.f : .t.f :} {.t.f : Test :} {.t.f : all Key} {.t.f + Test Key} {.t.f + all Key} {.t.f _ Test Key} {.t.f _ all _}}
 
 test bind-13.2 {Tk_BindEvent procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -459,13 +459,13 @@ test bind-13.2 {Tk_BindEvent procedure} -setup {
     bind all <Key> {continue; lappend x "%W %K all press any"}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
 
-    event generate .t.f <Key-colon>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     destroy .t.f
     bind all <Key> {}
     bind Test <Key> {}
-} -result {{.t.f colon .t.f pressed colon} {.t.f colon Test press any}}
+} -result {{.t.f : .t.f pressed colon} {.t.f : Test press any}}
 
 test bind-13.3 {Tk_BindEvent procedure} -setup {
     proc bgerror args {}
@@ -477,21 +477,21 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
 } -body {
     bind Test <Key> {lappend x "%W %K Test press any"; error Test}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
-    event generate .t.f <Key-colon>
+    event generate .t.f <:>
     update
     list $x $errorInfo
 } -cleanup {
     destroy .t.f
     bind Test <Key> {}
     rename bgerror {}
-}  -result {{{.t.f colon .t.f pressed colon} {.t.f colon Test press any}} {Test
+}  -result {{{.t.f : .t.f pressed colon} {.t.f : Test press any}} {Test
     while executing
 "error Test"
     (command bound to event)}}
 test bind-13.4 {Tk_BindEvent procedure} -setup {
     proc foo {} {
-        set x 44
-        event generate .t.f <Key-colon>
+	set x 44
+	event generate .t.f <:>
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -506,7 +506,7 @@ test bind-13.4 {Tk_BindEvent procedure} -setup {
 } -cleanup {
     destroy .t.f
     bind Test : {}
-} -result {{.t.f colon .t.f} {.t.f colon Test}}
+} -result {{.t.f : .t.f} {.t.f : Test}}
 
 test bind-13.5 {Tk_BindEvent procedure} -body {
     bind all <Destroy> {lappend x "%W destroyed"}
@@ -534,7 +534,7 @@ test bind-13.7 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {bind .t.f : {}; lappend x "%W (all binding)"}
-    event generate .t.f <Key-colon>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     bind Test : {}
@@ -551,7 +551,7 @@ test bind-13.8 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {destroy .t.f; lappend x "%W (all binding)"}
-    event generate .t.f <Key-colon>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     bind Test : {}
@@ -616,9 +616,9 @@ test bind-13.12 {Tk_BindEvent procedure: collapse repeating modifiers} -setup {
 } -body {
     bind .t.f <Key> "lappend x %K%#"
     bind .t.f <KeyRelease> "lappend x %K%#"
-    event generate .t.f <Key-Shift_L> -serial 100 -when tail
+    event generate .t.f <Shift_L> -serial 100 -when tail
     event generate .t.f <KeyRelease-Shift_L> -serial 101 -when tail
-    event generate .t.f <Key-Shift_L> -serial 102 -when tail
+    event generate .t.f <Shift_L> -serial 102 -when tail
     event generate .t.f <KeyRelease-Shift_L> -serial 103 -when tail
     update
 } -cleanup {
@@ -633,12 +633,12 @@ test bind-13.13 {Tk_BindEvent procedure: valid key detail} -setup {
 } -body {
     bind .t.f <Key> "lappend x Key%K"
     bind .t.f <KeyRelease> "lappend x Release%K"
-    event generate .t.f <Key> -keysym colon
-    event generate .t.f <KeyRelease> -keysym colon
+    event generate .t.f <Key> -keysym :
+    event generate .t.f <KeyRelease> -keysym :
     return $x
 } -cleanup {
     destroy .t.f
-} -result {Keycolon Releasecolon}
+} -result {Key: Release:}
 test bind-13.14 {Tk_BindEvent procedure: invalid key detail} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -936,7 +936,7 @@ test bind-13.33 {Tk_BindEvent procedure: many C bindings cause realloc} -setup {
 } -body {
     bindtags .t.f {a b c d e f g h i j k l m n o p}
     foreach p [bindtags .t.f] {
-        bind $p <Button-1> "lappend x $p"
+	bind $p <Button-1> "lappend x $p"
     }
     event generate .t.f <Button-1>
     return $x
@@ -1019,8 +1019,8 @@ test bind-13.43 {Tk_BindEvent procedure: break in script} -setup {
 } -result  {b1}
 test bind-13.45 {Tk_BindEvent procedure: error in script} -setup {
     proc bgerror msg {
-        global x
-        lappend x $msg
+	global x
+	lappend x $msg
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -1131,7 +1131,7 @@ test bind-15.6 {MatchPatterns procedure, ignoring type mismatches} -setup {
     bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
-    event generate .t.f <Key-a>
+    event generate .t.f <a>
     event generate .t.f <ButtonRelease-1>
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1148,7 +1148,7 @@ test bind-15.7 {MatchPatterns procedure, ignoring type mismatches} -setup {
     bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
-    event generate .t.f <Key-Shift_L>
+    event generate .t.f <Shift_L>
     event generate .t.f <ButtonRelease-1>
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1164,9 +1164,9 @@ test bind-15.8 {MatchPatterns procedure, ignoring type mismatches} -setup {
 } -body {
     bind .t.f ab {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-c>
-    event generate .t.f <Key-b>
+    event generate .t.f <a>
+    event generate .t.f <c>
+    event generate .t.f <b>
     return $x
 } -cleanup {
     destroy .t.f
@@ -1179,7 +1179,7 @@ test bind-15.9 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -1192,7 +1192,7 @@ test bind-15.10 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0xfc
+    event generate .t.f <a> -state 0xfc
     return $x
 } -cleanup {
     destroy .t.f
@@ -1205,7 +1205,7 @@ test bind-15.11 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0x8
+    event generate .t.f <a> -state 0x8
     return $x
 } -cleanup {
     destroy .t.f
@@ -1222,9 +1222,9 @@ test bind-15.12 {MatchPatterns procedure, ignore modifier presses and releases} 
     # differently on some platforms.
     bind .t.f aB {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-b> -state 1
+    event generate .t.f <a>
+    event generate .t.f <Shift_L>
+    event generate .t.f <b> -state 1
     return $x
 } -cleanup {
     destroy .t.f
@@ -1237,8 +1237,8 @@ test bind-15.13 {MatchPatterns procedure, checking detail} -setup {
 } -body {
     bind .t.f ab {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-c>
+    event generate .t.f <a>
+    event generate .t.f <c>
     return $x
 } -cleanup {
     destroy .t.f
@@ -1540,7 +1540,7 @@ test bind-15.31 {MatchPatterns procedure, conflict resolution} -setup {
 } -body {
     bind .t.f <M1-Key> {set x 0}
     bind .t.f <M2-Key> {set x 1}
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -1554,7 +1554,7 @@ test bind-15.32 {MatchPatterns procedure, conflict resolution} -setup {
     bind .t.f <M2-Key> {set x 0}
     bind .t.f <M1-Key> {set x 1}
     set x none
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -2038,22 +2038,22 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
     set x {}
 } -body {
     bind .t.f <Key> {lappend x "%A"}
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-A> -state 1
-    event generate .t.f <Key-Tab>
-    event generate .t.f <Key-Return>
-    event generate .t.f <Key-F1>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-space>
-    event generate .t.f <Key-dollar> -state 1
-    event generate .t.f <Key-braceleft> -state 1
-    event generate .t.f <Key-Multi_key>
-    event generate .t.f <Key-e>
-    event generate .t.f <Key-apostrophe>
+    event generate .t.f <a>
+    event generate .t.f <A> -state 1
+    event generate .t.f <Tab>
+    event generate .t.f <Return>
+    event generate .t.f <F1>
+    event generate .t.f <Shift_L>
+    event generate .t.f <space>
+    event generate .t.f <dollar> -state 1
+    event generate .t.f <braceleft> -state 1
+    event generate .t.f <Multi_key>
+    event generate .t.f <e>
+    event generate .t.f <apostrophe>
     set x
 } -cleanup {
     destroy .t.f
-} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \u00e9}
+} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} é}
 test bind-16.36 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -2090,14 +2090,14 @@ test bind-16.38 {ExpandPercents procedure} -constraints {
     set x {}
 } -body {
     bind .t.f <Key> {lappend x %K}
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-A> -state 1
-    event generate .t.f <Key-Tab>
-    event generate .t.f <Key-F1>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-space>
-    event generate .t.f <Key-dollar> -state 1
-    event generate .t.f <Key-braceleft> -state 1
+    event generate .t.f <a>
+    event generate .t.f <A> -state 1
+    event generate .t.f <Tab>
+    event generate .t.f <F1>
+    event generate .t.f <Shift_L>
+    event generate .t.f <space>
+    event generate .t.f <dollar> -state 1
+    event generate .t.f <braceleft> -state 1
     set x
 } -cleanup {
     destroy .t.f
@@ -2110,7 +2110,7 @@ test bind-16.39 {ExpandPercents procedure} -setup {
 } -body {
     bind .t.f <Key> {set x "%N"}
     set x none
-    event generate .t.f <Key-space>
+    event generate .t.f <space>
     set x
 } -cleanup {
     destroy .t.f
@@ -2123,7 +2123,7 @@ test bind-16.40 {ExpandPercents procedure} -setup {
 } -body {
     bind .t.f <Key> {set x "%S"}
     set x none
-    event generate .t.f <Key-space> -subwindow .t
+    event generate .t.f <space> -subwindow .t
     set x
 } -cleanup {
     destroy .t.f
@@ -2196,7 +2196,7 @@ test bind-16.45 {ExpandPercents procedure} -setup {
     bind Entry <Key> {set y "%M"}
     bind all <Key> {set z "%M"}
     set x none; set y none; set z none
-    event gen .t.e <Key-a>
+    event gen .t.e <a>
     list $x $y $z
 } -cleanup {
     destroy .t.e
@@ -2217,7 +2217,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind Entry <Key> {set y "%M"}
     bind .t.e <Key> {set x "%M"}
     set x none; set y none; set z none
-    event gen .t.e <Key-a>
+    event gen .t.e <a>
     list $x $y $z
 } -cleanup {
     destroy .t.e
@@ -2225,6 +2225,19 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
+test bind-16.47 {ExpandPercents procedure} -constraints aquaOrWin32 -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Key> {set x "%K"}
+    set x none
+    event generate .t.f <Key> -keysym :
+    set x
+} -cleanup {
+    destroy .t.f
+} -result :
 
 test bind-17.1 {event command} -body {
     event
@@ -2689,7 +2702,7 @@ test bind-20.2 {GetVirtualEvent procedure: non-existent event} -body {
 test bind-20.3 {GetVirtualEvent procedure: owns 1} -setup {
     event delete <<xyz>>
 } -body {
-    event add <<xyz>> <Control-Key-v>
+    event add <<xyz>> <Control-v>
     event info <<xyz>>
 } -cleanup {
     event delete <<xyz>>
@@ -2720,7 +2733,7 @@ test bind-21.3 {GetAllVirtualEvents procedure: many events} -body {
     event add <<xyz>> <Control-v>
     event add <<xyz>> <Button-2>
     event add <<abc>> <Control-v>
-    event add <<def>> <Key-F6>
+    event add <<def>> <F6>
     lsort [event info]
 } -cleanup {
     event delete <<xyz>>
@@ -2789,7 +2802,7 @@ test bind-22.10 {HandleEventGenerate} -setup {
     set x {}
 } -body {
     bind .t.f <Key> {set x "%s %K"}
-    event generate .t.f <Control-Key-space>
+    event generate .t.f <Control-space>
     set x
 } -cleanup {
     destroy .t.f
@@ -2975,7 +2988,7 @@ test bind-22.24 {HandleEventGenerate: options <Configure> -borderwidth xyz} -set
     return $x
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.25 {HandleEventGenerate: options <Configure> -borderwidth 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3217,7 +3230,7 @@ test bind-22.41 {HandleEventGenerate: options <Expose> -height xyz} -setup {
     event generate .t.f <Expose> -height xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.42 {HandleEventGenerate: options <Expose> -height 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3649,7 +3662,7 @@ test bind-22.73 {HandleEventGenerate: options <Key> -rootx xyz} -setup {
     event generate .t.f <Key> -rootx xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.74 {HandleEventGenerate: options <Key> -rootx 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3759,7 +3772,7 @@ test bind-22.81 {HandleEventGenerate: options <Key> -rooty xyz} -setup {
     event generate .t.f <Key> -rooty xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.82 {HandleEventGenerate: options <Key> -rooty 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4349,7 +4362,7 @@ test bind-22.124 {HandleEventGenerate: options <Expose> -width xyz} -setup {
     event generate .t.f <Expose> -width xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.125 {HandleEventGenerate: options <Expose> -width 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4554,7 +4567,7 @@ test bind-22.139 {HandleEventGenerate: options <Key> -x xyz} -setup {
     event generate .t.f <Key> -x xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.140 {HandleEventGenerate: options <Key> -x 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4720,7 +4733,7 @@ test bind-22.151 {HandleEventGenerate: options <Key> -y xyz} -setup {
     event generate .t.f <Key> -y xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.152 {HandleEventGenerate: options <Key> -y 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5444,6 +5457,59 @@ test bind-25.49 {modifier names} -setup {
     destroy .t.f
 } -result <Extended-Key-Return>
 
+test bind-25.50 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Button6-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <B6-Key-a>
+
+test bind-25.51 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Button7-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <B7-Key-a>
+
+test bind-25.52 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Button8-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <B8-Key-a>
+
+test bind-25.53 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Button9-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <B9-Key-a>
+
+test bind-25.54 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Num-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod3-Key-a>
+
+test bind-25.55 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Fn-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod4-Key-a>
 
 
 test bind-26.1 {event names} -setup {
@@ -5503,20 +5569,6 @@ test bind-26.5 {event names: Button} -setup {
 } -cleanup {
     destroy .t.f
 } -result {{event Button} <Button>}
-
-test bind-26.6 {event names: ButtonPress} -setup {
-    frame .t.f -class Test -width 150 -height 100
-    pack .t.f
-    focus -force .t.f
-    update
-} -body {
-    bind .t.f <Button> "set x {event ButtonPress}"
-    set x xyzzy
-    event generate .t.f <Button>
-    list $x [bind .t.f]
-} -cleanup {
-    destroy .t.f
-} -result {{event ButtonPress} <Button>}
 
 test bind-26.7 {event names: ButtonRelease} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5601,20 +5653,6 @@ test bind-26.12 {event names: Key} -setup {
 } -cleanup {
     destroy .t.f
 } -result {{event Key} <Key>}
-
-test bind-26.13 {event names: KeyPress} -setup {
-    frame .t.f -class Test -width 150 -height 100
-    pack .t.f
-    focus -force .t.f
-    update
-} -body {
-    bind .t.f <Key> "set x {event KeyPress}"
-    set x xyzzy
-    event generate .t.f <Key>
-    list $x [bind .t.f]
-} -cleanup {
-    destroy .t.f
-} -result {{event KeyPress} <Key>}
 
 test bind-26.14 {event names: KeyRelease} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -5777,8 +5815,8 @@ test bind-27.1 {button names} -body {
     bind .t <Expose-1> foo
 } -returnCodes error -result {specified button "1" for non-button event}
 test bind-27.2 {button names} -body {
-    bind .t <Button-6> foo
-} -returnCodes error -result {bad button number "6"}
+    bind .t <Button-10> foo
+} -returnCodes error -result {bad button number "10"}
 test bind-27.3 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5849,6 +5887,62 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-5> {button 5}}
+test bind-27.8 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-6> {lappend x "button 6"}
+    set x [bind .t.f]
+    event generate .t.f <Button-6>
+    event generate .t.f <ButtonRelease-6>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-6> {button 6}}
+test bind-27.9 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-7> {lappend x "button 7"}
+    set x [bind .t.f]
+    event generate .t.f <Button-7>
+    event generate .t.f <ButtonRelease-7>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-7> {button 7}}
+test bind-27.10 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-8> {lappend x "button 8"}
+    set x [bind .t.f]
+    event generate .t.f <Button-8>
+    event generate .t.f <ButtonRelease-8>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-8> {button 8}}
+test bind-27.11 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-9> {lappend x "button 9"}
+    set x [bind .t.f]
+    event generate .t.f <Button-9>
+    event generate .t.f <ButtonRelease-9>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-9> {button 9}}
 
 test bind-28.1 {keysym names} -body {
     bind .t <Expose-a> foo
@@ -5857,7 +5951,7 @@ test bind-28.2 {keysym names} -body {
     bind .t <Gorp> foo
 } -returnCodes error -result {bad event type or keysym "Gorp"}
 test bind-28.3 {keysym names} -body {
-    bind .t <Key-Stupid> foo
+    bind .t <Stupid> foo
 } -returnCodes error -result {bad event type or keysym "Stupid"}
 test bind-28.4 {keysym names} -body {
     frame .t.f -class Test -width 150 -height 100
@@ -5873,10 +5967,10 @@ test bind-28.5 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-colon> "lappend x \"keysym received\""
-    bind .t.f <Key-underscore> "lappend x {bad binding match}"
+    bind .t.f <:> "lappend x \"keysym received\""
+    bind .t.f <_> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-colon> ;# -state 0
+    event generate .t.f <:> ;# -state 0
     set x
 } -cleanup {
     destroy .t.f
@@ -5887,10 +5981,10 @@ test bind-28.6 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-Return> "lappend x \"keysym Return\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <Return> "lappend x \"keysym Return\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-Return> -state 0
+    event generate .t.f <Return> -state 0
     set x
 } -cleanup {
     destroy .t.f
@@ -5901,10 +5995,10 @@ test bind-28.7 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-X> "lappend x \"keysym X\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <X> "lappend x \"keysym X\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-X> -state 1
+    event generate .t.f <X> -state 1
     set x
 } -cleanup {
     destroy .t.f
@@ -5915,28 +6009,28 @@ test bind-28.8 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-X> "lappend x \"keysym X\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <X> "lappend x \"keysym X\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-X> -state 1
+    event generate .t.f <X> -state 1
     set x
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
-test bind-28.9 {keysym names, Eth -> ETH} -body {
+test bind-28.9 {keysym names, Ð} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <Eth> foo
+    bind .t.f <Ð> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Key-ETH>
-test bind-28.10 {keysym names, Ooblique -> Oslash} -body {
+} -result <Key-Ð>
+test bind-28.10 {keysym names, Ø} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <Ooblique> foo
+    bind .t.f <Ø> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result <Key-Oslash>
+} -result <Key-Ø>
 test bind-28.11 {keysym names, gcedilla} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <gcedilla> foo
@@ -5944,19 +6038,40 @@ test bind-28.11 {keysym names, gcedilla} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-gcedilla>
-test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Greek_IOTAdiaeresis> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
 } -result <Key-Greek_IOTAdieresis>
+test bind-28.13 {keysym names, Unicode} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <€> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-€>"
+test bind-28.14 {keysym names, Emoji} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <\U1F44D> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-\U1F44D>"
+test bind-28.15 {keysym names, Emoji} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <👍> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-👍>"
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5979,12 +6094,12 @@ test bind-29.1 {Tcl_BackgroundError procedure} -setup {
 
 test bind-29.2 {Tcl_BackgroundError procedure} -setup {
     proc do {} {
-        event generate .t.f <Button>
-        event generate .t.f <ButtonRelease>
+	event generate .t.f <Button>
+	event generate .t.f <ButtonRelease>
     }
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6142,6 +6257,8 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
 } -result {{} {} {TestUserData >b<}}
 
 test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -setup {
+    # note: this test is now essentially useless
+    #       since DoWarp no longer exist, not even as an idle callback
     frame .t.f
     pack .t.f
     focus -force .t.f
@@ -6167,7 +6284,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     # that used an event ring overflowed, and the double click was not detected.
     # But new implementation should work properly.
     for {set i 0} {$i < 1000} {incr i} {
-        event generate .t.f <Expose>
+	event generate .t.f <Expose>
     }
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -6181,10 +6298,10 @@ test bind-32.3 {should trigger best match of modifier states} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Alt-Control-Key-A> { lappend x "Alt-Control" }
-    bind .t.f <Shift-Control-Key-A> { lappend x "Shift-Control" }
-    bind .t.f <Shift-Key-A> { lappend x "Shift" }
-    event generate .t.f <Alt-Control-Key-A>
+    bind .t.f <Alt-Control-A> { lappend x "Alt-Control" }
+    bind .t.f <Shift-Control-A> { lappend x "Shift-Control" }
+    bind .t.f <Shift-A> { lappend x "Shift" }
+    event generate .t.f <Alt-Control-A>
     set x
 } -cleanup {
     destroy .t.f
@@ -6274,7 +6391,7 @@ test bind-32.9 {trigger events for modifier keys} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Any-Key> { set x "Key" }
+    bind .t.f <Key> { set x "Key" }
     event generate .t.f <Key> -keysym Caps_Lock
     set x
 } -cleanup {
@@ -6284,14 +6401,14 @@ test bind-32.10 {reset key state when destroying window} -setup {
     set x {}
 } -body {
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <Key-A> { set x "A" }
-    event generate .t.f <Key-A>
-    event generate .t.f <Key-A>
+    bind .t.f <A> { set x "A" }
+    event generate .t.f <A>
+    event generate .t.f <A>
     destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <Key-A> { set x "A" }
-    bind .t.f <Double-Key-A> { set x "AA" }
-    event generate .t.f <Key-A>
+    bind .t.f <A> { set x "A" }
+    bind .t.f <Double-A> { set x "AA" }
+    event generate .t.f <A>
     destroy .t.f
     set x
 } -result {A}
@@ -6335,11 +6452,11 @@ test bind-32.13 {don't detect repetition when window has changed} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Key-A> { set x "A" }
-    bind .t.f <Double-Key-A> { set x "AA" }
-    focus -force .t.f; event generate .t.f <Key-A>
-    focus -force .t.g; event generate .t.g <Key-A>
-    focus -force .t.f; event generate .t.f <Key-A>
+    bind .t.f <A> { set x "A" }
+    bind .t.f <Double-A> { set x "AA" }
+    focus -force .t.f; event generate .t.f <A>
+    focus -force .t.g; event generate .t.g <A>
+    focus -force .t.f; event generate .t.f <A>
     set x
 } -cleanup {
     destroy .t.f
@@ -6405,12 +6522,8 @@ test bind-33.2 {prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # This test case shows that old implementation has an issue, because
-    # it is expected that <Double-Button-1> is matching, this binding
-    # is more specific. But new implementation will be conform to old,
-    # and so "11" is the expected result.
-} -result 11
-test bind-33.3 {should prefer most specific event} -setup {
+} -result Double
+test bind-33.3 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6425,11 +6538,7 @@ test bind-33.3 {should prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # Also this test case shows that old implementation has an issue, it is
-    # expected that <a><Double-Button-1><a> is matching, because <Double-Button-1> is more
-    # specific than <Button-1><Button-1>. But new implementation will be conform to old,
-    # and so "11" is the expected result.
-} -result 11
+} -result Double
 test bind-33.4 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6559,11 +6668,7 @@ test bind-33.11 {should prefer most specific} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # This test case shows that old implementation has an issue, because
-    # it is expected that first one is matching, this binding
-    # is more specific. But new implementation will be conform to old,
-    # and so "last" is the expected result.
-} -result last
+} -result first
 test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6752,9 +6857,9 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # pointer should have moved the same amount as the window moved
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
-        if {$pos1 != ($pos2 - 400)} {
-            set res [list $pointerPos1 $pointerPos2]
-        }
+	if {$pos1 != ($pos2 - 400)} {
+	    set res [list $pointerPos1 $pointerPos2]
+	}
     }
     set res
 } -cleanup {
@@ -6778,31 +6883,31 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     # a hot spot (which would trigger the corresponding action as an
     # unwanted effect) but will warp the pointer to the hot spot limit only.
     if {[tk windowingsystem] eq "x11"} {
-        set halo 1
+	set halo 1
     } else {
-        set halo 0
+	set halo 0
     }
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
     controlPointerWarpTiming
     event generate {} <Motion> -x -1 -y -1 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     set res
 } -cleanup {
@@ -6822,7 +6927,7 @@ proc testKey {window event type mods} {
     update
     event generate $window $event
     if {$keyInfo == {}} {
-        vwait keyInfo
+	vwait keyInfo
     }
     set save $keyInfo
     set keyInfo {}
@@ -6832,7 +6937,7 @@ proc testKey {window event type mods} {
     }
     eval $injectcmd
     if {$keyInfo == {}} {
-        vwait keyInfo
+	vwait keyInfo
     }
     if {$save != $keyInfo} {
 	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
@@ -6946,7 +7051,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     grab release .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
-            -highlightbackground black -bg yellow -text "My label"
+	    -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
     # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
@@ -6968,7 +7073,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping
     expr {$x1==$x2 && $y1==$y2 && $x1==[winfo rootx .top.l]+10 \
-                               && $y1==[winfo rooty .top.l]+10}
+			       && $y1==[winfo rooty .top.l]+10}
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2

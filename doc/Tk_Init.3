@@ -47,38 +47,48 @@ all Tk commands that are considered unsafe.  Those commands and the
 reasons for their exclusion are:
 .TP
 \fBbell\fR
+.
 Continuous ringing of the bell is a nuisance.
 .TP
 \fBclipboard\fR
+.
 A malicious script could replace the contents of the clipboard with
 the string
 .QW "\fBrm \-r *\fR"
 and lead to surprises when the contents of the clipboard are pasted.
 .TP
 \fBgrab\fR
+.
 Grab can be used to block the user from using any other applications.
 .TP
 \fBmenu\fR
+.
 Menus can be used to cover the entire screen and to steal input from
 the user.
 .TP
 \fBselection\fR
+.
 See clipboard.
 .TP
 \fBsend\fR
+.
 Send can be used to cause unsafe interpreters to execute commands.
 .TP
 \fBtk\fR
+.
 The tk command recreates the send command, which is unsafe.
 .TP
 \fBtkwait\fR
+.
 Tkwait can block the containing process forever
 .TP
 \fBtoplevel\fR
+.
 Toplevels can be used to cover the entire screen and to steal input
 from the user.
 .TP
 \fBwm\fR
+.
 If toplevels are ever allowed, wm can be used to remove decorations,
 move windows around, etc.
 .SH KEYWORDS

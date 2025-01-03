@@ -1,6 +1,6 @@
 # This file is a Tcl script to test the Windows specific message box
 #
-# Copyright (c) 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -25,11 +25,11 @@ proc GetWindowInfo {title button} {
     array set a $windowInfo
     set childinfo {} ; set childtext ""
     foreach child $a(children) {
-        lappend childinfo $child [set info [testgetwindowinfo $child]]
-        array set ca $info
-        if {$ca(class) eq "Static"} {
-            append childtext $ca(text)
-        }
+	lappend childinfo $child [set info [testgetwindowinfo $child]]
+	array set ca $info
+	if {$ca(class) eq "Static"} {
+	    append childtext $ca(text)
+	}
     }
     set a(children) $childinfo
     set a(childtext) $childtext
@@ -224,14 +224,14 @@ test winMsgbox-2.3 {tk_messageBox message (unicode)} -constraints {
 } -body {
     global windowInfo
     set title "winMsgbox-2.2 [pid]"
-    set message "\u041f\u043e\u0438\u0441\u043a\u0020\u0441\u0442\u0440\u0430\u043d\u0438\u0446"
+    set message "Поиск страниц"
     after 100 [list GetWindowInfo $title 2]
     set r [tk_messageBox -type ok -title $title -message $message]
     array set info $windowInfo
     lappend r $info(childtext)
 } -cleanup {
     wm deiconify .
-} -result [list ok "\u041f\u043e\u0438\u0441\u043a\u0020\u0441\u0442\u0440\u0430\u043d\u0438\u0446"]
+} -result [list ok "Поиск страниц"]
 
 test winMsgbox-2.4 {tk_messageBox message (empty)} -constraints {
     win getwindowinfo
@@ -261,7 +261,7 @@ test winMsgbox-3.1 {tk_messageBox detail (sourceforge bug #1692927)} -constraint
     set title "winMsgbox-3.0 [pid]"
     after 100 [list GetWindowInfo $title 2]
     set r [tk_messageBox -type ok -title $title \
-               -message Hello -detail "Pleased to meet you"]
+	       -message Hello -detail "Pleased to meet you"]
     array set info $windowInfo
     lappend r $info(childtext)
 } -cleanup {
@@ -276,15 +276,15 @@ test winMsgbox-3.2 {tk_messageBox detail (unicode)} -constraints {
 } -body {
     global windowInfo
     set title "winMsgbox-3.1 [pid]"
-    set message "\u041f\u043e\u0438\u0441\u043a"
-    set detail "\u0441\u0442\u0440\u0430\u043d\u0438\u0446"
+    set message "Поиск"
+    set detail "страниц"
     after 100 [list GetWindowInfo $title 2]
     set r [tk_messageBox -type ok -title $title -message $message -detail $detail]
     array set info $windowInfo
     lappend r $info(childtext)
 } -cleanup {
     wm deiconify .
-} -result [list ok "\u041f\u043e\u0438\u0441\u043a\n\n\u0441\u0442\u0440\u0430\u043d\u0438\u0446"]
+} -result [list ok "Поиск\n\nстраниц"]
 
 # -------------------------------------------------------------------------
 

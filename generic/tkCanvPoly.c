@@ -3,9 +3,9 @@
  *
  *	This file implements polygon items for canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 Ajuba Solutions.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -77,70 +77,68 @@ static const Tk_CustomOption pixelOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.activeDash),
+	NULL, offsetof(PolygonItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, activeFillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, activeFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activeoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.activeStipple),
+	NULL, offsetof(PolygonItem, outline.activeStipple),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, activeFillStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, activeFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
-	"0.0", Tk_Offset(PolygonItem, outline.activeWidth),
+	"0.0", offsetof(PolygonItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.dash),
+	NULL, offsetof(PolygonItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(PolygonItem, outline.offset),
-	TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(PolygonItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.disabledDash),
+	NULL, offsetof(PolygonItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, disabledFillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, disabledFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.disabledColor),
+	NULL, offsetof(PolygonItem, outline.disabledColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.disabledStipple),
+	NULL, offsetof(PolygonItem, outline.disabledStipple),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
-	"0.0", Tk_Offset(PolygonItem, outline.disabledWidth),
+	"0.0", offsetof(PolygonItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    /* Remark: Default for -fill should be NULL, see [2860519]. Will be fixed in Tk 8.7 */
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	DEF_CANVITEM_OUTLINE, Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
-	"round", Tk_Offset(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"round", offsetof(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(PolygonItem, tsoffset),
+	"0,0", offsetof(PolygonItem, tsoffset),
 	TK_CONFIG_NULL_OK, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(PolygonItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
-	"0,0", Tk_Offset(PolygonItem, outline.tsoffset),
+	"0,0", offsetof(PolygonItem, outline.tsoffset),
 	TK_CONFIG_NULL_OK, &offsetOption},
     {TK_CONFIG_BITMAP, "-outlinestipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-smooth", NULL, NULL,
-	"0", Tk_Offset(PolygonItem, smooth),
+	"0", offsetof(PolygonItem, smooth),
 	TK_CONFIG_DONT_SET_DEFAULT, &smoothOption},
     {TK_CONFIG_INT, "-splinesteps", NULL, NULL,
-	"12", Tk_Offset(PolygonItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"12", offsetof(PolygonItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(PolygonItem, fillStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, fillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
-	"1.0", Tk_Offset(PolygonItem, outline.width),
+	"1.0", offsetof(PolygonItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
@@ -152,11 +150,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 static void		ComputePolygonBbox(Tk_Canvas canvas,
 			    PolygonItem *polyPtr);
 static int		ConfigurePolygon(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreatePolygon(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeletePolygon(Tk_Canvas canvas,
 			    Tk_Item *itemPtr,  Display *display);
 static void		DisplayPolygon(Tk_Canvas canvas,
@@ -164,20 +162,22 @@ static void		DisplayPolygon(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetPolygonIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, Tcl_Size *indexPtr);
 static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, Tcl_Size first, Tcl_Size last);
 static void		PolygonInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, Tcl_Size beforeThis, Tcl_Obj *obj);
 static int		PolygonToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		PolygonToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		PolygonToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotatePolygon(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScalePolygon(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -198,7 +198,7 @@ Tk_ItemType tkPolygonType = {
     PolygonCoords,			/* coordProc */
     DeletePolygon,			/* deleteProc */
     DisplayPolygon,			/* displayProc */
-    TK_CONFIG_OBJS | TK_MOVABLE_POINTS,	/* flags */
+    TK_MOVABLE_POINTS,		/* flags */
     PolygonToPoint,			/* pointProc */
     PolygonToArea,			/* areaProc */
     PolygonToPostscript,		/* postscriptProc */
@@ -210,7 +210,8 @@ Tk_ItemType tkPolygonType = {
     PolygonInsert,		/* insertProc */
     PolygonDeleteCoords,		/* dTextProc */
     NULL,				/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotatePolygon,			/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -246,11 +247,11 @@ CreatePolygon(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing polygon. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -330,11 +331,12 @@ PolygonCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int i, numPoints;
+    int i;
+    int numPoints;
 
     if (objc == 0) {
 	/*
@@ -359,9 +361,9 @@ PolygonCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %d",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -428,7 +430,7 @@ ConfigurePolygon(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Polygon item to reconfigure. */
-    int objc,			/* Number of elements in objv.  */
+    Tcl_Size objc,			/* Number of elements in objv.  */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
@@ -443,7 +445,7 @@ ConfigurePolygon(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) polyPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, polyPtr, flags)) {
 	return TCL_ERROR;
     }
 
@@ -1014,12 +1016,13 @@ static void
 PolygonInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    Tcl_Size beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    int length, oriNumPoints, nbInsPoints, i;
+    Tcl_Size objc;
     Tcl_Obj **objv;
     double *newCoordPtr;
     Tk_State state = itemPtr->state;
@@ -1035,14 +1038,14 @@ PolygonInsert(
     oriNumPoints = polyPtr->numPoints - polyPtr->autoClosed;
     length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
     nbInsPoints = objc / 2;
-    while (beforeThis > length) {
+    while ((int)beforeThis > length) {
 	beforeThis -= length;
     }
-    while (beforeThis < 0) {
+    while ((int)beforeThis < 0) {
 	beforeThis += length;
     }
     newCoordPtr = (double *)ckalloc(sizeof(double) * (length + 2 + objc));
-    for (i=0; i<beforeThis; i++) {
+    for (i=0; i<(int)beforeThis; i++) {
 	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1053,7 +1056,7 @@ PolygonInsert(
 	}
     }
 
-    for (i=beforeThis; i<length; i++) {
+    for (i=(int)beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = polyPtr->coordPtr[i];
     }
     if (polyPtr->coordPtr) {
@@ -1136,7 +1139,7 @@ PolygonInsert(
 
 		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 		} else {
-		    beforeThis -= abs(beforeThis) % 6;
+		    beforeThis -= abs((int)beforeThis) % 6;
 		    objc += 4;
 		}
 
@@ -1154,7 +1157,7 @@ PolygonInsert(
 	     * Be careful; beforeThis could now be negative
 	     */
 
-	    for (i=beforeThis; i<beforeThis+objc; i+=2) {
+	    for (i=(int)beforeThis; i<(int)beforeThis+objc; i+=2) {
 		j = i;
 		if (j < 0) {
 		    j += length;
@@ -1206,23 +1209,23 @@ static void
 PolygonDeleteCoords(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Index of first character to delete. */
-    int last)			/* Index of last character to delete. */
+    Tcl_Size first,			/* Index of first character to delete. */
+    Tcl_Size last)			/* Index of last character to delete. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int count, i;
     int length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    while (first >= length) {
+    while ((int)first >= length) {
 	first -= length;
     }
-    while (first < 0) {
+    while ((int)first < 0) {
 	first += length;
     }
-    while (last >= length) {
+    while ((int)last >= length) {
 	last -= length;
     }
-    while (last < 0) {
+    while ((int)last < 0) {
 	last += length;
     }
 
@@ -1249,7 +1252,7 @@ PolygonDeleteCoords(
 	    polyPtr->coordPtr[i-count] = polyPtr->coordPtr[i];
 	}
     } else {
-	for (i=last; i<=first; i++) {
+	for (i=last; i<=(int)first; i++) {
 	    polyPtr->coordPtr[i-last] = polyPtr->coordPtr[i];
 	}
     }
@@ -1709,30 +1712,43 @@ GetPolygonIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
+    Tcl_Size length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    const char *string = Tcl_GetString(obj);
+    const char *string;
+    Tcl_Size count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    if (string[0] == 'e') {
-	if (strncmp(string, "end", obj->length) != 0) {
-	    goto badIndex;
+    if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
+	if (idx < 0) {
+	    idx = 0;
+	} else if (idx >= INT_MAX - ((INT_MAX) % count)) {
+	    idx = count;
+	} else {
+	    idx = (idx & (Tcl_Size)-2) % count;
 	}
-	*indexPtr = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-    } else if (string[0] == '@') {
+	*indexPtr = idx;
+	return TCL_OK;
+    }
+
+    string = Tcl_GetStringFromObj(obj, &length);
+
+    if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end;
+	char *rest;
 	const char *p;
 
 	p = string+1;
-	x = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	rest = strchr((char *)p, ',');
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, p, &x) != TCL_OK) {
+	    *rest = ',';
 	    goto badIndex;
 	}
-	p = end+1;
-	y = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	*rest = ',';
+	p = rest+1;
+	if (Tcl_GetDouble(NULL, p, &y) != TCL_OK) {
 	    goto badIndex;
 	}
 	bestDist = 1.0e36;
@@ -1747,31 +1763,50 @@ GetPolygonIndex(
 	    coordPtr += 2;
 	}
     } else {
-	int count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
-
-	if (Tcl_GetIntFromObj(interp, obj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	*indexPtr &= -2; /* if odd, make it even */
-	if (!count) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > 0) {
-	    *indexPtr = ((*indexPtr - 2) % count) + 2;
-	} else {
-	    *indexPtr = -((-(*indexPtr)) % count);
-	}
+    badIndex:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", (char *)NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotatePolygon --
+ *
+ *	This function is called to rotate a polygon by a given amount about a
+ *	point.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the polygon is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
 
-    /*
-     * Some of the paths here leave messages in interp->result, so we have to
-     * clear it out before storing our own message.
-     */
+static void
+RotatePolygon(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    PolygonItem *polyPtr = (PolygonItem *) itemPtr;
+    double *coordPtr;
+    int i;
+    double s = sin(angleRad), c = cos(angleRad);
 
-  badIndex:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
-    return TCL_ERROR;
+    for (i = 0, coordPtr = polyPtr->coordPtr; i < polyPtr->numPoints;
+	    i++, coordPtr += 2) {
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+    }
+    ComputePolygonBbox(canvas, polyPtr);
 }
 
 /*
@@ -1928,21 +1963,17 @@ PolygonToPostscript(
 	 */
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, color);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
-	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
-	    Tcl_AppendToObj(psObj, "fill\n", -1);
+	    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	}
 	goto done;
     }
@@ -1960,25 +1991,21 @@ PolygonToPostscript(
 	    polyPtr->smooth->postscriptProc(interp, canvas, polyPtr->coordPtr,
 		    polyPtr->numPoints, polyPtr->splineSteps);
 	}
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
-	    Tcl_AppendToObj(psObj, "eoclip ", -1);
+	    Tcl_AppendToObj(psObj, "eoclip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (color != NULL) {
-		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	    }
 	} else {
-	    Tcl_AppendToObj(psObj, "eofill\n", -1);
+	    Tcl_AppendToObj(psObj, "eofill\n", TCL_INDEX_NONE);
 	}
     }
 
@@ -2007,9 +2034,7 @@ PolygonToPostscript(
 	Tcl_AppendPrintfToObj(psObj, "%d setlinejoin 1 setlinecap\n", style);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &polyPtr->outline) != TCL_OK){
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &polyPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
 
@@ -2022,11 +2047,6 @@ PolygonToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*

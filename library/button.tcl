@@ -4,9 +4,9 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 2002 ActiveState Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 2002 ActiveState Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -21,7 +21,7 @@ if {[tk windowingsystem] eq "aqua"} {
     bind Radiobutton <Enter> {
 	tk::ButtonEnter %W
     }
-    bind Radiobutton <1> {
+    bind Radiobutton <Button-1> {
 	tk::ButtonDown %W
     }
     bind Radiobutton <ButtonRelease-1> {
@@ -30,7 +30,7 @@ if {[tk windowingsystem] eq "aqua"} {
     bind Checkbutton <Enter> {
 	tk::ButtonEnter %W
     }
-    bind Checkbutton <1> {
+    bind Checkbutton <Button-1> {
 	tk::ButtonDown %W
     }
     bind Checkbutton <ButtonRelease-1> {
@@ -41,16 +41,16 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 if {"win32" eq [tk windowingsystem]} {
-    bind Checkbutton <equal> {
+    bind Checkbutton <=> {
 	tk::CheckRadioInvoke %W select
     }
-    bind Checkbutton <plus> {
+    bind Checkbutton <+> {
 	tk::CheckRadioInvoke %W select
     }
     bind Checkbutton <minus> {
 	tk::CheckRadioInvoke %W deselect
     }
-    bind Checkbutton <1> {
+    bind Checkbutton <Button-1> {
 	tk::CheckRadioDown %W
     }
     bind Checkbutton <ButtonRelease-1> {
@@ -63,7 +63,7 @@ if {"win32" eq [tk windowingsystem]} {
 	tk::ButtonLeave %W
     }
 
-    bind Radiobutton <1> {
+    bind Radiobutton <Button-1> {
 	tk::CheckRadioDown %W
     }
     bind Radiobutton <ButtonRelease-1> {
@@ -84,10 +84,10 @@ if {"x11" eq [tk windowingsystem]} {
 	    tk::CheckRadioInvoke %W
 	}
     }
-    bind Checkbutton <1> {
+    bind Checkbutton <Button-1> {
 	tk::CheckInvoke %W
     }
-    bind Radiobutton <1> {
+    bind Radiobutton <Button-1> {
 	tk::CheckRadioInvoke %W
     }
     bind Checkbutton <Enter> {
@@ -127,7 +127,7 @@ bind Button <Enter> {
 bind Button <Leave> {
     tk::ButtonLeave %W
 }
-bind Button <1> {
+bind Button <Button-1> {
     tk::ButtonDown %W
 }
 bind Button <ButtonRelease-1> {
@@ -752,9 +752,9 @@ proc ::tk::CheckLeave {w} {
     # has not changed it in the meantime.
 
     if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
-        if {[$w cget -selectcolor] eq $Priv($w,selectcolor)
-                || ([info exist Priv($w,aselectcolor)] &&
-                    [$w cget -selectcolor] eq $Priv($w,aselectcolor))} {
+	if {[$w cget -selectcolor] eq $Priv($w,selectcolor)
+		|| ([info exist Priv($w,aselectcolor)] &&
+		    [$w cget -selectcolor] eq $Priv($w,aselectcolor))} {
 	    $w configure -selectcolor $Priv($w,selectcolor)
 	}
     }

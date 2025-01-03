@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ttkspin
 catch {destroy $w}
@@ -46,4 +46,4 @@ $w.s1 set 1
 $w.s2 set 00.00
 $w.s3 set Canberra
 
-pack $w.s1 $w.s2 $w.s3 -side top -pady 5 -padx 10
+pack $w.s1 $w.s2 $w.s3 -side top -pady 3p -padx 7.5p

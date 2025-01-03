@@ -101,48 +101,48 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    nil]];
 
     _defaultWindowsMenuItems = [NSArray arrayWithObjects:
-    	    [NSMenuItem itemWithTitle:@"Minimize"
-    	    	   action:@selector(performMiniaturize:) target:nil
-    	    	   keyEquivalent:@"m"],
-    	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
-    	    	   target:nil],
+	    [NSMenuItem itemWithTitle:@"Minimize"
+		   action:@selector(performMiniaturize:) target:nil
+		   keyEquivalent:@"m"],
+	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
+		   target:nil],
 	    nil];
 
     /*
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macOSVersion] > 101200) {
+    if ([NSApp macOSVersion] >= 101300) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
-        	    [NSMenuItem separatorItem],
-    	            [NSMenuItem itemWithTitle:@"Show Previous Tab"
-		           action:@selector(selectPreviousTab:)
-		           target:nil
+		    [NSMenuItem separatorItem],
+		    [NSMenuItem itemWithTitle:@"Show Previous Tab"
+			   action:@selector(selectPreviousTab:)
+			   target:nil
 			   keyEquivalent:@"\t"
-		           keyEquivalentModifierMask:
-		    	       NSControlKeyMask|NSShiftKeyMask],
-	            [NSMenuItem itemWithTitle:@"Show Next Tab"
-		           action:@selector(selectNextTab:)
-		           target:nil
+			   keyEquivalentModifierMask:
+			       NSControlKeyMask|NSShiftKeyMask],
+		    [NSMenuItem itemWithTitle:@"Show Next Tab"
+			   action:@selector(selectNextTab:)
+			   target:nil
 			   keyEquivalent:@"\t"
-		           keyEquivalentModifierMask:NSControlKeyMask],
-    	            [NSMenuItem itemWithTitle:@"Move Tab To New Window"
-    	    	           action:@selector(moveTabToNewWindow:)
-    	    	           target:nil],
-    	            [NSMenuItem itemWithTitle:@"Merge All Windows"
-    	    	           action:@selector(mergeAllWindows:)
-    	    	           target:nil],
-    	            [NSMenuItem separatorItem],
-	            nil]];
+			   keyEquivalentModifierMask:NSControlKeyMask],
+		    [NSMenuItem itemWithTitle:@"Move Tab To New Window"
+			   action:@selector(moveTabToNewWindow:)
+			   target:nil],
+		    [NSMenuItem itemWithTitle:@"Merge All Windows"
+			   action:@selector(mergeAllWindows:)
+			   target:nil],
+		    [NSMenuItem separatorItem],
+		    nil]];
     }
     _defaultWindowsMenuItems = [_defaultWindowsMenuItems arrayByAddingObject:
 	    [NSMenuItem itemWithTitle:@"Bring All to Front"
 		   action:@selector(arrangeInFront:)]];
     [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
-    				      _defaultWindowsMenuItems];
+				      _defaultWindowsMenuItems];
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]
@@ -193,17 +193,19 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	}
 	return haveDemo;
     } else {
-        return [super validateUserInterfaceItem:anItem];
+	return [super validateUserInterfaceItem:anItem];
     }
 }
 
 - (void) orderFrontStandardAboutPanel: (id) sender
 {
+    (void)sender;
+
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:nil];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
+	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
@@ -219,7 +221,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    "::tk::mac::ShowHelp", NULL, 0)) {
 	[super showHelp:sender];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", -1,
+	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
@@ -231,12 +233,14 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkSource: (id) sender
 {
+    (void)sender;
+
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
-		-1, TCL_EVAL_GLOBAL) == TCL_OK) {
+		TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
 	    Tcl_Obj *path = Tcl_GetObjResult(_eventInterp);
-	    int len;
+	    Tcl_Size len;
 
 	    Tcl_GetStringFromObj(path, &len);
 	    if (len) {
@@ -256,6 +260,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
+	(void)sender;
+
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
@@ -281,6 +287,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
 {
+    (void)anItem;
+
     return YES;
 }
 
@@ -322,23 +330,20 @@ static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
 {
-    Tcl_Obj *libpath, *result = NULL;
+    Tcl_Obj *result = NULL;
 
-    libpath = Tcl_GetVar2Ex(interp, "tk_library", NULL, TCL_GLOBAL_ONLY);
-    if (libpath) {
-	Tcl_Obj *demo[2] = {	Tcl_NewStringObj("demos", 5),
-				Tcl_NewStringObj("widget", 6) };
+    if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
+		   TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
 
+	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
 	Tcl_IncrRefCount(demo[0]);
-	Tcl_IncrRefCount(demo[1]);
-	result = Tcl_FSJoinToPath(libpath, 2, demo);
-	Tcl_DecrRefCount(demo[1]);
+	result = Tcl_FSJoinToPath(libpath, 1, demo);
 	Tcl_DecrRefCount(demo[0]);
 	Tcl_DecrRefCount(libpath);
-    } else {
-	Tcl_ResetResult(interp);
     }
+    Tcl_ResetResult(interp);
     return result;
 }
 
@@ -360,34 +365,11 @@ GetWidgetDemoPath(
 
 void
 TkMacOSXHandleMenuSelect(
-    short theMenu,
-    unsigned short theItem,
-    int optionKeyPressed)
+    TCL_UNUSED(short),
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXInitMenus --
- *
- *	This procedure initializes the Macintosh menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXInitMenus(
-    Tcl_Interp *interp)
-{
-    [NSApp _setupMenus];
 }
 
 /*

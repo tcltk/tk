@@ -8,7 +8,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_CreateOptionTable, Tk_DeleteOptionTable, Tk_InitOptions, Tk_SetOptions, Tk_FreeSavedOptions, Tk_RestoreSavedOptions, Tk_GetOptionValue,  Tk_GetOptionInfo, Tk_FreeConfigOptions, Tk_Offset \- process configuration options
+Tk_CreateOptionTable, Tk_DeleteOptionTable, Tk_InitOptions, Tk_SetOptions, Tk_FreeSavedOptions, Tk_RestoreSavedOptions, Tk_GetOptionValue,  Tk_GetOptionInfo, Tk_FreeConfigOptions \- process configuration options
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -35,9 +35,6 @@ Tcl_Obj *
 \fBTk_GetOptionInfo\fR(\fIinterp, recordPtr, optionTable, namePtr, tkwin\fR)
 .sp
 \fBTk_FreeConfigOptions\fR(\fIrecordPtr, optionTable, tkwin\fR)
-.sp
-int
-\fBTk_Offset(\fItype, field\fB)\fR
 .fi
 .SH ARGUMENTS
 .AS Tk_SavedOptions "*const objv[]" in/out
@@ -53,7 +50,7 @@ pointed to by this argument must exist for the lifetime of the Tk_OptionTable.
 .AP Tk_OptionTable optionTable in
 Token for an option table.  Must have been returned by a previous call
 to \fBTk_CreateOptionTable\fR.
-.AP char *recordPtr in/out
+.AP void *recordPtr in/out
 Points to structure in which values of configuration options are stored;
 fields of this record are modified by procedures such as \fBTk_SetOptions\fR
 and read by procedures such as \fBTk_GetOptionValue\fR.
@@ -62,7 +59,7 @@ For options such as \fBTK_OPTION_COLOR\fR, this argument indicates
 the window in which the option will be used.  If \fIoptionTable\fR uses
 no window-dependent options, then a NULL value may be supplied for
 this argument.
-.AP int objc in
+.AP Tcl_Size objc in
 Number of values in \fIobjv\fR.
 .AP Tcl_Obj "*const *objv" in
 Command-line arguments for setting configuring options.
@@ -240,12 +237,6 @@ is returned and an error message is left in \fIinterp\fR's result unless
 \fBTk_FreeConfigOptions\fR must be invoked when a widget is deleted.
 It frees all of the resources associated with any of the configuration
 options defined in \fIrecordPtr\fR by \fIoptionTable\fR.
-.PP
-The \fBTk_Offset\fR macro is provided as a safe way of generating the
-\fIobjOffset\fR and \fIinternalOffset\fR values for entries in
-Tk_OptionSpec structures.  It takes two arguments: the name of a type
-of record, and the name of a field in that record. It returns the byte
-offset of the named field in records of the given type.
 .SH "TEMPLATES"
 .PP
 The array of Tk_OptionSpec structures passed to \fBTk_CreateOptionTable\fR
@@ -259,8 +250,8 @@ typedef struct {
     const char *\fIdbName\fR;
     const char *\fIdbClass\fR;
     const char *\fIdefValue\fR;
-    int \fIobjOffset\fR;
-    int \fIinternalOffset\fR;
+    Tcl_Size \fIobjOffset\fR;
+    Tcl_Size \fIinternalOffset\fR;
     int \fIflags\fR;
     const void *\fIclientData\fR;
     int \fItypeMask\fR;
@@ -282,7 +273,7 @@ value is specified in the option database.  The \fIobjOffset\fR and
 \fIinternalOffset\fR fields indicate where to store the value of this
 option in widget records (more on this below); values for the \fIobjOffset\fR
 and \fIinternalOffset\fR fields should always be generated with the
-\fBTk_Offset\fR macro.
+\fBoffsetof\fR macro.
 The \fIflags\fR field contains additional information
 to control the processing of this configuration option (see below
 for details).
@@ -328,6 +319,18 @@ If this bit is set for an option then no default value will be set in
 system default value, nor \fIoptionTable\fR are used to give a default
 value to this option. Instead it is assumed that the caller has already
 supplied a default value in the widget code.
+.IP \fBTK_OPTION_ENUM_VAR\fR
+If this value is set for an option, then it indicates the the
+internalOffset points to an enum variable in stead of an int variable.
+Only useful in combination with \fBTK_OPTION_STRING_TABLE\fR,
+\fBTK_OPTION_BOOLEAN\fR, \fBTK_OPTION_ANCHOR\fR, \fBTK_OPTION_JUSTIFY\fR,
+or \fBTK_OPTION_ANCHOR\fR.
+.IP \fBTK_OPTION_VAR(\fItype\fB)\fR
+If this value is set for an option, then it indicates the the
+internalOffset points to a \fItype\fR variable in stead of an int variable.
+Only useful in combination with \fBTK_OPTION_STRING_TABLE\fR or
+\fBTK_OPTION_BOOLEAN\fR, or as \fBTK_OPTION_VAR(Tcl_Size)\fR
+with \fBTK_OPTION_INT\fR
 .RS
 .PP
 The \fItype\fR field of each Tk_OptionSpec structure determines
@@ -342,7 +345,9 @@ nor \fIclientData\fR.
 .IP \fBTK_OPTION_ANCHOR\fR
 The value must be a standard anchor position such as \fBne\fR or
 \fBcenter\fR.  The internal form is a Tk_Anchor value like the ones
-returned by \fBTk_GetAnchorFromObj\fR.
+returned by \fBTk_GetAnchorFromObj\fR.  This option type supports the
+\fBTK_OPTION_NULL_OK\fR flag; if the empty string is specified as the
+value for the option, the integer relief value is set to \fBTK_ANCHOR_NULL\fR.
 .IP \fBTK_OPTION_BITMAP\fR
 The value must be a standard Tk bitmap name. The internal form is a
 Pixmap token like the ones returned by \fBTk_AllocBitmapFromObj\fR.
@@ -352,7 +357,9 @@ such as \fBTk_SetOptions\fR, and it supports the \fBTK_OPTION_NULL_OK\fR flag.
 The value must be a standard boolean value such as \fBtrue\fR or
 \fBno\fR.  The internal form is an integer with value 0 or 1.  Note that if
 the \fIobjOffset\fR field is not used, information about the original
-value of this option will be lost.
+value of this option will be lost.  This option type supports the
+\fBTK_OPTION_NULL_OK\fR flag; if a NULL value is set, the internal
+representation is set to -1.
 .IP \fBTK_OPTION_BORDER\fR
 The value must be a standard color name such as \fBred\fR or \fB#ff8080\fR.
 The internal form is a Tk_3DBorder token like the ones returned
@@ -381,7 +388,7 @@ option type.  See the section \fBCUSTOM OPTION TYPES\fR below for details.
 The string value must be a floating-point number in
 the format accepted by \fBstrtol\fR.  The internal form is a C
 \fBdouble\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
-flag; if a NULL value is set, the internal representation is set to zero.
+flag; if a NULL value is set, the internal representation is set to NaN.
 .IP \fBTK_OPTION_END\fR
 Marks the end of the template.  There must be a Tk_OptionSpec structure
 with \fItype\fR \fBTK_OPTION_END\fR at the end of each template.  If the
@@ -400,11 +407,24 @@ such as \fBTk_SetOptions\fR, and it supports the \fBTK_OPTION_NULL_OK\fR flag.
 The string value must be an integer in the format accepted by
 \fBstrtol\fR (e.g. \fB0\fR and \fB0x\fR prefixes may be used to
 specify octal or hexadecimal numbers, respectively).  The internal form is
-a C \fBint\fR value.
+a C \fBint\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if a NULL value is set, the internal representation is set to INT_MIN.
+.IP \fBTK_OPTION_INDEX\fR
+The string value must be an index in the format accepted by
+\fBTcl_GetIntForIndex()\fR
+or the empty string.  The internal form is a C \fBint\fR value. If the string
+starts with \fB\-\fR, the internal representation will be set to INT_MIN. If the
+string has the form \fBend-???\fR, then the result will be a negative number:
+\fB-1\fR stands for \fBend\fR, \fB-2\fR stands for \fBend-1\fR and so on.
+This option type supports the \fBTK_OPTION_NULL_OK\fR flag;
+if a NULL value is set, the internal representation is set to INT_MIN.
 .IP \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
 The internal form is a Tk_Justify like the values returned by
-\fBTk_GetJustifyFromObj\fR.
+\fBTk_GetJustifyFromObj\fR.  This option type supports the
+\fBTK_OPTION_NULL_OK\fR
+flag; if the empty string is specified as the value for the option,
+the integer relief value is set to \fBTK_JUSTIFY_NULL\fR.
 .IP \fBTK_OPTION_PIXELS\fR
 The value must specify a screen distance such as \fB2i\fR or \fB6.4\fR.
 The internal form is an integer value giving a
@@ -485,11 +505,13 @@ integer pixel value corresponding to \fB2m\fR.  Unfortunately, this loses
 the original screen-independent value. Thus for \fBTK_OPTION_PIXELS\fR options
 it is better to use the \fIobjOffset\fR field.  In this case the original
 value of the option is retained in the object and can be returned when
-the option is retrieved.  In most cases it is convenient to use the
+the option is retrieved.  It might seem convenient to use the
 \fIinternalOffset\fR field as well, so that the integer value is
-immediately available for use in the widget code (alternatively,
-\fBTk_GetPixelsFromObj\fR can be used to extract the integer value from
-the object whenever it is needed).  Note that the problem of losing
+immediately available for use in the widget code. But if scaling is
+involved, \fIinternalOffset\fR won't change value when the scaling
+changes. Therefore it is better always to use
+\fBTk_GetPixelsFromObj\fR to extract the integer value from
+the object whenever it is needed.  Note: the problem of losing
 information on retrievals exists only for \fBTK_OPTION_PIXELS\fR options.
 .PP
 The second reason to use the \fIobjOffset\fR field is in order to
@@ -509,17 +531,17 @@ additional configuration types by writing procedures to parse, print,
 free, and restore saved copies of the type and creating a structure
 pointing to those procedures:
 .CS
-typedef struct Tk_ObjCustomOption {
+typedef struct {
     const char *\fIname\fR;
     Tk_CustomOptionSetProc *\fIsetProc\fR;
     Tk_CustomOptionGetProc *\fIgetProc\fR;
     Tk_CustomOptionRestoreProc *\fIrestoreProc\fR;
     Tk_CustomOptionFreeProc *\fIfreeProc\fR;
-    ClientData \fIclientData\fR;
+    void *\fIclientData\fR;
 } \fBTk_ObjCustomOption\fR;
 
 typedef int \fBTk_CustomOptionSetProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tcl_Interp *\fIinterp\fR,
     Tk_Window \fItkwin\fR,
     Tcl_Obj **\fIvaluePtr\fR,
@@ -529,19 +551,19 @@ typedef int \fBTk_CustomOptionSetProc\fR(
     int \fIflags\fR);
 
 typedef Tcl_Obj *\fBTk_CustomOptionGetProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIrecordPtr\fR,
     int \fIinternalOffset\fR);
 
 typedef void \fBTk_CustomOptionRestoreProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIinternalPtr\fR,
     char *\fIsaveInternalPtr\fR);
 
 typedef void \fBTk_CustomOptionFreeProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIinternalPtr\fR);
 .CE

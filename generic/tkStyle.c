@@ -3,8 +3,8 @@
  *
  *	This file implements the widget styles and themes support.
  *
- * Copyright (c) 1990-1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -78,7 +78,7 @@ typedef struct Style {
     const char *name;		/* Name of style. Points to a hash key. */
     StyleEngine *enginePtr;	/* Style engine of which the style is an
 				 * instance. */
-    ClientData clientData;	/* Data provided during registration. */
+    void *clientData;	/* Data provided during registration. */
 } Style;
 
 /*
@@ -99,7 +99,7 @@ typedef struct Element {
  */
 
 typedef struct {
-    int nbInit;			/* Number of calls to the init proc. */
+    size_t nbInit;			/* Number of calls to the init proc. */
     Tcl_HashTable engineTable;	/* Map a name to a style engine. Keys are
 				 * strings, values are Tk_StyleEngine
 				 * pointers. */
@@ -108,7 +108,7 @@ typedef struct {
 				 * fallback for all engines. */
     Tcl_HashTable styleTable;	/* Map a name to a style. Keys are strings,
 				 * values are Tk_Style pointers.*/
-    int nbElements;		/* Size of the below tables. */
+    Tcl_Size nbElements;		/* Size of the below tables. */
     Tcl_HashTable elementTable;	/* Map a name to an element Id. Keys are
 				 * strings, values are integer element IDs. */
     Element *elements;		/* Array of Elements. */
@@ -129,13 +129,13 @@ static void		FreeStyleEngine(StyleEngine *enginePtr);
 static void		FreeStyleObjProc(Tcl_Obj *objPtr);
 static void		FreeWidgetSpec(StyledWidgetSpec *widgetSpecPtr);
 static StyledElement *	GetStyledElement(StyleEngine *enginePtr,
-			    int elementId);
+			    Tcl_Size elementId);
 static StyledWidgetSpec*GetWidgetSpec(StyledElement *elementPtr,
 			    Tk_OptionTable optionTable);
 static void		InitElement(Element *elementPtr, const char *name,
 			    int id, int genericId, int created);
 static void		InitStyle(Style *stylePtr, const char *name,
-			    StyleEngine *enginePtr, ClientData clientData);
+			    StyleEngine *enginePtr, void *clientData);
 static void		InitStyledElement(StyledElement *elementPtr);
 static void		InitStyleEngine(StyleEngine *enginePtr,
 			    const char *name, StyleEngine *parentPtr);
@@ -150,12 +150,14 @@ static int		SetStyleFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * style object points to the Style structure for the stylefont, or NULL.
  */
 
-static const Tcl_ObjType styleObjType = {
-    "style",			/* name */
+static const TkObjType styleObjType = {
+    {"style",			/* name */
     FreeStyleObjProc,		/* freeIntRepProc */
     DupStyleObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetStyleFromAny		/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -240,7 +242,7 @@ TkStylePkgFree(
     Tcl_HashSearch search;
     Tcl_HashEntry *entryPtr;
     StyleEngine *enginePtr;
-    int i;
+    Tcl_Size i;
 
     tsdPtr->nbInit--;
     if (tsdPtr->nbInit != 0) {
@@ -366,7 +368,7 @@ InitStyleEngine(
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    int elementId;
+    Tcl_Size elementId;
 
     if (name == NULL || *name == '\0') {
 	/*
@@ -421,7 +423,7 @@ FreeStyleEngine(
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    int elementId;
+    Tcl_Size elementId;
 
     /*
      * Free allocated elements.
@@ -841,7 +843,7 @@ static StyledElement *
 GetStyledElement(
     StyleEngine *enginePtr,	/* Style engine providing the implementation.
 				 * NULL means the default system engine. */
-    int elementId)		/* Unique element ID */
+    Tcl_Size elementId)		/* Unique element ID */
 {
     StyledElement *elementPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -852,7 +854,7 @@ GetStyledElement(
 	enginePtr = tsdPtr->defaultEnginePtr;
     }
 
-    while (elementId >= 0 && elementId < tsdPtr->nbElements) {
+    while (elementId != TCL_INDEX_NONE && elementId < tsdPtr->nbElements) {
 	/*
 	 * Look for an implemented element through the engine chain.
 	 */
@@ -1035,7 +1037,7 @@ GetWidgetSpec(
 Tk_StyledElement
 Tk_GetStyledElement(
     Tk_Style style,		/* The widget style. */
-    int elementId,		/* Unique element ID. */
+    Tcl_Size elementId,		/* Unique element ID. */
     Tk_OptionTable optionTable)	/* Option table for the widget. */
 {
     Style *stylePtr = (Style *) style;
@@ -1076,7 +1078,7 @@ Tk_GetElementSize(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     int width, int height,	/* Requested size. */
     int inner,			/* If TRUE, compute the outer size according
@@ -1090,7 +1092,7 @@ Tk_GetElementSize(
     StyledWidgetSpec *widgetSpecPtr = (StyledWidgetSpec *) element;
 
     widgetSpecPtr->elementPtr->specPtr->getSize(stylePtr->clientData,
-	    recordPtr, widgetSpecPtr->optionsPtr, tkwin, width, height, inner,
+	    (char *)recordPtr, widgetSpecPtr->optionsPtr, tkwin, width, height, inner,
 	    widthPtr, heightPtr);
 }
 
@@ -1117,7 +1119,7 @@ Tk_GetElementBox(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     int x, int y,		/* Top left corner of available area. */
     int width, int height,	/* Size of available area. */
@@ -1133,7 +1135,7 @@ Tk_GetElementBox(
     StyledWidgetSpec *widgetSpecPtr = (StyledWidgetSpec *) element;
 
     widgetSpecPtr->elementPtr->specPtr->getBox(stylePtr->clientData,
-	    recordPtr, widgetSpecPtr->optionsPtr, tkwin, x, y, width, height,
+	    (char *)recordPtr, widgetSpecPtr->optionsPtr, tkwin, x, y, width, height,
 	    inner, xPtr, yPtr, widthPtr, heightPtr);
 }
 
@@ -1159,14 +1161,14 @@ Tk_GetElementBorderWidth(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin)		/* The widget window. */
 {
     Style *stylePtr = (Style *) style;
     StyledWidgetSpec *widgetSpecPtr = (StyledWidgetSpec *) element;
 
     return widgetSpecPtr->elementPtr->specPtr->getBorderWidth(
-	    stylePtr->clientData, recordPtr, widgetSpecPtr->optionsPtr, tkwin);
+	    stylePtr->clientData, (char *)recordPtr, widgetSpecPtr->optionsPtr, tkwin);
 }
 
 /*
@@ -1190,7 +1192,7 @@ Tk_DrawElement(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     Drawable d,			/* Where to draw element. */
     int x, int y,		/* Top left corner of element. */
@@ -1201,7 +1203,7 @@ Tk_DrawElement(
     StyledWidgetSpec *widgetSpecPtr = (StyledWidgetSpec *) element;
 
     widgetSpecPtr->elementPtr->specPtr->draw(stylePtr->clientData,
-	    recordPtr, widgetSpecPtr->optionsPtr, tkwin, d, x, y, width,
+	    (char *)recordPtr, widgetSpecPtr->optionsPtr, tkwin, d, x, y, width,
 	    height, state);
 }
 
@@ -1227,7 +1229,7 @@ Tk_CreateStyle(
     const char *name,		/* Name of the style to create. NULL or empty
 				 * means the default system style. */
     Tk_StyleEngine engine,	/* The style engine. */
-    ClientData clientData)	/* Private data passed as is to engine code. */
+    void *clientData)	/* Private data passed as is to engine code. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1313,7 +1315,7 @@ InitStyle(
 				 * means the default system style. Usually
 				 * points to the hash key. */
     StyleEngine *enginePtr,	/* The style engine. */
-    ClientData clientData)	/* Private data passed as is to engine code. */
+    void *clientData)	/* Private data passed as is to engine code. */
 {
     stylePtr->name = name;
     stylePtr->enginePtr = enginePtr;
@@ -1356,8 +1358,8 @@ Tk_GetStyle(
     if (entryPtr == NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "style \"%s\" doesn't exist", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
+		    "style \"%s\" does not exist", name));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, (char *)NULL);
 	}
 	return NULL;
     }
@@ -1402,56 +1404,12 @@ Tk_AllocStyleFromObj(
     Tcl_Obj *objPtr)		/* Object containing name of the style to
 				 * retrieve. */
 {
-    if (objPtr->typePtr != &styleObjType) {
-	SetStyleFromAny(interp, objPtr);
+    if (objPtr->typePtr != &styleObjType.objType) {
+	if (SetStyleFromAny(interp, objPtr) != TCL_OK) {
+	    return NULL;
+	}
     }
     return (Tk_Style)objPtr->internalRep.twoPtrValue.ptr1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_GetStyleFromObj --
- *
- *	Find the style that corresponds to a given object. The style must have
- *	already been created by Tk_CreateStyle.
- *
- * Results:
- *	The return value is a token for the style that matches objPtr, or NULL
- *	if none found.
- *
- * Side effects:
- *	If the object is not already a style ref, the conversion will free any
- *	old internal representation.
- *
- *----------------------------------------------------------------------
- */
-
-Tk_Style
-Tk_GetStyleFromObj(
-    Tcl_Obj *objPtr)		/* The object from which to get the style. */
-{
-    if (objPtr->typePtr != &styleObjType) {
-	SetStyleFromAny(NULL, objPtr);
-    }
-
-    return (Tk_Style)objPtr->internalRep.twoPtrValue.ptr1;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * Tk_FreeStyleFromObj --
- *
- *	No-op. Present only for stubs compatibility.
- *
- *---------------------------------------------------------------------------
- */
-#undef Tk_FreeStyleFromObj
-void
-Tk_FreeStyleFromObj(
-    TCL_UNUSED(Tcl_Obj *))
-{
 }
 
 /*
@@ -1463,8 +1421,8 @@ Tk_FreeStyleFromObj(
  *	internal form.
  *
  * Results:
- *	Always returns TCL_OK. If an error occurs is returned (e.g. the style
- *	doesn't exist), an error message will be left in interp's result.
+ *	If an error occurs is returned (e.g. the style doesn't exist), an
+ *	error message will be left in interp's result and TCL_ERROR is returned.
  *
  * Side effects:
  *	The object is left with its typePtr pointing to styleObjType.
@@ -1479,6 +1437,7 @@ SetStyleFromAny(
 {
     const Tcl_ObjType *typePtr;
     const char *name;
+    Tk_Style style;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -1490,8 +1449,12 @@ SetStyleFromAny(
 	typePtr->freeIntRepProc(objPtr);
     }
 
-    objPtr->typePtr = &styleObjType;
-    objPtr->internalRep.twoPtrValue.ptr1 = Tk_GetStyle(interp, name);
+    style = Tk_GetStyle(interp, name);
+    if (style == NULL) {
+	return TCL_ERROR;
+    }
+    objPtr->typePtr = &styleObjType.objType;
+    objPtr->internalRep.twoPtrValue.ptr1 = style;
 
     return TCL_OK;
 }

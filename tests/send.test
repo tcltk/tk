@@ -2,10 +2,10 @@
 # other procedures in the file tkSend.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
-# Copyright (c) 2001 ActiveState Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2001 ActiveState Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -225,13 +225,13 @@ test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
     cleanupbg
     set result
 } {altDisplay homeDisplay}
-# Since macOS has no registry of interpreters, 8.3, 8.4 and 8.10 will fail.
+# Since macOS has no registry of interpreters, 8.3 and 8.10 will fail.
 test send-8.3 {Tk_SendCmd procedure, options} {secureserver notAqua} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
-test send-8.4 {Tk_SendCmd procedure, options} {secureserver notAqua} {
+test send-8.4 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -gorp foo bar baz} msg] $msg
-} {1 {no application named "-gorp"}}
+} {1 {bad option "-gorp": must be -async, -displayof, or --}}
 test send-8.5 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -async foo} msg] $msg
 } {1 {wrong # args: should be "send ?-option value ...? interpName arg ?arg ...?"}}

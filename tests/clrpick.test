@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out Tk's "tk_chooseColor" command.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -97,7 +97,7 @@ proc ToChooseColorByKey {parent r g b} {
 
 proc PressButton {btn} {
     event generate $btn <Enter>
-    event generate $btn <1> -x 5 -y 5
+    event generate $btn <Button-1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
@@ -137,7 +137,7 @@ proc SendButtonPress {parent btn type} {
 	event generate $w <Enter>
 	focus $w
 	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
+	event generate $w <Key> -keysym Return
     }
 }
 
@@ -149,7 +149,7 @@ test clrpick-2.1 {tk_chooseColor command} -constraints {
 } -body {
     ToPressButton . ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor #404040 \
-        -parent .
+	    -parent .
 } -result {#404040}
 test clrpick-2.2 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover

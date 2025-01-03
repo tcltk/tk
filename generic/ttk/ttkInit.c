@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
  */
@@ -13,15 +13,18 @@
  * See also: enum Ttk_ButtonDefaultState.
  */
 const char *const ttkDefaultStrings[] = {
-    "normal", "active", "disabled", NULL
+    "active", "disabled", "normal", NULL
 };
 
 int Ttk_GetButtonDefaultStateFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
-    *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, statePtr);
+    int state = (int)TTK_BUTTON_DEFAULT_DISABLED;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkDefaultStrings,
+	    "default state", 0, &state);
+
+    *statePtr = (Ttk_ButtonDefaultState)state;
+    return result;
 }
 
 /*
@@ -34,11 +37,14 @@ const char *const ttkCompoundStrings[] = {
 };
 
 int Ttk_GetCompoundFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *compoundPtr)
 {
-    *statePtr = TTK_COMPOUND_NONE;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, statePtr);
+    int compound = (int)TTK_COMPOUND_NONE;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkCompoundStrings,
+	    "compound layout", 0, &compound);
+
+    *compoundPtr = (Ttk_Compound)compound;
+    return result;
 }
 
 /*
@@ -50,11 +56,14 @@ const char *const ttkOrientStrings[] = {
 };
 
 int Ttk_GetOrientFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {
-    *resultPtr = TTK_ORIENT_HORIZONTAL;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, resultPtr);
+    int orient = (int)TTK_ORIENT_HORIZONTAL;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
+	    "orientation", 0, &orient);
+
+    *resultPtr = (Ttk_Orient)orient;
+    return result;
 }
 
 /*
@@ -62,17 +71,17 @@ int Ttk_GetOrientFromObj(
  * Other options are accepted and interpreted as synonyms for "normal".
  */
 static const char *const ttkStateStrings[] = {
-    "normal", "readonly", "disabled", "active", NULL
+    "active", "disabled", "normal", "readonly", NULL
 };
 enum {
-    TTK_COMPAT_STATE_NORMAL,
-    TTK_COMPAT_STATE_READONLY,
+    TTK_COMPAT_STATE_ACTIVE,
     TTK_COMPAT_STATE_DISABLED,
-    TTK_COMPAT_STATE_ACTIVE
+    TTK_COMPAT_STATE_NORMAL,
+    TTK_COMPAT_STATE_READONLY
 };
 
 /* TtkCheckStateOption --
- * 	Handle -state compatibility option.
+ *	Handle -state compatibility option.
  *
  *	NOTE: setting -state disabled / -state enabled affects the
  *	widget state, but the internal widget state does *not* affect
@@ -85,8 +94,8 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
     unsigned all = TTK_STATE_DISABLED|TTK_STATE_READONLY|TTK_STATE_ACTIVE;
 #   define SETFLAGS(f) TtkWidgetChangeState(corePtr, f, all^f)
 
-    (void)Tcl_GetIndexFromObjStruct(NULL, objPtr, ttkStateStrings,
-	    sizeof(char *), "", 0, &stateOption);
+    Tcl_GetIndexFromObj(NULL, objPtr, ttkStateStrings,
+	    "", 0, &stateOption);
     switch (stateOption) {
 	case TTK_COMPAT_STATE_NORMAL:
 	default:
@@ -103,28 +112,6 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 	    break;
     }
 #   undef SETFLAGS
-}
-
-/* TtkSendVirtualEvent --
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>> -when tail"
- *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
- */
-void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
-{
-    union {XEvent general; XVirtualEvent virt;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(tgtWin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(tgtWin);
-    event.general.xany.display = Tk_Display(tgtWin);
-    event.virt.name = Tk_GetUid(eventName);
-
-    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 /* TtkEnumerateOptions, TtkGetOptionValue --
@@ -148,7 +135,7 @@ int TtkEnumerateOptions(
 
 	if (specPtr->type == TK_OPTION_END && specPtr->clientData != NULL) {
 	    /* Chain to next option spec array: */
-	    specPtr = specPtr->clientData;
+	    specPtr = (const Tk_OptionSpec *)specPtr->clientData;
 	}
     }
     Tcl_SetObjResult(interp, result);
@@ -175,14 +162,14 @@ int TtkGetOptionValue(
  */
 
 /* public */
-Tk_OptionSpec ttkCoreOptionSpecs[] =
+const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
+	offsetof(WidgetCore, cursorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
+	offsetof(WidgetCore,styleObj), TCL_INDEX_NONE, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
+	offsetof(WidgetCore,classObj), TCL_INDEX_NONE, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -190,9 +177,9 @@ Tk_OptionSpec ttkCoreOptionSpecs[] =
  * +++ Initialization: elements and element factories.
  */
 
-extern void TtkElements_Init(Tcl_Interp *);
-extern void TtkLabel_Init(Tcl_Interp *);
-extern void TtkImage_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkElements_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkLabel_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkImage_Init(Tcl_Interp *);
 
 static void RegisterElements(Tcl_Interp *interp)
 {
@@ -205,19 +192,19 @@ static void RegisterElements(Tcl_Interp *interp)
  * +++ Initialization: Widget definitions.
  */
 
-extern void TtkButton_Init(Tcl_Interp *);
-extern void TtkEntry_Init(Tcl_Interp *);
-extern void TtkFrame_Init(Tcl_Interp *);
-extern void TtkNotebook_Init(Tcl_Interp *);
-extern void TtkPanedwindow_Init(Tcl_Interp *);
-extern void TtkProgressbar_Init(Tcl_Interp *);
-extern void TtkScale_Init(Tcl_Interp *);
-extern void TtkScrollbar_Init(Tcl_Interp *);
-extern void TtkSeparator_Init(Tcl_Interp *);
-extern void TtkTreeview_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkButton_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkEntry_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkFrame_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkNotebook_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkPanedwindow_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkTreeview_Init(Tcl_Interp *);
 
 #ifdef TTK_SQUARE_WIDGET
-extern int TtkSquareWidget_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkSquareWidget_Init(Tcl_Interp *);
 #endif
 
 static void RegisterWidgets(Tcl_Interp *interp)
@@ -241,9 +228,9 @@ static void RegisterWidgets(Tcl_Interp *interp)
  * +++ Initialization: Built-in themes.
  */
 
-extern int TtkAltTheme_Init(Tcl_Interp *);
-extern int TtkClassicTheme_Init(Tcl_Interp *);
-extern int TtkClamTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClamTheme_Init(Tcl_Interp *);
 
 static void RegisterThemes(Tcl_Interp *interp)
 {
@@ -274,7 +261,10 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
+#ifndef TK_NO_DEPRECATED
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
+#endif
+    Tcl_PkgProvideEx(interp, "ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
 
     return TCL_OK;
 }

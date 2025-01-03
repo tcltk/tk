@@ -12,7 +12,7 @@
 .SH NAME
 toplevel \- Create and manipulate 'toplevel' main and popup window widgets
 .SH SYNOPSIS
-\fBtoplevel\fR \fIpathName \fR?\fIoptions\fR?
+\fBtoplevel\fI pathName \fR?\fIoptions\fR?
 .SO
 \-borderwidth	\-highlightcolor	\-pady
 \-cursor	\-highlightthickness	\-relief
@@ -25,6 +25,17 @@ except that its value may also be specified as an empty string.
 In this case, the widget will display no background or border, and
 no colors will be consumed from its colormap for its background
 and border.
+.VS "8.7, TIP262"
+An empty background will disable drawing the background image.
+.OP \-backgroundimage backgroundImage BackgroundImage
+This specifies an image to display on the toplevel's background within
+the border of the toplevel (i.e., the image will be clipped by the
+toplevel's highlight ring and border, if either are present) on top of
+the background;
+subwidgets of the toplevel will be drawn on top. The image must have
+been created with the \fBimage create\fR command. If specified as the
+empty string, no image will be displayed.
+.VE "8.7, TIP262"
 .OP \-class class Class
 Specifies a class for the window.
 This class will be used when querying the option database for
@@ -57,7 +68,7 @@ widget command.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .OP \-menu menu Menu
 Specifies a menu widget to be used as a menubar. On the Macintosh, the
@@ -73,6 +84,15 @@ Defaults to the same screen as its parent.
 This option is special in that it may not be specified via the option
 database, and it may not be modified with the \fBconfigure\fR
 widget command.
+.OP \-tile tile Tile
+.VS "8.7, TIP262"
+This specifies how to draw the background image (see
+\fB\-backgroundimage\fR) on the toplevel.
+If true (according to \fBTcl_GetBoolean\fR), the image will be tiled
+to fill the whole toplevel, with the origin of the first copy of the
+image being the top left of the interior of the toplevel.
+If false (the default), the image will be centered within the toplevel.
+.VE "8.7, TIP262"
 .OP \-use use Use
 This option is used for embedding. If the value is not an empty string,
 it must be the window identifier of a container window, specified as
@@ -93,7 +113,7 @@ widget command.
 .OP \-width width Width
 Specifies the desired width for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .BE
 .SH DESCRIPTION
@@ -111,7 +131,7 @@ top-level window:  its X parent is the root window of a screen
 rather than the logical parent from its Tk path name.  The primary
 purpose of a toplevel is to serve as a container for dialog boxes
 and other collections of widgets.  The only visible features
-of a toplevel are its background color and an optional 3-D border
+of a toplevel are its background and an optional 3-D border
 to make the toplevel appear raised or sunken.
 .SH "WIDGET COMMAND"
 .PP
@@ -121,13 +141,14 @@ command may be used to invoke various
 operations on the widget.  It has the following general form:
 .PP
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 .PP
 \fIPathName\fR is the name of the command, which is the same as
 the toplevel widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for toplevel widgets:
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -135,6 +156,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBtoplevel\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

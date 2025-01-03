@@ -26,6 +26,7 @@ jobs:
           - "clang"
         config:
           - ""
+          - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
@@ -39,14 +40,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev
+          sudo apt-get install libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
-          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
+          echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
           echo "TOOL_DIR=$(cd tcl/tools;pwd)" >> $GITHUB_ENV
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
@@ -55,9 +56,22 @@ jobs:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
           OPTS: ${{ matrix.compiler }}${{ matrix.config }}
-      - name: Configure (opts=${{ matrix.config }})
+      - name: Configure and Build Tcl
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
+            cat config.log
+            echo "::warning::Failure during Tcl Configure"
+            exit 1
+          }
+          make all install  || {
+            echo "::warning::Failure during Tcl Build"
+            exit 1
+          }
+          echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
+        working-directory: tcl/unix
+      - name: Configure (opts=${{ matrix.config }})
+        run: |
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -126,20 +140,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
+      - name: Checkout Tcl
+        uses: actions/checkout@v4
+        with:
+          repository: tcltk/tcl
+          ref: main
+          path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev xvfb xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
+          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
-          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
+          echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
-      - name: Configure ${{ matrix.config }}
+      - name: Configure and Build Tcl
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
+            cat config.log
+            echo "::warning::Failure during Tcl Configure"
+            exit 1
+          }
+          make all install  || {
+            echo "::warning::Failure during Tcl Build"
+            exit 1
+          }
+          echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
+        working-directory: tcl/unix
+      - name: Configure ${{ matrix.config }}
+        run: |
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1

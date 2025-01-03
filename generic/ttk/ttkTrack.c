@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
  * like scrollbars in which individual elements may
  * be active or pressed instead of the widget as a whole.
  *
  * Usage:
- * 	TtkTrackElementState(&recordPtr->core);
+ *	TtkTrackElementState(&recordPtr->core);
  *
  * Registers an event handler on the widget that tracks pointer
  * events and updates the state of the element under the
@@ -16,11 +16,11 @@
  * and is normally set to the ACTIVE state unless another element
  * is currently being pressed.
  *
- * The active element becomes "pressed" on <ButtonPress> events,
+ * The active element becomes "pressed" on <Button> events,
  * and remains "active" and "pressed" until the corresponding
  * <ButtonRelease> event.
  *
- * TODO: Handle "chords" properly (e.g., <B1-ButtonPress-2>)
+ * TODO: Handle "chords" properly (e.g., <B1-Button-2>)
  */
 
 #include "tkInt.h"
@@ -30,17 +30,17 @@
 typedef struct {
     WidgetCore		*corePtr;	/* widget to track */
     Ttk_Layout		tracking;	/* current layout being tracked */
-    Ttk_Element 	activeElement;	/* element under the mouse cursor */
-    Ttk_Element 	pressedElement; /* currently pressed element */
+    Ttk_Element	activeElement;	/* element under the mouse cursor */
+    Ttk_Element	pressedElement; /* currently pressed element */
 } ElementStateTracker;
 
 /*
  * ActivateElement(es, node) --
- * 	Make 'node' the active element if non-NULL.
- * 	Deactivates the currently active element if different.
+ *	Make 'node' the active element if non-NULL.
+ *	Deactivates the currently active element if different.
  *
- * 	The active element has TTK_STATE_ACTIVE set _unless_
- * 	another element is 'pressed'
+ *	The active element has TTK_STATE_ACTIVE set _unless_
+ *	another element is 'pressed'
  */
 static void ActivateElement(ElementStateTracker *es, Ttk_Element element)
 {
@@ -65,7 +65,7 @@ static void ActivateElement(ElementStateTracker *es, Ttk_Element element)
 }
 
 /* ReleaseElement --
- * 	Releases the currently pressed element, if any.
+ *	Releases the currently pressed element, if any.
  */
 static void ReleaseElement(ElementStateTracker *es)
 {
@@ -85,7 +85,7 @@ static void ReleaseElement(ElementStateTracker *es)
 }
 
 /* PressElement --
- * 	Presses the specified element.
+ *	Presses the specified element.
  */
 static void PressElement(ElementStateTracker *es, Ttk_Element element)
 {
@@ -103,7 +103,7 @@ static void PressElement(ElementStateTracker *es, Ttk_Element element)
 }
 
 /* ElementStateEventProc --
- * 	Event handler for tracking element states.
+ *	Event handler for tracking element states.
  */
 
 static const unsigned ElementStateMask =
@@ -116,9 +116,9 @@ static const unsigned ElementStateMask =
     ;
 
 static void
-ElementStateEventProc(ClientData clientData, XEvent *ev)
+ElementStateEventProc(void *clientData, XEvent *ev)
 {
-    ElementStateTracker *es = clientData;
+    ElementStateTracker *es = (ElementStateTracker *)clientData;
     Ttk_Layout layout = es->corePtr->layout;
     Ttk_Element element;
 
@@ -167,13 +167,13 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 
 /*
  * TtkTrackElementState --
- * 	Register an event handler to manage the 'pressed'
- * 	and 'active' states of individual widget elements.
+ *	Register an event handler to manage the 'pressed'
+ *	and 'active' states of individual widget elements.
  */
 
 void TtkTrackElementState(WidgetCore *corePtr)
 {
-    ElementStateTracker *es = ckalloc(sizeof(*es));
+    ElementStateTracker *es = (ElementStateTracker *)ckalloc(sizeof(*es));
     es->corePtr = corePtr;
     es->tracking = 0;
     es->activeElement = es->pressedElement = 0;

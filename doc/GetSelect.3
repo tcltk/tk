@@ -16,6 +16,7 @@ Tk_GetSelection \- retrieve the contents of a selection
 .sp
 int
 \fBTk_GetSelection\fR(\fIinterp, tkwin, selection, target, proc, clientData\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_GetSelProc clientData
 .AP Tcl_Interp *interp in
@@ -30,7 +31,7 @@ Form in which to retrieve selection.
 .AP Tk_GetSelProc *proc in
 Procedure to invoke to process pieces of the selection as they
 are retrieved.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .BE
 .SH DESCRIPTION
@@ -44,7 +45,7 @@ should have arguments and result that match the type
 .PP
 .CS
 typedef int \fBTk_GetSelProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tcl_Interp *\fIinterp\fR,
         char *\fIportion\fR);
 .CE

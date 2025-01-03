@@ -15,15 +15,16 @@ Tk_GetScrollInfoObj, Tk_GetScrollInfo \- parse arguments for scrolling commands
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_GetScrollInfoObj(\fIinterp, objc, objv, fractionPtr, stepsPtr\fB)\fR
+\fBTk_GetScrollInfoObj\fR(\fIinterp, objc, objv, fractionPtr, stepsPtr\fR)
 .sp
 int
-\fBTk_GetScrollInfo(\fIinterp, argc, argv, fractionPtr, stepsPtr\fB)\fR
+\fBTk_GetScrollInfo\fR(\fIinterp, argc, argv, fractionPtr, stepsPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tcl_Interp" *fractionPtr
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
-.AP int objc in
+.AP Tcl_Size objc in
 Number of Tcl_Obj's in \fIobjv\fR array.
 .AP "Tcl_Obj *const *" objv in
 Argument objects.  These represent the entire widget command, of
@@ -50,19 +51,20 @@ and parses the words starting with \fIobjv\fR[2].
 The words starting with \fIobjv\fR[2] must have one of the following forms:
 .CS
 \fBmoveto \fIfraction\fR
-\fBscroll \fInumber\fB units\fR
 \fBscroll \fInumber\fB pages\fR
+\fBscroll \fInumber\fB units\fR
 .CE
 .LP
-Any of the \fBmoveto\fR, \fBscroll\fR, \fBunits\fR, and \fBpages\fR
+Any of the \fBmoveto\fR, \fBscroll\fR, \fBpages\fR, and \fBunits\fR
 keywords may be abbreviated.
 If \fIobjv\fR has the \fBmoveto\fR form, \fBTK_SCROLL_MOVETO\fR
 is returned as result and \fI*fractionPtr\fR is filled in with the
 \fIfraction\fR argument to the command, which must be a proper real
 value.
-If \fIobjv\fR has the \fBscroll\fR form, \fBTK_SCROLL_UNITS\fR
-or \fBTK_SCROLL_PAGES\fR is returned and \fI*stepsPtr\fR is filled
-in with the \fInumber\fR value, which must be a proper integer.
+If \fIobjv\fR has the \fBscroll\fR form, \fBTK_SCROLL_PAGES\fR
+or \fBTK_SCROLL_UNITS\fR is returned and \fI*stepsPtr\fR is filled
+in with the \fInumber\fR value, which must be a  integer or a float,
+but if it is a float then it is converted to an integer, rounded away from 0.
 If an error occurs in parsing the arguments, \fBTK_SCROLL_ERROR\fR
 is returned and an error message is left in interpreter
 \fIinterp\fR's result.

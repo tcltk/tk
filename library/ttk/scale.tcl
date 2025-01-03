@@ -1,4 +1,4 @@
-# scale.tcl - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
+# scale.tcl - Copyright © 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
 #
 # Bindings for the TScale widget
 
@@ -41,14 +41,14 @@ proc ttk::scale::Press {w x y} {
 
     switch -glob -- [$w identify $x $y] {
 	*track -
-        *trough {
-            set inc [expr {([$w get $x $y] <= [$w get]) ^ ([$w cget -from] > [$w cget -to]) ? -1 : 1}]
-            ttk::Repeatedly Increment $w $inc
-        }
-        *slider {
-            set State(dragging) 1
-            set State(initial) [$w get]
-        }
+	*trough {
+	    set inc [expr {([$w get $x $y] <= [$w get]) ^ ([$w cget -from] > [$w cget -to]) ? -1 : 1}]
+	    ttk::Repeatedly Increment $w $inc
+	}
+	*slider {
+	    set State(dragging) 1
+	    set State(initial) [$w get]
+	}
     }
 }
 
@@ -61,14 +61,14 @@ proc ttk::scale::Jump {w x y} {
 
     switch -glob -- [$w identify $x $y] {
 	*track -
-        *trough {
-            $w set [$w get $x $y]
-            set State(dragging) 1
-            set State(initial) [$w get]
-        }
-        *slider {
-            Press $w $x $y
-        }
+	*trough {
+	    $w set [$w get $x $y]
+	    set State(dragging) 1
+	    set State(initial) [$w get]
+	}
+	*slider {
+	    Press $w $x $y
+	}
     }
 }
 

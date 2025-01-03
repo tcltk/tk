@@ -2,8 +2,8 @@
 # tkGet.c.  It is organized in the standard fashion for Tcl
 # white-box tests.
 #
-# Copyright (c) 1998 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1998 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2

@@ -58,6 +58,9 @@ than one element at a time (e.g. menus but not buttons).
 .OP \-activeforeground activeForeground Background
 Specifies foreground color to use when drawing active elements.
 See above for definition of active elements.
+.OP \-activerelief activeRelief Relief
+Specifies the 3-D effect desired for the active item of the widget.
+See the \fB\-relief\fR option for details.
 .OP \-anchor anchor Anchor
 Specifies how the information in a widget (e.g. text or a bitmap)
 is to be displayed in the widget.
@@ -221,6 +224,13 @@ internal space above and/or below what it displays inside.
 Most widgets only use this option for padding text:  if they are
 displaying a bitmap or image, then they usually ignore padding
 options.
+.OP \-placeholder placeHolder PlaceHolder
+Specifies a help text string to display if no text is otherwise displayed,
+that is when the widget is empty. The placeholder text is displayed using
+the values of the \fB\-font\fR and \fB\-justify\fR options.
+.OP \-placeholderforeground placeholderForeground PlaceholderForeground
+Specifies the foreground color to use when the placeholder text is
+displayed. The default color is platform-specific.
 .OP \-relief relief Relief
 Specifies the 3-D effect desired for the widget.  Acceptable
 values are \fBraised\fR, \fBsunken\fR, \fBflat\fR, \fBridge\fR,
@@ -282,7 +292,7 @@ The script must return \fB0\fR, \fB1\fR, or an empty string:  a
 \fB0\fR or \fB1\fR value specifies whether the window will receive
 the input focus, and an empty string results in the default decision
 described above.
-Note: this interpretation of the option is defined entirely by
+Note that this interpretation of the option is defined entirely by
 the Tcl scripts that implement traversal:  the widget implementations
 ignore the option entirely, so you can change its meaning if you
 redefine the keyboard traversal scripts.
@@ -306,7 +316,8 @@ Specifies the integer index of a character to underline in the widget.
 This option is used by the default bindings to implement keyboard
 traversal for menu buttons and menu entries.
 0 corresponds to the first character of the text displayed in the
-widget, 1 to the next character, and so on.
+widget, 1 to the next character, and so on. \fBend\fR corresponds to the
+last character, \fBend\fR-1 to the before last character, and so on.
 .OP \-wraplength wrapLength WrapLength
 For widgets that can perform word-wrapping, this option specifies
 the maximum line length.
@@ -314,7 +325,7 @@ Lines that would exceed this length are wrapped onto the next line,
 so that no line is longer than the specified length.
 The value may be specified in any of the standard forms for
 screen distances.
-If this value is less than or equal to 0 then no wrapping is done:  lines
+If this value is negative or zero then no wrapping is done:  lines
 will break only at newline characters in the text.
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 Specifies the prefix for a command used to communicate with horizontal

@@ -12,9 +12,10 @@
 .SH NAME
 grab \- Confine pointer and keyboard events to a window sub-tree
 .SH SYNOPSIS
+.nf
 \fBgrab \fR?\fB\-global\fR? \fIwindow\fR
-.sp
-\fBgrab \fIoption \fR?\fIarg arg \fR...?
+\fBgrab \fIoption \fR?\fIarg \fR...?
+.fi
 .BE
 .SH DESCRIPTION
 .PP
@@ -83,21 +84,28 @@ grab on a given display at once.
 The \fBgrab\fR command can take any of the following forms:
 .TP
 \fBgrab \fR?\fB\-global\fR? \fIwindow\fR
+.
 Same as \fBgrab set\fR, described below.
+.\" METHOD: current
 .TP
 \fBgrab current \fR?\fIwindow\fR?
+.
 If \fIwindow\fR is specified, returns the name of the current grab
 window in this application for \fIwindow\fR's display, or an empty
 string if there is no such window.
 If \fIwindow\fR is omitted, the command returns a list whose elements
 are all of the windows grabbed by this application for all displays,
 or an empty string if the application has no grabs.
+.\" METHOD: release
 .TP
 \fBgrab release \fIwindow\fR
+.
 Releases the grab on \fIwindow\fR if there is one, otherwise does
 nothing.  Returns an empty string.
+.\" METHOD: set
 .TP
 \fBgrab set \fR?\fB\-global\fR? \fIwindow\fR
+.
 Sets a grab on \fIwindow\fR.  If \fB\-global\fR is specified then the
 grab is global, otherwise it is local.
 If a grab was already in effect for this application on
@@ -105,8 +113,10 @@ If a grab was already in effect for this application on
 If there is already a grab on \fIwindow\fR and it has the same
 global/local form as the requested grab, then the command
 does nothing.  Returns an empty string.
+.\" METHOD: status
 .TP
 \fBgrab status \fIwindow\fR
+.
 Returns \fBnone\fR if no grab is currently set on \fIwindow\fR,
 \fBlocal\fR if a local grab is set on \fIwindow\fR, and
 \fBglobal\fR if a global grab is set.
@@ -136,9 +146,9 @@ Set a grab so that only one button may be clicked out of a group.  The
 other buttons are unresponsive to the mouse until the middle button is
 clicked.
 .CS
-pack [button .b1 \-text "Click me! #1" \-command {destroy .b1}]
-pack [button .b2 \-text "Click me! #2" \-command {destroy .b2}]
-pack [button .b3 \-text "Click me! #3" \-command {destroy .b3}]
+pack [button .b1 -text "Click me! #1" -command {destroy .b1}]
+pack [button .b2 -text "Click me! #2" -command {destroy .b2}]
+pack [button .b3 -text "Click me! #3" -command {destroy .b3}]
 \fBgrab\fR .b2
 .CE
 .SH "SEE ALSO"

@@ -1,0 +1,240 @@
+# This file is a Tcl script to test systray and sysnotify features in Tk.
+# It is organized in the standard fashion for Tcl tests.
+#
+# Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2020 Francois Vogel.
+# All rights reserved.
+
+package require tcltest 2.2
+namespace import ::tcltest::*
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+
+test systray-1 {systray icon creation, all options} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "Systray sample" \
+	    -button1 {puts "button 1 click"} -button3 {puts "button 3 click"}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
+
+test systray-2 {systray create, argument checking} -body {
+    tk systray create
+} -returnCodes error -result {missing required option "-image"}
+
+test systray-3 {systray create, argument checking} -body {
+    tk systray create -text Hell
+} -returnCodes error -result {missing required option "-image"}
+
+test systray-4 {systray create, argument checking} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -gorp invalidOption
+} -returnCodes error -result {unknown option "-gorp": must be -image, -text, -button1 or -button3}
+
+test systray-5 {systray icon creation, only required option present} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
+
+test systray-6 {systray icon creation, some options present} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -button3 {puts b3}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
+
+test systray-7 {systray icon, all parameters modification, introspection} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    image create photo _page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
+} -body {
+    tk systray create -image _book -text "Systray icon text"
+    tk systray configure -image _page
+    tk systray configure -text "Another text for my icon"
+    tk systray configure -button1 {set a 1}
+    tk systray configure -button3 {set b 2}
+    tk systray configure
+} -cleanup {
+    tk systray destroy
+    image delete _book
+    image delete _page
+} -result {-image _page -text {Another text for my icon} -button1 {set a 1} -button3 {set b 2}}
+
+test systray-8 {systray icon, single parameter modification, introspection} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "Systray icon text" -button1 {puts b1}
+    tk systray configure -button1 {set a 1}
+    tk systray configure -button1
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {set a 1}
+
+test systray-9 {systray icon, several parameters modification at once, introspection} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "Systray icon text" -button1 {puts b1}
+    tk systray configure -button1 {set a 1} -text NewText
+    list [tk systray configure -button1] [tk systray configure -text]
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {{set a 1} NewText}
+
+test systray-10 {configure non-existing systray icon} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk systray configure
+} -returnCodes error -result {systray not created}
+
+test systray-11 {destroy non-existing systray icon} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk systray destroy
+} -returnCodes error -result {systray not created}
+
+test systray-12 {destroy systray icon works} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book
+    tk systray destroy
+    tk systray create -image _book
+} -result {}
+
+test systray-13 {systray icon creation, attempt to create more than one in an interp} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book
+    tk systray create -image _book
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -returnCodes error -result {only one system tray icon supported per interpeter}
+
+test systray-14 {systray icon creation, create one per interp, visibiliy checks} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "first interp"
+    interp create second
+    # load Tk into the 'second' interp
+    foreach pkg [info loaded] {
+	if {[lindex $pkg 1] == "Tk"} {
+	set loadTk "load $pkg"
+	break
+	}
+    }
+    eval $loadTk second
+    # create the icon in the 'second' interp
+    second eval {
+	# should trigger an error: image _book unknown in 'second' interp'
+	# image from higer interp should not be visible by 'tk systray'
+	tk systray create -image _book -text "second interp"
+    }
+} -cleanup {
+    tk systray destroy
+    image delete _book
+    interp delete second
+} -returnCodes error -result {image "_book" does not exist}
+
+test systray-15 {systray icon creation, create one per interp} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "first interp"
+    interp create second
+    # load Tk into the 'second' interp
+    foreach pkg [info loaded] {
+	if {[lindex $pkg 1] == "Tk"} {
+	set loadTk "load $pkg"
+	break
+	}
+    }
+    eval $loadTk second
+    # create the icon in the 'second' interp
+    second eval {
+	image create photo _page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
+	tk systray create -image _page -text "second interp"
+    }
+} -cleanup {
+    second eval {
+	tk systray destroy
+	image delete _page
+    }
+    interp delete second
+    tk systray destroy
+    image delete _book
+} -result {}
+
+test systray-16 {systray icon creation from a bitmap, on Linux and macOS only} -constraints {
+    nonwin
+} -setup {
+    set data1 {
+	#define foo_width 16
+	#define foo_height 16
+	static unsigned char foo_bits[] = {
+	   0xff, 0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+	   0x81, 0x81, 0xff, 0xff, 0xff, 0xff, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+	   0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0xff, 0xff
+	};
+    }
+    image create bitmap cross -data $data1
+} -body {
+    tk systray create -image cross
+} -cleanup {
+    tk systray destroy
+    image delete cross
+} -result {}
+
+test systray-17 {systray icon existence check} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk systray exists
+} -result {0}
+
+test systray-18 {systray icon existence check} -setup {
+    catch {tk systray destroy}
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "Systray test"
+    tk systray exists
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {1}
+
+
+test sysnotify-1 {system notification popup} -setup {
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+    tk systray create -image _book -text "Systray sample"
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {}
+
+test sysnotify-2.1 {system notification stems from a systray icon on Windows} -constraints {
+    win
+} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -returnCodes error -result {must create a system tray icon with the "tk systray" command first}
+test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
+    nonwin
+} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk sysnotify {Alert} {This is an alert}
+} -result {}
+
+
+cleanupTests

@@ -5,7 +5,7 @@ if {[namespace exists tk::test]} {
     return
 }
 
-package require Tk
+package require tk
 tk appname tktest
 wm title . tktest
 # If the main window isn't already mapped (e.g. because the tests are
@@ -132,50 +132,51 @@ namespace eval tk {
 
 	namespace export fixfocus
 	proc fixfocus {} {
-            catch {destroy .focus}
-            toplevel .focus
-            wm geometry .focus +0+0
-            entry .focus.e
-            .focus.e insert 0 "fixfocus"
-            pack .focus.e
-            update
-            focus -force .focus.e
-            destroy .focus
+	    catch {destroy .focus}
+	    toplevel .focus
+	    wm geometry .focus +0+0
+	    entry .focus.e
+	    .focus.e insert 0 "fixfocus"
+	    pack .focus.e
+	    update
+	    focus -force .focus.e
+	    destroy .focus
 	}
 
-        namespace export imageInit imageFinish imageCleanup imageNames
-        variable ImageNames
-        proc imageInit {} {
-            variable ImageNames
-            if {![info exists ImageNames]} {
-                set ImageNames [lsort [image names]]
-            }
-            imageCleanup
-            if {[lsort [image names]] ne $ImageNames} {
-                return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
-            }
-        }
-        proc imageFinish {} {
-            variable ImageNames
-            if {[lsort [image names]] ne $ImageNames} {
-                return -code error "images remaining: [image names] != $ImageNames"
-            }
-            imageCleanup
-        }
-        proc imageCleanup {} {
-            variable ImageNames
-            foreach img [image names] {
-                if {$img ni $ImageNames} {image delete $img}
-            }
-        }
-        proc imageNames {} {
-            variable ImageNames
-            set r {}
-            foreach img [image names] {
-                if {$img ni $ImageNames} {lappend r $img}
-            }
-            return $r
-        }
+	namespace export imageInit imageFinish imageCleanup imageNames
+	variable ImageNames
+	proc imageInit {} {
+	    variable ImageNames
+	    if {![info exists ImageNames]} {
+		set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    }
+	    imageCleanup
+	    if {[lsort [image names]] ne $ImageNames} {
+		return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
+	    }
+	}
+	proc imageFinish {} {
+	    variable ImageNames
+	    set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    if {$imgs ne $ImageNames} {
+		return -code error "images remaining: [image names] != $ImageNames"
+	    }
+	    imageCleanup
+	}
+	proc imageCleanup {} {
+	    variable ImageNames
+	    foreach img [image names] {
+		if {$img ni $ImageNames} {image delete $img}
+	    }
+	}
+	proc imageNames {} {
+	    variable ImageNames
+	    set r {}
+	    foreach img [image names] {
+		if {$img ni $ImageNames} {lappend r $img}
+	    }
+	    return $r
+	}
 
 	#
 	#  CONTROL TIMING ASPECTS OF POINTER WARPING
@@ -188,13 +189,8 @@ namespace eval tk {
 	# It takes care of the following timing details of pointer warping:
 	#
 	# a. Allow pointer warping to happen if it was scheduled for execution at
-	#    idle time.
-	#    - In Tk releases 8.6 and older, pointer warping is scheduled for
-	#      execution at idle time
-	#    - In release 8.7 and newer this happens synchronously if $w refers to the
-	#      whole screen or if the -when option to [event generate] is "now".
-	#    The namespace variable idle_pointer_warping records which of these is
-	#    the case.
+	#    idle time. This happens synchronously if $w refers to the
+	#    whole screen or if the -when option to [event generate] is "now".
 	#
 	# b. Work around a race condition associated with OS notification of
 	#    mouse motion on Windows.
@@ -237,18 +233,35 @@ namespace eval tk {
 	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
 	# the whole screen.
 	#
-	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
 	proc controlPointerWarpTiming {{duration 50}} {
-		variable idle_pointer_warping
-		if {$idle_pointer_warping} {
-			update idletasks ;# see a. above
-		}
+		update idletasks ;# see a. above
 		if {[tk windowingsystem] eq "win32"} {
 			after $duration ;# see b. above
 		}
 	}
 	namespace export controlPointerWarpTiming
 
+	# On macOS windows are not allowed to overlap the menubar at the top of the
+	# screen or the dock.  So tests which move a window and then check whether it
+	# got moved to the requested location should use a y coordinate larger than the
+	# height of the menubar (normally 23 pixels) and an x coordinate larger than the
+	# width of the dock, if it happens to be on the left.
+	# menubarheight deals with this issue but may not be available from the test
+	# environment, therefore provide a fallback here
+	if {[llength [info procs menubarheight]] == 0} {
+	    if {[tk windowingsystem] ne "aqua"} {
+		# Windows may overlap the menubar
+		proc menubarheight {} {
+		    return 0
+		}
+	    } else {
+		# Windows may not overlap the menubar
+		proc menubarheight {} {
+		    return 30 ;  # arbitrary value known to be larger than the menubar height
+		}
+	    }
+	    namespace export menubarheight
+	}
     }
 }
 
@@ -270,6 +283,8 @@ testConstraint nonUnixUserInteraction [expr {
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 
+testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
+
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
@@ -289,7 +304,6 @@ testConstraint testmenubar     [llength [info commands testmenubar]]
 testConstraint testmetrics     [llength [info commands testmetrics]]
 testConstraint testmovemouse   [llength [info commands testmovemouse]]
 testConstraint testobjconfig   [llength [info commands testobjconfig]]
-testConstraint testOldImageType [expr {"oldtest" in [image types]}]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
 testConstraint testtext        [llength [info commands testtext]]
@@ -396,8 +410,8 @@ testConstraint secureserver 0
 if {[llength [info commands send]]} {
     testConstraint secureserver 1
     if {[catch {send $app set a 0} msg] == 1} {
-        if {[string match "X server insecure *" $msg]} {
-            testConstraint secureserver 0
+	if {[string match "X server insecure *" $msg]} {
+	    testConstraint secureserver 0
 	}
     }
 }
@@ -416,4 +430,3 @@ namespace import -force tcltest::cleanupTests
 deleteWindows
 wm geometry . {}
 raise .
-

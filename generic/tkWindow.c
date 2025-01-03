@@ -5,8 +5,8 @@
  *	equivalent to functions in Xlib (and even invoke them) but also
  *	maintain the local Tk_Window structure.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,7 +39,7 @@ typedef struct TkHalfdeadWindow {
 } TkHalfdeadWindow;
 
 typedef struct {
-    int numMainWindows;		/* Count of numver of main windows currently
+    int numMainWindows;		/* Count of number of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
 				/* First in list of all main windows managed
@@ -96,7 +96,7 @@ static const XSetWindowAttributes defAtts= {
 #define USEINITPROC 8
 #define SAVEUPDATECMD 16 /* better only be one of these! */
 
-typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
+typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
     Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
@@ -208,13 +208,24 @@ static const TkCmd commands[] = {
 static Tk_Window	CreateTopLevelWindow(Tcl_Interp *interp,
 			    Tk_Window parent, const char *name,
 			    const char *screenName, unsigned int flags);
-static void		DeleteWindowsExitProc(ClientData clientData);
+static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
 			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
+
+/*
+ * This static variable only makes sense for macOS and Windows, which never
+ * have more than one display.  It is set by TkCloseDisplay, and when set
+ * prevents sending Enter and Leave events when all of the windows in the
+ * display are being destroyed.  Tk does not send those events on X11; that
+ * job is handled by the X server.
+ */
+
+static int displayBeingClosed = 0;
+
 
 /*
  *----------------------------------------------------------------------
@@ -239,9 +250,8 @@ static void
 TkCloseDisplay(
     TkDisplay *dispPtr)
 {
+    displayBeingClosed = 1;
     TkClipCleanup(dispPtr);
-
-    TkpCancelWarp(dispPtr);
 
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
@@ -338,9 +348,11 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
-	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
-	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
+	Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtGIF);
+	Tk_CreatePhotoImageFormatVersion3(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
+	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
@@ -359,9 +371,7 @@ CreateTopLevelWindow(
      * Set the flags specified in the call.
      */
 
-#ifdef TK_USE_INPUT_METHODS
     winPtr->ximGeneration = 0;
-#endif /*TK_USE_INPUT_METHODS*/
     winPtr->flags |= flags;
 
     /*
@@ -437,8 +447,8 @@ GetScreen(
     screenName = TkGetDefaultScreenName(interp, screenName);
     if (screenName == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no display name and no $DISPLAY environment variable", -1));
-	Tcl_SetErrorCode(interp, "TK", "NO_DISPLAY", NULL);
+		"no display name and no $DISPLAY environment variable", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "NO_DISPLAY", (char *)NULL);
 	return NULL;
     }
     length = strlen(screenName);
@@ -448,8 +458,8 @@ GetScreen(
 	p--;
     }
     if ((*p == '.') && (p[1] != '\0')) {
-	length = p - screenName;
-	screenId = strtoul(p+1, NULL, 10);
+	length = (size_t)(p - screenName);
+	screenId = (int)strtoul(p+1, NULL, 10);
     }
 
     /*
@@ -468,7 +478,7 @@ GetScreen(
 	    if (dispPtr == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"couldn't connect to display \"%s\"", screenName));
-		Tcl_SetErrorCode(interp, "TK", "DISPLAY", "CONNECT", NULL);
+		Tcl_SetErrorCode(interp, "TK", "DISPLAY", "CONNECT", (char *)NULL);
 		return NULL;
 	    }
 	    dispPtr->nextPtr = tsdPtr->displayList; /* TkGetDisplayList(); */
@@ -502,7 +512,7 @@ GetScreen(
     if (screenId >= ScreenCount(dispPtr->display)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad screen number \"%d\"", screenId));
-	Tcl_SetErrorCode(interp, "TK", "DISPLAY", "SCREEN_NUMBER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "DISPLAY", "SCREEN_NUMBER", (char *)NULL);
 	return NULL;
     }
     *screenPtr = screenId;
@@ -656,13 +666,11 @@ TkAllocWindow(
     winPtr->dirtyAtts = CWEventMask|CWColormap|CWBitGravity;
     winPtr->flags = 0;
     winPtr->handlerList = NULL;
-#ifdef TK_USE_INPUT_METHODS
     winPtr->ximGeneration = 0;
     winPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
     winPtr->tagPtr = NULL;
     winPtr->numTags = 0;
-    winPtr->optionLevel = -1;
+    winPtr->optionLevel = TCL_INDEX_NONE;
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
@@ -752,7 +760,7 @@ NameWindow(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window name starts with an upper-case letter: \"%s\"",
 		name));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "NOTCLASS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "NOTCLASS", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -791,7 +799,7 @@ NameWindow(
     if (!isNew) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window name \"%s\" already exists in parent", name));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "EXISTS", (char *)NULL);
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(hPtr, winPtr);
@@ -842,7 +850,7 @@ TkCreateMainWindow(
     TkMainInfo *mainPtr;
     TkWindow *winPtr;
     const TkCmd *cmdPtr;
-    ClientData clientData;
+    void *clientData;
     Tcl_CmdInfo info;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -878,7 +886,6 @@ TkCreateMainWindow(
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
     mainPtr->deletionEpoch = 0l;
-    TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
     TkStylePkgInit(mainPtr);
@@ -889,7 +896,10 @@ TkCreateMainWindow(
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
     mainPtr->tclUpdateObjProc = NULL;
-    if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
+#if TCL_MAJOR_VERSION > 8
+    mainPtr->tclUpdateObjProc2 = NULL;
+#endif
+    if (Tcl_LinkVar(interp, "tk_strictMotif", &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }
@@ -897,7 +907,7 @@ TkCreateMainWindow(
 	Tcl_ResetResult(interp);
     }
     if (Tcl_LinkVar(interp, "::tk::AlwaysShowSelection",
-	    (char *) &mainPtr->alwaysShowSelection,
+	    &mainPtr->alwaysShowSelection,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }
@@ -935,7 +945,7 @@ TkCreateMainWindow(
 	}
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
-	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
+	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->tcl_CreateFileHandler) {
 	    /*
 	     * We are running on Cygwin, so don't use the win32 dialogs.
 	     */
@@ -951,8 +961,15 @@ TkCreateMainWindow(
 	}
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
-	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
+#if TCL_MAJOR_VERSION > 8
+	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
+		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
+	    } else
+#endif
+	    if (!cmdInfo.objClientData) {
+		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -965,9 +982,7 @@ TkCreateMainWindow(
 	}
     }
     if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		(TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+	static const char version[] = TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
 #if defined(MAC_OSX_TK)
 		".aqua"
 #endif
@@ -1024,9 +1039,6 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-		".utf-16"
-#endif
 #if defined(_WIN32)
 		".win32"
 #endif
@@ -1036,7 +1048,18 @@ TkCreateMainWindow(
 		".no-xft"
 #endif
 #endif
-		), NULL);
+		;
+#if TCL_MAJOR_VERSION > 8
+	if (info.isNativeObjectProc == 2) {
+	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
+		    info.objProc2, (void *)
+		    version, NULL);
+
+	} else
+#endif
+	Tcl_CreateObjCommand(interp, "::tk::build-info",
+		info.objProc, (void *)
+		version, NULL);
     }
 
     /*
@@ -1091,14 +1114,14 @@ Tk_CreateWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", -1));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
-		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+		    TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
 	    TkWindow *winPtr = TkAllocWindow(parentPtr->dispPtr,
@@ -1155,14 +1178,14 @@ Tk_CreateAnonymousWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", -1));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
-		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+		    TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
 	    TkWindow *winPtr = TkAllocWindow(parentPtr->dispPtr,
@@ -1226,7 +1249,7 @@ Tk_CreateWindowFromPath(
     char fixedSpace[FIXED_SPACE+1];
     char *p;
     Tk_Window parent;
-    int numChars;
+    size_t numChars;
 
     /*
      * Strip the parent's name out of pathName (it's everything up to the last
@@ -1240,10 +1263,10 @@ Tk_CreateWindowFromPath(
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", (char *)NULL);
 	return NULL;
     }
-    numChars = (int) (p-pathName);
+    numChars = (size_t)(p - pathName);
     if (numChars > FIXED_SPACE) {
 	p = (char *)ckalloc(numChars + 1);
     } else {
@@ -1270,13 +1293,13 @@ Tk_CreateWindowFromPath(
     }
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: parent has been destroyed", -1));
-	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+		"can't create window: parent has been destroyed", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: its parent has -container = yes", -1));
-	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+		"can't create window: its parent has -container = yes", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	return NULL;
     }
 
@@ -1322,11 +1345,44 @@ Tk_CreateWindowFromPath(
  *--------------------------------------------------------------
  */
 
+#if defined(MAC_OSX_TK) || defined(_WIN32)
+static void SendEnterLeaveForDestroy(
+    Tk_Window tkwin)
+{
+    int x, y;
+    unsigned int state;
+    Tk_Window pointerWin;
+    TkWindow *containerPtr;
+
+    if (displayBeingClosed) {
+	return;
+    }
+    XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
+		  NULL, NULL, &state);
+    pointerWin = Tk_CoordsToWindow(x, y, tkwin);
+    if (pointerWin == tkwin) {
+	if (!Tk_IsTopLevel(tkwin)) {
+	    containerPtr = TkGetContainer((TkWindow *)pointerWin);
+	    Tk_UpdatePointer((Tk_Window) containerPtr, x, y, state);
+	}
+    }
+
+    if (pointerWin && (tkwin == Tk_Parent(pointerWin))) {
+	Tk_UpdatePointer(Tk_Parent(tkwin), x, y, state);
+    }
+}
+#else
+static void SendEnterLeaveForDestroy(
+    TCL_UNUSED(Tk_Window))
+{
+}
+#endif
+
 void
 Tk_DestroyWindow(
     Tk_Window tkwin)		/* Window to destroy. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
@@ -1341,6 +1397,10 @@ Tk_DestroyWindow(
 
 	return;
     }
+    if ((winPtr->flags & TK_DONT_DESTROY_WINDOW) == 0) {
+	SendEnterLeaveForDestroy(tkwin);
+    }
+
     winPtr->flags |= TK_ALREADY_DEAD;
 
     /*
@@ -1443,10 +1503,10 @@ Tk_DestroyWindow(
 	 * (otherwise, for example, the Tk window may appear to exist even
 	 * though its X window is gone; this could cause errors). Special
 	 * note: it's possible that the embedded window has already been
-	 * deleted, in which case TkpGetOtherWindow will return NULL.
+	 * deleted, in which case Tk_GetOtherWindow will return NULL.
 	 */
 
-	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *childPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 
 	if (childPtr != NULL) {
 	    childPtr->flags |= TK_DONT_DESTROY_WINDOW;
@@ -1511,7 +1571,7 @@ Tk_DestroyWindow(
      * Cleanup the data structures associated with this window.
      */
 
-    if (winPtr->flags & TK_WIN_MANAGED) {
+    if (winPtr->wmInfoPtr && (winPtr->flags & TK_WIN_MANAGED)) {
 	TkWmDeadWindow(winPtr);
     } else if (winPtr->flags & TK_WM_COLORMAP_WINDOW) {
 	TkWmRemoveFromColormapWindows(winPtr);
@@ -1533,18 +1593,16 @@ Tk_DestroyWindow(
 	}
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
-		(char *) winPtr->window));
+		winPtr->window));
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
-#ifdef TK_USE_INPUT_METHODS
     if (winPtr->inputContext != NULL &&
-	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
+	winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
 	XDestroyIC(winPtr->inputContext);
     }
     winPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
     }
@@ -1594,13 +1652,22 @@ Tk_DestroyWindow(
 	    if ((winPtr->mainPtr->interp != NULL) &&
 		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
-			winPtr->mainPtr->tclUpdateObjProc != NULL) {
+		    if (cmdPtr->flags & SAVEUPDATECMD) {
 			/* Restore Tcl's version of [update] */
-			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
-					     cmdPtr->name,
-					     winPtr->mainPtr->tclUpdateObjProc,
-					     NULL, NULL);
+#if TCL_MAJOR_VERSION > 8
+			if (winPtr->mainPtr->tclUpdateObjProc2 != NULL) {
+			    Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
+				    cmdPtr->name,
+				    winPtr->mainPtr->tclUpdateObjProc2,
+				    NULL, NULL);
+			} else
+#endif
+			if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
+			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+				    cmdPtr->name,
+				    winPtr->mainPtr->tclUpdateObjProc,
+				    NULL, NULL);
+			}
 		    } else {
 			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
 					     cmdPtr->name, TkDeadAppObjCmd,
@@ -1800,7 +1867,7 @@ Tk_MakeWindowExist(
     if (createProc != NULL && parent != None) {
 	winPtr->window = createProc(tkwin, parent, winPtr->instanceData);
     } else {
-	winPtr->window = TkpMakeWindow(winPtr, parent);
+	winPtr->window = Tk_MakeWindow(tkwin, parent);
     }
 
     hPtr = Tcl_CreateHashEntry(&winPtr->dispPtr->winTable,
@@ -1978,8 +2045,8 @@ Tk_ResizeWindow(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
-    winPtr->changes.width = (unsigned) width;
-    winPtr->changes.height = (unsigned) height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
     if (winPtr->window != None) {
 	XResizeWindow(winPtr->display, winPtr->window, (unsigned) width,
 		(unsigned) height);
@@ -2000,8 +2067,8 @@ Tk_MoveResizeWindow(
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
-    winPtr->changes.width = (unsigned) width;
-    winPtr->changes.height = (unsigned) height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
     if (winPtr->window != None) {
 	XMoveResizeWindow(winPtr->display, winPtr->window, x, y,
 		(unsigned) width, (unsigned) height);
@@ -2173,11 +2240,7 @@ Tk_DefineCursor(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
-#if defined(MAC_OSX_TK)
-    winPtr->atts.cursor = (XCursor) cursor;
-#else
     winPtr->atts.cursor = (Cursor) cursor;
-#endif
 
     if (winPtr->window != None) {
 	XDefineCursor(winPtr->display, winPtr->window, winPtr->atts.cursor);
@@ -2360,7 +2423,7 @@ void
 Tk_SetClassProcs(
     Tk_Window tkwin,		/* Token for window to modify. */
     const Tk_ClassProcs *procs,	/* Class procs structure. */
-    ClientData instanceData)	/* Data to be passed to class functions. */
+    void *instanceData)	/* Data to be passed to class functions. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -2404,8 +2467,8 @@ Tk_NameToWindow(
 	 */
 
 	if (interp != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window",-1));
-	    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window",TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
 	}
 	return NULL;
     }
@@ -2417,7 +2480,7 @@ Tk_NameToWindow(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad window path name \"%s\"", pathName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", pathName,
-		    NULL);
+		    (char *)NULL);
 	}
 	return NULL;
     }
@@ -2463,7 +2526,7 @@ Tk_IdToWindow(
 	return NULL;
     }
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
+    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, window);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -2597,7 +2660,7 @@ Tk_RestackWindow(
     TkWindow *otherPtr = (TkWindow *) other;
 
     /*
-     * Special case: if winPtr is a top-level window then just find the
+     * Special case: if winPtr is a toplevel window then just find the
      * top-level ancestor of otherPtr and restack winPtr above otherPtr
      * without changing any of Tk's childLists.
      */
@@ -2734,8 +2797,8 @@ Tk_MainWindow(
 	}
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "this isn't a Tk application", -1));
-    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	    "this isn't a Tk application", TCL_INDEX_NONE));
+    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
     return NULL;
 }
 
@@ -2803,7 +2866,7 @@ Tk_GetNumMainWindows(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkpAlwaysShowSelection --
+ * Tk_AlwaysShowSelection --
  *
  *	Indicates whether text/entry widgets should always display
  *	their selection, regardless of window focus.
@@ -2821,7 +2884,7 @@ Tk_GetNumMainWindows(void)
  */
 
 int
-TkpAlwaysShowSelection(
+Tk_AlwaysShowSelection(
     Tk_Window tkwin)		/* Window whose application is to be
 				 * checked. */
 {
@@ -2849,7 +2912,7 @@ TkpAlwaysShowSelection(
 
 static void
 DeleteWindowsExitProc(
-    ClientData clientData)	/* tsdPtr when handler was created. */
+    void *clientData)	/* tsdPtr when handler was created. */
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
@@ -2933,16 +2996,16 @@ DeleteWindowsExitProc(
 static HMODULE tkcygwindll = NULL;
 
 /*
- * Run Tk_MainEx from libtk8.?.dll
+ * Run Tk_MainEx from libtcl9tk9.?.dll
  *
- * This function is only ever called from wish8.?.exe, the cygwin port of Tcl.
+ * This function is only ever called from wish9.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
 
 MODULE_SCOPE void
 TkCygwinMainEx(
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization
@@ -2951,19 +3014,23 @@ TkCygwinMainEx(
     Tcl_Interp *interp)
 {
     WCHAR name[MAX_PATH];
-    int len;
-    void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+    size_t len;
+    void (*tkmainex)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-    /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
+    /* construct "<path>/libtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
     len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
-    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
+#if TCL_MAJOR_VERSION > 8
+    memcpy(name+len-12, L"libtcl9tk9", 10 * sizeof(WCHAR));
+#else
+    memcpy(name+len-8, L"libtk9", 6 * sizeof(WCHAR));
+#endif
 
     tkcygwindll = LoadLibraryW(name);
     if (tkcygwindll) {
-	tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
+	tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
 		(void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
 	if (tkmainex) {
 	    tkmainex(argc, argv, appInitProc, interp);
@@ -3158,9 +3225,15 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * TIP #59: Make embedded configuration information available.
+     */
+
+    TkInitEmbeddedConfigurationInformation(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.
@@ -3195,8 +3268,8 @@ Initialize(
 	    parent = Tcl_GetParent(parent);
 	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling parent interpreter", -1));
-		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
+			"no controlling parent interpreter", TCL_INDEX_NONE));
+		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3216,7 +3289,7 @@ Initialize(
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
-		Tcl_NewStringObj("::safe::TkInit", -1));
+		Tcl_NewStringObj("::safe::TkInit", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
@@ -3250,7 +3323,7 @@ Initialize(
     }
 
     if (value) {
-	int objc;
+	Tcl_Size objc;
 	Tcl_Obj **objv, **rest;
 	Tcl_Obj *parseList = Tcl_NewListObj(1, NULL);
 
@@ -3302,7 +3375,7 @@ Initialize(
      */
 
     {
-	int numBytes;
+	Tcl_Size numBytes;
 	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
@@ -3316,13 +3389,13 @@ Initialize(
      * information parsed from argv, if any.
      */
 
-    cmd = Tcl_NewStringObj("toplevel . -class", -1);
+    cmd = Tcl_NewStringObj("toplevel . -class", TCL_INDEX_NONE);
 
     Tcl_ListObjAppendElement(NULL, cmd, classObj);
     classObj = NULL;
 
     if (displayObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-screen", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-screen", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, displayObj);
 
 	/*
@@ -3337,22 +3410,29 @@ Initialize(
 	displayObj = NULL;
     }
     if (colorMapObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-colormap", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-colormap", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, colorMapObj);
 	colorMapObj = NULL;
     }
     if (useObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-use", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-use", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, useObj);
 	useObj = NULL;
     }
     if (visualObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-visual", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-visual", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, visualObj);
 	visualObj = NULL;
     }
 
-    code = TkListCreateFrame(NULL, interp, cmd, 1, nameObj);
+    Tcl_Size objc;
+    Tcl_Obj **objv;
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, cmd, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+    code = TkCreateFrame(NULL, interp, objc, objv,
+	    1, nameObj ? Tcl_GetString(nameObj) : NULL);
 
     Tcl_DecrRefCount(cmd);
 
@@ -3373,7 +3453,7 @@ Initialize(
 
 	Tcl_SetVar2Ex(interp, "geometry", NULL, geometryObj, TCL_GLOBAL_ONLY);
 
-	cmd = Tcl_NewStringObj("wm geometry .", -1);
+	cmd = Tcl_NewStringObj("wm geometry .", TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, cmd, geometryObj);
 	Tcl_IncrRefCount(cmd);
 	code = Tcl_EvalObjEx(interp, cmd, 0);
@@ -3385,11 +3465,15 @@ Initialize(
     }
 
     /*
-     * Provide Tk and its stub table.
+     * Provide "tk" and its stub table.
      */
 
-    code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkStubs);
+#ifndef TK_NO_DEPRECATED
+    Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
+	    (void *)&tkStubs);
+#endif
+    code = Tcl_PkgProvideEx(interp, "tk", TK_PATCH_LEVEL,
+	    (void *)&tkStubs);
     if (code != TCL_OK) {
 	goto done;
     }
@@ -3439,7 +3523,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, TCL_EVAL_GLOBAL);
+tkInit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*
@@ -3487,7 +3571,7 @@ Tk_PkgInitStubsCheck(
     const char * version,
     int exact)
 {
-    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0, NULL);
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "tk", version, 0, NULL);
 
     if (exact && actualVersion) {
 	const char *p = version;
@@ -3499,11 +3583,11 @@ Tk_PkgInitStubsCheck(
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
 		/* Construct error message */
-		Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+		Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 		return NULL;
 	    }
 	} else {
-	    return Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
+	    return Tcl_PkgPresentEx(interp, "tk", version, 1, NULL);
 	}
     }
     return actualVersion;

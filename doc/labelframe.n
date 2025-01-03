@@ -12,7 +12,7 @@
 .SH NAME
 labelframe \- Create and manipulate 'labelframe' labelled container widgets
 .SH SYNOPSIS
-\fBlabelframe\fR \fIpathName\fR ?\fIoptions\fR?
+\fBlabelframe\fI pathName\fR ?\fIoptions\fR?
 .SO
 \-borderwidth	\-highlightbackground	\-pady
 \-cursor	\-highlightcolor	\-relief
@@ -47,7 +47,7 @@ widget command.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .OP \-labelanchor labelAnchor LabelAnchor
 Specifies where to place the label. A label is only displayed if the
@@ -71,7 +71,7 @@ widget command.
 .OP \-width width Width
 Specifies the desired width for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .BE
 .SH DESCRIPTION
@@ -95,20 +95,24 @@ name is the same as the path name of the labelframe's window.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as
 the labelframe widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for frame widgets:
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
+.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBlabelframe\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for
@@ -132,10 +136,10 @@ This shows how to build part of a GUI for a hamburger vendor. The
 the kinds of things that the choices are being made over.
 .PP
 .CS
-grid [\fBlabelframe\fR .burger \-text "Burger"] \e
-     [\fBlabelframe\fR .bun    \-text "Bun"] \-sticky news
-grid [\fBlabelframe\fR .cheese \-text "Cheese Option"] \e
-     [\fBlabelframe\fR .pickle \-text "Pickle Option"] \-sticky news
+grid [\fBlabelframe\fR .burger -text "Burger"] \e
+     [\fBlabelframe\fR .bun    -text "Bun"] -sticky news
+grid [\fBlabelframe\fR .cheese -text "Cheese Option"] \e
+     [\fBlabelframe\fR .pickle -text "Pickle Option"] -sticky news
 foreach {type name val} {
     burger Beef    beef
     burger Lamb    lamb
@@ -157,9 +161,9 @@ foreach {type name val} {
     pickle Onions  onion
     pickle Chili   chili
 } {
-    set w [radiobutton .$type.$val \-text $name \-anchor w \e
-            \-variable $type \-value $val]
-    pack $w \-side top \-fill x
+    set w [radiobutton .$type.$val -text $name -anchor w \e
+            -variable $type -value $val]
+    pack $w -side top -fill x
 }
 set burger beef
 set bun    white

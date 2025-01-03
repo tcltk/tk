@@ -51,8 +51,6 @@ How To Compile And Install Tk:
 				given by (a) above.
 	--with-x=DIR		Tells configure where to find an installation
 				of the X Window System. Not normally needed.
-	--enable-threads	If this switch is set, Tk will compile itself
-				with multithreading support.
 	--enable-shared		If this switch is specified, Tk will compile
 				itself as a shared library if it can figure
 				out how to do that on this platform. This is

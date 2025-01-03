@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the canvas "moveto" command. It is
 # derived from canvRect.test.
 #
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
-# Copyright (c) 2004 Neil McKay.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2004 Neil McKay.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -25,7 +25,7 @@ test canvMoveto-1.3 {Bad args handling for "moveto" command} -body {
 } -returnCodes error -result {wrong # args: should be ".c moveto tagOrId x y"}
 test canvMoveto-1.4 {Bad args handling for "moveto" command} -body {
     .c moveto test 12 y
-} -returnCodes error -result {bad screen distance "y"}
+} -returnCodes error -result {expected screen distance but got "y"}
 test canvMoveto-1.5 {Bad args handling for "moveto" command} -body {
     .c moveto test 12 20 -anchor
 } -returnCodes error -result {wrong # args: should be ".c moveto tagOrId x y"}

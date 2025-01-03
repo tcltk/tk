@@ -5,8 +5,8 @@
 #	This file is used to generate the tkDecls.h, tkPlatDecls.h,
 #	tkStub.c, and tkPlatStub.c files.
 #
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -54,8 +54,8 @@ declare 5 {
 }
 declare 6 {
     void Tk_BindEvent(Tk_BindingTable bindingTable,
-	    XEvent *eventPtr, Tk_Window tkwin, int numObjects,
-	    ClientData *objectPtr)
+	    XEvent *eventPtr, Tk_Window tkwin, Tcl_Size numObjects,
+	    void **objectPtr)
 }
 declare 7 {
     void Tk_CanvasDrawableCoords(Tk_Canvas canvas,
@@ -88,7 +88,7 @@ declare 13 {
 }
 declare 14 {
     void Tk_CanvasPsPath(Tcl_Interp *interp,
-	    Tk_Canvas canvas, double *coordPtr, int numPoints)
+	    Tk_Canvas canvas, double *coordPtr, Tcl_Size numPoints)
 }
 declare 15 {
     int Tk_CanvasPsStipple(Tcl_Interp *interp,
@@ -101,12 +101,12 @@ declare 17 {
     void Tk_CanvasSetStippleOrigin(Tk_Canvas canvas, GC gc)
 }
 declare 18 {
-    int Tk_CanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+    int Tk_CanvasTagsParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 19 {
-    CONST86 char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+    const char *Tk_CanvasTagsPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 {
     Tk_Window	Tk_CanvasTkwin(Tk_Canvas canvas)
@@ -120,7 +120,7 @@ declare 22 {
 	    XSetWindowAttributes *attsPtr)
 }
 declare 23 {
-    int Tk_CharBbox(Tk_TextLayout layout, int index, int *xPtr,
+    int Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr,
 	    int *yPtr, int *widthPtr, int *heightPtr)
 }
 declare 24 {
@@ -136,17 +136,17 @@ declare 26 {
 declare 27 {
     int Tk_ConfigureInfo(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    char *widgRec, const char *argvName, int flags)
+	    void *widgRec, const char *argvName, int flags)
 }
 declare 28 {
     int Tk_ConfigureValue(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    char *widgRec, const char *argvName, int flags)
+	    void *widgRec, const char *argvName, int flags)
 }
 declare 29 {
     int Tk_ConfigureWidget(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    int argc, CONST84 char **argv, char *widgRec,
+	    Tcl_Size objc, Tcl_Obj *const *objv, void *widgRec,
 	    int flags)
 }
 declare 30 {
@@ -155,7 +155,7 @@ declare 30 {
 }
 declare 31 {
     Tk_TextLayout Tk_ComputeTextLayout(Tk_Font font,
-	    const char *str, int numChars, int wrapLength,
+	    const char *str, Tcl_Size numChars, int wrapLength,
 	    Tk_Justify justify, int flags, int *widthPtr,
 	    int *heightPtr)
 }
@@ -164,7 +164,7 @@ declare 32 {
 }
 declare 33 {
     unsigned long Tk_CreateBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr, const char *script, int append)
 }
 declare 34 {
@@ -173,15 +173,15 @@ declare 34 {
 declare 35 {
     Tk_ErrorHandler Tk_CreateErrorHandler(Display *display,
 	    int errNum, int request, int minorCode,
-	    Tk_ErrorProc *errorProc, ClientData clientData)
+	    Tk_ErrorProc *errorProc, void *clientData)
 }
 declare 36 {
     void Tk_CreateEventHandler(Tk_Window token,
 	    unsigned long mask, Tk_EventProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 37 {
-    void Tk_CreateGenericHandler(Tk_GenericProc *proc, ClientData clientData)
+    void Tk_CreateGenericHandler(Tk_GenericProc *proc, void *clientData)
 }
 declare 38 {
     void Tk_CreateImageType(const Tk_ImageType *typePtr)
@@ -195,7 +195,7 @@ declare 40 {
 declare 41 {
     void Tk_CreateSelHandler(Tk_Window tkwin,
 	    Atom selection, Atom target,
-	    Tk_SelectionProc *proc, ClientData clientData,
+	    Tk_SelectionProc *proc, void *clientData,
 	    Atom format)
 }
 declare 42 {
@@ -214,11 +214,11 @@ declare 45 {
     void Tk_DefineCursor(Tk_Window window, Tk_Cursor cursor)
 }
 declare 46 {
-    void Tk_DeleteAllBindings(Tk_BindingTable bindingTable, ClientData object)
+    void Tk_DeleteAllBindings(Tk_BindingTable bindingTable, void *object)
 }
 declare 47 {
     int Tk_DeleteBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr)
 }
 declare 48 {
@@ -230,10 +230,10 @@ declare 49 {
 declare 50 {
     void Tk_DeleteEventHandler(Tk_Window token,
 	    unsigned long mask, Tk_EventProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 51 {
-    void Tk_DeleteGenericHandler(Tk_GenericProc *proc, ClientData clientData)
+    void Tk_DeleteGenericHandler(Tk_GenericProc *proc, void *clientData)
 }
 declare 52 {
     void Tk_DeleteImage(Tcl_Interp *interp, const char *name)
@@ -245,7 +245,7 @@ declare 54 {
     void Tk_DestroyWindow(Tk_Window tkwin)
 }
 declare 55 {
-    CONST84_RETURN char *Tk_DisplayName(Tk_Window tkwin)
+    const char *Tk_DisplayName(Tk_Window tkwin)
 }
 declare 56 {
     int Tk_DistanceToTextLayout(Tk_TextLayout layout, int x, int y)
@@ -253,7 +253,7 @@ declare 56 {
 declare 57 {
     void Tk_Draw3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
-	    XPoint *pointPtr, int numPoints, int borderWidth,
+	    XPoint *pointPtr, Tcl_Size numPoints, int borderWidth,
 	    int leftRelief)
 }
 declare 58 {
@@ -263,7 +263,7 @@ declare 58 {
 }
 declare 59 {
     void Tk_DrawChars(Display *display, Drawable drawable, GC gc,
-	    Tk_Font tkfont, const char *source, int numBytes, int x, int y)
+	    Tk_Font tkfont, const char *source, Tcl_Size numBytes, int x, int y)
 }
 declare 60 {
     void Tk_DrawFocusHighlight(Tk_Window tkwin, GC gc, int width,
@@ -272,12 +272,12 @@ declare 60 {
 declare 61 {
     void Tk_DrawTextLayout(Display *display,
 	    Drawable drawable, GC gc, Tk_TextLayout layout,
-	    int x, int y, int firstChar, int lastChar)
+	    int x, int y, Tcl_Size firstChar, Tcl_Size lastChar)
 }
 declare 62 {
     void Tk_Fill3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
-	    XPoint *pointPtr, int numPoints, int borderWidth,
+	    XPoint *pointPtr, Tcl_Size numPoints, int borderWidth,
 	    int leftRelief)
 }
 declare 63 {
@@ -318,16 +318,13 @@ declare 73 {
 }
 declare 74 {
     void Tk_FreeOptions(const Tk_ConfigSpec *specs,
-	    char *widgRec, Display *display, int needFlags)
+	    void *widgRec, Display *display, int needFlags)
 }
 declare 75 {
     void Tk_FreePixmap(Display *display, Pixmap pixmap)
 }
 declare 76 {
     void Tk_FreeTextLayout(Tk_TextLayout textLayout)
-}
-declare 77 {
-    void Tk_FreeXId(Display *display, XID xid)
 }
 declare 78 {
     GC Tk_GCForColor(XColor *colorPtr, Drawable drawable)
@@ -337,22 +334,22 @@ declare 79 {
 }
 declare 80 {
     Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tk_Uid colorName)
+	    const char *colorName)
 }
 declare 81 {
     void Tk_GetAllBindings(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object)
+	    Tk_BindingTable bindingTable, void *object)
 }
 declare 82 {
     int Tk_GetAnchor(Tcl_Interp *interp,
 	    const char *str, Tk_Anchor *anchorPtr)
 }
 declare 83 {
-    CONST84_RETURN char *Tk_GetAtomName(Tk_Window tkwin, Atom atom)
+    const char *Tk_GetAtomName(Tk_Window tkwin, Atom atom)
 }
 declare 84 {
-    CONST84_RETURN char *Tk_GetBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+    const char *Tk_GetBinding(Tcl_Interp *interp,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr)
 }
 declare 85 {
@@ -366,7 +363,7 @@ declare 87 {
     int Tk_GetCapStyle(Tcl_Interp *interp, const char *str, int *capPtr)
 }
 declare 88 {
-    XColor *Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name)
+    XColor *Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin, const char *name)
 }
 declare 89 {
     XColor *Tk_GetColorByValue(Tk_Window tkwin, XColor *colorPtr)
@@ -377,13 +374,13 @@ declare 90 {
 }
 declare 91 {
     Tk_Cursor Tk_GetCursor(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tk_Uid str)
+	    const char *str)
 }
 declare 92 {
     Tk_Cursor Tk_GetCursorFromData(Tcl_Interp *interp,
 	    Tk_Window tkwin, const char *source, const char *mask,
 	    int width, int height, int xHot, int yHot,
-	    Tk_Uid fg, Tk_Uid bg)
+	    const char *fg, const char *bg)
 }
 declare 93 {
     Tk_Font Tk_GetFont(Tcl_Interp *interp,
@@ -400,11 +397,11 @@ declare 96 {
 }
 declare 97 {
     Tk_Image Tk_GetImage(Tcl_Interp *interp, Tk_Window tkwin, const char *name,
-	    Tk_ImageChangedProc *changeProc, ClientData clientData)
+	    Tk_ImageChangedProc *changeProc, void *clientData)
 }
 declare 98 {
-    ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
-	    const char *name, CONST86 Tk_ImageType **typePtrPtr)
+    void *Tk_GetImageModelData(Tcl_Interp *interp,
+	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
     Tk_ItemType *Tk_GetItemTypes(void)
@@ -439,7 +436,7 @@ declare 107 {
 }
 declare 108 {
     int Tk_GetScrollInfo(Tcl_Interp *interp,
-	    int argc, CONST84 char **argv, double *dblPtr, int *intPtr)
+	    Tcl_Size argc, const char **argv, double *dblPtr, int *intPtr)
 }
 declare 109 {
     int Tk_GetScreenMM(Tcl_Interp *interp,
@@ -448,7 +445,7 @@ declare 109 {
 declare 110 {
     int Tk_GetSelection(Tcl_Interp *interp,
 	    Tk_Window tkwin, Atom selection, Atom target,
-	    Tk_GetSelProc *proc, ClientData clientData)
+	    Tk_GetSelProc *proc, void *clientData)
 }
 declare 111 {
     Tk_Uid Tk_GetUid(const char *str)
@@ -472,11 +469,8 @@ declare 116 {
     Tk_Window Tk_IdToWindow(Display *display, Window window)
 }
 declare 117 {
-    void Tk_ImageChanged(Tk_ImageMaster model, int x, int y,
+    void Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
-}
-declare 118 {
-    int Tk_Init(Tcl_Interp *interp)
 }
 declare 119 {
     Atom Tk_InternAtom(Tk_Window tkwin, const char *name)
@@ -497,14 +491,14 @@ declare 123 {
 }
 declare 124 {
     void Tk_ManageGeometry(Tk_Window tkwin,
-	    const Tk_GeomMgr *mgrPtr, ClientData clientData)
+	    const Tk_GeomMgr *mgrPtr, void *clientData)
 }
 declare 125 {
     void Tk_MapWindow(Tk_Window tkwin)
 }
 declare 126 {
     int Tk_MeasureChars(Tk_Font tkfont,
-	    const char *source, int numBytes, int maxPixels,
+	    const char *source, Tcl_Size numBytes, int maxPixels,
 	    int flags, int *lengthPtr)
 }
 declare 127 {
@@ -518,37 +512,37 @@ declare 129 {
     void Tk_MoveToplevelWindow(Tk_Window tkwin, int x, int y)
 }
 declare 130 {
-    CONST84_RETURN char *Tk_NameOf3DBorder(Tk_3DBorder border)
+    const char *Tk_NameOf3DBorder(Tk_3DBorder border)
 }
 declare 131 {
-    CONST84_RETURN char *Tk_NameOfAnchor(Tk_Anchor anchor)
+    const char *Tk_NameOfAnchor(Tk_Anchor anchor)
 }
 declare 132 {
-    CONST84_RETURN char *Tk_NameOfBitmap(Display *display, Pixmap bitmap)
+    const char *Tk_NameOfBitmap(Display *display, Pixmap bitmap)
 }
 declare 133 {
-    CONST84_RETURN char *Tk_NameOfCapStyle(int cap)
+    const char *Tk_NameOfCapStyle(int cap)
 }
 declare 134 {
-    CONST84_RETURN char *Tk_NameOfColor(XColor *colorPtr)
+    const char *Tk_NameOfColor(XColor *colorPtr)
 }
 declare 135 {
-    CONST84_RETURN char *Tk_NameOfCursor(Display *display, Tk_Cursor cursor)
+    const char *Tk_NameOfCursor(Display *display, Tk_Cursor cursor)
 }
 declare 136 {
-    CONST84_RETURN char *Tk_NameOfFont(Tk_Font font)
+    const char *Tk_NameOfFont(Tk_Font font)
 }
 declare 137 {
-    CONST84_RETURN char *Tk_NameOfImage(Tk_ImageMaster model)
+    const char *Tk_NameOfImage(Tk_ImageModel model)
 }
 declare 138 {
-    CONST84_RETURN char *Tk_NameOfJoinStyle(int join)
+    const char *Tk_NameOfJoinStyle(int join)
 }
 declare 139 {
-    CONST84_RETURN char *Tk_NameOfJustify(Tk_Justify justify)
+    const char *Tk_NameOfJustify(Tk_Justify justify)
 }
 declare 140 {
-    CONST84_RETURN char *Tk_NameOfRelief(int relief)
+    const char *Tk_NameOfRelief(int relief)
 }
 declare 141 {
     Tk_Window Tk_NameToWindow(Tcl_Interp *interp,
@@ -557,23 +551,12 @@ declare 141 {
 declare 142 {
     void Tk_OwnSelection(Tk_Window tkwin,
 	    Atom selection, Tk_LostSelProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 143 {
     int Tk_ParseArgv(Tcl_Interp *interp,
-	    Tk_Window tkwin, int *argcPtr, CONST84 char **argv,
+	    Tk_Window tkwin, int *argcPtr, const char **argv,
 	    const Tk_ArgvInfo *argTable, int flags)
-}
-declare 144 {
-    void Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height)
-}
-declare 145 {
-    void Tk_PhotoPutZoomedBlock_NoComposite(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int zoomX, int zoomY,
-	    int subsampleX, int subsampleY)
 }
 declare 146 {
     int Tk_PhotoGetImage(Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr)
@@ -581,14 +564,8 @@ declare 146 {
 declare 147 {
     void Tk_PhotoBlank(Tk_PhotoHandle handle)
 }
-declare 148 {
-    void Tk_PhotoExpand_Panic(Tk_PhotoHandle handle, int width, int height )
-}
 declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
-}
-declare 150 {
-    void Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle, int width, int height)
 }
 declare 151 {
     int Tk_PointToChar(Tk_TextLayout layout, int x, int y)
@@ -615,10 +592,7 @@ declare 157 {
 }
 declare 158 {
     Tk_RestrictProc *Tk_RestrictEvents(Tk_RestrictProc *proc,
-	    ClientData arg, ClientData *prevArgPtr)
-}
-declare 159 {
-    int Tk_SafeInit(Tcl_Interp *interp)
+	    void *arg, void **prevArgPtr)
 }
 declare 160 {
     const char *Tk_SetAppName(Tk_Window tkwin, const char *name)
@@ -672,7 +646,7 @@ declare 175 {
     void Tk_TextLayoutToPostscript(Tcl_Interp *interp, Tk_TextLayout layout)
 }
 declare 176 {
-    int Tk_TextWidth(Tk_Font font, const char *str, int numBytes)
+    int Tk_TextWidth(Tk_Font font, const char *str, Tcl_Size numBytes)
 }
 declare 177 {
     void Tk_UndefineCursor(Tk_Window window)
@@ -680,8 +654,8 @@ declare 177 {
 declare 178 {
     void Tk_UnderlineChars(Display *display,
 	    Drawable drawable, GC gc, Tk_Font tkfont,
-	    const char *source, int x, int y, int firstByte,
-	    int lastByte)
+	    const char *source, int x, int y, Tcl_Size firstByte,
+	    Tcl_Size lastByte)
 }
 declare 179 {
     void Tk_UnderlineTextLayout(Display *display, Drawable drawable, GC gc,
@@ -744,7 +718,7 @@ declare 194 {
     void  Tk_FreeColorFromObj(Tk_Window tkwin, Tcl_Obj *objPtr)
 }
 declare 195 {
-    void  Tk_FreeConfigOptions(char *recordPtr, Tk_OptionTable optionToken,
+    void  Tk_FreeConfigOptions(void *recordPtr, Tk_OptionTable optionToken,
 	    Tk_Window tkwin)
 }
 declare 196 {
@@ -774,11 +748,11 @@ declare 203 {
 }
 declare 204 {
     Tcl_Obj *Tk_GetOptionInfo(Tcl_Interp *interp,
-	    char *recordPtr, Tk_OptionTable optionTable,
+	    void *recordPtr, Tk_OptionTable optionTable,
 	    Tcl_Obj *namePtr, Tk_Window tkwin)
 }
 declare 205 {
-    Tcl_Obj *Tk_GetOptionValue(Tcl_Interp *interp, char *recordPtr,
+    Tcl_Obj *Tk_GetOptionValue(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin)
 }
 declare 206 {
@@ -799,30 +773,23 @@ declare 209 {
 }
 declare 210 {
     int	 Tk_GetScrollInfoObj(Tcl_Interp *interp,
-	    int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
+	    Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
 }
 declare 211 {
-    int	 Tk_InitOptions(Tcl_Interp *interp, char *recordPtr,
+    int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
-}
-declare 212 {
-    void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
-	    Tcl_Interp *interp)
 }
 declare 213 {
     void  Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr)
 }
 declare 214 {
-    int	 Tk_SetOptions(Tcl_Interp *interp, char *recordPtr,
-	    Tk_OptionTable optionTable, int objc,
+    int	 Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
+	    Tk_OptionTable optionTable, Tcl_Size objc,
 	    Tcl_Obj *const objv[], Tk_Window tkwin,
 	    Tk_SavedOptions *savePtr, int *maskPtr)
 }
 declare 215 {
     void Tk_InitConsoleChannels(Tcl_Interp *interp)
-}
-declare 216 {
-    int Tk_CreateConsoleWindow(Tcl_Interp *interp)
 }
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
@@ -892,7 +859,7 @@ declare 234 {
 }
 declare 235 {
     void Tk_PostscriptPath(Tcl_Interp *interp, Tk_PostscriptInfo psInfo,
-	    double *coordPtr, int numPoints)
+	    double *coordPtr, Tcl_Size numPoints)
 }
 declare 236 {
     int Tk_PostscriptStipple(Tcl_Interp *interp, Tk_Window tkwin,
@@ -924,7 +891,7 @@ declare 241 {
 }
 declare 242 {
     void Tk_SetClassProcs(Tk_Window tkwin,
-	    const Tk_ClassProcs *procs, ClientData instanceData)
+	    const Tk_ClassProcs *procs, void *instanceData)
 }
 
 # New in 8.4a4
@@ -942,17 +909,6 @@ declare 244 {
 #
 declare 245 {
     void Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
-}
-declare 246 {
-    void Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int compRule)
-}
-declare 247 {
-    void Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int zoomX, int zoomY,
-	    int subsampleX, int subsampleY, int compRule)
 }
 declare 248 {
     int Tk_CollapseMotionEvents(Display *display, int collapse)
@@ -975,7 +931,7 @@ declare 252 {
 }
 declare 253 {
     Tk_Style Tk_CreateStyle(const char *name, Tk_StyleEngine engine,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 254 {
     Tk_Style Tk_GetStyle(Tcl_Interp *interp, const char *name)
@@ -989,34 +945,28 @@ declare 256 {
 declare 257 {
     Tk_Style  Tk_AllocStyleFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr)
 }
-declare 258 {
-    Tk_Style Tk_GetStyleFromObj(Tcl_Obj *objPtr)
-}
-declare 259 {
-    void  Tk_FreeStyleFromObj(Tcl_Obj *objPtr)
-}
 declare 260 {
-    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, int elementId,
+    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, Tcl_Size elementId,
 	Tk_OptionTable optionTable)
 }
 declare 261 {
     void Tk_GetElementSize(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, int width, int height,
+	    void *recordPtr, Tk_Window tkwin, int width, int height,
 	    int inner, int *widthPtr, int *heightPtr)
 }
 declare 262 {
     void Tk_GetElementBox(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, int x, int y, int width,
+	    void *recordPtr, Tk_Window tkwin, int x, int y, int width,
 	    int height, int inner, int *xPtr, int *yPtr, int *widthPtr,
 	    int *heightPtr)
 }
 declare 263 {
     int Tk_GetElementBorderWidth(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin)
+	    void *recordPtr, Tk_Window tkwin)
 }
 declare 264 {
     void Tk_DrawElement(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y,
+	    void *recordPtr, Tk_Window tkwin, Drawable d, int x, int y,
 	    int width, int height, int state)
 }
 
@@ -1052,23 +1002,100 @@ declare 271 {
     Tcl_Interp *Tk_Interp(Tk_Window tkwin)
 }
 
-# Now that the Tk 8.2 -> 8.3 transition is long past, use more conventional
-# means to continue support for extensions using the USE_OLD_IMAGE to
-# continue use of their string-based Tcl_ImageTypes and Tcl_PhotoImageFormats.
-#
-# Note that this restores the usual rules for stub compatibility.  Stub-enabled
-# extensions compiled against 8.5 headers and linked to the 8.5 stub library
-# will produce a file [load]able into an interp with Tk 8.X, for X >= 5.
-# It will *not* be [load]able into interps with Tk 8.4 (or Tk 8.2!).
-# Developers who need to produce a file [load]able into legacy interps must
-# build against legacy sources.
-declare 272 {
-    void Tk_CreateOldImageType(const Tk_ImageType *typePtr)
+
+# ----- BASELINE -- FOR -- 8.6.0 ----- #
+
+
+# TIP#580
+declare 274 {
+    int Tk_AlwaysShowSelection(Tk_Window tkwin)
 }
-declare 273 {
-    void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
+declare 275 {
+    unsigned Tk_GetButtonMask(unsigned button)
+}
+declare 276 {
+    int Tk_GetDoublePixelsFromObj(Tcl_Interp *interp, Tk_Window tkwin,
+	    Tcl_Obj *objPtr, double *doublePtr)
+}
+declare 277 {
+    Tcl_Obj *Tk_NewWindowObj(Tk_Window tkwin)
+}
+declare 278 {
+    void Tk_SendVirtualEvent(Tk_Window tkwin, const char *eventName,
+	    Tcl_Obj *detail)
+}
+declare 279 {
+    Tcl_Obj *Tk_FontGetDescription(Tk_Font tkfont)
+}
+
+# TIP#529
+declare 280 {
+    void Tk_CreatePhotoImageFormatVersion3(
+	    const Tk_PhotoImageFormatVersion3 *formatPtr)
+}
+
+# TIP#606
+declare 281 {
+    void Tk_DrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
+	    int highlightWidth, Drawable drawable)
+}
+declare 282 {
+    void Tk_SetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, const char *menuName)
+}
+declare 283 {
+    void Tk_SetWindowMenubar(Tcl_Interp *interp, Tk_Window tkwin,
+	    const char *oldMenuName, const char *menuName)
+}
+declare 284 {
+    void Tk_ClipDrawableToRect(Display *display, Drawable d, int x,
+	    int y, int width, int height)
+}
+declare 285 {
+    Tcl_Obj *Tk_GetSystemDefault(Tk_Window tkwin,
+	    const char *dbName, const char *className)
+}
+declare 286 {
+    int Tk_UseWindow(Tcl_Interp *interp, Tk_Window tkwin, const char *string)
+}
+declare 287 {
+    void Tk_MakeContainer(Tk_Window tkwin)
+}
+declare 288 {
+    Tk_Window Tk_GetOtherWindow(Tk_Window tkwin)
+}
+declare 289 {
+    void Tk_Get3DBorderColors(Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr,
+	    XColor *lightColorPtr)
 }
 declare 290 {
+    Window Tk_MakeWindow(Tk_Window tkwin, Window parent)
+}
+
+# ----- BASELINE -- FOR -- 9.0.0 ----- #
+
+# TIP#706
+declare 291 {
+    void Tk_UnderlineCharsInContext(Display *display,
+	   Drawable drawable, GC gc, Tk_Font tkfont,
+	   const char *string, Tcl_Size numBytes, int x, int y,
+	   Tcl_Size firstByte, Tcl_Size lastByte)
+}
+declare 292 {
+    void Tk_DrawCharsInContext(Display * display,
+	   Drawable drawable, GC gc, Tk_Font tkfont,
+	   const char *string, Tcl_Size numBytes, Tcl_Size rangeStart,
+	   Tcl_Size rangeLength, int x, int y)
+}
+declare 293 {
+    int Tk_MeasureCharsInContext(Tk_Font tkfont,
+	   const char *string, Tcl_Size numBytes, Tcl_Size rangeStart,
+	   Tcl_Size rangeLength, int maxPixels, int flags,
+	   int *lengthPtr)
+}
+
+# ----- BASELINE -- FOR -- 8.7.0 / 9.0.1 ----- #
+
+declare 294 {
     void TkUnusedStubEntry(void)
 }
 
@@ -1092,47 +1119,19 @@ declare 2 win {
 declare 3 win {
     Tk_Window Tk_HWNDToWindow(HWND hwnd)
 }
-declare 4 win {
-    void Tk_PointerEvent(HWND hwnd, int x, int y)
-}
-declare 5 win {
-    int Tk_TranslateWinEvent(HWND hwnd,
-	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
-}
 
 ################################
 # Aqua specific functions
-
-declare 0 aqua {
-    void Tk_MacOSXSetEmbedHandler(
-	    Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacOSXEmbedGetClipProc *getClipProc,
-	    Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
-}
-declare 1 aqua {
-    void Tk_MacOSXTurnOffMenus(void)
-}
-declare 2 aqua {
-    void Tk_MacOSXTkOwnsCursor(int tkOwnsIt)
-}
-declare 3 aqua {
-    void TkMacOSXInitMenus(Tcl_Interp *interp)
-}
 declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
-}
-declare 5 aqua {
-    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
-	    int height, int flags)
 }
 declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
-declare 7 aqua {
-    void *TkMacOSXGetDrawablePort(Drawable drawable)
-}
+# Stub removed because it just returned NULL.
+#declare 7 aqua {
+#    void *TkMacOSXGetDrawablePort(Drawable drawable)
+#}
 declare 8 aqua {
     void *TkMacOSXGetRootControl(Drawable drawable)
 }
@@ -1153,7 +1152,7 @@ declare 13 aqua {
     void *Tk_MacOSXGetNSWindowForDrawable(Drawable drawable)
 }
 declare 16 aqua {
-    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
+    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
 }
 
@@ -1166,11 +1165,11 @@ export {
 	    int exact)
 }
 export {
-    void Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+    void Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 export {
-    void Tk_MainExW(int argc, wchar_t **argv,
+    void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 }
 

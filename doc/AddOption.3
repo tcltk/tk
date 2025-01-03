@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH Tk_AddOption 3 "" Tk "Tk Library Procedures"
@@ -13,6 +13,10 @@ Tk_AddOption \- Add an option to the option database
 .sp
 void
 \fBTk_AddOption\fR(\fItkwin, name, value, priority\fR)
+.sp
+Tcl_Obj *
+\fBTk_GetSystemDefault\fR(\fItkwin, dbName, className\fR)
+.fi
 .SH ARGUMENTS
 .AP Tk_Window tkwin in
 Token for window.
@@ -20,12 +24,16 @@ Token for window.
 Multi-element name of option.
 .AP "const char" *value in
 Value of option.
+.AP "const char" *dbName in
+The option database name.
+.AP "const char" *className in
+The name of the option class.
 .AP int priority in
 Overall priority level to use for option.
 .BE
 .SH DESCRIPTION
 .PP
-This procedure is invoked to add an option to the database
+\fBTk_AddOption\fR is invoked to add an option to the database
 associated with \fItkwin\fR's main window.  \fIName\fR
 contains the option being specified and consists of names and/or
 classes separated by asterisks or dots, in the usual X format.
@@ -46,5 +54,9 @@ user-specific startup files.
 .IP \fBTK_INTERACTIVE_PRIO\fR (80)
 Used for options specified interactively after the application starts
 running.
+.PP
+\fBTk_GetSystemDefault\fR returns a Tcl_Obj* with the string identifying
+a configuration option matching the given \fIdbname\fR and \fIclassName\fR.
+Returns NULL if there are no system defaults that match this pair.
 .SH KEYWORDS
 class, name, option, add

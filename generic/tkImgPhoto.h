@@ -3,10 +3,10 @@
  *
  *	Declarations for images of type "photo" for Tk.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2008 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2008 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -27,11 +27,11 @@
  * Forward declarations of the structures we define.
  */
 
-#define PhotoModel PhotoMaster
+#define PhotoMaster PhotoModel
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
-typedef struct PhotoMaster	PhotoMaster;
+typedef struct PhotoModel	PhotoModel;
 
 /*
  * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
@@ -48,13 +48,6 @@ typedef struct PhotoMaster	PhotoMaster;
 	typedef short schar;
 #   endif
 #endif
-
-/*
- * An unsigned 32-bit integral type, used for pixel values. We use int rather
- * than long here to accommodate those systems where longs are 64 bits.
- */
-
-typedef unsigned int pixel;
 
 /*
  * The maximum number of pixels to transmit to the server in a single
@@ -94,19 +87,26 @@ struct ColorTableId {
 struct ColorTable {
     ColorTableId id;		/* Information used in selecting this color
 				 * table. */
-    int	flags;			/* See below. */
-    int	refCount;		/* Number of instances using this map. */
-    int liveRefCount;		/* Number of instances which are actually in
+#if TCL_MAJOR_VERSION > 8
+    size_t	refCount;		/* Number of instances using this map. */
+    size_t liveRefCount;		/* Number of instances which are actually in
 				 * use, using this map. */
+    int	flags;			/* See below. */
+#else
+    int	flags;			/* See below. */
+    unsigned int	refCount;		/* Number of instances using this map. */
+    unsigned int liveRefCount;		/* Number of instances which are actually in
+				 * use, using this map. */
+#endif
     int	numColors;		/* Number of colors allocated for this map. */
 
     XVisualInfo	visualInfo;	/* Information about the visual for windows
 				 * using this color table. */
 
-    pixel redValues[256];	/* Maps 8-bit values of red intensity to a
+    unsigned redValues[256];	/* Maps 8-bit values of red intensity to a
 				 * pixel value or index in pixelMap. */
-    pixel greenValues[256];	/* Ditto for green intensity. */
-    pixel blueValues[256];	/* Ditto for blue intensity. */
+    unsigned greenValues[256];	/* Ditto for green intensity. */
+    unsigned blueValues[256];	/* Ditto for blue intensity. */
     unsigned long *pixelMap;	/* Actual pixel values allocated. */
 
     unsigned char colorQuant[3][256];
@@ -141,8 +141,8 @@ struct ColorTable {
  * Definition of the data associated with each photo image model.
  */
 
-struct PhotoMaster {
-    Tk_ImageMaster tkMaster;	/* Tk's token for image model. NULL means the
+struct PhotoModel {
+    Tk_ImageModel tkModel;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
@@ -155,10 +155,12 @@ struct PhotoMaster {
     Tk_Uid palette;		/* User-specified default palette for
 				 * instances of this image. */
     double gamma;		/* Display gamma value to correct for. */
-    char *fileString;		/* Name of file to read into image. */
-    Tcl_Obj *dataString;	/* Object to use as contents of image. */
+    Tcl_Obj *fileObj;		/* Name of file to read into image. */
+    Tcl_Obj *dataObj;		/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
+    Tcl_Obj *metadata;		/* User-specified metadata dict or read from
+				 * image file */
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */
@@ -169,7 +171,7 @@ struct PhotoMaster {
 };
 
 /*
- * Bit definitions for the flags field of a PhotoMaster.
+ * Bit definitions for the flags field of a PhotoModel.
  * COLOR_IMAGE:			1 means that the image has different color
  *				components.
  * IMAGE_CHANGED:		1 means that the instances of this image need
@@ -196,13 +198,17 @@ struct PhotoMaster {
  */
 
 struct PhotoInstance {
-    PhotoMaster *masterPtr;	/* Pointer to model for image. */
+    PhotoModel *modelPtr;	/* Pointer to model for image. */
     Display *display;		/* Display for windows using this instance. */
     Colormap colormap;		/* The image may only be used in windows with
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
 				 * instances associated with this model. */
-    int refCount;		/* Number of instances using this structure. */
+#if TCL_MAJOR_VERSION > 8
+    size_t refCount;		/* Number of instances using this structure. */
+#else
+    unsigned int refCount;	/* Number of instances using this structure. */
+#endif
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not
@@ -241,16 +247,16 @@ struct PhotoInstance {
 
 MODULE_SCOPE void	TkImgPhotoConfigureInstance(
 			    PhotoInstance *instancePtr);
-MODULE_SCOPE void	TkImgDisposeInstance(ClientData clientData);
+MODULE_SCOPE void	TkImgDisposeInstance(void *clientData);
 MODULE_SCOPE void	TkImgPhotoInstanceSetSize(PhotoInstance *instancePtr);
-MODULE_SCOPE ClientData	TkImgPhotoGet(Tk_Window tkwin, ClientData clientData);
+MODULE_SCOPE void *TkImgPhotoGet(Tk_Window tkwin, void *clientData);
 MODULE_SCOPE void	TkImgDitherInstance(PhotoInstance *instancePtr, int x,
 			    int y, int width, int height);
-MODULE_SCOPE void	TkImgPhotoDisplay(ClientData clientData,
+MODULE_SCOPE void	TkImgPhotoDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width, int height,
 			    int drawableX, int drawableY);
-MODULE_SCOPE void	TkImgPhotoFree(ClientData clientData,
+MODULE_SCOPE void	TkImgPhotoFree(void *clientData,
 			    Display *display);
 MODULE_SCOPE void	TkImgResetDither(PhotoInstance *instancePtr);
 

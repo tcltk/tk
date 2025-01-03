@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .toolbar
 destroy $w
@@ -17,7 +17,7 @@ positionWindow $w
 
 ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
 	a toolbar that is styled correctly and which can be torn off. The\
-	buttons are configured to be \u201Ctoolbar style\u201D buttons by\
+	buttons are configured to be “toolbar style” buttons by\
 	telling them that they are to use the Toolbutton style. At the left\
 	end of the toolbar is a simple marker that the cursor changes to a\
 	movement icon over; drag that away from the toolbar to tear off the\
@@ -31,7 +31,7 @@ ttk::separator $w.sep
 ttk::frame $t.tearoff -cursor fleur
 ttk::separator $t.tearoff.to -orient vertical
 ttk::separator $t.tearoff.to2 -orient vertical
-pack $t.tearoff.to -fill y -expand 1 -padx 4 -side left
+pack $t.tearoff.to -fill y -expand 1 -padx 3p -side left
 pack $t.tearoff.to2 -fill y -expand 1 -side left
 ttk::frame $t.contents
 grid $t.tearoff $t.contents -sticky nsew
@@ -79,7 +79,7 @@ text $w.txt -width 40 -height 10
 interp alias {} doInsert {} $w.txt insert end	;# Make bindings easy to write
 
 ## Arrange contents
-grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 2 -pady 4 -sticky ns
+grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 1.5p -pady 3p -sticky ns
 grid $t -sticky ew
 grid $w.sep -sticky ew
 grid $w.msg -sticky ew

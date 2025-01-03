@@ -20,7 +20,7 @@ menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 \-activebackground	\-borderwidth	\-foreground
 \-activeborderwidth	\-cursor	\-relief
 \-activeforeground	\-disabledforeground	\-takefocus
-\-background	\-font
+\-background	\-font	\-activerelief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-postcommand postCommand Command
@@ -35,12 +35,12 @@ For menu entries that are check buttons or radio buttons, this option
 specifies the color to display in the indicator when the check button
 or radio button is selected.
 .OP \-tearoff tearOff TearOff
-This option must have a proper boolean value, which specifies
-whether or not the menu should include a tear-off entry at the
-top.  If so, it will exist as entry 0 of the menu and the other
-entries will number starting at 1.  The default
-menu bindings arrange for the menu to be torn off when the tear-off
-entry is invoked.
+This option must have a proper boolean value (default is false),
+which specifies whether or not the menu should include a tear-off
+entry at the top.  If so, it will exist as entry 0 of the menu and
+the other entries will number starting at 1.  The default menu
+bindings arrange for the menu to be torn off when the tear-off entry
+is invoked.
 This option is ignored under Aqua/macOS, where menus cannot
 be torn off.
 .OP \-tearoffcommand tearOffCommand TearOffCommand
@@ -285,8 +285,7 @@ system menu.
 When Tk sees a Help menu on X Windows and Motif menu compatibility is
 enabled the menu is moved to be last in the menubar and is right
 justified. Motif menu compatibility is enabled by setting the Tk option
-\fB*Menu.useMotifHelp\fR to true or by calling
-\fBtk::classic::restore menu\fR.
+\fB*Menu.useMotifHelp\fR to true.
 .SH "CLONES"
 .PP
 When a menu is set as a menubar for a toplevel window, or when a menu
@@ -304,7 +303,7 @@ name is \fIpathName\fR.  This
 command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
@@ -315,33 +314,35 @@ indicators are called \fIindex\fRes and may be specified in
 any of the following forms:
 .IP \fBactive\fR 12
 Indicates the entry that is currently active.  If no entry is
-active then this form is equivalent to \fBnone\fR.  This form may
+active then this form is equivalent to \fB{}\fR.  This form may
 not be abbreviated.
 .IP \fBend\fR 12
 Indicates the bottommost entry in the menu.  If there are no
-entries in the menu then this form is equivalent to \fBnone\fR.
+entries in the menu then this form is equivalent to \fB{}\fR.
 This form may not be abbreviated.
 .IP \fBlast\fR 12
 Same as \fBend\fR.
-.IP \fBnone\fR 12
+.IP \fB{}\fR 12
 Indicates
 .QW "no entry at all" ;
 this is used most commonly with
 the \fBactivate\fR option to deactivate all the entries in the
-menu.  In most cases the specification of \fBnone\fR causes
+menu.  In most cases the specification of \fB{}\fR causes
 nothing to happen in the widget command.
-This form may not be abbreviated.
 .IP \fB@\fIx\fB,\fIy\fR 12
 Indicates the entry that covers the point in the menu's window specified
 by \fIx\fR and \fIy\fR (in pixel coordinates).
-If no entry covers that point, then this form is equivalent to \fBnone\fR.
+If no entry covers that point, then this form is equivalent to \fB{}\fR.
 If only a single number is specified, it is treated as the y-coordinate.
 .IP \fInumber\fR 12
 Specifies the entry numerically, where 0 corresponds
 to the top-most entry of the menu, 1 to the entry below it, and
 so on.
+.IP \fIid\fR 12
+If the index does not satisfy one of the above forms then the menu is
+searched for an entry with the specified id.
 .IP \fIpattern\fR 12
-If the index does not satisfy one of the above forms then this
+If all of the above methods for finding an entry fail, this
 form is used.  \fIPattern\fR is pattern-matched against the label of
 each entry in the menu, in order from the top down, until a
 matching entry is found.  The rules of \fBstring match\fR
@@ -349,6 +350,9 @@ are used.
 .PP
 If the index could match more than one of the above forms, then
 the form earlier in the above list takes precedence.
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .PP
 The following widget commands are possible for menu widgets:
 .\" METHOD: activate
@@ -358,20 +362,23 @@ The following widget commands are possible for menu widgets:
 Change the state of the entry indicated by \fIindex\fR to \fBactive\fR
 and redisplay it using its active colors.
 Any previously-active entry is deactivated.  If \fIindex\fR
-is specified as \fBnone\fR, or if the specified entry is
+is specified as \fB{}\fR, or if the specified entry is
 disabled, then the menu ends up with no active entry.
 Returns an empty string.
 .\" METHOD: add
 .TP
-\fIpathName \fBadd \fItype \fR?\fIoption value option value ...\fR?
+\fIpathName \fBadd \fItype \fR?\fIid\fR? ?\fIoption value option value ...\fR?
 .
 Add a new entry to the bottom of the menu.  The new entry's type
 is given by \fItype\fR and must be one of \fBcascade\fR,
 \fBcheckbutton\fR, \fBcommand\fR, \fBradiobutton\fR, or \fBseparator\fR,
-or a unique abbreviation of one of the above.  If additional arguments
-are present, they specify the options listed in the \fBMENU ENTRY OPTIONS\fR
-section below.
-The \fBadd\fR widget command returns an empty string.
+or a unique abbreviation of one of the above.
+If the \fIid\fR argument is specified, it is used as the entry identifier;
+\fIid\fR must not already exist in the menu. Otherwise, a new unique
+identifier is generated.
+If additional arguments are present, they specify the options listed in the
+\fBMENU ENTRY OPTIONS\fR section below.
+The \fBadd\fR widget command returns the id of the new entry.
 .\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
@@ -437,22 +444,32 @@ modified as indicated in the command and the command returns an empty string.
 If no \fIoptions\fR are specified, returns a list describing
 the current options for entry \fIindex\fR (see \fBTk_ConfigureInfo\fR for
 information on the format of this list).
+.\" METHOD: id
+.TP
+\fIpathName \fBid \fIindex\fR
+.
+Returns the id of the menu entry given by \fIindex\fR.
+This is the identifier that was assigned to the entry when it was created
+using the \fBadd\fR or \fBinsert\fR widget command.
+Returns an empty string for the tear-off entry, or if \fIindex\fR is
+equivalent to \fB{}\fR.
 .\" METHOD: index
 .TP
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
-\fBnone\fR if \fIindex\fR was specified as \fBnone\fR.
+\fB{}\fR if \fIindex\fR was specified as \fB{}\fR.
 .\" METHOD: insert
 .TP
-\fIpathName \fBinsert \fIindex type \fR?\fIoption value option value ...\fR?
+\fIpathName \fBinsert \fIindex type \fR?\fIid\fR? ?\fIoption value option value ...\fR?
 .
 Same as the \fBadd\fR widget command except that it inserts the new
 entry just before the entry given by \fIindex\fR, instead of appending
-to the end of the menu.  The \fItype\fR, \fIoption\fR, and \fIvalue\fR
-arguments have the same interpretation as for the \fBadd\fR widget
-command.  It is not possible to insert new menu entries before the
+to the end of the menu.  The \fItype\fR, \fIid\fR, \fIoption\fR, and
+\fIvalue\fR arguments have the same interpretation as for the \fBadd\fR
+widget command.  It is not possible to insert new menu entries before the
 tear-off entry, if the menu has one.
+The \fBinsert\fR widget command returns the id of the new entry.
 .\" METHOD: invoke
 .TP
 \fIpathName \fBinvoke \fIindex\fR
@@ -542,7 +559,6 @@ Specifies a foreground color to use for displaying this entry when it
 is active.   This option is ignored on Aqua/macOS.
 If this option is specified as an empty string (the default), then the
 \fB\-activeforeground\fR option for the overall menu is used.
-This option is not available for separator or tear-off entries.
 .\" OPTION: -accelerator
 .TP
 \fB\-accelerator \fIvalue\fR

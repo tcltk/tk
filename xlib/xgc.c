@@ -4,9 +4,9 @@
  *	This file contains generic routines for manipulating X graphics
  *	contexts.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright (c) 2002-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 2002-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -15,11 +15,8 @@
 #include "tkInt.h"
 #include <X11/Xlib.h>
 #if defined(MAC_OSX_TK)
-#   define Cursor XCursor
-#   define Region XRegion
 #endif
 
-#undef TkSetRegion
 
 #define MAX_DASH_LIST_SIZE 10
 typedef struct {
@@ -104,12 +101,11 @@ static void FreeClipMask(GC gc) {
 GC
 XCreateGC(
     Display *display,
-    Drawable d,
+    TCL_UNUSED(Drawable),
     unsigned long mask,
     XGCValues *values)
 {
     GC gp;
-    (void)d;
 
     /*
      * In order to have room for a dash list, MAX_DASH_LIST_SIZE extra chars
@@ -233,11 +229,9 @@ XChangeGC(
  */
 
 int XFreeGC(
-    Display *d,
+    TCL_UNUSED(Display *),
     GC gc)
 {
-    (void)d;
-
     if (gc != NULL) {
 	FreeClipMask(gc);
 	ckfree(gc);
@@ -264,38 +258,33 @@ int XFreeGC(
 
 int
 XSetForeground(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     unsigned long foreground)
 {
-    (void)display;
-
     gc->foreground = foreground;
     return Success;
 }
 
 int
 XSetBackground(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     unsigned long background)
 {
-    (void)display;
-
     gc->background = background;
     return Success;
 }
 
 int
 XSetDashes(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int dash_offset,
     _Xconst char *dash_list,
     int n)
 {
     char *p = &(gc->dashes);
-    (void)display;
 
 #ifdef TkWinDeleteBrush
     TkWinDeleteBrush(gc->fgBrush);
@@ -314,48 +303,40 @@ XSetDashes(
 
 int
 XSetFunction(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int function)
 {
-    (void)display;
-
     gc->function = function;
     return Success;
 }
 
 int
 XSetFillRule(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int fill_rule)
 {
-    (void)display;
-
     gc->fill_rule = fill_rule;
     return Success;
 }
 
 int
 XSetFillStyle(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int fill_style)
 {
-    (void)display;
-
     gc->fill_style = fill_style;
     return Success;
 }
 
 int
 XSetTSOrigin(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int x, int y)
 {
-    (void)display;
-
     gc->ts_x_origin = x;
     gc->ts_y_origin = y;
     return Success;
@@ -363,51 +344,43 @@ XSetTSOrigin(
 
 int
 XSetFont(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     Font font)
 {
-    (void)display;
-
     gc->font = font;
     return Success;
 }
 
 int
 XSetArcMode(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int arc_mode)
 {
-    (void)display;
-
     gc->arc_mode = arc_mode;
     return Success;
 }
 
 int
 XSetStipple(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     Pixmap stipple)
 {
-    (void)display;
-
     gc->stipple = stipple;
     return Success;
 }
 
 int
 XSetLineAttributes(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     unsigned int line_width,
     int line_style,
     int cap_style,
     int join_style)
 {
-    (void)display;
-
     gc->line_width = line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;
@@ -417,13 +390,11 @@ XSetLineAttributes(
 
 int
 XSetClipOrigin(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     int clip_x_origin,
     int clip_y_origin)
 {
-    (void)display;
-
     gc->clip_x_origin = clip_x_origin;
     gc->clip_y_origin = clip_y_origin;
     return Success;
@@ -450,12 +421,10 @@ XSetClipOrigin(
 
 int
 TkSetRegion(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     TkRegion r)
 {
-    (void)display;
-
     if (r == NULL) {
 	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
@@ -471,12 +440,10 @@ TkSetRegion(
 
 int
 XSetClipMask(
-    Display *display,
+    TCL_UNUSED(Display *),
     GC gc,
     Pixmap pixmap)
 {
-    (void)display;
-
     if (pixmap == None) {
 	FreeClipMask(gc);
     } else {
@@ -558,10 +525,9 @@ XDrawPoints(
     GC gc,
     XPoint *points,
     int npoints,
-    int mode)
+    TCL_UNUSED(int))
 {
     int res = Success;
-    (void)mode;
 
     while (npoints-- > 0) {
 	res = XDrawLine(display, d, gc,
@@ -575,397 +541,272 @@ XDrawPoints(
 #if !defined(MAC_OSX_TK)
 int
 XDrawSegments(
-    Display *display,
-    Drawable d,
-    GC gc,
-    XSegment *segments,
-    int nsegments)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Drawable),
+    TCL_UNUSED(GC),
+    TCL_UNUSED(XSegment *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)d;
-    (void)gc;
-    (void)segments;
-    (void)nsegments;
-
     return BadDrawable;
 }
 #endif
 
-#if 0
 char *
 XFetchBuffer(
-    Display *display,
-    int *nbytes_return,
-    int buffer)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)nbytes_return;
-    (void)buffer;
-
     return (char *) 0;
 }
 
 Status
 XFetchName(
-    Display *display,
-    Window w,
-    char **window_name_return)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(char **))
 {
-    (void)display;
-    (void)w;
-    (void)window_name_return;
-
     return Success;
 }
 
 Atom *
 XListProperties(
-    Display* display,
-    Window w,
-    int *num_prop_return)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int *))
 {
-    (void)display;
-    (void)w;
-    (void)num_prop_return;
-
     return (Atom *) 0;
 }
 
 int
 XMapRaised(
-    Display *display,
-    Window w)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
 {
-    (void)display;
-    (void)w;
-
     return Success;
 }
 
 int
 XQueryTextExtents(
-    Display *display,
-    XID font_ID,
-    _Xconst char *string,
-    int nchars,
-    int *direction_return,
-    int *font_ascent_return,
-    int *font_descent_return,
-    XCharStruct *overall_return)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(XID),
+    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(XCharStruct *))
 {
-    (void)display;
-    (void)font_ID;
-    (void)string;
-    (void)nchars;
-    (void)direction_return;
-    (void)font_ascent_return;
-    (void)font_descent_return;
-    (void)overall_return;
-
     return Success;
 }
 
 int
 XReparentWindow(
-    Display *display,
-    Window w,
-    Window parent,
-    int x,
-    int y)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)w;
-    (void)parent;
-    (void)x;
-    (void)y;
-
     return BadWindow;
 }
 
 int
 XUndefineCursor(
-    Display *display,
-    Window w)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
 {
-    (void)display;
-    (void)w;
-
     return Success;
 }
 
 XVaNestedList
 XVaCreateNestedList(
-    int unused, ...)
+    TCL_UNUSED(int), ...)
 {
-    (void)unused;
     return NULL;
 }
 
 char *
 XSetICValues(
-    XIC xic, ...)
+    TCL_UNUSED(XIC), ...)
 {
-    (void)xic;
     return NULL;
 }
 
 char *
 XGetICValues(
-    XIC xic, ...)
+    TCL_UNUSED(XIC), ...)
 {
-    (void)xic;
     return NULL;
 }
 
 void
 XSetICFocus(
-    XIC xic)
+    TCL_UNUSED(XIC))
 {
-    (void)xic;
 }
 
 Window
 XCreateWindow(
-    Display *display,
-	Window parent,
-	int x,
-	int y,
-    unsigned int width,
-	unsigned int height,
-    unsigned int border_width,
-	int depth,
-	unsigned int clazz,
-    Visual *visual,
-	unsigned long value_mask,
-    XSetWindowAttributes *attributes)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(Visual *),
+    TCL_UNUSED(unsigned long),
+    TCL_UNUSED(XSetWindowAttributes *))
 {
-    (void)display;
-    (void)parent;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)border_width;
-    (void)depth;
-    (void)clazz;
-    (void)visual;
-    (void)value_mask;
-    (void)attributes;
-
 	return 0;
 }
 
 int
 XPointInRegion(
-    Region rgn,
-	int x,
-	int y)
+    TCL_UNUSED(Region),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)rgn;
-    (void)x;
-    (void)y;
-
 	return 0;
 }
 
 int
 XUnionRegion(
-    Region srca,
-	Region srcb,
-	Region dr_return)
+    TCL_UNUSED(Region),
+    TCL_UNUSED(Region),
+    TCL_UNUSED(Region))
 {
-    (void)srca;
-    (void)srcb;
-    (void)dr_return;
-
 	return 0;
 }
 
 Region
 XPolygonRegion(
-    XPoint *pts,
-	int n,
-	int rule)
+    TCL_UNUSED(XPoint *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    (void)pts;
-    (void)n;
-    (void)rule;
-
     return 0;
 }
-#endif
 
 void
 XDestroyIC(
-    XIC ic)
+    TCL_UNUSED(XIC))
 {
-    (void)ic;
 }
 
 Cursor
 XCreatePixmapCursor(
-    Display *display,
-    Pixmap source,
-    Pixmap mask,
-    XColor *foreground_color,
-    XColor *background_color,
-    unsigned int x,
-    unsigned int y)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Pixmap),
+    TCL_UNUSED(Pixmap),
+    TCL_UNUSED(XColor *),
+    TCL_UNUSED(XColor *),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int))
 {
-    (void)display;
-    (void)source;
-    (void)mask;
-    (void)foreground_color;
-    (void)background_color;
-    (void)x;
-    (void)y;
-
     return (Cursor) NULL;
 }
 
 Cursor
 XCreateGlyphCursor(
-    Display *display,
-    Font source_font,
-    Font mask_font,
-    unsigned int source_char,
-    unsigned int mask_char,
-    XColor _Xconst *foreground_color,
-    XColor _Xconst *background_color)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Font),
+    TCL_UNUSED(Font),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(XColor _Xconst *),
+    TCL_UNUSED(XColor _Xconst *))
 {
-    (void)display;
-    (void)source_font;
-    (void)mask_font;
-    (void)source_char;
-    (void)mask_char;
-    (void)foreground_color;
-    (void)background_color;
-
     return (Cursor) NULL;
 }
 
-#if 0
 XFontSet
 XCreateFontSet(
-    Display *display		/* display */,
-    _Xconst char *base_font_name_list	/* base_font_name_list */,
-    char ***missing_charset_list		/* missing_charset_list */,
-    int *missing_charset_count		/* missing_charset_count */,
-    char **def_string		/* def_string */
+    TCL_UNUSED(Display *)		/* display */,
+    TCL_UNUSED(_Xconst char *)	/* base_font_name_list */,
+    TCL_UNUSED(char ***)		/* missing_charset_list */,
+    TCL_UNUSED(int *)		/* missing_charset_count */,
+    TCL_UNUSED(char **)		/* def_string */
 ) {
-    (void)display;
-    (void)base_font_name_list;
-    (void)missing_charset_list;
-    (void)missing_charset_count;
-    (void)def_string;
-
     return (XFontSet)0;
 }
 
 void
 XFreeFontSet(
-    Display *display,		/* display */
-    XFontSet fontset		/* font_set */
+    TCL_UNUSED(Display *),		/* display */
+    TCL_UNUSED(XFontSet)		/* font_set */
 ) {
-    (void)display;
-    (void)fontset;
 }
 
 void
 XFreeStringList(
-    char **list		/* list */
+    TCL_UNUSED(char **)		/* list */
 ) {
-    (void)list;
 }
 
 Status
 XCloseIM(
-    XIM im /* im */
+    TCL_UNUSED(XIM) /* im */
 ) {
-    (void)im;
-
     return Success;
 }
 
 Bool
 XRegisterIMInstantiateCallback(
-    Display *dpy			/* dpy */,
-    struct _XrmHashBucketRec *rdb	/* rdb */,
-    char *res_name			/* res_name */,
-    char *res_class			/* res_class */,
-    XIDProc callback			/* callback */,
-    XPointer client_data			/* client_data */
+    TCL_UNUSED(Display *)			/* dpy */,
+    TCL_UNUSED(struct _XrmHashBucketRec *)	/* rdb */,
+    TCL_UNUSED(char *)			/* res_name */,
+    TCL_UNUSED(char *)			/* res_class */,
+    TCL_UNUSED(XIDProc)			/* callback */,
+    TCL_UNUSED(XPointer)			/* client_data */
 ) {
-    (void)dpy;
-    (void)rdb;
-    (void)res_name;
-    (void)res_class;
-    (void)callback;
-    (void)client_data;
-
     return False;
 }
 
 Bool
 XUnregisterIMInstantiateCallback(
-    Display *dpy			/* dpy */,
-    struct _XrmHashBucketRec *rdb	/* rdb */,
-    char *res_name			/* res_name */,
-    char *res_class			/* res_class */,
-    XIDProc callback			/* callback */,
-    XPointer client_data			/* client_data */
+    TCL_UNUSED(Display *)		/* dpy */,
+    TCL_UNUSED(struct _XrmHashBucketRec *)	/* rdb */,
+    TCL_UNUSED(char *)			/* res_name */,
+    TCL_UNUSED(char *)			/* res_class */,
+    TCL_UNUSED(XIDProc)			/* callback */,
+    TCL_UNUSED(XPointer)			/* client_data */
 ) {
-    (void)dpy;
-    (void)rdb;
-    (void)res_name;
-    (void)res_class;
-    (void)callback;
-    (void)client_data;
-
     return False;
 }
 
 char *
 XSetLocaleModifiers(
-    const char *modifier_list		/* modifier_list */
+    TCL_UNUSED(const char *)		/* modifier_list */
 ) {
-    (void)modifier_list;
-
     return NULL;
 }
 
 XIM XOpenIM(
-    Display *dpy			/* dpy */,
-    struct _XrmHashBucketRec *rdb	/* rdb */,
-    char *res_name			/* res_name */,
-    char *res_class			/* res_class */
+    TCL_UNUSED(Display *)			/* dpy */,
+    TCL_UNUSED(struct _XrmHashBucketRec *)	/* rdb */,
+    TCL_UNUSED(char *)			/* res_name */,
+    TCL_UNUSED(char *)			/* res_class */
 ) {
-    (void)dpy;
-    (void)rdb;
-    (void)res_name;
-    (void)res_class;
-
     return NULL;
 }
 
 char *
 XGetIMValues(
-    XIM im /* im */, ...
+    TCL_UNUSED(XIM) /* im */, ...
 ) {
-    (void)im;
-
     return NULL;
 }
 
 char *
 XSetIMValues(
-    XIM im /* im */, ...
+    TCL_UNUSED(XIM) /* im */, ...
 ) {
-    (void)im;
-
     return NULL;
 }
-#endif
 
 /*
  * Local Variables:

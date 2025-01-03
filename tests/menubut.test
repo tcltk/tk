@@ -1,9 +1,9 @@
 # This file is a Tcl script to test menubuttons in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 # XXX This test file is woefully incomplete right now.  If any part
@@ -74,7 +74,7 @@ test menubutton-1.9 {configuration options} -body {
 } -result 4
 test menubutton-1.10 {configuration options} -body {
     .mb configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.11 {configuration options} -body {
     .mb configure -bg #ff0000
     .mb cget -bg
@@ -98,10 +98,10 @@ test menubutton-1.15 {configuration options} -body {
     .mb cget -borderwidth
 } -cleanup {
     .mb configure -borderwidth [lindex [.mb configure -borderwidth] 3]
-} -result 1
+} -result 1.3
 test menubutton-1.16 {configuration options} -body {
     .mb configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.17 {configuration options} -body {
     .mb configure -cursor arrow
     .mb cget -cursor
@@ -188,7 +188,7 @@ test menubutton-1.34 {configuration options} -body {
 } -result 18
 test menubutton-1.35 {configuration options} -body {
     .mb configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.36 {configuration options} -constraints {
     testImageType
 } -setup {
@@ -207,7 +207,7 @@ test menubutton-1.37 {configuration options} -setup {
     .mb configure -image bogus
 } -cleanup {
     .mb configure -image [lindex [.mb configure -image] 3]
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test menubutton-1.38 {configuration options} -body {
     .mb configure -indicatoron yes
     .mb cget -indicatoron
@@ -240,7 +240,7 @@ test menubutton-1.43 {configuration options} -body {
 } -result 12
 test menubutton-1.44 {configuration options} -body {
     .mb configure -padx 420x
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test menubutton-1.45 {configuration options} -body {
     .mb configure -pady 12
     .mb cget -pady
@@ -249,7 +249,7 @@ test menubutton-1.45 {configuration options} -body {
 } -result 12
 test menubutton-1.46 {configuration options} -body {
     .mb configure -pady 420x
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test menubutton-1.47 {configuration options} -body {
     .mb configure -relief groove
     .mb cget -relief
@@ -294,7 +294,7 @@ test menubutton-1.54 {configuration options} -body {
 } -result 5
 test menubutton-1.55 {configuration options} -body {
     .mb configure -underline 3p
-} -returnCodes error -result {expected integer but got "3p"}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test menubutton-1.56 {configuration options} -body {
     .mb configure -width 402
     .mb cget -width
@@ -312,7 +312,7 @@ test menubutton-1.58 {configuration options} -body {
 } -result 100
 test menubutton-1.59 {configuration options} -body {
     .mb configure -wraplength 6x
-} -returnCodes error -result {bad screen distance "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 
 
 deleteWindows
@@ -404,7 +404,7 @@ test menubutton-4.2 {ConfigureMenuButton procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {expected integer but got "1i"
-    (processing -width option)
+    (processing "-width" option)
     invoked from within
 ".mb1 configure -width 1i"}
 
@@ -425,7 +425,7 @@ test menubutton-4.4 {ConfigureMenuButton procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {expected integer but got "0.5c"
-    (processing -height option)
+    (processing "-height" option)
     invoked from within
 ".mb1 configure -height 0.5c"}
 
@@ -436,7 +436,7 @@ test menubutton-4.5 {ConfigureMenuButton procedure} -setup {
     .mb1 configure -width abc
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {bad screen distance "abc"}
+} -returnCodes error -result {expected screen distance but got "abc"}
 test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
     deleteWindows
 } -body {
@@ -445,8 +445,8 @@ test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
     return $errorInfo
 } -cleanup {
     deleteWindows
-} -result {bad screen distance "abc"
-    (processing -width option)
+} -result {expected screen distance but got "abc"
+    (processing "-width" option)
     invoked from within
 ".mb1 configure -width abc"}
 
@@ -462,7 +462,7 @@ test menubutton-4.7 {ConfigureMenuButton procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -returnCodes error -result {bad screen distance "0.5x"}
+} -returnCodes error -result {expected screen distance but got "0.5x"}
 test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
     testImageType
 } -setup {
@@ -476,8 +476,8 @@ test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {bad screen distance "0.5x"
-    (processing -height option)
+} -result {expected screen distance but got "0.5x"
+    (processing "-height" option)
     invoked from within
 ".mb1 configure -height 0.5x"}
 
@@ -593,7 +593,7 @@ test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
     image create test image1
 } -body {
     menubutton .mb -image image1 -bd 2 -relief raised -width 40 \
-        -highlightthickness 2
+	-highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -607,7 +607,7 @@ test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
     image create test image1
 } -body {
     menubutton .mb -image image1 -bd 2 -relief raised -height 30 \
-        -highlightthickness 2
+	-highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -618,7 +618,7 @@ test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
     menubutton .mb -bitmap question -bd 2 -relief raised \
-        -highlightthickness 2
+	-highlightthickness 2
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -628,7 +628,7 @@ test menubutton-7.7 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
     menubutton .mb -bitmap question -bd 2 -relief raised -width 40 \
-        -highlightthickness 1
+	-highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -638,7 +638,7 @@ test menubutton-7.8 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
     menubutton .mb -bitmap question -bd 2 -relief raised -height 50 \
-        -highlightthickness 1
+	-highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -650,7 +650,7 @@ test menubutton-7.9 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     menubutton .mb -text String -bd 2 -relief raised -padx 0 -pady 0 \
-        -highlightthickness 1
+	-highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -662,7 +662,7 @@ test menubutton-7.10 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     menubutton .mb -text String -bd 2 -relief raised -width 20 \
-        -padx 0 -pady 0 -highlightthickness 1
+	-padx 0 -pady 0 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -674,7 +674,7 @@ test menubutton-7.11 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     menubutton .mb -text String -bd 2 -relief raised -height 2 \
-        -padx 0 -pady 0 -highlightthickness 1
+	-padx 0 -pady 0 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -686,7 +686,7 @@ test menubutton-7.12 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     menubutton .mb -text String -bd 2 -relief raised -padx 10 -pady 5 \
-        -highlightthickness 1
+	-highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -698,7 +698,7 @@ test menubutton-7.13 {ComputeMenuButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     menubutton .mb -text String -bd 2 -relief raised \
-        -highlightthickness 1 -indicatoron 1
+	-highlightthickness 1 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -714,7 +714,7 @@ test menubutton-7.14 {ComputeMenuButtonGeometry procedure} -constraints {
     # size varies to maintain constant absolute size.
 
     menubutton .mb -image image1 -bd 2 -relief raised \
-        -highlightthickness 2 -indicatoron 1
+	-highlightthickness 2 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -731,7 +731,7 @@ test menubutton-7.15 {ComputeMenuButtonGeometry procedure} -constraints {
     # size varies to maintain constant absolute size.
 
     menubutton .mb -image image1 -bd 2 -relief raised \
-        -highlightthickness 2 -indicatoron 1
+	-highlightthickness 2 -indicatoron 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
@@ -757,7 +757,7 @@ test menubutton-9.1 {Bug [5d991b822e]} {
     set var INIT
     menubutton .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable {}
+	.b configure -textvariable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -770,7 +770,7 @@ test menubutton-9.2 {Bug [5d991b822e]} {
     set var INIT
     menubutton .b -textvariable var
     trace add variable var unset {apply {args {
-        .b configure -textvariable new
+	.b configure -textvariable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}

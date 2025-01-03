@@ -16,6 +16,7 @@ Tk_ParseArgv \- process command-line options
 .sp
 int
 \fBTk_ParseArgv\fR(\fIinterp, tkwin, argcPtr, argv, argTable, flags\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_ArgvInfo *argTable
 .AP Tcl_Interp *interp in
@@ -72,8 +73,8 @@ expected;  each of its entries has the following structure:
 typedef struct {
     const char *\fIkey\fR;
     int \fItype\fR;
-    char *\fIsrc\fR;
-    char *\fIdst\fR;
+    void *\fIsrc\fR;
+    void *\fIdst\fR;
     const char *\fIhelp\fR;
 } \fBTk_ArgvInfo\fR;
 .CE
@@ -113,18 +114,15 @@ after the matching argument, which is called
 .QW "the following argument" .
 The legal values for \fItype\fR, and the processing
 that they cause, are as follows:
-.TP
-\fBTK_ARGV_END\fR
+.IP \fBTK_ARGV_END\fR
 Marks the end of the table.  The last entry in \fIargTable\fR
 must have this type;  all of its other fields are ignored and it
 will never match any arguments.
-.TP
-\fBTK_ARGV_CONSTANT\fR
+.IP \fBTK_ARGV_CONSTANT\fR
 \fISrc\fR is treated as an integer and \fIdst\fR is treated
 as a pointer to an integer.  \fISrc\fR is stored at \fI*dst\fR.
 The matching argument is discarded.
-.TP
-\fBTK_ARGV_INT\fR
+.IP \fBTK_ARGV_INT\fR
 The following argument must contain an
 integer string in the format accepted by \fBstrtol\fR (e.g.
 .QW 0
@@ -135,22 +133,19 @@ numbers, respectively).  \fIDst\fR is treated as a pointer to an
 integer;  the following argument is converted to an integer value
 and stored at \fI*dst\fR.  \fISrc\fR is ignored.  The matching
 and following arguments are discarded from \fIargv\fR.
-.TP
-\fBTK_ARGV_FLOAT\fR
+.IP \fBTK_ARGV_FLOAT\fR
 The following argument must contain a floating-point number in
 the format accepted by \fBstrtol\fR.
 \fIDst\fR is treated as the address of a double-precision
 floating point value;  the following argument is converted to a
 double-precision value and stored at \fI*dst\fR.  The matching
 and following arguments are discarded from \fIargv\fR.
-.TP
-\fBTK_ARGV_STRING\fR
+.IP \fBTK_ARGV_STRING\fR
 In this form, \fIdst\fR is treated as a pointer to a (char *);
 \fBTk_ParseArgv\fR stores at \fI*dst\fR a pointer to the following
 argument, and discards the matching and following arguments from
 \fIargv\fR.  \fISrc\fR is ignored.
-.TP
-\fBTK_ARGV_UID\fR
+.IP \fBTK_ARGV_UID\fR
 This form is similar to \fBTK_ARGV_STRING\fR, except that the argument
 is turned into a Tk_Uid by calling \fBTk_GetUid\fR.
 \fIDst\fR is treated as a pointer to a
@@ -158,32 +153,28 @@ Tk_Uid; \fBTk_ParseArgv\fR stores at \fI*dst\fR the Tk_Uid
 corresponding to the following
 argument, and discards the matching and following arguments from
 \fIargv\fR.  \fISrc\fR is ignored.
-.TP
-\fBTK_ARGV_CONST_OPTION\fR
+.IP \fBTK_ARGV_CONST_OPTION\fR
 This form causes a Tk option to be set (as if the \fBoption\fR
 command had been invoked).  The \fIsrc\fR field is treated as a
 pointer to a string giving the value of an option, and \fIdst\fR
 is treated as a pointer to the name of the option.  The matching
 argument is discarded.  If \fItkwin\fR is NULL, then argument
 specifiers of this type are ignored (as if they did not exist).
-.TP
-\fBTK_ARGV_OPTION_VALUE\fR
+.IP \fBTK_ARGV_OPTION_VALUE\fR
 This form is similar to \fBTK_ARGV_CONST_OPTION\fR, except that the
 value of the option is taken from the following argument instead
 of from \fIsrc\fR.  \fIDst\fR is used as the name of the option.
 \fISrc\fR is ignored.  The matching and following arguments
 are discarded.  If \fItkwin\fR is NULL, then argument
 specifiers of this type are ignored (as if they did not exist).
-.TP
-\fBTK_ARGV_OPTION_NAME_VALUE\fR
+.IP \fBTK_ARGV_OPTION_NAME_VALUE\fR
 In this case the following argument is taken as the name of a Tk
 option and the argument after that is taken as the value for that
 option.  Both \fIsrc\fR and \fIdst\fR are ignored.  All three
 arguments are discarded from \fIargv\fR.  If \fItkwin\fR is NULL,
 then argument
 specifiers of this type are ignored (as if they did not exist).
-.TP
-\fBTK_ARGV_HELP\fR
+.IP \fBTK_ARGV_HELP\fR
 When this kind of option is encountered, \fBTk_ParseArgv\fR uses the
 \fIhelp\fR fields of \fIargTable\fR to format a message describing
 all the valid arguments.  The message is placed in interpreter
@@ -194,8 +185,7 @@ field of a \fBTK_ARGV_HELP\fR specifier is NULL, then the specifier will
 never match any arguments;  in this case the specifier simply provides
 extra documentation, which will be included when some other
 \fBTK_ARGV_HELP\fR entry causes help information to be returned.
-.TP
-\fBTK_ARGV_REST\fR
+.IP \fBTK_ARGV_REST\fR
 This option is used by programs or commands that allow the last
 several of their options to be the name and/or options for some
 other program.  If a \fBTK_ARGV_REST\fR argument is found, then
@@ -207,8 +197,7 @@ integer value, and stores at \fI*dst\fR the index of the first of the
 \fBTK_ARGV_REST\fR options in the returned \fIargv\fR.  This allows the
 program to distinguish the \fBTK_ARGV_REST\fR options from other
 unprocessed options that preceded the \fBTK_ARGV_REST\fR.
-.TP
-\fBTK_ARGV_FUNC\fR
+.IP \fBTK_ARGV_FUNC\fR
 For this kind of argument, \fIsrc\fR is treated as the address of
 a procedure, which is invoked to process the following argument.
 The procedure should have the following structure:
@@ -232,8 +221,7 @@ should return 0 and \fBTkParseArgv\fR will process the following
 argument in the normal fashion.  In either event the matching argument
 is discarded.
 .RE
-.TP
-\fBTK_ARGV_GENFUNC\fR
+.IP \fBTK_ARGV_GENFUNC\fR
 This form provides a more general procedural escape.  It treats
 \fIsrc\fR as the address of a procedure, and passes that procedure
 all of the remaining arguments.  The procedure should have the following
@@ -266,27 +254,23 @@ in the usual Tcl fashion, and return \-1;  when this happens
 \fBTk_ParseArgv\fR will abort its processing and return \fBTCL_ERROR\fR.
 .RE
 .SS "FLAGS"
-.TP
-\fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR
+.IP \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR
 \fBTk_ParseArgv\fR normally treats \fIargv[0]\fR as a program
 or command name, and returns it to the caller just as if it
 had not matched \fIargTable\fR.  If this flag is given, then
 \fIargv[0]\fR is not given special treatment.
-.TP
-\fBTK_ARGV_NO_ABBREV\fR
+.IP \fBTK_ARGV_NO_ABBREV\fR
 Normally, \fBTk_ParseArgv\fR accepts unique abbreviations for
 \fIkey\fR values in \fIargTable\fR.  If this flag is given then
 only exact matches will be acceptable.
-.TP
-\fBTK_ARGV_NO_LEFTOVERS\fR
+.IP \fBTK_ARGV_NO_LEFTOVERS\fR
 Normally, \fBTk_ParseArgv\fR returns unrecognized arguments to the
 caller.  If this bit is set in \fIflags\fR then \fBTk_ParseArgv\fR
 will return an error if it encounters any argument that does not
 match \fIargTable\fR.  The only exception to this rule is \fIargv[0]\fR,
 which will be returned to the caller with no errors as
 long as \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR is not specified.
-.TP
-\fBTK_ARGV_NO_DEFAULTS\fR
+.IP \fBTK_ARGV_NO_DEFAULTS\fR
 Normally, \fBTk_ParseArgv\fR searches an internal table of
 standard argument specifiers in addition to \fIargTable\fR.  If
 this bit is set in \fIflags\fR, then \fBTk_ParseArgv\fR will
@@ -312,21 +296,19 @@ Boolean exec = FALSE;
  * Define option descriptions.
  */
 Tk_ArgvInfo argTable[] = {
-    {"\-X", TK_ARGV_CONSTANT, (char *) 1, (char *) &debugFlag,
+    {"-X", TK_ARGV_CONSTANT, (char *) 1, &debugFlag,
         "Turn on debugging printfs"},
-    {"\-N", TK_ARGV_INT, NULL, (char *) &numReps,
+    {"-N", TK_ARGV_INT, NULL, &numReps,
         "Number of repetitions"},
-    {"\-of", TK_ARGV_STRING, NULL, (char *) &fileName,
+    {"-of", TK_ARGV_STRING, NULL, &fileName,
         "Name of file for output"},
-    {"x", TK_ARGV_REST, NULL, (char *) &exec,
+    {"x", TK_ARGV_REST, NULL, &exec,
         "File to exec, followed by any arguments (must be last argument)."},
     {NULL, TK_ARGV_END, NULL, NULL,
         NULL}
 };
 
-main(argc, argv)
-    int argc;
-    char *argv[];
+int main(int argc, char *argv[])
 {
     \&...
 
@@ -346,9 +328,9 @@ Note that default values can be assigned to variables named in
 particular arguments are present in \fIargv\fR.
 Here are some example command lines and their effects.
 .CS
-prog \-N 200 infile        # just sets the numReps variable to 200
-prog \-of out200 infile    # sets fileName to reference "out200"
-prog \-XN 10 infile        # sets the debug flag, also sets numReps
+prog -N 200 infile        # just sets the numReps variable to 200
+prog -of out200 infile    # sets fileName to reference "out200"
+prog -XN 10 infile        # sets the debug flag, also sets numReps
 .CE
 In all of the above examples, \fIargc\fR will be set by \fBTk_ParseArgv\fR to 2,
 \fIargv\fR[0] will be

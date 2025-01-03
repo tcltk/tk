@@ -3,8 +3,8 @@
 # file tests the Macintosh-specific features of the menu
 # system.
 #
-# Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1995-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -75,7 +75,7 @@ test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -constraints unix -setup {
 } -returnCodes ok -result {{} {} {}}
 
 
-test unixMenu-7.1 {TkpSetMainMenubar - nothing to do} -constraints unix -body {}
+test unixMenu-7.1 {Tk_SetMainMenubar - nothing to do} -constraints unix -body {}
 
 
 test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -constraints {

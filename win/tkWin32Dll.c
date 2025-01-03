@@ -3,7 +3,7 @@
  *
  *	This file contains a stub dll entry point.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -104,6 +104,7 @@ DllMain(
 #if defined(HAVE_NO_SEH) && !defined(__aarch64__)
     TCLEXCEPTION_REGISTRATION registration;
 #endif
+    (void)reserved;
 
     /*
      * If we are attaching to the DLL from a new process, tell Tk about the

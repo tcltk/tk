@@ -4,7 +4,7 @@
  *	Declarations of types and functions used to implement the menubutton
  *	widget.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -55,23 +55,21 @@ typedef struct {
     Tcl_Command widgetCmd;	/* Token for menubutton's widget command. */
     Tk_OptionTable optionTable;	/* Table that defines configuration options
 				 * available for this widget. */
-    char *menuName;		/* Name of menu associated with widget.
-				 * Malloc-ed. */
+    Tcl_Obj *menuNameObj;		/* Name of menu associated with widget. */
 
     /*
      * Information about what's displayed in the menu button:
      */
 
-    char *text;			/* Text to display in button (malloc'ed) or
-				 * NULL. */
-    int underline;		/* Index of character to underline. */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textObj;			/* Text to display in button. May be NULL. */
+    int underline;		/* Index of character to underline. INT_MIN means no underline */
+    Tcl_Obj *textVarNameObj;	/* Name of variable or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */
     Pixmap bitmap;		/* Bitmap to display or None. If not None then
 				 * text and textVar and underline are
 				 * ignored. */
-    char *imageString;		/* Name of image to display (malloc'ed), or
+    Tcl_Obj *imageObj;		/* Name of image to display, or
 				 * NULL. If non-NULL, bitmap, text, and
 				 * textVarName are ignored. */
     Tk_Image image;		/* Image to display in window, or NULL if
@@ -89,11 +87,19 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Structure used to draw 3-D border and
 				 * background when window is active. NULL
 				 * means no such border exists. */
-    int borderWidth;		/* Width of border. */
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *borderWidthObj;	/* Width of border. */
+#else
+    int borderWidth;
+#endif
     int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. <= 0 means
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
+#else
+    int highlightWidth;
+#endif
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
@@ -121,19 +127,24 @@ typedef struct {
 				 * pixel (positive means to right). */
     int rightBearing;		/* Amount text sticks right from its
 				 * origin. */
-    char *widthString;		/* Value of -width option. Malloc'ed. */
-    char *heightString;		/* Value of -height option. Malloc'ed. */
+    Tcl_Obj *widthObj;		/* Value of -width option. */
+    Tcl_Obj *heightObj;		/* Value of -height option. */
     int width, height;		/* If > 0, these specify dimensions to request
 				 * for window, in characters for text and in
 				 * pixels for bitmaps. In this case the actual
 				 * size of the text string or bitmap is
 				 * ignored in computing desired window
 				 * size. */
-    int wrapLength;		/* Line length (in pixels) at which to wrap
-				 * onto next line. <= 0 means don't wrap
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *wrapLengthObj;	/* Line length (in pixels) at which to wrap
+				 * onto next line. 0 means don't wrap
 				 * except at newlines. */
-    int padX, padY;		/* Extra space around text or bitmap (pixels
+    Tcl_Obj *padXObj, *padYObj;	/* Extra space around text or bitmap (pixels
 				 * on each side). */
+#else
+    int wrapLength;
+    int padX, padY;
+#endif
     Tk_Anchor anchor;		/* Where text/bitmap should be displayed
 				 * inside window region. */
     Tk_Justify justify;		/* Justification to use for multi-line
@@ -161,19 +172,19 @@ typedef struct {
 				 * whether the menubutton should show both an
 				 * image and text, and, if so, how. */
     enum direction direction;	/* Direction for where to pop the menu. Valid
-    				 * directions are "above", "below", "left",
-    				 * "right", and "flush". "flush" means that
-    				 * the upper left corner of the menubutton is
-    				 * where the menu pops up. "above" and "below"
-    				 * will attempt to pop the menu completely
-    				 * above or below the menu respectively.
-    				 * "left" and "right" will pop the menu left
-    				 * or right, and the active item will be next
-    				 * to the button. */
+				 * directions are "above", "below", "flush",
+				 * "left", and "right". "above" and "below"
+				 * will attempt to pop the menu completely
+				 * above or below the menu respectively.
+				 * "flush" means that the upper left corner
+				 * of the menubutton is where the menu pops up.
+				 * "left" and "right" will pop the menu left
+				 * or right, and the active item will be next
+				 * to the button. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
 } TkMenuButton;
@@ -209,8 +220,8 @@ typedef struct {
 
 MODULE_SCOPE void	TkpComputeMenuButtonGeometry(TkMenuButton *mbPtr);
 MODULE_SCOPE TkMenuButton *TkpCreateMenuButton(Tk_Window tkwin);
-MODULE_SCOPE void	TkpDisplayMenuButton(ClientData clientData);
-MODULE_SCOPE void 	TkpDestroyMenuButton(TkMenuButton *mbPtr);
-MODULE_SCOPE void	TkMenuButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkpDisplayMenuButton(void *clientData);
+MODULE_SCOPE void	TkpDestroyMenuButton(TkMenuButton *mbPtr);
+MODULE_SCOPE void	TkMenuButtonWorldChanged(void *instanceData);
 
 #endif /* _TKMENUBUTTON */

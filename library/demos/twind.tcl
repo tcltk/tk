@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # Make an Aqua button's fill color match its parent's background
 proc blend {bt} {
@@ -37,7 +37,7 @@ ttk::scrollbar $w.scroll -command "$t yview"
 pack $w.scroll -side right -fill y
 panedwindow $w.pane
 pack $w.pane -expand yes -fill both
-$w.pane add $w.f
+$w.pane add $w.f -stretch always
 # Import to raise given creation order above
 raise $w.f
 
@@ -92,7 +92,7 @@ $t insert end "display the same underlying text. Click this button to "
 $t window create end \
   -create {button %W.peer -text "Make A Peer" -command "textMakePeer %W" \
 	       -cursor top_left_arrow
-      blend %W.peer} -padx 3
+      blend %W.peer} -padx 3p
 $t insert end " widget.  Notice how peer widgets can have different "
 $t insert end "font settings, and by default contain all the images "
 $t insert end "of the 'parent', but that the embedded windows, "
@@ -105,7 +105,7 @@ $t insert end "peers is for "
 $t window create end \
   -create {button %W.split -text "Split Windows" -command "textSplitWindow %W" \
 	       -cursor top_left_arrow
-      blend %W.split} -padx 3
+      blend %W.split} -padx 3p
 $t insert end " \n\n"
 
 $t insert end "Users of previous versions of Tk will also be interested "
@@ -128,13 +128,13 @@ $t insert end "to restore the short string.\n"
 $t insert end "\nNOTE: these buttons will not appear in peers!\n" "peer_warning"
 button $t.default -text Default -command "embDefBg $t" \
 	-cursor top_left_arrow
-$t window create end -window $t.default -padx 3
+$t window create end -window $t.default -padx 3p
 global embToggle
 set embToggle Short
 checkbutton $t.toggle -textvariable embToggle -indicatoron 0 \
 	-variable embToggle -onvalue "A much longer string" \
-	-offvalue "Short" -cursor top_left_arrow -pady 5 -padx 2
-$t window create end -window $t.toggle -padx 3 -pady 2
+	-offvalue "Short" -cursor top_left_arrow -pady 3p -padx 1.5p
+$t window create end -window $t.toggle -padx 3p -pady 1.5p
 set i 1
 foreach color {AntiqueWhite3 Bisque1 Bisque2 Bisque3 Bisque4
 	SlateBlue3 RoyalBlue1 SteelBlue2 DeepSkyBlue3 LightBlue1
@@ -142,7 +142,7 @@ foreach color {AntiqueWhite3 Bisque1 Bisque2 Bisque3 Bisque4
 	Yellow1 IndianRed1 IndianRed2 Tan1 Tan4} {
     button $t.color$i -text $color -cursor top_left_arrow -command \
 	    "changeBg $t $color"
-    $t window create end -window [blend $t.color$i] -padx 3 -pady 2
+    $t window create end -window [blend $t.color$i] -padx 3p -pady 1.5p
     incr i
 }
 $t tag add buttons [blend $t.default] end
@@ -175,19 +175,26 @@ $t window create end -window [blend $t.smallP]
 
 $t insert end "\n\nFinally, images fit comfortably in text widgets too:"
 
-$t image create end -image \
-    [image create photo -file [file join $tk_demoDirectory images ouster.png]]
+image create photo img -file [file join $tk_demoDirectory images ouster.png]
+
+# Create a copy of the image just created, magnified according to the
+# display's DPI scaling level.  Since the zooom factor must be an integer,
+# the copy will only be effectively magnified if $tk::scalingPct >= 200.
+image create photo img2
+img2 copy img -zoom [expr {$tk::scalingPct / 100}]
+
+$t image create end -image img2
 
 proc textWindBigB w {
-    $w configure -borderwidth 15
+    $w configure -borderwidth 12p
 }
 
 proc textWindBigH w {
-    $w configure -highlightthickness 15
+    $w configure -highlightthickness 12p
 }
 
 proc textWindBigP w {
-    $w configure -padx 15 -pady 15
+    $w configure -padx 12p -pady 12p
 }
 
 proc textWindSmallB w {
@@ -343,9 +350,9 @@ proc textSplitWindow {textW} {
 	    set t [$textW peer create $w.peer \
 	      -yscrollcommand "$w.scroll set"]
 	    $t tag configure peer_warning -font boldFont
-	    $w.pane add $t
+	    $w.pane add $t -stretch always
 	}
     } else {
-        return
+	return
     }
 }

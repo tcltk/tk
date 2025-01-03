@@ -5,8 +5,8 @@
  *	toolkit. This allows cursors to be shared between widgets and also
  *	avoids round-trips to the X server.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -59,12 +59,14 @@ static void		InitCursorObj(Tcl_Obj *objPtr);
  * option is set.
  */
 
-Tcl_ObjType const tkCursorObjType = {
-    "cursor",			/* name */
+const TkObjType tkCursorObjType = {
+    {"cursor",			/* name */
     FreeCursorObjProc,		/* freeIntRepProc */
     DupCursorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V1(TkLengthOne)},
+    0
 };
 
 /*
@@ -101,7 +103,7 @@ Tk_AllocCursorFromObj(
 {
     TkCursor *cursorPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType.objType) {
 	InitCursorObj(objPtr);
     }
     cursorPtr = (TkCursor *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -188,7 +190,7 @@ Tk_Cursor
 Tk_GetCursor(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry for
+    const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
     TkCursor *cursorPtr = TkcGetCursor(interp, tkwin, string);
@@ -319,8 +321,8 @@ Tk_GetCursorFromData(
     const char *mask,		/* Bitmap data for cursor mask. */
     int width, int height,	/* Dimensions of cursor. */
     int xHot, int yHot,		/* Location of hot-spot in cursor. */
-    Tk_Uid fg,			/* Foreground color for cursor. */
-    Tk_Uid bg)			/* Background color for cursor. */
+    const char *fg,			/* Foreground color for cursor. */
+    const char *bg)			/* Background color for cursor. */
 {
     DataKey dataKey;
     Tcl_HashEntry *dataHashPtr;
@@ -339,8 +341,8 @@ Tk_GetCursorFromData(
     dataKey.height = height;
     dataKey.xHot = xHot;
     dataKey.yHot = yHot;
-    dataKey.fg = fg;
-    dataKey.bg = bg;
+    dataKey.fg = Tk_GetUid(fg);
+    dataKey.bg = Tk_GetUid(bg);
     dataKey.display = Tk_Display(tkwin);
     dataHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorDataTable,
 	    (char *) &dataKey, &isNew);
@@ -429,10 +431,10 @@ Tk_NameOfCursor(
 
     if (!dispPtr->cursorInit) {
     printid:
-	snprintf(dispPtr->cursorString, sizeof(dispPtr->cursorString), "cursor id 0x%" TCL_Z_MODIFIER "x", (size_t)cursor);
+	snprintf(dispPtr->cursorString, sizeof(dispPtr->cursorString), "cursor id 0x%" TCL_Z_MODIFIER "x", PTR2INT(cursor));
 	return dispPtr->cursorString;
     }
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	goto printid;
     }
@@ -521,7 +523,7 @@ Tk_FreeCursor(
 	Tcl_Panic("Tk_FreeCursor called before Tk_GetCursor");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeCursor received unknown cursor argument");
     }
@@ -698,7 +700,7 @@ GetCursorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType.objType) {
 	InitCursorObj(objPtr);
     }
 
@@ -775,7 +777,7 @@ InitCursorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkCursorObjType;
+    objPtr->typePtr = &tkCursorObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -866,9 +868,9 @@ TkDebugCursor(
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->objRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

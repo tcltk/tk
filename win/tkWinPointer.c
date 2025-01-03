@@ -3,8 +3,8 @@
  *
  *	Windows specific mouse tracking code.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -31,7 +31,7 @@ static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
  * Forward declarations of procedures used in this file.
  */
 
-static void		MouseTimerProc(ClientData clientData);
+static void		MouseTimerProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -93,7 +93,7 @@ TkWinGetModifierState(void)
 /*
  *----------------------------------------------------------------------
  *
- * Tk_PointerEvent --
+ * TkWinPointerEvent --
  *
  *	This procedure is called for each pointer-related event. It converts
  *	the position to root coords and updates the global pointer state
@@ -109,7 +109,7 @@ TkWinGetModifierState(void)
  */
 
 void
-Tk_PointerEvent(
+TkWinPointerEvent(
     HWND hwnd,			/* Window for coords, or NULL for the root
 				 * window. */
     int x, int y)		/* Coords relative to hwnd, or screen if hwnd
@@ -179,6 +179,12 @@ XGrabKeyboard(
     int keyboard_mode,
     Time time)
 {
+    (void)display;
+    (void)owner_events;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)time;
+
     keyboardWinPtr = TkWinGetWinPtr(grab_window);
     return GrabSuccess;
 }
@@ -204,6 +210,9 @@ XUngrabKeyboard(
     Display *display,
     Time time)
 {
+    (void)display;
+    (void)time;
+
     keyboardWinPtr = NULL;
     return Success;
 }
@@ -226,14 +235,14 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData clientData)
+    TCL_UNUSED(void *))
 {
     POINT pos;
 
     mouseTimerSet = 0;
 
     GetCursorPos(&pos);
-    Tk_PointerEvent(NULL, pos.x, pos.y);
+    TkWinPointerEvent(NULL, pos.x, pos.y);
 }
 
 /*
@@ -285,6 +294,7 @@ TkGetPointerCoords(
     int *xPtr, int *yPtr)	/* Store pointer coordinates here. */
 {
     POINT point;
+    (void)tkwin;
 
     GetCursorPos(&point);
     *xPtr = point.x;
@@ -313,13 +323,13 @@ TkGetPointerCoords(
 Bool
 XQueryPointer(
     Display *display,
-    Window w,
-    Window *root_return,
-    Window *child_return,
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window *),
     int *root_x_return,
     int *root_y_return,
-    int *win_x_return,
-    int *win_y_return,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     unsigned int *mask_return)
 {
     LastKnownRequestProcessed(display)++;
@@ -367,8 +377,8 @@ void TkSetCursorPos(
      * requested position is off the primary screen.
      */
     if ( x < 0 || x > xscreen || y < 0 || y > yscreen ) {
-        SetCursorPos(x, y);
-        return;
+	SetCursorPos(x, y);
+	return;
     }
 
     input.type = INPUT_MOUSE;
@@ -384,7 +394,7 @@ void TkSetCursorPos(
      * See ticket [69b48f427e].
      */
     if (input.mi.dx == 0 && input.mi.dy == 0) {
-        input.mi.dx = 1;
+	input.mi.dx = 1;
     }
 
     input.mi.mouseData = 0;
@@ -407,6 +417,12 @@ XWarpPointer(
     int dest_y)
 {
     RECT r;
+    (void)display;
+    (void)src_w;
+    (void)src_x;
+    (void)src_y;
+    (void)src_width;
+    (void)src_height;
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
     TkSetCursorPos(r.left+dest_x, r.top+dest_y);
@@ -451,7 +467,7 @@ XGetInputFocus(
 {
     Tk_Window tkwin = Tk_HWNDToWindow(GetFocus());
 
-    *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
+    *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
     LastKnownRequestProcessed(display)++;
     return Success;
@@ -478,8 +494,8 @@ int
 XSetInputFocus(
     Display *display,
     Window focus,
-    int revert_to,
-    Time time)
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
     LastKnownRequestProcessed(display)++;
     if (focus != None) {

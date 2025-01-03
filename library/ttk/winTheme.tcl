@@ -3,6 +3,7 @@
 #
 
 namespace eval ttk::theme::winnative {
+
     ttk::style theme settings winnative {
 
 	ttk::style configure "." \
@@ -15,68 +16,74 @@ namespace eval ttk::theme::winnative {
 	    -troughcolor SystemScrollbar \
 	    -font TkDefaultFont
 
-	ttk::style map "." -foreground [list disabled SystemGrayText]
-        ttk::style map "." -embossed [list disabled 1]
+	ttk::style map "." -foreground {disabled SystemGrayText}
+	ttk::style map "." -embossed {disabled 1}
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
-	ttk::style configure TCheckbutton -padding "2 4"
-	ttk::style configure TRadiobutton -padding "2 4"
-	ttk::style configure TMenubutton \
-	    -padding "8 4" -arrowsize 3 -relief raised
-
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
+
+	ttk::style configure TCheckbutton -padding {1.5p 3p}
+	ttk::style configure TRadiobutton -padding {1.5p 3p}
+
+	ttk::style configure TMenubutton \
+	    -padding {6p 3p} -arrowsize 2.25p -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -insertwidth 1
 	ttk::style map TEntry \
 	    -fieldbackground \
-	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText]
+		{readonly SystemButtonFace disabled SystemButtonFace} \
+	    -selectbackground {!focus SystemWindow} \
+	    -selectforeground {!focus SystemWindowText}
 
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    -fieldbackground [list \
-	    	readonly SystemButtonFace \
+		readonly SystemButtonFace \
 		disabled SystemButtonFace] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight]
+	    -focusfill {{readonly focus} SystemHighlight}
 
 	ttk::style element create ComboboxPopdownFrame.border from default
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-        ttk::style configure TSpinbox -padding {2 0 16 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 12p 0}
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat -padding {8 4}
+	ttk::style configure Toolbutton -relief flat -padding {6p 3p}
 	ttk::style map Toolbutton -relief \
-	    {disabled flat selected sunken  pressed sunken  active raised}
+	    {disabled flat  selected sunken  pressed sunken  active raised}
 
-	ttk::style configure TScale -groovewidth 4
+	ttk::style configure TScale -groovewidth 3p
 
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
-	ttk::style configure TNotebook.Tab -padding {3 1} -borderwidth 1
-	ttk::style map TNotebook.Tab -expand [list selected {2 2 2 0}]
+	ttk::style configure TNotebook.Tab -padding {2.25p 0.75p} -borderwidth 1
+	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Item \
+	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure Treeview -background SystemWindow \
+	    -stripedbackground System3dLight -indent 15p
+	ttk::setTreeviewRowHeight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
-        ttk::style configure TProgressbar \
-	    -background SystemHighlight -borderwidth 0
+	ttk::style configure TProgressbar \
+	    -background SystemHighlight -borderwidth 0 \
+	    -barsize 22.5p -thickness 11.25p
     }
 }
 

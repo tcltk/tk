@@ -34,9 +34,9 @@
  * (2) Manager voluntarily relinquishes control
  * (3) Content window is destroyed
  *
- * In case (1), Tk calls the manager's lostSlaveProc.
+ * In case (1), Tk calls the manager's lostContentProc.
  * Case (2) is performed by calling Tk_ManageGeometry(window,NULL,0);
- * in this case Tk does _not_ call the lostSlaveProc (documented behavior).
+ * in this case Tk does _not_ call the lostContentProc (documented behavior).
  * Tk doesn't handle case (3) either; to account for that we
  * register an event handler on the content window to track <Destroy> events.
  */
@@ -45,24 +45,24 @@
  */
 typedef struct
 {
-    Tk_Window 		window;
-    Ttk_Manager 	*manager;
-    void 		*data;
+    Tk_Window		window;
+    Ttk_Manager	*manager;
+    void		*data;
     unsigned		flags;
 } Ttk_Content;
 
 /* content->flags bits:
  */
-#define CONTENT_MAPPED 	0x1	/* content windows to be mapped when container is */
+#define CONTENT_MAPPED	0x1	/* content windows to be mapped when container is */
 
 struct TtkManager_
 {
-    Ttk_ManagerSpec	*managerSpec;
-    void 		*managerData;
-    Tk_Window   	window;
+    const Ttk_ManagerSpec	*managerSpec;
+    void		*managerData;
+    Tk_Window	window;
     unsigned		flags;
-    int 	 	nContent;
-    Ttk_Content 		**content;
+    Tcl_Size		nContent;
+    Ttk_Content		**content;
 };
 
 /* manager->flags bits:
@@ -74,7 +74,7 @@ struct TtkManager_
 static void ManagerIdleProc(void *);	/* forward */
 
 /* ++ ScheduleUpdate --
- * 	Schedule a call to recompute the size and/or layout,
+ *	Schedule a call to recompute the size and/or layout,
  *	depending on flags.
  */
 static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
@@ -87,8 +87,8 @@ static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
 }
 
 /* ++ RecomputeSize --
- * 	Recomputes the required size of the container window,
- * 	makes geometry request.
+ *	Recomputes the required size of the container window,
+ *	makes geometry request.
  */
 static void RecomputeSize(Ttk_Manager *mgr)
 {
@@ -102,18 +102,18 @@ static void RecomputeSize(Ttk_Manager *mgr)
 }
 
 /* ++ RecomputeLayout --
- * 	Recompute geometry of all content windows.
+ *	Recompute geometry of all content windows.
  */
 static void RecomputeLayout(Ttk_Manager *mgr)
 {
-    mgr->managerSpec->PlaceSlaves(mgr->managerData);
+    mgr->managerSpec->PlaceContent(mgr->managerData);
     mgr->flags &= ~MGR_RELAYOUT_REQUIRED;
 }
 
 /* ++ ManagerIdleProc --
- * 	DoWhenIdle procedure for deferred updates.
+ *	DoWhenIdle procedure for deferred updates.
  */
-static void ManagerIdleProc(ClientData clientData)
+static void ManagerIdleProc(void *clientData)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     mgr->flags &= ~MGR_UPDATE_PENDING;
@@ -135,14 +135,14 @@ static void ManagerIdleProc(ClientData clientData)
  */
 
 /* ++ ManagerEventHandler --
- * 	Recompute content layout when container widget is resized.
- * 	Keep the content's map state in sync with the container's.
+ *	Recompute content layout when container widget is resized.
+ *	Keep the content's map state in sync with the container's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
-static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
+static void ManagerEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int i;
+    Tcl_Size i;
 
     switch (eventPtr->type)
     {
@@ -167,14 +167,14 @@ static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
 }
 
 /* ++ ContentLostEventHandler --
- * 	Notifies manager when a content window is destroyed
- * 	(see <<NOTE-LOSTCONTENT>>).
+ *	Notifies manager when a content window is destroyed
+ *	(see <<NOTE-LOSTCONTENT>>).
  */
 static void ContentLostEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_Content *content = (Ttk_Content *)clientData;
     if (eventPtr->type == DestroyNotify) {
-	content->manager->managerSpec->tkGeomMgr.lostSlaveProc(
+	content->manager->managerSpec->tkGeomMgr.lostContentProc(
 	    content->manager, content->window);
     }
 }
@@ -206,16 +206,16 @@ static void DeleteContent(Ttk_Content *content)
  */
 
 Ttk_Manager *Ttk_CreateManager(
-    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
+    const Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
 
-    mgr->managerSpec 	= managerSpec;
+    mgr->managerSpec	= managerSpec;
     mgr->managerData	= managerData;
     mgr->window	= window;
-    mgr->nContent 	= 0;
-    mgr->content 	= NULL;
-    mgr->flags  	= 0;
+    mgr->nContent	= 0;
+    mgr->content	= NULL;
+    mgr->flags	= 0;
 
     Tk_CreateEventHandler(
 	mgr->window, ManagerEventMask, ManagerEventHandler, mgr);
@@ -245,11 +245,11 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
  */
 
 /* ++ InsertContent --
- * 	Adds content to the list of managed windows.
+ *	Adds content to the list of managed windows.
  */
-static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, int index)
+static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, Tcl_Size index)
 {
-    int endIndex = mgr->nContent++;
+    Tcl_Size endIndex = mgr->nContent++;
     mgr->content = (Ttk_Content **)ckrealloc(mgr->content, mgr->nContent * sizeof(Ttk_Content *));
 
     while (endIndex > index) {
@@ -269,21 +269,21 @@ static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, int index)
 }
 
 /* RemoveContent --
- * 	Unmanage and delete the content window.
+ *	Unmanage and delete the content window.
  *
  * NOTES/ASSUMPTIONS:
  *
  * [1] It's safe to call Tk_UnmapWindow / Tk_UnmaintainGeometry even if this
  * routine is called from the content window's DestroyNotify event handler.
  */
-static void RemoveContent(Ttk_Manager *mgr, int index)
+static void RemoveContent(Ttk_Manager *mgr, Tcl_Size index)
 {
     Ttk_Content *content = mgr->content[index];
-    int i;
+    Tcl_Size i;
 
     /* Notify manager:
      */
-    mgr->managerSpec->SlaveRemoved(mgr->managerData, index);
+    mgr->managerSpec->ContentRemoved(mgr->managerData, index);
 
     /* Remove from array:
      */
@@ -310,25 +310,25 @@ static void RemoveContent(Ttk_Manager *mgr, int index)
  * +++ Tk_GeomMgr hooks.
  */
 
-void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
+void Ttk_GeometryRequestProc(void *clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int index = Ttk_ContentIndex(mgr, window);
+    Tcl_Size index = Ttk_ContentIndex(mgr, window);
 
     if (index >= 0) {
 	int reqWidth = Tk_ReqWidth(window);
 	int reqHeight= Tk_ReqHeight(window);
-	if (mgr->managerSpec->SlaveRequest(
+	if (mgr->managerSpec->ContentRequest(
 	    mgr->managerData, index, reqWidth, reqHeight)) {
 	    ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 	}
     }
 }
 
-void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
+void Ttk_LostContentProc(void *clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
-    int index = Ttk_ContentIndex(mgr, window);
+    Tcl_Size index = Ttk_ContentIndex(mgr, window);
 
     /* ASSERT: index >= 0 */
     RemoveContent(mgr, index);
@@ -339,19 +339,19 @@ void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
  */
 
 /* ++ Ttk_InsertContent --
- * 	Add a new content window at the specified index.
+ *	Add a new content window at the specified index.
  */
 void Ttk_InsertContent(
-    Ttk_Manager *mgr, int index, Tk_Window tkwin, void *data)
+    Ttk_Manager *mgr, Tcl_Size index, Tk_Window tkwin, void *data)
 {
     Ttk_Content *content = NewContent(mgr, tkwin, data);
     InsertContent(mgr, content, index);
 }
 
 /* ++ Ttk_ForgetContent --
- * 	Unmanage the specified content window.
+ *	Unmanage the specified content window.
  */
-void Ttk_ForgetContent(Ttk_Manager *mgr, int index)
+void Ttk_ForgetContent(Ttk_Manager *mgr, Tcl_Size index)
 {
     Tk_Window window = mgr->content[index]->window;
     RemoveContent(mgr, index);
@@ -359,14 +359,14 @@ void Ttk_ForgetContent(Ttk_Manager *mgr, int index)
 }
 
 /* ++ Ttk_PlaceContent --
- * 	Set the position and size of the specified content window.
+ *	Set the position and size of the specified content window.
  *
  * NOTES:
- * 	Contrary to documentation, Tk_MaintainGeometry doesn't always
- * 	map the content window.
+ *	Contrary to documentation, Tk_MaintainGeometry doesn't always
+ *	map the content window.
  */
 void Ttk_PlaceContent(
-    Ttk_Manager *mgr, int index, int x, int y, int width, int height)
+    Ttk_Manager *mgr, Tcl_Size index, int x, int y, int width, int height)
 {
     Ttk_Content *content = mgr->content[index];
     Tk_MaintainGeometry(content->window,mgr->window,x,y,width,height);
@@ -377,9 +377,9 @@ void Ttk_PlaceContent(
 }
 
 /* ++ Ttk_UnmapContent --
- * 	Unmap the specified content window, but leave it managed.
+ *	Unmap the specified content window, but leave it managed.
  */
-void Ttk_UnmapContent(Ttk_Manager *mgr, int index)
+void Ttk_UnmapContent(Ttk_Manager *mgr, Tcl_Size index)
 {
     Ttk_Content *content = mgr->content[index];
     Tk_UnmaintainGeometry(content->window, mgr->window);
@@ -391,7 +391,7 @@ void Ttk_UnmapContent(Ttk_Manager *mgr, int index)
 }
 
 /* LayoutChanged, SizeChanged --
- * 	Schedule a relayout, resp. resize request.
+ *	Schedule a relayout, resp. resize request.
  */
 void Ttk_ManagerLayoutChanged(Ttk_Manager *mgr)
 {
@@ -405,15 +405,15 @@ void Ttk_ManagerSizeChanged(Ttk_Manager *mgr)
 
 /* +++ Accessors.
  */
-int Ttk_NumberContent(Ttk_Manager *mgr)
+Tcl_Size Ttk_NumberContent(Ttk_Manager *mgr)
 {
     return mgr->nContent;
 }
-void *Ttk_ContentData(Ttk_Manager *mgr, int index)
+void *Ttk_ContentData(Ttk_Manager *mgr, Tcl_Size index)
 {
     return mgr->content[index]->data;
 }
-Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, int index)
+Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, Tcl_Size index)
 {
     return mgr->content[index]->window;
 }
@@ -423,40 +423,49 @@ Tk_Window Ttk_ContentWindow(Ttk_Manager *mgr, int index)
  */
 
 /* ++ Ttk_ContentIndex --
- * 	Returns the index of specified content window, -1 if not found.
+ *	Returns the index of specified content window, TCL_INDEX_NONE if not found.
  */
-int Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
+Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 {
-    int index;
+    Tcl_Size index;
     for (index = 0; index < mgr->nContent; ++index)
 	if (mgr->content[index]->window == window)
 	    return index;
     return -1;
 }
 
-/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, indexPtr) --
- * 	Return the index of the content window specified by objPtr.
- * 	Content windows may be specified as an integer index or
- * 	as the name of the managed window.
+/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, lastOK, indexPtr) --
+ *	Return the index of the content window specified by objPtr.
+ *	Content windows may be specified as an integer index or
+ *	as the name of the managed window.
+ *
+ *  The parameter lastOK should be non-0 if the resolved index can be equal to
+ *  the current size (i.e. one more than the current highest index) and 0
+ *  otherwise.
  *
  * Returns:
- * 	Standard Tcl completion code.  Leaves an error message in case of error.
+ *	Standard Tcl completion code.  Leaves an error message in case of error.
  */
 
 int Ttk_GetContentIndexFromObj(
-    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, int *indexPtr)
+    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, int lastOK, Tcl_Size *indexPtr)
 {
     const char *string = Tcl_GetString(objPtr);
-    int index = 0;
+    Tcl_Size index = 0;
     Tk_Window tkwin;
 
     /* Try interpreting as an integer first:
      */
-    if (Tcl_GetIntFromObj(NULL, objPtr, &index) == TCL_OK) {
-	if (index < 0 || index >= mgr->nContent) {
+    if (TkGetIntForIndex(objPtr, mgr->nContent - 1, lastOK, &index) == TCL_OK) {
+	/*
+	 * Note despite passing lastOK above, we still need to check here
+	 * as well as TkGetIntForIndex only uses lastOK for end-relative indices,
+	 * not integers.
+	 */
+	if (index < 0 || (index - !!lastOK) >= mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Slave index %d out of bounds", index));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
+		    "Managed window index \"%s\" out of bounds", Tcl_GetString(objPtr)));
+	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -472,7 +481,7 @@ int Ttk_GetContentIndexFromObj(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
 		    Tk_PathName(mgr->window)));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "MANAGER", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -480,15 +489,15 @@ int Ttk_GetContentIndexFromObj(
     }
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "Invalid slave specification %s", string));
-    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
+	    "Invalid managed window specification %s", string));
+    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "SPEC", NULL);
     return TCL_ERROR;
 }
 
 /* ++ Ttk_ReorderContent(mgr, fromIndex, toIndex) --
- * 	Change content window order.
+ *	Change content window order.
  */
-void Ttk_ReorderContent(Ttk_Manager *mgr, int fromIndex, int toIndex)
+void Ttk_ReorderContent(Ttk_Manager *mgr, Tcl_Size fromIndex, Tcl_Size toIndex)
 {
     Ttk_Content *moved = mgr->content[fromIndex];
 
@@ -512,13 +521,13 @@ void Ttk_ReorderContent(Ttk_Manager *mgr, int fromIndex, int toIndex)
 }
 
 /* ++ Ttk_Maintainable(interp, window, container) --
- * 	Utility routine.  Verifies that 'container' may be used to maintain
+ *	Utility routine.  Verifies that 'container' may be used to maintain
  *	the geometry of 'window' via Tk_MaintainGeometry:
  *
- * 	+ 'container' is either 'window's parent -OR-
- * 	+ 'container is a descendant of 'window's parent.
- * 	+ 'window' is not a toplevel window
- * 	+ 'window' belongs to the same toplevel as 'container'
+ *	+ 'container' is either 'window's parent -OR-
+ *	+ 'container is a descendant of 'window's parent.
+ *	+ 'window' is not a toplevel window
+ *	+ 'window' belongs to the same toplevel as 'container'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */
@@ -540,7 +549,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window window, Tk_Window container)
     return 1;
 
 badWindow:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot add \"%s\" as content of \"%s\"",
 	    Tk_PathName(window), Tk_PathName(container)));
     Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;

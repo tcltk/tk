@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * ttk::scrollbar widget.
  */
@@ -15,14 +15,14 @@ typedef struct
 {
     Tcl_Obj	*commandObj;
 
-    int 	orient;
+    int	orient;
     Tcl_Obj	*orientObj;
 
     double	first;			/* top fraction */
     double	last;			/* bottom fraction */
 
     Ttk_Box	troughBox;		/* trough parcel */
-    int 	minSize;		/* minimum size of thumb */
+    int	minSize;		/* minimum size of thumb */
 } ScrollbarPart;
 
 typedef struct
@@ -31,14 +31,14 @@ typedef struct
     ScrollbarPart scrollbar;
 } Scrollbar;
 
-static Tk_OptionSpec ScrollbarOptionSpecs[] =
+static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0, 0, 0},
+	offsetof(Scrollbar, scrollbar.commandObj), TCL_INDEX_NONE, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	Tk_Offset(Scrollbar,scrollbar.orientObj),
-	Tk_Offset(Scrollbar,scrollbar.orient),
+	offsetof(Scrollbar, scrollbar.orientObj),
+	offsetof(Scrollbar, scrollbar.orient),
 	0, ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -72,10 +72,10 @@ static Ttk_Layout ScrollbarGetLayout(
 
 /*
  * ScrollbarDoLayout --
- * 	Layout hook.  Adjusts the position of the scrollbar thumb.
+ *	Layout hook.  Adjusts the position of the scrollbar thumb.
  *
  * Side effects:
- * 	Sets sb->troughBox and sb->minSize.
+ *	Sets sb->troughBox and sb->minSize.
  */
 static void ScrollbarDoLayout(void *recordPtr)
 {
@@ -129,11 +129,11 @@ static void ScrollbarDoLayout(void *recordPtr)
  */
 
 /* $sb set $first $last --
- * 	Set the position of the scrollbar.
+ *	Set the position of the scrollbar.
  */
 static int
 ScrollbarSetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *firstObj, *lastObj;
@@ -180,11 +180,11 @@ ScrollbarSetCommand(
 }
 
 /* $sb get --
- * 	Returns the last thing passed to 'set'.
+ *	Returns the last thing passed to 'set'.
  */
 static int
 ScrollbarGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *result[2];
@@ -202,12 +202,12 @@ ScrollbarGetCommand(
 }
 
 /* $sb delta $dx $dy --
- * 	Returns the percentage change corresponding to a mouse movement
- * 	of $dx, $dy.
+ *	Returns the percentage change corresponding to a mouse movement
+ *	of $dx, $dy.
  */
 static int
 ScrollbarDeltaCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     double dx, dy;
@@ -242,12 +242,12 @@ ScrollbarDeltaCommand(
 }
 
 /* $sb fraction $x $y --
- * 	Returns a real number between 0 and 1 indicating  where  the
- * 	point given by x and y lies in the trough area of the scrollbar.
+ *	Returns a real number between 0 and 1 indicating  where  the
+ *	point given by x and y lies in the trough area of the scrollbar.
  */
 static int
 ScrollbarFractionCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     Ttk_Box b = sb->scrollbar.troughBox;
@@ -282,22 +282,23 @@ ScrollbarFractionCommand(
 }
 
 static const Ttk_Ensemble ScrollbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
-    { "delta",    	ScrollbarDeltaCommand,0 },
-    { "fraction",    	ScrollbarFractionCommand,0 },
-    { "get",    	ScrollbarGetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "delta",	ScrollbarDeltaCommand,0 },
+    { "fraction",	ScrollbarFractionCommand,0 },
+    { "get",	ScrollbarGetCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "set",  		ScrollbarSetCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "set",		ScrollbarSetCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------
  * +++ Widget specification.
  */
-static WidgetSpec ScrollbarWidgetSpec =
+static const WidgetSpec ScrollbarWidgetSpec =
 {
     "TScrollbar",		/* className */
     sizeof(Scrollbar),		/* recordSize */
@@ -308,7 +309,7 @@ static WidgetSpec ScrollbarWidgetSpec =
     TtkCoreConfigure,		/* configureProc */
     TtkNullPostConfigure,	/* postConfigureProc */
     ScrollbarGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetSize,		/* sizeProc */
     ScrollbarDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };

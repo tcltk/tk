@@ -3,8 +3,8 @@
  *
  *	This file contains functions that manage the input focus for Tk.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -82,7 +82,7 @@ typedef struct TkDisplayFocusInfo {
 
 static DisplayFocusInfo*FindDisplayFocusInfo(TkMainInfo *mainPtr,
 			    TkDisplay *dispPtr);
-static void		FocusMapProc(ClientData clientData, XEvent *eventPtr);
+static void		FocusMapProc(void *clientData, XEvent *eventPtr);
 static void		GenerateFocusEvents(TkWindow *sourcePtr,
 			    TkWindow *destPtr);
 
@@ -105,7 +105,7 @@ static void		GenerateFocusEvents(TkWindow *sourcePtr,
 
 int
 Tk_FocusObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -128,7 +128,7 @@ Tk_FocusObjCmd(
 	Tk_Window focusWin = (Tk_Window) TkGetFocusWin(winPtr);
 
 	if (focusWin != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(focusWin));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(focusWin));
 	}
 	return TCL_OK;
     }
@@ -164,7 +164,7 @@ Tk_FocusObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], focusOptions,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -179,7 +179,7 @@ Tk_FocusObjCmd(
 	}
 	newPtr = TkGetFocusWin(newPtr);
 	if (newPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) newPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) newPtr));
 	}
 	break;
     case 1:			/* -force */
@@ -212,12 +212,12 @@ Tk_FocusObjCmd(
 	    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		    tlFocusPtr = tlFocusPtr->nextPtr) {
 		if (tlFocusPtr->topLevelPtr == topLevelPtr) {
-		    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+		    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window)
 			    tlFocusPtr->focusWinPtr));
 		    return TCL_OK;
 		}
 	    }
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) topLevelPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) topLevelPtr));
 	    return TCL_OK;
 	}
 	break;
@@ -630,8 +630,8 @@ TkSetFocusWin(
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    if (topLevelPtr->flags & TK_EMBEDDED &&
-        (displayFocusPtr->focusWinPtr == NULL)) {
+    if ((topLevelPtr->flags & TK_EMBEDDED) &&
+	    (displayFocusPtr->focusWinPtr == NULL)) {
 
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform
@@ -649,14 +649,14 @@ TkSetFocusWin(
 	 * application.
 	 */
 
-    	if (force) {
+	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
 		displayFocusPtr2->focusWinPtr = NULL;
 	    }
-    	}
+	}
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the
@@ -971,7 +971,7 @@ GenerateFocusEvents(
 
 static void
 FocusMapProc(
-    ClientData clientData,	/* Toplevel window. */
+    void *clientData,	/* Toplevel window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;

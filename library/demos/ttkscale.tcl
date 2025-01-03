@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ttkscale
 catch {destroy $w}
@@ -24,10 +24,10 @@ pack $w.msg -side top -padx .5c
 set btns [addSeeDismiss $w.buttons [winfo toplevel $w]]
 pack $btns -side bottom -fill x
 
-ttk::frame $w.frame -borderwidth 10
+ttk::frame $w.frame -borderwidth 7.5p
 pack $w.frame -side top -fill x
 
-# List of colors from rainbox; "Indigo" is not a standard color
+# List of colors from rainbow; "Indigo" is not a standard color
 set colorList {Red Orange Yellow Green Blue Violet}
 ttk::label $w.frame.label
 ttk::scale $w.frame.scale -from 0 -to 5 -command [list apply {{w idx} {

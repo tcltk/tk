@@ -3,8 +3,8 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,7 +39,7 @@ bind Scrollbar <Leave> {
     }
     %W activate {}
 }
-bind Scrollbar <1> {
+bind Scrollbar <Button-1> {
     tk::ScrollButtonDown %W %x %y
 }
 bind Scrollbar <B1-Motion> {
@@ -57,13 +57,13 @@ bind Scrollbar <B1-Leave> {
 bind Scrollbar <B1-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <2> {
+bind Scrollbar <Button-2> {
     tk::ScrollButton2Down %W %x %y
 }
-bind Scrollbar <B1-2> {
+bind Scrollbar <B1-Button-2> {
     # Do nothing, since button 1 is already down.
 }
-bind Scrollbar <B2-1> {
+bind Scrollbar <B2-Button-1> {
     # Do nothing, since button 2 is already down.
 }
 bind Scrollbar <B2-Motion> {
@@ -84,10 +84,10 @@ bind Scrollbar <B2-Leave> {
 bind Scrollbar <B2-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <Control-1> {
+bind Scrollbar <Control-Button-1> {
     tk::ScrollTopBottom %W %x %y
 }
-bind Scrollbar <Control-2> {
+bind Scrollbar <Control-Button-2> {
     tk::ScrollTopBottom %W %x %y
 }
 
@@ -129,41 +129,29 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
-if {[tk windowingsystem] eq "aqua"} {
-    bind Scrollbar <MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-(%D)}]
-    }
-    bind Scrollbar <Option-MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-10 * (%D)}]
-    }
-    bind Scrollbar <Shift-MouseWheel> {
-	tk::ScrollByUnits %W h [expr {-(%D)}]
-    }
-    bind Scrollbar <Shift-Option-MouseWheel> {
-	tk::ScrollByUnits %W h [expr {-10 * (%D)}]
-    }
-} else {
-    bind Scrollbar <MouseWheel> {
-	if {%D >= 0} {
-	    tk::ScrollByUnits %W v [expr {-%D/30}]
-	} else {
-	    tk::ScrollByUnits %W v [expr {(29-%D)/30}]
-	}
-    }
-    bind Scrollbar <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    tk::ScrollByUnits %W h [expr {-%D/30}]
-	} else {
-	    tk::ScrollByUnits %W h [expr {(29-%D)/30}]
-	}
-    }
+bind Scrollbar <Enter> {+
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
-    bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
-    bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
-    bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
+bind Scrollbar <MouseWheel> {
+    tk::ScrollByUnits %W vh %D -40.0
+}
+bind Scrollbar <Option-MouseWheel> {
+    tk::ScrollByUnits %W vh %D -12.0
+}
+bind Scrollbar <Shift-MouseWheel> {
+    tk::ScrollByUnits %W hv %D -40.0
+}
+bind Scrollbar <Shift-Option-MouseWheel> {
+    tk::ScrollByUnits %W hv %D -12.0
+}
+bind Scrollbar <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+    if {$tk::Priv(deltaX) != 0 && [%W cget -orient] eq "horizontal"} {
+	tk::ScrollbarScrollByPixels %W h $tk::Priv(deltaX)
+    }
+    if {$tk::Priv(deltaY) != 0 && [%W cget -orient] eq "vertical"} {
+	tk::ScrollbarScrollByPixels %W v $tk::Priv(deltaY)
+    }
 }
 
 # tk::ScrollButtonDown --
@@ -325,6 +313,47 @@ proc ::tk::ScrollEndDrag {w x y} {
     set Priv(initPos) ""
 }
 
+# ::tk::ScrollbarScrollByPixels --
+# This procedure tells the scrollbar's associated widget to scroll up
+# or down by a given number of pixels.  It only works with scrollbars
+# because it uses the delta command.
+#
+# Arguments:
+# w -		The scrollbar widget.
+# orient -	Which kind of scrollbar this applies to: "h" for
+#		horizontal, "v" for vertical.
+# amount -	How many pixels to scroll.
+
+proc ::tk::ScrollbarScrollByPixels {w orient amount} {
+    set cmd [$w cget -command]
+    if {$cmd eq ""} {
+	return
+    }
+    set xyview [lindex [split $cmd] end]
+    if {$orient eq "v"} {
+	if {$xyview eq "xview"} {
+	    return
+	}
+    }
+    if {$orient eq "h"} {
+	if {$xyview eq "yview"} {
+	    return
+	}
+    }
+
+    # The code below works with both the current and old syntax for
+    # the scrollbar get command.
+
+    set info [$w get]
+    if {[llength $info] == 2} {
+	set first [lindex $info 0]
+    } else {
+	set first [lindex $info 2]
+    }
+    set pixels [expr {-$amount}]
+    uplevel #0 $cmd moveto [expr $first + [$w delta $pixels $pixels]]
+}
+
 # ::tk::ScrollByUnits --
 # This procedure tells the scrollbar's associated widget to scroll up
 # or down by a given number of units.  It notifies the associated widget
@@ -333,20 +362,35 @@ proc ::tk::ScrollEndDrag {w x y} {
 # Arguments:
 # w -		The scrollbar widget.
 # orient -	Which kinds of scrollbars this applies to:  "h" for
-#		horizontal, "v" for vertical, "hv" for both.
+#		horizontal, "v" for vertical, "hv" or "vh" for both.
 # amount -	How many units to scroll:  typically 1 or -1.
 
-proc ::tk::ScrollByUnits {w orient amount} {
+proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
     set cmd [$w cget -command]
     if {$cmd eq "" || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
+
+    if {[string length $orient] == 2 && $factor != 1.0} {
+	# Count both the <MouseWheel> and <Shift-MouseWheel>
+	# events, and ignore the non-dominant ones
+
+	variable ::tk::Priv
+	set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
+	incr Priv(${axis}Events)
+	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+		($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+		 $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+	    return
+	}
+    }
+
     set info [$w get]
     if {[llength $info] == 2} {
-	uplevel #0 $cmd scroll $amount units
+	uplevel #0 $cmd scroll [expr {$amount/$factor}] units
     } else {
-	uplevel #0 $cmd [expr {[lindex $info 2] + $amount}]
+	uplevel #0 $cmd [expr {[lindex $info 2] + [expr {$amount/$factor}]}]
     }
 }
 
@@ -433,7 +477,7 @@ proc ::tk::ScrollTopBottom {w x y} {
 proc ::tk::ScrollButton2Down {w x y} {
     variable ::tk::Priv
     if {![winfo exists $w]} {
-        return
+	return
     }
     set element [$w identify $x $y]
     if {[string match {arrow[12]} $element]} {
@@ -449,8 +493,8 @@ proc ::tk::ScrollButton2Down {w x y} {
 
     update idletasks
     if {[winfo exists $w]} {
-        $w configure -activerelief sunken
-        $w activate slider
-        ScrollStartDrag $w $x $y
+	$w configure -activerelief sunken
+	$w activate slider
+	ScrollStartDrag $w $x $y
     }
 }

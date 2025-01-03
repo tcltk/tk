@@ -2,14 +2,16 @@
 # which implement canvas "text" items.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
@@ -24,7 +26,7 @@ test canvText-1.1 {configuration options: good value for "anchor"} -body {
 } -result {nw nw}
 test canvasText-1.2 {configuration options: bad value for "anchor"} -body {
     .c itemconfigure test -anchor xyz
-} -returnCodes error -result {bad anchor position "xyz": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "xyz": must be n, ne, e, se, s, sw, w, nw, or center}
 test canvText-1.3 {configuration options: good value for "fill"} -body {
     .c itemconfigure test -fill #ff0000
     list [lindex [.c itemconfigure test -fill] 4] [.c itemcget test -fill]
@@ -42,7 +44,7 @@ test canvText-1.6 {configuration options: good value for "font"} -body {
 } -result {{Times 40} {Times 40}}
 test canvasText-1.7 {configuration options: bad value for "font"} -body {
     .c itemconfigure test -font {}
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test canvText-1.8 {configuration options: good value for "justify"} -body {
     .c itemconfigure test -justify left
     list [lindex [.c itemconfigure test -justify] 4] [.c itemcget test -justify]
@@ -63,14 +65,14 @@ test canvText-1.12 {configuration options: good value for "underline"} -body {
 } -result {0 0}
 test canvasText-1.13 {configuration options: bad value for "underline"} -body {
     .c itemconfigure test -underline xyz
-} -returnCodes error -result {expected integer but got "xyz"}
+} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test canvText-1.14 {configuration options: good value for "width"} -body {
     .c itemconfigure test -width 6
     list [lindex [.c itemconfigure test -width] 4] [.c itemcget test -width]
 } -result {6 6}
 test canvasText-1.15 {configuration options: bad value for "width"} -body {
     .c itemconfigure test -width xyz
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-1.16 {configuration options: good value for "tags"} -body {
     .c itemconfigure test -tags {test a b c}
     list [lindex [.c itemconfigure test -tags] 4] [.c itemcget test -tags]
@@ -100,12 +102,12 @@ test canvText-2.2 {CreateText procedure: args} -body {
     .c create text xyz 0
 } -cleanup {
     .c delete all
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-2.3 {CreateText procedure: args} -body {
     .c create text 0 xyz
 } -cleanup {
     .c delete all
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-2.4 {CreateText procedure: args} -body {
     .c create text 0 0 -xyz xyz
 } -cleanup {
@@ -133,14 +135,14 @@ test canvText-3.2 {TextCoords procedure} -setup {
     .c coords test xyz 0
 } -cleanup {
     .c delete test
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-3.3 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
     .c coords test 0 xyz
 } -cleanup {
     .c delete test
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-3.4 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
@@ -260,7 +262,7 @@ test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
 } -result {}
 
 
-test canvText-6.1 {ComputeTextBbox procedure} -constraints fonts -setup {
+test canvText-6.1 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
@@ -312,7 +314,7 @@ test canvText-6.4 {ComputeTextBbox procedure} -constraints fonts -setup {
 } -cleanup {
     .c delete test
 } -result 1
-test canvText-6.5 {ComputeTextBbox procedure} -constraints fonts -setup {
+test canvText-6.5 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
@@ -364,7 +366,7 @@ test canvText-6.8 {ComputeTextBbox procedure} -constraints fonts -setup {
 } -cleanup {
     .c delete test
 } -result 1
-test canvText-6.9 {ComputeTextBbox procedure} -constraints fonts -setup {
+test canvText-6.9 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
@@ -753,7 +755,7 @@ test canvText-14.1 {GetTextIndex procedure} -setup {
     list [.c index test end] [.c index test insert] \
 	[.c index test sel.first] [.c index test sel.last] \
 	[.c index test @0,0] \
-	[.c index test -1] [.c index test 10] [.c index test 100]
+	[.c index test {}] [.c index test 10] [.c index test 100]
 } -cleanup {
     .c delete test
 } -result {15 12 5 8 0 0 10 15}
@@ -906,20 +908,20 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     set s1 {    Yeah-ah-ah-ah-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-Yow}
     set s2 {    Yeah ah ah ah oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh oh Yow}
     $c create text 21 18 \
-        -font $f \
-        -text $s1 \
-        -fill white \
-        -width 922 \
-        -anchor nw \
-        -tags tbox1
+	-font $f \
+	-text $s1 \
+	-fill white \
+	-width 922 \
+	-anchor nw \
+	-tags tbox1
     $c create rect {*}[$c bbox tbox1] -outline red
     $c create text 21 160 \
-        -font $f \
-        -text $s2 \
-        -fill white \
-        -width 922 \
-        -anchor nw \
-        -tags tbox2
+	-font $f \
+	-text $s2 \
+	-fill white \
+	-width 922 \
+	-anchor nw \
+	-tags tbox2
     $c create rect {*}[$c bbox tbox2] -outline red
     after 500 "set done 1" ; vwait done
     set results [list]
@@ -931,7 +933,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     lappend results [selection get]
     array set metrics [font metrics $f]
     set x [expr {21 + [font measure $f "    "] \
-        + ([font measure {Arial 28 bold} "Y"] / 2)}]
+	+ ([font measure {Arial 28 bold} "Y"] / 2)}]
     set y1 [expr {18 + ($metrics(-linespace) / 2)}]
     set y2 [expr {160 + ($metrics(-linespace) / 2)}]
     lappend results [$c index tbox1 @$x,$y1]
@@ -948,10 +950,10 @@ test canvText-20.1 {angled text bounding box} -setup {
 	list $b $a $d $c
     }
     proc almosteq {b1 b2} {
-        # check whether the two boxes are equal, with 1 unit tolerance on each x y w h
-        lassign $b1 a b c d
-        lassign $b2 e f g h
-        expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
+	# check whether the two boxes are equal, with 1 unit tolerance on each x y w h
+	lassign $b1 a b c d
+	lassign $b2 e f g h
+	expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
     }
 } -body {
     .c create text 2 2 -tag t -anchor center -text 0 -font {TkDefaultFont 24}

@@ -16,6 +16,7 @@ Tk_SetWindowVisual \- change visual characteristics of window
 .sp
 int
 \fBTk_SetWindowVisual\fR(\fItkwin, visual, depth, colormap\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tk_Window int" colormap
 .AP Tk_Window tkwin in
@@ -43,7 +44,7 @@ is called then it returns 0 and does not make any changes;  otherwise
 it returns 1 to signify that the operation
 completed successfully.
 .PP
-Note:  \fBTk_SetWindowVisual\fR should not be called if you just want
+Note that \fBTk_SetWindowVisual\fR should not be called if you just want
 to change a window's colormap without changing its visual or depth;
 call \fBTk_SetWindowColormap\fR instead.
 .SH KEYWORDS

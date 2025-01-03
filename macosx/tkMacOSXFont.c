@@ -16,8 +16,6 @@
 #include "tkMacOSXFont.h"
 #include "tkMacOSXConstants.h"
 
-#define defaultOrientation kCTFontDefaultOrientation
-#define verticalOrientation kCTFontVerticalOrientation
 #define fixedPitch kCTFontUserFixedPitchFontType
 
 /*
@@ -25,6 +23,26 @@
 #define TK_MAC_DEBUG_FONTS
 #endif
 */
+
+/*
+ * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
+ * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
+ * tricky to get this function, because we are compiling with
+ * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
+ */
+#if TCL_MAJOR_VERSION < 9
+#   undef TclNumUtfChars
+#   undef TclUtfAtIndex
+#   ifdef USE_TCL_STUBS
+#	define TclNumUtfChars \
+	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
+#	define TclUtfAtIndex \
+	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
+#   else
+#	define TclNumUtfChars Tcl_NumUtfChars
+#	define TclUtfAtIndex Tcl_UtfAtIndex
+#   endif
+#endif
 
 /*
  * The following structure represents our Macintosh-specific implementation
@@ -55,7 +73,7 @@ struct SystemFontMapEntry {
 
 #define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
 static const struct SystemFontMapEntry systemFontMap[] = {
-    ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
+    ThemeFont(System,			"TkDefaultFont", "TkIconFont"),
     ThemeFont(EmphasizedSystem,		"TkCaptionFont", NULL),
     ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
     ThemeFont(SmallEmphasizedSystem, NULL, NULL),
@@ -112,7 +130,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	Tcl_DStringInit(&_ds);
-	Tcl_UtfToUniCharDString((const char *)bytes, len, &_ds);
+	Tcl_UtfToChar16DString((const char *)bytes, len, &_ds);
 	_string = [[NSString alloc]
 	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
 			       length:Tcl_DStringLength(&_ds)>>1
@@ -164,9 +182,9 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
 	p = Tcl_DStringValue(&_ds);
 	for (index = 0; index < [_string length]; index++) {
-	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
+	    p += Tcl_UniCharToUtf([_string characterAtIndex: index]|TCL_COMBINE, p);
 	}
-	Tcl_DStringSetLength(&_ds, p - Tcl_DStringValue(&_ds));
+	Tcl_DStringSetLength(&_ds, (Tcl_Size)(p - Tcl_DStringValue(&_ds)));
     }
     return _ds;
 }
@@ -203,7 +221,8 @@ GetTkFontAttributesForNSFont(
     NSFontTraitMask traits = [[NSFontManager sharedFontManager]
 	    traitsOfFont:nsFont];
     faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
-    faPtr->size = [nsFont pointSize];
+#define FACTOR 0.75
+    faPtr->size = [nsFont pointSize] * FACTOR;
     faPtr->weight = (traits & NSBoldFontMask ? TK_FW_BOLD : TK_FW_NORMAL);
     faPtr->slant = (traits & NSItalicFontMask ? TK_FS_ITALIC : TK_FS_ROMAN);
 
@@ -242,12 +261,12 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:TCL_INDEX_NONE] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
     if (size == 0.0) {
-	size = [defaultFont pointSize];
+	size = [defaultFont pointSize] * FACTOR;
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
 
@@ -363,7 +382,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, defaultOrientation, ch, boundingRects, nCh));
+		nsFont, kCTFontOrientationDefault, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
@@ -417,6 +436,143 @@ CreateNamedSystemFont(
 {
     TkDeleteNamedFont(NULL, tkwin, name);
     return TkCreateNamedFont(interp, tkwin, name, faPtr);
+}
+
+#pragma mark -
+
+#pragma mark Grapheme Cluster indexing
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * startOfClusterObjCmd --
+ *
+ *      This function is invoked to process the startOfCluster command.
+ *
+ * Results:
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *      None
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+startOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    const char *stringArg;
+    Tcl_Size len, idx;
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
+	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	}
+	idx = newIdx;
+    }
+    if (idx >= 0) {
+	if (idx >= len) {
+	    idx = len;
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location;
+	}
+	if (idx > 0 && len != ulen) {
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+	    Tcl_Size newIdx = 1;
+	    for (Tcl_Size i = 1; i < idx; i++) {
+		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+	    }
+	    idx = newIdx;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
+    }
+    return TCL_OK;
+}
+
+static int
+endOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    char *stringArg;
+    Tcl_Size idx, len;
+
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
+	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	}
+	idx = newIdx;
+    }
+    if (idx + 1 <= len) {
+	if (idx < 0) {
+	    idx = 0;
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location + range.length;
+	    if (idx > 0 && len != ulen) {
+		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+		Tcl_Size newIdx = 1;
+		for (Tcl_Size i = 1; i < idx; i++) {
+		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+		}
+		idx = newIdx;
+	    }
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
+    }
+    return TCL_OK;
 }
 
 #pragma mark -
@@ -515,6 +671,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
+    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*
@@ -612,7 +770,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size / FACTOR) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -701,7 +859,7 @@ TkpGetFontFamilies(
 
     for (NSString *family in list) {
 	Tcl_ListObjAppendElement(NULL, resultPtr,
-		Tcl_NewStringObj([family UTF8String], -1));
+		Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
     }
     Tcl_SetObjResult(interp, resultPtr);
 }
@@ -741,7 +899,7 @@ TkpGetSubFonts(
 
 	    if (family) {
 		Tcl_ListObjAppendElement(NULL, resultPtr,
-			Tcl_NewStringObj([family UTF8String], -1));
+			Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
 	    }
 	}
     }
@@ -769,7 +927,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,	 		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -800,7 +958,7 @@ TkpGetFontAttrsForChar(
  *	characters.
  *
  *	With ATSUI we need the line context to do this right, so we have the
- *	actual implementation in TkpMeasureCharsInContext().
+ *	actual implementation in Tk_MeasureCharsInContext().
  *
  * Results:
  *	The return value is the number of bytes from source that fit into the
@@ -821,7 +979,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
@@ -838,18 +996,18 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    return TkpMeasureCharsInContext(tkfont, source, numBytes, 0, numBytes,
+    return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes,
 	    maxLength, flags, lengthPtr);
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * TkpMeasureCharsInContext --
+ * Tk_MeasureCharsInContext --
  *
  *	Determine the number of bytes from the string that will fit in the
  *	given horizontal span. The measurement is done under the assumption
- *	that TkpDrawCharsInContext() will be used to actually display the
+ *	that Tk_DrawCharsInContext() will be used to actually display the
  *	characters.
  *
  *	This one is almost the same as Tk_MeasureChars(), but with access to
@@ -867,14 +1025,14 @@ Tk_MeasureChars(
  */
 
 int
-TkpMeasureCharsInContext(
+Tk_MeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char * source,	/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string in all. */
-    int rangeStart,		/* Index of first byte to measure. */
-    int rangeLength,		/* Length of range to measure in bytes. */
+    Tcl_Size rangeStart,		/* Index of first byte to measure. */
+    Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
 				 * character that would cross this x-position.
@@ -928,8 +1086,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
+    start = TclNumUtfChars(source, rangeStart);
+    len = TclNumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1030,7 +1188,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (TkUtfAtIndex(source, index) - source) - rangeStart;
+    fit = (TclUtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
@@ -1079,7 +1237,7 @@ Tk_DrawChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
@@ -1101,7 +1259,7 @@ TkDrawAngledChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
@@ -1113,7 +1271,7 @@ TkDrawAngledChars(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpDrawCharsInContext --
+ * Tk_DrawCharsInContext --
  *
  *	Draw a string of characters on the screen like Tk_DrawChars(), with
  *	access to all the characters on the line for context.
@@ -1131,7 +1289,7 @@ TkDrawAngledChars(
  */
 
 void
-TkpDrawCharsInContext(
+Tk_DrawCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
@@ -1144,9 +1302,9 @@ TkpDrawCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1169,9 +1327,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1229,8 +1387,8 @@ TkpDrawAngledCharsInContext(
 	     -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    start = TclNumUtfChars(source, rangeStart);
+    length = TclNumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 
@@ -1305,32 +1463,6 @@ TkMacOSXNSFontAttributesForFont(
 }
 
 /*
- *---------------------------------------------------------------------------
- *
- * TkMacOSXIsCharacterMissing --
- *
- *	Given a tkFont and a character determine whether the character has
- *	a glyph defined in the font or not.
- *
- * Results:
- *	Returns a 1 if the character is missing, a 0 if it is not.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-#undef TkMacOSXIsCharacterMissing
-int
-TkMacOSXIsCharacterMissing(
-    TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
-    TCL_UNUSED(unsigned int))	/* The character we are looking for. */
-{
-    return 0;
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXFontDescriptionForNSFontAndNSFontAttributes --
@@ -1363,8 +1495,8 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 	id strikethrough = [nsAttributes objectForKey:
 		NSStrikethroughStyleAttributeName];
 
-	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] + 0.5));
+	objv[i++] = Tcl_NewStringObj(familyName, TCL_INDEX_NONE);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] * FACTOR + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
@@ -1424,7 +1556,7 @@ TkMacOSXUseAntialiasedText(
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-		(char *) &antialiasedTextEnabled,
+		&antialiasedTextEnabled,
 		TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}

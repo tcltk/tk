@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .menu
 catch {destroy $w}
@@ -130,7 +130,7 @@ $m entryconfigure 2 -columnbreak 1
 set m $w.menu.more
 $w.menu add cascade -label "More" -menu $m -underline 0
 menu $m -tearoff 0
-foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Make life meaningful}} {
+foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Does almost nothing also} {Make life meaningful}} {
     $m add command -label $i -command [list puts "You invoked \"$i\""]
 }
 set emojiLabel [encoding convertfrom utf-8 "\xF0\x9F\x98\x8D Make friends"]
@@ -139,6 +139,13 @@ $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
 	-command [list \
 	tk_dialog $w.compound {Compound Menu Entry} \
 		"The menu entry you invoked displays both a bitmap and a\
+		text string.  Other than this, it is just like any other\
+		menu entry." {} 0 OK ]
+
+$m entryconfigure "Does almost nothing also" -image lilearth -compound left \
+	-command [list \
+	tk_dialog $w.compound {Compound Menu Entry} \
+		"The menu entry you invoked displays both a image and a\
 		text string.  Other than this, it is just like any other\
 		menu entry." {} 0 OK ]
 
