@@ -262,7 +262,7 @@ static int		UtfToUcs2beProc(void *clientData, const char*src,
  */
 
 static XFontStruct *
-XLoadQueryFontNoXError(Display *display, char *name)
+XLoadQueryFontNoXError(Display *display, const char *name)
 {
     XFontStruct *fontStructPtr = NULL;
     Tk_ErrorHandler handler;
