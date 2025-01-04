@@ -57,7 +57,7 @@ update idletasks
 
 # Fonts must be fixed width and have chars missing below char 32, so that
 # tests can control char expansion and missing character code. Therefore
-# we're using TkFixedFont here for both the labal and the canvas.
+# we're using TkFixedFont here for both the label and the canvas.
 
 label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font TkFixedFont
 pack .b.l
