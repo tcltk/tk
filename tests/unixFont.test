@@ -55,15 +55,16 @@ toplevel .b
 wm geom .b +0+0
 update idletasks
 
-# Font should be fixed width and have chars missing below char 32, so can
-# test control char expansion and missing character code.
+# Fonts must be fixed width and have chars missing below char 32, so that
+# tests can control char expansion and missing character code. Therefore
+# we're using TkFixedFont here for both the labal and the canvas.
 
 set courier {Courier -10}
 set cx [font measure $courier 0]
 
 label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font TkFixedFont
 pack .b.l
-canvas .b.c -closeenough 0
+canvas .b.c -closeenough 0 -font TkFixedFont
 
 set t [.b.c create text 0 0 -anchor nw -just left -font $courier]
 pack .b.c
