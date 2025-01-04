@@ -59,16 +59,15 @@ update idletasks
 # tests can control char expansion and missing character code. Therefore
 # we're using TkFixedFont here for both the labal and the canvas.
 
-set courier {Courier -10}
-set cx [font measure $courier 0]
-
 label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font TkFixedFont
 pack .b.l
-canvas .b.c -closeenough 0 -font TkFixedFont
+canvas .b.c -closeenough 0
 
-set t [.b.c create text 0 0 -anchor nw -just left -font $courier]
+set t [.b.c create text 0 0 -anchor nw -just left -font TkFixedFont]
 pack .b.c
 update
+
+set cx [font measure TkFixedFont 0]
 
 set ax [winfo reqwidth .b.l]
 set ay [winfo reqheight .b.l]
@@ -272,20 +271,21 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
 # - with Xft the problem is identical for \u4000, and moreover the width
 #   of, say, \002 depends on which fonts are installed.
     set x 0
-    incr x [font measure $courier "䀀"]   ;# 6
-    incr x [font measure $courier "\002"]   ;# 4
-    incr x [font measure $courier "\012"]   ;# 2
-    incr x [font measure $courier "\101"]   ;# 1
+    incr x [font measure TkFixedFont "䀀"]   ;# 6
+    incr x [font measure TkFixedFont "\002"]   ;# 4
+    incr x [font measure TkFixedFont "\012"]   ;# 2
+    incr x [font measure TkFixedFont "\101"]   ;# 1
     set x
 } [expr $cx*13]
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
-    font metrics $courier -fixed
+    font metrics TkFixedFont -fixed
 } 1
-test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11} {
+test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     set x 0
-    incr x [font measure $courier "\001"]   ;# 4
-    incr x [font measure $courier "\002"]   ;# 4
-    incr x [font measure $courier "\012"]   ;# 2
+    incr x [font measure TkFixedFont "\001"]   ;# 4
+    incr x [font measure TkFixedFont "\002"]   ;# 4
+    incr x [font measure TkFixedFont "\012"]   ;# 2
     set x
 } [expr $cx*10]
 test unixfont-8.7 {InitFont procedure: XA_UNDERLINE_POSITION} x11 {
@@ -309,7 +309,8 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {2 chars substituted in inserted text} {x11} {
+test unixfont-9.1 {2 chars substituted in inserted text} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -318,7 +319,8 @@ test unixfont-9.1 {2 chars substituted in inserted text} {x11} {
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {4 chars substituted in inserted text} {x11} {
+test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
