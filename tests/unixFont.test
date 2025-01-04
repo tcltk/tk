@@ -281,9 +281,7 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
     font metrics $courier -fixed
 } 1
-test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 withoutXft} {
-# Constrained by withoutXft because with Xft the width of, say, \002 depends
-# on which fonts are installed and get substituted by Tk.
+test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -311,10 +309,7 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {2 chars substituted in inserted text} {x11 withoutXft} {
-# Constrained by withoutXft because with Xft the width of \a (aka \007 the
-# bell character) depends on which fonts are installed and get substituted
-# by Tk.
+test unixfont-9.1 {2 chars substituted in inserted text} {x11} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -323,9 +318,7 @@ test unixfont-9.1 {2 chars substituted in inserted text} {x11 withoutXft} {
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {4 chars substituted in inserted text} {x11 withoutXft} {
-# Constrained by withoutXft because with Xft the width of \001 depends
-# on which fonts are installed and get substituted by Tk.
+test unixfont-9.2 {4 chars substituted in inserted text} {x11} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
