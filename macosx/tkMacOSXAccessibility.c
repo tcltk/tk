@@ -116,10 +116,10 @@ extern Tcl_HashTable *TkAccessibilityObject;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     for (i = 0; roleMap[i].tkrole != NULL; i++) {
-    if(strcmp(roleMap[i].tkrole, result) == 0) {
-      macrole = roleMap[i].macrole;
-    }
-    return macrole;
+	if(strcmp(roleMap[i].tkrole, result) == 0) {
+	    macrole = roleMap[i].macrole;
+	}
+	return macrole;
     }
 }
     
@@ -129,29 +129,18 @@ extern Tcl_HashTable *TkAccessibilityObject;
     return YES;
 }
 
- - (NSRect)accessibilityFrame {
-   Tk_Window path;
-    Drawable d;
-    unsigned int width, height, x, y;
-    
+- (NSRect)accessibilityFrame {
+    Tk_Window path;
     path = self.tk_win;
-    d = Tk_WindowId(path);
-    width = Tk_Width(path);
-    height = Tk_Height(path);
-    x=Tk_X(path);
-    y=Tk_Y(path);
-    Tk_Window win = self.tk_win;
-    TkWindow *winPtr = (TkWindow *)win;
+    TkWindow *winPtr = (TkWindow *)path;
     NSWindow *w = nil;
+    NSRect bounds;
     w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    NSRect windowFrame = [w frame];
-    NSRect elementFrame = NSMakeRect(windowFrame.origin.x + x,
-				     windowFrame.origin.y + y,
-				     width,
-				     height);
-    return elementFrame;
-
- }
+    TkMacOSXWinCGBounds(winPtr, &bounds);
+    CGRect accessibilityRect;
+    accessibilityRect = [w convertRectToScreen:bounds];
+    return accessibilityRect;
+}
 
 - (id)accessibilityParent {
     Tk_Window win = self.tk_win;
@@ -173,30 +162,29 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 - (void) updateAccessibilityElementFrame {
 
+    self.accessibilityFrame = CGRectZero;
     Tk_Window path;
-    Drawable d;
-    unsigned int width, height, x, y;
-    
     path = self.tk_win;
-    d = Tk_WindowId(path);
-    width = Tk_Width(path);
-    height = Tk_Height(path);
-    x=Tk_X(path);
-    y=Tk_Y(path);
-    Tk_Window win = self.tk_win;
-    TkWindow *winPtr = (TkWindow *)win;
+    TkWindow *winPtr = (TkWindow *)path;
     NSWindow *w = nil;
+    NSRect bounds;
     w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    NSRect windowFrame = [w frame];
-    NSRect elementFrame = NSMakeRect(windowFrame.origin.x + x,
-				     windowFrame.origin.y + y,
-				     width,
-				     height);
-    self.accessibilityFrame = elementFrame;
-    [self setAccessibilityFrameInParentSpace:elementFrame];
-
+    TkMacOSXWinCGBounds(winPtr, &bounds);
+    [self resizeAccessibilityElement: bounds];
 }
- 
+
+
+- (void) resizeAccessibilityElement:(NSRect) newFrame {
+        NSPoint origin = newFrame.origin;
+        origin.y = [[NSScreen mainScreen] frame].size.height - (origin.y + newFrame.size.height); // Flip Y-axis
+        newFrame.origin = origin;
+        
+        // Set the new frame
+        [self setAccessibilityFrame: newFrame];
+        NSLog(@"Frame updated to: %@", NSStringFromRect(newFrame));
+ }
+
+
 @end
 
 
@@ -243,7 +231,7 @@ TkMacAccessibleObjCmd(
     widget.tk_win = path;
     [widget.accessibilityParent accessibilityAddChildElement: widget];
 
-    [widget updateAccessibilityElementFrame];
+    //  [widget updateAccessibilityElementFrame];
     
     [pool drain];
     return TCL_OK;

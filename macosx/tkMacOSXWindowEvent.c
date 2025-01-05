@@ -117,8 +117,15 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width, height, flags);
-    }
 
+	/*Resize accessibility frame if window is resized.*/
+	TKContentView *view = [w contentView];
+	if ([view isKindOfClass:[TKContentView class]]) {
+	    for (TkAccessibilityElement *element in view.accessibilityChildren) {	    
+		[element updateAccessibilityElementFrame];
+	    }
+	}
+    }
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -1355,18 +1362,13 @@ NSMutableArray *_tkAccessibleElements;
 }
 
 - (id)accessibilityHitTest:(NSPoint)point {
+    NSLog(@"point");
     for (TkAccessibilityElement *element in self.accessibilityChildren) {
         if (NSPointInRect(point, [element accessibilityFrame])) {
             return element;
         }
     }
     return [super accessibilityHitTest:point];
-}
-
-- (void)windowDidResize:(NSNotification *)notification {
-    for (TkAccessibilityElement *element in self.accessibilityChildren) {
-	[element updateAccessibilityElementFrame];
-    }
 }
 
 @end
