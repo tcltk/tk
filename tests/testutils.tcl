@@ -290,6 +290,9 @@ namespace eval ::tk::test::scroll {
 	    set {
 		set scrollInfo $args
 	    }
+	    default {
+		return -code error "invalid mode parameter \"$mode\""
+	    }
 	}
     }
 
