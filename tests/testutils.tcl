@@ -283,31 +283,15 @@ namespace eval ::tk::test::dialog {
     proc afterbody {} {
 	set doRepeat 0
 
-	if {$::tcl_platform(platform) eq "windows"} {
+	if {($::tcl_platform(platform) eq "windows") && [vista?]} {
 	    # On Vista and later, using the new file dialogs we have to find
 	    # the window using its title as tk_dialog will not be set at the C level
-	    if {[vista?]} {
-		variable dialogclass
-		if {[catch {testfindwindow "" $dialogclass} ::tk_dialog]} {
-		    set doRepeat 1
-		}
-	    } else {
-		#
-		# TODO: See if this clause can be combined with the analogous
-		#       clause for non-windows platforms right below
-		#
-		if {$::tk_dialog == 0} {
-		    set doRepeat 1
-		}
-	    }
-	} else {
-	    #
-	    # TODO: See if this clause can be combined with the analogous
-	    #       clause for windows platforms right above
-	    #
-	    if {$::tk_dialog == {}} {
+	    variable dialogclass
+	    if {[catch {testfindwindow "" $dialogclass} ::tk_dialog]} {
 		set doRepeat 1
 	    }
+	} elseif {$::tk_dialog == {}} {
+	    set doRepeat 1
 	}
 
 	if {$doRepeat} {
@@ -346,7 +330,7 @@ namespace eval ::tk::test::dialog {
     proc start {script} {
 	variable iter_after 0
 
-	set ::tk_dialog [expr {$::tcl_platform(platform) eq "windows"?0:""}]
+	set ::tk_dialog {}
 	if {$::tcl_platform(platform) eq "windows"} {
 	    variable dialogclass "#32770"
 	}
