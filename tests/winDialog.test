@@ -12,6 +12,10 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::dialog::*
+set applyFontCmd [list dialogTestFont set]
+
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
@@ -24,11 +28,6 @@ testConstraint english [expr {
     && (([testwinlocale] & 0xff) == 9)
 }]
 
-proc vista? {{prevista 0} {postvista 1}} {
-    lassign [split $::tcl_platform(osVersion) .] major
-    return [expr {$major >= 6 ? $postvista : $prevista}]
-}
-
 # What directory to use in initialdir tests. Old code used to use
 # c:/. However, on Vista/later that is a protected directory if you
 # are not running privileged. Moreover, not everyone has a drive c:
@@ -37,53 +36,6 @@ proc initialdir {} {
     # file join to return in Tcl canonical format (/ separator, not \)
     #return [file join $::env(TEMP)]
     return [tcltest::temporaryDirectory]
-}
-
-
-proc start {arg} {
-    set ::tk_dialog 0
-    set ::iter_after 0
-    set ::dialogclass "#32770"
-
-    after 1 $arg
-}
-
-proc then {cmd} {
-    set ::command $cmd
-    set ::dialogresult {}
-    set ::testfont {}
-
-    # Do not make the delay too short. The newer Vista dialogs take
-    # time to come up. Even if the testforwindow returns true, the
-    # controls are not ready to accept messages
-    after 500 afterbody
-    vwait ::dialogresult
-    return $::dialogresult
-}
-
-proc afterbody {} {
-    # On Vista and later, using the new file dialogs we have to find
-    # the window using its title as tk_dialog will not be set at the C level
-    if {[vista?]} {
-	if {[catch {testfindwindow "" $::dialogclass} ::tk_dialog]} {
-	    if {[incr ::iter_after] > 30} {
-		set ::dialogresult ">30 iterations waiting on tk_dialog"
-		return
-	    }
-	    after 150 {afterbody}
-	    return
-	}
-    } else {
-	if {$::tk_dialog == 0} {
-	    if {[incr ::iter_after] > 30} {
-		set ::dialogresult ">30 iterations waiting on tk_dialog"
-		return
-	    }
-	    after 150 {afterbody}
-	    return
-	}
-    }
-    uplevel #0 {set dialogresult [eval $command]}
 }
 
 proc Click {button} {
@@ -105,10 +57,6 @@ proc GetText {id} {
 
 proc SetText {id text} {
     return [testwinevent $::tk_dialog $id WM_SETTEXT $text]
-}
-
-proc ApplyFont {font} {
-     set ::testfont $font
 }
 
 # ----------------------------------------------------------------------
@@ -953,40 +901,40 @@ test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
     start {tk fontchooser show}
     list [then {
 	Click cancel
-    }] $::testfont
+    }] [dialogTestFont get]
 } -result {0 {}}
 test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -font system
+	tk fontchooser configure -command $applyFontCmd -font system
 	tk fontchooser show
     }
     list [then {
 	Click cancel
-    }] $::testfont
+    }] [dialogTestFont get]
 } -result {0 {}}
 test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -font system
+	tk fontchooser configure -command $applyFontCmd -font system
 	tk fontchooser show
     }
     list [then {
 	Click 1
-    }] [expr {[llength $::testfont] ne {}}]
+    }] [expr {[llength [dialogTestFont get]] ne {}}]
 } -result {0 1}
 test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -title "tk test"
+	tk fontchooser configure -command $applyFontCmd -title "tk test"
 	tk fontchooser show
     }
     list [then {
 	Click cancel
-    }] $::testfont
+    }] [dialogTestFont get]
 } -result {0 {}}
 test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     nt testwinevent
@@ -994,14 +942,14 @@ test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     array set a {parent {}}
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -parent .
+	tk fontchooser configure -command $applyFontCmd -parent .
 	tk fontchooser show
     }
     then {
 	array set a [testgetwindowinfo $::tk_dialog]
 	Click cancel
     }
-    list [expr {$a(parent) == [wm frame .]}] $::testfont
+    list [expr {$a(parent) == [wm frame .]}] [dialogTestFont get]
 } -result {1 {}}
 test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent
@@ -1018,13 +966,13 @@ test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -parent .
+	tk fontchooser configure -command $applyFontCmd -parent .
 	tk fontchooser show
     }
     list [then {
 	Click [expr {0x0402}] ;# value from XP
 	Click cancel
-    }] [expr {[llength $::testfont] > 0}]
+    }] [expr {[llength [dialogTestFont get]] > 0}]
 } -result {0 1}
 test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
@@ -1032,7 +980,7 @@ test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
     array set a {text failed}
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont -title "Hello"
+	tk fontchooser configure -command $applyFontCmd -title "Hello"
 	tk fontchooser show
     }
     then {
@@ -1047,7 +995,7 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
     array set a {text failed}
 } -body {
     start {
-	tk fontchooser configure -command ApplyFont \
+	tk fontchooser configure -command $applyFontCmd \
 	    -title  "Привет"
 	tk fontchooser show
     }
@@ -1062,7 +1010,12 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}
 }
 
-# cleanup
+#
+# CLEANUP
+#
+
+unset applyFontCmd
+namespace forget ::tk::test::dialog::*
 cleanupTests
 return
 
