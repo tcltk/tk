@@ -286,6 +286,50 @@ namespace eval ::tk::test::button {
     namespace export *
 }
 
+namespace eval ::tk::test::colors {
+    # colorsFree --
+    #
+    # Returns 1 if there appear to be free colormap entries in a window, 0
+    # otherwise.
+    #
+    # Arguments:
+    # w -			Name of window in which to check.
+    # red, green, blue -	Intensities to use in a trial color allocation
+    #			to see if there are colormap entries free.
+    #
+    proc colorsFree {w {red 31} {green 245} {blue 192}} {
+	lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
+	expr {($r/256 == $red) && ($g/256 == $green) && ($b/256 == $blue)}
+    }
+
+    # eatColors --
+    #
+    # Creates a toplevel window and allocates enough colors in it to use up all
+    # the slots in an 8-bit colormap.
+    #
+    # Arguments:
+    # w -		Name of toplevel window to create.
+    #
+    proc eatColors {w} {
+	catch {destroy $w}
+	toplevel $w
+	wm geom $w +0+0
+	canvas $w.c -width 400 -height 200 -bd 0
+	pack $w.c
+	for {set y 0} {$y < 8} {incr y} {
+	    for {set x 0} {$x < 40} {incr x} {
+		set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
+		$w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
+		    [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
+		    -fill $color
+	    }
+	}
+	update
+    }
+
+    namespace export *
+}
+
 namespace eval ::tk::test::dialog {
 
     #
