@@ -7,12 +7,6 @@ loadTestedCommands
 ### treeview tag invariants:
 #
 
-proc assert {expr {message ""}} {
-    if {![uplevel 1 [list expr $expr]]} {
-	error "PANIC: $message ($expr failed)"
-    }
-}
-
 proc itemConstraints {tv item} {
     # $tag in [$tv item $item -tags] <==> [$tv tag has $tag $item]
     foreach tag [$tv item $item -tags] {

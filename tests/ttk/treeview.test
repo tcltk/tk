@@ -25,14 +25,6 @@ proc consistencyCheck {tv {item {}}} {
     }
 }
 
-proc assert {expr {message ""}} {
-    if {![uplevel 1 [list expr $expr]]} {
-	set error "PANIC! PANIC! PANIC: $message ($expr failed)"
-	puts stderr $error
-	error $error
-    }
-}
-
 proc tvSetup {} {
     destroy .tv
     ttk::treeview .tv -columns {a b c}
