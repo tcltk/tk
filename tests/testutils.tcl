@@ -259,6 +259,13 @@ namespace eval tk {
 	    }
 	    namespace export menubarheight
 	}
+
+	proc assert {expr {message ""}} {
+	    if {![uplevel 1 [list expr $expr]]} {
+		error "PANIC: $message ($expr failed)"
+	    }
+	}
+	namespace export assert
     }
 }
 
