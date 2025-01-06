@@ -290,7 +290,7 @@ namespace eval ::tk::test::dialog {
 	    if {[catch {testfindwindow "" $dialogclass} ::tk_dialog]} {
 		set doRepeat 1
 	    }
-	} elseif {$::tk_dialog == {}} {
+	} elseif {$::tk_dialog eq ""} {
 	    set doRepeat 1
 	}
 
