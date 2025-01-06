@@ -435,7 +435,7 @@ set expectedScreen ""
 if {[tcltest::testConstraint haveDISPLAY]} {
     set expectedScreen [list -screen screen Screen {} $env(DISPLAY)]
 }
-test frame-2.15 {toplevel configuration options} -constraints {x11 haveDISPLAY} -setup {
+test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -444,7 +444,7 @@ test frame-2.15 {toplevel configuration options} -constraints {x11 haveDISPLAY} 
 } -cleanup {
     deleteWindows
 } -result $expectedScreen
-test frame-2.16 {toplevel configuration options} -constraints {x11 haveDISPLAY} -setup {
+test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)

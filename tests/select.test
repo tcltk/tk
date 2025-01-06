@@ -1007,7 +1007,7 @@ test select-10.3 {ConvertSelection procedure} -constraints x11 -setup {
 # testing timers
 # This one hangs in Exceed
 test select-10.4 {ConvertSelection procedure} -constraints {
-    x11 noExceed failsOnUbuntu
+    x11 failsOnUbuntu
 } -setup {
     setup
     setupbg
