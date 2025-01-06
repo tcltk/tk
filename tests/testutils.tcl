@@ -272,6 +272,114 @@ namespace import -force tk::test::*
 # these functional areas.
 #
 
+namespace eval ::tk::test::dialog {
+
+    #
+    # The following helper functions serve both windows and non-windows dialogs.
+    # On windows (test file winDialog.test), they are used to send messages
+    # to the win32 dialog, hence the weirdness.
+    #
+
+    proc afterbody {} {
+	set doRepeat 0
+
+	if {$::tcl_platform(platform) eq "windows"} {
+	    # On Vista and later, using the new file dialogs we have to find
+	    # the window using its title as tk_dialog will not be set at the C level
+	    if {[vista?]} {
+		variable dialogclass
+		if {[catch {testfindwindow "" $dialogclass} ::tk_dialog]} {
+		    set doRepeat 1
+		}
+	    } else {
+		#
+		# TODO: See if this clause can be combined with the analogous
+		#       clause for non-windows platforms right below
+		#
+		if {$::tk_dialog == 0} {
+		    set doRepeat 1
+		}
+	    }
+	} else {
+	    #
+	    # TODO: See if this clause can be combined with the analogous
+	    #       clause for windows platforms right above
+	    #
+	    if {$::tk_dialog == {}} {
+		set doRepeat 1
+	    }
+	}
+
+	if {$doRepeat} {
+	    variable iter_after
+	    if {[incr iter_after] > 30} {
+		variable dialogresult ">30 iterations waiting for tk_dialog"
+		return
+	    }
+	    after 150 ::tk::test::dialog::afterbody
+	    return
+	}
+
+	variable dialogresult [uplevel #0 $::tk::test::dialog::dialogcommand]
+    }
+
+    #
+    # Note that a command "::testfont" (all lower case) is already defined
+    # by tkTest.c for usage by font.test. The prefix "dialog" is used for
+    # explicit distinction.
+    #
+    proc dialogTestFont {mode {font ""}} {
+	variable testfont
+	switch -- $mode {
+	    get {
+		return $testfont
+	    }
+	    set {
+		set testfont $font
+	    }
+	    default {
+		return -code error "invalid parameter \"$mode\""
+	    }
+	}
+    }
+
+    proc start {script} {
+	variable iter_after 0
+
+	set ::tk_dialog [expr {$::tcl_platform(platform) eq "windows"?0:""}]
+	if {$::tcl_platform(platform) eq "windows"} {
+	    variable dialogclass "#32770"
+	}
+
+	after 1 $script
+    }
+
+    proc then {cmd} {
+	variable dialogcommand $cmd dialogresult {}
+	variable testfont {}
+
+	if {$::tcl_platform(platform) eq "windows"} {
+	    # Do not make the delay too short. The newer Vista dialogs take
+	    # time to come up. Even if the testforwindow returns true, the
+	    # controls are not ready to accept messages
+	    after 500 ::tk::test::dialog::afterbody
+	} else {
+	    afterbody
+	}
+	vwait ::tk::test::dialog::dialogresult
+	return $dialogresult
+    }
+
+    if {$::tcl_platform(platform) eq "windows"} {
+	proc vista? {{prevista 0} {postvista 1}} {
+	    lassign [split $::tcl_platform(osVersion) .] major
+	    return [expr {$major >= 6 ? $postvista : $prevista}]
+	}
+    }
+
+    namespace export dialogTestFont start then vista?
+}
+
 namespace eval ::tk::test::scroll {
 
     # scrollInfo --
