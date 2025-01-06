@@ -11,33 +11,11 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::colors::*
+
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
-# eatColors --
-# Creates a toplevel window and allocates enough colors in it to
-# use up all the slots in the colormap.
-#
-# Arguments:
-# w -        Name of toplevel window to create.
-# options -    Options for w, such as "-colormap new".
-
-proc eatColors {w {options ""}} {
-    destroy $w
-    eval toplevel $w $options
-    wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
-    pack $w.c
-    for {set y 0} {$y < 8} {incr y} {
-	for {set x 0} {$x < 40} {incr x} {
-	    set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
-	    $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
-		[expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
-		-fill $color
-	}
-    }
-    update
-}
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the winfo options are tested.
@@ -487,8 +465,12 @@ test winfo-14.4 {mapped at idle time} -setup {
     destroy .t
 } -result 1
 
+#
+# CLEANUP
+#
+
 deleteWindows
-# cleanup
+namespace forget ::tk::test::colors::*
 cleanupTests
 return
 

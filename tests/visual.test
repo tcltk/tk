@@ -524,9 +524,6 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 #
 
 deleteWindows
-rename eatColors {}
-rename colorsFree {}
-
 namespace forget ::tk::test::colors::*
 cleanupTests
 return
