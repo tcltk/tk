@@ -12,11 +12,12 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::button::*
+
 imageInit
 
-proc bogusTrace args {
-    error "trace aborted"
-}
 option clear
 
 # ----------------------------------------------------------------------
@@ -191,9 +192,13 @@ test winbutton-1.9 {TkpComputeButtonGeometry procedure} -constraints win -setup 
     deleteWindows
 } -result {23 33}
 
-# cleanup
+#
+# CLEANUP
+#
+
 imageFinish
 deleteWindows
+namespace forget ::tk::test::button::*
 cleanupTests
 return
 
