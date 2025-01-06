@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl 8.6
+      - name: Checkout Tcl 8.7
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -139,7 +139,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.7
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -147,7 +147,7 @@ jobs:
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev
+          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
