@@ -80,7 +80,7 @@ foreach test {
 	    {unknown color name "non-existent"}}
     {-borderwidth 1.3 1.3 badValue {expected screen distance but got "badValue"}}
     {-command "set x" {set x} {} {}}
-    {-elementborderwidth 4 4 badValue {expected screen distance but got "badValue"}}
+    {-elementborderwidth 4 4 badValue {expected screen distance or "" but got "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-highlightbackground #112233 #112233 ugly {unknown color name "ugly"}}
     {-highlightcolor #123456 #123456 bogus {unknown color name "bogus"}}

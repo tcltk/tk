@@ -34,7 +34,7 @@ are used as callbacks in different places.
 The structure pointed to by \fIprocs\fR contains the following:
 .CS
 typedef struct {
-    size_t \fIsize\fR;
+    Tcl_Size \fIsize\fR;
     Tk_ClassWorldChangedProc *\fIworldChangedProc\fR;
     Tk_ClassCreateProc *\fIcreateProc\fR;
     Tk_ClassModalProc *\fImodalProc\fR;
