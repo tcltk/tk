@@ -279,6 +279,13 @@ namespace import -force tk::test::*
 # these functional areas.
 #
 
+namespace eval ::tk::test::button {
+    proc bogusTrace args {
+	error "trace aborted"
+    }
+    namespace export *
+}
+
 namespace eval ::tk::test::dialog {
 
     #
