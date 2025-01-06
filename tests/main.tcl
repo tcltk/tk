@@ -47,12 +47,9 @@ namespace import -force tcltest::cleanupTests
 #
 # SOURCE DEFINITIONS OF GLOBAL UTILITY PROCS AND CONSTRAINTS
 #
-# Note: the tcltest mechanism induces that [info script] at this place returns
-#       the name of the test file calling [loadTestedCommands] instead of the
-#       pathname invocation of this script. Apparently, [tcltest::loadTestedCommands]
-#       doesn't use [source] to read and evaluate the script file. Therefore,
-#       [info script] cannot be used to determine the main Tk test directory,
-#       and we use [tcltest::configure -loadfile] instead.
+# Note: tcltest uses [uplevel] to evaluate this script. Therefore, [info script]
+#       cannot be used to determine the main Tk test directory, and we use
+#       [tcltest::configure -loadfile] instead.
 #
 set mainTestDir [file dirname [tcltest::configure -loadfile]]
 source [file join $mainTestDir testutils.tcl]
