@@ -391,6 +391,54 @@ namespace eval ::tk::test::dialog {
 	event generate $btn <ButtonRelease-1> -x 5 -y 5
     }
 
+    proc SendButtonPress {parent btn buttonType} {
+	variable dialogType
+	switch -- $dialogType {
+	    "choosedir" {
+		if {$parent == "."} {
+		    set w .__tk_choosedir
+		} else {
+		    set w $parent.__tk_choosedir
+		}
+		upvar ::tk::dialog::file::__tk_choosedir data
+	    }
+	    "clrpick" {
+		set w .__tk__color
+		upvar ::tk::dialog::color::[winfo name $w] data
+	    }
+	    "filebox" {
+		if {$parent == "."} {
+		    set w .__tk_filedialog
+		} else {
+		    set w $parent.__tk_filedialog
+		}
+		upvar ::tk::dialog::file::__tk_filedialog data
+	    }
+	    default {
+		return -code error "invalid dialog type \"$dialogType\""
+	    }
+	}
+
+	set button $data($btn\Btn)
+	if ![winfo ismapped $button] {
+	    update
+	}
+
+	if {$buttonType == "mouse"} {
+	    PressButton $button
+	} else {
+	    event generate $w <Enter>
+	    focus $w
+	    event generate $button <Enter>
+	    event generate $w <Key> -keysym Return
+	}
+    }
+
+    variable dialogType none
+    proc setDialogType {type} {
+	variable dialogType $type
+    }
+
     proc start {script} {
 	variable iter_after 0
 
@@ -400,6 +448,13 @@ namespace eval ::tk::test::dialog {
 	}
 
 	after 1 $script
+    }
+
+    proc ToPressButton {parent btn} {
+	variable dialogType
+	if {($dialogType eq "choosedir") || ! $::isNative} {
+	    after 100 SendButtonPress $parent $btn mouse
+	}
     }
 
     proc then {cmd} {
@@ -418,7 +473,7 @@ namespace eval ::tk::test::dialog {
 	return $dialogresult
     }
 
-    namespace export dialogTestFont PressButton start then
+    namespace export dialogTestFont PressButton SendButtonPress setDialogType ToPressButton start then
 }
 
 namespace eval ::tk::test::scroll {

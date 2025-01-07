@@ -12,16 +12,13 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
+setDialogType choosedir
 
 #----------------------------------------------------------------------
 #
 # Procedures needed by this test file
 #
 #----------------------------------------------------------------------
-
-proc ToPressButton {parent btn} {
-    after 100 SendButtonPress $parent $btn mouse
-}
 
 proc ToEnterDirsByKey {parent dirs} {
     after 100 [list EnterDirsByKey $parent $dirs]
@@ -44,31 +41,6 @@ proc EnterDirsByKey {parent dirs} {
 	after 50
     }
 }
-
-proc SendButtonPress {parent btn type} {
-    global tk_strictMotif
-    if {$parent == "."} {
-	set w .__tk_choosedir
-    } else {
-	set w $parent.__tk_choosedir
-    }
-    upvar ::tk::dialog::file::__tk_choosedir data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 #----------------------------------------------------------------------
 #
@@ -170,6 +142,7 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 #
 
 removeDirectory choosedirTest
+setDialogType none
 namespace forget ::tk::test::dialog::*
 cleanupTests
 return
