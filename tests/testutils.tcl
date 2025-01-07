@@ -341,7 +341,7 @@ namespace eval ::tk::test::dialog {
     proc afterbody {} {
 	set doRepeat 0
 
-	if {($::tcl_platform(platform) eq "windows") && [vista?]} {
+	if {$::tcl_platform(platform) eq "windows"} {
 	    # On Vista and later, using the new file dialogs we have to find
 	    # the window using its title as tk_dialog will not be set at the C level
 	    variable dialogclass
@@ -412,14 +412,7 @@ namespace eval ::tk::test::dialog {
 	return $dialogresult
     }
 
-    if {$::tcl_platform(platform) eq "windows"} {
-	proc vista? {{prevista 0} {postvista 1}} {
-	    lassign [split $::tcl_platform(osVersion) .] major
-	    return [expr {$major >= 6 ? $postvista : $prevista}]
-	}
-    }
-
-    namespace export dialogTestFont start then vista?
+    namespace export dialogTestFont start then
 }
 
 namespace eval ::tk::test::scroll {
