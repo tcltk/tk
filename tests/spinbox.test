@@ -12,32 +12,15 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
+namespace import -force ::tk::test::entry::*
 namespace import -force ::tk::test::scroll::*
 
 set scrollCmdPrefix [list scrollInfo set]
-
-# For trace add variable
-proc override args {
-    global x
-    set x 12345
+foreach i {1 2 3} {
+    set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
-
-# Procedures used in widget VALIDATION tests
-proc doval {W d i P s S v V} {
-    set ::vVals [list $W $d $i $P $s $S $v $V]
-    return 1
-}
-proc doval2 {W d i P s S v V} {
-    set ::vVals [list $W $d $i $P $s $S $v $V]
-    set ::e mydata
-    return 1
-}
-proc doval3 {W d i P s S v V} {
-    set ::vVals [list $W $d $i $P $s $S $v $V]
-    return 0
-}
-
 set cy [font metrics {Courier -12} -linespace]
+
 
 test spinbox-1.1 {configuration option: "activebackground"} -setup {
     spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -3279,89 +3262,95 @@ test spinbox-18.1 {Spinbox widget vs hiding} -setup {
 # test cases. This was replaced by inserting recently set configurations
 # that matters for the test case
 test spinbox-19.1 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert 0 a
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e 1 0 a {} a all key}
 
 test spinbox-19.2 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert 0 a   ;# previous settings
     .e insert 1 b
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e 1 1 ab a b all key}
 
 test spinbox-19.3 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert 0 ab   ;# previous settings
     .e insert end c
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e 1 2 abc ab c all key}
 
 test spinbox-19.4 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
-    list $::vVals $::e
+    list [validationData get] $::e
 } -cleanup {
     destroy .e
 } -result {{.e 1 1 a123bc abc 123 all key} a123bc}
 
 test spinbox-19.5 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e 0 2 a13bc a123bc 2 all key}
 
 test spinbox-19.6 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3369,33 +3358,35 @@ test spinbox-19.6 {spinbox widget validation} -setup {
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
     .e delete 1 3
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e 0 1 abc a13bc 13 key key}
 
 test spinbox-19.7 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focus \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abc                 ;# previous settings
-    set ::vVals {}
+    validationData set {}
     .e insert end d
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {}
 
 test spinbox-19.8 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3405,16 +3396,17 @@ test spinbox-19.8 {spinbox widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusin}
 
 test spinbox-19.9 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focus \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3426,16 +3418,17 @@ test spinbox-19.9 {spinbox widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusout}
 
 test spinbox-19.10 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3444,16 +3437,17 @@ test spinbox-19.10 {spinbox widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusin}
 
 test spinbox-19.11 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3465,16 +3459,17 @@ test spinbox-19.11 {spinbox widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusout}
 
 test spinbox-19.12 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focusin \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3483,118 +3478,124 @@ test spinbox-19.12 {spinbox widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
 
 test spinbox-19.13 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focusin \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
-    set ::vVals {}
+    validationData set {}
     focus -force .
 # update necessary to process FocusOut event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {}
 
 test spinbox-19.14 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focuso \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
-    set ::vVals {}                  ;# previous settings
+    validationData set {}                  ;# previous settings
     focus -force .e
 # update necessary to process FocusIn event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {}
 
 test spinbox-19.15 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focuso \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
-    set ::vVals {}                  ;# previous settings
+    validationData set {}                  ;# previous settings
     focus -force .e                 ;# previous settings
 # update necessary to process FocusIn event
     update                          ;# previous settings
     focus -force .
 # update necessary to process FocusOut event
     update
-    set ::vVals
+    validationData get
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusout focusout}
 
 # the same as 19.16 but added [.e validate] to returned list
 test spinbox-19.16 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focuso \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
-    set ::vVals {}                  ;# previous settings
+    validationData set {}                  ;# previous settings
     focus -force .e                 ;# previous settings
 # update necessary to process FocusIn event
     update                          ;# previous settings
     focus -force .
 # update necessary to process FocusOut event
     update
-    list [.e validate] $::vVals
+    list [.e validate] [validationData get]
 } -cleanup {
     destroy .e
 } -result {1 {.e -1 -1 abcd abcd {} all forced}}
 
 
 test spinbox-19.17 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate focuso \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
     set ::e newdata
-    list [.e cget -validate] $::vVals
+    list [.e cget -validate] [validationData get]
 } -cleanup {
     destroy .e
 } -result {focusout {.e -1 -1 newdata abcd {} focusout forced}}
 
 
-# proc doval changed - returns 0
+# Note: changed validateCmd - returns 0
 test spinbox-19.18 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
@@ -3602,7 +3603,7 @@ test spinbox-19.18 {spinbox widget validation} -setup {
     set ::e newdata                 ;# previous settings
     .e configure -validate all
     set ::e nextdata
-    list [.e cget -validate] $::vVals
+    list [.e cget -validate] [validationData get]
 } -cleanup {
     destroy .e
 } -result {none {.e -1 -1 nextdata newdata {} all forced}}
@@ -3610,21 +3611,22 @@ test spinbox-19.18 {spinbox widget validation} -setup {
 
 ## This sets validate to none because it shows that we prevent a possible
 ## loop condition in the validation, when the spinbox textvar is also set
-# proc doval2 used
+# proc validateCmd2 used
 test spinbox-19.19 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval3 %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     set ::e nextdata                 ;# previous settings
 
-    .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V]
+    .e configure -validatecommand $validateCmd2
     .e validate
-    list [.e cget -validate] [.e get] $::vVals
+    list [.e cget -validate] [.e get] [validationData get]
 } -cleanup {
     destroy .e
 } -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
@@ -3635,21 +3637,22 @@ test spinbox-19.19 {spinbox widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the spinbox widget shown as is in the textvar.
 test spinbox-19.20 {spinbox widget validation} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate all \
-	-validatecommand [list doval %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
 	-textvariable ::e \
 	-background red -foreground white
     pack .e
     set ::e nextdata                 ;# previous settings
-    .e configure -validatecommand [list doval2 %W %d %i %P %s %S %v %V] ;# prev
+    .e configure -validatecommand $validateCmd2 ;# prev
     .e validate                     ;# previous settings
 
     .e configure -validate all
     set ::e testdata
-    list [.e cget -validate] [.e get] $::e $::vVals
+    list [.e cget -validate] [.e get] $::e [validationData get]
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
@@ -3660,15 +3663,16 @@ test spinbox-19.20 {spinbox widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test spinbox-19.21 {spinbox widget validation - bug 40e4bf6198} -setup {
-    unset -nocomplain ::e ::vVals
+    unset -nocomplain ::e
+    validationData unset
 } -body {
     spinbox .e -validate key \
-	-validatecommand [list doval2 %W %d %i %P %s %S %v %V] \
+	-validatecommand $validateCmd2 \
 	-textvariable ::e
     pack .e
     set ::e origdata
     .e insert 0 A
-    list [.e cget -validate] [.e get] $::e $::vVals
+    list [.e cget -validate] [.e get] $::e [validationData get]
 } -cleanup {
     destroy .e
 } -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
@@ -3922,5 +3926,6 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 # option clear
 unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
+namespace forget ::tk::test::entry::*
 cleanupTests
 return
