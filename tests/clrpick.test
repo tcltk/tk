@@ -12,6 +12,7 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
+setDialogType clrpick
 
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
@@ -84,13 +85,6 @@ test clrpick-1.7 {tk_chooseColor command} -body {
 catch {tk_chooseColor -foo 1} msg
 set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 
-proc ToPressButton {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 200 "SendButtonPress . $btn mouse"
-    }
-}
-
 proc ToChooseColorByKey {parent r g b} {
     global isNative
     if {!$isNative} {
@@ -118,26 +112,6 @@ proc ChooseColorByKey {parent r g b} {
 
     SendButtonPress . ok mouse
 }
-
-proc SendButtonPress {parent btn type} {
-    set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
@@ -198,6 +172,7 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
 # CLEANUP
 #
 
+setDialogType none
 namespace forget ::tk::test::dialog::*
 cleanupTests
 return
