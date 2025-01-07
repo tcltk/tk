@@ -476,6 +476,55 @@ namespace eval ::tk::test::dialog {
     namespace export dialogTestFont PressButton SendButtonPress setDialogType ToPressButton start then
 }
 
+
+namespace eval ::tk::test::entry {
+    # For trace add variable
+    proc override args {
+	global x
+	set x 12345
+    }
+
+    # Procedures used in widget VALIDATION tests
+    proc validateCommand1 {W d i P s S v V} {
+	variable validationData [list $W $d $i $P $s $S $v $V]
+	return 1
+    }
+    proc validateCommand2 {W d i P s S v V} {
+	variable validationData [list $W $d $i $P $s $S $v $V]
+	set ::e mydata
+	return 1
+    }
+    proc validateCommand3 {W d i P s S v V} {
+	variable validationData [list $W $d $i $P $s $S $v $V]
+	return 0
+    }
+    proc validateCommand4 {W d i P s S v V} {
+	variable validationData [list $W $d $i $P $s $S $v $V]
+	.e delete 0 end;
+	.e insert end dovaldata
+	return 0
+    }
+    proc validationData {mode {value ""}} {
+	variable validationData
+	switch -- $mode {
+	    get {
+		return $validationData
+	    }
+	    lappend {
+		lappend validationData $value
+	    }
+	    set {
+		set validationData $value
+	    }
+	    unset {
+		unset -nocomplain validationData
+	    }
+	}
+    }
+
+    namespace export *
+}
+
 namespace eval ::tk::test::scroll {
 
     # scrollInfo --
