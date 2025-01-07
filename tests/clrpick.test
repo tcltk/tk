@@ -10,6 +10,9 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::dialog::*
+
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
     # machines with small color palettes still fail.
@@ -93,12 +96,6 @@ proc ToChooseColorByKey {parent r g b} {
     if {!$isNative} {
 	after 200 ChooseColorByKey . $r $g $b
     }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc ChooseColorByKey {parent r g b} {
@@ -197,7 +194,10 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
     set ::scr
 } -result [winfo screen .]
 
-# cleanup
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::dialog::*
 cleanupTests
 return
-
