@@ -385,6 +385,12 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
+    proc PressButton {btn} {
+	event generate $btn <Enter>
+	event generate $btn <Button-1> -x 5 -y 5
+	event generate $btn <ButtonRelease-1> -x 5 -y 5
+    }
+
     proc start {script} {
 	variable iter_after 0
 
@@ -412,7 +418,7 @@ namespace eval ::tk::test::dialog {
 	return $dialogresult
     }
 
-    namespace export dialogTestFont start then
+    namespace export dialogTestFont PressButton start then
 }
 
 namespace eval ::tk::test::scroll {

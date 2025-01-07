@@ -10,6 +10,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::dialog::*
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -90,12 +92,6 @@ proc ChooseMsgByKey {parent btn} {
     if {!$isNative} {
 	after 100 SendEventToMsg $parent $btn key
     }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc SendEventToMsg {parent btn type} {
@@ -440,8 +436,10 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
     wm deiconify .
 } -result {ok}
 
-# cleanup
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::dialog::*
 cleanupTests
 return
-
-

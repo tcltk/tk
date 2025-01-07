@@ -10,6 +10,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::dialog::*
+
 #----------------------------------------------------------------------
 #
 # Procedures needed by this test file
@@ -22,12 +25,6 @@ proc ToPressButton {parent btn} {
 
 proc ToEnterDirsByKey {parent dirs} {
     after 100 [list EnterDirsByKey $parent $dirs]
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc EnterDirsByKey {parent dirs} {
@@ -168,7 +165,11 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 	    -parent $parent
 } -result $real
 
-# cleanup
+#
+# CLEANUP
+#
+
 removeDirectory choosedirTest
+namespace forget ::tk::test::dialog::*
 cleanupTests
 return
