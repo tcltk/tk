@@ -10,6 +10,9 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::dialog::*
+
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long
 
@@ -44,12 +47,6 @@ proc ToEnterFileByKey {parent fileName fileDir} {
     if {!$isNative} {
 	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
     }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc EnterFileByKey {parent fileName fileDir} {
@@ -463,9 +460,12 @@ foreach mode $modes {
     # needed on the other platforms because they use native file dialogs.
 }
 
-set tk_strictMotif $tk_strictMotif_old
+#
+# CLEANUP
+#
 
-# cleanup
+set tk_strictMotif $tk_strictMotif_old
 removeFile filebox.tmp
+namespace forget ::tk::test::dialog::*
 cleanupTests
 return
