@@ -519,6 +519,9 @@ namespace eval ::tk::test::entry {
 	    unset {
 		unset -nocomplain validationData
 	    }
+	    default {
+		return -code error "invalid parameter \"$mode\""
+	    }
 	}
     }
 
