@@ -528,6 +528,15 @@ namespace eval ::tk::test::entry {
     namespace export *
 }
 
+namespace eval ::tk::test::geometry {
+    proc getsize {w} {
+	update
+	return "[winfo reqwidth $w] [winfo reqheight $w]"
+    }
+
+    namespace export *
+}
+
 namespace eval ::tk::test::scroll {
 
     # scrollInfo --
