@@ -3924,7 +3924,10 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 #
 
 # option clear
-unset scrollCmdPrefix
+foreach i {1 2 3} {
+    unset validateCmd$i
+}
+unset i scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
 namespace forget ::tk::test::entry::*
 cleanupTests
