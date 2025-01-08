@@ -570,6 +570,17 @@ namespace eval ::tk::test::select {
 	error "selection handler aborted"
     }
 
+    proc setup {{path .f1} {display {}}} {
+	catch {destroy $path}
+	if {$display == {}} {
+	    frame $path
+	} else {
+	    toplevel $path -screen $display
+	    wm geom $path +0+0
+	}
+	selection own $path
+    }
+
     namespace export *
 }
 
