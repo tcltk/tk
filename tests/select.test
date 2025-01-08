@@ -96,18 +96,6 @@ proc reallyBadHandler {path type offset count} {
 selection clear .
 after 1500
 
-# common setup code
-proc setup {{path .f1} {display {}}} {
-    catch {destroy $path}
-    if {$display == {}} {
-	frame $path
-    } else {
-	toplevel $path -screen $display
-	wm geom $path +0+0
-    }
-    selection own $path
-}
-
 # set up a very large buffer to test INCR retrievals
 set longValue ""
 foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
