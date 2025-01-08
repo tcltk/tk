@@ -270,5 +270,9 @@ test validate-3.last "Cleanup" -body { destroy .e }
 # CLEANUP
 #
 
+foreach i {1 2 3 4} {
+    unset validateCmd$i
+}
+unset i
 namespace forget ::tk::test::entry::*
 tcltest::cleanupTests
