@@ -1547,9 +1547,6 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-$(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4 \
-		$(UNIX_DIR)/aclocal.m4
-	cd $(UNIX_DIR); autoconf
 $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac $(UNIX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoconf
 $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
