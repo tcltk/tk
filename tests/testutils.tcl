@@ -365,10 +365,11 @@ namespace eval ::tk::test::dialog {
 	variable dialogresult [uplevel #0 $::tk::test::dialog::dialogcommand]
     }
 
+    # dialogTestFont --
     #
-    # Note that a command "::testfont" (all lower case) is already defined
-    # by tkTest.c for usage by font.test. The prefix "dialog" is used for
-    # explicit distinction.
+    # A global command "::testfont" (all lower case) is already defined by
+    # tkTest.c for usage by the test file font.test. To distinguish our proc
+    # from this global command, we use a prefix "dialog".
     #
     proc dialogTestFont {mode {font ""}} {
 	variable testfont
