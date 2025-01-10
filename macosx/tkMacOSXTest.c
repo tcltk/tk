@@ -21,10 +21,10 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-static Tcl_ObjCmdProc2 PressButtonObjCmd;
-static Tcl_ObjCmdProc2 MoveMouseObjCmd;
-static Tcl_ObjCmdProc2 InjectKeyEventObjCmd;
-static Tcl_ObjCmdProc2 MenuBarHeightObjCmd;
+static Tcl_ObjCmdProc2 TestpressbuttonObjCmd;
+static Tcl_ObjCmdProc2 TestmovemouseObjCmd;
+static Tcl_ObjCmdProc2 TestinjectkeyeventObjCmd;
+static Tcl_ObjCmdProc2 TestmenubarheightObjCmd;
 
 
 /*
@@ -52,17 +52,17 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-    Tcl_CreateObjCommand2(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * MenuBarHeightObjCmd --
+ * TestmenubarheightObjCmd --
  *
  *	This procedure calls [NSMenu menuBarHeight] and returns the result
  *      as an integer.  Windows can never be placed to overlap the MenuBar,
@@ -78,7 +78,7 @@ TkplatformtestInit(
  */
 
 static int
-MenuBarHeightObjCmd(
+TestmenubarheightObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
     TCL_UNUSED(Tcl_Size),				/* Not used. */
@@ -124,7 +124,7 @@ TkTestLogDisplay(
 /*
  *----------------------------------------------------------------------
  *
- * PressButtonObjCmd --
+ * TestpressbuttonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
  *      location.  It injects NSEvents into the NSApplication event queue, as
@@ -143,7 +143,7 @@ TkTestLogDisplay(
  */
 
 static int
-PressButtonObjCmd(
+TestpressbuttonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
@@ -226,7 +226,7 @@ PressButtonObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * MoveMouseObjCmd --
+ * TestmovemouseObjCmd --
  *
  *	This Tcl command simulates a mouse motion to a specific screen
  *      location.  It injects an NSEvent into the NSApplication event queue,
@@ -243,7 +243,7 @@ PressButtonObjCmd(
  */
 
 static int
-MoveMouseObjCmd(
+TestmovemouseObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
@@ -304,7 +304,7 @@ MoveMouseObjCmd(
 }
 
 static int
-InjectKeyEventObjCmd(
+TestinjectkeyeventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
