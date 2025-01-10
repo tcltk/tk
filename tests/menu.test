@@ -9,6 +9,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
+
 imageInit
 
 
@@ -4282,9 +4286,13 @@ test menu-41.14 {identifiers - reserved word} -setup {
     destroy .m
 } -result {2}
 
-# cleanup
+#
+# CLEANUP
+#
+
 imageFinish
 deleteWindows
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 
