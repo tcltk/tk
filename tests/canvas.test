@@ -10,6 +10,10 @@
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
+
 imageInit
 
 # XXX - This test file is woefully incomplete. At present, only a few of the
@@ -1312,8 +1316,12 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
-# cleanup
+#
+# CLEANUP
+#
+
 imageCleanup
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 
