@@ -565,9 +565,89 @@ namespace eval ::tk::test::scroll {
 }
 
 namespace eval ::tk::test::select {
+    variable selValue {} selInfo {}
+
+    proc badHandler {path type offset count} {
+	variable selInfo
+	variable selValue
+	selection handle -type $type $path {}
+	lappend selInfo $path $type $offset $count
+	set numBytes [expr {[string length $selValue] - $offset}]
+	if {$numBytes <= 0} {
+	    return ""
+	}
+	string range $selValue $offset [expr {$numBytes+$offset}]
+    }
+
+    proc badHandler2 {path type offset count} {
+	variable abortCount
+	variable selInfo
+	variable selValue
+	incr abortCount -1
+	if {$abortCount == 0} {
+	    selection handle -type $type $path {}
+	}
+	lappend selInfo $path $type $offset $count
+	set numBytes [expr {[string length [selValue get]] - $offset}]
+	if {$numBytes <= 0} {
+	    return ""
+	}
+	string range [selValue get] $offset [expr {$numBytes+$offset}]
+    }
 
     proc errHandler args {
 	error "selection handler aborted"
+    }
+
+    proc errIncrHandler {type offset count} {
+	variable selInfo
+	variable selValue
+	variable pass
+	if {$offset == 4000} {
+	    if {$pass == 0} {
+		# Just sizing the selection;  don't do anything here.
+		set pass 1
+	    } else {
+		# Fetching the selection;  wait long enough to cause a timeout.
+		after 6000
+	    }
+	}
+	lappend selInfo $type $offset $count
+	set numBytes [expr {[string length $selValue] - $offset}]
+	if {$numBytes <= 0} {
+	    return ""
+	}
+	string range $selValue $offset [expr $numBytes+$offset]
+    }
+
+    proc handler {type offset count} {
+	variable selInfo
+	variable selValue
+	lappend selInfo $type $offset $count
+	set numBytes [expr {[string length $selValue] - $offset}]
+	if {$numBytes <= 0} {
+	    return ""
+	}
+	string range $selValue $offset [expr $numBytes+$offset]
+    }
+
+    proc reallyBadHandler {path type offset count} {
+	variable selInfo
+	variable selValue
+	variable pass
+	if {$offset == 4000} {
+	    if {$pass == 0} {
+		set pass 1
+	    } else {
+		selection handle -type $type $path {}
+	    }
+	}
+	lappend selInfo $path $type $offset $count
+	set numBytes [expr {[string length $selValue] - $offset}]
+	if {$numBytes <= 0} {
+	    return ""
+	}
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc setup {{path .f1} {display {}}} {
@@ -579,6 +659,70 @@ namespace eval ::tk::test::select {
 	    wm geom $path +0+0
 	}
 	selection own $path
+    }
+
+    #
+    # Procs to be used for namespace variable access by test files
+    #
+
+    proc abortCount {subcmd {value ""}} {
+	variable abortCount
+	switch -- $subcmd {
+	    get {
+		return $abortCount
+	    }
+	    set {
+		set abortCount $value
+	    }
+	    default {
+		return -code error "invalid parameter \"$subcmd\""
+	    }
+	}
+    }
+
+    proc pass {subcmd {value ""}} {
+	variable pass
+	switch -- $subcmd {
+	    get {
+		return $pass
+	    }
+	    set {
+		set pass $value
+	    }
+	    default {
+		return -code error "invalid parameter \"$subcmd\""
+	    }
+	}
+    }
+
+    proc selInfo {subcmd {value ""}} {
+	variable selInfo
+	switch -- $subcmd {
+	    get {
+		return $selInfo
+	    }
+	    set {
+		set selInfo $value
+	    }
+	    default {
+		return -code error "invalid parameter \"$subcmd\""
+	    }
+	}
+    }
+
+    proc selValue {subcmd {value ""}} {
+	variable selValue
+	switch -- $subcmd {
+	    get {
+		return $selValue
+	    }
+	    set {
+		set selValue $value
+	    }
+	    default {
+		return -code error "invalid parameter \"$subcmd\""
+	    }
+	}
     }
 
     namespace export *
