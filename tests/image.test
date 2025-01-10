@@ -12,6 +12,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
+
 imageInit
 
 # Canvas used in some tests in the whole file
@@ -585,10 +588,13 @@ test image-15.1 {deleting image does not make widgets forget about it} -setup {
     imageCleanup
 } -result {10 10 20 20 foo {} {10 10 30 30} foo}
 
+#
+# CLEANUP
+#
+
 destroy .c
 imageFinish
-
-# cleanup
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 
