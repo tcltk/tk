@@ -24,6 +24,7 @@ namespace eval tk {
 		error "PANIC: $message ($expr failed)"
 	    }
 	}
+
 	# controlPointerWarpTiming --
 	#
 	# This proc is intended to ensure that the (mouse) pointer has actually
@@ -84,6 +85,31 @@ namespace eval tk {
 			after $duration ;# see b. above
 		}
 	}
+
+	# createStdAccessProc --
+	#
+	# Creates a standard proc for accessing a namespace variable, providing
+	# get and set methods.
+	#
+	proc createStdAccessProc {varName} {
+	    namespace eval [uplevel 1 {namespace current}] [subst -nocommands {
+		proc $varName {subcmd {value ""}} {
+		    variable $varName
+		    switch -- \$subcmd {
+			get {
+			    return \$$varName
+			}
+			set {
+			    set $varName \$value
+			}
+			default {
+			    return -code error "invalid subcmd \"\$subcmd\""
+			}
+		    }
+		}
+	    }]
+	}
+
 	proc deleteWindows {} {
 	    destroy {*}[winfo children .]
 	    # This update is needed to avoid intermittent failures on macOS in unixEmbed.test
@@ -93,6 +119,7 @@ namespace eval tk {
 	    # is not understood, but it appears that this update prevents the test failures.
 	    update
 	}
+
 	proc fixfocus {} {
 	    catch {destroy .focus}
 	    toplevel .focus
@@ -104,6 +131,7 @@ namespace eval tk {
 	    focus -force .focus.e
 	    destroy .focus
 	}
+
 	proc loadTkCommand {} {
 	    set tklib {}
 	    foreach pair [info loaded {}] {
@@ -115,7 +143,8 @@ namespace eval tk {
 	    }
 	    return [list load $tklib Tk]
 	}
-	namespace export assert controlPointerWarpTiming deleteWindows fixfocus loadTkCommand
+
+	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCommand
 
 	# On macOS windows are not allowed to overlap the menubar at the top of the
 	# screen or the dock.  So tests which move a window and then check whether it
@@ -326,9 +355,9 @@ namespace eval ::tk::test::dialog {
     # tkTest.c for usage by the test file font.test. To distinguish our proc
     # from this global command, we use a prefix "dialog".
     #
-    proc dialogTestFont {mode {font ""}} {
+    proc dialogTestFont {subcmd {font ""}} {
 	variable testfont
-	switch -- $mode {
+	switch -- $subcmd {
 	    get {
 		return $testfont
 	    }
@@ -336,7 +365,7 @@ namespace eval ::tk::test::dialog {
 		set testfont $font
 	    }
 	    default {
-		return -code error "invalid parameter \"$mode\""
+		return -code error "invalid subcmd \"$subcmd\""
 	    }
 	}
     }
@@ -460,9 +489,9 @@ namespace eval ::tk::test::entry {
 	.e insert end dovaldata
 	return 0
     }
-    proc validationData {mode {value ""}} {
+    proc validationData {subcmd {value ""}} {
 	variable validationData
-	switch -- $mode {
+	switch -- $subcmd {
 	    get {
 		return $validationData
 	    }
@@ -476,7 +505,7 @@ namespace eval ::tk::test::entry {
 		unset -nocomplain validationData
 	    }
 	    default {
-		return -code error "invalid parameter \"$mode\""
+		return -code error "invalid subcmd \"$subcmd\""
 	    }
 	}
     }
@@ -544,9 +573,9 @@ namespace eval ::tk::test::scroll {
     #	variable "scrollInfo".
     #
     variable scrollInfo {}
-    proc scrollInfo {mode args} {
+    proc scrollInfo {subcmd args} {
 	variable scrollInfo
-	switch -- $mode {
+	switch -- $subcmd {
 	    get {
 		return $scrollInfo
 	    }
@@ -554,7 +583,7 @@ namespace eval ::tk::test::scroll {
 		set scrollInfo $args
 	    }
 	    default {
-		return -code error "invalid mode parameter \"$mode\""
+		return -code error "invalid subcmd \"$subcmd\""
 	    }
 	}
     }
@@ -660,67 +689,11 @@ namespace eval ::tk::test::select {
     }
 
     #
-    # Procs to be used for namespace variable access by test files
+    # Create procs to be used for namespace variable access by test files
     #
-
-    proc abortCount {subcmd {value ""}} {
-	variable abortCount
-	switch -- $subcmd {
-	    get {
-		return $abortCount
-	    }
-	    set {
-		set abortCount $value
-	    }
-	    default {
-		return -code error "invalid parameter \"$subcmd\""
-	    }
-	}
-    }
-
-    proc pass {subcmd {value ""}} {
-	variable pass
-	switch -- $subcmd {
-	    get {
-		return $pass
-	    }
-	    set {
-		set pass $value
-	    }
-	    default {
-		return -code error "invalid parameter \"$subcmd\""
-	    }
-	}
-    }
-
-    proc selInfo {subcmd {value ""}} {
-	variable selInfo
-	switch -- $subcmd {
-	    get {
-		return $selInfo
-	    }
-	    set {
-		set selInfo $value
-	    }
-	    default {
-		return -code error "invalid parameter \"$subcmd\""
-	    }
-	}
-    }
-
-    proc selValue {subcmd {value ""}} {
-	variable selValue
-	switch -- $subcmd {
-	    get {
-		return $selValue
-	    }
-	    set {
-		set selValue $value
-	    }
-	    default {
-		return -code error "invalid parameter \"$subcmd\""
-	    }
-	}
+    namespace import ::tk::test::createStdAccessProc
+    foreach varName {abortCount pass selInfo selValue} {
+	createStdAccessProc $varName
     }
 
     namespace export *
