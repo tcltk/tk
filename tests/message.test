@@ -11,6 +11,8 @@ namespace import ::tcltest::*
 tcltest::loadTestedCommands
 eval tcltest::configure $argv
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
 
 test message-1.1 {configuration option: "anchor"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -508,5 +510,10 @@ test message-4.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::image::*
 cleanupTests
 return

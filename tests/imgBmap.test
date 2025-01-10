@@ -11,6 +11,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
+
 imageInit
 
 set data1 {#define foo_width 16
@@ -506,11 +510,14 @@ test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
     list [expr {"i2" in [imageNames]}] [catch {i2 foo} msg] $msg
 } -result {0 1 {invalid command name "i2"}}
 
+#
+# CLEANUP
+#
+
 removeFile foo.bm
 removeFile foo2.bm
 imageFinish
-
-# cleanup
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

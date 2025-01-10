@@ -140,41 +140,6 @@ namespace eval tk {
 	    destroy .focus
 	}
 
-	namespace export imageInit imageFinish imageCleanup imageNames
-	variable ImageNames
-	proc imageInit {} {
-	    variable ImageNames
-	    if {![info exists ImageNames]} {
-		set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
-	    }
-	    imageCleanup
-	    if {[lsort [image names]] ne $ImageNames} {
-		return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
-	    }
-	}
-	proc imageFinish {} {
-	    variable ImageNames
-	    set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
-	    if {$imgs ne $ImageNames} {
-		return -code error "images remaining: [image names] != $ImageNames"
-	    }
-	    imageCleanup
-	}
-	proc imageCleanup {} {
-	    variable ImageNames
-	    foreach img [image names] {
-		if {$img ni $ImageNames} {image delete $img}
-	    }
-	}
-	proc imageNames {} {
-	    variable ImageNames
-	    set r {}
-	    foreach img [image names] {
-		if {$img ni $ImageNames} {lappend r $img}
-	    }
-	    return $r
-	}
-
 	#
 	#  CONTROL TIMING ASPECTS OF POINTER WARPING
 	#
@@ -533,6 +498,48 @@ namespace eval ::tk::test::geometry {
     proc getsize {w} {
 	update
 	return "[winfo reqwidth $w] [winfo reqheight $w]"
+    }
+
+    namespace export *
+}
+
+namespace eval ::tk::test::image {
+    variable ImageNames
+
+    proc imageCleanup {} {
+	variable ImageNames
+	foreach img [image names] {
+	    if {$img ni $ImageNames} {image delete $img}
+	}
+    }
+
+    proc imageFinish {} {
+	variable ImageNames
+	set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	if {$imgs ne $ImageNames} {
+	    return -code error "images remaining: [image names] != $ImageNames"
+	}
+	imageCleanup
+    }
+
+    proc imageInit {} {
+	variable ImageNames
+	if {![info exists ImageNames]} {
+	    set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	}
+	imageCleanup
+	if {[lsort [image names]] ne $ImageNames} {
+	    return -code error "IMAGE NAMES mismatch: [image names] != $ImageNames"
+	}
+    }
+
+    proc imageNames {} {
+	variable ImageNames
+	set r {}
+	foreach img [image names] {
+	    if {$img ni $ImageNames} {lappend r $img}
+	}
+	return $r
     }
 
     namespace export *

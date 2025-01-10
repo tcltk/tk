@@ -11,6 +11,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::image::*
+
 imageInit
 
 # Canvas used in every test case of the whole file
@@ -799,8 +803,12 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     image delete foo2
 } -result {{foo2 display 0 0 80 60}}
 
-# cleanup
+#
+# CLEANUP
+#
+
 imageFinish
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

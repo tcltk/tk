@@ -15,6 +15,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::button::*
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -257,12 +258,12 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     deleteWindows
 } -result 1
 
-
 #
 # CLEANUP
 #
 
 imageFinish
+namespace forget ::tk::test::image::*
 namespace forget ::tk::test::button::*
 cleanupTests
 return
