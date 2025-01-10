@@ -50,6 +50,19 @@ const struct MacRoleMap roleMap[] = {
 
 
 extern Tcl_HashTable *TkAccessibilityObject;
+NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window);
+
+NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) {
+    
+    /*Convert screen coordinates to window base coordinates.*/
+    NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
+    
+    /*Flip the y-axis to make it top-left origin.*/
+    CGFloat flipped = window.contentView.frame.size.height - windowpoint.y;
+    
+    return NSMakePoint(windowpoint.x, flipped);
+}
+
 
 @implementation TkAccessibilityElement : NSAccessibilityElement
 
@@ -82,7 +95,6 @@ extern Tcl_HashTable *TkAccessibilityObject;
   
 }
   
-
 -(id) accessibilityValue {
     return nil;
 }
@@ -121,11 +133,11 @@ extern Tcl_HashTable *TkAccessibilityObject;
 	}
 	return macrole;
     }
+    return macrole;
 }
     
 
 - (BOOL)isAccessibilityElement {
-    NSLog(@"yes is accessible");
     return YES;
 }
 
@@ -133,13 +145,54 @@ extern Tcl_HashTable *TkAccessibilityObject;
     Tk_Window path;
     path = self.tk_win;
     TkWindow *winPtr = (TkWindow *)path;
-    NSWindow *w = nil;
-    NSRect bounds;
-    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    CGRect bounds, screenrect;
+    NSPoint flippedorigin;
+    CGFloat titlebarheight;
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    
+     
+    /*Get CGRect points for Tk widget.*/
     TkMacOSXWinCGBounds(winPtr, &bounds);
-    CGRect accessibilityRect;
-    accessibilityRect = [w convertRectToScreen:bounds];
-    return accessibilityRect;
+
+    /*Convert CGRect coordinates to screen coordinates as required by NSAccessibility API.*/
+    screenrect = [w convertRectToScreen:bounds];
+
+    /*Convert to window coordinates and flip coordinates to Y-down orientation.  Calculate height of titlebar.*/
+    flippedorigin = ConvertScreenToWindowCoordinates(screenrect.origin, w);
+    titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
+    screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
+
+    /*Finally,convert back to screen coordinates.*/	
+    screenrect = [w convertRectToScreen:screenrect];
+
+    return screenrect;
+}
+
+- (void) updateAccessibilityElementFrame {
+    Tk_Window path;
+    path = self.tk_win;
+    TkWindow *winPtr = (TkWindow *)path;
+    CGRect bounds, screenrect;
+    NSPoint flippedorigin;
+    CGFloat titlebarheight;
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+
+    /*Get CGRect points for Tk widget.*/
+    TkMacOSXWinCGBounds(winPtr, &bounds);
+
+    /*Convert CGRect coordinates to screen coordinates as required by NSAccessibility API.*/
+    screenrect = [w convertRectToScreen:bounds];
+
+    /*Convert to window coordinates and flip coordinates to Y-down orientation.  Calculate height of titlebar.*/
+    flippedorigin = ConvertScreenToWindowCoordinates(screenrect.origin, w);
+    titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
+    screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
+
+    /*Finally,convert back to screen coordinates.*/	
+    screenrect = [w convertRectToScreen:screenrect];
+    
+    self.accessibilityFrame = screenrect;
+  
 }
 
 - (id)accessibilityParent {
@@ -160,33 +213,8 @@ extern Tcl_HashTable *TkAccessibilityObject;
     return NO; 
 }
 
-- (void) updateAccessibilityElementFrame {
-
-    self.accessibilityFrame = CGRectZero;
-    Tk_Window path;
-    path = self.tk_win;
-    TkWindow *winPtr = (TkWindow *)path;
-    NSWindow *w = nil;
-    NSRect bounds;
-    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    TkMacOSXWinCGBounds(winPtr, &bounds);
-    [self resizeAccessibilityElement: bounds];
-}
-
-
-- (void) resizeAccessibilityElement:(NSRect) newFrame {
-        NSPoint origin = newFrame.origin;
-        origin.y = [[NSScreen mainScreen] frame].size.height - (origin.y + newFrame.size.height); // Flip Y-axis
-        newFrame.origin = origin;
-        
-        // Set the new frame
-        [self setAccessibilityFrame: newFrame];
-        NSLog(@"Frame updated to: %@", NSStringFromRect(newFrame));
- }
-
 
 @end
-
 
 
 /*
@@ -230,9 +258,8 @@ TkMacAccessibleObjCmd(
     TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
     [widget.accessibilityParent accessibilityAddChildElement: widget];
-
-    //  [widget updateAccessibilityElementFrame];
     
+
     [pool drain];
     return TCL_OK;
 
