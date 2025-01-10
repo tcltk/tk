@@ -1324,6 +1324,9 @@ static const char *const accentNames[] = {
     self.tkLayerBitmapContext = newCtx;
 }
 
+-(BOOL) isFlipped {
+    return NO;
+}
 
 /*Add support for accessibility in TKContentView.*/
 
