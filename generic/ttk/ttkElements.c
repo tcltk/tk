@@ -1445,12 +1445,14 @@ static void SliderElementDraw(
 	    case TTK_ORIENT_HORIZONTAL:
 		XFillRectangle(disp, d, gc,
 			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
-			b.x + dim/2 - 1, mainInfoPtr->troughInnerHeight);
+			b.x + dim/2 - mainInfoPtr->troughInnerX,
+			mainInfoPtr->troughInnerHeight);
 		break;
 	    case TTK_ORIENT_VERTICAL:
 		XFillRectangle(disp, d, gc,
 			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
-			mainInfoPtr->troughInnerWidth, b.y + dim/2 - 1);
+			mainInfoPtr->troughInnerWidth,
+			b.y + dim/2 - mainInfoPtr->troughInnerY);
 		break;
 	}
     }
