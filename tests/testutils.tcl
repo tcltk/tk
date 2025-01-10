@@ -3,15 +3,19 @@
 # This file holds utility procs, each of which is used by several test files
 # in the Tk test suite.
 #
-# The procs are defined per functional area of Tk (also called "domain"),
-# similar to the names of test files:
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
+#
+# NAMESPACES AND FUNCTIONAL AREAS
+#
+# Utility procs are defined per functional area of Tk (also called "domain"),
+# similar to the names of test files.
 # - generic utility procs that don't belong to a specific functional area go
 #   into the namespace ::tk::test.
 # - those that do belong to a specific functional area go into a child namespace
 #   of ::tk::test that bears the name of that functional area.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 #
 # DEFINITIONS OF GENERIC UTILITY PROCS
