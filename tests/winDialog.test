@@ -652,6 +652,13 @@ test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constr
 #        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
     tk_getOpenFile -initialfile ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
+
+#
+# test winDialog-5.15 targeted Windows OS versions older that Vista.
+# As of TIP #592, those OS versions are not supported anymore and therefore
+# the test was removed.
+#
+
 test winDialog-5.16 {GetFileName: parent} -constraints {
     nt
 } -body {
