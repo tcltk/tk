@@ -726,9 +726,4 @@ namespace eval ::tk::test::select {
     namespace export *
 }
 
-#
-# TODO: RELOCATE UTILITY PROCS CATEGORY B. HERE
-#       (As indicated by the spreadsheet file "relocate.ods")
-#
-
 # EOF
