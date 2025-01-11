@@ -1332,16 +1332,6 @@ static const char *const accentNames[] = {
     self.tkLayerBitmapContext = newCtx;
 }
 
-
-- (void)viewFrameDidChange:(NSNotification *)notification {
-    if ([self isKindOfClass:[TKContentView class]]) {
-	for (TkAccessibilityElement *element in self.accessibilityChildren) {
-	    [element updateAccessibilityElementFrame];
-	}
-    }
-}
-
-
 /*Add support for accessibility in TKContentView.*/
 
 NSMutableArray *_tkAccessibleElements;
