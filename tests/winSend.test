@@ -14,15 +14,6 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::send::*
 
-# Compute a script that will load Tk into a child interpreter.
-
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-    }
-}
-
 set currentInterps [winfo interps]
 if {
     [testConstraint win] &&
