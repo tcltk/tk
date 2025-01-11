@@ -699,4 +699,41 @@ namespace eval ::tk::test::select {
     namespace export *
 }
 
+namespace eval ::tk::test::send {
+    # Procedure to create a new application with a given name and class.
+    proc newApp {name args} {
+	global loadTk
+
+	set cmdArgs [list -name $name]
+
+	set index [lsearch $args "-safe"]
+	if {$index >= 0} {
+	    set safe 1
+	    set options [lremove $args $index]
+	} else {
+	    set safe 0
+	    set options $args
+	}
+	if {[llength $options] ni {0 2}} {
+	    return -code error "invalid #args"
+	}
+	foreach {key value} $options {
+	    if {$key ne "-class"} {
+		return -code error "invalid option \"$key\""
+	    }
+	    lappend cmdArgs $key $value
+	}
+	if {$safe} {
+	    interp create -safe $name
+	} else {
+	    interp create $name
+	}
+
+	$name eval [list set argv $cmdArgs]
+	catch {eval $loadTk $name}
+    }
+
+    namespace export *
+}
+
 # EOF
