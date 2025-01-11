@@ -22,15 +22,6 @@ testConstraint xhost [llength [auto_execok xhost]]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
-# Compute a script that will load Tk into a child interpreter.
-
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-    }
-}
-
 set name [tk appname]
 set commId ""
 catch {
