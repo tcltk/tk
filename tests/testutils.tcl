@@ -96,7 +96,7 @@ namespace eval tk {
 	# get and set methods.
 	#
 	proc createStdAccessProc {varName} {
-	    namespace eval [uplevel 1 {namespace current}] [subst -nocommands {
+	    uplevel 1 [subst -nocommands {
 		proc $varName {subcmd {value ""}} {
 		    variable $varName
 		    switch -- \$subcmd {
