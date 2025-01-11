@@ -171,89 +171,6 @@ namespace eval tk {
 	    }
 	    namespace export menubarheight
 	}
-
-	namespace eval bg {
-	    # Manage a background process.
-	    # Replace with child interp or thread?
-	    namespace import ::tcltest::interpreter
-	    namespace import ::tk::test::loadTkCommand
-	    namespace export setup cleanup do
-
-	    proc cleanup {} {
-		variable fd
-		# catch in case the background process has closed $fd
-		catch {puts $fd exit}
-		catch {close $fd}
-		set fd ""
-	    }
-	    proc setup args {
-		variable fd
-		if {[info exists fd] && [string length $fd]} {
-		    cleanup
-		}
-		set fd [open "|[list [interpreter] \
-			-geometry +0+0 -name tktest] $args" r+]
-		puts $fd "puts foo; flush stdout"
-		flush $fd
-		if {[gets $fd data] < 0} {
-		    error "unexpected EOF from \"[interpreter]\""
-		}
-		if {$data ne "foo"} {
-		    error "unexpected output from\
-			    background process: \"$data\""
-		}
-		puts $fd [loadTkCommand]
-		flush $fd
-		fileevent $fd readable [namespace code Ready]
-	    }
-	    proc Ready {} {
-		variable fd
-		variable Data
-		variable Done
-		set x [gets $fd]
-		if {[eof $fd]} {
-		    fileevent $fd readable {}
-		    set Done 1
-		} elseif {$x eq "**DONE**"} {
-		    set Done 1
-		} else {
-		    append Data $x
-		}
-	    }
-	    proc do {cmd {block 0}} {
-		variable fd
-		variable Data
-		variable Done
-		if {$block} {
-		    fileevent $fd readable {}
-		}
-		puts $fd "[list catch $cmd msg]; update; puts \$msg;\
-			puts **DONE**; flush stdout"
-		flush $fd
-		set Data {}
-		if {$block} {
-		    while {![eof $fd]} {
-			set line [gets $fd]
-			if {$line eq "**DONE**"} {
-			    break
-			}
-			append Data $line
-		    }
-		} else {
-		    set Done 0
-		    vwait [namespace which -variable Done]
-		}
-		return $Data
-	    }
-	}
-	proc Export {internal as external} {
-	    uplevel 1 [list namespace import $internal]
-	    uplevel 1 [list rename [namespace tail $internal] $external]
-	    uplevel 1 [list namespace export $external]
-	}
-	Export bg::setup as setupbg
-	Export bg::cleanup as cleanupbg
-	Export bg::do as dobg
     }
 }
 
@@ -266,6 +183,85 @@ namespace import -force tk::test::*
 # the names of test files. The namespace names below ::tk::test correspond to
 # these functional areas.
 #
+
+namespace eval ::tk::test::bg {
+    # Manage a background process.
+    # Replace with child interp or thread?
+    namespace import ::tcltest::interpreter
+    namespace import ::tk::test::loadTkCommand
+
+    proc cleanupbg {} {
+	variable fd
+	# catch in case the background process has closed $fd
+	catch {puts $fd exit}
+	catch {close $fd}
+	set fd ""
+    }
+
+    proc dobg {cmd {block 0}} {
+	variable fd
+	variable Data
+	variable Done
+	if {$block} {
+	    fileevent $fd readable {}
+	}
+	puts $fd "[list catch $cmd msg]; update; puts \$msg;\
+		puts **DONE**; flush stdout"
+	flush $fd
+	set Data {}
+	if {$block} {
+	    while {![eof $fd]} {
+		set line [gets $fd]
+		if {$line eq "**DONE**"} {
+		    break
+		}
+		append Data $line
+	    }
+	} else {
+	    set Done 0
+	    vwait [namespace which -variable Done]
+	}
+	return $Data
+    }
+
+    proc Ready {} {
+	variable fd
+	variable Data
+	variable Done
+	set x [gets $fd]
+	if {[eof $fd]} {
+	    fileevent $fd readable {}
+	    set Done 1
+	} elseif {$x eq "**DONE**"} {
+	    set Done 1
+	} else {
+	    append Data $x
+	}
+    }
+
+    proc setupbg args {
+	variable fd
+	if {[info exists fd] && [string length $fd]} {
+	    cleanupbg
+	}
+	set fd [open "|[list [interpreter] \
+		-geometry +0+0 -name tktest] $args" r+]
+	puts $fd "puts foo; flush stdout"
+	flush $fd
+	if {[gets $fd data] < 0} {
+	    error "unexpected EOF from \"[interpreter]\""
+	}
+	if {$data ne "foo"} {
+	    error "unexpected output from\
+		    background process: \"$data\""
+	}
+	puts $fd [loadTkCommand]
+	flush $fd
+	fileevent $fd readable [namespace code Ready]
+    }
+
+    namespace export cleanupbg dobg setupbg
+}
 
 namespace eval ::tk::test::button {
     proc bogusTrace args {
