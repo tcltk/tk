@@ -165,7 +165,7 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
 
     /*Finally,convert back to screen coordinates.*/	
-    screenrect = [w convertRectToScreen:screenrect];
+     screenrect = [w convertRectToScreen:screenrect];
 
     return screenrect;
 }
@@ -185,14 +185,14 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     /*Convert CGRect coordinates to screen coordinates as required by NSAccessibility API.*/
     screenrect = [w convertRectToScreen:bounds];
 
-    /*Convert to window coordinates and flip coordinates to Y-down orientation.  Calculate height of titlebar.*/
-    flippedorigin = ConvertScreenToWindowCoordinates(screenrect.origin, w);
-    titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
-    screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
+    // /*Convert to window coordinates and flip coordinates to Y-down orientation.  Calculate height of titlebar.*/
+    // flippedorigin = ConvertScreenToWindowCoordinates(screenrect.origin, w);
+    // titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
+    // screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
 
 
-    /*Finally,convert back to screen coordinates.*/	
-    screenrect = [w convertRectToScreen:screenrect];
+    // /*Finally,convert back to screen coordinates.*/	
+    // screenrect = [w convertRectToScreen:screenrect];
 
     /*Re-enable accessiblity.*/
     self.accessibilityFrame = screenrect;
