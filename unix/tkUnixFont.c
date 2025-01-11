@@ -254,7 +254,7 @@ static int		SeenName(const char *name, Tcl_DString *dsPtr);
  */
 
 static XFontStruct *
-XLoadQueryFontNoXError(Display *display, char *name)
+XLoadQueryFontNoXError(Display *display, const char *name)
 {
     XFontStruct *fontStructPtr = NULL;
     Tk_ErrorHandler handler;
