@@ -136,7 +136,7 @@ namespace eval tk {
 	    destroy .focus
 	}
 
-	proc loadTkCmdCommand {} {
+	proc loadTkCommand {} {
 	    set tklib {}
 	    foreach pair [info loaded {}] {
 		foreach {lib pfx} $pair break
@@ -148,7 +148,7 @@ namespace eval tk {
 	    return [list load $tklib Tk]
 	}
 
-	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCmdCommand
+	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCommand
 
 	# On macOS windows are not allowed to overlap the menubar at the top of the
 	# screen or the dock.  So tests which move a window and then check whether it
@@ -188,7 +188,7 @@ namespace eval ::tk::test::bg {
     # Manage a background process.
     # Replace with child interp or thread?
     namespace import ::tcltest::interpreter
-    namespace import ::tk::test::loadTkCmdCommand
+    namespace import ::tk::test::loadTkCommand
 
     proc cleanupbg {} {
 	variable fd
@@ -255,7 +255,7 @@ namespace eval ::tk::test::bg {
 	    error "unexpected output from\
 		    background process: \"$data\""
 	}
-	puts $fd [loadTkCmdCommand]
+	puts $fd [loadTkCommand]
 	flush $fd
 	fileevent $fd readable [namespace code Ready]
     }
@@ -702,7 +702,6 @@ namespace eval ::tk::test::select {
 namespace eval ::tk::test::send {
     # Procedure to create a new application with a given name and class.
     proc newApp {name args} {
-	variable loadTkCmd
 
 	set cmdArgs [list -name $name]
 
@@ -723,12 +722,8 @@ namespace eval ::tk::test::send {
 	    }
 	    lappend cmdArgs $key $value
 	}
-	if {$safe} {
-	    interp create -safe $name
-	} else {
-	    interp create $name
-	}
 
+	variable loadTkCmd
 	if {! [info exists loadTkCmd]} {
 	    foreach pkg [info loaded] {
 		if {[lindex $pkg 1] eq "Tk"} {
@@ -736,6 +731,11 @@ namespace eval ::tk::test::send {
 		    break
 		}
 	    }
+	}
+	if {$safe} {
+	    interp create -safe $name
+	} else {
+	    interp create $name
 	}
 
 	$name eval [list set argv $cmdArgs]
