@@ -66,7 +66,6 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
 
 @implementation TkAccessibilityElement : NSAccessibilityElement
 
-
 - (id) init {
     self = [super init];
     return self;
@@ -141,6 +140,10 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     return YES;
 }
 
+- (BOOL)accessibilityIsIgnored {
+    return NO; 
+}
+
 - (NSRect)accessibilityFrame {
     Tk_Window path;
     path = self.tk_win;
@@ -149,8 +152,7 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     NSPoint flippedorigin;
     CGFloat titlebarheight;
     NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    
-     
+
     /*Get CGRect points for Tk widget.*/
     TkMacOSXWinCGBounds(winPtr, &bounds);
 
@@ -176,7 +178,7 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     NSPoint flippedorigin;
     CGFloat titlebarheight;
     NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-
+    
     /*Get CGRect points for Tk widget.*/
     TkMacOSXWinCGBounds(winPtr, &bounds);
 
@@ -188,9 +190,11 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
     screenrect = CGRectMake(screenrect.origin.x, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
 
+
     /*Finally,convert back to screen coordinates.*/	
     screenrect = [w convertRectToScreen:screenrect];
-    
+
+    /*Re-enable accessiblity.*/
     self.accessibilityFrame = screenrect;
   
 }
@@ -207,10 +211,6 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
 
 - (BOOL)becomeFirstResponder {
     return TRUE;
-}
-
-- (BOOL)accessibilityIsIgnored {
-    return NO; 
 }
 
 
