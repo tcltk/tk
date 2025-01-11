@@ -11,6 +11,9 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::send::*
+
 # Compute a script that will load Tk into a child interpreter.
 
 foreach pkg [info loaded] {
@@ -18,19 +21,6 @@ foreach pkg [info loaded] {
 	set loadTk "load $pkg"
 	break
     }
-}
-
-# Procedure to create a new application with a given name and class.
-
-proc newApp {name {safe {}}} {
-    global loadTk
-    if {[string compare $safe "-safe"] == 0} {
-	interp create -safe $name
-    } else {
-	interp create $name
-    }
-    $name eval [list set argv [list -name $name]]
-    catch {eval $loadTk $name}
 }
 
 set currentInterps [winfo interps]
@@ -402,6 +392,10 @@ while {[llength $newInterps] != [llength $currentInterps]} {
     }
 }
 
-# cleanup
+#
+# CLEANUP
+#
+
+namespace forget ::tk::test::send::*
 cleanupTests
 return
