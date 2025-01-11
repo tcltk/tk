@@ -1,12 +1,13 @@
 # constraints.tcl --
 #
-# This file holds test constraints that are used by several test files
+# This file defines test constraints that are used by several test files
 # in the Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 namespace import -force tcltest::testConstraint
+
 testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
@@ -143,6 +144,7 @@ testConstraint defaultPseudocolor8 [expr {
 }]
 
 # constraint based on whether our display is secure
+namespace import -force ::tk::test::bg::*
 setupbg
 set app [dobg {tk appname}]
 testConstraint secureserver 0
@@ -155,5 +157,6 @@ if {[llength [info commands send]]} {
     }
 }
 cleanupbg
+namespace forget ::tk::test::bg::*
 
 # EOF

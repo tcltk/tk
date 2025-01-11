@@ -14,6 +14,9 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::bg::*
+
 testConstraint xhost [llength [auto_execok xhost]]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
@@ -609,6 +612,10 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     lappend x [testsend prop comm TK_APPLICATION]
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
+#
+# CLEANUP
+#
+
 catch {
     tk appname $name
     testsend prop root InterpRegistry $registry
@@ -616,6 +623,6 @@ catch {
 }
 rename newApp {}
 
-# cleanup
+namespace forget ::tk::test::bg::*
 cleanupTests
 return
