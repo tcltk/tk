@@ -121,8 +121,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	/*Resize accessibility frame if window is resized.*/
 	TKContentView *view = [w contentView];
 	if ([view isKindOfClass:[TKContentView class]]) {
-	    for (TkAccessibilityElement *element in view.accessibilityChildren) {	    
+	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
 		[element updateAccessibilityElementFrame];
+	    }
+	}
+
+	if (movedOnly) {
+	    if ([view isKindOfClass:[TKContentView class]]) {
+		for (TkAccessibilityElement *element in view.accessibilityChildren) {
+		       [element updateAccessibilityElementFrame];
+		}
 	    }
 	}
     }
@@ -1324,9 +1332,15 @@ static const char *const accentNames[] = {
     self.tkLayerBitmapContext = newCtx;
 }
 
--(BOOL) isFlipped {
-    return NO;
+
+- (void)viewFrameDidChange:(NSNotification *)notification {
+    if ([self isKindOfClass:[TKContentView class]]) {
+	for (TkAccessibilityElement *element in self.accessibilityChildren) {
+	    [element updateAccessibilityElementFrame];
+	}
+    }
 }
+
 
 /*Add support for accessibility in TKContentView.*/
 
@@ -1365,7 +1379,6 @@ NSMutableArray *_tkAccessibleElements;
 }
 
 - (id)accessibilityHitTest:(NSPoint)point {
-    NSLog(@"point");
     for (TkAccessibilityElement *element in self.accessibilityChildren) {
         if (NSPointInRect(point, [element accessibilityFrame])) {
             return element;
