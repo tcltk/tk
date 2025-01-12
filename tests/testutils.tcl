@@ -745,4 +745,38 @@ namespace eval ::tk::test::send {
     namespace export *
 }
 
+namespace eval ::tk::test::text {
+    variable fixedFont {Courier -12}
+    variable fixedWidth [font measure $fixedFont m]
+    variable fixedHeight [font metrics $fixedFont -linespace]
+    variable fixedAscent [font metrics $fixedFont -ascent]
+
+    # full border size of the text widget, i.e. first x or y coordinate inside the text widget
+    # warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
+    # vertically around the widget)
+    proc bo {{w .t}} {
+	return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
+    }
+
+    # x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
+    proc xchar {n {w .t}} {
+	return [expr {[bo $w] + [xw $n]}]
+    }
+
+    # x-width of $n chars, fixed width font
+    proc xw {n} {
+	variable fixedWidth
+	return [expr {$n * $fixedWidth}]
+    }
+
+    # y-coordinate of the first pixel of $l-th display line (count starts at 1)
+    proc yline {l {w .t}} {
+	variable fixedHeight
+	return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
+    }
+
+    namespace export *
+}
+
+
 # EOF

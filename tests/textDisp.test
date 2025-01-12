@@ -12,6 +12,12 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
+namespace import -force ::tk::test::text::*
+upvar 0 ::tk::test::text::fixedFont fixedFont \
+	::tk::test::text::fixedWidth fixedWidth \
+	::tk::test::text::fixedHeight fixedHeight \
+	::tk::test::text::fixedAscent fixedAscent
+
 namespace import -force ::tk::test::scroll::*
 
 set scrollCmdPrefix [list scrollInfo set]
@@ -61,11 +67,6 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {Courier -12}
-set fixedHeight [font metrics $fixedFont -linespace]
-set fixedWidth [font measure $fixedFont m]
-set fixedAscent [font metrics $fixedFont -ascent]
-
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
@@ -101,29 +102,9 @@ pack .t -expand 1 -fill both
 
 wm geometry . {}
 
-# full border size of the text widget, i.e. first x or y coordinate inside the text widget
-# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
-# vertically around the widget)
-proc bo {{w .t}} {
-    return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
-}
-# x-width of $n chars, fixed width font
-proc xw {n} {
-    global fixedWidth
-    return [expr {$n * $fixedWidth}]
-}
-# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
-proc xchar {n {w .t}} {
-    return [expr {[bo $w] + [xw $n]}]
-}
 # x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
 proc xcharr {n {w .t}} {
     return [expr {[winfo width $w] - [bo $w] - [xw $n]}]
-}
-# y-coordinate of the first pixel of $l-th display line (count starts at 1)
-proc yline {l {w .t}} {
-    global fixedHeight
-    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
 }
 # x-pixels of empty space in widget $w on a line containing $n chars
 proc xe {n {w .t}} {
@@ -4927,6 +4908,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 
 unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
+namespace forget ::tk::test::text::*
 deleteWindows
 option clear
 cleanupTests
