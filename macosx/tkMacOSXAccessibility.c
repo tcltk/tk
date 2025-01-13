@@ -25,7 +25,10 @@
 
 /* Data declarations and protoypes of functions used in this file. */
 extern Tcl_HashTable *TkAccessibilityObject;
-NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
+static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
+static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
+			     int objc, Tcl_Obj *const objv[]);
+int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
@@ -50,8 +53,23 @@ const struct MacRoleMap roleMap[] = {
     {NULL, 0}
 };
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * FlipY --
+ *
+ *  Flips the y-coordinate for an NSRect in an NSWindow.
+ *
+ * Results:
+ *	Y-coordinate is oriented to upper left-hand corner of screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
-NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
+static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     
     /*Convert screen coordinates to window base coordinates.*/
     NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
@@ -62,6 +80,22 @@ NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return NSMakePoint(windowpoint.x, flipped);
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAccessibilityElement class --
+ *
+ *  Primary interaction between Tk and NSAccessibility API.
+ *
+ * Results:
+ *	Tk widgets are now accessible to screen readers on macOS.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 @implementation TkAccessibilityElement : NSAccessibilityElement
 
@@ -121,7 +155,7 @@ NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-	NSLog(@"No label found.");
+	NSLog(@"No role found.");
 	return nil;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -169,7 +203,7 @@ NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
     
     /* Calculate the desired x-offset for the accessibility frame.*/
-    windowframe=w.frame;
+    windowframe = w.frame;
     adjustedx = screenrect.origin.x - windowframe.origin.x;
 
     screenrect = CGRectMake(adjustedx, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
@@ -203,8 +237,8 @@ NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
  *
  * TkMacAccessibleObjCmd --
  *
- *	Main command for creating, displaying, and removing icons from the
- *	status bar.
+ *	Main command for adding and managing accessibility objects to Tk
+ *      widgets on macOS using the NSAccessibiilty API.
  *
  * Results:
  *
@@ -212,7 +246,7 @@ NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
  *
  * Side effects:
  *
- *	Management of icon display in the status bar.
+ *	Tk widgets are now accessible to screen readers.
  *
  *----------------------------------------------------------------------
  */
@@ -247,6 +281,24 @@ TkMacAccessibleObjCmd(
   
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXAccessibility_Init --
+ *
+ *	Initializes the accessibility module.
+ *
+ * Results:
+ *
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *
+ *	Accessibility module is now activated.
+ *
+ *----------------------------------------------------------------------
+ */
 
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
