@@ -12,6 +12,7 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
+setDialogType msgbox
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -83,35 +84,17 @@ set isNative [expr {[info commands tk::MessageBox] == ""}]
 proc ChooseMsg {parent btn} {
     global isNative
     if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn mouse
+	after 100 SendButtonPress $parent $btn mouse
     }
 }
 
 proc ChooseMsgByKey {parent btn} {
     global isNative
     if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn key
+	after 100 SendButtonPress $parent $btn key
     }
 }
 
-proc SendEventToMsg {parent btn type} {
-    if {$parent != "."} {
-	set w $parent.__tk__messagebox
-    } else {
-	set w .__tk__messagebox
-    }
-    if ![winfo ismapped $w.$btn] {
-	update
-    }
-    if {$type == "mouse"} {
-	PressButton $w.$btn
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $w.$btn <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
 #
 # Try out all combinations of (type) x (default button) and
 # (type) x (icon).
