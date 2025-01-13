@@ -420,7 +420,6 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TkAccessibilityElement : NSAccessibilityElement
-- (void) updateAccessibilityElementFrame;
 @property (nonatomic, strong)  TKContentView  *parentView;
 @property Tk_Window tk_win;
 @end
