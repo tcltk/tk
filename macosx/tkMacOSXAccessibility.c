@@ -24,6 +24,8 @@
 #include "tkMacOSXPrivate.h"
 
 /* Data declarations and protoypes of functions used in this file. */
+extern Tcl_HashTable *TkAccessibilityObject;
+NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
@@ -49,10 +51,7 @@ const struct MacRoleMap roleMap[] = {
 };
 
 
-extern Tcl_HashTable *TkAccessibilityObject;
-NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window);
-
-NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) {
+NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     
     /*Convert screen coordinates to window base coordinates.*/
     NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
@@ -146,7 +145,7 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
     path = self.tk_win;
     TkWindow *winPtr = (TkWindow *)path;
     CGRect bounds, screenrect, windowframe;
-    NSPoint flippedorigin, vieworigin;
+    NSPoint flippedorigin;
     CGFloat titlebarheight, adjustedx;
     NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
@@ -166,7 +165,7 @@ NSPoint ConvertScreenToWindowCoordinates(NSPoint screenpoint, NSWindow *window) 
      *
      */
     
-    flippedorigin = ConvertScreenToWindowCoordinates(screenrect.origin, w);
+    flippedorigin = FlipY(screenrect.origin, w);
     titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
     
     /* Calculate the desired x-offset for the accessibility frame.*/
