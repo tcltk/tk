@@ -51,12 +51,6 @@ update
 
 wm geometry . {}
 
-# y-coordinate of the first pixel of $l-th display line (count starts at 1)
-proc yline {l {w .t}} {
-    global fixedHeight
-    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
-}
-
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
 # The statements below reset the main window;  it's needed if the window
