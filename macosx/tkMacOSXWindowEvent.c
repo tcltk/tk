@@ -122,14 +122,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	TKContentView *view = [w contentView];
 	if ([view isKindOfClass:[TKContentView class]]) {
 	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
-		[element updateAccessibilityElementFrame];
-	    }
-	}
-
-	if (movedOnly) {
-	    if ([view isKindOfClass:[TKContentView class]]) {
-		for (TkAccessibilityElement *element in view.accessibilityChildren) {
-		       [element updateAccessibilityElementFrame];
+		if  (movedOnly) {
+		    NSAccessibilityPostNotification(self, NSAccessibilityMovedNotification);
+		} else {
+		    NSAccessibilityPostNotification(self, NSAccessibilityResizedNotification);
 		}
 	    }
 	}
