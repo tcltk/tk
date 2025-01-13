@@ -11,6 +11,10 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+upvar 0 ::tk::test::text::fixedFont fixedFont \
+	::tk::test::text::fixedWidth fixedWidth \
+	::tk::test::text::fixedHeight fixedHeight
+
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
 pack .t -expand 1 -fill both
@@ -715,10 +719,6 @@ test textIndex-18.1 {Object indices don't cache mark names} {
 
 frame .f -width 100 -height 20
 pack .f -side left
-
-set fixedFont {Courier -12}
-set fixedHeight [font metrics $fixedFont -linespace]
-set fixedWidth [font measure $fixedFont m]
 
 set varFont {Times -14}
 set bigFont {Helvetica -24}
