@@ -32,11 +32,7 @@ testConstraint english [expr {
 # c:/. However, on Vista/later that is a protected directory if you
 # are not running privileged. Moreover, not everyone has a drive c:
 # but not having a TEMP would break a lot Windows programs
-proc initialdir {} {
-    # file join to return in Tcl canonical format (/ separator, not \)
-    #return [file join $::env(TEMP)]
-    return [tcltest::temporaryDirectory]
-}
+set initialDir [tcltest::temporaryDirectory]
 
 proc Click {button} {
     switch -exact -- $button {
@@ -188,7 +184,7 @@ test winDialog-5.2 {GetFileName: one argument} -constraints {
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -initialdir [initialdir] -parent . -title test -initialfile foo}
+    start {tk_getOpenFile -initialdir $initialDir -parent . -title test -initialfile foo}
     then {
 	Click cancel
     }
@@ -345,31 +341,31 @@ test winDialog-5.7.7 {tk_getOpenFile: -defaultextension} -constraints {
     nt testwinevent
 } -body {
     unset -nocomplain x
-    tcltest::makeFile "" "5 7 7.aaa" [initialdir]
+    tcltest::makeFile "" "5 7 7.aaa" $initialDir
     start {set x [tk_getOpenFile \
 		      -defaultextension aaa \
-		      -initialdir [file nativename [initialdir]] \
+		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 7 7" -title Foo]}
     then {
 	Click ok
     }
     return $x
-} -result [file join [initialdir] "5 7 7.aaa"]
+} -result [file join $initialDir "5 7 7.aaa"]
 
 test winDialog-5.7.8 {tk_getOpenFile: -defaultextension} -constraints {
     nt testwinevent
 } -body {
     unset -nocomplain x
-    tcltest::makeFile "" "5 7 8.aaa" [initialdir]
+    tcltest::makeFile "" "5 7 8.aaa" $initialDir
     start {set x [tk_getOpenFile \
 		      -defaultextension aaa \
-		      -initialdir [file nativename [initialdir]] \
+		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 7 8.aaa" -title Foo]}
     then {
 	Click ok
     }
     return $x
-} -result [file join [initialdir] "5 7 8.aaa"]
+} -result [file join $initialDir "5 7 8.aaa"]
 
 test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     nt testwinevent
@@ -414,13 +410,13 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
 #        case FILE_INITDIR:
     unset -nocomplain x
     start {set x [tk_getSaveFile \
-		      -initialdir [initialdir] \
+		      -initialdir $initialDir \
 		      -initialfile "12x 455" -title Foo]}
     then {
 	Click ok
     }
     return $x
-} -result [file join [initialdir] "12x 455"]
+} -result [file join $initialDir "12x 455"]
 
 test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
     nt tcl8
@@ -464,7 +460,7 @@ test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
     nt testwinevent
 } -body {
     # Windows remembers dirs from previous selections so use
-    # a subdir for this test, not [initialdir] itself
+    # a subdir for this test, not $initialDir itself
     set newdir [tcltest::makeDirectory "5 12 3"]
     set cur [pwd]
     try {
@@ -501,19 +497,19 @@ test winDialog-5.12.5 {tk_getSaveFile: initial directory: nativename} -constrain
 } -body {
     unset -nocomplain x
     start {set x [tk_getSaveFile \
-		      -initialdir [file nativename [initialdir]] \
+		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 12 5" -title Foo]}
     then {
 	Click ok
     }
     return $x
-} -result [file join [initialdir] "5 12 5"]
+} -result [file join $initialDir "5 12 5"]
 
 test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints {
     nt testwinevent
 } -body {
     # Windows remembers dirs from previous selections so use
-    # a subdir for this test, not [initialdir] itself
+    # a subdir for this test, not $initialDir itself
     set dir [tcltest::makeDirectory "5 12 6"]
     set cur [pwd]
     try {
@@ -564,7 +560,7 @@ test winDialog-5.12.8 {tk_getOpenFile: initial directory: .} -constraints {
     nt testwinevent
 } -body {
     # Windows remembers dirs from previous selections so use
-    # a subdir for this test, not [initialdir] itself
+    # a subdir for this test, not $initialDir itself
     set newdir [tcltest::makeDirectory "5 12 8"]
     set path [tcltest::makeFile "" "testfile" $newdir]
     set cur [pwd]
@@ -602,21 +598,21 @@ test winDialog-5.12.10 {tk_getOpenFile: initial directory: nativename} -constrai
     nt testwinevent
 } -body {
     unset -nocomplain x
-    tcltest::makeFile "" "5 12 10" [initialdir]
+    tcltest::makeFile "" "5 12 10" $initialDir
     start {set x [tk_getOpenFile \
-		      -initialdir [file nativename [initialdir]] \
+		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 12 10" -title Foo]}
     then {
 	Click ok
     }
     return $x
-} -result [file join [initialdir] "5 12 10"]
+} -result [file join $initialDir "5 12 10"]
 
 test winDialog-5.12.11 {tk_getOpenFile: initial directory: relative} -constraints {
     nt testwinevent
 } -body {
     # Windows remembers dirs from previous selections so use
-    # a subdir for this test, not [initialdir] itself
+    # a subdir for this test, not $initialDir itself
     set dir [tcltest::makeDirectory "5 12 11"]
     set path [tcltest::makeFile "" testfile $dir]
     set cur [pwd]
@@ -749,7 +745,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     start {set x [tk_getSaveFile -title Back]}
     then {
 	if {[catch {SetText 0x3e9 [file nativename \
-		[file join [initialdir] "12x 457"]]} msg]} {
+		[file join $initialDir "12x 457"]]} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -758,7 +754,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     return $x$msg
 } -cleanup {
     unset msg
-} -result [file join [initialdir] "12x 457"]
+} -result [file join $initialDir "12x 457"]
 test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraints {
     nt
 } -body {
@@ -815,7 +811,7 @@ test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {
     nt testwinevent
 } -body {
     start {
-	tk_chooseDirectory -initialdir [initialdir] -mustexist 1 -parent . -title test
+	tk_chooseDirectory -initialdir $initialDir -mustexist 1 -parent . -title test
     }
     then {
 	Click cancel
@@ -844,12 +840,12 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
 } -body {
 #        case DIR_INITIAL:
 
-    start {set x [tk_chooseDirectory -initialdir [initialdir] -title Foo]}
+    start {set x [tk_chooseDirectory -initialdir $initialDir -title Foo]}
     then {
 	Click ok
     }
     string tolower [set x]
-} -result [string tolower [initialdir]]
+} -result [string tolower $initialDir]
 test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
     nt tcl8
 } -body {
