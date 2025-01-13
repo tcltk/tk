@@ -399,13 +399,24 @@ namespace eval ::tk::test::dialog {
 		}
 		upvar ::tk::dialog::file::__tk_filedialog data
 	    }
+	    "msgbox" {
+		if {$parent == "."} {
+		    set w .__tk__messagebox
+		} else {
+		    set w $parent.__tk__messagebox
+		}
+	    }
 	    default {
 		return -code error "invalid dialog type \"$dialogType\""
 	    }
 	}
 
-	set button $data($btn\Btn)
-	if ![winfo ismapped $button] {
+	if {$dialogType eq "msgbox"} {
+	    set button $w.$btn
+	} else {
+	    set button $data($btn\Btn)
+	}
+	if {! [winfo ismapped $button]} {
 	    update
 	}
 
