@@ -106,12 +106,6 @@ proc raiseDelay {} {
     update
 }
 
-# How to carry out a small delay while processing events
-
-proc eventDelay {{delay 200}} {
-    after $delay "set done 1" ; vwait done
-}
-
 deleteWindows
 
 ##############################################################################
@@ -362,11 +356,11 @@ test wm-attributes-1.4.0 {setting/unsetting fullscreen does not change the focus
     lappend results [focus]
 
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [focus]
 
     wm attributes .t -fullscreen 0
-    eventDelay
+    _pause 200
     lappend results [focus]
 } -cleanup {
     deleteWindows
@@ -379,19 +373,19 @@ test wm-attributes-1.4.1 {setting fullscreen does not generate FocusIn on wrappe
     pack [entry .t.e]
     lower .t
     bind .t <FocusIn> {lappend focusin %W}
-    eventDelay
+    _pause 200
 
     lappend focusin 1
     focus -force .t.e
-    eventDelay
+    _pause 200
 
     lappend focusin 2
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
 
     lappend focusin 3
     wm attributes .t -fullscreen 0
-    eventDelay
+    _pause 200
 
     lappend focusin final [focus]
 } -cleanup {
@@ -405,13 +399,13 @@ test wm-attributes-1.5.0 {fullscreen stackorder} -setup {
 } -constraints win -body {
     toplevel .t
     lappend results [wm stackorder .]
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     # Default stacking is on top of other windows on the display. Setting the
     # fullscreen attribute does not change this.
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -421,13 +415,13 @@ test wm-attributes-1.5.1 {fullscreen stackorder} -setup {
 } -constraints win -body {
     toplevel .t
     lower .t
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     # If stacking order is explicitly set, then setting the fullscreen
     # attribute should not change it.
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -443,7 +437,7 @@ test wm-attributes-1.5.2 {fullscreen stackorder} -setup {
     # If stacking order is explicitly set for an unmapped window, then setting
     # the fullscreen attribute should not change it.
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -452,16 +446,16 @@ test wm-attributes-1.5.3 {fullscreen stackorder} -setup {
     set results [list]
 } -constraints win -body {
     toplevel .t
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     # Unsetting the fullscreen attribute should not change the stackorder.
     wm attributes .t -fullscreen 0
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -471,16 +465,16 @@ test wm-attributes-1.5.4 {fullscreen stackorder} -setup {
 } -constraints win -body {
     toplevel .t
     lower .t
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     wm attributes .t -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     # Unsetting the fullscreen attribute should not change the stackorder.
     wm attributes .t -fullscreen 0
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -494,16 +488,16 @@ test wm-attributes-1.5.5 {fullscreen stackorder} -setup {
     raise .a
     raise .b
     raise .c
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     wm attributes .b -fullscreen 1
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 
     # Unsetting the fullscreen attribute should not change the stackorder.
     wm attributes .b -fullscreen 0
-    eventDelay
+    _pause 200
     lappend results [wm stackorder .]
 } -cleanup {
     deleteWindows
@@ -2513,3 +2507,4 @@ return
 # Local variables:
 # mode: tcl
 # End:
+s
