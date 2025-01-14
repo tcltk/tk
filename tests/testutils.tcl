@@ -173,7 +173,7 @@ namespace eval tk {
 	# Suspend script execution for a given amount of time, but continue
 	# processing events.
 	proc _pause {{msecs 1000}} {
-	    global _pause
+	    variable _pause
 
 	    if {! [info exists _pause(number)]} {
 		set _pause(number) 0
