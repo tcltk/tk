@@ -148,8 +148,6 @@ namespace eval tk {
 	    return [list load $tklib Tk]
 	}
 
-	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCommand
-
 	# On macOS windows are not allowed to overlap the menubar at the top of the
 	# screen or the dock.  So tests which move a window and then check whether it
 	# got moved to the requested location should use a y coordinate larger than the
@@ -171,9 +169,29 @@ namespace eval tk {
 	    }
 	    namespace export menubarheight
 	}
+
+	# Suspend script execution for a given amount of time, but continue
+	# processing events.
+	proc _pause {{msecs 1000}} {
+	    global _pause
+
+	    if {! [info exists _pause(number)]} {
+		set _pause(number) 0
+	    }
+
+	    set num [incr _pause(number)]
+	    set _pause($num) 0
+
+	    after $msecs "set _pause($num) 1"
+	    vwait _pause($num)
+	    unset _pause($num)
+	}
+
+	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCommand _pause
     }
 }
 
+# Generic utilities are imported by default
 namespace import -force tk::test::*
 
 #
@@ -788,6 +806,5 @@ namespace eval ::tk::test::text {
 
     namespace export *
 }
-
 
 # EOF
