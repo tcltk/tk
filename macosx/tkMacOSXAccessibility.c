@@ -284,12 +284,10 @@ TkMacAccessibleObjCmd(
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
-    [widget.accessibilityParent accessibilityAddChildElement: widget];;
+    [widget.accessibilityParent accessibilityAddChildElement: widget];
    
     [pool drain];
     return TCL_OK;
-
-  
 }
 
 
