@@ -1008,6 +1008,9 @@ TkCreateMainWindow(
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XFT)
+		".no-xft"
+#endif
 #ifdef __OBJC__
 		".objective-c"
 #if defined(__cplusplus)
@@ -1031,9 +1034,6 @@ TkCreateMainWindow(
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
-#if !defined(HAVE_XFT)
-		".no-xft"
-#endif
 #endif
 		), NULL);
     }
