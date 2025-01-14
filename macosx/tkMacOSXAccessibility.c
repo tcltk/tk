@@ -214,6 +214,14 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return screenrect;
 }
 
+- (NSString*) accessibilityIdentifier {
+
+    int x = arc4random_uniform(1000);
+    NSNumber *id = [NSNumber numberWithInt: x];
+    NSString *identifier = [id stringValue];
+    return identifier;
+}
+
 - (id)accessibilityParent {
     Tk_Window win = self.tk_win;
     TkWindow *winPtr = (TkWindow *)win;
@@ -226,6 +234,10 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 
 - (BOOL)becomeFirstResponder {
     return TRUE;
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return NO;
 }
 
 
@@ -272,9 +284,8 @@ TkMacAccessibleObjCmd(
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
-    [widget.accessibilityParent accessibilityAddChildElement: widget];
-    
-
+    [widget.accessibilityParent accessibilityAddChildElement: widget];;
+   
     [pool drain];
     return TCL_OK;
 
