@@ -95,23 +95,6 @@ proc _keypress_string {win string} {
     }
 }
 
-# Delay script execution for a given amount of time
-
-proc _pause {{msecs 1000}} {
-    global _pause
-
-    if {! [info exists _pause(number)]} {
-	set _pause(number) 0
-    }
-
-    set num [incr _pause(number)]
-    set _pause($num) 0
-
-    after $msecs "set _pause($num) 1"
-    vwait _pause($num)
-    unset _pause($num)
-}
-
 # Helper proc to convert index to x y position
 
 proc _text_ind_to_x_y {text ind} {
@@ -1193,7 +1176,6 @@ unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}
 rename _keypress {}
-rename _pause {}
 rename _text_ind_to_x_y {}
 rename _get_selection {}
 rename create_and_pack_frames {}
