@@ -1345,7 +1345,7 @@ NSMutableArray *_tkAccessibleElements;
 }
 
 - (BOOL)accessibilityIsIgnored {
-    return NO;
+    return YES;
 }
 
 - (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
