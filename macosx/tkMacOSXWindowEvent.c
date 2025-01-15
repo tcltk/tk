@@ -1364,15 +1364,6 @@ NSMutableArray *_tkAccessibleElements;
     [self setAccessibilityParent:self];
 }
 
-- (id)accessibilityHitTest:(NSPoint)point {
-    for (TkAccessibilityElement *element in self.accessibilityChildren) {
-        if (NSPointInRect(point, [element accessibilityFrame])) {
-            return element;
-        }
-    }
-    return [super accessibilityHitTest:point];
-}
-
 @end
 
 /*
