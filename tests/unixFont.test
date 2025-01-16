@@ -21,9 +21,9 @@ namespace import -force ::tk::test::geometry::*
 
 if {[tk windowingsystem] eq "x11"} {
     if {[testConstraint withXft]} {
-        set fontsystemcmd [auto_execok fc-list]
+	set fontsystemcmd [auto_execok fc-list]
     } else {
-        set fontsystemcmd [auto_execok xlsfonts]
+	set fontsystemcmd [auto_execok xlsfonts]
     }
 }
 foreach {constraint font} {
