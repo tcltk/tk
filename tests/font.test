@@ -938,9 +938,9 @@ test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
 } -body {
     set name {{new century schoolbook} 10}
     if {[font actual {{new century schoolbook} 10} -family] == "new century schoolbook"} {
-        set x [psfontname "{new century schoolbook} 10"]
+	set x [psfontname "{new century schoolbook} 10"]
     } else {
-        set x NewCenturySchlbk-Roman
+	set x NewCenturySchlbk-Roman
     }
 } -result {NewCenturySchlbk-Roman}
 test font-21.7 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
