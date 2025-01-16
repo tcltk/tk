@@ -367,27 +367,6 @@ namespace eval ::tk::test::dialog {
 	variable dialogresult [uplevel #0 $::tk::test::dialog::dialogcommand]
     }
 
-    # dialogTestFont --
-    #
-    # A global command "::testfont" (all lower case) is already defined by
-    # tkTest.c for usage by the test file font.test. To distinguish our proc
-    # from this global command, we use a prefix "dialog".
-    #
-    proc dialogTestFont {subcmd {font ""}} {
-	variable testfont
-	switch -- $subcmd {
-	    get {
-		return $testfont
-	    }
-	    set {
-		set testfont $font
-	    }
-	    default {
-		return -code error "invalid subcmd \"$subcmd\""
-	    }
-	}
-    }
-
     proc PressButton {btn} {
 	event generate $btn <Enter>
 	event generate $btn <Button-1> -x 5 -y 5
@@ -473,7 +452,7 @@ namespace eval ::tk::test::dialog {
 
     proc then {cmd} {
 	variable dialogcommand $cmd dialogresult {}
-	variable testfont {}
+	variable dialogTestFont {}
 
 	if {$::tcl_platform(platform) eq "windows"} {
 	    # Do not make the delay too short. The newer Vista dialogs take
@@ -486,6 +465,8 @@ namespace eval ::tk::test::dialog {
 	vwait ::tk::test::dialog::dialogresult
 	return $dialogresult
     }
+
+    ::tk::test::createStdAccessProc dialogTestFont
 
     namespace export dialogTestFont PressButton SendButtonPress setDialogType ToPressButton start then
 }
