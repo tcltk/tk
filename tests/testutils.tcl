@@ -23,9 +23,9 @@
 namespace eval tk {
     namespace eval test {
 
-	proc assert {expr {message ""}} {
-	    if {![uplevel 1 [list expr $expr]]} {
-		error "PANIC: $message ($expr failed)"
+	proc assert {expr} {
+	    if {! [uplevel 1 [list expr $expr]]} {
+		return -code error "assertion failed: \"[uplevel 1 [list subst -nocommands $expr]]\""
 	    }
 	}
 
