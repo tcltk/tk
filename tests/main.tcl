@@ -1,8 +1,8 @@
 # main.tcl --
 #
-# This file is loaded by default by each test file. It performs an initial Tk
-# setup for the root window, and loads definitions of global test items
-# (utility procs, constraints, ...).
+# This file is loaded by each test file when invoking "tcltest::loadTestedCommands".
+# It performs an initial Tk setup for the root window, and loads, in turn,
+# definitions of global utility procs and test constraints.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
