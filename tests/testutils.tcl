@@ -203,11 +203,62 @@ namespace import -force tk::test::*
 #
 
 namespace eval ::tk::test::child {
-    # Manage a child Tk process.
-    # Replace with child interp or thread?
+
+    # childTkInterp --
+    #
+    # 	Create a new Tk application in a child interpreter, with
+    #	a given name and class.
+    #
+    proc childTkInterp {name args} {
+	set index [lsearch $args "-safe"]
+	if {$index >= 0} {
+	    set safe 1
+	    set options [lremove $args $index]
+	} else {
+	    set safe 0
+	    set options $args
+	}
+	if {[llength $options] ni {0 2}} {
+	    return -code error "invalid #args"
+	}
+
+	set cmdArgs [list -name $name]
+	foreach {key value} $options {
+	    if {$key ne "-class"} {
+		return -code error "invalid option \"$key\""
+	    }
+	    lappend cmdArgs $key $value
+	}
+
+	variable loadTkCmd
+	if {! [info exists loadTkCmd]} {
+	    foreach pkg [info loaded] {
+		if {[lindex $pkg 1] eq "Tk"} {
+		    set loadTkCmd "load $pkg"
+		    break
+		}
+	    }
+	}
+	if {$safe} {
+	    interp create -safe $name
+	} else {
+	    interp create $name
+	}
+
+	$name eval [list set argv $cmdArgs]
+	catch {eval $loadTkCmd $name}
+    }
+
     namespace import ::tcltest::interpreter
     namespace import ::tk::test::loadTkCommand
 
+    # childTkProcess --
+    #
+    # 	Create a new Tk application in a child process, and enable it to
+    #	evaluate scripts on our behalf.
+    #
+    #	Suggestion: replace with child interp or thread ?
+    #
     proc childTkProcess {subcmd args} {
 	variable fd
 	switch -- $subcmd {
@@ -710,53 +761,6 @@ namespace eval ::tk::test::select {
     namespace import ::tk::test::createStdAccessProc
     foreach varName {abortCount pass selInfo selValue} {
 	createStdAccessProc $varName
-    }
-
-    namespace export *
-}
-
-namespace eval ::tk::test::send {
-    # Procedure to create a new application with a given name and class.
-    proc newApp {name args} {
-
-	set cmdArgs [list -name $name]
-
-	set index [lsearch $args "-safe"]
-	if {$index >= 0} {
-	    set safe 1
-	    set options [lremove $args $index]
-	} else {
-	    set safe 0
-	    set options $args
-	}
-	if {[llength $options] ni {0 2}} {
-	    return -code error "invalid #args"
-	}
-
-	foreach {key value} $options {
-	    if {$key ne "-class"} {
-		return -code error "invalid option \"$key\""
-	    }
-	    lappend cmdArgs $key $value
-	}
-
-	variable loadTkCmd
-	if {! [info exists loadTkCmd]} {
-	    foreach pkg [info loaded] {
-		if {[lindex $pkg 1] eq "Tk"} {
-		    set loadTkCmd "load $pkg"
-		    break
-		}
-	    }
-	}
-	if {$safe} {
-	    interp create -safe $name
-	} else {
-	    interp create $name
-	}
-
-	$name eval [list set argv $cmdArgs]
-	catch {eval $loadTkCmd $name}
     }
 
     namespace export *
