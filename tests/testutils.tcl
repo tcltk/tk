@@ -1,7 +1,8 @@
 # testutils.tcl --
 #
-# This file holds utility procs, each of which is used by several test files
-# in the Tk test suite.
+# This file is sourced by each test file by invoking "tcltest::loadTestedCommands".
+# It holds utility procs, each of which is used by several test files in the
+# Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -9,17 +10,22 @@
 #
 # NAMESPACES AND FUNCTIONAL AREAS
 #
-# Utility procs are defined per functional area of Tk (also called "domain"),
-# similar to the names of test files.
-# - generic utility procs that don't belong to a specific functional area go
-#   into the namespace ::tk::test.
-# - those that do belong to a specific functional area go into a child namespace
-#   of ::tk::test that bears the name of that functional area.
+# There are two types of utility proc: generic procs, and procs that belong to
+# a specific functional area of Tk.
+# - Generic utility procs reside in the namespace ::tk::test. These utility
+#   procs are all imported by default for each test file ("namespace import"
+#   command already issued in this file), and therefore they are readily
+#   available to them.
+# - Utility procs that belong to a specific functional area reside in a child
+#   namespace of ::tk::test that bears the name of that functional area (for
+#   example ::tk::test::dialog). These procs are imported on demand by test
+#   files.
 #
 
 #
 # DEFINITIONS OF GENERIC UTILITY PROCS
 #
+
 namespace eval tk {
     namespace eval test {
 
@@ -191,15 +197,11 @@ namespace eval tk {
     }
 }
 
-# Generic utilities are imported by default
+# import generic utility procs by default
 namespace import -force tk::test::*
 
 #
 # DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
-#
-# Utility procs are defined and used per functional area of Tk as indicated by
-# the names of test files. The namespace names below ::tk::test correspond to
-# these functional areas.
 #
 
 namespace eval ::tk::test::child {
@@ -285,7 +287,6 @@ namespace eval ::tk::test::child {
 		variable Data
 		variable Done
 
-		# arguments
 		set script [lindex $args 0]
 		set block 0
 		if {[llength $args] == 2} {
@@ -314,7 +315,7 @@ namespace eval ::tk::test::child {
 		return $Data
 	    }
 	    exit {
-		# catch in case the background process has closed $fd
+		# catch in case the child process has closed $fd
 		catch {puts $fd exit}
 		catch {close $fd}
 		set fd ""
@@ -352,9 +353,9 @@ namespace eval ::tk::test::colors {
     # otherwise.
     #
     # Arguments:
-    # w -			Name of window in which to check.
-    # red, green, blue -	Intensities to use in a trial color allocation
-    #			to see if there are colormap entries free.
+    #	w                : name of window in which to check.
+    #	red, green, blue : intensities to use in a trial color allocation
+    #	                   to see if there are colormap entries free.
     #
     proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
@@ -367,7 +368,7 @@ namespace eval ::tk::test::colors {
     # the slots in an 8-bit colormap.
     #
     # Arguments:
-    # w -		Name of toplevel window to create.
+    #	w : name of toplevel window to create.
     #
     proc eatColors {w} {
 	catch {destroy $w}
@@ -513,8 +514,7 @@ namespace eval ::tk::test::dialog {
 
 	if {$::tcl_platform(platform) eq "windows"} {
 	    # Do not make the delay too short. The newer Vista dialogs take
-	    # time to come up. Even if the testforwindow returns true, the
-	    # controls are not ready to accept messages
+	    # time to come up.
 	    after 500 ::tk::test::dialog::afterbody
 	} else {
 	    afterbody
@@ -530,13 +530,13 @@ namespace eval ::tk::test::dialog {
 
 
 namespace eval ::tk::test::entry {
-    # For trace add variable
+    # Handler for variable trace on ::x
     proc override args {
 	global x
 	set x 12345
     }
 
-    # Procedures used in widget VALIDATION tests
+    # Procedures used by widget validation tests
     proc validateCommand1 {W d i P s S v V} {
 	variable validationData [list $W $d $i $P $s $S $v $V]
 	return 1
