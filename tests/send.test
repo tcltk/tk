@@ -15,7 +15,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::send::*
 namespace import -force ::tk::test::child::*
 
 testConstraint xhost [llength [auto_execok xhost]]
@@ -248,7 +247,7 @@ test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver notAqua
 } {1 {no application named "bogus_name"}}
 
 catch {
-    newApp t_s_1 -class Test
+    childTkInterp t_s_1 -class Test
     t_s_1 eval wm withdraw .
 }
 
@@ -268,7 +267,7 @@ test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {secure
     list $a [send t_s_1 {set a}]
 } {us them}
 test send-8.14 {Tk_SendCmd procedure, local interp killed by send} {secureserver testsend} {
-    newApp t_s_2 -class Test
+    childTkInterp t_s_2 -class Test
     list [catch {send t_s_2 {destroy .; concat result}} msg] $msg
 } {0 result}
 
@@ -584,9 +583,9 @@ catch {
 }
 test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     set x [list [testsend prop comm TK_APPLICATION]]
-    newApp t_s_1 -class Test
+    childTkInterp t_s_1 -class Test
     send t_s_1 wm withdraw .
-    newApp t_s_2 -class Test
+    childTkInterp t_s_2 -class Test
     send t_s_2 wm withdraw .
     lappend x [testsend prop comm TK_APPLICATION]
     interp delete t_s_1
@@ -605,7 +604,6 @@ catch {
     testdeleteapps
 }
 
-namespace forget ::tk::test::send::*
 namespace forget ::tk::test::child::*
 cleanupTests
 return
