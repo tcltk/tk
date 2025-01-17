@@ -144,9 +144,9 @@ testConstraint defaultPseudocolor8 [expr {
 }]
 
 # constraint based on whether our display is secure
-namespace import -force ::tk::test::bg::*
-setupbg
-set app [dobg {tk appname}]
+namespace import -force ::tk::test::child::*
+childTkProcess create
+set app [childTkProcess eval {tk appname}]
 testConstraint secureserver 0
 if {[llength [info commands send]]} {
     testConstraint secureserver 1
@@ -156,7 +156,7 @@ if {[llength [info commands send]]} {
 	}
     }
 }
-cleanupbg
-namespace forget ::tk::test::bg::*
+childTkProcess exit
+namespace forget ::tk::test::child::*
 
 # EOF
