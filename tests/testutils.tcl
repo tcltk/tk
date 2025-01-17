@@ -1,6 +1,6 @@
 # testutils.tcl --
 #
-# This file is sourced by each test file by invoking "tcltest::loadTestedCommands".
+# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
 # It holds utility procs, each of which is used by several test files in the
 # Tk test suite.
 #
