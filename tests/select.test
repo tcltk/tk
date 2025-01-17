@@ -19,7 +19,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::select::*
-namespace import -force ::tk::test::bg::*
+namespace import -force ::tk::test::child::*
 
 testConstraint cliboardManagerPresent 0
 if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
@@ -259,16 +259,16 @@ test select-3.6 {Tk_OwnSelection procedure} -setup {
 test select-3.7 {Tk_OwnSelection procedure} -constraints x11 -setup {
     global lostSel
     setup
-    setupbg
+    childTkProcess create
 } -body {
     set lostSel {owned}
     selection own -command { set lostSel {lost1} } .f1
     update
     set result {}
-    lappend result [dobg { selection own . }]
-    lappend result [dobg {selection own}]
+    lappend result [childTkProcess eval { selection own . }]
+    lappend result [childTkProcess eval {selection own}]
     update
-    cleanupbg
+    childTkProcess exit
     lappend result $lostSel
 } -result {{} . lost1}
 # check reentrancy on selection replacement
@@ -298,15 +298,15 @@ test select-3.11 {Tk_OwnSelection procedure} -constraints {
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
-    setupbg
+    childTkProcess create
     update
     set result ""
 } -body {
-    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
+    lappend result [childTkProcess eval "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
     lappend result [selection own -displayof .f1] \
 	    [selection own -displayof .f2]
 } -cleanup {
-    cleanupbg
+    childTkProcess exit
 } -result {{} .f1 {}}
 
 ##############################################################################
@@ -333,15 +333,15 @@ test select-4.3 {Tk_ClearSelection procedure} -setup {
 test select-4.4 {Tk_ClearSelection procedure} -constraints x11 -setup {
     global lostSel
     setup
-    setupbg
+    childTkProcess create
 } -body {
     set lostSel {owned}
     selection own -command { set lostSel {lost1} } .f1
     update
     set result {}
-    lappend result [dobg {selection clear; update}]
+    lappend result [childTkProcess eval {selection clear; update}]
     update
-    cleanupbg
+    childTkProcess exit
     lappend result [selection own]
 } -result {{} {}}
 # multiple display tests
@@ -366,7 +366,7 @@ test select-4.6 {Tk_ClearSelection procedure} -constraints {
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
-    setupbg
+    childTkProcess create
 } -body {
     set lostSel {owned}
     set lostSel2 {owned2}
@@ -374,10 +374,10 @@ test select-4.6 {Tk_ClearSelection procedure} -constraints {
     selection own -command { set lostSel2 {lost2} } .f2
     update
     set result ""
-    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
+    lappend result [childTkProcess eval "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
     lappend result [selection own -displayof .f1] \
 	    [selection own -displayof .f2] $lostSel $lostSel2
-    cleanupbg
+    childTkProcess exit
     set result
 } -result {{} .f1 {} owned lost2}
 
@@ -450,20 +450,20 @@ test select-5.8 {Tk_GetSelection procedure} -setup {
 } -result "$longValue {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000} 1 {PRIMARY selection doesn't exist or form \"STRING\" not defined}"
 test select-5.9 {Tk_GetSelection procedure} -constraints x11 -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selection handle -selection PRIMARY .f1 {handler TEST} TEST
     update
     selValue set "Test value"
     selInfo set ""
     set result ""
-    lappend result [dobg {selection get TEST}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{Test value} {TEST 0 4000}}
 test select-5.10 {Tk_GetSelection procedure} -constraints x11 -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selection handle -selection PRIMARY .f1 {handler TEST} TEST
     update
@@ -471,8 +471,8 @@ test select-5.10 {Tk_GetSelection procedure} -constraints x11 -setup {
     selInfo set ""
     selection own .f1
     set result ""
-    lappend result [dobg {selection get TEST} 1]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST} 1]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{selection owner didn't respond} {}}
 # multiple display tests
@@ -513,7 +513,7 @@ test select-5.13 {Tk_GetSelection procedure} -constraints {
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
-    setupbg
+    childTkProcess create
 } -body {
     selection handle -selection PRIMARY .f1 {handler TEST} TEST
     selection own .f1
@@ -523,10 +523,10 @@ test select-5.13 {Tk_GetSelection procedure} -constraints {
     selInfo set ""
     update
     set result ""
-    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
+    lappend result [childTkProcess eval "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
     selValue set "Test value2"
-    lappend result [dobg "selection get TEST"]
-    cleanupbg
+    lappend result [childTkProcess eval "selection get TEST"]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{Test value} {Test value2} {TEST2 0 4000 TEST 0 4000}}
 test select-5.14 {Tk_GetSelection procedure} -constraints {
@@ -534,7 +534,7 @@ test select-5.14 {Tk_GetSelection procedure} -constraints {
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
-    setupbg
+    childTkProcess create
 } -body {
     selection handle -selection PRIMARY .f1 {handler TEST} TEST
     selection own .f1
@@ -544,10 +544,10 @@ test select-5.14 {Tk_GetSelection procedure} -constraints {
     selInfo set ""
     update
     set result ""
-    lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
+    lappend result [childTkProcess eval "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection get -displayof .t TEST"]
     selValue set "Test value2"
-    lappend result [dobg "selection get TEST"]
-    cleanupbg
+    lappend result [childTkProcess eval "selection get TEST"]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{PRIMARY selection doesn't exist or form "TEST" not defined} {Test value2} {TEST 0 4000}}
 test select-5.15 {Tk_GetSelection procedure} -setup {
@@ -784,21 +784,21 @@ test select-7.1 {TkSelDeadWindow procedure} -constraints nonPortable -setup {
 # Check reentrancy on losing selection
 test select-8.1 {TkSelEventProc procedure} -constraints x11 -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selection own -selection CLIPBOARD -command {destroy .f1} .f1
     update
-    dobg {selection own -selection CLIPBOARD .}
+    childTkProcess eval {selection own -selection CLIPBOARD .}
     winfo children .
 } -cleanup {
-    cleanupbg
+    childTkProcess exit
 } -result {}
 
 ##############################################################################
 
 test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -constraints x11 -body {
     selValue set "1024"
     selInfo set ""
@@ -806,52 +806,52 @@ test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
 	.f1 {handler TEST}
     update
     set result ""
-    lappend result [dobg {selection get TEST}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{0x400 } {TEST 0 4000}}
 test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -constraints {x11 failsOnUbuntu} -body {
     selValue set "1024 0xffff  2048 -2  "
     selInfo set ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
 	.f1 {handler TEST}
     set result ""
-    lappend result [dobg {selection get TEST}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{0x400 0xffff 0x800 0xfffffffe } {TEST 0 4000}}
 test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -constraints {x11 failsOnUbuntu} -body {
     selValue set "   "
     selInfo set ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
 	.f1 {handler TEST}
     set result ""
-    lappend result [dobg {selection get TEST}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{ } {TEST 0 4000}}
 test select-9.4 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -constraints {x11 failsOnUbuntu} -body {
     selValue set "16 foobar 32"
     selInfo set ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
 	.f1 {handler TEST}
     set result ""
-    lappend result [dobg {selection get TEST}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get TEST}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{0x10 0x0 0x20 } {TEST 0 4000}}
 test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -constraints x11 -body {
     # Ensure that lists of atoms are constructed correctly, even when the
     # atom names have spaces in. [Bug 1353414]
@@ -860,9 +860,9 @@ test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
     set selType {text/x-tk-test;detail="foo bar"}
     selection handle -selection PRIMARY -format STRING -type $selType \
     .f1 [list handler $selType]
-    lsort [dobg {selection get TARGETS}]
+    lsort [childTkProcess eval {selection get TARGETS}]
 } -cleanup {
-    cleanupbg
+    childTkProcess exit
 } -result {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW {text/x-tk-test;detail="foo bar"}}
 
 ##############################################################################
@@ -902,24 +902,24 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} -constr
 } -result {{1:PRIMARY selection doesn't exist or form "STRING" not defined} {}}
 test select-10.2 {ConvertSelection procedure} -constraints x11 -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selValue set [string range $longValue 0 3999]
     selInfo set ""
     selection handle .f1 {handler STRING}
     set result ""
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result [list [string range $longValue 0 3999] {STRING 0 4000 STRING 4000 4000 STRING 0 4000 STRING 4000 4000}]
 test select-10.3 {ConvertSelection procedure} -constraints x11 -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selection handle .f1 ERROR errHandler
-    dobg {selection get ERROR}
+    childTkProcess eval {selection get ERROR}
 } -cleanup {
-    cleanupbg
+    childTkProcess exit
 } -result {PRIMARY selection doesn't exist or form "ERROR" not defined}
 # testing timers
 # This one hangs in Exceed
@@ -927,37 +927,37 @@ test select-10.4 {ConvertSelection procedure} -constraints {
     x11 failsOnUbuntu
 } -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selValue set $longValue
     selInfo set ""
     selection handle .f1 {errIncrHandler STRING}
     set result ""
     pass set 0
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{selection owner didn't respond} {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000 STRING 0 4000 STRING 4000 4000}}
 test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
     x11 failsOnUbuntu
 } -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selValue set "Test value"
     selInfo set ""
     selection handle -type TEST .f1 { handler TEST }
     selection handle -type STRING .f1 { badHandler .f1 STRING }
     set result ""
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000}}
 test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
     x11 failsOnUbuntu
 } -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     proc weirdHandler {type offset count} {
 	destroy .f1
@@ -967,8 +967,8 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
     selInfo set ""
     selection handle .f1 {weirdHandler STRING}
     set result ""
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -cleanup {
     rename weirdHandler {}
@@ -979,7 +979,7 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
 # testing reentrancy
 test select-11.1 {TkSelPropProc procedure} -constraints {x11 failsOnUbuntu} -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selValue set $longValue
     selInfo set ""
@@ -987,8 +987,8 @@ test select-11.1 {TkSelPropProc procedure} -constraints {x11 failsOnUbuntu} -set
     selection handle -type STRING .f1 { reallyBadHandler .f1 STRING }
     set result ""
     pass set 0
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{selection owner didn't respond} {.f1 STRING 0 4000 .f1 STRING 4000 4000 .f1 STRING 8000 4000 .f1 STRING 12000 4000 .f1 STRING 16000 4000 .f1 STRING 0 4000 .f1 STRING 4000 4000}}
 
@@ -998,26 +998,26 @@ test select-11.1 {TkSelPropProc procedure} -constraints {x11 failsOnUbuntu} -set
 test select-12.1 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [selection get -type TIMESTAMP]
-    setupbg
-    lappend result [dobg {selection get -type TIMESTAMP}]
-    cleanupbg
+    childTkProcess create
+    lappend result [childTkProcess eval {selection get -type TIMESTAMP}]
+    childTkProcess exit
     set result
 } -result {0x0 {0x0 }}
 test select-12.2 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [lsort [list [selection get -type TARGETS]]]
-    setupbg
-    lappend result [dobg {lsort [selection get -type TARGETS]}]
-    cleanupbg
+    childTkProcess create
+    lappend result [childTkProcess eval {lsort [selection get -type TARGETS]}]
+    childTkProcess exit
     set result
 } -result {{MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-12.3 {DefaultSelection procedure} -constraints x11 -body {
     setup
     selection handle .f1 {handler TEST} TEST
     set result [list [lsort [selection get -type TARGETS]]]
-    setupbg
-    lappend result [dobg {lsort [selection get -type TARGETS]}]
-    cleanupbg
+    childTkProcess create
+    lappend result [childTkProcess eval {lsort [selection get -type TARGETS]}]
+    childTkProcess exit
     set result
 } -result {{MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-12.4 {DefaultSelection procedure} -constraints x11 -setup {
@@ -1025,17 +1025,17 @@ test select-12.4 {DefaultSelection procedure} -constraints x11 -setup {
     set result ""
 } -body {
     lappend result [selection get -type TK_APPLICATION]
-    setupbg
-    lappend result [dobg {selection get -type TK_APPLICATION}]
-    cleanupbg
+    childTkProcess create
+    lappend result [childTkProcess eval {selection get -type TK_APPLICATION}]
+    childTkProcess exit
     set result
 } -result [list [winfo name .] [winfo name .]]
 test select-12.5 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [selection get -type TK_WINDOW]
-    setupbg
-    lappend result [dobg {selection get -type TK_WINDOW}]
-    cleanupbg
+    childTkProcess create
+    lappend result [childTkProcess eval {selection get -type TK_WINDOW}]
+    childTkProcess exit
     set result
 } -result {.f1 .f1}
 test select-12.6 {DefaultSelection procedure} -body {
@@ -1052,15 +1052,15 @@ test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
     x11 failsOnUbuntu
 } -setup {
     setup
-    setupbg
+    childTkProcess create
 } -body {
     selValue set $longValue
     selInfo set ""
     selection handle .f1 {badHandler2 .f1 STRING}
     set result ""
     abortCount set 2
-    lappend result [dobg {selection get}]
-    cleanupbg
+    lappend result [childTkProcess eval {selection get}]
+    childTkProcess exit
     lappend result [selInfo get]
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000 .f1 STRING 4000 4000}}
 
@@ -1081,7 +1081,7 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 # CLEANUP
 #
 
-namespace forget ::tk::test::bg::*
+namespace forget ::tk::test::child::*
 namespace forget ::tk::test::select::*
 cleanupTests
 return
