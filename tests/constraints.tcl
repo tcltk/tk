@@ -1,13 +1,17 @@
 # constraints.tcl --
 #
-# This file defines test constraints that are used by several test files
-# in the Tk test suite.
+# This file defines test constraints that are used by several test files in the
+# Tk test suite. It is sourced by each test file when invoking
+# "tcltest::loadTestedCommands".
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 namespace import -force tcltest::testConstraint
 
+#
+# WINDOWING SYSTEM AND DISPLAY
+#
 testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
@@ -15,42 +19,33 @@ testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
 }]
-testConstraint userInteraction 0
-testConstraint nonUnixUserInteraction [expr {
-    [testConstraint userInteraction] ||
-    ([testConstraint unix] && [testConstraint notAqua])
-}]
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
-
-testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
 
-# constraints for testing facilities defined in the tktest executable...
-testConstraint testbitmap      [llength [info commands testbitmap]]
-testConstraint testborder      [llength [info commands testborder]]
-testConstraint testcbind       [llength [info commands testcbind]]
-testConstraint testclipboard   [llength [info commands testclipboard]]
-testConstraint testcolor       [llength [info commands testcolor]]
-testConstraint testcursor      [llength [info commands testcursor]]
-testConstraint testembed       [llength [info commands testembed]]
-testConstraint testfont        [llength [info commands testfont]]
-testConstraint testImageType   [expr {"test" in [image types]}]
-testConstraint testmakeexist   [llength [info commands testmakeexist]]
-testConstraint testmenubar     [llength [info commands testmenubar]]
-testConstraint testmetrics     [llength [info commands testmetrics]]
-testConstraint testmovemouse   [llength [info commands testmovemouse]]
-testConstraint testobjconfig   [llength [info commands testobjconfig]]
-testConstraint testpressbutton [llength [info commands testpressbutton]]
-testConstraint testsend        [llength [info commands testsend]]
-testConstraint testtext        [llength [info commands testtext]]
-testConstraint testwinevent    [llength [info commands testwinevent]]
-testConstraint testwrapper     [llength [info commands testwrapper]]
+# constraint based on whether our display is secure
+namespace import -force ::tk::test::child::*
+childTkProcess create
+set app [childTkProcess eval {tk appname}]
+testConstraint secureserver 0
+if {[llength [info commands send]]} {
+    testConstraint secureserver 1
+    if {[catch {send $app set a 0} msg] == 1} {
+	if {[string match "X server insecure *" $msg]} {
+	    testConstraint secureserver 0
+	}
+    }
+}
+childTkProcess exit
+namespace forget ::tk::test::child::*
 
-# constraints about what sort of fonts are available
+
+#
+# FONTS
+#
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
@@ -126,7 +121,9 @@ testConstraint haveBigFontTwiceLargerThanTextFont [expr {
 }]
 unset fixedFont bigFont
 
-# constraints for the visuals available
+#
+# VISUALS
+#
 testConstraint pseudocolor8 [expr {
     ([catch {
 	toplevel .t -visual {pseudocolor 8} -colormap new
@@ -143,20 +140,37 @@ testConstraint defaultPseudocolor8 [expr {
     ([winfo visual .] eq "pseudocolor") && ([winfo depth .] == 8)
 }]
 
-# constraint based on whether our display is secure
-namespace import -force ::tk::test::child::*
-childTkProcess create
-set app [childTkProcess eval {tk appname}]
-testConstraint secureserver 0
-if {[llength [info commands send]]} {
-    testConstraint secureserver 1
-    if {[catch {send $app set a 0} msg] == 1} {
-	if {[string match "X server insecure *" $msg]} {
-	    testConstraint secureserver 0
-	}
-    }
-}
-childTkProcess exit
-namespace forget ::tk::test::child::*
+
+#
+# VARIOUS
+#
+testConstraint userInteraction 0
+testConstraint nonUnixUserInteraction [expr {
+    [testConstraint userInteraction] ||
+    ([testConstraint unix] && [testConstraint notAqua])
+}]
+
+testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
+
+# constraints for testing facilities defined in the tktest executable
+testConstraint testbitmap      [llength [info commands testbitmap]]
+testConstraint testborder      [llength [info commands testborder]]
+testConstraint testcbind       [llength [info commands testcbind]]
+testConstraint testclipboard   [llength [info commands testclipboard]]
+testConstraint testcolor       [llength [info commands testcolor]]
+testConstraint testcursor      [llength [info commands testcursor]]
+testConstraint testembed       [llength [info commands testembed]]
+testConstraint testfont        [llength [info commands testfont]]
+testConstraint testImageType   [expr {"test" in [image types]}]
+testConstraint testmakeexist   [llength [info commands testmakeexist]]
+testConstraint testmenubar     [llength [info commands testmenubar]]
+testConstraint testmetrics     [llength [info commands testmetrics]]
+testConstraint testmovemouse   [llength [info commands testmovemouse]]
+testConstraint testobjconfig   [llength [info commands testobjconfig]]
+testConstraint testpressbutton [llength [info commands testpressbutton]]
+testConstraint testsend        [llength [info commands testsend]]
+testConstraint testtext        [llength [info commands testtext]]
+testConstraint testwinevent    [llength [info commands testwinevent]]
+testConstraint testwrapper     [llength [info commands testwrapper]]
 
 # EOF
