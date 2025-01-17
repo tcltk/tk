@@ -197,7 +197,7 @@ namespace eval tk {
     }
 }
 
-# import generic utility procs by default
+# import generic utility procs into test files
 namespace import -force tk::test::*
 
 #
@@ -251,9 +251,6 @@ namespace eval ::tk::test::child {
 	catch {eval $loadTkCmd $name}
     }
 
-    namespace import ::tcltest::interpreter
-    namespace import ::tk::test::loadTkCommand
-
     # childTkProcess --
     #
     # 	Create a new Tk application in a child process, and enable it to
@@ -268,18 +265,18 @@ namespace eval ::tk::test::child {
 		if {[info exists fd] && [string length $fd]} {
 		    childTkProcess exit
 		}
-		set fd [open "|[list [interpreter] \
+		set fd [open "|[list [::tcltest::interpreter] \
 			-geometry +0+0 -name tktest] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {
-		    error "unexpected EOF from \"[interpreter]\""
+		    error "unexpected EOF from \"[::tcltest::interpreter]\""
 		}
 		if {$data ne "foo"} {
 		    error "unexpected output from\
 			    background process: \"$data\""
 		}
-		puts $fd [loadTkCommand]
+		puts $fd [::tk::test::loadTkCommand]
 		flush $fd
 		fileevent $fd readable [namespace code {childTkProcess read}]
 	    }
@@ -758,9 +755,8 @@ namespace eval ::tk::test::select {
     #
     # Create procs to be used for namespace variable access by test files
     #
-    namespace import ::tk::test::createStdAccessProc
     foreach varName {abortCount pass selInfo selValue} {
-	createStdAccessProc $varName
+	::tk::test::createStdAccessProc $varName
     }
 
     namespace export *
