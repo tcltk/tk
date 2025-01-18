@@ -975,7 +975,7 @@ if {[testConstraint testwinevent]} {
 # CLEANUP
 #
 
-unset applyFontCmd
+unset applyFontCmd initialDir
 namespace forget ::tk::test::dialog::*
 cleanupTests
 return
