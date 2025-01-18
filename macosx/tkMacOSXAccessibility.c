@@ -200,7 +200,12 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
      */
     
     flippedorigin = FlipY(screenrect.origin, w);
-    titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
+    if (([w styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+	titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height + 26;
+    } else {
+	titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
+    }
+	
     
     /* Calculate the desired x-offset for the accessibility frame.*/
     windowframe = w.frame;
@@ -222,11 +227,13 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return identifier;
 }
 
+
 - (id)accessibilityParent {
     Tk_Window win = self.tk_win;
     TkWindow *winPtr = (TkWindow *)win;
     NSWindow *w = nil;
     w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    w.accessibilityRole = NSAccessibilityWindowRole;
     TKContentView *view = [w contentView];
     self.parentView = view;
     return self.parentView;
@@ -285,6 +292,7 @@ TkMacAccessibleObjCmd(
     TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
     [widget.accessibilityParent accessibilityAddChildElement: widget];
+    NSAccessibilityPostNotification(widget.parentView, NSAccessibilityLayoutChangedNotification);
    
     [pool drain];
     return TCL_OK;
