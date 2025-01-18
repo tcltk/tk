@@ -309,6 +309,7 @@ namespace eval ::tk::accessible {
 
     #building out support for button initially to get mechanism correct
     bind Button <Map> {+::tk::accessible::add_acc_object %W}
+    bind Text <Map> {+::tk::accessible::add_acc_object %W}
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action add_acc_object
