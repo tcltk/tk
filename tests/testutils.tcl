@@ -389,39 +389,6 @@ namespace eval ::tk::test::colors {
 
 namespace eval ::tk::test::dialog {
 
-    #
-    # The following helper functions serve both windows and non-windows dialogs.
-    # On windows (test file winDialog.test), they are used to send messages
-    # to the win32 dialog, hence the weirdness.
-    #
-
-    proc afterbody {} {
-	set doRepeat 0
-
-	if {$::tcl_platform(platform) eq "windows"} {
-	    # On Vista and later, using the new file dialogs we have to find
-	    # the window using its title as tk_dialog will not be set at the C level
-	    variable dialogclass
-	    if {[catch {testfindwindow "" $dialogclass} ::tk_dialog]} {
-		set doRepeat 1
-	    }
-	} elseif {$::tk_dialog eq ""} {
-	    set doRepeat 1
-	}
-
-	if {$doRepeat} {
-	    variable iter_after
-	    if {[incr iter_after] > 30} {
-		variable dialogresult ">30 iterations waiting for tk_dialog"
-		return
-	    }
-	    after 150 ::tk::test::dialog::afterbody
-	    return
-	}
-
-	variable dialogresult [uplevel #0 $::tk::test::dialog::dialogcommand]
-    }
-
     proc PressButton {btn} {
 	event generate $btn <Enter>
 	event generate $btn <Button-1> -x 5 -y 5
@@ -487,15 +454,65 @@ namespace eval ::tk::test::dialog {
 	variable dialogType $type
     }
 
-    proc start {script} {
-	variable iter_after 0
+    proc testDialog {stage {script ""}} {
+	variable testDialogCmd
+	variable testDialogResult
+	variable testDialogFont
+	variable iter_after
 
-	set ::tk_dialog {}
-	if {$::tcl_platform(platform) eq "windows"} {
-	    variable dialogclass "#32770"
+	switch -- $stage {
+	    launch {
+		set iter_after 0
+		set ::tk_dialog {}
+		if {$::tcl_platform(platform) eq "windows"} {
+		    variable testDialogClass "#32770"
+		}
+
+		after 1 $script
+	    }
+	    onDisplay {
+		set testDialogCmd $script
+		set testDialogResult {}
+		set testDialogFont {}
+
+		if {$::tcl_platform(platform) eq "windows"} {
+		    # Do not make the delay too short. The newer Vista dialogs take
+		    # time to come up.
+		    after 500 [list [namespace current]::testDialog onDisplay2]
+		} else {
+		    testDialog onDisplay2
+		}
+		vwait ::tk::test::dialog::testDialogResult
+		return $testDialogResult
+	    }
+	    onDisplay2 {
+		set doRepeat 0
+
+		if {$::tcl_platform(platform) eq "windows"} {
+		    # On Vista and later, using the new file dialogs we have to find
+		    # the window using its title as tk_dialog will not be set at the C level
+		    variable testDialogClass
+		    if {[catch {testfindwindow "" $testDialogClass} ::tk_dialog]} {
+			set doRepeat 1
+		    }
+		} elseif {$::tk_dialog eq ""} {
+		    set doRepeat 1
+		}
+
+		if {$doRepeat} {
+		    if {[incr iter_after] > 30} {
+			set testDialogResult ">30 iterations waiting for tk_dialog"
+			return
+		    }
+		    after 150 [list ::tk::test::dialog::testDialog onDisplay2]
+		    return
+		}
+		set testDialogResult [uplevel #0 $testDialogCmd]
+	    }
+	    default {
+		return -code error "invalid parameter \"$stage\""
+	    }
 	}
-
-	after 1 $script
     }
 
     proc ToPressButton {parent btn} {
@@ -505,24 +522,9 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
-    proc then {cmd} {
-	variable dialogcommand $cmd dialogresult {}
-	variable dialogTestFont {}
+    ::tk::test::createStdAccessProc testDialogFont
 
-	if {$::tcl_platform(platform) eq "windows"} {
-	    # Do not make the delay too short. The newer Vista dialogs take
-	    # time to come up.
-	    after 500 ::tk::test::dialog::afterbody
-	} else {
-	    afterbody
-	}
-	vwait ::tk::test::dialog::dialogresult
-	return $dialogresult
-    }
-
-    ::tk::test::createStdAccessProc dialogTestFont
-
-    namespace export dialogTestFont PressButton SendButtonPress setDialogType ToPressButton start then
+    namespace export PressButton SendButtonPress setDialogType testDialog testDialogFont ToPressButton
 }
 
 
