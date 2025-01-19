@@ -173,7 +173,6 @@ namespace eval tk {
 		    return 30 ;  # arbitrary value known to be larger than the menubar height
 		}
 	    }
-	    namespace export menubarheight
 	}
 
 	# Suspend script execution for a given amount of time, but continue
@@ -193,7 +192,7 @@ namespace eval tk {
 	    unset _pause($num)
 	}
 
-	namespace export assert controlPointerWarpTiming createStdAccessProc deleteWindows fixfocus loadTkCommand _pause
+	namespace export *
     }
 }
 
