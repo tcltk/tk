@@ -90,10 +90,10 @@ namespace eval tk {
 	# the whole screen.
 	#
 	proc controlPointerWarpTiming {{duration 50}} {
-		update idletasks ;# see a. above
-		if {[tk windowingsystem] eq "win32"} {
-			after $duration ;# see b. above
-		}
+	    update idletasks ;# see a. above
+	    if {[tk windowingsystem] eq "win32"} {
+		after $duration ;# see b. above
+	    }
 	}
 
 	# createStdAccessProc --
@@ -398,7 +398,7 @@ namespace eval ::tk::test::dialog {
 	variable dialogType
 	switch -- $dialogType {
 	    "choosedir" {
-		if {$parent == "."} {
+		if {$parent eq "."} {
 		    set w .__tk_choosedir
 		} else {
 		    set w $parent.__tk_choosedir
@@ -410,7 +410,7 @@ namespace eval ::tk::test::dialog {
 		upvar ::tk::dialog::color::[winfo name $w] data
 	    }
 	    "filebox" {
-		if {$parent == "."} {
+		if {$parent eq "."} {
 		    set w .__tk_filedialog
 		} else {
 		    set w $parent.__tk_filedialog
@@ -418,7 +418,7 @@ namespace eval ::tk::test::dialog {
 		upvar ::tk::dialog::file::__tk_filedialog data
 	    }
 	    "msgbox" {
-		if {$parent == "."} {
+		if {$parent eq "."} {
 		    set w .__tk__messagebox
 		} else {
 		    set w $parent.__tk__messagebox
@@ -438,7 +438,7 @@ namespace eval ::tk::test::dialog {
 	    update
 	}
 
-	if {$buttonType == "mouse"} {
+	if {$buttonType eq "mouse"} {
 	    PressButton $button
 	} else {
 	    event generate $w <Enter>
@@ -744,7 +744,7 @@ namespace eval ::tk::test::select {
 
     proc setup {{path .f1} {display {}}} {
 	catch {destroy $path}
-	if {$display == {}} {
+	if {$display eq ""} {
 	    frame $path
 	} else {
 	    toplevel $path -screen $display
@@ -753,12 +753,11 @@ namespace eval ::tk::test::select {
 	selection own $path
     }
 
-    #
-    # Create procs to be used for namespace variable access by test files
-    #
+    # Create access procs for namespace variables
     foreach varName {abortCount pass selInfo selValue} {
 	::tk::test::createStdAccessProc $varName
     }
+    unset varName
 
     namespace export *
 }
