@@ -8,7 +8,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
-set applyFontCmd [list dialogTestFont set]
+set applyFontCmd [list testDialogFont set]
 
 proc Click {button} {
     switch -exact -- $button {
@@ -67,11 +67,11 @@ test fontchooser-1.9 {tk fontchooser: usage} -returnCodes error -body {
 testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
 
 test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -title "Hello"
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	set x [wm title $::tk_dialog]
 	Click cancel
     }
@@ -79,12 +79,12 @@ test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
 } -result {Hello}
 
 test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure \
 	    -title "Привет"
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	set x [wm title $::tk_dialog]
 	Click cancel
     }
@@ -92,11 +92,11 @@ test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -bo
 } -result "Привет"
 
 test fontchooser-3.0 {fontchooser -parent} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -parent .
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	set x [winfo parent $::tk_dialog]
 	Click cancel
     }
@@ -108,58 +108,58 @@ test fontchooser-3.1 {fontchooser -parent (invalid)} -constraints scriptImpl -bo
 } -returnCodes error -match glob -result {bad window path *}
 
 test fontchooser-4.0 {fontchooser -font} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -command $applyFontCmd -font courier
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	Click cancel
     }
-    dialogTestFont get
+    testDialogFont get
 } -result {}
 
 test fontchooser-4.1 {fontchooser -font} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -command $applyFontCmd -font courier
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	Click ok
     }
-    expr {[dialogTestFont get] ne {}}
+    expr {[testDialogFont get] ne {}}
 } -result 1
 
 test fontchooser-4.2 {fontchooser -font} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -command $applyFontCmd -font TkDefaultFont
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	Click ok
     }
-    expr {[dialogTestFont get] ne {}}
+    expr {[testDialogFont get] ne {}}
 } -result 1
 
 test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -command $applyFontCmd -font {times 14 bold}
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	Click ok
     }
-    expr {[dialogTestFont get] ne {}}
+    expr {[testDialogFont get] ne {}}
 } -result 1
 
 test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl havePointsize14BoldFont} -body {
-    start {
+    testDialog launch {
 	tk::fontchooser::Configure -command $applyFontCmd -font {times 14 bold}
 	tk::fontchooser::Show
     }
-    then {
+    testDialog onDisplay {
 	Click ok
     }
-    lrange [dialogTestFont get] 1 end
+    lrange [testDialogFont get] 1 end
 } -result {14 bold}
 
 test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} -body {

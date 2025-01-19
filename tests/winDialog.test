@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
-set applyFontCmd [list dialogTestFont set]
+set applyFontCmd [list testDialogFont set]
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
@@ -60,16 +60,16 @@ proc SetText {id text} {
 test winDialog-1.1 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
 } -body {
-    start {tk_chooseColor}
-    then {
+    testDialog launch {tk_chooseColor}
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
 test winDialog-1.2 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
 } -body {
-    start {set clr [tk_chooseColor -initialcolor "#ff9933"]}
-    then {
+    testDialog launch {set clr [tk_chooseColor -initialcolor "#ff9933"]}
+    testDialog onDisplay {
 	set x [Click cancel]
     }
     list $x $clr
@@ -77,8 +77,8 @@ test winDialog-1.2 {Tk_ChooseColorObjCmd} -constraints {
 test winDialog-1.3 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
 } -body {
-    start {set clr [tk_chooseColor -initialcolor "#ff9933"]}
-    then {
+    testDialog launch {set clr [tk_chooseColor -initialcolor "#ff9933"]}
+    testDialog onDisplay {
 	set x [Click ok]
     }
     list $x $clr
@@ -89,8 +89,8 @@ test winDialog-1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
     catch {unset a x}
 } -body {
     set x {}
-    start {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
-    then {
+    testDialog launch {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
+    testDialog onDisplay {
 	if {[catch {
 	    array set a [testgetwindowinfo $::tk_dialog]
 	    if {[info exists a(text)]} {lappend x $a(text)}
@@ -105,11 +105,11 @@ test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
     catch {unset a x}
 } -body {
     set x {}
-    start {
+    testDialog launch {
 	set clr [tk_chooseColor -initialcolor "#ff9933" \
 		     -title "Привет"]
     }
-    then {
+    testDialog onDisplay {
 	if {[catch {
 	    array set a [testgetwindowinfo $::tk_dialog]
 	    if {[info exists a(text)]} {lappend x $a(text)}
@@ -123,9 +123,9 @@ test winDialog-1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
 } -setup {
     catch {unset a x}
 } -body {
-    start {set clr [tk_chooseColor -initialcolor "#ff9933" -parent .]}
+    testDialog launch {set clr [tk_chooseColor -initialcolor "#ff9933" -parent .]}
     set x {}
-    then {
+    testDialog onDisplay {
 	if {[catch {
 	    array set a [testgetwindowinfo $::tk_dialog]
 	    if {[info exists a(parent)]} {
@@ -148,8 +148,8 @@ test winDialog-2.1 {ColorDlgHookProc} -constraints {emptyTest nt} -body {}
 test winDialog-3.1 {Tk_GetOpenFileObjCmd} -constraints {
     nt testwinevent english
 } -body {
-    start {tk_getOpenFile}
-    then {
+    testDialog launch {tk_getOpenFile}
+    testDialog onDisplay {
 	set x [GetText cancel]
 	Click cancel
     }
@@ -160,8 +160,8 @@ test winDialog-3.1 {Tk_GetOpenFileObjCmd} -constraints {
 test winDialog-4.1 {Tk_GetSaveFileObjCmd} -constraints {
     nt testwinevent english
 } -body {
-    start {tk_getSaveFile}
-    then {
+    testDialog launch {tk_getSaveFile}
+    testDialog onDisplay {
 	set x [GetText cancel]
 	Click cancel
     }
@@ -171,8 +171,8 @@ test winDialog-4.1 {Tk_GetSaveFileObjCmd} -constraints {
 test winDialog-5.1 {GetFileName: no arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -title Open}
-    then {
+    testDialog launch {tk_getOpenFile -title Open}
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
@@ -184,8 +184,8 @@ test winDialog-5.2 {GetFileName: one argument} -constraints {
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -initialdir $initialDir -parent . -title test -initialfile foo}
-    then {
+    testDialog launch {tk_getOpenFile -initialdir $initialDir -parent . -title test -initialfile foo}
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
@@ -197,8 +197,8 @@ test winDialog-5.4 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} -constraints {
 test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getOpenFile -title bar]}
-    set y [then {
+    testDialog launch {set x [tk_getOpenFile -title bar]}
+    set y [testDialog onDisplay {
 	Click cancel
     }]
     # Note this also tests fix for
@@ -215,9 +215,9 @@ test winDialog-5.6 {GetFileName: valid option, but missing value} -constraints {
 test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
+    testDialog launch {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -232,9 +232,9 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
 test winDialog-5.7.1 {GetFileName: extension {} } -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getSaveFile -defaultextension {} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -defaultextension {} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -249,9 +249,9 @@ test winDialog-5.7.1 {GetFileName: extension {} } -constraints {
 test winDialog-5.7.2 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1e756ff2a6e00 } -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -266,9 +266,9 @@ test winDialog-5.7.2 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1
 test winDialog-5.7.3 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1e756ff2a6e00 } -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar.c} msg]} {
 	    Click cancel
 	} else {
@@ -285,9 +285,9 @@ test winDialog-5.7.4 {GetFileName: extension {} } -constraints {
 } -body {
     # Although the docs do not explicitly mention, -filetypes seems to
     # override -defaultextension
-    start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {foo} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {foo} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -304,9 +304,9 @@ test winDialog-5.7.5 {GetFileName: extension {} } -constraints {
 } -body {
     # Although the docs do not explicitly mention, -filetypes seems to
     # override -defaultextension
-    start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -323,9 +323,9 @@ test winDialog-5.7.6 {GetFileName: All/extension } -constraints {
     nt testwinevent
 } -body {
     # In 8.6.4 this combination resulted in bar.aaa.aaa which is bad
-    start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {aaa} -title Save]}
+    testDialog launch {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {aaa} -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -342,11 +342,11 @@ test winDialog-5.7.7 {tk_getOpenFile: -defaultextension} -constraints {
 } -body {
     unset -nocomplain x
     tcltest::makeFile "" "5 7 7.aaa" $initialDir
-    start {set x [tk_getOpenFile \
+    testDialog launch {set x [tk_getOpenFile \
 		      -defaultextension aaa \
 		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 7 7" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -357,11 +357,11 @@ test winDialog-5.7.8 {tk_getOpenFile: -defaultextension} -constraints {
 } -body {
     unset -nocomplain x
     tcltest::makeFile "" "5 7 8.aaa" $initialDir
-    start {set x [tk_getOpenFile \
+    testDialog launch {set x [tk_getOpenFile \
 		      -defaultextension aaa \
 		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 7 8.aaa" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -370,9 +370,9 @@ test winDialog-5.7.8 {tk_getOpenFile: -defaultextension} -constraints {
 test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_getSaveFile -defaultextension foo -title Save]}
+    testDialog launch {set x [tk_getSaveFile -defaultextension foo -title Save]}
     set msg {}
-    then {
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
@@ -388,11 +388,11 @@ test winDialog-5.9 {GetFileName: file types} -constraints {
 } -body {
     #        case FILE_TYPES:
 
-    start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
+    testDialog launch {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
     # XXX - currently disabled for vista style dialogs because the file
     # types control has no control ID and we don't have a mechanism to
     # locate it.
-    then {
+    testDialog onDisplay {
 	Click cancel
     }
     return 1
@@ -409,10 +409,10 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
 } -body {
 #        case FILE_INITDIR:
     unset -nocomplain x
-    start {set x [tk_getSaveFile \
+    testDialog launch {set x [tk_getSaveFile \
 		      -initialdir $initialDir \
 		      -initialfile "12x 455" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -428,10 +428,10 @@ test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
     nt testwinevent tcl8
 } -body {
     unset -nocomplain x
-    start {set x [tk_getSaveFile \
+    testDialog launch {set x [tk_getSaveFile \
 		      -initialdir ~ \
 		      -initialfile "5 12 1" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -447,10 +447,10 @@ test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
     # least) it returned /users/Default instead of /users/USERNAME...
 
     unset -nocomplain x
-    start {set x [tk_getSaveFile \
+    testDialog launch {set x [tk_getSaveFile \
 		      -initialdir ~$::tcl_platform(user) \
 		      -initialfile "5 12 2" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -466,10 +466,10 @@ test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
     try {
 	cd $newdir
 	unset -nocomplain x
-	start {set x [tk_getSaveFile \
+	testDialog launch {set x [tk_getSaveFile \
 			  -initialdir . \
 			  -initialfile "testfile" -title Foo]}
-	then {
+	testDialog onDisplay {
 	    Click ok
 	}
     } finally {
@@ -483,10 +483,10 @@ test winDialog-5.12.4 {tk_getSaveFile: initial directory: unicode} -constraints 
 } -body {
     set dir [tcltest::makeDirectory "ŧéŝŧ"]
     unset -nocomplain x
-    start {set x [tk_getSaveFile \
+    testDialog launch {set x [tk_getSaveFile \
 		      -initialdir $dir \
 		      -initialfile "testfile" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     string equal $x [file join $dir testfile]
@@ -496,10 +496,10 @@ test winDialog-5.12.5 {tk_getSaveFile: initial directory: nativename} -constrain
     nt testwinevent
 } -body {
     unset -nocomplain x
-    start {set x [tk_getSaveFile \
+    testDialog launch {set x [tk_getSaveFile \
 		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 12 5" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -515,10 +515,10 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
     try {
 	cd [file dirname $dir]
 	unset -nocomplain x
-	start {set x [tk_getSaveFile \
+	testDialog launch {set x [tk_getSaveFile \
 			  -initialdir "5 12 6" \
 			  -initialfile "testfile" -title Foo]}
-	then {
+	testDialog onDisplay {
 	    Click ok
 	}
     } finally {
@@ -543,10 +543,10 @@ test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
 } -body {
     set fn [file tail [lindex [glob -types f ~/*] 0]]
     unset -nocomplain x
-    start {set x [tk_getOpenFile \
+    testDialog launch {set x [tk_getOpenFile \
 		      -initialdir ~ \
 		      -initialfile $fn -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     string equal $x [file normalize [file join ~ $fn]]
@@ -567,10 +567,10 @@ test winDialog-5.12.8 {tk_getOpenFile: initial directory: .} -constraints {
     try {
 	cd $newdir
 	unset -nocomplain x
-	start {set x [tk_getOpenFile \
+	testDialog launch {set x [tk_getOpenFile \
 			  -initialdir . \
 			  -initialfile "testfile" -title Foo]}
-	then {
+	testDialog onDisplay {
 	    Click ok
 	}
     } finally {
@@ -585,10 +585,10 @@ test winDialog-5.12.9 {tk_getOpenFile: initial directory: unicode} -constraints 
     set dir [tcltest::makeDirectory "ŧéŝŧ"]
     set path [tcltest::makeFile "" testfile $dir]
     unset -nocomplain x
-    start {set x [tk_getOpenFile \
+    testDialog launch {set x [tk_getOpenFile \
 		      -initialdir $dir \
 		      -initialfile "testfile" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     string equal $x $path
@@ -599,10 +599,10 @@ test winDialog-5.12.10 {tk_getOpenFile: initial directory: nativename} -constrai
 } -body {
     unset -nocomplain x
     tcltest::makeFile "" "5 12 10" $initialDir
-    start {set x [tk_getOpenFile \
+    testDialog launch {set x [tk_getOpenFile \
 		      -initialdir [file nativename $initialDir] \
 		      -initialfile "5 12 10" -title Foo]}
-    then {
+    testDialog onDisplay {
 	Click ok
     }
     return $x
@@ -619,10 +619,10 @@ test winDialog-5.12.11 {tk_getOpenFile: initial directory: relative} -constraint
     try {
 	cd [file dirname $dir]
 	unset -nocomplain x
-	start {set x [tk_getOpenFile \
+	testDialog launch {set x [tk_getOpenFile \
 			  -initialdir [file tail $dir] \
 			  -initialfile "testfile" -title Foo]}
-	then {
+	testDialog onDisplay {
 	    Click ok
 	}
     } finally {
@@ -636,8 +636,8 @@ test winDialog-5.13 {GetFileName: initial file} -constraints {
 } -body {
 #        case FILE_INITFILE:
 
-    start {set x [tk_getSaveFile -initialfile "12x 456" -title Foo]}
-    then {
+    testDialog launch {set x [tk_getSaveFile -initialfile "12x 456" -title Foo]}
+    testDialog onDisplay {
 	Click ok
     }
     file tail $x
@@ -662,8 +662,8 @@ test winDialog-5.16 {GetFileName: parent} -constraints {
 
     toplevel .t
     set x 0
-    start {tk_getOpenFile -parent .t -title Parent; set x 1}
-    then {
+    testDialog launch {tk_getOpenFile -parent .t -title Parent; set x 1}
+    testDialog onDisplay {
 	destroy .t
     }
     return $x
@@ -673,8 +673,8 @@ test winDialog-5.17 {GetFileName: title} -constraints {
 } -body {
 #        case FILE_TITLE:
 
-    start {tk_getOpenFile -title Narf}
-    then {
+    testDialog launch {tk_getOpenFile -title Narf}
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
@@ -682,8 +682,8 @@ test winDialog-5.18 {GetFileName: no filter specified} -constraints {
     nt testwinevent
 } -body {
     #    if (ofn.lpstrFilter == NULL)
-    start {tk_getOpenFile -title Filter}
-    then {
+    testDialog launch {tk_getOpenFile -title Filter}
+    testDialog onDisplay {
 	catch {set x [GetText 0x470]} y
 	Click cancel
     }
@@ -697,8 +697,8 @@ test winDialog-5.19 {GetFileName: parent HWND doesn't yet exist} -constraints {
 #    if (Tk_WindowId(parent) == None)
 
     toplevel .t
-    start {tk_getOpenFile -parent .t -title Open}
-    then {
+    testDialog launch {tk_getOpenFile -parent .t -title Open}
+    testDialog onDisplay {
 	destroy .t
     }
 } -result {}
@@ -709,8 +709,8 @@ test winDialog-5.20 {GetFileName: parent HWND already exists} -constraints {
 } -body {
     toplevel .t
     update
-    start {tk_getOpenFile -parent .t -title Open}
-    then {
+    testDialog launch {tk_getOpenFile -parent .t -title Open}
+    testDialog onDisplay {
 	destroy .t
     }
 } -result {}
@@ -719,8 +719,8 @@ test winDialog-5.21 {GetFileName: call GetOpenFileName} -constraints {
 } -body {
 #        winCode = GetOpenFileName(&ofn);
 
-    start {tk_getOpenFile -title Open}
-    then {
+    testDialog launch {tk_getOpenFile -title Open}
+    testDialog onDisplay {
 	set x [GetText ok]
 	Click cancel
     }
@@ -731,8 +731,8 @@ test winDialog-5.22 {GetFileName: call GetSaveFileName} -constraints {
 } -body {
 #        winCode = GetSaveFileName(&ofn);
 
-    start {tk_getSaveFile -title Save}
-    then {
+    testDialog launch {tk_getSaveFile -title Save}
+    testDialog onDisplay {
 	set x [GetText ok]
 	Click cancel
     }
@@ -742,8 +742,8 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     nt testwinevent
 } -body {
     set msg {}
-    start {set x [tk_getSaveFile -title Back]}
-    then {
+    testDialog launch {set x [tk_getSaveFile -title Back]}
+    testDialog onDisplay {
 	if {[catch {SetText 0x3e9 [file nativename \
 		[file join $initialDir "12x 457"]]} msg]} {
 	    Click cancel
@@ -760,8 +760,8 @@ test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraint
 } -body {
     # MacOS type that is correct, but has embedded nulls.
 
-    start {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0}}}}]}
-    then {
+    testDialog launch {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0}}}}]}
+    testDialog onDisplay {
 	Click cancel
     }
     return $x
@@ -771,8 +771,8 @@ test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraint
 } -body {
     # MacOS type that is correct, but has embedded high-bit chars.
 
-    start {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {••••}}}}]}
-    then {
+    testDialog launch {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {••••}}}}]}
+    testDialog onDisplay {
 	Click cancel
     }
     return $x
@@ -795,8 +795,8 @@ test winDialog-8.1 {OFNHookProc} -constraints {emptyTest nt} -body {}
 test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} -constraints {
     nt testwinevent
 } -body {
-    start {set x [tk_chooseDirectory]}
-    set y [then {
+    testDialog launch {set x [tk_chooseDirectory]}
+    set y [testDialog onDisplay {
 	Click cancel
     }]
     # $x should be "" on a Cancel
@@ -810,10 +810,10 @@ test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -constraints {
 test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk_chooseDirectory -initialdir $initialDir -mustexist 1 -parent . -title test
     }
-    then {
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
@@ -825,8 +825,8 @@ test winDialog-9.4 {Tk_ChooseDirectoryObjCmd: Tcl_GetIndexFromObj() != TCL_OK} -
 test winDialog-9.5 {Tk_ChooseDirectoryObjCmd: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     nt testwinevent
 } -body {
-    start {tk_chooseDirectory -title bar}
-    then {
+    testDialog launch {tk_chooseDirectory -title bar}
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
@@ -840,8 +840,8 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
 } -body {
 #        case DIR_INITIAL:
 
-    start {set x [tk_chooseDirectory -initialdir $initialDir -title Foo]}
-    then {
+    testDialog launch {set x [tk_chooseDirectory -initialdir $initialDir -title Foo]}
+    testDialog onDisplay {
 	Click ok
     }
     string tolower [set x]
@@ -859,92 +859,92 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFi
 test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk fontchooser show}
-    list [then {
+    testDialog launch {tk fontchooser show}
+    list [testDialog onDisplay {
 	Click cancel
-    }] [dialogTestFont get]
+    }] [testDialogFont get]
 } -result {0 {}}
 test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -font system
 	tk fontchooser show
     }
-    list [then {
+    list [testDialog onDisplay {
 	Click cancel
-    }] [dialogTestFont get]
+    }] [testDialogFont get]
 } -result {0 {}}
 test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -font system
 	tk fontchooser show
     }
-    list [then {
+    list [testDialog onDisplay {
 	Click 1
-    }] [expr {[llength [dialogTestFont get]] ne {}}]
+    }] [expr {[llength [testDialogFont get]] ne {}}]
 } -result {0 1}
 test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -title "tk test"
 	tk fontchooser show
     }
-    list [then {
+    list [testDialog onDisplay {
 	Click cancel
-    }] [dialogTestFont get]
+    }] [testDialogFont get]
 } -result {0 {}}
 test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     nt testwinevent
 } -setup {
     array set a {parent {}}
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -parent .
 	tk fontchooser show
     }
-    then {
+    testDialog onDisplay {
 	array set a [testgetwindowinfo $::tk_dialog]
 	Click cancel
     }
-    list [expr {$a(parent) == [wm frame .]}] [dialogTestFont get]
+    list [expr {$a(parent) == [wm frame .]}] [testDialogFont get]
 } -result {1 {}}
 test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command FooBarBaz
 	tk fontchooser show
     }
-    then {
+    testDialog onDisplay {
 	Click cancel
     }
 } -result 0
 test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -parent .
 	tk fontchooser show
     }
-    list [then {
+    list [testDialog onDisplay {
 	Click [expr {0x0402}] ;# value from XP
 	Click cancel
-    }] [expr {[llength [dialogTestFont get]] > 0}]
+    }] [expr {[llength [testDialogFont get]] > 0}]
 } -result {0 1}
 test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
 } -setup {
     array set a {text failed}
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd -title "Hello"
 	tk fontchooser show
     }
-    then {
+    testDialog onDisplay {
 	array set a [testgetwindowinfo $::tk_dialog]
 	Click cancel
     }
@@ -955,12 +955,12 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
 } -setup {
     array set a {text failed}
 } -body {
-    start {
+    testDialog launch {
 	tk fontchooser configure -command $applyFontCmd \
 	    -title  "Привет"
 	tk fontchooser show
     }
-    then {
+    testDialog onDisplay {
 	array set a [testgetwindowinfo $::tk_dialog]
 	Click cancel
     }
