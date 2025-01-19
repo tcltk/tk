@@ -524,7 +524,7 @@ namespace eval ::tk::test::dialog {
 
     ::tk::test::createStdAccessProc testDialogFont
 
-    namespace export PressButton SendButtonPress setDialogType testDialog testDialogFont ToPressButton
+    namespace export *
 }
 
 
