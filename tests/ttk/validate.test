@@ -189,9 +189,6 @@ test validate-1.20 {entry widget validation} -constraints coreEntry -body {
     list [.e cget -validate] [.e get] $::e [validationData get]
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
 
-#
-# New tests, -JE:
-#
 test validate-2.1 "Validation script changes value" -body {
     .e configure -validate none -validatecommand $validateCmd4
     set ::e testdata
