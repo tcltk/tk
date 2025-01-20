@@ -13,7 +13,6 @@
 
 package require tcltest 2.2
 namespace import ::tcltest::*
-namespace import ::tk::test:loadTkCommand
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
