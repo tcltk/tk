@@ -28,10 +28,6 @@ testConstraint english [expr {
     && (([testwinlocale] & 0xff) == 9)
 }]
 
-# What directory to use in initialdir tests. Old code used to use
-# c:/. However, on Vista/later that is a protected directory if you
-# are not running privileged. Moreover, not everyone has a drive c:
-# but not having a TEMP would break a lot Windows programs
 set initialDir [tcltest::temporaryDirectory]
 
 proc Click {button} {
