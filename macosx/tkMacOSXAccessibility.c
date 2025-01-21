@@ -42,6 +42,8 @@ const struct MacRoleMap roleMap[] = {
     {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
     {"Combobox",  @"NSAccessibilityComboBoxRole"},
     {"Entry",  @"NSAccessibilityTextFieldRole"},
+    {"Frame", @"NSAccessibilityGroupRole"},
+    {"Label", @"NSAccessibilityStaticTextRole"},
     {"Notebook", @"NSAccessibilityTabGroupRole"},
     {"Progressbar",  @"NSAccessibilityProgressIndicatorRole"},
     {"Radiobutton",  @"NSAccessibilityRadioButtonRole"},
@@ -233,7 +235,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     TkWindow *winPtr = (TkWindow *)win;
     NSWindow *w = nil;
     w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    w.accessibilityRole = NSAccessibilityWindowRole;
     TKContentView *view = [w contentView];
     self.parentView = view;
     return self.parentView;
