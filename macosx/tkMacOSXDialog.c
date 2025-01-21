@@ -37,7 +37,9 @@ static void setAllowedFileTypes(
 	NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
 	for (NSString *ext in extensions) {
 	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
-	    [allowedTypes addObject:uttype];
+	    if (uttype) {
+		[allowedTypes addObject:uttype];
+	    }
 	}
 	[panel setAllowedContentTypes:allowedTypes];
     } else {
