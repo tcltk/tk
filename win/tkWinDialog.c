@@ -153,7 +153,8 @@ typedef struct {
 
 typedef struct OFNData {
     Tcl_Interp *interp;		/* Interp, used only if debug is turned on,
-				 * for setting the "tk_dialog" variable. */
+				 * for setting the variable
+				 * "::tk::test::dialog::tk_dialog". */
     int dynFileBufferSize;	/* Dynamic filename buffer size, stored to
 				 * avoid shrinking and expanding the buffer
 				 * when selection changes */
@@ -646,9 +647,9 @@ EatSpuriousMessageBugFix(void)
  * TkWinDialogDebug --
  *
  *	Function to turn on/off debugging support for common dialogs under
- *	windows. The variable "tk_debug" is set to the identifier of the
- *	dialog window when the modal dialog window pops up and it is safe to
- *	send messages to the dialog.
+ *	windows. The variable "::tk::test::dialog::tk_dialog" is set to the
+ *	identifier of the dialog window when the modal dialog window pops up
+ *	and it is safe to send messages to the dialog.
  *
  * Results:
  *	None.
@@ -1839,10 +1840,10 @@ GetFileName(
  *
  * OFNHookProc --
  *
- *	Dialog box hook function. This is used to set the "tk_dialog"
- *	variable for test/debugging when the dialog is ready to receive
- *	messages. When multiple file selection is enabled this function
- *	is used to process the list of names.
+ *	Dialog box hook function. This is used to set the variable
+ *	"::tk::test::dialog::tk_dialog" for test/debugging when the dialog
+ *	is ready to receive messages. When multiple file selection is enabled
+ *	this function is used to process the list of names.
  *
  * Results:
  *	Returns 0 to allow default processing of messages to occur.
@@ -2949,10 +2950,11 @@ MsgBoxCBTProc(
  *
  * SetTkDialog --
  *
- *	Records the HWND for a native dialog in the 'tk_dialog' variable so
- *	that the test-suite can operate on the correct dialog window. Use of
- *	this is enabled when a test program calls TkWinDialogDebug by calling
- *	the test command 'tkwinevent debug 1'.
+ *	Records the HWND for a native dialog in the variable
+ *	":tk::test::dialog::tk_dialog" so that the test-suite can operate
+ *	on the correct dialog window. Use of this is enabled when a test
+ *	program calls TkWinDialogDebug by calling the test command
+ *	'testwinevent debug 1'.
  *
  * ----------------------------------------------------------------------
  */
@@ -2966,7 +2968,8 @@ SetTkDialog(
     char buf[32];
 
     snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
-    Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(tsdPtr->debugInterp, "::tk::test::dialog::tk_dialog", NULL,
+		buf, TCL_GLOBAL_ONLY);
 }
 
 /*

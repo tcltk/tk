@@ -458,11 +458,13 @@ namespace eval ::tk::test::dialog {
 	variable testDialogResult
 	variable testDialogFont
 	variable iter_after
+	variable tk_dialog; # On MS Windows, this variable is set at the C level
+	                    # by SetTkDialog() in tkWinDialog.c
 
 	switch -- $stage {
 	    launch {
 		set iter_after 0
-		set ::tk_dialog {}
+		set tk_dialog {}
 		if {$::tcl_platform(platform) eq "windows"} {
 		    variable testDialogClass "#32770"
 		}
@@ -491,10 +493,10 @@ namespace eval ::tk::test::dialog {
 		    # On Vista and later, using the new file dialogs we have to find
 		    # the window using its title as tk_dialog will not be set at the C level
 		    variable testDialogClass
-		    if {[catch {testfindwindow "" $testDialogClass} ::tk_dialog]} {
+		    if {[catch {testfindwindow "" $testDialogClass} tk_dialog]} {
 			set doRepeat 1
 		    }
-		} elseif {$::tk_dialog eq ""} {
+		} elseif {$tk_dialog eq ""} {
 		    set doRepeat 1
 		}
 
