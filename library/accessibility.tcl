@@ -307,9 +307,81 @@ namespace eval ::tk::accessible {
 			     {}\
 			 }
 
-    #building out support for button initially to get mechanism correct
-    bind Button <Map> {+::tk::accessible::add_acc_object %W}
-    bind Text <Map> {+::tk::accessible::add_acc_object %W}
+    #Text bindings
+    bind Text <Map> {+::tk::accessible::_init \
+			 %W \
+			 Text \
+			 Text \
+			 Text \
+			 [::tk::accessible::_gettext %W] \
+			 [%W cget -state] \
+			 {}\
+		     }
+
+    #Frame/TFrame bindings
+    bind Frame <Map> {+::tk::accessible::_init \
+			  %W \
+			  Frame \
+			  Frame \
+			  Frame \
+			  {} \
+			  {}\
+			  {}\
+		      }
+
+    bind TFrame <Map> {+::tk::accessible::_init \
+			   %W \
+			   Frame \
+			   Frame \
+			   Frame \
+			   {} \
+			   {}\
+			   {}\
+		       }
+    
+    #Labelframe/TLabelframe bindings
+    bind Labelframe <Map>    {+::tk::accessible::_init \
+				  %W \
+				  Labelframe \
+				  Labelframe \
+				  [%W cget -text] \
+				  {} \
+				  {}\
+				  {}\
+			      }
+    bind TLabelframe <Map>    {+::tk::accessible::_init \
+				   %W \
+				   Labelframe \
+				   Labelframe \
+				   [%W cget -text] \
+				   {} \
+				   {}\
+				   {}\
+			       }
+    
+    #Label/TLabel bindings
+    bind Label <Map>    {+::tk::accessible::_init \
+			     %W \
+			     Label \
+			     Label \
+			     [%W cget -text] \
+			     {} \
+			     {}\
+			     {}\
+			 }
+
+    bind TLabel <Map>    {+::tk::accessible::_init \
+			      %W \
+			      Label \
+			      Label \
+			      [%W cget -text] \
+			      {} \
+			      {}\
+			      {}\
+			  }
+    
+    
+    bind all <Map> {+::tk::accessible::add_acc_object %W}
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action add_acc_object
