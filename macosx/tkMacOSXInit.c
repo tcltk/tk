@@ -51,7 +51,7 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
-;
+
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
     if (winPtr) {
