@@ -8,6 +8,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
+upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
 set applyFontCmd [list testDialogFont set]
 
 proc Click {button} {
