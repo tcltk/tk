@@ -519,7 +519,8 @@ DoConfig(
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_PIXELS:
+	case TK_CONFIG_PIXELS: {
+	    int nullOK = specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1);
 	    if (specPtr->specFlags & TK_CONFIG_OBJS) {
 		int dummy;
 		if (nullValue) {
@@ -527,8 +528,13 @@ DoConfig(
 			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
 			*(Tcl_Obj **)ptr = NULL;
 		    }
-		} else if (Tk_GetPixelsFromObj(interp, tkwin, arg, &dummy)
+		} else if (Tk_GetPixelsFromObj((nullOK ? NULL : interp), tkwin, arg, &dummy)
 			!= TCL_OK) {
+		wrongPixel:
+		    if (interp && nullOK) {
+			Tcl_AppendResult(interp, "expected screen distance or \"\" but got \"",
+				Tcl_GetString(arg), "\"", (char *)NULL);
+		    }
 		    return TCL_ERROR;
 		} else {
 		    Tcl_IncrRefCount(arg);
@@ -539,11 +545,12 @@ DoConfig(
 		}
 	    } else if (nullValue) {
 		*(int *)ptr = INT_MIN;
-	    } else if (Tk_GetPixelsFromObj(interp, tkwin, arg, (int *)ptr)
+	    } else if (Tk_GetPixelsFromObj((nullOK ? NULL : interp), tkwin, arg, (int *)ptr)
 		!= TCL_OK) {
-		return TCL_ERROR;
+		goto wrongPixel;
 	    }
 	    break;
+	}
 	case TK_CONFIG_MM:
 	    if (Tk_GetScreenMM(interp, tkwin, value, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;

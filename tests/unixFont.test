@@ -16,21 +16,30 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 if {[tk windowingsystem] eq "x11"} {
-    set xlsf [auto_execok xlsfonts]
+    if {[testConstraint withXft]} {
+	set fontsystemcmd [auto_execok fc-list]
+    } else {
+	set fontsystemcmd [auto_execok xlsfonts]
+    }
 }
 foreach {constraint font} {
-    hasArial	arial
-    hasCourierNew	"courier new"
-    hasTimesNew	"times new roman"
+    hasArial      arial
+    hasCourierNew "courier new"
+    hasTimesNew   "times new roman"
 } {
-    if {[tk windowingsystem] eq "x11"} {
-	testConstraint $constraint 1
-	if {[llength $xlsf]} {
-	    if {![catch {eval exec $xlsf [list *-$font-*]} res]
+    testConstraint $constraint 0
+    if {([tk windowingsystem] eq "x11") && [llength $fontsystemcmd]} {
+	if {[testConstraint withXft]} {
+	    if {[exec $fontsystemcmd $font family] ne ""} {
+		testConstraint $constraint 1
+	    }
+	} else {
+	    # With the old font system, the constraint is true by default,
+	    # except on the mac with XQuartz
+	    testConstraint $constraint [expr {!(($tcl_platform(os) eq "Darwin") \
+					     && ([tk windowingsystem] eq "x11"))}]
+	    if {![catch {eval exec $fontsystemcmd [list *-$font-*]} res]
 		    && ![string match *unmatched* $res]} {
 		# Newer Unix systems have more default fonts installed,
 		# so we can't rely on fallbacks for fonts to need to
@@ -38,8 +47,6 @@ foreach {constraint font} {
 		testConstraint $constraint 0
 	    }
 	}
-    } else {
-	testConstraint $constraint 0
     }
 }
 
@@ -48,19 +55,19 @@ toplevel .b
 wm geom .b +0+0
 update idletasks
 
-# Font should be fixed width and have chars missing below char 32, so can
-# test control char expansion and missing character code.
+# Fonts must be fixed width and have chars missing below char 32, so that
+# tests can control char expansion and missing character code. Therefore
+# we're using TkFixedFont here for both the label and the canvas.
 
-set courier {Courier -10}
-set cx [font measure $courier 0]
-
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font fixed
+label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font TkFixedFont
 pack .b.l
 canvas .b.c -closeenough 0
 
-set t [.b.c create text 0 0 -anchor nw -just left -font $courier]
+set t [.b.c create text 0 0 -anchor nw -just left -font TkFixedFont]
 pack .b.c
 update
+
+set cx [font measure TkFixedFont 0]
 
 set ax [winfo reqwidth .b.l]
 set ay [winfo reqheight .b.l]
@@ -69,10 +76,10 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11 noExceed} {
+test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
     list [catch {font measure {} xyz} msg] $msg
 } {1 {font "" does not exist}}
-test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 failsOnUbuntu} {
+test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 haveFixedFamilyFont} {
     font measure fixed 0
 } 6
 
@@ -81,21 +88,21 @@ test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} x11 {
     set x {}
 } {}
 test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
-	{x11 noExceed hasTimesNew failsOnUbuntu} {
+	{x11 hasTimesNew} {
     set x {}
     lappend x [lindex [font actual {-family "Times New Roman"}] 1]
     lappend x [lindex [font actual {-family "New York"}] 1]
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{x11 noExceed hasCourierNew failsOnUbuntu failsOnXQuarz} {
+	{x11 hasCourierNew} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{x11 noExceed hasArial failsOnUbuntu failsOnXQuarz} {
+	{x11 hasArial} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]
@@ -105,19 +112,19 @@ test unixfont-2.5 {TkpGetFontFromAttributes procedure: fallback} x11 {
     font actual {-xyz-xyz-*-*-*-*-*-*-*-*-*-*-*-*}
     set x {}
 } {}
-test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} {x11 failsOnUbuntu} {
+test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 10}] 1
 } {fixed}
 test unixfont-2.7 {TkpGetFontFromAttributes: fixed family not available!} x11 {
     # no test available
 } {}
-test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 failsOnUbuntu} {
+test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 31}] 1
 } {fixed}
-test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 noExceed failsOnUbuntu} {
+test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 haveCourierFamilyFont} {
     lindex [font actual {-family courier}] 1
 } {courier}
-test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 haveCourier37Font} {
+test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 havePointsize37Font} {
     lindex [font actual {-family courier -size 37}] 3
 } 37
 test unixfont-2.11 {TkpGetFontFromAttributes: font cannot be loaded} x11 {
@@ -169,11 +176,11 @@ test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} x11 {
     .b.l config -text "000000     00000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
-test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11 failsOnUbuntu} {
+test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11} {
     .b.l config -text "00  000     00000"
     getsize
 } "[expr $ax*7] [expr $ay*2]"
-test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11 failsOnUbuntu} {
+test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
     .b.c index $t @[expr int($ax*2.5)],1
@@ -189,7 +196,7 @@ test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} x
     .b.l config -wrap $a
     set x
 } "$ax [expr $ay*6]"
-test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {x11 failsOnUbuntu} {
+test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {x11} {
     .b.l config -text "000   \n000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
@@ -256,22 +263,29 @@ test unixfont-8.3 {InitFont procedure: can't parse info from name} x11 {
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
-test unixfont-8.4 {InitFont procedure: classify characters} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
+# Constrained by nonPortable because this test highly relies on fonts availability.
+# - without Xft, I couldn't find any font featuring a glyph of 6 charwidths
+#   for character \u4000. The 'unifont' package provides this glyph but the
+#   width of \u4000 is only 2 character widths (which seems visually fine).
+# - with Xft the problem is identical for \u4000, and moreover the width
+#   of, say, \002 depends on which fonts are installed.
     set x 0
-    incr x [font measure $courier "䀀"]   ;# 6
-    incr x [font measure $courier "\002"]   ;# 4
-    incr x [font measure $courier "\012"]   ;# 2
-    incr x [font measure $courier "\101"]   ;# 1
+    incr x [font measure TkFixedFont "䀀"]   ;# 6
+    incr x [font measure TkFixedFont "\002"]   ;# 4
+    incr x [font measure TkFixedFont "\012"]   ;# 2
+    incr x [font measure TkFixedFont "\101"]   ;# 1
     set x
 } [expr $cx*13]
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
-    font metrics $courier -fixed
+    font metrics TkFixedFont -fixed
 } 1
-test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     set x 0
-    incr x [font measure $courier "\001"]   ;# 4
-    incr x [font measure $courier "\002"]   ;# 4
-    incr x [font measure $courier "\012"]   ;# 2
+    incr x [font measure TkFixedFont "\001"]   ;# 4
+    incr x [font measure TkFixedFont "\002"]   ;# 4
+    incr x [font measure TkFixedFont "\012"]   ;# 2
     set x
 } [expr $cx*10]
 test unixfont-8.7 {InitFont procedure: XA_UNDERLINE_POSITION} x11 {
@@ -295,7 +309,8 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-9.1 {2 chars substituted in inserted text} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -304,7 +319,8 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbu
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
+# Constrained by nonPortable, see unixfont-8.4
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
