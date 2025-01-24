@@ -32,7 +32,7 @@ int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
-    const char *tkrole;
+    char *tkrole;
     NSAccessibilityRole  macrole;
 };
 
@@ -44,6 +44,7 @@ const struct MacRoleMap roleMap[] = {
     {"Entry",  @"NSAccessibilityTextFieldRole"},
     {"Frame", @"NSAccessibilityGroupRole"},
     {"Label", @"NSAccessibilityStaticTextRole"},
+    {"Listbox", @"NSAccessibilityListRole"},
     {"Notebook", @"NSAccessibilityTabGroupRole"},
     {"Progressbar",  @"NSAccessibilityProgressIndicatorRole"},
     {"Radiobutton",  @"NSAccessibilityRadioButtonRole"},
@@ -161,14 +162,16 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 	return nil;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    for (i = 0; roleMap[i].tkrole != NULL; i++) {
-	if(strcmp(roleMap[i].tkrole, result) == 0) {
-	    macrole = roleMap[i].macrole;
+    for (i = 0; i < sizeof(roleMap); i++) {
+	if(strcmp(roleMap[i].tkrole, result) != 0) {
+	    continue;
 	}
+	macrole = roleMap[i].macrole;
 	return macrole;
     }
     return macrole;
 }
+
     
 
 - (BOOL)isAccessibilityElement {
@@ -247,7 +250,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 - (BOOL)accessibilityIsIgnored {
     return NO;
 }
-
 
 @end
 
