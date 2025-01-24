@@ -1028,7 +1028,7 @@ ConfigureButton(
     int error, haveImage;
     Tk_Image image;
     int wrapLength, borderWidth, highlightWidth, padX, padY;
-    int butPtrWidth, butPtrHeight;
+    int width, height;
 
     /*
      * Eliminate any existing trace on variables monitored by the button.
@@ -1092,13 +1092,6 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
-	if (wrapLength < 0) {
-	    wrapLength = 0;
-	    Tcl_DecrRefCount(butPtr->wrapLengthObj);
-	    butPtr->wrapLengthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->wrapLengthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
 	if (borderWidth < 0) {
 	    borderWidth = 0;
@@ -1126,6 +1119,13 @@ ConfigureButton(
 	    Tcl_DecrRefCount(butPtr->padYObj);
 	    butPtr->padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padYObj);
+	}
+	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+	if (wrapLength < 0) {
+	    wrapLength = 0;
+	    Tcl_DecrRefCount(butPtr->wrapLengthObj);
+	    butPtr->wrapLengthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->wrapLengthObj);
 	}
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
@@ -1274,13 +1274,13 @@ ConfigureButton(
 	     */
 
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->widthObj,
-		    &butPtrWidth) != TCL_OK) {
+		    &width) != TCL_OK) {
 	    widthError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->heightObj,
-		    &butPtrHeight) != TCL_OK) {
+		    &height) != TCL_OK) {
 	    heightError:
 		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
@@ -1290,21 +1290,21 @@ ConfigureButton(
 	     * The button displays an ordinary text string.
 	     */
 
-	    if (Tcl_GetIntFromObj(interp, butPtr->widthObj, &butPtrWidth)
+	    if (Tcl_GetIntFromObj(interp, butPtr->widthObj, &width)
 		    != TCL_OK) {
 		goto widthError;
 	    }
-	    if (Tcl_GetIntFromObj(interp, butPtr->heightObj, &butPtrHeight)
+	    if (Tcl_GetIntFromObj(interp, butPtr->heightObj, &height)
 		    != TCL_OK) {
 		goto heightError;
 	    }
 	}
-	if (butPtrWidth < 0) {
+	if (width < 0) {
 	    Tcl_DecrRefCount(butPtr->widthObj);
 	    butPtr->widthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->widthObj);
 	}
-	if (butPtrHeight < 0) {
+	if (height < 0) {
 	    Tcl_DecrRefCount(butPtr->heightObj);
 	    butPtr->heightObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->heightObj);
