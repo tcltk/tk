@@ -8,15 +8,15 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
-upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
+upvar #0 ::tk::test::dialog::testDialog testDialog
 set applyFontCmd [list testDialogFont set]
 
 proc Click {button} {
-    upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
+    upvar #0 ::tk::test::dialog::testDialog testDialog
     switch -exact -- $button {
-	ok { $tk_dialog.ok invoke }
-	cancel { $tk_dialog.cancel invoke }
-	apply { $tk_dialog.apply invoke }
+	ok { $testDialog.ok invoke }
+	cancel { $testDialog.cancel invoke }
+	apply { $testDialog.apply invoke }
 	default { return -code error "invalid button name \"$button\"" }
     }
 }
@@ -74,7 +74,7 @@ test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
 	tk::fontchooser::Show
     }
     testDialog onDisplay {
-	set x [wm title $tk_dialog]
+	set x [wm title $testDialog]
 	Click cancel
     }
     set x
@@ -87,7 +87,7 @@ test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -bo
 	tk::fontchooser::Show
     }
     testDialog onDisplay {
-	set x [wm title $tk_dialog]
+	set x [wm title $testDialog]
 	Click cancel
     }
     set x
@@ -99,7 +99,7 @@ test fontchooser-3.0 {fontchooser -parent} -constraints scriptImpl -body {
 	tk::fontchooser::Show
     }
     testDialog onDisplay {
-	set x [winfo parent $tk_dialog]
+	set x [winfo parent $testDialog]
 	Click cancel
     }
     set x
