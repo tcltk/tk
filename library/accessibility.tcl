@@ -163,9 +163,9 @@ namespace eval ::tk::accessible {
     #Listbox bindings
     bind Listbox <Map> {+::tk::accessible::_init \
 			    %W \
-			    Table \
-			    Table \
-			    Table\
+			    Listbox \
+			    Listbox \
+			    Listbox \
 			    [%W get [%W curselection]] \
 			    [%W cget -state]\
 			    {}\
@@ -285,16 +285,6 @@ namespace eval ::tk::accessible {
 			     {%W cget -command}\
 			 }
 
-    #Text bindings
-    bind Text <Map> {+::tk::accessible::_init \
-			 %W \
-			 Text \
-			 Text \
-			 Text \
-			 [::tk::accessible::_gettext %W] \
-			 [%W cget -state] \
-			 {}\
-		     }
 
     #Treeview bindings
     bind Treeview <Map> {+::tk::accessible::_init \
@@ -317,47 +307,6 @@ namespace eval ::tk::accessible {
 			 [%W cget -state] \
 			 {}\
 		     }
-
-    #Frame/TFrame bindings
-    bind Frame <Map> {+::tk::accessible::_init \
-			  %W \
-			  Frame \
-			  Frame \
-			  Frame \
-			  {} \
-			  {}\
-			  {}\
-		      }
-
-    bind TFrame <Map> {+::tk::accessible::_init \
-			   %W \
-			   Frame \
-			   Frame \
-			   Frame \
-			   {} \
-			   {}\
-			   {}\
-		       }
-    
-    #Labelframe/TLabelframe bindings
-    bind Labelframe <Map>    {+::tk::accessible::_init \
-				  %W \
-				  Labelframe \
-				  Labelframe \
-				  [%W cget -text] \
-				  {} \
-				  {}\
-				  {}\
-			      }
-    bind TLabelframe <Map>    {+::tk::accessible::_init \
-				   %W \
-				   Labelframe \
-				   Labelframe \
-				   [%W cget -text] \
-				   {} \
-				   {}\
-				   {}\
-			       }
     
     #Label/TLabel bindings
     bind Label <Map>    {+::tk::accessible::_init \
