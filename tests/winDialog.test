@@ -384,19 +384,24 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     unset msg
 } -result bar.foo
 test winDialog-5.9 {GetFileName: file types} -constraints {
-    nt testwinevent
+    nt testwinevent knownBug
 } -body {
-    #        case FILE_TYPES:
-
+    #
+    # This test was used with MS Windows versions before Windows Vista.
+    # Starting from that version, the test is not valid anymore because the
+    # dialog's file types control has no control ID and we don't have a
+    # mechanism to locate it.
+    # The test remains at this place, with constraint knownBug, to serve as an
+    # example/template in the event that the situation changes in the future
+    # somehow.
+    #
     testDialog launch {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
-    # XXX - currently disabled for vista style dialogs because the file
-    # types control has no control ID and we don't have a mechanism to
-    # locate it.
     testDialog onDisplay {
+	set x [GetText 0x470]
 	Click cancel
     }
-    return 1
-} -result 1
+    return $x
+} -result {foo files (*.foo)}
 test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
     nt
 } -body {
