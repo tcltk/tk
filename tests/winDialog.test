@@ -14,6 +14,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 namespace import -force ::tk::test::dialog::*
+upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
 set applyFontCmd [list testDialogFont set]
 
 if {[testConstraint testwinevent]} {
@@ -31,24 +32,27 @@ testConstraint english [expr {
 set initialDir [tcltest::temporaryDirectory]
 
 proc Click {button} {
+    upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
     switch -exact -- $button {
 	ok     { set button 1 }
 	cancel { set button 2 }
     }
-    testwinevent $::tk_dialog $button WM_LBUTTONDOWN 1 0x000a000b
-    testwinevent $::tk_dialog $button WM_LBUTTONUP 0 0x000a000b
+    testwinevent $tk_dialog $button WM_LBUTTONDOWN 1 0x000a000b
+    testwinevent $tk_dialog $button WM_LBUTTONUP 0 0x000a000b
 }
 
 proc GetText {id} {
+    upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
     switch -exact -- $id {
 	ok     { set id 1 }
 	cancel { set id 2 }
     }
-    return [testwinevent $::tk_dialog $id WM_GETTEXT]
+    return [testwinevent $tk_dialog $id WM_GETTEXT]
 }
 
 proc SetText {id text} {
-    return [testwinevent $::tk_dialog $id WM_SETTEXT $text]
+    upvar #0 ::tk::test::dialog::tk_dialog tk_dialog
+    return [testwinevent $tk_dialog $id WM_SETTEXT $text]
 }
 
 # ----------------------------------------------------------------------
@@ -88,7 +92,7 @@ test winDialog-1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
     testDialog launch {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
     testDialog onDisplay {
 	if {[catch {
-	    array set a [testgetwindowinfo $::tk_dialog]
+	    array set a [testgetwindowinfo $tk_dialog]
 	    if {[info exists a(text)]} {lappend x $a(text)}
 	} err]} { lappend x $err }
 	lappend x [Click ok]
@@ -107,7 +111,7 @@ test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
     }
     testDialog onDisplay {
 	if {[catch {
-	    array set a [testgetwindowinfo $::tk_dialog]
+	    array set a [testgetwindowinfo $tk_dialog]
 	    if {[info exists a(text)]} {lappend x $a(text)}
 	} err]} { lappend x $err }
 	lappend x [Click ok]
@@ -123,7 +127,7 @@ test winDialog-1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
     set x {}
     testDialog onDisplay {
 	if {[catch {
-	    array set a [testgetwindowinfo $::tk_dialog]
+	    array set a [testgetwindowinfo $tk_dialog]
 	    if {[info exists a(parent)]} {
 		append x [expr {$a(parent) == [wm frame .]}]
 	    }
@@ -903,7 +907,7 @@ test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
 	tk fontchooser show
     }
     testDialog onDisplay {
-	array set a [testgetwindowinfo $::tk_dialog]
+	array set a [testgetwindowinfo $tk_dialog]
 	Click cancel
     }
     list [expr {$a(parent) == [wm frame .]}] [testDialogFont get]
@@ -941,7 +945,7 @@ test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
 	tk fontchooser show
     }
     testDialog onDisplay {
-	array set a [testgetwindowinfo $::tk_dialog]
+	array set a [testgetwindowinfo $tk_dialog]
 	Click cancel
     }
     set a(text)
@@ -957,7 +961,7 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
 	tk fontchooser show
     }
     testDialog onDisplay {
-	array set a [testgetwindowinfo $::tk_dialog]
+	array set a [testgetwindowinfo $tk_dialog]
 	Click cancel
     }
     set a(text)
