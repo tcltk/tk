@@ -172,7 +172,7 @@ proc ::tk::fontchooser::Create {} {
     if {![winfo exists $S(W)]} {
 	toplevel $S(W) -class TkFontDialog
 	if {[package provide tcltest] ne {}} {
-	    set ::tk::test::dialog::tk_dialog $S(W)
+	    set ::tk::test::dialog::testDialog $S(W)
 	}
 	wm withdraw $S(W)
 	wm title $S(W) $S(-title)

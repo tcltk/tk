@@ -154,7 +154,7 @@ typedef struct {
 typedef struct OFNData {
     Tcl_Interp *interp;		/* Interp, used only if debug is turned on,
 				 * for setting the variable
-				 * "::tk::test::dialog::tk_dialog". */
+				 * "::tk::test::dialog::testDialog". */
     int dynFileBufferSize;	/* Dynamic filename buffer size, stored to
 				 * avoid shrinking and expanding the buffer
 				 * when selection changes */
@@ -647,7 +647,7 @@ EatSpuriousMessageBugFix(void)
  * TkWinDialogDebug --
  *
  *	Function to turn on/off debugging support for common dialogs under
- *	windows. The variable "::tk::test::dialog::tk_dialog" is set to the
+ *	windows. The variable "::tk::test::dialog::testDialog" is set to the
  *	identifier of the dialog window when the modal dialog window pops up
  *	and it is safe to send messages to the dialog.
  *
@@ -1841,7 +1841,7 @@ GetFileName(
  * OFNHookProc --
  *
  *	Dialog box hook function. This is used to set the variable
- *	"::tk::test::dialog::tk_dialog" for test/debugging when the dialog
+ *	"::tk::test::dialog::testDialog" for test/debugging when the dialog
  *	is ready to receive messages. When multiple file selection is enabled
  *	this function is used to process the list of names.
  *
@@ -2951,7 +2951,7 @@ MsgBoxCBTProc(
  * SetTkDialog --
  *
  *	Records the HWND for a native dialog in the variable
- *	":tk::test::dialog::tk_dialog" so that the test-suite can operate
+ *	":tk::test::dialog::testDialog" so that the test-suite can operate
  *	on the correct dialog window. Use of this is enabled when a test
  *	program calls TkWinDialogDebug by calling the test command
  *	'testwinevent debug 1'.
@@ -2968,7 +2968,7 @@ SetTkDialog(
     char buf[32];
 
     snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
-    Tcl_SetVar2(tsdPtr->debugInterp, "::tk::test::dialog::tk_dialog", NULL,
+    Tcl_SetVar2(tsdPtr->debugInterp, "::tk::test::dialog::testDialog", NULL,
 		buf, TCL_GLOBAL_ONLY);
 }
 
