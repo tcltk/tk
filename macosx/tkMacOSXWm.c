@@ -468,7 +468,7 @@ static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 static void             RemoveTransient(TkWindow *winPtr);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
 /*
  * Add a window as a tab in the group specified by its tabbingid, or
@@ -2977,14 +2977,15 @@ WmIconbitmapCmd(
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
     if (WmSetAttribute(winPtr, TkMacOSXGetNSWindowForDrawable(winPtr->window), interp,
-	    WMATT_TITLEPATH, objv[3]) == TCL_OK) {
-	if (!len) {
-	    if (wmPtr->hints.icon_pixmap != None) {
-		Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-		wmPtr->hints.icon_pixmap = None;
-	    }
-	    wmPtr->hints.flags &= ~IconPixmapHint;
+	    WMATT_TITLEPATH, objv[3]) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (!len) {
+	if (wmPtr->hints.icon_pixmap != None) {
+	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+	    wmPtr->hints.icon_pixmap = None;
 	}
+	wmPtr->hints.flags &= ~IconPixmapHint;
     } else {
 	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {

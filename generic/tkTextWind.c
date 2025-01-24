@@ -992,9 +992,7 @@ EmbWinLayoutProc(
 	if (ewPtr->body.ew.padXObj) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
 	    if (padX < 0) {
-		if (ewPtr->body.ew.padXObj) {
-		    Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
-		}
+		Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
 		ewPtr->body.ew.padXObj = Tcl_NewIntObj(0);
 		Tcl_IncrRefCount(ewPtr->body.ew.padXObj);
 	    }
@@ -1002,9 +1000,7 @@ EmbWinLayoutProc(
 	if (ewPtr->body.ew.padYObj) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
 	    if (padY < 0) {
-		if (ewPtr->body.ew.padYObj) {
-		    Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
-		}
+		Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
 		ewPtr->body.ew.padYObj = Tcl_NewIntObj(0);
 		Tcl_IncrRefCount(ewPtr->body.ew.padYObj);
 	    }
@@ -1276,9 +1272,7 @@ EmbWinBboxProc(
     if (ewPtr->body.ew.padXObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
 	if (padX < 0) {
-	    if (ewPtr->body.ew.padXObj) {
-		Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
-	    }
+	    Tcl_DecrRefCount(ewPtr->body.ew.padXObj);
 	    ewPtr->body.ew.padXObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(ewPtr->body.ew.padXObj);
 	}
@@ -1286,9 +1280,7 @@ EmbWinBboxProc(
     if (ewPtr->body.ew.padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
 	if (padY < 0) {
-	    if (ewPtr->body.ew.padYObj) {
-		Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
-	    }
+	    Tcl_DecrRefCount(ewPtr->body.ew.padYObj);
 	    ewPtr->body.ew.padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(ewPtr->body.ew.padYObj);
 	}

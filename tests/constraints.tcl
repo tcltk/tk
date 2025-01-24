@@ -246,21 +246,21 @@ namespace eval tk {
 	# got moved to the requested location should use a y coordinate larger than the
 	# height of the menubar (normally 23 pixels) and an x coordinate larger than the
 	# width of the dock, if it happens to be on the left.
-	# menubarheight deals with this issue but may not be available from the test
+	# testmenubarheight deals with this issue but may not be available from the test
 	# environment, therefore provide a fallback here
-	if {[llength [info procs menubarheight]] == 0} {
+	if {[llength [info procs testmenubarheight]] == 0} {
 	    if {[tk windowingsystem] ne "aqua"} {
 		# Windows may overlap the menubar
-		proc menubarheight {} {
+		proc testmenubarheight {} {
 		    return 0
 		}
 	    } else {
 		# Windows may not overlap the menubar
-		proc menubarheight {} {
+		proc testmenubarheight {} {
 		    return 30 ;  # arbitrary value known to be larger than the menubar height
 		}
 	    }
-	    namespace export menubarheight
+	    namespace export testmenubarheight
 	}
     }
 }
@@ -282,9 +282,7 @@ testConstraint nonUnixUserInteraction [expr {
 }]
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
-testConstraint noExceed [expr {
-    ![testConstraint unix] || [catch {font actual "\{xyz"}]
-}]
+
 testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 
 # constraint for running a test on all windowing system except aqua
@@ -292,23 +290,25 @@ testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
 
 # constraints for testing facilities defined in the tktest executable...
-testConstraint testImageType [expr {"test" in [image types]}]
-testConstraint testbitmap    [llength [info commands testbitmap]]
-testConstraint testborder    [llength [info commands testborder]]
-testConstraint testcbind     [llength [info commands testcbind]]
-testConstraint testclipboard [llength [info commands testclipboard]]
-testConstraint testcolor     [llength [info commands testcolor]]
-testConstraint testcursor    [llength [info commands testcursor]]
-testConstraint testembed     [llength [info commands testembed]]
-testConstraint testfont      [llength [info commands testfont]]
-testConstraint testmakeexist [llength [info commands testmakeexist]]
-testConstraint testmenubar   [llength [info commands testmenubar]]
-testConstraint testmetrics   [llength [info commands testmetrics]]
-testConstraint testobjconfig [llength [info commands testobjconfig]]
-testConstraint testsend      [llength [info commands testsend]]
-testConstraint testtext      [llength [info commands testtext]]
-testConstraint testwinevent  [llength [info commands testwinevent]]
-testConstraint testwrapper   [llength [info commands testwrapper]]
+testConstraint testbitmap      [llength [info commands testbitmap]]
+testConstraint testborder      [llength [info commands testborder]]
+testConstraint testcbind       [llength [info commands testcbind]]
+testConstraint testclipboard   [llength [info commands testclipboard]]
+testConstraint testcolor       [llength [info commands testcolor]]
+testConstraint testcursor      [llength [info commands testcursor]]
+testConstraint testembed       [llength [info commands testembed]]
+testConstraint testfont        [llength [info commands testfont]]
+testConstraint testImageType   [expr {"test" in [image types]}]
+testConstraint testmakeexist   [llength [info commands testmakeexist]]
+testConstraint testmenubar     [llength [info commands testmenubar]]
+testConstraint testmetrics     [llength [info commands testmetrics]]
+testConstraint testmovemouse   [llength [info commands testmovemouse]]
+testConstraint testobjconfig   [llength [info commands testobjconfig]]
+testConstraint testpressbutton [llength [info commands testpressbutton]]
+testConstraint testsend        [llength [info commands testsend]]
+testConstraint testtext        [llength [info commands testtext]]
+testConstraint testwinevent    [llength [info commands testwinevent]]
+testConstraint testwrapper     [llength [info commands testwrapper]]
 
 # constraints about what sort of fonts are available
 testConstraint fonts 1
@@ -329,6 +329,31 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+
+testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
+testConstraint withoutXft [expr {![testConstraint withXft]}]
+unset fs
+
+# Expected results of some tests on Linux rely on availability of the "times"
+# font. This font is generally provided when Tk uses the old X font system,
+# but not when using Xft on top of fontconfig. Specifically (old system):
+#    xlsfonts | grep times
+# may return quite some output while (new system):
+#    fc-list | grep times
+# return value is empty. That's not surprising since the two font systems are
+# separate (availability of a font in one of them does not mean it's available
+# in the other one). The following constraints are useful in this kind of
+# situation.
+testConstraint haveTimesFamilyFont [expr {
+    [string tolower [font actual {-family times} -family]] == "times"
+}]
+testConstraint haveFixedFamilyFont [expr {
+    [string tolower [font actual {-family fixed} -family]] == "fixed"
+}]
+testConstraint haveCourierFamilyFont [expr {
+    [string tolower [font actual {-family courier} -family]] == "courier"
+}]
+
 # Although unexpected, some systems may have a very limited set of fonts available.
 # The following constraints happen to evaluate to false at least on one system: the
 # Github CI runner for Linux with --disable-xft, which has exactly ONE single font
@@ -341,17 +366,14 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 # tests they constrain (that is: availability of any font having the given font
 # attributes), so that these constrained tests will in fact run on all systems having
 # reasonable font dotation.
-testConstraint haveTimes12Font [expr {
-    [font actual {times 12} -size] == 12
-}]
-testConstraint haveCourier37Font [expr {
+testConstraint havePointsize37Font [expr {
     [font actual {-family courier -size 37} -size] == 37
 }]
-testConstraint haveTimes14BoldFont [expr {
+testConstraint havePointsize14BoldFont [expr {
     ([font actual {times 14 bold} -size] == 14) &&
     ([font actual {times 14 bold} -weight] eq "bold")
 }]
-testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
+testConstraint haveBoldItalicUnderlineOverstrikeFont [expr {
     ([font actual {times 12 bold italic overstrike underline} -weight] eq "bold") &&
     ([font actual {times 12 bold italic overstrike underline} -slant] eq "italic") &&
     ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&

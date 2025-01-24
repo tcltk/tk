@@ -12,14 +12,12 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-# The macOS test module includes the pressbutton command to simulate a
+# The macOS test module includes the testpressbutton command to simulate a
 # mouse button press event by injecting events into the NSApplication
 # event queue.  On other platforms there is currently no way to test
 # the actual grab effect, per se, in an automated test.  Therefore,
 # this test suite only covers the interface to the grab command (ie,
 # error messages, etc.) on platforms other than macOS.
-
-testConstraint pressbutton [llength [info commands pressbutton]]
 
 test grab-1.1 {Tk_GrabObjCmd} -body {
     grab
@@ -187,7 +185,7 @@ test grab-5.2 {Tk_GrabObjCmd, grab set} -body {
 } -result {. global}
 
 test grab-6.1 {local grab on child window} -constraints {
-    pressbutton
+    testpressbutton
 } -body {
     wm geometry . 100x200+200+100
     set result {}
@@ -196,17 +194,17 @@ test grab-6.1 {local grab on child window} -constraints {
     bind .f <Button-1> {lappend result "inside"}
     pack .f
     update idletasks
-    pressbutton 250 150
+    testpressbutton 250 150
     update
     lappend result ":"
-    pressbutton 250 250
+    testpressbutton 250 250
     update
     lappend result ":"
     grab set .f
-    pressbutton 250 150
+    testpressbutton 250 150
     update
     lappend result ":"
-    pressbutton 250 250
+    testpressbutton 250 250
     update
     return $result
 } -cleanup {

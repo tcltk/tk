@@ -540,9 +540,7 @@ EmbImageLayoutProc(
     if (eiPtr->body.ei.padXObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
 	if (padX < 0) {
-	    if (eiPtr->body.ei.padXObj) {
-		Tcl_DecrRefCount(eiPtr->body.ei.padXObj);
-	    }
+	    Tcl_DecrRefCount(eiPtr->body.ei.padXObj);
 	    eiPtr->body.ei.padXObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(eiPtr->body.ei.padXObj);
 	}
@@ -550,9 +548,7 @@ EmbImageLayoutProc(
     if (eiPtr->body.ei.padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
 	if (padY < 0) {
-	    if (eiPtr->body.ei.padYObj) {
-		Tcl_DecrRefCount(eiPtr->body.ei.padYObj);
-	    }
+	    Tcl_DecrRefCount(eiPtr->body.ei.padYObj);
 	    eiPtr->body.ei.padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(eiPtr->body.ei.padYObj);
 	}
