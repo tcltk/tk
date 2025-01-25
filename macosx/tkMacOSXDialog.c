@@ -37,7 +37,9 @@ static void setAllowedFileTypes(
 	NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
 	for (NSString *ext in extensions) {
 	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
-	    [allowedTypes addObject:uttype];
+	    if (uttype) {
+		[allowedTypes addObject:uttype];
+	    }
 	}
 	[panel setAllowedContentTypes:allowedTypes];
     } else {
@@ -84,6 +86,41 @@ typedef struct {
 static filepanelFilterInfo filterInfo;
 static NSOpenPanel *openpanel;
 static NSSavePanel *savepanel;
+
+/*
+ * A thread which closes the currently running modal dialog after a timeout.
+ */
+
+@interface TKPanelMonitor: NSThread {
+@private
+    NSTimeInterval _timeout;
+}
+
+- (id) initWithTimeout: (NSTimeInterval) timeout;
+
+@end
+
+@implementation TKPanelMonitor: NSThread
+
+- (id) initWithTimeout: (NSTimeInterval) timeout {
+    self = [super init];
+    if (self) {
+	_timeout = timeout;
+	return self;
+    }
+    return self;
+}
+
+- (void) main
+{
+    [NSThread sleepForTimeInterval:_timeout];
+    if ([self isCancelled]) {
+	[NSThread exit];
+    }
+    [NSApp stopModalWithCode:modalCancel];
+}
+@end
+
 
 static const char *const colorOptionStrings[] = {
     "-initialcolor", "-parent", "-title", NULL
@@ -868,7 +905,20 @@ Tk_GetOpenFileObjCmd(
 	parent = nil;
 	parentIsKey = False;
     }
-    modalReturnCode = showOpenSavePanel(openpanel, parent, interp, cmdObj, multiple);
+    TKPanelMonitor *monitor;
+    if (testsAreRunning) {
+	/*
+	 * We need the panel to close by itself when running tests.
+	 */
+
+	monitor = [[TKPanelMonitor alloc] initWithTimeout: 1.0];
+	[monitor start];
+    }
+    modalReturnCode = showOpenSavePanel(openpanel, parent, interp, cmdObj,
+					multiple);
+    if (testsAreRunning) {
+	[monitor cancel];
+    }
     if (cmdObj) {
 	Tcl_DecrRefCount(cmdObj);
     }
