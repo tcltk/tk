@@ -488,27 +488,15 @@ ConfigureMessage(
      * be specified to Tk_ConfigureWidget.
      */
 
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
-    if (width < 0) {
-	if (msgPtr->widthObj) {
-	    Tcl_DecrRefCount(msgPtr->widthObj);
-	}
-	msgPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->widthObj);
-    }
     Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
     if (borderWidth < 0) {
-	if (msgPtr->borderWidthObj) {
-	    Tcl_DecrRefCount(msgPtr->borderWidthObj);
-	}
+	Tcl_DecrRefCount(msgPtr->borderWidthObj);
 	msgPtr->borderWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(msgPtr->borderWidthObj);
     }
     Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
     if (highlightWidth < 0) {
-	if (msgPtr->highlightWidthObj) {
-	    Tcl_DecrRefCount(msgPtr->highlightWidthObj);
-	}
+	Tcl_DecrRefCount(msgPtr->highlightWidthObj);
 	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
     }
@@ -525,6 +513,12 @@ ConfigureMessage(
 	    Tcl_DecrRefCount(msgPtr->padYObj);
 	    msgPtr->padYObj = NULL;
 	}
+    }
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
+    if (width < 0) {
+	Tcl_DecrRefCount(msgPtr->widthObj);
+	msgPtr->widthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(msgPtr->widthObj);
     }
 
     Tk_FreeSavedOptions(&savedOptions);

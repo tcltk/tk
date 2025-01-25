@@ -986,23 +986,17 @@ ConfigureFrame(
 	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, None);
     }
 
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->widthObj, &width);
-    if (width < 0) {
-	Tcl_DecrRefCount(framePtr->widthObj);
-	framePtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->widthObj);
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
+    if (borderWidth < 0) {
+	Tcl_DecrRefCount(framePtr->borderWidthObj);
+	framePtr->borderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->borderWidthObj);
     }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->heightObj, &height);
     if (height < 0) {
 	Tcl_DecrRefCount(framePtr->heightObj);
 	framePtr->heightObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->heightObj);
-    }
-    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
-    if (borderWidth < 0) {
-	Tcl_DecrRefCount(framePtr->borderWidthObj);
-	framePtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->borderWidthObj);
     }
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
     if (highlightWidth < 0) {
@@ -1021,6 +1015,12 @@ ConfigureFrame(
 	Tcl_DecrRefCount(framePtr->padYObj);
 	framePtr->padYObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->padYObj);
+    }
+    Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->widthObj, &width);
+    if (width < 0) {
+	Tcl_DecrRefCount(framePtr->widthObj);
+	framePtr->widthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->widthObj);
     }
 
     /*
