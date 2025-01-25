@@ -38,7 +38,7 @@ proc makeToplevels {} {
 # got moved to the requested location should use a y coordinate larger than the
 # height of the menubar (normally 23 pixels) and an x coordinate larger than
 # the width of the dock, if it happens to be on the left.  Starting with
-# macOS 16 (Sequoia) it became impossible for the y coordinate of the top
+# macOS 15 (Sequoia) it became impossible for the y coordinate of the top
 # of a window to be less than 10 plus the menubar height (as reported by
 # [[NSApp mainMenu] menuBarHeight]).
 
