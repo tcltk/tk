@@ -52,7 +52,7 @@ TkplatformtestInit(
      */
 
     testsAreRunning = 1;
-      
+
     /*
      * Add commands for platform specific tests on MacOS here.
      */
