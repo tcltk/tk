@@ -1097,12 +1097,6 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
-	if (butPtr->wrapLength < 0) {
-	    butPtr->wrapLength = 0;
-	    Tcl_DecrRefCount(butPtr->wrapLengthPtr);
-	    butPtr->wrapLengthPtr = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->wrapLengthPtr);
-	}
 	if (butPtr->borderWidth < 0) {
 	    butPtr->borderWidth = 0;
 	    Tcl_DecrRefCount(butPtr->borderWidthPtr);
@@ -1126,6 +1120,12 @@ ConfigureButton(
 	    Tcl_DecrRefCount(butPtr->padYPtr);
 	    butPtr->padYPtr = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padYPtr);
+	}
+	if (butPtr->wrapLength < 0) {
+	    butPtr->wrapLength = 0;
+	    Tcl_DecrRefCount(butPtr->wrapLengthPtr);
+	    butPtr->wrapLengthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->wrapLengthPtr);
 	}
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
@@ -1298,6 +1298,18 @@ ConfigureButton(
 		    != TCL_OK) {
 		goto heightError;
 	    }
+	}
+	if (butPtr->width < 0) {
+	    butPtr->width = 0;
+	    Tcl_DecrRefCount(butPtr->widthPtr);
+	    butPtr->widthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->widthPtr);
+	}
+	if (butPtr->height < 0) {
+	    butPtr->height = 0;
+	    Tcl_DecrRefCount(butPtr->heightPtr);
+	    butPtr->heightPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->heightPtr);
 	}
 	break;
     }

@@ -1042,14 +1042,11 @@ ConfigureFrame(
 	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, None);
     }
 
-    if (framePtr->width < 0) {
-	framePtr->width = 0;
+    if (framePtr->borderWidth < 0) {
+	framePtr->borderWidth = 0;
     }
     if (framePtr->height < 0) {
 	framePtr->height = 0;
-    }
-    if (framePtr->borderWidth < 0) {
-	framePtr->borderWidth = 0;
     }
     if (framePtr->highlightWidth < 0) {
 	framePtr->highlightWidth = 0;
@@ -1065,6 +1062,9 @@ ConfigureFrame(
 	Tcl_DecrRefCount(framePtr->padYObj);
 	framePtr->padYObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->padYObj);
+    }
+    if (framePtr->width < 0) {
+	framePtr->width = 0;
     }
 
     /*

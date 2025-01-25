@@ -488,9 +488,6 @@ ConfigureMessage(
      * be specified to Tk_ConfigureWidget.
      */
 
-    if (msgPtr->width < 0) {
-	msgPtr->width = 0;
-    }
     if (msgPtr->borderWidth < 0) {
 	msgPtr->borderWidth = 0;
     }
@@ -520,6 +517,9 @@ ConfigureMessage(
 	    msgPtr->padYObj = Tcl_NewIntObj(-1);
 	    Tcl_IncrRefCount(msgPtr->padYObj);
 	}
+    }
+    if (msgPtr->width < 0) {
+	msgPtr->width = 0;
     }
 
     Tk_FreeSavedOptions(&savedOptions);
