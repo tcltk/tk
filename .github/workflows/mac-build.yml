@@ -49,8 +49,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-	  export TK_NO_STDERR=1
-          make test | tee out.txt
+          make TK_NO_STDERR=1 test | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
