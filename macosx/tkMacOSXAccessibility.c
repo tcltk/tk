@@ -29,10 +29,13 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
+static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
+			   TCL_UNUSED(int));
+char *callback_command;
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
-    char *tkrole;
+    const char *tkrole;
     NSAccessibilityRole  macrole;
 };
 
@@ -136,6 +139,29 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 
 - (BOOL)accessibilityPerformPress {
     // [super performPress];
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+    Tcl_Event *event; 
+
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return NO;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
+    if (!hPtr2) {
+	NSLog(@"No action found.");
+	return NO;
+    }
+
+    char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    callback_command = action;
+    event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+    event->proc = ActionEventProc;
+    Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     NSLog(@"press");
     return YES;
 }
@@ -172,8 +198,7 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return macrole;
 }
 
-- (NSString)accessibilityTitle {
-
+- (NSString*)accessibilityTitle {
 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -275,6 +300,20 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 }
 
 @end
+
+/*
+ * Event proc which calls the ActionEventProc procedure.
+ */
+
+static int
+ActionEventProc(TCL_UNUSED(Tcl_Event *),
+    TCL_UNUSED(int))
+{
+    TkMainInfo *info = TkGetMainInfoList();
+
+    Tcl_GlobalEval(info->interp, callback_command);
+    return 1;
+}
 
 
 /*
