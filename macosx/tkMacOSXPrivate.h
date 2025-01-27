@@ -133,6 +133,12 @@
     }
 
 /*
+ *  This is set to 1 if tests are being run. Defined in tkMacOSXInit.c.
+ */
+
+extern int testsAreRunning;
+
+/*
  *  The structure of a 32-bit XEvent keycode on macOS. It may be viewed as
  *  an unsigned int or as having either two or three bitfields.
  */

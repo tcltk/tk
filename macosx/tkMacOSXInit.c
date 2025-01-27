@@ -20,6 +20,12 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+/*
+ * This flag is set if tests are being run.
+ */
+
+int testsAreRunning = 0;
+
 static char tkLibPath[PATH_MAX + 1] = "";
 
 /*
@@ -594,6 +600,9 @@ TkpInit(
 #if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
+	} else if (getenv("TK_NO_STDERR") != NULL) {
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDERR_FILENO);
 	}
 
 	/*
