@@ -138,7 +138,7 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 }
 
 - (BOOL)accessibilityPerformPress {
-    // [super performPress];
+ 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
@@ -162,7 +162,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
     event->proc = ActionEventProc;
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-    NSLog(@"press");
     return YES;
 }
 
