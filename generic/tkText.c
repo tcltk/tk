@@ -2062,9 +2062,9 @@ ConfigureText(
 {
     Tk_SavedOptions savedOptions;
     int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
-    int mask = 0;
-    int selBorderWidth = INT_MIN, spacing1, spacing2, spacing3;
-    int insertBorderWidth, insertWidth;
+    int mask = 0, selBorderWidth = 0, height, highlightWidth;
+    int borderWidth, spacing1, spacing2, spacing3;
+    int insertBorderWidth, insertWidth, padX, padY;
 
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
 	    objc, objv, textPtr->tkwin, &savedOptions, &mask) != TCL_OK) {
@@ -2204,6 +2204,64 @@ ConfigureText(
      * Don't allow negative spacings.
      */
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+    if (borderWidth < 0) {
+	borderWidth = 0;
+	Tcl_DecrRefCount(textPtr->borderWidthObj);
+	textPtr->borderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->borderWidthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->heightObj, &height);
+    if (height < 0) {
+	height = 0;
+	Tcl_DecrRefCount(textPtr->heightObj);
+	textPtr->heightObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->heightObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth < 0) {
+	highlightWidth = 0;
+	Tcl_DecrRefCount(textPtr->highlightWidthObj);
+	textPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->highlightWidthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    if (insertBorderWidth < 0) {
+	insertBorderWidth = 0;
+	Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
+	textPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->insertBorderWidthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    if (insertWidth < 0) {
+	insertWidth = 0;
+	Tcl_DecrRefCount(textPtr->insertWidthObj);
+	textPtr->insertWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->insertWidthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    if (padX < 0) {
+	Tcl_DecrRefCount(textPtr->padXObj);
+	textPtr->padXObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->padXObj);
+    }
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+    if (padY < 0) {
+	Tcl_DecrRefCount(textPtr->padYObj);
+	textPtr->padYObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->padYObj);
+    }
+    if (textPtr->selBorderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->selBorderWidthObj, &selBorderWidth);
+    }
+    if (selBorderWidth < 0) {
+	selBorderWidth = 0;
+	if (textPtr->selBorderWidthObj) {
+	    Tcl_DecrRefCount(textPtr->selBorderWidthObj);
+	}
+	textPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->selBorderWidthObj);
+    }
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &spacing1);
     if (spacing1 < 0) {
 	spacing1 = 0;
@@ -2225,32 +2283,6 @@ ConfigureText(
 	textPtr->spacing3Obj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(textPtr->spacing3Obj);
     }
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
-    if (insertBorderWidth < 0) {
-	insertBorderWidth = 0;
-	Tcl_DecrRefCount(textPtr->insertBorderWidthObj);
-	textPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->insertBorderWidthObj);
-    }
-    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
-    if (insertWidth < 0) {
-	insertWidth = 0;
-	Tcl_DecrRefCount(textPtr->insertWidthObj);
-	textPtr->insertWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->insertWidthObj);
-    }
-    if (textPtr->selBorderWidthObj) {
-	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->selBorderWidthObj, &selBorderWidth);
-    }
-    if (selBorderWidth < 0) {
-	selBorderWidth = 0;
-	if (textPtr->selBorderWidthObj) {
-	    Tcl_DecrRefCount(textPtr->selBorderWidthObj);
-	}
-	textPtr->selBorderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->selBorderWidthObj);
-    }
-
 
     /*
      * Parse tab stops.

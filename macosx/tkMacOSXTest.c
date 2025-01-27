@@ -16,7 +16,6 @@
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXWm.h"
 
-
 /*
  * Forward declarations of procedures defined later in this file:
  */
@@ -48,6 +47,12 @@ int
 TkplatformtestInit(
     Tcl_Interp *interp)		/* Interpreter to add commands to. */
 {
+    /*
+     * Set a flag indicating that testing is in progress.
+     */
+
+    testsAreRunning = 1;
+
     /*
      * Add commands for platform specific tests on MacOS here.
      */
