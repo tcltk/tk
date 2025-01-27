@@ -23,6 +23,16 @@ test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
     regsub -all "\0" $msg {\\0} msg
     list $x $msg
 } {1 {bad Macintosh file type "\0\0"}}
+test fileDialog-0.3 {GetFileName: file types: bad filetype} \
+-constraints {[tk windowingsystem] eq "aqua"} \
+-body {
+    # Check for the Aqua crash reported in ticket 080a28104.
+
+    set filename [tk_getOpenFile -filetypes {
+    	{"Invalid extension" {x.y}}
+	{"All files" {*}}
+    }]
+} -result {}
 
 set tk_strictMotif_old $tk_strictMotif
 
