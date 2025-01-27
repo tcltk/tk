@@ -21,6 +21,12 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+/*
+ * This flag is set if tests are being run.
+ */
+
+int testsAreRunning = 0;
+
 static char tkLibPath[PATH_MAX + 1] = "";
 
 /*
@@ -46,6 +52,7 @@ int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
+
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
     if (winPtr) {
