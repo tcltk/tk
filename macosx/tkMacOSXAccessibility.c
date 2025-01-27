@@ -172,6 +172,34 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return macrole;
 }
 
+- (NSAccessibilityRole)accessibilityTitle {
+
+    NSAccessibilityRole macrole = nil;
+    int i;
+
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return nil;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
+    if (!hPtr2) {
+	NSLog(@"No title found.");
+	return nil;
+    }
+
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    NSString  *mactitle = [NSString stringWithUTF8String:result];
+    return mactitle;
+}
+
+
     
 
 - (BOOL)isAccessibilityElement {
