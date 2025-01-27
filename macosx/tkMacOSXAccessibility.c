@@ -172,10 +172,8 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return macrole;
 }
 
-- (NSAccessibilityRole)accessibilityTitle {
+- (NSString)accessibilityTitle {
 
-    NSAccessibilityRole macrole = nil;
-    int i;
 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -195,12 +193,9 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     }
 
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    NSString  *mactitle = [NSString stringWithUTF8String:result];
+    NSString *mactitle = [NSString stringWithUTF8String:result];
     return mactitle;
-}
-
-
-    
+} 
 
 - (BOOL)isAccessibilityElement {
     return YES;
