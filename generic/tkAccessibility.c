@@ -77,8 +77,6 @@ Tk_SetAccessibleRole(
   Tcl_HashEntry *hPtr, *hPtr2;
   
   Tcl_HashTable *AccessibleAttributes;
-  AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-  Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
 
   int isNew;
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -86,11 +84,18 @@ Tk_SetAccessibleRole(
     return TCL_ERROR;
   }
 
-  /* Set accessible role for window.  */
+  /* 
+   * Create new hash table for widget attributes if none exists. 
+   * Ensure it is unique to that widget.
+   */
   hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
-   
-  Tcl_SetHashValue(hPtr, AccessibleAttributes);
+  if (isNew) {
+    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+    Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
+    Tcl_SetHashValue(hPtr, AccessibleAttributes);
+  }
 
+  /* Set accessible role for window.  */
   hPtr2 =  Tcl_CreateHashEntry(AccessibleAttributes, "role", &isNew);
   if (!isNew) {
     Tcl_DecrRefCount(Tcl_GetHashValue(hPtr2));
@@ -780,7 +785,7 @@ TkAccessibility_Init(
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
   TkAccessibilityObject =   (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-  Tcl_InitHashTable(TkAccessibilityObject, TCL_STRING_KEYS);
+  Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
   return TCL_OK;
 }
 
