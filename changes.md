@@ -20,6 +20,10 @@ to the userbase.
  - [Build tk 9.0.1 failed on macos 10.13](https://core.tcl-lang.org/tk/tktview/cb5d77)
  - [image svg upstream out of bound read nanosvg#262](https://core.tcl-lang.org/tk/tktview/121786)
  - [wm iconbitmap does not correctly set the icon pixmap hint on macOS](https://core.tcl-lang.org/tk/tktview/13ac26)
+ - [Backspace crashes 9.0 interpreter on FreeBSD](https://core.tcl-lang.org/tk/tktview/1da19a)
+ - [Bug in the ttk::scale widget of the "default" theme](https://core.tcl-lang.org/tk/tktview/126d07)
+ - [Wrong appearance of the ttk::menubutton indicator of the "xpnative" theme](https://core.tcl-lang.org/tk/tktview/525536)
+ - [English shortcuts for Chinese locale](https://core.tcl-lang.org/tk/tktview/c99266)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
