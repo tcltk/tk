@@ -144,7 +144,7 @@ jobs:
           else
             function runXvfb {
               echo Xvfb not used, this is a --enable-aqua build
-	      export TK_NO_STDERR=1
+              export TK_NO_STDERR=1
             }
           fi
           ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
