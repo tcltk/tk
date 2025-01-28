@@ -107,7 +107,7 @@ namespace eval ::tk::accessible {
 				[%W cget -text] \
 				[set [%W cget -variable]] \
 				[%W cget -state] \
-				{}\
+				{%W invoke}\
 			    }
     bind TCheckbutton <Map> {+::tk::accessible::_init \
 				 %W \
@@ -116,7 +116,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -text] \
 				 [set [%W cget -variable]] \
 				 [%W cget -state] \
-				 {}\
+				 {%W invoke}\
 			     }
     #combobox bindings			    
     bind TCombobox <Map> {+::tk::accessible::_init \
@@ -189,7 +189,7 @@ namespace eval ::tk::accessible {
 				[%W cget -text] \
 				[%W cget -variable] \
 				[%W cget -state] \
-				{}\
+				{%W invoke}\
 			    }
     bind TRadiobutton <Map> {+::tk::accessible::_init \
 				 %W \
@@ -198,7 +198,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -text] \
 				 [%W cget -variable] \
 				 [%W cget -state] \
-				 {}\
+				 {% invoke}\
 			     }
 
     #Scale/TScale bindings
