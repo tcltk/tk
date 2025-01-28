@@ -1151,19 +1151,20 @@ static ElementInfo ElementInfoTable[] = {
     { "NotebookPane.background", &GenericElementSpec, L"TAB",
     	TABP_BODY, null_statemap, NOPAD, 0 },
     { "Toolbutton.border", &GenericElementSpec, L"TOOLBAR",
-    	TP_BUTTON, toolbutton_statemap, NOPAD,0 },
+	TP_BUTTON, toolbutton_statemap, NOPAD, 0 },
     { "Menubutton.button", &GenericElementSpec, L"TOOLBAR",
-    	TP_SPLITBUTTON,toolbutton_statemap, NOPAD,0 },
-    { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
-    	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
+	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
+    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
+	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
     	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
-    	HP_HEADERITEM, header_statemap, PAD(4,0,4,0),0 },
+	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
     { "sizegrip", &GenericElementSpec, L"STATUS",
-    	SP_GRIPPER, null_statemap, NOPAD,0 },
+	SP_GRIPPER, null_statemap, NOPAD, 0 },
     { "Spinbox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, edittext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Spinbox.uparrow", &SpinboxArrowElementSpec, L"SPIN",
@@ -1174,9 +1175,9 @@ static ElementInfo ElementInfoTable[] = {
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
 #ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
-    	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
+	BP_GROUPBOX, groupbox_statemap, NOPAD, 0 },
 #endif
-    { 0,0,0,0,0,NOPAD,0 }
+    { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
 #undef PAD
 
