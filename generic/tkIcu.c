@@ -287,6 +287,11 @@ Icu_Init(
 	    icu_fns.name = (fn_icu_ ## name)				\
 		Tcl_FindSymbol(NULL, icu_fns.lib, symbol)
 	    ICU_SYM(open);
+	    if (!icu_fns.open && *icuversion) {
+		/* FreeBSD doesn't append the ICU version to the symbol name, see [1da19a69f8] */
+		*icuversion = 0;
+		ICU_SYM(open); /* try again without version suffix */
+	    }
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
 	    ICU_SYM(following);

@@ -369,8 +369,34 @@ TkTextTagCmd(
 		if (borderWidth < 0) {
 		    borderWidth = 0;
 		    Tcl_DecrRefCount(tagPtr->borderWidthObj);
-		    tagPtr->borderWidthObj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->borderWidthObj);
+		    tagPtr->borderWidthObj = NULL;
+		}
+	    }
+	    if (tagPtr->lMargin1Obj) {
+		int lMargin1;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin1Obj, &lMargin1);
+		if (lMargin1 < 0) {
+		    lMargin1 = 0;
+		    Tcl_DecrRefCount(tagPtr->lMargin1Obj);
+		    tagPtr->lMargin1Obj = NULL;
+		}
+	    }
+	    if (tagPtr->lMargin2Obj) {
+		int lMargin2;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->lMargin2Obj, &lMargin2);
+		if (lMargin2 < 0) {
+		    lMargin2 = 0;
+		    Tcl_DecrRefCount(tagPtr->lMargin2Obj);
+		    tagPtr->lMargin2Obj = NULL;
+		}
+	    }
+	    if (tagPtr->rMarginObj) {
+		int rMargin;
+		Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->rMarginObj, &rMargin);
+		if (rMargin < 0) {
+		    rMargin = 0;
+		    Tcl_DecrRefCount(tagPtr->rMarginObj);
+		    tagPtr->rMarginObj = NULL;
 		}
 	    }
 	    if (tagPtr->spacing1Obj) {
@@ -379,8 +405,7 @@ TkTextTagCmd(
 		if (spacing1 < 0) {
 		    spacing1 = 0;
 		    Tcl_DecrRefCount(tagPtr->spacing1Obj);
-		    tagPtr->spacing1Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing1Obj);
+		    tagPtr->spacing1Obj = NULL;
 		}
 	    }
 	    if (tagPtr->spacing2Obj) {
@@ -389,8 +414,7 @@ TkTextTagCmd(
 		if (spacing2 < 0) {
 		    spacing2 = 0;
 		    Tcl_DecrRefCount(tagPtr->spacing2Obj);
-		    tagPtr->spacing2Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing2Obj);
+		    tagPtr->spacing2Obj = NULL;
 		}
 	    }
 	    if (tagPtr->spacing3Obj) {
@@ -399,8 +423,7 @@ TkTextTagCmd(
 		if (spacing3 < 0) {
 		    spacing3 = 0;
 		    Tcl_DecrRefCount(tagPtr->spacing3Obj);
-		    tagPtr->spacing3Obj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->spacing3Obj);
+		    tagPtr->spacing3Obj = NULL;
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
