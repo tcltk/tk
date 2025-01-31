@@ -298,6 +298,40 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return NO;
 }
 
+
+/* NSAccessibilityTableRole methods. */
+
+- (NSArray *)  accessibilityColumnHeaderUIElements {
+    // Returns the column header accessibility elements for the table.
+    // Required
+}
+
+- (NSArray *) accessibilityRowHeaderUIElements {
+    // Returns the row header accessibility elements for the table.
+    // Required
+}
+
+- (NSArray<id<NSAccessibilityRow>> *)  accessibilityRows {
+    // Returns the row accessibility elements for the table.
+    // Required
+}
+
+- (NSArray<id<NSAccessibilityRow>> *) accessibilitySelectedRows {
+    // Returns the currently selected rows for the table.
+    // Required
+}
+
+- (NSArray<id<NSAccessibilityRow>> *) accessibilityVisibleRows {
+    // Returns the visible rows for the table.
+    // Required
+}
+
+- (void) setAccessibilitySelectedRows:(NSArray<id<NSAccessibilityRow>> *) selectedRows {
+    // Sets the table’s currently selected rows.
+    // Required
+}
+
+
 @end
 
 /*
