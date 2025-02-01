@@ -949,6 +949,18 @@ test btree-14.2 {TkTextIsElided} -setup {
 } -cleanup {
     destroy .t
 } -result {1.0}
+test btree-14.3 {Bug [bdd1f64523] - switch the -elide state of a tag} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t insert end "text_ellipse" tag_ellipse
+    .t insert end "text_hidden"  tag_hidden
+    .t tag configure tag_hidden   -elide 1
+    .t tag configure tag_ellipse  -elide 1
+    .t tag configure tag_hidden   -elide 0  ; # used to crash (assertion failed)
+} -cleanup {
+    destroy .t
+} -result {}
 
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
