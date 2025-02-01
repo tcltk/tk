@@ -8859,7 +8859,7 @@ UpdateElideInfo(
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastBranchPtr);
 		    newBranchPtr = lastBranchPtr;
 		    somethingHasChanged = 1;
-		} else { /* if (!actualElided) */
+		} else { /* if (actualElided) */
 		    /*
 		     * We have to insert a link.
 		     */
