@@ -1204,6 +1204,11 @@ static int
 IsBranchSection(
     const TkTextSection *sectionPtr)
 {
+    /*
+     * A section is a branch section if and only if it ends with a branch segment.
+     * Branch segments are always the last segment of a section.
+     */
+
     assert(sectionPtr);
     return sectionPtr->nextPtr && sectionPtr->nextPtr->segPtr->prevPtr->typePtr == &tkTextBranchType;
 }
@@ -1212,6 +1217,11 @@ static int
 IsLinkSection(
     const TkTextSection *sectionPtr)
 {
+    /*
+     * A section is a link section if and only if it starts with a link segment.
+     * Link segments are always the first segment of a section.
+     */
+
     assert(sectionPtr);
     return sectionPtr->segPtr->typePtr == &tkTextLinkType;
 }
@@ -5179,7 +5189,7 @@ LinkMark(
      */
 
     assert(!prevPtr || prevPtr->nextPtr);	/* mark cannot be last segment */
-    assert(linePtr->segPtr);			/* dito */
+    assert(linePtr->segPtr);			/* ditto */
 
     if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	if (prevPtr) {
