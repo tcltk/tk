@@ -8868,9 +8868,18 @@ UpdateElideInfo(
 			/*
 			 * The related branch is starting outside of this range,
 			 * so we have to search for it.
+			 * Since TkBTreeFindStartOfElidedRange search starts from a supposedly elided segment
+			 * and since the elide state of that segment is obtained from the tag information of
+			 * that segment, we need to temporarily restore the original elide state of the tag.
 			 */
+			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
+			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
+			}
 			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, *firstSegPtr);
 			assert(lastBranchPtr->typePtr == &tkTextBranchType);
+			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
+			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
+			}
 		    }
 
 		    if (deletedLinkPtr) {
