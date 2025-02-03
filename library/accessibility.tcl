@@ -50,6 +50,15 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
+    proc _getlistlength {w} {
+	if {[winfo class $w] eq "Listbox"} {
+	    set data [$w get 0 end]
+	    set count [llength $data]
+	    return $count
+	}
+    }
+	
+
 
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
