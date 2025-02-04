@@ -31,7 +31,10 @@ static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
 			   TCL_UNUSED(int));
+static char * DataEventProc(TCL_UNUSED(Tcl_Event *),
+			    TCL_UNUSED(int));
 char *callback_command;
+char *data_command;
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
@@ -311,10 +314,25 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
     TCL_UNUSED(int))
 {
     TkMainInfo *info = TkGetMainInfoList();
-
     Tcl_GlobalEval(info->interp, callback_command);
     return 1;
 }
+
+
+/*
+ * Event proc which calls the DataEventProc procedure.
+ */
+
+static char *
+DataEventProc(TCL_UNUSED(Tcl_Event *),
+    TCL_UNUSED(int))
+{
+    TkMainInfo *info = TkGetMainInfoList();
+    Tcl_GlobalEval(info->interp, data_command);
+     char *data = Tcl_GetStringResult(info->interp);
+     return data;
+}
+
 
 
 /*
