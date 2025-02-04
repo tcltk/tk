@@ -325,12 +325,12 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
 
 static char *
 DataEventProc(TCL_UNUSED(Tcl_Event *),
-    TCL_UNUSED(int))
+	      TCL_UNUSED(int))
 {
     TkMainInfo *info = TkGetMainInfoList();
     Tcl_GlobalEval(info->interp, data_command);
-     char *data = Tcl_GetStringResult(info->interp);
-     return data;
+    char *data = Tcl_GetStringResult(info->interp);
+    return data;
 }
 
 
