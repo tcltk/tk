@@ -589,7 +589,7 @@ static int		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
-static void		SetTkDialog(void *clientData);
+static void		SetTestDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
 
 /*
@@ -873,7 +873,7 @@ ColorDlgHookProc(
 	}
 	if (tsdPtr->debugFlag) {
 	    tsdPtr->debugInterp = (Tcl_Interp *) ccPtr->lpTemplateName;
-	    Tcl_DoWhenIdle(SetTkDialog, hDlg);
+	    Tcl_DoWhenIdle(SetTestDialog, hDlg);
 	}
 	return TRUE;
     }
@@ -1986,7 +1986,7 @@ OFNHookProc(
 	    if (ofnData->interp != NULL) {
 		hdlg = GetParent(hdlg);
 		tsdPtr->debugInterp = ofnData->interp;
-		Tcl_DoWhenIdle(SetTkDialog, hdlg);
+		Tcl_DoWhenIdle(SetTestDialog, hdlg);
 	    }
 	    TkWinSetUserData(hdlg, NULL);
 	}
@@ -2573,7 +2573,7 @@ ChooseDirectoryValidateProc(
 
     if (tsdPtr->debugFlag) {
 	tsdPtr->debugInterp = (Tcl_Interp *) chooseDirSharedData->interp;
-	Tcl_DoWhenIdle(SetTkDialog, hwnd);
+	Tcl_DoWhenIdle(SetTestDialog, hwnd);
     }
     chooseDirSharedData->retDir[0] = '\0';
     switch (message) {
@@ -2948,10 +2948,10 @@ MsgBoxCBTProc(
 /*
  * ----------------------------------------------------------------------
  *
- * SetTkDialog --
+ * SetTestDialog --
  *
  *	Records the HWND for a native dialog in the variable
- *	":tk::test::dialog::testDialog" so that the test-suite can operate
+ *	"::tk::test::dialog::testDialog" so that the test-suite can operate
  *	on the correct dialog window. Use of this is enabled when a test
  *	program calls TkWinDialogDebug by calling the test command
  *	'testwinevent debug 1'.
@@ -2960,7 +2960,7 @@ MsgBoxCBTProc(
  */
 
 static void
-SetTkDialog(
+SetTestDialog(
     void *clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -3103,7 +3103,7 @@ HookProc(
 	phd->hwnd = hwndDlg;
 	if (tsdPtr->debugFlag) {
 	    tsdPtr->debugInterp = phd->interp;
-	    Tcl_DoWhenIdle(SetTkDialog, hwndDlg);
+	    Tcl_DoWhenIdle(SetTestDialog, hwndDlg);
 	}
 	if (phd->titleObj != NULL) {
 	    Tcl_DString title;
