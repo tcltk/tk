@@ -459,7 +459,7 @@ namespace eval ::tk::test::dialog {
 	variable testDialogFont
 	variable iter_after
 	variable testDialog; # On MS Windows, this variable is set at the C level
-	                     # by SetTkDialog() in tkWinDialog.c
+	                     # by SetTestDialog() in tkWinDialog.c
 
 	switch -- $stage {
 	    launch {
