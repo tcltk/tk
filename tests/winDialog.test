@@ -655,7 +655,7 @@ test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constr
 } -returnCodes error -result {user "12x" doesn't exist}
 
 #
-# test winDialog-5.15 targeted Windows OS versions older that Vista.
+# test winDialog-5.15 targeted Windows OS versions older than Vista.
 # As of TIP #592, those OS versions are not supported anymore and therefore
 # the test was removed.
 #
