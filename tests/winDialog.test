@@ -32,7 +32,7 @@ testConstraint english [expr {
 set initialDir [tcltest::temporaryDirectory]
 
 proc Click {button} {
-    upvar #0 ::tk::test::dialog::testDialog testDialog
+    upvar #0 testDialog testDialog
     switch -exact -- $button {
 	ok     { set button 1 }
 	cancel { set button 2 }
@@ -42,7 +42,7 @@ proc Click {button} {
 }
 
 proc GetText {id} {
-    upvar #0 ::tk::test::dialog::testDialog testDialog
+    upvar #0 testDialog testDialog
     switch -exact -- $id {
 	ok     { set id 1 }
 	cancel { set id 2 }
@@ -51,7 +51,7 @@ proc GetText {id} {
 }
 
 proc SetText {id text} {
-    upvar #0 ::tk::test::dialog::testDialog testDialog
+    upvar #0 testDialog testDialog
     return [testwinevent $testDialog $id WM_SETTEXT $text]
 }
 
