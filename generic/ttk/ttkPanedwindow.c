@@ -929,7 +929,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_PIXELS,
-	    offsetof(SashElement,thicknessObj), "5" },
+	offsetof(SashElement,thicknessObj), "3.75p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -956,16 +956,89 @@ static const Ttk_ElementSpec SashElementSpec = {
     TtkNullElementDraw
 };
 
+static const int DEFAULT_GRIP_SIZE = 20;
+
+typedef struct {
+    Tcl_Obj	*borderObj;
+    Tcl_Obj	*gripSizeObj;
+} GripElement;
+
+static const Ttk_ElementOptionSpec GripElementOptions[] = {
+    { "-background", TK_OPTION_BORDER,
+	offsetof(GripElement,borderObj), DEFAULT_BACKGROUND },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(GripElement,gripSizeObj), "15p" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+};
+
+static void GripElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
+    GripElement *grip = (GripElement *)elementRecord;
+    int gripSize = DEFAULT_GRIP_SIZE;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+
+    if (orient == TTK_ORIENT_HORIZONTAL) {
+	*widthPtr = gripSize;
+    } else {
+	*heightPtr = gripSize;
+    }
+}
+
+static void GripElementDraw(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
+{
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
+    GripElement *grip = (GripElement *)elementRecord;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, grip->borderObj);
+    GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+    int gripSize = DEFAULT_GRIP_SIZE, gripPad = 1;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+
+    if (orient == TTK_ORIENT_HORIZONTAL) {
+	XFillRectangle(Tk_Display(tkwin), d, darkGC,
+		b.x + (b.width - gripSize) / 2, b.y + gripPad,
+		gripSize, b.height - 2 * gripPad);
+    } else {
+	XFillRectangle(Tk_Display(tkwin), d, darkGC,
+		b.x + gripPad, b.y + (b.height - gripSize) / 2,
+		b.width - 2 * gripPad, gripSize);
+    }
+}
+
+static const Ttk_ElementSpec GripElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(GripElement),
+    GripElementOptions,
+    GripElementSize,
+    GripElementDraw
+};
+
 TTK_BEGIN_LAYOUT(PanedLayout)
     TTK_NODE("Panedwindow.background", 0)/* @@@ BUG: empty layouts don't work */
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalSashLayout)
-    TTK_NODE("Sash.hsash", TTK_FILL_X)
+    TTK_GROUP("Sash.hsash", TTK_FILL_BOTH,
+	TTK_NODE("Sash.hgrip", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(VerticalSashLayout)
-    TTK_NODE("Sash.vsash", TTK_FILL_Y)
+    TTK_GROUP("Sash.vsash", TTK_FILL_BOTH,
+	TTK_NODE("Sash.vgrip", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------
@@ -980,6 +1053,10 @@ TtkPanedwindow_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElement(interp, themePtr, "hsash", &SashElementSpec, 0);
     Ttk_RegisterElement(interp, themePtr, "vsash", &SashElementSpec, 0);
+    Ttk_RegisterElement(interp, themePtr, "hgrip", 
+	    &GripElementSpec,  INT2PTR(TTK_ORIENT_HORIZONTAL));
+    Ttk_RegisterElement(interp, themePtr, "vgrip", 
+	    &GripElementSpec,  INT2PTR(TTK_ORIENT_VERTICAL));
 
     Ttk_RegisterLayout(themePtr, "TPanedwindow", PanedLayout);
     Ttk_RegisterLayout(themePtr, "Horizontal.Sash", HorizontalSashLayout);
