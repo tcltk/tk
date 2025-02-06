@@ -1185,14 +1185,6 @@ TTK_LAYOUT("TCombobox",
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 
-TTK_LAYOUT("Horizontal.Sash",
-    TTK_GROUP("Sash.hsash", TTK_FILL_BOTH,
-	TTK_NODE("Sash.hgrip", TTK_FILL_BOTH)))
-
-TTK_LAYOUT("Vertical.Sash",
-    TTK_GROUP("Sash.vsash", TTK_FILL_BOTH,
-	TTK_NODE("Sash.vgrip", TTK_FILL_BOTH)))
-
 TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------

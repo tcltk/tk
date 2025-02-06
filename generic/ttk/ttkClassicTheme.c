@@ -856,15 +856,21 @@ TTK_LAYOUT("TSpinbox",
 		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" scale, includes highlight border */
+TTK_LAYOUT("Horizontal.TScale",
+    TTK_GROUP("Horizontal.Scale.highlight", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+
 TTK_LAYOUT("Vertical.TScale",
     TTK_GROUP("Vertical.Scale.highlight", TTK_FILL_BOTH,
 	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 
-TTK_LAYOUT("Horizontal.TScale",
-    TTK_GROUP("Horizontal.Scale.highlight", TTK_FILL_BOTH,
-	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+TTK_LAYOUT("Horizontal.Sash",
+    TTK_NODE("Sash.hsash", TTK_FILL_X))
+
+TTK_LAYOUT("Vertical.Sash",
+    TTK_NODE("Sash.vsash", TTK_FILL_Y))
 
 /* put highlight border around treeview */
 TTK_LAYOUT("Treeview",
