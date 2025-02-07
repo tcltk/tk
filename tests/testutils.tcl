@@ -388,6 +388,14 @@ namespace eval ::tk::test::colors {
 
 namespace eval ::tk::test::dialog {
 
+    proc Click {button} {
+	variable testDialog
+	if {$button ni "ok cancel apply"} {
+	    return -code error "invalid button name \"$button\""
+	}
+	$testDialog.$button invoke
+    }
+
     proc PressButton {btn} {
 	event generate $btn <Enter>
 	event generate $btn <Button-1> -x 5 -y 5

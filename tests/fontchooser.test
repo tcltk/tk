@@ -11,13 +11,6 @@ namespace import -force ::tk::test::dialog::*
 upvar #0 ::tk::test::dialog::testDialog testDialog
 set applyFontCmd [list testDialogFont set]
 
-proc Click {button} {
-    if {$button ni "ok cancel apply"} {
-	return -code error "invalid button name \"$button\""
-    }
-    $::testDialog.$button invoke
-}
-
 # -------------------------------------------------------------------------
 
 test fontchooser-1.1 {tk fontchooser: usage} -returnCodes error -body {
