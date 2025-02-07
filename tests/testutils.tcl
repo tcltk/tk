@@ -203,6 +203,13 @@ namespace import -force tk::test::*
 # DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
 #
 
+namespace eval ::tk::test::button {
+    proc bogusTrace args {
+	error "trace aborted"
+    }
+    namespace export *
+}
+
 namespace eval ::tk::test::child {
 
     # childTkInterp --
@@ -332,13 +339,6 @@ namespace eval ::tk::test::child {
 	}
     }
 
-    namespace export *
-}
-
-namespace eval ::tk::test::button {
-    proc bogusTrace args {
-	error "trace aborted"
-    }
     namespace export *
 }
 
