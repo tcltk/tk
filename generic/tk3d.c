@@ -1422,14 +1422,16 @@ Tk_Get3DBorderColors(
     XColor *darkColorPtr,
     XColor *lightColorPtr)
 {
+    static const XColor NOCOLOR = {0, 0, 0, 0, 0, 0};
+
     if (bgColorPtr) {
-	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+	*bgColorPtr = ((TkBorder *)border)->bgColorPtr ? *((TkBorder *)border)->bgColorPtr : NOCOLOR;
     }
     if (darkColorPtr) {
-	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+	*darkColorPtr = ((TkBorder *) border)->darkColorPtr ? *((TkBorder *) border)->darkColorPtr : NOCOLOR;
     }
     if (lightColorPtr) {
-	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+	*lightColorPtr = ((TkBorder *) border)->lightColorPtr ? *((TkBorder *) border)->lightColorPtr : NOCOLOR;
     }
 }
 
