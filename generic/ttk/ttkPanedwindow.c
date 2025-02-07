@@ -926,7 +926,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,thicknessObj), "3.75p" },
+	Tk_Offset(SashElement,thicknessObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -964,7 +964,7 @@ static Ttk_ElementOptionSpec GripElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(GripElement,borderObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
-	Tk_Offset(GripElement,gripSizeObj), "15p" },
+	Tk_Offset(GripElement,gripSizeObj), "20" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
