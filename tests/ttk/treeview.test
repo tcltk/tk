@@ -8,6 +8,10 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
+# Import utility procs for specific functional areas
+namespace import -force ::tk::test::scroll::*
+set scrollCmdPrefix [list scrollInfo set]
+
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
 #	are properly linked.
@@ -605,15 +609,12 @@ test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
 
 ### NEED: more tests for see/yview/scrolling
 
-proc scrollcallback {args} {
-    set ::scrolldata $args
-}
 test treeview-9.0 "scroll callback - empty tree" -body {
     tvSetup
-    .tv configure -yscrollcommand scrollcallback
+    .tv configure -yscrollcommand $scrollCmdPrefix
     .tv delete [.tv children {}]
     update
-    set ::scrolldata
+    scrollInfo get
 } -result [list 0.0 1.0]
 
 test treeview-9.1 "scrolling" -setup {
@@ -1500,4 +1501,9 @@ test treeview-23.1 "cell padding" -setup {
     destroy .tv
 } -result {2 4 6 8}
 
+#
+# CLEANUP
+#
+
+namespace import -force ::tk::test::scroll::*
 tcltest::cleanupTests
