@@ -12,13 +12,10 @@ upvar #0 ::tk::test::dialog::testDialog testDialog
 set applyFontCmd [list testDialogFont set]
 
 proc Click {button} {
-    upvar #0 testDialog testDialog
-    switch -exact -- $button {
-	ok { $testDialog.ok invoke }
-	cancel { $testDialog.cancel invoke }
-	apply { $testDialog.apply invoke }
-	default { return -code error "invalid button name \"$button\"" }
+    if {$button ni "ok cancel apply"} {
+	return -code error "invalid button name \"$button\""
     }
+    $::testDialog.$button invoke
 }
 
 # -------------------------------------------------------------------------
