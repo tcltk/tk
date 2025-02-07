@@ -1505,5 +1505,5 @@ test treeview-23.1 "cell padding" -setup {
 # CLEANUP
 #
 
-namespace import -force ::tk::test::scroll::*
+namespace forget ::tk::test::scroll::*
 tcltest::cleanupTests
