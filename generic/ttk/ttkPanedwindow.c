@@ -1053,9 +1053,9 @@ TtkPanedwindow_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElement(interp, themePtr, "hsash", &SashElementSpec, 0);
     Ttk_RegisterElement(interp, themePtr, "vsash", &SashElementSpec, 0);
-    Ttk_RegisterElement(interp, themePtr, "hgrip", 
+    Ttk_RegisterElement(interp, themePtr, "hgrip",
 	    &GripElementSpec,  INT2PTR(TTK_ORIENT_HORIZONTAL));
-    Ttk_RegisterElement(interp, themePtr, "vgrip", 
+    Ttk_RegisterElement(interp, themePtr, "vgrip",
 	    &GripElementSpec,  INT2PTR(TTK_ORIENT_VERTICAL));
 
     Ttk_RegisterLayout(themePtr, "TPanedwindow", PanedLayout);
