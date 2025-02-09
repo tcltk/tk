@@ -26,15 +26,13 @@
 /* Data declarations and protoypes of functions used in this file. */
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
+NSArray *TclListToNSArray(char *listdata);
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
 			   TCL_UNUSED(int));
-static char * DataEventProc(TCL_UNUSED(Tcl_Event *),
-			    TCL_UNUSED(int));
 char *callback_command;
-char *data_command;
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
@@ -89,6 +87,61 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return NSMakePoint(windowpoint.x, flipped);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TclListToNSArray --
+ *
+ * Converts a Tcl list to an NSArray.
+ *
+ * Results:
+ *	Tcl list data converted to an NSArray for use in 
+ *      accessibility operations.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+NSArray *TclListToNSArray (char *listdata) {
+
+  TkMainInfo *info = TkGetMainInfoList();
+  Tcl_Interp *interp = info->interp;
+  
+  /* Extract elements from the input Tcl list.*/
+  int listLength;
+  Tcl_Obj **elemPtrs;
+
+  if (Tcl_ListObjGetElements(interp, listdata, &listLength, &elemPtrs) != TCL_OK) {
+    NSLog(@"Unable to convert list data.");
+    return nil;
+  }
+
+  /*Create a new Tcl list.*/
+  Tcl_Obj *newList = Tcl_NewListObj(0, NULL);
+
+  for (int i = 0; i < listLength; i++) {
+    Tcl_ListObjAppendElement(interp, newList, elemPtrs[i]);
+  }
+  /*Extract elements from the Tcl list.*/
+  if (Tcl_ListObjGetElements(interp, newList, &listLength, &elemPtrs) != TCL_OK) {
+    return nil;
+  }
+
+  /*Create an NSMutableArray to store the converted elements.*/
+  NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:listLength];
+
+  for (int i = 0; i < listLength; i++) {
+    const char *liststring = Tcl_GetString(elemPtrs[i]); 
+    NSString *arraystring = [NSString stringWithUTF8String:liststring]; 
+    [array addObject:arraystring];
+  }
+
+  return [array copy]; 
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -137,9 +190,13 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 }
   
 -(id) accessibilityValue {
-    return nil;
+    if (self.selectedIndex != NSNotFound) {
+       return self.tableitems[self.selectedIndex];
+   }
+   return nil;
 }
 
+/*Action for button roles.*/
 - (BOOL)accessibilityPerformPress {
  
     Tk_Window win = self.tk_win;
@@ -254,23 +311,17 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
      *
      */
     
-    flippedorigin = FlipY(screenrect.origin, w);
-    if (([w styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-	titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height + 26;
-    } else {
-	titlebarheight = w.frame.size.height - [w contentRectForFrameRect: w.frame].size.height;
-    }
-	
+    flippedorigin = FlipY(screenrect.origin, w);	
     
     /* Calculate the desired x-offset for the accessibility frame.*/
     windowframe = w.frame;
     adjustedx = screenrect.origin.x - windowframe.origin.x;
 
-    screenrect = CGRectMake(adjustedx, flippedorigin.y - titlebarheight, screenrect.size.width, screenrect.size.height);
-
-    /*Finally,convert back to screen coordinates.*/	
-     screenrect = [w convertRectToScreen:screenrect];
-
+    screenrect = CGRectMake(adjustedx, flippedorigin.y - screenrect.size.height,screenrect.size.width, screenrect.size.height);
+ 
+    /* Finally,convert back to screen coordinates. */	
+    screenrect = [w convertRectToScreen:screenrect];
+ 
     return screenrect;
 }
 
@@ -301,7 +352,49 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return NO;
 }
 
+/* NSAccessibilityTableRole methods. */
 
+- (NSArray *)  accessibilityColumnHeaderUIElements {
+  return @[]; // Modify as needed if there are column headers  return nil;
+}
+
+- (NSArray *) accessibilityRowHeaderUIElements {
+    return @[]; // Modify as needed if there are column headers  return nil;
+}
+
+- (NSArray<id<NSAccessibilityRow>> *)  accessibilityRows {
+    NSAccessibilityRole role = self.accessibilityRole;
+    if ([role isEqualToString:NSAccessibilityListRole] || [role isEqualToString:NSAccessibilityTableRole]){
+	//	NSLog(@"list");
+	char *cmd = "%W get 0 end";
+	TkMainInfo *info = TkGetMainInfoList();
+	Tcl_Eval(info->interp, cmd);
+	char *data = Tcl_GetString(Tcl_GetObjResult(info->interp));
+	NSArray *rows = TclListToNSArray(data);
+	for (id object in rows) {
+	    object = [[NSAccessibilityElement alloc] init];
+	    [object setAccessibilityRole: NSAccessibilityRowRole];
+	    [self accessibilityAddChildElement: object];
+	}
+	return rows;
+    }
+    return nil;
+}
+
+- (NSArray *)accessibilityChildren {
+    NSAccessibilityRole role = self.accessibilityRole;
+    if ([role isEqualToString:NSAccessibilityListRole] || [role isEqualToString:NSAccessibilityTableRole]){
+	//	NSLog(@"children");
+	return [self accessibilityRows];
+    }
+}
+
+- (id)accessibilityFocusedUIElement {
+   if (self.selectedIndex != NSNotFound) {
+       return self.accessibilityChildren[self.selectedIndex];
+   }
+   return nil;
+}
 
 @end
 
@@ -317,22 +410,6 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
     Tcl_GlobalEval(info->interp, callback_command);
     return 1;
 }
-
-
-/*
- * Event proc which calls the DataEventProc procedure.
- */
-
-static char *
-DataEventProc(TCL_UNUSED(Tcl_Event *),
-	      TCL_UNUSED(int))
-{
-    TkMainInfo *info = TkGetMainInfoList();
-    Tcl_GlobalEval(info->interp, data_command);
-    char *data = Tcl_GetStringResult(info->interp);
-    return data;
-}
-
 
 
 /*
