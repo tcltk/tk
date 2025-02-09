@@ -184,7 +184,7 @@ Tk_Get3DBorder(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
-    const char *colorName)		/* String giving name of color for window
+    const char *colorName)	/* String giving name of color for window
 				 * background. */
 {
     Tcl_HashEntry *hashPtr;
@@ -1422,14 +1422,18 @@ Tk_Get3DBorderColors(
     XColor *darkColorPtr,
     XColor *lightColorPtr)
 {
+    TkBorder *borderPtr = (TkBorder *)border;
+    static const XColor NOCOLOR = {0, 0, 0, 0, 0, 0};
+    const XColor *colorPtr = borderPtr->bgColorPtr ? borderPtr->bgColorPtr : &NOCOLOR;
+
     if (bgColorPtr) {
-	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+	*bgColorPtr = *colorPtr;
     }
     if (darkColorPtr) {
-	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+	*darkColorPtr = borderPtr->darkColorPtr ? *borderPtr->darkColorPtr : *colorPtr;
     }
     if (lightColorPtr) {
-	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+	*lightColorPtr = borderPtr->lightColorPtr ? *borderPtr->lightColorPtr : *colorPtr;
     }
 }
 
