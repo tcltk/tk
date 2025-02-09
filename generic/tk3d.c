@@ -428,9 +428,7 @@ Tk_Free3DBorder(
 
     prevPtr = (TkBorder *)Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
-    if (borderPtr->bgColorPtr != NULL) {
-	Tk_FreeColor(borderPtr->bgColorPtr);
-    }
+    Tk_FreeColor(borderPtr->bgColorPtr);
     if (borderPtr->darkColorPtr != NULL) {
 	Tk_FreeColor(borderPtr->darkColorPtr);
     }
@@ -1423,8 +1421,7 @@ Tk_Get3DBorderColors(
     XColor *lightColorPtr)
 {
     TkBorder *borderPtr = (TkBorder *)border;
-    static const XColor NOCOLOR = {0, 0, 0, 0, 0, 0};
-    const XColor *colorPtr = borderPtr->bgColorPtr ? borderPtr->bgColorPtr : &NOCOLOR;
+    const XColor *colorPtr = borderPtr->bgColorPtr ;
 
     if (bgColorPtr) {
 	*bgColorPtr = *colorPtr;
