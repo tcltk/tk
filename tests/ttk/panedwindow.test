@@ -226,7 +226,7 @@ proc sashpositions {pw} {
 
 test paned-sashpos-setup "Setup for sash position test" -body {
     ttk::style theme use default
-    ttk::style configure -sashthickness 5
+    ttk::style configure Sash -sashthickness 5
 
     ttk::panedwindow .pw
     .pw add [frame .pw.f1 -width 20 -height 20]
@@ -262,7 +262,7 @@ test paned-sashpos-cleanup "Clean up" -body { destroy .pw }
 
 test paned-propagation-setup "Setup." -body {
     ttk::style theme use default
-    ttk::style configure -sashthickness 5
+    ttk::style configure Sash -sashthickness 5
     wm geometry . {}
     ttk::panedwindow .pw -orient vertical
 
