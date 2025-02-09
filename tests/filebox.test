@@ -32,7 +32,7 @@ test fileDialog-0.3 {GetFileName: file types: bad filetype} \
 -body {
     # Checks for the Aqua crash reported in ticket 080a28104.
     set filename [tk_getOpenFile -filetypes {
-    	{"Invalid extension" {x.y}}
+	{"Invalid extension" {x.y}}
 	{"All files" {*}}
     }]
 } \
