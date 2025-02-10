@@ -12,11 +12,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::text::*
-upvar 0 ::tk::test::text::fixedFont fixedFont \
-	::tk::test::text::fixedWidth fixedWidth \
-	::tk::test::text::fixedHeight fixedHeight \
-	::tk::test::text::fixedAscent fixedAscent
+testutils import text
 
 namespace import -force ::tk::test::scroll::*
 
@@ -4908,7 +4904,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 
 unset scrollCmdPrefix
 namespace forget ::tk::test::scroll::*
-namespace forget ::tk::test::text::*
+testutils forget text
 deleteWindows
 option clear
 cleanupTests

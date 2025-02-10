@@ -11,7 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
+testutils import -novars dialog
 setDialogType filebox
 
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
@@ -446,6 +446,6 @@ foreach mode $modes {
 set tk_strictMotif $tk_strictMotif_old
 removeFile filebox.tmp
 setDialogType none
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return

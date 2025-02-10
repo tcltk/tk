@@ -11,7 +11,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
+testutils import -novars dialog
 setDialogType clrpick
 
 if {[testConstraint defaultPseudocolor8]} {
@@ -173,6 +173,6 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
 #
 
 setDialogType none
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return

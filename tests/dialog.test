@@ -7,7 +7,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
+testutils import -novars dialog
 
 test dialog-1.1 {tk_dialog command} -body {
     tk_dialog
@@ -64,6 +64,6 @@ test dialog-2.3 {tk_dialog operation} -body {
 # CLEANUP
 #
 
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return

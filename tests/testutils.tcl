@@ -29,6 +29,20 @@
 namespace eval tk {
     namespace eval test {
 
+	# auto_ns_vars --
+	#
+	# Each new namespace automatically holds several variables upvar'ed
+	# from the global namespace. Notably:
+	#
+	#	argc argv argv0 auto_index auto_path env tcl_interactive tcl_library \
+	#	tcl_patchLevel tcl_pkgPath tcl_platform tcl_rcFileName tcl_version
+	#
+	# proc testutils (see below) needs to know about them to keep track of
+	# newly created variables.
+	#
+	variable auto_ns_vars [namespace eval tmp {info vars}]
+	namespace delete tmp
+
 	proc assert {expr} {
 	    if {! [uplevel 1 [list expr $expr]]} {
 		return -code error "assertion failed: \"[uplevel 1 [list subst -nocommands $expr]]\""
@@ -192,6 +206,86 @@ namespace eval tk {
 	    unset _pause($num)
 	}
 
+	# testutils --
+	#
+	#    Takes care of importing/forgetting utility procs with any associated
+	#    variables from a specific test domain (functional area). It hides
+	#    details/peculiarities from the test writer.
+	#
+	#    The "import" subcmd invokes any proc "init" defined in the doamin-
+	#    specific namespace. See also the explanation of this mehanism below
+	#    the header for the section "DEFINITIONS OF UTILITY PROCS PER
+	#    FUNCTIONAL AREA" in this file.
+	#
+	# Arguments:
+	#    subCmd : "import" or "forget"
+	#    args   : a sequence of domains that need to be imported/forgotten,
+	#             optionally preceded by the option -nocommands or -novars.
+	#
+	proc testutils {subCmd args} {
+	    variable importedVars
+
+	    set usage "[lindex [info level 0] 0] import|forget ?-nocommands|-novars? domain ?domain domain ...?"
+	    set argc [llength $args]
+	    if {$argc < 1} {
+		return -code error $usage
+	    }
+
+	    set option [lindex $args 0]
+	    if {$option ni "-nocommands -novars"} {
+		set option {}
+	    }
+	    if {($subCmd ni "import forget") || (($option ne "") && ($argc < 2))} {
+		return -code error $usage
+	    }
+	    if {($subCmd eq "forget") && ($option ne "")} {
+		return -code error "options \"-nocommands\" and \"-novars\" are not valid with subCmd \"forget\""
+	    }
+
+	    set domains [expr {$option eq ""?$args:[lrange $args 1 end]}]
+	    foreach domain $domains {
+		if {! [namespace exists ::tk::test::$domain]} {
+		    return -code error "Tk test domain \"$domain\" doesn't exist"
+		}
+		switch -- $subCmd {
+		    import {
+			if {$domain ni [array names importedVars]} {
+			    if {$option ne "-nocommands"} {
+				uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
+				set importedVars($domain) [list]
+			    }
+			    if {$option ne "-novars"} {
+				variable auto_ns_vars
+				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
+				    ::tk::test::${domain}::init
+				}
+				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+				    if {$varName ni $auto_ns_vars} {
+					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+					lappend importedVars($domain) $varName
+				    }
+				}
+			    }
+			} else {
+			    if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
+				::tk::test::${domain}::init
+			    }
+			}
+		    }
+		    forget {
+			if {! [info exists importedVars($domain)]} {
+			    return -code error "domain \"$domain\" was not imported"
+			}
+			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+			foreach varName $importedVars($domain) {
+			    uplevel 1 unset -nocomplain $varName
+			}
+			unset importedVars($domain)
+		    }
+		}
+	    }
+	}
+
 	namespace export *
     }
 }
@@ -203,6 +297,40 @@ namespace import -force tk::test::*
 # DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
 #
 
+#
+#  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+#  AND AUTO-INITIALIZATION
+#
+# Some utility procs from specific functional areas store state in a namespace
+# variable that is also accessed from the namespace in which the tests are
+# executed (the "executing namespace"). Some tests require such variables
+# to be initialized.
+#
+# When such variables are imported into the "executing namespace" through
+# an "upvar" command, and the test file unsets these variables as part of a
+# cleanup operation, this results in the deletion of the target variable
+# inside the specific domain namespace. This, in turn, poses a problem for
+# the next test file, which presumes that the variable is initialized.
+#
+# The proc "testutils" deals with this upvar issue as follows:
+#
+# If a namespace for a specific functional area holds a proc "init", the
+# "testutils import xxx" will invoke it to carry out the initialization of
+# such namespace variables and subsequently imports them into the executing
+# namespace using "upvar" (import with auto-initialization).
+# Upon test file cleanup "testutils forget xxx" will remove the imported
+# utility procs with the associated namespace variables, and unset the upvar'ed
+# variable in both the source and target namespace, including their link. The
+# link and initialization will be recreated for the next namespace upon
+# "testutils import yyy".
+#
+# Test writers that create a new utility procs that use a namespace variable
+# that is also accessed by a test file, need to add the initialization
+# statements to the init proc. Just placing them inside the "namespace eval"
+# scope for the specific domain (outside the init proc) isn't enough because
+# that foregoes the importing of the namespace variables and their automatic
+# re-initialization.
+#
 namespace eval ::tk::test::button {
     proc bogusTrace args {
 	error "trace aborted"
@@ -388,6 +516,11 @@ namespace eval ::tk::test::colors {
 
 namespace eval ::tk::test::dialog {
 
+    proc init {} {
+	variable dialogType none
+	variable testDialog
+    }
+
     proc Click {button} {
 	variable testDialog
 	if {$button ni "ok cancel apply"} {
@@ -456,7 +589,6 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
-    variable dialogType none
     proc setDialogType {type} {
 	variable dialogType $type
     }
@@ -534,7 +666,8 @@ namespace eval ::tk::test::dialog {
 
     ::tk::test::createStdAccessProc testDialogFont
 
-    namespace export *
+    namespace export Click PressButton SendButtonPress setDialogType testDialog \
+	    testDialogFont ToPressButton
 }
 
 
@@ -599,7 +732,6 @@ namespace eval ::tk::test::geometry {
 }
 
 namespace eval ::tk::test::image {
-    variable ImageNames
 
     proc imageCleanup {} {
 	variable ImageNames
@@ -774,10 +906,12 @@ namespace eval ::tk::test::select {
 }
 
 namespace eval ::tk::test::text {
-    variable fixedFont {Courier -12}
-    variable fixedWidth [font measure $fixedFont m]
-    variable fixedHeight [font metrics $fixedFont -linespace]
-    variable fixedAscent [font metrics $fixedFont -ascent]
+    proc init {} {
+	variable fixedFont {Courier -12}
+	variable fixedWidth [font measure $fixedFont m]
+	variable fixedHeight [font metrics $fixedFont -linespace]
+	variable fixedAscent [font metrics $fixedFont -ascent]
+    }
 
     # full border size of the text widget, i.e. first x or y coordinate inside the text widget
     # warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
@@ -803,7 +937,7 @@ namespace eval ::tk::test::text {
 	return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
     }
 
-    namespace export *
+    namespace export bo xchar xw yline
 }
 
 # EOF

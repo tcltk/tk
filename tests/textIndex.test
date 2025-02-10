@@ -10,10 +10,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
-
-upvar 0 ::tk::test::text::fixedFont fixedFont \
-	::tk::test::text::fixedWidth fixedWidth \
-	::tk::test::text::fixedHeight fixedHeight
+testutils import -nocommands text
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
@@ -1027,5 +1024,6 @@ test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outsi
 # cleanup
 rename textimage {}
 catch {destroy .t}
+testutils forget text
 cleanupTests
 return
