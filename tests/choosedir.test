@@ -11,7 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
+testutils import -novars dialog
 setDialogType choosedir
 
 #----------------------------------------------------------------------
@@ -143,6 +143,6 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 
 removeDirectory choosedirTest
 setDialogType none
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return

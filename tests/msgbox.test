@@ -11,7 +11,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
+testutils import -novars dialog
 setDialogType msgbox
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
@@ -423,6 +423,6 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
 # CLEANUP
 #
 
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return

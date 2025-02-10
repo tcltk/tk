@@ -12,11 +12,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::text::*
-upvar 0 ::tk::test::text::fixedFont fixedFont \
-	::tk::test::text::fixedWidth fixedWidth \
-	::tk::test::text::fixedHeight fixedHeight \
-	::tk::test::text::fixedAscent fixedAscent
+testutils import text
 
 deleteWindows
 
@@ -1653,6 +1649,6 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
 #
 
 option clear
-namespace forget ::tk::test::text::*
+testutils forget text
 cleanupTests
 return

@@ -13,8 +13,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
-upvar #0 ::tk::test::dialog::testDialog testDialog
+testutils import dialog
 set applyFontCmd [list testDialogFont set]
 
 if {[testConstraint testwinevent]} {
@@ -978,7 +977,7 @@ if {[testConstraint testwinevent]} {
 #
 
 unset applyFontCmd initialDir
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return
 

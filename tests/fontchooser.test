@@ -7,8 +7,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::dialog::*
-upvar #0 ::tk::test::dialog::testDialog testDialog
+testutils import dialog
+
 set applyFontCmd [list testDialogFont set]
 
 # -------------------------------------------------------------------------
@@ -165,7 +165,7 @@ test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} 
 #
 
 unset applyFontCmd
-namespace forget ::tk::test::dialog::*
+testutils forget dialog
 cleanupTests
 return
 
