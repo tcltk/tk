@@ -40,13 +40,13 @@
     <array>
       <dict>
 	<key>CFBundleTypeRole</key>
-        <string>Viewer</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-          <string>foo</string>
-        </array>
-        <key>CFBundleURLName</key>
-        <string>Get Foo</string>
+	<string>Viewer</string>
+	<key>CFBundleURLSchemes</key>
+	<array>
+	  <string>foo</string>
+	</array>
+	<key>CFBundleURLName</key>
+	<string>Get Foo</string>
       </dict>
     </array>
     <key>CFBundleExecutable</key>
@@ -99,8 +99,8 @@
 	<string>Wish</string>
 	<key>NSSendTypes</key>
 	<array>
-          <string>NSStringPboardType</string>
-          <string>NSPasteboardTypeString</string>
+	  <string>NSStringPboardType</string>
+	  <string>NSPasteboardTypeString</string>
 	</array>
       </dict>
     </array>
