@@ -499,6 +499,19 @@ namespace eval ::tk::test::colors {
 
 namespace eval ::tk::test::dialog {
 
+    # init --
+    #
+    # This is a reserved proc that is part of the auto-initialization mechanism
+    # that proc testutils employs when importing utility procs with associated
+    # namespace variables into the namespace in which a test file is executed.
+    # See also the explanation at:
+    #
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Test authors should define namespace variables here if they need to be
+    # imported into a test file namespace. This proc must not be exported.
+    #
     proc init {} {
 	variable dialogType none
 	variable testDialog
@@ -890,6 +903,19 @@ namespace eval ::tk::test::select {
 
 namespace eval ::tk::test::text {
 
+    # init --
+    #
+    # This is a reserved proc that is part of the auto-initialization mechanism
+    # that proc testutils employs when importing utility procs with associated
+    # namespace variables into the namespace in which a test file is executed.
+    # See also the explanation at:
+    #
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Test authors should define namespace variables here if they need to be
+    # imported into a test file namespace. This proc must not be exported.
+    #
     proc init {} {
 	variable fixedFont {Courier -12}
 	variable fixedWidth [font measure $fixedFont m]
