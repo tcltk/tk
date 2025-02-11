@@ -198,10 +198,12 @@ namespace eval tk {
 	#    variables from a specific test domain (functional area). It hides
 	#    details/peculiarities from the test writer.
 	#
-	#    The "import" subcmd invokes any proc "init" defined in the doamin-
-	#    specific namespace. See also the explanation of this mehanism below
-	#    the header for the section "DEFINITIONS OF UTILITY PROCS PER
-	#    FUNCTIONAL AREA" in this file.
+	#    The "import" subcmd invokes any proc "init" defined in the domain-
+	#    specific namespace. See also the explanation of this mehanism in
+	#    this file at:
+	#
+	#  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+	#  AND AUTO-INITIALIZATION
 	#
 	# Arguments:
 	#    subCmd : "import" or "forget"
@@ -314,6 +316,7 @@ namespace import -force tk::test::*
 # that foregoes the importing of the namespace variables and their automatic
 # re-initialization.
 #
+
 namespace eval ::tk::test::button {
     proc bogusTrace args {
 	error "trace aborted"
@@ -501,10 +504,10 @@ namespace eval ::tk::test::dialog {
 
     # init --
     #
-    # This is a reserved proc that is part of the auto-initialization mechanism
-    # that proc testutils employs when importing utility procs with associated
-    # namespace variables into the namespace in which a test file is executed.
-    # See also the explanation at:
+    # This is a reserved proc that is part of the mechanism that proc testutils
+    # employs when importing utility procs and associated namespace variables
+    # into the namespace in which a test file is executed.
+    # See also the explanation in this file at:
     #
     #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
     #  AND AUTO-INITIALIZATION
@@ -905,10 +908,10 @@ namespace eval ::tk::test::text {
 
     # init --
     #
-    # This is a reserved proc that is part of the auto-initialization mechanism
-    # that proc testutils employs when importing utility procs with associated
-    # namespace variables into the namespace in which a test file is executed.
-    # See also the explanation at:
+    # This is a reserved proc that is part of the mechanism that proc testutils
+    # employs when importing utility procs and associated namespace variables
+    # into the namespace in which a test file is executed.
+    # See also the explanation in this file at:
     #
     #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
     #  AND AUTO-INITIALIZATION
