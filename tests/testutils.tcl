@@ -29,20 +29,6 @@
 namespace eval tk {
     namespace eval test {
 
-	# auto_ns_vars --
-	#
-	# Each new namespace automatically holds several variables upvar'ed
-	# from the global namespace. Notably:
-	#
-	#	argc argv argv0 auto_index auto_path env tcl_interactive tcl_library \
-	#	tcl_patchLevel tcl_pkgPath tcl_platform tcl_rcFileName tcl_version
-	#
-	# proc testutils (see below) needs to know about them to keep track of
-	# newly created variables.
-	#
-	variable auto_ns_vars [namespace eval tmp {info vars}]
-	namespace delete tmp
-
 	proc assert {expr} {
 	    if {! [uplevel 1 [list expr $expr]]} {
 		return -code error "assertion failed: \"[uplevel 1 [list subst -nocommands $expr]]\""
@@ -255,15 +241,12 @@ namespace eval tk {
 				set importedVars($domain) [list]
 			    }
 			    if {$option ne "-novars"} {
-				variable auto_ns_vars
 				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				    ::tk::test::${domain}::init
 				}
 				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
-				    if {$varName ni $auto_ns_vars} {
-					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-					lappend importedVars($domain) $varName
-				    }
+				    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				    lappend importedVars($domain) $varName
 				}
 			    }
 			} else {
@@ -906,6 +889,7 @@ namespace eval ::tk::test::select {
 }
 
 namespace eval ::tk::test::text {
+
     proc init {} {
 	variable fixedFont {Courier -12}
 	variable fixedWidth [font measure $fixedFont m]
