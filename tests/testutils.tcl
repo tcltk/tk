@@ -194,7 +194,7 @@ namespace eval tk {
 
 	# testutils --
 	#
-	#    Takes care of importing/forgetting utility procs with any associated
+	#    Takes care of importing/forgetting utility procs and any associated
 	#    variables from a specific test domain (functional area). It hides
 	#    details/peculiarities from the test writer.
 	#
@@ -220,10 +220,10 @@ namespace eval tk {
 	    }
 
 	    set option [lindex $args 0]
-	    if {$option ni "-nocommands -novars"} {
+	    if {$option ni [list -nocommands -novars]} {
 		set option {}
 	    }
-	    if {($subCmd ni "import forget") || (($option ne "") && ($argc < 2))} {
+	    if {($subCmd ni [list import forget]) || (($option ne "") && ($argc < 2))} {
 		return -code error $usage
 	    }
 	    if {($subCmd eq "forget") && ($option ne "")} {
@@ -262,9 +262,7 @@ namespace eval tk {
 			    return -code error "domain \"$domain\" was not imported"
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
-			foreach varName $importedVars($domain) {
-			    uplevel 1 unset -nocomplain $varName
-			}
+			uplevel 1 unset -nocomplain {*}$importedVars($domain)
 			unset importedVars($domain)
 		    }
 		}
