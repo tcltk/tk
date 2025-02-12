@@ -196,7 +196,7 @@ namespace eval tk {
 	#
 	#    Takes care of importing/forgetting utility procs and any associated
 	#    variables from a specific test domain (functional area). It hides
-	#    details/peculiarities from the test writer.
+	#    details/peculiarities from the test author.
 	#
 	#    The "import" subcmd invokes any proc "init" defined in the domain-
 	#    specific namespace. See also the explanation of this mehanism in
@@ -289,30 +289,30 @@ namespace import -force tk::test::*
 # executed (the "executing namespace"). Some tests require such variables
 # to be initialized.
 #
-# When such variables are imported into the "executing namespace" through
-# an "upvar" command, and the test file unsets these variables as part of a
-# cleanup operation, this results in the deletion of the target variable
-# inside the specific domain namespace. This, in turn, poses a problem for
-# the next test file, which presumes that the variable is initialized.
+# When such variables are imported into the executing namespace through
+# an "upvar" command, and the test file subsequently unsets these variables
+# as part of a cleanup operation, this results in the deletion of the target
+# variable inside the specific domain namespace. This, in turn, poses a problem
+# for the next test file, which presumes that the variable is initialized.
 #
 # The proc "testutils" deals with this upvar issue as follows:
 #
-# If a namespace for a specific functional area holds a proc "init", the
-# "testutils import xxx" will invoke it to carry out the initialization of
-# such namespace variables and subsequently imports them into the executing
-# namespace using "upvar" (import with auto-initialization).
-# Upon test file cleanup "testutils forget xxx" will remove the imported
-# utility procs with the associated namespace variables, and unset the upvar'ed
-# variable in both the source and target namespace, including their link. The
-# link and initialization will be recreated for the next namespace upon
-# "testutils import yyy".
+# - if a namespace for a specific functional area holds a proc "init", the
+#   command "testutils import xxx" will invoke it, thus initializing namespace
+#   variables. And it subsequently imports them into the executing namespace
+#   using "upvar" (import with auto-initialization).
+# - upon test file cleanup, "testutils forget xxx" will remove the imported
+#   utility procs with the associated namespace variables, and unset the
+#   upvar'ed variable in both the source and target namespace, including their
+#   link. The link and the initialization will be restored for the next
+#   test file when it invokes "testutils import xxx".
 #
-# Test writers that create a new utility procs that use a namespace variable
+# Test authors who create a new utility proc that uses a namespace variable
 # that is also accessed by a test file, need to add the initialization
 # statements to the init proc. Just placing them inside the "namespace eval"
 # scope for the specific domain (outside the init proc) isn't enough because
-# that foregoes the importing of the namespace variables and their automatic
-# re-initialization.
+# that foregoes the importing of the namespace variables as well as their
+# automatic initialization.
 #
 
 namespace eval ::tk::test::button {
