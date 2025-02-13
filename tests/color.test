@@ -10,7 +10,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::colors::*
+testutils import colors
 
 # cname --
 # Returns a proper name for a color, given its intensities.
@@ -296,6 +296,6 @@ destroy .t
 # CLEANUP
 #
 
-namespace forget ::tk::test::colors::*
+testutils forget colors
 cleanupTests
 return

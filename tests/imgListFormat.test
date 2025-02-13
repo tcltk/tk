@@ -13,7 +13,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -641,6 +641,6 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
 #
 
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return

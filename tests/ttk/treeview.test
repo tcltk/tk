@@ -9,7 +9,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::scroll::*
+testutils import scroll
 set scrollCmdPrefix [list scrollInfo set]
 
 # consistencyCheck --
@@ -1505,5 +1505,6 @@ test treeview-23.1 "cell padding" -setup {
 # CLEANUP
 #
 
-namespace forget ::tk::test::scroll::*
+unset scrollCmdPrefix
+testutils forget scroll
 tcltest::cleanupTests

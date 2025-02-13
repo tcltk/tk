@@ -13,7 +13,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::colors::*
+testutils import colors
 
 update
 
@@ -524,7 +524,7 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 #
 
 deleteWindows
-namespace forget ::tk::test::colors::*
+testutils forget colors
 cleanupTests
 return
 

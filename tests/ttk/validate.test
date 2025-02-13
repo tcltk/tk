@@ -10,7 +10,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::entry::*
+testutils import entry
 foreach i {1 2 3 4} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
@@ -271,5 +271,5 @@ foreach i {1 2 3 4} {
     unset validateCmd$i
 }
 unset i
-namespace forget ::tk::test::entry::*
+testutils forget entry
 tcltest::cleanupTests
