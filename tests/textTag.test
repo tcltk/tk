@@ -11,9 +11,11 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-# Don't be tempted to redefine the namespace variable fixedFont, upvar'ed from
-# ::tk::test::text (cf. testutils.tcl) by test files run previously
-# (e.g. textDisp.test). That would clobber it permanently.
+#
+# Don't use the variable name "fixedFont" since that variable is already defined
+# in utility namespace ::tk::test::text for importing in the namespace in which
+# test files are executing.
+#
 set fixedFont2 {Courier 12}
 set bigFont   {Helvetica 24}
 
