@@ -247,7 +247,11 @@ namespace eval tk {
 				    ::tk::test::${domain}::init
 				}
 				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
-				    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				    if {[catch {
+					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				    } errMsg]} {
+					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				    }
 				    lappend importedVars($domain) $varName
 				}
 			    }
