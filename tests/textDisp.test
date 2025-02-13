@@ -12,9 +12,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-testutils import text
-
-namespace import -force ::tk::test::scroll::*
+testutils import scroll text
 
 set scrollCmdPrefix [list scrollInfo set]
 
@@ -4903,8 +4901,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 #
 
 unset scrollCmdPrefix
-namespace forget ::tk::test::scroll::*
-testutils forget text
+testutils forget scroll text
 deleteWindows
 option clear
 cleanupTests

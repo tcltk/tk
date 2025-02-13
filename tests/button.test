@@ -13,8 +13,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::button::*
-namespace import -force ::tk::test::image::*
+testutils import button image
 
 imageInit
 
@@ -4013,8 +4012,7 @@ test button-15.3 {Bug [5d991b822e]} {
 #
 
 imageFinish
-namespace forget ::tk::test::image::*
-namespace forget ::tk::test::button::*
+testutils forget button image
 cleanupTests
 return
 

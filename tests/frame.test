@@ -13,7 +13,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::colors::*
+testutils import colors
 
 tcltest::testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 
@@ -1740,7 +1740,7 @@ deleteWindows
 apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
     uniq optnames
 }
-namespace forget ::tk::test::colors::*
+testutils forget colors
 cleanupTests
 return
 

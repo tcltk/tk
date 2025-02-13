@@ -12,7 +12,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::colors::*
+testutils import colors
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
@@ -470,7 +470,7 @@ test winfo-14.4 {mapped at idle time} -setup {
 #
 
 deleteWindows
-namespace forget ::tk::test::colors::*
+testutils forget colors
 cleanupTests
 return
 

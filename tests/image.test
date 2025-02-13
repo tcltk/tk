@@ -13,7 +13,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -594,7 +594,7 @@ test image-15.1 {deleting image does not make widgets forget about it} -setup {
 
 destroy .c
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 

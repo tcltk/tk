@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::child::*
+testutils import child
 
 set currentInterps [winfo interps]
 if {
@@ -387,6 +387,6 @@ while {[llength $newInterps] != [llength $currentInterps]} {
 # CLEANUP
 #
 
-namespace forget ::tk::test::child::*
+testutils forget child
 cleanupTests
 return

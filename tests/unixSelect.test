@@ -15,8 +15,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::select::*
-namespace import -force ::tk::test::child::*
+testutils import child select
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races
@@ -362,7 +361,6 @@ test unixSelect-1.19 {Automatic UTF8_STRING support for selection handle} -const
 # CLEANUP
 #
 
-namespace forget ::tk::test::child::*
-namespace forget ::tk::test::select::*
+testutils forget child select
 cleanupTests
 return

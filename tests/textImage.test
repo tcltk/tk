@@ -13,7 +13,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -472,7 +472,7 @@ test textImage-5.1 {peer widget images} -setup {
 destroy .t
 font delete test_font
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 

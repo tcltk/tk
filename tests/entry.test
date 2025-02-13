@@ -12,8 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::entry::*
-namespace import -force ::tk::test::scroll::*
+testutils import entry scroll
 
 set scrollCmdPrefix [list scrollInfo set]
 foreach i {1 2 3} {
@@ -3636,8 +3635,6 @@ foreach i {1 2 3} {
     unset validateCmd$i
 }
 unset i scrollCmdPrefix
-namespace forget ::tk::test::scroll::*
-namespace forget ::tk::test::entry::*
+testutils forget entry scroll
 cleanupTests
 return
-

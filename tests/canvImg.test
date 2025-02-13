@@ -13,7 +13,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -808,7 +808,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 #
 
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 

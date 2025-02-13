@@ -27,7 +27,7 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
 
 # constraint based on whether our display is secure
-namespace import -force ::tk::test::child::*
+testutils import child
 childTkProcess create
 set app [childTkProcess eval {tk appname}]
 testConstraint secureserver 0
@@ -40,7 +40,7 @@ if {[llength [info commands send]]} {
     }
 }
 childTkProcess exit
-namespace forget ::tk::test::child::*
+testutils forget child
 
 
 #

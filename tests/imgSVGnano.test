@@ -11,7 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -263,7 +263,7 @@ test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
 
 namespace delete svgnano
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 
