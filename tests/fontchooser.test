@@ -9,7 +9,7 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 testutils import dialog
 
-set applyFontCmd [list testDialogFont set]
+set applyFontCmd [list set testDialogFont]
 
 # -------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ test fontchooser-4.0 {fontchooser -font} -constraints scriptImpl -body {
     testDialog onDisplay {
 	Click cancel
     }
-    testDialogFont get
+    set testDialogFont
 } -result {}
 
 test fontchooser-4.1 {fontchooser -font} -constraints scriptImpl -body {
@@ -118,7 +118,7 @@ test fontchooser-4.1 {fontchooser -font} -constraints scriptImpl -body {
     testDialog onDisplay {
 	Click ok
     }
-    expr {[testDialogFont get] ne {}}
+    expr {$testDialogFont ne {}}
 } -result 1
 
 test fontchooser-4.2 {fontchooser -font} -constraints scriptImpl -body {
@@ -129,7 +129,7 @@ test fontchooser-4.2 {fontchooser -font} -constraints scriptImpl -body {
     testDialog onDisplay {
 	Click ok
     }
-    expr {[testDialogFont get] ne {}}
+    expr {$testDialogFont ne {}}
 } -result 1
 
 test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
@@ -140,7 +140,7 @@ test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
     testDialog onDisplay {
 	Click ok
     }
-    expr {[testDialogFont get] ne {}}
+    expr {$testDialogFont ne {}}
 } -result 1
 
 test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl havePointsize14BoldFont} -body {
@@ -151,7 +151,7 @@ test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl havePointsize1
     testDialog onDisplay {
 	Click ok
     }
-    lrange [testDialogFont get] 1 end
+    lrange $testDialogFont 1 end
 } -result {14 bold}
 
 test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} -body {

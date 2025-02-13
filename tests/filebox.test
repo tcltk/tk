@@ -11,8 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import -novars dialog
-setDialogType filebox
+testutils import dialog
+set dialogType filebox
 
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long
@@ -445,7 +445,6 @@ foreach mode $modes {
 
 set tk_strictMotif $tk_strictMotif_old
 removeFile filebox.tmp
-setDialogType none
 testutils forget dialog
 cleanupTests
 return

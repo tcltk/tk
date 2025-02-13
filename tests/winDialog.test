@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import dialog
-set applyFontCmd [list testDialogFont set]
+set applyFontCmd [list set testDialogFont]
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
@@ -31,24 +31,27 @@ testConstraint english [expr {
 set initialDir [tcltest::temporaryDirectory]
 
 proc Click {button} {
+    variable testDialog
     switch -exact -- $button {
 	ok     { set button 1 }
 	cancel { set button 2 }
     }
-    testwinevent $::testDialog $button WM_LBUTTONDOWN 1 0x000a000b
-    testwinevent $::testDialog $button WM_LBUTTONUP 0 0x000a000b
+    testwinevent $testDialog $button WM_LBUTTONDOWN 1 0x000a000b
+    testwinevent $testDialog $button WM_LBUTTONUP 0 0x000a000b
 }
 
 proc GetText {id} {
+    variable testDialog
     switch -exact -- $id {
 	ok     { set id 1 }
 	cancel { set id 2 }
     }
-    return [testwinevent $::testDialog $id WM_GETTEXT]
+    return [testwinevent $testDialog $id WM_GETTEXT]
 }
 
 proc SetText {id text} {
-    return [testwinevent $::testDialog $id WM_SETTEXT $text]
+    variable testDialog
+    return [testwinevent $testDialog $id WM_SETTEXT $text]
 }
 
 # ----------------------------------------------------------------------
@@ -863,7 +866,7 @@ test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
     testDialog launch {tk fontchooser show}
     list [testDialog onDisplay {
 	Click cancel
-    }] [testDialogFont get]
+    }] $testDialogFont
 } -result {0 {}}
 test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
@@ -874,7 +877,7 @@ test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     }
     list [testDialog onDisplay {
 	Click cancel
-    }] [testDialogFont get]
+    }] $testDialogFont
 } -result {0 {}}
 test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     nt testwinevent
@@ -885,7 +888,7 @@ test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     }
     list [testDialog onDisplay {
 	Click 1
-    }] [expr {[llength [testDialogFont get]] ne {}}]
+    }] [expr {[llength $testDialogFont] ne {}}]
 } -result {0 1}
 test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
@@ -896,7 +899,7 @@ test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
     }
     list [testDialog onDisplay {
 	Click cancel
-    }] [testDialogFont get]
+    }] $testDialogFont
 } -result {0 {}}
 test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     nt testwinevent
@@ -911,7 +914,7 @@ test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
 	array set a [testgetwindowinfo $testDialog]
 	Click cancel
     }
-    list [expr {$a(parent) == [wm frame .]}] [testDialogFont get]
+    list [expr {$a(parent) == [wm frame .]}] $testDialogFont
 } -result {1 {}}
 test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent
@@ -934,7 +937,7 @@ test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
     list [testDialog onDisplay {
 	Click [expr {0x0402}] ;# value from XP
 	Click cancel
-    }] [expr {[llength [testDialogFont get]] > 0}]
+    }] [expr {[llength $testDialogFont] > 0}]
 } -result {0 1}
 test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent

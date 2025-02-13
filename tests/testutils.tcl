@@ -520,6 +520,7 @@ namespace eval ::tk::test::dialog {
     proc init {} {
 	variable dialogType none
 	variable testDialog
+	variable testDialogFont
     }
 
     proc Click {button} {
@@ -588,10 +589,6 @@ namespace eval ::tk::test::dialog {
 	    event generate $button <Enter>
 	    event generate $w <Key> -keysym Return
 	}
-    }
-
-    proc setDialogType {type} {
-	variable dialogType $type
     }
 
     proc testDialog {stage {script ""}} {
@@ -665,10 +662,8 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
-    ::tk::test::createStdAccessProc testDialogFont
-
-    namespace export Click PressButton SendButtonPress setDialogType testDialog \
-	    testDialogFont ToPressButton
+    namespace export Click PressButton SendButtonPress testDialog \
+	    ToPressButton
 }
 
 
