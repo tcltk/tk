@@ -3022,8 +3022,7 @@ test entry-18.1 {Entry widget vs hiding} -setup {
 # test cases. This was replaced by inserting recently set configurations
 # that matters for the test case
 test entry-19.1 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3032,14 +3031,13 @@ test entry-19.1 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e 1 0 a {} a all key}
 
 test entry-19.2 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3049,14 +3047,13 @@ test entry-19.2 {entry widget validation} -setup {
     pack .e ; update idletasks
     .e insert 0 a   ;# previous settings
     .e insert 1 b
-    validationData get
+    return $validationData
 } -cleanup {
     destroy .e
 } -result {.e 1 1 ab a b all key}
 
 test entry-19.3 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3066,14 +3063,13 @@ test entry-19.3 {entry widget validation} -setup {
     pack .e ; update idletasks
     .e insert 0 ab   ;# previous settings
     .e insert end c
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e 1 2 abc ab c all key}
 
 test entry-19.4 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3083,14 +3079,13 @@ test entry-19.4 {entry widget validation} -setup {
     pack .e ; update idletasks
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
-    list [validationData get] $::e
+    list $validationData $::e
 } -cleanup {
     destroy .e
 } -result {{.e 1 1 a123bc abc 123 all key} a123bc}
 
 test entry-19.5 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3100,14 +3095,13 @@ test entry-19.5 {entry widget validation} -setup {
     pack .e ; update idletasks
     .e insert 0 a123bc   ;# previous settings
     .e delete 2
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e 0 2 a13bc a123bc 2 all key}
 
 test entry-19.6 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3118,14 +3112,13 @@ test entry-19.6 {entry widget validation} -setup {
     .e insert 0 a13bc   ;# previous settings
     .e configure -validate key
     .e delete 1 3
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e 0 1 abc a13bc 13 key key}
 
 test entry-19.7 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focus \
 	-validatecommand $validateCmd1 \
@@ -3134,16 +3127,15 @@ test entry-19.7 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abc                 ;# previous settings
-    validationData set {}
+    set validationData {}
     .e insert end d
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {}
 
 test entry-19.8 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3156,14 +3148,13 @@ test entry-19.8 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusin}
 
 test entry-19.9 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focus \
 	-validatecommand $validateCmd1 \
@@ -3178,14 +3169,13 @@ test entry-19.9 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focus focusout}
 
 test entry-19.10 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3197,14 +3187,13 @@ test entry-19.10 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusin}
 
 test entry-19.11 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3219,14 +3208,13 @@ test entry-19.11 {entry widget validation} -setup {
     focus -force .
 # update necessary to process FocusOut event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} all focusout}
 
 test entry-19.12 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focusin \
 	-validatecommand $validateCmd1 \
@@ -3238,14 +3226,13 @@ test entry-19.12 {entry widget validation} -setup {
     focus -force .e
 # update necessary to process FocusIn event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
 
 test entry-19.13 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focusin \
 	-validatecommand $validateCmd1 \
@@ -3254,18 +3241,17 @@ test entry-19.13 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
-    validationData set {}
+    set validationData {}
     focus -force .
 # update necessary to process FocusOut event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {}
 
 test entry-19.14 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
@@ -3274,18 +3260,17 @@ test entry-19.14 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
-    validationData set {}                  ;# previous settings
+    set validationData {}                  ;# previous settings
     focus -force .e
 # update necessary to process FocusIn event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {}
 
 test entry-19.15 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
@@ -3294,22 +3279,21 @@ test entry-19.15 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
-    validationData set {}                  ;# previous settings
+    set validationData {}                  ;# previous settings
     focus -force .e                 ;# previous settings
 # update necessary to process FocusIn event
     update                          ;# previous settings
     focus -force .
 # update necessary to process FocusOut event
     update
-    validationData get
+    set validationData
 } -cleanup {
     destroy .e
 } -result {.e -1 -1 abcd abcd {} focusout focusout}
 
 # the same as 19.16 but added [.e validate] to returned list
 test entry-19.16 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
@@ -3318,22 +3302,21 @@ test entry-19.16 {entry widget validation} -setup {
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
-    validationData set {}                  ;# previous settings
+    set validationData {}                  ;# previous settings
     focus -force .e                 ;# previous settings
 # update necessary to process FocusIn event
     update                          ;# previous settings
     focus -force .
 # update necessary to process FocusOut event
     update
-    list [.e validate] [validationData get]
+    list [.e validate] $validationData
 } -cleanup {
     destroy .e
 } -result {1 {.e -1 -1 abcd abcd {} all forced}}
 
 
 test entry-19.17 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
@@ -3343,7 +3326,7 @@ test entry-19.17 {entry widget validation} -setup {
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
     set ::e newdata
-    list [.e cget -validate] [validationData get]
+    list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
 } -result {focusout {.e -1 -1 newdata abcd {} focusout forced}}
@@ -3351,8 +3334,7 @@ test entry-19.17 {entry widget validation} -setup {
 
 # proc doval changed - returns 0
 test entry-19.18 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd3 \
@@ -3363,7 +3345,7 @@ test entry-19.18 {entry widget validation} -setup {
     set ::e newdata                 ;# previous settings
     .e configure -validate all
     set ::e nextdata
-    list [.e cget -validate] [validationData get]
+    list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
 } -result {none {.e -1 -1 nextdata newdata {} all forced}}
@@ -3372,8 +3354,7 @@ test entry-19.18 {entry widget validation} -setup {
 ## loop condition in the validation, when the entry textvar is also set
 # proc doval2 used
 test entry-19.19 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd3 \
@@ -3385,7 +3366,7 @@ test entry-19.19 {entry widget validation} -setup {
 
     .e configure -validatecommand $validateCmd2
     .e validate
-    list [.e cget -validate] [.e get] [validationData get]
+    list [.e cget -validate] [.e get] $validationData
 } -cleanup {
     destroy .e
 } -result {none nextdata {.e -1 -1 nextdata nextdata {} all forced}}
@@ -3396,8 +3377,7 @@ test entry-19.19 {entry widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test entry-19.20 {entry widget validation} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
@@ -3411,7 +3391,7 @@ test entry-19.20 {entry widget validation} -setup {
 
     .e configure -validate all
     set ::e testdata
-    list [.e cget -validate] [.e get] $::e [validationData get]
+    list [.e cget -validate] [.e get] $::e $validationData
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
@@ -3422,8 +3402,7 @@ test entry-19.20 {entry widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
-    unset -nocomplain ::e
-    validationData unset
+    unset -nocomplain ::e validationData
 } -body {
     entry .e -validate key \
 	-validatecommand $validateCmd2 \
@@ -3431,7 +3410,7 @@ test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
     pack .e ; update idletasks
     set ::e origdata
     .e insert 0 A
-    list [.e cget -validate] [.e get] $::e [validationData get]
+    list [.e cget -validate] [.e get] $::e $validationData
 } -cleanup {
     destroy .e
 } -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
