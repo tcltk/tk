@@ -26,6 +26,7 @@
 /* Data declarations and protoypes of functions used in this file. */
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
+NSArray *TclListToNSArray(char *listdata);
 CGRect GetListBBox (Tk_Window win, Tcl_Size index);
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
@@ -90,6 +91,73 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
 /*
  *----------------------------------------------------------------------
  *
+ * TclListToNSArray --
+ *
+ * Converts a Tcl list to an NSArray.
+ *
+ * Results:
+ *	Tcl list data converted to an NSArray for use in 
+ *      accessibility operations.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+NSArray *TclListToNSArray (char *listdata) {
+
+    TkMainInfo *info = TkGetMainInfoList();
+    Tcl_Interp *interp = info->interp;
+  
+
+    Tcl_Obj  *listObj, *listObjItem;
+    Tcl_Size listLength, i, newLength;
+    char **elemPtrs;
+
+
+    /* Extract elements from the Tcl list. */
+    if (Tcl_SplitList(interp, listdata, &listLength, &elemPtrs) != TCL_OK) {
+       	NSLog(@"Unable to convert list data.");
+	return nil; 
+    }
+
+    /* Create empty list object. */
+
+    listObj = Tcl_NewListObj(listLength, NULL);
+
+    for (i = 0; i < listLength; i++) {
+        Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(elemPtrs[i], -1));
+    }
+
+    Tcl_Free((char *)elemPtrs);
+
+    /* Get the number of elements in the list. */
+    if (Tcl_ListObjLength(interp, listObj, &newLength) != TCL_OK) {
+	NSLog(@"Error getting list length.");
+        return nil;
+    }
+
+    /* Create an NSMutableArray to store the converted elements. */
+    NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:newLength];
+    for (i = 0; i < newLength; i++) {
+	if (Tcl_ListObjIndex(interp, listObj, i, &listObjItem) != TCL_OK) {
+	    NSLog(@"Unable to get list item.");
+	    continue;
+	}
+	const char *liststring = Tcl_GetString(listObjItem); 
+	NSString *arraystring = [NSString stringWithUTF8String:liststring];
+	NSLog(@"adding new string: %s", liststring);
+	    
+	[array addObject:arraystring];
+    }
+    return [array copy]; 
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GetListBBox --
  *
  * Converts a Tcl listbox bounding box into a CGRect.
@@ -127,6 +195,10 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
     
     return rect;
 }
+    
+
+    
+
 
 /*
  *----------------------------------------------------------------------
@@ -348,39 +420,28 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 }
 
 - (NSArray<id<NSAccessibilityRow>> *)  accessibilityRows {
-
-    Tcl_Size listLength, i;
-    char **elemPtrs;
-    NSMutableArray *rows = [NSMutableArray array];
-
-    /*Get items in the Tk listbox. */
+    
     TkMainInfo *info = TkGetMainInfoList();
     char *win = Tk_PathName(self.tk_win);
     Tcl_VarEval(info->interp, win,  " get 0 end", NULL);  
     char *data = Tcl_GetString(Tcl_GetObjResult(info->interp));
-
-    /* Extract elements from the Tcl list. */
-    if (Tcl_SplitList(info->interp, data, &listLength, &elemPtrs) != TCL_OK) {
-       	NSLog(@"Unable to convert list data.");
-	return nil; 
-    }
-    /* Build array of accessibility row items. */
-
-    for (i = 0; i < listLength; i++) {
-	TkAccessibilityElement  *rowElement = [[TkAccessibilityElement alloc] init];
-	const char *itemText = Tcl_GetString(elemPtrs[i]);
-	rowElement.accessibilityRole = NSAccessibilityRowRole;
-	rowElement.accessibilityElement = YES;
-	rowElement.accessibilityParent = self.parentView;
-	rowElement.accessibilityFrame = GetListBBox(self.tk_win, (int)rows[i]);
-	rowElement.accessibilityValue = [NSString stringWithUTF8String:itemText];
-	rowElement.accessibilityFocused = YES;
-	if (i == self.selectedIndex) {
-	    self.accessibilitySelected = YES;
-	}
-	[rows addObject: rowElement];
-	 NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
-	 NSLog(@"Added new row: %@", rowElement.accessibilityValue);
+    NSArray *rows = TclListToNSArray(data);
+    NSLog(@"rows count is %d", [rows count]);
+    for (int i=0; i < [rows count]; i++) {
+	TkAccessibilityElement *rowObject =  [[TkAccessibilityElement alloc] init];
+	rowObject.accessibilityRole = NSAccessibilityRowRole;
+	rowObject.accessibilityElement = YES;
+	rowObject.accessibilityParent = self;
+	rowObject.accessibilityFrame = GetListBBox(self.tk_win, i);
+	rowObject.accessibilityLabel = [rows objectAtIndex:i];
+	  if (i == self.selectedIndex) {
+           self.accessibilitySelected = YES;
+       }
+	TkAccessibilityElement *rowText =  [[TkAccessibilityElement alloc] init];
+ rowText.accessibilityRole = NSAccessibilityStaticTextRole;
+        rowText.accessibilityValue = rowObject.accessibilityLabel;
+        rowText.accessibilityParent = rowObject;
+        rowObject.accessibilityChildren = @[rowText];
     }
     return rows;
 }
@@ -388,8 +449,8 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 - (NSArray *)accessibilityChildren {
     NSAccessibilityRole role = self.accessibilityRole;
     if ((role = NSAccessibilityListRole)) {
-       	NSLog(@"Returning accessibility children");
-	return self.accessibilityRows;
+	NSLog(@"Accessing children.");
+	return [self accessibilityRows];
     }
 }
 
@@ -399,7 +460,6 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
    }
    return nil;
 }
-
 
 @end
 
