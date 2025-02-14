@@ -273,6 +273,41 @@ namespace eval tk {
 	    }
 	}
 
+	if {[info exists ::env(UNSET_METHOD)] && ($::env(UNSET_METHOD) == 2)} {
+	    puts "USING UNSET METHOD 2"
+	    # First implementation of method 5
+	    rename ::unset ::tk::test::_unset
+	    proc unset {args} {
+		variable importedVars
+		if {[lindex $args 0] eq "-nocomplain"} {
+		    set noComplain 1
+		    set vars [lrange $args 1 end]
+		} else {
+		    set noComplain 0
+		    set vars $args
+		}
+		set exportingDomain ""
+		foreach varName $vars {
+		    foreach domain [array names importedVars] {
+			if {$varName in $importedVars($domain)} {
+			    set exportingDomain $domain
+			    break
+			}
+		    }
+		    if {$exportingDomain ne ""} {
+			variable ::tk::test::${domain}::$varName
+			uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+		    } else {
+			set cmd [list ::tk::test::_unset $varName]
+			if {$noComplain} {
+			    set cmd [linsert $cmd 1 "-nocomplain"]
+			}
+			uplevel 1 $cmd
+		    }
+		}
+	    }
+	}
+
 	namespace export *
     }
 }
@@ -668,6 +703,24 @@ namespace eval ::tk::test::dialog {
 
 
 namespace eval ::tk::test::entry {
+
+    # init --
+    #
+    # This is a reserved proc that is part of the mechanism that proc testutils
+    # employs when importing utility procs and associated namespace variables
+    # into the namespace in which a test file is executed.
+    # See also the explanation in this file at:
+    #
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Test authors should define namespace variables here if they need to be
+    # imported into a test file namespace. This proc must not be exported.
+    #
+    proc init {args} {
+	variable validationData
+    }
+
     # Handler for variable trace on ::x
     proc override args {
 	global x
@@ -694,28 +747,44 @@ namespace eval ::tk::test::entry {
 	.e insert end dovaldata
 	return 0
     }
-    proc validationData {subcmd {value ""}} {
-	variable validationData
-	switch -- $subcmd {
-	    get {
-		return $validationData
-	    }
-	    lappend {
-		lappend validationData $value
-	    }
-	    set {
-		set validationData $value
-	    }
-	    unset {
-		unset -nocomplain validationData
-	    }
-	    default {
-		return -code error "invalid subcmd \"$subcmd\""
-	    }
+
+    #
+    # METHODS FOR HANDLING "unset" FROM WITHIN TEST FILES
+    #
+    #
+    # method 1: re-init by variable trace. (Note: proc "init" is extended with
+    #           an unused "args" argument that receives the trace variables)
+    #           The trace command will need to be incorporated in
+    #           "testutils import" and removed in "testutils forget", for each
+    #           imported namespace variable.
+    if {! [info exists ::env(UNSET_METHOD)] || ($::env(UNSET_METHOD) == 1)} {
+	puts "USING UNSET METHOD 1"
+	if {[trace info variable validationData] eq ""} {
+	    trace add variable validationData unset init
 	}
     }
 
-    namespace export *
+    # method 2: redefine "unset". See namespace ::tk::test for implementation
+
+    #
+    # method 3: test file calls "testutils import $domain" instead "unset"
+    #           (repeatedly if necessary) . This will re-initialize everything
+    #           in "init without re-importing commands."
+    #
+    # method 4: instead of "unset", tests resort to only re-initializing
+    #           the namespace variable directly (from within the test file),
+    #           like ttk/validate.test does.
+    #
+    # method 5: test file calls this access proc instead of "unset". Not yet
+    #           activated in testfile.
+    proc unsetValidationData {} {
+	variable validationData
+	unset validationData
+	variable validationData
+    }
+
+    namespace export override validateCommand1 validateCommand2 validateCommand3 \
+	    validateCommand4 unsetValidationData
 }
 
 namespace eval ::tk::test::geometry {
