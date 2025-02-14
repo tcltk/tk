@@ -275,7 +275,7 @@ namespace eval tk {
 
 	if {[info exists ::env(UNSET_METHOD)] && ($::env(UNSET_METHOD) == 2)} {
 	    puts "USING UNSET METHOD 2"
-	    # First implementation of method 5
+	    # First implementation
 	    rename ::unset ::tk::test::_unset
 	    proc unset {args} {
 		variable importedVars
@@ -286,8 +286,8 @@ namespace eval tk {
 		    set noComplain 0
 		    set vars $args
 		}
-		set exportingDomain ""
 		foreach varName $vars {
+		    set exportingDomain ""
 		    foreach domain [array names importedVars] {
 			if {$varName in $importedVars($domain)} {
 			    set exportingDomain $domain
