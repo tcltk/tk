@@ -15,7 +15,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import child
+namespace import -force ::tk::test::child::*
 
 testConstraint xhost [llength [auto_execok xhost]]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
@@ -604,6 +604,6 @@ catch {
     testdeleteapps
 }
 
-testutils forget child
+namespace forget ::tk::test::child::*
 cleanupTests
 return
