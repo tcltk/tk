@@ -245,7 +245,6 @@ namespace eval tk {
 			    if {$option ne "-novars"} {
 				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				    ::tk::test::${domain}::init
-				    puts "testutils ran init proc for domain \"$domain\""
 				    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
 					if {[catch {
 					    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
@@ -255,18 +254,14 @@ namespace eval tk {
 					# auto-re-initialize an imported namespace variable if the test file unsets it
 					trace add variable $varName unset ::tk::test::${domain}::init
 					lappend importedVars($domain) $varName
-					puts "testutils imported variable \"$varName\" for domain $domain"
-					puts "added unset trace on \"$varName\""
 				    }
 				}
 			    }
 			} else {
 			    if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				::tk::test::${domain}::init
-				puts "testutils ran init proc for domain \"$domain\""
 			    }
 			}
-			puts "importedVars for domain $domain: \"$importedVars($domain)\""
 		    }
 		    forget {
 			if {! [info exists importedVars($domain)]} {
@@ -275,10 +270,8 @@ namespace eval tk {
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
 			foreach varName $importedVars($domain) {
 			    trace remove variable $varName unset ::tk::test::${domain}::init
-			    puts "removed unset trace on \"$varName\""
 			}
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
-			puts "testutils removed variables $importedVars($domain) for domain \"$domain\""
 			unset importedVars($domain)
 		    }
 		}
