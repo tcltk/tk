@@ -253,7 +253,7 @@ namespace eval tk {
 					    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
 					}
 					# auto-re-initialize an imported namespace variable if the test file unsets it
-					trace add variable $varName unset init
+					trace add variable $varName unset ::tk::test::${domain}::init
 					lappend importedVars($domain) $varName
 					puts "testutils imported variable \"$varName\" for domain $domain"
 					puts "added unset trace on \"$varName\""
@@ -274,7 +274,7 @@ namespace eval tk {
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
 			foreach varName $importedVars($domain) {
-			    trace remove variable $varName unset init
+			    trace remove variable $varName unset ::tk::test::${domain}::init
 			    puts "removed unset trace on \"$varName\""
 			}
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
