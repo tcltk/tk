@@ -252,8 +252,11 @@ namespace eval tk {
 					} errMsg]} {
 					    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
 					}
+					# auto-re-initialize an imported namespace variable if the test file unsets it
+					trace add variable $varName unset init
 					lappend importedVars($domain) $varName
 					puts "testutils imported variable \"$varName\" for domain $domain"
+					puts "added unset trace on \"$varName\""
 				    }
 				}
 			    }
@@ -270,44 +273,13 @@ namespace eval tk {
 			    return -code error "domain \"$domain\" was not imported"
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+			foreach varName $importedVars($domain) {
+			    trace remove variable $varName unset init
+			    puts "removed unset trace on \"$varName\""
+			}
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
 			puts "testutils removed variables $importedVars($domain) for domain \"$domain\""
 			unset importedVars($domain)
-		    }
-		}
-	    }
-	}
-
-	if {[info exists ::env(UNSET_METHOD)] && ($::env(UNSET_METHOD) == 2)} {
-	    puts "USING UNSET METHOD 2"
-	    # First implementation
-	    rename ::unset ::tk::test::_unset
-	    proc unset {args} {
-		variable importedVars
-		if {[lindex $args 0] eq "-nocomplain"} {
-		    set noComplain 1
-		    set vars [lrange $args 1 end]
-		} else {
-		    set noComplain 0
-		    set vars $args
-		}
-		foreach varName $vars {
-		    set exportingDomain ""
-		    foreach domain [array names importedVars] {
-			if {$varName in $importedVars($domain)} {
-			    set exportingDomain $domain
-			    break
-			}
-		    }
-		    if {$exportingDomain ne ""} {
-			variable ::tk::test::${domain}::$varName
-			uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-		    } else {
-			set cmd [list ::tk::test::_unset $varName]
-			if {$noComplain} {
-			    set cmd [linsert $cmd 1 "-nocomplain"]
-			}
-			uplevel 1 $cmd
 		    }
 		}
 	    }
@@ -751,41 +723,6 @@ namespace eval ::tk::test::entry {
 	.e delete 0 end;
 	.e insert end dovaldata
 	return 0
-    }
-
-    #
-    # METHODS FOR HANDLING "unset" FROM WITHIN TEST FILES
-    #
-    #
-    # method 1: re-init by variable trace. (Note: proc "init" is extended with
-    #           an unused "args" argument that receives the trace variables)
-    #           The trace command will need to be incorporated in
-    #           "testutils import" and removed in "testutils forget", for each
-    #           imported namespace variable.
-    if {! [info exists ::env(UNSET_METHOD)] || ($::env(UNSET_METHOD) == 1)} {
-	puts "USING UNSET METHOD 1"
-	if {[trace info variable validationData] eq ""} {
-	    trace add variable validationData unset init
-	}
-    }
-
-    # method 2: redefine "unset". See namespace ::tk::test for implementation
-
-    #
-    # method 3: test file calls "testutils import $domain" instead "unset"
-    #           (repeatedly if necessary) . This will re-initialize everything
-    #           in "init without re-importing commands."
-    #
-    # method 4: instead of "unset", tests resort to only re-initializing
-    #           the namespace variable directly (from within the test file),
-    #           like ttk/validate.test does.
-    #
-    # method 5: test file calls this access proc instead of "unset". Not yet
-    #           activated in testfile.
-    proc unsetValidationData {} {
-	variable validationData
-	unset validationData
-	variable validationData
     }
 
     namespace export override validateCommand1 validateCommand2 validateCommand3 \
