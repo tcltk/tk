@@ -8,7 +8,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import scroll
+namespace import -force ::tk::test::scroll::*
 
 # Some of the tests raise background errors;
 # override default bgerror to catch them.
@@ -95,9 +95,9 @@ test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand [list scrollInfo set]
     .e insert end "0123456789"
     pack .e;
-    set timeout [after 500 {set $scrollInfo "timeout"}]
-    vwait scrollInfo
-    set scrollInfo
+    set timeout [after 500 {scrollInfo set "timeout"}]
+    vwait ::tk::test::scroll::scrollInfo
+    scrollInfo get
 } -cleanup {
     destroy .e
     after cancel $timeout
@@ -408,5 +408,5 @@ test entry-12.2 "style command" -body {
 # CLEANUP
 #
 
-testutils forget scroll
+namespace forget ::tk::test::scroll::*
 tcltest::cleanupTests
