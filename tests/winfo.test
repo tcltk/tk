@@ -470,7 +470,7 @@ test winfo-14.4 {mapped at idle time} -setup {
 #
 
 deleteWindows
-forget colors
+testutils forget colors
 cleanupTests
 return
 
