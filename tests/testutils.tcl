@@ -245,21 +245,25 @@ namespace eval tk {
 			    if {$option ne "-novars"} {
 				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				    ::tk::test::${domain}::init
-				}
-				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
-				    if {[catch {
-					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-				    } errMsg]} {
-					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				    puts "testutils ran init proc for domain \"$domain\""
+				    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+					if {[catch {
+					    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+					} errMsg]} {
+					    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+					}
+					lappend importedVars($domain) $varName
+					puts "testutils imported variable \"$varName\" for domain $domain"
 				    }
-				    lappend importedVars($domain) $varName
 				}
 			    }
 			} else {
 			    if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				::tk::test::${domain}::init
+				puts "testutils ran init proc for domain \"$domain\""
 			    }
 			}
+			puts "importedVars for domain $domain: \"$importedVars($domain)\""
 		    }
 		    forget {
 			if {! [info exists importedVars($domain)]} {
@@ -267,6 +271,7 @@ namespace eval tk {
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
+			puts "testutils removed variables $importedVars($domain) for domain \"$domain\""
 			unset importedVars($domain)
 		    }
 		}
