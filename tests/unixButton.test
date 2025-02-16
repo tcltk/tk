@@ -14,7 +14,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::button::*
+testutils import button
 namespace import -force ::tk::test::image::*
 
 imageInit
@@ -264,7 +264,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 
 imageFinish
 namespace forget ::tk::test::image::*
-namespace forget ::tk::test::button::*
+testutils forget button
 cleanupTests
 return
 
