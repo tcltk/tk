@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -1321,7 +1321,7 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
 #
 
 imageCleanup
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

@@ -22,7 +22,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import child
+namespace import -force ::tk::test::child::*
 
 # set up a very large buffer to test INCR retrievals
 set longValue ""
@@ -362,7 +362,7 @@ test clipboard-7.20 {Tk_ClipboardCmd procedure} -setup {
 # CLEANUP
 #
 
-testutils forget child
+namespace forget ::tk::test::child::*
 cleanupTests
 return
 

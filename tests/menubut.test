@@ -16,7 +16,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -791,7 +791,7 @@ deleteWindows
 option clear
 imageFinish
 
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

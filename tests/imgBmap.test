@@ -13,7 +13,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -517,7 +517,7 @@ test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
 removeFile foo.bm
 removeFile foo2.bm
 imageFinish
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

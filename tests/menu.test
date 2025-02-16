@@ -11,7 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -4292,7 +4292,7 @@ test menu-41.14 {identifiers - reserved word} -setup {
 
 imageFinish
 deleteWindows
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

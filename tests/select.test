@@ -17,7 +17,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import child select
+namespace import -force ::tk::test::select::*
+namespace import -force ::tk::test::child::*
 
 testConstraint cliboardManagerPresent 0
 if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
@@ -1079,7 +1080,8 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 # CLEANUP
 #
 
-testutils forget child select
+namespace forget ::tk::test::child::*
+namespace forget ::tk::test::select::*
 cleanupTests
 return
 

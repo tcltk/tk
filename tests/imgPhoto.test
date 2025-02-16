@@ -80,7 +80,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
@@ -2719,7 +2719,7 @@ catch {rename checkImgTransLoop {}}
 imageFinish
 removeFile README-imgPhoto
 
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 

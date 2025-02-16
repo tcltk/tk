@@ -11,7 +11,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-testutils import image
+namespace import -force ::tk::test::image::*
 
 imageInit
 
@@ -716,7 +716,7 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
 
 imageFinish
 deleteWindows
-testutils forget image
+namespace forget ::tk::test::image::*
 cleanupTests
 return
 
