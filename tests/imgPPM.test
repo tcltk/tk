@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -235,7 +235,7 @@ test imgPPM-5.9 {StringReadPPM procedure} -setup {
 
 imageFinish
 catch {file delete test.ppm}
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 

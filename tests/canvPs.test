@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -209,7 +209,7 @@ test canvPs-5.2 {test ps generation with image} -body {
 
 unset -nocomplain foo bar
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 deleteWindows
 cleanupTests
 return

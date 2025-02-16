@@ -14,7 +14,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::image::*
+testutils import image
 
 imageInit
 
@@ -1174,7 +1174,7 @@ test imgPNG-4.4 {file output with metadata} -setup {
 
 namespace delete png
 imageFinish
-namespace forget ::tk::test::image::*
+testutils forget image
 cleanupTests
 return
 
