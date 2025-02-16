@@ -14,7 +14,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::button::*
+testutils import button
 namespace import -force ::tk::test::image::*
 
 imageInit
@@ -200,7 +200,7 @@ test winbutton-1.9 {TkpComputeButtonGeometry procedure} -constraints win -setup 
 imageFinish
 deleteWindows
 namespace forget ::tk::test::image::*
-namespace forget ::tk::test::button::*
+testutils forget button
 cleanupTests
 return
 

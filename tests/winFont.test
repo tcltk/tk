@@ -16,7 +16,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::geometry::*
+testutils import geometry
 
 test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
     win
@@ -384,7 +384,7 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
 # CLEANUP
 #
 
-namespace forget ::tk::test::geometry::*
+testutils forget geometry
 cleanupTests
 return
 

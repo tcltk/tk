@@ -17,7 +17,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::geometry::*
+testutils import geometry
 
 if {[tk windowingsystem] eq "x11"} {
     if {[testConstraint withXft]} {
@@ -335,6 +335,6 @@ test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
 # CLEANUP
 #
 
-namespace forget ::tk::test::geometry::*
+testutils forget geometry
 cleanupTests
 return
