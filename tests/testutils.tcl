@@ -529,7 +529,7 @@ namespace eval ::tk::test::dialog {
     # Test authors should define namespace variables here if they need to be
     # imported into a test file namespace. This proc must not be exported.
     #
-    proc init {} {
+    proc init {args} {
 	variable dialogType none
 	variable testDialog
 	variable testDialogFont
@@ -927,7 +927,7 @@ namespace eval ::tk::test::text {
     # Test authors should define namespace variables here if they need to be
     # imported into a test file namespace. This proc must not be exported.
     #
-    proc init {} {
+    proc init {args} {
 	variable fixedFont {Courier -12}
 	variable fixedWidth [font measure $fixedFont m]
 	variable fixedHeight [font metrics $fixedFont -linespace]
