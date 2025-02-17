@@ -774,26 +774,27 @@ namespace eval ::tk::test::image {
 
 namespace eval ::tk::test::scroll {
 
-    # scrollInfo --
+    # init --
     #
-    #	Used as the scrolling command for widgets, set with "-[xy]scrollcommand".
-    #	It saves the scrolling information in, or retrieves it from a namespace
-    #	variable "scrollInfo".
+    # This is a reserved proc that is part of the mechanism that proc testutils
+    # employs when importing utility procs and associated namespace variables
+    # into the namespace in which a test file is executed.
+    # See also the explanation in this file at:
     #
-    variable scrollInfo {}
-    proc scrollInfo {subcmd args} {
-	variable scrollInfo
-	switch -- $subcmd {
-	    get {
-		return $scrollInfo
-	    }
-	    set {
-		set scrollInfo $args
-	    }
-	    default {
-		return -code error "invalid subcmd \"$subcmd\""
-	    }
-	}
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Test authors should define namespace variables here if they need to be
+    # imported into a test file namespace. This proc must not be exported.
+    #
+    proc init {args} {
+	variable scrollInfo {}
+    }
+
+    # Used as the scrolling command for widgets, set with "-[xy]scrollcommand".
+    # It saves the scrolling information in a namespace variable "scrollInfo".
+    proc setScrollInfo {args} {
+	variable scrollInfo $args
     }
 
     namespace export *

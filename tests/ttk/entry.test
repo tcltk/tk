@@ -8,7 +8,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::scroll::*
+testutils import scroll
 
 # Some of the tests raise background errors;
 # override default bgerror to catch them.
@@ -92,12 +92,12 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
 } -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
-    ttk::entry .e -font fixed -width 5 -xscrollcommand [list scrollInfo set]
+    ttk::entry .e -font fixed -width 5 -xscrollcommand setScrollInfo
     .e insert end "0123456789"
     pack .e;
-    set timeout [after 500 {scrollInfo set "timeout"}]
-    vwait ::tk::test::scroll::scrollInfo
-    scrollInfo get
+    set timeout [after 500 {set scrollInfo "timeout"}]
+    vwait scrollInfo
+    set scrollInfo
 } -cleanup {
     destroy .e
     after cancel $timeout
@@ -408,5 +408,5 @@ test entry-12.2 "style command" -body {
 # CLEANUP
 #
 
-namespace forget ::tk::test::scroll::*
+testutils forget scroll
 tcltest::cleanupTests
