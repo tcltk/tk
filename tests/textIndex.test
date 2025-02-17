@@ -10,7 +10,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
-testutils import -nocommands text
+testutils import text
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10

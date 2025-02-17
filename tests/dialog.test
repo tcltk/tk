@@ -7,7 +7,7 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
-testutils import -novars dialog
+testutils import dialog
 
 test dialog-1.1 {tk_dialog command} -body {
     tk_dialog
