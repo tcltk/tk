@@ -801,7 +801,23 @@ namespace eval ::tk::test::scroll {
 }
 
 namespace eval ::tk::test::select {
-    variable selValue {} selInfo {}
+
+    # init --
+    #
+    # This is a reserved proc that is part of the mechanism that proc testutils
+    # employs when importing utility procs and associated namespace variables
+    # into the namespace in which a test file is executed.
+    # See also the explanation in this file at:
+    #
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Test authors should define namespace variables here if they need to be
+    # imported into a test file namespace. This proc must not be exported.
+    #
+    proc init {args} {
+	variable selValue {} selInfo {}
+    }
 
     proc badHandler {path type offset count} {
 	variable selInfo
