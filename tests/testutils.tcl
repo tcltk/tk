@@ -817,6 +817,8 @@ namespace eval ::tk::test::select {
     #
     proc init {args} {
 	variable selValue {} selInfo {}
+	variable abortCount
+	variable pass
     }
 
     proc badHandler {path type offset count} {
@@ -840,11 +842,11 @@ namespace eval ::tk::test::select {
 	    selection handle -type $type $path {}
 	}
 	lappend selInfo $path $type $offset $count
-	set numBytes [expr {[string length [selValue get]] - $offset}]
+	set numBytes [expr {[string length $selValue] - $offset}]
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range [selValue get] $offset [expr {$numBytes+$offset}]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc errHandler args {
@@ -912,12 +914,6 @@ namespace eval ::tk::test::select {
 	}
 	selection own $path
     }
-
-    # Create access procs for namespace variables
-    foreach varName {abortCount pass selInfo selValue} {
-	::tk::test::createStdAccessProc $varName
-    }
-    unset varName
 
     namespace export *
 }
