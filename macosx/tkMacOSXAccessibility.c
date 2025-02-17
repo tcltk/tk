@@ -527,6 +527,31 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
     }
 }
 
+- (void)accessibilityPerformAction:(NSString *)action {
+       NSAccessibilityRole role = self.accessibilityRole;
+    if ((role = NSAccessibilityListRole)) {
+        [self selectItem];
+    }
+}
+
+
+- (void)selectItem {
+    
+    NSAccessibilityRole role = self.accessibilityRole;
+    if ((role = NSAccessibilityListRole)) {
+
+	/* Set selection on rows in the Tk listbox. */
+	TkMainInfo *info = TkGetMainInfoList();
+	char *win = Tk_PathName(self.tk_win);
+	Tcl_VarEval(info->interp, win,  " selection clear 0 end; ", win,  "  selection set [ ", win, "index active]", NULL);
+	Tcl_VarEval(info->interp, win,  " curselection", NULL);
+	int index = Tcl_GetIntFromObj(info->interp, Tcl_GetObjResult(info->interp), &index);
+	id rowObject = [self.accessibilityRows objectAtIndex:index];
+	rowObject.accessibilitySelected=TRUE;
+
+    }
+}
+
 
 @end
 
@@ -631,6 +656,7 @@ EmitSelectionChanged(
     NSAccessibilityRole role = widget.accessibilityRole;
 
     if ((role = NSAccessibilityRowRole)) {
+	NSLog(@"selection changed");
 	NSAccessibilityPostNotification(widget, NSAccessibilitySelectedRowsChangedNotification);
     }   
     return TCL_OK;
