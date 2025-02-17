@@ -9,8 +9,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 # Import utility procs for specific functional areas
-namespace import -force ::tk::test::scroll::*
-set scrollCmdPrefix [list scrollInfo set]
+testutils import scroll
 
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
@@ -611,10 +610,10 @@ test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
 
 test treeview-9.0 "scroll callback - empty tree" -body {
     tvSetup
-    .tv configure -yscrollcommand $scrollCmdPrefix
+    .tv configure -yscrollcommand setScrollInfo
     .tv delete [.tv children {}]
     update
-    scrollInfo get
+    set scrollInfo
 } -result [list 0.0 1.0]
 
 test treeview-9.1 "scrolling" -setup {
@@ -1505,5 +1504,5 @@ test treeview-23.1 "cell padding" -setup {
 # CLEANUP
 #
 
-namespace forget ::tk::test::scroll::*
+testutils forget scroll
 tcltest::cleanupTests
