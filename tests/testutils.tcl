@@ -797,7 +797,7 @@ namespace eval ::tk::test::scroll {
 	variable scrollInfo $args
     }
 
-    namespace export *
+    namespace export setScrollInfo
 }
 
 namespace eval ::tk::test::select {
