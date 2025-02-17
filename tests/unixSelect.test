@@ -73,13 +73,13 @@ test unixSelect-1.3 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
 	{handler COMPOUND_TEXT}
     selection own .
-    selValue set üф
-    selInfo set {}
+    set selValue üф
+    set selInfo {}
     set result [childTkProcess eval {
 	set x [selection get -type COMPOUND_TEXT]
 	list [string equal üф $x] [string length $x]
     }]
-    lappend result [selInfo get]
+    lappend result $selInfo
 } -cleanup {
     childTkProcess exit
 } -result {1 2 {COMPOUND_TEXT 0 4000}}
@@ -97,15 +97,15 @@ test unixSelect-1.4 {TkSelGetSelection procedure: INCR i18n text, iso2022} -cons
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
 	{handler COMPOUND_TEXT}
     selection own .
-    selValue set [string repeat x 3999]üф[string repeat x 3999]
-    selInfo set {}
+    set selValue [string repeat x 3999]üф[string repeat x 3999]
+    set selInfo {}
     set result [childTkProcess eval {
 	set x [selection get -type COMPOUND_TEXT]
 	list [string equal \
 	    [string repeat x 3999]üф[string repeat x 3999] $x] \
 	    [string length $x]
     }]
-    lappend result [selInfo get]
+    lappend result $selInfo
 } -cleanup {
     childTkProcess exit
 } -result {1 8000 {COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3999 COMPOUND_TEXT 7998 4000 COMPOUND_TEXT 0 4000 COMPOUND_TEXT 4000 3998 COMPOUND_TEXT 7997 4000}}
@@ -119,13 +119,13 @@ test unixSelect-1.5 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
 	{handler COMPOUND_TEXT}
     selection own .
-    selValue set üф
-    selInfo set {}
+    set selValue üф
+    set selInfo {}
     set result [childTkProcess eval {
 	set x [selection get -type COMPOUND_TEXT]
 	list [string equal üф $x] [string length $x]
     }]
-    lappend result [selInfo get]
+    lappend result $selInfo
 } -cleanup {
     childTkProcess exit
 } -result {1 2 {COMPOUND_TEXT 0 4000}}
@@ -350,7 +350,7 @@ test unixSelect-1.19 {Automatic UTF8_STRING support for selection handle} -const
     # See Bug #666346 "Selection handling crashes under KDE 3.0"
     label .l
     selection handle .l  [list handler STRING]
-    selValue set "This is the selection value"
+    set selValue "This is the selection value"
     selection own .l
     selection get -type UTF8_STRING
 } -cleanup {
