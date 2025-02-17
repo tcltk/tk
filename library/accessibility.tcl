@@ -39,6 +39,7 @@ namespace eval ::tk::accessible {
 	}
     }
 
+    #Get data from ttk::treeview for use in the API
     proc _gettreeviewdata {w} {
 	if {[::tk::accessible::_checktree $w] eq "Tree"} {
 	    #Tree
@@ -50,6 +51,7 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
+    #get number of items in listbox
     proc _getlistlength {w} {
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get 0 end]
@@ -57,9 +59,17 @@ namespace eval ::tk::accessible {
 	    return $count
 	}
     }
+
+    #get number of items in listbox
+    proc _getselection {w} {
+	if {[winfo class $w] eq "Listbox"} {
+	    set data [$w get 0 end]
+	    set count [llength $data]
+	    return $count
+	}
+    }
+
 	
-
-
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
     #we only want these to fire once.
@@ -340,6 +350,7 @@ namespace eval ::tk::accessible {
     
     
     bind all <Map> {+::tk::accessible::add_acc_object %W}
+    bind ListBox <<ListboxSelect>> {+::tk::accessible::emit_selection_change %W} 
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action add_acc_object

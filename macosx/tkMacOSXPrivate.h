@@ -428,8 +428,6 @@ VISIBILITY_HIDDEN
 @interface TkAccessibilityElement : NSAccessibilityElement
 @property (nonatomic, strong)  TKContentView  *parentView;
 @property Tk_Window tk_win;
-@property (nonatomic, strong) NSArray<NSString *> *tableitems;
-@property (nonatomic, assign) NSInteger selectedIndex;
 @end
 
 
