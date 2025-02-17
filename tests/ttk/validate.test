@@ -82,7 +82,7 @@ test validate-1.8 {entry widget validation - vmode focus} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
     focus -force .e
-    vwait ::tk::test::entry::validationData
+    vwait validationData
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} focus focusin}
@@ -91,7 +91,7 @@ test validate-1.9 {entry widget validation - vmode focus} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
     focus -force .
-    vwait ::tk::test::entry::validationData
+    vwait validationData
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} focus focusout}
@@ -101,7 +101,7 @@ test validate-1.10 {entry widget validation - vmode all} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
     focus -force .e
-    vwait ::tk::test::entry::validationData
+    vwait validationData
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} all focusin}
@@ -110,7 +110,7 @@ test validate-1.11 {entry widget validation} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
     focus -force .
-    vwait ::tk::test::entry::validationData
+    vwait validationData
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} all focusout}
@@ -120,7 +120,7 @@ test validate-1.12 {entry widget validation} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
     focus -force .e
-    vwait ::tk::test::entry::validationData
+    vwait validationData
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
