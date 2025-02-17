@@ -688,13 +688,13 @@ namespace eval ::tk::test::entry {
     # imported into a test file namespace. This proc must not be exported.
     #
     proc init {args} {
+	variable textVar
 	variable validationData
     }
 
-    # Handler for variable trace on ::x
+    # Handler for variable trace on namespace variable textVar
     proc override args {
-	global x
-	set x 12345
+	variable textVar 12345
     }
 
     # Procedures used by widget validation tests
