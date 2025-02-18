@@ -5,7 +5,7 @@
  *      for Tk on macOS.  
  *
  * Copyright © 2023 Apple Inc.
- * Copyright © 2024 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -454,16 +454,18 @@ EmitSelectionChanged(
     widget.tk_win = path;
     NSAccessibilityRole role = widget.accessibilityRole;
 
-    /*
-     * We access listbox data through the <<ListboxSelect>> event at the
-     * script level and sending notifications from the C level to update the
-     * value read by VoiceOver of the wdget based on the listbox data's
-     * selected value. The accessibility design is tightly tied to a
-     * Tk_Window and mapping this API to elements that are not actual windows,
-     * like listbox rows, introduces too much complexity.
-     */
 
     if ((role = NSAccessibilityListRole)) {
+
+	/*
+	 * We access listbox data through the <<ListboxSelect>> event at the
+	 * script level and sending notifications from the C level to update the
+	 * value read by VoiceOver of the widget based on the listbox data's
+	 * selected value. The accessibility design is tightly tied to a
+	 * Tk_Window and mapping this API to elements that are not actual
+	 * windows, like listbox rows, introduces too much complexity.
+	 */
+
 	NSAccessibilityPostNotification(widget, NSAccessibilityTitleChangedNotification);
 	PostAccessibilityAnnouncement(widget.accessibilityValue);
     }
