@@ -457,7 +457,7 @@ EmitSelectionChanged(
     /*
      * We access listbox data through the <<ListboxSelect>> event at the
      * script level and sending notifications from the C level to update the
-     * value read by VoiceOvere of the wdget based on the listbox data's
+     * value read by VoiceOver of the wdget based on the listbox data's
      * selected value. The accessibility design is tightly tied to a
      * Tk_Window and mapping this API to elements that are not actual windows,
      * like listbox rows, introduces too much complexity.
