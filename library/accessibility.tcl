@@ -256,6 +256,7 @@ namespace eval ::tk::accessible {
 			      {} \
 			      {}\
 			  }
+    
     #Scrollbar/TScrollbar bindings
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \

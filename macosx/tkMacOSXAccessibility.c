@@ -26,8 +26,7 @@
 /* Data declarations and protoypes of functions used in this file. */
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
-NSArray *TclListToNSArray(char *listdata);
-CGRect GetListBBox (Tk_Window win, Tcl_Size index);
+void PostAccessibilityAnnouncement(NSString *message);
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
@@ -90,21 +89,41 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     
     return NSMakePoint(windowpoint.x, flipped);
 }
-    
+
+
 /*
  *----------------------------------------------------------------------
  *
- * TkAccessibilityElement class --
+ * PostAccessibilityAnnouncement --
  *
- *  Primary interaction between Tk and NSAccessibility API.
+ *  Customized accessibility message. 
  *
  * Results:
- *	Tk widgets are now accessible to screen readers on macOS.
+ *      Accessibilty API posts customized message.
  *
  * Side effects:
  *	None.
  *
  *----------------------------------------------------------------------
+ */
+
+
+void  PostAccessibilityAnnouncement( NSString *message) {
+    NSDictionary *userInfo = @{ NSAccessibilityAnnouncementKey: message,
+				NSAccessibilityPriorityKey : @(NSAccessibilityPriorityHigh),};
+    NSAccessibilityPostNotificationWithUserInfo([NSApp mainWindow], 
+						NSAccessibilityAnnouncementRequestedNotification,
+						userInfo);
+}
+    
+/*
+ *
+ * TkAccessibilityElement --
+ *
+ *  Primary interaction between Tk and NSAccessibility API. Accessibility is 
+ *  linked to a specific Tk_Window, and traits are set and retrieved from hash
+ *  tables. 
+ *
  */
 
 @implementation TkAccessibilityElement : NSAccessibilityElement
@@ -177,8 +196,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     NSAccessibilityRole role = self.accessibilityRole;
     
     if ((role = NSAccessibilityListRole)) {
-	NSAccessibilityRole role = self.accessibilityRole;
-
         
 	Tk_Window win = self.tk_win;
 	Tcl_HashEntry *hPtr, *hPtr2;
@@ -211,18 +228,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     Tcl_HashTable *AccessibleAttributes;
 
     NSAccessibilityRole role = self.accessibilityRole;
-
-   /*
-    * Hard code a label for Tk listbox/treeview items because they are not
-    * Tk windows and thus cannot be stored in the hash table.
-    */
-        
-    if ((role = NSAccessibilityListRole)) {
-	NSString *_baseTitle = @"Listbox: ";
-	NSString *title = [_baseTitle  stringByAppendingString:self.accessibilityValue];
-        
-	return title;
-    }
        
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -347,8 +352,6 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
     return YES;
 }
 
-
-
 @end
 
 /*
@@ -453,16 +456,18 @@ EmitSelectionChanged(
 
     /*
      * We access listbox data through the <<ListboxSelect>> event at the
-     * script level and sending notifications from the C level to change the
-     * title of the widget based on the listbox data's selected value.
-     * The accessibility design is tightly tied to a Tk_Window and mapping
-     * this API to elements that are not actual windows, like listbox rows,
-     * introduces too much complexity.
+     * script level and sending notifications from the C level to update the
+     * value read by VoiceOvere of the wdget based on the listbox data's
+     * selected value. The accessibility design is tightly tied to a
+     * Tk_Window and mapping this API to elements that are not actual windows,
+     * like listbox rows, introduces too much complexity.
      */
 
     if ((role = NSAccessibilityListRole)) {
 	NSAccessibilityPostNotification(widget, NSAccessibilityTitleChangedNotification);
-    }   
+	PostAccessibilityAnnouncement(widget.accessibilityValue);
+    }
+
     return TCL_OK;
 }
 
