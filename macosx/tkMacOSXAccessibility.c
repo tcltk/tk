@@ -211,7 +211,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	AccessibleAttributes = Tcl_GetHashValue(hPtr);
 	hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
 	if (!hPtr2) {
-	    NSLog(@"No label found.");
+	    NSLog(@"No value found.");
 	    return nil;
 	}
 	char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
