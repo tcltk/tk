@@ -466,7 +466,7 @@ EmitSelectionChanged(
 	 * windows, like listbox rows, introduces too much complexity.
 	 */
 
-	NSAccessibilityPostNotification(widget, NSAccessibilityTitleChangedNotification);
+	NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
 	PostAccessibilityAnnouncement(widget.accessibilityValue);
     }
 
