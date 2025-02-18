@@ -68,7 +68,6 @@ namespace eval ::tk::accessible {
 	    return $count
 	}
     }
-
 	
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because

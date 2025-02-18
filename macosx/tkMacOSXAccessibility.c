@@ -151,7 +151,6 @@ NSArray *TclListToNSArray (char *listdata) {
 	}
 	const char *liststring = Tcl_GetString(listObjItem); 
 	NSString *arraystring = [NSString stringWithUTF8String:liststring];
-	NSLog(@"adding new string: %s", liststring);
 	    
 	[array addObject:arraystring];
     }
@@ -181,7 +180,7 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 
     /* Get item bounding box in listbox-relative coordinates.*/
     if (Tcl_VarEval(Tk_Interp(win), Tk_PathName(win), " bbox ", Tcl_GetString(intObj), NULL) != TCL_OK) {
-	NSLog(@"Unable to parse bounding box");
+	NSLog(@"Unable to parse bounding box.");
 	return CGRectZero;
     }
   
@@ -228,7 +227,7 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
     NSAccessibilityRole role = self.accessibilityRole;
 
     /*
-      Hard code a label for Tk listbox items because they are not
+      Hard code a label for Tk listbox/treeview items because they are not
       Tk windows and thus cannot be stored in the hash table.
     */
        
@@ -300,6 +299,14 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
+
+    /*
+     * Hard code value for treeview and listbox elements that do not
+     * have a corresponding Tk_Window.
+    */
+    if (win == NULL) {
+	return NSAccessibilityRowRole;
+    }
 
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -418,6 +425,19 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
     return NO;
 }
 
+- (NSArray *)accessibilityActionNames {
+
+    NSAccessibilityRole role = self.accessibilityRole;
+
+    if ((role = NSAccessibilityRowRole)) {
+	return @[NSAccessibilityPickAction, NSAccessibilityPressAction];
+    }
+}
+
+- (void)accessibilityChildrenChanged {
+    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
+}
+
 /* NSAccessibilityTableRole methods. */
 
 - (NSArray *)  accessibilityColumnHeaderUIElements {
@@ -431,6 +451,7 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 - (NSArray<id<NSAccessibilityRow>> *)  accessibilityRows {
 
     NSAccessibilityRole role = self.accessibilityRole;
+    NSMutableArray *rows = [NSMutableArray array];
     
     if ((role = NSAccessibilityListRole)) {
 	
@@ -446,33 +467,34 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 	 */
 	 
 	NSArray *listrows = TclListToNSArray(data);
-	NSMutableArray *rows = [listrows mutableCopy];
+	rows = [listrows mutableCopy];
 	    
 	    /*
 	     * Each row must be set up as an individual accessibility
 	     * element.
 	     */
 	    
-	    for (NSUInteger i=0; i < [rows count]; i++) {
-		role = NSAccessibilityRowRole;
-		TkAccessibilityElement *rowObject =  [[TkAccessibilityElement alloc] init];
-		rowObject.accessibilityElement = YES;
-		rowObject.accessibilityParent = self;
-		rowObject.accessibilityFrame = GetListBBox(self.tk_win, i);
+	for (NSUInteger i=0; i < [listrows count]; i++) {
+	    TkAccessibilityElement *rowObject =  [[TkAccessibilityElement alloc] init];
+	    rowObject.accessibilityElement = YES;
+	    rowObject.accessibilityParent = self;
+	    rowObject.accessibilityFrame = GetListBBox(self.tk_win, i);
 
-		/*
-		 * Get row text and pass to value that is called
-		 * directly in accessibilityLabel.
-		 */
+	    /*
+	     * Get row text and pass to value that is called
+	     * directly in accessibilityLabel.
+	     */
 		
-		NSString *string = [rows objectAtIndex:i];
-		altlabel = [string UTF8String];
+	    NSString *string = [rows objectAtIndex:i];
+	    altlabel = [string UTF8String];
 	
-		NSLog(@"the label is %@", rowObject.accessibilityLabel);
-		[rows addObject: rowObject];
-	    }
+	    [rows addObject: rowObject];
+	 
+	}
+	[self accessibilityChildrenChanged];
 	return [rows copy];
     }
+    return [rows copy];
 }
 
 - (NSArray *)accessibilityChildren {
@@ -505,7 +527,9 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 	 */
 	    
 	for (NSUInteger i=0; i < [selectedRows count]; i++) {
-	    role = NSAccessibilityRowRole;
+	    if ((role = NSAccessibilityUnknownRole)) {
+		role = NSAccessibilityRowRole;
+	    }
 	    TkAccessibilityElement *selectedObject =  [[TkAccessibilityElement alloc] init];
 	    selectedObject.accessibilityElement = YES;
 	    selectedObject.accessibilityParent = self;
@@ -528,11 +552,14 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 }
 
 - (void)accessibilityPerformAction:(NSString *)action {
-       NSAccessibilityRole role = self.accessibilityRole;
+    NSAccessibilityRole role = self.accessibilityRole;
     if ((role = NSAccessibilityListRole)) {
-        [self selectItem];
+	if ([action isEqualToString:NSAccessibilityPickAction]) {
+	    NSLog(@"selected");
+	    //   [self selectItem];
+	}
     }
-}
+    }
 
 
 - (void)selectItem {
@@ -546,7 +573,7 @@ CGRect GetListBBox (Tk_Window win, Tcl_Size index) {
 	Tcl_VarEval(info->interp, win,  " selection clear 0 end; ", win,  "  selection set [ ", win, "index active]", NULL);
 	Tcl_VarEval(info->interp, win,  " curselection", NULL);
 	int index = Tcl_GetIntFromObj(info->interp, Tcl_GetObjResult(info->interp), &index);
-	id rowObject = [self.accessibilityRows objectAtIndex:index];
+	TkAccessibilityElement *rowObject = [self.accessibilityRows objectAtIndex:index];
 	rowObject.accessibilitySelected=TRUE;
 
     }
