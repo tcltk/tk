@@ -51,21 +51,12 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
-    #get number of items in listbox
-    proc _getlistlength {w} {
+    #update listbox selection
+    proc _updateselection {w} {
 	if {[winfo class $w] eq "Listbox"} {
-	    set data [$w get 0 end]
-	    set count [llength $data]
-	    return $count
-	}
-    }
-
-    #get number of items in listbox
-    proc _getselection {w} {
-	if {[winfo class $w] eq "Listbox"} {
-	    set data [$w get 0 end]
-	    set count [llength $data]
-	    return $count
+	    set data [$w get [$w curselection]]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
 	}
     }
 	
@@ -178,7 +169,7 @@ namespace eval ::tk::accessible {
 			   {} \
 		       }
 
-    #Listbox bindings
+    #    Listbox bindings
     bind Listbox <Map> {+::tk::accessible::_init \
 			    %W \
 			    Listbox \
@@ -188,6 +179,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state]\
 			    {}\
 			}
+
     #Progressbar
     bind TProgressbar <Map> {+::tk::accessible::_init \
 				 %W \
@@ -349,7 +341,7 @@ namespace eval ::tk::accessible {
     
     
     bind all <Map> {+::tk::accessible::add_acc_object %W}
-    bind ListBox <<ListboxSelect>> {+::tk::accessible::emit_selection_change %W} 
+    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action add_acc_object
