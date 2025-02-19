@@ -281,11 +281,6 @@ Tk_MenubuttonObjCmd(
     mbPtr->cursor = NULL;
     mbPtr->takeFocusObj = NULL;
     mbPtr->flags = 0;
-    mbPtr->borderWidthObj = NULL;
-    mbPtr->highlightWidthObj = NULL;
-    mbPtr->padXObj = NULL;
-    mbPtr->padYObj = NULL;
-    mbPtr->wrapLengthObj = NULL;
 
     Tk_CreateEventHandler(mbPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
@@ -454,7 +449,7 @@ DestroyMenuButton(
  *
  * ConfigureMenuButton --
  *
- *	This function is called to process an argv/argc list, plus the Tk
+ *	This function is called to process an objv/objc list, plus the Tk
  *	option database, in order to configure (or reconfigure) a menubutton
  *	widget.
  *
