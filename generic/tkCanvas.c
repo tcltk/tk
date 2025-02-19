@@ -3180,6 +3180,26 @@ DisplayCanvas(
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
 		width, height);
+	/*
+	 * Force a display of all items which are windows.  This is apparently
+	 * redundant, but its purpose is to make macOS (the only platform
+	 * which defines TK_NO_DOUBLE_BUFFERING) update the clipping region
+	 * for the canvas so that when the background is filled the new
+	 * locations of the window items will be clipped away, rather than the
+	 * old locations. If the clipping regions are not updated, "ghost"
+	 * windows will be created at the old locations.  Now that updateLayer
+	 * is being used for macOS drawing it should be possible to stop
+	 * maintaining clipping regions for all widgets.  When that happens
+	 * this code can be removed.
+	 */
+
+	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
+		itemPtr = itemPtr->nextPtr) {
+	    if (itemPtr->typePtr == &tkWindowType) {
+		ItemDisplay(canvasPtr, itemPtr, pixmap,
+			    screenX1, screenY1, width, height);
+	    }
+	}
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*
@@ -3235,8 +3255,6 @@ DisplayCanvas(
 		(unsigned int) width, (unsigned int) height,
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin);
 	Tk_FreePixmap(Tk_Display(tkwin), pixmap);
-#else
-	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
     }
 
