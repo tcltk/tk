@@ -93,10 +93,11 @@ test notebook-4.end "Cleanup test suite 1-4.*" -body { destroy .nb }
 
 test notebook-5.1 "Virtual events" -body {
     toplevel .t
+    update
     set ::events [list]
+    pack [set nb [ttk::notebook .t.nb]] -expand true -fill both; update
     bind .t <<NotebookTabChanged>> { lappend events changed %W }
 
-    pack [set nb [ttk::notebook .t.nb]] -expand true -fill both; update
     $nb add [frame $nb.f1] ;  # triggers <<NotebookTabChanged>> (first tab gets autoselected)
     $nb add [frame $nb.f2]
     $nb add [frame $nb.f3]
