@@ -446,17 +446,17 @@ TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
     Tcl_Size i;
-    const char *p;
+    char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
-	p = (const char *)winPtr->tagPtr[i];
+	p = (char *)winPtr->tagPtr[i];
 	if (*p == '.') {
 	    /*
 	     * Names starting with "." are malloced rather than Uids, so they
 	     * have to be freed.
 	     */
 
-	    ckfree((char *)p);
+	    ckfree(p);
 	}
     }
     ckfree(winPtr->tagPtr);

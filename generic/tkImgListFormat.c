@@ -181,7 +181,7 @@ Tk_PhotoImageFormat tkImgFmtDefault = {
  * Side effects:
  *      The value in *indexPtr is updated to the index of the fist
  *      element in argv[] that does not look like an option/value, or to
- *      argc if parsing reached the end of argv[].
+ *      objc if parsing reached the end of argv[].
  *
  *----------------------------------------------------------------------
  */

@@ -648,7 +648,7 @@ Tk_FontObjCmd(
 	    return result;
 	}
 	return GetAttributeInfoObj(interp, &nfPtr->fa, objPtr);
-     }
+    }
     case FONT_CREATE: {
 	int skip = 3, i;
 	const char *name;
@@ -3403,7 +3403,7 @@ noMapping:	;
  *
  * Side effects:
  *	The fields of the font attributes structure get filled in with
- *	information from argc/argv. If an error occurs while parsing, the font
+ *	information from objv/objc. If an error occurs while parsing, the font
  *	attributes structure will contain all modifications specified in the
  *	command line options up to the point of the error.
  *

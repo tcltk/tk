@@ -167,17 +167,17 @@ static Tcl_ThreadDataKey dataKey;
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-data", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	 NULL, offsetof(PhotoModel, fileObj), TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	 NULL, offsetof(PhotoModel, fileObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-format", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
 	 DEF_PHOTO_GAMMA, offsetof(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
 	 DEF_PHOTO_HEIGHT, offsetof(PhotoModel, userHeight), 0, NULL},
     {TK_CONFIG_STRING, "-metadata", NULL, NULL,
-	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK|TK_CONFIG_OBJS, NULL},
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
 	 DEF_PHOTO_PALETTE, offsetof(PhotoModel, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
@@ -1650,7 +1650,7 @@ GetExtension(
  * Side effects:
  *	Fields in *optPtr get filled in. The value of optIndexPtr is updated
  *	to contain the index of the first element in argv[] that was not
- *	parsed, or argc if the end of objv[] was reached.
+ *	parsed, or objc if the end of objv[] was reached.
  *
  *----------------------------------------------------------------------
  */
