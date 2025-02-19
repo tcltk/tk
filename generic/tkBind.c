@@ -3824,9 +3824,9 @@ GetAllVirtualEvents(
  *	an XEvent, constructed from information parsed from the event
  *	description string and its optional arguments.
  *
- *	argv[0] contains name of the target window.
- *	argv[1] contains pattern string for one event (e.g, <Control-v>).
- *	argv[2..argc-1] contains -field/option pairs for specifying additional
+ *	objv[0] contains name of the target window.
+ *	objv[1] contains pattern string for one event (e.g, <Control-v>).
+ *	objv[2..objc-1] contains -field/option pairs for specifying additional
  *			detail in the generated event.
  *
  *	Either virtual or physical events can be generated this way. The event
