@@ -24,6 +24,8 @@ to the userbase.
  - [Bug in the ttk::scale widget of the "default" theme](https://core.tcl-lang.org/tk/tktview/126d07)
  - [Wrong appearance of the ttk::menubutton indicator of the "xpnative" theme](https://core.tcl-lang.org/tk/tktview/525536)
  - [English shortcuts for Chinese locale](https://core.tcl-lang.org/tk/tktview/c99266)
+ - [No grip element in ttk::panedwindow sashes of most built-in themes](https://core.tcl-lang.org/tk/tktview/9902d8)
+ - [Tk_Get3DBorderColors broken by design](https://core.tcl-lang.org/tk/tktview/517165)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 

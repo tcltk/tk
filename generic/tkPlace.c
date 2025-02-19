@@ -593,7 +593,7 @@ FindContainer(
  *
  * ConfigureContent --
  *
- *	This function is called to process an argv/argc list to reconfigure
+ *	This function is called to process an objv/objc list to reconfigure
  *	the placement of a window.
  *
  * Results:

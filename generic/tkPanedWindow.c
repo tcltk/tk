@@ -1227,7 +1227,7 @@ PanedWindowSashCommand(
  *
  * ConfigurePanedWindow --
  *
- *	This function is called to process an argv/argc list in conjunction
+ *	This function is called to process an objv/objc list in conjunction
  *	with the Tk option database to configure (or reconfigure) a paned
  *	window widget.
  *
