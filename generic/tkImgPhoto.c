@@ -1576,7 +1576,7 @@ GetExtension(
  * Side effects:
  *	Fields in *optPtr get filled in. The value of optIndexPtr is updated
  *	to contain the index of the first element in argv[] that was not
- *	parsed, or argc if the end of objv[] was reached.
+ *	parsed, or objc if the end of objv[] was reached.
  *
  *----------------------------------------------------------------------
  */
