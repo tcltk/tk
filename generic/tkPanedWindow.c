@@ -20,7 +20,7 @@
  * Flag values for "sticky"ness. The 16 combinations subsume the packer's
  * notion of anchor and fill.
  *
- * STICK_NORTH	This window sticks to the top of its cavity.
+ * STICK_NORTH		This window sticks to the top of its cavity.
  * STICK_EAST		This window sticks to the right edge of its cavity.
  * STICK_SOUTH		This window sticks to the bottom of its cavity.
  * STICK_WEST		This window sticks to the left edge of its cavity.
