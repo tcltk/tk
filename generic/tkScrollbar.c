@@ -446,7 +446,7 @@ ScrollbarWidgetObjCmd(
  *
  * ConfigureScrollbar --
  *
- *	This function is called to process an argv/argc list, plus the Tk
+ *	This function is called to process an objv/objc list, plus the Tk
  *	option database, in order to configure (or reconfigure) a scrollbar
  *	widget.
  *
