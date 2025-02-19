@@ -1027,7 +1027,6 @@ ConfigureButton(
     Tcl_Obj *errorResult = NULL;
     int error, haveImage;
     Tk_Image image;
-    int wrapLength, borderWidth, highlightWidth, padX, padY;
     int width, height;
 
     /*
@@ -1091,41 +1090,6 @@ ConfigureButton(
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->activeBorder);
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
-	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
-	if (borderWidth < 0) {
-	    borderWidth = 0;
-	    Tcl_DecrRefCount(butPtr->borderWidthObj);
-	    butPtr->borderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->borderWidthObj);
-	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-	    Tcl_DecrRefCount(butPtr->highlightWidthObj);
-	    butPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->highlightWidthObj);
-	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
-	if (padX < 0) {
-	    padX = 0;
-	    Tcl_DecrRefCount(butPtr->padXObj);
-	    butPtr->padXObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->padXObj);
-	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
-	if (padY < 0) {
-	    padY = 0;
-	    Tcl_DecrRefCount(butPtr->padYObj);
-	    butPtr->padYObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->padYObj);
-	}
-	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
-	if (wrapLength < 0) {
-	    wrapLength = 0;
-	    Tcl_DecrRefCount(butPtr->wrapLengthObj);
-	    butPtr->wrapLengthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(butPtr->wrapLengthObj);
 	}
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
