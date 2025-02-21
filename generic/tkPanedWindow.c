@@ -227,7 +227,6 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int cavityHeight, int *xPtr, int *yPtr,
 			    int *paneWidthPtr, int *paneHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
-static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 static void *	ComputeSlotAddress(void *recordPtr, Tcl_Size offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
@@ -2502,7 +2501,7 @@ SetSticky(
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 
-    if (flags & TK_OPTION_NULL_OK && ObjectIsEmpty(*value)) {
+    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	/*
@@ -3025,37 +3024,6 @@ PanedWindowProxyCommand(
     }
 
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ObjectIsEmpty --
- *
- *	This function tests whether the string value of an object is empty.
- *
- * Results:
- *	The return value is 1 if the string value of objPtr has length zero,
- *	and 0 otherwise.
- *
- * Side effects:
- *	May cause object shimmering, since this function can force a
- *	conversion to a string object.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-ObjectIsEmpty(
-    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
-{
-    if (objPtr == NULL) {
-	return 1;
-    }
-    if (objPtr->bytes == NULL) {
-	Tcl_GetString(objPtr);
-    }
-    return (objPtr->length == 0);
 }
 
 /*
