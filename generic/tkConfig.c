@@ -141,7 +141,6 @@ static Tcl_Obj *	GetObjectForOption(void *recordPtr,
 static Option *		GetOption(const char *name, OptionTable *tablePtr);
 static Option *		GetOptionFromObj(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr);
-static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
 static void		DupOptionInternalRep(Tcl_Obj *, Tcl_Obj *);
 
@@ -630,7 +629,7 @@ DoObjConfig(
     case TK_OPTION_BOOLEAN: {
 	int newBool;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBool = -1;
 	} else if (Tcl_GetBooleanFromObj(nullOK ? NULL : interp, valuePtr, &newBool) != TCL_OK) {
@@ -662,7 +661,7 @@ DoObjConfig(
 	int newInt;
 
 	if ((optionPtr->specPtr->flags & TYPE_MASK) == 0) {
-	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    if (nullOK && TkObjIsEmpty(valuePtr)) {
 		valuePtr = NULL;
 		newInt = INT_MIN;
 	    } else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
@@ -680,7 +679,7 @@ DoObjConfig(
 	    }
 	} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
 	    Tcl_WideInt newWideInt;
-	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    if (nullOK && TkObjIsEmpty(valuePtr)) {
 		valuePtr = NULL;
 		newWideInt = (sizeof(long) > sizeof(int)) ? LONG_MIN : LLONG_MIN;
 	    } else if (Tcl_GetWideIntFromObj(nullOK ? NULL : interp, valuePtr, &newWideInt) != TCL_OK) {
@@ -724,7 +723,7 @@ DoObjConfig(
     case TK_OPTION_DOUBLE: {
 	double newDbl;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 #if defined(NAN)
 	    newDbl = NAN;
@@ -756,7 +755,7 @@ DoObjConfig(
 	const char *value;
 	Tcl_Size length;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	}
 	if (internalPtr != NULL) {
@@ -775,7 +774,7 @@ DoObjConfig(
     case TK_OPTION_STRING_TABLE: {
 	int newValue;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newValue = -1;
 	} else {
@@ -810,7 +809,7 @@ DoObjConfig(
     case TK_OPTION_COLOR: {
 	XColor *newPtr;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPtr = NULL;
 	} else {
@@ -828,7 +827,7 @@ DoObjConfig(
     case TK_OPTION_FONT: {
 	Tk_Font newFont;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newFont = NULL;
 	} else {
@@ -846,7 +845,7 @@ DoObjConfig(
     case TK_OPTION_STYLE: {
 	Tk_Style newStyle;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newStyle = NULL;
 	} else {
@@ -864,7 +863,7 @@ DoObjConfig(
     case TK_OPTION_BITMAP: {
 	Pixmap newBitmap;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBitmap = None;
 	} else {
@@ -882,7 +881,7 @@ DoObjConfig(
     case TK_OPTION_BORDER: {
 	Tk_3DBorder newBorder;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBorder = NULL;
 	} else {
@@ -900,7 +899,7 @@ DoObjConfig(
     case TK_OPTION_RELIEF: {
 	int newRelief;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
@@ -932,7 +931,7 @@ DoObjConfig(
     case TK_OPTION_CURSOR: {
 	Tk_Cursor newCursor;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    newCursor = NULL;
 	    valuePtr = NULL;
 	} else {
@@ -951,7 +950,7 @@ DoObjConfig(
     case TK_OPTION_JUSTIFY: {
 	int newJustify;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newJustify = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
@@ -983,7 +982,7 @@ DoObjConfig(
     case TK_OPTION_ANCHOR: {
 	int newAnchor;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newAnchor = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
@@ -1015,7 +1014,7 @@ DoObjConfig(
     case TK_OPTION_PIXELS: {
 	int newPixels;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPixels = INT_MIN;
 	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
@@ -1040,7 +1039,7 @@ DoObjConfig(
     case TK_OPTION_WINDOW: {
 	Tk_Window newWin;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newWin = NULL;
 	} else if (TkGetWindowFromObj(interp, tkwin, valuePtr,
@@ -1097,7 +1096,7 @@ DoObjConfig(
 /*
  *----------------------------------------------------------------------
  *
- * ObjectIsEmpty --
+ * TkObjIsEmpty --
  *
  *	This function tests whether the string value of an object is empty.
  *
@@ -1111,14 +1110,25 @@ DoObjConfig(
  *----------------------------------------------------------------------
  */
 
-static int
-ObjectIsEmpty(
+#if defined(USE_TCL_STUBS)
+# undef Tcl_IsEmpty
+# define Tcl_IsEmpty \
+    ((int (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
+#endif
+
+int
+TkObjIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
     if (objPtr == NULL) {
 	return 1;
     }
     if (objPtr->bytes == NULL) {
+#if defined(USE_TCL_STUBS)
+	if (Tcl_IsEmpty) {
+	    return Tcl_IsEmpty(objPtr);
+	}
+#endif
 	Tcl_GetString(objPtr);
     }
     return (objPtr->length == 0);
