@@ -688,6 +688,7 @@ XFillRectangles(
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
 	CGRect rect;
 
@@ -1549,10 +1550,14 @@ TkMacOSXGetClipRgn(
  *
  * Tk_ClipDrawableToRect --
  *
- *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping. This is called by the
- *	Text widget to display each DLine, and by the Canvas widget when it
- *	is updating a sub rectangle in the canvas.
+ *      Sets the drawRgn to a single rectangle as specified.  This is
+ *      called by Canvas and Text widgets before calling XFillRectangle
+ *      to draw the backround of a rectangle which is  being updated.  If the
+ *      drawRgn is a complex clipping region that clips out subwindows
+ *      then those subwindows may remain visible as ghost windows if the
+ *      subsequent update involves moving the subwindow.
+ *
+ *	If width or height are negative, reset to no clipping.
  *
  * Results:
  *	None.
@@ -1587,13 +1592,13 @@ Tk_ClipDrawableToRect(
 	if (macDraw->winPtr && (macDraw->flags & TK_CLIP_INVALID)) {
 	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
 	}
+	// The visRgn, which clips subwindows,  will be preferred
+	// if we leave it in place.  So we must remove it.
 	if (macDraw->visRgn) {
-	    macDraw->drawRgn = HIShapeCreateIntersection(macDraw->visRgn,
-		    drawRgn);
-	    CFRelease(drawRgn);
-	} else {
-	    macDraw->drawRgn = drawRgn;
+	    CFRelease(macDraw->visRgn);
+	    macDraw->visRgn = nil;
 	}
+	macDraw->drawRgn = drawRgn;
     }
 }
 
