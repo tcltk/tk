@@ -3196,7 +3196,7 @@ DisplayCanvas(
 
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
-	    if (itemPtr->typePtr == &tkWindowType) {
+	    if (AlwaysRedraw(itemPtr)) {
 		ItemDisplay(canvasPtr, itemPtr, pixmap,
 			    screenX1, screenY1, width, height);
 	    }
