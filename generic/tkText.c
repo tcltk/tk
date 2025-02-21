@@ -88,7 +88,6 @@ static Tcl_Obj *	GetLineStartEnd(void *clientData,
 static void		RestoreLineStartEnd(void *clientData,
 			    Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
-static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 
 static const Tk_ObjCustomOption lineOption = {
     "line",			/* name */
@@ -6799,7 +6798,7 @@ SetLineStartEnd(
 	internalPtr = NULL;
     }
 
-    if (flags & TK_OPTION_NULL_OK && ObjectIsEmpty(*value)) {
+    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	int line;
@@ -6842,37 +6841,6 @@ RestoreLineStartEnd(
     char *oldInternalPtr)	/* Pointer to old value. */
 {
     *(TkTextLine **)internalPtr = *(TkTextLine **)oldInternalPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ObjectIsEmpty --
- *
- *	This function tests whether the string value of an object is empty.
- *
- * Results:
- *	The return value is 1 if the string value of objPtr has length zero,
- *	and 0 otherwise.
- *
- * Side effects:
- *	May cause object shimmering, since this function can force a
- *	conversion to a string object.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-ObjectIsEmpty(
-    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
-{
-    if (objPtr == NULL) {
-	return 1;
-    }
-    if (objPtr->bytes == NULL) {
-	Tcl_GetString(objPtr);
-    }
-    return (objPtr->length == 0);
 }
 
 /*

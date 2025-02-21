@@ -424,7 +424,7 @@ FileReadGIF(
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
     int index = 0, result = TCL_ERROR;
-    Tcl_Size argc = 0, i;
+    Tcl_Size objc = 0, i;
     Tcl_Obj **objv;
     unsigned char buf[100];
     unsigned char *trashBuffer = NULL;
@@ -455,16 +455,16 @@ FileReadGIF(
      */
 
     if (format && Tcl_ListObjGetElements(interp, format,
-	    &argc, &objv) != TCL_OK) {
+	    &objc, &objv) != TCL_OK) {
 	return TCL_ERROR;
     }
-    for (i = 1; i < argc; i++) {
+    for (i = 1; i < objc; i++) {
 	int optionIdx;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
 		sizeof(char *), "option name", 0, &optionIdx) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (i == (argc-1)) {
+	if (i == (objc-1)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no value given for \"%s\" option",
 		    Tcl_GetString(objv[i])));

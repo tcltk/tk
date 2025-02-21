@@ -217,7 +217,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 
 static void		ComputeTextBbox(Tk_Canvas canvas, TextItem *textPtr);
 static int		ConfigureText(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size argc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
