@@ -8151,7 +8151,7 @@ TkTextInspectOptions(
 		Tcl_Obj *nameObj;
 		int myFlags = flags;
 
-		if (GetByteLength(valObj) == 0) {
+		if (TkObjIsEmpty(valObj)) {
 		    continue;
 		}
 
@@ -11325,13 +11325,6 @@ GetTextStartEnd(
  */
 
 static int
-ObjectIsEmpty(
-    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
-{
-    return objPtr ? GetByteLength(objPtr) == 0 : 1;
-}
-
-static int
 SetTextStartEnd(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tcl_Interp *),		/* Current interp; may be used for errors. */
@@ -11352,7 +11345,7 @@ SetTextStartEnd(
     assert(!*objPtr);
     *oldObjPtr = NULL;
 
-    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
 	*objPtr = Tcl_NewStringObj((objPtr == &textPtr->newStartIndex) ? "begin" : "end", TCL_INDEX_NONE);
     } else {
@@ -11503,7 +11496,7 @@ SetLineStartEnd(
 	internalPtr = NULL;
     }
 
-    if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	int line;
