@@ -1092,47 +1092,6 @@ DoObjConfig(
 /*
  *----------------------------------------------------------------------
  *
- * TkObjIsEmpty --
- *
- *	This function tests whether the string value of an object is empty.
- *
- * Results:
- *	The return value is 1 if the string value of objPtr has length zero,
- *	and 0 otherwise.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-#if defined(USE_TCL_STUBS)
-# undef Tcl_IsEmpty
-# define Tcl_IsEmpty \
-    ((int (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
-#endif
-
-int
-TkObjIsEmpty(
-    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
-{
-    if (objPtr == NULL) {
-	return 1;
-    }
-    if (objPtr->bytes == NULL) {
-#if defined(USE_TCL_STUBS)
-	if (Tcl_IsEmpty) {
-	    return Tcl_IsEmpty(objPtr);
-	}
-#endif
-	Tcl_GetString(objPtr);
-    }
-    return (objPtr->length == 0);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GetOption --
  *
  *	This function searches through a chained option table to find the

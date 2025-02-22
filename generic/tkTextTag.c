@@ -41,6 +41,9 @@ static const char *const justifyStrings[] = {
     "left", "right", "center", "full", NULL
 };
 
+#ifndef TK_OPTION_NEG_OK
+#   define TK_OPTION_NEG_OK		(1 << 6)
+#endif /* TK_OPTION_NEG_OK */
 
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
@@ -86,7 +89,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
