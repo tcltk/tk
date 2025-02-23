@@ -153,6 +153,11 @@ typedef enum {
  * Information used for parsing window configuration options:
  */
 
+#ifndef TK_OPTION_NEG_OK
+#   define TK_OPTION_NEG_OK		(1 << 6)
+#endif /* TK_OPTION_NEG_OK */
+
+
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align), 0, alignStrings, 0},
@@ -161,9 +166,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-owner", NULL, NULL,
 	"1", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, isOwner), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", offsetof(TkTextEmbWindow, padXObj), offsetof(TkTextEmbWindow, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padXObj), offsetof(TkTextEmbWindow, padX), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", offsetof(TkTextEmbWindow, padYObj), offsetof(TkTextEmbWindow, padY), 0, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padYObj), offsetof(TkTextEmbWindow, padY), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
 	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
     {TK_OPTION_STRING, "-tags", NULL, NULL,
