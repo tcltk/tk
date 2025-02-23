@@ -200,10 +200,6 @@ static const Tk_ObjCustomOption startEndMarkOption = {
  * Information used to parse text configuration options:
  */
 
-#ifndef TK_OPTION_NEG_OK
-#   define TK_OPTION_NEG_OK		(1 << 6)
-#endif /* TK_OPTION_NEG_OK */
-
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-autoseparators", "autoSeparators",
 	"AutoSeparators", DEF_TEXT_AUTO_SEPARATORS, TCL_INDEX_NONE, offsetof(TkText, autoSeparators),
@@ -290,9 +286,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-maxredo", "maxRedo", "MaxRedo",
 	"TCL_INDEX_NONE", TCL_INDEX_NONE, offsetof(TkText, maxRedoDepth), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_TEXT_PADX, TCL_INDEX_NONE, offsetof(TkText, padX), TK_OPTION_NEG_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_PADX, TCL_INDEX_NONE, offsetof(TkText, padX), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_TEXT_PADY, TCL_INDEX_NONE, offsetof(TkText, padY), TK_OPTION_NEG_OK, 0, 0},
+	DEF_TEXT_PADY, TCL_INDEX_NONE, offsetof(TkText, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_TEXT_RELIEF, TCL_INDEX_NONE, offsetof(TkText, relief), 0, 0, 0},
     {TK_OPTION_INT, "-responsiveness", "responsiveness", "Responsiveness",
