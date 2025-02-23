@@ -29,9 +29,8 @@ Tk_Window
 .fi
 .SH ARGUMENTS
 .AS Tcl_Interp *topLevScreen
-.AP Tcl_Interp *interp out
-Tcl interpreter to use for error reporting.  If no error occurs,
-then \fI*interp\fR is not modified.
+.AP Tcl_Interp *interp in
+Tcl interpreter to use for error reporting (can be NULL).
 .AP Tk_Window parent in
 Token for the window that is to serve as the logical parent of
 the new window.
