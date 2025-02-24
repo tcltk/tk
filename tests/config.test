@@ -1117,7 +1117,7 @@ test config-4.115 {DoObjConfig - custom internal value} -constraints {
 }  -result {THIS IS A TEST}
 
 
-test config-5.1 {ObjectIsEmpty - object is already string} -constraints {
+test config-5.1 {TkObjIsEmpty - object is already string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [format ""]
@@ -1125,14 +1125,14 @@ test config-5.1 {ObjectIsEmpty - object is already string} -constraints {
 } -cleanup {
     killTables
 }  -result {}
-test config-5.2 {ObjectIsEmpty - object is already string} -constraints {
+test config-5.2 {TkObjIsEmpty - object is already string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [format " "]
 } -cleanup {
     killTables
 } -returnCodes error -result {unknown color name " "}
-test config-5.3 {ObjectIsEmpty - must convert back to string} -constraints {
+test config-5.3 {TkObjIsEmpty - must convert back to string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [list]
