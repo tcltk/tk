@@ -246,13 +246,17 @@ namespace eval tk {
 				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				    ::tk::test::${domain}::init
 				    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+					#
+					# Note that a test file may have unset an already upvar'ed namespace variable,
+					# thus making it invisible to "info vars" inside the domain namespace. This is
+					# not a problem because an "unset" doesn't affect the the upvar link, which is
+					# what we're defining/rewriting here.
+					#
 					if {[catch {
 					    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
 					} errMsg]} {
 					    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
 					}
-					# auto-re-initialize an imported namespace variable if the test file unsets it
-					trace add variable $varName unset ::tk::test::${domain}::init
 					lappend importedVars($domain) $varName
 				    }
 				}
@@ -299,10 +303,9 @@ namespace import -force tk::test::*
 # to be initialized.
 #
 # When such variables are imported into the executing namespace through
-# an "upvar" command, and the test file subsequently unsets these variables
-# as part of a cleanup operation, this results in the deletion of the target
-# variable inside the specific domain namespace. This, in turn, poses a problem
-# for the next test file, which presumes that the variable is initialized.
+# an "upvar" command, and the test file subsequently writes or unsets these
+# variables, this poses a problem for the next test file, which presumes that
+# the variable is properly initialized.
 #
 # The proc "testutils" deals with this upvar issue as follows:
 #
@@ -312,9 +315,10 @@ namespace import -force tk::test::*
 #   using "upvar" (import with auto-initialization).
 # - upon test file cleanup, "testutils forget xxx" will remove the imported
 #   utility procs with the associated namespace variables, and unset the
-#   upvar'ed variable in both the source and target namespace, including their
-#   link. The link and the initialization will be restored for the next
-#   test file when it invokes "testutils import xxx".
+#   upvar'ed variable in both the source and target namespace (an upvar link
+#   cannot be removed, and will persist). When a next test file invokes
+#   "testutils import xxx", the command will re-initialize the namespace
+#   variables, and rewrite the upvar link (which doesn't hurt).
 #
 # Test authors who create a new utility proc that uses a namespace variable
 # that is also accessed by a test file, need to add the initialization
