@@ -272,9 +272,6 @@ namespace eval tk {
 			    return -code error "domain \"$domain\" was not imported"
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
-			foreach varName $importedVars($domain) {
-			    trace remove variable $varName unset ::tk::test::${domain}::init
-			}
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
 			unset importedVars($domain)
 		    }
