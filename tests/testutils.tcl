@@ -272,6 +272,17 @@ namespace eval tk {
 			    return -code error "domain \"$domain\" was not imported"
 			}
 			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+			foreach varName $importedVars($domain) {
+			    #
+			    # This cleanup prevents that a test file leaves the last assigned
+			    # value as an initial value for the subsequent test file. This would
+			    # happen in case the init proc defines the namespace variable using
+			    # the "variable" command without a value, for example:
+			    #
+			    #        "variable x"
+			    #
+			    unset -nocomplain $varName
+			}
 			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
 			unset importedVars($domain)
 		    }
