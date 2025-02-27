@@ -23,263 +23,6 @@
 #
 
 #
-# DEFINITIONS OF GENERIC UTILITY PROCS
-#
-
-namespace eval tk {
-    namespace eval test {
-
-	proc assert {expr} {
-	    if {! [uplevel 1 [list expr $expr]]} {
-		return -code error "assertion failed: \"[uplevel 1 [list subst -nocommands $expr]]\""
-	    }
-	}
-
-	# controlPointerWarpTiming --
-	#
-	# This proc is intended to ensure that the (mouse) pointer has actually
-	# been moved to its new position after a Tk test issued:
-	#
-	#    [event generate $w $event -warp 1 ...]
-	#
-	# It takes care of the following timing details of pointer warping:
-	#
-	# a. Allow pointer warping to happen if it was scheduled for execution at
-	#    idle time. This happens synchronously if $w refers to the
-	#    whole screen or if the -when option to [event generate] is "now".
-	#
-	# b. Work around a race condition associated with OS notification of
-	#    mouse motion on Windows.
-	#
-	#    When calling [event generate $w $event -warp 1 ...], the following
-	#    sequence occurs:
-	#    - At some point in the processing of this command, either via a
-	#      synchronous execution path, or asynchronously at idle time, Tk calls
-	#      an OS function* to carry out the mouse cursor motion.
-	#    - Tk has previously registered a callback function** with the OS, for
-	#      the OS to call in order to notify Tk when a mouse move is completed.
-	#    - Tk doesn't wait for the callback function to receive the notification
-	#      from the OS, but continues processing. This suits most use cases
-	#      because usually the notification arrives fast enough (within a few tens
-	#      of microseconds). However ...
-	#    - A problem arises if Tk performs some processing, immediately following
-	#      up on [event generate $w $event -warp 1 ...], and that processing
-	#      relies on the mouse pointer having actually moved. If such processing
-	#      happens just before the notification from the OS has been received,
-	#      Tk will be using not yet updated info (e.g. mouse coordinates).
-	#
-	#         Hickup, choke etc ... !
-	#
-	#            *  the function SendInput() of the Win32 API
-	#            ** the callback function is TkWinChildProc()
-	#
-	#    This timing issue can be addressed by putting the Tk process on hold
-	#    (do nothing at all) for a somewhat extended amount of time, while
-	#    letting the OS complete its job in the meantime. This is what is
-	#    accomplished by calling [after ms].
-	#
-	#    ----
-	#    For the history of this issue please refer to Tk ticket [69b48f427e],
-	#    specifically the comment on 2019-10-27 14:24:26.
-	#
-	#
-	# Beware: there are cases, not (yet) exercised by the Tk test suite, where
-	# [controlPointerWarpTiming] doesn't ensure the new position of the pointer.
-	# For example, when issued under Tk8.7+, if the value for the -when option
-	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
-	# the whole screen.
-	#
-	proc controlPointerWarpTiming {{duration 50}} {
-	    update idletasks ;# see a. above
-	    if {[tk windowingsystem] eq "win32"} {
-		after $duration ;# see b. above
-	    }
-	}
-
-	# createStdAccessProc --
-	#
-	# Creates a standard proc for accessing a namespace variable, providing
-	# get and set methods.
-	#
-	proc createStdAccessProc {varName} {
-	    uplevel 1 [subst -nocommands {
-		proc $varName {subcmd {value ""}} {
-		    variable $varName
-		    switch -- \$subcmd {
-			get {
-			    return \$$varName
-			}
-			set {
-			    set $varName \$value
-			}
-			default {
-			    return -code error "invalid subcmd \"\$subcmd\""
-			}
-		    }
-		}
-	    }]
-	}
-
-	proc deleteWindows {} {
-	    destroy {*}[winfo children .]
-	    # This update is needed to avoid intermittent failures on macOS in unixEmbed.test
-	    # with the (GitHub Actions) CI runner.
-	    # Reason for the failures is unclear but could have to do with window ids being deleted
-	    # after the destroy command returns. The detailed mechanism of such delayed deletions
-	    # is not understood, but it appears that this update prevents the test failures.
-	    update
-	}
-
-	proc fixfocus {} {
-	    catch {destroy .focus}
-	    toplevel .focus
-	    wm geometry .focus +0+0
-	    entry .focus.e
-	    .focus.e insert 0 "fixfocus"
-	    pack .focus.e
-	    update
-	    focus -force .focus.e
-	    destroy .focus
-	}
-
-	proc loadTkCommand {} {
-	    set tklib {}
-	    foreach pair [info loaded {}] {
-		foreach {lib pfx} $pair break
-		if {$pfx eq "Tk"} {
-		    set tklib $lib
-		    break
-		}
-	    }
-	    return [list load $tklib Tk]
-	}
-
-	# On macOS windows are not allowed to overlap the menubar at the top of the
-	# screen or the dock.  So tests which move a window and then check whether it
-	# got moved to the requested location should use a y coordinate larger than the
-	# height of the menubar (normally 23 pixels) and an x coordinate larger than the
-	# width of the dock, if it happens to be on the left.
-	# testmenubarheight deals with this issue but may not be available from the test
-	# environment, therefore provide a fallback here
-	if {[llength [info procs testmenubarheight]] == 0} {
-	    if {[tk windowingsystem] ne "aqua"} {
-		# Windows may overlap the menubar
-		proc testmenubarheight {} {
-		    return 0
-		}
-	    } else {
-		# Windows may not overlap the menubar
-		proc testmenubarheight {} {
-		    return 30 ;  # arbitrary value known to be larger than the menubar height
-		}
-	    }
-	}
-
-	# Suspend script execution for a given amount of time, but continue
-	# processing events.
-	proc _pause {{msecs 1000}} {
-	    variable _pause
-
-	    if {! [info exists _pause(number)]} {
-		set _pause(number) 0
-	    }
-
-	    set num [incr _pause(number)]
-	    set _pause($num) 0
-
-	    after $msecs "set _pause($num) 1"
-	    vwait _pause($num)
-	    unset _pause($num)
-	}
-
-	# testutils --
-	#
-	#    Takes care of importing/forgetting utility procs and any associated
-	#    variables from a specific test domain (functional area). It hides
-	#    details/peculiarities from the test author.
-	#
-	#    The "import" subcmd invokes any proc "init" defined in the domain-
-	#    specific namespace. See also the explanation of this mehanism in
-	#    this file at:
-	#
-	#  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-	#  AND AUTO-INITIALIZATION
-	#
-	# Arguments:
-	#    subCmd : "import" or "forget"
-	#    args   : a sequence of domains that need to be imported/forgotten.
-	#
-	proc testutils {subCmd args} {
-	    variable importedVars
-
-	    if {([llength $args] < 1) || ($subCmd ni [list import forget])} {
-		return -code error "[lindex [info level 0] 0] import|forget domain ?domain domain ...?"
-	    }
-
-	    foreach domain $args {
-		if {! [namespace exists ::tk::test::$domain]} {
-		    return -code error "Tk test domain \"$domain\" doesn't exist"
-		}
-		switch -- $subCmd {
-		    import {
-			if {$domain ni [array names importedVars]} {
-
-			    # import procs
-			    uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
-
-			    # import associated namespace variables
-			    set importedVars($domain) [list]
-			    if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
-				::tk::test::${domain}::init
-				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
-				    #
-				    # Note that a test file may have unset an already upvar'ed namespace variable,
-				    # thus making it invisible to "info vars" inside the domain namespace. This is
-				    # not a problem because an "unset" doesn't affect the the upvar link, which is
-				    # what we're defining/rewriting here.
-				    #
-				    if {[catch {
-					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-				    } errMsg]} {
-					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
-				    }
-				    lappend importedVars($domain) $varName
-				}
-			    }
-			}
-		    }
-		    forget {
-			if {! [info exists importedVars($domain)]} {
-			    return -code error "domain \"$domain\" was not imported"
-			}
-			uplevel 1 [list namespace forget ::tk::test::${domain}::*]
-
-			# This cleanup prevents that a test file leaves the last assigned
-			# value as an initial value for the subsequent test file. This would
-			# happen in case the init proc defines the namespace variable using
-			# the "variable" command without a value, for example:
-			#
-			#        "variable x"
-			#
-			uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
-			unset importedVars($domain)
-		    }
-		}
-	    }
-	}
-
-	namespace export *
-    }
-}
-
-# import generic utility procs into test files
-namespace import -force tk::test::*
-
-#
-# DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
-#
-
-#
 #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
 #  AND AUTO-INITIALIZATION
 #
@@ -313,6 +56,267 @@ namespace import -force tk::test::*
 # that foregoes the importing of the namespace variables as well as their
 # automatic initialization.
 #
+
+namespace eval ::tk::test {
+    #
+    # At this level in the namespace hierarchy, the namespace is empty. The
+    # contents of this namespace are solely contained in child namespaces.
+    #
+    # Each child namespace represents a functional area, also called "domain".
+    #
+}
+
+#
+# DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
+#
+
+namespace eval ::tk::test::generic {
+
+    proc assert {expr} {
+	if {! [uplevel 1 [list expr $expr]]} {
+	    return -code error "assertion failed: \"[uplevel 1 [list subst -nocommands $expr]]\""
+	}
+    }
+
+    # controlPointerWarpTiming --
+    #
+    # This proc is intended to ensure that the (mouse) pointer has actually
+    # been moved to its new position after a Tk test issued:
+    #
+    #    [event generate $w $event -warp 1 ...]
+    #
+    # It takes care of the following timing details of pointer warping:
+    #
+    # a. Allow pointer warping to happen if it was scheduled for execution at
+    #    idle time. This happens synchronously if $w refers to the
+    #    whole screen or if the -when option to [event generate] is "now".
+    #
+    # b. Work around a race condition associated with OS notification of
+    #    mouse motion on Windows.
+    #
+    #    When calling [event generate $w $event -warp 1 ...], the following
+    #    sequence occurs:
+    #    - At some point in the processing of this command, either via a
+    #      synchronous execution path, or asynchronously at idle time, Tk calls
+    #      an OS function* to carry out the mouse cursor motion.
+    #    - Tk has previously registered a callback function** with the OS, for
+    #      the OS to call in order to notify Tk when a mouse move is completed.
+    #    - Tk doesn't wait for the callback function to receive the notification
+    #      from the OS, but continues processing. This suits most use cases
+    #      because usually the notification arrives fast enough (within a few tens
+    #      of microseconds). However ...
+    #    - A problem arises if Tk performs some processing, immediately following
+    #      up on [event generate $w $event -warp 1 ...], and that processing
+    #      relies on the mouse pointer having actually moved. If such processing
+    #      happens just before the notification from the OS has been received,
+    #      Tk will be using not yet updated info (e.g. mouse coordinates).
+    #
+    #         Hickup, choke etc ... !
+    #
+    #            *  the function SendInput() of the Win32 API
+    #            ** the callback function is TkWinChildProc()
+    #
+    #    This timing issue can be addressed by putting the Tk process on hold
+    #    (do nothing at all) for a somewhat extended amount of time, while
+    #    letting the OS complete its job in the meantime. This is what is
+    #    accomplished by calling [after ms].
+    #
+    #    ----
+    #    For the history of this issue please refer to Tk ticket [69b48f427e],
+    #    specifically the comment on 2019-10-27 14:24:26.
+    #
+    #
+    # Beware: there are cases, not (yet) exercised by the Tk test suite, where
+    # [controlPointerWarpTiming] doesn't ensure the new position of the pointer.
+    # For example, when issued under Tk8.7+, if the value for the -when option
+    # to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
+    # the whole screen.
+    #
+    proc controlPointerWarpTiming {{duration 50}} {
+	update idletasks ;# see a. above
+	if {[tk windowingsystem] eq "win32"} {
+	    after $duration ;# see b. above
+	}
+    }
+
+    # createStdAccessProc --
+    #
+    # Creates a standard proc for accessing a namespace variable, providing
+    # get and set methods.
+    #
+    proc createStdAccessProc {varName} {
+	uplevel 1 [subst -nocommands {
+	    proc $varName {subcmd {value ""}} {
+		variable $varName
+		switch -- \$subcmd {
+		    get {
+			return \$$varName
+		    }
+		    set {
+			set $varName \$value
+		    }
+		    default {
+			return -code error "invalid subcmd \"\$subcmd\""
+		    }
+		}
+	    }
+	}]
+    }
+
+    proc deleteWindows {} {
+	destroy {*}[winfo children .]
+	# This update is needed to avoid intermittent failures on macOS in unixEmbed.test
+	# with the (GitHub Actions) CI runner.
+	# Reason for the failures is unclear but could have to do with window ids being deleted
+	# after the destroy command returns. The detailed mechanism of such delayed deletions
+	# is not understood, but it appears that this update prevents the test failures.
+	update
+    }
+
+    proc fixfocus {} {
+	catch {destroy .focus}
+	toplevel .focus
+	wm geometry .focus +0+0
+	entry .focus.e
+	.focus.e insert 0 "fixfocus"
+	pack .focus.e
+	update
+	focus -force .focus.e
+	destroy .focus
+    }
+
+    proc loadTkCommand {} {
+	set tklib {}
+	foreach pair [info loaded {}] {
+	    foreach {lib pfx} $pair break
+	    if {$pfx eq "Tk"} {
+		set tklib $lib
+		break
+	    }
+	}
+	return [list load $tklib Tk]
+    }
+
+    # On macOS windows are not allowed to overlap the menubar at the top of the
+    # screen or the dock.  So tests which move a window and then check whether it
+    # got moved to the requested location should use a y coordinate larger than the
+    # height of the menubar (normally 23 pixels) and an x coordinate larger than the
+    # width of the dock, if it happens to be on the left.
+    # testmenubarheight deals with this issue but may not be available from the test
+    # environment, therefore provide a fallback here
+    if {[llength [info procs testmenubarheight]] == 0} {
+	if {[tk windowingsystem] ne "aqua"} {
+	    # Windows may overlap the menubar
+	    proc testmenubarheight {} {
+		return 0
+	    }
+	} else {
+	    # Windows may not overlap the menubar
+	    proc testmenubarheight {} {
+		return 30 ;  # arbitrary value known to be larger than the menubar height
+	    }
+	}
+    }
+
+    # Suspend script execution for a given amount of time, but continue
+    # processing events.
+    proc _pause {{msecs 1000}} {
+	variable _pause
+
+	if {! [info exists _pause(number)]} {
+	    set _pause(number) 0
+	}
+
+	set num [incr _pause(number)]
+	set _pause($num) 0
+
+	after $msecs "set _pause($num) 1"
+	vwait _pause($num)
+	unset _pause($num)
+    }
+
+    # testutils --
+    #
+    #    Takes care of importing/forgetting utility procs and any associated
+    #    variables from a specific test domain (functional area). It hides
+    #    details/peculiarities from the test author.
+    #
+    #    The "import" subcmd invokes any proc "init" defined in the domain-
+    #    specific namespace. See also the explanation of this mehanism in
+    #    this file at:
+    #
+    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
+    #  AND AUTO-INITIALIZATION
+    #
+    # Arguments:
+    #    subCmd : "import" or "forget"
+    #    args   : a sequence of domains that need to be imported/forgotten.
+    #
+    proc testutils {subCmd args} {
+	variable importedVars
+
+	if {([llength $args] < 1) || ($subCmd ni [list import forget])} {
+	    return -code error "[lindex [info level 0] 0] import|forget domain ?domain domain ...?"
+	}
+
+	foreach domain $args {
+	    if {! [namespace exists ::tk::test::$domain]} {
+		return -code error "Tk test domain \"$domain\" doesn't exist"
+	    }
+	    switch -- $subCmd {
+		import {
+		    if {$domain ni [array names importedVars]} {
+
+			# import procs
+			uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
+
+			# import associated namespace variables
+			set importedVars($domain) [list]
+			if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
+			    ::tk::test::${domain}::init
+			    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+				#
+				# Note that a test file may have unset an already upvar'ed namespace variable,
+				# thus making it invisible to "info vars" inside the domain namespace. This is
+				# not a problem because an "unset" doesn't affect the the upvar link, which is
+				# what we're defining/rewriting here.
+				#
+				if {[catch {
+				    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				} errMsg]} {
+				    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				}
+				lappend importedVars($domain) $varName
+			    }
+			}
+		    }
+		}
+		forget {
+		    if {! [info exists importedVars($domain)]} {
+			return -code error "domain \"$domain\" was not imported"
+		    }
+		    uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+
+		    # This cleanup prevents that a test file leaves the last assigned
+		    # value as an initial value for the subsequent test file. This would
+		    # happen in case the init proc defines the namespace variable using
+		    # the "variable" command without a value, for example:
+		    #
+		    #        "variable x"
+		    #
+		    uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
+		    unset importedVars($domain)
+		}
+	    }
+	}
+    }
+
+    namespace export *
+}
+
+# Import generic utility procs into the global namespace (in which tests are
+# executing), as a standard policy.
+::tk::test::generic::testutils import generic
 
 namespace eval ::tk::test::button {
     proc bogusTrace args {
@@ -393,7 +397,7 @@ namespace eval ::tk::test::child {
 		    error "unexpected output from\
 			    background process: \"$data\""
 		}
-		puts $fd [::tk::test::loadTkCommand]
+		puts $fd [loadTkCommand]
 		flush $fd
 		fileevent $fd readable [namespace code {childTkProcess read}]
 	    }
