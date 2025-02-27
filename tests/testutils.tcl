@@ -207,63 +207,44 @@ namespace eval tk {
 	#
 	# Arguments:
 	#    subCmd : "import" or "forget"
-	#    args   : a sequence of domains that need to be imported/forgotten,
-	#             optionally preceded by the option -nocommands or -novars.
+	#    args   : a sequence of domains that need to be imported/forgotten.
 	#
 	proc testutils {subCmd args} {
 	    variable importedVars
 
-	    set usage "[lindex [info level 0] 0] import|forget ?-nocommands|-novars? domain ?domain domain ...?"
-	    set argc [llength $args]
-	    if {$argc < 1} {
-		return -code error $usage
+	    if {([llength $args] < 1) || ($subCmd ni [list import forget])} {
+		return -code error "[lindex [info level 0] 0] import|forget domain ?domain domain ...?"
 	    }
 
-	    set option [lindex $args 0]
-	    if {$option ni [list -nocommands -novars]} {
-		set option {}
-	    }
-	    if {($subCmd ni [list import forget]) || (($option ne "") && ($argc < 2))} {
-		return -code error $usage
-	    }
-	    if {($subCmd eq "forget") && ($option ne "")} {
-		return -code error "options \"-nocommands\" and \"-novars\" are not valid with subCmd \"forget\""
-	    }
-
-	    set domains [expr {$option eq ""?$args:[lrange $args 1 end]}]
-	    foreach domain $domains {
+	    foreach domain $args {
 		if {! [namespace exists ::tk::test::$domain]} {
 		    return -code error "Tk test domain \"$domain\" doesn't exist"
 		}
 		switch -- $subCmd {
 		    import {
 			if {$domain ni [array names importedVars]} {
-			    if {$option ne "-nocommands"} {
-				uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
-				set importedVars($domain) [list]
-			    }
-			    if {$option ne "-novars"} {
-				if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
-				    ::tk::test::${domain}::init
-				    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
-					#
-					# Note that a test file may have unset an already upvar'ed namespace variable,
-					# thus making it invisible to "info vars" inside the domain namespace. This is
-					# not a problem because an "unset" doesn't affect the the upvar link, which is
-					# what we're defining/rewriting here.
-					#
-					if {[catch {
-					    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-					} errMsg]} {
-					    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
-					}
-					lappend importedVars($domain) $varName
-				    }
-				}
-			    }
-			} else {
+
+			    # import procs
+			    uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
+
+			    # import associated namespace variables
+			    set importedVars($domain) [list]
 			    if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 				::tk::test::${domain}::init
+				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+				    #
+				    # Note that a test file may have unset an already upvar'ed namespace variable,
+				    # thus making it invisible to "info vars" inside the domain namespace. This is
+				    # not a problem because an "unset" doesn't affect the the upvar link, which is
+				    # what we're defining/rewriting here.
+				    #
+				    if {[catch {
+					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				    } errMsg]} {
+					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				    }
+				    lappend importedVars($domain) $varName
+				}
 			    }
 			}
 		    }
