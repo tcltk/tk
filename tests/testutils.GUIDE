@@ -1,0 +1,163 @@
+================================================================================
+         TESTUTILS, A GUIDE FOR TEST AUTHORS AND MAINTAINERS
+================================================================================
+
+
+INTRODUCTION
+============
+"testutils" is a mechanism that provides utility procs to test authors.
+
+The testutils mechanism is similar to a Tcl package (using a namespace): it
+exports utilities that are imported by test files. The entire mechanism is
+implemented in a single file "testutils.tcl".
+
+Section A of this document explains the usage of the mechanism, targeted at
+test authors. Section B provides a more detailed description of the innards and
+workings of the testutils mechanism. This information is specifically targeted
+at developers carrying out maintenance of the testutils mechanism.
+
+
+A. USING UTILITY PROCS IN TESTS AND TEST FILES
+==============================================
+This section explains to test authors how utility procs are organized, how to
+use existing utility procs in a test file, and how to create new utility procs.
+
+A1. Organization of utility procs using namespaces
+--------------------------------------------------
+The utility procs that testutils provides are grouped into categories, each of
+which represents a specific functional area for Tk. These functional areas
+(also called "domains") carry names such as "dialog", "entry", "text", which
+conform more or less to names of test files in the Tk test suite.
+
+Utility procs are imported on demand by test files, using the command "testutils"
+(See the explanantion of this command in the next section.) Utility procs for
+the domain "generic" are an exception to this general rule: these procs are
+pre-imported for each test file as a standard policy. Test authors don't need
+to do anything special to access them, they are readily available.
+
+Each domain has its own namespace below ::tk::test in which utility procs are
+defined. For example: utilities that are specific for Tk dialogs are stored
+inside the namespace ::tk::test::dialog.
+
+A2. Using existing utility procs in test files
+----------------------------------------------
+The command "testutils" is the interface for the test author to import utility
+procs into the namespace in which individual tests are running (this is the
+global namespace). It takes the following form:
+
+    testutils (import|forget) domain ?domain domain ...?
+
+The command "testutils import" is typically invoked at the top of a test file.
+The command "testutils forget" is typically invoked at the end of a test file.
+These commands take care of the importing and cleaning up of utility procs
+for a specific domain. They also take care of importing any namespace variables
+associated with these procs, so that they can be accessed from within a test.
+
+Typical invocations (using the domain "dialog" as an example), are:
+
+    testutils import dialog
+
+    test foo-1.0 -body {
+        .
+        .
+        SendButtonPress; # invoke utility proc imported from domain "dialog"
+        .
+        .
+    } -result {foo_result}
+
+    testutils forget dialog
+
+
+A3. Adding new utility procs
+----------------------------
+Test authors may define new utility procs in the file "testutils.tcl". There
+are four points that a test author should beware of when adding a new utility
+proc:
+
+1. Consider whether the new utility proc is used in multiple test files. If
+   they are not, they may as well be defined inside the specific test file
+   that uses it, because there is no code duplication.
+
+2. Add the proc definition to the proper domain namespace, or create a new
+   domain namespace.
+
+3. It may be the case that tests need to access (read/write) variables that are
+   associated with the new utility proc. The command "testutils" also handles
+   the importing and initialization of these associated variables, but attention
+   is needed for the following rules:
+
+   - these variables should be declared inside the utility proc as namespace
+     variables, using the command "variable".
+
+   - their definition needs to be to placed in the reserved proc "init" inside
+     the proper namespace.
+     Note that just placing them inside the "namespace eval" scope for the
+     specific domain (i.e. outside the init proc) isn't good enough because that
+     foregoes the importing of the namespace variables as well as their automatic
+     initialization. Also, any namespace variables initialized inside the
+     "namespace eval" scope for the specific domain, but outside the init proc,
+     will NOT be cleaned up upon the invocation of "testutils forget"
+     (in contrast to imported namespace variables).
+
+4. Add the utility proc to the "namespace export" command at the end of the
+   domain namespace, and don't export the init proc itself.
+
+The file testutils contains various examples showing this practice.
+
+
+B. INNER WORKINGS OF THE TESTUTILS MECHANISM
+============================================
+This section is targeted at developers carrying out maintenance of the testutils
+mechanism, whether debugging or improving it otherwise.
+
+B1. Files and file loading
+--------------------------
+The entire testutils mechanism is implemented in a single file "testutils.tcl".
+This file is sourced on behalf of each test file by a command in the file
+main.tcl.
+
+The file "testutils.tcl" keeps the definitions of utility procs in a central
+place. This prevents code duplication when these utility procs are used by
+multiple test files.
+
+B2.Importing procs and associated namespace variables
+-----------------------------------------------------
+The command "testutils" makes utility procs available to the global namespace
+in which test files execute. The procs themselves are made available through
+a plain "namespace export/namespace import"; nothing special about that.
+However, special attention is needed for those utility procs that store state
+in a namespace variable that is also accessed from the global namespace in which
+tests are executing. Such variables are made available to the global namespace
+using an upvar statement. The importing of these associated namespace variables
+needs to handle some specifics:
+
+Besides making them available to test files, some tests require such variables
+to be initialized, regardless whatever the test file did to them. Therefore,
+the proc "testutils" needs to re-initialze these upvar'ed variables for each
+test file that imports them. This is how the command "testutils" goes about
+this so-called "auto-initialization".
+
+- if a namespace for a specific functional area holds a proc "init", the
+  command "testutils import xxx" will invoke it, thus initializing namespace
+  variables. It subsequently imports the variables into the executing namespace
+  using "upvar" (import with auto-initialization).
+- upon test file cleanup, "testutils forget xxx" removes the imported utility
+  procs and unsets the upvar'ed variable in both the source and target namespace.
+  Note that the upvar link itself cannot be removed, and will persist.
+  When a subsequent test file invokes "testutils import xxx" again, the command
+  will re-initialize the namespace variables. A typical init proc (using the
+  domain "dialog" as an example) is:
+
+	proc init {} {
+	    variable dialogType none
+	    variable testDialog
+	    variable testDialogFont
+	}
+
+Note that the namespace variable "dialogType" is initialized with a value, while
+the namespace variables "testDialog" and "testDialogFont" are not. Both variants
+of declaring/defining a namespace variable are supported.
+
+Some aspects regarding cleanup and re-initialization of upvar'ed namespace
+variables are tricky. The tricky details are explicitly described by comments
+in the proc testutils.
