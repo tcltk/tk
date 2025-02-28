@@ -4506,7 +4506,7 @@ DisplayText(
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
-#if MAC_OSX_TK
+#ifdef MAC_OSX_TK
 	    } else if (dlPtr->chunkPtr != NULL) {
 		/*
 		 * On macOS we need to redisplay all embedded windows which
@@ -4578,7 +4578,7 @@ DisplayText(
 			TkTextPrintIndex(textPtr, &dlPtr->index, string);
 			LOG("tk_textEmbWinDisplay", string);
 		    }
-#if MAC_OSX_TK
+#ifdef MAC_OSX_TK
 		    /* We need to redisplay the entire DLine so that the
 		     * background of the line will not contain artifacts left
 		     * by the scrolling.
