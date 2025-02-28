@@ -4349,8 +4349,8 @@ DisplayText(
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
-#if !MACOSX_TK
-	    /* No point in doing this on macOS. The lines get redrawn anyway.*/
+#ifndef MACOSX_TK
+	    /* No point in doing this on macOS. The DLines get redrawn anyway.*/
 	    TextInvalidateRegion(textPtr, damageRgn);
 #endif
 	}
