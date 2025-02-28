@@ -139,30 +139,6 @@ namespace eval ::tk::test::generic {
 	}
     }
 
-    # createStdAccessProc --
-    #
-    # Creates a standard proc for accessing a namespace variable, providing
-    # get and set methods.
-    #
-    proc createStdAccessProc {varName} {
-	uplevel 1 [subst -nocommands {
-	    proc $varName {subcmd {value ""}} {
-		variable $varName
-		switch -- \$subcmd {
-		    get {
-			return \$$varName
-		    }
-		    set {
-			set $varName \$value
-		    }
-		    default {
-			return -code error "invalid subcmd \"\$subcmd\""
-		    }
-		}
-	    }
-	}]
-    }
-
     proc deleteWindows {} {
 	destroy {*}[winfo children .]
 	# This update is needed to avoid intermittent failures on macOS in unixEmbed.test
