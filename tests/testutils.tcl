@@ -1,74 +1,29 @@
 # testutils.tcl --
 #
 # This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It holds utility procs, each of which is used by several test files in the
-# Tk test suite.
+# It implements the testutils mechanism which is used to import utility procs
+# into test files that need them.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 #
-# NAMESPACES AND FUNCTIONAL AREAS
+# DOCUMENTATION FOR TEST AUTHORS AND MAINTAINERS
 #
-# There are two types of utility proc: generic procs, and procs that belong to
-# a specific functional area of Tk.
-# - Generic utility procs reside in the namespace ::tk::test. These utility
-#   procs are all imported by default for each test file ("namespace import"
-#   command already issued in this file), and therefore they are readily
-#   available to them.
-# - Utility procs that belong to a specific functional area reside in a child
-#   namespace of ::tk::test that bears the name of that functional area (for
-#   example ::tk::test::dialog). These procs are imported on demand by test
-#   files.
-#
-
-#
-#  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-#  AND AUTO-INITIALIZATION
-#
-# Some utility procs from specific functional areas store state in a namespace
-# variable that is also accessed from the namespace in which the tests are
-# executed (the "executing namespace"). Some tests require such variables
-# to be initialized.
-#
-# When such variables are imported into the executing namespace through
-# an "upvar" command, and the test file subsequently writes or unsets these
-# variables, this poses a problem for the next test file, which presumes that
-# the variable is properly initialized.
-#
-# The proc "testutils" deals with this upvar issue as follows:
-#
-# - if a namespace for a specific functional area holds a proc "init", the
-#   command "testutils import xxx" will invoke it, thus initializing namespace
-#   variables. And it subsequently imports them into the executing namespace
-#   using "upvar" (import with auto-initialization).
-# - upon test file cleanup, "testutils forget xxx" will remove the imported
-#   utility procs with the associated namespace variables, and unset the
-#   upvar'ed variable in both the source and target namespace (an upvar link
-#   cannot be removed, and will persist). When a next test file invokes
-#   "testutils import xxx", the command will re-initialize the namespace
-#   variables, and rewrite the upvar link (which doesn't hurt).
-#
-# Test authors who create a new utility proc that uses a namespace variable
-# that is also accessed by a test file, need to add the initialization
-# statements to the init proc. Just placing them inside the "namespace eval"
-# scope for the specific domain (outside the init proc) isn't enough because
-# that foregoes the importing of the namespace variables as well as their
-# automatic initialization.
+# The testutils mechanism is documented in the separate file "testutils.GUIDE",
+# which is placed in the same directory as this file "testutils.tcl".
 #
 
 namespace eval ::tk::test {
     #
-    # At this level in the namespace hierarchy, the namespace is empty. The
-    # contents of this namespace are solely contained in child namespaces.
+    # The namespace ::tk::test itself doesn't contain any procs or variables.
+    # The contents of this namespace exist solely in child namespaces that
+    # are defined hereafter.
     #
     # Each child namespace represents a functional area, also called "domain".
     #
 }
 
-#
-# DEFINITIONS OF UTILITY PROCS PER FUNCTIONAL AREA
-#
 
 namespace eval ::tk::test::generic {
 
@@ -214,15 +169,9 @@ namespace eval ::tk::test::generic {
     # testutils --
     #
     #    Takes care of importing/forgetting utility procs and any associated
-    #    variables from a specific test domain (functional area). It hides
-    #    details/peculiarities from the test author.
+    #    variables from a specific test domain (functional area).
     #
-    #    The "import" subcmd invokes any proc "init" defined in the domain-
-    #    specific namespace. See also the explanation of this mehanism in
-    #    this file at:
-    #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    #    More information is available in the file "testutils.GUIDE"
     #
     # Arguments:
     #    subCmd : "import" or "forget"
@@ -504,16 +453,15 @@ namespace eval ::tk::test::dialog {
 
     # init --
     #
-    # This is a reserved proc that is part of the mechanism that proc testutils
-    # employs when importing utility procs and associated namespace variables
-    # into the namespace in which a test file is executed.
-    # See also the explanation in this file at:
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
     #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the global namespace in which tests are
+    # executing. This proc must not be exported.
     #
-    # Test authors should define namespace variables here if they need to be
-    # imported into a test file namespace. This proc must not be exported.
+    # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
 	variable dialogType none
@@ -669,16 +617,15 @@ namespace eval ::tk::test::entry {
 
     # init --
     #
-    # This is a reserved proc that is part of the mechanism that proc testutils
-    # employs when importing utility procs and associated namespace variables
-    # into the namespace in which a test file is executed.
-    # See also the explanation in this file at:
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
     #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the global namespace in which tests are
+    # executing. This proc must not be exported.
     #
-    # Test authors should define namespace variables here if they need to be
-    # imported into a test file namespace. This proc must not be exported.
+    # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
 	variable textVar
@@ -769,16 +716,15 @@ namespace eval ::tk::test::scroll {
 
     # init --
     #
-    # This is a reserved proc that is part of the mechanism that proc testutils
-    # employs when importing utility procs and associated namespace variables
-    # into the namespace in which a test file is executed.
-    # See also the explanation in this file at:
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
     #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the global namespace in which tests are
+    # executing. This proc must not be exported.
     #
-    # Test authors should define namespace variables here if they need to be
-    # imported into a test file namespace. This proc must not be exported.
+    # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
 	variable scrollInfo {}
@@ -797,16 +743,15 @@ namespace eval ::tk::test::select {
 
     # init --
     #
-    # This is a reserved proc that is part of the mechanism that proc testutils
-    # employs when importing utility procs and associated namespace variables
-    # into the namespace in which a test file is executed.
-    # See also the explanation in this file at:
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
     #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the global namespace in which tests are
+    # executing. This proc must not be exported.
     #
-    # Test authors should define namespace variables here if they need to be
-    # imported into a test file namespace. This proc must not be exported.
+    # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
 	variable selValue {} selInfo {}
@@ -915,16 +860,15 @@ namespace eval ::tk::test::text {
 
     # init --
     #
-    # This is a reserved proc that is part of the mechanism that proc testutils
-    # employs when importing utility procs and associated namespace variables
-    # into the namespace in which a test file is executed.
-    # See also the explanation in this file at:
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
     #
-    #  INIT PROCS, IMPORTING UTILITY PROCS AND ASSOCIATED NAMESPACE VARIABLES,
-    #  AND AUTO-INITIALIZATION
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the global namespace in which tests are
+    # executing. This proc must not be exported.
     #
-    # Test authors should define namespace variables here if they need to be
-    # imported into a test file namespace. This proc must not be exported.
+    # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
 	variable fixedFont {Courier -12}
