@@ -253,7 +253,8 @@ namespace eval ::tk::test::generic {
     #    args   : a sequence of domains that need to be imported/forgotten.
     #
     proc testutils {subCmd args} {
-	variable importedVars
+	variable importedDomains
+	variable importVars
 
 	if {([llength $args] < 1) || ($subCmd ni [list import forget])} {
 	    return -code error "[lindex [info level 0] 0] import|forget domain ?domain domain ...?"
@@ -265,47 +266,69 @@ namespace eval ::tk::test::generic {
 	    }
 	    switch -- $subCmd {
 		import {
-		    if {$domain ni [array names importedVars]} {
+		    if {[info exists importedDomains] && ($domain in $importedDomains)} {
+			return -code error "domain \"$domain\" was already imported"
+		    } else {
 
 			# import procs
 			uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
 
-			# import associated namespace variables
-			set importedVars($domain) [list]
+			# import associated namespace variables declared in the init proc
 			if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
 			    ::tk::test::${domain}::init
-			    foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+			    if {! [info exists importVars($domain)]} {
 				#
-				# Note that a test file may have unset an already upvar'ed namespace variable,
-				# thus making it invisible to "info vars" inside the domain namespace. This is
-				# not a problem because an "unset" doesn't affect the the upvar link, which is
-				# what we're defining/rewriting here.
+				# Note that importing associated namespace variables into the global namespace
+				# needs to be done only once because an upvar link cannot be removed from
+				# a namespace unless the namespace itself is deleted.
 				#
-				if {[catch {
-				    uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
-				} errMsg]} {
-				    return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+				    if {[catch {
+					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
+				    } errMsg]} {
+					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+				    }
+				    lappend importVars($domain) $varName
 				}
-				lappend importedVars($domain) $varName
 			    }
 			}
+			lappend importedDomains $domain
 		    }
 		}
 		forget {
-		    if {! [info exists importedVars($domain)]} {
+		    if {$domain ni $importedDomains} {
 			return -code error "domain \"$domain\" was not imported"
 		    }
+
+		    # remove imported utility procs from the global namespace
 		    uplevel 1 [list namespace forget ::tk::test::${domain}::*]
 
-		    # This cleanup prevents that a test file leaves the last assigned
-		    # value as an initial value for the subsequent test file. This would
-		    # happen in case the init proc defines the namespace variable using
-		    # the "variable" command without a value, for example:
 		    #
-		    #        "variable x"
+		    # Some namespace variables are meant to persist across test files
+		    # in the entire Tk test suite (notably the variable ImageNames,
+		    # domain "image"). These variables are also not meant to be accessed
+		    # from and imported into the global namespace, and they should not be
+		    # cleaned up here.
 		    #
-		    uplevel 1 [list unset -nocomplain {*}$importedVars($domain)]
-		    unset importedVars($domain)
+
+		    if {[info exists importVars($domain)]} {
+			#
+			# Clean up imported namespace variables.
+			#
+			# Besides plain removal, this cleanup of namespace variables takes care that no
+			# differences are created between subsequent variable imports with respect to:
+			#   - the result of "info exists"
+			#   - visibility for "info vars"
+			#   - the (next) initial value upon re-import
+			# after the init proc was invoked.
+			#
+			# Without proper cleanup, such differences would occur in case that the init
+			# proc defines the namespace variable using the "variable" command without a
+			# value.
+			#
+			uplevel 1 [list unset -nocomplain {*}$importVars($domain)]
+		    }
+		    set importedDomains [lremove $importedDomains [lsearch $importedDomains $domain]]
 		}
 	    }
 	}
