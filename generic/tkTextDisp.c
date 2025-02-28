@@ -4588,11 +4588,11 @@ DisplayText(
 #else		   
 		    TkTextEmbWinDisplayProc(textPtr, chunkPtr, x,
 			    0,
-			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow, //height
-			    dlPtr->baseline - dlPtr->spaceAbove,  //baseline
+			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,
+			    dlPtr->baseline - dlPtr->spaceAbove,
 			    NULL,
 			    None,
-			    dlPtr->y + dlPtr->spaceAbove);  //screenY
+			    dlPtr->y + dlPtr->spaceAbove);
 #endif
 		}
 	    }
