@@ -4533,7 +4533,7 @@ DisplayText(
 	    } else if (dlPtr->chunkPtr != NULL && ((dlPtr->y < 0)
 		    || (dlPtr->y + dlPtr->height > dInfoPtr->maxY))) {
 		/*
-		 * On platforms other than MacOS ...
+		 * On platforms other than macOS ...
 		 *
 		 * It's the first or last DLine which are also overlapping the
 		 * top or bottom of the window, but we decided above it wasn't
