@@ -200,6 +200,19 @@ namespace eval ::tk::test::generic {
 
 			# import associated namespace variables declared in the init proc
 			if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
+			    if {[info exists importVars($domain)]} {
+				#
+				# Note [A1]:
+				# If test files inadvertently leave behind a variable with the same name
+				# as an upvar'ed namespace variable, its last value will serve as a new
+				# initial value in case that the init proc declares that variable without
+				# a value. Also, the result of "info exists varName" would be different
+				# between test files.
+				#
+				# The next unset prevents such artefacts. See also note [A2] below.
+				#
+				uplevel 1 [list unset -nocomplain {*}$importVars($domain)]
+			    }
 			    ::tk::test::${domain}::init
 			    if {! [info exists importVars($domain)]} {
 				#
@@ -232,24 +245,18 @@ namespace eval ::tk::test::generic {
 		    # Some namespace variables are meant to persist across test files
 		    # in the entire Tk test suite (notably the variable ImageNames,
 		    # domain "image"). These variables are also not meant to be accessed
-		    # from and imported into the global namespace, and they should not be
+		    # from, and imported into the global namespace, and they should not be
 		    # cleaned up here.
 		    #
 
 		    if {[info exists importVars($domain)]} {
 			#
-			# Clean up imported namespace variables.
+			# Remove imported namespace variables.
 			#
-			# Besides plain removal, this cleanup of namespace variables takes care that no
-			# differences are created between subsequent variable imports with respect to:
-			#   - the result of "info exists"
-			#   - visibility for "info vars"
-			#   - the (next) initial value upon re-import
-			# after the init proc was invoked.
-			#
-			# Without proper cleanup, such differences would occur in case that the init
-			# proc defines the namespace variable using the "variable" command without a
-			# value.
+			# Note [A2]:
+			# The upvar link to the global namespace cannot be removed. Without
+			# specific attention, this can cause surprising behaviour upon
+			# re-initialization. See also note [A1] above.
 			#
 			uplevel 1 [list unset -nocomplain {*}$importVars($domain)]
 		    }
