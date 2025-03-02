@@ -199,6 +199,7 @@ namespace eval ::tk::test::generic {
 		    namespace export *
 		}
 	    }
+	    return
 	}
 
 	foreach domain $args {
