@@ -147,10 +147,11 @@ is as follows:
   variables. It subsequently imports the variables into the executing namespace
   using "upvar" (import with auto-initialization).
 - upon test file cleanup, "testutils forget xxx" removes the imported utility
-  procs and unsets the upvar'ed variable in both the source and target namespace.
+  procs and unsets the upvar'ed variables in both the source and target namespace.
   When a subsequent test file invokes "testutils import xxx" again, the command
-  will re-initialize the namespace variables. A typical init proc (using the
-  domain "dialog" as an example) is:
+  will re-initialize the namespace variables.
+
+A typical init proc (using the domain "dialog" as an example) is:
 
 	proc init {} {
 	    variable dialogType none
