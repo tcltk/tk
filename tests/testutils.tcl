@@ -182,7 +182,6 @@ namespace eval ::tk::test::generic {
 	variable importedDomains
 	variable importVars
 
-	set usage
 	set argc [llength $args]
 	if {($subCmd in [list import forget]) && ($argc < 1)} {
 	    return -code error "invalid #args. Usage: [lindex [info level 0] 0] import|forget domain ?domain domain ...?"
