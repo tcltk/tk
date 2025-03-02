@@ -124,8 +124,8 @@ The file "testutils.tcl" keeps the definitions of utility procs in a central
 place. This prevents code duplication when these utility procs are used by
 multiple test files.
 
-B2.Importing procs and associated namespace variables
------------------------------------------------------
+B2. Importing procs and associated namespace variables
+------------------------------------------------------
 The command "testutils" makes utility procs available to the global namespace
 in which test files execute. The procs themselves are made available through
 a plain "namespace export/namespace import"; nothing special about that.
@@ -161,7 +161,14 @@ Note that the namespace variable "dialogType" is initialized with a value, while
 the namespace variables "testDialog" and "testDialogFont" are not. Both variants
 of declaring/defining a namespace variable are supported.
 
-The cycle of subsequent cleanup and re-initialization of upvar'ed namespace
-variables across multiple test files is tricky. This is primarily caused by the
-fact that the upvar link for imported namespace variables cannot be removed.
-The tricky details are explicitly described by comments in the proc testutils.
+B3. Tricky aspects of repeated initialization
+---------------------------------------------
+While the entire Tk test suite is running, many test files are loaded, each of
+which may import and susequently forget utility domains. When tracking a single
+utility domain across test files that come and go, associated namespace variables
+may be imported, initialized and cleaned up repeatedly. This repetitive cycle
+presents tricky aspects for the re-initialization of those namespace variables
+that were declared using the "variable" command without supplying a value. This
+is caused by the fact that, once established, the upvar link for imported
+namespace variables cannot be removed. The tricky details are explicitly
+described by comments in the proc testutils.
