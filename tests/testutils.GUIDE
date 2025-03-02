@@ -1,5 +1,5 @@
 ================================================================================
-         TESTUTILS, A GUIDE FOR TEST AUTHORS AND MAINTAINERS
+             TESTUTILS GUIDE FOR TEST AUTHORS AND MAINTAINERS
 ================================================================================
 
 
@@ -86,25 +86,23 @@ utility proc:
    the importing and initialization of these associated variables, but attention
    is needed for the following:
 
-   - these variables should be declared inside the utility proc as namespace
-     variables, using the command "variable".
+   Their definition needs to be to placed in the reserved proc "init" (inside
+   the proper namespace). Variables defined in this proc are imported into
+   the namespace where tests are executing by the command "testutils import".
 
-   - their definition needs to be to placed in the reserved proc "init" (inside
-     the proper namespace). Variables defined in this proc are imported into
-     the namespace where tests are executing by the command "testutils import".
-     Note that just placing them inside the "namespace eval" scope for the
-     specific domain (i.e. outside the init proc) isn't good enough because that
-     foregoes the importing of the namespace variables as well as their automatic
-     initialization fort each test file that requires them.
+   Note that just placing them inside the "namespace eval" scope for the
+   specific domain (i.e. outside the init proc) isn't good enough because that
+   foregoes the importing of the namespace variables as well as their automatic
+   initialization for each test file that requires them.
 
-     Also: any namespace variables initialized inside the "namespace eval" scope
-     for the specific domain, but outside the init proc, will NOT be cleaned up
-     upon the invocation of "testutils forget" (in contrast to imported
-     namespace variables).
+   Also: any namespace variables initialized inside the "namespace eval" scope
+   for the specific domain, but outside the init proc, will NOT be cleaned up
+   upon the invocation of "testutils forget" (in contrast to imported
+   namespace variables).
 
-4. If you created a new domain namespace, export the test utilities using the
-   command "testutils export". This ensures that all utility procs in the domain
-   namespace are exported, except any init proc.
+4. If you created a new domain namespace in step 2, then export the test
+   utilities using the command "testutils export". This ensures that all utility
+   procs in the domain namespace are exported, except any init proc.
 
 The file testutils.tcl contains various examples showing this practice.
 
@@ -121,10 +119,6 @@ This file is sourced on behalf of each test file by a command in the file
 "main.tcl", which in turn is loaded through the tcltest option "-loadfile" in
 the file "all.tcl".
 
-The file "testutils.tcl" keeps the definitions of utility procs in a central
-place. This prevents code duplication when these utility procs are used by
-multiple test files.
-
 B2. Importing procs and associated namespace variables
 ------------------------------------------------------
 The command "testutils" makes utility procs available to the global namespace
@@ -137,10 +131,10 @@ using an upvar statement. The importing of these associated namespace variables
 needs to handle some specifics:
 
 Besides making them available to test files, some tests require such variables
-to be initialized, regardless whatever the test file did to them. Therefore,
-the proc "testutils" needs to re-initialze these upvar'ed variables for each
-test file that imports them. The procedure for this so-called "auto-initialization"
-is as follows:
+to be initialized, regardless whatever the previous test file did to them.
+Therefore, the proc "testutils" needs to re-initialze these upvar'ed variables
+for each test file that imports them. The procedure for this so-called
+"auto-initialization" is as follows:
 
 - if a namespace for a specific functional area holds a proc "init", the
   command "testutils import xxx" will invoke it, thus initializing namespace
