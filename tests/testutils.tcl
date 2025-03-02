@@ -168,21 +168,38 @@ namespace eval ::tk::test::generic {
 
     # testutils --
     #
-    #    Takes care of importing/forgetting utility procs and any associated
-    #    variables from a specific test domain (functional area).
+    #    Takes care of exporting/importing/forgetting utility procs and any
+    #    associated variables from a specific test domain (functional area).
     #
     #    More information is available in the file "testutils.GUIDE"
     #
     # Arguments:
-    #    subCmd : "import" or "forget"
-    #    args   : a sequence of domains that need to be imported/forgotten.
+    #    subCmd : "export", "import" or "forget"
+    #    args   : a sequence of domains that need to be imported/forgotten,
+    #             empty for "export"
     #
     proc testutils {subCmd args} {
 	variable importedDomains
 	variable importVars
 
-	if {([llength $args] < 1) || ($subCmd ni [list import forget])} {
-	    return -code error "[lindex [info level 0] 0] import|forget domain ?domain domain ...?"
+	set usage
+	set argc [llength $args]
+	if {($subCmd in [list import forget]) && ($argc < 1)} {
+	    return -code error "invalid #args. Usage: [lindex [info level 0] 0] import|forget domain ?domain domain ...?"
+	} elseif {$subCmd eq "export"} {
+	    if {$argc != 0} {
+		return -code error "invalid #args. Usage: [lindex [info level 0] 0] export"
+	    }
+
+	    # export all procs from the invoking domain namespace except "init"
+	    uplevel 1 {
+		if {[info procs init] eq "init"} {
+		    set exports [info procs]
+		    namespace export {*}[lremove $exports [lsearch $exports "init"]]
+		} else {
+		    namespace export *
+		}
+	    }
 	}
 
 	foreach domain $args {
@@ -266,7 +283,7 @@ namespace eval ::tk::test::generic {
 	}
     }
 
-    namespace export *
+    testutils export
 }
 
 # Import generic utility procs into the global namespace (in which tests are
@@ -277,7 +294,7 @@ namespace eval ::tk::test::button {
     proc bogusTrace args {
 	error "trace aborted"
     }
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::child {
@@ -409,7 +426,7 @@ namespace eval ::tk::test::child {
 	}
     }
 
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::colors {
@@ -453,7 +470,7 @@ namespace eval ::tk::test::colors {
 	update
     }
 
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::dialog {
@@ -615,8 +632,7 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
-    namespace export Click PressButton SendButtonPress testDialog \
-	    ToPressButton
+    testutils export
 }
 
 
@@ -665,8 +681,7 @@ namespace eval ::tk::test::entry {
 	return 0
     }
 
-    namespace export override validateCommand1 validateCommand2 validateCommand3 \
-	    validateCommand4 unsetValidationData
+    testutils export
 }
 
 namespace eval ::tk::test::geometry {
@@ -675,7 +690,7 @@ namespace eval ::tk::test::geometry {
 	return "[winfo reqwidth $w] [winfo reqheight $w]"
     }
 
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::image {
@@ -716,7 +731,7 @@ namespace eval ::tk::test::image {
 	return $r
     }
 
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::scroll {
@@ -743,7 +758,7 @@ namespace eval ::tk::test::scroll {
 	variable scrollInfo $args
     }
 
-    namespace export setScrollInfo
+    testutils export
 }
 
 namespace eval ::tk::test::select {
@@ -860,7 +875,7 @@ namespace eval ::tk::test::select {
 	selection own $path
     }
 
-    namespace export *
+    testutils export
 }
 
 namespace eval ::tk::test::text {
@@ -908,7 +923,7 @@ namespace eval ::tk::test::text {
 	return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
     }
 
-    namespace export bo xchar xw yline
+    testutils export
 }
 
 # EOF

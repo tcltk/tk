@@ -102,8 +102,9 @@ utility proc:
      upon the invocation of "testutils forget" (in contrast to imported
      namespace variables).
 
-4. Add the utility proc to the "namespace export" command at the end of the
-   domain namespace, and don't export the init proc itself.
+4. If you created a new domain namespace, export the test utilities using the
+   command "testutils export". This ensures that all utility procs in the domain
+   namespace are exported, except any init proc.
 
 The file testutils.tcl contains various examples showing this practice.
 
