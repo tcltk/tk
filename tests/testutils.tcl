@@ -197,6 +197,7 @@ namespace eval ::tk::test::generic {
 		if {[info procs init] eq "init"} {
 		    set exports [info procs]
 		    namespace export {*}[lremove $exports [lsearch $exports "init"]]
+		    unset exports
 		} else {
 		    namespace export *
 		}
