@@ -1,0 +1,108 @@
+# Test for the "testutils" command
+#
+# © 2025 Erik Leunissen
+#
+# See the file "license.terms" for information on usage and redistribution of
+# this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+
+package require tcltest 2.2
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+
+test testutils-1.0 {invalid subcommand} -body {
+    testutils foo
+} -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
+
+test testutils-2.0 {invalid #args for subCmd export} -body {
+    testutils export foo
+} -result {invalid #args. Usage: testutils export} -returnCodes error
+
+test testutils-2.1 {invalid #args for subCmd import} -body {
+    testutils import
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-2.2 {invalid #args for subCmd forget} -body {
+    testutils forget
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-3.1 {invalid domain for subCmd import} -body {
+    testutils import foo
+} -result {Tk test domain "foo" doesn't exist} -returnCodes error
+
+test testutils-3.2 {invalid domain for subCmd forget} -body {
+    testutils forget foo
+} -result {Tk test domain "foo" doesn't exist} -returnCodes error
+
+#
+# Create a domain namespace for testing
+#
+namespace eval ::tk::test::_foo {
+    proc init {} {
+	variable _bar 123
+	variable _pip
+    }
+    proc _kuk {} {}
+    testutils export
+}
+set initVars [info vars]; lappend initVars initVars
+
+test testutils-4.0 {forget not-imported domain} -body {
+    testutils forget _foo
+} -result {domain "_foo" was not imported} -returnCodes error
+
+test testutils-4.1 {duplicate import} -body {
+    testutils import _foo
+    testutils import _foo
+} -result {domain "_foo" was already imported} -returnCodes error -cleanup {
+    testutils forget _foo
+}
+
+test testutils-5.0 {utility proc is imported} -body {
+    testutils import _foo
+    info procs _kuk
+} -result {_kuk} -cleanup {
+    testutils forget _foo
+}
+
+test testutils-5.1 {forget removes utility proc} -body {
+    testutils import _foo
+    testutils forget _foo
+    info procs _kuk
+} -result {}
+
+test testutils-6.0 {associated variables are imported} -body {
+    testutils import _foo
+    set varNames [info vars]
+    foreach name $initVars {
+	set varNames [lremove $varNames [lsearch $varNames $name]]
+    }
+    list [lsort $varNames] [info exists _bar] [info exists _pip] $_bar
+} -result [list {_bar _pip} 1 0 123] -cleanup {
+    unset -nocomplain name varNames
+    testutils forget _foo
+}
+
+test testutils-6.1 {repeated initialization keeps imported variable without value non-existent,
+                    even if a test file inadvertently assigns it a value in the meantime.
+} -body {
+    catch {
+	testutils import _foo
+	testutils forget _foo
+    }
+    set _pip 11111
+    testutils import _foo
+    info exists _pip
+} -result 0 -cleanup {
+    testutils forget _foo
+}
+
+#
+# CLEANUP
+#
+
+namespace delete ::tk::test::_foo
+unset -nocomplain initVars
+cleanupTests
+
+# EOF
