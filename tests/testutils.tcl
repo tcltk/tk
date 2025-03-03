@@ -176,16 +176,18 @@ namespace eval ::tk::test::generic {
     # Arguments:
     #    subCmd : "export", "import" or "forget"
     #    args   : a sequence of domains that need to be imported/forgotten,
-    #             empty for "export"
+    #             unused for "export"
     #
     proc testutils {subCmd args} {
 	variable importedDomains
 	variable importVars
 
+	if {$subCmd ni [list export import forget]} {
+	    return -code error "invalid subCmd \"$subCmd\". Usage: [lindex [info level 0] 0] export|import|forget ?domain domain ...?"
+	}
+
 	set argc [llength $args]
-	if {($subCmd in [list import forget]) && ($argc < 1)} {
-	    return -code error "invalid #args. Usage: [lindex [info level 0] 0] import|forget domain ?domain domain ...?"
-	} elseif {$subCmd eq "export"} {
+	if {$subCmd eq "export"} {
 	    if {$argc != 0} {
 		return -code error "invalid #args. Usage: [lindex [info level 0] 0] export"
 	    }
@@ -201,7 +203,11 @@ namespace eval ::tk::test::generic {
 	    }
 	    return
 	}
+	if {($subCmd in [list import forget]) && ($argc < 1)} {
+	    return -code error "invalid #args. Usage: [lindex [info level 0] 0] import|forget domain ?domain ...?"
+	}
 
+	# import/forget domains
 	foreach domain $args {
 	    if {! [namespace exists ::tk::test::$domain]} {
 		return -code error "Tk test domain \"$domain\" doesn't exist"
@@ -234,8 +240,8 @@ namespace eval ::tk::test::generic {
 			    if {! [info exists importVars($domain)]} {
 				#
 				# Note that importing associated namespace variables into the global namespace
-				# needs to be done only once because an upvar link cannot be removed from
-				# a namespace unless the namespace itself is deleted.
+				# needs to be done only once because an upvar link cannot be removed from a
+				# namespace.
 				#
 				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
 				    if {[catch {
