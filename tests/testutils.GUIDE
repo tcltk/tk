@@ -55,17 +55,17 @@ associated with these procs, so that they can be accessed from within a test.
 
 Typical invocations in a test file (using the domain "dialog" as an example), are:
 
-    testutils import dialog
-
-    test foo-1.0 -body {
-        .
-        .
-        SendButtonPress; # invoke utility proc imported from domain "dialog"
-        .
-        .
-    } -result {foo_result}
-
-    testutils forget dialog
+┃    testutils import dialog
+┃    ⋮
+┃    test foo-1.0 -body {
+┃        ⋮
+┃        ⋮
+┃        SendButtonPress; # invoke utility proc imported from domain "dialog"
+┃        ⋮
+┃        ⋮
+┃    } -result {foo_result}
+┃    ⋮
+┃    testutils forget dialog
 
 
 A3. Adding new utility procs
