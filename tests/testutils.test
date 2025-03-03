@@ -83,13 +83,14 @@ test testutils-6.0 {associated variables are imported} -body {
     testutils forget _foo
 }
 
-test testutils-6.1 {repeated initialization keeps imported variable without value non-existent,
-                    even if a test file inadvertently assigns it a value in the meantime.
+test testutils-6.1 {
+    Repeated initialization keeps imported variable, defined without value, non-existent,
+    even if a test file inadvertently assigns it a value in the meantime.
 } -body {
     catch {
 	testutils import _foo
-	testutils forget _foo
     }
+    testutils forget _foo
     set _pip 11111
     testutils import _foo
     info exists _pip
