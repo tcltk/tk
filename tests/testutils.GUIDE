@@ -168,3 +168,8 @@ that were declared using the "variable" command without supplying a value. This
 is caused by the fact that, once established, the upvar link for imported
 namespace variables cannot be removed. The tricky details are explicitly
 described by comments in the proc testutils.
+
+B4. Test file
+-------------
+The correct functioning of the testutils mechanism is tested by the test
+file "testutils.test".
