@@ -10,6 +10,12 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+#
+# Note that utility procs from domain generic have already been imported,
+# so we can use "assert".
+#
+assert {"testutils" in [info procs testutils]}
+
 test testutils-1.0 {invalid subcommand} -body {
     testutils foo
 } -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
@@ -37,6 +43,7 @@ test testutils-3.2 {invalid domain for subCmd forget} -body {
 #
 # Create a domain namespace for testing
 #
+assert {"::tk::test::_foo" ni [namespace children ::tk::test]}
 namespace eval ::tk::test::_foo {
     proc init {} {
 	variable _bar 123
@@ -46,6 +53,10 @@ namespace eval ::tk::test::_foo {
     testutils export
 }
 set initVars [info vars]; lappend initVars initVars
+
+assert {"_kuk" ni [info procs _kuk]}
+assert {"_bar" ni [info vars _bar]}
+assert {"_pip" ni [info vars _pip]}
 
 test testutils-4.0 {forget not-imported domain} -body {
     testutils forget _foo
