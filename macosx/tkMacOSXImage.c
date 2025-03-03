@@ -23,7 +23,7 @@ static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
      int x, int y, unsigned int width, unsigned int height, CGFloat *scale);
 static inline CGRect ClipCopyRects(CGRect srcBounds, CGRect dstBounds,
-     int src_x, int src_y, int dst_x, int dst_y, unsigned int width,  unsigned int height);
+     int src_x, int src_y, unsigned int width,  unsigned int height);
 
 /* Pixel formats
  *
@@ -925,8 +925,6 @@ ClipCopyRects(
     CGRect dstBounds,
     int src_x,
     int src_y,
-    int dst_x,
-    int dst_y,
     unsigned int width,
     unsigned int height)
 {
@@ -994,8 +992,7 @@ TkScrollWindow(
      * XCopyArea does.
      */
 
-    CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y,  x + dx, y + dy,
-				  width, height);
+    CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y, width, height);
     unsigned int w = bounds.size.width;
     unsigned int h = bounds.size.height;
     
@@ -1059,7 +1056,7 @@ XCopyArea(
 {
     TkMacOSXDrawingContext dc;
     CGImageRef img = NULL;
-    CGRect srcRect, dstRect;
+    CGRect dstRect;
 
     // XXXX Need to deal with pixmaps!
 
@@ -1076,8 +1073,7 @@ XCopyArea(
     // We deal with this by reducing their common size  enough so that both
     // rectangles are  contained in their respective views.
 
-    CGRect bounds = ClipCopyRects(srcBounds, dstBounds, src_x, src_y, dst_x, dst_y,
-				  width, height);
+    CGRect bounds = ClipCopyRects(srcBounds, dstBounds, src_x, src_y, width, height);
     width = (int) bounds.size.width;
     height = (int) bounds.size.height;
     CGFloat scaleFactor;
