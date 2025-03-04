@@ -7078,7 +7078,8 @@ TkpWmSetState(
     }
 
     /*
-     * Make sure windows are updated after the state change too.
+     * Make sure windows are updated after the state change too.  This is needed
+     * in order for the event-9.11-20 tests to pass.
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}

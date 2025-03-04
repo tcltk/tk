@@ -10,10 +10,10 @@ site](https://sourceforge.net/projects/tcl/files/Tcl/).
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Amain)
 <br>
-8.7 (in development, daily build)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-8-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-8-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-8-branch)
+8.6 (legacy release, daily build)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-8-6-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-8-6-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-8-6-branch)
 
 ## <a id="intro">1.</a> Introduction
 
