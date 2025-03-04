@@ -973,6 +973,7 @@ ExposeRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
+    static bool initialized = NO;
     if (context && ![NSApp tkWillExit]) {
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
@@ -992,7 +993,10 @@ ExposeRestrictProc(
 	 * Without this there are black flashes when a window opens.
 	 */
 
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	if (!initialized) {
+	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    initialized = YES;
+	}
     }
 }
 
