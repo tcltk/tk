@@ -1,4 +1,4 @@
-# Test for the "testutils" command
+# Tests for the "testutils" command, defined in testutils.tcl
 #
 # © 2025 Erik Leunissen
 #
@@ -10,33 +10,45 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Notes:
 #
-# Note that utility procs from domain generic have already been imported,
-# so we can use "assert".
+# - All tests have been constrained with test constraint "testutils". This
+#   constraint isn't set anywhere, and therefore false by default. Therefore,
+#   the tests in this file are skipped in a regular invocation of the Tk test
+#   suite. In order to run these test, you need to use the tcltest option
+#   "-constraints testutils" in the invocation, possibly combined with the
+#   option "-file testutils.test" to exclude other test files, or with
+#   "-limitconstraints true" to exclude other tests.
 #
+# - At this place in the test file, the file "testutils.tcl" has already been
+#   sourced (through tcltest::loadTestedCommands above), and the utility procs
+#   from domain "generic" are already available. Therefore we can make use of
+#   proc "assert" here.
+#
+
 assert {"testutils" in [info procs testutils]}
 
-test testutils-1.0 {invalid subcommand} -body {
+test testutils-1.0 {invalid subcommand} -constraints testutils -body {
     testutils foo
 } -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
 
-test testutils-2.0 {invalid #args for subCmd export} -body {
+test testutils-2.0 {invalid #args for subCmd export} -constraints testutils -body {
     testutils export foo
 } -result {invalid #args. Usage: testutils export} -returnCodes error
 
-test testutils-2.1 {invalid #args for subCmd import} -body {
+test testutils-2.1 {invalid #args for subCmd import} -constraints testutils -body {
     testutils import
 } -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
 
-test testutils-2.2 {invalid #args for subCmd forget} -body {
+test testutils-2.2 {invalid #args for subCmd forget} -constraints testutils -body {
     testutils forget
 } -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
 
-test testutils-3.1 {invalid domain for subCmd import} -body {
+test testutils-3.1 {invalid domain for subCmd import} -constraints testutils -body {
     testutils import foo
 } -result {Tk test domain "foo" doesn't exist} -returnCodes error
 
-test testutils-3.2 {invalid domain for subCmd forget} -body {
+test testutils-3.2 {invalid domain for subCmd forget} -constraints testutils -body {
     testutils forget foo
 } -result {Tk test domain "foo" doesn't exist} -returnCodes error
 
@@ -58,31 +70,31 @@ assert {"_kuk" ni [info procs _kuk]}
 assert {"_bar" ni [info vars _bar]}
 assert {"_pip" ni [info vars _pip]}
 
-test testutils-4.0 {forget not-imported domain} -body {
+test testutils-4.0 {forget not-imported domain} -constraints testutils -body {
     testutils forget _foo
 } -result {domain "_foo" was not imported} -returnCodes error
 
-test testutils-4.1 {duplicate import} -body {
+test testutils-4.1 {duplicate import} -constraints testutils -body {
     testutils import _foo
     testutils import _foo
 } -result {domain "_foo" was already imported} -returnCodes error -cleanup {
     testutils forget _foo
 }
 
-test testutils-5.0 {utility proc is imported} -body {
+test testutils-5.0 {utility proc is imported} -constraints testutils -body {
     testutils import _foo
     info procs _kuk
 } -result {_kuk} -cleanup {
     testutils forget _foo
 }
 
-test testutils-5.1 {forget removes utility proc} -body {
+test testutils-5.1 {forget removes utility proc} -constraints testutils -body {
     testutils import _foo
     testutils forget _foo
     info procs _kuk
 } -result {}
 
-test testutils-6.0 {associated variables are imported} -body {
+test testutils-6.0 {associated variables are imported} -constraints testutils -body {
     testutils import _foo
     set varNames [info vars]
     foreach name $initVars {
@@ -97,7 +109,7 @@ test testutils-6.0 {associated variables are imported} -body {
 test testutils-6.1 {
     Repeated initialization keeps imported variable, defined without value, non-existent,
     even if a test file inadvertently assigns it a value in the meantime.
-} -body {
+} -constraints testutils -body {
     catch {
 	testutils import _foo
     }
