@@ -193,12 +193,12 @@ Tk_ImageObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
-	"create", "delete", "height", "inuse", "names", "type", "types",
-	"width", NULL
+	"create", "delete", "formats", "height", "inuse", "names", "type",
+	"types", "width", NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
-	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_FORMATS, IMAGE_HEIGHT, IMAGE_INUSE,
+	IMAGE_NAMES, IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
     int i, isNew, firstOption, index;
@@ -484,6 +484,8 @@ Tk_ImageObjCmd(
 	default:
 	    Tcl_Panic("can't happen");
 	}
+	break;
+    case IMAGE:FORMATS:
 	break;
     }
     return TCL_OK;
