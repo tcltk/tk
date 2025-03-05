@@ -7057,7 +7057,7 @@ TkpWmSetState(
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
     if (state == WithdrawnState) {
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == IconicState) {
 
 	/*
@@ -7069,9 +7069,9 @@ TkpWmSetState(
 		![macWin isMiniaturized]) {
 	    [macWin miniaturize:NSApp];
 	}
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == NormalState || state == ZoomState) {
-	Tk_MapWindow((Tk_Window)winPtr);
+	TkWmMapWindow(winPtr);
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
