@@ -220,7 +220,7 @@ proc ttk::treeview::DoubleClick {w x y} {
     }
 }
 
-## Press -- Button binding.
+## Press -- Button binding. 
 #
 proc ttk::treeview::Press {w x y} {
     focus $w

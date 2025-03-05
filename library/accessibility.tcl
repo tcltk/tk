@@ -51,13 +51,22 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
-    #update listbox selection
+    #update data selection
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get [$w curselection]]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
+	if {[winfo class $w] eq "Treeview"} {
+	    set data [::tk::accessible::_gettreeviewdata $w]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
+    }
+
+    proc _generate_invoke {w} {
+	event generate $w <Button-1>
     }
 	
     #Set initial accessible attributes and add binding to <Map> event.
@@ -169,7 +178,7 @@ namespace eval ::tk::accessible {
 			   {} \
 		       }
 
-    #    Listbox bindings
+    #Listbox bindings
     bind Listbox <Map> {+::tk::accessible::_init \
 			    %W \
 			    Listbox \
@@ -177,7 +186,7 @@ namespace eval ::tk::accessible {
 			    Listbox \
 			    [%W get [%W curselection]] \
 			    [%W cget -state]\
-			    {}\
+			    {%W invoke}\
 			}
 
     #Progressbar
@@ -265,7 +274,7 @@ namespace eval ::tk::accessible {
 			      Scrollbar \
 			      [%W get] \
 			      {} \
-			      {%W cget -command}\
+			      {::tk::accessible::_generate_invoke $%W}\
 			  }
     bind TScrollbar <Map> {+::tk::accessible::_init \
 			       %W \
@@ -274,7 +283,7 @@ namespace eval ::tk::accessible {
 			       Scrollbar \
 			       [%W get] \
 			       [%W state] \
-			       {%W cget -command}\
+			       {::tk::accessible::_generate_invoke $%W}\
 			   }
     #Spinbox/TSpinbox bindings
     bind Spinbox <Map> {+::tk::accessible::_init \
@@ -305,7 +314,7 @@ namespace eval ::tk::accessible {
 			     [::tk::accessible::_checktree %W] \
 			     [::tk::accessible::_gettreeviewdata %W] \
 			     [%W state] \
-			     {}\
+			     {ttk::treeview::Press %W %x %y }\
 			 }
 
     #Text bindings
@@ -342,7 +351,8 @@ namespace eval ::tk::accessible {
     
     
     bind all <Map> {+::tk::accessible::add_acc_object %W}
-    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
+    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
+    bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action add_acc_object

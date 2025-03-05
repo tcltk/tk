@@ -49,7 +49,6 @@ const struct MacRoleMap roleMap[] = {
     {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
     {"Combobox",  @"NSAccessibilityComboBoxRole"},
     {"Entry",  @"NSAccessibilityTextFieldRole"},
-    {"Frame", @"NSAccessibilityGroupRole"},
     {"Label", @"NSAccessibilityStaticTextRole"},
     {"Listbox", @"NSAccessibilityListRole"},
     {"Notebook", @"NSAccessibilityTabGroupRole"},
@@ -60,6 +59,7 @@ const struct MacRoleMap roleMap[] = {
     {"Spinbox", @"NSAccessibilityIncrementorRole"},
     {"Table",  @"NSAccessibilityTableRole"}, 
     {"Text",  @"NSAccessibilityTextAreaRole"},
+    {"Tree",  @"NSAccessibilityTableRole"},
     {NULL, 0}
 };
 
@@ -195,7 +195,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 -(id) accessibilityValue {
     NSAccessibilityRole role = self.accessibilityRole;
     
-    if ((role = NSAccessibilityListRole)) {
+    if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
         
 	Tk_Window win = self.tk_win;
 	Tcl_HashEntry *hPtr, *hPtr2;
@@ -319,9 +319,47 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 
-//placeholder for later implementation
-- (void)accessibilityPerformAction:(NSString *)action {
+- (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
+    if ([action isEqualToString:NSAccessibilityPressAction]) {
+        [self accessibilityPerformPress];  
+    } else if ([action isEqualToString:NSAccessibilityIncrementAction]) {
+        [self accessibilityPerformIncrement];  
+    } else if ([action isEqualToString:NSAccessibilityDecrementAction]) {
+        [self decreaseValue];  // Custom method to decrement a value
+    } else {
+        [super accessibilityPerformAction:action];  // Call super for unhandled actions
+    }
 }
+
+- (BOOL) accessibilityPerformIncrement {
+       Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+    Tcl_Event *event; 
+
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return NO;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
+    if (!hPtr2) {
+	NSLog(@"No action found.");
+	return NO;
+    }
+
+    char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    callback_command = action;
+    event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+    event->proc = ActionEventProc;
+    Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+    return YES;
+
+}
+
+
 
 /*Action for button roles.*/
 - (BOOL)accessibilityPerformPress {
@@ -459,7 +497,7 @@ EmitSelectionChanged(
 
 	/*
 	 * We access listbox data through the <<ListboxSelect>> event at the
-	 * script level and sending notifications from the C level to update the
+	 * script level and send notifications from the C level to update the
 	 * value read by VoiceOver of the widget based on the listbox data's
 	 * selected value. The accessibility design is tightly tied to a
 	 * Tk_Window and mapping this API to elements that are not actual
