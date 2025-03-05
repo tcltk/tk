@@ -4,7 +4,7 @@
  *	This file implements an accessibility API for Tk that can be accessed 
  *	from the script level.
  *
- * Copyright © 2024 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
  * Copyright © 2024 Emiliano Gavilan.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -418,12 +418,12 @@ Tk_SetAccessibleAction(
  *
  * Tk_GetAccessibleRole --
  *
- *	This function assigns an accessibility role for a 
+ *	This function reads an accessibility role for a 
  *	specific widget. 
  *	
  *
  * Results:
- *	Assigns an accessibility role.
+ *	Gets an accessibility role.
  *
  * Side effects:
  *	None.
@@ -539,7 +539,7 @@ Tk_GetAccessibleName(
  *	
  *
  * Results:
- *	Assigns an accessibility description.
+ *	Gets an accessibility description.
  *
  * Side effects:
  *	None.
