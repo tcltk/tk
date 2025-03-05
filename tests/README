@@ -3,8 +3,3 @@ README -- Tk test suite design document.
 This directory contains a set of validation tests for the Tk commands.
 Please see the tests/README file in the Tcl source distribution for
 information about the test suite.
-
-It also holds tests for the testutils mechanism in the test file "testutils.test".
-This mechanism supports Tk testing, but is not a part of Tk proper. Therefore, tests in
-that test file have been constrained to not run by default. Please see the
-explanation in "testutils.test" for how to run them.
