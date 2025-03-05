@@ -21,7 +21,9 @@
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
-	   int x, int y, unsigned int width, unsigned int height);
+     int x, int y, unsigned int width, unsigned int height, CGFloat *scale);
+static inline CGRect ClipCopyRects(CGRect srcBounds, CGRect dstBounds,
+     int src_x, int src_y, unsigned int width,  unsigned int height);
 
 /* Pixel formats
  *
@@ -647,7 +649,8 @@ CreateCGImageFromDrawableRect(
     int x,
     int y,
     unsigned int width,
-    unsigned int height)
+    unsigned int height,
+    CGFloat *scalePtr)
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
@@ -665,6 +668,9 @@ CreateCGImageFromDrawableRect(
 	scaleFactor = view.layer.contentsScale;
 	cg_context = ((TKContentView *)view).tkLayerBitmapContext;
 	CGContextRetain(cg_context);
+    }
+    if (scalePtr != nil) {
+	*scalePtr = scaleFactor;
     }
     if (cg_context) {
 	cg_image = CGBitmapContextCreateImage(cg_context);
@@ -834,7 +840,7 @@ XGetImage(
 	}
 
 	// Request 1x-scale image for compatibility
-	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height);
+	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height, nil);
 	if (cgImage) {
 	    bitmapRep = [NSBitmapImageRep alloc];
 	    [bitmapRep initWithCGImage:cgImage];
@@ -913,6 +919,112 @@ XGetImage(
     return imagePtr;
 }
 
+static inline CGRect
+ClipCopyRects(
+    CGRect srcBounds,
+    CGRect dstBounds,
+    int src_x,
+    int src_y,
+    unsigned int width,
+    unsigned int height)
+{
+    CGRect srcRect = CGRectMake(src_x, src_y, width, height);
+    CGRect bounds1 = CGRectIntersection(srcRect, srcBounds);
+    return CGRectIntersection(bounds1, dstBounds);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkScrollWindow --
+ *
+ *	Scroll a rectangle of the specified window and accumulate a damage
+ *	region.
+ *
+ * Results:
+ *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
+ *	the region that needs to be repainted after scrolling and returns 1.
+ *      When drawRect was in use, this function used the now deprecated
+ *      scrollRect method of NSView.  With the current updateLayer
+ *      implementation, using a CGImage as the view's backing layer, we are
+ *      able to use XCopyArea.  But both implementations are incomplete.
+ *      They return a damage area which is just the source rectangle minus
+ *      destination rectangle.  Other platforms, e.g. Windows, where
+ *      this function is essentially provided by the windowing system,
+ *      are able to add to the damage region the bounding rectangles of
+ *      all subwindows which meet the source rectangle, even if they are
+ *      contained in the destination rectangle.  The information needed
+ *      to do that is not available in this module, as far as I know.
+ *
+ *      In fact, the Text widget is the only one which calls this
+ *      function, and  textDisp.c compensates for this defect by using
+ *      macOS-specific code.  This is possible because access to the
+ *      list of all embedded windows in a Text widget is available in
+ *      that module.
+ *
+ * Side effects:
+ *	Scrolls the bits in the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkScrollWindow(
+    Tk_Window tkwin,		/* The window to be scrolled. */
+    GC gc,			/* GC for window to be scrolled. */
+    int x, int y,		/* Position rectangle to be scrolled. */
+    int width, int height,
+    int dx, int dy,		/* Distance rectangle should be moved. */
+    Region damageRgn)		/* Region to accumulate damage in. */
+{
+    Drawable drawable = Tk_WindowId(tkwin);
+    HIShapeRef srcRgn, dstRgn;
+    HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
+    NSRect srcRect, dstRect;
+    int result = 0;
+    NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
+    CGRect viewBounds = [view bounds];    
+    
+    /*
+     * To compute the damage region correctly we need to clip the source and
+     * destination rectangles to the NSView bounds in the same way that
+     * XCopyArea does.
+     */
+
+    CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y, width, height);
+    unsigned int w = bounds.size.width;
+    unsigned int h = bounds.size.height;
+    
+    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
+	     w, h, x + dx, y + dy) == Success) {
+
+	/*
+	 * Compute the damage region, using Tk coordinates (origin at top left).
+	 */
+
+	srcRect = CGRectMake(x, y, width, height);
+	dstRect = CGRectOffset(bounds, dx, dy);
+	//dstRect = CGRectOffset(srcRect, dx, dy);
+	srcRgn = HIShapeCreateWithRect(&srcRect);
+	dstRgn = HIShapeCreateWithRect(&dstRect);
+	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
+	CFRelease(dstRgn);
+	CFRelease(srcRgn);
+	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
+
+    }
+
+    /*
+     * Convert the HIShape dmgRgn into a TkRegion and store it.
+     */
+
+    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+
+    CFRelease(dmgRgn);
+    return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -939,12 +1051,32 @@ XCopyArea(
     int src_y,			/* define the source rectangle */
     unsigned int width,		/* that will be copied. */
     unsigned int height,
-    int dest_x,			/* Dest X & Y on dest rect. */
-    int dest_y)
+    int dst_x,			/* Dest X & Y on dest rect. */
+    int dst_y)
 {
     TkMacOSXDrawingContext dc;
     CGImageRef img = NULL;
     CGRect dstRect;
+
+    // XXXX Need to deal with pixmaps!
+
+    NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
+    NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
+    CGRect srcBounds = [srcView bounds];    
+    CGRect dstBounds = [dstView bounds];
+
+    // To avoid distorting the image when it is drawn we must ensure that
+    // the source and destination rectangles have the same size.  This is
+    // tricky because each of those rectangles will be clipped to the
+    // bounds of its containing NSView.  If the source gets clipped and
+    // the destination does not, for example, then the shapes will differ.
+    // We deal with this by reducing their common size  enough so that both
+    // rectangles are  contained in their respective views.
+
+    CGRect bounds = ClipCopyRects(srcBounds, dstBounds, src_x, src_y, width, height);
+    width = (int) bounds.size.width;
+    height = (int) bounds.size.height;
+    CGFloat scaleFactor;
 
     LastKnownRequestProcessed(display)++;
     if (!width || !height) {
@@ -961,11 +1093,12 @@ XCopyArea(
 	return BadDrawable;
     }
 
-    // Use unscaled source (TkMacOSXDrawCGImage() will implicitly downscale)
-    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height);
+    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height, &scaleFactor);
 
     if (img) {
-	dstRect = CGRectMake(dest_x, dest_y, width, height);
+	unsigned int w = (unsigned int) (CGImageGetWidth(img) / scaleFactor);
+	unsigned int h = (unsigned int) (CGImageGetHeight(img) / scaleFactor);
+	dstRect = CGRectMake(dst_x, dst_y, w, h);
 	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
 		gc->foreground, gc->background, dstRect);
 	CFRelease(img);

@@ -3180,6 +3180,28 @@ DisplayCanvas(
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
 		width, height);
+	/*
+	 * Call ItemDisplay for all window items.  This does not redraw the
+	 * windows, but sets their position within the canvas, which ensures
+	 * for macOS (the only platform which defines TK_NO_DOUBLE_BUFFERING)
+	 * that the clipping region for the canvas gets updated before the
+	 * background is painted by XFillRectangle.  Otherwise, when the
+	 * background is filled the old locations of the window items will be
+	 * clipped away, rather than the new locations, causing "ghost"
+	 * windows to appear at the old locations.  Now that updateLayer is
+	 * being used for macOS drawing it should be possible to stop
+	 * maintaining clipping regions for all widgets.  When that happens
+	 * this code can probably be removed.
+	 */
+
+	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
+		itemPtr = itemPtr->nextPtr) {
+	    if (AlwaysRedraw(itemPtr)) {
+		ItemDisplay(canvasPtr, itemPtr, pixmap,
+			    screenX1, screenY1, width, height);
+	    }
+	}
+
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*

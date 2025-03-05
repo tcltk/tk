@@ -7057,7 +7057,7 @@ TkpWmSetState(
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
     if (state == WithdrawnState) {
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == IconicState) {
 
 	/*
@@ -7069,16 +7069,17 @@ TkpWmSetState(
 		![macWin isMiniaturized]) {
 	    [macWin miniaturize:NSApp];
 	}
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == NormalState || state == ZoomState) {
-	Tk_MapWindow((Tk_Window)winPtr);
+	TkWmMapWindow(winPtr);
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
 
     /*
-     * Make sure windows are updated after the state change too.
+     * Make sure windows are updated after the state change too.  This is needed
+     * in order for the event-9.11-20 tests to pass.
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
