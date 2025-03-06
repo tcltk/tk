@@ -194,6 +194,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
   
 -(id) accessibilityValue {
     NSAccessibilityRole role = self.accessibilityRole;
+
+    /* Listbox and Treeview/Table. */
     
     if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
         
@@ -218,6 +220,27 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	NSString  *value = [NSString stringWithUTF8String:result];
 	return value;
     }
+
+    /* Scrollbar. */
+
+    if ((role = NSAccessibilityScrollBarRole)) {
+
+	TkMainInfo *info = TkGetMainInfoList();
+	
+	/*Get the scrollbar value from Tk.*/
+	NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+	NSString *commandString = [NSString stringWithFormat:@"%@ get", widgetName];
+
+	Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+	Tcl_Obj *resultObj;
+
+	if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+	    resultObj = Tcl_GetObjResult(info->interp);
+	    double value = strtod(Tcl_GetString(resultObj), NULL);
+	    return @(value);
+	}
+    }
+
     return nil;
 }
 
@@ -321,42 +344,89 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 - (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
     if ([action isEqualToString:NSAccessibilityPressAction]) {
-        [self accessibilityPerformPress];  
-    } else if ([action isEqualToString:NSAccessibilityIncrementAction]) {
-        [self accessibilityPerformIncrement];  
-    } else if ([action isEqualToString:NSAccessibilityDecrementAction]) {
-        [self decreaseValue];  // Custom method to decrement a value
-    } else {
-        [super accessibilityPerformAction:action];  // Call super for unhandled actions
+        [self accessibilityPerformPress];
+    }
+    if ([action isEqualToString:NSAccessibilityIncrementAction]) {
+        [self incrementValue];
+    }
+    if ([action isEqualToString:NSAccessibilityDecrementAction]) {
+        [self decrementValue];
     }
 }
 
-- (BOOL) accessibilityPerformIncrement {
-       Tk_Window win = self.tk_win;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_HashTable *AccessibleAttributes;
-    Tcl_Event *event; 
 
-    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-    if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
-	return NO;
+- (void)accessibilitySetValue:(id)value {
+
+    NSAccessibilityRole role = self.accessibilityRole;
+	
+    if ((role = NSAccessibilityScrollBarRole)) {
+
+	TkMainInfo *info = TkGetMainInfoList();
+	
+	if ([value isKindOfClass:[NSNumber class]]) {
+	    double newValue = [(NSNumber *)value doubleValue];
+	    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+	    NSString *commandString = [NSString stringWithFormat:@"%@ set %f", widgetName, newValue];
+
+	    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+	    Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL);;
+	}
     }
+}
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
-    if (!hPtr2) {
-	NSLog(@"No action found.");
-	return NO;
+- (NSNumber *)accessibilityMinimumValue {
+    	TkMainInfo *info = TkGetMainInfoList();
+    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+    NSString *commandString = [NSString stringWithFormat:@"%@ cget -from", widgetName];
+
+    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+    Tcl_Obj *resultObj;
+
+    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+        resultObj = Tcl_GetObjResult(info->interp);
+        double value = strtod(Tcl_GetString(resultObj), NULL);
+        return @(value);
     }
+    return nil;
+}
 
-    char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    callback_command = action;
-    event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
-    event->proc = ActionEventProc;
-    Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-    return YES;
+- (NSNumber *)accessibilityMaximumValue {
+    
+    TkMainInfo *info = TkGetMainInfoList();
+    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+    NSString *commandString = [NSString stringWithFormat:@"%@ cget -to", widgetName];
 
+    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+    Tcl_Obj *resultObj;
+
+    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+        resultObj = Tcl_GetObjResult(info->interp);
+        double value = strtod(Tcl_GetString(resultObj), NULL);
+        return @(value);
+    }
+    return nil;
+}
+
+- (void)incrementValue {
+    NSNumber *currentValue = [self accessibilityValue];
+    NSNumber *maximumValue = [self accessibilityMaximumValue];
+    if (currentValue && maximumValue) {
+        double currentValueDouble = [currentValue doubleValue];
+        double maximumValueDouble = [maximumValue doubleValue];
+        double newValue = MIN(currentValueDouble + 1.0, maximumValueDouble);
+        [self accessibilitySetValue:@(newValue)];
+    }
+}
+
+- (void)decrementValue {
+    NSNumber *currentValue = [self accessibilityValue];
+    NSNumber *minimumValue = [self accessibilityMinimumValue];
+    if (currentValue && minimumValue) {
+        double currentValueDouble = [currentValue doubleValue];
+        double minimumValueDouble = [minimumValue doubleValue];
+        double newValue = MAX(currentValueDouble - 1.0, minimumValueDouble); 
+        [self accessibilitySetValue:@(newValue)];
+    }
 }
 
 
