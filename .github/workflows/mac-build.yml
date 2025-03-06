@@ -11,7 +11,7 @@ permissions:
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  xcode:
+  framework:
     runs-on: macos-15
     defaults:
       run:
@@ -55,7 +55,7 @@ jobs:
             exit 1
           fi
         timeout-minutes: 30
-  clang:
+  prefix:
     runs-on: macos-15
     strategy:
       matrix:
