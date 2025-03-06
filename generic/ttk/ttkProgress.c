@@ -109,8 +109,8 @@ static int AnimationEnabled(Progressbar *pb)
     Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
     Tcl_GetDoubleFromObj(NULL, pb->progress.valueObj, &value);
 
-    return (pb->progress.period > 0 && value > 0.0 && value < maximum)
-        || (pb->progress.mode == TTK_PROGRESSBAR_INDETERMINATE);
+    return (pb->progress.period > 0
+	    && pb->progress.mode == TTK_PROGRESSBAR_INDETERMINATE);
 }
 
 /* AnimateProgressProc --
