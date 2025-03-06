@@ -167,14 +167,11 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 - (NSString *)accessibilityLabel {
 
-    NSAccessibilityRole role = self.accessibilityRole;
-
- 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
 
-
+  
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
 	NSLog(@"No table found. You must set the accessibility role first.");
@@ -193,8 +190,9 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
   
 -(id) accessibilityValue {
-    NSAccessibilityRole role = self.accessibilityRole;
 
+    NSAccessibilityRole role = self.accessibilityRole;
+ 
     /* Listbox and Treeview/Table. */
     
     if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
@@ -249,8 +247,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
-
-    NSAccessibilityRole role = self.accessibilityRole;
        
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -342,15 +338,16 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 
+/*Various actions for buttons, scrollbars, spinners, and scales. */
 - (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
     if ([action isEqualToString:NSAccessibilityPressAction]) {
         [self accessibilityPerformPress];
     }
     if ([action isEqualToString:NSAccessibilityIncrementAction]) {
-        [self incrementValue];
+        [self accessibilityIncrementValue];
     }
     if ([action isEqualToString:NSAccessibilityDecrementAction]) {
-        [self decrementValue];
+        [self accessibilityDecrementValue];
     }
 }
 
@@ -358,7 +355,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 - (void)accessibilitySetValue:(id)value {
 
     NSAccessibilityRole role = self.accessibilityRole;
-	
+
+    /* Scrollbar. */	
     if ((role = NSAccessibilityScrollBarRole)) {
 
 	TkMainInfo *info = TkGetMainInfoList();
@@ -375,7 +373,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 - (NSNumber *)accessibilityMinimumValue {
-    	TkMainInfo *info = TkGetMainInfoList();
+    
+    TkMainInfo *info = TkGetMainInfoList();
     NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
     NSString *commandString = [NSString stringWithFormat:@"%@ cget -from", widgetName];
 
@@ -407,29 +406,40 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return nil;
 }
 
-- (void)incrementValue {
-    NSNumber *currentValue = [self accessibilityValue];
-    NSNumber *maximumValue = [self accessibilityMaximumValue];
-    if (currentValue && maximumValue) {
-        double currentValueDouble = [currentValue doubleValue];
-        double maximumValueDouble = [maximumValue doubleValue];
-        double newValue = MIN(currentValueDouble + 1.0, maximumValueDouble);
-        [self accessibilitySetValue:@(newValue)];
+- (void)accessibilityIncrementValue {
+    
+    NSAccessibilityRole role = self.accessibilityRole;
+
+    
+    /* Scrollbar. */		
+    if ((role = NSAccessibilityScrollBarRole)) {
+	NSNumber *currentValue = [self accessibilityValue];
+	NSNumber *maximumValue = [self accessibilityMaximumValue];
+	if (currentValue && maximumValue) {
+	    double currentValueDouble = [currentValue doubleValue];
+	    double maximumValueDouble = [maximumValue doubleValue];
+	    double newValue = MIN(currentValueDouble + 1.0, maximumValueDouble);
+	    [self accessibilitySetValue:@(newValue)];
+	}
     }
 }
 
-- (void)decrementValue {
-    NSNumber *currentValue = [self accessibilityValue];
-    NSNumber *minimumValue = [self accessibilityMinimumValue];
-    if (currentValue && minimumValue) {
-        double currentValueDouble = [currentValue doubleValue];
-        double minimumValueDouble = [minimumValue doubleValue];
-        double newValue = MAX(currentValueDouble - 1.0, minimumValueDouble); 
-        [self accessibilitySetValue:@(newValue)];
+- (void)accessibilityDecrementValue {
+
+    NSAccessibilityRole role = self.accessibilityRole;
+
+    /* Scrollbar. */	
+    if ((role = NSAccessibilityScrollBarRole)) {
+	NSNumber *currentValue = [self accessibilityValue];
+	NSNumber *minimumValue = [self accessibilityMinimumValue];
+	if (currentValue && minimumValue) {
+	    double currentValueDouble = [currentValue doubleValue];
+	    double minimumValueDouble = [minimumValue doubleValue];
+	    double newValue = MAX(currentValueDouble - 1.0, minimumValueDouble); 
+	    [self accessibilitySetValue:@(newValue)];
+	}
     }
 }
-
-
 
 /*Action for button roles.*/
 - (BOOL)accessibilityPerformPress {
