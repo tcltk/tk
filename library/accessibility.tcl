@@ -64,11 +64,7 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_selection_change $w
 	}
     }
-
-    proc _generate_invoke {w} {
-	event generate $w <Button-1>
-    }
-	
+ d	
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
     #we only want these to fire once.
@@ -274,7 +270,7 @@ namespace eval ::tk::accessible {
 			      Scrollbar \
 			      [%W get] \
 			      {} \
-			      {::tk::accessible::_generate_invoke $%W}\
+			      {}\
 			  }
     bind TScrollbar <Map> {+::tk::accessible::_init \
 			       %W \
@@ -283,7 +279,7 @@ namespace eval ::tk::accessible {
 			       Scrollbar \
 			       [%W get] \
 			       [%W state] \
-			       {::tk::accessible::_generate_invoke $%W}\
+			       {}\
 			   }
     #Spinbox/TSpinbox bindings
     bind Spinbox <Map> {+::tk::accessible::_init \
