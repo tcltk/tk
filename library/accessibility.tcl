@@ -64,7 +64,7 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_selection_change $w
 	}
     }
- d	
+	
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
     #we only want these to fire once.
