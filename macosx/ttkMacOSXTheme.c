@@ -2651,16 +2651,6 @@ static void PbarElementDraw(
 	ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     }
     END_DRAWING
-   
-    // Make sure that progress bar updates are displayed immediately
-    // by providing the Apple window manager with an opportunity to
-    // call updateLayer.
-
-    [NSApp nextEventMatchingMask:NSAnyEventMask
-		       untilDate:[NSDate distantPast]
-			  inMode:NSDefaultRunLoopMode
-			 dequeue:NO];
-
 }
 
 static Ttk_ElementSpec PbarElementSpec = {
