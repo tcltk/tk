@@ -554,14 +554,15 @@ static ThemeFrameParams
 /*
  * If we try to draw a rounded rectangle with too large of a radius, the Core
  * Graphics library will sometimes raise a fatal exception.  This macro
- * protects against this by returning if the width or height is less than
- * twice the radius.  Presumably this only happens when a widget has not yet
- * been configured and has size 1x1, so there is nothing to draw anyway.
+ * protects against this by setting the radius to 0 if the width or height is
+ * less than twice the radius.  Presumably this mainly happens when a widget
+ * has not yet been configured and hence has size 1x1, so there is nothing
+ * to draw anyway.
  */
 
-#define CHECK_RADIUS(radius, bounds)                                                 \
-    if ((radius) > (bounds).size.width / 2 || (radius) > (bounds).size.height / 2) { \
-	return;                                                                      \
+#define CHECK_RADIUS(radius, bounds)                                         \
+    if (2 * radius > bounds.size.width || 2 * radius > bounds.size.height) { \
+	radius = 0;                                                          \
     }
 
 /*
