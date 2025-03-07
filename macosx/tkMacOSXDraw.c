@@ -1375,7 +1375,8 @@ end:
  * setNeedsDisplay will fail here too.
  */
 
-void scheduleUpdate(void *clientData) {
+MODULE_SCOPE void
+TkMacOSXUpdateViewIdleTask(void *clientData) {
     NSView *view = (NSView *) clientData;
     [view setNeedsDisplay:YES];
     [NSApp nextEventMatchingMask:NSAnyEventMask
@@ -1428,8 +1429,8 @@ TkMacOSXRestoreDrawingContext(
 
     [dcPtr->view setNeedsDisplay: YES];
     if ([dcPtr->view needsDisplay] == NO) {
-	Tcl_CancelIdleCall(scheduleUpdate, (void *) dcPtr->view);
-	Tcl_DoWhenIdle(scheduleUpdate, (void *) dcPtr->view);
+	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+	Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
     }
 
 #ifdef TK_MAC_DEBUG
