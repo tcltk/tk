@@ -156,7 +156,7 @@ static const ButtonDesign pushbuttonDesign = {
 };
 
 static const ButtonDesign helpDesign = {
-  .radius = 11,
+  .radius = 11.0,
   .palettes = {
     {
       .light = {.face = 241.0, .top = 218.0, .side = 217.0, .bottom = 206.0},
@@ -560,9 +560,11 @@ static ThemeFrameParams
  * to draw anyway.
  */
 
-#define CHECK_RADIUS(radius, bounds)                                         \
-    if (2 * radius > bounds.size.width || 2 * radius > bounds.size.height) { \
-	radius = 0;                                                          \
+#define CHECK_RADIUS(radius, bounds)            \
+    if (radius < 0.0                            \
+	|| 2 * radius > bounds.size.width       \
+	|| 2 * radius > bounds.size.height) {   \
+	radius = 0.0;                           \
     }
 
 /*
