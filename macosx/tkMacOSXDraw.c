@@ -1154,7 +1154,6 @@ TkMacOSXSetupDrawingContext(
 	 * updateLayer and return failure.
 	 */
 	canDraw = false;
-	[view setNeedsDisplay:YES];
 	goto end;
     }
 //#endif //disable clipping
@@ -1367,12 +1366,9 @@ end:
 }
 
 /*
- * Idle task to schedule a redraw of the view if the call to setNeedsDisplay
- * mysteriously fails.  The call to nextEventMatchingMask has no effect, but it
- * provides an opportunity for the window manager to call updateLayer.
- *
- * NOTE: Unfortunately this is not perfect.  Sometimes the call to
- * setNeedsDisplay will fail here too.
+ * Idle task to schedule a call to updateLayer so the results of drawing
+ * operations become visible. The call to nextEventMatchingMask has no effect,
+ * but it provides an opportunity for the window manager to call updateLayer.
  */
 
 MODULE_SCOPE void
@@ -1420,18 +1416,12 @@ TkMacOSXRestoreDrawingContext(
     }
 
     /*
-     * Mark the view as needing to be redisplayed, since we have drawn on its
-     * backing layer.  Sometimes, for unknown mysterious reasons, the call to
-     * setNeedsDisplay does not actually change the value of the needsDisplay
-     * property.  When that happens we schedule an idle task to try again and
-     * also provide an opportunity for the window manager to call updateLayer.
+     * Schedule a call to updateLayer, since we have drawn on the view's
+     * backing layer.
      */
 
-    [dcPtr->view setNeedsDisplay: YES];
-    if ([dcPtr->view needsDisplay] == NO) {
-	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
-	Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
-    }
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

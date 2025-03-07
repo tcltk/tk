@@ -577,7 +577,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 @end
@@ -597,7 +596,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -2438,7 +2436,6 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
