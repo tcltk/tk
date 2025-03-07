@@ -408,6 +408,7 @@ static int		WinSetIcon(Tcl_Interp *interp,
 			    WinIconPtr titlebaricon, Tk_Window tkw);
 static void		FreeIconBlock(BlockOfIconImagesPtr lpIR);
 static void		DecrIconRefCount(WinIconPtr titlebaricon);
+static void		WithdrawWindow(TkWindow *winPtr);
 
 static int		WmAspectCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
@@ -5347,8 +5348,7 @@ WmStateCmd(
 	    }
 	    TkpWmSetState(winPtr, IconicState);
 	} else if (index == OPT_WITHDRAWN) {
-	    wmPtr->flags |= WM_WITHDRAWN;
-	    TkpWmSetState(winPtr, WithdrawnState);
+	    WithdrawWindow(winPtr);
 	} else if (index == OPT_ZOOMED) {
 	    TkpWmSetState(winPtr, ZoomState);
 	} else {
@@ -5632,8 +5632,7 @@ WmWithdrawCmd(
 	    return TCL_ERROR;
 	}
     } else {
-	wmPtr->flags |= WM_WITHDRAWN;
-	TkpWmSetState(winPtr, WithdrawnState);
+	WithdrawWindow(winPtr);
     }
     return TCL_OK;
 }
@@ -5682,6 +5681,60 @@ WmWaitVisibilityOrMapProc(
 		UpdateWrapper(winPtr);
 	    }
 	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WithdrawWindow --
+ *
+ *	Function to withdraw a toplevel window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The toplevel window is withdrawn.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WithdrawWindow(
+    TkWindow *winPtr)		/* Toplevel window to withdraw */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    int resetTempStyle = 0;
+    LONG exStyle = 0;
+
+    /*
+     * Special handling of transient toplevels (wmPtr->containerPtr != NULL),
+     * in order to work around a Windows 10 & 11 problem where withdrawn
+     * transients still appear in the thumbnail preview of the parent window,
+     * when hovering over it in the Windows taskbar.  Temporarily setting this
+     * window style to include WS_EX_TOOLWINDOW prevents it being captured in
+     * the Windows thumbnail preview.
+     */
+
+    if (!(wmPtr->flags & WM_WITHDRAWN)
+		&& !(wmPtr->flags & TK_EMBEDDED)
+		&& !(wmPtr->flags & WM_NEVER_MAPPED)
+		&& (wmPtr->containerPtr != NULL)) {
+        exStyle = GetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE);
+        if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
+	    SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
+					exStyle | WS_EX_TOOLWINDOW);
+	    resetTempStyle=1;
+        }
+    }
+
+    wmPtr->flags |= WM_WITHDRAWN;
+    TkpWmSetState(winPtr, WithdrawnState);
+
+    if (resetTempStyle) {
+	SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
+				exStyle & ~WS_EX_TOOLWINDOW);
     }
 }
 
@@ -8339,10 +8392,7 @@ void
 TkpWinToplevelWithDraw(
     TkWindow *winPtr)
 {
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-
-    wmPtr->flags |= WM_WITHDRAWN;
-    TkpWmSetState(winPtr, WithdrawnState);
+    WithdrawWindow(winPtr);
 }
 
 /*
