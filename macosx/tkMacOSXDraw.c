@@ -14,6 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
@@ -1366,6 +1367,24 @@ end:
 }
 
 /*
+ * Idle task to schedule a redraw of the view if the call to setNeedsDisplay
+ * mysteriously fails.  The call to nextEventMatchingMask has no effect, but it
+ * provides an opportunity for the window manager to call updateLayer.
+ *
+ * NOTE: Unfortunately this is not perfect.  Sometimes the call to
+ * setNeedsDisplay will fail here too.
+ */
+
+void scheduleUpdate(void *clientData) {
+    NSView *view = (NSView *) clientData;
+    [view setNeedsDisplay:YES];
+    [NSApp nextEventMatchingMask:NSAnyEventMask
+		       untilDate:[NSDate distantPast]
+			  inMode:NSDefaultRunLoopMode
+			 dequeue:NO];
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXRestoreDrawingContext --
@@ -1401,10 +1420,17 @@ TkMacOSXRestoreDrawingContext(
 
     /*
      * Mark the view as needing to be redisplayed, since we have drawn on its
-     * backing layer.
+     * backing layer.  Sometimes, for unknown mysterious reasons, the call to
+     * setNeedsDisplay does not actually change the value of the needsDisplay
+     * property.  When that happens we schedule an idle task to try again and
+     * also provide an opportunity for the window manager to call updateLayer.
      */
 
-    [dcPtr->view setNeedsDisplay:YES];
+    [dcPtr->view setNeedsDisplay: YES];
+    if ([dcPtr->view needsDisplay] == NO) {
+	Tcl_CancelIdleCall(scheduleUpdate, (void *) dcPtr->view);
+	Tcl_DoWhenIdle(scheduleUpdate, (void *) dcPtr->view);
+    }
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
