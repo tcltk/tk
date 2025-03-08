@@ -219,26 +219,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	return value;
     }
 
-    /* Scrollbar. */
-
-    if ((role = NSAccessibilityScrollBarRole)) {
-
-	// TkMainInfo *info = TkGetMainInfoList();
-	
-	// /*Get the scrollbar value from Tk.*/
-	// NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-	// NSString *commandString = [NSString stringWithFormat:@"%@ get", widgetName];
-
-	// Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-	// Tcl_Obj *resultObj;
-
-	// if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-	//     resultObj = Tcl_GetObjResult(info->interp);
-	//     double value = strtod(Tcl_GetString(resultObj), NULL);
-	//     return @(value);
-	// }
-    }
-
     return nil;
 }
 
