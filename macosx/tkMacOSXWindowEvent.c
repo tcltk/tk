@@ -260,7 +260,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
-	[view setNeedsDisplay:YES];
     }
 }
 
@@ -1086,12 +1085,6 @@ ExposeRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
-
-    /*
-     * Request a call to updateLayer.
-     */
-
-    [self setNeedsDisplay:YES];
 }
 
 /*

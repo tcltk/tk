@@ -14,6 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
@@ -1153,7 +1154,6 @@ TkMacOSXSetupDrawingContext(
 	 * updateLayer and return failure.
 	 */
 	canDraw = false;
-	[view setNeedsDisplay:YES];
 	goto end;
     }
 //#endif //disable clipping
@@ -1366,6 +1366,22 @@ end:
 }
 
 /*
+ * Idle task to schedule a call to updateLayer so the results of drawing
+ * operations become visible. The call to nextEventMatchingMask has no effect,
+ * but it provides an opportunity for the window manager to call updateLayer.
+ */
+
+MODULE_SCOPE void
+TkMacOSXUpdateViewIdleTask(void *clientData) {
+    NSView *view = (NSView *) clientData;
+    [view setNeedsDisplay:YES];
+    [NSApp nextEventMatchingMask:NSAnyEventMask
+		       untilDate:[NSDate distantPast]
+			  inMode:NSDefaultRunLoopMode
+			 dequeue:NO];
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXRestoreDrawingContext --
@@ -1400,11 +1416,12 @@ TkMacOSXRestoreDrawingContext(
     }
 
     /*
-     * Mark the view as needing to be redisplayed, since we have drawn on its
+     * Schedule a call to updateLayer, since we have drawn on the view's
      * backing layer.
      */
 
-    [dcPtr->view setNeedsDisplay:YES];
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

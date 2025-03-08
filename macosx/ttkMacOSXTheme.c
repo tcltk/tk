@@ -412,6 +412,7 @@ static void FillBorder(
     if (bounds.size.width < 2) {
 	return;
     }
+    CHECK_RADIUS(radius, bounds);
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGPoint end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     CGFloat corner = (radius > 0 ? radius : 2.0) / bounds.size.height;
@@ -531,6 +532,7 @@ static void DrawAccentedButton(
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGColorRef faceColor = CGCOLOR(controlAccentColor());
     CGFloat radius = design->radius;
+    CHECK_RADIUS(radius, bounds);
     CGPathRef path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     // This gradient should only be used for PushButtons and Tabs, and it needs
     // to be lighter at the top.
@@ -1359,7 +1361,8 @@ static void DrawGroupBox(
     int contrast,
     Bool save)
 {
-    CHECK_RADIUS(5, bounds)
+    CGFloat radius = 5;
+    CHECK_RADIUS(radius, bounds)
 
     CGPathRef path;
     CGColorRef backgroundColor, borderColor;
@@ -1367,7 +1370,7 @@ static void DrawGroupBox(
     backgroundColor = GetBackgroundCGColor(context, tkwin, contrast, save);
     borderColor = CGColorFromGray(boxBorder);
     CGContextSetFillColorWithColor(context, backgroundColor);
-    path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextClipToRect(context, bounds);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
