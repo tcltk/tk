@@ -473,7 +473,7 @@ static void DrawFocusRing(
  *      drawn in a 3-step gradient and a solid gray face.
  *
  *      Note that this will produce a round button if length = width =
- *      2*radius.
+ *      2 * radius.
  */
 
 static void DrawGrayButton(
@@ -486,10 +486,8 @@ static void DrawGrayButton(
     int isDark = TkMacOSXInDarkMode(tkwin);
     GrayPalette palette = LookupGrayPalette(design, state, isDark);
     GrayColor faceGray = {.grayscale = 0.0, .alpha = 1.0};
-    CGFloat radius = 2 * design->radius <= bounds.size.height ?
-	design->radius : bounds.size.height / 2;
     if (palette.top <= 255.0) {
-	FillBorder(context, bounds, palette, radius);
+	FillBorder(context, bounds, palette, design->radius);
     }
     if (palette.face <= 255.0) {
 	faceGray.grayscale = palette.face / 255.0;
@@ -505,7 +503,8 @@ static void DrawGrayButton(
 	gray = (rgba[0] + rgba[1] + rgba[2]) / 3.0;
 	faceGray.grayscale = gray;
     }
-    FillRoundedRectangle(context, CGRectInset(bounds, 1, 1), radius - 1,
+    FillRoundedRectangle(context, CGRectInset(bounds, 1, 1),
+			 design->radius - 1,
 			 CGColorFromGray(faceGray));
 }
 
