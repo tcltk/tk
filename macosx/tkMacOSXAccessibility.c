@@ -223,20 +223,20 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
     if ((role = NSAccessibilityScrollBarRole)) {
 
-	TkMainInfo *info = TkGetMainInfoList();
+	// TkMainInfo *info = TkGetMainInfoList();
 	
-	/*Get the scrollbar value from Tk.*/
-	NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-	NSString *commandString = [NSString stringWithFormat:@"%@ get", widgetName];
+	// /*Get the scrollbar value from Tk.*/
+	// NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+	// NSString *commandString = [NSString stringWithFormat:@"%@ get", widgetName];
 
-	Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-	Tcl_Obj *resultObj;
+	// Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+	// Tcl_Obj *resultObj;
 
-	if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-	    resultObj = Tcl_GetObjResult(info->interp);
-	    double value = strtod(Tcl_GetString(resultObj), NULL);
-	    return @(value);
-	}
+	// if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+	//     resultObj = Tcl_GetObjResult(info->interp);
+	//     double value = strtod(Tcl_GetString(resultObj), NULL);
+	//     return @(value);
+	// }
     }
 
     return nil;
@@ -356,20 +356,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
     NSAccessibilityRole role = self.accessibilityRole;
 
-    /* Scrollbar. */	
-    if ((role = NSAccessibilityScrollBarRole)) {
-
-	TkMainInfo *info = TkGetMainInfoList();
-	
-	if ([value isKindOfClass:[NSNumber class]]) {
-	    double newValue = [(NSNumber *)value doubleValue];
-	    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-	    NSString *commandString = [NSString stringWithFormat:@"%@ set %f", widgetName, newValue];
-
-	    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-	    Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL);;
-	}
-    }
+    //pending for future implementation
 }
 
 - (NSNumber *)accessibilityMinimumValue {
@@ -409,37 +396,16 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 - (void)accessibilityIncrementValue {
     
     NSAccessibilityRole role = self.accessibilityRole;
-
-    
-    /* Scrollbar. */		
-    if ((role = NSAccessibilityScrollBarRole)) {
-	NSNumber *currentValue = [self accessibilityValue];
-	NSNumber *maximumValue = [self accessibilityMaximumValue];
-	if (currentValue && maximumValue) {
-	    double currentValueDouble = [currentValue doubleValue];
-	    double maximumValueDouble = [maximumValue doubleValue];
-	    double newValue = MIN(currentValueDouble + 1.0, maximumValueDouble);
-	    [self accessibilitySetValue:@(newValue)];
-	}
-    }
+   
+    //pending for future implementation
 }
 
 - (void)accessibilityDecrementValue {
 
     NSAccessibilityRole role = self.accessibilityRole;
-
-    /* Scrollbar. */	
-    if ((role = NSAccessibilityScrollBarRole)) {
-	NSNumber *currentValue = [self accessibilityValue];
-	NSNumber *minimumValue = [self accessibilityMinimumValue];
-	if (currentValue && minimumValue) {
-	    double currentValueDouble = [currentValue doubleValue];
-	    double minimumValueDouble = [minimumValue doubleValue];
-	    double newValue = MAX(currentValueDouble - 1.0, minimumValueDouble); 
-	    [self accessibilitySetValue:@(newValue)];
-	}
-    }
+    //pending for future implementation
 }
+
 
 /*Action for button roles.*/
 - (BOOL)accessibilityPerformPress {
@@ -472,6 +438,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 @end
 
+
 /*
  * Event proc which calls the ActionEventProc procedure.
  */
@@ -484,7 +451,6 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
     Tcl_GlobalEval(info->interp, callback_command);
     return 1;
 }
-
 
 /*
  *----------------------------------------------------------------------
