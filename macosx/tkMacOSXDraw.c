@@ -14,6 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
@@ -1069,85 +1070,6 @@ XFillArcs(
 /*
  *----------------------------------------------------------------------
  *
- * TkScrollWindow --
- *
- *	Scroll a rectangle of the specified window and accumulate a damage
- *	region.
- *
- * Results:
- *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
- *	the region that needs to be repainted after scrolling and returns 1.
- *      When drawRect was in use, this function used the now deprecated
- *      scrollRect method of NSView.  With the current updateLayer
- *      implementation, using a CGImage as the view's backing layer, we are
- *      able to use XCopyArea.  But both implementations are incomplete.
- *      They return a damage area which is just the source rectangle minus
- *      destination rectangle.  Other platforms, e.g. Windows, where
- *      this function is essentially provided by the windowing system,
- *      are able to add to the damage region the bounding rectangles of
- *      all subwindows which meet the source rectangle, even if they are
- *      contained in the destination rectangle.  The information needed
- *      to do that is not available in this module, as far as I know.
- *
- *      In fact, the Text widget is the only one which calls this
- *      function, and  textDisp.c compensates for this defect by using
- *      macOS-specific code.  This is possible because access to the
- *      list of all embedded windows in a Text widget is available in
- *      that module.
- *
- * Side effects:
- *	Scrolls the bits in the window.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkScrollWindow(
-    Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
-    int x, int y,		/* Position rectangle to be scrolled. */
-    int width, int height,
-    int dx, int dy,		/* Distance rectangle should be moved. */
-    Region damageRgn)		/* Region to accumulate damage in. */
-{
-    Drawable drawable = Tk_WindowId(tkwin);
-    HIShapeRef srcRgn, dstRgn;
-    HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect srcRect, dstRect;
-    int result = 0;
-
-    // Should behave more like TkScrollWindow on other platforms
-    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
-	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
-
-	/*
-	 * Compute the damage region, using Tk coordinates (origin at top left).
-	 */
-
-	srcRect = CGRectMake(x, y, width, height);
-	dstRect = CGRectOffset(srcRect, dx, dy);
-	srcRgn = HIShapeCreateWithRect(&srcRect);
-	dstRgn = HIShapeCreateWithRect(&dstRect);
-	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
-	CFRelease(dstRgn);
-	CFRelease(srcRgn);
-	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
-
-    }
-
-    /*
-     * Convert the HIShape dmgRgn into a TkRegion and store it.
-     */
-
-    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-
-    CFRelease(dmgRgn);
-    return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXSetUpGraphicsPort --
  *
  *	Set up the graphics port from the given GC.
@@ -1232,7 +1154,6 @@ TkMacOSXSetupDrawingContext(
 	 * updateLayer and return failure.
 	 */
 	canDraw = false;
-	[view setNeedsDisplay:YES];
 	goto end;
     }
 //#endif //disable clipping
@@ -1445,6 +1366,22 @@ end:
 }
 
 /*
+ * Idle task to schedule a call to updateLayer so the results of drawing
+ * operations become visible. The call to nextEventMatchingMask has no effect,
+ * but it provides an opportunity for the window manager to call updateLayer.
+ */
+
+MODULE_SCOPE void
+TkMacOSXUpdateViewIdleTask(void *clientData) {
+    NSView *view = (NSView *) clientData;
+    [view setNeedsDisplay:YES];
+    [NSApp nextEventMatchingMask:NSAnyEventMask
+		       untilDate:[NSDate distantPast]
+			  inMode:NSDefaultRunLoopMode
+			 dequeue:NO];
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXRestoreDrawingContext --
@@ -1479,11 +1416,12 @@ TkMacOSXRestoreDrawingContext(
     }
 
     /*
-     * Mark the view as needing to be redisplayed, since we have drawn on its
+     * Schedule a call to updateLayer, since we have drawn on the view's
      * backing layer.
      */
 
-    [dcPtr->view setNeedsDisplay:YES];
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

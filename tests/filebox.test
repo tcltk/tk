@@ -279,6 +279,15 @@ foreach mode $modes {
 	destroy .t2
     }
 
+test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
+    #ToPressButton $parent cancel
+    set filename [tk_getOpenFile -filetypes {
+        {"Invalid extension" {x.y}}
+        {"All files" {*}}
+     }]
+     } -result {}
+}
+
     foreach x [lsort -integer [array names filters]] {
 	test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	    ToPressButton $parent ok
