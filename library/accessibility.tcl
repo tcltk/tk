@@ -348,6 +348,8 @@ namespace eval ::tk::accessible {
     
     bind all <Map> {+::tk::accessible::add_acc_object %W}
     bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
+    bind Listbox <FocusIn> {+%W configure -highlightthickness 1}
+    bind Listbox <FocusOut> {+%W configure -highlightthickness 0}
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 
     #Export the main commands.
