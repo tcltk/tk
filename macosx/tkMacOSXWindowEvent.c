@@ -122,16 +122,21 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowExpanded: (NSNotification *) notification
 {
+    // This method will be called when the asynchronous deminiaturization
+    // operation has completed.  If the window is iconified by clicking on its
+    // dock icon, as opposed to calling wm deiconify, then the Tk state of
+    // the window needs to be updated.  That is the purpose of this method.
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
+
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    if (winPtr) {
+    if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
-	Tk_MapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
 
 	/*
 	 * NSWindowDidDeminiaturizeNotification is received after
@@ -194,15 +199,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowCollapsed: (NSNotification *) notification
 {
+    // This method will be called when the asynchronous miniaturization
+    // operation has completed.  If the window is iconified by clicking on its
+    // yellow button, as opposed to calling wm iconify, then the Tk state of
+    // the window needs to be updated.  That is the purpose of this method.
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (winPtr) {
+    if (winPtr && winPtr->wmInfoPtr->hints.initial_state != IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state = IconicState;
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     }
 }
 
@@ -238,7 +248,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
-	[view setNeedsDisplay:YES];
     }
 }
 
@@ -1063,12 +1072,6 @@ ExposeRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
-
-    /*
-     * Request a call to updateLayer.
-     */
-
-    [self setNeedsDisplay:YES];
 }
 
 /*

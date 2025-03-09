@@ -1018,7 +1018,6 @@ TkMacOSXRedrawViewIdleTask(
     TKContentView *view = (TKContentView *) clientData;
     //    fprintf(stderr, "idle redraw for %p\n", view);
     [view generateExposeEvents:[view bounds]];
-    [view setNeedsDisplay:YES];
 }
 
 void
@@ -1039,7 +1038,6 @@ TkMacOSXInvalidateWindow(
 	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];
-    [view setNeedsDisplay:YES];
 }
 
 /*
