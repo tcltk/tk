@@ -1143,7 +1143,8 @@ TkpSetWindowMenuBar(
  *
  *      This is a no-op on all other platforms.  On OS X it installs the
  *      menubar with the specified menuName, if possible.  If the name is NULL
- *      it installs the default menu.
+ *      and the toplevel has a parent toplevel then the child will inherit
+ *      the parent's menubar.   Otherwise, the default menu will be used.
  *
  * Results:
  *	None.
@@ -1173,6 +1174,10 @@ Tk_SetMainMenubar(
 	return;
     }
 
+    if (!Tk_IsTopLevel(winPtr)) {
+	return;
+    }
+
     if (menuName) {
 	Tk_Window menubar = NULL;
 
@@ -1197,6 +1202,19 @@ Tk_SetMainMenubar(
 		    menuRefPtr->menuPtr->platformData) {
 		menu = (TKMenu *) menuRefPtr->menuPtr->platformData;
 	    }
+	}
+    } else {
+	//	Tk_Window w;
+	//	for (w = Tk_Parent(tkwin) ; w != NULL ; w = Tk_Parent(w)) {
+	TkWindow *winPtr2 = (TkWindow *) Tk_Parent(winPtr);
+	if (winPtr2 &&
+	    Tk_IsTopLevel(winPtr2) &&
+	    winPtr2->wmInfoPtr &&
+	    winPtr2->wmInfoPtr->menuPtr &&
+	    winPtr2->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    menu = (TKMenu *) winPtr2->wmInfoPtr->menuPtr->platformData;
+	    //		break;
+	    //	    }
 	}
     }
 
