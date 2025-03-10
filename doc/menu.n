@@ -225,10 +225,15 @@ all of its submenus.
 Any menu can be set as a menubar for a toplevel window (see
 \fBtoplevel\fR command for syntax). On the Macintosh, whenever the
 toplevel is in front, this menu's cascade items will appear in the
-menubar across the top of the main monitor. On Windows and Unix, this
+menubar across the top of the main screen. On Windows and Unix, this
 menu's items will be displayed in a menubar across the top of the
 window. These menus will behave according to the interface guidelines
-of their platforms. For every menu set as a menubar, a clone menu is
+of their platforms. In particular, since macOS requires that a
+menubar always be displayed for the active app, if no menu is assigned
+by a \fBconfigure -menu\fR for a certain toplevel then a standard default
+menu will be displayed whenever that toplevel has focus.
+
+For every menu set as a menubar, a clone menu is
 made. See the \fBCLONES\fR section for more information.
 .PP
 As noted, menubars may behave differently on different platforms.  One
