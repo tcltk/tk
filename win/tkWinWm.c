@@ -303,6 +303,10 @@ typedef struct TkWmInfo {
 
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
+/*
+ * No styles for transient windows to avoid system menu entries Size, Minimize
+ * and Maximize to be enabled. Bug 159aa5eba2
+ */
 #define EX_TRANSIENT_STYLE (0)
 
 /*
