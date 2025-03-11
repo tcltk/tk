@@ -27,6 +27,7 @@
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 void PostAccessibilityAnnouncement(NSString *message);
+AXUIElementRef getFocusedUIElement();
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
@@ -244,6 +245,30 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     NSString *mactitle = [NSString stringWithUTF8String:result];
     return mactitle;
+}
+
+- (NSString*)accessibilityHint {
+
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+       
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	NSLog(@"No table found. You must set the accessibility role first.");
+	return nil;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "help");
+    if (!hPtr2) {
+	NSLog(@"No help found.");
+	return nil;
+    }
+
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    NSString *machelp = [NSString stringWithUTF8String:result];
+    return machelp;
 } 
 
 
@@ -281,6 +306,10 @@ void  PostAccessibilityAnnouncement( NSString *message) {
  
     /* Finally,convert back to screen coordinates. */	
     screenrect = [w convertRectToScreen:screenrect];
+
+    
+    /* Force focus on Tk widget to align with VoiceOver cursor/focus. */
+    [self forceFocus];
  
     return screenrect;
 }
@@ -317,7 +346,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return NO;
 }
 
-
 /*Various actions for buttons, scrollbars, spinners, and scales. */
 - (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
     if ([action isEqualToString:NSAccessibilityPressAction]) {
@@ -329,6 +357,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     if ([action isEqualToString:NSAccessibilityDecrementAction]) {
         [self accessibilityDecrementValue];
     }
+   
 }
 
 
@@ -373,6 +402,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return nil;
 }
 
+
 - (void)accessibilityIncrementValue {
     
     NSAccessibilityRole role = self.accessibilityRole;
@@ -414,6 +444,18 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     event->proc = ActionEventProc;
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     return YES;
+}
+
+- (void) forceFocus {
+
+    TkMainInfo *info = TkGetMainInfoList();
+    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+    NSString *commandString = [NSString stringWithFormat:@"::tk::accessible::_forceTkFocus %@", widgetName];
+    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+    Tcl_Obj *resultObj;
+    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+        resultObj = Tcl_GetObjResult(info->interp);
+    }
 }
 
 @end
