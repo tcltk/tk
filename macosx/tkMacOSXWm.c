@@ -1287,8 +1287,17 @@ TkWmDeadWindow(
 	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
+		TkWindow *frontPtr = TkMacOSXGetTkWindow(w); 
 		[w makeKeyAndOrderFront:NSApp];
-		newTkEventTarget = TkMacOSXGetTkWindow(w);
+		newTkEventTarget = frontPtr;
+		/* Set the menubar for the new front window. */
+		if (frontPtr->wmInfoPtr &&
+		    frontPtr->wmInfoPtr->menuPtr &&
+		    frontPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+		    Tk_Window menubar = frontPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
+		    TKMenu *menu = (TKMenu *) frontPtr->wmInfoPtr->menuPtr->platformData;
+		    [NSApp tkSetMainMenu:menu];
+		}
 		break;
 	    }
 	}
