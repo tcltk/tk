@@ -167,6 +167,13 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 - (NSString *)accessibilityLabel {
 
+      NSAccessibilityRole role = self.accessibilityRole;
+ 
+      /* Listbox.*/ 
+      if ((role = NSAccessibilityListRole)) {
+	  return self.accessibilityHint;
+      }
+
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
