@@ -27,7 +27,6 @@
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 void PostAccessibilityAnnouncement(NSString *message);
-AXUIElementRef getFocusedUIElement();
 static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
