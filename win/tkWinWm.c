@@ -304,8 +304,10 @@ typedef struct TkWmInfo {
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
 /*
- * No styles for transient windows to avoid system menu entries Size, Minimize
- * and Maximize to be enabled. Bug 159aa5eba2
+ * Bug 159aa5eb: Removed extended style WS_EX_DLGMODALFRAME. This style has
+ * the undocumented side effect to enable the unwanted system menu items
+ * "Resize", "Minimize" and "Maximize". "Resise" menu item may be correctly
+ * enabled by "wm resizable".
  */
 #define EX_TRANSIENT_STYLE (0)
 
