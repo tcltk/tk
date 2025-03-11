@@ -5,15 +5,15 @@ This is the **Tk 9.0.2** source distribution.
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
 
-9.0 (production release, daily build)
+9.1 (in development, daily build)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Amain)
 <br>
-8.6 (legacy release, daily build)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-8-6-branch)
+9.0 (production release, daily build)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-9-0-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-9-0-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-9-0-branch)
 
 ## <a id="intro">1.</a> Introduction
 
