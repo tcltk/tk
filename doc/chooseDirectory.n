@@ -63,6 +63,9 @@ turns the file dialog into a sheet attached to the parent window.
 .
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title will be displayed.
+.SH DEPRECATED OPTION
+The option \fB\-xpstyle\fI was never officially supported and is deprecated.
+It has no effect since Tk 9.1 and will be removed with Tk 9.2.
 .SH EXAMPLE
 .PP
 .CS

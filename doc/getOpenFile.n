@@ -194,6 +194,9 @@ extensions, except as in the special extension
 Extensions without a full stop character (e.g.
 .QW ~ )
 are allowed but may not work on all platforms.
+.SH DEPRECATED OPTION
+The option \fB\-xpstyle\fI was never officially supported and is deprecated.
+It has no effect since Tk 9.1 and will be removed with Tk 9.2.
 .SH EXAMPLE
 .PP
 .CS
