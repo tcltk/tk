@@ -61,6 +61,15 @@ XDestroyWindow(
     //	    Tk_PathName(macWin->winPtr),
     //	    Tk_PathName(macWin->winPtr->parentPtr));
 
+    /*Destroy any accessibility elements before destroying the window.*/
+    NSArray *children = [view.accessibilityChildren copy];  
+    for (TkAccessibilityElement *element in children) {
+	if (element) {
+	    NSAccessibilityPostNotification(element, NSAccessibilityUIElementDestroyedNotification);
+	    [element release];  // Correctly release element
+	}
+    }
+
     /*
      * Remove any dangling pointers that may exist if the window we are
      * deleting is being tracked by the grab code.
