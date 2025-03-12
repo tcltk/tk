@@ -1433,11 +1433,7 @@ UnhookCascadeEntry(
 
 static void
 DestroyMenuEntry(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Pointer to entry to be freed. */
-#else
-    char *memPtr)
-#endif
 {
     TkMenuEntry *mePtr = (TkMenuEntry *)memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;

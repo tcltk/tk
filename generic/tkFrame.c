@@ -823,11 +823,7 @@ FrameWidgetObjCmd(
 
 static void
 DestroyFrame(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about frame widget. */
-#else
-    char *memPtr)
-#endif
 {
     Frame *framePtr = (Frame *)memPtr;
     Labelframe *labelframePtr = (Labelframe *)memPtr;

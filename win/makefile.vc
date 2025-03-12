@@ -89,12 +89,6 @@ RCFILE = tk.rc
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
 
-!if ($(TCL_MAJOR_VERSION) > 8) || ($(TCL_MAJOR_VERSION) == 8 && $(TCL_MINOR_VERSION) > 6)
-USING_PRE87_TCL = 0
-!else
-USING_PRE87_TCL = 1
-!endif
-
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
 !if $(TCLINSTALL)
@@ -121,10 +115,6 @@ TK_EMBED_SCRIPTS = 0
 !message *** Tk script library will be appended to the binary.
 TK_EMBED_SCRIPTS = 1
 !endif
-!endif
-
-!if $(USING_PRE87_TCL)
-TK_EMBED_SCRIPTS = 0
 !endif
 
 TK_NO_DEPRECATED = 0
@@ -361,10 +351,7 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 # Project specific targets
 #---------------------------------------------------------------------
 
-release:  setup $(TKSTUBLIB) $(WISH)
-!if !$(USING_PRE87_TCL)
-release:  libtkzip embed
-!endif
+release:  setup $(TKSTUBLIB) $(WISH) libtkzip embed
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
 cwish:	  $(WISHC)
@@ -742,20 +729,12 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {![package vsatisfies [package provide Tcl] 8.7-]} return
+if {![package vsatisfies [package provide Tcl] 9.0]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
 } else {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME9)]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME8)]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
 package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
@@ -771,9 +750,7 @@ install-libraries:
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-!if !$(USING_PRE87_TCL)
 	@$(CPY) "$(TKSCRIPTZIP)" "$(LIB_INSTALL_DIR)"
-!endif
 !if !$(TK_EMBED_SCRIPTS)
 	@echo installing script library
 	@$(CPY) "$(LIBDIR)\*" "$(SCRIPT_INSTALL_DIR)\"
