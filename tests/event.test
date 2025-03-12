@@ -1138,6 +1138,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     wm geometry .two 300x300+100+100
     create_and_pack_frames .two
     wm deiconify .two
+    update idletasks; # make sure two is there
     toplevel .three
     pack propagate .three 0
     wm geometry .three 300x300+110+110

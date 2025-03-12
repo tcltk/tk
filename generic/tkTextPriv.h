@@ -1051,33 +1051,6 @@ TkBTreeGetNumberOfDisplayLines(
     return dispLineInfo->numDispLines;
 }
 
-#if TCL_UTF_MAX <= 4 && TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
-/*
- *----------------------------------------------------------------------
- *
- * TkUtfToUniChar --
- *
- *	Only needed for backporting, see source of version 8.7 about
- *	this function.
- *
- *	IMO this function is only a bad hack, Tcl should provide the
- *	appropriate functionality.
- *
- *----------------------------------------------------------------------
- */
-
-inline
-int
-TkUtfToUniChar(const char *src, int *chPtr)
-{
-    Tcl_UniChar ch;
-    int result = Tcl_UtfToUniChar(src, &ch);
-    *chPtr = ch;
-    return result;
-}
-
-#endif /* end of backport for 8.6/8.5 */
-
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */
 /* vi:set ts=8 sw=4: */

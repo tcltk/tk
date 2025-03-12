@@ -11859,10 +11859,6 @@ extern TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
 extern TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
 extern int		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 extern void		TkTextIndexSave(TkTextIndex *indexPtr);
-# if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 && TCL_UTF_MAX <= 4
-extern int		TkUtfToUniChar(const char *src, int *chPtr);
-# endif
-
 
 /*
  * Local Variables:
