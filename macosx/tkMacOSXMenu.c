@@ -1160,7 +1160,6 @@ Tk_SetMainMenubar(
     Tk_Window tkwin,		/* The frame we are setting up */
     const char *menuName)	/* The name of the menu to put in front. */
 {
-    static Tcl_Interp *currentInterp = NULL;
     TKMenu *menu = nil;
     TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -1205,7 +1204,6 @@ Tk_SetMainMenubar(
      */
 
     [NSApp tkSetMainMenu:menu];
-    currentInterp = interp;
 }
 
 /*

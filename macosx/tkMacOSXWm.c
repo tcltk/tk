@@ -1294,7 +1294,6 @@ TkWmDeadWindow(
 		if (frontPtr->wmInfoPtr &&
 		    frontPtr->wmInfoPtr->menuPtr &&
 		    frontPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
-		    Tk_Window menubar = frontPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
 		    TKMenu *menu = (TKMenu *) frontPtr->wmInfoPtr->menuPtr->platformData;
 		    [NSApp tkSetMainMenu:menu];
 		}
