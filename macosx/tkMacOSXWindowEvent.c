@@ -44,7 +44,6 @@ extern NSString *NSWindowWillOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 
-
 @implementation TKApplication(TKWindowEvent)
 
 - (void) windowActivation: (NSNotification *) notification
@@ -52,33 +51,41 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    NSWindow *w = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    NSWindow *win = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     NSString *name = [notification name];
-    Bool flag = [name isEqualToString:NSWindowDidBecomeKeyNotification];
-    if (winPtr && flag) {
-	NSPoint location = [NSEvent mouseLocation];
-	int x = location.x;
-	int y = floor(TkMacOSXZeroScreenHeight() - location.y);
-	/*
-	 * The Tk event target persists when there is no key window but
-	 * gets reset when a new window becomes the key window.
-	 */
-
-	[NSApp setTkEventTarget: winPtr];
-
-	/*
-	 * Call Tk_UpdatePointer if the pointer is in the window.
-	 */
-
-	NSView *view = [w contentView];
-	NSPoint viewLocation = [view convertPoint:location fromView:nil];
-	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+    if ([name isEqualToString:NSWindowDidResignKeyNotification]) {
+	if (![NSApp keyWindow]) {
+	    TkMacOSXAssignNewKeyWindow(NULL);
 	}
-    }
-    if (winPtr && Tk_IsMapped(winPtr)) {
-	GenerateActivateEvents(winPtr, flag);
+    } 
+    if ([name isEqualToString:NSWindowDidBecomeKeyNotification]) {
+	if (winPtr) {
+	    NSPoint location = [NSEvent mouseLocation];
+	    int x = location.x;
+	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	    /*
+	     * The Tk event target persists when there is no key window but
+	     * gets reset when a new window becomes the key window.
+	     */
+
+	    [NSApp setTkEventTarget: winPtr];
+
+	    /*
+	     * Call Tk_UpdatePointer if the pointer is in the window.
+	     */
+
+	    NSView *view = [win contentView];
+	    NSPoint viewLocation = [view convertPoint:location fromView:nil];
+	    if (NSPointInRect(viewLocation,
+			      NSInsetRect([view bounds], 2, 2))) {
+		Tk_UpdatePointer((Tk_Window) winPtr, x, y,
+				 [NSApp tkButtonState]);
+	    }
+	}
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, true);
+	}
     }
 }
 
