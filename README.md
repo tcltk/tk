@@ -1,19 +1,19 @@
 # README:  Tk
 
-This is the **Tk 9.0.2** source distribution.
+This is the **Tk 9.1a0** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
 
-9.0 (production release, daily build)
+9.1 (in development, daily build)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=main)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Amain)
 <br>
-8.6 (legacy release, daily build)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-8-6-branch)
-[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-8-6-branch)
+9.0 (production release, daily build)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/linux-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/linux-build.yml?query=branch%3Acore-9-0-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/win-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/win-build.yml?query=branch%3Acore-9-0-branch)
+[![Build Status](https://github.com/tcltk/tk/actions/workflows/mac-build.yml/badge.svg?branch=core-9-0-branch)](https://github.com/tcltk/tk/actions/workflows/mac-build.yml?query=branch%3Acore-9-0-branch)
 
 ## <a id="intro">1.</a> Introduction
 
@@ -21,7 +21,7 @@ This directory contains the sources and documentation for Tk, a
 cross-platform GUI toolkit implemented with the Tcl scripting language.
 
 For details on features, incompatibilities, and potential problems with
-this release, see [the Tcl/Tk 9.0 Web page](https://www.tcl-lang.org/software/tcltk/9.0.html)
+this release, see [the Tcl/Tk 9.1 Web page](https://www.tcl-lang.org/software/tcltk/9.1.html)
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
 

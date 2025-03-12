@@ -72,12 +72,8 @@ typedef struct MMRep {
 typedef struct WindowRep {
     Tk_Window tkwin;		/* Cached window; NULL if not found. */
     TkMainInfo *mainPtr;	/* MainWindow associated with tkwin. */
-#if TCL_MAJOR_VERSION > 8
     size_t epoch;			/* Value of mainPtr->deletionEpoch at last
 				 * successful lookup. */
-#else
-    long epoch;
-#endif
 } WindowRep;
 
 /*
