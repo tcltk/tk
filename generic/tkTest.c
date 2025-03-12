@@ -56,10 +56,6 @@ EXTERN int		Tktest_Init(Tcl_Interp *interp);
 }
 #endif
 
-#if TCL_MAJOR_VERSION < 9
-#   undef Tcl_CreateObjCommand2
-#   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
-#endif
 /*
  * The following data structure represents the model for a test image:
  */
@@ -208,7 +204,7 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
 	return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {

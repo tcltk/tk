@@ -25,26 +25,6 @@
 */
 
 /*
- * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
- * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
- * tricky to get this function, because we are compiling with
- * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
- */
-#if TCL_MAJOR_VERSION < 9
-#   undef TclNumUtfChars
-#   undef TclUtfAtIndex
-#   ifdef USE_TCL_STUBS
-#	define TclNumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
-#	define TclUtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
-#   else
-#	define TclNumUtfChars Tcl_NumUtfChars
-#	define TclUtfAtIndex Tcl_UtfAtIndex
-#   endif
-#endif
-
-/*
  * The following structure represents our Macintosh-specific implementation
  * of a font object.
  */

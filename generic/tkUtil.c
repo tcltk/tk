@@ -1221,13 +1221,8 @@ TkMakeEnsemble(
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, (char *)NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
-#if TCL_MAJOR_VERSION > 8
 	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
-#else
-	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
-		    map[i].proc, clientData, NULL);
-#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);

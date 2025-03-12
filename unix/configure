@@ -675,8 +675,6 @@ TK_STUB_LIB_FLAG
 TK_STUB_LIB_FILE
 TK_LIB_SPEC
 TK_LIB_FLAG
-TK_LIB_FILE_TCL9
-TK_LIB_FILE_TCL8
 TK_LIB_FILE
 TK_YEAR
 TK_PATCH_LEVEL
@@ -2803,10 +2801,8 @@ printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MINOR_VERSION}" -lt 7 ; then
-    as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
+    as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
-fi
 fi
 
 
@@ -8781,13 +8777,7 @@ fi
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
-eval "TK_LIB_FILE_TCL8=libtk${LIB_SUFFIX}"
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_LIB_FILE=libtk${LIB_SUFFIX}"
-else
 eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
-fi
-eval "TK_LIB_FILE_TCL9=libtcl9tk${LIB_SUFFIX}"
 
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
@@ -8881,13 +8871,7 @@ printf "%s\n" "#define TK_FRAMEWORK 1" >>confdefs.h
 	# override libdir default
 	libdir="/Library/Frameworks"
     fi
-    if test ${TCL_MAJOR_VERSION} = 8 ; then
-	TK_LIB_FILE="Tk"
-    else
-	TK_LIB_FILE="Tk"
-    fi
-    TK_LIB_FILE_TCL8="Tk"
-    TK_LIB_FILE_TCL9="Tk"
+    TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
@@ -8926,10 +8910,7 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    TK_LIB_FLAG="-l"
-    if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-	TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-    fi
+    TK_LIB_FLAG="-ltcl9"
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
 	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
@@ -9185,8 +9166,6 @@ eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
-
-
 
 
 

@@ -2188,11 +2188,7 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about canvas widget. */
-#else
-    char *memPtr)
-#endif
 {
     TkCanvas *canvasPtr = (TkCanvas *)memPtr;
     Tk_Item *itemPtr;
