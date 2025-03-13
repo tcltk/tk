@@ -852,7 +852,9 @@ void TkMacOSXAssignNewKeyWindow(
 	WmInfo *wmPtr;
 	BOOL isOnScreen;
 	winPtr = TkMacOSXGetTkWindow(w);
-	if (!winPtr || !winPtr->wmInfoPtr) {
+	if (!winPtr
+	    || !winPtr->wmInfoPtr
+	    || (winPtr->flags & TK_ALREADY_DEAD)) {
 	    continue;
 	}
 	wmPtr = winPtr->wmInfoPtr;
