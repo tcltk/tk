@@ -837,6 +837,43 @@ FrontWindowAtPoint(
     return NULL;
 }
 
+void TkMacOSXAssignNewKeyWindow(
+    NSWindow *ignore)
+{
+    TkWindow *winPtr;
+
+    /*
+     * Avoid bug 5692042764: set tkEventTarget to NULL if there is no window to
+     * send Tk events to.
+     */
+
+    [NSApp setTkEventTarget: NULL];
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	WmInfo *wmPtr;
+	BOOL isOnScreen;
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (!winPtr || !winPtr->wmInfoPtr) {
+	    continue;
+	}
+	wmPtr = winPtr->wmInfoPtr;
+	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
+		      wmPtr->hints.initial_state != WithdrawnState);
+	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
+	    TKMenu *menu;
+	    [w makeKeyAndOrderFront:NSApp];
+	    /* Set the menubar for the new front window. */
+	    if (winPtr->wmInfoPtr &&
+		winPtr->wmInfoPtr->menuPtr &&
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+		menu = (TKMenu *) winPtr->wmInfoPtr->menuPtr->platformData;
+		[NSApp tkSetMainMenu:menu];
+		[NSApp setTkEventTarget: winPtr];
+	    }
+	    break;
+	}
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1268,40 +1305,7 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
-
-	/*
-	 * Fix bug 5692042764:
-	 * set tkEventTarget to NULL when there is no window to send Tk events to.
-	 */
-	TkWindow *newTkEventTarget = NULL;
-	winPtr2 = NULL;
-
-	for (w in [NSApp orderedWindows]) {
-	    winPtr2 = TkMacOSXGetTkWindow(w);
-	    BOOL isOnScreen;
-
-	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
-		continue;
-	    }
-	    wmPtr2 = winPtr2->wmInfoPtr;
-	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
-			  wmPtr2->hints.initial_state != WithdrawnState);
-	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
-		TkWindow *frontPtr = TkMacOSXGetTkWindow(w); 
-		[w makeKeyAndOrderFront:NSApp];
-		newTkEventTarget = frontPtr;
-		/* Set the menubar for the new front window. */
-		if (frontPtr->wmInfoPtr &&
-		    frontPtr->wmInfoPtr->menuPtr &&
-		    frontPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
-		    TKMenu *menu = (TKMenu *) frontPtr->wmInfoPtr->menuPtr->platformData;
-		    [NSApp tkSetMainMenu:menu];
-		}
-		break;
-	    }
-	}
-
-	[NSApp setTkEventTarget:newTkEventTarget];
+	TkMacOSXAssignNewKeyWindow(deadNSWindow);
 
 	/*
 	 * Prevent zombies on systems with a TouchBar.
