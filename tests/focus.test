@@ -157,11 +157,13 @@ test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
     unix
 } -body {
-    # Move focus to the child or bg application.
+    # Move focus to the root window in the child or bg interpreter.
     focusClear
-    # The application of .t does not have focus, so this has no effect now.
+    if {[tk windowingsystem] eq "aqua"} {
+	childInterp eval {focus -force .}
+    }
+    # The main application does not have focus, so this has no effect now.
     focus .t
-    # This should return {} since the application does not have focus.
     focus -displayof .t.b3
 }  -result {}
 test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -constraints {
