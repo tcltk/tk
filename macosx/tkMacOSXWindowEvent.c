@@ -55,8 +55,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     NSString *name = [notification name];
     if ([name isEqualToString:NSWindowDidResignKeyNotification]) {
-	if (![NSApp keyWindow]) {
-	    TkMacOSXAssignNewKeyWindow(NULL);
+	if (![NSApp keyWindow] && [NSApp isActive]) {
+	    TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), NULL);
 	}
     } 
     if ([name isEqualToString:NSWindowDidBecomeKeyNotification]) {
