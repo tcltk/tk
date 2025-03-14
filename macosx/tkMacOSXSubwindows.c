@@ -61,14 +61,20 @@ XDestroyWindow(
     //	    Tk_PathName(macWin->winPtr),
     //	    Tk_PathName(macWin->winPtr->parentPtr));
 
-    /*Destroy any accessibility elements before destroying the window.*/
-    NSArray *children = [view.accessibilityChildren copy];  
-    for (TkAccessibilityElement *element in children) {
-	if (element) {
-	    NSAccessibilityPostNotification(element, NSAccessibilityUIElementDestroyedNotification);
-	    [element release];  // Correctly release element
+
+	/*Destroy any accessibility elements before destroying the window.*/
+	if (AXIsProcessTrusted()) {
+	    NSLog(@"Deleting children");
+	    NSArray *children = [view.accessibilityChildren copy];  
+	    for (TkAccessibilityElement *element in children) {
+		if (element) {
+		    [element accessibilityIsIgnored: YES];
+		    NSAccessibilityPostNotification(element, NSAccessibilityUIElementDestroyedNotification);
+		    [element release];  
+		}
+	    }
+	    [children release];
 	}
-    }
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -1070,11 +1076,34 @@ void *
 Tk_MacOSXGetNSWindowForDrawable(
     Drawable drawable)
 {
+
     MacDrawable *macWin = (MacDrawable *)drawable;
     NSWindow *result = nil;
 
+    //  if (drawable == None) {
+    //     NSLog(@"ERROR: Tk_MacOSXGetNSWindowForDrawable called with NULL drawable!");
+    // 	 return NULL;
+    // }
+
+    //  Tk_Window tkwin = Tk_IdToWindow(Tk_Display(Tk_MainWindow), drawable);
+
+    //  if (!tkwin) {
+    // 	 Tk_MakeWindowExist(tkwin);
+    //  }
+                                                    
+    //  TkWindow *winPtr = (TkWindow*)tkwin;
+    // if (!winPtr) {
+    //     NSLog(@"ERROR: TkMacOSXGetTkWindow returned NULL for drawable: %p", drawable);
+    //      return NULL;
+    // }
+    // if (!winPtr->window) {
+    //     NSLog(@"ERROR: winPtr->window is NULL for winPtr: %p", winPtr);
+    // 	  return NULL;
+    // }
+    
     if (!macWin || macWin->flags & TK_IS_PIXMAP) {
-	result = nil;
+	//	result = nil;
+	return nil;
 
     } else if (macWin->toplevel && macWin->toplevel->winPtr &&
 	    macWin->toplevel->winPtr->wmInfoPtr &&

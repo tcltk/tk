@@ -144,14 +144,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
 	return nil;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-	NSLog(@"No role found.");
 	return nil;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -181,14 +179,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
   
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
 	return nil;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
     if (!hPtr2) {
-	NSLog(@"No label found.");
 	return nil;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -211,14 +207,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 	hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
 	if (!hPtr) {
-	    NSLog(@"No table found. You must set the accessibility role first.");
 	    return nil;
 	}
 
 	AccessibleAttributes = Tcl_GetHashValue(hPtr);
 	hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
 	if (!hPtr2) {
-	    NSLog(@"No value found.");
 	    return nil;
 	}
 	char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -237,14 +231,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
        
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
 	return nil;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
     if (!hPtr2) {
-	NSLog(@"No title found.");
 	return nil;
     }
 
@@ -261,14 +253,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
        
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
 	return nil;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "help");
     if (!hPtr2) {
-	NSLog(@"No help found.");
 	return nil;
     }
 
@@ -286,6 +276,11 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     NSPoint flippedorigin;
     CGFloat adjustedx;
     NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+
+    /* Check to see if Tk_Window exists. */
+    if (!winPtr || winPtr->flags & TK_ALREADY_DEAD) {
+	return CGRectZero;
+    }
 
     /* Get CGRect points for Tk widget.*/
      TkMacOSXWinCGBounds(winPtr, &bounds);
@@ -315,7 +310,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
     
     /* Force focus on Tk widget to align with VoiceOver cursor/focus. */
-    [self forceFocus];
+    //  [self forceFocus];
  
     return screenrect;
 }
@@ -330,13 +325,19 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 
 - (id)accessibilityParent {
+    
     Tk_Window win = self.tk_win;
     TkWindow *winPtr = (TkWindow *)win;
-    NSWindow *w = nil;
-    w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    TKContentView *view = [w contentView];
-    self.parentView = view;
-    return self.parentView;
+    if (winPtr->window) {
+	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
+	self.parentView = view;
+	return self.parentView;
+    }
+    return nil;
+}
+
+- (BOOL) accessibilityIsFocused {
+    return [self.accessibilityParent window] == [NSApp keyWindow];
 }
 
 - (BOOL)becomeFirstResponder {
@@ -433,14 +434,12 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	NSLog(@"No table found. You must set the accessibility role first.");
 	return NO;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
     if (!hPtr2) {
-	NSLog(@"No action found.");
 	return NO;
     }
 
