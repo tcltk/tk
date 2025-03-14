@@ -838,6 +838,7 @@ FrontWindowAtPoint(
 }
 
 void TkMacOSXAssignNewKeyWindow(
+    Tcl_Interp *interp,
     NSWindow *ignore)
 {
     TkWindow *winPtr;
@@ -854,7 +855,8 @@ void TkMacOSXAssignNewKeyWindow(
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
-	    || (winPtr->flags & TK_ALREADY_DEAD)) {
+	    || (winPtr->flags & TK_ALREADY_DEAD)
+	    || interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
 	wmPtr = winPtr->wmInfoPtr;
@@ -1307,7 +1309,8 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
-	TkMacOSXAssignNewKeyWindow(deadNSWindow);
+	TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr),
+				   deadNSWindow);
 
 	/*
 	 * Prevent zombies on systems with a TouchBar.
@@ -7247,7 +7250,6 @@ TkpChangeFocus(
 	winPtr->atts.override_redirect) {
 	return 0;
     }
-
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
