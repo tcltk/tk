@@ -10,6 +10,10 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+if {[tk windowingsystem] eq "aqua"} {
+    interp create childInterp
+    load {} Tk childInterp
+}
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
@@ -43,16 +47,12 @@ proc focusSetupAlt {} {
 # the X server and possibly also the window manager.
 
 proc focusClear {} {
-    dobg {after 200; focus -force .; update}
-    after 400
     if {[tk windowingsystem] eq "aqua"} {
-	# In Aqua we need to explicitly wait until focus is cleared.
-	while {[focus] != ""} {
-	    after 100 {set y 1}
-	    tkwait variable y
-	}
+        childInterp eval {focus -force .}
+    } else {
+        dobg {after 200; focus -force .; update}
+    	after 400
     }
-
     update
 }
 
@@ -157,7 +157,12 @@ test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
     unix
 } -body {
+    # Move focus to the root window in the child or bg interpreter.
     focusClear
+    if {[tk windowingsystem] eq "aqua"} {
+	childInterp eval {focus -force .}
+    }
+    # The main application does not have focus, so this has no effect now.
     focus .t
     focus -displayof .t.b3
 }  -result {}
@@ -789,4 +794,7 @@ deleteWindows
 
 # cleanup
 cleanupTests
+if {[tk windowingsystem] eq "aqua"} {
+    destroy childInterp
+}
 return

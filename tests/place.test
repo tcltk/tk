@@ -296,6 +296,7 @@ test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints 
     update
     set result [winfo ismapped .t.f2]
     wm iconify .t
+    update idletasks
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
     update

@@ -191,6 +191,7 @@ XMapWindow(
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
+		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		} else {
 		    [win orderFrontRegardless];
 		}
@@ -361,6 +362,7 @@ XUnmapWindow(
 				  wmInfoPtr->hints.initial_state != WithdrawnState);
 		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
 			[w makeKeyAndOrderFront:NSApp];
+			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 			break;
 		    }
 		}
