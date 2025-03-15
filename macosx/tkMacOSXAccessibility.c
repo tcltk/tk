@@ -327,9 +327,17 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 - (id)accessibilityParent {
     
     Tk_Window win = self.tk_win;
+    NSLog(@"%s", Tk_PathName(win));
     TkWindow *winPtr = (TkWindow *)win;
-    if (winPtr->window) {
+    if ((winPtr->window) == NULL) {
+	NSLog(@"winPtr is NULL");
+	return nil;
+    } else {
 	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
+	if (!view || ![view isKindOfClass:[TKContentView class]]) {
+	    NSLog(@"view is nil");
+	    return nil;
+	}
 	self.parentView = view;
 	return self.parentView;
     }
