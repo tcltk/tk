@@ -14441,12 +14441,8 @@ TkTextCharLayoutProc(
     if (bytesThatFit < maxBytes) {
 	if (bytesThatFit == 0 && noCharsYet) {
 	    int chLen;
-
-	    /*
-	     * Proper implementation for UTF-8 strings:
-	     */
-
 	    Tcl_UniChar ch;
+
 	    chLen = Tcl_UtfToUniChar(p, &ch);
 
 	    /*
