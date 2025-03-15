@@ -1511,6 +1511,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
 } -body {
     # Move the cursor out of the way.
     event generate . <Motion> -warp 1 -x 800 -y 500
+    controlPointerWarpTiming
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2
     pack .t
@@ -1523,7 +1524,6 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     bind .t <Enter> {lappend res Enter}
     bind .t <Leave> {lappend res Leave}
 
-    update idletasks
     set res {}
     # Bindings must not trigger on the widget border, only over
     # the actual tagged characters themselves.
