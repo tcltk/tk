@@ -1031,11 +1031,7 @@ EntryWidgetObjCmd(
 
 static void
 DestroyEntry(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about entry widget. */
-#else
-    char *memPtr)
-#endif
 {
     Entry *entryPtr = (Entry *)memPtr;
 

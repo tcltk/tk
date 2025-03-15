@@ -60,21 +60,13 @@ typedef struct TkCanvas {
      * Information used when displaying widget:
      */
 
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
-#else
-    int borderWidth;
-#endif
     Tk_3DBorder bgBorder;	/* Used for canvas background. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
-#else
-    int highlightWidth;
-#endif
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -86,12 +78,8 @@ typedef struct TkCanvas {
 				 * borders. */
     GC pixmapGC;		/* Used to copy bits from a pixmap to the
 				 * screen and also to clear the pixmap. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *widthObj, *heightObj;		/* Dimensions to request for canvas window,
 				 * specified in pixels. */
-#else
-    int width, height;
-#endif
     int redrawX1, redrawY1;	/* Upper left corner of area to redraw, in
 				 * pixel coordinates. Border pixels are
 				 * included. Only valid if REDRAW_PENDING flag
@@ -181,7 +169,6 @@ typedef struct TkCanvas {
 				 * Units are pixels in canvas coords. */
     Tcl_Obj *regionObj;		/* The option string from which scrollX1 etc.
 				 * are derived. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *xScrollIncrementObj;	/* If >0, defines a grid for horizontal
 				 * scrolling. This is the size of the "unit",
 				 * and the left edge of the screen will always
@@ -190,10 +177,6 @@ typedef struct TkCanvas {
 				 * scrolling. This is the size of the "unit",
 				 * and the top edge of the screen will always
 				 * lie on an even unit boundary. */
-#else
-    int xScrollIncrement;
-    int yScrollIncrement;
-#endif
     /*
      * Information used for scanning:
      */
