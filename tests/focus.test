@@ -54,7 +54,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    while {[focus] != "."} {
 		after 100
 		incr i
-		if {1 > 10} {
+		if {i > 10} {
 		    break
 		}
 	    }
