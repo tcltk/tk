@@ -454,35 +454,34 @@ static void		InsertChars(TkText *textPtr, TkTextIndex *index1Ptr, TkTextIndex *i
 static void		TextBlinkProc(void *clientData);
 static void		TextCmdDeletedProc(void *clientData);
 static int		CreateWidget(TkSharedText *sharedTextPtr, Tk_Window tkwin, Tcl_Interp *interp,
-			    const TkText *parent, int objc, Tcl_Obj *const objv[]);
+			    const TkText *parent, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(void *clientData, XEvent *eventPtr);
 static void		ProcessConfigureNotify(TkText *textPtr, int updateLineGeometry);
 static Tcl_Size		TextFetchSelection(void *clientData, Tcl_Size offset, char *buffer,
 			    Tcl_Size maxBytes);
 static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
+			    Tcl_Size objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
 			    int viewUpdate, int triggerWatchDelete, int triggerWatchInsert,
 			    int userFlag, int parseHyphens);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
 			    const TkTextIndex *indexFromPtr, const TkTextIndex *indexToPtr,
-			    int objc, Tcl_Obj *const objv[], int viewUpdate, int triggerWatch,
+			    Tcl_Size objc, Tcl_Obj *const objv[], int viewUpdate, int triggerWatch,
 			    int userFlag, int parseHyphens);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		TextWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 TextWidgetObjCmd;
 static void		TextWorldChangedCallback(void *instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static void		UpdateLineMetrics(TkText *textPtr, unsigned lineNum, unsigned endLine);
 static int		TextChecksumCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextInspectCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DumpLine(Tcl_Interp *interp, TkText *textPtr,
 			    int what, TkTextLine *linePtr, int start, int end,
 			    int lineno, Tcl_Obj *command, TkTextTag **prevTagPtr);
@@ -503,9 +502,9 @@ static Tcl_Obj *	GetEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *optio
 static unsigned		TextSearchIndexInLine(const SearchSpec *searchSpecPtr, TkTextLine *linePtr,
 			    int byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextWatchCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TriggerWatchEdit(TkText *textPtr, int userFlag, const char *operation,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
 			    const char *info, int final);
@@ -925,7 +924,7 @@ CreateWidget(
     Tcl_Interp *interp,		/* Current interpreter. */
     const TkText *parent,	/* If non-NULL then take default start, end
 				 * from this parent. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr;
@@ -1016,7 +1015,7 @@ CreateWidget(
     textPtr->tkwin = newWin;
     textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
-    textPtr->widgetCmd = Tcl_CreateObjCommand(interp, Tk_PathName(textPtr->tkwin),
+    textPtr->widgetCmd = Tcl_CreateObjCommand2(interp, Tk_PathName(textPtr->tkwin),
 	    TextWidgetObjCmd, textPtr, TextCmdDeletedProc);
     DEBUG_ALLOC(textPtr->widgetNumber = ++widgetNumber);
 
@@ -1394,7 +1393,7 @@ static int
 TextWidgetObjCmd(
     void *clientData,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -2860,7 +2859,7 @@ static int
 TextWatchCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkSharedText *sharedTextPtr;
@@ -2961,7 +2960,7 @@ static int
 TextPeerCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = textPtr->tkwin;
@@ -3070,7 +3069,7 @@ TextReplaceCmd(
 				/* Index from which to replace. */
     const TkTextIndex *indexToPtr,
 				/* Index to which to replace. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     int viewUpdate,		/* Update vertical view if set. */
     int triggerWatch,		/* Should we trigger the watch command? */
@@ -3792,7 +3791,7 @@ TkConfigureText(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkText *textPtr,		/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
@@ -6195,7 +6194,7 @@ static int
 TextInsertCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     const TkTextIndex *indexPtr,/* Index at which to insert. */
     int viewUpdate,		/* Update the view if set. */
@@ -6343,7 +6342,7 @@ static int
 TextSearchCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int i, argsLeft, code;
@@ -7214,7 +7213,7 @@ static int
 GetDumpFlags(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     unsigned allowed,		/* Which options are allowed? */
     unsigned dflt,		/* Default options (-all) */
@@ -7395,7 +7394,7 @@ static int
 TextDumpCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
 				 * enough to know that objv[1] is "dump". */
 {
@@ -7867,7 +7866,7 @@ static int
 TextChecksumCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
 				 * enough to know that objv[1] is "checksum". */
 {
@@ -8389,7 +8388,7 @@ static int
 TextInspectCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkSharedText *sharedTextPtr;
@@ -8810,7 +8809,7 @@ static int
 TextEditCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
@@ -11622,7 +11621,7 @@ TkrTesttextCmd(
     if (Tcl_GetCommandInfo(interp, Tcl_GetString(objv[1]), &info) == 0) {
 	return TCL_ERROR;
     }
-    textPtr = (TkText *)info.objClientData;
+    textPtr = (TkText *)info.objClientData2;
     len = strlen(Tcl_GetString(objv[2]));
     if (strncmp(Tcl_GetString(objv[2]), "byteindex", len) == 0) {
 	if (objc != 5) {

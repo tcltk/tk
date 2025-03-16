@@ -13,7 +13,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   msvc:
-    runs-on: windows-2022
+    runs-on: windows-2025
     defaults:
       run:
         shell: powershell
@@ -100,7 +100,7 @@ jobs:
              throw "nmake exit code: $lastexitcode"
           }
   gcc:
-    runs-on: windows-2019
+    runs-on: windows-2025
     defaults:
       run:
         shell: msys2 {0}

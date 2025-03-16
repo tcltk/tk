@@ -1982,7 +1982,7 @@ MODULE_SCOPE unsigned	TkBTreeLinesPerNode(const TkTextBTree tree);
 MODULE_SCOPE const union TkTextTagSet * TkBTreeRootTagInfo(const TkTextBTree tree);
 MODULE_SCOPE void	TkTextBindProc(void *clientData, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
-MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
+MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE const TkTextSegment * TkTextGetUndeletableNewline(const TkTextLine *lastLinePtr);
 MODULE_SCOPE void	TkTextPerformWatchCmd(TkSharedText *sharedTextPtr, TkText *textPtr,
