@@ -137,8 +137,6 @@ TK_VFS_ROOT		= libtk.vfs
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 TK_LIB_FILE		= @TK_LIB_FILE@
 TK_DLL_FILE		= @TK_DLL_FILE@
-TK_DLL_FILE_TCL8	= @TK_DLL_FILE_TCL8@
-TK_DLL_FILE_TCL9	= @TK_DLL_FILE_TCL9@
 TEST_DLL_FILE		= tktest$(VER)${DLLSUFFIX}
 TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${DLLSUFFIX}${LIBSUFFIX}
 
@@ -533,20 +531,12 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {![package vsatisfies [package provide Tcl] 8.7-]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
-	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtcl9tk$(VERSION).dll]]]";\
-	echo "    } else {";\
-	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
-	echo "    }";\
+	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtcl9tk$(VERSION).dll]]]";\
 	echo "} else {";\
-	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
-	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL9)]]]";\
-	echo "    } else {";\
-	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL8)]]]";\
-	echo "    }";\
+	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
 	echo "}";\
 	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
 	) > $(PKG_INDEX);

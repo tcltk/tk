@@ -2848,11 +2848,7 @@ Unlink(
 
 static void
 DestroyGrid(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about window that is now dead. */
-#else
-    char *memPtr)
-#endif
 {
     Gridder *gridPtr = (Gridder *)memPtr;
 

@@ -533,11 +533,9 @@ typedef struct TkDisplay {
      * Miscellaneous information:
      */
 
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
-#endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
     Tcl_Size refCount;		/* Reference count of how many Tk applications
@@ -563,11 +561,6 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
-#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
-    XIM inputMethod;		/* Input method for this display. */
-    XIMStyle inputStyle;	/* Input style selected for this display. */
-    XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
-#endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
 /*
@@ -646,11 +639,7 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window. Managed by tkWindow.c. */
-#if TCL_MAJOR_VERSION > 8
     size_t deletionEpoch;		/* Incremented by window deletions. */
-#else
-    long deletionEpoch;
-#endif
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command to
 				 * bind events to Tcl commands. */
@@ -691,12 +680,10 @@ typedef struct TkMainInfo {
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
-#if TCL_MAJOR_VERSION > 8
     Tcl_ObjCmdProc2 *tclUpdateObjProc2;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down, in case it's a Tcl_ObjCmdProc2 */
-#endif
     unsigned int ttkNbTabsStickBit;
 				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
@@ -801,9 +788,7 @@ typedef struct TkWindow {
 
     TkEventHandler *handlerList;/* First in list of event handlers declared
 				 * for this window, or NULL if none. */
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC inputContext;		/* XIM input context. */
-#endif /* TK_USE_INPUT_METHODS */
 
     /*
      * Information used for event bindings (see "bind" and "bindtags" commands
@@ -882,18 +867,12 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int ximGeneration;          /* Used to invalidate XIC */
-#endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
     struct TkWindow *maintainerPtr;
 				/* The geometry container for this window. The
 				 * value is NULL if the window has no container or
 				 * if its container is its parent. */
-#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
-    XIC inputContext;		/* XIM input context. */
-    int ximGeneration;          /* Used to invalidate XIC */
-#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -944,10 +923,6 @@ typedef struct {
  * The following structure is used with TkMakeEnsemble to create ensemble
  * commands and optionally to create sub-ensembles.
  */
-
-#if (TCL_MAJOR_VERSION < 9) && !defined(Tcl_ObjCmdProc2)
-#define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
-#endif
 
 typedef struct TkEnsemble {
     const char *name;
@@ -1316,10 +1291,6 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
-#endif
-
-#if defined(_WIN32) && !defined(STATIC_BUILD) && (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION)
-#   define tcl_CreateFileHandler reserved9
 #endif
 
 MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);

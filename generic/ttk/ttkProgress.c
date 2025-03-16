@@ -109,10 +109,8 @@ static int AnimationEnabled(Progressbar *pb)
     Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
     Tcl_GetDoubleFromObj(NULL, pb->progress.valueObj, &value);
 
-    return pb->progress.period > 0
-	&& value > 0.0
-	&& (   value < maximum
-	    || pb->progress.mode == TTK_PROGRESSBAR_INDETERMINATE);
+    return (pb->progress.period > 0
+	    && pb->progress.mode == TTK_PROGRESSBAR_INDETERMINATE);
 }
 
 /* AnimateProgressProc --
@@ -405,8 +403,8 @@ static Ttk_Layout ProgressbarGetLayout(
     pb->progress.period = 0;
     pb->progress.maxPhase = 0;
     if (layout) {
-	Tcl_Obj *periodObj = Ttk_QueryOption(layout,"-period", 0);
-	Tcl_Obj *maxPhaseObj = Ttk_QueryOption(layout,"-maxphase", 0);
+	Tcl_Obj *periodObj = Ttk_QueryOption(layout, "-period", 0);
+	Tcl_Obj *maxPhaseObj = Ttk_QueryOption(layout, "-maxphase", 0);
 	if (periodObj)
 	    Tcl_GetIntFromObj(NULL, periodObj, &pb->progress.period);
 	if (maxPhaseObj)

@@ -1822,16 +1822,6 @@ EXTERN int Tk_Init(Tcl_Interp *interp);
 EXTERN int Tk_SafeInit(Tcl_Interp *interp);
 EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
-#if TK_MAJOR_VERSION < 9
-/* Restore 8.x signature of Tk_ConfigureWidget, but panic if TK_CONFIG_OBJS flag is not set */
-#undef Tk_ConfigureWidget
-#define Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags) \
-	((int (*)(Tcl_Interp *, Tk_Window, const Tk_ConfigSpec *, \
-	int, const char **, char *, int))(void *)(tkStubsPtr->tk_ConfigureWidget)) \
-	(((flags & TK_CONFIG_OBJS) ? interp : (Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory in Tk_ConfigureWidget"), \
-	NULL)), tkwin, specs, argc, argv, widgRec, flags)
-#endif
-
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 

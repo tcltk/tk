@@ -1438,11 +1438,7 @@ ListboxGetItemAttributes(
 
 static void
 DestroyListbox(
-#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about listbox widget. */
-#else
-    char *memPtr)
-#endif
 {
     Listbox *listPtr = (Listbox *)memPtr;
     Tcl_HashEntry *entry;
