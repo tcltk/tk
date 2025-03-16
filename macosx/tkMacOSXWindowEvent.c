@@ -52,6 +52,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
+    if ([NSApp tkWillExit]) {
+	return;
+    }
+    static NSWindow *systemDialog = NULL;
     NSWindow *win = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     NSString *name = [notification name];
@@ -72,13 +76,13 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    }
 	}
     }
-    if ([name isEqualToString:NSWindowWillCloseNotification]) {
-	if (![NSApp keyWindow] && !winPtr) {
-	    /*
-	     * On older systems the system dialogs do not send DidResignKey.
-	     */
+    /*
+     * On older systems the system dialogs do not send DidResignKey
+     * but the do send WillClose.
+     */
 
-	    [NSApp activateIgnoringOtherApps:YES];
+    if ([name isEqualToString:NSWindowWillCloseNotification]) {
+	if (win == systemDialog) {
 	    TkMacOSXAssignNewKeyWindow(NULL, NULL);
 	}
     }
@@ -105,7 +109,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 		Tk_UpdatePointer((Tk_Window) winPtr, x, y,
 				 [NSApp tkButtonState]);
 	    }
-	}
+	} else {
+            systemDialog = win;
+        }
 	if (winPtr && Tk_IsMapped(winPtr)) {
 	    GenerateActivateEvents(winPtr, true);
 	}
