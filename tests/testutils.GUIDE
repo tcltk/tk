@@ -97,8 +97,8 @@ so, there are several points for a test author to be aware of:
 
    Also: any namespace variables initialized inside the "namespace eval" scope
    for the specific domain, but outside the init proc, will NOT be cleaned up
-   upon the invocation of "testutils forget" (in contrast to imported
-   namespace variables).
+   upon the invocation of "testutils forget", in contrast to imported
+   namespace variables.
 
 4. If you created a new domain namespace in step 2, then export the test
    utilities using the command "testutils export". This ensures that all utility
@@ -127,7 +127,7 @@ a plain "namespace export/namespace import"; there is nothing special about that
 However, special attention is needed for those utility procs that store state
 in a namespace variable that is also accessed from the global namespace in which
 tests are executing. Such variables are made available to the global namespace
-using an upvar statement. The process of importing of these associated namespace
+using an upvar statement. The process of importing these associated namespace
 variables needs to handle some specifics:
 
 Besides making them available to test files, some tests require such variables
