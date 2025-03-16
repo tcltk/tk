@@ -132,7 +132,7 @@ variables needs to handle some specifics:
 
 Besides making them available to test files, some tests require such variables
 to be initialized, regardless whatever the previous test file did to them.
-Therefore, the proc "testutils" needs to re-initialze these upvar'ed variables
+Therefore, the proc "testutils" needs to re-initialize these upvar'ed variables
 for each test file that imports them. The steps in this auto-initialization
 process are as follows:
 
