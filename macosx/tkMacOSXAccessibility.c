@@ -27,13 +27,16 @@
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 void PostAccessibilityAnnouncement(NSString *message);
-static int TkMacAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
+static int TkMacOSXAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
+static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
 static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
 			   TCL_UNUSED(int));
+
 char *callback_command;
 const char *altlabel;
 
@@ -275,7 +278,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     CGRect bounds, screenrect, windowframe;
     NSPoint flippedorigin;
     CGFloat adjustedx;
-    NSWindow *w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSWindow *w;
 
     /* Check to see if Tk_Window exists. */
     if (!winPtr || winPtr->flags & TK_ALREADY_DEAD) {
@@ -290,6 +293,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
      *  by NSAccessibility API.
      *
      */
+     
+    w  = TkMacOSXGetNSWindowForDrawable(winPtr->window);
     screenrect = [w convertRectToScreen:bounds];
 
     /*
@@ -307,10 +312,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
  
     /* Finally,convert back to screen coordinates. */	
     screenrect = [w convertRectToScreen:screenrect];
-
-    
-    /* Force focus on Tk widget to align with VoiceOver cursor/focus. */
-    //  [self forceFocus];
  
     return screenrect;
 }
@@ -327,15 +328,20 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 - (id)accessibilityParent {
     
     Tk_Window win = self.tk_win;
-    NSLog(@"%s", Tk_PathName(win));
     TkWindow *winPtr = (TkWindow *)win;
-    if ((winPtr->window) == NULL) {
-	NSLog(@"winPtr is NULL");
+    
+    if (!winPtr) {
+	[self invalidateAndRelease];
 	return nil;
-    } else {
+    }
+    
+    if ((winPtr->window) == NULL) {
+	return nil;
+    }
+    
+    if (winPtr->window) {
 	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
 	if (!view || ![view isKindOfClass:[TKContentView class]]) {
-	    NSLog(@"view is nil");
 	    return nil;
 	}
 	self.parentView = view;
@@ -356,7 +362,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return YES;
 }
 
-
 - (BOOL)accessibilityIsIgnored {
     return NO;
 }
@@ -374,7 +379,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     }
    
 }
-
 
 - (void)accessibilitySetValue:(id)value {
 
@@ -459,16 +463,26 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return YES;
 }
 
-- (void) forceFocus {
+- (id)invalidateAndRelease {
 
-    TkMainInfo *info = TkGetMainInfoList();
-    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-    NSString *commandString = [NSString stringWithFormat:@"::tk::accessible::_forceTkFocus %@", widgetName];
-    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-    Tcl_Obj *resultObj;
-    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-        resultObj = Tcl_GetObjResult(info->interp);
+    if (!self.tk_win) {
+	return nil;	
     }
+    
+    /* Notify macOS that this element is being destroyed. */
+    NSAccessibilityPostNotification(self, NSAccessibilityUIElementDestroyedNotification);
+
+    /* Break any strong references to avoid accessing stale memory. */
+    self.tk_win = NULL; 
+    self.accessibilityParent = nil;
+
+    /* Finally, release the object.*/
+    [self release];
+    self = nil;
+}
+
+- (void)dealloc {
+    [super dealloc];
 }
 
 @end
@@ -507,7 +521,7 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
  */
 
 static int
-TkMacAccessibleObjCmd(
+TkMacOSXAccessibleObjCmd(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
@@ -528,6 +542,7 @@ TkMacAccessibleObjCmd(
     TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
     [widget.accessibilityParent accessibilityAddChildElement: widget];
+    TkMacOSXAccessibility_RegisterForCleanup(widget.tk_win, widget);
     NSAccessibilityPostNotification(widget.parentView, NSAccessibilityLayoutChangedNotification);
    
     [pool drain];
@@ -592,6 +607,50 @@ EmitSelectionChanged(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXAccessibility_RegisterForCleanup --
+ *
+ * Register event handler for destroying accessibility element.
+ *
+ * Results:
+ *      Event handler is registered.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement) {
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkMacOSXAccessibility_DestroyHandler, accessibilityElement);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXAccessibility_DestroyHandler --
+ *
+ * Clean up accessibility element structures when window is destroyed.
+ *
+ * Results:
+ *	Accessibility element is deallocated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr) {
+    if (eventPtr->type == DestroyNotify) {
+        TkAccessibilityElement *element = (TkAccessibilityElement *)clientData;
+        if (element) {
+            [element invalidateAndRelease];
+        }
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -613,7 +672,7 @@ EmitSelectionChanged(
 
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
     [pool release];
     return TCL_OK;

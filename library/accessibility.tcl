@@ -64,13 +64,6 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_selection_change $w
 	}
     }
-
-    #force Tk focus on the widget that currently has accessibility focus
-    proc _forceTkFocus {w} {
-	if {[focus] ne $w} {
-	    focus -force $w
-	}
-    }
 	
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
