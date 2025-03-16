@@ -1545,6 +1545,9 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
 } -body {
+    # Move the cursor out of the way.
+    event generate . <Motion> -warp 1 -x 800 -y 500
+    controlPointerWarpTiming
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2
     pack .t

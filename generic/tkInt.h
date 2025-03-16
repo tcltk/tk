@@ -1304,7 +1304,7 @@ MODULE_SCOPE Tcl_ObjCmdProc TkUnsupported1ObjCmd;
 /*
  * For Tktest.
  */
-MODULE_SCOPE Tcl_ObjCmdProc SquareObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 SquareObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else
