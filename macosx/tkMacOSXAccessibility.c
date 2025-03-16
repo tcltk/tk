@@ -118,6 +118,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 						NSAccessibilityAnnouncementRequestedNotification,
 						userInfo);
 }
+
+
     
 /*
  *
@@ -272,6 +274,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 
 - (NSRect)accessibilityFrame {
+    
     Tk_Window path;
     path = self.tk_win;
     TkWindow *winPtr = (TkWindow *)path;
@@ -279,6 +282,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     NSPoint flippedorigin;
     CGFloat adjustedx;
     NSWindow *w;
+
+    NSAccessibilityRole role = self.accessibilityRole;
 
     /* Check to see if Tk_Window exists. */
     if (!winPtr || winPtr->flags & TK_ALREADY_DEAD) {
@@ -312,6 +317,16 @@ void  PostAccessibilityAnnouncement( NSString *message) {
  
     /* Finally,convert back to screen coordinates. */	
     screenrect = [w convertRectToScreen:screenrect];
+
+    /*
+     *  Force focus on Tk widget to align with VoiceOver cursor/focus
+     *  if standard keyboard navigation of non-accessible widget elements
+     *  is required.
+     */
+    
+    if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
+	[self forceFocus];
+    }
  
     return screenrect;
 }
@@ -329,7 +344,9 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     
     Tk_Window win = self.tk_win;
     TkWindow *winPtr = (TkWindow *)win;
+
     
+    /* Ensure Tk window exists. */
     if (!winPtr) {
 	[self invalidateAndRelease];
 	return nil;
@@ -338,7 +355,9 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     if ((winPtr->window) == NULL) {
 	return nil;
     }
-    
+
+    /* Tk window exists. Set tke TKContentView as the accessibility
+       parent. */
     if (winPtr->window) {
 	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
 	if (!view || ![view isKindOfClass:[TKContentView class]]) {
@@ -463,6 +482,19 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return YES;
 }
 
+- (void) forceFocus {
+
+    TkMainInfo *info = TkGetMainInfoList();
+    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
+    NSString *commandString = [NSString stringWithFormat:@"::tk::accessible::_forceTkFocus %@", widgetName];
+    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
+
+    Tcl_Obj *resultObj;
+    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
+        resultObj = Tcl_GetObjResult(info->interp);
+    }
+}
+
 - (id)invalidateAndRelease {
 
     if (!self.tk_win) {
@@ -501,53 +533,6 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
     return 1;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkMacAccessibleObjCmd --
- *
- *	Main command for adding and managing accessibility objects to Tk
- *      widgets on macOS using the NSAccessibilty API.
- *
- * Results:
- *
- *      A standard Tcl result.
- *
- * Side effects:
- *
- *	Tk widgets are now accessible to screen readers.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TkMacOSXAccessibleObjCmd(
-		      TCL_UNUSED(void *),
-		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
-		      Tcl_Obj *const objv[])	/* Argument objects. */
-{	
-    if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
-    }
-    Tk_Window path;
-   
-    path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-    if (path == NULL) {
-	Tk_MakeWindowExist(path);
-    }
-
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
-    widget.tk_win = path;
-    [widget.accessibilityParent accessibilityAddChildElement: widget];
-    TkMacOSXAccessibility_RegisterForCleanup(widget.tk_win, widget);
-    NSAccessibilityPostNotification(widget.parentView, NSAccessibilityLayoutChangedNotification);
-   
-    [pool drain];
-    return TCL_OK;
-}
 
 
 /*
@@ -652,6 +637,56 @@ static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *
     }
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacAccessibleObjCmd --
+ *
+ *	Main command for adding and managing accessibility objects to Tk
+ *      widgets on macOS using the NSAccessibilty API.
+ *
+ * Results:
+ *
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *
+ *	Tk widgets are now accessible to screen readers.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXAccessibleObjCmd(
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{	
+    if (objc < 2) {
+	Tcl_WrongNumArgs(ip, 1, objv, "window?");
+	return TCL_ERROR;
+    }
+    Tk_Window path;
+   
+    path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    if (path == NULL) {
+	Tk_MakeWindowExist(path);
+    }
+
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    TkAccessibilityElement *widget =  [[TkAccessibilityElement alloc] init];
+    widget.tk_win = path;
+    [widget.accessibilityParent accessibilityAddChildElement: widget];
+    TkMacOSXAccessibility_RegisterForCleanup(widget.tk_win, widget);
+    NSAccessibilityPostNotification(widget.parentView, NSAccessibilityLayoutChangedNotification);
+   
+    [pool drain];
+    return TCL_OK;
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -671,6 +706,7 @@ static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *
  */
 
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
+
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
