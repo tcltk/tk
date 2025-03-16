@@ -14,6 +14,10 @@ namespace import -force tcltest::test
 # Import utility procs for specific functional areas
 testutils import child
 
+if {[tk windowingsystem] eq "aqua"} {
+    childTkInterp childInterp
+}
+
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
@@ -45,18 +49,26 @@ proc focusSetupAlt {} {
 # is needed to wait long enough for pending actions to get through
 # the X server and possibly also the window manager.
 
-proc focusClear {} {
-    childTkProcess eval {after 200; focus -force .; update}
-    after 400
-    if {[tk windowingsystem] eq "aqua"} {
-	# In Aqua we need to explicitly wait until focus is cleared.
-	while {[focus] != ""} {
-	    after 100 {set y 1}
-	    tkwait variable y
+if {[tk windowingsystem] eq "aqua"} {
+    proc focusClear {} {
+        childInterp eval {
+	    focus -force .
+	    set i 0
+	    while {[focus] != "."} {
+		after 100
+		incr i
+		if {1 > 10} {
+		    break
+		}
+	    }
 	}
     }
-
-    update
+} else {
+    proc focusClear {} {
+        childTkProcess eval {after 200; focus -force .; update}
+    	after 400
+	update
+    }
 }
 
 
@@ -160,7 +172,9 @@ test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
     unix
 } -body {
+    # Move focus to the root window in the child process/interpreter.
     focusClear
+    # The main application does not have focus, so this has no effect now.
     focus .t
     focus -displayof .t.b3
 }  -result {}
@@ -795,4 +809,7 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
 deleteWindows
 testutils forget child
 cleanupTests
+if {[tk windowingsystem] eq "aqua"} {
+    interp delete childInterp
+}
 return
