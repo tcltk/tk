@@ -39,6 +39,7 @@ static int		GenerateActivateEvents(TkWindow *winPtr,
 
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
+extern NSString *NSWindowWillCloseNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOffScreenNotification;
@@ -57,12 +58,30 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if ([name isEqualToString:NSWindowDidResignKeyNotification]) {
 	if (![NSApp keyWindow] && [NSApp isActive]) {
 	    if (winPtr) {
+		/*
+		 * A Tk window lost focus and no window has focus anymore.
+		 */
+
 		TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), NULL);
 	    } else {
+		/*
+		 * A system dialog, such as a standard About dialog, lost focus.
+		 */
+
 		TkMacOSXAssignNewKeyWindow(NULL, NULL);
 	    }
 	}
-    } 
+    }
+    if ([name isEqualToString:NSWindowWillCloseNotification]) {
+	if (![NSApp keyWindow] && !winPtr) {
+	    /*
+	     * On older systems the system dialogs do not send DidResignKey.
+	     */
+
+	    [NSApp activateIgnoringOtherApps:YES];
+	    TkMacOSXAssignNewKeyWindow(NULL, NULL);
+	}
+    }
     if ([name isEqualToString:NSWindowDidBecomeKeyNotification]) {
 	if (winPtr) {
 	    NSPoint location = [NSEvent mouseLocation];
@@ -314,6 +333,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
+    observe(NSWindowWillCloseNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
