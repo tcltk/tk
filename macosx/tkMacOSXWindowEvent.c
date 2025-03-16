@@ -39,11 +39,11 @@ static int		GenerateActivateEvents(TkWindow *winPtr,
 
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
+extern NSString *NSWindowWillCloseNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
-
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -52,33 +52,69 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    NSWindow *w = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    if ([NSApp tkWillExit]) {
+	return;
+    }
+    static NSWindow *systemDialog = NULL;
+    NSWindow *win = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     NSString *name = [notification name];
-    Bool flag = [name isEqualToString:NSWindowDidBecomeKeyNotification];
-    if (winPtr && flag) {
-	NSPoint location = [NSEvent mouseLocation];
-	int x = location.x;
-	int y = floor(TkMacOSXZeroScreenHeight() - location.y);
-	/*
-	 * The Tk event target persists when there is no key window but
-	 * gets reset when a new window becomes the key window.
-	 */
+    if ([name isEqualToString:NSWindowDidResignKeyNotification]) {
+	if (![NSApp keyWindow] && [NSApp isActive]) {
+	    if (winPtr) {
+		/*
+		 * A Tk window lost focus and no window has focus anymore.
+		 */
 
-	[NSApp setTkEventTarget: winPtr];
+		TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), NULL);
+	    } else {
+		/*
+		 * A system dialog, such as a standard About dialog, lost focus.
+		 */
 
-	/*
-	 * Call Tk_UpdatePointer if the pointer is in the window.
-	 */
-
-	NSView *view = [w contentView];
-	NSPoint viewLocation = [view convertPoint:location fromView:nil];
-	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+		TkMacOSXAssignNewKeyWindow(NULL, NULL);
+	    }
 	}
     }
-    if (winPtr && Tk_IsMapped(winPtr)) {
-	GenerateActivateEvents(winPtr, flag);
+    /*
+     * On older systems the system dialogs do not send DidResignKey
+     * but the do send WillClose.
+     */
+
+    if ([name isEqualToString:NSWindowWillCloseNotification]) {
+	if (win == systemDialog) {
+	    TkMacOSXAssignNewKeyWindow(NULL, NULL);
+	}
+    }
+    if ([name isEqualToString:NSWindowDidBecomeKeyNotification]) {
+	if (winPtr) {
+	    NSPoint location = [NSEvent mouseLocation];
+	    int x = location.x;
+	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	    /*
+	     * The Tk event target persists when there is no key window but
+	     * gets reset when a new window becomes the key window.
+	     */
+
+	    [NSApp setTkEventTarget: winPtr];
+
+	    /*
+	     * Call Tk_UpdatePointer if the pointer is in the window.
+	     */
+
+	    NSView *view = [win contentView];
+	    NSPoint viewLocation = [view convertPoint:location fromView:nil];
+	    if (NSPointInRect(viewLocation,
+			      NSInsetRect([view bounds], 2, 2))) {
+		Tk_UpdatePointer((Tk_Window) winPtr, x, y,
+				 [NSApp tkButtonState]);
+	    }
+	} else {
+            systemDialog = win;
+        }
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, true);
+	}
     }
 }
 
@@ -303,6 +339,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
+    observe(NSWindowWillCloseNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
