@@ -246,15 +246,15 @@ if { [wm attributes $w -isdark] } {
 proc beLight {f w} {
     wm attributes $w -appearance aqua
     # A small delay is needed for the appearance change to complete.
-    after 10 [list $f.dark state !selected]
-    after 10 [list $f.light state selected]
+    after 20 [list $f.dark state !selected]
+    after 20 [list $f.light state selected]
 }
 
 proc beDark {f w} {
     wm attributes $w -appearance darkaqua
     # A small delay is needed for the appearance change to complete.
-    after 10 [list $f.light state !selected]
-    after 10 [list $f.dark state selected]
+    after 20 [list $f.light state !selected]
+    after 20 [list $f.dark state selected]
 }
 $w.notebook add $appearanceFrame -text "Appearance"
 

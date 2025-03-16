@@ -136,7 +136,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
-	TkWmUnmapWindow(winPtr);
+	TkWmMapWindow(winPtr);
 
 	/*
 	 * NSWindowDidDeminiaturizeNotification is received after
@@ -248,7 +248,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
-	[view setNeedsDisplay:YES];
     }
 }
 
@@ -1073,12 +1072,6 @@ ExposeRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
-
-    /*
-     * Request a call to updateLayer.
-     */
-
-    [self setNeedsDisplay:YES];
 }
 
 /*

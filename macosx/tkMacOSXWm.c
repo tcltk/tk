@@ -577,7 +577,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 @end
@@ -597,7 +596,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1289,8 +1287,16 @@ TkWmDeadWindow(
 	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
+		TkWindow *frontPtr = TkMacOSXGetTkWindow(w); 
 		[w makeKeyAndOrderFront:NSApp];
-		newTkEventTarget = TkMacOSXGetTkWindow(w);
+		newTkEventTarget = frontPtr;
+		/* Set the menubar for the new front window. */
+		if (frontPtr->wmInfoPtr &&
+		    frontPtr->wmInfoPtr->menuPtr &&
+		    frontPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+		    TKMenu *menu = (TKMenu *) frontPtr->wmInfoPtr->menuPtr->platformData;
+		    [NSApp tkSetMainMenu:menu];
+		}
 		break;
 	    }
 	}
@@ -1311,7 +1317,8 @@ TkWmDeadWindow(
 	 */
 
 	TKContentView *deadView = [deadNSWindow contentView];
-	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask,(void *) deadView);
+	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) deadView);
+	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) deadView);
 	CGContextRelease(deadView.tkLayerBitmapContext);
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -2437,7 +2444,6 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
