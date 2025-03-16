@@ -1381,7 +1381,7 @@ Tk_ChooseDirectoryObjCmd(
 void
 TkAboutDlg(void)
 {
-    [NSApp orderFrontStandardAboutPanel:nil];
+    [NSApp orderFrontStandardAboutPanel:NSApp];
 }
 
 /*
@@ -1411,7 +1411,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanel:nil];
+    [NSApp orderFrontStandardAboutPanel:NSApp];
     return TCL_OK;
 }
 
