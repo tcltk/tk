@@ -64,6 +64,13 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_selection_change $w
 	}
     }
+
+    #force Tk focus on the widget that currently has accessibility focus
+    proc _forceTkFocus {w} {
+	if {[focus] ne $w} {
+	    focus $w
+	}
+    }
 	
     #Set initial accessible attributes and add binding to <Map> event.
     #If the accessibility role is already set, return because
@@ -350,6 +357,7 @@ namespace eval ::tk::accessible {
     bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
     bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate the listbox, use the standard Up-Arrow and Down-Arrow keys."}
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
+    bind Treeview <FocusIn> {+%W configure -takefocus 1}
 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object
