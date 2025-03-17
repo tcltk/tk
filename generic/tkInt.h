@@ -1168,7 +1168,7 @@ MODULE_SCOPE Tcl_ObjCmdProc Tk_RaiseObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_ScaleObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_ScrollbarObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_SelectionObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_SendObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SendObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_SpinboxObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_TextObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_TkwaitObjCmd;

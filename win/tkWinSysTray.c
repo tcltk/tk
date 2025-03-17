@@ -901,7 +901,7 @@ static int
 WinSystrayCmd(
     void *clientData,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const char *const cmdStrings[] = {
@@ -1062,7 +1062,7 @@ static int
 WinSysNotifyCmd(
     void *clientData,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
@@ -1158,9 +1158,9 @@ WinIcoInit(
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();
     icoInterpPtr->nextPtr = firstIcoInterpPtr;
     firstIcoInterpPtr = icoInterpPtr;
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd,
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", WinSystrayCmd,
 	    icoInterpPtr, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
