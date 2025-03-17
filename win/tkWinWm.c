@@ -303,7 +303,13 @@ typedef struct TkWmInfo {
 
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
-#define EX_TRANSIENT_STYLE (WS_EX_DLGMODALFRAME)
+/*
+ * Bug 159aa5eb: Removed extended style WS_EX_DLGMODALFRAME. This style has
+ * the undocumented side effect to enable the unwanted system menu items
+ * "Resize", "Minimize" and "Maximize". "Resise" menu item may be correctly
+ * enabled by "wm resizable".
+ */
+#define EX_TRANSIENT_STYLE (0)
 
 /*
  * The following structure is the official type record for geometry management
