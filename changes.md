@@ -26,6 +26,7 @@ to the userbase.
  - [English shortcuts for Chinese locale](https://core.tcl-lang.org/tk/tktview/c99266)
  - [No grip element in ttk::panedwindow sashes of most built-in themes](https://core.tcl-lang.org/tk/tktview/9902d8)
  - [Tk_Get3DBorderColors broken by design](https://core.tcl-lang.org/tk/tktview/517165)
+ - [MS-Win: Incorrect system menu entries for transient toplevels](https://core.tcl-lang.org/tkview/159aa5eb)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
