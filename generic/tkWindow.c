@@ -962,6 +962,8 @@ TkCreateMainWindow(
 	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
 	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
+	    } else if (!cmdInfo.objClientData) {
+		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
@@ -1044,8 +1046,7 @@ TkCreateMainWindow(
 		;
 	if (info.isNativeObjectProc) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
-		    info.objProc2, (void *)
-		    version, NULL);
+		    info.objProc2, (void *)version, NULL);
 
 	}
     }
@@ -1646,6 +1647,11 @@ Tk_DestroyWindow(
 			    Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc2,
+				    NULL, NULL);
+			} else if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
+			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+				    cmdPtr->name,
+				    (Tcl_ObjCmdProc *)winPtr->mainPtr->tclUpdateObjProc,
 				    NULL, NULL);
 			}
 		    } else {
@@ -3201,7 +3207,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
 	return TCL_ERROR;
     }
 
