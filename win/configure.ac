@@ -5,7 +5,7 @@
 
 AC_INIT([tk],[9.1])
 AC_CONFIG_SRCDIR([../generic/tk.h])
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
@@ -77,11 +77,9 @@ SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MINOR_VERSION}" -lt 7; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.7+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.7 or better.])
-fi
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better.])
 fi
 
 #--------------------------------------------------------------------
@@ -229,29 +227,17 @@ if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
-fi
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
-else
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
-fi
+eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
-TK_LIB_FLAG="-l"
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-fi
+TK_LIB_FLAG="-ltcl9"
 eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}tk${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
-else
-    eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
-fi
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_STUB_LIB_FLAG}\""
 
 TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"

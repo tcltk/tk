@@ -3,8 +3,7 @@ on:
   push:
     branches:
     - "main"
-    - "core-8-branch"
-    - "core-8-6-branch"
+    - "core-9-0-branch"
     tags:
     - "core-**"
 permissions:
@@ -12,8 +11,8 @@ permissions:
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  xcode:
-    runs-on: macos-14
+  framework:
+    runs-on: macos-15
     defaults:
       run:
         shell: bash
@@ -23,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Check out Tcl
+      - name: Check out Tcl 9.1
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -56,8 +55,8 @@ jobs:
             exit 1
           fi
         timeout-minutes: 30
-  clang:
-    runs-on: macos-14
+  prefix:
+    runs-on: macos-15
     strategy:
       matrix:
         symbols:
@@ -75,7 +74,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Check out Tcl
+      - name: Check out Tcl 9.1
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl

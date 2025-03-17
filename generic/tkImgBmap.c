@@ -145,8 +145,7 @@ typedef struct ParseInfo {
  * Prototypes for procedures used only locally in this file:
  */
 
-static int		ImgBmapCmd(void *clientData, Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ImgBmapCmd;
 static void		ImgBmapCmdDeletedProc(void *clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,

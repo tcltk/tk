@@ -254,6 +254,7 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
+MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
@@ -292,6 +293,8 @@ MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
+					     NSWindow *ignore);
 
 #pragma mark Private Objective-C Classes
 

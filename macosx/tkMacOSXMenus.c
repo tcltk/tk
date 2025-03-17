@@ -203,7 +203,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
-	[super orderFrontStandardAboutPanel:nil];
+	[super orderFrontStandardAboutPanel:NSApp];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
