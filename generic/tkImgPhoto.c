@@ -185,8 +185,7 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static void		PhotoFormatThreadExitProc(void *clientData);
-static int		ImgPhotoCmd(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ImgPhotoCmd;
 static int		ParseSubcommandOptions(
 			    struct SubcommandOptions *optPtr,
 			    Tcl_Interp *interp, int allowedOptions,
@@ -370,7 +369,7 @@ ImgPhotoCreate(
     memset(modelPtr, 0, sizeof(PhotoModel));
     modelPtr->tkModel = model;
     modelPtr->interp = interp;
-    modelPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
+    modelPtr->imageCmd = Tcl_CreateObjCommand2(interp, name, ImgPhotoCmd,
 	    modelPtr, ImgPhotoCmdDeletedProc);
     modelPtr->palette = NULL;
     modelPtr->pix32 = NULL;
@@ -412,7 +411,7 @@ static int
 ImgPhotoCmd(
     void *clientData,	/* Information about photo model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const photoOptions[] = {

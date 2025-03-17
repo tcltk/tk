@@ -110,8 +110,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 				 [NSApp tkButtonState]);
 	    }
 	} else {
-            systemDialog = win;
-        }
+	    systemDialog = win;
+	}
 	if (winPtr && Tk_IsMapped(winPtr)) {
 	    GenerateActivateEvents(winPtr, true);
 	}

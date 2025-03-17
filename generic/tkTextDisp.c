@@ -4583,9 +4583,9 @@ DisplayText(
 		     * background of the line will not contain artifacts left
 		     * by the scrolling.
 		     */
-		    
+
 		    DisplayDLine(textPtr, dlPtr, NULL, pixmap);
-#else		   
+#else
 		    TkTextEmbWinDisplayProc(textPtr, chunkPtr, x,
 			    0,
 			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,

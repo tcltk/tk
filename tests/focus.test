@@ -48,7 +48,7 @@ proc focusSetupAlt {} {
 
 if {[tk windowingsystem] eq "aqua"} {
     proc focusClear {} {
-        childInterp eval {
+	childInterp eval {
 	    focus -force .
 	    set i 0
 	    while {[focus] != "."} {
@@ -62,8 +62,8 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 } else {
     proc focusClear {} {
-        dobg {after 200; focus -force .; update}
-    	after 400
+	dobg {after 200; focus -force .; update}
+	after 400
 	update
     }
 }

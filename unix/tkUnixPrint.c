@@ -17,7 +17,7 @@
 
 typedef int (CupsSubCmdOp)(Tcl_Interp *, int, Tcl_Obj *const []);
 
-static Tcl_ObjCmdProc Cups_Cmd;
+static Tcl_ObjCmdProc2 Cups_Cmd;
 static CupsSubCmdOp DefaultPrinterOp;
 static CupsSubCmdOp GetPrintersOp;
 static CupsSubCmdOp PrintOp;
@@ -55,7 +55,7 @@ static int
 Cups_Cmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const struct CupsCmds {
@@ -515,7 +515,7 @@ Cups_Init(Tcl_Interp *interp)
     ns = Tcl_FindNamespace(interp, "::tk::print", NULL, TCL_GLOBAL_ONLY);
     if (!ns)
 	ns = Tcl_CreateNamespace(interp, "::tk::print", NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::cups", Cups_Cmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::cups", Cups_Cmd, NULL, NULL);
     Tcl_Export(interp, ns, "cups", 0);
 #else
 Cups_Init(TCL_UNUSED(Tcl_Interp *))
