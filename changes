@@ -8262,3 +8262,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-03-17 (bug) [159aa5] MS-Win: Incorrect system menu entries for transient
 	toplevels (cjmcdonald)
+
+2025-03-17 (bug) [91d0e9] MS-Win: Withdrawn Tk transient windows can reappear in
+	Windows taskbar preview (cjmcdonald)
