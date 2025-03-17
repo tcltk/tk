@@ -677,10 +677,10 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    Tcl_ObjCmdProc2 *tclUpdateObjProc;
+    void *tclUpdateObjProc;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
-				 * down */
+				 * down. Only for Tcl 9.x */
     Tcl_ObjCmdProc2 *tclUpdateObjProc2;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
