@@ -145,8 +145,7 @@ typedef struct ParseInfo {
  * Prototypes for procedures used only locally in this file:
  */
 
-static int		ImgBmapCmd(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ImgBmapCmd;
 static void		ImgBmapCmdDeletedProc(void *clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
@@ -187,7 +186,7 @@ ImgBmapCreate(
 
     modelPtr->tkModel = model;
     modelPtr->interp = interp;
-    modelPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgBmapCmd,
+    modelPtr->imageCmd = Tcl_CreateObjCommand2(interp, name, ImgBmapCmd,
 	    modelPtr, ImgBmapCmdDeletedProc);
     modelPtr->width = modelPtr->height = 0;
     modelPtr->data = NULL;
@@ -742,7 +741,7 @@ static int
 ImgBmapCmd(
     void *clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const bmapOptions[] = {"cget", "configure", NULL};

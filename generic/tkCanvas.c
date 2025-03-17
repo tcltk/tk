@@ -237,7 +237,7 @@ static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
 static int		CanvasWidgetCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const *objv);
 static void		CanvasWorldChanged(void *instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
@@ -673,7 +673,7 @@ Tk_CanvasObjCmd(
     canvasPtr->tkwin = newWin;
     canvasPtr->display = Tk_Display(newWin);
     canvasPtr->interp = interp;
-    canvasPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    canvasPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(canvasPtr->tkwin), CanvasWidgetCmd, canvasPtr,
 	    CanvasCmdDeletedProc);
     canvasPtr->firstItemPtr = NULL;
@@ -793,7 +793,7 @@ static int
 CanvasWidgetCmd(
     void *clientData,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
