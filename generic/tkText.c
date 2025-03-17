@@ -363,7 +363,7 @@ static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static Tcl_ObjCmdProc TextWidgetObjCmd;
+static Tcl_ObjCmdProc2 TextWidgetObjCmd;
 static Tcl_ObjCmdProc2 SharedTextObjCmd;
 static void		TextWorldChangedCallback(void *instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
@@ -507,7 +507,7 @@ CreateWidget(
     textPtr->tkwin = newWin;
     textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
-    textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    textPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
 	    textPtr, TextCmdDeletedProc);
 
@@ -671,7 +671,7 @@ static int
 TextWidgetObjCmd(
     void *clientData,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -6969,7 +6969,7 @@ TkpTesttextCmd(
     if (Tcl_GetCommandInfo(interp, Tcl_GetString(objv[1]), &info) == 0) {
 	return TCL_ERROR;
     }
-    textPtr = (TkText *)info.objClientData;
+    textPtr = (TkText *)info.objClientData2;
     len = strlen(Tcl_GetString(objv[2]));
     if (strncmp(Tcl_GetString(objv[2]), "byteindex", len) == 0) {
 	if (objc != 5) {

@@ -65,7 +65,7 @@ static int
 startEndOfCmd(
     void *clientData,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tcl_DString ds;
@@ -304,15 +304,15 @@ Icu_Init(
     Tcl_MutexUnlock(&icu_mutex);
 
     if (icu_fns.lib != NULL) {
-	Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
 		INT2PTR(0), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::startOfNextWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfNextWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::startOfPreviousWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfPreviousWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::endOfCluster", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
 		INT2PTR(FLAG_FOLLOWING), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::endOfWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::endOfWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
     icu_fns.nopen += 5;
     }
