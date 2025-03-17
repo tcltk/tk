@@ -8259,3 +8259,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-01-03 (bug) [13ac26] wm iconbitmap does not correctly set the icon
 	pixmap hint on macOS (serhiy.storchaka)
+
+2025-03-17 (bug) [159aa5] MS-Win: Incorrect system menu entries for transient
+	toplevels (cjmcdonald)
