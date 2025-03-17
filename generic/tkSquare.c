@@ -300,7 +300,7 @@ SquareWidgetObjCmd(
  *
  * SquareConfigure --
  *
- *	This procedure is called to process an argv/argc list in conjunction
+ *	This procedure is called to process an objv/objc list in conjunction
  *	with the Tk option database to configure (or reconfigure) a square
  *	widget.
  *

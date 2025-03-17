@@ -1882,7 +1882,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
     update
     interp create child
     load {} Tk child
-    child eval {wm geometry . 200x200+100+100; update}
+    child eval {wm geometry . 200x200+100+100; after 100; update}
     set result [list [winfo containing 200 200] \
 	[child eval {winfo containing 200 200}]]
     interp delete child

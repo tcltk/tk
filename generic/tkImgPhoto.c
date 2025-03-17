@@ -185,8 +185,7 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static void		PhotoFormatThreadExitProc(void *clientData);
-static int		ImgPhotoCmd(void *clientData, Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ImgPhotoCmd;
 static int		ParseSubcommandOptions(
 			    struct SubcommandOptions *optPtr,
 			    Tcl_Interp *interp, int allowedOptions,
@@ -1576,7 +1575,7 @@ GetExtension(
  * Side effects:
  *	Fields in *optPtr get filled in. The value of optIndexPtr is updated
  *	to contain the index of the first element in argv[] that was not
- *	parsed, or argc if the end of objv[] was reached.
+ *	parsed, or objc if the end of objv[] was reached.
  *
  *----------------------------------------------------------------------
  */

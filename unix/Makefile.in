@@ -112,7 +112,7 @@ TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl9.0)
+# The linker flags needed to link in the Tcl library (ex: -ltcl9.1)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
@@ -337,7 +337,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} -DTCL_UTF_MAX=4 @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -651,7 +651,7 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
-	@if test "x${LIB_FILE}" = "xlibtcl9tk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
+	@if test "x${LIB_FILE}" = "xcygtcl9tk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
 	    (cd ${TOP_DIR}/win; ${MAKE} tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll); \
 	    cp "${TOP_DIR}/win/tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll" .; \
 	fi
@@ -795,7 +795,7 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
-	    echo "if {![package vsatisfies [package provide Tcl] 8.7-]} return";\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
 	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]]]";\
@@ -1796,7 +1796,7 @@ alldist: dist
 # This target creates the HTML folder for Tcl & Tk and places it
 # in DISTDIR/html.  It uses the tcltk-man2html.tcl tool from
 # the Tcl group's tool workspace.  It depends on the Tcl & Tk being
-# in directories called tcl9.0 & tk9.0 up two directories from the
+# in directories called tcl9.1 & tk9.1 up two directories from the
 # TOOL_DIR.
 #
 

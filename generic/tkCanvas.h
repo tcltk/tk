@@ -290,7 +290,7 @@ typedef struct TkCanvas {
  */
 
 MODULE_SCOPE int	TkCanvPostscriptObjCmd(TkCanvas *canvasPtr,
-			    Tcl_Interp *interp, Tcl_Size argc, Tcl_Obj *const objv[]);
+			    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvTranslatePath(TkCanvas *canvPtr,
 			    int numVertex, double *coordPtr, int closed,
 			    XPoint *outPtr);

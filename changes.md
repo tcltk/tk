@@ -4,24 +4,10 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.1a1 arises from the check-in with tag `core-9-1a1`.
+Release Tk 9.1a0 arises from the check-in with tag `core-9.1a0`.
 
-Highlighted differences between Tk 9.1 and Tk 9.0 are summarized below,
-with focus on changes important to programmers using the Tk library and
-writing Tcl scripts containing Tk commands.
-
-## Many improvements to use of platform features and conventions.
- - TODO
-
-## New commands and options
- - TODO
-
-## Widget options
- - TODO
-
-## Improved widget appearance
- - TODO
-
-## Known bugs
- - TODO
-
+Tk 9.1a0 continues the Tk 9.x series of releases.  The Tk 9.x series
+do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
+To make use of Tk 9.1a0, first a Tcl 9.0 or 9.1 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.

@@ -133,7 +133,7 @@ EXTERN void		TkGetButtPoints(double p1[], double p2[],
 				double m2[]);
 /* 32 */
 EXTERN TkCursor *	TkGetCursorByName(Tcl_Interp *interp,
-				Tk_Window tkwin, Tk_Uid string);
+				Tk_Window tkwin, const char *string);
 /* 33 */
 EXTERN const char *	TkGetDefaultScreenName(Tcl_Interp *interp,
 				const char *screenName);
@@ -582,7 +582,7 @@ typedef struct TkIntStubs {
     void (*tkpFreeCursor) (TkCursor *cursorPtr); /* 29 */
     char * (*tkGetBitmapData) (Tcl_Interp *interp, const char *string, const char *fileName, int *widthPtr, int *heightPtr, int *hotXPtr, int *hotYPtr); /* 30 */
     void (*tkGetButtPoints) (double p1[], double p2[], double width, int project, double m1[], double m2[]); /* 31 */
-    TkCursor * (*tkGetCursorByName) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string); /* 32 */
+    TkCursor * (*tkGetCursorByName) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 32 */
     const char * (*tkGetDefaultScreenName) (Tcl_Interp *interp, const char *screenName); /* 33 */
     TkDisplay * (*tkGetDisplay) (Display *display); /* 34 */
     Tcl_Size (*tkGetDisplayOf) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window *tkwinPtr); /* 35 */
