@@ -1115,6 +1115,8 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+    wm geometry . +500+500; # avoid an extraneous <Leave> event
+    update idletasks
     destroy .one
     toplevel .two
     pack propagate .two 0
