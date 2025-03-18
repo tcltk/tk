@@ -8956,9 +8956,9 @@ DisplayText(
 		     * background of the line will not contain artifacts left
 		     * by the scrolling.
 		     */
-		    
+
 		    DisplayDLine(textPtr, dlPtr, NULL, pixmap);
-#else		   
+#else
 		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x,
 			    dlPtr->spaceAbove,
 			    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
