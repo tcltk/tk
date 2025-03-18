@@ -866,7 +866,7 @@ Tk_GetAccessibleHelp(
     return TCL_ERROR;
   }
 
-  /* Get accessible action for window.  */
+  /* Get accessible help for window.  */
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
     Tcl_AppendResult(ip, "No table found. You must set the accessibility role first.", (char *) NULL);
