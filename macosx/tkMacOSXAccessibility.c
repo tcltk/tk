@@ -172,7 +172,9 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
       NSAccessibilityRole role = self.accessibilityRole;
  
-      /* Listbox.*/ 
+      /* Return the help text for listbox as the label, because
+	 VoiceOver does not seem to read the help text.
+      */ 
       if ((role = NSAccessibilityListRole)) {
 	  return self.accessibilityHint;
       }
@@ -198,38 +200,41 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
   
 -(id) accessibilityValue {
-
-    NSAccessibilityRole role = self.accessibilityRole;
  
-    /* Listbox and Treeview/Table. */
-    
-    if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
-        
-	Tk_Window win = self.tk_win;
-	Tcl_HashEntry *hPtr, *hPtr2;
-	Tcl_HashTable *AccessibleAttributes;
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
 
 
-	hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-	if (!hPtr) {
-	    return nil;
-	}
-
-	AccessibleAttributes = Tcl_GetHashValue(hPtr);
-	hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
-	if (!hPtr2) {
-	    return nil;
-	}
-	char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-	NSString  *value = [NSString stringWithUTF8String:result];
-	return value;
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	return nil;
     }
 
-    return nil;
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
+    if (!hPtr2) {
+	return nil;
+    }
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    NSString  *value = [NSString stringWithUTF8String:result];
+    return value;
 }
+
 
 - (NSString*)accessibilityTitle {
 
+    NSAccessibilityRole role = self.accessibilityRole;
+
+    /*
+     * Return the value data for labels and text widgets as the accessibility
+     * title, because VoiceOver does not seem to pick up the accessibiility
+     * value for these widgets.
+    */ 
+    if ((role = NSAccessibilityStaticTextRole) || (role = NSAccessibilityTextAreaRole)) {
+	return self.accessibilityValue;
+    }
+    
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;

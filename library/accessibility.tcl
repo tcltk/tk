@@ -337,8 +337,8 @@ namespace eval ::tk::accessible {
 			     %W \
 			     Label \
 			     Label \
+			     Label \
 			     [%W cget -text] \
-			     {} \
 			     {}\
 			     {}\
 			 }
@@ -347,8 +347,8 @@ namespace eval ::tk::accessible {
 			      %W \
 			      Label \
 			      Label \
+			      Label \
 			      [%W cget -text] \
-			      {} \
 			      {}\
 			      {}\
 			  }
