@@ -322,16 +322,6 @@ void  PostAccessibilityAnnouncement( NSString *message) {
  
     /* Finally,convert back to screen coordinates. */	
     screenrect = [w convertRectToScreen:screenrect];
-
-    /*
-     *  Force focus on Tk widget to align with VoiceOver cursor/focus
-     *  if standard keyboard navigation of non-accessible widget elements
-     *  is required.
-     */
-    
-    if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
-	[self forceFocus];
-    }
  
     return screenrect;
 }
