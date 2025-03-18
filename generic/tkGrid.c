@@ -332,7 +332,7 @@ int
 Tk_GridObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1184,7 +1184,7 @@ GridRowColumnConfigureCommand(
 			contentPtr->numCols : contentPtr->numRows);
 	    }
 
-	    for (slot = first; slot <= last; slot++) {
+	    for (slot = first; (Tcl_Size)slot <= last; slot++) {
 		ok = CheckSlotData(containerPtr, slot, slotType, /*checkOnly*/ 0);
 		if (ok != TCL_OK) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1382,8 +1382,8 @@ GridContentCommand(
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
     Gridder *contentPtr;
-    int i, value, index;
-    int row = -1, column = -1;
+    Tcl_Size i;
+    int row = -1, column = -1, value, index;
     static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
@@ -2983,9 +2983,8 @@ ConfigureContent(
     Gridder *contentPtr;
     Tk_Window other, content, parent, ancestor;
     TkWindow *container;
-    int i, j, tmp;
-    int numWindows;
-    int width;
+    Tcl_Size i, j, numWindows;
+    int width, tmp;
     int defaultRow = -1;
     int defaultColumn = 0;	/* Default column number */
     int defaultColumnSpan = 1;	/* Default number of columns */

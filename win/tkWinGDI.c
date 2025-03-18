@@ -84,7 +84,7 @@ static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
-			    const char *str[], int numargs);
+			    const char *str[], Tcl_Size numargs);
 static Tcl_ObjCmdProc2 PrintSelectPrinter;
 static Tcl_ObjCmdProc2 PrintOpenPrinter;
 static Tcl_ObjCmdProc2 PrintClosePrinter;
@@ -384,7 +384,8 @@ static int GdiPhoto(
     int oldmode;		/* For saving the old stretch mode. */
     POINT pt;			/* For saving the brush org. */
     char *pbuf = NULL;
-    int i, j, k;
+    int i, k;
+    Tcl_Size j;
     int retval = TCL_OK;
 
     /*
@@ -1835,7 +1836,7 @@ static int GdiMap(
     SIZE vextent;	/* Viewport extent. */
     POINT worigin;	/* Device origin. */
     POINT vorigin;	/* Viewport origin. */
-    int argno;
+    Tcl_Size argno;
 
     /* Keep track of what parts of the function need to be executed. */
     int need_usage   = 0;
@@ -2424,9 +2425,9 @@ static int GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
     LOGFONTW *lf,
     const char *str[],
-    int numargs)
+    Tcl_Size numargs)
 {
-    int i;
+    Tcl_Size i;
     int retval = 0; /* Number of words that could not be parsed. */
 
     for (i=0; i<numargs; i++) {

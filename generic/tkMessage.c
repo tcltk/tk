@@ -174,7 +174,7 @@ static Tcl_ObjCmdProc2 MessageWidgetObjCmd;
 static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
-			    int objc, Tcl_Obj *const objv[], int flags);
+			    Tcl_Size objc, Tcl_Obj *const objv[], int flags);
 static void		DestroyMessage(void *memPtr);
 static void		DisplayMessage(void *clientData);
 
@@ -211,7 +211,7 @@ int
 Tk_MessageObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr;
@@ -434,7 +434,7 @@ ConfigureMessage(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Message *msgPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {

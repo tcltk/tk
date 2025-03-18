@@ -914,7 +914,7 @@ DisplayIcon(
 		icon->offscreenImage = XGetImage(Tk_Display(icon->drawingWin),
 			icon->offscreenPixmap, 0, 0, w, h, AllPlanes, ZPixmap);
 	    }
-	    if (icon->offscreenGC == None) {
+	    if (icon->offscreenGC == NULL) {
 		XGCValues gcv;
 		gcv.function = GXcopy;
 		gcv.plane_mask = AllPlanes;
