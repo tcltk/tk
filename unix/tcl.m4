@@ -1079,7 +1079,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    ;;
 	CYGWIN_*|MINGW32_*|MSYS_*)
 	    SHLIB_CFLAGS="-fno-common"
-	    SHLIB_LD='${CC} -shared -Wl,--out-implib,$(patsubst cyg%.dll,lib%.dll.a,${LIB_FILE})'
+	    SHLIB_LD='${CC} -shared -Wl,--out-implib,$(patsubst cyg%.dll,lib%.dll.a,$[@])'
 	    SHLIB_SUFFIX=".dll"
 	    DL_OBJS="tclLoadDl.o"
 	    PLAT_OBJS='${CYGWIN_OBJS}'
@@ -2087,7 +2087,7 @@ AC_DEFUN([SC_TIME_HANDLER], [
     AC_CHECK_HEADERS(sys/time.h)
     AC_CHECK_HEADERS_ONCE([sys/time.h])
 
-    AC_CHECK_FUNCS(gmtime_r localtime_r mktime)
+    AC_CHECK_FUNCS(gmtime_r localtime_r)
 
     AC_CACHE_CHECK([tm_tzadj in struct tm], tcl_cv_member_tm_tzadj, [
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct tm tm; (void)tm.tm_tzadj;]])],
