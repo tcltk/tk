@@ -51,13 +51,13 @@ static int	ConsoleHandle(void *instanceData, int direction,
 		    void **handlePtr);
 static int	ConsoleInput(void *instanceData, char *buf, int toRead,
 		    int *errorCode);
-static Tcl_ObjCmdProc ConsoleObjCmd;
+static Tcl_ObjCmdProc2 ConsoleObjCmd;
 static int	ConsoleOutput(void *instanceData, const char *buf,
 		    int toWrite, int *errorCode);
 static void	ConsoleWatch(void *instanceData, int mask);
 static void	DeleteConsoleInterp(void *clientData);
 static void	InterpDeleteProc(void *clientData, Tcl_Interp *interp);
-static Tcl_ObjCmdProc InterpreterObjCmd;
+static Tcl_ObjCmdProc2 InterpreterObjCmd;
 
 /*
  * This structure describes the channel type structure for file based IO:
@@ -421,7 +421,7 @@ Tk_CreateConsoleWindow(
      * Add console commands to the interp
      */
 
-    token = Tcl_CreateObjCommand(interp, "console", ConsoleObjCmd, info,
+    token = Tcl_CreateObjCommand2(interp, "console", ConsoleObjCmd, info,
 	    ConsoleDeleteProc);
     info->refCount++;
 
@@ -430,7 +430,7 @@ Tk_CreateConsoleWindow(
      * in the consoleInterp.  The ref held by the consoleInterp delete
      * handler takes care of us.
      */
-    Tcl_CreateObjCommand(consoleInterp, "consoleinterp", InterpreterObjCmd,
+    Tcl_CreateObjCommand2(consoleInterp, "consoleinterp", InterpreterObjCmd,
 	    info, NULL);
 
     mainWindow = Tk_MainWindow(interp);
@@ -692,7 +692,7 @@ static int
 ConsoleObjCmd(
     void *clientData,	/* Access to the console interp */
     Tcl_Interp *interp,		/* Current interpreter */
-    int objc,			/* Number of arguments */
+    Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result;
@@ -784,7 +784,7 @@ static int
 InterpreterObjCmd(
     void *clientData,	/* */
     Tcl_Interp *interp,		/* Current interpreter */
-    int objc,			/* Number of arguments */
+    Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result = TCL_OK;
