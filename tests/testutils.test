@@ -28,6 +28,9 @@ tcltest::loadTestedCommands
 
 assert {"testutils" in [info procs testutils]}
 
+#
+# Sections 1 - 3: invalid invocations
+#
 test testutils-1.0 {invalid subcommand} -constraints testutils -body {
     testutils foo
 } -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
@@ -53,9 +56,10 @@ test testutils-3.2 {invalid domain for subCmd forget} -constraints testutils -bo
 } -result {Tk test domain "foo" doesn't exist} -returnCodes error
 
 #
-# Create a domain namespace for testing
+# Create a domain namespace for testing export, import, forget
 #
 assert {"::tk::test::_foo" ni [namespace children ::tk::test]}
+assert {"::tk::test::_zez" ni [namespace children ::tk::test]}
 namespace eval ::tk::test::_foo {
     proc init {} {
 	variable _bar 123
@@ -71,17 +75,49 @@ assert {"_kuk" ni [info procs _kuk]}
 assert {"_bar" ni [info vars _bar]}
 assert {"_pip" ni [info vars _pip]}
 
+#
+# 4. Failed forgets and imports
+#
 test testutils-4.0 {forget not-imported domain} -constraints testutils -body {
     testutils forget _foo
 } -result {domain "_foo" was not imported} -returnCodes error
 
-test testutils-4.1 {duplicate import} -constraints testutils -body {
+test testutils-4.1 {import fails: proc already exists} -constraints testutils -setup {
+    namespace eval ::_zez {
+	proc _kuk {} {}
+    }
+} -body {
+    namespace eval ::_zez {
+	testutils import _foo
+    }
+} -result "import from utility namespace ::tk::test::_foo failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
+    namespace delete ::_zez
+}
+
+# This test needs to be run before any succesful import in subsequent tests
+# because the registration of imported domains.
+test testutils-4.2 {import fails: variable already exists} -constraints testutils -setup {
+    namespace eval ::_zez {
+	set _bar 11
+    }
+} -body {
+    namespace eval ::_zez {
+	testutils import _foo
+    }
+} -result "import from utility namespace ::tk::test::_foo failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
+    namespace delete ::_zez
+}
+
+test testutils-4.3 {duplicate import} -constraints testutils -body {
     testutils import _foo
     testutils import _foo
 } -result {domain "_foo" was already imported} -returnCodes error -cleanup {
     testutils forget _foo
 }
 
+#
+# 5. Succesful imports, procs
+#
 test testutils-5.0 {utility proc is imported and init proc is not} -constraints testutils -body {
     testutils import _foo
     expr {([info procs _kuk] eq "_kuk") && ([info procs init] eq "")}
@@ -95,6 +131,9 @@ test testutils-5.1 {forget removes utility proc} -constraints testutils -body {
     info procs _kuk
 } -result {}
 
+#
+# 6. Succesful imports, variables
+#
 test testutils-6.0 {associated variables are imported} -constraints testutils -body {
     testutils import _foo
     set varNames [info vars]
@@ -108,7 +147,7 @@ test testutils-6.0 {associated variables are imported} -constraints testutils -b
 }
 
 test testutils-6.1 {
-    Repeated initialization keeps imported variable, defined without value, non-existent,
+    Repeated initialization keeps imported variable defined without value non-existent,
     even if a test file inadvertently assigns it a value in the meantime.
 } -constraints testutils -body {
     catch {

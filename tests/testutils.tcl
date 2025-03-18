@@ -220,10 +220,16 @@ namespace eval ::tk::test::generic {
 		    } else {
 
 			# import procs
-			uplevel 1 [list namespace import -force ::tk::test::${domain}::*]
+			if {[catch {
+			    uplevel 1 [list namespace import ::tk::test::${domain}::*]
+			} errMsg]} {
+			    # revert import of procs already done
+			    uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+			    return -code error "import from utility namespace ::tk::test::$domain failed: $errMsg"
+			}
 
 			# import associated namespace variables declared in the init proc
-			if {[namespace inscope ::tk::test::$domain {info procs init}] eq "init"} {
+			if {"init" in [namespace inscope ::tk::test::$domain {info procs init}]} {
 			    if {[info exists importVars($domain)]} {
 				#
 				# Note [A1]:
@@ -244,16 +250,22 @@ namespace eval ::tk::test::generic {
 				# needs to be done only once because an upvar link cannot be removed from a
 				# namespace.
 				#
-				foreach varName [namespace inscope ::tk::test::$domain {info vars}] {
+				set associatedVars [namespace inscope ::tk::test::$domain {info vars}]
+				foreach varName $associatedVars {
 				    if {[catch {
 					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
 				    } errMsg]} {
-					return -code error "failed to import variable $varName from utility namespace ::tk::test::$domain into the namespace in which tests are executing: $errMsg"
+					# revert imported procs and partial variable import
+					uplevel 1 [list unset -nocomplain {*}$associatedVars]
+					uplevel 1 [list namespace forget ::tk::test::${domain}::*]
+					return -code error "import from utility namespace ::tk::test::$domain failed: $errMsg"
 				    }
-				    lappend importVars($domain) $varName
 				}
+				set importVars($domain) $associatedVars
 			    }
 			}
+
+			# register domain as imported
 			lappend importedDomains $domain
 		    }
 		}
