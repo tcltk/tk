@@ -984,8 +984,8 @@ TkScrollWindow(
     NSRect srcRect, dstRect;
     int result = 0;
     NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
-    CGRect viewBounds = [view bounds];    
-    
+    CGRect viewBounds = [view bounds];
+
     /*
      * To compute the damage region correctly we need to clip the source and
      * destination rectangles to the NSView bounds in the same way that
@@ -995,7 +995,7 @@ TkScrollWindow(
     CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y, width, height);
     unsigned int w = bounds.size.width;
     unsigned int h = bounds.size.height;
-    
+
     if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
 	     w, h, x + dx, y + dy) == Success) {
 
@@ -1062,7 +1062,7 @@ XCopyArea(
 
     NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
     NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
-    CGRect srcBounds = [srcView bounds];    
+    CGRect srcBounds = [srcView bounds];
     CGRect dstBounds = [dstView bounds];
 
     // To avoid distorting the image when it is drawn we must ensure that

@@ -8361,12 +8361,12 @@ TkpWinToplevelWithDraw(
 	     && !(wmPtr->flags & TK_EMBEDDED)
 	     && !(wmPtr->flags & WM_NEVER_MAPPED)
 	     && (wmPtr->containerPtr != NULL)) {
-        exStyle = GetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE);
-        if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
+	exStyle = GetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE);
+	if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
 	    SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
 		     exStyle | WS_EX_TOOLWINDOW);
 	    resetTempStyle=1;
-        }
+	}
     }
 
     wmPtr->flags |= WM_WITHDRAWN;
