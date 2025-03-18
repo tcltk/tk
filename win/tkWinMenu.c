@@ -176,7 +176,7 @@ static void		GetTearoffEntryGeometry(TkMenu *menuPtr,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
 			    int *heightPtr);
 static int		GetNewID(TkMenuEntry *mePtr, WORD *menuIDPtr);
-static Tcl_ObjCmdProc TkWinMenuKeyObjCmd;
+static Tcl_ObjCmdProc2 TkWinMenuKeyObjCmd;
 static void		MenuSelectEvent(TkMenu *menuPtr);
 static void		ReconfigureWindowsMenu(void *clientData);
 static void		RecursivelyClearActiveMenu(TkMenu *menuPtr);
@@ -2145,7 +2145,7 @@ static int
 TkWinMenuKeyObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     UINT scanCode;
@@ -2285,7 +2285,7 @@ TkpInitializeMenuBindings(
      * binding in Tcl code.
      */
 
-    (void) Tcl_CreateObjCommand(interp, "tk::WinMenuKey",
+    (void) Tcl_CreateObjCommand2(interp, "tk::WinMenuKey",
 	    TkWinMenuKeyObjCmd, Tk_MainWindow(interp), NULL);
 
     (void) Tk_CreateBinding(interp, bindingTable, (void *)uid,

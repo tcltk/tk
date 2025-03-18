@@ -170,7 +170,7 @@ static void		MessageEventProc(void *clientData,
 static char *		MessageTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static Tcl_ObjCmdProc MessageWidgetObjCmd;
+static Tcl_ObjCmdProc2 MessageWidgetObjCmd;
 static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
@@ -246,7 +246,7 @@ Tk_MessageObjCmd(
     msgPtr->tkwin = tkwin;
     msgPtr->display = Tk_Display(tkwin);
     msgPtr->interp = interp;
-    msgPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    msgPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(msgPtr->tkwin), MessageWidgetObjCmd, msgPtr,
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
@@ -298,7 +298,7 @@ static int
 MessageWidgetObjCmd(
     void *clientData,	/* Information about message widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr = (Message *)clientData;

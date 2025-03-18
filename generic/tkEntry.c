@@ -434,7 +434,7 @@ static int		EntryValueChanged(Entry *entryPtr,
 			    const char *newValue);
 static void		EntryVisibleRange(Entry *entryPtr,
 			    double *firstPtr, double *lastPtr);
-static Tcl_ObjCmdProc EntryWidgetObjCmd;
+static Tcl_ObjCmdProc2 EntryWidgetObjCmd;
 static void		EntryWorldChanged(void *instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
 			    Tcl_Obj *indexObj, Tcl_Size *indexPtr);
@@ -444,7 +444,7 @@ static int		InsertChars(Entry *entryPtr, Tcl_Size index, Tcl_Obj *obj);
  * These forward declarations are the spinbox specific ones:
  */
 
-static Tcl_ObjCmdProc SpinboxWidgetObjCmd;
+static Tcl_ObjCmdProc2 SpinboxWidgetObjCmd;
 static int		GetSpinboxElement(Spinbox *sbPtr, int x, int y);
 static int		SpinboxInvoke(Tcl_Interp *interp, Spinbox *sbPtr,
 			    int element);
@@ -522,7 +522,7 @@ Tk_EntryObjCmd(
     entryPtr->tkwin		= tkwin;
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
-    entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    entryPtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd, entryPtr,
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
@@ -596,7 +596,7 @@ static int
 EntryWidgetObjCmd(
     void *clientData,	/* Information about entry widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;
@@ -3771,7 +3771,7 @@ Tk_SpinboxObjCmd(
     entryPtr->tkwin		= tkwin;
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
-    entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    entryPtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(entryPtr->tkwin), SpinboxWidgetObjCmd, sbPtr,
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
@@ -3863,7 +3863,7 @@ static int
 SpinboxWidgetObjCmd(
     void *clientData,	/* Information about spinbox widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;
