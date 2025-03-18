@@ -356,7 +356,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	return nil;
     }
 
-    /* Tk window exists. Set tke TKContentView as the accessibility
+    /* Tk window exists. Set the TKContentView as the accessibility
        parent. */
     if (winPtr->window) {
 	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);

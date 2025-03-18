@@ -20,10 +20,10 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-static Tcl_ObjCmdProc TestpressbuttonObjCmd;
-static Tcl_ObjCmdProc TestmovemouseObjCmd;
-static Tcl_ObjCmdProc TestinjectkeyeventObjCmd;
-static Tcl_ObjCmdProc TestmenubarheightObjCmd;
+static Tcl_ObjCmdProc2 TestpressbuttonObjCmd;
+static Tcl_ObjCmdProc2 TestmovemouseObjCmd;
+static Tcl_ObjCmdProc2 TestinjectkeyeventObjCmd;
+static Tcl_ObjCmdProc2 TestmenubarheightObjCmd;
 
 
 /*
@@ -57,10 +57,10 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-    Tcl_CreateObjCommand(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -86,7 +86,7 @@ static int
 TestmenubarheightObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Size),				/* Not used. */
     TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
 {
     static int height = 0;
@@ -151,10 +151,11 @@ static int
 TestpressbuttonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value;
+    int x = 0, y = 0, value;
+    Tcl_Size i;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
@@ -250,10 +251,11 @@ static int
 TestmovemouseObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value;
+    int x = 0, y = 0, value;
+    Tcl_Size i;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion;
@@ -310,7 +312,7 @@ static int
 TestinjectkeyeventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
@@ -320,7 +322,8 @@ TestinjectkeyeventObjCmd(
 	"-command", "-control", "-function", "-option", "-shift", "-x", "-y", NULL};
     enum args {KEYEVENT_COMMAND, KEYEVENT_CONTROL, KEYEVENT_FUNCTION, KEYEVENT_OPTION,
 	       KEYEVENT_SHIFT, KEYEVENT_X, KEYEVENT_Y};
-    int i, index, keysym, mods = 0, x = 0, y = 0;
+    Tcl_Size i;
+    int index, keysym, mods = 0, x = 0, y = 0;
     NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;
     NSUInteger type;
