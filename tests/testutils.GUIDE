@@ -68,6 +68,10 @@ Typical invocations in a test file (using the domain "dialog" as an example), ar
 ┃    ⋮
 ┃    testutils forget dialog
 
+The command "testutils import" fails if a proc or variable with the same name
+was already defined in the global namespace outside the testutils mechanism.
+Therefore, test authors need to take care that such procs and variables are
+cleaned up before the end of a test file.
 
 A3. Adding new utility procs
 ----------------------------
