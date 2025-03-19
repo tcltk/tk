@@ -21,7 +21,7 @@ testutils import scroll
 proc consistencyCheck {tv {item {}}} {
     set i 0
     foreach child [$tv children $item] {
-	assert {[$tv parent $child] == $item}
+	assert {[$tv parent $child] eq $item}
 	assert {[$tv index $child] == $i}
 	incr i
 	consistencyCheck $tv $child
