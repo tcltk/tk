@@ -339,7 +339,7 @@ static void		FrameRequestProc(void *clientData,
 			    Tk_Window tkwin);
 static void		FrameStructureProc(void *clientData,
 			    XEvent *eventPtr);
-static Tcl_ObjCmdProc FrameWidgetObjCmd;
+static Tcl_ObjCmdProc2 FrameWidgetObjCmd;
 static void		FrameWorldChanged(void *instanceData);
 static void		MapFrame(void *clientData);
 
@@ -621,7 +621,7 @@ TkCreateFrame(
     framePtr->tkwin = newWin;
     framePtr->display = Tk_Display(newWin);
     framePtr->interp = interp;
-    framePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(newWin),
+    framePtr->widgetCmd	= Tcl_CreateObjCommand2(interp, Tk_PathName(newWin),
 	    FrameWidgetObjCmd, framePtr, FrameCmdDeletedProc);
     framePtr->optionTable = optionTable;
     framePtr->type = type;
@@ -697,7 +697,7 @@ static int
 FrameWidgetObjCmd(
     void *clientData,	/* Information about frame widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const frameOptions[] = {
@@ -2098,10 +2098,10 @@ TkToplevelWindowForCommand(
     if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
 	return NULL;
     }
-    if (cmdInfo.objProc != FrameWidgetObjCmd) {
+    if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
 	return NULL;
     }
-    framePtr = (Frame *)cmdInfo.objClientData;
+    framePtr = (Frame *)cmdInfo.objClientData2;
     if (framePtr->type != TYPE_TOPLEVEL) {
 	return NULL;
     }
