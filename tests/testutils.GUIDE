@@ -33,8 +33,8 @@ files in the Tk test suite.
 Utility procs are imported on demand by test files, using the command "testutils"
 (See the explanation of this command in the next section.) Utility procs for
 the domain "generic" are an exception to this general rule: these procs are
-imported for each test file as a standard policy. Test authors don't need
-to do anything special to access them, they are readily available.
+imported into the global namespace as a standard policy. They are readily
+available to the test author, in each test file.
 
 Each domain has its own namespace below ::tk::test in which utility procs are
 defined. For example: utilities that are specific for Tk dialogs are stored
