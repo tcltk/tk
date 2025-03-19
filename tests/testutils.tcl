@@ -215,7 +215,10 @@ namespace eval ::tk::test::generic {
 	    }
 	    switch -- $subCmd {
 		import {
-		    if {[info exists importedDomains] && ($domain in $importedDomains)} {
+		    # determine the requesting namespace
+		    set ns [uplevel 1 {namespace current}]
+
+		    if {[info exists importedDomains($ns)] && ($domain in $importedDomains($ns))} {
 			return -code error "domain \"$domain\" was already imported"
 		    } else {
 
@@ -230,7 +233,7 @@ namespace eval ::tk::test::generic {
 
 			# import associated namespace variables declared in the init proc
 			if {"init" in [namespace inscope ::tk::test::$domain {info procs init}]} {
-			    if {[info exists importVars($domain)]} {
+			    if {[info exists importVars($ns,$domain)]} {
 				#
 				# Note [A1]:
 				# If test files inadvertently leave behind a variable with the same name
@@ -241,14 +244,16 @@ namespace eval ::tk::test::generic {
 				#
 				# The next unset prevents such artefacts. See also note [A2] below.
 				#
-				uplevel 1 [list unset -nocomplain {*}$importVars($domain)]
+				uplevel 1 [list unset -nocomplain {*}$importVars($ns,$domain)]
 			    }
 			    ::tk::test::${domain}::init
-			    if {! [info exists importVars($domain)]} {
+			    if {($ns ne "::") || (! [info exists importVars($ns,$domain)])} {
 				#
-				# Note that importing associated namespace variables into the global namespace
-				# needs to be done only once because an upvar link cannot be removed from a
-				# namespace.
+				# Importing associated namespace variables into the global namespace where
+				# tests are normally executing, needs to be done only once because an upvar
+				# link cannot be removed from a namespace. For other requesting namespaces
+				# we need to reckon with deletion and re-creation of the namespace in the
+				# meantime.
 				#
 				set associatedVars [namespace inscope ::tk::test::$domain {info vars}]
 				foreach varName $associatedVars {
@@ -261,42 +266,43 @@ namespace eval ::tk::test::generic {
 					return -code error "import from utility namespace ::tk::test::$domain failed: $errMsg"
 				    }
 				}
-				set importVars($domain) $associatedVars
+				set importVars($ns,$domain) $associatedVars
 			    }
 			}
 
 			# register domain as imported
-			lappend importedDomains $domain
+			lappend importedDomains($ns) $domain
 		    }
 		}
 		forget {
-		    if {$domain ni $importedDomains} {
+		    set ns [uplevel 1 {namespace current}]
+		    if {(! [info exists importedDomains($ns)]) || ($domain ni $importedDomains($ns))} {
 			return -code error "domain \"$domain\" was not imported"
 		    }
 
-		    # remove imported utility procs from the global namespace
+		    # remove imported utility procs from the namespace where tests are executing
 		    uplevel 1 [list namespace forget ::tk::test::${domain}::*]
 
 		    #
 		    # Some namespace variables are meant to persist across test files
 		    # in the entire Tk test suite (notably the variable ImageNames,
 		    # domain "image"). These variables are also not meant to be accessed
-		    # from, and imported into the global namespace, and they should not be
-		    # cleaned up here.
+		    # from, and imported into the namespace where tests are executing,
+		    # and they should not be cleaned up here.
 		    #
 
-		    if {[info exists importVars($domain)]} {
+		    if {[info exists importVars($ns,$domain)]} {
 			#
 			# Remove imported namespace variables.
 			#
 			# Note [A2]:
-			# The upvar link to the global namespace cannot be removed. Without
-			# specific attention, this can cause surprising behaviour upon
+			# The upvar link in the namespace where tests are executing cannot be removed.
+			# Without specific attention, this can cause surprising behaviour upon
 			# re-initialization. See also note [A1] above.
 			#
-			uplevel 1 [list unset -nocomplain {*}$importVars($domain)]
+			uplevel 1 [list unset -nocomplain {*}$importVars($ns,$domain)]
 		    }
-		    set importedDomains [lremove $importedDomains [lsearch $importedDomains $domain]]
+		    set importedDomains($ns) [lremove $importedDomains($ns) [lsearch $importedDomains($ns) $domain]]
 		}
 	    }
 	}
@@ -306,7 +312,7 @@ namespace eval ::tk::test::generic {
 }
 
 # Import generic utility procs into the global namespace (in which tests are
-# executing), as a standard policy.
+# normally executing) as a standard policy.
 ::tk::test::generic::testutils import generic
 
 namespace eval ::tk::test::button {
@@ -501,8 +507,8 @@ namespace eval ::tk::test::dialog {
     # variables available to test files.
     #
     # Test authors should define and initialize namespace variables here if
-    # they need to be imported into the global namespace in which tests are
-    # executing. This proc must not be exported.
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
     #
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
@@ -664,8 +670,8 @@ namespace eval ::tk::test::entry {
     # variables available to test files.
     #
     # Test authors should define and initialize namespace variables here if
-    # they need to be imported into the global namespace in which tests are
-    # executing. This proc must not be exported.
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
     #
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
@@ -762,8 +768,8 @@ namespace eval ::tk::test::scroll {
     # variables available to test files.
     #
     # Test authors should define and initialize namespace variables here if
-    # they need to be imported into the global namespace in which tests are
-    # executing. This proc must not be exported.
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
     #
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
@@ -789,8 +795,8 @@ namespace eval ::tk::test::select {
     # variables available to test files.
     #
     # Test authors should define and initialize namespace variables here if
-    # they need to be imported into the global namespace in which tests are
-    # executing. This proc must not be exported.
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
     #
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
@@ -906,8 +912,8 @@ namespace eval ::tk::test::text {
     # variables available to test files.
     #
     # Test authors should define and initialize namespace variables here if
-    # they need to be imported into the global namespace in which tests are
-    # executing. This proc must not be exported.
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
     #
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
