@@ -249,8 +249,8 @@ foreach mode $modes {
 test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
     #ToPressButton $parent cancel
     set filename [tk_getOpenFile -filetypes {
-        {"Invalid extension" {x.y}}
-        {"All files" {*}}
+	{"Invalid extension" {x.y}}
+	{"All files" {*}}
      }]
      } -result {}
 }
