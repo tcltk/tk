@@ -15,8 +15,6 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 testutils import colors
 
-tcltest::testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
-
 # uniq --
 #
 # Returns the unique items of a list in the order they first appear.
