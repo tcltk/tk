@@ -60,6 +60,11 @@ test testutils-3.2 {invalid domain for subCmd forget} -constraints testutils -bo
 #
 assert {"::tk::test::_foo" ni [namespace children ::tk::test]}
 assert {"::tk::test::_zez" ni [namespace children ::tk::test]}
+assert {"init" ni [info procs init]}
+assert {"_kuk" ni [info procs _kuk]}
+assert {"_bar" ni [info vars _bar]}
+assert {"_pip" ni [info vars _pip]}
+
 namespace eval ::tk::test::_foo {
     proc init {} {
 	variable _bar 123
@@ -69,11 +74,6 @@ namespace eval ::tk::test::_foo {
     testutils export
 }
 set initVars [info vars]; lappend initVars initVars
-
-assert {"init" ni [info procs init]}
-assert {"_kuk" ni [info procs _kuk]}
-assert {"_bar" ni [info vars _bar]}
-assert {"_pip" ni [info vars _pip]}
 
 #
 # 4. Domain failures for forget and import
@@ -184,7 +184,7 @@ test testutils-6.3 {repeated creation/deletion of requesting namespace doesn't f
 #
 
 namespace delete ::tk::test::_foo
-unset -nocomplain initVars
+unset initVars
 cleanupTests
 
 # EOF
