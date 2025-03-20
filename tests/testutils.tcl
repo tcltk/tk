@@ -208,14 +208,14 @@ namespace eval ::tk::test::generic {
 	    return -code error "invalid #args. Usage: [lindex [info level 0] 0] import|forget domain ?domain ...?"
 	}
 
+	# determine the requesting namespace
+	set ns [uplevel 1 {namespace current}]
+
 	# import/forget domains
 	foreach domain $args {
 	    if {! [namespace exists ::tk::test::$domain]} {
 		return -code error "Tk test domain \"$domain\" doesn't exist"
 	    }
-
-	    # determine the requesting namespace
-	    set ns [uplevel 1 {namespace current}]
 
 	    switch -- $subCmd {
 		import {
