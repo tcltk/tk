@@ -213,11 +213,12 @@ namespace eval ::tk::test::generic {
 	    if {! [namespace exists ::tk::test::$domain]} {
 		return -code error "Tk test domain \"$domain\" doesn't exist"
 	    }
+
+	    # determine the requesting namespace
+	    set ns [uplevel 1 {namespace current}]
+
 	    switch -- $subCmd {
 		import {
-		    # determine the requesting namespace
-		    set ns [uplevel 1 {namespace current}]
-
 		    if {[info exists importedDomains($ns)] && ($domain in $importedDomains($ns))} {
 			return -code error "domain \"$domain\" was already imported"
 		    } else {
@@ -275,7 +276,6 @@ namespace eval ::tk::test::generic {
 		    }
 		}
 		forget {
-		    set ns [uplevel 1 {namespace current}]
 		    if {(! [info exists importedDomains($ns)]) || ($domain ni $importedDomains($ns))} {
 			return -code error "domain \"$domain\" was not imported"
 		    }
