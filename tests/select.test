@@ -25,7 +25,6 @@ if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
 	testConstraint cliboardManagerPresent 1
     }
 }
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races

@@ -11,9 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # Create some test windows.
 
 destroy .pack
@@ -1753,7 +1750,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
     bind . <<NoManagedChild>> {}
     destroy .1
 } -result 0
-
+
 # cleanup
 cleanupTests
 return
