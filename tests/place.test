@@ -13,9 +13,6 @@ tcltest::loadTestedCommands
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the features are tested.
 

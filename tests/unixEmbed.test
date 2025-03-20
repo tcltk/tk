@@ -14,9 +14,6 @@ namespace import -force tcltest::test
 # Import utility procs for specific functional areas
 testutils import colors child
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 namespace eval ::_test_tmp {}
 
 # ------------------------------------------------------------------------------

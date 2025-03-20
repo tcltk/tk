@@ -92,9 +92,6 @@ proc stdWindow {} {
     update
 }
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # [raise] and [lower] may return before the window manager has completed the
 # operation. The raiseDelay procedure idles for a while to give the operation
 # a chance to complete.
