@@ -955,7 +955,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 # TkpRedirectKeyEvent is not implemented in win or aqua.  If someone
 # implements it they should change the constraints for this test.
 test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
-    unix notAqua failsOnXQuarz
+    unix notAqua failsOnXQuartz
 } -setup {
     deleteWindows
     catch {interp delete child}
@@ -1053,7 +1053,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
-    unix notAqua failsOnUbuntu failsOnXQuarz
+    unix notAqua failsOnUbuntu failsOnXQuartz
 } -setup {
     deleteWindows
 } -body {
