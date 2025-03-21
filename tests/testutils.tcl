@@ -256,7 +256,11 @@ namespace eval ::tk::test::generic {
 				# we need to reckon with deletion and re-creation of the namespace in the
 				# meantime.
 				#
-				set associatedVars [namespace inscope ::tk::test::$domain {info vars}]
+				if {[info exists importVars($ns,$domain)]} {
+				    set associatedVars $importVars($ns,$domain)
+				} else {
+				    set associatedVars [namespace inscope ::tk::test::$domain {info vars}]
+				}
 				foreach varName $associatedVars {
 				    if {[catch {
 					uplevel 1 [list upvar #0 ::tk::test::${domain}::$varName $varName]
