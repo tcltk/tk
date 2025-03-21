@@ -113,7 +113,7 @@ test testutils-5.2 {import fails: proc already exists} -constraints testutils -s
     namespace eval ::_zez {
 	testutils import _foo
     }
-} -result "import from utility namespace ::tk::test::_foo failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
+} -result "import from utility domain _foo failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
     namespace delete ::_zez
 }
 
@@ -159,7 +159,7 @@ test testutils-6.2 {import fails: variable already exists} -constraints testutil
     namespace eval ::_zez {
 	testutils import _foo
     }
-} -result "import from utility namespace ::tk::test::_foo failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
+} -result "import from utility domain _foo failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
     namespace delete ::_zez
 }
 
