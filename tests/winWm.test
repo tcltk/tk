@@ -530,7 +530,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     destroy .tx .t .sd
 } -result ok
 
-test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuartz} -setup {
     destroy .t
     toplevel .t
     set winwm92 {}

@@ -1533,7 +1533,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 
 # Tests pack-18.1.1 and pack-18.2 are constrained with failsOnUbuntu
 # because they are failing in the GitHub CI environment, using Linux Ubuntu.
-# These tests are also constrained with failsOnXQuarz because they fail
+# These tests are also constrained with failsOnXQuartz because they fail
 # on macOS when building with clang --disable-aqua (which uses XQuartz)
 # (this is the case both at GitHub CI and on a real Mac).
 # Analysis shows that, on both cases, WaitForMapNotify is giving up on
@@ -1556,7 +1556,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # colored.  So, evidently, even though the size changes are honored,
 # the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
-    macOrUnix failsOnUbuntu failsOnXQuarz
+    macOrUnix failsOnUbuntu failsOnXQuartz
 } -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
@@ -1602,7 +1602,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 1}
 
-test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
