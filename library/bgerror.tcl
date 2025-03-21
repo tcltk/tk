@@ -181,7 +181,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     pack $dlg.top -side top -fill both -expand 1
 
     set W [ttk::frame $dlg.top.info]
-    text $W.text -setgrid false -height 10 -wrap char \
+    text $W.text -setgrid 0 -height 10 -wrap char \
 	-yscrollcommand [list $W.scroll set]
     if {$windowingsystem ne "aqua"} {
 	$W.text configure -width 40
