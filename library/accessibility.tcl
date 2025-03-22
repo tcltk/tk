@@ -65,7 +65,6 @@ namespace eval ::tk::accessible {
 	}
 	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"} {
 	    set data [$w get]
-	    puts $data
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}   
