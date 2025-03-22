@@ -62,7 +62,7 @@ static Tk_Window TKU_GetWrapper(Tk_Window winPtr);
 void TKU_AddInput(Display* dpy, Window win, long add_to_mask);
 static Tk_Window TKU_Wrapper(Tk_Window w, Tcl_Interp* interp);
 static Window TKU_XID(Tk_Window w);
-
+    
 /* Customized window withdraw */
 static void
 TKU_WmWithdraw(
@@ -212,6 +212,7 @@ static Atom DockSelectionAtomFor(Tk_Window tkwin);
 static void DockToManager(DockIcon *icon);
 static void CreateTrayIconWindow(DockIcon *icon);
 
+static void SetTrayIconSizeHints(DockIcon *icon, int width, int height);
 static void TrayIconRequestSize(DockIcon* icon, int w, int h);
 static void TrayIconForceImageChange(DockIcon* icon);
 static void TrayIconUpdate(DockIcon* icon, int mask);
@@ -685,6 +686,51 @@ Tk_OptionSpec IconOptionSpec[] = {
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetTrayIconSizeHints --
+ *
+ *	Called by TrayIconRequestSize to set X11 size hints for the wrapper of
+ *      the tray icon window.  This is needed because some window managers will
+ *      try to reduce the width of the icon as much as possible, causing it to
+ *      become 1 pixel wide.
+ *
+ * Results:
+ *	Size hints are sent to the window manager.
+ *      
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+SetTrayIconSizeHints(
+    DockIcon *icon,
+    int width,
+    int height)
+{
+    TkWindow *winPtr = (TkWindow *) icon->drawingWin;
+    XSizeHints *hintsPtr = XAllocSizeHints();
+    if (hintsPtr == NULL) {
+	return;
+    }
+    hintsPtr->base_width = 0;
+    hintsPtr->min_width = width;
+    hintsPtr->max_width = width;
+    hintsPtr->base_height = 0;
+    hintsPtr->min_height = height;
+    hintsPtr->max_height = height;
+    hintsPtr->width_inc = width;
+    hintsPtr->height_inc = height;
+    hintsPtr->win_gravity = NorthWestGravity;
+    hintsPtr->flags = PBaseSize|PMinSize|PMaxSize|PResizeInc|PWinGravity;
+    XSetWMNormalHints(winPtr->display, icon->wrapper, hintsPtr);
+    XFree(hintsPtr);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -713,12 +759,12 @@ TrayIconRequestSize(
 	    TkWindow *winPtr = (TkWindow *) icon->drawingWin;
 	    Tk_SetMinimumRequestSize(icon->drawingWin, w, h);
 	    Tk_GeometryRequest(icon->drawingWin, w, h);
-	    XResizeWindow(winPtr->display, winPtr->window, w, h);
+	    SetTrayIconSizeHints(icon, w, h);
 	    icon->requestedWidth = w;
 	    icon->requestedHeight = h;
 	}
     } else {
-	/* Sign that no size is requested yet */
+	/* Signal that no size has been requested. */
 	icon->requestedWidth = 0;
 	icon->requestedHeight = 0;
     }
