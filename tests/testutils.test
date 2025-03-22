@@ -49,11 +49,11 @@ test testutils-2.2 {invalid #args for subCmd forget} -constraints testutils -bod
 
 test testutils-3.1 {invalid domain for subCmd import} -constraints testutils -body {
     testutils import foo
-} -result {Tk test domain "foo" doesn't exist} -returnCodes error
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
 
 test testutils-3.2 {invalid domain for subCmd forget} -constraints testutils -body {
     testutils forget foo
-} -result {Tk test domain "foo" doesn't exist} -returnCodes error
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
 
 #
 # Create a domain namespace for testing export, import, forget
@@ -85,7 +85,7 @@ test testutils-4.0 {forget not-imported domain} -constraints testutils -body {
 test testutils-4.1 {duplicate import} -constraints testutils -body {
     testutils import _foo
     testutils import _foo
-} -result {domain "_foo" was already imported} -returnCodes error -cleanup {
+} -result {testutils domain "_foo" was already imported} -returnCodes error -cleanup {
     testutils forget _foo
 }
 
@@ -113,7 +113,7 @@ test testutils-5.2 {import fails: proc already exists} -constraints testutils -s
     namespace eval ::_zez {
 	testutils import _foo
     }
-} -result "import from utility domain _foo failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
+} -result "import from testutils domain \"_foo\" failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
     namespace delete ::_zez
 }
 
@@ -159,7 +159,7 @@ test testutils-6.2 {import fails: variable already exists} -constraints testutil
     namespace eval ::_zez {
 	testutils import _foo
     }
-} -result "import from utility domain _foo failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
+} -result "import from testutils domain \"_foo\" failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
     namespace delete ::_zez
 }
 

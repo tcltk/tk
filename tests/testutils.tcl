@@ -214,13 +214,13 @@ namespace eval ::tk::test::generic {
 	# import/forget domains
 	foreach domain $args {
 	    if {! [namespace exists ::tk::test::$domain]} {
-		return -code error "Tk test domain \"$domain\" doesn't exist"
+		return -code error "testutils domain \"$domain\" doesn't exist"
 	    }
 
 	    switch -- $subCmd {
 		import {
 		    if {[info exists importedDomains($ns)] && ($domain in $importedDomains($ns))} {
-			return -code error "domain \"$domain\" was already imported"
+			return -code error "testutils domain \"$domain\" was already imported"
 		    } else {
 
 			# import procs
@@ -229,7 +229,7 @@ namespace eval ::tk::test::generic {
 			} errMsg]} {
 			    # revert import of procs already done
 			    uplevel 1 [list namespace forget ::tk::test::${domain}::*]
-			    return -code error "import from utility domain $domain failed: $errMsg"
+			    return -code error "import from testutils domain \"$domain\" failed: $errMsg"
 			}
 
 			# import associated namespace variables declared in the init proc
@@ -268,7 +268,7 @@ namespace eval ::tk::test::generic {
 					# revert imported procs and partial variable import
 					uplevel 1 [list unset -nocomplain {*}$associatedVars]
 					uplevel 1 [list namespace forget ::tk::test::${domain}::*]
-					return -code error "import from utility domain $domain failed: $errMsg"
+					return -code error "import from testutils domain \"$domain\" failed: $errMsg"
 				    }
 				}
 				set importVars($ns,$domain) $associatedVars
