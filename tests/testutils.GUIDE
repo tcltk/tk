@@ -26,11 +26,11 @@ use existing utility procs in a test file, and how to create new utility procs.
 A1. Organization of utility procs using namespaces
 --------------------------------------------------
 The utility procs that testutils provides are grouped into functional areas.
-These functional areas (also called "domains", or "utility domains") carry names
-such as "dialog","entry", "text", which conform more or less to names of test
-files in the Tk test suite.
+These functional areas are also called "domains", or "utility domains". They
+carry names such as "dialog","entry", "text", which conform more or less to
+names of test files in the Tk test suite.
 
-Utility procs are imported on demand by test files, using the command "testutils"
+Utility procs are imported on demand by test files, using the command "testutils".
 (See the explanation of this command in the next section.) Utility procs for
 the domain "generic" are an exception to this general rule: these procs are
 imported into the global namespace as a standard policy. They are readily
@@ -42,9 +42,10 @@ inside the namespace ::tk::test::dialog.
 
 A2. Using existing utility procs in test files
 ----------------------------------------------
-The command "testutils" is the interface for the test author to import utility
-procs into the namespace in which tests are executed (this is the global
-namespace). It takes the following form:
+The command "testutils" is the interface to the testutils mechanism for the test
+author. The test author may use it to import utility procs into the namespace
+in which tests are executed (normally, this is the global namespace). The command
+takes the following form:
 
     testutils (import|forget) domain ?domain domain ...?
 
@@ -52,7 +53,7 @@ The command "testutils import" is typically invoked at the top of a test file.
 The command "testutils forget" is typically invoked at the end of a test file.
 These commands take care of the importing and cleaning up of utility procs
 for a specific domain. They also take care of importing any namespace variables
-associated with these procs, so that they can be accessed from within a test.
+associated with these procs so that they can be accessed from within a test.
 
 Typical invocations in a test file (using the domain "dialog" as an example), are:
 
@@ -68,15 +69,16 @@ Typical invocations in a test file (using the domain "dialog" as an example), ar
 ┃    ⋮
 ┃    testutils forget dialog
 
-The command "testutils import" fails if a proc or variable with the same name
-was already defined in the global namespace outside the testutils mechanism.
-Therefore, test authors need to take care that such procs and variables are
-cleaned up before the end of a test file.
+The command "testutils import" fails if a proc or variable, unrelated to the
+testutils mechanism, but having the same name as a utility proc or associated
+variable, was already defined in the importing namespace. Therefore, test
+authors need to take care that such procs and variables are cleaned up before
+the end of a test file.
 
 A3. Adding new utility procs
 ----------------------------
 Test authors may define new utility procs in the file "testutils.tcl". When doing
-so, there are several points for a test author to be aware of:
+so, there are several points to be aware of:
 
 1. Consider whether the new utility proc is used in multiple test files. If
    it's not, it may as well be defined inside the specific test file that uses
@@ -125,12 +127,12 @@ the file "all.tcl".
 
 B2. Importing procs and associated namespace variables
 ------------------------------------------------------
-The command "testutils" makes utility procs available to the global namespace
-in which test files execute. The procs themselves are made available through
-a plain "namespace export/namespace import"; there is nothing special about that.
-However, special attention is needed for those utility procs that store state
-in a namespace variable that is also accessed from the global namespace in which
-tests are executing. Such variables are made available to the global namespace
+The command "testutils" makes utility procs available to the namespace in which
+test files execute. The command employs a plain "namespace export/namespace import"
+for importing procs; there is nothing special about that. However, special
+attention is needed for those utility procs that store state in a namespace
+variable that is also accessed from the namespace in which tests are executing.
+Such variables are made available to the namespace in which tests are executing
 using an upvar statement. The process of importing these associated namespace
 variables needs to handle some specifics:
 
@@ -175,9 +177,9 @@ namespace variables cannot be removed. The tricky details are explicitly
 described by comments in the proc testutils.
 
 Another tricky detail - that testutils currently evades - is the fact that
-unsetting an upvar'ed namespace variable changes its visibility (for "info vars")
-in the namespace where the variable was defined, but not in the namespace where
-the upvar statement was invoked.
+unsetting an upvar'ed namespace variable changes its visibility for "info vars"
+in the utility namespace where the variable was defined, but not in the namespace
+where the upvar statement was invoked.
 
 B4. Test file
 -------------
