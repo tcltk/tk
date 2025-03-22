@@ -63,6 +63,12 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
+	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"} {
+	    set data [$w get]
+	    puts $data
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}   
     }
 	
     #Set initial accessible attributes and add binding to <Map> event.
@@ -351,7 +357,18 @@ namespace eval ::tk::accessible {
     bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
     bind Treeview <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
+    bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+        bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
 
+    #VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
+    if {[tk windowingsystem] eq "aqua"} {
+	bind Entry <Command-a> {+::tk::accessible::_updateselection %W}
+	bind TEntry <Command-a> {+::tk::accessible::_updateselection %W}
+    } else  {
+	bind Entry <Control-a> {+::tk::accessible::_updateselection %W}
+	bind TEntry <Control-a> {+::tk::accessible::_updateselection %W}
+    }
+    
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object
     namespace ensemble create
