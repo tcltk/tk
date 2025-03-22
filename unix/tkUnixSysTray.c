@@ -710,9 +710,10 @@ TrayIconRequestSize(
     if (icon->drawingWin) {
 	if (icon->requestedWidth != w ||
 		icon->requestedHeight != h) {
-	    Tk_SetMinimumRequestSize(icon->drawingWin,w,h);
-	    Tk_GeometryRequest(icon->drawingWin,w,h);
-	    Tk_SetGrid(icon->drawingWin,1,1,w,h);
+	    TkWindow *winPtr = (TkWindow *) icon->drawingWin;
+	    Tk_SetMinimumRequestSize(icon->drawingWin, w, h);
+	    Tk_GeometryRequest(icon->drawingWin, w, h);
+	    XResizeWindow(winPtr->display, winPtr->window, w, h);
 	    icon->requestedWidth = w;
 	    icon->requestedHeight = h;
 	}
