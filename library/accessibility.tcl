@@ -63,11 +63,55 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
-	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"} {
+	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"  {
 	    set data [$w get]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
-	}   
+	}
+      }
+    }
+
+	#increment scale
+	proc _updatescale {w key} {
+	    if {[winfo class $w] eq "Scale"} {
+		switch -- $key {
+		    Right {
+			tk::ScaleIncrement $w down little noRepeat
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		    Left {
+			tk::ScaleIncrement $w up little noRepeat
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	    }
+	    if {[winfo class $w] eq "TScale"} {
+		switch -- $key {
+		    Right {
+			ttk::scale::Increment $w 1
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		    Left {
+			ttk::scale::Increment $w -1
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	    }
+	}
+
+    #force Tk focus on the widget that currently has accessibility focus if needed
+    proc _forceTkFocus {w} {
+	if {[focus] ne $w} {
+	    focus -force $w
+	}
     }
 	
     #Set initial accessible attributes and add binding to <Map> event.
@@ -107,7 +151,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W invoke}\
 			}
-    #Canvas bindings
+    #Canvas bindings 
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
 			   Canvas \
@@ -349,17 +393,30 @@ namespace eval ::tk::accessible {
 			      {}\
 			      {}\
 			  }
+
+    #
+    # Various bindings to support data updates, help text/navigation
+    # instructions, and other actions.
+    #
     
-    
+    #Activate accessibility object when mapped.
     bind all <Map> {+::tk::accessible::add_acc_object %W}
+
+    #Capture value changes, navigation help.
     bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
     bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
     bind Treeview <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
     bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-        bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind Scale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
+       bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
 
-    #VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
+    #
+    # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
+    # in entry widgets.
+    #
+    
     if {[tk windowingsystem] eq "aqua"} {
 	bind Entry <Command-a> {+::tk::accessible::_updateselection %W}
 	bind TEntry <Command-a> {+::tk::accessible::_updateselection %W}
@@ -367,6 +424,13 @@ namespace eval ::tk::accessible {
 	bind Entry <Control-a> {+::tk::accessible::_updateselection %W}
 	bind TEntry <Control-a> {+::tk::accessible::_updateselection %W}
     }
+
+    #Capture value changes from scale widgets.
+    bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
+    bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
+    bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
+    bind TScale <Left> {+::tk::accessible::_updatescale %W Left}
+    
     
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object
