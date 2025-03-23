@@ -474,9 +474,9 @@ namespace eval ::tk::accessible {
     # how it is constructed. If VoiceOver is running, alias the ttk::spinbox
     # to the core Tk spinbox.
     if {[tk windowingsystem] eq "aqua"} {
-	set result [exec pgrep -x VoiceOver]
-	if {[string length $result] > 0} {
-	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
+	set result [::tk::accessible::check_screenreader]
+	if {$result > 0} {
+	interp alias {} ::ttk::spinbox {} ::tk::spinbox
 	}
     }
     
@@ -488,7 +488,7 @@ namespace eval ::tk::accessible {
     
     
     #Export the main commands.
-    namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object
+    namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object check_screenreader
     namespace ensemble create
 }
 

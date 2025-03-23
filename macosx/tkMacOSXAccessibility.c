@@ -31,6 +31,9 @@ static int TkMacOSXAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
+int IsVoiceOverRunning(TCL_UNUSED(void *),Tcl_Interp *ip,
+			     int objc, Tcl_Obj *const objv[]);
+int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
@@ -539,6 +542,46 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
 }
 
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsVoiceOverRunning --
+ *
+ * Runtime check to see if screen reader is running. 
+ *
+ * Results:
+ *	Returns if screen reader is active or not. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int IsVoiceOverRunning (
+		      TCL_UNUSED(void *),
+		      Tcl_Interp *ip,		/* Current interpreter. */
+		      int objc,			/* Number of arguments. */
+		      Tcl_Obj *const objv[])	/* Argument objects. */
+{
+
+    int result = 0;
+    FILE *fp = popen("pgrep -x VoiceOver", "r");
+    if (fp == NULL) {
+	result = 0;
+    }
+
+    char buffer[16];
+    /* If output exists, VoiceOver is running. */
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
+
+    pclose(fp);
+    if (running) {
+	result = 1;
+    }
+    Tcl_SetObjResult(ip, Tcl_NewIntObj(result));
+    return TCL_OK;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -715,6 +758,7 @@ int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
+     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
     [pool release];
     return TCL_OK;
 }
