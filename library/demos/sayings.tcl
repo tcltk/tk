@@ -31,7 +31,7 @@ pack $w.frame -side top -expand yes -fill both -padx 1c
 ttk::scrollbar $w.frame.yscroll -command "$w.frame.list yview"
 ttk::scrollbar $w.frame.xscroll -orient horizontal \
     -command "$w.frame.list xview"
-listbox $w.frame.list -width 20 -height 10 -setgrid 1 \
+listbox $w.frame.list -width 20 -height 10 \
     -yscroll "$w.frame.yscroll set" -xscroll "$w.frame.xscroll set"
 
 grid $w.frame.list -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
