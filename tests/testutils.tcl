@@ -281,7 +281,7 @@ namespace eval ::tk::test::generic {
 		}
 		forget {
 		    if {(! [info exists importedDomains($ns)]) || ($domain ni $importedDomains($ns))} {
-			return -code error "domain \"$domain\" was not imported"
+			return -code error "testutils domain \"$domain\" was not imported"
 		    }
 
 		    # remove imported utility procs from the namespace where tests are executing

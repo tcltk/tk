@@ -80,7 +80,7 @@ set initVars [info vars]; lappend initVars initVars
 #
 test testutils-4.0 {forget not-imported domain} -constraints testutils -body {
     testutils forget _foo
-} -result {domain "_foo" was not imported} -returnCodes error
+} -result {testutils domain "_foo" was not imported} -returnCodes error
 
 test testutils-4.1 {duplicate import} -constraints testutils -body {
     testutils import _foo
