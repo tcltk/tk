@@ -63,12 +63,16 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
-	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"  {
+	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
 	    set data [$w get]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
-      }
+	if {[winfo class $w] eq "TCombobox"} {
+	    set data [$w get]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
     }
 
 	#increment scale and spinbox
@@ -137,12 +141,58 @@ namespace eval ::tk::accessible {
 			::tk::accessible::emit_selection_change $w
 		    }
 		}
-	    }
+	     }
+	     if {[winfo class $w] eq "TCombobox"} {
+		switch -- $key {
+		   Down {
+			ttk::combobox::Post $w
+			set data [$w get]
+		    }
+		    Escape {
+			ttk::combobox::Unpost $w
+			$w selection range 0 end
+			if {[tk windowingsystem] eq "aqua"} {
+			    event generate <Command-a>
+			} else {
+			    event generate <Control-a>
+			}
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	     }
+
+	    if {[winfo class $w] eq "TEntry" && [tk windowingsystem] eq "aqua"} {
+		switch -- $key {
+		   Down {
+			ttk::combobox::Post $w
+			set data [$w get]
+		    }
+		    Escape {
+			puts "unposting"
+			ttk::combobox::Unpost $w
+			$w selection range 0 end
+			if {[tk windowingsystem] eq "aqua"} {
+			    event generate <Command-a>
+			    event generate <<SelectAll>>
+			} else {
+			    event generate <Control-a>
+			    event generate <<SelectAll>>
+			}
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	    }	
 	}
+
+				
 
     #force Tk focus on the widget that currently has accessibility focus if needed
     proc _forceTkFocus {w} {
-	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox"} {
+	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview"} {
 	    if {[focus] ne $w} {
 		focus -force $w
 	    }
@@ -450,6 +500,7 @@ namespace eval ::tk::accessible {
     bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
     bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
     bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
+    bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
@@ -485,7 +536,6 @@ namespace eval ::tk::accessible {
     bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
     bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
     bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
-    
     
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object check_screenreader
