@@ -187,7 +187,6 @@ typedef struct {
 
     int x,y,width,height;
     int imageWidth, imageHeight;
-    int requestedWidth, requestedHeight;
     int visible; /* whether XEMBED_MAPPED should be set */
     int docked;	 /* whether an icon should be docked */
     Tcl_Obj *imageObj; /* option: -image */
@@ -717,10 +716,10 @@ SetTrayIconSizeHints(
     if (hintsPtr == NULL) {
 	return;
     }
-    hintsPtr->base_width = 0;
+    hintsPtr->base_width = width;      /* preferred width */
     hintsPtr->min_width = width;
     hintsPtr->max_width = width;
-    hintsPtr->base_height = 0;
+    hintsPtr->base_height = height;    /* preferred height */
     hintsPtr->min_height = height;
     hintsPtr->max_height = height;
     hintsPtr->width_inc = width;
@@ -754,19 +753,9 @@ TrayIconRequestSize(
     int h)
 {
     if (icon->drawingWin) {
-	if (icon->requestedWidth != w ||
-		icon->requestedHeight != h) {
-	    TkWindow *winPtr = (TkWindow *) icon->drawingWin;
-	    Tk_SetMinimumRequestSize(icon->drawingWin, w, h);
-	    Tk_GeometryRequest(icon->drawingWin, w, h);
-	    SetTrayIconSizeHints(icon, w, h);
-	    icon->requestedWidth = w;
-	    icon->requestedHeight = h;
-	}
-    } else {
-	/* Signal that no size has been requested. */
-	icon->requestedWidth = 0;
-	icon->requestedHeight = 0;
+	SetTrayIconSizeHints(icon, w, h);
+	Tk_SetMinimumRequestSize(icon->drawingWin, w, h);
+	Tk_GeometryRequest(icon->drawingWin, w, h);
     }
 }
 
@@ -818,7 +807,7 @@ TrayIconImageChanged(
     if (imgw == w && imgh == h && x == 0 && y == 0) {
 	icon->photo = NULL;	/* invalidate */
     }
-    TrayIconRequestSize(icon,imgw,imgh);
+    TrayIconRequestSize(icon, imgw, imgh);
     EventuallyRedrawIcon(icon);
 }
 
@@ -1167,6 +1156,19 @@ TrayIconWrapperEvent(
  *----------------------------------------------------------------------
  */
 
+/*
+ * Idle task to re-request a size for the widget.  This is called
+ * when a configureNotify event is received to remind the window
+ * manager about our preferred size by setting XSizeHints.  It
+ * seems that many window managers forget about the hints and will
+ * shrink the tray icon to have width 1 if we don't do this.
+ */
+
+static void SizeRequestIdleTask(void *clientData) {
+    DockIcon *icon = (DockIcon *) clientData;
+    TrayIconForceImageChange(icon);
+}
+
 static void
 TrayIconEvent(
     void *cd,
@@ -1194,14 +1196,14 @@ TrayIconEvent(
 	Tcl_CancelIdleCall(DisplayIcon, icon);
 	icon->flags &= ~ICON_FLAG_REDRAW_PENDING;
 	icon->drawingWin = NULL;
-	icon->requestedWidth = 0; /* trigger re-request on recreation */
-	icon->requestedHeight = 0;
 	icon->wrapper = None;
 	icon->myManager = None;
 	break;
 
     case ConfigureNotify:
 	Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconConfigure"), NULL);
+	/* Resend our size request, in case the wm has forgotten. */
+	Tcl_DoWhenIdle(SizeRequestIdleTask, (void *) icon);
 	if (icon->width != ev->xconfigure.width ||
 		icon->height != ev->xconfigure.height) {
 	    icon->width = ev->xconfigure.width;
@@ -1486,7 +1488,6 @@ TrayIconUpdate(
 		     (!icon->bestVisual && (icon->flags & ICON_FLAG_ARGB32)))) {
 		icon->myManager = None;
 		icon->wrapper = None;
-		icon->requestedWidth = icon->requestedHeight = 0;
 		Tk_DestroyWindow(icon->drawingWin);
 		icon->drawingWin = NULL;
 	    }
