@@ -93,8 +93,8 @@ so, there are several points to be aware of:
    is needed for the following:
 
    Their definition needs to be to placed in the reserved proc "init" (inside
-   the proper namespace). The command "testutils import" will import any variables
-   defined in this proc into the namespace where tests are executing.
+   the proper domain namespace). The command "testutils import" will import any
+   variables defined in this proc into the namespace where tests are executing.
 
    Note that just placing associated namespace variables inside the "namespace eval"
    scope for the specific domain, but outside the init proc, isn't good enough
