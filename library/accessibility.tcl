@@ -162,30 +162,6 @@ namespace eval ::tk::accessible {
 		    }
 		}
 	     }
-
-	    if {[winfo class $w] eq "TEntry" && [tk windowingsystem] eq "aqua"} {
-		switch -- $key {
-		   Down {
-			ttk::combobox::Post $w
-			set data [$w get]
-		    }
-		    Escape {
-			puts "unposting"
-			ttk::combobox::Unpost $w
-			$w selection range 0 end
-			if {[tk windowingsystem] eq "aqua"} {
-			    event generate <Command-a>
-			    event generate <<SelectAll>>
-			} else {
-			    event generate <Control-a>
-			    event generate <<SelectAll>>
-			}
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		}
-	    }	
 	}
 
 				
