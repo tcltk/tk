@@ -329,7 +329,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
      *  is required.
      */
     
-    if ((role = NSAccessibilitySliderRole)) {
+    if ((role = NSAccessibilitySliderRole) || (role = NSAccessibilityIncrementorRole)) {
 	[self forceFocus];
     }
  

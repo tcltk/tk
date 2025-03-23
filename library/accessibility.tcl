@@ -71,7 +71,7 @@ namespace eval ::tk::accessible {
       }
     }
 
-	#increment scale
+	#increment scale and spinbox
 	proc _updatescale {w key} {
 	    if {[winfo class $w] eq "Scale"} {
 		switch -- $key {
@@ -105,12 +105,49 @@ namespace eval ::tk::accessible {
 		    }
 		}
 	    }
+
+	     if {[winfo class $w] eq "Spinbox"} {
+		switch -- $key {
+		    Up {
+			$w invoke buttonup
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		    Down {
+			$w invoke buttondown
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	     }
+	     if {[winfo class $w] eq "TSpinbox"} {
+		switch -- $key {
+		    Up {
+			ttk::spinbox::Spin $w +1 
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		    Down {
+			ttk::spinbox::Spin $w -1 
+			set data [$w get]
+			::tk::accessible::acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+		    }
+		}
+	    }
 	}
 
     #force Tk focus on the widget that currently has accessibility focus if needed
     proc _forceTkFocus {w} {
-	if {[focus] ne $w} {
-	    focus -force $w
+	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox"} {
+	    if {[focus] ne $w} {
+		focus -force $w
+	    }
+	} else {
+	    return
 	}
     }
 	
@@ -410,11 +447,13 @@ namespace eval ::tk::accessible {
     bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
     bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
     bind Scale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
-       bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
+    bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
+    bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
+    bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
-    # in entry widgets.
+    # in entry widgets but does respond to the corresponding keysyms.
     #
     
     if {[tk windowingsystem] eq "aqua"} {
@@ -430,6 +469,22 @@ namespace eval ::tk::accessible {
     bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
     bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
     bind TScale <Left> {+::tk::accessible::_updatescale %W Left}
+
+    # On macOS, the ttk::spinbox returns the wrong accessibility role because of
+    # how it is constructed. If VoiceOver is running, alias the ttk::spinbox
+    # to the core Tk spinbox.
+    if {[tk windowingsystem] eq "aqua"} {
+	set result [exec pgrep -x VoiceOver]
+	if {[string length $result] > 0} {
+	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
+	}
+    }
+    
+    #Capture value changes from spinbox widgets.
+    bind Spinbox <Up> {+::tk::accessible::_updatescale %W Up}
+    bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
+    bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
+    bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
     
     
     #Export the main commands.
