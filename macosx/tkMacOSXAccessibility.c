@@ -51,7 +51,7 @@ struct MacRoleMap {
 
 const struct MacRoleMap roleMap[] = {
     {"Button", @"NSAccessibilityButtonRole"},
-    {"Canvas", @"NSAccessibilityUnknownRole"},
+    {"Canvas", @"NSAccessibilityScrollAreaRole"},
     {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
     {"Combobox",  @"NSAccessibilityComboBoxRole"},
     {"Entry",  @"NSAccessibilityTextFieldRole"},

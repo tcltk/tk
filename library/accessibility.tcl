@@ -75,94 +75,94 @@ namespace eval ::tk::accessible {
 	}
     }
 
-	#increment scale and spinbox
-	proc _updatescale {w key} {
-	    if {[winfo class $w] eq "Scale"} {
-		switch -- $key {
-		    Right {
-			tk::ScaleIncrement $w down little noRepeat
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		    Left {
-			tk::ScaleIncrement $w up little noRepeat
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
+    #increment scale and spinbox
+    proc _updatescale {w key} {
+	if {[winfo class $w] eq "Scale"} {
+	    switch -- $key {
+		Right {
+		    tk::ScaleIncrement $w down little noRepeat
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+		Left {
+		    tk::ScaleIncrement $w up little noRepeat
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
-	    if {[winfo class $w] eq "TScale"} {
-		switch -- $key {
-		    Right {
-			ttk::scale::Increment $w 1
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		    Left {
-			ttk::scale::Increment $w -1
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		}
-	    }
-
-	     if {[winfo class $w] eq "Spinbox"} {
-		switch -- $key {
-		    Up {
-			$w invoke buttonup
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		    Down {
-			$w invoke buttondown
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		}
-	     }
-	     if {[winfo class $w] eq "TSpinbox"} {
-		switch -- $key {
-		    Up {
-			ttk::spinbox::Spin $w +1 
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		    Down {
-			ttk::spinbox::Spin $w -1 
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		}
-	     }
-	     if {[winfo class $w] eq "TCombobox"} {
-		switch -- $key {
-		   Down {
-			ttk::combobox::Post $w
-			set data [$w get]
-		    }
-		    Escape {
-			ttk::combobox::Unpost $w
-			$w selection range 0 end
-			if {[tk windowingsystem] eq "aqua"} {
-			    event generate <Command-a>
-			} else {
-			    event generate <Control-a>
-			}
-			set data [$w get]
-			::tk::accessible::acc_value $w $data
-			::tk::accessible::emit_selection_change $w
-		    }
-		}
-	     }
 	}
+	if {[winfo class $w] eq "TScale"} {
+	    switch -- $key {
+		Right {
+		    ttk::scale::Increment $w 1
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+		Left {
+		    ttk::scale::Increment $w -1
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+	    }
+	}
+
+	if {[winfo class $w] eq "Spinbox"} {
+	    switch -- $key {
+		Up {
+		    $w invoke buttonup
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+		Down {
+		    $w invoke buttondown
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+	    }
+	}
+	if {[winfo class $w] eq "TSpinbox"} {
+	    switch -- $key {
+		Up {
+		    ttk::spinbox::Spin $w +1 
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+		Down {
+		    ttk::spinbox::Spin $w -1 
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+	    }
+	}
+	if {[winfo class $w] eq "TCombobox"} {
+	    switch -- $key {
+		Down {
+		    ttk::combobox::Post $w
+		    set data [$w get]
+		}
+		Escape {
+		    ttk::combobox::Unpost $w
+		    $w selection range 0 end
+		    if {[tk windowingsystem] eq "aqua"} {
+			event generate <Command-a>
+		    } else {
+			event generate <Control-a>
+		    }
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+	    }
+	}
+    }
 
 				
 
@@ -477,6 +477,7 @@ namespace eval ::tk::accessible {
     bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
     bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
+    bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
