@@ -12,7 +12,6 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
-setDialogType clrpick
 
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
