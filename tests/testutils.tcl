@@ -518,6 +518,7 @@ namespace eval ::tk::test::dialog {
     #
     proc init {} {
 	variable dialogType none
+	variable dialogIsNative
 	variable testDialog
 	variable testDialogFont
     }
@@ -590,6 +591,28 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
+    proc setDialogType {type} {
+	variable dialogIsNative
+	switch -- $type {
+	    "choosedir" {
+		set dialogIsNative [expr {[info procs ::tk_chooseDirectory] eq ""}]
+	    }
+	    "clrpick" {
+		set dialogIsNative [expr {[info procs ::tk_chooseColor] eq ""}]
+	    }
+	    "filebox" {
+		set dialogIsNative [expr {[info procs ::tk_getOpenFile] eq ""}]
+	    }
+	    "msgbox" {
+		set dialogIsNative [expr {[info procs ::tk_messageBox] eq ""}]
+	    }
+	    default {
+		return -code error "invalid dialog type \"$type\""
+	    }
+	}
+	variable dialogType $type
+    }
+
     proc testDialog {stage {script ""}} {
 	variable testDialogCmd
 	variable testDialogResult
@@ -655,8 +678,8 @@ namespace eval ::tk::test::dialog {
     }
 
     proc ToPressButton {parent btn} {
-	variable dialogType
-	if {($dialogType eq "choosedir") || ! $::isNative} {
+	variable dialogIsNative
+	if {! $dialogIsNative} {
 	    after 100 SendButtonPress $parent $btn mouse
 	}
     }
