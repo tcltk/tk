@@ -592,24 +592,24 @@ namespace eval ::tk::test::dialog {
     }
 
     proc setDialogType {type} {
-	variable dialogIsNative
 	switch -- $type {
 	    "choosedir" {
-		set dialogIsNative [expr {[info procs ::tk_chooseDirectory] eq ""}]
+		set cmd ::tk_chooseDirectory
 	    }
 	    "clrpick" {
-		set dialogIsNative [expr {[info procs ::tk_chooseColor] eq ""}]
+		set cmd ::tk_chooseColor
 	    }
 	    "filebox" {
-		set dialogIsNative [expr {[info procs ::tk_getOpenFile] eq ""}]
+		set cmd ::tk_getOpenFile
 	    }
 	    "msgbox" {
-		set dialogIsNative [expr {[info procs ::tk_messageBox] eq ""}]
+		set cmd ::tk_messageBox
 	    }
 	    default {
 		return -code error "invalid dialog type \"$type\""
 	    }
 	}
+	variable dialogIsNative [expr {[info procs $cmd] eq ""}]
 	variable dialogType $type
     }
 
