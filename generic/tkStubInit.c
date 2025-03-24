@@ -939,6 +939,9 @@ static const TkPlatStubs tkPlatStubs = {
     0, /* 15 */
     TkGenWMConfigureEvent, /* 16 */
 #endif /* AQUA */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+    Tk_SetSizeHints, /* 0 */
+#endif /* X11 */
 };
 
 static const TkStubHooks tkStubHooks = {

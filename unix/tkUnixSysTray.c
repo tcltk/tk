@@ -14,6 +14,7 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
+#include "tkPlatDecls.h"
 
 /*
  * Based extensively on the tktray extension package. Here we are removing
@@ -211,7 +212,6 @@ static Atom DockSelectionAtomFor(Tk_Window tkwin);
 static void DockToManager(DockIcon *icon);
 static void CreateTrayIconWindow(DockIcon *icon);
 
-static void SetTrayIconSizeHints(DockIcon *icon, int width, int height);
 static void TrayIconRequestSize(DockIcon* icon, int w, int h);
 static void TrayIconForceImageChange(DockIcon* icon);
 static void TrayIconUpdate(DockIcon* icon, int mask);
@@ -689,50 +689,6 @@ Tk_OptionSpec IconOptionSpec[] = {
 /*
  *----------------------------------------------------------------------
  *
- * SetTrayIconSizeHints --
- *
- *	Called by TrayIconRequestSize to set X11 size hints for the wrapper of
- *      the tray icon window.  This is needed because some window managers will
- *      try to reduce the width of the icon as much as possible, causing it to
- *      become 1 pixel wide.
- *
- * Results:
- *	Size hints are sent to the window manager.
- *      
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-static void
-SetTrayIconSizeHints(
-    DockIcon *icon,
-    int width,
-    int height)
-{
-    TkWindow *winPtr = (TkWindow *) icon->drawingWin;
-    XSizeHints *hintsPtr = XAllocSizeHints();
-    if (hintsPtr == NULL) {
-	return;
-    }
-    hintsPtr->base_width = width;      /* preferred width */
-    hintsPtr->min_width = width;
-    hintsPtr->max_width = width;
-    hintsPtr->base_height = height;    /* preferred height */
-    hintsPtr->min_height = height;
-    hintsPtr->max_height = height;
-    hintsPtr->width_inc = width;
-    hintsPtr->height_inc = height;
-    hintsPtr->win_gravity = NorthWestGravity;
-    hintsPtr->flags = PBaseSize|PMinSize|PMaxSize|PResizeInc|PWinGravity;
-    XSetWMNormalHints(winPtr->display, icon->wrapper, hintsPtr);
-    XFree(hintsPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TrayIconRequestSize --
  *
  *	Set icon size.
@@ -753,7 +709,7 @@ TrayIconRequestSize(
     int h)
 {
     if (icon->drawingWin) {
-	SetTrayIconSizeHints(icon, w, h);
+	Tk_SetSizeHints(icon->drawingWin, w, w, h, h);
 	Tk_SetMinimumRequestSize(icon->drawingWin, w, h);
 	Tk_GeometryRequest(icon->drawingWin, w, h);
     }
