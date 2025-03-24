@@ -12,7 +12,7 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
-set dialogType clrpick
+setDialogType clrpick
 
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
@@ -78,16 +78,8 @@ test clrpick-1.7 {tk_chooseColor command} -body {
     tk_chooseColor -initialcolor ##badbadbaadcolor
 } -returnCodes error -result {invalid color name "##badbadbaadcolor"}
 
-
-# tests 3.1 and 3.2 fail when individually run
-# if there is no catch {tk_chooseColor -foo 1} msg
-# before setting isNative
-catch {tk_chooseColor -foo 1} msg
-set isNative [expr {[info commands tk::dialog::color::] eq ""}]
-
 proc ToChooseColorByKey {parent r g b} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 200 ChooseColorByKey . $r $g $b
     }
 }

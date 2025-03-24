@@ -12,7 +12,7 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
-set dialogType msgbox
+setDialogType msgbox
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -78,19 +78,14 @@ test msgbox-1.19 {tk_messageBox command} -body {
 } -returnCodes error -result {bad window path name "foo.bar"}
 
 
-catch {tk_messageBox -foo bar}
-set isNative [expr {[info commands tk::MessageBox] == ""}]
-
 proc ChooseMsg {parent btn} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 100 SendButtonPress $parent $btn mouse
     }
 }
 
 proc ChooseMsgByKey {parent btn} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 100 SendButtonPress $parent $btn key
     }
 }

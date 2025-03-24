@@ -12,7 +12,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import dialog
-set dialogType filebox
+setDialogType filebox
 
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long
@@ -50,14 +50,8 @@ set tk_strictMotif_old $tk_strictMotif
 #
 #----------------------------------------------------------------------
 
-set isNative [expr {
-    [info commands ::tk::MotifFDialog] eq ""   &&
-    [info commands ::tk::dialog::file::] eq ""
-}]
-
 proc ToEnterFileByKey {parent fileName fileDir} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
     }
 }
