@@ -545,6 +545,11 @@ namespace eval ::tk::test::dialog {
 	    "msgbox" {
 		set cmd ::tk_messageBox
 	    }
+	    "dialog" -
+	    "fontchooser" -
+	    "winDialog" {
+		return unusedVariable
+	    }
 	    default {
 		return -code error "invalid dialog type \"$type\""
 	    }
