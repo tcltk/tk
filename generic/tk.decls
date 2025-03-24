@@ -1156,6 +1156,14 @@ declare 16 aqua {
 	    int height, int flags)
 }
 
+################################
+# X11 specific functions
+
+declare 0 x11 {
+    void Tk_SetSizeHints(Tk_Window tkwin, int minWidth, int maxWidth,
+			 int minHeight, int maxHeight)
+}
+
 ##############################################################################
 
 # Public functions that are not accessible via the stubs table.

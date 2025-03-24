@@ -3787,6 +3787,41 @@ WmWaitMapProc(
 	(void) TkpWmSetState(winPtr, WithdrawnState);
     }
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetSizeHints --
+ *
+ *	This function stores the provided values for the minimum and maximum
+ *      size of a toplevel window in the window's wmInfo struct.  Those values
+ *      will be passed to the window manager whenever UpdateSizeHints is
+ *      called. UpdateSizeHints will be called by UpdateGeometryInfo whenever
+ *      a window is mapped or has its size changed by the window manager.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Size limits will be passed to the window manager.
+ */
+
+void Tk_SetSizeHints(
+    Tk_Window tkwin,
+    int minWidth,
+    int maxWidth,
+    int minHeight,
+    int maxHeight)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    wmPtr->minWidth = minWidth;
+    wmPtr->maxWidth = maxWidth;
+    wmPtr->minHeight = minHeight;
+    wmPtr->maxHeight = maxHeight;
+}
+
 
 /*
  *----------------------------------------------------------------------
