@@ -517,8 +517,8 @@ namespace eval ::tk::test::dialog {
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
-	variable dialogType [file rootname [file tail [info script]]]
-	variable dialogIsNative [isNative $dialogType]
+	variable dialogType none
+	variable dialogIsNative
 	variable testDialog
 	variable testDialogFont
     }
@@ -529,32 +529,6 @@ namespace eval ::tk::test::dialog {
 	    return -code error "invalid button name \"$button\""
 	}
 	$testDialog.$button invoke
-    }
-
-    proc isNative {type} {
-	switch -- $type {
-	    "choosedir" {
-		set cmd ::tk_chooseDirectory
-	    }
-	    "clrpick" {
-		set cmd ::tk_chooseColor
-	    }
-	    "filebox" {
-		set cmd ::tk_getOpenFile
-	    }
-	    "msgbox" {
-		set cmd ::tk_messageBox
-	    }
-	    "dialog" -
-	    "fontchooser" -
-	    "winDialog" {
-		return unusedVariable
-	    }
-	    default {
-		return -code error "invalid dialog type \"$type\""
-	    }
-	}
-	return [expr {[info procs $cmd] eq ""}]
     }
 
     proc PressButton {btn} {
@@ -615,6 +589,28 @@ namespace eval ::tk::test::dialog {
 	    event generate $button <Enter>
 	    event generate $w <Key> -keysym Return
 	}
+    }
+
+    proc setDialogType {type} {
+	switch -- $type {
+	    "choosedir" {
+		set cmd ::tk_chooseDirectory
+	    }
+	    "clrpick" {
+		set cmd ::tk_chooseColor
+	    }
+	    "filebox" {
+		set cmd ::tk_getOpenFile
+	    }
+	    "msgbox" {
+		set cmd ::tk_messageBox
+	    }
+	    default {
+		return -code error "invalid dialog type \"$type\""
+	    }
+	}
+	variable dialogIsNative [expr {[info procs $cmd] eq ""}]
+	variable dialogType $type
     }
 
     proc testDialog {stage {script ""}} {
