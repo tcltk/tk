@@ -1239,6 +1239,8 @@ typedef void (Tk_ImageChangedProc) (void *clientData, int x, int y,
 typedef int (Tk_ImagePostscriptProc) (void *clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo,
 	int x, int y, int width, int height, int prepass);
+typedef int (Tk_ImageFormatProc) (Tcl_Interp *interp,
+	Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * The following structure represents a particular type of image (bitmap, xpm
@@ -1273,7 +1275,9 @@ struct Tk_ImageType {
 				/* Next in list of all image types currently
 				 * known. Filled in by Tk, not by image
 				 * manager. */
-    char *reserved;		/* reserved for future expansion */
+    Tk_ImageFormatProc *formatProc;
+				/* Procedure to call for the image driver
+				 * interface for format configuration. */
 };
 
 /*

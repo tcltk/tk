@@ -168,6 +168,7 @@ Tk_CreateImageType(
     tsdPtr->imageTypeList = copyPtr;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -193,15 +194,16 @@ Tk_ImageObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
-	"create", "delete", "formats", "height", "inuse", "names", "type",
+	"create", "delete", "format", "height", "inuse", "names", "type",
 	"types", "width", NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_FORMATS, IMAGE_HEIGHT, IMAGE_INUSE,
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_FORMAT, IMAGE_HEIGHT, IMAGE_INUSE,
 	IMAGE_NAMES, IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
     int i, isNew, firstOption, index;
+    int oldimage = 0;
     Tk_ImageType *typePtr;
     ImageModel *modelPtr;
     Image *imagePtr;
@@ -223,14 +225,24 @@ Tk_ImageObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    switch ((enum options) index) {
-    case IMAGE_CREATE: {
-	Tcl_Obj **args;
-	int oldimage = 0;
+    
+    /*
+     * First parse the image type for create and format options
+     */
 
+    switch ((enum options) index) {
+    case IMAGE_CREATE:
+    case IMAGE_FORMAT:
+
+	/*
+	 * Check if image type argument is given
+	 */
+	
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "type ?name? ?-option value ...?");
+		    (index == IMAGE_CREATE ?
+		    "type ?name? ?-option value ...?" :
+		    "type command ?arguments ...?") );
 	    return TCL_ERROR;
 	}
 
@@ -259,9 +271,20 @@ Tk_ImageObjCmd(
 	if (typePtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image type \"%s\" does not exist", arg));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, (char *)NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg,
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
+
+    }
+    
+    /*
+     * Process the command options
+     */
+    
+    switch ((enum options) index) {
+    case IMAGE_CREATE: {
+	Tcl_Obj **args;
 
 	/*
 	 * Figure out a name to use for the new image.
@@ -385,6 +408,38 @@ Tk_ImageObjCmd(
 		(const char *)Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), TCL_INDEX_NONE));
 	break;
     }
+    case IMAGE_FORMAT:
+
+	/*
+	 * Check, if a format proc is registered.
+	 * With Tk 9.1, a former reserved value was used for this pointer.
+	 * Old calls of Tk_CreateImageType may not pass a function but NULL
+	 * to indicate, that this is not supported.
+	 */
+
+	if (oldimage || typePtr->formatProc == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "format operation not supported by this image type",
+		    -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "FORMAT_NOT_SUPPORTED",
+		    (char *)NULL);
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Call the format image type command.
+	 * Note: there might be even no more arguments (objc-3=0).
+	 * Let the type handler handle this.
+	 */
+	
+	i = typePtr->formatProc(interp, objc-3, objv+3);
+
+	/*
+	 * Pass the format proc result to the caller
+	 */
+
+	return i;
+
     case IMAGE_DELETE:
 	for (i = 2; i < objc; i++) {
 	    arg = Tcl_GetString(objv[i]);
@@ -484,8 +539,6 @@ Tk_ImageObjCmd(
 	default:
 	    Tcl_Panic("can't happen");
 	}
-	break;
-    case IMAGE:FORMATS:
 	break;
     }
     return TCL_OK;
