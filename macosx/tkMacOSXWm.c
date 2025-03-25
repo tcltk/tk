@@ -577,7 +577,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 @end
@@ -597,7 +596,6 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
-    [[self contentView] setNeedsDisplay:YES];
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -839,6 +837,49 @@ FrontWindowAtPoint(
     return NULL;
 }
 
+void TkMacOSXAssignNewKeyWindow(
+    Tcl_Interp *interp,
+    NSWindow *ignore)
+{
+    TkWindow *winPtr;
+
+    /*
+     * Avoid bug 5692042764: set tkEventTarget to NULL if there is no window to
+     * send Tk events to.
+     */
+
+    [NSApp setTkEventTarget: NULL];
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	WmInfo *wmPtr;
+	BOOL isOnScreen;
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (!winPtr
+	    || !winPtr->wmInfoPtr
+	    || (winPtr->flags & TK_ALREADY_DEAD)) {
+	    continue;
+	}
+	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
+	    continue;
+	}
+	wmPtr = winPtr->wmInfoPtr;
+	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
+		      wmPtr->hints.initial_state != WithdrawnState);
+	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
+	    TKMenu *menu;
+	    [w makeKeyAndOrderFront:NSApp];
+	    /* Set the menubar for the new front window. */
+	    if (winPtr->wmInfoPtr &&
+		winPtr->wmInfoPtr->menuPtr &&
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+		menu = (TKMenu *) winPtr->wmInfoPtr->menuPtr->platformData;
+		[NSApp tkSetMainMenu:menu];
+		[NSApp setTkEventTarget: winPtr];
+	    }
+	    break;
+	}
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1270,32 +1311,8 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
-
-	/*
-	 * Fix bug 5692042764:
-	 * set tkEventTarget to NULL when there is no window to send Tk events to.
-	 */
-	TkWindow *newTkEventTarget = NULL;
-	winPtr2 = NULL;
-
-	for (w in [NSApp orderedWindows]) {
-	    winPtr2 = TkMacOSXGetTkWindow(w);
-	    BOOL isOnScreen;
-
-	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
-		continue;
-	    }
-	    wmPtr2 = winPtr2->wmInfoPtr;
-	    isOnScreen = (wmPtr2->hints.initial_state != IconicState &&
-			  wmPtr2->hints.initial_state != WithdrawnState);
-	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
-		[w makeKeyAndOrderFront:NSApp];
-		newTkEventTarget = TkMacOSXGetTkWindow(w);
-		break;
-	    }
-	}
-
-	[NSApp setTkEventTarget:newTkEventTarget];
+	TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr),
+				   deadNSWindow);
 
 	/*
 	 * Prevent zombies on systems with a TouchBar.
@@ -1311,7 +1328,8 @@ TkWmDeadWindow(
 	 */
 
 	TKContentView *deadView = [deadNSWindow contentView];
-	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask,(void *) deadView);
+	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) deadView);
+	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) deadView);
 	CGContextRelease(deadView.tkLayerBitmapContext);
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -2437,7 +2455,6 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -7057,7 +7074,7 @@ TkpWmSetState(
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
     if (state == WithdrawnState) {
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == IconicState) {
 
 	/*
@@ -7069,9 +7086,9 @@ TkpWmSetState(
 		![macWin isMiniaturized]) {
 	    [macWin miniaturize:NSApp];
 	}
-	Tk_UnmapWindow((Tk_Window)winPtr);
+	TkWmUnmapWindow(winPtr);
     } else if (state == NormalState || state == ZoomState) {
-	Tk_MapWindow((Tk_Window)winPtr);
+	TkWmMapWindow(winPtr);
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
@@ -7235,7 +7252,6 @@ TkpChangeFocus(
 	winPtr->atts.override_redirect) {
 	return 0;
     }
-
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
 

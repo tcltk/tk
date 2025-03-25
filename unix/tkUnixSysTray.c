@@ -198,8 +198,8 @@ typedef struct {
  * Forward declarations for procedures defined in this file.
  */
 
-static Tcl_ObjCmdProc TrayIconCreateCmd;
-static Tcl_ObjCmdProc TrayIconObjectCmd;
+static Tcl_ObjCmdProc2 TrayIconCreateCmd;
+static Tcl_ObjCmdProc2 TrayIconObjectCmd;
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp *interp,
 	Tcl_Size objc, Tcl_Obj *const objv[], int addflags);
 static int PostBalloon(DockIcon* icon, const char *utf8msg,
@@ -248,7 +248,7 @@ static int
 TrayIconObjectCmd(
     void *cd,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     DockIcon *icon = (DockIcon*)cd;
@@ -914,7 +914,7 @@ DisplayIcon(
 		icon->offscreenImage = XGetImage(Tk_Display(icon->drawingWin),
 			icon->offscreenPixmap, 0, 0, w, h, AllPlanes, ZPixmap);
 	    }
-	    if (icon->offscreenGC == None) {
+	    if (icon->offscreenGC == NULL) {
 		XGCValues gcv;
 		gcv.function = GXcopy;
 		gcv.plane_mask = AllPlanes;
@@ -1586,7 +1586,7 @@ static int
 TrayIconCreateCmd(
     void *cd,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window mainWindow = (Tk_Window)cd;
@@ -1658,7 +1658,7 @@ TrayIconCreateCmd(
 	}
     }
 
-    icon->widgetCmd = Tcl_CreateObjCommand(interp, Tcl_GetString(objv[1]),
+    icon->widgetCmd = Tcl_CreateObjCommand2(interp, Tcl_GetString(objv[1]),
 	    TrayIconObjectCmd, icon, TrayIconDeleteProc);
 
     /* Sometimes a command just can't be created... */
@@ -1705,7 +1705,7 @@ int
 Tktray_Init(
     Tcl_Interp *interp)
 {
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray",
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray",
 	    TrayIconCreateCmd, Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
