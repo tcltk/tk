@@ -118,6 +118,8 @@ static int		ImgPhotoPostscript(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, int x, int y, int width,
 			    int height, int prepass);
+static int		ImgPhotoFormat(Tcl_Interp *interp,
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * The type record itself for photo images:
@@ -132,7 +134,7 @@ Tk_ImageType tkPhotoImageType = {
     ImgPhotoDelete,		/* deleteProc */
     ImgPhotoPostscript,		/* postscriptProc */
     NULL,			/* nextPtr */
-    NULL
+    ImgPhotoFormat		/* formatProc */
 };
 
 typedef struct {
@@ -4377,6 +4379,83 @@ ImgPhotoPostscript(
     block.pixelPtr += y * block.pitch + x * block.pixelSize;
 
     return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ImgPhotoFormat --
+ *
+ *	The "image format photo args" command is passed to this procedure.
+ *
+ * Results:
+ *	Returns a standard Tcl return value.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+ImgPhotoFormat(
+    Tcl_Interp *interp,		/* Interpreter for application containing
+				 * image. */
+    Tcl_Size objc,		/* Number of arguments, may be zero. */
+    Tcl_Obj *const objv[])	/* Argument objects (doesn't include option
+				 * and image type). */
+{
+    static const char *const formatOptions[] = {
+	"list", NULL
+    };
+    enum options {
+	FORMAT_LIST
+    };
+    int index;
+    Tcl_Obj *resultObj;
+    Tk_PhotoImageFormat *formatPtr;
+    Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (objc < 1) {
+	Tcl_WrongNumArgs(interp, 0, objv, "suboption ?args?");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], formatOptions,
+	    sizeof(char *), "suboption", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    
+    switch ( (enum options) index) {
+    case FORMAT_LIST:
+	resultObj = Tcl_NewObj();
+	
+
+	/*
+	 * Scan through the table of file format handlers and collect the
+	 * name field.
+	 */
+
+	for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
+		formatPtr = formatPtr->nextPtr) {
+	    Tcl_ListObjAppendElement(interp, resultObj,
+		    Tcl_NewStringObj(formatPtr->name,-1)); 
+	}
+
+	for (formatVersion3Ptr = tsdPtr->formatListVersion3;
+		formatVersion3Ptr != NULL;
+		formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
+	    Tcl_ListObjAppendElement(interp, resultObj,
+		    Tcl_NewStringObj(formatVersion3Ptr->name,-1)); 
+	}
+
+	Tcl_SetObjResult(interp, resultObj);
+	break;
+    }
+
+    return TCL_OK;
 }
 
 /*
