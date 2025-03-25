@@ -25,7 +25,6 @@ proc ToEnterDirsByKey {parent dirs} {
 }
 
 proc EnterDirsByKey {parent dirs} {
-    global tk_strictMotif
     if {$parent == "."} {
 	set w .__tk_choosedir
     } else {
