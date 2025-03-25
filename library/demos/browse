@@ -15,7 +15,7 @@ package require tk
 scrollbar .scroll -command ".list yview"
 pack .scroll -side right -fill y
 listbox .list -yscroll ".scroll set" -relief sunken -width 20 -height 20 \
-	-setgrid yes
+	-setgrid 1
 pack .list -side left -fill both -expand yes
 wm minsize . 1 1
 

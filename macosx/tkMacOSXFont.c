@@ -25,26 +25,6 @@
 */
 
 /*
- * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
- * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
- * tricky to get this function, because we are compiling with
- * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
- */
-#if TCL_MAJOR_VERSION < 9
-#   undef TclNumUtfChars
-#   undef TclUtfAtIndex
-#   ifdef USE_TCL_STUBS
-#	define TclNumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
-#	define TclUtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
-#   else
-#	define TclNumUtfChars Tcl_NumUtfChars
-#	define TclUtfAtIndex Tcl_UtfAtIndex
-#   endif
-#endif
-
-/*
  * The following structure represents our Macintosh-specific implementation
  * of a font object.
  */
@@ -462,7 +442,7 @@ static int
 startOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
@@ -520,7 +500,7 @@ static int
 endOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
@@ -671,8 +651,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*

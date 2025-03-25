@@ -110,13 +110,8 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Value of -activebackground option: this is
 				 * the color used to draw 3-D border and
 				 * background when widget is active. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Value of -borderWidth option: specifies
 				 * width of border in pixels. Always >= 0. */
-#else
-    Tcl_Obj *borderWidthPtr;
-    int borderWidth;
-#endif
     int relief;			/* Value of -relief option: specifies 3-d
 				 * effect for border, such as
 				 * TK_RELIEF_RAISED. */
@@ -129,15 +124,10 @@ typedef struct {
 				 * TK_RELIEF_RAISED, to be used when a
 				 * checkbutton or radiobutton without
 				 * indicator is off. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *highlightWidthObj;	/* Value of -highlightthickness option:
 				 * specifies width in pixels of highlight to
 				 * draw around widget when it has the focus.
 				 * 0 means don't draw a highlight. Always >= 0. */
-#else
-    Tcl_Obj *highlightWidthPtr;
-    int highlightWidth;
-#endif
     Tk_3DBorder highlightBorder;/* Value of -highlightbackground option:
 				 * specifies background with which to draw 3-D
 				 * default ring and focus highlight area when
@@ -172,7 +162,6 @@ typedef struct {
 				 * disabledFg is NULL. */
     GC copyGC;			/* Used for copying information from an
 				 * off-screen pixmap to the screen. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *widthObj;		/* Value of -width option. */
     Tcl_Obj *heightObj;		/* Value of -height option. */
     Tcl_Obj *wrapLengthObj;	/* Value of -wraplength option: specifies line
@@ -187,18 +176,6 @@ typedef struct {
 				 * pixels of extra space to leave above and
 				 * below text. Ignored for bitmaps and
 				 * images. */
-#else
-    Tcl_Obj *widthPtr;
-    int width;
-    Tcl_Obj *heightPtr;
-    int height;
-    Tcl_Obj *wrapLengthPtr;
-    int wrapLength;
-    Tcl_Obj *padXPtr;
-    int padX;
-    Tcl_Obj *padYPtr;
-    int padY;
-#endif
     Tk_Anchor anchor;		/* Value of -anchor option: specifies where
 				 * text/bitmap should be displayed inside
 				 * button region. */
