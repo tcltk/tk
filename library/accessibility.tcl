@@ -166,7 +166,7 @@ namespace eval ::tk::accessible {
 
 				
 
-    #force Tk focus on the widget that currently has accessibility focus if needed
+    #Force Tk focus on the widget that currently has accessibility focus if needed.
     proc _forceTkFocus {w} {
 	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview"} {
 	    if {[focus] ne $w} {
@@ -380,7 +380,7 @@ namespace eval ::tk::accessible {
 			      Scrollbar \
 			      Scrollbar \
 			      Scrollbar \
-			      [%W get] \
+			      {} \
 			      {} \
 			      {}\
 			  }
@@ -389,8 +389,8 @@ namespace eval ::tk::accessible {
 			       Scrollbar \
 			       Scrollbar \
 			       Scrollbar \
-			       [%W get] \
-			       [%W state] \
+			       {} \
+			       {} \
 			       {}\
 			   }
     #Spinbox/TSpinbox bindings
@@ -478,6 +478,8 @@ namespace eval ::tk::accessible {
     bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
+    bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
@@ -513,7 +515,7 @@ namespace eval ::tk::accessible {
     bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
     bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
     bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
-    
+ 
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object check_screenreader
     namespace ensemble create
