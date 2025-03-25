@@ -657,14 +657,6 @@ ParseOFNOptions(
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
 		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
-#ifndef TK_NO_DEPRECATED
-	    /*
-	     * XXX -xpstyle is silently ignored as it is undocumented
-	     * and we do not want it to show in option error messages.
-	     */
-	    if (0 == strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
-		continue;
-#endif
 	    goto error_return;
 	} else if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
