@@ -517,7 +517,6 @@ namespace eval ::tk::test::dialog {
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
-	variable dialogType none
 	variable dialogIsNative
 	variable testDialog
 	variable testDialogFont
