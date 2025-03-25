@@ -4414,6 +4414,7 @@ ImgPhotoFormat(
     Tcl_Obj *resultObj;
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
+    char * defaultFormatName = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -4439,15 +4440,35 @@ ImgPhotoFormat(
 
 	for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 		formatPtr = formatPtr->nextPtr) {
-	    Tcl_ListObjAppendElement(interp, resultObj,
-		    Tcl_NewStringObj(formatPtr->name,-1)); 
+	    
+	    /*
+	     * Default will be evaluated last, so put it at the end of the
+	     * evaluation list
+	     */
+
+	    if (strncasecmp("default", formatPtr->name,
+		    strlen(formatPtr->name)) == 0) {
+		defaultFormatName = formatPtr->name;
+	    } else {
+		Tcl_ListObjAppendElement(interp, resultObj,
+			Tcl_NewStringObj(formatPtr->name,-1));
+	    }
 	}
+	
+	/*
+	 * Version 3 image format handlers
+	 */
 
 	for (formatVersion3Ptr = tsdPtr->formatListVersion3;
 		formatVersion3Ptr != NULL;
 		formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
 	    Tcl_ListObjAppendElement(interp, resultObj,
 		    Tcl_NewStringObj(formatVersion3Ptr->name,-1)); 
+	}
+	
+	if (NULL != defaultFormatName) {
+	    Tcl_ListObjAppendElement(interp, resultObj,
+		    Tcl_NewStringObj(defaultFormatName,-1));
 	}
 
 	Tcl_SetObjResult(interp, resultObj);
