@@ -41,7 +41,6 @@ static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
 			   TCL_UNUSED(int));
 
 char *callback_command;
-const char *altlabel;
 
 /* Map script-level roles to C roles. */
 struct MacRoleMap {
