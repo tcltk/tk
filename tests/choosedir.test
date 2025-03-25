@@ -12,6 +12,7 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import dialog
+setDialogType choosedir
 
 #----------------------------------------------------------------------
 #

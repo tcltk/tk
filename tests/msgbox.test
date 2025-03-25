@@ -12,6 +12,7 @@ namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
+setDialogType msgbox
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
