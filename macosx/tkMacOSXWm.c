@@ -7367,6 +7367,230 @@ TkWmStackorderToplevel(
 /*
  *----------------------------------------------------------------------
  *
+ * TkGenWMConfigureEvent --
+ *
+ *	Generate a ConfigureNotify event for Tk. Depending on the value of flag
+ *	the values of width/height, x/y, or both may be changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A ConfigureNotify event is sent to Tk.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGenWMConfigureEvent(
+    Tk_Window tkwin,
+    int x, int y,
+    int width, int height,
+    int flags)
+{
+    XEvent event;
+    WmInfo *wmPtr;
+    TkWindow *winPtr = (TkWindow *) tkwin;
+
+    if (tkwin == NULL) {
+	return;
+    }
+
+    event.type = ConfigureNotify;
+    event.xconfigure.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    event.xconfigure.send_event = False;
+    event.xconfigure.display = Tk_Display(tkwin);
+    event.xconfigure.event = Tk_WindowId(tkwin);
+    event.xconfigure.window = Tk_WindowId(tkwin);
+    event.xconfigure.border_width = winPtr->changes.border_width;
+    event.xconfigure.override_redirect = winPtr->atts.override_redirect;
+    if (winPtr->changes.stack_mode == Above) {
+	event.xconfigure.above = winPtr->changes.sibling;
+    } else {
+	event.xconfigure.above = None;
+    }
+
+    if (!(flags & TK_LOCATION_CHANGED)) {
+	x = Tk_X(tkwin);
+	y = Tk_Y(tkwin);
+    }
+    if (!(flags & TK_SIZE_CHANGED)) {
+	width = Tk_Width(tkwin);
+	height = Tk_Height(tkwin);
+    }
+    event.xconfigure.x = x;
+    event.xconfigure.y = y;
+    event.xconfigure.width = width;
+    event.xconfigure.height = height;
+
+    if (flags & TK_MACOSX_HANDLE_EVENT_IMMEDIATELY) {
+	Tk_HandleEvent(&event);
+    } else {
+	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    }
+
+    /*
+     * Update window manager information.
+     */
+
+    if (Tk_IsTopLevel(winPtr)) {
+	wmPtr = winPtr->wmInfoPtr;
+	if (flags & TK_LOCATION_CHANGED) {
+	    wmPtr->x = x;
+	    wmPtr->y = y;
+	}
+	if ((flags & TK_SIZE_CHANGED) && !(wmPtr->flags & WM_SYNC_PENDING) &&
+		((width != Tk_Width(tkwin)) || (height != Tk_Height(tkwin)))) {
+	    if ((wmPtr->width == -1) && (width == winPtr->reqWidth)) {
+		/*
+		 * Don't set external width, since the user didn't change it
+		 * from what the widgets asked for.
+		 */
+	    } else if (wmPtr->gridWin != NULL) {
+		wmPtr->width = wmPtr->reqGridWidth
+			+ (width - winPtr->reqWidth)/wmPtr->widthInc;
+		if (wmPtr->width < 0) {
+		    wmPtr->width = 0;
+		}
+	    } else {
+		wmPtr->width = width;
+	    }
+
+	    if ((wmPtr->height == -1) && (height == winPtr->reqHeight)) {
+		/*
+		 * Don't set external height, since the user didn't change it
+		 * from what the widgets asked for.
+		 */
+	    } else if (wmPtr->gridWin != NULL) {
+		wmPtr->height = wmPtr->reqGridHeight
+			+ (height - winPtr->reqHeight)/wmPtr->heightInc;
+		if (wmPtr->height < 0) {
+		    wmPtr->height = 0;
+		}
+	    } else {
+		wmPtr->height = height;
+	    }
+
+	    wmPtr->configWidth = width;
+	    wmPtr->configHeight = height;
+	}
+    }
+
+    /*
+     * Now set up the changes structure. Under X we wait for the
+     * ConfigureNotify to set these values. On the Mac we know immediately that
+     * this is what we want - so we just set them. However, we need to make
+     * sure the windows clipping region is marked invalid so the change is
+     * visible to the subwindow.
+     */
+
+    winPtr->changes.x = x;
+    winPtr->changes.y = y;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
+    TkMacOSXInvalClipRgns(tkwin);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGenWMDestroyEvent --
+ *
+ *	Generate a WM Destroy event for Tk.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A WM_PROTOCOL/WM_DELETE_WINDOW event is sent to Tk.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGenWMDestroyEvent(
+    Tk_Window tkwin)
+{
+    XEvent event;
+
+    event.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    event.xany.send_event = False;
+    event.xany.display = Tk_Display(tkwin);
+
+    event.xclient.window = Tk_WindowId(tkwin);
+    event.xclient.type = ClientMessage;
+    event.xclient.message_type = Tk_InternAtom(tkwin, "WM_PROTOCOLS");
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = Tk_InternAtom(tkwin, "WM_DELETE_WINDOW");
+    Tk_HandleEvent(&event);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmProtocolEventProc --
+ *
+ *	This procedure is called by the Tk_HandleEvent whenever a ClientMessage
+ *	event arrives whose type is "WM_PROTOCOLS". This procedure handles the
+ *	message from the window manager in an appropriate fashion.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Depends on what sort of handler, if any, was set up for the protocol.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWmProtocolEventProc(
+    TkWindow *winPtr,		/* Window to which the event was sent. */
+    XEvent *eventPtr)		/* X event. */
+{
+    WmInfo *wmPtr;
+    ProtocolHandler *protPtr;
+    Tcl_Interp *interp;
+    Atom protocol;
+    int result;
+
+    wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return;
+    }
+    protocol = (Atom) eventPtr->xclient.data.l[0];
+    for (protPtr = wmPtr->protPtr; protPtr != NULL;
+	    protPtr = protPtr->nextPtr) {
+	if (protocol == protPtr->protocol) {
+	    Tcl_Preserve(protPtr);
+	    interp = protPtr->interp;
+	    Tcl_Preserve(interp);
+	    result = Tcl_EvalEx(interp, Tcl_GetString(protPtr->commandObj), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    if (result != TCL_OK) {
+		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+			"\n    (command for \"%s\" window manager protocol)",
+			Tk_GetAtomName((Tk_Window)winPtr, protocol)));
+		Tcl_BackgroundException(interp, result);
+	    }
+	    Tcl_Release(interp);
+	    Tcl_Release(protPtr);
+	    return;
+	}
+    }
+
+    /*
+     * No handler was present for this protocol. If this is a WM_DELETE_WINDOW
+     * message then just destroy the window.
+     */
+
+    if (protocol == Tk_InternAtom((Tk_Window)winPtr, "WM_DELETE_WINDOW")) {
+	Tk_DestroyWindow((Tk_Window)winPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXApplyWindowAttributes --
  *
  *	This procedure applies all window attributes to the NSWindow.
