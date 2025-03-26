@@ -603,7 +603,7 @@ declare 161 {
 declare 162 {
     void Tk_SetClass(Tk_Window tkwin, const char *className)
 }
-declare 163 {
+declare 163 {deprecated "Tk_SetGrid is a no-op on 9.1. Consider using Tk_SetSizeHints on X11."} {
     void Tk_SetGrid(Tk_Window tkwin, int reqWidth, int reqHeight,
 	    int gridWidth, int gridHeight)
 }
@@ -985,10 +985,6 @@ declare 267 {
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height,
 	    int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)
 }
-declare 268 {
-    int Tk_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
-	    int width, int height)
-}
 # TIP#245
 declare 269 {
     long Tk_GetUserInactiveTime(Display *dpy)
@@ -1118,6 +1114,13 @@ declare 2 win {
 }
 declare 3 win {
     Tk_Window Tk_HWNDToWindow(HWND hwnd)
+}
+
+################################
+# X11 specific functions
+declare 0 x11 {
+    int Tk_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
+	    int width, int height)
 }
 
 ################################
