@@ -12,7 +12,6 @@ tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import dialog
-setDialogType filebox; # sets the variable "dialogIsNative"
 
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long

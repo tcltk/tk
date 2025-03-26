@@ -517,7 +517,8 @@ namespace eval ::tk::test::dialog {
     # For more information, see the documentation in the file "testutils.GUIDE"
     #
     proc init {} {
-	variable dialogIsNative
+	variable dialogType [file rootname [file tail [info script]]]
+	variable dialogIsNative [isNative $dialogType]
 	variable testDialog
 	variable testDialogFont
     }
@@ -590,7 +591,7 @@ namespace eval ::tk::test::dialog {
 	}
     }
 
-    proc setDialogType {type} {
+    proc isNative {type} {
 	switch -- $type {
 	    "choosedir" {
 		set cmd ::tk_chooseDirectory
@@ -604,12 +605,16 @@ namespace eval ::tk::test::dialog {
 	    "msgbox" {
 		set cmd ::tk_messageBox
 	    }
+	    "dialog" -
+	    "fontchooser" -
+	    "winDialog" {
+		return "N/A"
+	    }
 	    default {
 		return -code error "invalid dialog type \"$type\""
 	    }
 	}
-	variable dialogIsNative [expr {[info procs $cmd] eq ""}]
-	variable dialogType $type
+	return [expr {[info procs $cmd] eq ""}]
     }
 
     proc testDialog {stage {script ""}} {
