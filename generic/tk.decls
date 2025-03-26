@@ -985,6 +985,10 @@ declare 267 {
 	    Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height,
 	    int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)
 }
+declare 268 {
+    int Tk_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
+	    int width, int height)
+}
 # TIP#245
 declare 269 {
     long Tk_GetUserInactiveTime(Display *dpy)
@@ -1114,13 +1118,6 @@ declare 2 win {
 }
 declare 3 win {
     Tk_Window Tk_HWNDToWindow(HWND hwnd)
-}
-
-################################
-# X11 specific functions
-declare 0 x11 {
-    int Tk_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
-	    int width, int height)
 }
 
 ################################

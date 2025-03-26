@@ -830,7 +830,9 @@ EXTERN int		Tk_PhotoPutZoomedBlock(Tcl_Interp *interp,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int zoomX, int zoomY,
 				int subsampleX, int subsampleY, int compRule);
-/* Slot 268 is reserved */
+/* 268 */
+EXTERN int		Tk_PhotoSetSize(Tcl_Interp *interp,
+				Tk_PhotoHandle handle, int width, int height);
 /* 269 */
 EXTERN long		Tk_GetUserInactiveTime(Display *dpy);
 /* 270 */
@@ -1185,7 +1187,7 @@ typedef struct TkStubs {
     int (*tk_PhotoExpand) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 265 */
     int (*tk_PhotoPutBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 266 */
     int (*tk_PhotoPutZoomedBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 267 */
-    void (*reserved268)(void);
+    int (*tk_PhotoSetSize) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 268 */
     long (*tk_GetUserInactiveTime) (Display *dpy); /* 269 */
     void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
@@ -1747,7 +1749,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_PhotoPutBlock) /* 266 */
 #define Tk_PhotoPutZoomedBlock \
 	(tkStubsPtr->tk_PhotoPutZoomedBlock) /* 267 */
-/* Slot 268 is reserved */
+#define Tk_PhotoSetSize \
+	(tkStubsPtr->tk_PhotoSetSize) /* 268 */
 #define Tk_GetUserInactiveTime \
 	(tkStubsPtr->tk_GetUserInactiveTime) /* 269 */
 #define Tk_ResetUserInactiveTime \
