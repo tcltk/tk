@@ -1222,7 +1222,7 @@ const TkStubs tkStubs = {
     Tk_PhotoExpand, /* 265 */
     Tk_PhotoPutBlock, /* 266 */
     Tk_PhotoPutZoomedBlock, /* 267 */
-    0, /* 268 */
+    Tk_PhotoSetSize, /* 268 */
     Tk_GetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
