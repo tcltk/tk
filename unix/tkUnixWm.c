@@ -4943,12 +4943,24 @@ UpdateSizeHints(
 	hintsPtr->max_height = hintsPtr->base_height
 		+ (maxHeight * wmPtr->heightInc);
     } else {
+	int base_width = winPtr->reqWidth;
+	int base_height = winPtr->reqHeight;
+	if (base_width < wmPtr->minWidth) {
+	    base_width = wmPtr->minWidth;
+	} else if (base_width > wmPtr->maxWidth) {
+	    base_width = wmPtr->maxWidth;
+	}
+	if (base_height < wmPtr->minHeight) {
+	    base_height = wmPtr->minHeight;
+	} else if (base_height > wmPtr->maxHeight) {
+	    base_height = wmPtr->maxHeight;
+	}
 	hintsPtr->min_width = wmPtr->minWidth;
 	hintsPtr->min_height = wmPtr->minHeight;
 	hintsPtr->max_width = maxWidth;
 	hintsPtr->max_height = maxHeight;
-	hintsPtr->base_width = 0;
-	hintsPtr->base_height = 0;
+	hintsPtr->base_width = base_width;
+	hintsPtr->base_height = base_height;
     }
     hintsPtr->width_inc = wmPtr->widthInc;
     hintsPtr->height_inc = wmPtr->heightInc;
@@ -4965,11 +4977,12 @@ UpdateSizeHints(
      */
 
     if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	hintsPtr->max_width = hintsPtr->min_width = newWidth;
+	hintsPtr->max_width = hintsPtr->base_width = hintsPtr->min_width =
+	    newWidth;
 	hintsPtr->flags |= PMaxSize;
     }
     if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	hintsPtr->max_height = hintsPtr->min_height =
+	hintsPtr->max_height = hintsPtr->base_height = hintsPtr->min_height =
 		newHeight + wmPtr->menuHeight;
 	hintsPtr->flags |= PMaxSize;
     }
