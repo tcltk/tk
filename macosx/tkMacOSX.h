@@ -23,11 +23,13 @@
  * embedding where Tk does not control the top-level
  */
 
+#if 0
 typedef int (Tk_MacOSXEmbedRegisterWinProc) (long winID, Tk_Window window);
 typedef void* (Tk_MacOSXEmbedGetGrafPortProc) (Tk_Window window);
 typedef int (Tk_MacOSXEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacOSXEmbedGetClipProc) (Tk_Window window, void *rgn);
 typedef void (Tk_MacOSXEmbedGetOffsetInParentProc) (Tk_Window window, void *ulCorner);
+#endif
 
 #include "tkPlatDecls.h"
 
