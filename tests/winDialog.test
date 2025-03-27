@@ -682,6 +682,8 @@ test winDialog-5.17 {GetFileName: title} -constraints {
 	Click cancel
     }
 } -result 0
+# In the newer file dialogs, the file type widget does not even exist
+# if no file types specified
 test winDialog-5.18 {GetFileName: no filter specified} -constraints {
     nt testwinevent
 } -body {
