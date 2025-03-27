@@ -129,7 +129,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
 	int x, y, width = -1, height = -1, flags = 0;
 
@@ -140,10 +139,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	} else {
 	    x = y = -1;
 	}
-	if (!movedOnly && (winPtr->changes.width != bounds.size.width ||
+	if (!movedOnly && winPtr && (winPtr->changes.width != bounds.size.width ||
 		winPtr->changes.height !=  bounds.size.height)) {
-	    width = bounds.size.width - wmPtr->xInParent;
-	    height = bounds.size.height - wmPtr->yInParent;
+	    int xOffset = 0, yOffset = 0;
+	    TkMacOSXWindowOffset(winPtr, &xOffset, &yOffset);
+	    width = bounds.size.width - xOffset;
+	    height = bounds.size.height - yOffset;
 	    flags |= TK_SIZE_CHANGED;
 	}
 	/*
@@ -169,9 +170,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
-	winPtr->wmInfoPtr->hints.initial_state =
-		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
+    if (winPtr && TkMacOSXWmGetState(winPtr) == IconicState) {
+	TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState);
+	TkWmMapWindow(winPtr);
 	TkWmMapWindow(winPtr);
 
 	/*
@@ -246,8 +247,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (winPtr && winPtr->wmInfoPtr->hints.initial_state != IconicState) {
-	winPtr->wmInfoPtr->hints.initial_state = IconicState;
+    if (winPtr && TkMacOSXWmGetState(winPtr) != IconicState) {
+	TkpWmSetState(winPtr, IconicState);
 	TkWmUnmapWindow(winPtr);
     }
 }
@@ -395,10 +396,10 @@ static void RefocusGrabWindow(void *data) {
 
     for (NSWindow *win in [NSApp windows]) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
-	if (!winPtr || !winPtr->wmInfoPtr) {
+	if (!winPtr) {
 	    continue;
 	}
-	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
+	if (TkMacOSXWmGetState(winPtr) == WithdrawnState) {
 	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
@@ -638,8 +639,7 @@ TkMacOSXGenerateFocusEvent(
      * kWindowNoActivatesAttribute.
      */
 
-    if (winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
-	    winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)) {
+    if (!TkMacOSXWmCanFocus(winPtr)) {
 	return false;
     }
 
