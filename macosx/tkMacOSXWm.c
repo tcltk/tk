@@ -629,14 +629,7 @@ static void placeAsTab(TKWindow *macWindow) {
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    if (!winPtr || !winPtr->wmInfoPtr) {
-	return NO;
-    }
-    return (winPtr->wmInfoPtr &&
-	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
-	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
-	    ) ? NO : YES;
+    return TkMacOSXWmCanFocus(winPtr);
 }
 
 #if DEBUG_ZOMBIES
@@ -1379,7 +1372,39 @@ TkWmSetClass(
 {
     return;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXWmCanFocus --
+ *
+ *     Checks whether a Tk window has an underlying NSWindow which is
+ *     allowed to become a key window.
+ *
+ * Results:
+ *     True if the NSWindow is not a Help Window and can be activated,
+ *     otherwise false.
+ *
+ * Side effects:
+ *     None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int TkMacOSXWmCanFocus(
+    TkWindow *winPtr)
+{
+    if (!winPtr || !winPtr->wmInfoPtr) {
+	return 0;
+    }
+    return (winPtr->wmInfoPtr &&
+	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
+	    ) ? 0 : 1;
+}
+
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -6149,7 +6174,7 @@ Tk_MacOSXGetTkWindow(
     void *w)
 {
     Window window = None;
-    if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
+    if ([(NSWindow *) w respondsToSelector: @selector (tkWindow)]) {
 	window = [(TKWindow *)w tkWindow];
 	TkDisplay *dispPtr = TkGetDisplayList();
 	if (window && dispPtr && dispPtr->display) {
@@ -7103,6 +7128,30 @@ TkpWmSetState(
 setStateEnd:
     return 1;
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXWmGetState --
+ *
+ *	Returns the current window manager state for the wrapper window of a given
+ *	toplevel window.
+ *
+ * Results:
+ *	The value of hints.initial_state in the window's TkWmInfo struct.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXWmGetState(
+TkWindow *winPtr)   /* Toplevel window */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    return wmPtr->hints.initial_state;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -7151,7 +7200,7 @@ TkMacOSXWindowOffset(
     int *xOffset,
     int *yOffset)
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(wRef);
+    TkWindow *winPtr = (TkWindow *)wRef;
 
     if (winPtr && winPtr->wmInfoPtr) {
 	*xOffset = winPtr->wmInfoPtr->xInParent;

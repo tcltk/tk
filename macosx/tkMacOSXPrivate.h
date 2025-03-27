@@ -295,7 +295,9 @@ MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
-					     NSWindow *ignore);
+		      NSWindow *ignore);
+MODULE_SCOPE int TkMacOSXWmGetState(TkWindow *winPtr);
+MODULE_SCOPE int TkMacOSXWmCanFocus(TkWindow *winPtr);
 
 #pragma mark Private Objective-C Classes
 

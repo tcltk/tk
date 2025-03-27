@@ -15,7 +15,6 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
-#include "tkMacOSXWm.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
@@ -466,8 +465,8 @@ static void showRootWindow(void *clientData) {
 	return;
     }
     TkWindow *winPtr = TkMacOSXGetTkWindow(root);
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr->hints.initial_state == NormalState) {
+    int state = TkMacOSXWmGetState(winPtr);
+    if (state == NormalState) {
 	[root makeKeyAndOrderFront:NSApp];
     }
     [NSApp activateIgnoringOtherApps: YES];
