@@ -331,7 +331,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
      *  is required.
      */
     
-    if ((role = NSAccessibilitySliderRole) || (role = NSAccessibilityIncrementorRole) || (role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole)) {
+    if ((role = NSAccessibilitySliderRole) || (role = NSAccessibilityIncrementorRole) || (role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole) || (role = NSAccessibilityProgressIndicatorRole)) {
 	[self forceFocus];
     }
  
@@ -757,7 +757,7 @@ int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
     [pool release];
     return TCL_OK;
 }
