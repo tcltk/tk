@@ -186,11 +186,11 @@ Tk_ImageObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
-	"create", "delete", "format", "height", "inuse", "names", "type",
+	"create", "delete", "driver", "height", "inuse", "names", "type",
 	"types", "width", NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_FORMAT, IMAGE_HEIGHT, IMAGE_INUSE,
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_DRIVER, IMAGE_HEIGHT, IMAGE_INUSE,
 	IMAGE_NAMES, IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -218,12 +218,12 @@ Tk_ImageObjCmd(
     }
     
     /*
-     * First parse the image type for create and format options
+     * First parse the image type for create and driver options
      */
 
     switch ((enum options) index) {
     case IMAGE_CREATE:
-    case IMAGE_FORMAT:
+    case IMAGE_DRIVER:
 
 	/*
 	 * Check if image type argument is given
@@ -368,34 +368,34 @@ Tk_ImageObjCmd(
 		(const char *)Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), TCL_INDEX_NONE));
 	break;
     }
-    case IMAGE_FORMAT:
+    case IMAGE_DRIVER:
 
 	/*
-	 * Check, if a format proc is registered.
+	 * Check, if a driver proc is registered.
 	 * With Tk 9.1, a former reserved value was used for this pointer.
 	 * Old calls of Tk_CreateImageType may not pass a function but NULL
 	 * to indicate, that this is not supported.
 	 */
 
-	if (typePtr->formatProc == NULL) {
+	if (typePtr->driverProc == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "format operation not supported by this image type",
+		    "driver operation not supported by this image type",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "FORMAT_NOT_SUPPORTED",
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "DRIVER_NOT_SUPPORTED",
 		    (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	/*
-	 * Call the format image type command.
+	 * Call the driver image type command.
 	 * Note: there might be even no more arguments (objc-3=0).
 	 * Let the type handler handle this.
 	 */
 	
-	i = typePtr->formatProc(interp, objc-3, objv+3);
+	i = typePtr->driverProc(interp, objc-3, objv+3);
 
 	/*
-	 * Pass the format proc result to the caller
+	 * Pass the driver proc result to the caller
 	 */
 
 	return i;

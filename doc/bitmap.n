@@ -125,6 +125,9 @@ modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create\fR \fBbitmap\fR command.
+.SH "PHOTO DRIVER SUBOPTIONS"
+.PP
+There are currently no suboptions available for the \fBimage driver bitmap\fR command.
 .SH KEYWORDS
 bitmap, image
 '\" Local Variables:
