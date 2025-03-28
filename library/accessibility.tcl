@@ -51,6 +51,16 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
+    #Get treeview column names
+    proc _getcolumnnames {w} {
+	set columns [$w cget -columns] 
+	foreach col $columns {
+	    set text [$w heading $col -text]
+	    lappend headerlist $text
+	}
+	return $headerlist
+    }	
+
     #update data selection
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Listbox"} {
@@ -73,6 +83,22 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
+	if {[winfo class $w] eq "TNotebook"}  {
+	    set data  [$w tab current -text] 
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}	
+	if {[winfo class $w] eq "Text"}  {
+	    set data [::tk::accessible::_gettext $w]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
+	if {[winfo class $w] eq "TProgressbar"}  {
+	    set data [::tk::accessible::_getpbvalue $w]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
+	
     }
 
     #increment scale and spinbox
@@ -162,13 +188,43 @@ namespace eval ::tk::accessible {
 		}
 	    }
 	}
+	if {[winfo class $w] eq "TNotebook"} {
+	    switch -- $key {
+		Right {
+		    	{ ttk::notebook::CycleTab %W  1; break }
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+		Left {
+		    ttk::scale::Increment $w -1
+		    set data [$w get]
+		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		}
+	    }
+	}
+
+	
     }
 
-				
-
+    #Get value of progress bar
+    proc _getpbvalue {w} {
+	
+	#This variable exists if the progress bar is running, otherwise no
+	variable ::ttk::progressbar::Timers
+	
+	if {![info exists ::ttk::progressbar::Timers($w)]} {
+	    return "not running"
+	}
+	if {[info exists ::ttk::progressbar::Timers($w)]} {
+	    return "busy"
+	}
+    }
+			      
     #Force Tk focus on the widget that currently has accessibility focus if needed.
     proc _forceTkFocus {w} {
-	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview"} {
+	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview" || [winfo class $w] eq "TProgressbar"} {
 	    if {[focus] ne $w} {
 		focus -force $w
 	    }
@@ -184,9 +240,10 @@ namespace eval ::tk::accessible {
     proc _init {w role name description value state action} {
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
 	    if {$msg == $role} {
-		return
+	    	return
 	    }
 	}
+
 	::tk::accessible::acc_role $w $role
 	::tk::accessible::acc_name $w $name
 	::tk::accessible::acc_description $w $description
@@ -194,6 +251,8 @@ namespace eval ::tk::accessible {
 	::tk::accessible::acc_state $w $state
 	::tk::accessible::acc_action $w $action
     }
+
+
 
     #Button/TButton bindings
     bind Button <Map> {+::tk::accessible::_init \
@@ -303,7 +362,7 @@ namespace eval ::tk::accessible {
 				 Progressbar \
 				 Progressbar \
 				 Progressbar \
-				 [%W cget -value] \
+				 [::tk::accessible::_getpbvalue %W] \
 				 [%W state] \
 				 {}\
 			     }
@@ -360,19 +419,6 @@ namespace eval ::tk::accessible {
 			 }
     }
 
-    #Notebook bindings
-    #make keyboard navigation the default behavior
-    bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
-    
-    bind TNotebook <Map> {+::tk::accessible::_init \
-			      %W \
-			      Notebook \
-			      Notebook \
-			      Notebook \
-			      [%W tab current -text] \
-			      {} \
-			      {}\
-			  }
     
     #Scrollbar/TScrollbar bindings
     bind Scrollbar <Map> {+::tk::accessible::_init \
@@ -419,7 +465,7 @@ namespace eval ::tk::accessible {
 			     %W \
 			     [::tk::accessible::_checktree %W] \
 			     [::tk::accessible::_checktree %W] \
-			     [::tk::accessible::_checktree %W] \
+			     [::tk::accessible::_getcolumnnames %W] \
 			     [::tk::accessible::_gettreeviewdata %W] \
 			     [%W state] \
 			     {ttk::treeview::Press %W %x %y }\
@@ -457,6 +503,20 @@ namespace eval ::tk::accessible {
 			      {}\
 			  }
 
+    # Notebook bindings - bind to the <<NotebookTabChanged>> event rather
+    # than <Map> because this event is generated during widget construction
+    # and returns an error because the accessibility data has not been
+    # initialized yet. 
+    bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_init \
+			      %W \
+			      Notebook \
+			      Notebook \
+			      Notebook \
+			      [%W tab current -text] \
+			      {} \
+			      {}\
+			  }
+
     #
     # Various bindings to support data updates, help text/navigation
     # instructions, and other actions.
@@ -480,6 +540,11 @@ namespace eval ::tk::accessible {
     bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
     bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
     bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
+    bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
+    bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
+    bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
+   
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
@@ -515,6 +580,11 @@ namespace eval ::tk::accessible {
     bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
     bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
     bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
+
+    #Notebook selection
+    bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
+    bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
+
  
     #Export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object check_screenreader
