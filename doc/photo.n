@@ -867,6 +867,13 @@ the full image. The pixel outside of this box are all fully transparent.
 The photo image type was designed and implemented by Paul Mackerras,
 based on his earlier photo widget and some suggestions from
 John Ousterhout.
+.SH "PHOTO DRIVER SUBOPTIONS"
+.PP
+The following commands are available:
+.TP
+\fBimage driver photo formats\fR
+.
+List the available formats in the order they are checked, if no \fI-format\fR option is given on image creation.
 .SH EXAMPLE
 .PP
 Load an image from a file and tile it to the size of a window, which

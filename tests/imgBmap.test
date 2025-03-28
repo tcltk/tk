@@ -506,6 +506,17 @@ test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
     list [expr {"i2" in [imageNames]}] [catch {i2 foo} msg] $msg
 } -result {0 1 {invalid command name "i2"}}
 
+# test 26.x: ImgPhotoDriver, command "image driver photo"
+
+test image-13.1 {ImgBmapDriver/image driver bitmap: no option} -body {
+    image driver bitmap
+} -returnCodes error -result {wrong # args: should be "suboption ?args?"}
+
+test image-13.2 {ImgBmapDriver/image driver bitmap: bad option} -body {
+    image driver bitmap bad_option
+} -returnCodes error -result {bad suboption "bad_option": no valid options}
+
+
 removeFile foo.bm
 removeFile foo2.bm
 imageFinish

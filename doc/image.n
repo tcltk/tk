@@ -56,6 +56,11 @@ If a deleted image is recreated with another call to \fBimage create\fR,
 the existing instances will use the new image.
 .\" METHOD: height
 .TP
+\fBimage driver\fR \fItype\fR \fIsubcommand\fR ?\fIargs ...\fR?
+.
+The driver command of the image type \fItype\fR is invoked.
+The distinct functionality is described in the image type man page of the chosen image type.
+.TP
 \fBimage height \fIname\fR
 .
 Returns a decimal string giving the height of image \fIname\fR
