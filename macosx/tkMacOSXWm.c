@@ -7156,6 +7156,36 @@ TkWindow *winPtr)   /* Toplevel window */
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXWmGetNSWindow --
+ *
+ *	Returns the NSWindow (actually a TKWindow) used for a toplevel window.
+ *
+ * Results:
+ *	The value of the field window in the window's TkWmInfo struct.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+NSWindow*
+TkMacOSXWmGetNSWindow(
+TkWindow *winPtr)   /* Toplevel window */
+{
+    if (!winPtr) {
+	return nil;
+    }
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr) {
+	return wmPtr->window;
+    }
+    return nil;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpIsWindowFloating --
  *
  *	Returns 1 if a window is floating, 0 otherwise.

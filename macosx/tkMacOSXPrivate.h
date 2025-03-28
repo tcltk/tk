@@ -297,6 +297,7 @@ MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 		      NSWindow *ignore);
 MODULE_SCOPE int TkMacOSXWmGetState(TkWindow *winPtr);
+MODULE_SCOPE NSWindow* TkMacOSXWmGetNSWindow(TkWindow *winPtr);
 MODULE_SCOPE int TkMacOSXWmCanFocus(TkWindow *winPtr);
 
 #pragma mark Private Objective-C Classes

@@ -13,7 +13,6 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
-#include "tkMacOSXWm.h"
 #include "tkMacOSXConstants.h"
 
 /*
@@ -334,7 +333,7 @@ XUnmapWindow(
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
-	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
+	    TkMacOSXWmGetState(winPtr) != IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
 	    [win orderOut:NSApp];
 	    if ([win isKeyWindow]) {
@@ -349,16 +348,14 @@ XUnmapWindow(
 
 		for (NSWindow *w in [NSApp orderedWindows]) {
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
-		    WmInfo *wmInfoPtr;
-
 		    BOOL isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;
 		    }
-		    wmInfoPtr = winPtr2->wmInfoPtr;
-		    isOnScreen = (wmInfoPtr->hints.initial_state != IconicState &&
-				  wmInfoPtr->hints.initial_state != WithdrawnState);
+		    int state = TkMacOSXWmGetState(winPtr2);
+		    isOnScreen = (state != IconicState &&
+				  state != WithdrawnState);
 		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
 			[w makeKeyAndOrderFront:NSApp];
 			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
@@ -409,7 +406,7 @@ XResizeWindow(
 
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	TKWindow *w = (TKWindow *)macWin->winPtr->wmInfoPtr->window;
+	TKWindow *w = (TKWindow *) TkMacOSXWmGetNSWindow(macWin->winPtr);
 
 	if (w) {
 	    if ([w styleMask] & NSFullScreenWindowMask) {
@@ -457,9 +454,12 @@ XMoveResizeWindow(
 
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
+	NSWindow *w = TkMacOSXWmGetNSWindow(macWin->winPtr);
 
 	if (w) {
+	    int xOff, yOff;
+	    TkMacOSXWindowOffset(macWin->winPtr, &xOff, &yOff);
+
 	    /*
 	     * We explicitly convert everything to doubles so we don't get
 	     * surprised (again) by what happens when you do arithmetic with
@@ -470,12 +470,11 @@ XMoveResizeWindow(
 	    CGFloat Y = (CGFloat) y;
 	    CGFloat Width = (CGFloat) width;
 	    CGFloat Height = (CGFloat) height;
-	    CGFloat XOff = (CGFloat) macWin->winPtr->wmInfoPtr->xInParent;
-	    CGFloat YOff = (CGFloat) macWin->winPtr->wmInfoPtr->yInParent;
+	    CGFloat XOff = (CGFloat) xOff;
+	    CGFloat YOff = (CGFloat) yOff;
 	    NSRect r = NSMakeRect(
-		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
-		    Width, Height);
-
+		  X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
+		  Width, Height);
 	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
     } else {
@@ -510,7 +509,7 @@ XMoveWindow(
 
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
+	NSWindow *w = TkMacOSXWmGetNSWindow(macWin->winPtr);
 
 	if (w) {
 	    [w setFrameTopLeftPoint: NSMakePoint(
@@ -1067,22 +1066,19 @@ Tk_MacOSXGetNSWindowForDrawable(
     NSWindow *result = nil;
 
     if (!macWin || macWin->flags & TK_IS_PIXMAP) {
-	result = nil;
-
-    } else if (macWin->toplevel && macWin->toplevel->winPtr &&
-	    macWin->toplevel->winPtr->wmInfoPtr &&
-	    macWin->toplevel->winPtr->wmInfoPtr->window) {
-	result = macWin->toplevel->winPtr->wmInfoPtr->window;
-
-    } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
-	    macWin->winPtr->wmInfoPtr->window) {
-	result = macWin->winPtr->wmInfoPtr->window;
-
-    } else if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
-	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)macWin->toplevel->winPtr);
+	return  nil;
+    }
+    if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
+	TkWindow *contWinPtr = (TkWindow *) Tk_GetOtherWindow(
+	    (Tk_Window) macWin->toplevel->winPtr);
 	if (contWinPtr && contWinPtr->privatePtr) {
-	    result = TkMacOSXGetNSWindowForDrawable((Drawable)contWinPtr->privatePtr);
+	    result = TkMacOSXGetNSWindowForDrawable(
+	      (Drawable)contWinPtr->privatePtr);
 	}
+    } else if (macWin->toplevel) {
+	result = TkMacOSXWmGetNSWindow(macWin->toplevel->winPtr);
+    } else {
+	TkMacOSXWmGetNSWindow(macWin->winPtr);
     }
     return result;
 }
