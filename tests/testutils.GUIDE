@@ -152,16 +152,16 @@ process are as follows:
   "testutils import xxx" again, the command will re-initialize the namespace
   variables.
 
-A typical init proc (using the domain "dialog" as an example) is:
+A typical init proc (for a fictitious domain "cuisine") is:
 
-	proc init {} {
-	    variable dialogType none
-	    variable testDialog
-	    variable testDialogFont
-	}
+    proc init {} {
+	variable doneNess medium-rare
+	variable seasonings [list salt pepper]
+	variable tasteVerdict
+    }
 
-Note that the namespace variable "dialogType" is initialized with a value, while
-the namespace variables "testDialog" and "testDialogFont" are not. Both variants
+Note that the namespace variables "doneNess" and "seasonings" are initialized
+with a value, while the namespace variable "tasteVerdict" is not. Both variants
 of declaring/defining a namespace variable are supported.
 
 B3. Tricky aspects of repeated initialization
