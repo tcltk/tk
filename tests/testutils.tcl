@@ -531,6 +531,32 @@ namespace eval ::tk::test::dialog {
 	$testDialog.$button invoke
     }
 
+    proc isNative {type} {
+	switch -- $type {
+	    "choosedir" {
+		set cmd ::tk_chooseDirectory
+	    }
+	    "clrpick" {
+		set cmd ::tk_chooseColor
+	    }
+	    "filebox" {
+		set cmd ::tk_getOpenFile
+	    }
+	    "msgbox" {
+		set cmd ::tk_messageBox
+	    }
+	    "dialog" -
+	    "fontchooser" -
+	    "winDialog" {
+		return "N/A"
+	    }
+	    default {
+		return -code error "invalid dialog type \"$type\""
+	    }
+	}
+	return [expr {[info procs $cmd] eq ""}]
+    }
+
     proc PressButton {btn} {
 	event generate $btn <Enter>
 	event generate $btn <Button-1> -x 5 -y 5
@@ -589,32 +615,6 @@ namespace eval ::tk::test::dialog {
 	    event generate $button <Enter>
 	    event generate $w <Key> -keysym Return
 	}
-    }
-
-    proc isNative {type} {
-	switch -- $type {
-	    "choosedir" {
-		set cmd ::tk_chooseDirectory
-	    }
-	    "clrpick" {
-		set cmd ::tk_chooseColor
-	    }
-	    "filebox" {
-		set cmd ::tk_getOpenFile
-	    }
-	    "msgbox" {
-		set cmd ::tk_messageBox
-	    }
-	    "dialog" -
-	    "fontchooser" -
-	    "winDialog" {
-		return "N/A"
-	    }
-	    default {
-		return -code error "invalid dialog type \"$type\""
-	    }
-	}
-	return [expr {[info procs $cmd] eq ""}]
     }
 
     proc testDialog {stage {script ""}} {
