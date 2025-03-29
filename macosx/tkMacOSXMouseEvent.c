@@ -88,6 +88,7 @@ enum {
     NSInteger button;
     TkWindow *newFocus = NULL;
     int win_x, win_y;
+    int xOffset, yOffset;
     unsigned int buttonState = 0;
     Bool isTestingEvent = NO;
     Bool isMotionEvent = NO;
@@ -362,24 +363,26 @@ enum {
     if (Tk_IsEmbedded(winPtr)) {
 	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	if (Tk_IsTopLevel(contPtr)) {
-	    local.x -= contPtr->wmInfoPtr->xInParent;
-	    local.y -= contPtr->wmInfoPtr->yInParent;
+	    TkMacOSXWindowOffset(contPtr, &xOffset, &yOffset);
+	    local.x -= xOffset;
+	    local.y -= yOffset;
 	} else {
 	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
 	    if (topMacWin) {
 		TkWindow* topPtr = topMacWin->winPtr;
-		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+		TkMacOSXWindowOffset(topPtr, &xOffset, &yOffset);
+		local.x -= (xOffset + contPtr->changes.x);
+		local.y -= (yOffset + contPtr->changes.y);
 	    }
 	}
     }
     else {
-	if (winPtr && winPtr->wmInfoPtr) {
-	    local.x -= winPtr->wmInfoPtr->xInParent;
-	    local.y -= winPtr->wmInfoPtr->yInParent;
-	} else {
+	if (!winPtr || !winPtr->wmInfoPtr) {
 	    return theEvent;
 	}
+	TkMacOSXWindowOffset(winPtr, &xOffset, &yOffset);
+	local.x -= xOffset;
+	local.y -= yOffset;
     }
 
     /*
@@ -682,13 +685,11 @@ XQueryPointer(
 
 	    if (win) {
 		NSPoint local;
-
+		int xOffset, yOffset;
+		TkMacOSXWindowOffset(macWin->winPtr, &xOffset, &yOffset);
 		local = [win tkConvertPointFromScreen:global];
-		local.y = [win frame].size.height - local.y;
-		if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
-		    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
-		    local.y -= macWin->winPtr->wmInfoPtr->yInParent;
-		}
+		local.y = [win frame].size.height - local.y - yOffset;
+		local.x -= xOffset;
 		*win_x_return = local.x;
 		*win_y_return = local.y;
 	    }
@@ -780,13 +781,11 @@ TkGenerateButtonEvent(
 
     if (win) {
 	NSPoint local = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
-
+	int xOffset, yOffset;
+	TkMacOSXWindowOffset(macWin->winPtr, &xOffset, &yOffset);
 	local = [win tkConvertPointFromScreen:local];
-	local.y = [win frame].size.height - local.y;
-	if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
-	    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
-	    local.y -= macWin->winPtr->wmInfoPtr->yInParent;
-	}
+	local.y = [win frame].size.height - local.y - yOffset;
+	local.x -= xOffset;
 	med.local.h = local.x;
 	med.local.v = TkMacOSXZeroScreenHeight() - local.y;
     }
