@@ -118,7 +118,7 @@ static int		ImgPhotoPostscript(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, int x, int y, int width,
 			    int height, int prepass);
-static int		ImgPhotoDriver(Tcl_Interp *interp,
+static int		ImgPhotoHandler(Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
@@ -134,7 +134,7 @@ Tk_ImageType tkPhotoImageType = {
     ImgPhotoDelete,		/* deleteProc */
     ImgPhotoPostscript,		/* postscriptProc */
     NULL,			/* nextPtr */
-    ImgPhotoDriver		/* driverProc */
+    ImgPhotoHandler		/* handlerProc */
 };
 
 typedef struct {
@@ -4383,9 +4383,9 @@ ImgPhotoPostscript(
 /*
  *--------------------------------------------------------------
  *
- * ImgPhotoDriver --
+ * ImgPhotoHandler --
  *
- *	The "image driver photo args" command is passed to this procedure.
+ *	The "image handler photo args" command is passed to this procedure.
  *
  * Results:
  *	Returns a standard Tcl return value.
@@ -4397,18 +4397,18 @@ ImgPhotoPostscript(
  */
 
 static int
-ImgPhotoDriver(
+ImgPhotoHandler(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     Tcl_Size objc,		/* Number of arguments, may be zero. */
     Tcl_Obj *const objv[])	/* Argument objects (doesn't include option
 				 * and image type). */
 {
-    static const char *const driverOptions[] = {
+    static const char *const handlerOptions[] = {
 	"formats", NULL
     };
     enum options {
-	DRIVER_FORMATS
+	HANDLER_FORMATS
     };
     int index;
     Tcl_Obj *resultObj;
@@ -4423,13 +4423,13 @@ ImgPhotoDriver(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[0], driverOptions,
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], handlerOptions,
 	    sizeof(char *), "suboption", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     
     switch ( (enum options) index) {
-    case DRIVER_FORMATS:
+    case HANDLER_FORMATS:
 	resultObj = Tcl_NewObj();
 	
 
