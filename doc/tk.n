@@ -23,6 +23,13 @@ application as a whole, or to a screen or display, rather than to a
 particular window.
 The command can take any of a number of different forms
 depending on the \fIoption\fR argument.  The legal forms are:
+.\" METHOD: accessible
+.TP
+\fBtk accessible \fIsubcommand\fR ...
+.
+This command makes Tk widgets accessible to screen readers.
+For
+more details see the \fBaccessible\fR manual page.
 .\" METHOD: appname
 .TP
 \fBtk appname \fR?\fInewName\fR?
@@ -158,7 +165,7 @@ Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (macOS Aqua).
 .SH "SEE ALSO"
-busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
+accessible(n),busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
 .SH KEYWORDS
 application name, print, send, sysnotify, systray
 '\" Local Variables:
