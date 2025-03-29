@@ -273,6 +273,25 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W invoke}\
 			}
+    #Menubutton/TMButton bindings
+    bind Menubutton <Map> {+::tk::accessible::_init \
+			   %W \
+			   Button \
+			   Button \
+			   [%W cget -text] \
+			   {} \
+			   [%W cget -state] \
+			   {%W invoke}\
+			   }
+    bind TMenubutton <Map> {+::tk::accessible::_init \
+			   %W \
+			   Button \
+			   Button \
+			   [%W cget -text] \
+			   {} \
+			   [%W cget -state] \
+			   {%W invoke}\
+		       }
     #Canvas bindings 
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
@@ -540,6 +559,8 @@ namespace eval ::tk::accessible {
     bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
     bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
     bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind Menubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
+    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
     bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
