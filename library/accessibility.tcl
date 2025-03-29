@@ -33,9 +33,9 @@ namespace eval ::tk::accessible {
     #check if tree or table
     proc _checktree {w} {
 	if {[expr {"tree" in [$w cget -show]}] eq 1} {
-	    return Tree
+	    return "Tree"
 	} else {
-	    return Table
+	    return "Table"
 	}
     }
 
