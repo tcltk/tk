@@ -66,20 +66,20 @@ bind Treeview	<<PrevChar>>		{ ::ttk::treeview::KeyNav %W left }
 bind Treeview	<<NextChar>>		{ ::ttk::treeview::KeyNav %W right }
 bind Treeview	<<SelectPrevChar>>	{ ::ttk::treeview::SelectionExtend %W left }
 bind Treeview	<<SelectNextChar>>	{ ::ttk::treeview::SelectionExtend %W right }
-bind Treeview	<<PrevWord>>		{ ::ttk::treeview::KeyNav %W first }
-bind Treeview	<<NextWord>>		{ ::ttk::treeview::KeyNav %W last }
-bind Treeview	<<SelectPrevWord>>	{ ::ttk::treeview::SelectionExtend %W first }
-bind Treeview	<<SelectNextWord>>	{ ::ttk::treeview::SelectionExtend %W last }
+bind Treeview	<<PrevWord>>		{ ::ttk::treeview::KeyNav %W pageLeft }
+bind Treeview	<<NextWord>>		{ ::ttk::treeview::KeyNav %W pageRight }
+bind Treeview	<<SelectPrevWord>>	{ ::ttk::treeview::SelectionExtend %W pageLeft }
+bind Treeview	<<SelectNextWord>>	{ ::ttk::treeview::SelectionExtend %W pageRight }
 
 # Up/down arrow key bindings (none, shift, control, control+shift)
 bind Treeview	<<PrevLine>>		{ ::ttk::treeview::KeyNav %W up }
 bind Treeview	<<NextLine>>		{ ::ttk::treeview::KeyNav %W down }
 bind Treeview	<<SelectPrevLine>>	{ ::ttk::treeview::SelectionExtend %W up }
 bind Treeview	<<SelectNextLine>>	{ ::ttk::treeview::SelectionExtend %W down }
-bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W top }
-bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W bottom }
-bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::SelectionExtend %W top }
-bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::SelectionExtend %W bottom }
+bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W pageTop }
+bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W pageBottom }
+bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::SelectionExtend %W pageTop }
+bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::SelectionExtend %W pageBottom }
 
 # Home/End key bindings (none, shift, control, control+shift)
 bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
@@ -92,28 +92,28 @@ bind Treeview	<Control-Shift-Home>	{ ::ttk::treeview::SelectionExtend %W top }
 bind Treeview	<Control-Shift-End>	{ ::ttk::treeview::SelectionExtend %W bottom }
 
 # Page Up/Down key bindings (none, shift, control, control+shift)
-bind Treeview	<Prior>			{ ::ttk::treeview::ScrollPage %W up }
-bind Treeview	<Next>			{ ::ttk::treeview::ScrollPage %W down }
-bind Treeview	<Shift-Prior>		{ ::ttk::treeview::ScrollPage %W left }
-bind Treeview	<Shift-Next>		{ ::ttk::treeview::ScrollPage %W right }
-bind Treeview	<Control-Prior>		{ ::ttk::treeview::ScrollPage %W top }
-bind Treeview	<Control-Next>		{ ::ttk::treeview::ScrollPage %W bottom }
-bind Treeview	<Control-Shift-Prior>	{ ::ttk::treeview::ScrollPage %W pageTop }
-bind Treeview	<Control-Shift-Next>	{ ::ttk::treeview::ScrollPage %W pageBottom }
-bind Treeview	<Alt-Prior>		{ ::ttk::treeview::ScrollPage %W left; break }
-bind Treeview	<Alt-Next>		{ ::ttk::treeview::ScrollPage %W right; break }
+bind Treeview	<Prior>			{ ::ttk::treeview::PageNav %W up }
+bind Treeview	<Next>			{ ::ttk::treeview::PageNav %W down }
+bind Treeview	<Shift-Prior>		{ ::ttk::treeview::PageNav %W left }
+bind Treeview	<Shift-Next>		{ ::ttk::treeview::PageNav %W right }
+bind Treeview	<Control-Prior>		{ ::ttk::treeview::PageNav %W pageTop }
+bind Treeview	<Control-Next>		{ ::ttk::treeview::PageNav %W pageBottom }
+bind Treeview	<Control-Shift-Prior>	{ ::ttk::treeview::PageNav %W pageLeft }
+bind Treeview	<Control-Shift-Next>	{ ::ttk::treeview::PageNav %W pageRight }
+bind Treeview	<Meta-Prior>		{ ::ttk::treeview::PageNav %W left; break }
+bind Treeview	<Meta-Next>		{ ::ttk::treeview::PageNav %W right; break }
 
 # Scroll Lock bindings
-bind Treeview	<Mod3-Up>		{ %w yview scroll -1 units }
-bind Treeview	<Mod3-Down>		{ %w yview scroll 1 units }
-bind Treeview	<Mod3-Left>		{ %w xview scroll -1 units }
-bind Treeview	<Mod3-Right>		{ %w xview scroll 1 units }
-bind Treeview	<Mod3-Prior>		{ %w yview scroll -1 pages }
-bind Treeview	<Mod3-Next>		{ %w yview scroll 1 pages }
+bind Treeview	<Mod3-Up>		{ %W yview scroll -1 units }
+bind Treeview	<Mod3-Down>		{ %W yview scroll 1 units }
+bind Treeview	<Mod3-Left>		{ %W xview scroll -1 units }
+bind Treeview	<Mod3-Right>		{ %W xview scroll 1 units }
+bind Treeview	<Mod3-Prior>		{ %W yview scroll -1 pages }
+bind Treeview	<Mod3-Next>		{ %W yview scroll 1 pages }
 bind Treeview	<Mod3-Control-Prior>	{ %W yview moveto 0.0 }
 bind Treeview	<Mod3-Control-Next>	{ %W yview moveto 1.0 }
-bind Treeview	<Mod3-Home>		{ %w xview scroll -1 pages }
-bind Treeview	<Mod3-End>		{ %w xview scroll 1 pages }
+bind Treeview	<Mod3-Home>		{ %W xview scroll -1 pages }
+bind Treeview	<Mod3-End>		{ %W xview scroll 1 pages }
 bind Treeview	<Mod3-Control-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-Control-End>	{ %W xview moveto 1.0 }
 
@@ -213,6 +213,47 @@ proc ::ttk::treeview::BottomItem {w} {
     return $item
 }
 
+# Get widget width
+proc ::ttk::treeview::GetWidth {w} {
+    # Get widget width
+    set width 0
+    set list [list]
+    for {set i [FirstColumnNum $w]} {$i <= [LastColumnNum $w]} {incr i} {
+	lappend list $i $width [incr width [$w column [format "#%d" $i] -width]]
+    }
+    return [list $list $width]
+}
+
+# Get left most visible column
+proc ::ttk::treeview::PageLeft {w} {
+    lassign [$w xview] start end
+    lassign [GetWidth $w] list width
+    set left [expr {int($start * $width)}]
+
+    foreach {c x1 x2} $list {
+	if {$x1 >= $left} {
+	    break
+	}
+    }
+    return $c
+}
+
+# Get right most visible column
+proc ::ttk::treeview::PageRight {w} {
+    lassign [$w xview] start end
+    lassign [GetWidth $w] list width
+    set right [expr {int($end * $width)}]
+    set new 0
+
+    foreach {c x1 x2} $list {
+	if {$x2 > $right} {
+	    break
+	}
+	set new $c
+    }
+    return $new
+}
+
 ## KeyNav -- Keyboard navigation to move focus and selected item/cell
 #
 proc ::ttk::treeview::KeyNav {w dir} {
@@ -283,12 +324,24 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    set focus [BottomItem $w]
 	}
 	pageTop {
-	    # Select all items/cells from current to page top (window view)
+	    # Move to first row in current screen view
 	    set focus [PageTop $w]
 	}
 	pageBottom {
-	    # Select all items/cells from current to page bottom (window view)
+	    # Move to last row in current screen view
 	    set focus [PageBottom $w]
+	}
+	pageLeft {
+	    # Move to first column in current screen view
+	    if {$cellmode} {
+		set colNum [PageLeft $w]
+	    }
+	}
+	pageRight {
+	    # Move to last column in current screen view
+	    if {$cellmode} {
+		set colNum [PageRight $w]
+	    }
 	}
     }
 
@@ -302,9 +355,9 @@ proc ::ttk::treeview::KeyNav {w dir} {
     }
 }
 
-## ScrollPage -- Scroll view and move focus/selected item
+## PageNav -- Scroll view and move focus/selected item
 #
-proc ::ttk::treeview::ScrollPage {w dir} {
+proc ::ttk::treeview::PageNav {w dir} {
     set focus [$w focus]
     if {$focus eq ""} { return }
 
@@ -332,7 +385,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 
     switch -- $dir {
 	up {
-	    # Scroll up
+	    # Move up 1 page & select cell
 	    lassign [$w yview] start end
 	    if {$start > 0.0} {
 		# Scroll up 1 page and select item/cell at same coord
@@ -345,7 +398,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	down {
-	    # Scroll down
+	    # Move down 1 page & select cell
 	    lassign [$w yview] start end
 	    if {$end < 1.0} {
 		# Scroll down 1 page and select item/cell at same coord
@@ -361,7 +414,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	left {
-	    # Scroll left 1 page
+	    # Move left 1 page & select cell
 	    lassign [$w xview] start end
 	    if {$start > 0.0} {
 		$w xview scroll -1 pages
@@ -378,7 +431,7 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	right {
-	    # Scroll right 1 page
+	    # Move right 1 page & select cell
 	    lassign [$w xview] start end
 	    if {$end < 1.0} {
 		$w xview scroll 1 pages
@@ -395,14 +448,14 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    }
 	}
 	first {
-	    # Move to left edge & select first cell in item if in cell mode
+	    # Move to & select leftmost cell in item if in cell mode
 	    $w xview moveto 0
 	    if {$cellmode} {
 		set colId [FirstColumnId $w]
 	    }
 	}
 	last {
-	    # Move to right edge & select last cell in item if in cell mode
+	    # Move to & select rightmost cell in item if in cell mode
 	    $w xview moveto 1
 	    if {$cellmode} {
 		set colId [LastColumnId $w]
@@ -419,12 +472,24 @@ proc ::ttk::treeview::ScrollPage {w dir} {
 	    set focus [BottomItem $w]
 	}
 	pageTop {
-	    # Select top item/cell on page (window view)
+	    # Move to & select topmost item/cell in current screen view
 	    set focus [PageTop $w]
 	}
 	pageBottom {
-	    # Select bottom item/cell on page (window view)
+	    # Move to & select bottommost item/cell in current screen view
 	    set focus [PageBottom $w]
+	}
+	pageLeft {
+	    # Move to & select leftmost item/cell in current screen view
+	    if {$cellmode} {
+		set colNum [PageLeft $w]
+	    }
+	}
+	pageRight {
+	    # Move to & select rightmost item/cell in current screen view
+	    if {$cellmode} {
+		set colNum [PageRight $w]
+	    }
 	}
     }
 
@@ -514,12 +579,24 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	    set focus [BottomItem $w]
 	}
 	pageTop {
-	    # Select all items/cells from current to page top (window view)
+	    # Select all cells from current to first row in current screen view
 	    set focus [PageTop $w]
 	}
 	pageBottom {
-	    # Select all items/cells from current to page bottom (window view)
+	    # Select all cells from current to last row in current screen view
 	    set focus [PageBottom $w]
+	}
+	pageLeft {
+	    # Select all cells from current to first column in current screen view
+	    if {$cellmode} {
+		set colNum [PageLeft $w]
+	    }
+	}
+	pageRight {
+	    # Select all cells from current to last column in current screen view
+	    if {$cellmode} {
+		set colNum [PageRight $w]
+	    }
 	}
     }
 
