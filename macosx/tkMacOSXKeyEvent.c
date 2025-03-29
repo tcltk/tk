@@ -663,24 +663,27 @@ setXEventPoint(
     TkWindow *winPtr = (TkWindow *) tkwin;
     NSPoint local = [w  mouseLocationOutsideOfEventStream];
     NSPoint global = [w tkConvertPointToScreen: local];
-    int win_x, win_y;
+    int win_x, win_y, xOffset, yOffset;
 
     if (Tk_IsEmbedded(winPtr)) {
 	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 	if (Tk_IsTopLevel(contPtr)) {
-	    local.x -= contPtr->wmInfoPtr->xInParent;
-	    local.y -= contPtr->wmInfoPtr->yInParent;
+	    TkMacOSXWindowOffset(contPtr, &xOffset, &yOffset);
+	    local.x -= xOffset;
+	    local.y -= yOffset;
 	} else {
 	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
 	    if (topMacWin) {
 		TkWindow *topPtr = topMacWin->winPtr;
-		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+		TkMacOSXWindowOffset(topPtr, &xOffset, &yOffset);
+		local.x -= (xOffset + contPtr->changes.x);
+		local.y -= (yOffset + contPtr->changes.y);
 	    }
 	}
-    } else if (winPtr->wmInfoPtr != NULL) {
-	local.x -= winPtr->wmInfoPtr->xInParent;
-	local.y -= winPtr->wmInfoPtr->yInParent;
+    } else {
+	TkMacOSXWindowOffset(winPtr, &xOffset, &yOffset);
+	local.x -= xOffset;
+	local.y -= yOffset;
     }
     tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     local.x = win_x;
