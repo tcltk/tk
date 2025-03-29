@@ -29,7 +29,7 @@ tcltest::loadTestedCommands
 assert {"testutils" in [info procs testutils]}
 
 #
-# Sections 1: invalid invocations
+# Section 1: invalid invocations
 #
 test testutils-1.0 {invalid subcommand} -constraints testutils -body {
     testutils foo
