@@ -359,7 +359,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	return nil;
     }
     
-    if ((winPtr->window) == NULL) {
+    if (!winPtr->window) {
 	return nil;
     }
 
@@ -393,73 +393,11 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return NO;
 }
 
-/*Various actions for buttons, scrollbars, spinners, and scales. */
+/*Various actions for buttons. */
 - (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
     if ([action isEqualToString:NSAccessibilityPressAction]) {
         [self accessibilityPerformPress];
-    }
-    if ([action isEqualToString:NSAccessibilityIncrementAction]) {
-        [self accessibilityIncrementValue];
-    }
-    if ([action isEqualToString:NSAccessibilityDecrementAction]) {
-        [self accessibilityDecrementValue];
-    }
-   
-}
-
-- (void)accessibilitySetValue:(id)value {
-
-    NSAccessibilityRole role = self.accessibilityRole;
-
-    //pending for future implementation
-}
-
-- (NSNumber *)accessibilityMinimumValue {
-    
-    TkMainInfo *info = TkGetMainInfoList();
-    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-    NSString *commandString = [NSString stringWithFormat:@"%@ cget -from", widgetName];
-
-    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-    Tcl_Obj *resultObj;
-
-    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-        resultObj = Tcl_GetObjResult(info->interp);
-        double value = strtod(Tcl_GetString(resultObj), NULL);
-        return @(value);
-    }
-    return nil;
-}
-
-- (NSNumber *)accessibilityMaximumValue {
-    
-    TkMainInfo *info = TkGetMainInfoList();
-    NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
-    NSString *commandString = [NSString stringWithFormat:@"%@ cget -to", widgetName];
-
-    Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
-    Tcl_Obj *resultObj;
-
-    if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-        resultObj = Tcl_GetObjResult(info->interp);
-        double value = strtod(Tcl_GetString(resultObj), NULL);
-        return @(value);
-    }
-    return nil;
-}
-
-
-- (void)accessibilityIncrementValue {
-    
-    NSAccessibilityRole role = self.accessibilityRole;
-   
-    //pending for future implementation
-}
-
-- (void)accessibilityDecrementValue {
-
-    NSAccessibilityRole role = self.accessibilityRole;
-    //pending for future implementation
+    }  
 }
 
 
@@ -497,9 +435,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     NSString *commandString = [NSString stringWithFormat:@"::tk::accessible::_forceTkFocus %@", widgetName];
     Tcl_Obj *commandObj = Tcl_NewStringObj([commandString UTF8String], -1);
 
-    Tcl_Obj *resultObj;
     if (Tcl_EvalObjEx(info->interp, commandObj, TCL_EVAL_GLOBAL) == TCL_OK) {
-        resultObj = Tcl_GetObjResult(info->interp);
+        Tcl_GetObjResult(info->interp);
     }
 }
 
@@ -519,6 +456,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     /* Finally, release the object.*/
     [self release];
     self = nil;
+    
+    return TCL_OK; 
 }
 
 - (void)dealloc {
@@ -564,6 +503,9 @@ int IsVoiceOverRunning (
 		      int objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
 {
+
+    (void) objc;
+    (void) objv;
 
     int result = 0;
     FILE *fp = popen("pgrep -x VoiceOver", "r");
