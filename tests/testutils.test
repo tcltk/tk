@@ -31,7 +31,7 @@ assert {"testutils" in [info procs testutils]}
 #
 # Section 1: invalid invocations
 #
-test testutils-1.0 {invalid subcommand} -constraints testutils -body {
+test testutils-1.1 {invalid subcommand} -constraints testutils -body {
     testutils foo
 } -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
 
@@ -78,11 +78,11 @@ set initVars [info vars]; lappend initVars initVars
 #
 # 2. Domain failures for forget and import
 #
-test testutils-2.0 {forget not-imported domain} -constraints testutils -body {
+test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
     testutils forget _foo
 } -result {testutils domain "_foo" was not imported} -returnCodes error
 
-test testutils-2.1 {duplicate import} -constraints testutils -body {
+test testutils-2.2 {duplicate import} -constraints testutils -body {
     testutils import _foo
     testutils import _foo
 } -result {testutils domain "_foo" was already imported} -returnCodes error -cleanup {
@@ -92,20 +92,20 @@ test testutils-2.1 {duplicate import} -constraints testutils -body {
 #
 # 3. Import procs
 #
-test testutils-3.0 {utility proc is imported and init proc is not} -constraints testutils -body {
+test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
     testutils import _foo
     expr {([info procs _kuk] eq "_kuk") && ([info procs init] eq "")}
 } -result 1 -cleanup {
     testutils forget _foo
 }
 
-test testutils-3.1 {forget removes utility proc} -constraints testutils -body {
+test testutils-3.2 {forget removes utility proc} -constraints testutils -body {
     testutils import _foo
     testutils forget _foo
     info procs _kuk
 } -result {}
 
-test testutils-3.2 {import fails: proc already exists} -constraints testutils -setup {
+test testutils-3.3 {import fails: proc already exists} -constraints testutils -setup {
     namespace eval ::_zez {
 	proc _kuk {} {}
     }
@@ -120,7 +120,7 @@ test testutils-3.2 {import fails: proc already exists} -constraints testutils -s
 #
 # 4. Import variables
 #
-test testutils-4.0 {associated variables are imported} -constraints testutils -body {
+test testutils-4.1 {associated variables are imported} -constraints testutils -body {
     testutils import _foo
     set varNames [info vars]
     foreach name $initVars {
@@ -132,7 +132,7 @@ test testutils-4.0 {associated variables are imported} -constraints testutils -b
     testutils forget _foo
 }
 
-test testutils-4.1 {
+test testutils-4.2 {
     Repeated initialization keeps imported variable defined without value non-existent,
     even if a test file inadvertently assigns it a value in the meantime.
 } -constraints testutils -body {
@@ -147,7 +147,7 @@ test testutils-4.1 {
     testutils forget _foo
 }
 
-test testutils-4.2 {import fails: variable already exists} -constraints testutils -setup {
+test testutils-4.3 {import fails: variable already exists} -constraints testutils -setup {
     #
     # We need a pristine new namespace in which the variable _bar was never imported
     # and hence no upvar link for it exists.
@@ -163,7 +163,7 @@ test testutils-4.2 {import fails: variable already exists} -constraints testutil
     namespace delete ::_zez
 }
 
-test testutils-4.3 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -setup {
+test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -setup {
 } -body {
     namespace eval ::_zez {
 	testutils import _foo
