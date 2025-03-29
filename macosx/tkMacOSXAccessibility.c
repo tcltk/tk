@@ -384,6 +384,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return TRUE;
 }
 
+
 - (BOOL)isAccessibilityElement {
     return YES;
 }
