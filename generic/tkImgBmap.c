@@ -89,7 +89,7 @@ static int		ImgBmapPostscript(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psinfo, int x, int y,
 			    int width, int height, int prepass);
-static int		ImgBmapDriver(Tcl_Interp *interp,
+static int		ImgBmapHandler(Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 Tk_ImageType tkBitmapImageType = {
@@ -101,7 +101,7 @@ Tk_ImageType tkBitmapImageType = {
     ImgBmapDelete,		/* deleteProc */
     ImgBmapPostscript,		/* postscriptProc */
     NULL,			/* nextPtr */
-    ImgBmapDriver		/* driverProc */
+    ImgBmapHandler		/* handlerProc */
 };
 
 /*
@@ -1304,9 +1304,9 @@ ImgBmapPostscript(
 /*
  *--------------------------------------------------------------
  *
- * ImgBmapDriver --
+ * ImgBmapHandler --
  *
- *	The "image driver bitmap args" command is passed to this procedure.
+ *	The "image handler bitmap args" command is passed to this procedure.
  *
  * Results:
  *	Returns a standard Tcl return value.
@@ -1318,7 +1318,7 @@ ImgBmapPostscript(
  */
 
 static int
-ImgBmapDriver(
+ImgBmapHandler(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     Tcl_Size objc,		/* Number of arguments, may be zero. */
@@ -1329,7 +1329,7 @@ ImgBmapDriver(
      * There is currently no operation.
      */
     
-    static const char *const driverOptions[] = {
+    static const char *const handlerOptions[] = {
 	NULL
     };
     int index;
@@ -1339,7 +1339,7 @@ ImgBmapDriver(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[0], driverOptions,
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], handlerOptions,
 	    sizeof(char *), "suboption", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
