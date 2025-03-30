@@ -722,6 +722,9 @@ test wm-geometry-2.1 {setting values} -body {
 
 
 ### wm grid ###
+# These tests ahould be removed when the wm grid command is removed.
+# Currently they are testing argument parsing for a no-op command.
+
 test wm-grid-1.1 {usage} -returnCodes error -body {
     wm grid
 } -result {wrong # args: should be "wm option window ?arg ...?"}
@@ -758,17 +761,6 @@ test wm-grid-1.11 {usage} -returnCodes error -body {
 test wm-grid-1.12 {usage} -returnCodes error -body {
     wm grid . 13 14 15 -1
 } -result {heightInc can't be <= 0}
-
-test wm-grid-2.1 {setting and reading values} -setup {
-    set result {}
-} -body {
-    lappend result [wm grid .t]
-    wm grid .t 3 4 10 2
-    lappend result [wm grid .t]
-    wm grid .t {} {} {} {}
-    lappend result [wm grid .t]
-} -result [list {} {3 4 10 2} {}]
-
 
 ### wm group ###
 test wm-group-1.1 {usage} -returnCodes error -body {

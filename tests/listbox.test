@@ -23,19 +23,6 @@ proc getsize w {
     return $x
 }
 
-proc resetGridInfo {} {
-    # Some window managers, such as mwm, don't reset gridding information
-    # unless the window is withdrawn and re-mapped.  If this procedure
-    # isn't invoked, the window manager will stay in gridded mode, which
-    # can cause all sorts of problems.  The "wm positionfrom" command is
-    # needed so that the window manager doesn't ask the user to
-    # manually position the window when it is re-mapped.
-
-    wm withdraw .
-    wm positionfrom . user
-    wm deiconify .
-}
-
 # Procedure that creates a second listbox for checking things related
 # to partially visible lines.
 
@@ -65,7 +52,6 @@ option add *Listbox.font {Helvetica -12 bold}
 listbox .l
 pack .l
 update
-resetGridInfo
 test listbox-1.1 {configuration options} -body {
     .l configure -activestyle under
     list [lindex [.l configure -activestyle] 4] [.l cget -activestyle]
@@ -1230,7 +1216,6 @@ test listbox-4.1 {ConfigureListbox procedure} -constraints {
 } -cleanup {
     deleteWindows
 } -result {25x15 185x263}
-resetGridInfo
 test listbox-4.2 {ConfigureListbox procedure} -setup {
     deleteWindows
     destroy .l
@@ -1326,34 +1311,10 @@ test listbox-4.6 {ConfigureListbox procedure} -constraints {
     update
     wm deiconify .
     set x [getsize .]
-    .l2 configure -setgrid 1
-    update
-    list $x [getsize .]
 } -cleanup {
     deleteWindows
-} -result {115x328 15x20}
-test listbox-4.7 {ConfigureListbox procedure} -setup {
-    deleteWindows
-} -body {
-    wm withdraw .
-    listbox .l2 -font $fixed -width 30 -height 20 -setgrid 1
-    wm geom . +25+25
-    pack .l2
-    update
-    wm deiconify .
-    set result [getsize .]
-    wm geom . 26x15
-    update
-    lappend result [getsize .]
-    .l2 configure -setgrid 1
-    update
-    lappend result [getsize .]
-} -cleanup {
-    deleteWindows
-    wm geom . {}
-} -result {30x20 26x15 26x15}
+} -result {115x328}
 
-resetGridInfo
 test listbox-4.8 {ConfigureListbox procedure} -setup {
     destroy .l2
 } -body {
@@ -1872,7 +1833,6 @@ test listbox-8.1 {ListboxEventProc procedure} -constraints {
 } -cleanup {
     destroy .l
 } -result {20x10 150x178 0 {}}
-resetGridInfo
 test listbox-8.2 {ListboxEventProc procedure} -constraints {
 	fonts
 } -setup {
@@ -3210,7 +3170,6 @@ test listbox-32.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
-resetGridInfo
 deleteWindows
 option clear
 
