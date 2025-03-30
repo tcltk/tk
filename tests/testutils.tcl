@@ -920,7 +920,7 @@ namespace eval ::tk::test::select {
 	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
-    proc setup {{path .f1} {display {}}} {
+    proc selectionSetup {{path .f1} {display {}}} {
 	catch {destroy $path}
 	if {$display eq ""} {
 	    frame $path

@@ -68,7 +68,7 @@ test unixSelect-1.3 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     x11
 } -setup {
     childTkProcess create
-    setup
+    selectionSetup
 } -body {
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
 	{handler COMPOUND_TEXT}
@@ -88,7 +88,7 @@ test unixSelect-1.4 {TkSelGetSelection procedure: INCR i18n text, iso2022} -cons
     x11
 } -setup {
     childTkProcess create
-    setup
+    selectionSetup
 } -body {
     # This test is subtle.  The selection ends up getting fetched twice by
     # Tk:  once to compute the length, and again to actually send the data.
@@ -114,7 +114,7 @@ test unixSelect-1.5 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     x11
 } -setup {
     childTkProcess create
-    setup
+    selectionSetup
 } -body {
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
 	{handler COMPOUND_TEXT}
