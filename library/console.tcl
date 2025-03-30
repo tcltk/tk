@@ -145,7 +145,7 @@ proc ::tk::ConsoleInit {} {
     }
     ::ttk::frame .consoleframe -style ConsoleFrame
 
-    set con [text .console -yscrollcommand [list .sb set] -setgrid true \
+    set con [text .console -yscrollcommand [list .sb set] -setgrid 1 \
 		 -borderwidth 0 -highlightthickness 0 -font TkConsoleFont]
     if {[tk windowingsystem] eq "aqua"} {
 	scrollbar .sb -command [list $con yview]
