@@ -1145,6 +1145,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     pack propagate .three 0
     wm geometry .three 300x300+110+110
     create_and_pack_frames .three
+    update idletasks; # make sure three is ready
     wm deiconify .three
     waitForWindowEvent .three.f1.f2 <Enter>
     update idletasks; # finish displaying windows

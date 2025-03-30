@@ -377,9 +377,6 @@ enum {
 	}
     }
     else {
-	if (!winPtr || !winPtr->wmInfoPtr) {
-	    return theEvent;
-	}
 	TkMacOSXWindowOffset(winPtr, &xOffset, &yOffset);
 	local.x -= xOffset;
 	local.y -= yOffset;
