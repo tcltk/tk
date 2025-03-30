@@ -855,6 +855,7 @@ test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
 } {{11.0 12.0 13.0} {11.0 12.0 13.0}}
 test textDisp-4.15 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag add x 1.0 end
+    update idletasks
     .t yview 4.0
     update
     .t yview scroll -2 units
