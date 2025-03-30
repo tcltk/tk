@@ -722,14 +722,6 @@ test unixWm-20.1 {Tk_WmCmd procedure, "grid" option} unix {
 test unixWm-20.2 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 12 13 14 15 16} msg] $msg
 } {1 {wrong # args: should be "wm grid window ?baseWidth baseHeight widthInc heightInc?"}}
-test unixWm-20.3 {Tk_WmCmd procedure, "grid" option} unix {
-    set result {}
-    lappend result [wm grid .t]
-    wm grid .t 5 6 20 10
-    lappend result [wm grid .t]
-    wm grid .t {} {} {} {}
-    lappend result [wm grid .t]
-} {{} {5 6 20 10} {}}
 test unixWm-20.4 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t bad 10 11 12} msg] $msg
 } {1 {expected integer but got "bad"}}
@@ -1358,19 +1350,6 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     update
     wm geometry .t
 } {30x10+0+0}
-test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
-    update
-    destroy .t
-    update
-    toplevel .t
-    wm geometry .t 200x100+100+$Y0
-    listbox .t.l -height 20 -width 20
-    pack .t.l -fill both -expand 1
-    update
-    .t.l configure -setgrid 1
-    update
-    wm geometry .t
-} "20x20+100+$Y0"
 
 test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
     destroy .t
@@ -1496,28 +1475,6 @@ test unixWm-44.1 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {180 20}
-test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
-    destroy .t
-    toplevel .t -width 80 -height 60
-    wm grid .t 5 4 10 12
-    wm geometry .t +30+40
-    wm overrideredirect .t 1
-    tkwait visibility .t
-    wm geometry .t 10x2
-    update
-    list [winfo width .t] [winfo height .t]
-} {130 36}
-test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
-    destroy .t
-    toplevel .t -width 80 -height 60
-    wm grid .t 5 4 10 12
-    wm geometry .t +30+40
-    wm overrideredirect .t 1
-    tkwait visibility .t
-    wm geometry .t 1x10
-    update
-    list [winfo width .t] [winfo height .t]
-} {40 132}
 test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} unix {
     destroy .t
     toplevel .t -width 100 -height 200
@@ -1528,31 +1485,9 @@ test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {300 150}
-test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} unix {
+test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix} {
     destroy .t
     toplevel .t -width 80 -height 60
-    wm grid .t 18 7 10 12
-    wm geometry .t +30+40
-    wm overrideredirect .t 1
-    tkwait visibility .t
-    wm geometry .t 5x8
-    update
-    list [winfo width .t] [winfo height .t]
-} {1 72}
-destroy .t
-toplevel .t -width 80 -height 60
-test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
-    wm grid .t 18 7 10 12
-    wm geometry .t +30+40
-    wm overrideredirect .t 1
-    tkwait visibility .t
-    wm geometry .t 20x1
-    update
-    list [winfo width .t] [winfo height .t]
-} {100 1}
-destroy .t
-toplevel .t -width 80 -height 60
-test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix} {
     wm overrideredirect .t 1
     tkwait visibility .t
     update

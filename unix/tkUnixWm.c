@@ -1926,15 +1926,8 @@ WmGeometryCmd(
     if (objc == 3) {
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
-	if (wmPtr->gridWin != NULL) {
-	    width = wmPtr->reqGridWidth + (winPtr->changes.width
-		    - winPtr->reqWidth)/wmPtr->widthInc;
-	    height = wmPtr->reqGridHeight + (winPtr->changes.height
-		    - winPtr->reqHeight)/wmPtr->heightInc;
-	} else {
-	    width = winPtr->changes.width;
-	    height = winPtr->changes.height;
-	}
+	width = winPtr->changes.width;
+	height = winPtr->changes.height;
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
 	return TCL_OK;
@@ -3828,19 +3821,14 @@ void Tk_SetSizeHints(
  *
  * Tk_SetGrid --
  *
- *	This function is invoked by a widget when it wishes to set a grid
- *	coordinate system that controls the size of a top-level window. It
- *	provides a C interface equivalent to the "wm grid" command and is
- *	usually associated with the -setgrid option.
+ *	This function has been deprecated.  It is a no-op for the time
+ *      being, until it is is removed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Grid-related information will be passed to the window manager, so that
- *	the top-level window associated with tkwin will resize on even grid
- *	units. If some other window already controls gridding for the
- *	top-level window then this function call has no effect.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -3857,85 +3845,6 @@ Tk_SetGrid(
     int widthInc, int heightInc)/* Pixel increments corresponding to a change
 				 * of one grid unit. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    WmInfo *wmPtr;
-
-    /*
-     * Ensure widthInc and heightInc are greater than 0
-     */
-
-    if (widthInc <= 0) {
-	widthInc = 1;
-    }
-    if (heightInc <= 0) {
-	heightInc = 1;
-    }
-
-    /*
-     * Find the top-level window for tkwin, plus the window manager
-     * information.
-     */
-
-    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
-	winPtr = winPtr->parentPtr;
-	if (winPtr == NULL) {
-	    /*
-	     * The window is being deleted... just skip this operation.
-	     */
-
-	    return;
-	}
-    }
-    wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr == NULL) {
-	return;
-    }
-
-    if ((wmPtr->gridWin != NULL) && (wmPtr->gridWin != tkwin)) {
-	return;
-    }
-
-    if ((wmPtr->reqGridWidth == reqWidth)
-	    && (wmPtr->reqGridHeight == reqHeight)
-	    && (wmPtr->widthInc == widthInc)
-	    && (wmPtr->heightInc == heightInc)
-	    && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
-	return;
-    }
-
-    /*
-     * If gridding was previously off, then forget about any window size
-     * requests made by the user or via "wm geometry": these are in pixel
-     * units and there's no easy way to translate them to grid units since the
-     * new requested size of the top-level window in pixels may not yet have
-     * been registered yet (it may filter up the hierarchy in DoWhenIdle
-     * handlers). However, if the window has never been mapped yet then just
-     * leave the window size alone: assume that it is intended to be in grid
-     * units but just happened to have been specified before this function was
-     * called.
-     */
-
-    if ((wmPtr->gridWin == NULL) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-	wmPtr->width = -1;
-	wmPtr->height = -1;
-    }
-
-    /*
-     * Set the new gridding information, and start the process of passing all
-     * of this information to the window manager.
-     */
-
-    wmPtr->gridWin = tkwin;
-    wmPtr->reqGridWidth = reqWidth;
-    wmPtr->reqGridHeight = reqHeight;
-    wmPtr->widthInc = widthInc;
-    wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize;
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
-    }
 }
 
 /*
@@ -3943,15 +3852,14 @@ Tk_SetGrid(
  *
  * Tk_UnsetGrid --
  *
- *	This function cancels the effect of a previous call to Tk_SetGrid.
+ *	This function has been deprecated.  It is a no-op for the time
+ *      being, until it is removed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	If tkwin currently controls gridding for its top-level window,
- *	gridding is cancelled for that top-level window; if some other window
- *	controls gridding then this function has no effect.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -3961,49 +3869,6 @@ Tk_UnsetGrid(
     Tk_Window tkwin)		/* Token for window that is currently
 				 * controlling gridding. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    WmInfo *wmPtr;
-
-    /*
-     * Find the top-level window for tkwin, plus the window manager
-     * information.
-     */
-
-    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
-	winPtr = winPtr->parentPtr;
-	if (winPtr == NULL) {
-	    /*
-	     * The window is being deleted... just skip this operation.
-	     */
-
-	    return;
-	}
-    }
-    wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr == NULL) {
-	return;
-    }
-
-    if (tkwin != wmPtr->gridWin) {
-	return;
-    }
-
-    wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~PBaseSize;
-    if (wmPtr->width != -1) {
-	wmPtr->width = winPtr->reqWidth + (wmPtr->width
-		- wmPtr->reqGridWidth)*wmPtr->widthInc;
-	wmPtr->height = winPtr->reqHeight + (wmPtr->height
-		- wmPtr->reqGridHeight)*wmPtr->heightInc;
-    }
-    wmPtr->widthInc = 1;
-    wmPtr->heightInc = 1;
-
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
-    }
 }
 
 /*

@@ -1151,11 +1151,11 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     update idletasks; # finish displaying windows
     set result "|"
 } -body {
+    update idletasks; # Handle any lingering Leave events
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .three
     waitForWindowEvent .two.f1.f2 <Enter>
-    update idletasks; #finish destroying .two
     set result
 } -cleanup {
     bind all <Leave> {}
