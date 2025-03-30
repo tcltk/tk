@@ -1521,6 +1521,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     .t tag configure TAG -borderwidth 4 -relief raised
     .t tag bind TAG <Enter>  {lappend res "%x %y tag-Enter"}
     .t tag bind TAG <Leave>  {lappend res "%x %y tag-Leave"}
+    update idletasks
     bind .t <Enter> {lappend res Enter}
     bind .t <Leave> {lappend res Leave}
 

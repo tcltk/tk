@@ -65,7 +65,7 @@ typedef struct TkWmInfo {
     Tk_Uid titleUid;		/* Title to display in window caption. If NULL,
 				 * use name of widget. */
     char *iconName;		/* Name to display in icon. */
-    Tk_Window container;		/* Container window for TRANSIENT_FOR property,
+    Tk_Window container;	/* Container window for TRANSIENT_FOR property,
 				 * or None. */
     XWMHints hints;		/* Various pieces of information for window
 				 * manager. */
@@ -77,9 +77,9 @@ typedef struct TkWmInfo {
 				 * NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or
 				 * NULL if this isn't an icon for anyone. */
-    Transient *transientPtr;    /* First item in a list of all transient windows
-				 * belonging to this window, or NULL if there
-				 * are no transients. */
+    Transient *transientPtr;    /* First item in a list of all transient
+				 * windows belonging to this window, or NULL if
+				 * there are no transients. */
 
     /*
      * Information used to construct an XSizeHints structure for the window

@@ -1347,6 +1347,109 @@ TkWmDeadWindow(
     winPtr->wmInfoPtr = NULL;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpSetWindowMenuBar --
+ *
+ *	Associates a given menu with a window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	On Windows and UNIX, associates the platform menu with the platform
+ *	window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpSetWindowMenuBar(
+    Tk_Window tkwin,		/* The window we are setting the menu in */
+    TkMenu *menuPtr)		/* The menu we are setting */
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+
+    if (winPtr->wmInfoPtr) {
+	winPtr->wmInfoPtr->menuPtr = menuPtr;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetMainMenubar --
+ *
+ *	Puts the menu associated with a window into the menubar. Should only be
+ *	called when the window is in front.
+ *
+ *      This is a no-op on all other platforms.  On OS X it installs the
+ *      menubar with the specified menuName, if possible.  If the name is NULL
+ *      it installs the default menu.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The menubar may be changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetMainMenubar(
+    Tcl_Interp *interp,		/* The interpreter of the application */
+    Tk_Window tkwin,		/* The frame we are setting up */
+    const char *menuName)	/* The name of the menu to put in front. */
+{
+    TKMenu *menu = nil;
+    TkWindow *winPtr = (TkWindow *) tkwin;
+
+    /*
+     * We will be called when an embedded window receives an ActivationNotify
+     * event, but we should not change the menubar in that case.
+     */
+
+    if (Tk_IsEmbedded(winPtr)) {
+	return;
+    }
+
+    if (menuName) {
+	Tk_Window menubar = NULL;
+
+	if (winPtr->wmInfoPtr &&
+		winPtr->wmInfoPtr->menuPtr &&
+		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    menubar = winPtr->wmInfoPtr->menuPtr->mainMenuPtr->tkwin;
+	}
+
+	/*
+	 * Attempt to find the NSMenu directly.  If that fails, ask Tk to find
+	 * it.
+	 */
+
+	if (menubar != NULL && strcmp(menuName, Tk_PathName(menubar)) == 0) {
+	    menu = (TKMenu *) winPtr->wmInfoPtr->menuPtr->platformData;
+	} else {
+	    TkMenuReferences *menuRefPtr = TkFindMenuReferences(interp,
+		    menuName);
+
+	    if (menuRefPtr && menuRefPtr->menuPtr &&
+		    menuRefPtr->menuPtr->platformData) {
+		menu = (TKMenu *) menuRefPtr->menuPtr->platformData;
+	    }
+	}
+    }
+
+    /*
+     * If we couldn't find a menu this will install the default menubar.
+     */
+
+    [NSApp tkSetMainMenu:menu];
+}
+
 /*
  *----------------------------------------------------------------------
  *
