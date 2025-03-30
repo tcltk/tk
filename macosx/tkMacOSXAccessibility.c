@@ -390,6 +390,30 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 - (BOOL)accessibilityIsIgnored {
+
+    /* Check if Tk state is disabled. If so, ignoare accessible atribute. */
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+       
+    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+	return NO;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "state");
+    if (!hPtr2) {
+	return NO;
+    }
+
+    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    if (strcmp(result, "disabled") == 0) {
+	return YES;
+    }
+
+    
+    /* If state is NOT disabled, leave accessibility on. */ 
     return NO;
 }
 
