@@ -560,7 +560,7 @@ namespace eval ::tk::accessible {
     bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
     bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
     bind Menubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
-    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
     bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
