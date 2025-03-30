@@ -4,7 +4,7 @@
 # on X11, Windows, and macOS. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
-# Copyright © 2024 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -277,6 +277,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W invoke}\
 			}
+    
     # Menubutton/TMButton bindings.
     bind Menubutton <Map> {+::tk::accessible::_init \
 			       %W \
@@ -296,6 +297,7 @@ namespace eval ::tk::accessible {
 				[%W cget -state] \
 				{%W invoke}\
 			    }
+    
     # Canvas bindings. 
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
@@ -326,6 +328,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -state] \
 				 {%W invoke}\
 			     }
+    
     # Combobox bindings.			    
     bind TCombobox <Map> {+::tk::accessible::_init \
 			      %W \

@@ -391,7 +391,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 - (BOOL)accessibilityIsIgnored {
 
-    /* Check if Tk state is disabled. If so, ignoare accessible atribute. */
+    /* Check if Tk state is disabled. If so, ignore accessible atribute. */
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
