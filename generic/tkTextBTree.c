@@ -8735,6 +8735,11 @@ UpdateElideInfo(
 
     while (1) {
 	if (!segPtr) {
+
+	    /*
+	     * Finish processing of current line if there are changes, then switch to next line.
+	     */
+
 	    if (anyChanges) {
 		/*
 		 * The branches and links are influencing the section structure.
@@ -8796,13 +8801,22 @@ UpdateElideInfo(
 	}
 
 	if (segPtr->tagInfoPtr) {
+
+	    /*
+	     * Segment is char, emb. image or emb. window type, but not branch, link, or mark.
+	     */
+
 	    int shouldBeElided = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
 
 	    if (prevBranchPtr) {
 		if (!shouldBeElided || actualElided) {
 		    /*
-		     * Remove expired branch.
+		     * An existing branch was previously encountered, and:
+		     * - this segment should not be elided
+		     * or
+		     * - the curent state already is 'elided' (i.e. a new branch just got inserted)
+		     * --> Remove the previously encountered (now expired) branch.
 		     */
 
 		    assert(TkBTreeHaveElidedSegments(sharedTextPtr));
@@ -8826,7 +8840,11 @@ UpdateElideInfo(
 	    } else if (prevLinkPtr) {
 		if (shouldBeElided || !actualElided) {
 		    /*
-		     * Remove expired link.
+		     * An existing link was previously encountered, and:
+		     * - this segment should be elided
+		     * or
+		     * - the curent state already is 'not elided' (i.e. a new link just got inserted)
+		     * --> Remove the previously encountered (now expired) link.
 		     */
 
 		    if (prevLinkPtr == *firstSegPtr) {
@@ -8847,10 +8865,12 @@ UpdateElideInfo(
 	    } else if (actualElided != shouldBeElided) {
 		if (shouldBeElided) {
 		    /*
-		     * We have to insert a branch.
+		     * Previous segment is not elided (actualElided is false),
+		     * and current shall be elided.
+		     * Set the start of elision by inserting a branch.
 		     */
 
-		    if (deletedBranchPtr) {
+		    if (deletedBranchPtr) {  /* reuse if possible */
 			lastBranchPtr = deletedBranchPtr;
 			deletedBranchPtr = NULL;
 		    } else {
@@ -8859,14 +8879,16 @@ UpdateElideInfo(
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastBranchPtr);
 		    newBranchPtr = lastBranchPtr;
 		    somethingHasChanged = 1;
-		} else { /* if (actualElided) */
+		} else {
 		    /*
-		     * We have to insert a link.
+		     * Previous segment is elided (actualElided is true),
+		     * and current segment shall not be elided.
+		     * Set the end of elision by inserting a link.
 		     */
 
 		    if (!lastBranchPtr) {
 			/*
-			 * The related branch is starting outside of this range,
+			 * The related branch is starting outside of the range given to UpdateElideInfo(),
 			 * so we have to search for it.
 			 * Since TkBTreeFindStartOfElidedRange search starts from a supposedly elided segment
 			 * and since the elide state of that segment is obtained from the tag information of
@@ -8933,7 +8955,7 @@ UpdateElideInfo(
 
 	    if (actualElided) {
 		/*
-		 * In this case the related link is outside of the range,
+		 * In this case the related link is outside of the range given to UpdateElideInfo(),
 		 * so we have to search for it.
 		 */
 
