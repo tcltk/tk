@@ -13,14 +13,14 @@
 
 namespace eval ::tk::accessible {
 
-    #check message text on dialog 
+    # Check message text on dialog. 
     proc _getdialogtext {w} {
 	if {[winfo exists $w.msg]} {
 	    return [$w.msg cget -text]
 	}
     }
 
-    #get text in text widget
+    # Get text in text widget.
     proc _gettext {w} {
 	if {[$w tag ranges sel] eq ""} {
 	    set data [$w get 1.0 end]	
@@ -30,7 +30,8 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
-    #check if tree or table
+    # Attempt to verify if treeview is tree or table. This works
+    # for simple cases but may not be perfect. 
     proc _checktree {w} {
 	if {[expr {"tree" in [$w cget -show]}] eq 1} {
 	    return "Tree"
@@ -39,7 +40,7 @@ namespace eval ::tk::accessible {
 	}
     }
 
-    #Get data from ttk::treeview for use in the API
+    # Get data from ttk::treeview.
     proc _gettreeviewdata {w} {
 	if {[::tk::accessible::_checktree $w] eq "Tree"} {
 	    #Tree
@@ -51,7 +52,7 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
-    #Get treeview column names
+    # Get treeview column names.
     proc _getcolumnnames {w} {
 	set columns [$w cget -columns] 
 	foreach col $columns {
@@ -61,7 +62,7 @@ namespace eval ::tk::accessible {
 	return $headerlist
     }	
 
-    #update data selection
+    # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get [$w curselection]]
@@ -101,7 +102,7 @@ namespace eval ::tk::accessible {
 	
     }
 
-    #increment scale and spinbox
+    # Increment values in various widgets in response to keypress events. 
     proc _updatescale {w key} {
 	if {[winfo class $w] eq "Scale"} {
 	    switch -- $key {
@@ -191,7 +192,7 @@ namespace eval ::tk::accessible {
 	if {[winfo class $w] eq "TNotebook"} {
 	    switch -- $key {
 		Right {
-		    	{ ttk::notebook::CycleTab %W  1; break }
+		    { ttk::notebook::CycleTab %W  1; break }
 		    set data [$w get]
 		    ::tk::accessible::acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
@@ -208,10 +209,10 @@ namespace eval ::tk::accessible {
 	
     }
 
-    #Get value of progress bar
+    # Get value of progress bar.
     proc _getpbvalue {w} {
 	
-	#This variable exists if the progress bar is running, otherwise no
+	# This variable exists if the progress bar is running, otherwise no.
 	variable ::ttk::progressbar::Timers
 	
 	if {![info exists ::ttk::progressbar::Timers($w)]} {
@@ -221,8 +222,11 @@ namespace eval ::tk::accessible {
 	    return "busy"
 	}
     }
-			      
-    #Force Tk focus on the widget that currently has accessibility focus if needed.
+    
+    # Some widgets will not respond to keypress events unless
+    # they have focus. Force Tk focus on the widget that currently has
+    # accessibility focus if needed.
+    
     proc _forceTkFocus {w} {
 	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview" || [winfo class $w] eq "TProgressbar"} {
 	    if {[focus] ne $w} {
@@ -232,10 +236,10 @@ namespace eval ::tk::accessible {
 	    return
 	}
     }
-	
-    #Set initial accessible attributes and add binding to <Map> event.
-    #If the accessibility role is already set, return because
-    #we only want these to fire once.
+    
+    # Set initial accessible attributes and add binding to <Map> event.
+    # If the accessibility role is already set, return because
+    # we only want these to fire once.
     
     proc _init {w role name description value state action} {
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
@@ -254,7 +258,7 @@ namespace eval ::tk::accessible {
 
 
 
-    #Button/TButton bindings
+    # Button/TButton bindings.
     bind Button <Map> {+::tk::accessible::_init \
 			   %W \
 			   Button \
@@ -273,26 +277,26 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W invoke}\
 			}
-    #Menubutton/TMButton bindings
+    # Menubutton/TMButton bindings.
     bind Menubutton <Map> {+::tk::accessible::_init \
-			   %W \
-			   Button \
-			   Button \
-			   [%W cget -text] \
-			   {} \
-			   [%W cget -state] \
-			   {%W invoke}\
+			       %W \
+			       Button \
+			       Button \
+			       [%W cget -text] \
+			       {} \
+			       [%W cget -state] \
+			       {%W invoke}\
 			   }
     bind TMenubutton <Map> {+::tk::accessible::_init \
-			   %W \
-			   Button \
-			   Button \
-			   [%W cget -text] \
-			   {} \
-			   [%W cget -state] \
-			   {%W invoke}\
-		       }
-    #Canvas bindings 
+				%W \
+				Button \
+				Button \
+				[%W cget -text] \
+				{} \
+				[%W cget -state] \
+				{%W invoke}\
+			    }
+    # Canvas bindings. 
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
 			   Canvas \
@@ -303,7 +307,7 @@ namespace eval ::tk::accessible {
 			   {}\
 		       }
     
-    #Checkbutton/TCheckbutton bindings
+    # Checkbutton/TCheckbutton bindings.
     bind Checkbutton <Map> {+::tk::accessible::_init \
 				%W \
 				Checkbutton \
@@ -322,7 +326,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -state] \
 				 {%W invoke}\
 			     }
-    #combobox bindings			    
+    # Combobox bindings.			    
     bind TCombobox <Map> {+::tk::accessible::_init \
 			      %W \
 			      Combobox \
@@ -333,7 +337,7 @@ namespace eval ::tk::accessible {
 			      {} \
 			  }
     
-    #Dialog bindings
+    # Dialog bindings.
     bind Dialog <Map> {+::tk::accessible::_init\
 			   %W \
 			   Dialog \
@@ -344,7 +348,7 @@ namespace eval ::tk::accessible {
 			   {}\
 		       }
 
-    #Entry/TEntry bindings
+    # Entry/TEntry bindings.
     bind Entry <Map> {+::tk::accessible::_init \
 			  %W \
 			  Entry \
@@ -364,7 +368,7 @@ namespace eval ::tk::accessible {
 			   {} \
 		       }
 
-    #Listbox bindings
+    # Listbox bindings.
     bind Listbox <Map> {+::tk::accessible::_init \
 			    %W \
 			    Listbox \
@@ -375,7 +379,7 @@ namespace eval ::tk::accessible {
 			    {%W invoke}\
 			}
 
-    #Progressbar
+    # Progressbar bindings. 
     bind TProgressbar <Map> {+::tk::accessible::_init \
 				 %W \
 				 Progressbar \
@@ -386,7 +390,7 @@ namespace eval ::tk::accessible {
 				 {}\
 			     }
 
-    #Radiobutton/TRadiobutton bindings
+    # Radiobutton/TRadiobutton bindings.
     bind Radiobutton <Map> {+::tk::accessible::_init \
 				%W \
 				Radiobutton \
@@ -406,7 +410,7 @@ namespace eval ::tk::accessible {
 				 {% invoke}\
 			     }
 
-    #Scale/TScale bindings
+    # Scale/TScale bindings.
     bind Scale <Map> {+::tk::accessible::_init \
 			  %W \
 			  Scale \
@@ -425,7 +429,7 @@ namespace eval ::tk::accessible {
 			   {%W set} \
 		       }
 
-    #Menu bindings - macOS menus are native and already accessible-enabled
+    # Menu bindings - macOS menus are native and already accessible-enabled.
     if {[tk windowingsystem] ne "aqua"} {
 	bind Menu <Map> {+::tk::accessible::_init \
 			     %W \
@@ -437,9 +441,8 @@ namespace eval ::tk::accessible {
 			     {%W invoke}\
 			 }
     }
-
     
-    #Scrollbar/TScrollbar bindings
+    # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \
 			      Scrollbar \
@@ -458,7 +461,8 @@ namespace eval ::tk::accessible {
 			       {} \
 			       {}\
 			   }
-    #Spinbox/TSpinbox bindings
+    
+    # Spinbox/TSpinbox bindings.
     bind Spinbox <Map> {+::tk::accessible::_init \
 			    %W \
 			    Spinbox \
@@ -479,7 +483,7 @@ namespace eval ::tk::accessible {
 			 }
 
 
-    #Treeview bindings
+    # Treeview bindings.
     bind Treeview <Map> {+::tk::accessible::_init \
 			     %W \
 			     [::tk::accessible::_checktree %W] \
@@ -490,7 +494,7 @@ namespace eval ::tk::accessible {
 			     {ttk::treeview::Press %W %x %y }\
 			 }
 
-    #Text bindings
+    # Text bindings.
     bind Text <Map> {+::tk::accessible::_init \
 			 %W \
 			 Text \
@@ -501,7 +505,7 @@ namespace eval ::tk::accessible {
 			 {}\
 		     }
     
-    #Label/TLabel bindings
+    # Label/TLabel bindings.
     bind Label <Map>    {+::tk::accessible::_init \
 			     %W \
 			     Label \
@@ -523,49 +527,57 @@ namespace eval ::tk::accessible {
 			  }
 
     # Notebook bindings - bind to the <<NotebookTabChanged>> event rather
-    # than <Map> because this event is generated during widget construction
-    # and returns an error because the accessibility data has not been
+    # than <Map> because this event is generated before the <Map> event, 
+    # which returns an error because the accessibility data has not been
     # initialized yet. 
     bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_init \
-			      %W \
-			      Notebook \
-			      Notebook \
-			      Notebook \
-			      [%W tab current -text] \
-			      {} \
-			      {}\
-			  }
+					       %W \
+					       Notebook \
+					       Notebook \
+					       Notebook \
+					       [%W tab current -text] \
+					       {} \
+					       {}\
+					   }
 
-    #
-    # Various bindings to support data updates, help text/navigation
-    # instructions, and other actions.
-    #
-    
-    #Activate accessibility object when mapped.
+    # Activate accessibility object when mapped.
     bind all <Map> {+::tk::accessible::add_acc_object %W}
 
-    #Capture value changes, navigation help.
-    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
-    bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
+    # Various bindings to capture data/selection changes for
+    # widgets that support returning a value. 
+
+    #Selection changes.
+    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
-    bind Treeview <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
-    bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-    bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-    bind Scale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
-    bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
-    bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
-    bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
-    bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
-    bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
-    bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
-    bind Menubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
-    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
-    bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
-    bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
-    bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
-    bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
-   
+    bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+
+    
+    #Capture value changes from scale widgets.
+    bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
+    bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
+    bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
+    bind TScale <Left> {+::tk::accessible::_updatescale %W Left}
+
+    # On macOS, the ttk::spinbox returns the wrong accessibility role
+    # because of how it is constructed. If VoiceOver is running,
+    # alias the ttk::spinbox to the core Tk spinbox.
+    if {[tk windowingsystem] eq "aqua"} {
+	set result [::tk::accessible::check_screenreader]
+	if {$result > 0} {
+	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
+	}
+    }
+    
+    # Capture value changes from spinbox widgets.
+    bind Spinbox <Up> {+::tk::accessible::_updatescale %W Up}
+    bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
+    bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
+    bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
+
+    #Capture notebook selection
+    bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
+    bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
 
     #
     # VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
@@ -580,39 +592,46 @@ namespace eval ::tk::accessible {
 	bind TEntry <Control-a> {+::tk::accessible::_updateselection %W}
     }
 
-    #Capture value changes from scale widgets.
-    bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
-    bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
-    bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
-    bind TScale <Left> {+::tk::accessible::_updatescale %W Left}
+    #Progressbar updates.
+    bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
 
-    # On macOS, the ttk::spinbox returns the wrong accessibility role because of
-    # how it is constructed. If VoiceOver is running, alias the ttk::spinbox
-    # to the core Tk spinbox.
-    if {[tk windowingsystem] eq "aqua"} {
-	set result [::tk::accessible::check_screenreader]
-	if {$result > 0} {
-	interp alias {} ::ttk::spinbox {} ::tk::spinbox
-	}
-    }
+
+    # Help text for widgets that require additional direction
+    # on keyboard navigation - these widgets will use standard keyboard
+    # navigation when they obtain focus rather than the accessibility
+    # keyboard shortcuts. We are mostly limiting the accessibility tree to one
+    # level - toplevel window and child windows - to reduce the complexity of
+    # the implementation, which is tied tighly to Tk windows. Component
+    # elements of many widgets such listbox or treeview rows are not exposed as
+    # Tk windows, and there is no simple way to expose them to the platforms'
+    # accessibility API's directly, but they can be navigated via the keyboard
+    # and their data (obtained via selection events) can be piped to the
+    # screen reader for vocalization. The help text here assists the user
+    # in switching to the standard keys for navigation as needed. 
+
+    bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
+    bind Treeview <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
+    bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind Scale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
+    bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
+    bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
+    bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
+    bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
+    bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind Menubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
+    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
+    bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
+    bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
     
-    #Capture value changes from spinbox widgets.
-    bind Spinbox <Up> {+::tk::accessible::_updatescale %W Up}
-    bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
-    bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
-    bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
-
-    #Notebook selection
-    bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
-    bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
-
- 
-    #Export the main commands.
+    
+    # Finally, export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader
     namespace ensemble create
 }
 
-#Add these commands to the tk command ensemble: tk accessible
+# Add these commands to the tk command ensemble: tk accessible.
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
 	 {accessible ::tk::accessible}]
