@@ -3835,15 +3835,11 @@ void Tk_SetSizeHints(
 
 void
 Tk_SetGrid(
-    Tk_Window tkwin,		/* Token for window. New window mgr info will
-				 * be posted for the top-level window
-				 * associated with this window. */
-    int reqWidth,		/* Width (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int reqHeight,		/* Height (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int widthInc, int heightInc)/* Pixel increments corresponding to a change
-				 * of one grid unit. */
+	   TCL_UNUSED(Tk_Window),  /* tkwin     */
+	   TCL_UNUSED(int),        /* reqWidth  */
+	   TCL_UNUSED(int),	   /* reqHeight */
+	   TCL_UNUSED(int),        /* widthInc) */ 
+	   TCL_UNUSED(int))        /* heightInc */
 {
 }
 
@@ -3866,8 +3862,8 @@ Tk_SetGrid(
 
 void
 Tk_UnsetGrid(
-    Tk_Window tkwin)		/* Token for window that is currently
-				 * controlling gridding. */
+	     TCL_UNUSED(Tk_Window) /* tkwin */
+    )
 {
 }
 
@@ -3939,16 +3935,7 @@ ConfigureEvent(
 	     */
 
 	    if (!(winPtr->flags & TK_EMBEDDED)) {
-		if (wmPtr->gridWin != NULL) {
-		    wmPtr->width = wmPtr->reqGridWidth
-			    + (configEventPtr->width
-			    - winPtr->reqWidth)/wmPtr->widthInc;
-		    if (wmPtr->width < 0) {
-			wmPtr->width = 0;
-		    }
-		} else {
-		    wmPtr->width = configEventPtr->width;
-		}
+		wmPtr->width = configEventPtr->width;
 	    }
 	}
 	if ((wmPtr->height == -1)
@@ -3965,16 +3952,7 @@ ConfigureEvent(
 	     */
 
 	    if (!(winPtr->flags & TK_EMBEDDED)) {
-		if (wmPtr->gridWin != NULL) {
-		    wmPtr->height = wmPtr->reqGridHeight
-			    + (configEventPtr->height - wmPtr->menuHeight
-			    - winPtr->reqHeight)/wmPtr->heightInc;
-		    if (wmPtr->height < 0) {
-			wmPtr->height = 0;
-		    }
-		} else {
-		    wmPtr->height = configEventPtr->height - wmPtr->menuHeight;
-		}
+		wmPtr->height = configEventPtr->height - wmPtr->menuHeight;
 	    }
 	}
 	wmPtr->configWidth = configEventPtr->width;
@@ -4528,9 +4506,6 @@ UpdateGeometryInfo(
 
     if (wmPtr->width == -1) {
 	width = winPtr->reqWidth;
-    } else if (wmPtr->gridWin != NULL) {
-	width = winPtr->reqWidth
-		+ (wmPtr->width - wmPtr->reqGridWidth)*wmPtr->widthInc;
     } else {
 	width = wmPtr->width;
     }
@@ -4542,19 +4517,8 @@ UpdateGeometryInfo(
      * Account for window max/min width
      */
 
-    if (wmPtr->gridWin != NULL) {
-	min = winPtr->reqWidth
-		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	if (wmPtr->maxWidth > 0) {
-	    max = winPtr->reqWidth
-		+ (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	} else {
-	    max = 0;
-	}
-    } else {
-	min = wmPtr->minWidth;
-	max = wmPtr->maxWidth;
-    }
+    min = wmPtr->minWidth;
+    max = wmPtr->maxWidth;
     if (width < min) {
 	width = min;
     } else if ((max > 0) && (width > max)) {
@@ -4563,9 +4527,6 @@ UpdateGeometryInfo(
 
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
-    } else if (wmPtr->gridWin != NULL) {
-	height = winPtr->reqHeight
-		+ (wmPtr->height - wmPtr->reqGridHeight)*wmPtr->heightInc;
     } else {
 	height = wmPtr->height;
     }
@@ -4577,19 +4538,8 @@ UpdateGeometryInfo(
      * Account for window max/min height
      */
 
-    if (wmPtr->gridWin != NULL) {
-	min = winPtr->reqHeight
-		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	if (wmPtr->maxHeight > 0) {
-	    max = winPtr->reqHeight
-		+ (wmPtr->maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	} else {
-	    max = 0;
-	}
-    } else {
-	min = wmPtr->minHeight;
-	max = wmPtr->maxHeight;
-    }
+    min = wmPtr->minHeight;
+    max = wmPtr->maxHeight;
     if (height < min) {
 	height = min;
     } else if ((max > 0) && (height > max)) {
@@ -4626,7 +4576,6 @@ UpdateGeometryInfo(
 
     if (((width != winPtr->changes.width)
 	    || (height != winPtr->changes.height))
-	    && (wmPtr->gridWin == NULL)
 	    && !(wmPtr->sizeHintsFlags & (PMinSize|PMaxSize))) {
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     }
@@ -4788,45 +4737,24 @@ UpdateSizeHints(
      */
 
     GetMaxSize(wmPtr, &maxWidth, &maxHeight);
-    if (wmPtr->gridWin != NULL) {
-	hintsPtr->base_width = winPtr->reqWidth
-		- (wmPtr->reqGridWidth * wmPtr->widthInc);
-	if (hintsPtr->base_width < 0) {
-	    hintsPtr->base_width = 0;
-	}
-	hintsPtr->base_height = winPtr->reqHeight + wmPtr->menuHeight
-		- (wmPtr->reqGridHeight * wmPtr->heightInc);
-	if (hintsPtr->base_height < 0) {
-	    hintsPtr->base_height = 0;
-	}
-	hintsPtr->min_width = hintsPtr->base_width
-		+ (wmPtr->minWidth * wmPtr->widthInc);
-	hintsPtr->min_height = hintsPtr->base_height
-		+ (wmPtr->minHeight * wmPtr->heightInc);
-	hintsPtr->max_width = hintsPtr->base_width
-		+ (maxWidth * wmPtr->widthInc);
-	hintsPtr->max_height = hintsPtr->base_height
-		+ (maxHeight * wmPtr->heightInc);
-    } else {
-	int base_width = winPtr->reqWidth;
-	int base_height = winPtr->reqHeight;
-	if (base_width < wmPtr->minWidth) {
-	    base_width = wmPtr->minWidth;
-	} else if (base_width > wmPtr->maxWidth) {
-	    base_width = wmPtr->maxWidth;
-	}
-	if (base_height < wmPtr->minHeight) {
-	    base_height = wmPtr->minHeight;
-	} else if (base_height > wmPtr->maxHeight) {
-	    base_height = wmPtr->maxHeight;
-	}
-	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
-	hintsPtr->max_width = maxWidth;
-	hintsPtr->max_height = maxHeight;
-	hintsPtr->base_width = base_width;
-	hintsPtr->base_height = base_height;
+    int base_width = winPtr->reqWidth;
+    int base_height = winPtr->reqHeight;
+    if (base_width < wmPtr->minWidth) {
+	base_width = wmPtr->minWidth;
+    } else if (base_width > wmPtr->maxWidth) {
+	base_width = wmPtr->maxWidth;
     }
+    if (base_height < wmPtr->minHeight) {
+	base_height = wmPtr->minHeight;
+    } else if (base_height > wmPtr->maxHeight) {
+	base_height = wmPtr->maxHeight;
+    }
+    hintsPtr->min_width = wmPtr->minWidth;
+    hintsPtr->min_height = wmPtr->minHeight;
+    hintsPtr->max_width = maxWidth;
+    hintsPtr->max_height = maxHeight;
+    hintsPtr->base_width = base_width;
+    hintsPtr->base_height = base_height;
     hintsPtr->width_inc = wmPtr->widthInc;
     hintsPtr->height_inc = wmPtr->heightInc;
     hintsPtr->min_aspect.x = wmPtr->minAspect.x;
@@ -6787,23 +6715,16 @@ GetMaxSize(
     int tmp;
 
     if (wmPtr->maxWidth > 0) {
-	*maxWidthPtr = wmPtr->maxWidth;
+	*maxWidthPtr = wmPtr->maxWidth;					   
     } else {
 	/*
-	 * Must compute a default width. Fill up the display, leaving a bit of
+	 * Must compute a default width. Fill up the display, le
+	 aving a bit of
 	 * extra space for the window manager's borders.
 	 */
 
 	tmp = DisplayWidth(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
 	    - 15;
-	if (wmPtr->gridWin != NULL) {
-	    /*
-	     * Gridding is turned on; convert from pixels to grid units.
-	     */
-
-	    tmp = wmPtr->reqGridWidth
-		    + (tmp - wmPtr->winPtr->reqWidth)/wmPtr->widthInc;
-	}
 	*maxWidthPtr = tmp;
     }
     if (wmPtr->maxHeight > 0) {
@@ -6811,10 +6732,6 @@ GetMaxSize(
     } else {
 	tmp = DisplayHeight(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
 	    - 30;
-	if (wmPtr->gridWin != NULL) {
-	    tmp = wmPtr->reqGridHeight
-		    + (tmp - wmPtr->winPtr->reqHeight)/wmPtr->heightInc;
-	}
 	*maxHeightPtr = tmp;
     }
 }
