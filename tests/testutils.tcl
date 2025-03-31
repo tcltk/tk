@@ -133,16 +133,15 @@ namespace eval ::tk::test::generic {
     proc _pause {{msecs 1000}} {
 	variable _pause
 
-	if {! [info exists _pause(number)]} {
-	    set _pause(number) 0
+	if {! [info exists _pause(count)]} {
+	    set _pause(count) 0
 	}
 
-	set num [incr _pause(number)]
-	set _pause($num) 0
+	set num [incr _pause(count)]
+	set _pause($num) 1
 
-	after $msecs "set _pause($num) 1"
-	vwait _pause($num)
-	unset _pause($num)
+	after $msecs [list unset [namespace current]::_pause($num)]
+	vwait [namespace current]::_pause($num)
     }
 
     # On macOS windows are not allowed to overlap the menubar at the top of the
