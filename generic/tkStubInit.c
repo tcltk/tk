@@ -43,13 +43,13 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XPutImage
 #define TkUnusedStubEntry 0
 
-#if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
 {
     /* dummy implementation, no need to do anything */
     return 0;
 }
+#if !defined(MAC_OSX_TK)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   undef TkpDefineNativeBitmaps
@@ -60,6 +60,15 @@ doNothing(void)
 #   define TkpDefineNativeBitmaps ((void (*)(void))(void *)doNothing)
 #   define TkpCreateNativeBitmap ((Pixmap (*)(Display *, const void *))(void *)doNothing)
 #   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char *, int *, int *))(void *)doNothing)
+#endif
+
+#undef Tk_SetGrid
+#define Tk_SetGrid ((void (*)(Tk_Window,int,int,int,int))(void *)doNothing)
+#undef Tk_UnsetGrid
+#define Tk_UnsetGrid ((void (*)(Tk_Window))(void *)doNothing)
+#if defined(MAC_OSX_TK) || defined(_WIN32)
+#   undef Tk_SetSizeHints
+#   define Tk_SetSizeHints ((void (*)(Tk_Window,int,int,int,int))(void *)doNothing)
 #endif
 
 #ifdef _WIN32
@@ -939,9 +948,6 @@ static const TkPlatStubs tkPlatStubs = {
     0, /* 15 */
     TkGenWMConfigureEvent, /* 16 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-    Tk_SetSizeHints, /* 0 */
-#endif /* X11 */
 };
 
 static const TkStubHooks tkStubHooks = {
@@ -1226,7 +1232,7 @@ const TkStubs tkStubs = {
     Tk_GetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
-    0, /* 272 */
+    Tk_SetSizeHints, /* 272 */
     0, /* 273 */
     Tk_AlwaysShowSelection, /* 274 */
     Tk_GetButtonMask, /* 275 */

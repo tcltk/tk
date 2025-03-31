@@ -671,7 +671,7 @@ declare 181 {
 declare 182 {
     void Tk_UnmapWindow(Tk_Window tkwin)
 }
-declare 183 {
+declare 183 {deprecated "Tk_UnsetGrid is a no-op on 9.1. Consider using Tk_SetSizeHints on X11."} {
     void Tk_UnsetGrid(Tk_Window tkwin)
 }
 declare 184 {
@@ -1002,6 +1002,11 @@ declare 271 {
     Tcl_Interp *Tk_Interp(Tk_Window tkwin)
 }
 
+# TIP #???
+declare 272 {
+    void Tk_SetSizeHints(Tk_Window tkwin, int minWidth, int maxWidth,
+	    int minHeight, int maxHeight)
+}
 
 # ----- BASELINE -- FOR -- 8.6.0 ----- #
 
@@ -1154,14 +1159,6 @@ declare 13 aqua {
 declare 16 aqua {
     void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y, int width,
 	    int height, int flags)
-}
-
-################################
-# X11 specific functions
-
-declare 0 x11 {
-    void Tk_SetSizeHints(Tk_Window tkwin, int minWidth, int maxWidth,
-			 int minHeight, int maxHeight)
 }
 
 ##############################################################################

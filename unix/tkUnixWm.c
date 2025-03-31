@@ -2033,8 +2033,6 @@ WmGridCmd(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
-	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
-		heightInc);
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(wmPtr, winPtr);
@@ -3813,58 +3811,6 @@ void Tk_SetSizeHints(
     wmPtr->maxWidth = maxWidth;
     wmPtr->minHeight = minHeight;
     wmPtr->maxHeight = maxHeight;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_SetGrid --
- *
- *	This function has been deprecated.  It is a no-op for the time
- *      being, until it is is removed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_SetGrid(
-	   TCL_UNUSED(Tk_Window),  /* tkwin     */
-	   TCL_UNUSED(int),        /* reqWidth  */
-	   TCL_UNUSED(int),	   /* reqHeight */
-	   TCL_UNUSED(int),        /* widthInc) */ 
-	   TCL_UNUSED(int))        /* heightInc */
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_UnsetGrid --
- *
- *	This function has been deprecated.  It is a no-op for the time
- *      being, until it is removed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_UnsetGrid(
-	     TCL_UNUSED(Tk_Window) /* tkwin */
-    )
-{
 }
 
 /*

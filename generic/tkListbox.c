@@ -395,7 +395,7 @@ static int		ListboxInsertSubCmd(Listbox *listPtr,
 			    Tcl_Size index, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		ListboxCmdDeletedProc(void *clientData);
 static void		ListboxComputeGeometry(Listbox *listPtr,
-			    int fontChanged, int maxIsStale, int updateGrid);
+			    int fontChanged, int maxIsStale);
 static void		ListboxEventProc(void *clientData,
 			    XEvent *eventPtr);
 static Tcl_Size	ListboxFetchSelection(void *clientData,
@@ -1825,7 +1825,7 @@ ListboxWorldChanged(
      * to be redisplayed.
      */
 
-    ListboxComputeGeometry(listPtr, 1, 1, 1);
+    ListboxComputeGeometry(listPtr, 1, 1);
     listPtr->flags |= UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR;
     EventuallyRedrawRange(listPtr, 0, listPtr->nElements-1);
 }
@@ -1877,7 +1877,7 @@ DisplayListbox(
     }
 
     if (listPtr->flags & MAXWIDTH_IS_STALE) {
-	ListboxComputeGeometry(listPtr, 0, 1, 0);
+	ListboxComputeGeometry(listPtr, 0, 1);
 	listPtr->flags &= ~MAXWIDTH_IS_STALE;
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
@@ -2209,13 +2209,10 @@ ListboxComputeGeometry(
     int fontChanged,		/* Non-zero means the font may have changed so
 				 * per-element width information also has to
 				 * be computed. */
-    int maxIsStale,		/* Non-zero means the "maxWidth" field may no
+    int maxIsStale)		/* Non-zero means the "maxWidth" field may no
 				 * longer be up-to-date and must be
 				 * recomputed. If fontChanged is 1 then this
 				 * must be 1. */
-    int updateGrid)		/* Non-zero means call Tk_SetGrid or
-				 * Tk_UnsetGrid to update gridding for the
-				 * window. */
 {
     int width, height, pixelWidth, pixelHeight, i, result;
     Tcl_Size textLength;
@@ -2272,14 +2269,6 @@ ListboxComputeGeometry(
     pixelHeight = height*listPtr->lineHeight + 2 * listPtr->inset;
     Tk_GeometryRequest(listPtr->tkwin, pixelWidth, pixelHeight);
     Tk_SetInternalBorder(listPtr->tkwin, listPtr->inset);
-    if (updateGrid) {
-	if (listPtr->setGrid) {
-	    Tk_SetGrid(listPtr->tkwin, width, height, listPtr->xScrollUnit,
-		    listPtr->lineHeight);
-	} else {
-	    Tk_UnsetGrid(listPtr->tkwin);
-	}
-    }
 }
 
 /*
@@ -2394,7 +2383,7 @@ ListboxInsertSubCmd(
     if (listPtr->maxWidth != oldMaxWidth) {
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
-    ListboxComputeGeometry(listPtr, 0, 0, 0);
+    ListboxComputeGeometry(listPtr, 0, 0);
     EventuallyRedrawRange(listPtr, index, listPtr->nElements-1);
     return TCL_OK;
 }
@@ -2565,7 +2554,7 @@ ListboxDeleteSubCmd(
 	}
     }
     listPtr->flags |= UPDATE_V_SCROLLBAR;
-    ListboxComputeGeometry(listPtr, 0, widthChanged, 0);
+    ListboxComputeGeometry(listPtr, 0, widthChanged);
     if (widthChanged) {
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
@@ -2607,9 +2596,6 @@ ListboxEventProc(
 	if (!(listPtr->flags & LISTBOX_DELETED)) {
 	    listPtr->flags |= LISTBOX_DELETED;
 	    Tcl_DeleteCommandFromToken(listPtr->interp, listPtr->widgetCmd);
-	    if (listPtr->setGrid) {
-		Tk_UnsetGrid(listPtr->tkwin);
-	    }
 	    if (listPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayListbox, clientData);
 	    }

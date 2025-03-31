@@ -2498,12 +2498,6 @@ TextWorldChanged(
 
     Tk_SetInternalBorderEx(textPtr->tkwin,
 	    border + padX, border + padX, border + padY, border + padY);
-    if (textPtr->setGrid) {
-	Tk_SetGrid(textPtr->tkwin, textPtr->width, height,
-		textPtr->charWidth, textPtr->charHeight);
-    } else {
-	Tk_UnsetGrid(textPtr->tkwin);
-    }
 
     TkTextRelayoutWindow(textPtr, mask);
 }
@@ -2564,10 +2558,6 @@ TextEventProc(
 	textPtr->selBorder = NULL;
 	textPtr->selBorderWidthObj = NULL;
 	textPtr->selFgColorPtr = NULL;
-	if (textPtr->setGrid) {
-	    Tk_UnsetGrid(textPtr->tkwin);
-	    textPtr->setGrid = 0;
-	}
 	if (!(textPtr->flags & OPTIONS_FREED)) {
 	    Tk_FreeConfigOptions(textPtr, textPtr->optionTable,
 		    textPtr->tkwin);
@@ -2652,10 +2642,6 @@ TextCmdDeletedProc(
      */
 
     if (!(textPtr->flags & DESTROYED)) {
-	if (textPtr->setGrid) {
-	    Tk_UnsetGrid(textPtr->tkwin);
-	    textPtr->setGrid = 0;
-	}
 	textPtr->flags |= DESTROYED;
 	Tk_DestroyWindow(tkwin);
     }
