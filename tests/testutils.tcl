@@ -130,7 +130,7 @@ namespace eval ::tk::test::generic {
 
     # Suspend script execution for a given amount of time, but continue
     # processing events.
-    proc _pause {{msecs 1000}} {
+    proc pause {{msecs 1000}} {
 	variable _pause
 
 	if {! [info exists _pause(count)]} {
