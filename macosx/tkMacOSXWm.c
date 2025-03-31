@@ -712,7 +712,7 @@ SetWindowSizeLimits(
 {
     NSWindow *macWindow = TkMacOSXGetNSWindowForDrawable(winPtr->window);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int minWidth, minHeight, maxWidth, maxHeight, base;
+    int minWidth, minHeight, maxWidth, maxHeight;
 
     if (!macWindow) {
 	return;
@@ -2904,8 +2904,6 @@ WmGridCmd(
 	    errorMsg = "heightInc can't be <= 0";
 	    goto error;
 	}
-	Tk_SetGrid((Tk_Window)winPtr, reqWidth, reqHeight, widthInc,
-		heightInc);
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(wmPtr, winPtr);
@@ -4669,61 +4667,6 @@ WmUpdateGeom(
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_SetGrid --
- *
- *	This function has been deprecated.  It is a no-op for the time
- *      being, until it is is removed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_SetGrid(
-    Tk_Window tkwin,		/* Token for window. New window mgr info will
-				 * be posted for the top-level window
-				 * associated with this window. */
-    int reqWidth,		/* Width (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int reqHeight,		/* Height (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int widthInc, int heightInc)/* Pixel increments corresponding to a change
-				 * of one grid unit. */
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_UnsetGrid --
- *
- *	This function has been deprecated.  It is a no-op for the time
- *      being, until it is removed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_UnsetGrid(
-    Tk_Window tkwin)		/* Token for window that is currently
-				 * controlling gridding. */
-{
 }
 
 /*

@@ -14,7 +14,6 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include "tkPlatDecls.h"
 
 /*
  * Based extensively on the tktray extension package. Here we are removing

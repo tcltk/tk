@@ -579,7 +579,8 @@ EXTERN void		Tk_UnmaintainGeometry(Tk_Window window,
 /* 182 */
 EXTERN void		Tk_UnmapWindow(Tk_Window tkwin);
 /* 183 */
-EXTERN void		Tk_UnsetGrid(Tk_Window tkwin);
+TK_DEPRECATED("Tk_UnsetGrid is a no-op on 9.1. Consider using Tk_SetSizeHints on X11.")
+void			Tk_UnsetGrid(Tk_Window tkwin);
 /* 184 */
 EXTERN void		Tk_UpdatePointer(Tk_Window tkwin, int x, int y,
 				int state);
@@ -839,7 +840,9 @@ EXTERN long		Tk_GetUserInactiveTime(Display *dpy);
 EXTERN void		Tk_ResetUserInactiveTime(Display *dpy);
 /* 271 */
 EXTERN Tcl_Interp *	Tk_Interp(Tk_Window tkwin);
-/* Slot 272 is reserved */
+/* 272 */
+EXTERN void		Tk_SetSizeHints(Tk_Window tkwin, int minWidth,
+				int maxWidth, int minHeight, int maxHeight);
 /* Slot 273 is reserved */
 /* 274 */
 EXTERN int		Tk_AlwaysShowSelection(Tk_Window tkwin);
@@ -1102,7 +1105,7 @@ typedef struct TkStubs {
     void (*tk_Ungrab) (Tk_Window tkwin); /* 180 */
     void (*tk_UnmaintainGeometry) (Tk_Window window, Tk_Window container); /* 181 */
     void (*tk_UnmapWindow) (Tk_Window tkwin); /* 182 */
-    void (*tk_UnsetGrid) (Tk_Window tkwin); /* 183 */
+    TCL_DEPRECATED_API("Tk_UnsetGrid is a no-op on 9.1. Consider using Tk_SetSizeHints on X11.") void (*tk_UnsetGrid) (Tk_Window tkwin); /* 183 */
     void (*tk_UpdatePointer) (Tk_Window tkwin, int x, int y, int state); /* 184 */
     Pixmap (*tk_AllocBitmapFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 185 */
     Tk_3DBorder (*tk_Alloc3DBorderFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 186 */
@@ -1191,7 +1194,7 @@ typedef struct TkStubs {
     long (*tk_GetUserInactiveTime) (Display *dpy); /* 269 */
     void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
-    void (*reserved272)(void);
+    void (*tk_SetSizeHints) (Tk_Window tkwin, int minWidth, int maxWidth, int minHeight, int maxHeight); /* 272 */
     void (*reserved273)(void);
     int (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
     unsigned (*tk_GetButtonMask) (unsigned button); /* 275 */
@@ -1757,7 +1760,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_ResetUserInactiveTime) /* 270 */
 #define Tk_Interp \
 	(tkStubsPtr->tk_Interp) /* 271 */
-/* Slot 272 is reserved */
+#define Tk_SetSizeHints \
+	(tkStubsPtr->tk_SetSizeHints) /* 272 */
 /* Slot 273 is reserved */
 #define Tk_AlwaysShowSelection \
 	(tkStubsPtr->tk_AlwaysShowSelection) /* 274 */
@@ -1827,5 +1831,14 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #undef TkUnusedStubEntry
+
+#undef Tk_SetGrid
+#define Tk_SetGrid(w,a,b,c,d) /* NOP */
+#undef Tk_UnsetGrid
+#define Tk_UnsetGrid(w) /* NOP */
+#if (defined(MAC_OSX_TK) || defined(_WIN32)) && !defined(USE_TK_STUBS)
+#   undef Tk_SetSizeHints
+#   define Tk_SetSizeHints(w,a,b,c,d) /* NOP */
+#endif
 
 #endif /* _TKDECLS */

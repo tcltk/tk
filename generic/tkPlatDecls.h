@@ -76,11 +76,6 @@ EXTERN void *		Tk_MacOSXGetNSWindowForDrawable(Drawable drawable);
 EXTERN void		TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-/* 0 */
-EXTERN void		Tk_SetSizeHints(Tk_Window tkwin, int minWidth,
-				int maxWidth, int minHeight, int maxHeight);
-#endif /* X11 */
 
 typedef struct TkPlatStubs {
     int magic;
@@ -111,9 +106,6 @@ typedef struct TkPlatStubs {
     void (*reserved15)(void);
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 16 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-    void (*tk_SetSizeHints) (Tk_Window tkwin, int minWidth, int maxWidth, int minHeight, int maxHeight); /* 0 */
-#endif /* X11 */
 } TkPlatStubs;
 
 extern const TkPlatStubs *tkPlatStubsPtr;
@@ -166,10 +158,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #define TkGenWMConfigureEvent \
 	(tkPlatStubsPtr->tkGenWMConfigureEvent) /* 16 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-#define Tk_SetSizeHints \
-	(tkPlatStubsPtr->tk_SetSizeHints) /* 0 */
-#endif /* X11 */
 
 #endif /* defined(USE_TK_STUBS) */
 

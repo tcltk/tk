@@ -5692,62 +5692,6 @@ WmWaitVisibilityOrMapProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_SetGrid --
- *
- *	This function has been deprecated.  It is a no-op for the time
- *      being, until it is is removed.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_SetGrid(
-    Tk_Window tkwin,		/* Token for window. New window mgr info will
-				 * be posted for the top-level window
-				 * associated with this window. */
-    int reqWidth,		/* Width (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int reqHeight,		/* Height (in grid units) corresponding to the
-				 * requested geometry for tkwin. */
-    int widthInc, int heightInc)/* Pixel increments corresponding to a change
-				 * of one grid unit. */
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_UnsetGrid --
- *
- *	This function cancels the effect of a previous call to Tk_SetGrid.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	If tkwin currently controls gridding for its top-level window,
- *	gridding is cancelled for that top-level window; if some other window
- *	controls gridding then this function has no effect.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_UnsetGrid(
-    Tk_Window tkwin)		/* Token for window that is currently
-				 * controlling gridding. */
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TopLevelEventProc --
  *
  *	This function is invoked when a top-level (or other externally-managed
