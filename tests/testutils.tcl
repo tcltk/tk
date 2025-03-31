@@ -130,7 +130,7 @@ namespace eval ::tk::test::generic {
 
     # Suspend script execution for a given amount of time, but continue
     # processing events.
-    proc pause {{msecs 1000}} {
+    proc pause {ms} {
 	variable _pause
 
 	if {! [info exists _pause(count)]} {
@@ -140,7 +140,7 @@ namespace eval ::tk::test::generic {
 	set num [incr _pause(count)]
 	set _pause($num) 1
 
-	after $msecs [list unset [namespace current]::_pause($num)]
+	after $ms [list unset [namespace current]::_pause($num)]
 	vwait [namespace current]::_pause($num)
     }
 
