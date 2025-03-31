@@ -1647,28 +1647,10 @@ SetLimits(
     GetMaxSize(wmPtr, &maxWidth, &maxHeight);
     GetMinSize(wmPtr, &minWidth, &minHeight);
 
-    if (wmPtr->gridWin != NULL) {
-	base = winPtr->reqWidth - (wmPtr->reqGridWidth * wmPtr->widthInc);
-	if (base < 0) {
-	    base = 0;
-	}
-	base += wmPtr->borderWidth;
-	info->ptMinTrackSize.x = base + (minWidth * wmPtr->widthInc);
-	info->ptMaxTrackSize.x = base + (maxWidth * wmPtr->widthInc);
-
-	base = winPtr->reqHeight - (wmPtr->reqGridHeight * wmPtr->heightInc);
-	if (base < 0) {
-	    base = 0;
-	}
-	base += wmPtr->borderHeight;
-	info->ptMinTrackSize.y = base + (minHeight * wmPtr->heightInc);
-	info->ptMaxTrackSize.y = base + (maxHeight * wmPtr->heightInc);
-    } else {
-	info->ptMaxTrackSize.x = maxWidth + wmPtr->borderWidth;
-	info->ptMaxTrackSize.y = maxHeight + wmPtr->borderHeight;
-	info->ptMinTrackSize.x = minWidth + wmPtr->borderWidth;
-	info->ptMinTrackSize.y = minHeight + wmPtr->borderHeight;
-    }
+    info->ptMaxTrackSize.x = maxWidth + wmPtr->borderWidth;
+    info->ptMaxTrackSize.y = maxHeight + wmPtr->borderHeight;
+    info->ptMinTrackSize.x = minWidth + wmPtr->borderWidth;
+    info->ptMinTrackSize.y = minHeight + wmPtr->borderHeight;
 
     /*
      * If the window isn't supposed to be resizable, then set the minimum and
@@ -3701,15 +3683,8 @@ WmGeometryCmd(
     if (objc == 3) {
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
-	if (wmPtr->gridWin != NULL) {
-	    width = wmPtr->reqGridWidth + (winPtr->changes.width
-		    - winPtr->reqWidth)/wmPtr->widthInc;
-	    height = wmPtr->reqGridHeight + (winPtr->changes.height
-		    - winPtr->reqHeight)/wmPtr->heightInc;
-	} else {
-	    width = winPtr->changes.width;
-	    height = winPtr->changes.height;
-	}
+	width = winPtr->changes.width;
+	height = winPtr->changes.height;
 	if (winPtr->flags & TK_EMBEDDED) {
 	    int result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
 
@@ -3822,8 +3797,6 @@ WmGridCmd(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
-	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
-		heightInc);
     }
     WmUpdateGeom(wmPtr, winPtr);
     return TCL_OK;
@@ -5845,9 +5818,6 @@ UpdateGeometryInfo(
 
     if (wmPtr->width == -1) {
 	width = winPtr->reqWidth;
-    } else if (wmPtr->gridWin != NULL) {
-	width = winPtr->reqWidth
-		+ (wmPtr->width - wmPtr->reqGridWidth)*wmPtr->widthInc;
     } else {
 	width = wmPtr->width;
     }
@@ -5859,19 +5829,9 @@ UpdateGeometryInfo(
      * Account for window max/min width
      */
 
-    if (wmPtr->gridWin != NULL) {
-	min = winPtr->reqWidth
-		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	if (wmPtr->maxWidth > 0) {
-	    max = winPtr->reqWidth
-		    + (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	} else {
-	    max = 0;
-	}
-    } else {
-	min = wmPtr->minWidth;
-	max = wmPtr->maxWidth;
-    }
+    min = wmPtr->minWidth;
+    max = wmPtr->maxWidth;
+
     if (width < min) {
 	width = min;
     } else if ((max > 0) && (width > max)) {
@@ -5880,9 +5840,6 @@ UpdateGeometryInfo(
 
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
-    } else if (wmPtr->gridWin != NULL) {
-	height = winPtr->reqHeight
-		+ (wmPtr->height - wmPtr->reqGridHeight)*wmPtr->heightInc;
     } else {
 	height = wmPtr->height;
     }
@@ -5894,19 +5851,9 @@ UpdateGeometryInfo(
      * Account for window max/min height
      */
 
-    if (wmPtr->gridWin != NULL) {
-	min = winPtr->reqHeight
-		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	if (wmPtr->maxHeight > 0) {
-	    max = winPtr->reqHeight
-		    + (wmPtr->maxHeight-wmPtr->reqGridHeight)*wmPtr->heightInc;
-	} else {
-	    max = 0;
-	}
-    } else {
-	min = wmPtr->minHeight;
-	max = wmPtr->maxHeight;
-    }
+    min = wmPtr->minHeight;
+    max = wmPtr->maxHeight;
+
     if (height < min) {
 	height = min;
     } else if ((max > 0) && (height > max)) {
@@ -7037,16 +6984,7 @@ ConfigureTopLevel(
 		     * it from what the widgets asked for.
 		     */
 		} else {
-		    if (wmPtr->gridWin != NULL) {
-			wmPtr->width = wmPtr->reqGridWidth
-				+ (winPtr->changes.width - winPtr->reqWidth)
-				/ wmPtr->widthInc;
-			if (wmPtr->width < 0) {
-			    wmPtr->width = 0;
-			}
-		    } else {
-			wmPtr->width = winPtr->changes.width;
-		    }
+		    wmPtr->width = winPtr->changes.width;
 		}
 		if ((wmPtr->height == -1)
 			&& (winPtr->changes.height == winPtr->reqHeight)) {
@@ -7055,16 +6993,7 @@ ConfigureTopLevel(
 		     * it from what the widgets asked for.
 		     */
 		} else {
-		    if (wmPtr->gridWin != NULL) {
-			wmPtr->height = wmPtr->reqGridHeight
-				+ (winPtr->changes.height - winPtr->reqHeight)
-				/ wmPtr->heightInc;
-			if (wmPtr->height < 0) {
-			    wmPtr->height = 0;
-			}
-		    } else {
-			wmPtr->height = winPtr->changes.height;
-		    }
+		    wmPtr->height = winPtr->changes.height;
 		}
 		wmPtr->configWidth = winPtr->changes.width;
 		wmPtr->configHeight = winPtr->changes.height;
@@ -7467,13 +7396,6 @@ GetMinSize(
     if (tmp < 0) {
 	tmp = 0;
     }
-    if (wmPtr->gridWin != NULL) {
-	base = winPtr->reqWidth - (wmPtr->reqGridWidth * wmPtr->widthInc);
-	if (base < 0) {
-	    base = 0;
-	}
-	tmp = ((tmp - base) + wmPtr->widthInc - 1)/wmPtr->widthInc;
-    }
     if (tmp < wmPtr->minWidth) {
 	tmp = wmPtr->minWidth;
     }
@@ -7486,13 +7408,6 @@ GetMinSize(
     tmp = wmPtr->defMinHeight - wmPtr->borderHeight;
     if (tmp < 0) {
 	tmp = 0;
-    }
-    if (wmPtr->gridWin != NULL) {
-	base = winPtr->reqHeight - (wmPtr->reqGridHeight * wmPtr->heightInc);
-	if (base < 0) {
-	    base = 0;
-	}
-	tmp = ((tmp - base) + wmPtr->heightInc - 1)/wmPtr->heightInc;
     }
     if (tmp < wmPtr->minHeight) {
 	tmp = wmPtr->minHeight;
@@ -7540,26 +7455,12 @@ GetMaxSize(
 	 * extra space for the window manager's borders.
 	 */
 
-	tmp = wmPtr->defMaxWidth - wmPtr->borderWidth;
-	if (wmPtr->gridWin != NULL) {
-	    /*
-	     * Gridding is turned on; convert from pixels to grid units.
-	     */
-
-	    tmp = wmPtr->reqGridWidth
-		    + (tmp - wmPtr->winPtr->reqWidth)/wmPtr->widthInc;
-	}
-	*maxWidthPtr = tmp;
+	*maxWidthPtr = wmPtr->defMaxWidth - wmPtr->borderWidth;
     }
     if (wmPtr->maxHeight > 0) {
 	*maxHeightPtr = wmPtr->maxHeight;
     } else {
-	tmp = wmPtr->defMaxHeight - wmPtr->borderHeight;
-	if (wmPtr->gridWin != NULL) {
-	    tmp = wmPtr->reqGridHeight
-		    + (tmp - wmPtr->winPtr->reqHeight)/wmPtr->heightInc;
-	}
-	*maxHeightPtr = tmp;
+	*maxHeightPtr = wmPtr->defMaxHeight - wmPtr->borderHeight;
     }
 }
 
