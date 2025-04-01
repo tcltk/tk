@@ -133,10 +133,6 @@ namespace eval ::tk::test::generic {
     proc pause {ms} {
 	variable _pause
 
-	if {! [info exists _pause(count)]} {
-	    set _pause(count) 0
-	}
-
 	set num [incr _pause(count)]
 	set _pause($num) 1
 
