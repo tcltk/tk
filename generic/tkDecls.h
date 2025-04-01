@@ -1832,7 +1832,11 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TkUnusedStubEntry
 
-#if (defined(MAC_OSX_TK) || defined(_WIN32)) && !defined(USE_TK_STUBS)
+#if defined(USE_TK_STUBS)
+#   undef Tk_SetSizeHints
+#   define Tk_SetSizeHints(w,a,b,c,d) \
+	if (!tkStubsPtr->tk_SetSizeHints) {/* NOP */} else tkStubsPtr->tk_SetSizeHints(w,a,b,c,d)
+#elif defined(MAC_OSX_TK) || defined(_WIN32)
 #   undef Tk_SetSizeHints
 #   define Tk_SetSizeHints(w,a,b,c,d) /* NOP */
 #endif
