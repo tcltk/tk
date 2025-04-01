@@ -1832,10 +1832,6 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TkUnusedStubEntry
 
-#undef Tk_SetGrid
-#define Tk_SetGrid(w,a,b,c,d) /* NOP */
-#undef Tk_UnsetGrid
-#define Tk_UnsetGrid(w) /* NOP */
 #if (defined(MAC_OSX_TK) || defined(_WIN32)) && !defined(USE_TK_STUBS)
 #   undef Tk_SetSizeHints
 #   define Tk_SetSizeHints(w,a,b,c,d) /* NOP */
