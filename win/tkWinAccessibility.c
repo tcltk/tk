@@ -82,10 +82,14 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IDispatch *t
 
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static HWND Tk_GetHWND(Tk_Window tkwin);
-int TkWinAccessibleObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-int TkWinAccessiblity_Init(Tcl_Interp *interp);
 int IsScreenReaderRunning(TCL_UNUSED(*void), Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
+static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+int TkWinAccessibleObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkWinAccessiblity_Init(Tcl_Interp *interp);
+
+
 
 
 /* Plumbing to the COM/MSAA machinery. */
@@ -100,6 +104,7 @@ static IAccessibleVtbl tkAccessibleVtbl = {
     TkWinAccessible_get_accName,
     TkWinAccessible_get_accRole,
     TkWinAccessible_get_accState,
+	TkWinAccessible_get_accValue
     TkWinAccessible_get_accParent,
     TkWinAccessible_get_accChildCount,
     TkWinAccessible_get_accChild,
@@ -126,6 +131,7 @@ static ULONG STDMETHODCALLTYPE TkWinAccessible_Release(IDispatch *this) {
     TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
     if (--tkAccessible->refCount == 0) {
         g_free(tkAccessible->pathName);
+		tkAccessible->hwnd = NULL;
         g_free(tkAccessible);
         return 0;
     }
@@ -525,7 +531,8 @@ int TkWinAccessibleObjCmd(
 
 	HWND hwnd = Tk_GetHWND(tkwin);
 	TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
-
+	TkWinAccessible_RegisterForCleanup(tkwin, accessible);
+	
 	if (accessible == NULL) {		
 		Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
 		return TCL_ERROR;
@@ -533,6 +540,54 @@ int TkWinAccessibleObjCmd(
 
 	return TCL_OK;
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinAccessible_RegisterForCleanup --
+ *
+ * Register event handler for destroying accessibility element.
+ *
+ * Results:
+ *      Event handler is registered.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible) {
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+						  TkWinAccessible_DestroyHandler, tkAccessible;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinAccessible_DestroyHandler --
+ *
+ * Clean up accessibility element structures when window is destroyed.
+ *
+ * Results:
+ *	Accessibility element is deallocated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr) {
+    if (eventPtr->type == DestroyNotify) {
+        TkWinAccessible *tkAccessible = (TkWinAccessible *)clientData;
+        if (tkAccessible) {
+            TkWinAccessible_Release(tkAccessible);
+        }
+    }
+}
+
 
 /*
  *----------------------------------------------------------------------
