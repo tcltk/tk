@@ -344,6 +344,8 @@ CreateTopLevelWindow(
 	Tk_CreateImageType(&tkBitmapImageType);
 	Tk_CreateImageType(&tkPhotoImageType);
 
+	Tk_SetTypeInfoProc(&tkPhotoImageType, TkPhotoInfoProc);
+
 	/*
 	 * Create built-in photo image formats.
 	 */

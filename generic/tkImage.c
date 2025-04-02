@@ -77,6 +77,7 @@ typedef struct {
 				 * types. */
     int initialized;		/* Set to 1 if we've initialized the
 				 * structure. */
+    Tcl_HashTable *infoCmdTable;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -118,6 +119,31 @@ ImageTypeThreadExitProc(
 	tsdPtr->imageTypeList = tsdPtr->imageTypeList->nextPtr;
 	ckfree(freePtr);
     }
+    /* Cleanup the infoCmdTable hash table */
+    Tcl_HashEntry *entryPtr;
+    Tcl_HashSearch search;
+    for (entryPtr = Tcl_FirstHashEntry(tsdPtr->infoCmdTable, &search);
+	    entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
+	Tcl_DeleteHashEntry(entryPtr);
+    }
+    Tcl_DeleteHashTable(tsdPtr->infoCmdTable);
+    ckfree(tsdPtr->infoCmdTable);
+}
+
+int Tk_SetTypeInfoProc(
+    Tk_ImageType *typePtr,
+    Tk_ImageInfoProc *infoProc)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_HashEntry *entryPtr;
+    int isNew;
+
+    entryPtr = Tcl_CreateHashEntry(tsdPtr->infoCmdTable, typePtr->name, &isNew);
+    if (isNew) {
+	Tcl_SetHashValue(entryPtr, infoProc);
+    } /* else? */
+    return TCL_OK;
 }
 
 /*
@@ -153,6 +179,8 @@ Tk_CreateImageType(
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
+	tsdPtr->infoCmdTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	Tcl_InitHashTable(tsdPtr->infoCmdTable, TCL_STRING_KEYS);
     }
     copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
     *copyPtr = *typePtr;
@@ -377,10 +405,11 @@ Tk_ImageObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     case IMAGE_TYPES:
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
+	if (objc != 2 && objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?type?");
 	    return TCL_ERROR;
 	}
+if (objc == 2) {
 	resultObj = Tcl_NewObj();
 	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
@@ -388,6 +417,16 @@ Tk_ImageObjCmd(
 		    typePtr->name, TCL_INDEX_NONE));
 	}
 	Tcl_SetObjResult(interp, resultObj);
+} else {
+	Tk_ImageInfoProc *proc;
+	Tcl_HashEntry *entryPtr;
+
+	entryPtr = Tcl_FindHashEntry(tsdPtr->infoCmdTable, Tcl_GetString(objv[2]));
+	if (entryPtr) {
+	    proc = (Tk_ImageInfoProc *) Tcl_GetHashValue(entryPtr);
+	    proc(interp);
+	}
+}
 	break;
 
     case IMAGE_HEIGHT:

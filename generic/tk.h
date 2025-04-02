@@ -1219,6 +1219,9 @@ typedef void (Tk_ImageChangedProc) (void *clientData, int x, int y,
 typedef int (Tk_ImagePostscriptProc) (void *clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo,
 	int x, int y, int width, int height, int prepass);
+typedef int (Tk_ImageInfoProc) (Tcl_Interp *interp);
+
+int Tk_SetTypeInfoProc(Tk_ImageType *typePtr, Tk_ImageInfoProc *typeInfo);
 
 /*
  * The following structure represents a particular type of image (bitmap, xpm
