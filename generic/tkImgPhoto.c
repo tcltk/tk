@@ -4386,3 +4386,34 @@ ImgPhotoPostscript(
  * tab-width: 8
  * End:
  */
+int TkPhotoInfoProc(Tcl_Interp *interp) {
+    Tcl_Obj *resultObj, *keyObj, *valueObj;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tk_PhotoImageFormat *formatPtr;
+    Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
+
+    resultObj = Tcl_NewObj();
+    keyObj = Tcl_NewStringObj("format", -1);
+    /*
+     * Scan through the table of file format handlers and collect the
+     * name field.
+     */
+    valueObj = Tcl_NewListObj(0, NULL);
+    for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
+	formatPtr = formatPtr->nextPtr) {
+        Tcl_ListObjAppendElement(NULL, valueObj,
+	    Tcl_NewStringObj(formatPtr->name,-1));
+    }
+
+    for (formatVersion3Ptr = tsdPtr->formatListVersion3;
+	formatVersion3Ptr != NULL;
+	formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
+        Tcl_ListObjAppendElement(NULL, valueObj,
+	    Tcl_NewStringObj(formatVersion3Ptr->name,-1));
+    }
+    /* set the format key in the result dictionary */
+    Tcl_DictObjPut(NULL, resultObj, keyObj, valueObj);
+    Tcl_SetObjResult(interp, resultObj);
+    return TCL_OK;
+}

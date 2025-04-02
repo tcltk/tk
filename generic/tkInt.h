@@ -1071,6 +1071,7 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 
 MODULE_SCOPE const char *const tkWebColors[20];
 
+MODULE_SCOPE Tk_ImageInfoProc TkPhotoInfoProc;
 /*
  * The definition of pi, at least from the perspective of double-precision
  * floats.
