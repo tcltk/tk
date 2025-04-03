@@ -839,7 +839,9 @@ EXTERN void		Tk_ResetUserInactiveTime(Display *dpy);
 /* 271 */
 EXTERN Tcl_Interp *	Tk_Interp(Tk_Window tkwin);
 /* Slot 272 is reserved */
-/* Slot 273 is reserved */
+/* 273 */
+EXTERN int		Tk_SetTypeInfoProc(Tk_ImageType *typePtr,
+				Tk_ImageInfoProc *typeInfo);
 /* 274 */
 EXTERN int		Tk_AlwaysShowSelection(Tk_Window tkwin);
 /* 275 */
@@ -1191,7 +1193,7 @@ typedef struct TkStubs {
     void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*reserved272)(void);
-    void (*reserved273)(void);
+    int (*tk_SetTypeInfoProc) (Tk_ImageType *typePtr, Tk_ImageInfoProc *typeInfo); /* 273 */
     int (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
     unsigned (*tk_GetButtonMask) (unsigned button); /* 275 */
     int (*tk_GetDoublePixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 276 */
@@ -1757,7 +1759,8 @@ extern const TkStubs *tkStubsPtr;
 #define Tk_Interp \
 	(tkStubsPtr->tk_Interp) /* 271 */
 /* Slot 272 is reserved */
-/* Slot 273 is reserved */
+#define Tk_SetTypeInfoProc \
+	(tkStubsPtr->tk_SetTypeInfoProc) /* 273 */
 #define Tk_AlwaysShowSelection \
 	(tkStubsPtr->tk_AlwaysShowSelection) /* 274 */
 #define Tk_GetButtonMask \

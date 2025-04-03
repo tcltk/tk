@@ -1002,6 +1002,11 @@ declare 271 {
     Tcl_Interp *Tk_Interp(Tk_Window tkwin)
 }
 
+# TIP #714
+declare 273 {
+    int Tk_SetTypeInfoProc(Tk_ImageType *typePtr,
+	    Tk_ImageInfoProc *typeInfo)
+}
 
 # ----- BASELINE -- FOR -- 8.6.0 ----- #
 

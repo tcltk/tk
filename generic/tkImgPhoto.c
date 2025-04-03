@@ -4404,7 +4404,7 @@ TkPhotoInfoProc(Tcl_Interp *interp) {
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
-    char * defaultFormatName = NULL;
+    const char * defaultFormatName = NULL;
 
     formatValueObj = Tcl_NewListObj(0, NULL);
     fileValueObj = Tcl_NewListObj(0, NULL);
@@ -4417,7 +4417,7 @@ TkPhotoInfoProc(Tcl_Interp *interp) {
 
     for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 	    formatPtr = formatPtr->nextPtr) {
-	    
+
 	/*
 	 * Default will be evaluated last, so put it at the end of the
 	 * evaluation list
@@ -4426,7 +4426,7 @@ TkPhotoInfoProc(Tcl_Interp *interp) {
 	if (strncasecmp("default", formatPtr->name,
 		strlen(formatPtr->name)) == 0) {
 	    defaultFormatName = formatPtr->name;
-	    
+
 	    /*
 	     * The default format does not implement any file operations.
 	     * So no need to check for fileMatchProc or fileWriteProc
@@ -4448,7 +4448,7 @@ TkPhotoInfoProc(Tcl_Interp *interp) {
 	    formatVersion3Ptr != NULL;
 	    formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
 	Tcl_Obj *formatNameObj = Tcl_NewStringObj(formatVersion3Ptr->name,-1);
-        Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
+	Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
 	if (NULL != formatVersion3Ptr->fileMatchProc) {
 	    Tcl_ListObjAppendElement(NULL, fileValueObj, formatNameObj);
 	}
@@ -4459,13 +4459,13 @@ TkPhotoInfoProc(Tcl_Interp *interp) {
 
     if (NULL != defaultFormatName) {
 	Tcl_ListObjAppendElement(interp, formatValueObj,
-		Tcl_NewStringObj(defaultFormatName,-1));
+		Tcl_NewStringObj(defaultFormatName, -1));
     }
 
     /*
      * set the format key in the result dictionary
      */
-    
+
     resultObj = Tcl_NewObj();
     Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("format", -1),
 	    formatValueObj);
