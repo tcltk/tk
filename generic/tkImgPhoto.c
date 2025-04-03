@@ -4379,30 +4379,42 @@ ImgPhotoPostscript(
 }
 
 /*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * tab-width: 8
- * End:
+ *--------------------------------------------------------------
+ *
+ * TkPhotoInfoProc --
+ *
+ *	This function is called to return an information dict on
+ *	all photo images.
+ *	It is called by the command "image types photo".
+ *
+ * Results:
+ *	Returns a standard Tcl return value.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
  */
-int TkPhotoInfoProc(Tcl_Interp *interp) {
-    Tcl_Obj *resultObj, *keyObj, *valueObj;
+
+int
+TkPhotoInfoProc(Tcl_Interp *interp) {
+
+    Tcl_Obj *resultObj, *formatValueObj, *fileValueObj, *writeValueObj;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tk_PhotoImageFormat *formatPtr;
     Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
     char * defaultFormatName = NULL;
 
-    resultObj = Tcl_NewObj();
-    keyObj = Tcl_NewStringObj("format", -1);
+    formatValueObj = Tcl_NewListObj(0, NULL);
+    fileValueObj = Tcl_NewListObj(0, NULL);
+    writeValueObj = Tcl_NewListObj(0, NULL);
 
     /*
      * Scan through the table of file format handlers and collect the
-     * name field.
+     * data.
      */
 
-    valueObj = Tcl_NewListObj(0, NULL);
     for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 	    formatPtr = formatPtr->nextPtr) {
 	    
@@ -4414,21 +4426,39 @@ int TkPhotoInfoProc(Tcl_Interp *interp) {
 	if (strncasecmp("default", formatPtr->name,
 		strlen(formatPtr->name)) == 0) {
 	    defaultFormatName = formatPtr->name;
+	    
+	    /*
+	     * The default format does not implement any file operations.
+	     * So no need to check for fileMatchProc or fileWriteProc
+	     */
+
 	} else {
-	    Tcl_ListObjAppendElement(NULL, valueObj,
-		    Tcl_NewStringObj(formatPtr->name,-1));
+	    Tcl_Obj *formatNameObj = Tcl_NewStringObj(formatPtr->name,-1);
+	    Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
+	    if (NULL != formatPtr->fileMatchProc) {
+		Tcl_ListObjAppendElement(NULL, fileValueObj, formatNameObj);
+	    }
+	    if (NULL != formatPtr->fileWriteProc) {
+		Tcl_ListObjAppendElement(NULL, writeValueObj, formatNameObj);
+	    }
 	}
     }
 
     for (formatVersion3Ptr = tsdPtr->formatListVersion3;
 	    formatVersion3Ptr != NULL;
-	formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
-        Tcl_ListObjAppendElement(NULL, valueObj,
-		Tcl_NewStringObj(formatVersion3Ptr->name,-1));
+	    formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
+	Tcl_Obj *formatNameObj = Tcl_NewStringObj(formatVersion3Ptr->name,-1);
+        Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
+	if (NULL != formatVersion3Ptr->fileMatchProc) {
+	    Tcl_ListObjAppendElement(NULL, fileValueObj, formatNameObj);
+	}
+	if (NULL != formatVersion3Ptr->fileWriteProc) {
+	    Tcl_ListObjAppendElement(NULL, writeValueObj, formatNameObj);
+	}
     }
 
     if (NULL != defaultFormatName) {
-	Tcl_ListObjAppendElement(interp, valueObj,
+	Tcl_ListObjAppendElement(interp, formatValueObj,
 		Tcl_NewStringObj(defaultFormatName,-1));
     }
 
@@ -4436,7 +4466,22 @@ int TkPhotoInfoProc(Tcl_Interp *interp) {
      * set the format key in the result dictionary
      */
     
-    Tcl_DictObjPut(NULL, resultObj, keyObj, valueObj);
+    resultObj = Tcl_NewObj();
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("format", -1),
+	    formatValueObj);
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("file", -1),
+	    fileValueObj);
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("write", -1),
+	    writeValueObj);
     Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * tab-width: 8
+ * End:
+ */
