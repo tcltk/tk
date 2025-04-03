@@ -3738,7 +3738,7 @@ TextBlinkProc(
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
 	if (textPtr->insertCursorType) {
 	    /* Block cursor */
-	    TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
+	    TkTextRedrawRegion(textPtr, x - insertWidth / 2, y,
 		    charWidth + insertWidth / 2, h);
 	} else {
 	    /* I-beam cursor */
