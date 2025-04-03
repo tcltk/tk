@@ -827,71 +827,77 @@ static TreeItem *FindItemByIndex(
 }
 
 /* + GetPrevItem --
- *	Return the previous item in the widget view
+ *	Return the previous visible item in widget view
  */
-TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
-   TreeItem *prev;
+TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
+    TreeItem *current = item;
 
-    if (!item || !root) {
+    if (!current || !root) {
 	return NULL;
     }
 
-    while (item != NULL) {
-	prev = item->prev;
-	if (prev == NULL) {
-	    prev = item->parent;
-	} else {
-	    if (recurse && prev->children) {
-		while (prev && (prev->state & TTK_STATE_OPEN) &&
-			(!prev->hidden || hidden) && prev->children) {
-		    prev = prev->lastChild;
-		}
+    /* Loop over prev items until we find a visible one */
+    while (current != NULL) {
+	if (current->prev != NULL) {
+	    current = current->prev;
+	    while ((recurse && current->lastChild) && (allow_hidden ||
+		    (current->state & TTK_STATE_OPEN && !current->hidden))) {
+		current = current->lastChild;
 	    }
-	}
-	if (prev == root) {
+	} else if (current->parent != root && recurse) {
+	    current = current->parent;
+	} else {
+	    /* No more items */
 	    return NULL;
 	}
-	if (!prev->hidden || hidden) {
-	    return prev;
+
+	/* Exit loop if found prev visible item */
+	if (!current->hidden || allow_hidden) {
+	    break;
 	}
-	item = prev;
     }
-    return item;
+    return current;
 }
 
 /* + GetNextItem --
- *	Return the next item in the widget view
+ *	Return the next visible item in widget view
  */
-TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
-    TreeItem *next;
+TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
+    TreeItem *current = item;
 
-    if (!item || !root) {
+    if (!current || !root) {
 	return NULL;
     }
 
-    while (item != NULL) {
-	next = NULL;
-
-	if (recurse && (item->state & TTK_STATE_OPEN) && item->children &&
-		(!item->hidden || (item->hidden && hidden))) {
-	    next = item->children;
-	}
-	if (next == NULL) {
-	    next = item->next;
-	}
-	while (next == NULL && item != root) {
-	    item = item->parent;
-	    next = item->next;
-	}
-	if (next == NULL || next == root) {
+    /* Loop over next items until we find a visible one */
+    while (current != NULL) {
+	if ((recurse && current->children) && (allow_hidden ||
+		(current->state & TTK_STATE_OPEN && !current->hidden))) {
+	    current = current->children;
+	} else if (current->next != NULL) {
+	    current = current->next;
+	} else if (current->parent != root && recurse) {
+	    while (current->parent != root) {
+		current = current->parent;
+		if (current->next != NULL) {
+		   current = current->next;
+		   break;
+		} else if (current->parent == root) {
+		    /* No more items */
+		    return NULL;
+		}
+	    }
+	} else {
+	    /* No more items */
 	    return NULL;
 	}
-	if (!next->hidden || (next->hidden && hidden)) {
-	    return next;
+
+	/* Exit loop if found next visible item */
+	if (!current->hidden || allow_hidden) {
+	    break;
 	}
-	item = next;
     }
-    return item;
+    return current;
 }
 
 /* + GetItemListFromObj --
