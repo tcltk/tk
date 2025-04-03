@@ -1626,7 +1626,6 @@ SetLimits(
     WmInfo *wmPtr;
     int maxWidth, maxHeight;
     int minWidth, minHeight;
-    int base;
     TkWindow *winPtr = GetTopLevel(hwnd);
 
     if (winPtr == NULL) {
@@ -7383,7 +7382,6 @@ GetMinSize(
     int *minHeightPtr)		/* Where to store the current minimum height
 				 * of the window. */
 {
-    int tmp, base;
     TkWindow *winPtr = wmPtr->winPtr;
 
     /*
