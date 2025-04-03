@@ -1224,7 +1224,7 @@ const TkStubs tkStubs = {
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
     0, /* 272 */
-    0, /* 273 */
+    Tk_SetTypeInfoProc, /* 273 */
     Tk_AlwaysShowSelection, /* 274 */
     Tk_GetButtonMask, /* 275 */
     Tk_GetDoublePixelsFromObj, /* 276 */
