@@ -287,11 +287,14 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
 test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
     testImageType
 } -body {
-    image types x
-} -returnCodes error -result {wrong # args: should be "image types"}
+    image types x y
+} -returnCodes error -result {wrong # args: should be "image types ?type?"}
 test image-6.2 {Tk_ImageCmd procedure, "types" option} -body {
     lsort [image types]
 } -match glob -result {bitmap*photo test}
+test image-6.3 {Tk_ImageCmd procedure, "types" argument} -body {
+    image types x
+} -result {}
 
 
 test image-7.1 {Tk_ImageCmd procedure, "width" option} -body {
