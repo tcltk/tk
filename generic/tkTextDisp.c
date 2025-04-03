@@ -15,6 +15,7 @@
 
 #include "tkInt.h"
 #include "tkText.h"
+#include "tk3d.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -2431,15 +2432,22 @@ DisplayDLine(
 				 * must make sure it's large enough to hold
 				 * line. */
 {
-    TkTextDispChunk *chunkPtr;
+    TkTextDispChunk *chunkPtr, tmpChunk, *otherChunkPtr = NULL;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     Display *display;
     int height, y_off;
+    struct TextStyle tmpStyle;
+    TkBorder *borderPtr;
 #ifndef TK_NO_DOUBLE_BUFFERING
     const int y = 0;
 #else
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    BaseCharInfo bci;
+#else
+    CharInfo ci;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (dlPtr->chunkPtr == NULL) return;
 
@@ -2525,6 +2533,69 @@ DisplayDLine(
 	     * here.
 	     */
 
+	     if (textPtr->insertCursorType &&
+		    ((textPtr->flags & (GOT_FOCUS | INSERT_ON)) ==
+			(GOT_FOCUS | INSERT_ON)) &&
+		    (chunkPtr->nextPtr != NULL) &&
+		    (chunkPtr->nextPtr->displayProc == CharDisplayProc) &&
+		    (chunkPtr->nextPtr->numBytes > 0)) {
+		/*
+		 * Make a temporary chunk for displaying the text
+		 * within the block cursor later on.
+		 */
+		XGCValues gcValues;
+		unsigned long mask;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		CharInfo *ciPtr;
+		BaseCharInfo *bciPtr;
+		Tcl_UniChar ch;
+		int chnum;
+		char buf[16];
+#endif
+
+		otherChunkPtr = &tmpChunk;
+		*otherChunkPtr = *(chunkPtr->nextPtr);
+		otherChunkPtr->undisplayProc = NULL;
+		otherChunkPtr->numBytes = 1;
+		tmpStyle = *otherChunkPtr->stylePtr;
+		otherChunkPtr->stylePtr = &tmpStyle;
+		tmpStyle.bgGC = None;
+		mask = GCFont;
+		gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
+		mask |= GCForeground;
+		borderPtr = (TkBorder *) textPtr->border;
+		gcValues.foreground = borderPtr->bgColorPtr->pixel;
+		tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		ciPtr = (CharInfo *) otherChunkPtr->clientData;
+		chnum = ciPtr->baseOffset;
+		bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
+		bci.ci = *ciPtr;
+		Tcl_DStringInit(&bci.baseChars);
+		bci.width = -1;
+		bci.ci.baseOffset = 0;
+		Tcl_UtfToUniChar(Tcl_DStringValue(&bciPtr->baseChars) + chnum,
+			&ch);
+		chnum = Tcl_UniCharToUtf(ch, buf);
+		Tcl_DStringAppend(&bci.baseChars, buf, chnum);
+		bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
+		bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
+		bci.ci.baseChunkPtr = otherChunkPtr;
+		otherChunkPtr->clientData = (ClientData) &bci;
+#else
+		ci = *((CharInfo *) (otherChunkPtr->clientData));
+		otherChunkPtr->clientData = (ClientData) &ci;
+		ci.numBytes = 1;
+		if ((ci.chars[0] == '\n') ||
+			(ci.chars[0] == ' ') || (ci.chars[0] == '\t')) {
+		    /*
+		     * Ignore newline and other whitespace.
+		     */
+
+		    otherChunkPtr = NULL;
+		}
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	    }
 	    continue;
 	}
 
@@ -2553,6 +2624,37 @@ DisplayDLine(
 		    y + dlPtr->spaceAbove, dlPtr->height - dlPtr->spaceAbove -
 		    dlPtr->spaceBelow, dlPtr->baseline - dlPtr->spaceAbove,
 		    display, pixmap, dlPtr->y + dlPtr->spaceAbove);
+	}
+	
+	if (otherChunkPtr != NULL) {
+	    if ((textPtr->tkwin != NULL) && !(textPtr->flags & DESTROYED)) {
+		/*
+		 * Draw text within the block cursor.
+		 */
+
+		int x = otherChunkPtr->x + dInfoPtr->x -
+			dInfoPtr->curXPixelOffset;
+
+		if ((x + otherChunkPtr->width <= 0) || (x >= dInfoPtr->maxX)) {
+		    /*
+		     * See note above.
+		     */
+
+		    x = -otherChunkPtr->width;
+		}
+		otherChunkPtr->displayProc(textPtr, otherChunkPtr, x,
+			y + dlPtr->spaceAbove, dlPtr->height -
+			dlPtr->spaceAbove - dlPtr->spaceBelow,
+			dlPtr->baseline - dlPtr->spaceAbove,
+			display, pixmap, dlPtr->y + dlPtr->spaceAbove);
+	    }
+	    if (otherChunkPtr->stylePtr->fgGC != NULL) {
+		Tk_FreeGC(textPtr->display, otherChunkPtr->stylePtr->fgGC);
+	    }
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    Tcl_DStringFree(&bci.baseChars);
+#endif
+	    otherChunkPtr = NULL;
 	}
 
 	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
