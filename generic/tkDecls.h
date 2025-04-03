@@ -1830,4 +1830,10 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TkUnusedStubEntry
 
+#if defined(USE_TK_STUBS)
+#   undef Tk_SetTypeInfoProc
+#   define Tk_SetTypeInfoProc(t,i) \
+	if (!tkStubsPtr->tk_SetTypeInfoProc) {/* NOP */} else tkStubsPtr->tk_SetTypeInfoProc(t,i)
+#endif
+
 #endif /* _TKDECLS */
