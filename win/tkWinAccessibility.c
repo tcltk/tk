@@ -79,6 +79,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IDispatch *th
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IDispatch *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accLocation(IDispatch *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IDispatch *this, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IDispatch *this, VARIANT varChild, BSTR* pszHelp);
 
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static HWND Tk_GetHWND(Tk_Window tkwin);
@@ -109,6 +110,7 @@ static IAccessibleVtbl tkAccessibleVtbl = {
   TkWinAccessible_get_accChildCount,
   TkWinAccessible_get_accChild,
   TkWinAccessible_get_accLocation,
+  TkWinAccessible_get_accHelp, 
   TkWinAccessible_accDoDefaultAction,
 };
 
@@ -393,6 +395,39 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IDispatch *t
     return S_OK;
   }
   return E_INVALIDARG;
+}
+
+/* Function to get accessible help to MSAA. */
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IDispatch *this, VARIANT varChild, BSTR* pszHelp)
+{
+
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+    return E_INVALIDARG;
+  }
+
+  Tk_Window win = accessible_win;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  Tcl_HashTable *AccessibleAttributes;
+		
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    return E_INVALIDARG;
+  }
+		
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "help");
+  if (!hPtr2) {
+    return E_INVALIDARG;
+  }
+		
+  char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+   
+  *pszHelp = SysAllocString(CA2W(result));
+  if (!*pszHelp) {
+    return E_OUTOFMEMORY;
+  }
+
+  return S_OK;
 }
 
 /* Function to map Tk window to MSAA attributes. */
