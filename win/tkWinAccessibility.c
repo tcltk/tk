@@ -571,7 +571,7 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 /*
  *----------------------------------------------------------------------
  *
- * TkMacAccessibleObjCmd --
+ * TkWinAccessibleObjCmd --
  *
  *	Main command for adding and managing accessibility objects to Tk
  *      widgets on Windows using the Microsoft Active Accessibility API.
