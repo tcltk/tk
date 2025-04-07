@@ -2533,7 +2533,7 @@ DisplayDLine(
 	     * here.
 	     */
 
-	     if (textPtr->insertCursorType &&
+	    if (textPtr->insertCursorType &&
 		    ((textPtr->flags & (GOT_FOCUS | INSERT_ON)) ==
 			(GOT_FOCUS | INSERT_ON)) &&
 		    (chunkPtr->nextPtr != NULL) &&
@@ -2545,58 +2545,56 @@ DisplayDLine(
 		 */
 		XGCValues gcValues;
 		unsigned long mask;
-		int endX, numBytes, ix, iy, iw, ih, charWidth = 0;
-		TkTextIndex index;
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 		CharInfo *ciPtr;
 		BaseCharInfo *bciPtr;
+		Tcl_UniChar ch;
+		int chnum;
+		char buf[16];
 #endif
 
 		otherChunkPtr = &tmpChunk;
 		*otherChunkPtr = *(chunkPtr->nextPtr);
-		TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-		TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih,
-			&charWidth);
-		numBytes = CharChunkMeasureChars(otherChunkPtr, NULL, 0,
-				0, -1, otherChunkPtr->x,
-				otherChunkPtr->x + charWidth, 0, &endX);
-		if (numBytes > 0) {
-		    otherChunkPtr->undisplayProc = NULL;
-		    tmpStyle = *otherChunkPtr->stylePtr;
-		    otherChunkPtr->stylePtr = &tmpStyle;
-		    tmpStyle.bgGC = None;
-		    mask = GCFont;
-		    gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
-		    mask |= GCForeground;
-		    borderPtr = (TkBorder *) textPtr->border;
-		    gcValues.foreground = borderPtr->bgColorPtr->pixel;
-		    tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+		otherChunkPtr->undisplayProc = NULL;
+		otherChunkPtr->numBytes = 1;
+		tmpStyle = *otherChunkPtr->stylePtr;
+		otherChunkPtr->stylePtr = &tmpStyle;
+		tmpStyle.bgGC = None;
+		mask = GCFont;
+		gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
+		mask |= GCForeground;
+		borderPtr = (TkBorder *) textPtr->border;
+		gcValues.foreground = borderPtr->bgColorPtr->pixel;
+		tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    ciPtr = (CharInfo *) otherChunkPtr->clientData;
-
-		    bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
-		    bci.ci = *ciPtr;
-		    Tcl_DStringInit(&bci.baseChars);
-		    bci.width = -1;
-		    Tcl_DStringAppend(&bci.baseChars,
-			    Tcl_DStringValue(&bciPtr->baseChars) +
-
-			    bci.ci.baseOffset, numBytes);
-		    bci.ci.baseOffset = 0;
-		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
-		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
-		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = (ClientData) &bci;
-		    otherChunkPtr->numBytes = bci.ci.numBytes;
+		ciPtr = (CharInfo *) otherChunkPtr->clientData;
+		chnum = ciPtr->baseOffset;
+		bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
+		bci.ci = *ciPtr;
+		Tcl_DStringInit(&bci.baseChars);
+		bci.width = -1;
+		bci.ci.baseOffset = 0;
+		Tcl_UtfToUniChar(Tcl_DStringValue(&bciPtr->baseChars) + chnum,
+			&ch);
+		chnum = Tcl_UniCharToUtf(ch, buf);
+		Tcl_DStringAppend(&bci.baseChars, buf, chnum);
+		bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
+		bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
+		bci.ci.baseChunkPtr = otherChunkPtr;
+		otherChunkPtr->clientData = (ClientData) &bci;
 #else
-		    ci = *((CharInfo *) (otherChunkPtr->clientData));
-		    otherChunkPtr->clientData = (ClientData) &ci;
-		    ci.numBytes = numBytes;
-		    otherChunkPtr->numBytes = ci.numBytes;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-		} else {
+		ci = *((CharInfo *) (otherChunkPtr->clientData));
+		otherChunkPtr->clientData = (ClientData) &ci;
+		ci.numBytes = 1;
+		if ((ci.chars[0] == '\n') ||
+			(ci.chars[0] == ' ') || (ci.chars[0] == '\t')) {
+		    /*
+		     * Ignore newline and other whitespace.
+		     */
+
 		    otherChunkPtr = NULL;
 		}
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    }
 	    continue;
 	}
