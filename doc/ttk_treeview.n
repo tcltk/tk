@@ -656,6 +656,12 @@ Add items in \fIitemList\fR to the selection.
 .
 Add items between \fIfromItem\fR and \fItoItem\fR (inclusive) to the selection.
 .TP
+\fIpathname \fBselection anchor ?\fIitem\fR?
+.
+Sets the selection anchor to \fIitem\fR. The anchor is used as the starting
+cell for the selection extend bindings. Without \fIitem\fR, returns the current
+anchor item.
+.TP
 \fIpathname \fBselection has \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
