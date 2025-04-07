@@ -364,7 +364,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass) {
   atk_class->get_description = tk_get_description;
   atk_class->get_role = tk_get_role;
   atk_class->ref_state_set = tk_ref_state_set;
-  atk_class->get_help_test = tk_get_help_text;
+  atk_class->get_help_text = tk_get_help_text;
 
   AtkComponentIface *component_iface = g_type_interface_peek(klass, ATK_TYPE_COMPONENT);
   component_iface->get_extents = tk_get_extents;
@@ -649,8 +649,8 @@ int TkAtkAccessibleObjCmd(
   }
 
 
-  TkAtkAccessible *accessible = TkCreateAccessibleAtkObject(interp, tkwin, windowName)
-    TkAtkAccessible_RegisterForCleanup(tkwin, accessible);
+  TkAtkAccessible *accessible = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
+  TkAtkAccessible_RegisterForCleanup(tkwin, accessible);
   RegisterAtkObjectForTkWindow(tkwin, accessible);
 
 	
