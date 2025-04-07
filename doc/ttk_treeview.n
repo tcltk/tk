@@ -183,21 +183,21 @@ If \fIselop\fR is not specified, returns the list of selected cells.
 Otherwise, \fIselop\fR is one of the following:
 .RS
 .TP
-\fIpathname \fBcellselection set \fIcellList\fR
-.
-\fIcellList\fR becomes the new cell selection.
-.TP
-\fIpathname \fBcellselection set \fIfirstCell lastCell\fR
-.
-The rectangle defined becomes the new cell selection.
-.TP
 \fIpathname \fBcellselection add \fIcellList\fR
 .
 Add \fIcellList\fR to the cell selection.
 .TP
 \fIpathname \fBcellselection add \fIfirstCell lastCell\fR
 .
-The rectangle defined is added to the cell selection.
+Add the cells within the rectangle defined by \fIfirstCell\fR and
+\fIlastCell\fR to the cell selection.
+.TP
+\fIpathname \fBcellselection anchor ?\fIcell\fR?
+.
+Set cell selection anchor to \fIcell\fR. The anchor is used as the
+firstCell for the selection extend bindings. Without \fIcell\fR, the
+current cell selection anchor is returned. Set \fIcell\fR to the empty
+string {} to unset the anchor.
 .TP
 \fIpathname \fBcellselection remove \fIcellList\fR
 .
@@ -205,17 +205,28 @@ Remove \fIcellList\fR from the cell selection.
 .TP
 \fIpathname \fBcellselection remove \fIfirstCell lastCell\fR
 .
-The rectangle defined is removed from the cell selection.
+Remove the cells within the rectangle defined by \fIfirstCell\fR and
+\fIlastCell\fR from the cell selection.
+.TP
+\fIpathname \fBcellselection set \fIcellList\fR
+.
+\fIcellList\fR becomes the new cell selection.
+.TP
+\fIpathname \fBcellselection set \fIfirstCell lastCell\fR
+.
+Set the selection to the cells within the rectangle defined by
+\fIfirstCell\fR and \fIlastCell\fR. Other cells are unselected.
 .TP
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
-If the element is partially visible, the result gives the full area of the
-element, including any parts that are not visible.
+If the element is partially visible, the result gives the full
+area of the element, including any parts that are not visible.
 .TP
 \fIpathname \fBcellselection toggle \fIfirstCell lastCell\fR
 .
-Toggle the cell selection state of each cell in the rectangle defined.
+Toggle the selection state of the cells within the rectangle defined
+by \fIfirstCell\fR and \fIlastCell\fR.
 .RE
 .\" METHOD: children
 .TP
@@ -658,9 +669,9 @@ Add items between \fIfromItem\fR and \fItoItem\fR (inclusive) to the selection.
 .TP
 \fIpathname \fBselection anchor ?\fIitem\fR?
 .
-Sets the selection anchor to \fIitem\fR. The anchor is used as the starting
-cell for the selection extend bindings. Without \fIitem\fR, returns the current
-anchor item.
+Sets the selection anchor to \fIitem\fR. The anchor is used as the fromItem
+for the selection extend bindings. Without \fIitem\fR, the current selection
+anchor is returned. Set \fIitem\fR to the empty string {} to unset the anchor.
 .TP
 \fIpathname \fBselection has \fIitemList\fR
 .
