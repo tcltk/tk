@@ -4776,7 +4776,7 @@ fi
 	    ;;
 	CYGWIN_*|MINGW32_*|MSYS_*)
 	    SHLIB_CFLAGS="-fno-common"
-	    SHLIB_LD='${CC} -shared -Wl,--out-implib,$(patsubst cyg%.dll,lib%.dll.a,$@)'
+	    SHLIB_LD='${CC} -shared -Wl,--out-implib,$(patsubst cyg%.dll,lib%.dll,$@).a'
 	    SHLIB_SUFFIX=".dll"
 	    DL_OBJS="tclLoadDl.o"
 	    PLAT_OBJS='${CYGWIN_OBJS}'
@@ -8552,6 +8552,30 @@ fi
 
 fi
 
+
+#--------------------------------------------------------------------
+#	Check for Atk support
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+ PKG_PROG_PKG_CONFIG
+# Checking for Atk using pkg-config
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATK using pkg-config" >&5
+printf %s "checking for ATK using pkg-config... " >&6; }
+PKG_CHECK_EXISTS(atk,
+# found Atk
+  AC_MSG_RESULT([yes])
+  PKG_CHECK_MODULES([ATK], [atk])
+  AC_DEFINE([USE_ATK], [1], [Define if ATK is available])
+  have_atk=yes
+  AC_MSG_NOTICE([ATK found, enabling accessibility support])
+,
+# did not find atk
+  AC_MSG_RESULT([no])
+  have_atk=no
+  AC_MSG_NOTICE([ATK not found, accessibility support will be disabled])
+)
+fi
 
 #--------------------------------------------------------------------
 # XXX Do this last.
