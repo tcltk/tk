@@ -473,6 +473,29 @@ fi
 
 
 #--------------------------------------------------------------------
+#	Check for Atk support
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+ PKG_PROG_PKG_CONFIG
+# Checking for Atk using pkg-config
+AC_MSG_CHECKING([for ATK using pkg-config])
+PKG_CHECK_EXISTS([atk], [
+# found Atk
+  AC_MSG_RESULT([yes])
+  PKG_CHECK_MODULES([ATK], [atk])
+  AC_DEFINE([USE_ATK], [1], [Define if ATK is available])
+  have_atk=yes
+  AC_MSG_NOTICE([ATK found, enabling accessibility support])
+], [
+# did not find atk
+  AC_MSG_RESULT([no])
+  have_atk=no
+  AC_MSG_NOTICE([ATK not found, accessibility support will be disabled])
+])
+fi
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
