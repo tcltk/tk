@@ -85,7 +85,7 @@ struct AtkRoleMap {
   AtkRole atkrole;
 }
   
-  static const struct AtkRoleMap roleMap[] = {
+static const struct AtkRoleMap roleMap[] = {
   {"Button", ATK_ROLE_PUSH_BUTTON},
   {"Checkbox", ATK_ROLE_CHECK_BOX},
   {"Menuitem", ATK_ROLE_CHECK_MENU_ITEM},
