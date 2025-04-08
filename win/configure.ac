@@ -77,11 +77,9 @@ SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MINOR_VERSION}" -lt 7; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.7+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.7 or better.])
-fi
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better.])
 fi
 
 #--------------------------------------------------------------------
