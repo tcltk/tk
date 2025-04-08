@@ -38,10 +38,8 @@ SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MINOR_VERSION}" -lt 7 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}])
-fi
 fi
 
 SC_PROG_TCLSH

@@ -17,8 +17,8 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
-#	error Tk 9.0 must be compiled with tcl.h from Tcl 8.7 or better
+#if (TCL_MAJOR_VERSION < 9)
+#	error Tk 9.0 must be compiled with tcl.h from Tcl 9.0 or better
 #endif
 
 #ifndef EXTERN
@@ -1338,7 +1338,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 	Tk_PhotoImageBlock *blockPtr);
 
 /*
- * The following alternate definitions are used with the Tk8.7 file format
+ * The following alternate definitions are used with the Tk9.0 file format
  * supporting a metadata dict, internal dstring and close file flag
  */
 
