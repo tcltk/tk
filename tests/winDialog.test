@@ -16,18 +16,11 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
 
-testConstraint tcl8 [package vsatisfies [package provide Tcl] 8]
-
 # Locale identifier LANG_ENGLISH is 0x09
 testConstraint english [expr {
     [llength [info commands testwinlocale]]
     && (([testwinlocale] & 0xff) == 9)
 }]
-
-proc vista? {{prevista 0} {postvista 1}} {
-    lassign [split $::tcl_platform(osVersion) .] major
-    return [expr {$major >= 6 ? $postvista : $prevista}]
-}
 
 # What directory to use in initialdir tests. Old code used to use
 # c:/. However, on Vista/later that is a protected directory if you
@@ -64,24 +57,13 @@ proc then {cmd} {
 proc afterbody {} {
     # On Vista and later, using the new file dialogs we have to find
     # the window using its title as tk_dialog will not be set at the C level
-    if {[vista?]} {
-	if {[catch {testfindwindow "" $::dialogclass} ::tk_dialog]} {
-	    if {[incr ::iter_after] > 30} {
-		set ::dialogresult ">30 iterations waiting on tk_dialog"
-		return
-	    }
-	    after 150 {afterbody}
+    if {[catch {testfindwindow "" $::dialogclass} ::tk_dialog]} {
+	if {[incr ::iter_after] > 30} {
+	    set ::dialogresult ">30 iterations waiting on tk_dialog"
 	    return
 	}
-    } else {
-	if {$::tk_dialog == 0} {
-	    if {[incr ::iter_after] > 30} {
-		set ::dialogresult ">30 iterations waiting on tk_dialog"
-		return
-	    }
-	    after 150 {afterbody}
-	    return
-	}
+	after 150 {afterbody}
+	return
     }
     uplevel #0 {set dialogresult [eval $command]}
 }
@@ -274,7 +256,7 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
     start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -291,7 +273,7 @@ test winDialog-5.7.1 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -308,7 +290,7 @@ test winDialog-5.7.2 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -325,7 +307,7 @@ test winDialog-5.7.3 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar.c} msg]} {
+	if {[catch {SetText 0x3e9 bar.c} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -344,7 +326,7 @@ test winDialog-5.7.4 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {foo} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -363,7 +345,7 @@ test winDialog-5.7.5 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -382,7 +364,7 @@ test winDialog-5.7.6 {GetFileName: All/extension } -constraints {
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {aaa} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -429,7 +411,7 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -448,18 +430,10 @@ test winDialog-5.9 {GetFileName: file types} -constraints {
     # XXX - currently disabled for vista style dialogs because the file
     # types control has no control ID and we don't have a mechanism to
     # locate it.
-    if {[vista?]} {
-	then {
-	    Click cancel
-	}
-	return 1
-    } else {
-	then {
-	    set x [GetText 0x470]
-	    Click cancel
-	}
-	return [string equal $x {foo files (*.foo)}]
+    then {
+	Click cancel
     }
+    return 1
 } -result 1
 test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
     nt
@@ -481,66 +455,6 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
     }
     return $x
 } -result [file join [initialdir] "12x 455"]
-
-test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt tcl8
-} -body {
-    tk_getOpenFile -initialdir ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
-
-test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
-    nt testwinevent tcl8
-} -body {
-    unset -nocomplain x
-    start {set x [tk_getSaveFile \
-		      -initialdir ~ \
-		      -initialfile "5 12 1" -title Foo]}
-    then {
-	Click ok
-    }
-    return $x
-} -result [file normalize [file join ~ "5 12 1"]]
-
-test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
-    nt testwinevent tcl8
-} -body {
-
-    # Note: this test will fail on Tcl versions 8.6.4 and earlier due
-    # to a bug in file normalize for names of the form ~xxx that
-    # returns the wrong dir on Windows.  In particular (in Win8 at
-    # least) it returned /users/Default instead of /users/USERNAME...
-
-    unset -nocomplain x
-    start {set x [tk_getSaveFile \
-		      -initialdir ~$::tcl_platform(user) \
-		      -initialfile "5 12 2" -title Foo]}
-    then {
-	Click ok
-    }
-    return $x
-} -result [file normalize [file join ~$::tcl_platform(user) "5 12 2"]]
-
-test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
-    nt testwinevent
-} -body {
-    # Windows remembers dirs from previous selections so use
-    # a subdir for this test, not [initialdir] itself
-    set newdir [tcltest::makeDirectory "5 12 3"]
-    set cur [pwd]
-    try {
-	cd $newdir
-	unset -nocomplain x
-	start {set x [tk_getSaveFile \
-			  -initialdir . \
-			  -initialfile "testfile" -title Foo]}
-	then {
-	    Click ok
-	}
-    } finally {
-	cd $cur
-    }
-    string equal $x [file join $newdir testfile]
-} -result 1
 
 test winDialog-5.12.4 {tk_getSaveFile: initial directory: unicode} -constraints {
     nt testwinevent
@@ -589,35 +503,6 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
 	cd $cur
     }
     string equal $x [file join $dir testfile]
-} -result 1
-
-test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
-    # Ensure there's at least one file in the home directory in CI environments
-    set makeEmpty [expr {![llength [glob -nocomplain -type f -directory ~ *]]}]
-    if {$makeEmpty} {
-	for {set i 1} {$i < 1000} {incr i} {
-	    # Technically a race condition...
-	    set actualFilename [format "~/tkWinDialog5_12_7_%03d" $i]
-	    if {![file exists $actualFilename]} break
-	}
-	close [open $actualFilename w]
-    }
-} -constraints {
-    nt testwinevent tcl8
-} -body {
-    set fn [file tail [lindex [glob -types f ~/*] 0]]
-    unset -nocomplain x
-    start {set x [tk_getOpenFile \
-		      -initialdir ~ \
-		      -initialfile $fn -title Foo]}
-    then {
-	Click ok
-    }
-    string equal $x [file normalize [file join ~ $fn]]
-} -cleanup {
-    if {$makeEmpty} {
-	file delete $actualFilename
-    }
 } -result 1
 
 test winDialog-5.12.8 {tk_getOpenFile: initial directory: .} -constraints {
@@ -706,29 +591,6 @@ test winDialog-5.13 {GetFileName: initial file} -constraints {
     }
     file tail $x
 } -result "12x 456"
-test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constraints {
-    nt tcl8
-} -body {
-#        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
-    tk_getOpenFile -initialfile ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
-if {![vista?]} {
-    # XXX - disabled for Vista because the new dialogs allow long file
-    # names to be specified but force the user to change it.
-    test winDialog-5.15 {GetFileName: initial file: long name} -constraints {
-	nt testwinevent
-    } -body {
-	start {
-	    set dialogresult [catch {
-		tk_getSaveFile -initialfile [string repeat a 1024] -title Long
-	    } x]
-	}
-	then {
-	    Click ok
-	}
-	list $dialogresult [string match "invalid filename *" $x]
-    } -result {1 1}
-}
 test winDialog-5.16 {GetFileName: parent} -constraints {
     nt
 } -body {
@@ -752,34 +614,20 @@ test winDialog-5.17 {GetFileName: title} -constraints {
 	Click cancel
     }
 } -result 0
-if {[vista?]} {
-    # In the newer file dialogs, the file type widget does not even exist
-    # if no file types specified
-    test winDialog-5.18 {GetFileName: no filter specified} -constraints {
+# In the newer file dialogs, the file type widget does not even exist
+# if no file types specified
+test winDialog-5.18 {GetFileName: no filter specified} -constraints {
 	nt testwinevent
-    } -body {
-	#    if (ofn.lpstrFilter == NULL)
-	start {tk_getOpenFile -title Filter}
-	then {
-	    catch {set x [GetText 0x470]} y
-	    Click cancel
-	}
-	return $y
-    } -result {Could not find control with id 1136}
-} else {
-    test winDialog-5.18 {GetFileName: no filter specified} -constraints {
-	nt testwinevent
-    } -body {
-	#    if (ofn.lpstrFilter == NULL)
+} -body {
+    #    if (ofn.lpstrFilter == NULL)
+    start {tk_getOpenFile -title Filter}
+    then {
+	catch {set x [GetText 0x470]} y
+	Click cancel
+    }
+    return $y
+} -result {Could not find control with id 1136}
 
-	start {tk_getOpenFile -title Filter}
-	then {
-	    set x [GetText 0x470]
-	    Click cancel
-	}
-	return $x
-    } -result {All Files (*.*)}
-}
 test winDialog-5.19 {GetFileName: parent HWND doesn't yet exist} -constraints {
     nt
 } -setup {
@@ -835,7 +683,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     set msg {}
     start {set x [tk_getSaveFile -title Back]}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] [file nativename \
+	if {[catch {SetText 0x3e9 [file nativename \
 		[file join [initialdir] "12x 457"]]} msg]} {
 	    Click cancel
 	} else {
@@ -937,14 +785,6 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
     }
     string tolower [set x]
 } -result [string tolower [initialdir]]
-test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt tcl8
-} -body {
-#        if (Tcl_TranslateFileName(interp, string,
-#            &utfDirString) == NULL)
-
-    tk_chooseDirectory -initialdir ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
 
 
 test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
