@@ -2803,10 +2803,8 @@ printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MINOR_VERSION}" -lt 7 ; then
-    as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
+    as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
-fi
 fi
 
 

@@ -388,9 +388,9 @@ trees in a common parent directory.
 
 - The following instructions assume the Tcl and Tk source trees are named
 "tcl${ver}" and "tk${ver}" (where ${ver} is a shell variable containing the
-Tcl/Tk version number, e.g. '8.7').
+Tcl/Tk version number, e.g. '9.0').
 Setup this shell variable as follows:
-	ver="8.7"
+	ver="9.0"
 
 - Setup environment variables as desired, e.g. for a universal build on 10.9:
 	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.9"
@@ -669,7 +669,7 @@ conditional code which is only used for macOS.
 
 The 10.14 release added support for system appearance changes,
 including a "Dark Mode" that renders all window frames and menus in
-dark colors. Tk 8.7 provides three virtual events <<LightAqua>>,
+dark colors. Tk 9.0 provides three virtual events <<LightAqua>>,
 <<DarkAqua>> and <<AppearanceChanged>>, to allow you to update your Tk
 app's appearance when the system appearance changes.  These events are
 generated in [NSView effectiveAppearanceChanged], which is called by
