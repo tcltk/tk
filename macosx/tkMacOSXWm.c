@@ -1311,9 +1311,6 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
-	TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr),
-				   deadNSWindow);
-
 	/*
 	 * Prevent zombies on systems with a TouchBar.
 	 */
@@ -1322,7 +1319,17 @@ TkWmDeadWindow(
 	    [NSApp _setKeyWindow:nil];
 	    [NSApp _setMainWindow:nil];
 	}
-
+	
+	/*
+	 * Find a new keyWindow and make it be the event target.
+	 */
+	
+	TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), deadNSWindow);
+	NSWindow *keyWin = [NSApp keyWindow];
+	if (keyWin) {
+	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(keyWin)];
+	}
+	
 	/*
 	 * Avoid redrawing the view after it is released.
 	 */
