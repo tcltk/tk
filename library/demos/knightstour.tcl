@@ -144,8 +144,8 @@ proc Exit {dlg} {
     destroy $dlg
 }
 
-proc SetDelay {new} {
-    variable speed [expr {int($new)}]
+proc SetDelay {newSpeed} {
+    variable speed [expr {int($newSpeed)}]
     variable delay [expr {2000 - $speed}]
 }
 
@@ -184,11 +184,11 @@ proc CreateGUI {} {
     variable delay [expr {2000 - $speed}]
     variable continuous 0
     ttk::frame $dlg.tf
-    ttk::checkbutton $dlg.tf.cc -text Repeat \
-	-variable [namespace which -variable continuous]
+    ttk::label $dlg.tf.ls -text Speed
     ttk::scale $dlg.tf.sc  -from 0 -to 1992 -command [list SetDelay] \
 	-variable [namespace which -variable speed]
-    ttk::label $dlg.tf.ls -text Speed
+    ttk::checkbutton $dlg.tf.cc -text Repeat \
+	-variable [namespace which -variable continuous]
     ttk::button $dlg.tf.b1 -text Start -command [list Tour $dlg]
     ttk::button $dlg.tf.b2 -text Exit -command [list Exit $dlg]
     set square 0
@@ -233,14 +233,14 @@ proc CreateGUI {} {
     grid columnconfigure $f 1 -weight 1
 
     grid $f - - - - - -sticky news
-    set things [list $dlg.tf.cc $dlg.tf.sc $dlg.tf.ls $dlg.tf.b1]
+    set things [list $dlg.tf.b1 $dlg.tf.cc $dlg.tf.sc $dlg.tf.ls]
     if {![info exists ::widgetDemo]} {
-	lappend things $dlg.tf.b2
+	set things [linsert $things 0 $dlg.tf.b2]
 	if {[tk windowingsystem] ne "aqua"} {
 	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
 	}
     }
-    pack {*}$things -side right -padx 3p
+    pack {*}$things -side right -padx 1.5p -pady 1.5p
     if {[tk windowingsystem] eq "aqua"} {
 	pack configure {*}$things -padx {4 4} -pady {12 12}
 	pack configure [lindex $things 0] -padx {4 24}
