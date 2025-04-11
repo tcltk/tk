@@ -11,7 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-# Some tests require support for 4-byte UTF-8 sequences
 set defaultfontlist [font names]
 
 proc getnondefaultfonts {} {
