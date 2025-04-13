@@ -152,13 +152,13 @@ XLIBOBJS = \
 	$(TMP_DIR)\xutil.obj
 
 TKOBJS = \
-	$(TMP_DIR)\tkWinAccessibility.obj
 	$(TMP_DIR)\tkConsole.obj \
 	$(TMP_DIR)\tkUnixMenubu.obj \
 	$(TMP_DIR)\tkUnixScale.obj \
 	$(XLIBOBJS) \
 	$(TMP_DIR)\tkWin3d.obj \
 	$(TMP_DIR)\tkWin32Dll.obj \
+	$(TMP_DIR)\tkWinAccessibility.obj \
 	$(TMP_DIR)\tkWinButton.obj \
 	$(TMP_DIR)\tkWinClipboard.obj \
 	$(TMP_DIR)\tkWinColor.obj \
