@@ -152,7 +152,7 @@ XLIBOBJS = \
 	$(TMP_DIR)\xutil.obj
 
 TKOBJS = \
-	$$(TMP_DIR)\tkWinAccessibility.obj
+	$(TMP_DIR)\tkWinAccessibility.obj
 	$(TMP_DIR)\tkConsole.obj \
 	$(TMP_DIR)\tkUnixMenubu.obj \
 	$(TMP_DIR)\tkUnixScale.obj \
