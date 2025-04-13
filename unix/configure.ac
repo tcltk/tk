@@ -480,7 +480,7 @@ if test $tk_aqua = no; then
 # Manual ATK check using pkg-config in shell
 AC_MSG_CHECKING([for ATK (manual pkg-config check)])
 
-if pkg-config --exists atk-1.0; then
+if pkg-config --exists atk; then
   AC_MSG_RESULT([yes])
   ATK_CFLAGS=`$PKG_CONFIG --cflags atk`
   ATK_LIBS=`$PKG_CONFIG --libs atk`
