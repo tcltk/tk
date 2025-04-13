@@ -482,8 +482,8 @@ AC_MSG_CHECKING([for ATK (manual pkg-config check)])
 
 if pkg-config --exists atk; then
   AC_MSG_RESULT([yes])
-  ATK_CFLAGS=`$PKG_CONFIG --cflags atk`
-  ATK_LIBS=`$PKG_CONFIG --libs atk`
+  ATK_CFLAGS=`pkg-config --cflags atk`
+  ATK_LIBS=`$pkg-config --libs atk`
   AC_DEFINE([USE_ATK], [1], [Define if ATK is available])
   have_atk=yes
   AC_MSG_NOTICE([ATK found, enabling accessibility support])
