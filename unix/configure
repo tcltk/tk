@@ -8568,7 +8568,7 @@ if pkg-config --exists atk; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
   ATK_CFLAGS=`pkg-config --cflags atk`
-  ATK_LIBS=`$pkg-config --libs atk`
+  ATK_LIBS=`pkg-config --libs atk`
 
 printf "%s\n" "#define USE_ATK 1" >>confdefs.h
 
