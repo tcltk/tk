@@ -1098,7 +1098,7 @@ declare 293 {
 	   int *lengthPtr)
 }
 
-# ----- BASELINE -- FOR -- 8.7.0 / 9.0.1 ----- #
+# ----- BASELINE -- FOR -- 9.0.1 ----- #
 
 declare 294 {
     void TkUnusedStubEntry(void)
