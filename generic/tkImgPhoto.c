@@ -118,8 +118,7 @@ static int		ImgPhotoPostscript(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, int x, int y, int width,
 			    int height, int prepass);
-static int		ImgPhotoHandler(Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[]);
+static int		ImgPhotoInfoProc(Tcl_Interp *interp);
 
 /*
  * The type record itself for photo images:
@@ -134,7 +133,7 @@ Tk_ImageType tkPhotoImageType = {
     ImgPhotoDelete,		/* deleteProc */
     ImgPhotoPostscript,		/* postscriptProc */
     NULL,			/* nextPtr */
-    ImgPhotoHandler		/* handlerProc */
+    ImgPhotoInfoProc		/* infoProc */
 };
 
 typedef struct {
@@ -4383,9 +4382,11 @@ ImgPhotoPostscript(
 /*
  *--------------------------------------------------------------
  *
- * ImgPhotoHandler --
+ * TkPhotoInfoProc --
  *
- *	The "image handler photo args" command is passed to this procedure.
+ *	This function is called to return an information dict on
+ *	all photo images.
+ *	It is called by the command "image types photo".
  *
  * Results:
  *	Returns a standard Tcl return value.
@@ -4397,84 +4398,83 @@ ImgPhotoPostscript(
  */
 
 static int
-ImgPhotoHandler(
-    Tcl_Interp *interp,		/* Interpreter for application containing
-				 * image. */
-    Tcl_Size objc,		/* Number of arguments, may be zero. */
-    Tcl_Obj *const objv[])	/* Argument objects (doesn't include option
-				 * and image type). */
-{
-    static const char *const handlerOptions[] = {
-	"formats", NULL
-    };
-    enum options {
-	HANDLER_FORMATS
-    };
-    int index;
-    Tcl_Obj *resultObj;
-    Tk_PhotoImageFormat *formatPtr;
-    Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
-    char * defaultFormatName = NULL;
+ImgPhotoInfoProc(Tcl_Interp *interp) {
+
+    Tcl_Obj *resultObj, *formatValueObj, *fileValueObj, *writeValueObj;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tk_PhotoImageFormat *formatPtr;
+    Tk_PhotoImageFormatVersion3 *formatVersion3Ptr;
+    const char * defaultFormatName = NULL;
 
-    if (objc < 1) {
-	Tcl_WrongNumArgs(interp, 0, objv, "suboption ?args?");
-	return TCL_ERROR;
-    }
+    formatValueObj = Tcl_NewListObj(0, NULL);
+    fileValueObj = Tcl_NewListObj(0, NULL);
+    writeValueObj = Tcl_NewListObj(0, NULL);
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[0], handlerOptions,
-	    sizeof(char *), "suboption", 0, &index) != TCL_OK) {
-	return TCL_ERROR;
-    }
-    
-    switch ( (enum options) index) {
-    case HANDLER_FORMATS:
-	resultObj = Tcl_NewObj();
-	
+    /*
+     * Scan through the table of file format handlers and collect the
+     * data.
+     */
+
+    for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
+	    formatPtr = formatPtr->nextPtr) {
 
 	/*
-	 * Scan through the table of file format handlers and collect the
-	 * name field.
+	 * Default will be evaluated last, so put it at the end of the
+	 * evaluation list
 	 */
 
-	for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
-		formatPtr = formatPtr->nextPtr) {
-	    
+	if (strncasecmp("default", formatPtr->name,
+		strlen(formatPtr->name)) == 0) {
+	    defaultFormatName = formatPtr->name;
+
 	    /*
-	     * Default will be evaluated last, so put it at the end of the
-	     * evaluation list
+	     * The default format does not implement any file operations.
+	     * So no need to check for fileMatchProc or fileWriteProc
 	     */
 
-	    if (strncasecmp("default", formatPtr->name,
-		    strlen(formatPtr->name)) == 0) {
-		defaultFormatName = formatPtr->name;
-	    } else {
-		Tcl_ListObjAppendElement(interp, resultObj,
-			Tcl_NewStringObj(formatPtr->name,-1));
+	} else {
+	    Tcl_Obj *formatNameObj = Tcl_NewStringObj(formatPtr->name,-1);
+	    Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
+	    if (NULL != formatPtr->fileMatchProc) {
+		Tcl_ListObjAppendElement(NULL, fileValueObj, formatNameObj);
+	    }
+	    if (NULL != formatPtr->fileWriteProc) {
+		Tcl_ListObjAppendElement(NULL, writeValueObj, formatNameObj);
 	    }
 	}
-	
-	/*
-	 * Version 3 image format handlers
-	 */
-
-	for (formatVersion3Ptr = tsdPtr->formatListVersion3;
-		formatVersion3Ptr != NULL;
-		formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
-	    Tcl_ListObjAppendElement(interp, resultObj,
-		    Tcl_NewStringObj(formatVersion3Ptr->name,-1)); 
-	}
-	
-	if (NULL != defaultFormatName) {
-	    Tcl_ListObjAppendElement(interp, resultObj,
-		    Tcl_NewStringObj(defaultFormatName,-1));
-	}
-
-	Tcl_SetObjResult(interp, resultObj);
-	break;
     }
 
+    for (formatVersion3Ptr = tsdPtr->formatListVersion3;
+	    formatVersion3Ptr != NULL;
+	    formatVersion3Ptr = formatVersion3Ptr->nextPtr) {
+	Tcl_Obj *formatNameObj = Tcl_NewStringObj(formatVersion3Ptr->name,-1);
+	Tcl_ListObjAppendElement(NULL, formatValueObj, formatNameObj);
+	if (NULL != formatVersion3Ptr->fileMatchProc) {
+	    Tcl_ListObjAppendElement(NULL, fileValueObj, formatNameObj);
+	}
+	if (NULL != formatVersion3Ptr->fileWriteProc) {
+	    Tcl_ListObjAppendElement(NULL, writeValueObj, formatNameObj);
+	}
+    }
+
+    if (NULL != defaultFormatName) {
+	Tcl_ListObjAppendElement(interp, formatValueObj,
+		Tcl_NewStringObj(defaultFormatName, -1));
+    }
+
+    /*
+     * set the format key in the result dictionary
+     */
+
+    resultObj = Tcl_NewObj();
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("format", -1),
+	    formatValueObj);
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("file", -1),
+	    fileValueObj);
+    Tcl_DictObjPut(NULL, resultObj, Tcl_NewStringObj("write", -1),
+	    writeValueObj);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 

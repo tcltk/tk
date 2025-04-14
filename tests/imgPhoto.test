@@ -2707,21 +2707,21 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -result {{coordinates for -from option extend outside source image} 0 0}
 unset ousterPhotoFile
 
-# test 26.x: ImgPhotoHandler, command "image handler photo"
+# test 26.x: ImgPhotoInfo, command "image types photo"
 
-test image-26.1 {ImgPhotoDriver/image handler photo: no option} -body {
-    image handler photo
-} -returnCodes error -result {wrong # args: should be "suboption ?args?"}
-
-test image-26.2 {ImgPhotoDriver/image handler photo: bad option} -body {
-    image handler photo bad_option
-} -returnCodes error -result {bad suboption "bad_option": must be formats}
-
-test image-26.3 {ImgPhotoDriver/image handler photo: formats option} -body {
-    image handler photo formats
+test image-26.1 {ImgPhotoDriver/image types photo: format key} -body {
+    dict get [image types photo] format
 } -match glob -result {svg ppm png gif *default}
 # take into account, that the list of formats may extend
 # Any new format may be inserted between our own ones and the default format.
+
+test image-26.2 {ImgPhotoDriver/image types photo: format file} -body {
+    dict get [image types photo] file
+} -match glob -result {svg ppm png gif*}
+
+test image-26.3 {ImgPhotoDriver/image types photo: format write} -body {
+    dict get [image types photo] write
+} -match glob -result {ppm png gif*}
 
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}

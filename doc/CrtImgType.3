@@ -63,7 +63,7 @@ typedef struct {
     Tk_ImageFreeProc *\fIfreeProc\fR;
     Tk_ImageDeleteProc *\fIdeleteProc\fR;
     struct Tk_ImageType *\fInextPtr\fR;
-    Tk_ImageHandlerProc *\fIhandlerProc\fR;
+    Tk_ImageInfoProc *\fIinfoProc\fR;
 } \fBTk_ImageType\fR;
 .CE
 The fields of this structure will be described in later subsections
@@ -230,24 +230,18 @@ the image.
 .SS NEXTPTR
 .PP
 This field will be filled out by Tk and is ignored.
-.SS HANDLERPROC
+.SS INFOPROC
 .PP
-\fItypePtr->handlerProc\fR is a procedure that Tk invokes when the command \fBimage handler\fR \fItype\fR is invoked.
-The parameters to the command are passed as arguments.
+\fItypePtr->infoProc\fR is a procedure that Tk invokes when the command \fBimage types\fR \fItype\fR is invoked.
 The command result is set by the called procedure.
-\fItypePtr->handlerProc\fR must match the following prototype:
+\fItypePtr->infoProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageCreateProc\fR(
-        Tcl_Interp *\fIinterp\fR,
-        int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[],
+typedef int \fBTk_ImageInfoProc\fR(
+        Tcl_Interp *\fIinterp\fR)
 .CE
 The \fIinterp\fR argument is the interpreter in which the \fBimage\fR
 command was invoked.
-The \fIobjc\fR and \fIobjv\fR arguments describe all the options of the command (everything after the type argument to \fBimage driver\fR).
-\fIobjc\fR is 0, if no options are passed.
-The called routine is responsible for any error checking.
-Set \fItypePtr->handlerProc\fR to NULL to deactivate the \fBimage handler\fR subcommand for this handler.
+Set \fItypePtr->infoProc\fR to NULL to not return any data.
 .SH TK_GETIMAGEMODELDATA
 .PP
 The procedure \fBTk_GetImageModelData\fR may be invoked to retrieve
