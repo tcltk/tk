@@ -186,12 +186,12 @@ Tk_ImageObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
-	"create", "delete", "handler", "height", "inuse", "names", "type",
-	"types", "width", NULL
+	"create", "delete", "height", "inuse", "names", "type", "types",
+	"width", NULL
     };
     enum options {
-	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HANDLER, IMAGE_HEIGHT, IMAGE_INUSE,
-	IMAGE_NAMES, IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
+	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
+	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
     int i, isNew, firstOption, index;
@@ -216,24 +216,13 @@ Tk_ImageObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    
-    /*
-     * First parse the image type for create and handler options
-     */
-
     switch ((enum options) index) {
-    case IMAGE_CREATE:
-    case IMAGE_HANDLER:
+    case IMAGE_CREATE: {
+	Tcl_Obj **args;
 
-	/*
-	 * Check if image type argument is given
-	 */
-	
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    (index == IMAGE_CREATE ?
-		    "type ?name? ?-option value ...?" :
-		    "type command ?arguments ...?") );
+		    "type ?name? ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -256,16 +245,6 @@ Tk_ImageObjCmd(
 		    (char *)NULL);
 	    return TCL_ERROR;
 	}
-
-    }
-    
-    /*
-     * Process the command options
-     */
-    
-    switch ((enum options) index) {
-    case IMAGE_CREATE: {
-	Tcl_Obj **args;
 
 	/*
 	 * Figure out a name to use for the new image.
@@ -368,38 +347,6 @@ Tk_ImageObjCmd(
 		(const char *)Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), TCL_INDEX_NONE));
 	break;
     }
-    case IMAGE_HANDLER:
-
-	/*
-	 * Check, if a handler proc is registered.
-	 * With Tk 9.1, a former reserved value was used for this pointer.
-	 * Old calls of Tk_CreateImageType may not pass a function but NULL
-	 * to indicate, that this is not supported.
-	 */
-
-	if (typePtr->handlerProc == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "handler operation not supported by this image type",
-		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "HANDLER_NOT_SUPPORTED",
-		    (char *)NULL);
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Call the handler image type command.
-	 * Note: there might be even no more arguments (objc-3=0).
-	 * Let the type handler handle this.
-	 */
-	
-	i = typePtr->handlerProc(interp, objc-3, objv+3);
-
-	/*
-	 * Pass the handler proc result to the caller
-	 */
-
-	return i;
-
     case IMAGE_DELETE:
 	for (i = 2; i < objc; i++) {
 	    arg = Tcl_GetString(objv[i]);
@@ -432,10 +379,11 @@ Tk_ImageObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     case IMAGE_TYPES:
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
+	if (objc != 2 && objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?type?");
 	    return TCL_ERROR;
 	}
+if (objc == 2) {
 	resultObj = Tcl_NewObj();
 	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
@@ -443,6 +391,20 @@ Tk_ImageObjCmd(
 		    typePtr->name, TCL_INDEX_NONE));
 	}
 	Tcl_SetObjResult(interp, resultObj);
+} else {
+	char *stringArg;
+	stringArg = Tcl_GetString(objv[2]);
+	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
+	    typePtr = typePtr->nextPtr) {
+	    if (0 == strcmp(stringArg, typePtr->name)
+			    && typePtr->infoProc != NULL) {
+		int res;
+		res = typePtr->infoProc(interp);
+		if (res != TCL_OK)
+		return res;
+	    }
+	}
+}
 	break;
 
     case IMAGE_HEIGHT:
