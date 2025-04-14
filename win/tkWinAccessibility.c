@@ -26,7 +26,7 @@ DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0
 
 /* Data declarations used in this file. */
 typedef struct {
-  IDispatch lpVtbl;
+  IAccessibleVtbl lpVtbl;
   Tcl_Interp *interp;
   HWND hwnd;
   char *pathName;
@@ -61,6 +61,7 @@ const struct WinRoleMap roleMap[] = {
 
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
+TkAccessibilityObject = NULL;
 
 /* Tk window with the accessibility attributes. */
 Tk_Window accessible_win;
@@ -571,7 +572,7 @@ static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, cons
  */
 
 int IsScreenReaderRunning(
-			  ClientData clientData;
+			  ClientData clientData,
 			  Tcl_Interp *interp, /* Current interpreter. */
 			  int argc, /* Number of arguments. */
 			  Tcl_Obj *const argv[]) /* Argument objects. */
@@ -601,7 +602,7 @@ int IsScreenReaderRunning(
 
 static int
 EmitSelectionChanged(
-		     ClientData (clientData,
+		     ClientData clientData,
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -668,7 +669,7 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
   if (eventPtr->type == DestroyNotify) {
     TkWinAccessible *tkAccessible = (TkWinAccessible *)clientData;
     if (tkAccessible) {
-      TkWinAccessible_Release(tkAccessible);
+      TkWinAccessible_Release((IAccessible *)tkAccessible);
     }
   }
 }
@@ -696,10 +697,11 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 int TkWinAccessibleObjCmd(
 			  ClientData clientData,
 			  Tcl_Interp *interp, /* Current interpreter. */
-			  int argc, /* Number of arguments. */
-			  Tcl_Obj *const argv[]) /* Argument objects. */
+			  int objc, /* Number of arguments. */
+			  Tcl_Obj *const objv[]) /* Argument objects. */
 {
-  (void) clientData:
+  (void) clientData;
+
   if (objc != 2) {
     Tcl_WrongNumArgs(interp, 1, objv, "window");
     return TCL_ERROR;
@@ -715,7 +717,7 @@ int TkWinAccessibleObjCmd(
 
   accessible_win = tkwin;
 
-  HWND hwnd = Tk_GetHWND(tkwin);
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
   TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
 	
