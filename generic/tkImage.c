@@ -160,7 +160,6 @@ Tk_CreateImageType(
     tsdPtr->imageTypeList = copyPtr;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -241,8 +240,7 @@ Tk_ImageObjCmd(
 	if (typePtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image type \"%s\" does not exist", arg));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg,
-		    (char *)NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, (char *)NULL);
 	    return TCL_ERROR;
 	}
 

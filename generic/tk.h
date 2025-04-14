@@ -1320,7 +1320,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 	Tk_PhotoImageBlock *blockPtr);
 
 /*
- * The following alternate definitions are used with the Tk8.7 file format
+ * The following alternate definitions are used with the Tk9.0 file format
  * supporting a metadata dict, internal dstring and close file flag
  */
 

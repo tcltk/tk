@@ -53,7 +53,6 @@
 # ImgPostscriptPhoto                    no tests
 # Tk_PhotoGetMetadata:                  imgPhoto-21.*
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
-# ImgPhotoDriver                        imgPhoto-26.*
 #--------------------------------------------------------------------------
 #
 
@@ -122,8 +121,6 @@ set README [makeFile {
 
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
-
-testConstraint needsTcl867 [package vsatisfies [package provide Tcl] 8.6.7-]
 
 
 test imgPhoto-1.1 {options for photo images} -body {
@@ -256,9 +253,7 @@ test imgPhoto-3.4 {ImgPhotoConfigureModel: -data <ppm>} -setup {
     imageCleanup
 } -result {20 20}
 # This testcase fails with Tcl < 8.6.7, due to [25842c]
-test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -constraints {
-    needsTcl867
-} -setup {
+test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
 } -body {
@@ -1288,9 +1283,7 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 } -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
 # This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
-    results in same image as orignial } -constraints {
-	needsTcl867
-} -setup {
+    results in same image as orignial } -setup {
     image create photo teapot -file $teapotPhotoFile
     teapot copy teapot -from 50 60 70 80 -shrink
     image create photo teapotTransp -file $transpTeapotPhotoFile
