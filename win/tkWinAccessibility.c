@@ -61,7 +61,6 @@ const struct WinRoleMap roleMap[] = {
 
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
-TkAccessibilityObject = NULL;
 
 /* Tk window with the accessibility attributes. */
 Tk_Window accessible_win;
