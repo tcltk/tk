@@ -186,6 +186,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinX.obj \
 	$(TMP_DIR)\stubs.obj \
 	$(TMP_DIR)\tk3d.obj \
+	$(TMP_DIR)\tkAccessibility.obj \
 	$(TMP_DIR)\tkArgv.obj \
 	$(TMP_DIR)\tkAtom.obj \
 	$(TMP_DIR)\tkBind.obj \
