@@ -20,10 +20,6 @@
 MODULE_SCOPE void TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 #endif
 
-int
-TkAccessibility_Init(
-		     Tcl_Interp *interp);
-
 /*
  * The default prompt used when the user has not overridden it.
  */
@@ -200,6 +196,7 @@ Tk_MainEx(
 	    Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
 	}
     }
+	
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
 
@@ -225,7 +222,6 @@ Tk_MainEx(
 #endif
 
     Tcl_InitMemory(interp);
-
     is.interp = interp;
     is.gotPartial = 0;
     Tcl_Preserve(interp);
@@ -370,7 +366,7 @@ Tk_MainEx(
     Tcl_DStringInit(&is.command);
     Tcl_DStringInit(&is.line);
     Tcl_ResetResult(interp);
-    TkAccessibility_Init(interp);
+
 
     /*
      * Loop infinitely, waiting for commands to execute. When there are no
