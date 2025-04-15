@@ -474,19 +474,34 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
-    Tcl_CmdInfo cmdInfo;
-    if (Tcl_GetCommandInfo(tkAccessible->interp, tkAccessible->pathName, &cmdInfo)) {
-      Tcl_EvalEx(tkAccessible->interp, "event generate . <ButtonRelease-1>", -1, TCL_EVAL_GLOBAL);
-      Tcl_EvalEx(tkAccessible->interp, "event generate . <ButtonPress-1>", -1, TCL_EVAL_GLOBAL);
-    } else {
-      char command[256];
-      snprintf(command, sizeof(command), "%s invoke", tkAccessible->pathName);
-      Tcl_EvalEx(tkAccessible->interp, command, -1, TCL_EVAL_GLOBAL);
-    }
-    return S_OK;
+  BSTR  *pszDefaultAction = NULL;
+
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+    return E_INVALIDARG;
   }
-  return E_INVALIDARG;
+
+  VARIANT roleVar;
+  VariantInit(&roleVar);
+
+  HRESULT hr = TkWinAccessible_get_accRole(this, varChild, &roleVar);
+  if (FAILED(hr) || roleVar.vt != VT_I4) {
+    return E_FAIL;
+  }
+
+  switch (roleVar.lVal) {
+  case ROLE_SYSTEM_PUSHBUTTON:
+  case ROLE_SYSTEM_CHECKBUTTON:
+  case ROLE_SYSTEM_RADIOBUTTON:
+    *pszDefaultAction = SysAllocString(L"Press");
+    break;
+
+  default:
+    *pszDefaultAction = SysAllocString(L"Invoke");
+    break;
+  }
+
+  VariantClear(&roleVar);
+  return (*pszDefaultAction != NULL) ? S_OK : E_OUTOFMEMORY;
 }
 
 /* Function to get accessible help to MSAA. */
