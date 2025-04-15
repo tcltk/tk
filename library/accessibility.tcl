@@ -10,7 +10,6 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-
 namespace eval ::tk::accessible {
 
     # Check message text on dialog. 
@@ -244,7 +243,7 @@ namespace eval ::tk::accessible {
     proc _init {w role name description value state action} {
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
 	    if {$msg == $role} {
-	    	return
+		return
 	    }
 	}
 
@@ -254,9 +253,10 @@ namespace eval ::tk::accessible {
 	::tk::accessible::acc_value $w $value  
 	::tk::accessible::acc_state $w $state
 	::tk::accessible::acc_action $w $action
+	
     }
 
-
+puts "Commands: [info commands ::tk::accessible::acc_role]"
 
     # Button/TButton bindings.
     bind Button <Map> {+::tk::accessible::_init \

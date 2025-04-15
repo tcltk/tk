@@ -41,9 +41,9 @@ TkpInit(
      * initialize accessibility, printing and systray API's here.
      */
 
+    TkWinAccessiblity_Init(interp);
     WinIcoInit(interp);
     Winprint_Init(interp);
-    TkWinAccessiblity_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     Icu_Init(interp);
     return TCL_OK;

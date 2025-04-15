@@ -891,7 +891,6 @@ int
 TkAccessibility_Init(
 		     Tcl_Interp *interp)
 {
- 
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_role", Tk_SetAccessibleRole, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_name", Tk_SetAccessibleName, NULL,NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::acc_description", Tk_SetAccessibleDescription, NULL, NULL);
