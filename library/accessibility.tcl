@@ -256,8 +256,6 @@ namespace eval ::tk::accessible {
 	
     }
 
-puts "Commands: [info commands ::tk::accessible::acc_role]"
-
     # Button/TButton bindings.
     bind Button <Map> {+::tk::accessible::_init \
 			   %W \
