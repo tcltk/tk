@@ -310,12 +310,16 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, 
       return E_INVALIDARG;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    for (int i = 0; i < sizeof(roleMap); i++) {
-      if (strcmp(roleMap[i].tkrole, result) != 0) {
-	continue;
+    const char *tkrole = NULL;
+    LONG role = ROLE_SYSTEM_CLIENT;
+    if (tkrole) {
+      for (int i = 0; roleMap[i].tkrole !=NULL; i++) {
+	if (strcmp(roleMap[i].tkrole, tkrole) == 0) {
+	  role = roleMap[i].winrole;
+	  break;
+	}
       }
-      role = roleMap[i].winrole;
-    }	
+    }
     pvarRole->vt = VT_I4;
     pvarRole->lVal = role;
     return S_OK;
