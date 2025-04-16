@@ -68,6 +68,11 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
+	if {[winfo class $w] eq "Menu"} {
+	    set data [$w entrycget active -label]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
 	if {[winfo class $w] eq "Treeview"} {
 	    set data [::tk::accessible::_gettreeviewdata $w]
 	    ::tk::accessible::acc_value $w $data

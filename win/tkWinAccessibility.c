@@ -46,6 +46,7 @@ const struct WinRoleMap roleMap[] = {
   {"Entry", ROLE_SYSTEM_TEXT},
   {"Label", ROLE_SYSTEM_STATICTEXT},
   {"Listbox", ROLE_SYSTEM_LIST},
+  {"Menu", ROLE_SYSTEM_MENUPOPUP},
   {"Notebook", ROLE_SYSTEM_PAGETABLIST},
   {"Progressbar", ROLE_SYSTEM_PROGRESSBAR},
   {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON},
@@ -63,6 +64,10 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 /* Tk window with the accessibility attributes. */
 Tk_Window accessible_win;
+
+/* Tcl command passed to event procedure. */
+char *callback_command;
+
 
 /* Protoypes of functions used in this file. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
@@ -86,6 +91,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
 
+static int ActionEventProc(XEvent *eventPtr, ClientData clientData);
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
@@ -215,6 +221,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 
     case DISPID_ACC_HELP:
       return TkWinAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
+      
+    case DISPID_ACC_DODEFAULTACTION:
+      return TkWinAccessible_accDoDefaultAction(this, selfVar);
 
     default:
       return E_NOTIMPL;
@@ -227,6 +236,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+
   if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
 		
     Tk_Window win = accessible_win;
@@ -239,8 +249,13 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, 
       return E_INVALIDARG;
     }
 	
+    /* 
+     * Assign the "description" attribute to the name because it is 
+     * more detailed - MSAA generally does not provide both the 
+     * name and description. 
+     */
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
+    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
     if (!hPtr2) {
       return E_INVALIDARG;
     }
@@ -263,6 +278,21 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, 
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
   LONG role;
+
+  if (!pvarRole) return E_INVALIDARG;
+
+  /* Check for special cases - menu entries and submenus. */
+  if (varChild.vt == VT_I4 && varChild.lVal >= 1) {
+    /* Menu item. */
+    pvarRole->lVal = ROLE_SYSTEM_MENUITEM;
+    return S_OK;
+  } else if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    /* Submenu or popup menu. */
+    pvarRole->lVal = ROLE_SYSTEM_MENUPOPUP;
+    return S_OK;
+  }
+
+  /* Other widgets. */
   if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
     Tk_Window win = accessible_win;
 		
@@ -293,7 +323,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, 
   return E_INVALIDARG;
 }
 
-/* Function to map accessible state to MSAA.*/
+/* Function to map accessible state to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
@@ -409,13 +439,11 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *
   TkWindow *child;
   TkWindow *winPtr = (TkWindow *)Tk_MainWindow(tkAccessible->interp);
   for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-    if (Tk_IsMapped(child)) {
-      /* 
-       * const char *className = Tk_Class(child);
-       * if (className && strcmp(className, "Menu") == 0) {
-       *     continue; 
-       * }
-       */
+    if (Tk_IsMapped(child)) { 
+      const char *className = Tk_Class(child);
+      if (className && strcmp(className, "Menu") == 0) {
+	continue; 
+      }
       count++;
     }
   }
@@ -473,35 +501,49 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, 
 /* Function to get button press to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  BSTR  *pszDefaultAction = NULL;
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;  
+  Tk_Window win = accessible_win;
+  Tcl_HashEntry *hPtr, *hPtr2;
+  Tcl_HashTable *AccessibleAttributes;
+  Tcl_Event *event; 
 
-  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
     return E_INVALIDARG;
   }
 
-  VARIANT roleVar;
-  VariantInit(&roleVar);
-
-  HRESULT hr = TkWinAccessible_get_accRole(this, varChild, &roleVar);
-  if (FAILED(hr) || roleVar.vt != VT_I4) {
-    return E_FAIL;
+  AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
+  if (!hPtr2) {
+    return E_INVALIDARG;
   }
 
-  switch (roleVar.lVal) {
-  case ROLE_SYSTEM_PUSHBUTTON:
-  case ROLE_SYSTEM_CHECKBUTTON:
-  case ROLE_SYSTEM_RADIOBUTTON:
-    *pszDefaultAction = SysAllocString(L"Press");
-    break;
+  char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
+  callback_command = action;
+  event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+  event->proc = ActionEventProc;
+  Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+  return S_OK;  
+}
 
-  default:
-    *pszDefaultAction = SysAllocString(L"Invoke");
-    break;
-  }
+/*
+ * Event proc which calls the ActionEventProc procedure.
+ */
 
-  VariantClear(&roleVar);
-  return (*pszDefaultAction != NULL) ? S_OK : E_OUTOFMEMORY;
+static int
+ActionEventProc(XEvent *eventPtr,
+		ClientData clientData)
+{
+  /*
+   * MSVC complains if these parameters are stubbed out
+   * with TCL_UNUSED.
+   */
+  (void) eventPtr;
+  (void) clientData;
+  
+  TkMainInfo *info = TkGetMainInfoList();
+  Tcl_GlobalEval(info->interp, callback_command);
+  return 1;
 }
 
 /* Function to get accessible help to MSAA. */
@@ -606,7 +648,12 @@ int IsScreenReaderRunning(
 			  int argc, /* Number of arguments. */
 			  Tcl_Obj *const argv[]) /* Argument objects. */
 {
+  /*
+   * MSVC complains if this parameter is stubbed out
+   * with TCL_UNUSED.
+   */
   (void) clientData;
+  
   BOOL screenReader = FALSE;
   SystemParametersInfo(SPI_GETSCREENREADER, 0, &screenReader, 0);
   Tcl_SetObjResult(interp, Tcl_NewBooleanObj(screenReader));
@@ -635,8 +682,13 @@ EmitSelectionChanged(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
+  /*
+   * MSVC complains if this parameter is stubbed out
+   * with TCL_UNUSED.
+   */
   (void) clientData;
+  
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -731,6 +783,10 @@ int TkWinAccessibleObjCmd(
 			  int objc, /* Number of arguments. */
 			  Tcl_Obj *const objv[]) /* Argument objects. */
 {
+  /*
+   * MSVC complains if this parameter is stubbed out
+   * with TCL_UNUSED.
+   */
   (void) clientData;
 
   if (objc != 2) {
