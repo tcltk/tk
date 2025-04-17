@@ -232,12 +232,15 @@ namespace eval ::tk::accessible {
     # accessibility focus if needed.
     
     proc _forceTkFocus {w} {
+	
+	if {[tk windowingsystem] eq "aqua"} {
 	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview" || [winfo class $w] eq "TProgressbar"} {
 	    if {[focus] ne $w} {
 		focus -force $w
 	    }
 	} else {
 	    return
+	}
 	}
     }
     
@@ -435,8 +438,9 @@ namespace eval ::tk::accessible {
 			   {%W set} \
 		       }
 
-    # Menu bindings - macOS menus are native and already accessible-enabled.
-    if {[tk windowingsystem] ne "aqua"} {
+    # Menu bindings - macOS/Windows menus are native and
+    # already accessible-enabled.
+    if {[tk windowingsystem] eq "x11"} {
 	bind Menu <Map> {+::tk::accessible::_init \
 			     %W \
 			     Menu \
