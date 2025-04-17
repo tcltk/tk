@@ -81,7 +81,7 @@ static WidgetMapEntry widgetMap[512];
 static int widgetMapCount = 0;
 static LONG nextChildId = 1;
 
-/* Protoypes of functions used in this file. */
+/* Protoypes of glue functions to the IAccessible COM API. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
 static ULONG STDMETHODCALLTYPE TkWinAccessible_AddRef(IAccessible *this);
 static ULONG STDMETHODCALLTYPE TkWinAccessible_Release(IAccessible *this);
@@ -90,8 +90,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetTypeInfo(IAccessible *this, 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
-HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic)
-  HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
+/* Prototypes of empty stub functions required by MSAA. */
+HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
+HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild);
@@ -100,6 +101,7 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, long xLe
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
 
+/* Prototypes of the MSAA functions that actually implement accessibility for Tk widgets on Windows. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState);
@@ -111,10 +113,10 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
-static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this, VARIANT pvarChild);
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_NotImplemented();
+static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
 
-static int ActionEventProc(XEvent *eventPtr, ClientData clientData);
+/* Prototypes of Tk functions that support MSAA integration and implement the script-level API. */
+static int TkWinAccessible_ActionEventHandler(XEvent *eventPtr, int flags);
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 void ForceTkWidgetFocus(HWND hwnd, LONG childId);
 LONG RegisterTkWidget(Tk_Window tkwin);
@@ -125,7 +127,7 @@ int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj
 void TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
-static void TkAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
+static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
 int TkWinAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -161,48 +163,40 @@ static IAccessibleVtbl tkAccessibleVtbl = {
   TkWinAccessible_put_accValue
 };
 
-
 /*Empty stub functions required by MSAA. */
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic( IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic)
 {
-  if (pszHelpFile) *pszHelpFile = NULL;
-  if (pidTopic) *pidTopic = -1;
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut)
 {
-  if (pszKeyboardShortcut) *pszKeyboardShortcut = NULL;
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren)
 {
-  if (pvarChildren) VariantInit(pvarChildren);
-  return S_FALSE; 
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction)
 {
-  if (pszDefaultAction) *pszDefaultAction = NULL;
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild)
 {
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt)
 {
-  if (pvarEndUpAt) VariantInit(pvarEndUpAt);
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild)
 {
-  if (pvarChild) VariantInit(pvarChild);
-  return S_FALSE;
+  return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName(IAccessible *this, VARIANT varChild, BSTR szName)
@@ -311,7 +305,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
       return TkWinAccessible_accDoDefaultAction(this, selfVar);
 
     case DISPID_ACC_FOCUS:
-      return TkWinAccessible_get_accFocus(this, selfVar);   
+      return TkWinAccessible_get_accFocus(this, &selfVar);   
 
     default:
       return E_NOTIMPL;
@@ -476,7 +470,6 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accValue(IAccessible *this,
  * Function to set Tk toplevel as the primary parent of acccessible 
  * widgets. We want a flat hierarchy to simplify implementation. 
  */
-
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent) 
 {
   /* Validate ppdispParent to avoid dereferencing a NULL pointer. */
@@ -599,25 +592,23 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible 
   char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
   callback_command = action;
   event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
-  event->proc = ActionEventProc;
+  event->proc = TkWinAccessible_ActionEventHandler;
   Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
   return S_OK;  
 }
 
 /*
- * Event proc which calls the ActionEventProc procedure.
+ * Event proc which implements the action event procedure.
  */
 
-static int
-ActionEventProc(XEvent *eventPtr,
-		ClientData clientData)
+static int TkWinAccessible_ActionEventHandler(XEvent *eventPtr, int flags)
 {
   /*
    * MSVC complains if these parameters are stubbed out
    * with TCL_UNUSED.
    */
   (void) eventPtr;
-  (void) clientData;
+  (void) flags;
   
   TkMainInfo *info = TkGetMainInfoList();
   Tcl_GlobalEval(info->interp, callback_command);
@@ -658,7 +649,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
   return S_OK;
 }
 
-static STDMETHODIMP TkWinAccessible_get_accFocus(IAccessible *this, VARIANT pvarChild)
+static STDMETHODIMP TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);
@@ -704,9 +695,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
   if (!*pszDescription) {
     return E_OUTOFMEMORY;
   }
-
   return S_OK;
-
 }
 
 /* Function to map Tk window to MSAA attributes. */
@@ -728,7 +717,7 @@ LONG RegisterTkWidget(Tk_Window tkwin)
 {
   if (widgetMapCount >= 512) return -1;
 
-  // Check if it's already registered
+  /* Is it already registered? */
   for (int i = 0; i < widgetMapCount; ++i) {
     if (widgetMap[i].tkwin == tkwin) {
       return widgetMap[i].childId;
@@ -752,7 +741,7 @@ LONG GetChildIdForTkWindow(Tk_Window tkwin)
       return widgetMap[i].childId;
     }
   }
-  return -1; // Not found
+  return -1; /* Not found. */
 }
 
 /* Function to retrieve Tk window for a specifc MSAA ID. */
@@ -765,9 +754,6 @@ Tk_Window GetTkWindowForChildId(LONG childId)
   }
   return NULL;
 }
-
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -845,6 +831,7 @@ EmitSelectionChanged(
 	
   accessible_win = path;
 	
+  /* Fire notification of new value. */
   HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
   NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, 0);
 	
@@ -917,20 +904,21 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
  *----------------------------------------------------------------------
  */
 
-static void TkAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr)
+static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr)
 {
+
   if (!eventPtr || eventPtr->type != FocusIn) return;
 
   Tk_Window tkwin = (Tk_Window)clientData;
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(Tk_Toplevel(tkwin)));
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(Tk_Parent(tkwin)));
     
   if (!hwnd) return;
 
-  /* Lookup the unique child ID for this widget.*/ 
+  /* Look up the unique child ID for this widget.*/ 
   LONG childId = GetChildIdForTkWindow(tkwin); 
 
   if (childId > 0) {
-    /* Notify MSAA that this virtual control has focus. */
+    /* Notify MSAA that this control has focus. */
     NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
   }
 }
@@ -956,7 +944,6 @@ void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
   Tk_CreateEventHandler(tkwin, FocusChangeMask, 
 			TkWinAccessible_FocusEventHandler, tkAccessible);
 }
-
 
 
 /*
@@ -1015,7 +1002,6 @@ int TkWinAccessibleObjCmd(
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
     return TCL_ERROR;
   }
-
   return TCL_OK;
 }
 
