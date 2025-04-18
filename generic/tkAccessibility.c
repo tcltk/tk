@@ -4,8 +4,8 @@
  *	This file implements an accessibility API for Tk that can be accessed 
  *	from the script level.
  *
- * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2024 Emiliano Gavilan.
+ * Copyright (c) 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2024 Emiliano Gavilan.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
