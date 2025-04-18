@@ -388,9 +388,9 @@ trees in a common parent directory.
 
 - The following instructions assume the Tcl and Tk source trees are named
 "tcl${ver}" and "tk${ver}" (where ${ver} is a shell variable containing the
-Tcl/Tk version number, e.g. '8.7').
+Tcl/Tk version number, e.g. '9.0').
 Setup this shell variable as follows:
-	ver="8.7"
+	ver="9.0"
 
 - Setup environment variables as desired, e.g. for a universal build on 10.9:
 	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.9"
@@ -461,7 +461,7 @@ the shared library and set the DESTDIR variable to the pathname of a staging
 directory where the frameworks will be written.  The Tcl framework must be
 built first.
 For example, running the commands:
-	make -C ../tcl8.7/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
+	make -C ../tcl9.0/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tcl.framework
 	make -C macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tk.framework
@@ -669,7 +669,7 @@ conditional code which is only used for macOS.
 
 The 10.14 release added support for system appearance changes,
 including a "Dark Mode" that renders all window frames and menus in
-dark colors. Tk 8.7 provides three virtual events <<LightAqua>>,
+dark colors. Tk 9.0 provides three virtual events <<LightAqua>>,
 <<DarkAqua>> and <<AppearanceChanged>>, to allow you to update your Tk
 app's appearance when the system appearance changes.  These events are
 generated in [NSView effectiveAppearanceChanged], which is called by

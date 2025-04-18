@@ -117,6 +117,18 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    GenerateActivateEvents(winPtr, true);
 	}
     }
+    /*
+     * Make sure that the updated keyWindow is associated with the
+     * current TkEventTarget.
+     */
+ 
+    NSWindow *keyWin = [NSApp keyWindow];
+    if (keyWin) {
+	TkWindow *keyWinPtr = TkMacOSXGetTkWindow(keyWin);
+	if (keyWinPtr) {
+	    [NSApp setTkEventTarget:keyWinPtr];
+	}
+    }
 }
 
 - (void) windowBoundsChanged: (NSNotification *) notification
