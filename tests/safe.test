@@ -36,21 +36,17 @@ namespace import -force tcltest::test
 set hidden_cmds [list bell cd clipboard encoding exec exit \
 	fconfigure glob grab load menu open pwd selection \
 	socket source toplevel unload wm]
-if {[package vsatisfies [package provide Tcl] 8.6.7-]} {
-    lappend hidden_cmds tcl:encoding:dirs
-}
-if {[package vsatisfies [package provide Tcl] 8.7-]} {
-    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir tcl:file:home tcl:file:tildeexpand zipfs
-    foreach cmd {
-	cmdtype nameofexecutable
-    } {lappend hidden_cmds tcl:info:$cmd}
-    foreach cmd {
-	autopurge list purge status
-    } {lappend hidden_cmds tcl:process:$cmd}
-    foreach cmd {
-	canonical exists info list lmkimg lmkzip mkimg mkkey mkzip mount mountdata root unmount
-    } {lappend hidden_cmds tcl:zipfs:$cmd}
-}
+lappend hidden_cmds file tcl:encoding:dirs tcl:encoding:system
+lappend hidden_cmds tcl:file:tempdir tcl:file:home tcl:file:tildeexpand zipfs
+foreach cmd {
+    cmdtype nameofexecutable
+} {lappend hidden_cmds tcl:info:$cmd}
+foreach cmd {
+    autopurge list purge status
+} {lappend hidden_cmds tcl:process:$cmd}
+foreach cmd {
+    canonical exists info list lmkimg lmkzip mkimg mkkey mkzip mount mountdata root unmount
+} {lappend hidden_cmds tcl:zipfs:$cmd}
 foreach cmd {
     atime attributes copy delete dirname executable exists extension
     isdirectory isfile link lstat mkdir mtime nativename normalize

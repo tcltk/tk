@@ -190,11 +190,7 @@ Tk_MainEx(
      */
 
     if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
-	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-	    abort();
-	} else {
-	    Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
-	}
+	Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 	
 
