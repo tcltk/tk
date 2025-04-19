@@ -53,47 +53,61 @@ A list of column identifiers,
 specifying the number of columns and their names.
 .\"X: This is a read-only option; it may only be set when the widget is created.
 .OP \-displaycolumns displayColumns DisplayColumns
-A list of column identifiers
-(either symbolic names or integer indices)
-specifying which data columns are displayed
-and the order in which they appear,
-or the string \fB#all\fP.
-If set to \fB#all\fP (the default),
-all columns are shown in the order given.
+A list of column identifiers (either symbolic names or integer indices)
+specifying which columns are to be displayed and the order in which they appear,
+or the string \fB#all\fP to display all columns in \fB-columns\fR order.
+The default is \fB#all\fP.
 .OP \-height height Height
-Specifies the number of rows which should be visible.
-Note that
+Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection. Options are:
-\fBnone\fR, \fBsingle\fR, \fBbrowse\fR, \fBextended\fR, or \fBmultiple\fR.
+\fBnone\fR, \fBbrowse\fR, \fBsingle\fR, \fBmultiple\fR, or \fBextended\fR
+The default mode is \fBextended\fR.
 .RS
 .PP
-For \fBnone\fR, the selection can not be changed.
-For \fBsingle\fR and \fBbrowse\fR, only a single item will be selected at a
-time. In this mode, the selection follows the focus during keyboard traversal.
-For \fBextended\fR (the default), a single item may be selected. Multiple items
-can be selected by using the Control (individual) and Shift (range) keys.
-For \fBmultiple\fR, multiple items can be selected without changing
-the selection state of other items. In this mode, the focus and selection are
-independent which allows for keyboard traversal without changing the selection.
+.IP \fBnone\fR
+The selection cannot be changed.
+.IP \fBbrowse\fR
+Only one item will be selected at a time.
+The selection follows the focus during keyboard traversal.
+In this mode, the selection cannot be removed via the keyboard bindings.
+.IP \fBsingle\fR
+Only a single item can be selected at a time.
+Selecting an item unselects all other items.
+In this mode, the selection follows the focus during keyboard traversal.
+The selection can be cleared via the keyboard bindings.
+.IP \fBmultiple\fR
+Multiple items can be selected.
+Selecting an item does not change the selection state of other items.
+In this mode, the focus and selection are independent which allows for
+keyboard traversal without changing the selection.
+The selection can be cleared via the keyboard bindings.
+.IP \fBextended\fR
+Multiple items can be selected, but the default is for only
+one item to be selected at a time.
+More items can be selected by extending the selection using the Shift and
+Control/Command keys in combination with the mouse and keyboard traversal.
+In this mode, the selection follows the focus during keyboard traversal.
+The selection can be cleared via the keyboard bindings.
+.
 .PP
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
+
 .RE
 .OP \-selecttype selectType SelectType
 Controls how the built-in class bindings manage the selection.
-One of \fBitem\fR or \fBcell\fR.
+Options are \fBitem\fR or \fBcell\fR.
+The selection should be cleared when switching modes.
 .OP \-show show Show
-A list containing zero or more of the following values, specifying
-which elements of the tree to display.
+Controls which elements of the tree to display. May be a list containing zero or
+more of the following values. The default is \fBtree headings\fR.
 .RS
 .IP \fBtree\fR
 Display tree labels in column #0.
 .IP \fBheadings\fR
 Display the heading row.
-.PP
-The default is \fBtree headings\fR.
 .PP
 \fBNOTE:\fR Column #0 always refers to the tree column,
 even if \fB\-show tree\fR is not specified.
@@ -106,9 +120,10 @@ a tag. If not supported by the current theme, it will not show.
 .OP \-titlecolumns titleColumns TitleColumns
 Number of display columns at the left that should not be scrolled. The tree
 column counts, even if \fB\-show tree\fR is not specified. Thus for value N of
-this option, column #N is the first one that is scrollable. Default is 0.
+this option, column #N is the first one that is scrollable. The default is 0.
 .OP \-titleitems titleItems TitleItems
-Number of items at the top that should not be vertically scrolled. Default is 0.
+Number of items at the top that should not be vertically scrolled.
+The default is 0.
 .SH "INDICES"
 .PP
 Several of the widget commands for treeview take an index as their argument.
@@ -282,13 +297,13 @@ with respect to the cell. \fIAnchor\fR is one of
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
-heading column separator.  Default is 20 pixels.
+heading column separator.  The default is 20 pixels.
 .\" OPTION: -separator
 .TP
 \fB\-separator \fIboolean\fR
 .
 Specifies whether or not a column separator should be drawn to the right
-of the column.  Default is false.
+of the column.  The default is false.
 .\" OPTION: -stretch
 .TP
 \fB\-stretch \fIboolean\fR
@@ -301,7 +316,7 @@ By default columns are stretchable.
 .TP
 \fB\-width \fIwidth\fR
 .
-The width of the column in pixels.  Default is 200 pixels. The specified
+The width of the column in pixels.  The default is 200 pixels. The specified
 column width may be changed by Tk in order to honor \fB\-stretch\fR
 and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
 heading column separator.
@@ -562,22 +577,22 @@ cell/element using the rules described in the \fBre_syntax\fR reference page.
 .TP
 \fB\-all\fR
 .
-Return the identifiers of all items that match \fIpattern\fR rather than only
-the first one.
+Return the identifiers of all of the items that match \fIpattern\fR rather
+than only the first one.
 .\" OPTION: -not
 .TP
 \fB\-not\fR
 .
-Negates the match, so rather than return items that match \fIpattern\fR, only
-items that do not match \fIpattern\fR will be returned.
+Negates the match, so only the items that do not match \fIpattern\fR, will be
+returned.
 .\" OPTION: -start
 .TP
 \fB\-start \fIitem\fR
 .
 Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
 \fIparent\fR. When resuming a search, use the \fBbefore\fR or \fBafter\fR
-subcommands to get the start item. All other options should be the same as the
-initial search including \fIparent\fR.
+subcommands to get the previous or next item to start the search at. All other
+options should be the same as the initial search including \fIparent\fR.
 
 .\" OPTION: -ascii
 .TP
@@ -595,7 +610,8 @@ comparisons (see \fBlsort\fR for a full description).
 .TP
 \fB\-integer\fR
 .
-The values are to be compared to \fIpattern\fR as integers.
+The values are to be compared to \fIpattern\fR as integers. Empty
+values will be ignored, but non-integer values will generate an error.
 .\" OPTION: -nocase
 .TP
 \fB\-nocase\fR
@@ -607,26 +623,26 @@ Comparisons are to be performed in a case-insensitive manner. Only used with
 \fB\-real\fR
 .
 The values are to be compared to \fIpattern\fR as floating-point values.
+Empty values will be ignored, but non-integer values will generate an error.
 
 .\" OPTION: -backwards
 .TP
 \fB\-backwards\fR
 .
 The search is to be performed backwards starting from \fI\-start\fR item or
-last child of \fIparent\fR if not specified, until the first item in the
-treeview.
+last child of \fIparent\fR if not specified, until the first item in parent.
 .\" OPTION: -forwards
 .TP
 \fB\-forwards\fR
 .
 The search is to be performed forwards starting from \fI\-start\fR item or
-first child of \fIparent\fR if not specified, until the last item in the
-treeview. This is the default.
+first child of \fIparent\fR if not specified, until the last item in parent.
+This is the default.
 .\" OPTION: -column
 .TP
 \fB\-column \fIcolumn\fR
 .
-Only search within column \fIcolumn\fR.
+Only search within column \fIcolumn\fR. See also \fBCOLUMN IDENTIFIERS\fR.
 .\" OPTION: -hidden
 .TP
 \fB\-hidden\fR
@@ -735,7 +751,7 @@ in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .\" METHOD: size
 .TP
-\fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse? item\fR
+\fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse\fR? \fIitem\fR
 .
 Returns the number of children belonging to \fIitem\fR. With \fI\-hidden\fR
 option, will include hidden items. With \fI\-recurse\fR option, will include
@@ -844,9 +860,10 @@ then the \fB\-tags\fR for that item are unchanged.
 .TP
 \fIpathname \fBunhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
-Unhide all of the items in \fIitemList\fR and all child items. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR]. With \fI\-recurse\fR option,
-will also unhide all of their descendants. Use \fB{}\fR for root item.
+Unhide all of the items in \fIitemList\fR. Same as
+[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR] for each item.
+With \fI\-recurse\fR option, will also unhide all of their descendants.
+Use \fB{}\fR for root item.
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items
@@ -854,13 +871,13 @@ in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
 The textual label to display for the item in the tree column.
 .IP \fB\-height\fR
-The height for the item, in integer multiples of \fB\-rowheight\fP. Default is 1.
+The height for the item, in integer multiples of \fB\-rowheight\fP. The default is 1.
 .IP \fB\-image\fR
 A Tk image, displayed next to the label in the tree column, placed according
 to \fB\-imageanchor\fR.
 .IP \fB\-imageanchor\fR
 Specifies how the \fB\-image\fR is displayed relative to the text.
-Default is \fBw\fR. One of the standard Tk anchor values.
+The default is \fBw\fR. One of the standard Tk anchor values.
 .IP \fB\-values\fR
 The list of values associated with the item.
 .RS
@@ -988,19 +1005,19 @@ are:
 .br
 \fB\-indent\fP \fIamount\fP
 .RS
-Specifies how far items are indented from their parents. Defaults to 20 pixels.
+Specifies how far items are indented from their parents. The default is 20 pixels.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
 \fB\-columnseparatorwidth\fP \fIamount\fP
 .RS
-Specifies the width of column separators. Defaults to 1 pixel.
+Specifies the width of column separators. The default is 1 pixel.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
 \fB\-rowheight\fP \fIamount\fP
 .RS
-This is the standard height for an item. Defaults to 20 pixels.
+This is the standard height for an item. The default is 20 pixels.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If \fB\-rowheight\fP is not set by the style, it is set by measuring an
 item and a cell layout with the style's settings.
