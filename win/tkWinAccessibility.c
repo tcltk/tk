@@ -507,19 +507,25 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this
 /* Function to get number of accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren)
 {
+  if (!this || !pcChildren) {
+    return E_INVALIDARG;
+  }
+
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  Tk_Window childWin = GetTkWindowForChildId((LONG)tkAccessible);
+  Tk_Window toplevel = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName, NULL);
+  if (!toplevel || !Tk_IsTopLevel(toplevel)) {
+    *pcChildren = 0;
+    return S_OK;
+  }
+
   int count = 0;
-  TkWindow *child = (TkWindow*)childWin;
-  Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->interp, childWin);
   TkWindow *winPtr = (TkWindow *)toplevel;
-  
+  TkWindow *child;
+
+  /* Get child widgets of toplevel. */ 
   for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-    if (Tk_IsMapped(child)) { 
-      const char *className = Tk_Class(child);
-      if (className && strcmp(className, "Menu") == 0) {
-	continue; 
-      }
+    if (Tk_IsMapped((Tk_Window)child)) {
+      const char *className = Tk_Class((Tk_Window)child);
       count++;
     }
   }
@@ -527,46 +533,54 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *
   return S_OK;
 }
 
+
 /* Function to get accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+  if (!this || !ppdispChild) {
+    return E_INVALIDARG;
+  }
+
   *ppdispChild = NULL;
 
   if (varChild.vt != VT_I4 || varChild.lVal <= 0) {
     return E_INVALIDARG;
   }
 
-  /* Resolve the widget to the accessible object represents.*/
-  Tk_Window widget = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName, Tk_MainWindow(tkAccessible->interp));
-  if (!widget) {
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+
+  /* Resolve widget from the pathName stored in this accessible. */
+  Tk_Window toplevel = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName, Tk_MainWindow(tkAccessible->interp));
+  if (!toplevel || !Tk_IsTopLevel(toplevel)) {
     return E_FAIL;
   }
 
-  /* Get the toplevel window that contains this widget.*/
-  Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->interp, widget);
-  if (!toplevel) {
-    return E_FAIL;
-  }
-
-  /* Enumerate mapped children of that toplevel.*/
-  int count = 0;
-  TkWindow *child;
+  /* Enumerate mapped children. */
+  int index = 0;
   TkWindow *winPtr = (TkWindow *)toplevel;
+  TkWindow *child;
 
   for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-    if (Tk_IsMapped(child)) {
-      count++;
-      if (count == varChild.lVal) {
-	HWND child_hwnd = Tk_GetHWND(Tk_WindowId(child));
-	TkWinAccessible *childAccessible = create_tk_accessible(
-								tkAccessible->interp, child_hwnd, Tk_PathName((Tk_Window)child));
-	if (childAccessible) {
-	  *ppdispChild = (IDispatch *)childAccessible;
-	  return S_OK;
-	}
-	return E_OUTOFMEMORY;
+    if (!Tk_IsMapped((Tk_Window)child)) {
+      continue;
+    }
+
+    const char *className = Tk_Class((Tk_Window)child);
+    index++;
+    if (index == varChild.lVal) {
+       /* Pass NULL for HWND since only toplevel has a window handl.e */
+      TkWinAccessible *childAccessible = create_tk_accessible(
+        tkAccessible->interp,
+        NULL,  /* hwnd = NULL for child widgets */
+        Tk_PathName((Tk_Window)child)
+      );
+
+      if (!childAccessible) {
+        return E_OUTOFMEMORY;
       }
+
+      *ppdispChild = (IDispatch *)childAccessible;
+      return S_OK;
     }
   }
   return E_INVALIDARG;
@@ -954,45 +968,43 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
  *----------------------------------------------------------------------
  */
 
-static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr)
+static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr)
 {
+    if (!eventPtr || eventPtr->type != FocusIn) {
+        return;
+    }
 
-  if (clientData == NULL) {
-    return;
-  }
+     /* Get the currently focused widget. */
+      TkMainInfo *info = TkGetMainInfoList();
+      Tcl_Eval(info->interp, "focus");
+      char *path = Tcl_GetString(info->interp);
+      Tk_Window focusWin = Tk_NameToWindow(info->interp, path, Tk_MainWindow(info->interp);
+    if (!focusWin || !Tk_IsMapped(focusWin)) {
+        g_focusedChildId = 0;
+        return;
+    }
 
-  Tk_Window tkwin = (Tk_Window)clientData;
+   
+    /* Update the global focus ID. */
+    LONG childId = GetChildIdForTkWindow(focusWin);
+    if (childId > 0) {
+        g_focusedChildId = childId;
 
-  if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
-    return;
-  }
-
-  Tk_Window parent = Tk_Parent(tkwin);
-  if (parent == NULL) {
-    return;
-  }
-
-  Window parentWinId = Tk_WindowId(parent);
-  if (parentWinId == None) {
-    return;
-  }
-
-  HWND hwnd = Tk_GetHWND(parentWinId);
-  if (hwnd == NULL || !IsWindow(hwnd)) {
-    return;
-  }
-
-  /* Look up the unique child ID for this widget.*/ 
-  LONG childId = GetChildIdForTkWindow(tkwin); 
-
-  if (childId > 0) {
-    /* Notify MSAA that this control has focus. */
-    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-  }
+        // Notify MSAA about the focus event
+        Tk_Window toplevel = Tk_Toplevel(focusWin);
+        if (toplevel) {
+            Tk_MakeWindowExist(toplevel);
+            HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+            if (hwnd && IsWindow(hwnd)) {
+                NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+            }
+        }
+    } else {
+        g_focusedChildId = 0;
+    }
 }
 
-/*
- *----------------------------------------------------------------------
+/*---------------------------------------------------------------------
  *
  * TkWinAccessible_RegisterForFocus --
  *
@@ -1064,7 +1076,7 @@ int TkWinAccessibleObjCmd(
   HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
   TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
-  TkWinAccessible_RegisterForFocus(tkwin, accessible);
+ TkWinAccessible_RegisterForFocus(tkwin, accessible);
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
