@@ -568,12 +568,12 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this,
     const char *className = Tk_Class((Tk_Window)child);
     index++;
     if (index == varChild.lVal) {
-       /* Pass NULL for HWND since only toplevel has a window handl.e */
+      /* Pass NULL for HWND since only toplevel has a window handle. */
       TkWinAccessible *childAccessible = create_tk_accessible(
-        tkAccessible->interp,
-        NULL,  /* hwnd = NULL for child widgets */
-        Tk_PathName((Tk_Window)child)
-      );
+							      tkAccessible->interp,
+							      NULL,  /* hwnd = NULL for child widgets */
+							      Tk_PathName((Tk_Window)child)
+							      );
 
       if (!childAccessible) {
         return E_OUTOFMEMORY;
@@ -960,7 +960,7 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
  * Force accessibility focus when Tk receives a FocusIn event.
  *
  * Results:
- *	Accessibility element is deallocated. 
+ *	Accessibility focus is set 
  *
  * Side effects:
  *	None.
@@ -970,45 +970,50 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr)
 {
-    if (!eventPtr || eventPtr->type != FocusIn) {
-        return;
-    }
+  if (!clientData || !eventPtr) {
+    return;
+  }
 
-     /* Get the currently focused widget. */
-      TkMainInfo *info = TkGetMainInfoList();
-      Tcl_Eval(info->interp, "focus");
-      char *path = Tcl_GetString(info->interp);
-      Tk_Window focusWin = Tk_NameToWindow(info->interp, path, Tk_MainWindow(info->interp);
-    if (!focusWin || !Tk_IsMapped(focusWin)) {
-        g_focusedChildId = 0;
-        return;
-    }
+  if (eventPtr->type != FocusIn) {
+    return;
+  }
 
-   
-    /* Update the global focus ID. */
-    LONG childId = GetChildIdForTkWindow(focusWin);
-    if (childId > 0) {
-        g_focusedChildId = childId;
+  Tk_Window tkwin = (Tk_Window)clientData;
 
-        // Notify MSAA about the focus event
-        Tk_Window toplevel = Tk_Toplevel(focusWin);
-        if (toplevel) {
-            Tk_MakeWindowExist(toplevel);
-            HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-            if (hwnd && IsWindow(hwnd)) {
-                NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-            }
-        }
-    } else {
-        g_focusedChildId = 0;
-    }
+  if (!Tk_IsMapped(tkwin)) {
+    return;
+  }
+
+  /* Get the toplevel window. */
+  TkMainInfo *info = TkGetMainInfoList();
+  Tk_Window toplevel = GetToplevelOfWidget(info->interp, tkwin); 
+  if (!toplevel) {
+    return;
+  }
+
+  /* Ensure it exists and get HWND. */
+  Tk_MakeWindowExist(toplevel);
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+  if (!hwnd || !IsWindow(hwnd)) {
+    return;
+  }
+
+  /* Resolve child ID and update focus state. */
+  LONG childId = GetChildIdForTkWindow(tkwin);
+  if (childId > 0) {
+    g_focusedChildId = childId;
+
+    /* Notify MSAA. */
+    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+  }
 }
+
 
 /*---------------------------------------------------------------------
  *
  * TkWinAccessible_RegisterForFocus --
  *
- * Register event handler for destroying accessibility element.
+ * Register event handler for focusing accessibility element.
  *
  * Results:
  *      Event handler is registered.
@@ -1076,7 +1081,7 @@ int TkWinAccessibleObjCmd(
   HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
   TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
- TkWinAccessible_RegisterForFocus(tkwin, accessible);
+  TkWinAccessible_RegisterForFocus(tkwin, accessible);
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
