@@ -473,45 +473,44 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accValue(IAccessible *this,
  */
   static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent)
   {
-      if (!this || !ppdispParent) return E_INVALIDARG;
+    if (!this || !ppdispParent) return E_INVALIDARG;
   
-      TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-      *ppdispParent = NULL;
+    TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+    *ppdispParent = NULL;
   
-      Tk_Window widget = Tk_NameToWindow(
-          tkAccessible->interp,
-          tkAccessible->pathName,
-          Tk_MainWindow(tkAccessible->interp)
-      );
-      if (!widget) return E_FAIL;
+    Tk_Window widget = Tk_NameToWindow(
+				       tkAccessible->interp,
+				       tkAccessible->pathName,
+				       Tk_MainWindow(tkAccessible->interp)
+				       );
+    if (!widget) return E_FAIL;
   
-      /* If this is already a toplevel, it has no parent.*/
-      if (Tk_IsTopLevel(widget)) {
-          return S_FALSE; // No parent
-      }
+    /* If this is already a toplevel, it has no parent.*/
+    if (Tk_IsTopLevel(widget)) {
+      return S_FALSE; /* No parent.*/
+    }
   
-      /* Otherwise, return the toplevel's accessible object.*/
-      Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->interp, widget);
-      if (!toplevel) return E_FAIL;
+    /* Otherwise, return the toplevel's accessible object.*/
+    Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->interp, widget);
+    if (!toplevel) return E_FAIL;
   
-      const char *toplevelPath = Tk_PathName(toplevel);
-      if (!toplevelPath) return E_FAIL;
+    const char *toplevelPath = Tk_PathName(toplevel);
+    if (!toplevelPath) return E_FAIL;
   
-      TkWinAccessible *parentAccessible = create_tk_accessible(
-          tkAccessible->interp,
-          Tk_GetHWND(Tk_WindowId(toplevel)), // HWND is valid for toplevels
-          toplevelPath
-      );
+    TkWinAccessible *parentAccessible = create_tk_accessible(
+							     tkAccessible->interp,
+							     Tk_GetHWND(Tk_WindowId(toplevel)), /* HWND is valid for toplevels.*/
+							     toplevelPath
+							     );
   
-      if (!parentAccessible) return E_OUTOFMEMORY;
+    if (!parentAccessible) return E_OUTOFMEMORY;
   
-      *ppdispParent = (IDispatch *)parentAccessible;
+    *ppdispParent = (IDispatch *)parentAccessible;
   
-      ((IAccessible *)parentAccessible)->lpVtbl->AddRef((IAccessible *)parentAccessible);
-      return S_OK;
+    ((IAccessible *)parentAccessible)->lpVtbl->AddRef((IAccessible *)parentAccessible);
+    return S_OK;
   }
   
-
 /* Function to get number of accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren)
 {
@@ -594,7 +593,6 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this,
             return S_OK;
         }
     }
-
     return E_INVALIDARG;
 }
 
@@ -1099,7 +1097,6 @@ int TkWinAccessibleObjCmd(
   }
   return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
