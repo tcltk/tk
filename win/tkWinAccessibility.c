@@ -122,7 +122,10 @@ void ForceTkWidgetFocus(HWND hwnd, LONG childId);
 LONG RegisterTkWidget(Tk_Window tkwin);
 LONG GetChildIdForTkWindow(Tk_Window tkwin);
 Tk_Window GetTkWindowForChildId(LONG childId);
+static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin);
 Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr);
+LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+void InstallCustomWndProcForMSAA(Tk_Window tkwin);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 void TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
@@ -579,7 +582,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this,
         if (index == varChild.lVal) {
             TkWinAccessible *childAccessible = create_tk_accessible(
                 tkAccessible->interp,
-                NULL,  /* No HWND for child widgets */
+                GetWidgetHWNDIfPresent((Tk_Window)child), /*hwnd if valid*/
                 Tk_PathName((Tk_Window)child)
             );
 
@@ -802,6 +805,22 @@ Tk_Window GetTkWindowForChildId(LONG childId)
   return NULL;
 }
 
+/*Function to check if a Tk widget (i.e. ttk widget) has a HWND.*/
+static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
+  if (!tkwin || !Tk_IsMapped(tkwin)) return NULL;
+
+  Window winId = Tk_WindowId(tkwin);
+  if (winId == None) return NULL;
+
+  HWND hwnd = Tk_GetHWND(winId);
+  if (hwnd && IsWindow(hwnd)) {
+    return hwnd;
+  }
+
+  return NULL;
+}
+
+
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr)
 {
@@ -825,6 +844,46 @@ Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr)
 
   /* No toplevel ancestor found (shouldn't usually happen for visible widgets). */
   return NULL;
+}
+
+/* Custom WndProc to handle WM_GETOBJEC so MSAA responds to Tk accessibility. */
+LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  if (msg == WM_GETOBJECT && lParam == OBJID_CLIENT) {
+    /* Retrieve the Tk window from HWND. */
+    Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
+    if (tkwin) {
+      Tcl_Interp *interp = Tk_Interp(tkwin);
+      const char *pathName = Tk_PathName(tkwin);
+
+      TkWinAccessible *acc = create_tk_accessible(interp, hwnd, pathName);
+      if (acc) {
+	return LresultFromObject(&IID_IAccessible, wParam, (IAccessible *)acc);
+      }
+    }
+    return 0;
+  }
+
+  /* Call default window procedure if not handled. */
+  return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+/* Install custom WndProc. */
+void InstallCustomWndProcForMSAA(Tk_Window tkwin)
+{
+  if (!tkwin || !Tk_IsTopLevel(tkwin)) return;
+
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+  if (!hwnd) return;
+
+  /* Static WndProc to preserve the original for later calls. */
+  static WNDPROC originalWndProc = NULL;
+
+  /* Check if the WndProc has been set already. */
+  if (!originalWndProc) {
+    originalWndProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)TkWinAccessible_WndProc);
+  }
 }
 
 /*
@@ -1038,7 +1097,6 @@ void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
 			TkWinAccessible_FocusEventHandler, tkAccessible);
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1087,6 +1145,7 @@ int TkWinAccessibleObjCmd(
   accessible_win = tkwin;
 
   HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
+  InstallCustomWndProcForMSAA(tkwin);
   TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
   TkWinAccessible_RegisterForFocus(tkwin, accessible);
