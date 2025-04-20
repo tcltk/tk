@@ -12,7 +12,8 @@ test files:
 - it keeps them in a central place to prevent code duplication.
 - it provides these utility procs to test files, similar to what a Tcl package
   (using a namespace) does: it exports the utilities, and the test files import
-  them. The entire mechanism is implemented in a single file "testutils.tcl".
+  them.
+The entire mechanism is implemented in a single file "testutils.tcl".
 
 Section A of this document explains the usage of the mechanism, targeted at
 test authors. Section B provides a more detailed description of the innards and
