@@ -58,19 +58,19 @@ test testutils-1.6 {invalid domain for subCmd forget} -constraints testutils -bo
 #
 # Create a domain namespace for testing export, import, forget
 #
-assert {"::tk::test::_foo" ni [namespace children ::tk::test]}
-assert {"::tk::test::_zez" ni [namespace children ::tk::test]}
+assert {"::tk::test::foo" ni [namespace children ::tk::test]}
+assert {"::tk::test::zez" ni [namespace children ::tk::test]}
 assert {"init" ni [info procs init]}
-assert {"_kuk" ni [info procs _kuk]}
-assert {"_bar" ni [info vars _bar]}
-assert {"_pip" ni [info vars _pip]}
+assert {"kuk" ni [info procs kuk]}
+assert {"bar" ni [info vars bar]}
+assert {"pip" ni [info vars pip]}
 
-namespace eval ::tk::test::_foo {
+namespace eval ::tk::test::foo {
     proc init {} {
-	variable _bar 123
-	variable _pip
+	variable bar 123
+	variable pip
     }
-    proc _kuk {} {}
+    proc kuk {} {}
     testutils export
 }
 set initVars [info vars]; lappend initVars initVars
@@ -79,57 +79,57 @@ set initVars [info vars]; lappend initVars initVars
 # 2. Domain failures for forget and import
 #
 test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
-    testutils forget _foo
-} -result {testutils domain "_foo" was not imported} -returnCodes error
+    testutils forget foo
+} -result {testutils domain "foo" was not imported} -returnCodes error
 
 test testutils-2.2 {duplicate import} -constraints testutils -body {
-    testutils import _foo
-    testutils import _foo
-} -result {testutils domain "_foo" was already imported} -returnCodes error -cleanup {
-    testutils forget _foo
+    testutils import foo
+    testutils import foo
+} -result {testutils domain "foo" was already imported} -returnCodes error -cleanup {
+    testutils forget foo
 }
 
 #
 # 3. Import procs
 #
 test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
-    testutils import _foo
-    expr {([info procs _kuk] eq "_kuk") && ([info procs init] eq "")}
+    testutils import foo
+    expr {([info procs kuk] eq "kuk") && ([info procs init] eq "")}
 } -result 1 -cleanup {
-    testutils forget _foo
+    testutils forget foo
 }
 
 test testutils-3.2 {forget removes utility proc} -constraints testutils -body {
-    testutils import _foo
-    testutils forget _foo
-    info procs _kuk
+    testutils import foo
+    testutils forget foo
+    info procs kuk
 } -result {}
 
 test testutils-3.3 {import fails: proc already exists} -constraints testutils -setup {
-    namespace eval ::_zez {
-	proc _kuk {} {}
+    namespace eval ::zez {
+	proc kuk {} {}
     }
 } -body {
-    namespace eval ::_zez {
-	testutils import _foo
+    namespace eval ::zez {
+	testutils import foo
     }
-} -result "import from testutils domain \"_foo\" failed: can't import command \"_kuk\": already exists" -returnCodes error -cleanup {
-    namespace delete ::_zez
+} -result "import from testutils domain \"foo\" failed: can't import command \"kuk\": already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
 }
 
 #
 # 4. Import variables
 #
 test testutils-4.1 {associated variables are imported} -constraints testutils -body {
-    testutils import _foo
+    testutils import foo
     set varNames [info vars]
     foreach name $initVars {
 	set varNames [lremove $varNames [lsearch $varNames $name]]
     }
-    list [lsort $varNames] [info exists _bar] [info exists _pip] $_bar
-} -result [list {_bar _pip} 1 0 123] -cleanup {
+    list [lsort $varNames] [info exists bar] [info exists pip] $bar
+} -result [list {bar pip} 1 0 123] -cleanup {
     unset -nocomplain name varNames
-    testutils forget _foo
+    testutils forget foo
 }
 
 test testutils-4.2 {
@@ -137,53 +137,53 @@ test testutils-4.2 {
     even if a test file inadvertently assigns it a value in the meantime.
 } -constraints testutils -body {
     catch {
-	testutils import _foo
+	testutils import foo
     }
-    testutils forget _foo
-    set _pip 11111
-    testutils import _foo
-    info exists _pip
+    testutils forget foo
+    set pip 11111
+    testutils import foo
+    info exists pip
 } -result 0 -cleanup {
-    testutils forget _foo
+    testutils forget foo
 }
 
 test testutils-4.3 {import fails: variable already exists} -constraints testutils -setup {
     #
-    # We need a pristine new namespace in which the variable _bar was never imported
+    # We need a pristine new namespace in which the variable bar was never imported
     # and hence no upvar link for it exists.
     #
-    namespace eval ::_zez {
-	set _bar 11
+    namespace eval ::zez {
+	set bar 11
     }
 } -body {
-    namespace eval ::_zez {
-	testutils import _foo
+    namespace eval ::zez {
+	testutils import foo
     }
-} -result "import from testutils domain \"_foo\" failed: variable \"_bar\" already exists" -returnCodes error -cleanup {
-    namespace delete ::_zez
+} -result "import from testutils domain \"foo\" failed: variable \"bar\" already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
 }
 
 test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -setup {
 } -body {
-    namespace eval ::_zez {
-	testutils import _foo
-	testutils forget _foo
+    namespace eval ::zez {
+	testutils import foo
+	testutils forget foo
     }
-    namespace delete ::_zez
-    namespace eval ::_zez {
-	set _pip 22
-	testutils import _foo
-	list [info exists _bar] [info exists _pip] $_bar
+    namespace delete ::zez
+    namespace eval ::zez {
+	set pip 22
+	testutils import foo
+	list [info exists bar] [info exists pip] $bar
     }
 } -result {1 0 123} -cleanup {
-    namespace delete ::_zez
+    namespace delete ::zez
 }
 
 #
 # CLEANUP
 #
 
-namespace delete ::tk::test::_foo
+namespace delete ::tk::test::foo
 unset initVars
 cleanupTests
 
