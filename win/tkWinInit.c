@@ -11,6 +11,7 @@
  */
 
 #include "tkWinInt.h"
+extern int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
 
 /*
