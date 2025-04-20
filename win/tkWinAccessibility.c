@@ -81,6 +81,12 @@ static WidgetMapEntry widgetMap[512];
 static int widgetMapCount = 0;
 static LONG nextChildId = 1;
 
+/* Custom WndProc to handle accessibility. */
+typedef struct {
+  WNDPROC originalWndProc;
+  HWND hwnd;
+} TkWinAccessibleWndData;
+
 /* Protoypes of glue functions to the IAccessible COM API. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
 static ULONG STDMETHODCALLTYPE TkWinAccessible_AddRef(IAccessible *this);
@@ -843,11 +849,10 @@ Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr)
   return NULL;
 }
 
-/* Custom WndProc to handle WM_GETOBJEC so MSAA responds to Tk accessibility. */
+/* Custom WndProc to handle WM_GETOBJ so MSAA responds to Tk accessibility. */
 LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_GETOBJECT && lParam == OBJID_CLIENT) {
-    /* Retrieve the Tk window from HWND. */
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
     if (tkwin) {
       Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -855,13 +860,18 @@ LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
       TkWinAccessible *acc = create_tk_accessible(interp, hwnd, pathName);
       if (acc) {
-	      return LresultFromObject(&IID_IAccessible, wParam, (LPUNKNOWN)acc);
+        return LresultFromObject(&IID_IAccessible, wParam, (LPUNKNOWN)acc);
       }
     }
     return 0;
   }
 
-  /* Call default window procedure if not handled. */
+  /* Get the original WndProc stored as window data. */
+  TkWinAccessibleWndData *data = (TkWinAccessibleWndData *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+  if (data && data->originalWndProc) {
+    return CallWindowProc(data->originalWndProc, hwnd, msg, wParam, lParam);
+  }
+
   return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
@@ -873,14 +883,20 @@ void InstallCustomWndProcForMSAA(Tk_Window tkwin)
   HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
   if (!hwnd) return;
 
-  /* Static WndProc to preserve the original for later calls. */
-  static WNDPROC originalWndProc = NULL;
-
-  /* Check if the WndProc has been set already. */
-  if (!originalWndProc) {
-    originalWndProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-    SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)TkWinAccessible_WndProc);
+  /* Check if we've already installed the custom WndProc. */
+  TkWinAccessibleWndData *existing = (TkWinAccessibleWndData *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+  if (existing && existing->originalWndProc == TkWinAccessible_WndProc) {
+    return; // already set
   }
+
+  /* Store original WndProc and hook ours. */
+  WNDPROC original = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+  TkWinAccessibleWndData *data = (TkWinAccessibleWndData *)ckalloc(sizeof(TkWinAccessibleWndData));
+  data->originalWndProc = original;
+  data->hwnd = hwnd;
+
+  SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)data);
+  SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)TkWinAccessible_WndProc);
 }
 
 /*
