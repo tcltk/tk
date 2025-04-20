@@ -271,14 +271,6 @@ proc ::ttk::treeview::KeyNav {w dir} {
     }
 
     switch -- $dir {
-	up {
-	    # Move up one item/cell
-	    set focus [$w before $focus]
-	}
-	down {
-	    # Move down one item/cell
-	    set focus [$w after $focus]
-	}
 	left {
 	    # Move left one cell or close item if open
 	    if {$cellmode} {
@@ -301,6 +293,14 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    } elseif {![$w item $focus -open] && [$w haschildren $focus]} {
 		OpenItem $w $focus
 	    }
+	}
+	up {
+	    # Move up one item/cell
+	    set focus [$w before $focus]
+	}
+	down {
+	    # Move down one item/cell
+	    set focus [$w after $focus]
 	}
 	first {
 	    # Move to first cell in item or first child in parent
@@ -328,14 +328,6 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    $w yview moveto 1
 	    set focus [BottomItem $w]
 	}
-	pageTop {
-	    # Move to first row in current screen view
-	    set focus [PageTop $w]
-	}
-	pageBottom {
-	    # Move to last row in current screen view
-	    set focus [PageBottom $w]
-	}
 	pageLeft {
 	    # Move to first column in current screen view
 	    if {$cellmode} {
@@ -347,6 +339,14 @@ proc ::ttk::treeview::KeyNav {w dir} {
 	    if {$cellmode} {
 		set colNum [PageRight $w]
 	    }
+	}
+	pageTop {
+	    # Move to first row in current screen view
+	    set focus [PageTop $w]
+	}
+	pageBottom {
+	    # Move to last row in current screen view
+	    set focus [PageBottom $w]
 	}
     }
 
@@ -390,33 +390,20 @@ proc ::ttk::treeview::PageNav {w dir} {
     }
 
     switch -- $dir {
-	up {
-	    # Move up 1 page & select cell
-	    lassign [$w yview] start end
-	    if {$start > 0.0} {
-		# Scroll up 1 page and select item/cell at same coord
-		$w yview scroll -1 pages
-		update idletasks
-		set focus [$w identify item $x $y]
+	first {
+	    # Move to first cell in item or first child in parent
+	    if {$cellmode} {
+		set colNum [FirstColumnNum $w]
 	    } else {
-		# Select topmost item/cell if at top already
-		set focus [$w id {} first]
+		set focus [$w id [$w parent $focus] first]
 	    }
 	}
-	down {
-	    # Move down 1 page & select cell
-	    lassign [$w yview] start end
-	    if {$end < 1.0} {
-		# Scroll down 1 page and select item/cell at same coord
-		$w yview scroll 1 pages
-		update idletasks
-		set focus [$w identify item $x $y]
+	last {
+	    # Move to last cell in item or last child in parent
+	    if {$cellmode} {
+		set colNum [LastColumnNum $w]
 	    } else {
-		# Select bottom-most item/cell if at bottom already
-		set focus [$w id {} last]
-		while {[$w haschildren $focus] && [$w item $focus -open]} {
-		    set focus [$w id $focus last]
-		}
+		set focus [$w id [$w parent $focus] last]
 	    }
 	}
 	left {
@@ -453,18 +440,49 @@ proc ::ttk::treeview::PageNav {w dir} {
 		}
 	    }
 	}
+	up {
+	    # Move up 1 page & select cell
+	    lassign [$w yview] start end
+	    if {$start > 0.0} {
+		# Scroll up 1 page and select item/cell at same coord
+		$w yview scroll -1 pages
+		update idletasks
+		set focus [$w identify item $x $y]
+	    } else {
+		# Select topmost item/cell if at top already
+		set focus [$w id {} first]
+	    }
+	}
+	down {
+	    # Move down 1 page & select cell
+	    lassign [$w yview] start end
+	    if {$end < 1.0} {
+		# Scroll down 1 page and select item/cell at same coord
+		$w yview scroll 1 pages
+		update idletasks
+		set focus [$w identify item $x $y]
+	    } else {
+		# Select bottom-most item/cell if at bottom already
+		set focus [$w id {} last]
+		while {[$w haschildren $focus] && [$w item $focus -open]} {
+		    set focus [$w id $focus last]
+		}
+	    }
+	}
 	first {
-	    # Move to & select leftmost cell in item if in cell mode
-	    $w xview moveto 0
+	    # Move to first cell in item or first child in parent
 	    if {$cellmode} {
-		set colId [FirstColumnId $w]
+		set colNum [FirstColumnNum $w]
+	    } else {
+		set focus [$w id [$w parent $focus] first]
 	    }
 	}
 	last {
-	    # Move to & select rightmost cell in item if in cell mode
-	    $w xview moveto 1
+	    # Move to last cell in item or last child in parent
 	    if {$cellmode} {
-		set colId [LastColumnId $w]
+		set colNum [LastColumnNum $w]
+	    } else {
+		set focus [$w id [$w parent $focus] last]
 	    }
 	}
 	top {
@@ -477,14 +495,6 @@ proc ::ttk::treeview::PageNav {w dir} {
 	    $w yview moveto 1
 	    set focus [BottomItem $w]
 	}
-	pageTop {
-	    # Move to & select topmost item/cell in current screen view
-	    set focus [PageTop $w]
-	}
-	pageBottom {
-	    # Move to & select bottommost item/cell in current screen view
-	    set focus [PageBottom $w]
-	}
 	pageLeft {
 	    # Move to & select leftmost item/cell in current screen view
 	    if {$cellmode} {
@@ -496,6 +506,14 @@ proc ::ttk::treeview::PageNav {w dir} {
 	    if {$cellmode} {
 		set colNum [PageRight $w]
 	    }
+	}
+	pageTop {
+	    # Move to & select topmost item/cell in current screen view
+	    set focus [PageTop $w]
+	}
+	pageBottom {
+	    # Move to & select bottommost item/cell in current screen view
+	    set focus [PageBottom $w]
 	}
     }
 
@@ -535,13 +553,21 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
     }
 
     switch -- $dir {
-	up {
-	    # Extend selection to prev item
-	    set focus [$w before $focus]
+	first {
+	    # Move to first cell in item or first child in parent
+	    if {$cellmode} {
+		set colNum [FirstColumnNum $w]
+	    } else {
+		set focus [$w id [$w parent $focus] first]
+	    }
 	}
-	down {
-	    # Extend selection to next item
-	    set focus [$w after $focus]
+	last {
+	    # Move to last cell in item or last child in parent
+	    if {$cellmode} {
+		set colNum [LastColumnNum $w]
+	    } else {
+		set focus [$w id [$w parent $focus] last]
+	    }
 	}
 	left {
 	    # Extend selection to prev cell
@@ -559,9 +585,16 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 		}
 	    }
 	}
+	up {
+	    # Extend selection to prev item
+	    set focus [$w before $focus]
+	}
+	down {
+	    # Extend selection to next item
+	    set focus [$w after $focus]
+	}
 	first {
-	    # Select all cells from current cell to first cell in same item
-	    # or items from focus to parent's first item
+	    # Move to first cell in item or first child in parent
 	    if {$cellmode} {
 		set colNum [FirstColumnNum $w]
 	    } else {
@@ -569,8 +602,7 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	    }
 	}
 	last {
-	    # Select all cells from current cell to last cell in same item
-	    # or items from focus to parent's last item
+	    # Move to last cell in item or last child in parent
 	    if {$cellmode} {
 		set colNum [LastColumnNum $w]
 	    } else {
@@ -585,14 +617,6 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	    # Select all cells/items from focus to bottom
 	    set focus [BottomItem $w]
 	}
-	pageTop {
-	    # Select all cells from current to first row in current screen view
-	    set focus [PageTop $w]
-	}
-	pageBottom {
-	    # Select all cells from current to last row in current screen view
-	    set focus [PageBottom $w]
-	}
 	pageLeft {
 	    # Select all cells from current to first column in current screen view
 	    if {$cellmode} {
@@ -604,6 +628,14 @@ proc ::ttk::treeview::SelectionExtend {w dir} {
 	    if {$cellmode} {
 		set colNum [PageRight $w]
 	    }
+	}
+	pageTop {
+	    # Select all cells from current to first row in current screen view
+	    set focus [PageTop $w]
+	}
+	pageBottom {
+	    # Select all cells from current to last row in current screen view
+	    set focus [PageBottom $w]
 	}
     }
 
