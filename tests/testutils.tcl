@@ -718,7 +718,7 @@ namespace eval ::tk::test::entry {
     }
     proc validateCommand2 {W d i P s S v V} {
 	variable validationData [list $W $d $i $P $s $S $v $V]
-	set ::e mydata
+	variable textVar mydata
 	return 1
     }
     proc validateCommand3 {W d i P s S v V} {
