@@ -116,7 +116,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
 static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
 
 /* Prototypes of Tk functions that support MSAA integration and implement the script-level API. */
-static int TkWinAccessible_ActionEventHandler(XEvent *eventPtr, int flags);
+static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags);
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 void ForceTkWidgetFocus(HWND hwnd, LONG childId);
 LONG RegisterTkWidget(Tk_Window tkwin);
@@ -236,7 +236,7 @@ static ULONG STDMETHODCALLTYPE TkWinAccessible_Release(IAccessible *this)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
   if (--tkAccessible->refCount == 0) {
-    free(tkAccessible->pathName);
+    tkAccessible->pathName = NULL;
     tkAccessible->hwnd = NULL;
     free(tkAccessible);
     return 0;
@@ -651,15 +651,12 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible 
  * Event proc which implements the action event procedure.
  */
 
-static int TkWinAccessible_ActionEventHandler(XEvent *eventPtr, int flags)
+ static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags)
 {
-  /*
-   * MSVC complains if these parameters are stubbed out
-   * with TCL_UNUSED.
-   */
-  (void) eventPtr;
-  (void) flags;
-  
+  /* MSVC complains about TCL_UNUSED. */
+  (void)evtPtr;
+  (void)flags;
+
   TkMainInfo *info = TkGetMainInfoList();
   Tcl_GlobalEval(info->interp, callback_command);
   return 1;
@@ -858,7 +855,7 @@ LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
       TkWinAccessible *acc = create_tk_accessible(interp, hwnd, pathName);
       if (acc) {
-	return LresultFromObject(&IID_IAccessible, wParam, (IAccessible *)acc);
+	      return LresultFromObject(&IID_IAccessible, wParam, (LPUNKNOWN)acc);
       }
     }
     return 0;
