@@ -874,20 +874,20 @@ test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e ; update idletasks
     update
-    set textVar {}
+    set result {}
 } -body {
 # UTF
     .e insert end "01234乎67890"
     .e delete 6
-    lappend textVar [.e get]
+    lappend result [.e get]
     .e delete 0 end
     .e insert end "012345乎7890"
     .e delete 6
-    lappend textVar [.e get]
+    lappend result [.e get]
     .e delete 0 end
     .e insert end "0123456乎890"
     .e delete 6
-    lappend textVar [.e get]
+    lappend result [.e get]
 } -cleanup {
     destroy .e
 } -result [list "01234乎7890" "0123457890" "012345乎890"]
@@ -1541,13 +1541,13 @@ test entry-3.86 {EntryWidgetCmd procedure, "xview" widget command} -setup {
 # UTF
 # If Tcl_NumUtfChars wasn't used, wrong answer would be:
 # 0.106383 0.117021 0.117021
-    set textVar {}
+    set result {}
     .e xview moveto .1
-    lappend textVar [format {%.6f} [lindex [.e xview] 0]]
+    lappend result [format {%.6f} [lindex [.e xview] 0]]
     .e xview moveto .11
-    lappend textVar [format {%.6f} [lindex [.e xview] 0]]
+    lappend result [format {%.6f} [lindex [.e xview] 0]]
     .e xview moveto .12
-    lappend textVar [format {%.6f} [lindex [.e xview] 0]]
+    lappend result [format {%.6f} [lindex [.e xview] 0]]
 } -cleanup {
     destroy .e
 } -result {0.095745 0.106383 0.117021}
@@ -1616,7 +1616,7 @@ test entry-5.4 {ConfigureEntry procedure, -textvariable} -setup {
 } -result {12345 12345}
 
 test entry-5.5 {ConfigureEntry procedure} -setup {
-    set textVar {}
+    set result {}
     entry .e1
     entry .e2
 } -body {
@@ -1626,13 +1626,13 @@ test entry-5.5 {ConfigureEntry procedure} -setup {
     pack .e1 .e2 ; update idletasks
     .e2 select from 0
     .e2 select to 10
-    lappend textVar [selection get]
+    lappend result [selection get]
     .e1 select from 1
     .e1 select to 5
-    lappend textVar [selection get]
+    lappend result [selection get]
     .e1 configure -exportselection 1
-    lappend textVar [selection get]
-    set textVar
+    lappend result [selection get]
+    set result
 } -cleanup {
     destroy .e1 .e2
 } -result {{This is so} {This is so} 1234}
@@ -1860,11 +1860,11 @@ test entry-6.10 {EntryComputeGeometry procedure} -constraints {
     .e configure -bd 1 -relief raised -width 0 -show .
     .e insert 0 12345
     update
-    set textVar [winfo reqwidth .e]
+    set result [winfo reqwidth .e]
     .e configure -show X
-    lappend textVar [winfo reqwidth .e]
+    lappend result [winfo reqwidth .e]
     .e configure -show ""
-    lappend textVar [winfo reqwidth .e]
+    lappend result [winfo reqwidth .e]
 } -cleanup {
     destroy .e
 } -result {23 53 43}
@@ -1879,15 +1879,15 @@ test entry-6.11 {EntryComputeGeometry procedure} -constraints {
     update
     set x1 [winfo reqwidth .e]
 	set x2 [expr {8+5*[font measure {helvetica 12} .]}]
-	set textVar [expr {$x1 eq $x2}]
+	set result [expr {$x1 eq $x2}]
     .e configure -show X
 	set x1 [winfo reqwidth .e]
 	set x2 [expr {8+5*[font measure {helvetica 12} X]}]
-    lappend textVar [expr {$x1 eq $x2}]
+    lappend result [expr {$x1 eq $x2}]
     .e configure -show ""
 	set x1 [winfo reqwidth .e]
 	set x2 [expr {8+[font measure {helvetica 12} 12345]}]
-    lappend textVar [expr {$x1 eq $x2}]
+    lappend result [expr {$x1 eq $x2}]
 } -cleanup {
     destroy .e
 } -result {1 1 1}
@@ -1947,9 +1947,9 @@ test entry-7.3 {InsertChars procedure} -setup {
     .e select from 2
     .e select to 6
     .e insert 2 XXX
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 8
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {5 9 5 8}
@@ -1961,9 +1961,9 @@ test entry-7.4 {InsertChars procedure} -setup {
     .e select from 2
     .e select to 6
     .e insert 3 XXX
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 8
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {2 9 2 8}
@@ -1975,9 +1975,9 @@ test entry-7.5 {InsertChars procedure} -setup {
     .e select from 2
     .e select to 6
     .e insert 5 XXX
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 8
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {2 9 2 8}
@@ -1989,9 +1989,9 @@ test entry-7.6 {InsertChars procedure} -setup {
     .e select from 2
     .e select to 6
     .e insert 6 XXX
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 5
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {2 6 2 5}
@@ -2115,9 +2115,9 @@ test entry-8.4 {DeleteChars procedure} -setup {
     .e select to 8
     .e delete 1 3
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 5
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {1 6 1 5}
@@ -2131,9 +2131,9 @@ test entry-8.5 {DeleteChars procedure} -setup {
     .e select to 8
     .e delete 1 4
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 4
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {1 5 1 4}
@@ -2147,9 +2147,9 @@ test entry-8.6 {DeleteChars procedure} -setup {
     .e select to 8
     .e delete 1 7
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 5
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {1 2 1 5}
@@ -2177,9 +2177,9 @@ test entry-8.8 {DeleteChars procedure} -setup {
     .e select to 8
     .e delete 3 7
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 8
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {3 4 3 8}
@@ -2206,9 +2206,9 @@ test entry-8.10 {DeleteChars procedure} -setup {
     .e select to 3
     .e delete 5 8
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 8
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {3 5 5 8}
@@ -2222,9 +2222,9 @@ test entry-8.11 {DeleteChars procedure} -setup {
     .e select to 3
     .e delete 8 10
     update
-    set textVar "[.e index sel.first] [.e index sel.last]"
+    set result "[.e index sel.first] [.e index sel.last]"
     .e select to 4
-    lappend textVar [.e index sel.first] [.e index sel.last]
+    lappend result [.e index sel.first] [.e index sel.last]
 } -cleanup {
     destroy .e
 } -result {3 8 4 8}
@@ -2466,14 +2466,14 @@ test entry-11.1 {EntryEventProc procedure} -setup {
     destroy .e
 } -result {}
 test entry-11.2 {EntryEventProc procedure} -setup {
-    set textVar {}
+    set result {}
 } -body {
     entry .e1 -fg #112233
     rename .e1 .e2
-    lappend textVar [winfo children .]
-    lappend textVar [.e2 cget -fg]
+    lappend result [winfo children .]
+    lappend result [.e2 cget -fg]
     destroy .e1
-    lappend textVar [info command .e*] [winfo children .]
+    lappend result [info command .e*] [winfo children .]
 } -cleanup {
     destroy .e1
 } -result {.e1 #112233 {} {}}
@@ -3021,12 +3021,12 @@ test entry-18.1 {Entry widget vs hiding} -setup {
 # test cases. This was replaced by inserting recently set configurations
 # that matters for the test case
 test entry-19.1 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a
@@ -3036,12 +3036,12 @@ test entry-19.1 {entry widget validation} -setup {
 } -result {.e 1 0 a {} a all key}
 
 test entry-19.2 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a   ;# previous settings
@@ -3052,12 +3052,12 @@ test entry-19.2 {entry widget validation} -setup {
 } -result {.e 1 1 ab a b all key}
 
 test entry-19.3 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 ab   ;# previous settings
@@ -3068,28 +3068,28 @@ test entry-19.3 {entry widget validation} -setup {
 } -result {.e 1 2 abc ab c all key}
 
 test entry-19.4 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
-    list $validationData $::e
+    list $validationData $textVar
 } -cleanup {
     destroy .e
 } -result {{.e 1 1 a123bc abc 123 all key} a123bc}
 
 test entry-19.5 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a123bc   ;# previous settings
@@ -3100,12 +3100,12 @@ test entry-19.5 {entry widget validation} -setup {
 } -result {.e 0 2 a13bc a123bc 2 all key}
 
 test entry-19.6 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 a13bc   ;# previous settings
@@ -3117,12 +3117,12 @@ test entry-19.6 {entry widget validation} -setup {
 } -result {.e 0 1 abc a13bc 13 key key}
 
 test entry-19.7 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focus \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abc                 ;# previous settings
@@ -3134,12 +3134,12 @@ test entry-19.7 {entry widget validation} -setup {
 } -result {}
 
 test entry-19.8 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e configure -validate focus    ;# previous settings
@@ -3153,12 +3153,12 @@ test entry-19.8 {entry widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focus focusin}
 
 test entry-19.9 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focus \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd      ;# previous settings
@@ -3174,12 +3174,12 @@ test entry-19.9 {entry widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focus focusout}
 
 test entry-19.10 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd          ;# previous settings
@@ -3192,12 +3192,12 @@ test entry-19.10 {entry widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} all focusin}
 
 test entry-19.11 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd          ;# previous settings
@@ -3213,12 +3213,12 @@ test entry-19.11 {entry widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} all focusout}
 
 test entry-19.12 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focusin \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert 0 abcd              ;# previous settings
@@ -3231,12 +3231,12 @@ test entry-19.12 {entry widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
 
 test entry-19.13 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focusin \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
@@ -3250,12 +3250,12 @@ test entry-19.13 {entry widget validation} -setup {
 } -result {}
 
 test entry-19.14 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
@@ -3269,12 +3269,12 @@ test entry-19.14 {entry widget validation} -setup {
 } -result {}
 
 test entry-19.15 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
@@ -3292,12 +3292,12 @@ test entry-19.15 {entry widget validation} -setup {
 
 # the same as 19.16 but added [.e validate] to returned list
 test entry-19.16 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
@@ -3315,16 +3315,16 @@ test entry-19.16 {entry widget validation} -setup {
 
 
 test entry-19.17 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
     .e insert end abcd              ;# previous settings
-    set ::e newdata
+    set textVar newdata
     list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
@@ -3333,17 +3333,17 @@ test entry-19.17 {entry widget validation} -setup {
 
 # proc doval changed - returns 0
 test entry-19.18 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
-    set ::e newdata                 ;# previous settings
+    set textVar newdata                 ;# previous settings
     .e configure -validate all
-    set ::e nextdata
+    set textVar nextdata
     list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
@@ -3353,15 +3353,15 @@ test entry-19.18 {entry widget validation} -setup {
 ## loop condition in the validation, when the entry textvar is also set
 # proc doval2 used
 test entry-19.19 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
-    set ::e nextdata                 ;# previous settings
+    set textVar nextdata                 ;# previous settings
 
     .e configure -validatecommand $validateCmd2
     .e validate
@@ -3376,21 +3376,21 @@ test entry-19.19 {entry widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test entry-19.20 {entry widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e ; update idletasks
-    set ::e nextdata                 ;# previous settings
+    set textVar nextdata                 ;# previous settings
     .e configure -validatecommand $validateCmd2 ;# prev
     .e validate                     ;# previous settings
 
     .e configure -validate all
-    set ::e testdata
-    list [.e cget -validate] [.e get] $::e $validationData
+    set textVar testdata
+    list [.e cget -validate] [.e get] $textVar $validationData
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
@@ -3401,15 +3401,15 @@ test entry-19.20 {entry widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test entry-19.21 {entry widget validation - bug 40e4bf6198} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     entry .e -validate key \
 	-validatecommand $validateCmd2 \
-	-textvariable ::e
+	-textvariable textVar
     pack .e ; update idletasks
-    set ::e origdata
+    set textVar origdata
     .e insert 0 A
-    list [.e cget -validate] [.e get] $::e $validationData
+    list [.e cget -validate] [.e get] $textVar $validationData
 } -cleanup {
     destroy .e
 } -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
