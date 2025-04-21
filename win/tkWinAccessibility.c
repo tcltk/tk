@@ -25,7 +25,7 @@ DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0
 
 /* Data declarations used in this file. */
 typedef struct {
-  IAccessibleVtbl lpVtbl;
+  IAccessibleVtbl *lpVtbl;
   Tcl_Interp *interp;
   HWND hwnd;
   char *pathName;
@@ -754,9 +754,12 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
 /* Function to map Tk window to MSAA attributes. */
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)malloc(sizeof(TkWinAccessible));
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)ckalloc(sizeof(TkWinAccessible));
+  if (!tkAccessible) {
+    return NULL;
+  } 
   if (tkAccessible) {
-    tkAccessible->lpVtbl = tkAccessibleVtbl;
+    tkAccessible->lpVtbl = &tkAccessibleVtbl;
     tkAccessible->interp = interp;
     tkAccessible->hwnd = hwnd;
     tkAccessible->pathName = strdup(pathName);
@@ -853,11 +856,11 @@ Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr)
 LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_GETOBJECT && lParam == OBJID_CLIENT) {
+   
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
     if (tkwin) {
       Tcl_Interp *interp = Tk_Interp(tkwin);
       const char *pathName = Tk_PathName(tkwin);
-
       TkWinAccessible *acc = create_tk_accessible(interp, hwnd, pathName);
       if (acc) {
         return LresultFromObject(&IID_IAccessible, wParam, (LPUNKNOWN)acc);
@@ -1168,7 +1171,7 @@ int TkWinAccessibleObjCmd(
     return TCL_ERROR;
   }
   return TCL_OK;
-}
+} 
 
 /*
  *----------------------------------------------------------------------
