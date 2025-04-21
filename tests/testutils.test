@@ -60,11 +60,9 @@ test testutils-1.6 {invalid domain for subCmd forget} -constraints testutils -bo
 #
 assert {"::tk::test::foo" ni [namespace children ::tk::test]}
 assert {"::tk::test::zez" ni [namespace children ::tk::test]}
-assert {"init" ni [info procs init]}
-assert {"kuk" ni [info procs kuk]}
-assert {"bar" ni [info vars bar]}
-assert {"pip" ni [info vars pip]}
-
+catch {rename init {}}
+catch {rename kuk {}}
+unset -nocomplain bar pip
 namespace eval ::tk::test::foo {
     proc init {} {
 	variable bar 123
@@ -184,7 +182,7 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
 #
 
 namespace delete ::tk::test::foo
-unset initVars
+unset -nocomplain bar initVars pip
 cleanupTests
 
 # EOF
