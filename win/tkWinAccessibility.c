@@ -244,7 +244,7 @@ static ULONG STDMETHODCALLTYPE TkWinAccessible_Release(IAccessible *this)
   if (--tkAccessible->refCount == 0) {
     tkAccessible->pathName = NULL;
     tkAccessible->hwnd = NULL;
-    free(tkAccessible);
+    ckfree(tkAccessible);
     return 0;
   }
   return tkAccessible->refCount;
@@ -755,6 +755,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)ckalloc(sizeof(TkWinAccessible));
+  
   if (!tkAccessible) {
     return NULL;
   } 
