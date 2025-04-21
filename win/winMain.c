@@ -286,6 +286,7 @@ Tcl_AppInit(
     (void) Tcl_EvalEx(interp,
 	    "set tcl_rcFileName [file tildeexpand ~/wishrc.tcl]",
 	    -1, TCL_EVAL_GLOBAL);
+
     return TCL_OK;
 }
 
