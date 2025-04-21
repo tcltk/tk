@@ -3260,12 +3260,12 @@ test spinbox-18.1 {Spinbox widget vs hiding} -setup {
 # test cases. This was replaced by inserting recently set configurations
 # that matters for the test case
 test spinbox-19.1 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 a
@@ -3275,12 +3275,12 @@ test spinbox-19.1 {spinbox widget validation} -setup {
 } -result {.e 1 0 a {} a all key}
 
 test spinbox-19.2 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 a   ;# previous settings
@@ -3291,12 +3291,12 @@ test spinbox-19.2 {spinbox widget validation} -setup {
 } -result {.e 1 1 ab a b all key}
 
 test spinbox-19.3 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 ab   ;# previous settings
@@ -3307,28 +3307,28 @@ test spinbox-19.3 {spinbox widget validation} -setup {
 } -result {.e 1 2 abc ab c all key}
 
 test spinbox-19.4 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 abc   ;# previous settings
     .e insert 1 123
-    list $validationData $::e
+    list $validationData $textVar
 } -cleanup {
     destroy .e
 } -result {{.e 1 1 a123bc abc 123 all key} a123bc}
 
 test spinbox-19.5 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 a123bc   ;# previous settings
@@ -3339,12 +3339,12 @@ test spinbox-19.5 {spinbox widget validation} -setup {
 } -result {.e 0 2 a13bc a123bc 2 all key}
 
 test spinbox-19.6 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 a13bc   ;# previous settings
@@ -3356,12 +3356,12 @@ test spinbox-19.6 {spinbox widget validation} -setup {
 } -result {.e 0 1 abc a13bc 13 key key}
 
 test spinbox-19.7 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focus \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abc                 ;# previous settings
@@ -3373,12 +3373,12 @@ test spinbox-19.7 {spinbox widget validation} -setup {
 } -result {}
 
 test spinbox-19.8 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e configure -validate focus    ;# previous settings
@@ -3392,12 +3392,12 @@ test spinbox-19.8 {spinbox widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focus focusin}
 
 test spinbox-19.9 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focus \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd      ;# previous settings
@@ -3413,12 +3413,12 @@ test spinbox-19.9 {spinbox widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focus focusout}
 
 test spinbox-19.10 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd          ;# previous settings
@@ -3431,12 +3431,12 @@ test spinbox-19.10 {spinbox widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} all focusin}
 
 test spinbox-19.11 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd          ;# previous settings
@@ -3452,12 +3452,12 @@ test spinbox-19.11 {spinbox widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} all focusout}
 
 test spinbox-19.12 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focusin \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert 0 abcd              ;# previous settings
@@ -3470,12 +3470,12 @@ test spinbox-19.12 {spinbox widget validation} -setup {
 } -result {.e -1 -1 abcd abcd {} focusin focusin}
 
 test spinbox-19.13 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focusin \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
@@ -3489,12 +3489,12 @@ test spinbox-19.13 {spinbox widget validation} -setup {
 } -result {}
 
 test spinbox-19.14 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
@@ -3508,12 +3508,12 @@ test spinbox-19.14 {spinbox widget validation} -setup {
 } -result {}
 
 test spinbox-19.15 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
@@ -3531,12 +3531,12 @@ test spinbox-19.15 {spinbox widget validation} -setup {
 
 # the same as 19.16 but added [.e validate] to returned list
 test spinbox-19.16 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
@@ -3554,16 +3554,16 @@ test spinbox-19.16 {spinbox widget validation} -setup {
 
 
 test spinbox-19.17 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate focuso \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
     .e insert end abcd              ;# previous settings
-    set ::e newdata
+    set textVar newdata
     list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
@@ -3572,17 +3572,17 @@ test spinbox-19.17 {spinbox widget validation} -setup {
 
 # Note: changed validateCmd - returns 0
 test spinbox-19.18 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
-    set ::e newdata                 ;# previous settings
+    set textVar newdata                 ;# previous settings
     .e configure -validate all
-    set ::e nextdata
+    set textVar nextdata
     list [.e cget -validate] $validationData
 } -cleanup {
     destroy .e
@@ -3593,15 +3593,15 @@ test spinbox-19.18 {spinbox widget validation} -setup {
 ## loop condition in the validation, when the spinbox textvar is also set
 # proc validateCmd2 used
 test spinbox-19.19 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd3 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
-    set ::e nextdata                 ;# previous settings
+    set textVar nextdata                 ;# previous settings
 
     .e configure -validatecommand $validateCmd2
     .e validate
@@ -3616,21 +3616,21 @@ test spinbox-19.19 {spinbox widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the spinbox widget shown as is in the textvar.
 test spinbox-19.20 {spinbox widget validation} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate all \
 	-validatecommand $validateCmd1 \
 	-invalidcommand bell \
-	-textvariable ::e \
+	-textvariable textVar \
 	-background red -foreground white
     pack .e
-    set ::e nextdata                 ;# previous settings
+    set textVar nextdata                 ;# previous settings
     .e configure -validatecommand $validateCmd2 ;# prev
     .e validate                     ;# previous settings
 
     .e configure -validate all
-    set ::e testdata
-    list [.e cget -validate] [.e get] $::e $validationData
+    set textVar testdata
+    list [.e cget -validate] [.e get] $textVar $validationData
 } -cleanup {
     destroy .e
 } -result {all testdata mydata {.e -1 -1 testdata mydata {} all forced}}
@@ -3641,15 +3641,15 @@ test spinbox-19.20 {spinbox widget validation} -setup {
 ## one of those "dangerous" conditions where the user will have a
 ## different value in the entry widget shown as is in the textvar.
 test spinbox-19.21 {spinbox widget validation - bug 40e4bf6198} -setup {
-    unset -nocomplain ::e validationData
+    unset -nocomplain textVar validationData
 } -body {
     spinbox .e -validate key \
 	-validatecommand $validateCmd2 \
-	-textvariable ::e
+	-textvariable textVar
     pack .e
-    set ::e origdata
+    set textVar origdata
     .e insert 0 A
-    list [.e cget -validate] [.e get] $::e $validationData
+    list [.e cget -validate] [.e get] $textVar $validationData
 } -cleanup {
     destroy .e
 } -result {none origdata mydata {.e 1 0 Aorigdata origdata A key key}}
