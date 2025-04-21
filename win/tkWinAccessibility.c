@@ -129,7 +129,7 @@ LONG RegisterTkWidget(Tk_Window tkwin);
 LONG GetChildIdForTkWindow(Tk_Window tkwin);
 Tk_Window GetTkWindowForChildId(LONG childId);
 static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin);
-Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr);
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void InstallCustomWndProcForMSAA(Tk_Window tkwin);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
@@ -500,7 +500,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accValue(IAccessible *this,
     }
   
     /* Otherwise, return the toplevel's accessible object.*/
-    Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->interp, widget);
+    Tk_Window toplevel = GetToplevelOfWidget(widget);
     if (!toplevel) return E_FAIL;
   
     const char *toplevelPath = Tk_PathName(toplevel);
@@ -829,28 +829,12 @@ static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
 
 
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
-Tk_Window GetToplevelOfWidget(Tcl_Interp *interp, Tk_Window widgetPtr)
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
-  if (widgetPtr == NULL) {
-    return NULL;
+  while (Tk_Parent(tkwin) != NULL) {
+    tkwin = Tk_Parent(tkwin);
   }
-
-  /* If the widget is already a toplevel, return it. */
-  if (Tk_IsTopLevel(widgetPtr)) {
-    return widgetPtr;
-  }
-
-  /* Iterate up the window hierarchy until a toplevel is found. */
-  Tk_Window parentPtr = Tk_Parent(widgetPtr);
-  while (parentPtr != NULL) {
-    if (Tk_IsTopLevel(parentPtr)) {
-      return parentPtr;
-    }
-    parentPtr = Tk_Parent(parentPtr);
-  }
-
-  /* No toplevel ancestor found (shouldn't usually happen for visible widgets). */
-  return NULL;
+  return tkwin;
 }
 
 /* Custom WndProc to handle WM_GETOBJ so MSAA responds to Tk accessibility. */
@@ -1069,8 +1053,7 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
   }
 
   /* Get the toplevel window. */
-  TkMainInfo *info = TkGetMainInfoList();
-  Tk_Window toplevel = GetToplevelOfWidget(info->interp, tkwin); 
+  Tk_Window toplevel = GetToplevelOfWidget(tkwin); 
   if (!toplevel) {
     return;
   }
