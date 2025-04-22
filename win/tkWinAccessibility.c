@@ -368,7 +368,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  LONG role;
+  LONG role =  0;
 
   if (!pvarRole) return E_INVALIDARG;
 
@@ -831,9 +831,12 @@ static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
-  while (Tk_Parent(tkwin) != NULL) {
+  while (!Tk_IsTopLevel(tkwin)) {
     tkwin = Tk_Parent(tkwin);
-  }
+      if (tkwin == NULL) {
+          return NULL; // Reached the top without finding a toplevel window
+        }
+    }
   return tkwin;
 }
 
@@ -1048,7 +1051,7 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
 
   Tk_Window tkwin = (Tk_Window)clientData;
 
-  if (!Tk_IsMapped(tkwin)) {
+  if (!tkwin || !Tk_IsMapped(tkwin)) {
     return;
   }
 
@@ -1144,7 +1147,7 @@ int TkWinAccessibleObjCmd(
 
   accessible_win = tkwin;
 
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(accessible_win));
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
   InstallCustomWndProcForMSAA(tkwin);
   TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
