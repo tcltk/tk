@@ -7465,16 +7465,25 @@ TkTextIndexBbox(
 				 * coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with index's dimensions. */
-    int *charWidthPtr)		/* If the 'index' is at the end of a display
+    int *charWidthPtr,		/* If the 'index' is at the end of a display
 				 * line and therefore takes up a very large
 				 * width, this is used to return the smaller
 				 * width actually desired by the index. */
+    int *cursorWidthPtr)	/* Receives same value as 'charWidthPtr'
+				 * except for the text index pointing to
+				 * a Tab which gets reduced to the width of
+				 * a single space. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
     TkTextDispChunk *chunkPtr;
     Tcl_Size byteCount;
+    int dummy;
 
+    if (charWidthPtr == NULL) {
+	charWidthPtr = &dummy;
+    }
+    
     /*
      * Make sure that all of the screen layout information is up to date.
      */
@@ -7539,20 +7548,16 @@ TkTextIndexBbox(
 	 * line.
 	 */
 
-	if (charWidthPtr != NULL) {
-	    *charWidthPtr = dInfoPtr->maxX - *xPtr;
-	    if (*charWidthPtr > textPtr->charWidth) {
-		*charWidthPtr = textPtr->charWidth;
-	    }
+	*charWidthPtr = dInfoPtr->maxX - *xPtr;
+	if (*charWidthPtr > textPtr->charWidth) {
+	    *charWidthPtr = textPtr->charWidth;
 	}
 	if (*xPtr > dInfoPtr->maxX) {
 	    *xPtr = dInfoPtr->maxX;
 	}
 	*widthPtr = dInfoPtr->maxX - *xPtr;
     } else {
-	if (charWidthPtr != NULL) {
-	    *charWidthPtr = *widthPtr;
-	}
+	*charWidthPtr = *widthPtr;
     }
     if (*widthPtr == 0) {
 	/*
@@ -7578,6 +7583,29 @@ TkTextIndexBbox(
 	*heightPtr = dInfoPtr->maxY - *yPtr;
 	if (*heightPtr <= 0) {
 	    return -1;
+	}
+    }
+    /*
+     * Display a block cursor on a tab with whitespace width
+     */
+
+    if (cursorWidthPtr != NULL) {
+	*cursorWidthPtr = *charWidthPtr;
+	if (chunkPtr->bboxProc == CharBboxProc) {
+	    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    BaseCharInfo *bciPtr =
+		(BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+	    char *chars = Tcl_DStringValue(&bciPtr->baseChars);
+
+	    if (chars[ciPtr->baseOffset + byteCount] == '\t')
+#else
+	    if (ciPtr->chars[byteCount] == '\t')
+#endif
+	    {
+		CharChunkMeasureChars(chunkPtr, " ", 1, 0, 1,
+			0, -1, 0, cursorWidthPtr);
+	    }
 	}
     }
     return 0;
