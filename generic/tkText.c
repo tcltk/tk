@@ -720,7 +720,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (TkTextIndexBbox(textPtr, indexPtr, &x, &y, &width, &height,
-		NULL) == 0) {
+		NULL, NULL) == 0) {
 	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewWideIntObj(x));
@@ -3733,7 +3733,8 @@ TextBlinkProc(
     }
   redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-    if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
+    if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h,
+	    &charWidth, NULL) == 0) {
 	int insertWidth;
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
 	if (textPtr->insertCursorType) {
