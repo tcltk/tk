@@ -153,7 +153,7 @@ static int GdiArc(
 	"-fill color -outline color "
 	"-width dimension -dash dashrule "
 	"-outlinestipple ignored -stipple ignored\n" ;
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
     double extent = 0.0, start = 0.0;
@@ -178,10 +178,10 @@ static int GdiArc(
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
 
@@ -657,6 +657,7 @@ static int GdiLine(
 
     int dodash = 0;
     const char *dashdata = 0;
+    double p1x, p1y, p2x, p2y;
 
     arrowshape[0] = 8;
     arrowshape[1] = 10;
@@ -675,13 +676,17 @@ static int GdiLine(
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }
+    polypoints[0].x = floor(p1x+0.5);
+    polypoints[0].y = floor(p1y+0.5);
+    polypoints[1].x = floor(p2x+0.5);
+    polypoints[1].y = floor(p2y+0.5);
     objc -= 6;
     objv += 6;
     npoly = 2;
@@ -933,7 +938,7 @@ static int GdiOval(
     static const char usage_message[] =
 	"::tk::print::_gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
 	"-stipple bitmap -width linewid";
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
     int width = 0;
@@ -954,19 +959,19 @@ static int GdiOval(
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (x1 > x2) {
-	int x3 = x1;
+	double x3 = x1;
 	x1 = x2;
 	x2 = x3;
     }
     if (y1 > y2) {
-	int y3 = y1;
+	double y3 = y1;
 	y1 = y2;
 	y2 = y3;
     }
@@ -1016,7 +1021,7 @@ static int GdiOval(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to right
      * and lower bounds to get appropriate behavior.
      */
-    Ellipse(hDC, x1, y1, x2+1, y2+1);
+    Ellipse(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1071,6 +1076,7 @@ static int GdiPolygon(
 
     int dodash = 0;
     const char *dashdata = 0;
+    double p1x, p1y, p2x, p2y;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
@@ -1086,12 +1092,16 @@ static int GdiPolygon(
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
+    polypoints[0].x = floor(p1x + 0.5);
+    polypoints[0].y = floor(p1y + 0.5);
+    polypoints[1].x = floor(p2x + 0.5);
+    polypoints[1].y = floor(p2y + 0.5);
     objc -= 6;
     objv += 6;
     npoly = 2;
@@ -1230,7 +1240,7 @@ static int GdiRectangle(
 	"-fill color -outline color "
 	"-stipple bitmap -width linewid";
 
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
     int width = 0;
@@ -1251,19 +1261,19 @@ static int GdiRectangle(
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (x1 > x2) {
-	int x3 = x1;
+	double x3 = x1;
 	x1 = x2;
 	x2 = x3;
     }
     if (y1 > y2) {
-	int y3 = y1;
+	double y3 = y1;
 	y1 = y2;
 	y2 = y3;
     }
@@ -1320,7 +1330,7 @@ static int GdiRectangle(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to
      * right and lower bounds to get appropriate behavior.
      */
-    Rectangle(hDC, x1, y1, x2+1, y2+1);
+    Rectangle(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1478,7 +1488,7 @@ int GdiText(
 	"-single -backfill";
 
     HDC hDC;
-    int x, y;
+    double x, y;
     const char *string = 0;
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
@@ -1505,15 +1515,15 @@ int GdiText(
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK)) {
 	return TCL_ERROR;
     }
     objc -= 4;
     objv += 4;
 
-    sizerect.left = sizerect.right = x;
-    sizerect.top = sizerect.bottom = y;
+    sizerect.left = sizerect.right = floor(x+0.5);
+    sizerect.top = sizerect.bottom = floor(y+0.5);
 
     while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
