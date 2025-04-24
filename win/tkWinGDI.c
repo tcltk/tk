@@ -3647,8 +3647,9 @@ static int PrintSelectPrinter(
     if (localPrinterName != NULL) {
 	char* varlink1 = (char*)ckalloc(100 * sizeof(char));
 	char** varlink2 = (char**)ckalloc(sizeof(char*));
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, NULL, 0, NULL, NULL);
 	*varlink2 = varlink1;
-	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, size_needed, NULL, NULL);
 
 	Tcl_LinkVar(interp, "::tk::print::printer_name", varlink2,
 	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
