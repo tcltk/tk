@@ -642,7 +642,7 @@ int
 Tk_CanvasObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1970,7 +1970,7 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr == itemPtr) {
-		if (index + 1 <= ((canvasPtr->textInfo.selectFirst
+		if ((Tcl_Size)index + 1 <= ((canvasPtr->textInfo.selectFirst
 			+ canvasPtr->textInfo.selectLast)/2)) {
 		    canvasPtr->textInfo.selectAnchor =
 			    canvasPtr->textInfo.selectLast + 1;
