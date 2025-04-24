@@ -29,6 +29,7 @@ to the userbase.
  - [MS-Win: Incorrect system menu entries for transient toplevels](https://core.tcl-lang.org/tk/tktview/159aa5)
  - [MS-Win: Withdrawn Tk transient windows can reappear in Windows taskbar preview](https://core.tcl-lang.org/tk/tktview/91d0e9)
  - [Aqua windows don't always move focus correctly](https://core.tcl-lang.org/tkview/28d33f)
+ - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tkview/f6d40f)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
