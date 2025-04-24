@@ -192,12 +192,12 @@ static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
 static int              ParseOFNOptions(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 			    enum OFNOper oper);
 static int		GetFileName(void *clientData,
-				    Tcl_Interp *interp, int objc,
+				    Tcl_Interp *interp, Tcl_Size objc,
 				    Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	       DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
@@ -308,12 +308,13 @@ int
 Tk_ChooseColorObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
     HWND hWnd;
-    int i, oldMode, winCode, result;
+    Tcl_Size i;
+    int oldMode, winCode, result;
     CHOOSECOLORW chooseColor;
     static int inited = 0;
     static COLORREF dwCustColors[16];
@@ -516,7 +517,7 @@ int
 Tk_GetOpenFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return GetFileName(clientData, interp, objc, objv, OFN_FILE_OPEN);
@@ -543,7 +544,7 @@ int
 Tk_GetSaveFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return GetFileName(clientData, interp, objc, objv, OFN_FILE_SAVE);
@@ -590,12 +591,12 @@ static int
 ParseOFNOptions(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum OFNOper oper,			/* 1 for Open, 0 for Save */
     OFNOpts *optsPtr)           /* Output, uninitialized on entry */
 {
-    int i;
+    Tcl_Size i;
     Tcl_DString ds;
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
@@ -1053,7 +1054,7 @@ static int
 GetFileName(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum OFNOper oper)	/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
@@ -1288,7 +1289,7 @@ int
 Tk_ChooseDirectoryObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result;
@@ -1326,14 +1327,14 @@ int
 Tk_MessageBoxObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
     HWND hWnd;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
-    int defaultBtn, icon, type;
-    int i, oldMode, winCode;
+    int defaultBtn, icon, type, oldMode, winCode;
+    Tcl_Size i;
     UINT flags;
     static const char *const optionStrings[] = {
 	"-default",	"-detail",	"-icon",	"-message",

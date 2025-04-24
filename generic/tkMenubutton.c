@@ -166,7 +166,7 @@ static char *		MenuButtonTextVarProc(void *clientData,
 			    const char *name2, int flags);
 static Tcl_ObjCmdProc2 MenuButtonWidgetObjCmd;
 static int		ConfigureMenuButton(Tcl_Interp *interp,
-			    TkMenuButton *mbPtr, int objc,
+			    TkMenuButton *mbPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		DestroyMenuButton(void *memPtr);
 
@@ -192,7 +192,7 @@ int
 Tk_MenubuttonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMenuButton *mbPtr;
@@ -471,7 +471,7 @@ ConfigureMenuButton(
     TkMenuButton *mbPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in objv. */
+    Tcl_Size objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
