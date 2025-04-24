@@ -144,7 +144,7 @@ static const struct gdi_command {
 static int GdiArc(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -153,7 +153,7 @@ static int GdiArc(
 	"-fill color -outline color "
 	"-width dimension -dash dashrule "
 	"-outlinestipple ignored -stipple ignored\n" ;
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
     double extent = 0.0, start = 0.0;
@@ -171,23 +171,23 @@ static int GdiArc(
     drawfunc = Pie;
 
     /* Verrrrrry simple for now.... */
-    if (argc < 6) {
+    if (objc < 6) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
 
-    argc -= 6;
+    objc -= 6;
     objv += 6;
-    while (argc >= 2) {
+    while (objc >= 2) {
 	if (strcmp(Tcl_GetString(objv[0]), "-extent") == 0) {
 	    extent = atof(Tcl_GetString(objv[1]));
 	} else if (strcmp(Tcl_GetString(objv[0]), "-start") == 0) {
@@ -227,7 +227,7 @@ static int GdiArc(
 	    Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	    return TCL_ERROR;
 	}
-	argc -= 2;
+	objc -= 2;
 	objv += 2;
     }
     xr0 = xr1 = (x1 + x2) / 2;
@@ -368,7 +368,7 @@ static int GdiImage(
 static int GdiPhoto(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -392,7 +392,7 @@ static int GdiPhoto(
      */
 
     /* HDC is required. */
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -412,13 +412,13 @@ static int GdiPhoto(
     }
 
     /* Parse the command line arguments. */
-    for (j = 2; j < argc; j++) {
+    for (j = 2; j < objc; j++) {
 	if (strcmp(Tcl_GetString(objv[j]), "-destination") == 0) {
 	    double x, y, w, h;
 	    int count = 0;
 	    char dummy;
 
-	    if (j < argc) {
+	    if (j < objc) {
 		count = sscanf(Tcl_GetString(objv[++j]), "%lf%lf%lf%lf%c",
 			&x, &y, &w, &h, &dummy);
 	    }
@@ -626,7 +626,7 @@ static int Bezierize(
 static int GdiLine(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -657,36 +657,41 @@ static int GdiLine(
 
     int dodash = 0;
     const char *dashdata = 0;
+    double p1x, p1y, p2x, p2y;
 
     arrowshape[0] = 8;
     arrowshape[1] = 10;
     arrowshape[2] = 3;
 
     /* Verrrrrry simple for now.... */
-    if (argc < 6) {
+    if (objc < 6) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    polypoints = (POINT *)attemptckalloc((argc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
     if (polypoints == 0) {
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	||	(Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
+	||	(Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }
-    argc -= 6;
+    polypoints[0].x = floor(p1x+0.5);
+    polypoints[0].y = floor(p1y+0.5);
+    polypoints[1].x = floor(p2x+0.5);
+    polypoints[1].y = floor(p2y+0.5);
+    objc -= 6;
     objv += 6;
     npoly = 2;
 
-    while (argc >= 2) {
+    while (objc >= 2) {
 	/* Check for a number. */
 	x = strtoul(Tcl_GetString(objv[0]), &strend, 0);
 	if (strend > Tcl_GetString(objv[0])) {
@@ -697,7 +702,7 @@ static int GdiLine(
 		polypoints[npoly].x = x;
 		polypoints[npoly].y = y;
 		npoly++;
-		argc -= 2;
+		objc -= 2;
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
@@ -717,7 +722,7 @@ static int GdiLine(
 		    doarrow = 1;
 		}
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-arrowshape") == 0) {
 		/* List of 3 numbers--set arrowshape array. */
 		int a1, a2, a3;
@@ -732,19 +737,19 @@ static int GdiLine(
 		/* Else the argument was bad. */
 
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-capstyle") == 0) {
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-fill") == 0) {
 		if (GdiGetColor(objv[1], &linecolor)) {
 		    dolinecolor = 1;
 		}
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-joinstyle") == 0) {
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-smooth") == 0) {
 		/* Argument is true/false or 1/0 or bezier. */
 		if (Tcl_GetString(objv[1])) {
@@ -759,35 +764,35 @@ static int GdiLine(
 			break;
 		    }
 		    objv += 2;
-		    argc -= 2;
+		    objc -= 2;
 		}
 	    } else if (strcmp(Tcl_GetString(*objv), "-splinesteps") == 0) {
 		if (Tcl_GetIntFromObj(interp, objv[1], &nStep) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-dash") == 0) {
 		if (Tcl_GetString(objv[1])) {
 		    dodash = 1;
 		    dashdata = Tcl_GetString(objv[1]);
 		}
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-dashoffset") == 0) {
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-stipple") == 0) {
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-width") == 0) {
 		if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		objv += 2;
-		argc -= 2;
+		objc -= 2;
 	    } else { /* It's an unknown argument!. */
-		argc--;
+		objc--;
 		objv++;
 	    }
 	    /* Check for arguments
@@ -927,13 +932,13 @@ static int GdiLine(
 static int GdiOval(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
 	"::tk::print::_gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
 	"-stipple bitmap -width linewid";
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
     int width = 0;
@@ -947,33 +952,33 @@ static int GdiOval(
     const char *dashdata = 0;
 
     /* Verrrrrry simple for now.... */
-    if (argc < 6) {
+    if (objc < 6) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (x1 > x2) {
-	int x3 = x1;
+	double x3 = x1;
 	x1 = x2;
 	x2 = x3;
     }
     if (y1 > y2) {
-	int y3 = y1;
+	double y3 = y1;
 	y1 = y2;
 	y2 = y3;
     }
-    argc -= 6;
+    objc -= 6;
     objv += 6;
 
-    while (argc > 0) {
+    while (objc > 0) {
 	/* Now handle any other arguments that occur. */
 	if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
 	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &fillcolor)) {
@@ -998,7 +1003,7 @@ static int GdiOval(
 	    }
 	}
 	objv += 2;
-	argc -= 2;
+	objc -= 2;
     }
 
     if (dofillcolor) {
@@ -1016,7 +1021,7 @@ static int GdiOval(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to right
      * and lower bounds to get appropriate behavior.
      */
-    Ellipse(hDC, x1, y1, x2+1, y2+1);
+    Ellipse(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1046,7 +1051,7 @@ static int GdiOval(
 static int GdiPolygon(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -1071,32 +1076,37 @@ static int GdiPolygon(
 
     int dodash = 0;
     const char *dashdata = 0;
+    double p1x, p1y, p2x, p2y;
 
     /* Verrrrrry simple for now.... */
-    if (argc < 6) {
+    if (objc < 6) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    polypoints = (POINT *)attemptckalloc((argc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
     if (polypoints == 0) {
 	/* TODO: unreachable */
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[2], (int *)&polypoints[0].x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], (int *)&polypoints[0].y) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], (int *)&polypoints[1].x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], (int *)&polypoints[1].y) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    argc -= 6;
+    polypoints[0].x = floor(p1x + 0.5);
+    polypoints[0].y = floor(p1y + 0.5);
+    polypoints[1].x = floor(p2x + 0.5);
+    polypoints[1].y = floor(p2y + 0.5);
+    objc -= 6;
     objv += 6;
     npoly = 2;
 
-    while (argc >= 2) {
+    while (objc >= 2) {
 	/* Check for a number */
 	x = strtoul(Tcl_GetString(objv[0]), &strend, 0);
 	if (strend > Tcl_GetString(objv[0])) {
@@ -1107,7 +1117,7 @@ static int GdiPolygon(
 		polypoints[npoly].x = x;
 		polypoints[npoly].y = y;
 		npoly++;
-		argc -= 2;
+		objc -= 2;
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
@@ -1161,7 +1171,7 @@ static int GdiPolygon(
 		    dashdata = Tcl_GetString(objv[1]);
 		}
 	    }
-	    argc -= 2;
+	    objc -= 2;
 	    objv += 2;
 	}
     }
@@ -1222,7 +1232,7 @@ static int GdiPolygon(
 static int GdiRectangle(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -1230,7 +1240,7 @@ static int GdiRectangle(
 	"-fill color -outline color "
 	"-stipple bitmap -width linewid";
 
-    int x1, y1, x2, y2;
+    double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
     int width = 0;
@@ -1244,34 +1254,34 @@ static int GdiRectangle(
     const char *dashdata = 0;
 
     /* Verrrrrry simple for now.... */
-    if (argc < 6) {
+    if (objc < 6) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y1) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &x2) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[5], &y2) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &x2) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (x1 > x2) {
-	int x3 = x1;
+	double x3 = x1;
 	x1 = x2;
 	x2 = x3;
     }
     if (y1 > y2) {
-	int y3 = y1;
+	double y3 = y1;
 	y1 = y2;
 	y2 = y3;
     }
-    argc -= 6;
+    objc -= 6;
     objv += 6;
 
     /* Now handle any other arguments that occur. */
-    while (argc > 1) {
+    while (objc > 1) {
 	if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
 	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &fillcolor)) {
 		dofillcolor = 1;
@@ -1295,7 +1305,7 @@ static int GdiRectangle(
 	    }
 	}
 
-	argc -= 2;
+	objc -= 2;
 	objv += 2;
     }
 
@@ -1320,7 +1330,7 @@ static int GdiRectangle(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to
      * right and lower bounds to get appropriate behavior.
      */
-    Rectangle(hDC, x1, y1, x2+1, y2+1);
+    Rectangle(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1352,7 +1362,7 @@ static int GdiRectangle(
 static int GdiCharWidths(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -1374,19 +1384,19 @@ static int GdiCharWidths(
     int widths[256];
     int retval;
 
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
 
     hDC = printDC;
 
-    argc -= 2;
+    objc -= 2;
     objv += 2;
 
-    while (argc > 0) {
+    while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
 	    if (GdiMakeLogFont(interp, Tcl_GetString(objv[0]), &lf, hDC)) {
 		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
@@ -1397,13 +1407,13 @@ static int GdiCharWidths(
 	    /* Else leave the font alone!. */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-array") == 0) {
 	    objv++;
-	    argc--;
-	    if (argc > 0) {
+	    objc--;
+	    if (objc > 0) {
 		aryvarname = Tcl_GetString(objv[0]);
 	    }
 	}
 	objv++;
-	argc--;
+	objc--;
     }
 
     /* Now, get the widths using the correct function for font type. */
@@ -1467,7 +1477,7 @@ static int GdiCharWidths(
 int GdiText(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -1478,7 +1488,7 @@ int GdiText(
 	"-single -backfill";
 
     HDC hDC;
-    int x, y;
+    double x, y;
     const char *string = 0;
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
@@ -1496,7 +1506,7 @@ int GdiText(
     WCHAR *wstring;
     Tcl_DString tds;
 
-    if (argc < 4) {
+    if (objc < 4) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -1505,27 +1515,27 @@ int GdiText(
 
     hDC = printDC;
 
-    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    argc -= 4;
+    objc -= 4;
     objv += 4;
 
-    sizerect.left = sizerect.right = x;
-    sizerect.top = sizerect.bottom = y;
+    sizerect.left = sizerect.right = floor(x+0.5);
+    sizerect.top = sizerect.bottom = floor(y+0.5);
 
-    while (argc > 0) {
+    while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
-	    if (argc > 0) {
+	    if (objc > 0) {
 		Tk_GetAnchor(interp, Tcl_GetString(objv[0]), &anchor);
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-justify") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
-	    if (argc > 0) {
+	    if (objc > 0) {
 		if (strcmp(Tcl_GetString(objv[0]), "left") == 0) {
 		    format_flags |= DT_LEFT;
 		} else if (strcmp(Tcl_GetString(objv[0]), "center") == 0) {
@@ -1535,13 +1545,13 @@ int GdiText(
 		}
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-text") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
-	    if (argc > 0) {
+	    if (objc > 0) {
 		string = Tcl_GetString(objv[0]);
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
 	    if (GdiMakeLogFont(interp, Tcl_GetString(objv[0]), &lf, hDC)) {
 		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
@@ -1551,20 +1561,20 @@ int GdiText(
 	    }
 	    /* Else leave the font alone! */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
 	    /* Not implemented yet. */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
 	    /* Get text color. */
 	    if (GdiGetColor(objv[0], &textcolor)) {
 		dotextcolor = 1;
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    argc--;
+	    objc--;
 	    objv++;
-	    if (argc > 0) {
+	    if (objc > 0) {
 		int value;
 		if (Tcl_GetIntFromObj(interp, objv[0], &value) != TCL_OK) {
 		    return TCL_ERROR;
@@ -1579,7 +1589,7 @@ int GdiText(
 	    dobgmode = 1;
 	}
 
-	argc--;
+	objc--;
 	objv++;
     }
 
@@ -1822,7 +1832,7 @@ static const char *GdiModeToName(
 static int GdiMap(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     static const char usage_message[] =
@@ -1846,7 +1856,7 @@ static int GdiMap(
     int use_mode     = 0;
 
     /* Required parameter: HDC for printer. */
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -1860,14 +1870,14 @@ static int GdiMap(
     }
 
     /* Parse remaining arguments. */
-    for (argno = 2; argno < argc; argno++) {
+    for (argno = 2; argno < objc; argno++) {
 	if (strcmp(Tcl_GetString(objv[argno]), "-default") == 0) {
 	    vextent.cx = vextent.cy = wextent.cx = wextent.cy = 1;
 	    vorigin.x = vorigin.y = worigin.x = worigin.y = 0;
 	    mapmode = MM_TEXT;
 	    use_default = 1;
 	} else if (strcmp(Tcl_GetString(objv[argno]), "-mode") == 0) {
-	    if (argno + 1 >= argc) {
+	    if (argno + 1 >= objc) {
 		need_usage = 1;
 	    } else {
 		mapmode = GdiNameToMode(Tcl_GetString(objv[argno + 1]));
@@ -1875,7 +1885,7 @@ static int GdiMap(
 		argno++;
 	    }
 	} else if (strcmp(Tcl_GetString(objv[argno]), "-offset") == 0) {
-	    if (argno + 1 >= argc) {
+	    if (argno + 1 >= objc) {
 		need_usage = 1;
 	    } else {
 		/* It would be nice if this parsed units as well.... */
@@ -1888,7 +1898,7 @@ static int GdiMap(
 		argno++;
 	    }
 	} else if (strcmp(Tcl_GetString(objv[argno]), "-logical") == 0) {
-	    if (argno + 1 >= argc) {
+	    if (argno + 1 >= objc) {
 		need_usage = 1;
 	    } else {
 		int count;
@@ -1910,7 +1920,7 @@ static int GdiMap(
 		}
 	    }
 	} else if (strcmp(Tcl_GetString(objv[argno]), "-physical") == 0) {
-	    if (argno + 1 >= argc) {
+	    if (argno + 1 >= objc) {
 		need_usage = 1;
 	    } else {
 		int count;
@@ -2005,7 +2015,7 @@ static int GdiMap(
 static int GdiCopyBits(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     /* Goal: get the Tk_Window from the top-level
@@ -2067,7 +2077,7 @@ static int GdiCopyBits(
      * Parse the arguments.
      */
     /* HDC is required. */
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -2085,7 +2095,7 @@ static int GdiCopyBits(
     }
 
     /* Loop through the remaining arguments. */
-    for (k=2; k<argc; k++) {
+    for (k=2; k<objc; k++) {
 	if (strcmp(Tcl_GetString(objv[k]), "-window") == 0) {
 	    if (Tcl_GetString(objv[k+1]) && Tcl_GetString(objv[k+1])[0] == '.') {
 		do_window = 1;
