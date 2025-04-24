@@ -30,6 +30,7 @@ to the userbase.
  - [MS-Win: Withdrawn Tk transient windows can reappear in Windows taskbar preview](https://core.tcl-lang.org/tk/tktview/91d0e9)
  - [Aqua windows don't always move focus correctly](https://core.tcl-lang.org/tkview/28d33f)
  - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tkview/f6d40f)
+ - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tkview/855ec4)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
