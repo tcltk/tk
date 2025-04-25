@@ -3635,6 +3635,8 @@ static int PrintSelectPrinter(
 	    localDevmode = NULL;
 	}
     } else {
+	unsigned int errorcode = CommDlgExtendedError();
+
 	/*
 	 * The user cancelled, or there was an error
 	 * The code on the Tcl side checks if the variable
@@ -3643,6 +3645,12 @@ static int PrintSelectPrinter(
 	 * So we better unset this here, unconditionally.
 	 */
 	Tcl_UnsetVar(interp, "::tk::print::printer_name", 0);
+	if (errorcode != 0) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("print failed: error %04x",
+		errorcode));
+	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", (char*)NULL);
+	    return TCL_ERROR;
+	}
 	return TCL_OK;
     }
 
@@ -3655,13 +3663,13 @@ static int PrintSelectPrinter(
      * script level.
      */
     if (localPrinterName != NULL) {
-#define PRNAME_MAX_LEN 100
-	char prname[PRNAME_MAX_LEN];
+	char *prname;
 	int size_needed = WideCharToMultiByte(CP_UTF8, 0, localPrinterName,
 		-1, NULL, 0, NULL, NULL);
+
+	prname = (char*)ckalloc(size_needed);
 	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, prname,
 		size_needed, NULL, NULL);
-
 	Tcl_SetVar2Ex(interp, "::tk::print::printer_name", NULL,
 		Tcl_NewStringObj(prname, size_needed - 1), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::copies", NULL,
@@ -3674,6 +3682,7 @@ static int PrintSelectPrinter(
 		Tcl_NewIntObj(paper_width), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::paper_height", NULL,
 		Tcl_NewIntObj(paper_height), 0);
+	ckfree(prname);
     }
 
     return TCL_OK;
