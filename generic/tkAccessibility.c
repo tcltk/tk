@@ -31,7 +31,7 @@ int     Tk_SetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
 int     Tk_SetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       int objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
-			       int objc, Tcl_Obj *const objv[]);
+			     int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
@@ -45,7 +45,7 @@ int     Tk_GetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
 int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
-			       int objc, Tcl_Obj *const objv[]);
+			     int objc, Tcl_Obj *const objv[]);
 
 /*
  *----------------------------------------------------------------------
@@ -98,7 +98,7 @@ Tk_SetAccessibleRole(
     Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
     Tcl_SetHashValue(hPtr, AccessibleAttributes);
   } else {
-	 AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
   }
 
   /* Set accessible role for window.  */
@@ -436,10 +436,10 @@ Tk_SetAccessibleAction(
 
 int
 Tk_SetAccessibleHelp(
-		       TCL_UNUSED(void *),
-		       Tcl_Interp *ip,		/* Current interpreter. */
-		       int objc,			/* Number of arguments. */
-		       Tcl_Obj *const objv[])	/* Argument objects. */
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
 	
 {	
   if (objc < 3) {
@@ -847,10 +847,10 @@ Tk_GetAccessibleAction(
 
 int
 Tk_GetAccessibleHelp(
-		       TCL_UNUSED(void *),
-		       Tcl_Interp *ip,		/* Current interpreter. */
-		       int objc,			/* Number of arguments. */
-		       Tcl_Obj *const objv[])	/* Argument objects. */
+		     TCL_UNUSED(void *),
+		     Tcl_Interp *ip,		/* Current interpreter. */
+		     int objc,			/* Number of arguments. */
+		     Tcl_Obj *const objv[])	/* Argument objects. */
 	
 {	
   if (objc < 2) {
