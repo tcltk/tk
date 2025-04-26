@@ -3647,7 +3647,7 @@ static int PrintSelectPrinter(
 	Tcl_UnsetVar(interp, "::tk::print::printer_name", 0);
 	if (errorcode != 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("print failed: error %04x",
-		errorcode));
+		    errorcode));
 	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", (char*)NULL);
 	    return TCL_ERROR;
 	}
