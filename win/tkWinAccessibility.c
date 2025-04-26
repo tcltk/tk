@@ -399,11 +399,6 @@ TkWinAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRo
     }
   }
   
-  if (role == ROLE_SYSTEM_PUSHBUTTON) {
-    MessageBoxW(NULL, L"Role", L"Role is button", MB_OK | MB_ICONINFORMATION); 
-  }
-
-
   pvarRole->vt = VT_I4;
   pvarRole->lVal = role;
   return S_OK;
