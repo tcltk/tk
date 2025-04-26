@@ -279,8 +279,8 @@ namespace eval ::tk::print {
 		set sc [$wid cget -scrollregion]
 		# if there is no scrollregion, use width and height.
 		if {$sc eq ""} {
-		    set window_x [$wid cget -width]
-		    set window_y [$wid cget -height]
+		    set window_x [winfo pixels $wid [$wid cget -width]]
+		    set window_y [winfo pixels $wid [$wid cget -height]]
 		} else {
 		    set window_x [lindex $sc 2]
 		    set window_y [lindex $sc 3]
