@@ -257,9 +257,15 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    if (winPtr && winPtr->wmInfoPtr->hints.initial_state != IconicState) {
-	winPtr->wmInfoPtr->hints.initial_state = IconicState;
+    NSString *name = [notification name];
+    if (!winPtr) {
+	return;
+    }
+    if ([name isEqualToString:NSWindowWillMiniaturizeNotification]) {
+	if (winPtr && winPtr->wmInfoPtr->hints.initial_state != IconicState) {
+	    winPtr->wmInfoPtr->hints.initial_state = IconicState;
+	}
+    } else {
 	TkWmUnmapWindow(winPtr);
     }
 }
@@ -356,6 +362,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
@@ -388,10 +395,12 @@ static void RefocusGrabWindow(void *data) {
 
 - (void) applicationActivate: (NSNotification *) notification
 {
-    (void)notification;
+    NSWindow *iconifiedWindow = nil;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
+#else
+    (void) notification;
 #endif
     [NSApp tkCheckPasteboard];
 
@@ -415,10 +424,17 @@ static void RefocusGrabWindow(void *data) {
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
-	} else {
-	    [[self keyWindow] orderFront: self];
+	}
+	if (iconifiedWindow == nil && [win isMiniaturized]) {
+	    iconifiedWindow = win;
 	}
     }
+    if ([self keyWindow] == nil && iconifiedWindow != nil) {
+	[iconifiedWindow makeKeyAndOrderFront:self];
+    } else {
+	[[self keyWindow] orderFront:self];
+    }
+
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
