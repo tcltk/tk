@@ -97,6 +97,8 @@ Tk_SetAccessibleRole(
     AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
     Tcl_SetHashValue(hPtr, AccessibleAttributes);
+  } else {
+	 AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
   }
 
   /* Set accessible role for window.  */
