@@ -1215,7 +1215,7 @@ if {[tk windowingsystem] eq "x11"} {
 		$pw - ($option(margin-left) + $option(margin-right)) / 72.0
 	    }]
 	    # set the wrap length at 98% of computed page width in chars
-	    # the 9.8 constant is the product 10.0 (default cpi) * 0.95
+	    # the 9.8 constant is the product 10.0 (default cpi) * 0.98
 	    set wl [expr {int( 9.8 * $pw / $tzoom )}]
 	    set data [encoding convertto utf-8 [_wrapLines [$w get 1.0 end] $wl]]
 	}
