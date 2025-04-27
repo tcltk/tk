@@ -32,6 +32,7 @@ to the userbase.
  - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tkview/f6d40f)
  - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tkview/855ec4)
  - [tk print command fails with canvas widget](https://core.tcl-lang.org/tkview/d2eac2)
+ - [tk print command fails on windows](https://core.tcl-lang.org/tkview/bb5c3d)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 

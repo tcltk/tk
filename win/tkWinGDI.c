@@ -3644,6 +3644,24 @@ static int PrintSelectPrinter(
 	} else {
 	    localDevmode = NULL;
 	}
+    } else {
+	unsigned int errorcode = CommDlgExtendedError();
+
+	/*
+	 * The user cancelled, or there was an error
+	 * The code on the Tcl side checks if the variable
+	 * ::tk::print::printer_name is defined to determine
+	 * that a valid selection was made.
+	 * So we better unset this here, unconditionally.
+	 */
+	Tcl_UnsetVar(interp, "::tk::print::printer_name", 0);
+	if (errorcode != 0) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("print failed: error %04x",
+		    errorcode));
+	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", (char*)NULL);
+	    return TCL_ERROR;
+	}
+	return TCL_OK;
     }
 
     if (pd.hDevMode != NULL) {
@@ -3651,27 +3669,30 @@ static int PrintSelectPrinter(
     }
 
     /*
-     * Store print properties and link variables so they can be accessed from
+     * Store print properties in variables so they can be accessed from
      * script level.
      */
     if (localPrinterName != NULL) {
-	char* varlink1 = (char*)ckalloc(100 * sizeof(char));
-	char** varlink2 = (char**)ckalloc(sizeof(char*));
-	*varlink2 = varlink1;
-	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
+	char *prname;
+	int size_needed = WideCharToMultiByte(CP_UTF8, 0, localPrinterName,
+		-1, NULL, 0, NULL, NULL);
 
-	Tcl_LinkVar(interp, "::tk::print::printer_name", varlink2,
-	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
-	Tcl_LinkVar(interp, "::tk::print::copies", &copies,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-	Tcl_LinkVar(interp, "::tk::print::dpi_x", &dpi_x,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-	Tcl_LinkVar(interp, "::tk::print::dpi_y", &dpi_y,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-	Tcl_LinkVar(interp, "::tk::print::paper_width", &paper_width,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
-	Tcl_LinkVar(interp, "::tk::print::paper_height", &paper_height,
-	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	prname = (char*)ckalloc(size_needed);
+	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, prname,
+		size_needed, NULL, NULL);
+	Tcl_SetVar2Ex(interp, "::tk::print::printer_name", NULL,
+		Tcl_NewStringObj(prname, size_needed - 1), 0);
+	Tcl_SetVar2Ex(interp, "::tk::print::copies", NULL,
+		Tcl_NewIntObj(copies), 0);
+	Tcl_SetVar2Ex(interp, "::tk::print::dpi_x", NULL,
+		Tcl_NewIntObj(dpi_x), 0);
+	Tcl_SetVar2Ex(interp, "::tk::print::dpi_y", NULL,
+		Tcl_NewIntObj(dpi_y), 0);
+	Tcl_SetVar2Ex(interp, "::tk::print::paper_width", NULL,
+		Tcl_NewIntObj(paper_width), 0);
+	Tcl_SetVar2Ex(interp, "::tk::print::paper_height", NULL,
+		Tcl_NewIntObj(paper_height), 0);
+	ckfree(prname);
     }
 
     return TCL_OK;
