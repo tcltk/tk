@@ -741,18 +741,22 @@ static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
-  /* Check to see if Tk window is alive. */
-  if (!tkwin || Tk_WindowId(tkwin) == None) {
+  /* First check if the tkwin is NULL (destroyed). If yes, exit. */
+  if (!tkwin) {
     return NULL;
   }
-  while (!Tk_IsTopLevel(tkwin)) {
+
+  /*Tk window exists. Now look for toplevel. If no parent found, return null. */
+  while (tkwin && !Tk_IsTopLevel(tkwin)) {
     tkwin = Tk_Parent(tkwin);
-    if (!tkwin || Tk_WindowId(tkwin) == None) {
+    if (tkwin == NULL) {
       return NULL;
     }
   }
+
   return tkwin;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -880,9 +884,12 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
     if (tkAccessible) {
       Tk_Window tkwin = tkAccessible->win;
       if (tkwin) {
-	/* Remove the focus event handler to avoid future crashes. */
+	/* Mark tkwin as NULL immediately to prevent later access. */
+	tkAccessible->win = NULL;
+
+	/* Clean up event handlers. */
 	Tk_DeleteEventHandler(tkwin,
-			      FocusChangeMask, /* or whatever mask you used */
+			      FocusChangeMask,
 			      TkWinAccessible_FocusEventHandler,
 			      (ClientData)tkwin);
       }
@@ -894,10 +901,11 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 }
 
 
+
 /*
  *----------------------------------------------------------------------
  *
- * TkWinAccessible_FocusHandler --
+ * TkWinAccessible_FocusEventHandler --
  *
  * Force accessibility focus when Tk receives a FocusIn event.
  *
@@ -922,17 +930,23 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
 
   Tk_Window tkwin = (Tk_Window)clientData;
 
-  if (!tkwin || !Tk_IsMapped(tkwin)) {
+  /* Ensure that tkwin is valid (not destroyed).*/
+  if (!tkwin || Tk_WindowId(tkwin) == None) {
+    return;  
+  }
+
+  /* Ensure the window is mapped (i.e., visible). */
+  if (!Tk_IsMapped(tkwin)) {
     return;
   }
 
-  /* Get the toplevel window. */
-  Tk_Window toplevel = GetToplevelOfWidget(tkwin); 
+  /* Get toplevel window. */
+  Tk_Window toplevel = GetToplevelOfWidget(tkwin);
   if (!toplevel) {
     return;
   }
 
-  /* Ensure it exists and get HWND. */
+  /* Ensure the toplevel window exists and get HWND. */
   Tk_MakeWindowExist(toplevel);
   HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
   if (!hwnd || !IsWindow(hwnd)) {
@@ -944,7 +958,7 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
   if (childId > 0) {
     g_focusedChildId = childId;
 
-    /* Notify MSAA. */
+    /* Notify MSAA of the focus event. */
     NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
   }
 }
