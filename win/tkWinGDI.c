@@ -57,7 +57,7 @@ static int		GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
  */
 static int		GdiMakeLogFont(Tcl_Interp *interp, const char *str,
 			    LOGFONTW *lf, HDC hDC);
-static int		GdiMakePen(Tcl_Interp *interp, int width,
+static int		GdiMakePen(Tcl_Interp *interp, double dwidth,
 			    int dashstyle, const char *dashstyledata,
 			    int capstyle, int joinstyle,
 			    int stipplestyle, const char *stippledata,
@@ -158,7 +158,7 @@ static int GdiArc(
     HDC hDC;
     double extent = 0.0, start = 0.0;
     DrawFunc drawfunc;
-    int width = 0;
+    double width = 0.0;
     HPEN hPen;
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
@@ -214,7 +214,7 @@ static int GdiArc(
 	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
 	    /* ignored */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    if (Tcl_GetIntFromObj(interp, objv[1], &width)) {
+	    if (Tcl_GetDoubleFromObj(interp, objv[1], &width)) {
 		return TCL_ERROR;
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-dash") == 0) {
@@ -646,7 +646,7 @@ static int GdiLine(
     LOGBRUSH lbrush;
     HBRUSH hBrush = NULL;
 
-    int width          = 0;
+    double width       = 0.0;
     COLORREF linecolor = 0;
     int dolinecolor    = 0;
     int dosmooth       = 0;
@@ -786,7 +786,7 @@ static int GdiLine(
 		objv += 2;
 		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-width") == 0) {
-		if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
+		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		objv += 2;
@@ -941,7 +941,7 @@ static int GdiOval(
     double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
-    int width = 0;
+    double width = 0.0;
     COLORREF linecolor = 0, fillcolor = 0;
     int dolinecolor = 0, dofillcolor = 0;
     HBRUSH hBrush = NULL;
@@ -992,7 +992,7 @@ static int GdiOval(
 	    /* Not actually implemented */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
 	    if (Tcl_GetString(objv[1])) {
-		if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
+		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 	    }
@@ -1067,7 +1067,7 @@ static int GdiPolygon(
     int x, y;
     HDC hDC;
     HPEN hPen;
-    int width = 0;
+    double width = 0.0;
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
@@ -1161,7 +1161,7 @@ static int GdiPolygon(
 		/* Not supported */
 	    } else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
 		if (Tcl_GetString(objv[1])) {
-		    if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
+		    if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
 			return TCL_ERROR;
 		    }
 		}
@@ -1243,7 +1243,7 @@ static int GdiRectangle(
     double x1, y1, x2, y2;
     HDC hDC;
     HPEN hPen;
-    int width = 0;
+    double width = 0.0;
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
@@ -1294,7 +1294,7 @@ static int GdiRectangle(
 	    /* Not supported; ignored */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
 	    if (Tcl_GetString(objv[1])) {
-		if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK) {
+		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 	    }
@@ -2663,7 +2663,7 @@ static int GdiMakeLogFont(
 
 static int GdiMakePen(
     Tcl_Interp *interp,
-    int width,
+    double dwidth,
     int dashstyle,
     const char *dashstyledata,
     TCL_UNUSED(int),		/* Ignored for now. */
@@ -2688,7 +2688,7 @@ static int GdiMakePen(
      * after first failure) may suffice for working around this. The
      * ExtCreatePen is not supported at all under Win32.
      */
-
+    int width = floor(dwidth + 0.5);
     HPEN hPen;
     LOGBRUSH lBrush;
     DWORD pStyle = PS_SOLID;           /* -dash should override*/
