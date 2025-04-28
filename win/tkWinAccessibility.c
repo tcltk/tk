@@ -755,7 +755,6 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
   Tk_Window current = tkwin;
   while (current != NULL && Tk_WindowId(current) != None) {
     Tk_Window parent = Tk_Parent(current);
-
     if (parent == NULL) {
       break;
     }
