@@ -9,6 +9,10 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
@@ -706,9 +710,13 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
     deleteWindows
 } -result {}
 
-# cleanup
+#
+# CLEANUP
+#
+
 imageFinish
 deleteWindows
+testutils forget image
 cleanupTests
 return
 

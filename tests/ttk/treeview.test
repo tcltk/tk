@@ -8,6 +8,9 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import scroll
+
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
 #	are properly linked.
@@ -18,18 +21,10 @@ loadTestedCommands
 proc consistencyCheck {tv {item {}}} {
     set i 0
     foreach child [$tv children $item] {
-	assert {[$tv parent $child] == $item} "parent $child = $item"
-	assert {[$tv index $child] == $i} "index $child [$tv index $child]=$i"
+	assert {[$tv parent $child] eq $item}
+	assert {[$tv index $child] == $i}
 	incr i
 	consistencyCheck $tv $child
-    }
-}
-
-proc assert {expr {message ""}} {
-    if {![uplevel 1 [list expr $expr]]} {
-	set error "PANIC! PANIC! PANIC: $message ($expr failed)"
-	puts stderr $error
-	error $error
     }
 }
 
@@ -613,15 +608,12 @@ test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
 
 ### NEED: more tests for see/yview/scrolling
 
-proc scrollcallback {args} {
-    set ::scrolldata $args
-}
 test treeview-9.0 "scroll callback - empty tree" -body {
     tvSetup
-    .tv configure -yscrollcommand scrollcallback
+    .tv configure -yscrollcommand setScrollInfo
     .tv delete [.tv children {}]
     update
-    set ::scrolldata
+    set scrollInfo
 } -result [list 0.0 1.0]
 
 test treeview-9.1 "scrolling" -setup {
@@ -1508,4 +1500,9 @@ test treeview-23.1 "cell padding" -setup {
     destroy .tv
 } -result {2 4 6 8}
 
+#
+# CLEANUP
+#
+
+testutils forget scroll
 tcltest::cleanupTests
