@@ -11,11 +11,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
-}
-
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
 	# Only Windows has [testmetrics]
@@ -137,7 +132,7 @@ test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
     destroy .s
 } -result .s
 
-scrollbar .s -orient vertical -command scroll -highlightthickness 2 -bd 2
+scrollbar .s -orient vertical -highlightthickness 2 -bd 2
 pack .s -side right -fill y
 update
 test scrollbar-3.1 {ScrollbarWidgetCmd procedure} {

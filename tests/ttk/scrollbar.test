@@ -3,8 +3,6 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
-
 # Before 2019 the code in library/ttk/scrollbar.tcl would replace the
 # constructor of ttk::scrollbar with the constructor of tk::scrollbar
 # unless the -class or -style options were specified..
@@ -15,7 +13,7 @@ testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
 
 test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
  -constraints {
-     coreScrollbar
+     aqua
 } -body {
     ttk::scrollbar .sb -command "yadda"
     list [winfo class .sb] [.sb cget -command]
@@ -25,7 +23,7 @@ test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
 
 test scrollbar-swapout-2 "... regardless of whether -style ..." \
 -constraints {
-    coreScrollbar
+    aqua
 } -body {
     ttk::style layout Vertical.Custom.TScrollbar \
 	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
@@ -36,7 +34,7 @@ test scrollbar-swapout-2 "... regardless of whether -style ..." \
 }
 
 test scrollbar-swapout-3 "... or -class is specified." -constraints {
-    coreScrollbar
+    aqua
 } -body {
     ttk::scrollbar .sb -command "yadda" -class Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command]
