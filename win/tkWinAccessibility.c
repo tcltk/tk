@@ -27,6 +27,7 @@ DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0
 typedef struct {
   IAccessibleVtbl *lpVtbl;
   Tk_Window win; 
+  Tk_Window toplevel;
   Tcl_Interp *interp;
   HWND hwnd;
   char *pathName;
@@ -670,10 +671,14 @@ static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, cons
     return NULL;
   } 
   if (tkAccessible) {
+	Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
+	Tk_Window toplevel = GetToplevelOfWidget(win);
     tkAccessible->lpVtbl = &tkAccessibleVtbl;
     tkAccessible->interp = interp;
+    tkAccessible->toplevel = toplevel;
     tkAccessible->hwnd = hwnd;
     tkAccessible->pathName = strdup(pathName);
+	tkAccessible->win = win;
     tkAccessible->refCount = 1;
   }
   return tkAccessible;
@@ -742,19 +747,21 @@ static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
   /* First check if the tkwin is NULL (destroyed). If yes, exit. */
-  if (!tkwin) {
+  if (tkwin == NULL) {
     return NULL;
   }
 
   /*Tk window exists. Now look for toplevel. If no parent found, return null. */
-  while (tkwin && !Tk_IsTopLevel(tkwin)) {
-    tkwin = Tk_Parent(tkwin);
-    if (tkwin == NULL) {
-      return NULL;
-    }
-  }
+  Tk_Window current = tkwin;
+  while (current != NULL && Tk_WindowId(current) != None) {
+    Tk_Window parent = Tk_Parent(current);
 
-  return tkwin;
+    if (parent == NULL) {
+      break;
+    }
+    current = parent;
+  }
+  return current;
 }
 
 
@@ -882,25 +889,14 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
   if (eventPtr->type == DestroyNotify) {
     TkWinAccessible *tkAccessible = (TkWinAccessible *)clientData;
     if (tkAccessible) {
-      Tk_Window tkwin = tkAccessible->win;
-      if (tkwin) {
-	/* Mark tkwin as NULL immediately to prevent later access. */
-	tkAccessible->win = NULL;
-
-	/* Clean up event handlers. */
-	Tk_DeleteEventHandler(tkwin,
-			      FocusChangeMask,
-			      TkWinAccessible_FocusEventHandler,
-			      (ClientData)tkwin);
-      }
-
-      /* Release the accessibility object. */
+      /* No calls to Tk_IsMapped, Tk_WindowId, Tk_Parent etc. */
+      tkAccessible->win = NULL;
+      tkAccessible->toplevel = NULL;
+      tkAccessible->hwnd = NULL;
       TkWinAccessible_Release((IAccessible *)tkAccessible);
     }
   }
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -920,46 +916,25 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr)
 {
-  if (!clientData || !eventPtr) {
+  if (!clientData || !eventPtr || eventPtr->type != FocusIn) {
     return;
   }
 
-  if (eventPtr->type != FocusIn) {
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)clientData;
+  if (!tkAccessible || !tkAccessible->win || !tkAccessible->toplevel || !tkAccessible->hwnd) {
+    return;
+  }
+    
+  if (!Tk_IsMapped(tkAccessible->win)) {
     return;
   }
 
-  Tk_Window tkwin = (Tk_Window)clientData;
-
-  /* Ensure that tkwin is valid (not destroyed).*/
-  if (!tkwin || Tk_WindowId(tkwin) == None) {
-    return;  
-  }
-
-  /* Ensure the window is mapped (i.e., visible). */
-  if (!Tk_IsMapped(tkwin)) {
-    return;
-  }
-
-  /* Get toplevel window. */
-  Tk_Window toplevel = GetToplevelOfWidget(tkwin);
-  if (!toplevel) {
-    return;
-  }
-
-  /* Ensure the toplevel window exists and get HWND. */
-  Tk_MakeWindowExist(toplevel);
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-  if (!hwnd || !IsWindow(hwnd)) {
-    return;
-  }
-
-  /* Resolve child ID and update focus state. */
-  LONG childId = GetChildIdForTkWindow(tkwin);
+  LONG childId = GetChildIdForTkWindow(tkAccessible->win);
   if (childId > 0) {
     g_focusedChildId = childId;
-
-    /* Notify MSAA of the focus event. */
-    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+    if (tkAccessible->hwnd && IsWindow(tkAccessible->hwnd) && tkAccessible->win && tkAccessible->toplevel && Tk_WindowId(tkAccessible->toplevel) != None) {
+      NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, childId);
+    }
   }
 }
 
@@ -972,11 +947,7 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
  *
  * Results:
  *      Event handler is registered.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+  *----------------------------------------------------------------------
  */
 
 void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
