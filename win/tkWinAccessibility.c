@@ -671,14 +671,14 @@ static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, cons
     return NULL;
   } 
   if (tkAccessible) {
-	Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
-	Tk_Window toplevel = GetToplevelOfWidget(win);
+    Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
+    Tk_Window toplevel = GetToplevelOfWidget(win);
     tkAccessible->lpVtbl = &tkAccessibleVtbl;
     tkAccessible->interp = interp;
     tkAccessible->toplevel = toplevel;
     tkAccessible->hwnd = hwnd;
     tkAccessible->pathName = strdup(pathName);
-	tkAccessible->win = win;
+    tkAccessible->win = win;
     tkAccessible->refCount = 1;
   }
   return tkAccessible;
@@ -947,7 +947,7 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
  *
  * Results:
  *      Event handler is registered.
-  *----------------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
