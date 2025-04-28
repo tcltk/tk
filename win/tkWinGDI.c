@@ -563,7 +563,7 @@ static int Bezierize(
     POINT* polypoints,
     int npoly,
     int nStep,
-    POINT* bpointptr)
+    POINT** bpointptr)
 {
     /* First, translate my points into a list of doubles. */
     double *inPointList, *outPointList;
@@ -606,7 +606,7 @@ static int Bezierize(
 	bpoints[n].y = (long)outPointList[2*n + 1];
     }
     ckfree(outPointList);
-    *bpointptr = *bpoints;
+    *bpointptr = bpoints;
     return nbpoints;
 }
 
@@ -811,15 +811,15 @@ static int GdiLine(
 
     if (dosmooth) { /* Use PolyBezier. */
 	int nbpoints;
-	POINT *bpoints = 0;
+	POINT *bpoints = NULL;
 
-	nbpoints = Bezierize(polypoints,npoly,nStep,bpoints);
+	nbpoints = Bezierize(polypoints,npoly,nStep,&bpoints);
 	if (nbpoints > 0) {
 	    Polyline(hDC, bpoints, nbpoints);
 	} else {
 	    Polyline(hDC, polypoints, npoly); /* Out of memory? Just draw a regular line. */
 	}
-	if (bpoints != 0) {
+	if (bpoints) {
 	    ckfree(bpoints);
 	}
     } else {
@@ -1189,14 +1189,15 @@ static int GdiPolygon(
 
     if (dosmooth) {
 	int nbpoints;
-	POINT *bpoints = 0;
-	nbpoints = Bezierize(polypoints,npoly,nStep,bpoints);
+	POINT *bpoints = NULL;
+
+	nbpoints = Bezierize(polypoints, npoly, nStep, &bpoints);
 	if (nbpoints > 0) {
 	    Polygon(hDC, bpoints, nbpoints);
 	} else {
 	    Polygon(hDC, polypoints, npoly);
 	}
-	if (bpoints != 0) {
+	if (bpoints) {
 	    ckfree(bpoints);
 	}
     } else {
