@@ -33,6 +33,8 @@ to the userbase.
  - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tkview/855ec4)
  - [tk print command fails with canvas widget](https://core.tcl-lang.org/tkview/d2eac2)
  - [tk print command fails on windows](https://core.tcl-lang.org/tkview/bb5c3d)
+ - [tk print fails for canvas items with non integer widths](https://core.tcl-lang.org/tkview/7716cb)
+ - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tkview/9b23b6)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
