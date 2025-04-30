@@ -7,11 +7,8 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-variable scrollInfo
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
-}
+# Import utility procs for specific functional areas
+testutils import entry scroll
 
 # Some of the tests raise background errors;
 # override default bgerror to catch them.
@@ -95,10 +92,10 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
 } -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
-    ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
+    ttk::entry .e -font fixed -width 5 -xscrollcommand setScrollInfo
     .e insert end "0123456789"
     pack .e;
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    set timeout [after 500 {set scrollInfo "timeout"}]
     vwait scrollInfo
     set scrollInfo
 } -cleanup {
@@ -238,35 +235,31 @@ test entry-5.1 {widget deletion while active} -body {
 # -textvariable tests.
 
 test entry-6.1 {Update linked variable in write trace} -body {
-    proc override args {
-	global x
-	set x "Overridden!"
-    }
     catch {destroy .e}
-    set x ""
-    trace add variable x write override
-    ttk::entry .e -textvariable x
+    set textVar ""
+    trace add variable textVar write override
+    ttk::entry .e -textvariable textVar
     .e insert 0 "Some text"
-    set result [list $x [.e get]]
+    set result [list $textVar [.e get]]
     set result
-} -result {Overridden! Overridden!} -cleanup {
-    unset x
-    rename override {}
+} -result {12345 12345} -cleanup {
+    trace remove variable textVar write override
+    unset textVar
     destroy .e
 }
 
 test entry-6.2 {-textvariable tests} -body {
     set result [list]
-    ttk::entry .e -textvariable x
-    set x "text"
+    ttk::entry .e -textvariable textVar
+    set textVar "text"
     lappend result [.e get]
-    unset x
+    unset textVar
     lappend result [.e get]
     .e insert end "newtext"
-    lappend result [.e get] [set x]
+    lappend result [.e get] $textVar
 } -result [list "text" "" "newtext" "newtext"] -cleanup {
     destroy .e
-    unset -nocomplain x
+    unset -nocomplain textVar
 }
 
 test entry-7.1 {Bad style options} -body {
@@ -407,4 +400,9 @@ test entry-12.2 "style command" -body {
     destroy .w
 } -result {customStyle.TEntry customStyle.TEntry TEntry}
 
+#
+# CLEANUP
+#
+
+testutils forget entry scroll
 tcltest::cleanupTests

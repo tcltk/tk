@@ -11,6 +11,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 # Note that we do not use [tcltest::makeFile] because it is
@@ -21,7 +24,7 @@ proc put {file data} {
     puts -nonewline $f $data
     close $f
 }
-
+
 test imgPPM-1.1 {FileReadPPM procedure} -body {
     put test.ppm "P6\n0 256\n255\nabcdef"
     image create photo p1 -file test.ppm
@@ -225,11 +228,14 @@ test imgPPM-5.9 {StringReadPPM procedure} -setup {
 } -cleanup {
     image delete ppm
 } -result {5 4}
-
-imageFinish
 
-# cleanup
+#
+# CLEANUP
+#
+
+imageFinish
 catch {file delete test.ppm}
+testutils forget image
 cleanupTests
 return
 
