@@ -130,7 +130,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(ArcItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
+	"0", offsetof(ArcItem, outline.offsetObj), TK_CONFIG_OBJS|TK_OPTION_NEG_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
