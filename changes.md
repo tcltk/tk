@@ -35,6 +35,7 @@ to the userbase.
  - [tk print command fails on windows](https://core.tcl-lang.org/tkview/bb5c3d)
  - [tk print fails for canvas items with non integer widths](https://core.tcl-lang.org/tkview/7716cb)
  - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tkview/9b23b6)
+ - [Collect utility procs for the Tk test suite](https://core.tcl-lang.org/tkview/718cbc)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 

@@ -79,6 +79,9 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import image
+
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
 #
@@ -190,7 +193,7 @@ test imgPhoto-1.13 {option -withalpha, normal use} -setup {
 test imgPhoto-1.14 {options for photo images - error case} -body {
     image create photo photo1 -metadata
 } -returnCodes error -result {value for "-metadata" missing}
-
+
 test imgPhoto-2.1 {ImgPhotoCreate procedure} -setup {
     imageCleanup
 } -body {
@@ -271,7 +274,7 @@ test imgPhoto-3.6 {ImgPhotoConfigureModel: -data <default>} -setup {
 } -cleanup {
     imageCleanup
 } -result {20 20}
-
+
 test imgPhoto-4.1 {ImgPhotoCmd procedure} -setup {
     image create photo photo1
 } -body {
@@ -1314,7 +1317,7 @@ test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     unset result
     imageCleanup
 } -result {}
-
+
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -setup {
     destroy .c
     pack [canvas .c]
@@ -1808,7 +1811,7 @@ test imgPhoto-18.1 {MatchFileFormat: "default" format not supported} -setup {
     catch {removeFile $f}
     unset f
 } -returnCodes error -result {-file option isn't supported for default images}
-
+
 test imgPhoto-19.1 {MatchStringFormat: with "-format default"} -setup {
     image create photo photo1
 } -body {
@@ -2700,13 +2703,17 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -result {{coordinates for -from option extend outside source image} 0 0}
 unset ousterPhotoFile
 
+#
+# CLEANUP
+#
+
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}
 imageFinish
-
-# cleanup
 removeFile README-imgPhoto
+
+testutils forget image
 cleanupTests
 return
 
