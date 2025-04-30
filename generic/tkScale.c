@@ -675,14 +675,6 @@ ConfigureScale(
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
 	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-		if (scalePtr->highlightWidthObj) {
-		    Tcl_DecrRefCount(scalePtr->highlightWidthObj);
-		}
-		scalePtr->highlightWidthObj = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(scalePtr->highlightWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
 	scalePtr->inset = highlightWidth + borderWidth;
 	break;
