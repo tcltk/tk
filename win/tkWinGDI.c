@@ -679,16 +679,15 @@ static int GdiLine(
 
     hDC = printDC;
 
-    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
-    if (polypoints == 0) {
-	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
-	return TCL_ERROR;
-    }
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
 	||	(Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
 	||	(Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
-	||	(Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)
-    ) {
+	||	(Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
+    if (polypoints == NULL) {
+	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
     polypoints[0].x = floor(p1x+0.5);
@@ -1097,16 +1096,16 @@ static int GdiPolygon(
 
     hDC = printDC;
 
-    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
-    if (polypoints == 0) {
-	/* TODO: unreachable */
-	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
-	return TCL_ERROR;
-    }
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
+    if (polypoints == NULL) {
+	/* TODO: unreachable */
+	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
     polypoints[0].x = floor(p1x + 0.5);
