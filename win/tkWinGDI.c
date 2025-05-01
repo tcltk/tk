@@ -99,8 +99,6 @@ static Tcl_ObjCmdProc2 PrintClosePage;
 
 static PRINTDLGW pd;
 static DOCINFOW di;
-static WCHAR *localPrinterName = NULL;
-static int copies, paper_width, paper_height, dpi_x, dpi_y;
 static LPDEVNAMES devnames;
 static HDC printDC;
 
@@ -3613,11 +3611,12 @@ static int PrintSelectPrinter(
     PDEVMODEW returnedDevmode = NULL;
     PDEVMODEW localDevmode = NULL;
 
-    copies = 0;
-    paper_width = 0;
-    paper_height = 0;
-    dpi_x = 0;
-    dpi_y = 0;
+    WCHAR *localPrinterName = NULL;
+    int copies = 0;
+    int paper_width = 0;
+    int paper_height = 0;
+    int dpi_x = 0;
+    int dpi_y = 0;
 
     /* Set up print dialog and initalize property structure. */
 
@@ -3626,41 +3625,8 @@ static int PrintSelectPrinter(
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
 
-    if (PrintDlgW(&pd) == TRUE) {
-
-	/*Get document info.*/
-	memset(&di, 0, sizeof(di));
-	di.cbSize = sizeof(di);
-	di.lpszDocName = L"Tk Print Output";
-
-	/* Copy print attributes to local structure. */
-	returnedDevmode = (PDEVMODEW) GlobalLock(pd.hDevMode);
-	devnames = (LPDEVNAMES) GlobalLock(pd.hDevNames);
-	printerName = (LPCWSTR) devnames + devnames->wDeviceOffset;
-	localDevmode = (LPDEVMODEW) HeapAlloc(GetProcessHeap(),
-		HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
-		returnedDevmode->dmSize);
-
-	if (localDevmode != NULL) {
-	    memcpy((LPVOID)localDevmode, (LPVOID)returnedDevmode,
-		    returnedDevmode->dmSize);
-
-	    /* Get values from user-set and built-in properties. */
-	    localPrinterName = localDevmode->dmDeviceName;
-	    dpi_y = localDevmode->dmYResolution;
-	    dpi_x = localDevmode->dmPrintQuality;
-	    /* Convert height and width to logical points. */
-	    paper_height = (int) localDevmode->dmPaperLength / 0.254;
-	    paper_width = (int) localDevmode->dmPaperWidth / 0.254;
-	    copies = pd.nCopies;
-	    /* Set device context here for all GDI printing operations. */
-	    printDC = CreateDCW(L"WINSPOOL", printerName, NULL, localDevmode);
-	} else {
-	    localDevmode = NULL;
-	}
-    } else {
+    if (! PrintDlgW(&pd)) {
 	unsigned int errorcode = CommDlgExtendedError();
-
 	/*
 	 * The user cancelled, or there was an error
 	 * The code on the Tcl side checks if the variable
@@ -3678,6 +3644,37 @@ static int PrintSelectPrinter(
 	return TCL_OK;
     }
 
+    /*Get document info.*/
+    memset(&di, 0, sizeof(di));
+    di.cbSize = sizeof(di);
+    di.lpszDocName = L"Tk Print Output";
+
+    /* Copy print attributes to local structure. */
+    returnedDevmode = (PDEVMODEW) GlobalLock(pd.hDevMode);
+    devnames = (LPDEVNAMES) GlobalLock(pd.hDevNames);
+    printerName = (LPCWSTR) devnames + devnames->wDeviceOffset;
+    localDevmode = (LPDEVMODEW) HeapAlloc(GetProcessHeap(),
+	HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
+	returnedDevmode->dmSize);
+
+    if (localDevmode != NULL) {
+	memcpy((LPVOID)localDevmode, (LPVOID)returnedDevmode,
+	    returnedDevmode->dmSize);
+
+	/* Get values from user-set and built-in properties. */
+	localPrinterName = localDevmode->dmDeviceName;
+	dpi_y = localDevmode->dmYResolution;
+	dpi_x = localDevmode->dmPrintQuality;
+	/* Convert height and width to logical points. */
+	paper_height = (int) localDevmode->dmPaperLength / 0.254;
+	paper_width = (int) localDevmode->dmPaperWidth / 0.254;
+	copies = pd.nCopies;
+	/* Set device context here for all GDI printing operations. */
+	printDC = CreateDCW(L"WINSPOOL", printerName, NULL, localDevmode);
+    } else {
+	localDevmode = NULL;
+    }
+
     if (pd.hDevMode != NULL) {
 	GlobalFree(pd.hDevMode);
     }
@@ -3687,15 +3684,12 @@ static int PrintSelectPrinter(
      * script level.
      */
     if (localPrinterName != NULL) {
-	char *prname;
-	int size_needed = WideCharToMultiByte(CP_UTF8, 0, localPrinterName,
-		-1, NULL, 0, NULL, NULL);
+	Tcl_DString prname;
 
-	prname = (char*)ckalloc(size_needed);
-	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, prname,
-		size_needed, NULL, NULL);
+	Tcl_DStringInit(&prname);
+	Tcl_WCharToUtfDString(localPrinterName, TCL_INDEX_NONE, &prname);
 	Tcl_SetVar2Ex(interp, "::tk::print::printer_name", NULL,
-		Tcl_NewStringObj(prname, size_needed - 1), 0);
+		Tcl_DStringToObj(&prname), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::copies", NULL,
 		Tcl_NewIntObj(copies), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::dpi_x", NULL,
@@ -3706,7 +3700,6 @@ static int PrintSelectPrinter(
 		Tcl_NewIntObj(paper_width), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::paper_height", NULL,
 		Tcl_NewIntObj(paper_height), 0);
-	ckfree(prname);
     }
 
     return TCL_OK;
