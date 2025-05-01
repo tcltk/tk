@@ -11,20 +11,15 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+testutils import scroll text
+
 # The delay procedure needs to wait long enough for the asynchronous updates
 # performed by the text widget to run.
 proc delay {} {
     update
     after 100
     update
-}
-
-# The procedure below is used as the scrolling command for the text;
-# it just saves the scrolling information in a variable "scrollInfo".
-
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
 }
 
 # The procedure below is used to generate errors during scrolling commands.
@@ -64,11 +59,6 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {Courier -12}
-set fixedHeight [font metrics $fixedFont -linespace]
-set fixedWidth [font measure $fixedFont m]
-set fixedAscent [font metrics $fixedFont -ascent]
-
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
@@ -97,36 +87,16 @@ Some of the upcoming tests will probably fail."
 # Option  -width 20  (characters) below is a fundamental assumption of many
 # upcoming tests when wrapping enters in play
 # Also  -height 10  (lines) is an important assumption
-text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
+text .t -font $fixedFont -width 20 -height 10 -yscrollcommand setScrollInfo
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
 
 wm geometry . {}
 
-# full border size of the text widget, i.e. first x or y coordinate inside the text widget
-# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
-# vertically around the widget)
-proc bo {{w .t}} {
-    return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
-}
-# x-width of $n chars, fixed width font
-proc xw {n} {
-    global fixedWidth
-    return [expr {$n * $fixedWidth}]
-}
-# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
-proc xchar {n {w .t}} {
-    return [expr {[bo $w] + [xw $n]}]
-}
 # x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
 proc xcharr {n {w .t}} {
     return [expr {[winfo width $w] - [bo $w] - [xw $n]}]
-}
-# y-coordinate of the first pixel of $l-th display line (count starts at 1)
-proc yline {l {w .t}} {
-    global fixedHeight
-    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
 }
 # x-pixels of empty space in widget $w on a line containing $n chars
 proc xe {n {w .t}} {
@@ -1106,7 +1076,7 @@ test textDisp-6.8 {DisplayText, vertical scrollbar updates} {
     .t count -update -ypixels 1.0 end ; update
     set scrollInfo
 } [list 0.0 [expr {10.0/13}]]
-.t configure -yscrollcommand {} -xscrollcommand scroll
+.t configure -yscrollcommand {} -xscrollcommand setScrollInfo
 test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -1348,7 +1318,7 @@ test textDisp-8.10 {TkTextChanged} haveBigFontTwiceLargerThanTextFont {
 test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-screen} {
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n"
-    .t configure -yscrollcommand scroll
+    .t configure -yscrollcommand setScrollInfo
     update
     set scrollInfo ""
     .t insert end "a\nb\nc\n"
@@ -2691,7 +2661,7 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     update
     lequal [list $x [.t index @0,0]] $expected
 } {1}
-.t configure -xscrollcommand scroll -yscrollcommand {}
+.t configure -xscrollcommand setScrollInfo -yscrollcommand {}
 
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
@@ -2793,7 +2763,7 @@ test textDisp-18.8 {GetXView procedure} {
 catch {rename bgerror {}}
 catch {rename bogus {}}
 
-.t configure -xscrollcommand {} -yscrollcommand scroll
+.t configure -xscrollcommand {} -yscrollcommand setScrollInfo
 test textDisp-19.1 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3130,7 +3100,7 @@ test textDisp-19.15 {GetYView procedure} {
     .t delete 1.0 end
     update
     rename bgerror {}
-    .t configure -yscrollcommand scroll
+    .t configure -yscrollcommand setScrollInfo
     set x
 } {{{scrolling error}} {scrolling error
     while executing
@@ -4949,9 +4919,12 @@ test textDisp-36.1 {Display bug with 'yview insert'} -setup {
     destroy .t1
 } -result {}
 
+#
+# CLEANUP
+#
+
+testutils forget scroll text
 deleteWindows
 option clear
-
-# cleanup
 cleanupTests
 return

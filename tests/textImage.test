@@ -11,6 +11,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 # One time setup.  Create a font to insure the tests are font metric invariant.
@@ -441,12 +445,14 @@ test textImage-5.1 {peer widget images} -setup {
     image delete small large
 } -result {}
 
-# cleanup
+#
+# CLEANUP
+#
+
 destroy .t
 font delete test_font
 imageFinish
-
-# cleanup
+testutils forget image
 cleanupTests
 return
 

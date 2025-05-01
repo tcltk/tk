@@ -15,6 +15,8 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import geometry
 
 test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
     win
@@ -125,10 +127,6 @@ update
 
 set ax [winfo reqwidth .t.l]
 set ay [winfo reqheight .t.l]
-proc getsize {} {
-    update
-    return "[winfo reqwidth .t.l] [winfo reqheight .t.l]"
-}
 
 test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraints {
     win
@@ -332,7 +330,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
     .t.l config -font {{MS Sans Serif} 8} -text "W"
     set width [winfo reqwidth .t.l]
     .t.l config -text "XaYoYaKaWx"
-    set x [lindex [getsize] 0]
+    set x [lindex [getsize .t.l] 0]
     .t.l config -font $font
     expr {$x < ($width*10)}
 } -cleanup {
@@ -382,11 +380,14 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
     font metric systemfixed -fixed
 } -result 1
 
-# cleanup
+#
+# CLEANUP
+#
+
+testutils forget geometry
 cleanupTests
 return
 
 # Local variables:
 # mode: tcl
 # End:
-
