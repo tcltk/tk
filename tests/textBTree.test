@@ -1448,7 +1448,11 @@ test btree-19.8 {test toggle chain 9} -setup {
     destroy .t
 } -result {}
 
-# cleanup
+#
+# CLEANUP
+#
+
+rename setup {}
 cleanupTests
 return
 

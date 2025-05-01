@@ -11,12 +11,10 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-deleteWindows
+# Import utility procs for specific functional areas
+testutils import text
 
-set fixedFont {Courier -12}
-set fixedHeight [font metrics $fixedFont -linespace]
-set fixedWidth [font measure $fixedFont m]
-set fixedAscent [font metrics $fixedFont -ascent]
+deleteWindows
 
 # On Windows at least, the tests do work with {Courier -10}, {Courier -12} or {Courier -14} as fixedFont.
 # Warn the user if the actual font is too different from what was requested.
@@ -48,27 +46,6 @@ update
 .t debug on
 
 wm geometry . {}
-
-# full border size of the text widget, i.e. first x or y coordinate inside the text widget
-# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
-# vertically around the widget)
-proc bo {{w .t}} {
-    return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
-}
-# x-width of $n chars, fixed width font
-proc xw {n} {
-    global fixedWidth
-    return [expr {$n * $fixedWidth}]
-}
-# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
-proc xchar {n {w .t}} {
-    return [expr {[bo $w] + [xw $n]}]
-}
-# y-coordinate of the first pixel of $l-th display line (count starts at 1)
-proc yline {l {w .t}} {
-    global fixedHeight
-    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
-}
 
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
@@ -1664,9 +1641,13 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
     destroy .t .f
 } -result {}
 
-option clear
 
-# cleanup
+#
+# CLEANUP
+#
+
+option clear
+testutils forget text
 cleanupTests
 return
 

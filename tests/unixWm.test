@@ -11,17 +11,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-namespace import -force ::tk::test:loadTkCommand
-
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
-proc sleep ms {
-    global x
-    after $ms {set x 1}
-    vwait x
-}
-
 # Procedure to set up a collection of top-level windows
 
 proc makeToplevels {} {
@@ -114,11 +103,11 @@ set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
-	sleep 10
+	pause 10
 	wm geom .t $geom
 	update idletasks
 	wm deiconify .t
-	sleep 10
+	pause 10
 	wm geom .t
     } 100x150$geom
     incr i
@@ -293,7 +282,7 @@ test unixWm-8.3 {icon windows} unix {
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-8.4 {icon windows} {unix failsOnUbuntu failsOnXQuartz} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -638,7 +627,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuartz} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -851,7 +840,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -862,7 +851,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu fail
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -1435,7 +1424,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuartz} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1796,7 +1785,7 @@ if {[tk windowingsystem] eq "aqua"} {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
 }
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuartz} {
     update
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +100+100
@@ -1961,7 +1950,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr $x + 350] $y] \
 	    [winfo containing [expr $x + 450] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuartz} {
     destroy .t
     destroy .t2
     update
@@ -2062,7 +2051,7 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
     # This test assumes that .t2 is not mapped yet, but that is not really guaranteed.
     winfo containing 100 100
 } {.t}
-test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuarz} {
+test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuartz} {
     foreach w {.t .t2 .t3} {
 	destroy $w
 	toplevel $w -width 200 -height 200 -bg green

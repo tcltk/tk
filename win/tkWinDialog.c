@@ -149,7 +149,8 @@ typedef struct {
 
 typedef struct OFNData {
     Tcl_Interp *interp;		/* Interp, used only if debug is turned on,
-				 * for setting the "tk_dialog" variable. */
+				 * for setting the variable
+				 * "::tk::test::dialog::testDialog". */
     int dynFileBufferSize;	/* Dynamic filename buffer size, stored to
 				 * avoid shrinking and expanding the buffer
 				 * when selection changes */
@@ -204,7 +205,7 @@ static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	       DWORD *defaultFilterIndexPtr);
 static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
-static void		SetTkDialog(void *clientData);
+static void		SetTestDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
 
 /*
@@ -262,9 +263,9 @@ EatSpuriousMessageBugFix(void)
  * TkWinDialogDebug --
  *
  *	Function to turn on/off debugging support for common dialogs under
- *	windows. The variable "tk_debug" is set to the identifier of the
- *	dialog window when the modal dialog window pops up and it is safe to
- *	send messages to the dialog.
+ *	windows. The variable "::tk::test::dialog::testDialog" is set to the
+ *	identifier of the dialog window when the modal dialog window pops up
+ *	and it is safe to send messages to the dialog.
  *
  * Results:
  *	None.
@@ -488,7 +489,7 @@ ColorDlgHookProc(
 	}
 	if (tsdPtr->debugFlag) {
 	    tsdPtr->debugInterp = (Tcl_Interp *) ccPtr->lpTemplateName;
-	    Tcl_DoWhenIdle(SetTkDialog, hDlg);
+	    Tcl_DoWhenIdle(SetTestDialog, hDlg);
 	}
 	return TRUE;
     }
@@ -1546,18 +1547,19 @@ MsgBoxCBTProc(
 /*
  * ----------------------------------------------------------------------
  *
- * SetTkDialog --
+ * SetTestDialog --
  *
- *	Records the HWND for a native dialog in the 'tk_dialog' variable so
- *	that the test-suite can operate on the correct dialog window. Use of
- *	this is enabled when a test program calls TkWinDialogDebug by calling
- *	the test command 'tkwinevent debug 1'.
+ *	Records the HWND for a native dialog in the variable
+ *	"::tk::test::dialog::testDialog" so that the test-suite can operate
+ *	on the correct dialog window. Use of this is enabled when a test
+ *	program calls TkWinDialogDebug by calling the test command
+ *	'testwinevent debug 1'.
  *
  * ----------------------------------------------------------------------
  */
 
 static void
-SetTkDialog(
+SetTestDialog(
     void *clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1565,7 +1567,8 @@ SetTkDialog(
     char buf[32];
 
     snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
-    Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(tsdPtr->debugInterp, "::tk::test::dialog::testDialog", NULL,
+		buf, TCL_GLOBAL_ONLY);
 }
 
 /*
@@ -1699,7 +1702,7 @@ HookProc(
 	phd->hwnd = hwndDlg;
 	if (tsdPtr->debugFlag) {
 	    tsdPtr->debugInterp = phd->interp;
-	    Tcl_DoWhenIdle(SetTkDialog, hwndDlg);
+	    Tcl_DoWhenIdle(SetTestDialog, hwndDlg);
 	}
 	if (phd->titleObj != NULL) {
 	    Tcl_DString title;

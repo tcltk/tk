@@ -10,6 +10,9 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+testutils import dialog
+
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
     # machines with small color palettes still fail.
@@ -74,31 +77,10 @@ test clrpick-1.7 {tk_chooseColor command} -body {
     tk_chooseColor -initialcolor ##badbadbaadcolor
 } -returnCodes error -result {invalid color name "##badbadbaadcolor"}
 
-
-# tests 3.1 and 3.2 fail when individually run
-# if there is no catch {tk_chooseColor -foo 1} msg
-# before setting isNative
-catch {tk_chooseColor -foo 1} msg
-set isNative [expr {[info commands tk::dialog::color::] eq ""}]
-
-proc ToPressButton {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 200 "SendButtonPress . $btn mouse"
-    }
-}
-
 proc ToChooseColorByKey {parent r g b} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 200 ChooseColorByKey . $r $g $b
     }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc ChooseColorByKey {parent r g b} {
@@ -121,26 +103,6 @@ proc ChooseColorByKey {parent r g b} {
 
     SendButtonPress . ok mouse
 }
-
-proc SendButtonPress {parent btn type} {
-    set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
@@ -197,7 +159,10 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
     set ::scr
 } -result [winfo screen .]
 
-# cleanup
+#
+# CLEANUP
+#
+
+testutils forget dialog
 cleanupTests
 return
-
