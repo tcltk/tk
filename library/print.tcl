@@ -102,6 +102,7 @@ namespace eval ::tk::print {
 	proc _print_data {data {breaklines 1} {font ""}} {
 	    variable printargs
 	    variable printer_name
+	    variable charwidths
 
 	    _set_dc
 
@@ -110,10 +111,12 @@ namespace eval ::tk::print {
 	    }
 
 	    if {$font eq ""} {
-		_gdi characters $printargs(hDC) -array printcharwid
+		_gdi characters $printargs(hDC) -array ::tk::print::charwidths
 	    } else {
-		_gdi characters $printargs(hDC) -font $font -array printcharwid
+		_gdi characters $printargs(hDC) \
+		    -font $font -array ::tk::print::charwidths
 	    }
+	    array default set ::tk::print::charwidths $charwidths(x)
 	    set pagewid [expr {($printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx)}]
 	    set pagehgt [expr {($printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy)}]
 	    set totallen [string length $data]
@@ -136,8 +139,7 @@ namespace eval ::tk::print {
 		    }
 		}
 
-		set result [_print_page_nextline $linestring \
-				printcharwid printargs $curhgt $font]
+		set result [_print_page_nextline $linestring $curhgt $font]
 		incr curlen [lindex $result 0]
 		incr curhgt [lindex $result 1]
 		if {$curhgt + [lindex $result 1] > $pagehgt} {
@@ -174,14 +176,10 @@ namespace eval ::tk::print {
 	# and y is the height of the line printed
 	# Arguments:
 	#   string -         Data to print
-	#   pdata -         Array of values for printer characteristics
-	#   cdata -         Array of values for character widths
 	#   y -              Y value to begin printing at
 	#   font -           if non-empty specifies a font to draw the line in
-	proc _print_page_nextline {string carray parray y font} {
-	    upvar #0 $carray charwidths
-	    upvar #0 $parray printargs
-
+	proc _print_page_nextline {string y font} {
+	    variable charwidths
 	    variable printargs
 
 	    set endindex 0
