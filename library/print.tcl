@@ -698,7 +698,7 @@ if {[tk windowingsystem] eq "x11"} {
 		return -code error "Unable to obtain the list of printers.\
 		    Command \"$cmd\" not found.\
 		    Please install the CUPS package for your system."
-	    } trap {CHILDSTATUS} {} {
+	    } trap {CHILDSTATUS} {e o} {
 		# command returns a non-0 exit status. Wrong print system?
 		set cmd [lindex [dict get $o -errorstack ] 1 2]
 		return -code error "Command \"$cmd\" return with errors"
