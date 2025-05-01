@@ -548,7 +548,7 @@ static int GdiPhoto(
 /*
  *----------------------------------------------------------------------
  *
- * Bezierize --
+ * Smoothize --
  *
  *	Interface to Tk's line smoother, used for lines and pollies.
  *	Provided by Jasper Taylor <jasper.taylor@ed.ac.uk>.
@@ -558,11 +558,14 @@ static int GdiPhoto(
  *
  *----------------------------------------------------------------------
  */
-
-static int Bezierize(
+#define SMOOTH_NONE   0
+#define SMOOTH_BEZIER 1
+#define SMOOTH_RAW    2
+static int Smoothize(
     POINT* polypoints,
     int npoly,
     int nStep,
+    int smooth, /* either SMOOTH_BEZIER or SMOOTH_RAW */
     POINT** bpointptr)
 {
     /* First, translate my points into a list of doubles. */
@@ -590,8 +593,13 @@ static int Bezierize(
 	return 0;
     }
 
-    nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
+    if (smooth == SMOOTH_BEZIER) {
+        nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
 	    NULL, outPointList);
+    } else {   /* SMOOTH_RAW */
+        nbpoints = TkMakeRawCurve(NULL, inPointList, npoly, nStep,
+	    NULL, outPointList);
+    }
 
     ckfree(inPointList);
     bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
@@ -634,7 +642,7 @@ static int GdiLine(
 	"-arrow [first|last|both|none] -arrowshape {d1 d2 d3} "
 	"-dash dashlist "
 	"-capstyle [butt|projecting|round] -fill color "
-	"-joinstyle [bevel|miter|round] -smooth [true|false|bezier] "
+	"-joinstyle [bevel|miter|round] -smooth [true|false|bezier|raw] "
 	"-splinesteps number -stipple bitmap -width linewid";
     char *strend;
     POINT *polypoints;
@@ -649,7 +657,7 @@ static int GdiLine(
     double width       = 0.0;
     COLORREF linecolor = 0;
     int dolinecolor    = 0;
-    int dosmooth       = 0;
+    int smooth         = SMOOTH_NONE;
     int doarrow        = 0; /* 0=none; 1=end; 2=start; 3=both. */
     int arrowshape[3];
 
@@ -751,16 +759,19 @@ static int GdiLine(
 		objv += 2;
 		objc -= 2;
 	    } else if (strcmp(Tcl_GetString(*objv), "-smooth") == 0) {
-		/* Argument is true/false or 1/0 or bezier. */
+		/* Argument is a boolean, "bezier" or "raw". */
 		if (Tcl_GetString(objv[1])) {
 		    switch (Tcl_GetString(objv[1])[0]) {
 		    case 't': case 'T':
 		    case '1':
 		    case 'b': case 'B': /* bezier. */
-			dosmooth = 1;
+			smooth = SMOOTH_BEZIER;
+			break;
+		    case 'r': case 'R': /* raw. */
+			smooth = SMOOTH_RAW;
 			break;
 		    default:
-			dosmooth = 0;
+			/* do nothing; SMOOTH_NONE is the default */
 			break;
 		    }
 		    objv += 2;
@@ -809,11 +820,11 @@ static int GdiLine(
 	GdiMakeBrush(linecolor, 0, &lbrush, hDC, &hBrush);
     }
 
-    if (dosmooth) { /* Use PolyBezier. */
+    if (smooth) { /* Use Smoothize. */
 	int nbpoints;
 	POINT *bpoints = NULL;
 
-	nbpoints = Bezierize(polypoints,npoly,nStep,&bpoints);
+	nbpoints = Smoothize(polypoints, npoly, nStep, smooth, &bpoints);
 	if (nbpoints > 0) {
 	    Polyline(hDC, bpoints, nbpoints);
 	} else {
@@ -1056,13 +1067,13 @@ static int GdiPolygon(
 {
     static const char usage_message[] =
 	"::tk::print::_gdi polygon hdc x1 y1 ... xn yn "
-	"-fill color -outline color -smooth [true|false|bezier] "
+	"-fill color -outline color -smooth [true|false|bezier|raw] "
 	"-splinesteps number -stipple bitmap -width linewid";
 
     char *strend;
     POINT *polypoints;
     int npoly;
-    int dosmooth = 0;
+    int smooth = SMOOTH_NONE;
     int nStep = 12;
     int x, y;
     HDC hDC;
@@ -1144,10 +1155,13 @@ static int GdiPolygon(
 		    case 't': case 'T':
 		    case '1':
 		    case 'b': case 'B': /* bezier. */
-			dosmooth = 1;
+			smooth = SMOOTH_BEZIER;
+			break;
+		    case 'r': case 'R': /* raw. */
+			smooth = SMOOTH_RAW;
 			break;
 		    default:
-			dosmooth = 0;
+			/* do nothing; SMOOTH_NONE is the default */
 			break;
 		    }
 		}
@@ -1187,11 +1201,11 @@ static int GdiPolygon(
 		linecolor, hDC, (HGDIOBJ *)&hPen);
     }
 
-    if (dosmooth) {
+    if (smooth) { /* Use Smoothize. */
 	int nbpoints;
 	POINT *bpoints = NULL;
 
-	nbpoints = Bezierize(polypoints, npoly, nStep, &bpoints);
+	nbpoints = Smoothize(polypoints, npoly, nStep, smooth, &bpoints);
 	if (nbpoints > 0) {
 	    Polygon(hDC, bpoints, nbpoints);
 	} else {
