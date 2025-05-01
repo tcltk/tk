@@ -240,12 +240,6 @@ namespace eval ::tk::print {
 	    set vtgPrint(printer.bg) white
 	}
 
-	proc _is_win {} {
-	    variable printargs
-
-	    return [info exist tk_patchLevel]
-	}
-
 	# _print_widget
 	# Main procedure for printing a widget.  Currently supports
 	# canvas widgets.  Handles opening and closing of printer.
