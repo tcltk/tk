@@ -2545,7 +2545,8 @@ DisplayDLine(
 		 */
 		XGCValues gcValues;
 		unsigned long mask;
-		int endX, numBytes, ix, iy, iw, ih, charWidth = 0;
+		int endX, numBytes, ix, iy, iw, ih;
+		int charWidth = 0, cursorWidth = 0;
 		TkTextIndex index;
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -2560,10 +2561,10 @@ DisplayDLine(
 		*otherChunkPtr = *(chunkPtr->nextPtr);
 		TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 		TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih,
-			&charWidth);
+			&charWidth, &cursorWidth);
 		numBytes = CharChunkMeasureChars(otherChunkPtr, NULL, 0,
 			0, -1, otherChunkPtr->x,
-			otherChunkPtr->x + charWidth, 0, &endX);
+			otherChunkPtr->x + cursorWidth, 0, &endX);
 		if (numBytes > 0) {
 		    otherChunkPtr->undisplayProc = NULL;
 		    tmpStyle = *otherChunkPtr->stylePtr;
