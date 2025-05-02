@@ -11,8 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
@@ -262,7 +260,7 @@ test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
 } -result {}
 
 
-test canvText-6.1 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
+test canvText-6.1 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
@@ -314,7 +312,7 @@ test canvText-6.4 {ComputeTextBbox procedure} -constraints fonts -setup {
 } -cleanup {
     .c delete test
 } -result 1
-test canvText-6.5 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
+test canvText-6.5 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"
@@ -366,7 +364,7 @@ test canvText-6.8 {ComputeTextBbox procedure} -constraints fonts -setup {
 } -cleanup {
     .c delete test
 } -result 1
-test canvText-6.9 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuarz} -setup {
+test canvText-6.9 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz} -setup {
     .c delete test
 } -body {
     set font "-adobe-times-medium-r-normal--*-200-*-*-*-*-*-*"

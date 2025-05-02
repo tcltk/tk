@@ -12,6 +12,9 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
@@ -19,7 +22,7 @@ set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTranspar
 
 # ---------------------------------------------------------------------
 
-
+
 test imgListFormat-1.1 {ParseFormatOptions: default values} -setup {
     image create photo photo1
 } -body {
@@ -103,9 +106,9 @@ test imgListFormat-1.11 {valid colorformats} -setup {
     imageCleanup
     unset result
 } -result {{{#ffffff}} {{#ffffff78}} {{{255 255 255 120}}}}
-
+
 # GetBadOptMsg: only use case already tested with imgListFormat-1.4
-
+
 test imgListFormat-3.1 {StringMatchDef: data is not a list} -body {
     testphotostringmatch {not a " proper list}
     # " (this comment is here only for editor highlighting)
@@ -147,7 +150,7 @@ test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
 } -cleanup {
     imageCleanup
 } -result {2 3 {0 0 0 255}}
-
+
 # ImgStringRead: most of the error cases cannot be tested with current code,
 # as the errors are detected by StringMatchDef
 test imgListFormat-4.1 {StringReadDef: use with -format opt} -setup {
@@ -193,7 +196,7 @@ test imgListFormat-4.5 {StringReadDef: correct compositing rule} -setup {
 } -cleanup {
     imageCleanup
 } -result {{255 0 0 255} {0 78 185 225} {255 0 0 255}}
-
+
 test imgListFormat-5.1 {StringWriteDef: format options not a list} -setup {
     image create photo photo1
 } -body {
@@ -308,7 +311,7 @@ test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -setup {
     unset result
     imageCleanup
 } -result {{0 78 185 225} {161 65 0 170} {255 202 159 175}}
-
+
 test imgListFormat-6.1 {ParseColor: empty string} -setup {
     image create photo photo1
     set result {}
@@ -397,7 +400,7 @@ test imgListFormat-6.8 {ParseColor: overall test} -setup {
 {255 250 250 128} {255 238 238 136} {255 238 238 128} {255 238 238 128}\
 {255 250 250 128} {255 250 250 136} {255 250 250 128} {255 250 250 128}\
 {255 250 250 255} {255 238 238 136} {255 250 250 128} {255 250 250 255}}
-
+
 # Note: these tests were written for an earlier implementation of
 # ParseColorAsList. For this reason, their order and layout do not follow the
 # current code very well. Test coverage is pretty good, nevertheless.
@@ -476,7 +479,7 @@ test imgListFormat-7.10 {ParseColorAsList: list format, string rep} -setup {
 } -cleanup {
 	imageCleanup
 } -result {111 222 33 44}
-
+
 test imgListFormat-8.1 {ParseColorAsHex: RGB format} -setup {
     image create photo photo1
 } -body {
@@ -508,7 +511,7 @@ test imgListFormat-8.4 {ParseColor: valid #RGBA color} -setup {
 } -cleanup {
     imageCleanup
 } -result {{155 213 2 13} {119 170 204 255}}
-
+
 test imgListFormat-9.1 {ParseColorAsStandard:
 	Tk color, valid suffixes} -setup {
     image create photo photo1
@@ -633,11 +636,11 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
     imageCleanup
 } -returnCodes error -result {invalid color name "#1111#1"}
 
-
-# ---------------------------------------------------------------------
+#
+# CLEANUP
+#
 
 imageFinish
-
-# cleanup
+testutils forget image
 cleanupTests
 return

@@ -76,19 +76,19 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-	if {[info exists printer_name] && $printer_name ne ""} {
-	    set printargs(hDC) $printer_name
-	    set printargs(pw) $paper_width
-	    set printargs(pl) $paper_height
-	    set printargs(lm) 1000
-	    set printargs(tm) 1000
-	    set printargs(rm) 1000
-	    set printargs(bm) 1000
-	    set printargs(resx) $dpi_x
-	    set printargs(resy) $dpi_y
-	    set printargs(copies) $copies
-	    set printargs(resolution) [list $dpi_x $dpi_y]
-		}
+	    if {[info exists printer_name] && $printer_name ne ""} {
+		set printargs(hDC) $printer_name
+		set printargs(pw) $paper_width
+		set printargs(pl) $paper_height
+		set printargs(lm) 1000
+		set printargs(tm) 1000
+		set printargs(rm) 1000
+		set printargs(bm) 1000
+		set printargs(resx) $dpi_x
+		set printargs(resy) $dpi_y
+		set printargs(copies) $copies
+		set printargs(resolution) [list $dpi_x $dpi_y]
+	    }
 	}
 
 	# _print_data
@@ -279,8 +279,8 @@ namespace eval ::tk::print {
 		set sc [$wid cget -scrollregion]
 		# if there is no scrollregion, use width and height.
 		if {$sc eq ""} {
-		    set window_x [$wid cget -width]
-		    set window_y [$wid cget -height]
+		    set window_x [winfo pixels $wid [$wid cget -width]]
+		    set window_y [winfo pixels $wid [$wid cget -height]]
 		} else {
 		    set window_x [lindex $sc 2]
 		    set window_y [lindex $sc 3]
@@ -1215,7 +1215,7 @@ if {[tk windowingsystem] eq "x11"} {
 		$pw - ($option(margin-left) + $option(margin-right)) / 72.0
 	    }]
 	    # set the wrap length at 98% of computed page width in chars
-	    # the 9.8 constant is the product 10.0 (default cpi) * 0.95
+	    # the 9.8 constant is the product 10.0 (default cpi) * 0.98
 	    set wl [expr {int( 9.8 * $pw / $tzoom )}]
 	    set data [encoding convertto utf-8 [_wrapLines [$w get 1.0 end] $wl]]
 	}

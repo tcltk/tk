@@ -21,6 +21,9 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import child
+
 # set up a very large buffer to test INCR retrievals
 set longValue ""
 foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
@@ -29,7 +32,7 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
 }
 
 # Now we start the main body of the test code
-
+
 test clipboard-1.1 {ClipboardHandler procedure} -setup {
     clipboard clear
 } -body {
@@ -236,13 +239,13 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} -setup {
 test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints x11 -setup {
     clipboard clear
 } -body {
-    setupbg
+    childTkProcess create
     clipboard append -f INTEGER -t TEST "16"
-    set result [dobg {clipboard get TEST}]
+    set result [childTkProcess eval {clipboard get TEST}]
     return $result
 } -cleanup {
     clipboard clear
-    cleanupbg
+    childTkProcess exit
 }  -result {0x10 }
 test clipboard-6.3 {Tk_ClipboardAppend procedure} -setup {
     clipboard clear
@@ -354,8 +357,12 @@ test clipboard-7.20 {Tk_ClipboardCmd procedure} -setup {
 } -cleanup {
     clipboard clear
 } -result {-type}
-
-# cleanup
+
+#
+# CLEANUP
+#
+
+testutils forget child
 cleanupTests
 return
 

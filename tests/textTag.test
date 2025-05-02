@@ -11,18 +11,23 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-set fixedFont {Courier 12}
+#
+# Don't use the variable name "fixedFont" since that variable is already defined
+# in utility namespace ::tk::test::text for importing in the namespace in which
+# test files are executing.
+#
+set fixedFont2 {Courier 12}
 set bigFont   {Helvetica 24}
 
 # Warn the user if the actual font is too different from what was requested.
-if {[font metrics [font actual $fixedFont] -fixed] != 1} {
-    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+if {[font metrics [font actual $fixedFont2] -fixed] != 1} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont2]\",\
 does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
 tests will fail."
 }
 
 destroy .t
-text .t -width 20 -height 10 -font $fixedFont
+text .t -width 20 -height 10 -font $fixedFont2
 
 pack .t -expand 1 -fill both
 update
