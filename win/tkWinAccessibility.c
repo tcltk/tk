@@ -67,18 +67,11 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Tcl command passed to event procedure. */
 char *callback_command;
 
-/* Focused accessible widget object. */
-static LONG g_focusedChildId = 0;
-
 /* Map Tk windows to MSAA ID's. */
 typedef struct {
   Tk_Window tkwin;
   LONG childId;
 } WidgetMapEntry;
-
-static WidgetMapEntry widgetMap[512];
-static int widgetMapCount = 0;
-static LONG nextChildId = 1;
 
 /* Custom WndProc to handle accessibility. */
 typedef struct {
@@ -123,9 +116,6 @@ static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this
 /* Prototypes of Tk functions that support MSAA integration and implement the script-level API. */
 static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags);
 static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
-LONG RegisterTkWidget(Tk_Window tkwin);
-LONG GetChildIdForTkWindow(Tk_Window tkwin);
-Tk_Window GetTkWindowForChildId(LONG childId);
 static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -612,25 +602,19 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
 }
 
 /* Function to get accessible description to MSAA. */
-static STDMETHODIMP TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
+HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accFocus(IAccessible *iface, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
+
   VariantInit(pvarChild);
 
-  /* Return the currently focused child ID.*/
-  LONG focusedId  = g_focusedChildId;
-  
-  if (focusedId <= 0) {
-    /* Either return VARIANT with VT_EMPTY or VT_I4 and lVal = 0 (self). */
-    pvarChild->vt = VT_I4;
-    pvarChild->lVal = 0; 
-  } else {
-    pvarChild->vt = VT_I4;
-    pvarChild->lVal = focusedId;
-  }
+  /* Flat hierarchy: always return self.*/
+  pvarChild->vt = VT_I4;
+  pvarChild->lVal = CHILDID_SELF;
 
   return S_OK;
 }
+
 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
 {
@@ -684,48 +668,6 @@ static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, cons
   return tkAccessible;
 }
 
-/* Function to map Tk window to MSAA ID's. */
-LONG RegisterTkWidget(Tk_Window tkwin) 
-{
-  if (widgetMapCount >= 512) return -1;
-
-  /* Is it already registered? */
-  for (int i = 0; i < widgetMapCount; ++i) {
-    if (widgetMap[i].tkwin == tkwin) {
-      return widgetMap[i].childId;
-    }
-  }
-
-  LONG childId = nextChildId++;
-
-  widgetMap[widgetMapCount].tkwin = tkwin;
-  widgetMap[widgetMapCount].childId = childId;
-  widgetMapCount++;
-
-  return childId;
-}
-
-/* Function to retrieve MSAA ID for a specifc Tk window. */
-LONG GetChildIdForTkWindow(Tk_Window tkwin) 
-{
-  for (int i = 0; i < widgetMapCount; ++i) {
-    if (widgetMap[i].tkwin == tkwin) {
-      return widgetMap[i].childId;
-    }
-  }
-  return -1; /* Not found. */
-}
-
-/* Function to retrieve Tk window for a specifc MSAA ID. */
-Tk_Window GetTkWindowForChildId(LONG childId) 
-{
-  for (int i = 0; i < widgetMapCount; ++i) {
-    if (widgetMap[i].childId == childId) {
-      return widgetMap[i].tkwin;
-    }
-  }
-  return NULL;
-}
 
 /*Function to check if a Tk widget (i.e. ttk widget) has a HWND.*/
 static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
@@ -928,12 +870,8 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
     return;
   }
 
-  LONG childId = GetChildIdForTkWindow(tkAccessible->win);
-  if (childId > 0) {
-    g_focusedChildId = childId;
-    if (tkAccessible->hwnd && IsWindow(tkAccessible->hwnd) && tkAccessible->win && tkAccessible->toplevel && Tk_WindowId(tkAccessible->toplevel) != None) {
-      NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, childId);
-    }
+  if (tkAccessible->hwnd && IsWindow(tkAccessible->hwnd) && tkAccessible->win && tkAccessible->toplevel && Tk_WindowId(tkAccessible->toplevel) != None) {
+    NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, CHILDID_SELF);
   }
 }
 
