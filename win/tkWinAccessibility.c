@@ -67,18 +67,6 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Tcl command passed to event procedure. */
 char *callback_command;
 
-/* Map Tk windows to MSAA ID's. */
-typedef struct {
-  Tk_Window tkwin;
-  LONG childId;
-} WidgetMapEntry;
-
-/* Custom WndProc to handle accessibility. */
-typedef struct {
-  WNDPROC originalWndProc;
-  HWND hwnd;
-} TkWinAccessibleWndData;
-
 /* Protoypes of glue functions to the IAccessible COM API. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
 static ULONG STDMETHODCALLTYPE TkWinAccessible_AddRef(IAccessible *this);
@@ -601,8 +589,8 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
   return S_OK;
 }
 
-/* Function to get accessible description to MSAA. */
-HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accFocus(IAccessible *iface, VARIANT *pvarChild)
+/* Function to get accessible focus to MSAA. */
+static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
 
@@ -615,7 +603,7 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accFocus(IAccessible *iface, VARIA
   return S_OK;
 }
 
-
+/* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
 {
 
