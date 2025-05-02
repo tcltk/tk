@@ -9,7 +9,7 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
-namespace import ::tk::test::loadTkCommand
+
 update
 # Move the mouse out of the way for window-2.1
 event generate {} <Motion> -warp 1 -x 640 -y 10

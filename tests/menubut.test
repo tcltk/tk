@@ -14,6 +14,10 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 # Create entries in the option database to be sure that geometry options
@@ -779,14 +783,15 @@ test menubutton-9.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
-
-
+#
+# CLEANUP
+#
 
 deleteWindows
 option clear
 imageFinish
 
-# cleanup
+testutils forget image
 cleanupTests
 return
 
