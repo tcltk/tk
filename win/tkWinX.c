@@ -79,6 +79,10 @@ static unsigned long scrollCounter = 0;
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
+/* Miscellaneous accessibility data and functions. */
+#include "tkWinAccessibility.h"
+
+
 /*
  * Declarations of static variables used in this file.
  */
@@ -816,6 +820,31 @@ TkWinChildProc(
 		result = 0;
 	    } else {
 		result = 1;
+	    }
+	}
+	break;
+
+    /* Handle MSAA queries. */
+    case WM_GETOBJECT: 
+	if ((LONG)lParam == OBJID_CLIENT) {
+	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
+	    if (tkwin) {
+		TkWindow *child;
+		TkWindow *parent = (TkWindow *)tkwin;
+		for (child = parent->childList; child != NULL; child = child->nextPtr) {
+		    const char *name = Tk_PathName((Tk_Window)child);
+		    TkMainInfo *info = TkGetMainInfoList();
+		    if (Tcl_Eval(info->interp, "focus") == TCL_OK) {
+			Tcl_Obj *resultObj = Tcl_GetObjResult(info->interp);
+			const char *result = Tcl_GetString(resultObj);      
+			if (strcmp(result, name) == 0) {
+			    TkWinAccessible *acc = GetTkAccessibleForWindow((Tk_Window)child);
+			    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+			    acc->lpVtbl->Release((IAccessible *)acc);  
+			    return result;
+			}
+		    }
+		}
 	    }
 	}
 	break;

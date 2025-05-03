@@ -11,58 +11,19 @@
  *
  */
 
-#include <tcl.h>
-#include <tk.h>
-#include "tkWinInt.h"
-#include <oleacc.h>
-#include <oaidl.h>
-#include <oleauto.h>
-#include <initguid.h>
-
-
-/* Define the GUID for the MSAA interface. */
-DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0x0, 0x38, 0x9b, 0x71);
-
-/* Data declarations used in this file. */
-typedef struct {
-  IAccessibleVtbl *lpVtbl;
-  Tk_Window win; 
-  Tk_Window toplevel;
-  Tcl_Interp *interp;
-  HWND hwnd;
-  char *pathName;
-  LONG refCount;
-} TkWinAccessible;
-
-/* Map script-level roles to C roles. */
-struct WinRoleMap {
-  const char *tkrole;
-  LONG winrole;
-};
-
-const struct WinRoleMap roleMap[] = {
-  {"Button", ROLE_SYSTEM_PUSHBUTTON},
-  {"Canvas", ROLE_SYSTEM_CLIENT},
-  {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON},
-  {"Combobox", ROLE_SYSTEM_COMBOBOX},
-  {"Entry", ROLE_SYSTEM_TEXT},
-  {"Label", ROLE_SYSTEM_STATICTEXT},
-  {"Listbox", ROLE_SYSTEM_LIST},
-  {"Menu", ROLE_SYSTEM_MENUPOPUP},
-  {"Notebook", ROLE_SYSTEM_PAGETABLIST},
-  {"Progressbar", ROLE_SYSTEM_PROGRESSBAR},
-  {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON},
-  {"Scale", ROLE_SYSTEM_SLIDER},
-  {"Scrollbar", ROLE_SYSTEM_SCROLLBAR},
-  {"Spinbox", ROLE_SYSTEM_SPINBUTTON},
-  {"Table", ROLE_SYSTEM_TABLE}, 
-  {"Text", ROLE_SYSTEM_TEXT},
-  {"Tree", ROLE_SYSTEM_OUTLINE},
-  {NULL, 0}
-};
+#include "tkWinAccessibility.h"
 
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
+
+/* Hash tables for linking Tk windows to accessibility object and HWND. */
+static Tcl_HashTable tkAccessibleTable;
+static int tkAccessibleTableInitialized = 0;
+static Tcl_HashTable hwndToTkWindowTable;
+static int hwndToTkWindowTableInitialized = 0;
+
+/* Currently focused Tk widget. */
+static Tk_Window gCurrentAccessibleWidget = NULL;
 
 /* Tcl command passed to event procedure. */
 char *callback_command;
@@ -103,10 +64,11 @@ static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this
 
 /* Prototypes of Tk functions that support MSAA integration and implement the script-level API. */
 static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags);
-static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
+static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
+void InitTkAccessibleTable(void);
+void InitHwndToTkWindowTable(void);
 static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
-LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 void TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
@@ -115,6 +77,28 @@ void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
 static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
 int TkWinAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
+
+const struct WinRoleMap roleMap[] = {
+  {"Button", ROLE_SYSTEM_PUSHBUTTON},
+  {"Canvas", ROLE_SYSTEM_CLIENT},
+  {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON},
+  {"Combobox", ROLE_SYSTEM_COMBOBOX},
+  {"Entry", ROLE_SYSTEM_TEXT},
+  {"Label", ROLE_SYSTEM_STATICTEXT},
+  {"Listbox", ROLE_SYSTEM_LIST},
+  {"Menu", ROLE_SYSTEM_MENUPOPUP},
+  {"Notebook", ROLE_SYSTEM_PAGETABLIST},
+  {"Progressbar", ROLE_SYSTEM_PROGRESSBAR},
+  {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON},
+  {"Scale", ROLE_SYSTEM_SLIDER},
+  {"Scrollbar", ROLE_SYSTEM_SCROLLBAR},
+  {"Spinbox", ROLE_SYSTEM_SPINBUTTON},
+  {"Table", ROLE_SYSTEM_TABLE}, 
+  {"Text", ROLE_SYSTEM_TEXT},
+  {"Tree", ROLE_SYSTEM_OUTLINE},
+  {NULL, 0}
+};
+
 
 /* Plumbing to the COM/MSAA machinery. */
 static IAccessibleVtbl tkAccessibleVtbl = {
@@ -635,7 +619,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
 }
 
 /* Function to map Tk window to MSAA attributes. */
-static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
+static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)ckalloc(sizeof(TkWinAccessible));
   
@@ -653,6 +637,13 @@ static TkWinAccessible *create_tk_accessible(Tcl_Interp *interp, HWND hwnd, cons
     tkAccessible->win = win;
     tkAccessible->refCount = 1;
   }
+  Tcl_HashEntry *entry;
+  int newEntry;
+  entry = Tcl_CreateHashEntry(&tkAccessibleTable, (ClientData)tkAccessible->win, &newEntry);
+  Tcl_SetHashValue(entry, tkAccessible);
+entry = Tcl_CreateHashEntry(&hwndToTkWindowTable, (ClientData)hwnd, &newEntry);
+Tcl_SetHashValue(entry, (ClientData)tkAccessible->win);
+  
   return tkAccessible;
 }
 
@@ -691,6 +682,46 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
     current = parent;
   }
   return current;
+}
+
+/* Function to initialize Tk -> MSAA hash table. */
+void InitTkAccessibleTable(void) {
+    if (!tkAccessibleTableInitialized) {
+        Tcl_InitHashTable(&tkAccessibleTable, TCL_ONE_WORD_KEYS);
+        tkAccessibleTableInitialized = 1;
+    }
+}
+
+/* Function to initialize HWND -> Tk hash table. */
+void InitHwndToTkWindowTable(void) {
+    if (!hwndToTkWindowTableInitialized) {
+        Tcl_InitHashTable(&hwndToTkWindowTable, TCL_ONE_WORD_KEYS);
+        hwndToTkWindowTableInitialized = 1;
+    }
+}
+
+/* Function to retrieve accessible object associated with Tk window. */
+TkWinAccessible *GetTkAccessibleForWindow(Tk_Window win) {
+  if (!tkAccessibleTableInitialized) {
+    return NULL;
+  }
+  Tcl_HashEntry *entry = Tcl_FindHashEntry(&tkAccessibleTable, (ClientData)win);
+  if (entry) {
+    return (TkWinAccessible *)Tcl_GetHashValue(entry);
+  }
+  return NULL;
+}
+
+/* Function to retrieve Tk window associated with HWND. */
+Tk_Window GetTkWindowForHwnd(HWND hwnd) {
+    if (!hwndToTkWindowTableInitialized) {
+        return NULL;
+    }
+    Tcl_HashEntry *entry = Tcl_FindHashEntry(&hwndToTkWindowTable, (ClientData)hwnd);
+    if (entry) {
+        return (Tk_Window)Tcl_GetHashValue(entry);
+    }
+    return NULL;
 }
 
 
@@ -928,9 +959,11 @@ int TkWinAccessibleObjCmd(
   }
 
   HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));   
-  TkWinAccessible *accessible = create_tk_accessible(interp, hwnd, windowName);
+  TkWinAccessible *accessible = CreateTkAccessible(interp, hwnd, windowName);
   TkWinAccessible_RegisterForCleanup(tkwin, accessible);
   TkWinAccessible_RegisterForFocus(tkwin, accessible);
+  InitTkAccessibleTable();
+  InitHwndToTkWindowTable();
 
 	
   if (accessible == NULL) {		
@@ -959,7 +992,8 @@ int TkWinAccessibleObjCmd(
  */
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
-{	
+{
+
   Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkWinAccessibleObjCmd, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
