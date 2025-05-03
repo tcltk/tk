@@ -17,13 +17,10 @@
 extern Tcl_HashTable *TkAccessibilityObject;
 
 /* Hash tables for linking Tk windows to accessibility object and HWND. */
-static Tcl_HashTable tkAccessibleTable;
+static Tcl_HashTable *tkAccessibleTable;
 static int tkAccessibleTableInitialized = 0;
-static Tcl_HashTable hwndToTkWindowTable;
+static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
-
-/* Currently focused Tk widget. */
-static Tk_Window gCurrentAccessibleWidget = NULL;
 
 /* Tcl command passed to event procedure. */
 char *callback_command;
@@ -621,14 +618,27 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
 /* Function to map Tk window to MSAA attributes. */
 static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)ckalloc(sizeof(TkWinAccessible));
+  /*Check for NULL values to guard against crashes. */
+  if (!tkAccessibleTable || !hwndToTkWindowTable) {
+    return NULL;
+  }
+
+  if (!pathName || !*pathName) {
+    return NULL;
+  }
+    
+  Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
+  if (!win) {
+    return NULL;
+  }
+  Tk_Window toplevel = GetToplevelOfWidget(win);
   
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)ckalloc(sizeof(TkWinAccessible));  
   if (!tkAccessible) {
     return NULL;
-  } 
+  }
+  
   if (tkAccessible) {
-    Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
-    Tk_Window toplevel = GetToplevelOfWidget(win);
     tkAccessible->lpVtbl = &tkAccessibleVtbl;
     tkAccessible->interp = interp;
     tkAccessible->toplevel = toplevel;
@@ -637,16 +647,27 @@ static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const 
     tkAccessible->win = win;
     tkAccessible->refCount = 1;
   }
+  
   Tcl_HashEntry *entry;
   int newEntry;
-  entry = Tcl_CreateHashEntry(&tkAccessibleTable, (ClientData)tkAccessible->win, &newEntry);
+  entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);;
+  if (!entry) {
+    ckfree(tkAccessible);
+    return NULL;
+  }
   Tcl_SetHashValue(entry, tkAccessible);
-entry = Tcl_CreateHashEntry(&hwndToTkWindowTable, (ClientData)hwnd, &newEntry);
-Tcl_SetHashValue(entry, (ClientData)tkAccessible->win);
+  
+  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
+  if (!entry) {
+    /* Remove previous entry to avoid leaks. */
+    Tcl_DeleteHashEntry(Tcl_FindHashEntry(tkAccessibleTable, win));
+    ckfree(tkAccessible);
+    return NULL;
+  }
+  Tcl_SetHashValue(entry, win);
   
   return tkAccessible;
 }
-
 
 /*Function to check if a Tk widget (i.e. ttk widget) has a HWND.*/
 static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
@@ -686,18 +707,20 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 
 /* Function to initialize Tk -> MSAA hash table. */
 void InitTkAccessibleTable(void) {
-    if (!tkAccessibleTableInitialized) {
-        Tcl_InitHashTable(&tkAccessibleTable, TCL_ONE_WORD_KEYS);
-        tkAccessibleTableInitialized = 1;
-    }
+  if (!tkAccessibleTableInitialized) {
+    tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+    Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
+    tkAccessibleTableInitialized = 1;
+  }
 }
 
 /* Function to initialize HWND -> Tk hash table. */
 void InitHwndToTkWindowTable(void) {
-    if (!hwndToTkWindowTableInitialized) {
-        Tcl_InitHashTable(&hwndToTkWindowTable, TCL_ONE_WORD_KEYS);
-        hwndToTkWindowTableInitialized = 1;
-    }
+  if (!hwndToTkWindowTableInitialized) {
+    hwndToTkWindowTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+    Tcl_InitHashTable(hwndToTkWindowTable, TCL_ONE_WORD_KEYS);
+    hwndToTkWindowTableInitialized = 1;
+  }
 }
 
 /* Function to retrieve accessible object associated with Tk window. */
@@ -705,7 +728,7 @@ TkWinAccessible *GetTkAccessibleForWindow(Tk_Window win) {
   if (!tkAccessibleTableInitialized) {
     return NULL;
   }
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(&tkAccessibleTable, (ClientData)win);
+  Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, (ClientData)win);
   if (entry) {
     return (TkWinAccessible *)Tcl_GetHashValue(entry);
   }
@@ -717,7 +740,7 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
     if (!hwndToTkWindowTableInitialized) {
         return NULL;
     }
-    Tcl_HashEntry *entry = Tcl_FindHashEntry(&hwndToTkWindowTable, (ClientData)hwnd);
+    Tcl_HashEntry *entry = Tcl_FindHashEntry(hwndToTkWindowTable, (ClientData)hwnd);
     if (entry) {
         return (Tk_Window)Tcl_GetHashValue(entry);
     }

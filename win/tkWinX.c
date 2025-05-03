@@ -836,8 +836,8 @@ TkWinChildProc(
 		    TkMainInfo *info = TkGetMainInfoList();
 		    if (Tcl_Eval(info->interp, "focus") == TCL_OK) {
 			Tcl_Obj *resultObj = Tcl_GetObjResult(info->interp);
-			const char *result = Tcl_GetString(resultObj);      
-			if (strcmp(result, name) == 0) {
+			const char *focus = Tcl_GetString(resultObj);      
+			if (strcmp(focus, name) == 0) {
 			    TkWinAccessible *acc = GetTkAccessibleForWindow((Tk_Window)child);
 			    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 			    acc->lpVtbl->Release((IAccessible *)acc);  
