@@ -991,7 +991,7 @@ int TkWinAccessibleObjCmd(
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
-    return TCL_ERROR;
+    return TCL_OK;
   }
   return TCL_OK;
 }
