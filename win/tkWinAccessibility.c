@@ -38,10 +38,8 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
-HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
 
@@ -54,6 +52,8 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, LONG xLeft, LONG yTop,VARIANT *pvarChild);
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
@@ -75,6 +75,7 @@ static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *ev
 int TkWinAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
+/*Mapping Tk roles to MSAA roles.*/
 const struct WinRoleMap roleMap[] = {
   {"Button", ROLE_SYSTEM_PUSHBUTTON},
   {"Canvas", ROLE_SYSTEM_CLIENT},
@@ -95,6 +96,13 @@ const struct WinRoleMap roleMap[] = {
   {"Tree", ROLE_SYSTEM_OUTLINE},
   {NULL, 0}
 };
+
+/* Custom action struct for MSAA. */
+typedef struct {
+    Tcl_Event header;
+    Tcl_Interp *interp;
+    char *command;
+} TkWinAccessibleActionEvent;
 
 
 /* Plumbing to the COM/MSAA machinery. */
@@ -145,22 +153,12 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VA
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction)
-{
-  return E_NOTIMPL;
-}
-
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild)
 {
   return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt)
-{
-  return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild)
 {
   return E_NOTIMPL;
 }
@@ -464,11 +462,38 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this,
 {
   if (!ppdispChild) return E_INVALIDARG;
   *ppdispChild = NULL;
+  
+  /* Return the IAccessible object itself for CHILDID_SELF. */
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) return E_INVALIDARG;
 
-  if (varChild.vt != VT_I4) return E_INVALIDARG;
-  if (varChild.lVal != CHILDID_SELF) return E_INVALIDARG;
+  *ppdispChild = (IDispatch *)this;
+  ((IAccessible *)this)->lpVtbl->AddRef(this);
 
   return S_OK;
+}
+
+/* Get specific screen coordinates to expose MSAA object at that position. */
+HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, LONG xLeft, LONG yTop, VARIANT *pvarChild)
+{
+    if (!pvarChild) return E_INVALIDARG;
+
+    TkWinAccessible *acc = (TkWinAccessible *)this;
+    Tk_Window tkwin = acc->win;
+
+    int rootX, rootY, width, height;
+    Tk_GetRootCoords(tkwin, &rootX, &rootY);
+    width = Tk_Width(tkwin);
+    height = Tk_Height(tkwin);
+
+    if (xLeft >= rootX && xLeft <= (rootX + width) &&
+        yTop >= rootY && yTop <= (rootY + height)) {
+        VariantInit(pvarChild);
+        pvarChild->vt = VT_I4;
+        pvarChild->lVal = CHILDID_SELF;  // Return self
+        return S_OK;
+    }
+
+    return S_FALSE;  // No object found at those coordinates
 }
 
 
@@ -492,47 +517,102 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, 
   return E_INVALIDARG;
 }
 
-/* Function to get button press to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
+/* Function to return default MSAA action for a widget. */
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;  
-  Tk_Window win = tkAccessible->win;
-  Tcl_HashEntry *hPtr, *hPtr2;
-  Tcl_HashTable *AccessibleAttributes;
-  Tcl_Event *event; 
-
-  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) {
+  if (!pszDefaultAction || varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
     return E_INVALIDARG;
   }
 
-  AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "action");
-  if (!hPtr2) {
-    return E_INVALIDARG;
+  TkWinAccessible *acc = (TkWinAccessible *)this;
+
+  VARIANT roleVar;
+  HRESULT hr = TkWinAccessible_get_accRole(this, varChild, &roleVar);
+  if (FAILED(hr)) return hr;
+
+  if (roleVar.vt != VT_I4) return E_FAIL;
+
+  LPCWSTR action = NULL;
+
+  switch (roleVar.lVal) {
+  case ROLE_SYSTEM_PUSHBUTTON:
+  case ROLE_SYSTEM_MENUITEM:
+  case ROLE_SYSTEM_LINK:
+  case ROLE_SYSTEM_OUTLINEITEM:
+  case ROLE_SYSTEM_LISTITEM:
+    action = L"Press";
+    break;
+  case ROLE_SYSTEM_CHECKBUTTON:
+    action = L"Check";
+    break;
+  case ROLE_SYSTEM_RADIOBUTTON:
+    action = L"Select";
+    break;
+  default:
+    action = NULL;
+    break;
   }
 
-  char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
-  callback_command = action;
-  event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
-  event->proc = TkWinAccessible_ActionEventHandler;
-  Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-  return S_OK;  
+  if (action) {
+    *pszDefaultAction = SysAllocString(action);
+    return S_OK;
+  } else {
+    return S_FALSE;
+  }
 }
+
+
+/* Function to get button press to MSAA. */
+static HRESULT STDMETHODCALLTYPE
+TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
+{
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+    return E_INVALIDARG;
+  }
+
+  TkWinAccessible *acc = (TkWinAccessible *)this;
+  Tk_Window win = acc->win;
+
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) return E_FAIL;
+
+  Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
+  if (!actionEntry) return E_FAIL;
+
+  const char *command = Tcl_GetString(Tcl_GetHashValue(actionEntry));
+  if (!command || !*command) return E_FAIL;
+
+  /* Allocate an event for Tcl event loop. */
+  TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)ckalloc(sizeof(TkWinAccessibleActionEvent));
+  event->header.proc = TkWinAccessible_ActionEventHandler;
+  event->interp = acc->interp;
+  event->command = (char *)ckalloc(strlen(command) + 1);
+  strcpy(event->command, command);
+
+  Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+  return S_OK;
+}
+
+
 
 /*
  * Event proc which implements the action event procedure.
  */
 
-static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags)
+static int
+TkWinAccessible_ActionEventHandler(Tcl_Event *evPtr, int flags)
 {
-  /* MSVC complains about TCL_UNUSED. */
-  (void)evtPtr;
-  (void)flags;
+    if (!(flags & TCL_WINDOW_EVENTS)) return 0;
 
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_GlobalEval(info->interp, callback_command);
-  return 1;
+    TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)evPtr;
+    if (event->interp && event->command) {
+        Tcl_Eval(event->interp, event->command);
+    }
+
+    ckfree(event->command);
+    ckfree(event);
+    return 1;
 }
 
 /* Function to get accessible help to MSAA. */
@@ -683,7 +763,6 @@ static HWND GetWidgetHWNDIfPresent(Tk_Window tkwin) {
 
   return NULL;
 }
-
 
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
@@ -987,7 +1066,6 @@ int TkWinAccessibleObjCmd(
   TkWinAccessible_RegisterForFocus(tkwin, accessible);
   InitTkAccessibleTable();
   InitHwndToTkWindowTable();
-
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
