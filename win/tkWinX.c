@@ -829,31 +829,18 @@ TkWinChildProc(
 	if ((LONG)lParam == OBJID_CLIENT) {
 	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
 	    if (tkwin) {
-		TkWindow *parent = (TkWindow *)tkwin;
-		for (TkWindow *child = parent->childList; child != NULL; child = child->nextPtr) {
-		    const char *name = Tk_PathName((Tk_Window)child);
-		    TkMainInfo *info = TkGetMainInfoList();
-		    if (!info || !info->interp) {
-			continue;
-		    }
-
-		    if (Tcl_Eval(info->interp, "focus") == TCL_OK) {
-			Tcl_Obj *resultObj = Tcl_GetObjResult(info->interp);
-			const char *focus = Tcl_GetString(resultObj);
-			
-			if (focus && strcmp(focus, name) == 0) {
-			    TkWinAccessible *acc = GetTkAccessibleForWindow((Tk_Window)child);
-			    if (acc) {
-				LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-				return result;
-			    }
-			}
-		    }
+		TkWinAccessible *acc = GetTkAccessibleForWindow(tkwin);
+		if (acc) {
+		    /*
+		     *  Return the root accessible object with
+		     *  only CHILDID_SELF exposed.
+		     */
+		    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+		    return result;
 		}
 	    }
 	}
 	break;
-
 
     default:
 	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
