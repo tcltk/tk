@@ -779,7 +779,7 @@ test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
     }
     list [testDialog onDisplay {
 	Click 1
-    }] [expr {[llength $testDialogFont] ne {}}]
+    }] [expr {[llength $testDialogFont] > 0}]
 } -result {0 1}
 test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
     nt testwinevent
