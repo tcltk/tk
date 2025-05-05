@@ -55,8 +55,8 @@ static int		GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
 /*
  * Helper functions.
  */
-static int		GdiMakeLogFont(Tcl_Interp *interp, const char *str,
-			    LOGFONTW *lf, HDC hDC);
+static int		GdiMakeLogFont(Tcl_Interp *interp, Tcl_Obj *specPtr,
+			    double angle, LOGFONTW *lf, HDC hDC);
 static int		GdiMakePen(Tcl_Interp *interp, double dwidth,
 			    int dashstyle, const char *dashstyledata,
 			    int capstyle, int joinstyle,
@@ -82,9 +82,8 @@ static int		DIBNumColors(LPBITMAPINFOHEADER lpDIB);
 static int		PalEntriesOnDevice(HDC hDC);
 static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
-static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
-			    const char *str[], int numargs);
+			    Tcl_Obj *const *objv, Tcl_Size argc);
 static Tcl_ObjCmdProc2 PrintSelectPrinter;
 static Tcl_ObjCmdProc2 PrintOpenPrinter;
 static Tcl_ObjCmdProc2 PrintClosePrinter;
@@ -96,18 +95,15 @@ static Tcl_ObjCmdProc2 PrintClosePage;
 /*
  * Global state.
  */
-
-static PRINTDLGW pd;
 static DOCINFOW di;
-static LPDEVNAMES devnames;
 static HDC printDC;
+static Tcl_DString jobNameW;
 
 /*
  * To make the "subcommands" follow a standard convention, add them to this
  * array. The first element is the subcommand name, and the second a standard
  * Tcl command handler.
  */
-
 static const struct gdi_command {
     const char *command_string;
     Tcl_ObjCmdProc2 *command;
@@ -1410,7 +1406,7 @@ static int GdiCharWidths(
 	if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
 	    objc--;
 	    objv++;
-	    if (GdiMakeLogFont(interp, Tcl_GetString(objv[0]), &lf, hDC)) {
+	    if (GdiMakeLogFont(interp, objv[0], 0.0, &lf, hDC)) {
 		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
@@ -1494,13 +1490,13 @@ int GdiText(
 {
     static const char usage_message[] =
 	"::tk::print::_gdi text hdc x y -anchor [center|n|e|s|w] "
-	"-fill color -font fontname "
+	"-angle angle -fill color -font fontname "
 	"-justify [left|right|center] "
 	"-stipple bitmap -text string -width linelen "
 	"-single -backfill";
 
     HDC hDC;
-    double x, y;
+    double x, y, angle = 0.0;
     const char *string = 0;
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
@@ -1508,7 +1504,7 @@ int GdiText(
     LOGFONTW lf;
     HFONT hfont;
     HGDIOBJ oldfont;
-    int made_font = 0;
+    int dofont = 0, made_font = 0;
     int retval;
     int dotextcolor = 0;
     int dobgmode = 0;
@@ -1517,6 +1513,7 @@ int GdiText(
     int usesingle = 0;
     WCHAR *wstring;
     Tcl_DString tds;
+    Tcl_Obj *fontObj = NULL;
 
     if (objc < 4) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
@@ -1544,6 +1541,12 @@ int GdiText(
 	    if (objc > 0) {
 		Tk_GetAnchor(interp, Tcl_GetString(objv[0]), &anchor);
 	    }
+	} else if (strcmp(Tcl_GetString(objv[0]), "-angle") == 0) {
+	    objc--;
+	    objv++;
+	    if (objc > 0) {
+		Tcl_GetDoubleFromObj(interp, objv[0], &angle);
+	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-justify") == 0) {
 	    objc--;
 	    objv++;
@@ -1565,12 +1568,8 @@ int GdiText(
 	} else if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
 	    objc--;
 	    objv++;
-	    if (GdiMakeLogFont(interp, Tcl_GetString(objv[0]), &lf, hDC)) {
-		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
-		    made_font = 1;
-		    oldfont = SelectObject(hDC, hfont);
-		}
-	    }
+	    dofont = 1;
+	    fontObj = objv[0];
 	    /* Else leave the font alone! */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
 	    objc--;
@@ -1608,6 +1607,15 @@ int GdiText(
     if (string == 0) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
+    }
+
+    if (angle != 0.0 || dofont) {
+	if (GdiMakeLogFont(interp, fontObj, angle, &lf, hDC)) {
+	    if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+		made_font = 1;
+		oldfont = SelectObject(hDC, hfont);
+	    }
+	}
     }
 
     /* Set the format flags for -single: Overrides -width. */
@@ -1674,8 +1682,9 @@ int GdiText(
     }
 
     /* Print the text. */
+    /* TODO: calculate the right values for sizerect, and remove DT_NOCLIP */
     retval = DrawTextW(hDC, wstring,
-	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags);
+	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags | DT_NOCLIP);
     Tcl_DStringFree(&tds);
 
     /* Get the color set back. */
@@ -2445,82 +2454,47 @@ static int DIBNumColors(
 static int GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
     LOGFONTW *lf,
-    const char *str[],
-    int numargs)
+    Tcl_Obj *const *objv,
+    Tcl_Size argc)
 {
-    int i;
+    Tcl_Size i;
     int retval = 0; /* Number of words that could not be parsed. */
 
-    for (i=0; i<numargs; i++) {
-	if (str[i]) {
-	    int wt;
-	    if ((wt = GdiWordToWeight(str[i])) != -1) {
-		lf->lfWeight = wt;
-	    } else if (strcmp(str[i], "roman") == 0) {
-		lf->lfItalic = FALSE;
-	    } else if (strcmp(str[i], "italic") == 0) {
-		lf->lfItalic = TRUE;
-	    } else if (strcmp(str[i], "underline") == 0) {
-		lf->lfUnderline = TRUE;
-	    } else if (strcmp(str[i], "overstrike") == 0) {
-		lf->lfStrikeOut = TRUE;
-	    } else {
-		retval++;
-	    }
-	}
-    }
-    return retval;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GdiWordToWeight --
- *
- *	Converts keywords to font weights.
- *
- * Results:
- *	Helps set the proper font for GDI rendering.
- *
- *----------------------------------------------------------------------
- */
-
-static int GdiWordToWeight(
-    const char *str)
-{
-    int retval = -1;
-    size_t i;
-    static const struct font_weight {
-	const char *name;
-	int weight;
-    } font_weights[] = {
-	{ "thin", FW_THIN },
-	{ "extralight", FW_EXTRALIGHT },
-	{ "ultralight", FW_EXTRALIGHT },
-	{ "light", FW_LIGHT },
-	{ "normal", FW_NORMAL },
-	{ "regular", FW_NORMAL },
-	{ "medium", FW_MEDIUM },
-	{ "semibold", FW_SEMIBOLD },
-	{ "demibold", FW_SEMIBOLD },
-	{ "bold", FW_BOLD },
-	{ "extrabold", FW_EXTRABOLD },
-	{ "ultrabold", FW_EXTRABOLD },
-	{ "heavy", FW_HEAVY },
-	{ "black", FW_HEAVY },
+    enum fontStyles {
+	STY_BOLD, STY_ITALIC, STY_NORMAL, STY_OVERSTRIKE, STY_ROMAN,
+	STY_UNDERLINE
     };
+    const char *const styleNames[] = {
+	"bold", "italic", "normal", "overstrike", "roman", "underline", NULL
+    };
+    enum fontStyles sty;
 
-    if (str == 0) {
-	return -1;
-    }
-
-    for (i=0; i<sizeof(font_weights) / sizeof(struct font_weight); i++) {
-	if (strcmp(str, font_weights[i].name) == 0) {
-	    retval = font_weights[i].weight;
-	    break;
+    for (i = 0; i < argc; i++) {
+	if (Tcl_GetIndexFromObj(NULL, objv[i], styleNames, NULL, 0, &sty)
+		!= TCL_OK) {
+	    retval++;
+	    continue;
+	}
+	switch (sty) {
+	    case STY_BOLD:
+		lf->lfWeight = FW_BOLD;
+		break;
+	    case STY_ITALIC:
+		lf->lfItalic = TRUE;
+		break;
+	    case STY_NORMAL:
+		lf->lfWeight = FW_NORMAL;
+		break;
+	    case STY_OVERSTRIKE:
+		lf->lfStrikeOut = TRUE;
+		break;
+	    case STY_ROMAN:
+		lf->lfItalic = FALSE;
+		break;
+	    case STY_UNDERLINE:
+		lf->lfUnderline = TRUE;
 	}
     }
-
     return retval;
 }
 
@@ -2529,8 +2503,9 @@ static int GdiWordToWeight(
  *
  * MakeLogFont --
  *
- *	Takes the font description string and converts this into a logical
+ *	Takes the font description Tcl_Obj and converts this into a logical
  *	font spec.
+ *      The expected font format is a list of {family size ?style ...?}
  *
  * Results:
  *	 Sets font weight.
@@ -2540,11 +2515,12 @@ static int GdiWordToWeight(
 
 static int GdiMakeLogFont(
     Tcl_Interp *interp,
-    const char *str,
+    Tcl_Obj *specPtr,
+    double angle,
     LOGFONTW *lf,
     HDC hDC)
 {
-    const char **list;
+    Tcl_Obj **listPtr;
     Tcl_Size count;
 
     /* Set up defaults for logical font. */
@@ -2555,36 +2531,38 @@ static int GdiMakeLogFont(
     lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf->lfQuality = DEFAULT_QUALITY;
     lf->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+    if (angle != 0.0) {
+	lf->lfEscapement = lf->lfOrientation = 10.0 * angle;
+    }
 
-    /* The cast to (char *) is silly, based on prototype of Tcl_SplitList. */
-    if (Tcl_SplitList(interp, str, &count, &list) != TCL_OK) {
+    if (!specPtr ||
+	    Tcl_ListObjGetElements(interp, specPtr, &count, &listPtr) != TCL_OK) {
 	return 0;
     }
 
     /* Now we have the font structure broken into name, size, weight. */
     if (count >= 1) {
 	Tcl_DString ds;
+	const char *str = Tcl_GetString(listPtr[0]);
 
 	Tcl_DStringInit(&ds);
-	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], TCL_INDEX_NONE, &ds),
-		LF_FACESIZE-1);
-	Tcl_DStringFree(&ds);
+	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(str, TCL_INDEX_NONE, &ds),
+		LF_FACESIZE);
 	lf->lfFaceName[LF_FACESIZE-1] = 0;
+	Tcl_DStringFree(&ds);
     } else {
 	return 0;
     }
 
     if (count >= 2) {
 	int siz;
-	char *strend;
-	siz = strtol(list[1], &strend, 0);
 
 	/*
 	 * Assumptions:
 	 * 1) Like canvas, if a positive number is specified, it's in points.
 	 * 2) Like canvas, if a negative number is specified, it's in pixels.
 	 */
-	if (strend > list[1]) { /* If it looks like a number, it is a number.... */
+	if (Tcl_GetIntFromObj(NULL, listPtr[1], &siz) == TCL_OK) { /* If it looks like a number, it is a number.... */
 	    if (siz > 0) {  /* Size is in points. */
 		SIZE wextent, vextent;
 		POINT worigin, vorigin;
@@ -2647,15 +2625,15 @@ static int GdiMakeLogFont(
 		lf->lfHeight = siz;  /* Leave this negative. */
 	    }
 	} else {
-	    GdiParseFontWords(interp, lf, list+1, count-1);
+	    /*  what, no size ?? */
+	    GdiParseFontWords(interp, lf, listPtr+1, count-1);
 	}
     }
 
     if (count >= 3) {
-	GdiParseFontWords(interp, lf, list+2, count-2);
+	GdiParseFontWords(interp, lf, listPtr+2, count-2);
     }
 
-    ckfree(list);
     return 1;
 }
 
@@ -3607,23 +3585,24 @@ static int PrintSelectPrinter(
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj* const*))
 {
+    PRINTDLGW pd;
     LPCWSTR printerName = NULL;
-    PDEVMODEW returnedDevmode = NULL;
-    PDEVMODEW localDevmode = NULL;
+    PDEVMODEW devmode = NULL;
+    LPDEVNAMES devnames = NULL;
 
-    WCHAR *localPrinterName = NULL;
     int copies = 0;
     int paper_width = 0;
     int paper_height = 0;
     int dpi_x = 0;
     int dpi_y = 0;
+    int returnVal = TCL_OK;
 
     /* Set up print dialog and initalize property structure. */
-
     memset(&pd, 0, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
-    pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
+    pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION |
+	PD_RETURNDC;
 
     if (! PrintDlgW(&pd)) {
 	unsigned int errorcode = CommDlgExtendedError();
@@ -3644,50 +3623,38 @@ static int PrintSelectPrinter(
 	return TCL_OK;
     }
 
-    /*Get document info.*/
-    memset(&di, 0, sizeof(di));
-    di.cbSize = sizeof(di);
-    di.lpszDocName = L"Tk Print Output";
-
-    /* Copy print attributes to local structure. */
-    returnedDevmode = (PDEVMODEW) GlobalLock(pd.hDevMode);
+    devmode = (PDEVMODEW) GlobalLock(pd.hDevMode);
     devnames = (LPDEVNAMES) GlobalLock(pd.hDevNames);
+    if (! devmode) {
+	Tcl_AppendResult(interp, "selected printer doesn't have extended info",
+	    NULL);
+	return TCL_ERROR;
+    }
+    if (! devnames) {
+	Tcl_AppendResult(interp, "can't get device names", NULL);
+	return TCL_ERROR;
+    }
+
     printerName = (LPCWSTR) devnames + devnames->wDeviceOffset;
-    localDevmode = (LPDEVMODEW) HeapAlloc(GetProcessHeap(),
-	HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS,
-	returnedDevmode->dmSize);
-
-    if (localDevmode != NULL) {
-	memcpy((LPVOID)localDevmode, (LPVOID)returnedDevmode,
-	    returnedDevmode->dmSize);
-
-	/* Get values from user-set and built-in properties. */
-	localPrinterName = localDevmode->dmDeviceName;
-	dpi_y = localDevmode->dmYResolution;
-	dpi_x = localDevmode->dmPrintQuality;
-	/* Convert height and width to logical points. */
-	paper_height = (int) localDevmode->dmPaperLength / 0.254;
-	paper_width = (int) localDevmode->dmPaperWidth / 0.254;
-	copies = pd.nCopies;
-	/* Set device context here for all GDI printing operations. */
-	printDC = CreateDCW(L"WINSPOOL", printerName, NULL, localDevmode);
-    } else {
-	localDevmode = NULL;
-    }
-
-    if (pd.hDevMode != NULL) {
-	GlobalFree(pd.hDevMode);
-    }
+    /* Get values from user-set and built-in properties. */
+    dpi_y = devmode->dmYResolution;
+    dpi_x = devmode->dmPrintQuality;
+    /* Convert height and width to logical points. */
+    paper_height = (int) devmode->dmPaperLength / 0.254;
+    paper_width = (int) devmode->dmPaperWidth / 0.254;
+    copies = pd.nCopies;
+    /* Set device context here for all GDI printing operations. */
+    printDC = pd.hDC;
 
     /*
      * Store print properties in variables so they can be accessed from
      * script level.
      */
-    if (localPrinterName != NULL) {
+    if (printerName != NULL) {
 	Tcl_DString prname;
 
 	Tcl_DStringInit(&prname);
-	Tcl_WCharToUtfDString(localPrinterName, TCL_INDEX_NONE, &prname);
+	Tcl_WCharToUtfDString((WCHAR *)printerName, TCL_INDEX_NONE, &prname);
 	Tcl_SetVar2Ex(interp, "::tk::print::printer_name", NULL,
 		Tcl_DStringToObj(&prname), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::copies", NULL,
@@ -3700,9 +3667,18 @@ static int PrintSelectPrinter(
 		Tcl_NewIntObj(paper_width), 0);
 	Tcl_SetVar2Ex(interp, "::tk::print::paper_height", NULL,
 		Tcl_NewIntObj(paper_height), 0);
+    } else {
+	Tcl_UnsetVar(interp, "::tk::print::printer_name", 0);
+	Tcl_AppendResult(interp, "selected printer doesn't have name", NULL);
+	DeleteDC(printDC);
+	returnVal = TCL_ERROR;
     }
 
-    return TCL_OK;
+    GlobalUnlock(devmode);
+    GlobalFree(devmode);
+    GlobalUnlock(devnames);
+    GlobalFree(devnames);
+    return returnVal;
 }
 
 /*
@@ -3795,19 +3771,34 @@ int PrintClosePrinter(
  *
  * -------------------------------------------------------------------------
  */
-
 int PrintOpenDoc(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(Tcl_Obj *const *))
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
 {
     int output = 0;
+    const char *jobname;
+    Tcl_Size len;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "jobname");
+	return TCL_ERROR;
+    }
+
 
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
 	return TCL_ERROR;
     }
+
+    jobname = Tcl_GetStringFromObj(objv[1], &len);
+    Tcl_DStringInit(&jobNameW);
+
+    /*Get document info.*/
+    memset(&di, 0, sizeof(di));
+    di.cbSize = sizeof(di);
+    di.lpszDocName = Tcl_UtfToWCharDString(jobname, len, &jobNameW);
 
     /*
      * Start printing.
@@ -3850,6 +3841,7 @@ int PrintCloseDoc(
 	return TCL_ERROR;
     }
     DeleteDC(printDC);
+    Tcl_DStringFree(&jobNameW);
     return TCL_OK;
 }
 
