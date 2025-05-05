@@ -76,7 +76,7 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-	    if {[info exists printer_name] && $printer_name ne ""} {
+	    if {[info exists printer_name]} {
 		set printargs(hDC) $printer_name
 		set printargs(pw) $paper_width
 		set printargs(pl) $paper_height
@@ -117,13 +117,14 @@ namespace eval ::tk::print {
 		    -font $font -array ::tk::print::charwidths
 	    }
 	    array default set ::tk::print::charwidths $charwidths(x)
-	    set pagewid [expr {($printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx)}]
-	    set pagehgt [expr {($printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy)}]
+	    set pagewid  [expr {($printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx)}]
+	    set pagehgt  [expr {($printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy)}]
 	    set totallen [string length $data]
+	    set zerohgt  [expr {$printargs(tm) * $printargs(resy) / 1000}]
+	    set curhgt $zerohgt
 	    set curlen 0
-	    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000}]
 
-	    _opendoc
+	    _opendoc "[tk appname]: Tk Print Job"
 	    _openpage
 
 	    while {$curlen < $totallen} {
@@ -139,13 +140,13 @@ namespace eval ::tk::print {
 		    }
 		}
 
-		set result [_print_page_nextline $linestring $curhgt $font]
-		incr curlen [lindex $result 0]
-		incr curhgt [lindex $result 1]
-		if {$curhgt + [lindex $result 1] > $pagehgt} {
+		lassign [_print_page_nextline $linestring $curhgt $font] len hgt
+		incr curlen $len
+		incr curhgt $hgt
+		if {$curhgt + $hgt > $pagehgt} {
 		    _closepage
 		    _openpage
-		    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000}]
+		    set curhgt $zerohgt
 		}
 	    }
 
@@ -165,8 +166,8 @@ namespace eval ::tk::print {
 	#   font -       Optional arguments to supply to the text command
 	proc _print_file {filename {breaklines 1} {font ""}} {
 	    set fn [open $filename r]
-	    set data [read $fn]
-	    close $fn
+	    set data [chan read $fn]
+	    chan close $fn
 	    _print_data $data $breaklines $font
 	}
 
@@ -223,7 +224,7 @@ namespace eval ::tk::print {
 		set result [_gdi text $printargs(hDC) $lm $y \
 				 -anchor nw -justify left -text $txt]
 	    }
-	    return "$startindex $result"
+	    return [list $startindex $result]
 	}
 
 	# These procedures read in the canvas widget, and write all of
@@ -233,9 +234,7 @@ namespace eval ::tk::print {
 	variable vtgPrint
 
 	proc _init_print_canvas {} {
-	    variable option
 	    variable vtgPrint
-	    variable printargs
 
 	    set vtgPrint(printer.bg) white
 	}
@@ -252,13 +251,20 @@ namespace eval ::tk::print {
 	    variable printargs
 	    variable printer_name
 
+	    # provide an early exit if the widget is not a canvas
+	    set class [winfo class $wid]
+	    if {$class ne "Canvas"} {
+		return -code error "Can't print items of type $class.\
+		     No handler registered"
+	    }
+
 	    _set_dc
 
 	    if {![info exists printer_name]} {
 		return
 	    }
 
-	    _opendoc
+	    _opendoc $name
 	    _openpage
 
 	    # Here is where any scaling/gdi mapping should take place
@@ -267,7 +273,7 @@ namespace eval ::tk::print {
 
 	    # For normal windows, this may be fine--but for a canvas, one
 	    # wants the canvas dimensions, and not the WINDOW dimensions.
-	    if {[winfo class $wid] eq "Canvas"} {
+	    if {$class eq "Canvas"} {
 		set sc [$wid cget -scrollregion]
 		# if there is no scrollregion, use width and height.
 		if {$sc eq ""} {
@@ -305,14 +311,7 @@ namespace eval ::tk::print {
 		-offset $printargs(resolution)
 
 	    # Handling of canvas widgets.
-	    switch [winfo class $wid] {
-		Canvas {
-		    _print_canvas $printargs(hDC) $wid
-		}
-		default {
-		    puts "Can't print items of type [winfo class $wid]. No handler registered"
-		}
-	    }
+	    _print_canvas $printargs(hDC) $wid
 
 	    # End printing process.
 	    _closepage
@@ -325,7 +324,7 @@ namespace eval ::tk::print {
 	#    hdc -              The printer handle.
 	#    cw  -              The canvas widget.
 	proc _print_canvas {hdc cw} {
-	    variable  vtgPrint
+	    variable vtgPrint
 	    variable printargs
 
 	    # Get information about page being printed to
@@ -338,6 +337,7 @@ namespace eval ::tk::print {
 		if {[info commands _print_canvas.$type] eq "_print_canvas.$type"} {
 		    _print_canvas.[$cw type $id] $printargs(hDC) $cw $id
 		} else {
+		    # should we use puts?
 		    puts "Omitting canvas item of type $type since there is no handler registered for it"
 		}
 	    }
@@ -535,19 +535,18 @@ namespace eval ::tk::print {
 	    set wdth [expr {[lindex $bbox 2] - [lindex $bbox 0]}]
 
 	    set just [$cw itemcget $id -justify]
+	    set angle [$cw itemcget $id -angle]
 
-	    # Get the real canvas font info and create a compatible font,
-	    # suitable for printer name extraction.
-	    set font [font create {*}[font actual [$cw itemcget $id -font]]]
-
+	    # Get the real canvas font info suitable for printer
+	    # name extraction.
+	    set font [font actual [$cw itemcget $id -font]]
 	    # Just get the name and family, or some of the _gdi commands will
 	    # fail.
-	    set font [list [font configure $font -family] \
-			  -[font configure $font -size]]
+	    set font [list [dict get $font -family] -[dict get $font -size]]
 
 	    _gdi text $hdc {*}$coords \
 		-fill $color -text $txt -font $font \
-		-anchor $anchr -width $wdth -justify $just
+		-anchor $anchr -width $wdth -justify $just -angle $angle
 	}
 
 	# _print_canvas.image
@@ -1287,7 +1286,7 @@ namespace eval ::tk::print {
 proc ::tk::print {w} {
     switch [winfo class $w],[tk windowingsystem] {
 	"Canvas,win32" {
-	    tailcall ::tk::print::_print_widget $w 0 "Tk Print Output"
+	    tailcall ::tk::print::_print_widget $w 0 "[tk appname]: Tk window $w"
 	}
 	"Canvas,x11" {
 	    tailcall ::tk::print::_print $w
@@ -1298,7 +1297,7 @@ proc ::tk::print {w} {
 	    ::tk::print::_print $printfile
 	}
 	"Text,win32" {
-	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
+	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {{Courier New} 11}
 	}
 	"Text,x11" {
 	    tailcall ::tk::print::_print $w
