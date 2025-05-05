@@ -579,20 +579,17 @@ TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr){
-      MessageBox(NULL, "No window entry", "Debug", MB_OK);
       return E_FAIL;
   }
 
   Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
   if (!actionEntry) {
-      MessageBox(NULL, "No action entry", "Debug", MB_OK);
       return E_FAIL;
   }
 
   const char *command = Tcl_GetString(Tcl_GetHashValue(actionEntry));
   if (!command || !*command) {
-      MessageBox(NULL, "No command entry", "Debug", MB_OK);
       return E_FAIL;
   }
 
@@ -620,7 +617,6 @@ TkWinAccessible_ActionEventHandler(Tcl_Event *evPtr, int flags)
 
     TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)evPtr;
     if (event->interp && event->command) {
-      MessageBoxW(NULL, L"Running Tcl Command", L"Debug", MB_OK);
         Tcl_Eval(event->interp, event->command);
     }
 
