@@ -34,6 +34,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetTypeInfo(IAccessible *this, 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
+
 /* Prototypes of empty stub functions required by MSAA. */
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
@@ -264,6 +265,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 
     case DISPID_ACC_HELP:
       return TkWinAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
+
+    case DISPID_ACC_DEFAULTACTION:
+      return TkWinAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
       
     case DISPID_ACC_DODEFAULTACTION:
       return TkWinAccessible_accDoDefaultAction(this, selfVar);
@@ -489,11 +493,11 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, LONG xLe
         yTop >= rootY && yTop <= (rootY + height)) {
         VariantInit(pvarChild);
         pvarChild->vt = VT_I4;
-        pvarChild->lVal = CHILDID_SELF;  // Return self
+        pvarChild->lVal = CHILDID_SELF; 
         return S_OK;
     }
 
-    return S_FALSE;  // No object found at those coordinates
+    return S_FALSE;
 }
 
 
@@ -574,14 +578,23 @@ TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
   Tk_Window win = acc->win;
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) return E_FAIL;
+  if (!hPtr){
+      MessageBox(NULL, "No window entry", "Debug", MB_OK);
+      return E_FAIL;
+  }
 
   Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-  if (!actionEntry) return E_FAIL;
+  if (!actionEntry) {
+      MessageBox(NULL, "No action entry", "Debug", MB_OK);
+      return E_FAIL;
+  }
 
   const char *command = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-  if (!command || !*command) return E_FAIL;
+  if (!command || !*command) {
+      MessageBox(NULL, "No command entry", "Debug", MB_OK);
+      return E_FAIL;
+  }
 
   /* Allocate an event for Tcl event loop. */
   TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)ckalloc(sizeof(TkWinAccessibleActionEvent));
@@ -591,10 +604,10 @@ TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
   strcpy(event->command, command);
 
   Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+  Tcl_DoOneEvent(0);
+
   return S_OK;
 }
-
-
 
 /*
  * Event proc which implements the action event procedure.
@@ -607,6 +620,7 @@ TkWinAccessible_ActionEventHandler(Tcl_Event *evPtr, int flags)
 
     TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)evPtr;
     if (event->interp && event->command) {
+      MessageBoxW(NULL, L"Running Tcl Command", L"Debug", MB_OK);
         Tcl_Eval(event->interp, event->command);
     }
 
