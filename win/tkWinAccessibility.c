@@ -800,8 +800,6 @@ static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const 
     return NULL;
   }
   Tcl_SetHashValue(entry, win);
-
-  NotifyAllMSAAEvents(interp, pathName);
   
   return tkAccessible;
 }
@@ -1156,6 +1154,8 @@ int TkWinAccessibleObjCmd(
   TkWinAccessible_RegisterForFocus(tkwin, accessible);
   InitTkAccessibleTable();
   InitHwndToTkWindowTable();
+  TkWinAccessible_HookWindowProc(tkwin);
+  NotifyAllMSAAEvents(interp, windowName);
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
