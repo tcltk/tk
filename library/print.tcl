@@ -539,10 +539,22 @@ namespace eval ::tk::print {
 
 	    # Get the real canvas font info suitable for printer
 	    # name extraction.
-	    set font [font actual [$cw itemcget $id -font]]
-	    # Just get the name and family, or some of the _gdi commands will
-	    # fail.
-	    set font [list [dict get $font -family] -[dict get $font -size]]
+	    set fa [font actual [$cw itemcget $id -font]]
+	    # Transform to the third documented format in font(n)
+	    # {family size style style style style}
+	    set font [lmap k { -family -size -weight -slant } {
+		dict get $fa $k
+	    }]
+	    # underline and overstrike only works for non-rotated text
+	    foreach k { -underline -overstrike } v { underline overstrike } {
+		if {[dict get $fa $k]} {
+		    lappend font $v
+		}
+	    }
+	    # make sure size is in pixels (negative)
+	    if {[set size [lindex $font 1]] > 0} {
+		lset font 1 [expr { -1 * [winfo pixels $cw ${size}p] }]
+	    }
 
 	    _gdi text $hdc {*}$coords \
 		-fill $color -text $txt -font $font \

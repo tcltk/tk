@@ -1514,6 +1514,7 @@ int GdiText(
     WCHAR *wstring;
     Tcl_DString tds;
     Tcl_Obj *fontObj = NULL;
+    UINT alignFlags;
 
     if (objc < 4) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
@@ -1631,39 +1632,51 @@ int GdiText(
     DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
 	    format_flags | DT_CALCRECT);
 
-    /* Adjust the rectangle according to the anchor. */
+    /* Adjust the rectangle according to the anchor and the angle . */
     x = y = 0;
     switch (anchor) {
     case TK_ANCHOR_N:
-	x = (sizerect.right - sizerect.left) / 2;
+	alignFlags = TA_TOP | TA_CENTER;
 	break;
     case TK_ANCHOR_S:
-	x = (sizerect.right - sizerect.left) / 2;
-	y = (sizerect.bottom - sizerect.top);
+	alignFlags = TA_BOTTOM | TA_CENTER;
 	break;
     case TK_ANCHOR_E:
-	x = (sizerect.right - sizerect.left);
-	y = (sizerect.bottom - sizerect.top) / 2;
+	alignFlags = TA_RIGHT | TA_TOP;
+	y = (sizerect.bottom - sizerect.top) / 2;;
 	break;
     case TK_ANCHOR_W:
-	y = (sizerect.bottom - sizerect.top) / 2;
+	alignFlags = TA_LEFT | TA_TOP;
+	y = (sizerect.bottom - sizerect.top) / 2;;
 	break;
     case TK_ANCHOR_NE:
-	x = (sizerect.right - sizerect.left);
+	alignFlags = TA_TOP | TA_RIGHT;
 	break;
     case TK_ANCHOR_NW:
+    case TK_ANCHOR_NULL: /* this is the default*/
+	alignFlags = TA_TOP | TA_LEFT | TA_NOUPDATECP;
 	break;
     case TK_ANCHOR_SE:
-	x = (sizerect.right - sizerect.left);
-	y = (sizerect.bottom - sizerect.top);
+	alignFlags = TA_BOTTOM | TA_RIGHT;
 	break;
     case TK_ANCHOR_SW:
-	y = (sizerect.bottom - sizerect.top);
+	alignFlags = TA_BOTTOM | TA_LEFT;
 	break;
     default:
-	x = (sizerect.right - sizerect.left) / 2;
-	y = (sizerect.bottom - sizerect.top) / 2;
+	alignFlags = TA_CENTER | TA_TOP;
+	y = (sizerect.bottom - sizerect.top) / 2;;
 	break;
+    }
+
+    /* GDI doesn't provide TA_VCENTER align. So use TOP align
+     * and adjust sizerect values for height and angle.
+     */
+    if ((y != 0) && (angle != 0.0)) {
+#define DEG2RAD(x) (0.017453292519943295 * (x))
+	double sina = sin(DEG2RAD(angle));
+	double cosa = cos(DEG2RAD(angle));
+	x = y * sina;
+	y = y * cosa;
     }
     sizerect.right  -= x;
     sizerect.left   -= x;
@@ -1682,7 +1695,8 @@ int GdiText(
     }
 
     /* Print the text. */
-    /* TODO: calculate the right values for sizerect, and remove DT_NOCLIP */
+    /* TODO: calculate the right values for sizerect, and remove DT_NOCLIP? */
+    SetTextAlign(hDC, alignFlags);
     retval = DrawTextW(hDC, wstring,
 	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags | DT_NOCLIP);
     Tcl_DStringFree(&tds);
