@@ -531,11 +531,13 @@ namespace eval ::tk::print {
 	    set coords [$cw coords $id]
 	    set anchr [$cw itemcget $id -anchor]
 
+	    set angle [$cw itemcget $id -angle]
+	    if {$angle != 0} {$cw itemconfigure $id -angle 0.0}
 	    set bbox [$cw bbox $id]
+	    if {$angle != 0} {$cw itemconfigure $id -angle $angle}
 	    set wdth [expr {[lindex $bbox 2] - [lindex $bbox 0]}]
 
 	    set just [$cw itemcget $id -justify]
-	    set angle [$cw itemcget $id -angle]
 
 	    # Get the real canvas font info suitable for printer
 	    # name extraction.
