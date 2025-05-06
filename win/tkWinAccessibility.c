@@ -13,6 +13,9 @@
 
 #include "tkWinAccessibility.h"
 
+#define WM_TKWINA11Y_INVOKE (WM_USER + 1002)
+static WNDPROC oldWndProc = NULL;
+
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
 
@@ -21,9 +24,6 @@ static Tcl_HashTable *tkAccessibleTable;
 static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
-
-/* Tcl command passed to event procedure. */
-char *callback_command;
 
 /* Protoypes of glue functions to the IAccessible COM API. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
@@ -59,9 +59,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible 
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
 static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
+static HRESULT TkWinAccessible_GetAttributeBSTR(TkWinAccessible *acc, const char *key, BSTR *outBstr);
 
 /* Prototypes of Tk functions that support MSAA integration and implement the script-level API. */
-static int TkWinAccessible_ActionEventHandler(Tcl_Event *evtPtr, int flags);
 static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 void InitTkAccessibleTable(void);
 void InitHwndToTkWindowTable(void);
@@ -73,6 +73,11 @@ void TkWinAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 void TkWinAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
 static void TkWinAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
+static void TkWinAccessible_InvokeCommand(TkWinAccessible *acc, const char *command);
+void TkWinAccessible_HookWindowProc(Tk_Window tkwin);
+static LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+int NotifyAccessibilityEvent(Tcl_Interp *ip, char *pathName, char *eventName);
+void NotifyAllMSAAEvents(Tcl_Interp *interp, const char *pathName);
 int TkWinAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -136,6 +141,15 @@ static IAccessibleVtbl tkAccessibleVtbl = {
   TkWinAccessible_accDoDefaultAction,
   TkWinAccessible_put_accName,
   TkWinAccessible_put_accValue
+};
+
+/*MSAA events on which we will call notifications .*/
+static const char *standardMsaaEvents[] = {
+  "valuechange",
+  "namechange",
+  "statechange",
+  "focus",
+  NULL
 };
 
 /*Empty stub functions required by MSAA. */
@@ -579,51 +593,31 @@ TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr){
-      return E_FAIL;
+    return E_FAIL;
   }
 
   Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-  if (!actionEntry) {
-      return E_FAIL;
+  if (actionEntry) {
+    const char *command = Tcl_GetString(Tcl_GetHashValue(actionEntry));
+    if (command && *command) {
+      TkWinAccessible_InvokeCommand(acc, command);
+      return S_OK;
+    }
   }
+  return E_FAIL;
 
-  const char *command = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-  if (!command || !*command) {
-      return E_FAIL;
-  }
-
-  /* Allocate an event for Tcl event loop. */
-  TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)ckalloc(sizeof(TkWinAccessibleActionEvent));
-  event->header.proc = TkWinAccessible_ActionEventHandler;
-  event->interp = acc->interp;
-  event->command = (char *)ckalloc(strlen(command) + 1);
-  strcpy(event->command, command);
-
-  Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-  Tcl_DoOneEvent(0);
-
-  return S_OK;
 }
-
 /*
- * Event proc which implements the action event procedure.
+ * Helper proc which implements the action event procedure.
  */
 
-static int
-TkWinAccessible_ActionEventHandler(Tcl_Event *evPtr, int flags)
-{
-    if (!(flags & TCL_WINDOW_EVENTS)) return 0;
-
-    TkWinAccessibleActionEvent *event = (TkWinAccessibleActionEvent *)evPtr;
-    if (event->interp && event->command) {
-        Tcl_Eval(event->interp, event->command);
-    }
-
-    ckfree(event->command);
-    ckfree(event);
-    return 1;
+static void TkWinAccessible_InvokeCommand(TkWinAccessible *acc, const char *command) {
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(acc->win));
+  SetPropA(hwnd, "TK_A11Y_COMMAND", (HANDLE)command);
+  PostMessageW(hwnd, WM_TKWINA11Y_INVOKE, (WPARAM)acc->interp, 0);
 }
+
 
 /* Function to get accessible help to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp)
@@ -705,6 +699,57 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
   return S_OK;
 }
 
+/*Function to quickly retrieve widget attributes. */
+static HRESULT TkWinAccessible_GetAttributeBSTR(TkWinAccessible *acc, const char *key, BSTR *outBstr)
+{
+  if (!acc || !key || !outBstr) return E_INVALIDARG;
+
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, acc->win);
+  if (!hPtr) return E_INVALIDARG;
+
+  Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *entry = Tcl_FindHashEntry(attrs, key);
+
+  const char *value = NULL;
+  if (entry) {
+    value = Tcl_GetString(Tcl_GetHashValue(entry));
+  }
+
+  if (!value || !*value) {
+    value = acc->pathName; 
+  }
+
+  Tcl_DString ds;
+  Tcl_DStringInit(&ds);
+  *outBstr = SysAllocString(Tcl_UtfToWCharDString(value, -1, &ds));
+  Tcl_DStringFree(&ds);
+
+  return *outBstr ? S_OK : E_OUTOFMEMORY;
+}
+
+/* Custom WndProc that process Tcl commands from MSAA. */
+static LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  if (msg == WM_TKWINA11Y_INVOKE) {
+    Tcl_Interp *interp = (Tcl_Interp *)wParam;
+    const char *command = (const char *)GetPropA(hwnd, "TK_A11Y_COMMAND");
+    if (command && interp) {
+      Tcl_Eval(interp, command);
+    }
+    RemovePropA(hwnd, "TK_A11Y_COMMAND");
+    return 0;
+  }
+  return CallWindowProc(oldWndProc, hwnd, msg, wParam, lParam);
+}
+
+/* Helper function to integrate custom WndProc. */
+void TkWinAccessible_HookWindowProc(Tk_Window tkwin) {
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+  if (!oldWndProc) {
+    oldWndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)TkWinAccessible_WndProc);
+  }
+}
+
+
 /* Function to map Tk window to MSAA attributes. */
 static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
@@ -755,6 +800,8 @@ static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const 
     return NULL;
   }
   Tcl_SetHashValue(entry, win);
+
+  NotifyAllMSAAEvents(interp, pathName);
   
   return tkAccessible;
 }
@@ -835,7 +882,40 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
     }
     return NULL;
 }
+/* Notification mechanism of Tk data changes to MSAA. */
+int NotifyAccessibilityEvent(Tcl_Interp *ip, char *pathName, char *eventName)
+{
+  Tk_Window path = Tk_NameToWindow(ip, pathName, Tk_MainWindow(ip));
+  if (!path) {
+    Tcl_SetResult(ip, "invalid window", TCL_STATIC);
+    return TCL_ERROR;
+  }
 
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(path));
+  DWORD event = 0;
+
+  if (strcmp(eventName, "valuechange") == 0) {
+    event = EVENT_OBJECT_VALUECHANGE;
+  } else if (strcmp(eventName, "namechange") == 0) {
+    event = EVENT_OBJECT_NAMECHANGE;
+  } else if (strcmp(eventName, "statechange") == 0) {
+    event = EVENT_OBJECT_STATECHANGE;
+  } else if (strcmp(eventName, "focus") == 0) {
+    event = EVENT_OBJECT_FOCUS;
+  }
+   
+  NotifyWinEvent(event, hwnd, OBJID_CLIENT, CHILDID_SELF);
+  return TCL_OK;
+}
+
+/* Force notification of name, focus and other data changes in MSAA. */
+void NotifyAllMSAAEvents(Tcl_Interp *interp, const char *pathName) {
+  const char **event = standardMsaaEvents;
+  while (*event) {
+    NotifyAccessibilityEvent(interp, (char *)pathName, (char *)(*event));
+    event++;
+  }
+}
 
 /*
  *----------------------------------------------------------------------
