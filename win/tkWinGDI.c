@@ -1496,8 +1496,8 @@ int GdiText(
 	"-single -backfill";
 
     HDC hDC;
-    double x, y, angle = 0.0;
-    const char *string = 0;
+    double y, xi, yi, angle = 0.0;
+    const char *string = NULL;
     RECT sizerect;
     UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
     Tk_Anchor anchor = TK_ANCHOR_N;
@@ -1525,15 +1525,15 @@ int GdiText(
 
     hDC = printDC;
 
-    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK)
-	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK)) {
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &xi) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &yi) != TCL_OK)) {
 	return TCL_ERROR;
     }
     objc -= 4;
     objv += 4;
 
-    sizerect.left = sizerect.right = floor(x+0.5);
-    sizerect.top = sizerect.bottom = floor(y+0.5);
+    sizerect.left = sizerect.right = floor(xi+0.5);
+    sizerect.top = sizerect.bottom = floor(yi+0.5);
 
     while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
@@ -1605,7 +1605,7 @@ int GdiText(
 	objv++;
     }
 
-    if (string == 0) {
+    if (! string) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -1632,8 +1632,8 @@ int GdiText(
     DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
 	    format_flags | DT_CALCRECT);
 
-    /* Adjust the rectangle according to the anchor and the angle . */
-    x = y = 0;
+    /* Adjust the rectangle according to the anchor. */
+    y = 0.0;
     switch (anchor) {
     case TK_ANCHOR_N:
 	alignFlags = TA_TOP | TA_CENTER;
@@ -1643,18 +1643,18 @@ int GdiText(
 	break;
     case TK_ANCHOR_E:
 	alignFlags = TA_RIGHT | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;;
+	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
     case TK_ANCHOR_W:
 	alignFlags = TA_LEFT | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;;
+	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
     case TK_ANCHOR_NE:
 	alignFlags = TA_TOP | TA_RIGHT;
 	break;
     case TK_ANCHOR_NW:
     case TK_ANCHOR_NULL: /* this is the default*/
-	alignFlags = TA_TOP | TA_LEFT | TA_NOUPDATECP;
+	alignFlags = TA_TOP | TA_LEFT;
 	break;
     case TK_ANCHOR_SE:
 	alignFlags = TA_BOTTOM | TA_RIGHT;
@@ -1664,22 +1664,12 @@ int GdiText(
 	break;
     default:
 	alignFlags = TA_CENTER | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;;
+	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
     }
-
-    /* GDI doesn't provide TA_VCENTER align. So use TOP align
-     * and adjust sizerect values for height and angle.
+    /* GDI doesn't provide TA_VCENTER align. So we use TA_TOP align
+     * and adjust sizerect values for height.
      */
-    if ((y != 0) && (angle != 0.0)) {
-#define DEG2RAD(x) (0.017453292519943295 * (x))
-	double sina = sin(DEG2RAD(angle));
-	double cosa = cos(DEG2RAD(angle));
-	x = y * sina;
-	y = y * cosa;
-    }
-    sizerect.right  -= x;
-    sizerect.left   -= x;
     sizerect.top    -= y;
     sizerect.bottom -= y;
 
@@ -1695,10 +1685,16 @@ int GdiText(
     }
 
     /* Print the text. */
-    /* TODO: calculate the right values for sizerect, and remove DT_NOCLIP? */
-    SetTextAlign(hDC, alignFlags);
-    retval = DrawTextW(hDC, wstring,
+    SetTextAlign(hDC, alignFlags | TA_NOUPDATECP);
+    if (angle == 0.0) {
+	retval = DrawTextW(hDC, wstring,
 	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags | DT_NOCLIP);
+    } else {
+#define DEG2RAD(x) (0.017453292519943295 * (x))
+	xi = floor(xi - y * sin(DEG2RAD(angle)) + 0.5);
+	yi = floor(yi - y * cos(DEG2RAD(angle)) + 0.5);
+	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&tds)/2);
+    }
     Tcl_DStringFree(&tds);
 
     /* Get the color set back. */
@@ -2545,9 +2541,7 @@ static int GdiMakeLogFont(
     lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf->lfQuality = DEFAULT_QUALITY;
     lf->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    if (angle != 0.0) {
-	lf->lfEscapement = lf->lfOrientation = 10.0 * angle;
-    }
+    lf->lfEscapement = lf->lfOrientation = 10.0 * angle;
 
     if (!specPtr ||
 	    Tcl_ListObjGetElements(interp, specPtr, &count, &listPtr) != TCL_OK) {
