@@ -82,13 +82,13 @@ unset fs
 # in the other one). The following constraints are useful in this kind of
 # situation.
 testConstraint haveTimesFamilyFont [expr {
-    [string tolower [font actual {-family times} -family]] == "times"
+    [string tolower [font actual {-family times} -family]] eq "times"
 }]
 testConstraint haveFixedFamilyFont [expr {
-    [string tolower [font actual {-family fixed} -family]] == "fixed"
+    [string tolower [font actual {-family fixed} -family]] eq "fixed"
 }]
 testConstraint haveCourierFamilyFont [expr {
-    [string tolower [font actual {-family courier} -family]] == "courier"
+    [string tolower [font actual {-family courier} -family]] eq "courier"
 }]
 
 # Although unexpected, some systems may have a very limited set of fonts available.
