@@ -835,7 +835,7 @@ TkWinChildProc(
 		     *  Return the root accessible object with
 		     *  only CHILDID_SELF exposed.
 		     */
-		    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+		    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)(IAccessible *)acc);
 			 
 		    /* Notify screen readers. */
 		    NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
