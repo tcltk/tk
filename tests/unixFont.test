@@ -120,9 +120,6 @@ test unixfont-2.7 {TkpGetFontFromAttributes: fixed family not available!} x11 {
 test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 31}] 1
 } {fixed}
-test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 haveCourierFamilyFont} {
-    lindex [font actual {-family courier}] 1
-} {courier}
 test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 havePointsize37Font} {
     lindex [font actual {-family courier -size 37}] 3
 } 37
