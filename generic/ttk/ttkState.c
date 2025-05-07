@@ -16,12 +16,12 @@ static const struct {
     int value;
 } stateNames[] = {
     {"active", TTK_STATE_ACTIVE},		/* Mouse cursor is over widget or element */
-    {"alternate", TTK_STATE_ALTERNATE},	/* Widget-specific alternate display style */
+    {"alternate", TTK_STATE_ALTERNATE},		/* Widget-specific alternate display style */
     {"background", TTK_STATE_BACKGROUND},	/* Top-level window lost focus (Mac,Win "inactive") */
     {"disabled", TTK_STATE_DISABLED},		/* Widget is disabled */
-    {"first", TTK_STATE_FIRST},		/* First */
-    {"focus", TTK_STATE_FOCUS},		/* Widget has keyboard focus */
-    {"hover", TTK_STATE_HOVER},		/* Mouse cursor is over widget */
+    {"first", TTK_STATE_FIRST},			/* First */
+    {"focus", TTK_STATE_FOCUS},			/* Widget has keyboard focus */
+    {"hover", TTK_STATE_HOVER},			/* Mouse cursor is over widget */
     {"invalid", TTK_STATE_INVALID},		/* Bad value */
     {"last", TTK_STATE_LAST},			/* Last */
     {"leaf", TTK_STATE_LEAF},			/* Leaf */

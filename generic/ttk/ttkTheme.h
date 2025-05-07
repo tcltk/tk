@@ -59,10 +59,10 @@ typedef unsigned int Ttk_State;
 #define TTK_STATE_USER3		(1<<13)
 #define TTK_STATE_USER2		(1<<14)
 #define TTK_STATE_USER1		(1<<15)
-#define TTK_STATE_OPEN			(1<<16)
-#define TTK_STATE_LEAF			(1<<17)
+#define TTK_STATE_OPEN		(1<<16)
+#define TTK_STATE_LEAF		(1<<17)
 #define TTK_STATE_FIRST		(1<<18)
-#define TTK_STATE_LAST			(1<<19)
+#define TTK_STATE_LAST		(1<<19)
 
 /* Maintenance note: if you get all the way to "USER1",
  * see tkstate.c
