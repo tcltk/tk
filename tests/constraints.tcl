@@ -87,9 +87,6 @@ testConstraint haveTimesFamilyFont [expr {
 testConstraint haveFixedFamilyFont [expr {
     [string tolower [font actual {-family fixed} -family]] eq "fixed"
 }]
-testConstraint haveCourierFamilyFont [expr {
-    [string tolower [font actual {-family courier} -family]] eq "courier"
-}]
 
 # Although unexpected, some systems may have a very limited set of fonts available.
 # The following constraints happen to evaluate to false at least on one system: the
