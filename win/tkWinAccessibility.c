@@ -178,16 +178,23 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accValue(IAccessible *this, VARIAN
 
 /*Begin active functions.*/
 
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject)
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *iface, REFIID riid, void **ppvObject)
 {
-  if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch) || IsEqualIID(riid, &IID_IAccessible)) {
-    *ppvObject = this;
-    TkWinAccessible_AddRef(this);
+  TkWinAccessible *acc = (TkWinAccessible *)iface;
+
+  if (IsEqualIID(riid, &IID_IUnknown) ||
+      IsEqualIID(riid, &IID_IDispatch) ||
+      IsEqualIID(riid, &IID_IAccessible)) {
+
+    *ppvObject = iface;
+    TkWinAccessible_AddRef(iface);  // Uses cast-safe version
     return S_OK;
   }
+
   *ppvObject = NULL;
   return E_NOINTERFACE;
 }
+
 
 static ULONG STDMETHODCALLTYPE TkWinAccessible_AddRef(IAccessible *this)
 {
@@ -234,93 +241,108 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetIDsOfNames(IAccessible *this
   return hr;
 }
 
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(
+							IAccessible *this,
+							DISPID dispIdMember,
+							REFIID riid,
+							LCID lcid,
+							WORD wFlags,
+							DISPPARAMS *pDispParams,
+							VARIANT *pVarResult,
+							EXCEPINFO *pExcepInfo,
+							UINT *puArgErr)
 {
-  IDispatch* pDisp = NULL;
-    
-  {
-    if (!pVarResult) {
-      return E_POINTER;
-    }
+  if (!pVarResult) {
+    return E_POINTER;
+  }
 
-    VariantInit(pVarResult);
+  VariantInit(pVarResult);
 
-    VARIANT selfVar;
-    selfVar.vt = VT_I4;
-    selfVar.lVal = CHILDID_SELF;
+  VARIANT selfVar;
+  selfVar.vt = VT_I4;
+  selfVar.lVal = CHILDID_SELF;
 
-    switch (dispIdMember) {
-    case DISPID_ACC_NAME:
-      return TkWinAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
+  switch (dispIdMember) {
+  case DISPID_ACC_NAME:
+    pVarResult->vt = VT_BSTR;
+    return TkWinAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
 
-    case DISPID_ACC_VALUE:
-      return TkWinAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
+  case DISPID_ACC_VALUE:
+    pVarResult->vt = VT_BSTR;
+    return TkWinAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
 
-    case DISPID_ACC_ROLE:
-      return TkWinAccessible_get_accRole(this, selfVar, pVarResult);
+  case DISPID_ACC_ROLE:
+    return TkWinAccessible_get_accRole(this, selfVar, pVarResult);
 
-    case DISPID_ACC_STATE:
-      return TkWinAccessible_get_accState(this, selfVar, pVarResult);
+  case DISPID_ACC_STATE:
+    return TkWinAccessible_get_accState(this, selfVar, pVarResult);
 
-    case DISPID_ACC_DESCRIPTION:
-      return TkWinAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
+  case DISPID_ACC_DESCRIPTION:
+    pVarResult->vt = VT_BSTR;
+    return TkWinAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
 
-    case DISPID_ACC_HELP:
-      return TkWinAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
+  case DISPID_ACC_HELP:
+    pVarResult->vt = VT_BSTR;
+    return TkWinAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
 
-    case DISPID_ACC_DEFAULTACTION:
-      return TkWinAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
-      
-    case DISPID_ACC_DODEFAULTACTION:
-      return TkWinAccessible_accDoDefaultAction(this, selfVar);
+  case DISPID_ACC_DEFAULTACTION:
+    pVarResult->vt = VT_BSTR;
+    return TkWinAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
 
-    case DISPID_ACC_FOCUS:
-      return TkWinAccessible_get_accFocus(this, &selfVar);   
+  case DISPID_ACC_DODEFAULTACTION:
+    return TkWinAccessible_accDoDefaultAction(this, selfVar);
 
-    default:
-      return E_NOTIMPL;
-    }
+  case DISPID_ACC_FOCUS:
+    return TkWinAccessible_get_accFocus(this, pVarResult);
+
+  default:
+    return E_NOTIMPL;
   }
 }
 
-/* Function to map accessible name to MSAA.*/
+/* Function to map accessible name to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName)
 {
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-
-  if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
-		
-    Tk_Window win = tkAccessible->win;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_DString ds;
-	
-    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-    if (!hPtr) {
-      return E_INVALIDARG;
-    }
-	
-    /* 
-     * Assign the "description" attribute to the name because it is 
-     * more detailed - MSAA generally does not provide both the 
-     * name and description. 
-     */
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
-    if (!hPtr2) {
-      return E_INVALIDARG;
-    }
-	
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    Tcl_DStringInit(&ds);
-    if (result) {
-      *pszName = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-    } else {
-      *pszName = SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
-    }
-    Tcl_DStringFree(&ds);
-    return S_OK;
+  if (!pszName) {
+    return E_POINTER;
   }
-  return E_INVALIDARG;
+
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+    return E_INVALIDARG;
+  }
+
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+  Tk_Window win = tkAccessible->win;
+
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) {
+    return E_INVALIDARG;
+  }
+
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
+
+  Tcl_DString ds;
+  Tcl_DStringInit(&ds);
+
+  const char *result = NULL;
+  if (hPtr2) {
+    result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+  }
+
+  if (result && *result != '\0') {
+    *pszName = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
+  } else {
+    *pszName = SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+  }
+
+  Tcl_DStringFree(&ds);
+
+  if (!*pszName) {
+    return E_OUTOFMEMORY;
+  }
+
+  return S_OK;
 }
 
 /* Function to map accessible role to MSAA.*/
@@ -657,35 +679,32 @@ static HRESULT STDMETHODCALLTYPE  TkWinAccessible_get_accFocus(IAccessible *this
 }
 
 /* Function to get accessible description to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDesc)
 {
+  if (!pszDesc) return E_POINTER;
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) return E_INVALIDARG;
 
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;  
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
   Tk_Window win = tkAccessible->win;
-  Tcl_HashEntry *hPtr, *hPtr2;
-  Tcl_HashTable *AccessibleAttributes;
+
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) return E_INVALIDARG;
+
+  Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hDesc = Tcl_FindHashEntry(attrs, "description");
+  if (!hDesc) return S_FALSE;
+
+  const char *descStr = Tcl_GetString(Tcl_GetHashValue(hDesc));
+  if (!descStr || !*descStr) return S_FALSE;
+
   Tcl_DString ds;
-		
-  hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) {
-    return E_INVALIDARG;
-  }
-		
-  AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
-  if (!hPtr2) {
-    return E_INVALIDARG;
-  }
-		
-  char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   Tcl_DStringInit(&ds);
-  *pszDescription = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
+  *pszDesc = SysAllocString(Tcl_UtfToWCharDString(descStr, -1, &ds));
   Tcl_DStringFree(&ds);
-  if (!*pszDescription) {
-    return E_OUTOFMEMORY;
-  }
-  return S_OK;
+
+  return (*pszDesc) ? S_OK : E_OUTOFMEMORY;
 }
+
 
 /* Custom WndProc that process Tcl commands from MSAA. */
 static LRESULT CALLBACK TkWinAccessible_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
