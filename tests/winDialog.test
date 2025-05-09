@@ -28,16 +28,6 @@ testConstraint english [expr {
 
 set initialDir [tcltest::temporaryDirectory]
 
-proc Click {button} {
-    variable testDialog
-    switch -exact -- $button {
-	ok     { set button 1 }
-	cancel { set button 2 }
-    }
-    testwinevent $testDialog $button WM_LBUTTONDOWN 1 0x000a000b
-    testwinevent $testDialog $button WM_LBUTTONUP 0 0x000a000b
-}
-
 proc GetText {id} {
     variable testDialog
     switch -exact -- $id {
