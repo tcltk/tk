@@ -14,16 +14,18 @@
 #ifndef _TKWININT
 #define _TKWININT
 
-#ifndef _TKINT
-#include "tkInt.h"
-#endif
-
 /*
- * Include platform specific public interfaces.
+ * Include platform specific public interfaces as the very first step. This is
+ * necessary because definitions provided by subsequent header files depend on
+ * the interface versions defined in tkWin.h
  */
 
 #ifndef _TKWIN
 #include "tkWin.h"
+#endif
+
+#ifndef _TKINT
+#include "tkInt.h"
 #endif
 
 /*
