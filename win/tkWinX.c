@@ -824,30 +824,6 @@ TkWinChildProc(
 	}
 	break;
 
-    /* Handle MSAA queries. */
-    case WM_GETOBJECT:
-	if ((LONG)lParam == OBJID_CLIENT) {
-	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
-	    if (tkwin) {
-		TkWinAccessible *acc = GetTkAccessibleForWindow(tkwin);
-		if (acc) {
-		    /*
-		     *  Return the root accessible object with
-		     *  only CHILDID_SELF exposed.
-		     */
-		    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)(IAccessible *)acc);
-			 
-		    /* Notify screen readers. */
-		    NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
-		    NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
-		    NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, CHILDID_SELF);
-			
-		    return result;
-		}
-	    }
-	}
-	break;
-
     default:
 	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
