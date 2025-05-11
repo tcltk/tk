@@ -519,11 +519,28 @@ namespace eval ::tk::test::dialog {
     }
 
     proc Click {button} {
+	variable dialogType
 	variable testDialog
-	if {$button ni "ok cancel apply"} {
-	    return -code error "invalid button name \"$button\""
+
+	switch -- $dialogType {
+	    "fontchooser" {
+		if {$button ni "ok cancel apply"} {
+		    return -code error "invalid button name \"$button\""
+		}
+		$testDialog.$button invoke
+	    }
+	    "winDialog" {
+		switch -exact -- $button {
+		    ok     { set button 1 }
+		    cancel { set button 2 }
+		}
+		testwinevent $testDialog $button WM_LBUTTONDOWN 1 0x000a000b
+		testwinevent $testDialog $button WM_LBUTTONUP 0 0x000a000b
+	    }
+	    default {
+		return -code error "invalid dialog type \"$dialogType\""
+	    }
 	}
-	$testDialog.$button invoke
     }
 
     proc isNative {type} {
