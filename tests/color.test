@@ -1,23 +1,35 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkColor.c.  It is organized in the standard fashion for Tcl tests.
+# tkColor.c.
 #
 # Copyright © 1995-1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+#    This loads the script "main.tcl", which takes care of:
+#    - setup for the application and the root window
+#    - loading and configuration of the tcltest test harness
+#    - loading of the testutils mechanism together with its utility procs
+#    - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+#
 tcltest::loadTestedCommands
 
-# Import utility procs for specific functional areas
+#
+# IMPORT GLOBAL UTILITY PROCS
+#
 testutils import colors
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # cname --
 # Returns a proper name for a color, given its intensities.
 #
 # Arguments:
 # r, g, b -	Intensities on a 0-255 scale.
-
 proc cname {r g b} {
     format #%02x%02x%02x $r $g $b
 }
@@ -77,6 +89,10 @@ proc c255 {vals} {
 	    [expr {[lindex $vals 2]/256}]
 }
 
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 # -- WARNING (SB, 6.4.2017) --
 #
 # The if block below looks _very_ outdated. It didn't get any
@@ -86,7 +102,7 @@ proc c255 {vals} {
 # The problem is, on machines with a fancy 24 truecolor display, the
 # 'colorsFree' constraint doesn't get set, turning off pretty much every test
 # in this file.
-
+#
 if {[testConstraint pseudocolor8]} {
     toplevel .t -visual {pseudocolor 8} -colormap new
     wm geom .t +0+0
@@ -103,6 +119,10 @@ if {[testConstraint pseudocolor8]} {
     }
     destroy .t.c .t.c2
 }
+
+#
+# TESTS
+#
 
 test color-1.1 {Tk_AllocColorFromObj - converting internal reps} colorsFree {
     set x green
