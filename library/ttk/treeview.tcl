@@ -128,6 +128,9 @@ bind Treeview	<Shift-Tab>		{ ::ttk::treeview::KeyNav %W left; break }
 bind Treeview	<Control-Return>	{ ::ttk::treeview::ToggleFocus %W toggle }
 bind Treeview	<Control-Tab>		[bind all <<NextWindow>>]
 bind Treeview	<Control-Shift-Tab>	[bind all <<PrevWindow>>]
+bind Treeview	<minus>			{ ::ttk::treeview::CloseItem %W {} }
+bind Treeview	<plus>			{ ::ttk::treeview::OpenItem %W {} }
+bind Treeview	<asterisk>		{ ::ttk::treeview::OpenItem %W {} -recurse }
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectionSet %W all }
@@ -955,15 +958,23 @@ proc ::ttk::treeview::select.extend.extended {w item cell} { ExtendTo $w $item $
 # OpenItem, CloseItem -- Set the open state of an item, generate event
 #
 
-proc ::ttk::treeview::OpenItem {w item} {
-    $w focus $item
+proc ::ttk::treeview::OpenItem {w item args} {
+    if {$item ne ""} {
+	$w focus $item
+    } else {
+	set item [$w focus]
+    }
     event generate $w <<TreeviewOpen>>
-    $w item $item -open true
+    $w expand {*}$args [list $item]
 }
 
 proc ::ttk::treeview::CloseItem {w item} {
-    $w item $item -open false
-    $w focus $item
+    if {$item ne ""} {
+	$w focus $item
+    } else {
+	set item [$w focus]
+    }
+    $w collapse [list $item]
     event generate $w <<TreeviewClose>>
 }
 
