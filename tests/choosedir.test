@@ -46,15 +46,13 @@ proc EnterDirsByKey {parent dirs} {
 }
 
 #
-# TESTS SETUP
+# COMMON TEST SETUP
 #
+set parent .
 
 # Make a dir for us to rely on for tests
 set real [makeDirectory choosedirTest]
-set dir [file dirname $real]
-set fake [file join $dir non-existant]
-
-set parent .
+set fake [file join [file dirname $real] non-existant]
 
 #
 # TESTS
@@ -147,6 +145,7 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 # CLEANUP
 #
 
+unset fake parent real
 removeDirectory choosedirTest
 testutils forget dialog
 cleanupTests
