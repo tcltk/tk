@@ -1,23 +1,36 @@
 # This file is a Tcl script to test out the procedures in tkCanvText.c,
-# which implement canvas "text" items.  It is organized in the standard
-# fashion for Tcl tests.
+# which implement canvas "text" items.
 #
 # Copyright © 1996-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
-# Canvas used in 1.* - 17.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.* - 17.*
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
 update
 
 # Item used in 1.*  tests
 .c create text 20 20 -tag test
+
+#
+# TESTS
+#
+
 test canvText-1.1 {configuration options: good value for "anchor"} -body {
     .c itemconfigure test -anchor nw
     list [lindex [.c itemconfigure test -anchor] 4] [.c itemcget test -anchor]
@@ -985,6 +998,9 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
     destroy .c
 } -result {}
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return

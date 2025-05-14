@@ -1,17 +1,26 @@
 # This file is a Tcl script to test out the procedures in tkRectOval.c,
-# which implement canvas "rectangle" and "oval" items.  It is organized
-# in the standard fashion for Tcl tests.
+# which implement canvas "rectangle" and "oval" items.
 #
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
-# Canvas used in every test case of the whole file
+#
+# COMMON TEST SETUP
+#
+# For every test case of the whole file
+#
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
 update
@@ -463,7 +472,10 @@ end
 %%EOF
 }
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
 

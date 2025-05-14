@@ -6,13 +6,27 @@
 # Copyright © 2004 Neil McKay.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
+#
+# COMMON TEST SETUP
+#
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 .c create rectangle 20 20 80 80 -tag {test rect1}
 .c create rectangle 40 40 90 100 -tag {test rect2}
+
+#
+# TESTS
+#
 
 test canvMoveto-1.1 {Bad args handling for "moveto" command} -body {
     .c moveto test
@@ -45,9 +59,11 @@ test canvMoveto-2.3 {Canvas "moveto" command, blank x coordinate} {
     .c bbox test
 } {200 200 272 282}
 
-.c delete withtag all
+#
+# CLEANUP
+#
 
-# cleanup
+.c delete withtag all
 cleanupTests
 return
 
