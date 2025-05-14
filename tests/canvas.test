@@ -1,14 +1,23 @@
 # This file is a Tcl script to test out the procedures in tkCanvas.c, which
-# implements generic code for canvases. It is organized in the standard
-# fashion for Tcl tests.
+# implements generic code for canvases.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-2000 Ajuba Solutions.
 # Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+# XXX - This test file is woefully incomplete. At present, only a few of the
+# features are tested.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
@@ -16,10 +25,15 @@ testutils import image
 
 imageInit
 
-# XXX - This test file is woefully incomplete. At present, only a few of the
-# features are tested.
+#
+# TESTS
+#
 
-# Canvas used in 1.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.*
+#
 canvas .c
 pack .c
 update
@@ -193,7 +207,11 @@ test canvas-1.47 {configure throws error on bad option} -body {
 } -returnCodes error -match glob -result {*}
 catch {destroy .c}
 
-# Canvas used in 2.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-2.*
+#
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
@@ -241,7 +259,11 @@ test canvas-2.5 {CanvasWidgetCmd, raise/lower option, no error on non-existing t
 } -result {}
 catch {destroy .c}
 
-# Canvas used in 3.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-3.*
+#
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 80} \
 	-borderwidth 0 -highlightthickness 0
 pack .c
@@ -287,7 +309,11 @@ test canvas-5.1 {ButtonCmdDeletedProc procedure} -body {
     destroy .c1
 } -result {{} {}}
 
-# Canvas used in 6.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-6.*
+#
 canvas .c -width 100 -height 50 -scrollregion {-200 -100 305 102} \
 	-borderwidth 2 -highlightthickness 3
 pack .c
