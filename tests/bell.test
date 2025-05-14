@@ -1,14 +1,23 @@
 # This file is a Tcl script to test out Tk's "bell" command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+#    This loads the script "main.tcl", which takes care of:
+#    - setup for the application and the root window
+#    - loading and configuration of the tcltest test harness
+#    - loading of the testutils mechanism together with its utility procs
+#    - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+#
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test bell-1.1 {bell command} -body {
     bell a
@@ -48,6 +57,10 @@ test bell-1.8 {bell command} -body {
     after 200
     bell
 } -result {}
+
+#
+# CLEANUP
+#
 
 cleanupTests
 return
