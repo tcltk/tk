@@ -1,16 +1,26 @@
 # This file is a Tcl script to test the procedures in the file
-# tkCmds.c.  It is organized in the standard fashion for Tcl tests.
+# tkCmds.c.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 update
+
+#
+# TESTS
+#
 
 test cmds-1.1 {tkwait visibility, argument errors} -body {
     tkwait visibility
@@ -53,8 +63,9 @@ test cmds-1.6 {tkwait visibility, window gets deleted} -setup {
     destroy .f
 } -result {deleted}
 
+#
+# CLEANUP
+#
 
-# cleanup
 cleanupTests
 return
-

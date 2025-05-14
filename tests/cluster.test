@@ -1,18 +1,30 @@
 # This file is a Tcl script to test the [::tk::startOf|endOf]* functions in
-# tk.tcl and tkIcu.c.  It is organized in the standard fashion for Tcl tests.
+# tk.tcl and tkIcu.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 testConstraint needsICU [expr {[catch {info body ::tk::startOfCluster}]}]
 
+#
+# TESTS
+#
 
 test cluster-1.0 {::tk::startOfCluster} -body {
     ::tk::startOfCluster é -1
@@ -241,6 +253,10 @@ test cluster-8.5 {::tk::wordBreakBefore} -body {
 test cluster-8.6 {::tk::wordBreakAfter} -body {
     ::tk::wordBreakAfter a b c d
 } -returnCodes 1 -result {wrong # args: should be "::tk::wordBreakAfter str start ?locale?"}
+
+#
+# CLEANUP
+#
 
 cleanupTests
 return
