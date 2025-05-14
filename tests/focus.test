@@ -1,22 +1,27 @@
 # This file is a Tcl script to test out the "focus" command and the
-# other procedures in the file tkFocus.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkFocus.c.
 #
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import child
 
-if {[tk windowingsystem] eq "aqua"} {
-    childTkInterp childInterp
-}
+#
+# LOCAL UTILITY PROCS
+#
 
 proc focusSetup {} {
     destroy .t
@@ -28,6 +33,7 @@ proc focusSetup {} {
     }
     tkwait visibility .t.b4
 }
+
 proc focusSetupAlt {} {
     global env
     destroy .alt
@@ -39,13 +45,13 @@ proc focusSetupAlt {} {
     tkwait visibility .alt.d
 }
 
-
-# The following procedure ensures that there is no input focus
-# in this application.  It does it by arranging for another
-# application to grab the focus.  The "after" and "update" stuff
-# is needed to wait long enough for pending actions to get through
-# the X server and possibly also the window manager.
-
+# focusClear --
+#
+#    Ensures that there is no input focus in this application.  It does it by
+#    arranging for another application to grab the focus.  The "after" and
+#    "update" stuff is needed to wait long enough for pending actions to get
+#    through the X server and possibly also the window manager.
+#
 if {[tk windowingsystem] eq "aqua"} {
     proc focusClear {} {
 	childInterp eval {
@@ -68,17 +74,27 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+#
+# COMMON TEST SETUP
+#
+
+# childTkProcess exit will be after 4.3 test
+childTkProcess create
+update
+
+if {[tk windowingsystem] eq "aqua"} {
+    childTkInterp childInterp
+}
+
+focusSetup
+if {[testConstraint altDisplay]} {
+    focusSetupAlt
+}
 
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
 
-# Make sure the window manager knows who has focus
-catch {fixfocus}
-
-# childTkProcess exit will be after 4.3 test
-childTkProcess create
-update
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
 }
@@ -88,11 +104,13 @@ bind all <FocusOut> {
 bind all <Key> {
     append focusInfo "press %W %K"
 }
-focusSetup
-if {[testConstraint altDisplay]} {
-    focusSetupAlt
-}
 
+# Make sure the window manager knows who has focus
+catch {fixfocus}
+
+#
+# TESTS
+#
 
 test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
     focusClear

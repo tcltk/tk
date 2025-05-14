@@ -1,20 +1,25 @@
 # This file is a Tcl script to test out the features of the script
 # file focus.tcl, which includes the procedures tk_focusNext and
-# tk_focusPrev, among other things.  This file is organized in the
-# standard fashion for Tcl tests.
+# tk_focusPrev, among other things.
 #
 # Copyright © 1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
-option add *takeFocus 1
-option add *highlightThickness 2
-. configure -takefocus 1 -highlightthickness 2
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc setup1 w {
     if {$w == "."} {
@@ -48,6 +53,17 @@ proc cleanup1 w {
     }
 }
 
+#
+# COMMON TEST SETUP
+#
+
+option add *takeFocus 1
+option add *highlightThickness 2
+. configure -takefocus 1 -highlightthickness 2
+
+#
+# TESTS
+#
 
 test focusTcl-1.1 {tk_focusNext procedure, no children} -body {
     tk_focusNext .
@@ -474,10 +490,12 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
 } -result {.a .b}
 
 
+#
+# CLEANUP
+#
+
 . configure -takefocus 0 -highlightthickness 0
 option clear
-
-# cleanup
 cleanupTests
 return
 
