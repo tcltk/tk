@@ -1,19 +1,28 @@
 # This file is a Tcl script to test out the "frame", "labelframe" and
-# "toplevel" commands of Tk.  It is organized in the standard fashion for Tcl
-# tests.
+# "toplevel" commands of Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import colors
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # uniq --
 #
@@ -38,6 +47,10 @@ proc uniq {list} {
 proc optnames {options} {
     lsort [lmap desc $options {lindex $desc 0}]
 }
+
+#
+# TESTS
+#
 
 test frame-1.1 {frame configuration options} -setup {
     deleteWindows

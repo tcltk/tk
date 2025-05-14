@@ -1,17 +1,38 @@
 # This file is a Tcl script to test out Tk's "font" command
-# plus the procedures in tkFont.c.  It is organized in the
-# standard white-box fashion for Tcl tests.
+# plus the procedures in tkFont.c.
 #
 # Copyright © 1996-1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
-set defaultfontlist [font names]
+#
+# LOCAL UTILITY PROCS
+#
+
+proc clearnondefaultfonts {} {
+    foreach afont [getnondefaultfonts] {
+	font delete $afont
+    }
+}
+
+# Procedure used in tests: 24.15, 26.*, 28.*, 30.*, 31.*, 32.1
+proc csetup {{str ""}} {
+    focus -force .t.c
+    .t.c dchars text 0 end
+    .t.c insert text 0 $str
+    .t.c focus text
+}
 
 proc getnondefaultfonts {} {
     global defaultfontlist
@@ -24,10 +45,16 @@ proc getnondefaultfonts {} {
     set nondeffonts
 }
 
-proc clearnondefaultfonts {} {
-    foreach afont [getnondefaultfonts] {
-	font delete $afont
-    }
+#
+# COMMON TEST SETUP
+#
+
+set defaultfontlist [font names]
+
+switch [tk windowingsystem] {
+    x11		{set fixed "TkFixedFont"}
+    win32	{set fixed "courier 12"}
+    aqua	{set fixed "monaco 9"}
 }
 
 deleteWindows
@@ -36,21 +63,9 @@ toplevel .t
 wm geom .t +0+0
 update idletasks
 
-switch [tk windowingsystem] {
-    x11		{set fixed "TkFixedFont"}
-    win32	{set fixed "courier 12"}
-    aqua	{set fixed "monaco 9"}
-}
-
-
-# Procedure used in tests: 24.15, 26.*, 28.*, 30.*, 31.*, 32.1
-proc csetup {{str ""}} {
-    focus -force .t.c
-    .t.c dchars text 0 end
-    .t.c insert text 0 $str
-    .t.c focus text
-}
-
+#
+# TESTS
+#
 
 test font-1.1 {TkFontPkgInit} -setup {
     catch {interp delete foo}
@@ -2564,10 +2579,9 @@ test font-47.3 {Bug 3049518 - Label} -body {
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
-
-
-
-
