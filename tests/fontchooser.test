@@ -2,8 +2,15 @@
 #
 # Copyright © 2008 Pat Thoyts
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
@@ -11,7 +18,15 @@ testutils import dialog
 
 set applyFontCmd [list set testDialogFont]
 
-# -------------------------------------------------------------------------
+#
+# LOCAL TEST CONSTRAINTS
+#
+catch {tk fontchooser -invalidOption}
+testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
+
+#
+# TESTS
+#
 
 test fontchooser-1.1 {tk fontchooser: usage} -returnCodes error -body {
     tk fontchooser -z
@@ -49,14 +64,12 @@ test fontchooser-1.9 {tk fontchooser: usage} -returnCodes error -body {
     tk fontchooser configure -visible 1
 } -match glob -result {*}
 
-# -------------------------------------------------------------------------
 #
 # The remaining tests in this file are only relevant for the script
 # implementation. They can be tested by sourcing the script file but
 # the Tk tests are run with -singleproc 1 and doing this affects the
 # result of later attempts to test the native implementations.
 #
-testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
 
 test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
     testDialog launch {

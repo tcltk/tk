@@ -1,53 +1,29 @@
 # This file is a Tcl script to test out Tk's "tk_getOpenFile" and
-# "tk_getSaveFile" commands. It is organized in the standard fashion
-# for Tcl tests.
+# "tk_getSaveFile" commands.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import dialog
 
-test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
-    # MacOS type that is too long
-
-    set res [list [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0\0}}}} msg] $msg]
-    regsub -all "\0" $res {\\0}
-} {1 {bad Macintosh file type "\0\0\0\0\0"}}
-test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
-    # MacOS type that is too short, but looks ok in utf (4 bytes).
-
-    set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0}}}} msg]
-    regsub -all "\0" $msg {\\0} msg
-    list $x $msg
-} {1 {bad Macintosh file type "\0\0"}}
-# The next test must actually open a file dialog window, but it does
-# not require human interaction to close the dialog because the Aqua
-# port of tktest automatically closes every file dialog after a short
-# timeout when tests are being run.
-test fileDialog-0.3 {GetFileName: file types: bad filetype} \
--constraints aqua \
--body {
-    # Checks for the Aqua crash reported in ticket 080a28104.
-    set filename [tk_getOpenFile -filetypes {
-	{"Invalid extension" {x.y}}
-	{"All files" {*}}
-    }]
-} \
--result {}
-
 set tk_strictMotif_old $tk_strictMotif
 
-#----------------------------------------------------------------------
 #
-# Procedures needed by this test file
+# LOCAL UTILITY PROCS
 #
-#----------------------------------------------------------------------
 
 proc ToEnterFileByKey {parent fileName fileDir} {
     if {! $::dialogIsNative} {
@@ -76,11 +52,9 @@ proc EnterFileByKey {parent fileName fileDir} {
     SendButtonPress $parent ok mouse
 }
 
-#----------------------------------------------------------------------
 #
-# The test suite proper
+# COMMON TEST SETUP
 #
-#----------------------------------------------------------------------
 
 if {$tcl_platform(platform) == "unix"} {
     set modes "0 1"
@@ -117,14 +91,54 @@ array set filters {
     }
 }
 
-foreach mode $modes {
-    #
-    # Test both the motif version and the "tk" version of the file dialog
-    # box on Unix.
-    #
-    # Note that this means that test names are unusually complex.
-    #
+set parent .
+set verylongstring [string repeat longstring: 16]
 
+#
+# TESTS
+#
+
+test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
+    # MacOS type that is too long
+
+    set res [list [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0\0\0\0}}}} msg] $msg]
+    regsub -all "\0" $res {\\0}
+} {1 {bad Macintosh file type "\0\0\0\0\0"}}
+test fileDialog-0.2 {GetFileName: file types: MakeFilter() fails} {
+    # MacOS type that is too short, but looks ok in utf (4 bytes).
+
+    set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\0\0}}}} msg]
+    regsub -all "\0" $msg {\\0} msg
+    list $x $msg
+} {1 {bad Macintosh file type "\0\0"}}
+# The next test must actually open a file dialog window, but it does
+# not require human interaction to close the dialog because the Aqua
+# port of tktest automatically closes every file dialog after a short
+# timeout when tests are being run.
+test fileDialog-0.3 {GetFileName: file types: bad filetype} \
+-constraints aqua \
+-body {
+    # Checks for the Aqua crash reported in ticket 080a28104.
+    set filename [tk_getOpenFile -filetypes {
+	{"Invalid extension" {x.y}}
+	{"All files" {*}}
+    }]
+} \
+-result {}
+
+#
+# TESTS FOR EACH MODE
+#
+# Test both the motif version and the "tk" version of the file dialog
+# box on Unix.
+#
+# Note that this means that test names are unusually complex.
+#
+foreach mode $modes {
+
+    #
+    # COMMON TEST SETUP
+    #
     set addedExtensions {}
     if {$tcl_platform(platform) == "unix"} {
 	set tk_strictMotif $mode
@@ -169,19 +183,6 @@ foreach mode $modes {
     test filebox-1.6-$mode "tk_getOpenFile command" -body {
 	tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
-
-    set parent .
-
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
 
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
