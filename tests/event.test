@@ -1,22 +1,33 @@
-# This file is a Tcl script to test the code in tkEvent.c.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test the code in tkEvent.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
-
 # XXX This test file is woefully incomplete.  Right now it only tests
 # a few of the procedures in tkEvent.c.  Please add more tests whenever
 # possible.
 
-# Setup table used to query key events.
+#
+# TESTFILE INITIALIZATION
+#
 
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# _init_keypress_lookup --
+#
+#    Setup table used to query key events.
+#
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
@@ -39,14 +50,17 @@ proc _init_keypress_lookup {} {
 	    "\t" Tab]
 }
 
-# Lookup an event in the keypress table.
-# For example:
-# Q -> Q
-# ; -> semicolon
-# > -> greater
-# Delete -> Delete
-# Escape -> Escape
-
+# _keypress_lookup --
+#
+#    Lookup an event in the keypress table.
+#
+#    For example:
+#	 Q -> Q
+#	 ; -> semicolon
+#	 > -> greater
+#	 Delete -> Delete
+#	 Escape -> Escape
+#
 proc _keypress_lookup {char} {
     global keypress_lookup
 
@@ -65,8 +79,10 @@ proc _keypress_lookup {char} {
     }
 }
 
-# Lookup and generate a pair of Key and KeyRelease events
-
+# _keypress --
+#
+#    Lookup and generate a pair of Key and KeyRelease events
+#
 proc _keypress {win key} {
     set keysym [_keypress_lookup $key]
 
@@ -87,16 +103,20 @@ proc _keypress {win key} {
     pause 50
 }
 
-# Call _keypress for each character in the given string
-
+# _keypress_string --
+#
+#    Call _keypress for each character in the given string
+#
 proc _keypress_string {win string} {
     foreach letter [split $string ""] {
 	_keypress $win $letter
     }
 }
 
-# Helper proc to convert index to x y position
-
+# _text_ind_to_x_y --
+#
+#    Helper proc to convert index to x y position
+#
 proc _text_ind_to_x_y {text ind} {
     set bbox [$text bbox $ind]
     if {[llength $bbox] != 4} {
@@ -107,8 +127,10 @@ proc _text_ind_to_x_y {text ind} {
     return [list $x1 $middle_y]
 }
 
-# Return selection only if owned by the given widget
-
+# _get_selection --
+#
+#    Return selection only if owned by the given widget
+#
 proc _get_selection {widget} {
     if {[string compare $widget [selection own]] != 0} {
 	return ""
@@ -119,7 +141,80 @@ proc _get_selection {widget} {
     return $sel
 }
 
-# Begining of the actual tests
+proc create_and_pack_frames {{w {}}} {
+    frame $w.f1 -bg blue -width 200 -height 200
+    pack propagate $w.f1 0
+    frame $w.f1.f2 -bg yellow -width 100 -height 100
+    pack $w.f1.f2 $w.f1 -side bottom -anchor se
+    update idletasks
+}
+
+# setup_win_mousepointer --
+#
+#    Position the window and the mouse pointer as an initial state for some tests.
+#    The so-called "pointer window" is the $w window that will now contain the mouse pointer.
+#
+proc setup_win_mousepointer {w} {
+    wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
+    toplevel $w
+    pack propagate $w 0
+    wm geometry $w 300x300+100+100
+    tkwait visibility $w
+    update; # service remaining screen drawing events (e.g. <Expose>)
+    set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
+    event generate $w <Motion> -warp 1 -x 250 -y 250
+    if {($pointerWin ne $w) && ([tk windowingsystem] ne "aqua")} {
+	waitForWindowEvent $w <Enter>
+    } else {
+	controlPointerWarpTiming
+    }
+}
+
+# waitForWindowEvent --
+#
+#    This proc is intended to overcome latency of windowing system
+#    notifications when toplevel windows are involved. These latencies vary
+#    considerably with the window manager in use, with the system load,
+#    with configured scheduling priorities for processes, etc ...
+#    Waiting for the corresponding window events evades the trouble that is
+#    associated with the alternative: waiting or halting the Tk process for a
+#    fixed amount of time (using "after ms"). With the latter strategy it's
+#    always a gamble how much waiting time is enough on an end user's system.
+#    It also leads to long fixed waiting times in order to be on the safe side.
+#
+proc waitForWindowEvent {w event {timeout 1000}} {
+
+    variable _windowEvent
+
+    # Use counter as a unique ID to prevent subsequent waits
+    # from interfering with each other.
+    set counter [incr _windowEvent(counter)]
+    set _windowEvent($counter) 1
+    set savedBinding [bind $w $event]
+    bind $w $event [list +waitForWindowEvent.signal $counter]
+    set afterID [after $timeout [list set _windowEvent($counter) -1]]
+    vwait _windowEvent($counter)
+    set late [expr {$_windowEvent($counter) == -1}]
+    bind $w $event $savedBinding
+    unset _windowEvent($counter)
+    if {$late} {
+	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
+    } else {
+	after cancel $afterID
+    }
+}
+
+# waitForWindowEvent.signal--
+#
+#    Helper proc that records the triggering of a window event.
+#
+proc waitForWindowEvent.signal {counter} {
+    incr ::_windowEvent($counter)
+}
+
+#
+# TESTS
+#
 
 test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} -setup {
 	deleteWindows
@@ -864,67 +959,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
-proc waitForWindowEvent {w event {timeout 1000}} {
-# This proc is intended to overcome latency of windowing system
-# notifications when toplevel windows are involved. These latencies vary
-# considerably with the window manager in use, with the system load,
-# with configured scheduling priorities for processes, etc ...
-# Waiting for the corresponding window events evades the trouble that is
-# associated with the alternative: waiting or halting the Tk process for a
-# fixed amount of time (using "after ms"). With the latter strategy it's
-# always a gamble how much waiting time is enough on an end user's system.
-# It also leads to long fixed waiting times in order to be on the safe side.
-
-    variable _windowEvent
-
-    # Use counter as a unique ID to prevent subsequent waits
-    # from interfering with each other.
-    set counter [incr _windowEvent(counter)]
-    set _windowEvent($counter) 1
-    set savedBinding [bind $w $event]
-    bind $w $event [list +waitForWindowEvent.signal $counter]
-    set afterID [after $timeout [list set _windowEvent($counter) -1]]
-    vwait _windowEvent($counter)
-    set late [expr {$_windowEvent($counter) == -1}]
-    bind $w $event $savedBinding
-    unset _windowEvent($counter)
-    if {$late} {
-	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
-    } else {
-	after cancel $afterID
-    }
-}
-proc waitForWindowEvent.signal {counter} {
-# Helper proc that records the triggering of a window event.
-    incr ::_windowEvent($counter)
-}
-
-proc create_and_pack_frames {{w {}}} {
-    frame $w.f1 -bg blue -width 200 -height 200
-    pack propagate $w.f1 0
-    frame $w.f1.f2 -bg yellow -width 100 -height 100
-    pack $w.f1.f2 $w.f1 -side bottom -anchor se
-    update idletasks
-}
-
-proc setup_win_mousepointer {w} {
-# Position the window and the mouse pointer as an initial state for some tests.
-# The so-called "pointer window" is the $w window that will now contain the mouse pointer.
-    wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
-    toplevel $w
-    pack propagate $w 0
-    wm geometry $w 300x300+100+100
-    tkwait visibility $w
-    update; # service remaining screen drawing events (e.g. <Expose>)
-    set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
-    event generate $w <Motion> -warp 1 -x 250 -y 250
-    if {($pointerWin ne $w) && ([tk windowingsystem] ne "aqua")} {
-	waitForWindowEvent $w <Enter>
-    } else {
-	controlPointerWarpTiming
-    }
-}
-
 test event-9.11 {pointer window container = parent} -setup {
     setup_win_mousepointer .one
     wm withdraw .one
@@ -1169,7 +1203,10 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|}
 
-# cleanup
+#
+# CLEANUP
+#
+
 # macOS sometimes has trouble deleting the test window,
 # causing a failure in focus.test.
 pause 200;
@@ -1186,5 +1223,3 @@ rename setup_win_mousepointer {}
 
 cleanupTests
 return
-
-

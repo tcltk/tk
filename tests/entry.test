@@ -1,24 +1,36 @@
-# This file is a Tcl script to test entry widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test entry widgets in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import entry scroll
+
+#
+# COMMON TEST SETUP
+#
 
 foreach i {1 2 3} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 set cy [font metrics {Courier -12} -linespace]
 
+#
+# TESTS
+#
 
 test entry-1.1 {configuration option: "background" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
