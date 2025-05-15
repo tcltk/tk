@@ -1558,7 +1558,7 @@ ConfigureListbox(
     Tcl_Obj *oldListObj = NULL;
     Tcl_Obj *errorResult = NULL;
     int oldExport, error;
-    int borderWidth, selBorderWidth, highlightWidth;
+    int borderWidth, highlightWidth;
 
     oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
     if (listPtr->listVarNameObj != NULL) {
@@ -1596,26 +1596,7 @@ ConfigureListbox(
 	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
 
 	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->borderWidthObj, &borderWidth);
-	if (borderWidth < 0) {
-	    borderWidth = 0;
-	    Tcl_DecrRefCount(listPtr->borderWidthObj);
-	    listPtr->borderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(listPtr->borderWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->highlightWidthObj, &highlightWidth);
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-	    Tcl_DecrRefCount(listPtr->highlightWidthObj);
-	    listPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(listPtr->highlightWidthObj);
-	}
-	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
-	if (selBorderWidth < 0) {
-	    selBorderWidth = 0;
-	    Tcl_DecrRefCount(listPtr->selBorderWidthObj);
-	    listPtr->selBorderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(listPtr->selBorderWidthObj);
-	}
 	listPtr->inset = highlightWidth + borderWidth;
 
 	/*

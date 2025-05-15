@@ -120,7 +120,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * Make sure that the updated keyWindow is associated with the
      * current TkEventTarget.
      */
- 
+
     NSWindow *keyWin = [NSApp keyWindow];
     if (keyWin) {
 	TkWindow *keyWinPtr = TkMacOSXGetTkWindow(keyWin);
