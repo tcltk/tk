@@ -439,7 +439,6 @@ ConfigureMessage(
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    int width, borderWidth, highlightWidth, padX, padY;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -480,45 +479,6 @@ ConfigureMessage(
 	Tcl_TraceVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
-    }
-
-    /*
-     * A few other options need special processing, such as setting the
-     * background from a 3-D border or handling special defaults that couldn't
-     * be specified to Tk_ConfigureWidget.
-     */
-
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
-    if (borderWidth < 0) {
-	Tcl_DecrRefCount(msgPtr->borderWidthObj);
-	msgPtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->borderWidthObj);
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	Tcl_DecrRefCount(msgPtr->highlightWidthObj);
-	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
-    }
-    if (msgPtr->padXObj) {
-	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
-	if (padX < 0) {
-	    Tcl_DecrRefCount(msgPtr->padXObj);
-	    msgPtr->padXObj = NULL;
-	}
-    }
-    if (msgPtr->padYObj) {
-	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
-	if (padY < 0) {
-	    Tcl_DecrRefCount(msgPtr->padYObj);
-	    msgPtr->padYObj = NULL;
-	}
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
-    if (width < 0) {
-	Tcl_DecrRefCount(msgPtr->widthObj);
-	msgPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->widthObj);
     }
 
     Tk_FreeSavedOptions(&savedOptions);
