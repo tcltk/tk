@@ -12,7 +12,6 @@
  */
 
 #include "tkWinAccessibility.h"
-#include <windows.h>
 
 
 #define WM_TKWINA11Y_INVOKE (WM_USER + 1002)
@@ -41,7 +40,6 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
 
@@ -54,6 +52,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, LONG xLeft, LONG yTop,VARIANT *pvarChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT start, VARIANT *pvarEndUpAt);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
@@ -166,11 +165,6 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VA
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild)
-{
-  return E_NOTIMPL;
-}
-
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName(IAccessible *this, VARIANT varChild, BSTR szName)
 {
   return E_NOTIMPL;
@@ -195,6 +189,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *thi
   if (IsEqualIID(riid, &IID_IUnknown) ||
       IsEqualIID(riid, &IID_IDispatch) ||
       IsEqualIID(riid, &IID_IAccessible)) {
+    *ppvObject = this; 
     TkWinAccessible_AddRef(this);
     return S_OK;
   }
@@ -271,7 +266,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_GetIDsOfNames(IAccessible *this
 }
 
 /* Function to invoke different MSAA methods based on interface type. */
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPID dispIdMember,REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
   if (!pVarResult) {
     return E_POINTER;
@@ -315,6 +310,19 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 
   case DISPID_ACC_FOCUS:
     return TkWinAccessible_get_accFocus(this, &selfVar);
+	
+  case DISPID_ACC_SELECT:
+    if (wFlags & DISPATCH_METHOD) {
+      if (pDispParams->cArgs == 2) {
+	/* Arguments come in reverse order (last param is at index 0). */
+	VARIANT varChild = pDispParams->rgvarg[0];
+	VARIANT varFlags = pDispParams->rgvarg[1];
+	long flags = varFlags.lVal;
+	return TkWinAccessible_accSelect((IAccessible *)this, flags, varChild);
+      }
+    } else {
+      return E_NOTIMPL;
+    }
 
   default:
     return E_NOTIMPL;
@@ -402,10 +410,10 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, 
   Tk_Window win = tkAccessible->win;
   VariantInit(pvarRole);
 
-  /* Always return a role for toplevels to keep screen reader traversal alive. */
+  /* Always return a non-interactive role for toplevels to keep screen reader traversal alive. */
   if (Tk_IsTopLevel(win) && (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF)) {
     pvarRole->vt = VT_I4;
-    pvarRole->lVal = ROLE_SYSTEM_APPLICATION;
+    pvarRole->lVal = ROLE_SYSTEM_PANE;
     return S_OK;
   }
 
@@ -486,17 +494,22 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accState(IAccessible *this,
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
   Tk_Window win = tkAccessible->win;
   VariantInit(pvarState);
+  
+  LONG state = 0;
 
-  /* For top-level windows, mark as unavailable and invisible. */
-  if (Tk_IsTopLevel(win) && varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+  /* For top-level windows, just return. */
+  if (Tk_IsTopLevel(win)) {
     pvarState->vt = VT_I4;
-    pvarState->lVal = STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_UNAVAILABLE;
-    return S_OK;
+    pvarState->lVal = STATE_SYSTEM_UNAVAILABLE;
+    return E_INVALIDARG;
+  }
+
+  if (win == tkAccessible->focusedChildWin ) {
+    state |= STATE_SYSTEM_FOCUSED;
   }
 
   /* Handle CHILDID_SELF. */
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-    LONG state = 0;
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) return E_INVALIDARG;
 
@@ -514,7 +527,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accState(IAccessible *this,
     } else {
       state |= STATE_SYSTEM_FOCUSABLE;
     }
-
+	
     pvarState->vt = VT_I4;
     pvarState->lVal = state;
     return S_OK;
@@ -744,32 +757,64 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, LONG xLe
 
 
 /* Function to get accessible frame to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild)
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight,VARIANT varChild)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
-    int x, y, width, height;
-    Tk_Window win = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName,  Tk_MainWindow(tkAccessible->interp));
+
+  if (varChild.vt != VT_I4) {
+    return E_INVALIDARG;
+  }
+
+  int x = 0, y = 0, width = 0, height = 0;
+
+  if (varChild.lVal == CHILDID_SELF) {
+    /* Return location of container (toplevel). */
+    Tk_Window win = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName, Tk_MainWindow(tkAccessible->interp));
+    if (!win) return E_FAIL;
+
     x = Tk_X(win);
     y = Tk_Y(win);
     width = Tk_Width(win);
     height = Tk_Height(win);
-    *pxLeft = x;
-    *pyTop = y;
-    *pcxWidth = width;
-    *pcyHeight = height;
-    return S_OK;
+  } else {
+    /* Return location of virtual child .*/
+    LONG childIndex = varChild.lVal - 1;
+    if (childIndex >= 0 && childIndex < tkAccessible->numChildren) {
+      /* Assume the window has focus. */
+      TkWindow *focusWin = TkGetFocusWin((TkWindow *)tkAccessible->win);
+      for (int i = 0; i < tkAccessible->numChildren; i++) {
+	TkWinAccessible *childAcc = (TkWinAccessible *)tkAccessible->children[i];
+	Tk_Window childWin = (Tk_Window)focusWin;
+	if (childAcc && childAcc->win == childWin) {
+	  x = Tk_X(childWin);
+	  y = Tk_Y(childWin);
+	  width = Tk_Width(childWin);
+	  height = Tk_Height(childWin);
+	}
+      }
+
+      /* Convert to screen coordinates .*/
+      HWND hwnd = Tk_GetHWND(Tk_WindowId(Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName, Tk_MainWindow(tkAccessible->interp))));
+      POINT pt = { x, y };
+      ClientToScreen(hwnd, &pt);
+
+      *pxLeft = pt.x;
+      *pyTop = pt.y;
+      *pcxWidth = width;
+      *pcyHeight = height;
+
+      return S_OK;
+    }
+    return E_INVALIDARG;
   }
   return E_INVALIDARG;
 }
 
+
 /* Function to return default MSAA action for a widget. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction)
 {
-  if (!pszDefaultAction) {
-    return E_INVALIDARG;
-  }
-
+ 
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
 
   /* Handle CHILDID_SELF (for this object). */
@@ -896,7 +941,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible 
 
   /* Handle child index (1-based.) */
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-    LONG childIndex = varChild.lVal - 1;  // Convert to 0-based index
+    LONG childIndex = varChild.lVal - 1;  /* Convert to 0-based index. */
 
     TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
     if (childIndex >= 0 && childIndex < tkAccessible->numChildren) {
@@ -978,7 +1023,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
 
   /* Handle 1-based child index. */
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-    LONG childIndex = varChild.lVal - 1;  // 1-based to 0-based index.
+    LONG childIndex = varChild.lVal - 1;  /* 1-based to 0-based index. */
     if (childIndex >= 0 && childIndex < tkAccessible->numChildren) {
       IAccessible *child = tkAccessible->children[childIndex];
       if (!child) return E_INVALIDARG;
@@ -1001,25 +1046,33 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
-  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
 
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
   TkWindow *focusWin = TkGetFocusWin((TkWindow *)tkAccessible->win);
+	
+  /* Ignore toplevel. */
+  if (Tk_IsTopLevel((Tk_Window) focusWin)) {
+    //  return S_FALSE;
+  }
 
   VariantInit(pvarChild);
-  pvarChild->vt = VT_I4;
-  pvarChild->lVal = CHILDID_SELF;
 
   if (focusWin) {
     for (int i = 0; i < tkAccessible->numChildren; i++) {
       TkWinAccessible *childAcc = (TkWinAccessible *)tkAccessible->children[i];
       if (childAcc && childAcc->win == (Tk_Window)focusWin) {
-	pvarChild->lVal = i + 1;
-	break;
+	pvarChild->vt = VT_I4;
+	pvarChild->lVal = i + 1; /* Child IDs are 1-based. */
+	return S_OK;
       }
     }
   }
-  return S_OK;
+
+  /* No child is focused — return no focus .*/
+  pvarChild->vt = VT_EMPTY;
+  return S_FALSE;
 }
+
 
 /* Function to get description for accessible widget. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
@@ -1137,6 +1190,48 @@ void TkWinAccessible_HookWindowProc(Tk_Window tkwin) {
       LONG_PTR result = SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)TkWinAccessible_WndProc);
     }
   }
+}
+
+/* Function to set focus on selected widget. */
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild)
+{
+  /* Ensure valid arguments. */
+  if (varChild.vt != VT_I4 || varChild.lVal < 0) {
+    return E_INVALIDARG; /* Invalid child identifier. */
+  }
+
+  TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
+
+  if (!tkAccessible || !tkAccessible->win || !tkAccessible->children) {
+    return E_FAIL; /* Invalid or missing accessible widget. */
+  
+
+    /* Handle selection logic. */
+    long childId = varChild.lVal;
+    TkWinAccessible *childAcc = (TkWinAccessible *)tkAccessible->children[childId - 1]; // Assuming 1-based indexing
+
+    if (!childAcc || !childAcc->win) {
+      return E_FAIL; /* No valid child found. */
+    }
+
+    /* Perform the selection action on the widget. */
+    if (flags & SELFLAG_TAKEFOCUS) {
+      /* Set focus to the selected child widget. */
+      TkSetFocusWin((TkWindow*)childAcc->win, 0);
+
+      /* Notify MSAA about the focus change (send event). */
+      NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, childId);
+
+      /* Optionally: Mark the widget as selected if applicable. */
+      NotifyWinEvent(EVENT_OBJECT_SELECTION, tkAccessible->hwnd, OBJID_CLIENT, childId);
+    }
+
+    /* Mark the selection (you can add more logic depending on the widget type). */
+    NotifyWinEvent(EVENT_OBJECT_SELECTION, tkAccessible->hwnd, OBJID_CLIENT, childId);
+
+    return S_OK;
+  }
+  return S_OK;
 }
 
 /* Helper function to navigate accessibility tree. */
@@ -1494,7 +1589,7 @@ static void TkWinAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr)
 {
-  if (!clientData || !eventPtr || eventPtr->type != FocusIn) return;
+  if (!clientData || !eventPtr || (eventPtr->type != FocusIn && eventPtr->type != FocusOut)) return;
 
   TkWinAccessible *tkAccessible = (TkWinAccessible *)clientData;
 
@@ -1506,21 +1601,29 @@ static void TkWinAccessible_FocusEventHandler(ClientData clientData, XEvent *eve
 
   if (!focusWin || !tkAccessible->children) return;
 
-  for (int i = 0; i < tkAccessible->numChildren; i++) {
-    TkWinAccessible *childAcc = (TkWinAccessible *)tkAccessible->children[i];
-    if (childAcc && childAcc->win == (Tk_Window)focusWin) {
-      // Send MSAA focus notification to the correct child
-      NotifyWinEvent(EVENT_OBJECT_FOCUS,
-		     tkAccessible->hwnd,
-		     OBJID_CLIENT,
-		     i + 1); // MSAA uses 1-based indexing
-      tkAccessible->focusedIndex = i; // track it if needed
-      return;
+  if (eventPtr->type == FocusIn) {
+    for (int i = 0; i < tkAccessible->numChildren; i++) {
+      TkWinAccessible *childAcc = (TkWinAccessible *)tkAccessible->children[i];
+      if (childAcc && childAcc->win == (Tk_Window)focusWin) {
+        // Send MSAA focus notification to the correct child
+        NotifyWinEvent(EVENT_OBJECT_FOCUS,
+		       tkAccessible->hwnd,
+		       OBJID_CLIENT,
+		       i + 1); // MSAA uses 1-based indexing
+        tkAccessible->focusedIndex = i; // Track focused child
+        return;
+      }
     }
-  }
 
-  // If no matching child found, do nothing (or optionally fall back to CHILDID_SELF)
+    // If no matching child found, optionally fall back to CHILDID_SELF
+    NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, CHILDID_SELF);
+  } else if (eventPtr->type == FocusOut) {
+    // Focus lost - reset focus state
+    tkAccessible->focusedIndex = -1; // Or another invalid value
+    NotifyWinEvent(EVENT_OBJECT_FOCUS, tkAccessible->hwnd, OBJID_CLIENT, CHILDID_SELF); // Optionally notify focus lost
+  }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1673,8 +1776,6 @@ int TkWinAccessibleObjCmd(
     return TCL_ERROR;
   }
   
-
-
   /* 
    * The root widget/toplevel must have an associated HWND 
    * for accessibility. Child widgets are "virtual" accessible
