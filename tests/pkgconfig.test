@@ -1,4 +1,4 @@
-# This file is a Tcl script to test the commands pkgconfig.
+# This file is a Tcl script to test the command "pkgconfig".
 #
 # Copyright © 1991-1993 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
