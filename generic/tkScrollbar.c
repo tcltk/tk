@@ -471,43 +471,11 @@ ConfigureScrollbar(
     Tcl_Obj *const objv[],		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
-    int width, borderWidth, highlightWidth, elementBorderWidth;
-
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs, objc,
 	    objv, scrollPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    /*
-     * A few options need special processing, such as setting the background
-     * from a 3-D border.
-     */
-
-    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
-    if (borderWidth < 0) {
-	Tcl_DecrRefCount(scrollPtr->borderWidthObj);
-	scrollPtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(scrollPtr->borderWidthObj);
-    }
-    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	Tcl_DecrRefCount(scrollPtr->highlightWidthObj);
-	scrollPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(scrollPtr->highlightWidthObj);
-    }
-    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
-    if (width < 0) {
-	Tcl_DecrRefCount(scrollPtr->widthObj);
-	scrollPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(scrollPtr->widthObj);
-    }
-    if (scrollPtr->elementBorderWidthObj) {
-	Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->elementBorderWidthObj, &elementBorderWidth);
-	if (elementBorderWidth < 0) {
-	    Tcl_DecrRefCount(scrollPtr->elementBorderWidthObj);
-	    scrollPtr->elementBorderWidthObj = NULL;
-	}
-    }
     /*
      * Configure platform specific options.
      */
