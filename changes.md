@@ -14,6 +14,7 @@ necessarily in Tk 8.
 
 # 9.1 Features and Interfaces
  - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- 
+ - [Handle negative screen distances](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
