@@ -1,5 +1,4 @@
-# This file is a Tcl script to test menubuttons in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test menubuttons in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
@@ -10,15 +9,25 @@
 # XXX of a procedure has tests then the whole procedure has tests,
 # XXX but many procedures have no tests.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# COMMON TEST SETUP
+#
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -30,10 +39,14 @@ option add *Button.borderWidth 2
 option add *Button.highlightThickness 2
 option add *Button.font {Helvetica -12 bold}
 
-
 menubutton .mb -text "Test"
 pack .mb
 update
+
+#
+# TESTS
+#
+
 test menubutton-1.1 {configuration options} -body {
     .mb configure -activebackground #012345
     .mb cget -activebackground
@@ -318,11 +331,14 @@ test menubutton-1.59 {configuration options} -body {
     .mb configure -wraplength 6x
 } -returnCodes error -result {expected screen distance but got "6x"}
 
-
+#
+# COMMON TEST SETUP
+#
 deleteWindows
 menubutton .mb -text "Test"
 pack .mb
 update
+
 test menubutton-2.1 {Tk_MenubuttonCmd procedure} -body {
     menubutton
 } -returnCodes error -result {wrong # args: should be "menubutton pathName ?-option value ...?"}
@@ -346,10 +362,13 @@ test menubutton-2.5 {Tk_ButtonCmd procedure} -setup {
     winfo exists .mb
 } -result 0
 
-
+#
+# COMMON TEST SETUP
+#
 deleteWindows
 menubutton .mb -text "Test Menu"
 pack .mb
+
 test menubutton-3.1 {MenuButtonWidgetCmd procedure} -body {
     .mb
 } -returnCodes error -result {wrong # args: should be ".mb option ?arg ...?"}
@@ -386,6 +405,10 @@ test menubutton-3.10 {ButtonWidgetCmd procedure, "configure" option} -body {
 test menubutton-3.11 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb foobar
 } -returnCodes error -result {bad option "foobar": must be cget or configure}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 # XXX Need to add tests for several procedures here.   The tests for   XXX
@@ -517,8 +540,6 @@ test menubutton-4.11 {ConfigureMenuButton procedure - bad direction} -setup {
     deleteWindows
 } -result {below {}}
 
-
-
 # XXX Need to add tests for several procedures here. XXX
 
 test menubutton-5.1 {MenuButtonEventProc procedure} -setup {
@@ -546,11 +567,15 @@ test menubutton-6.1 {MenuButtonCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 
+#
+# COMMON TEST SETUP
+#
 if {[tk windowingsystem] eq "aqua"} {
     set extraWidth 36
 } else {
     set extraWidth 0
 }
+
 test menubutton-7.1 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType
 } -setup {

@@ -1,17 +1,42 @@
 # This file is a Tcl script to test out Tk's "tk_messageBox" command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc ChooseMsg {parent btn} {
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn mouse
+    }
+}
+
+proc ChooseMsgByKey {parent btn} {
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn key
+    }
+}
+
+#
+# TESTS
+#
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -75,19 +100,6 @@ test msgbox-1.18 {tk_messageBox command} -body {
 test msgbox-1.19 {tk_messageBox command} -body {
     tk_messageBox -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
-
-
-proc ChooseMsg {parent btn} {
-    if {! $::dialogIsNative} {
-	after 100 SendButtonPress $parent $btn mouse
-    }
-}
-
-proc ChooseMsgByKey {parent btn} {
-    if {! $::dialogIsNative} {
-	after 100 SendButtonPress $parent $btn key
-    }
-}
 
 #
 # Try out all combinations of (type) x (default button) and
