@@ -1,21 +1,39 @@
 # This file is a Tcl script to test out images of type "bitmap" (i.e.,
-# the procedures in the file tkImgBmap.c).  It is organized in the
-# standard fashion for Tcl tests.
+# the procedures in the file tkImgBmap.c).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc bgerror msg {
+    global errMsg
+    set errMsg $msg
+}
+
+#
+# COMMON TEST SETUP
+#
 
 set data1 {#define foo_width 16
 #define foo_height 16
@@ -38,16 +56,10 @@ makeFile $data1 foo.bm
 makeFile $data2 foo2.bm
 
 imageCleanup
-#canvas .c
-#pack .c
-#update
-#image create bitmap i1
-#.c create image 200 100 -image i1
-update
-proc bgerror msg {
-    global errMsg
-    set errMsg $msg
-}
+
+#
+# TESTS
+#
 
 test imageBmap-1.1 {options for bitmap images} -body {
     image create bitmap i1 -background #123456
