@@ -301,7 +301,7 @@ test text-1.29 {configuration option: "highlightthickness"} -setup {
     pack .t
     update
 } -body {
-    .t configure -highlightthickness -2
+    .t configure -highlightthickness 0
     .t cget -highlightthickness
 } -cleanup {
     destroy .t
@@ -595,7 +595,7 @@ test text-1.59 {configuration option: "spacing1"} -setup {
     pack .t
     update
 } -body {
-    .t configure -spacing1 -5
+    .t configure -spacing1 0
     .t cget -spacing1
 } -cleanup {
     destroy .t
@@ -633,7 +633,7 @@ test text-1.63 {configuration option: "spacing2"} -setup {
     pack .t
     update
 } -body {
-    .t configure -spacing2 -1
+    .t configure -spacing2 0
     .t cget -spacing2
 } -cleanup {
     destroy .t
@@ -671,7 +671,7 @@ test text-1.67 {configuration option: "spacing3"} -setup {
     pack .t
     update
 } -body {
-    .t configure -spacing3 -10
+    .t configure -spacing3 0
     .t cget -spacing3
 } -cleanup {
     destroy .t
@@ -3624,7 +3624,7 @@ test text-14.1 {ConfigureText procedure} -setup {
 test text-14.2 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    .t configure -spacing1 -2 -spacing2 1 -spacing3 1
+    .t configure -spacing1 0 -spacing2 1 -spacing3 1
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
@@ -3632,7 +3632,7 @@ test text-14.2 {ConfigureText procedure} -setup {
 test text-14.3 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    .t configure -spacing1 1 -spacing2 -1 -spacing3 1
+    .t configure -spacing1 1 -spacing2 0 -spacing3 1
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
@@ -3640,7 +3640,7 @@ test text-14.3 {ConfigureText procedure} -setup {
 test text-14.4 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    .t configure -spacing1 1 -spacing2 1 -spacing3 -3
+    .t configure -spacing1 1 -spacing2 1 -spacing3 0
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
