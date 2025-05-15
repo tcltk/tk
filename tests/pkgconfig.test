@@ -1,9 +1,4 @@
-# -*- tcl -*-
-# Commands covered:  pkgconfig
-#
-# This file contains a collection of tests for one or more of the Tk
-# built-in commands.  Sourcing this file into Tk runs the tests and
-# generates output for errors.  No output means no errors were found.
+# This file is a Tcl script to test the commands pkgconfig.
 #
 # Copyright © 1991-1993 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
@@ -13,10 +8,20 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test pkgconfig-1.1 {query keys} -constraints {nonwin} -body {
     lsort [::tk::pkgconfig list]
@@ -62,6 +67,9 @@ test pkgconfig-2.5 {error: query with to many arguments} {
     set msg
 } {wrong # args: should be "::tk::pkgconfig subcommand ?arg?"}
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
