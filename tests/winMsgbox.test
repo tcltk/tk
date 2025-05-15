@@ -13,10 +13,6 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
 
-proc Click {hwnd button} {
-    testwinevent $hwnd $button WM_COMMAND
-}
-
 proc GetWindowInfo {title button} {
     global windowInfo
     set windowInfo {}
