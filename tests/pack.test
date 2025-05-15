@@ -1,15 +1,20 @@
-# This file is a Tcl script to test out the "pack" command of Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "pack" command of Tk.
 #
 # Copyright © 1993 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# COMMON TEST SETUP
+#
 
 # Create some test windows.
 
@@ -27,6 +32,10 @@ foreach i {a b c d} {
 .pack.b config -width 50 -height 30
 .pack.c config -width 80 -height 80
 .pack.d config -width 40 -height 30
+
+#
+# TESTS
+#
 
 test pack-1.1 {-side option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -724,7 +733,11 @@ test pack-6.13 {-expand option} -setup {
     destroy .pack2
 } -result {38x42+181+45 38x42+181+178 38x42+181+312}
 
+#
+# COMMON TEST SETUP
+#
 wm geometry .pack {}
+
 test pack-7.1 {requesting size for parent} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -782,6 +795,10 @@ test pack-7.7 {requesting size for parent} -setup {
     list [winfo reqwidth .pack] [winfo reqheight .pack]
 } -result {100 110}
 
+#
+# COMMON TEST SETUP
+#
+
 # For the tests below, create a couple of "pad" windows to shrink
 # the available space for the remaining windows.  The tests have to
 # be done this way rather than shrinking the whole window, because
@@ -795,71 +812,107 @@ pack .pack.right -side right
 pack .pack.bottom -side bottom
 pack .pack.a .pack.b .pack.c -side top
 update
+
 test pack-8.1 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+30+0 1 50x30+15+40 1 80x80+0+70 1}
-wm geom .pack 270x250
-update
-test pack-8.2 {insufficient space} -body {
+
+test pack-8.2 {insufficient space} -setup {
+    wm geom .pack 270x250
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+25+0 1 50x30+10+40 1 70x30+0+70 1}
-wm geom .pack 240x220
-update
-test pack-8.3 {insufficient space} -body {
+
+test pack-8.3 {insufficient space} -setup {
+    wm geom .pack 240x220
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+10+0 1 40x30+0+40 1 70x30+0+70 0}
-wm geom .pack 350x350
-update
-test pack-8.4 {insufficient space} -body {
+
+test pack-8.4 {insufficient space} -setup {
+    wm geom .pack 350x350
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+65+0 1 50x30+50+40 1 80x80+35+70 1}
-wm geom .pack {}
+
+#
+# COMMON TEST SETUP
+#
+
 pack .pack.a -side left
 pack .pack.b -side right
 pack .pack.c -side left
 update
-test pack-8.5 {insufficient space} -body {
+
+test pack-8.5 {insufficient space} -setup {
+    wm geom .pack {}
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+0+20 1 50x30+100+25 1 80x80+20+0 1}
-wm geom .pack 320x180
-update
-test pack-8.6 {insufficient space} -body {
+
+test pack-8.6 {insufficient space} -setup {
+    wm geom .pack 320x180
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 50x30+70+0 1 50x30+20+0 1}
+
+#
+# COMMON TEST SETUP
+#
 wm geom .pack 250x180
 update
+
 test pack-8.7 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 30x30+20+0 1 50x30+20+0 0}
+
+#
+# COMMON TEST SETUP
+#
 pack forget .pack.b
 update
+
 test pack-8.8 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 30x30+20+0 0 30x30+20+0 1}
+
+#
+# COMMON TEST SETUP
+#
 pack .pack.b -side right -after .pack.a
 wm geom .pack {}
 update
+
 test pack-8.9 {insufficient space} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x40+0+20 1 50x30+100+25 1 80x80+20+0 1}
+
+#
+# COMMON TEST SETUP
+#
 pack forget .pack.right .pack.bottom
 
 test pack-9.1 {window ordering} -setup {
@@ -1185,7 +1238,6 @@ test pack-12.14 {command options and errors} -setup {
 } -body {
     pack .pack.a -in z
 } -returnCodes error -result {bad window path name "z"}
-set pad [winfo pixels .pack 1c]
 test pack-12.15 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1751,7 +1803,10 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
     destroy .1
 } -result 0
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
 
