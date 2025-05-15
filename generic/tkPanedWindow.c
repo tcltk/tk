@@ -919,11 +919,6 @@ ConfigurePanes(
 			pwPtr->paneOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
 		Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->panes[j]->minSizeObj, &minSize);
-		if (minSize < 0) {
-		    Tcl_DecrRefCount(pwPtr->panes[j]->minSizeObj);
-		    pwPtr->panes[j]->minSizeObj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(pwPtr->panes[j]->minSizeObj);
-		}
 		found = 1;
 
 		/*
@@ -985,11 +980,6 @@ ConfigurePanes(
 	    panePtr->paneHeight = Tk_ReqHeight(tkwin) + doubleBw;
 	}
 	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
-	if (minSize < 0) {
-	    Tcl_DecrRefCount(panePtr->minSizeObj);
-	    panePtr->minSizeObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(panePtr->minSizeObj);
-	}
 
 	/*
 	 * Set up the geometry management callbacks for this pane.

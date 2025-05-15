@@ -79,8 +79,7 @@ foreach test {
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-highlightbackground #112233 #112233 ugly {unknown color name "ugly"}}
     {-highlightcolor #123456 #123456 bogus {unknown color name "bogus"}}
-    {-highlightthickness 6 6 bogus {expected screen distance but got "bogus"}}
-    {-highlightthickness -2 0 {} {}}
+    {-highlightthickness 6 6 -2 {expected screen distance but got "-2"}}
     {-jump true 1 silly {expected boolean value but got "silly"}}
     {-orient horizontal horizontal badValue
 	    {bad orientation "badValue": must be vertical or horizontal}}

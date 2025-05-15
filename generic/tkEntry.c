@@ -1186,40 +1186,10 @@ ConfigureEntry(
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
 	Tk_GetPixelsFromObj(NULL, entryPtr->tkwin, entryPtr->borderWidthObj, &borderWidth);
-	if (borderWidth < 0) {
-	    borderWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->borderWidthObj);
-	    entryPtr->borderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->borderWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, entryPtr->tkwin, entryPtr->highlightWidthObj, &highlightWidth);
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->highlightWidthObj);
-	    entryPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->highlightWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, entryPtr->tkwin, entryPtr->insertBorderWidthObj, &insertBorderWidth);
-	if (insertBorderWidth < 0) {
-	    insertBorderWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->insertBorderWidthObj);
-	    entryPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->insertBorderWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, entryPtr->tkwin, entryPtr->insertWidthObj, &insertWidth);
-	if (insertWidth < 0) {
-	    insertWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->insertWidthObj);
-	    entryPtr->insertWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->insertWidthObj);
-	}
 	Tk_GetPixelsFromObj(NULL, entryPtr->tkwin, entryPtr->selBorderWidthObj, &selBorderWidth);
-	if (selBorderWidth < 0) {
-	    selBorderWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->selBorderWidthObj);
-	    entryPtr->selBorderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->selBorderWidthObj);
-	}
 
 	if (entryPtr->type == TK_SPINBOX) {
 	    if (sbPtr->fromValue > sbPtr->toValue) {
