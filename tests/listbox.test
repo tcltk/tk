@@ -1,17 +1,25 @@
 # This file is a Tcl script to test out the "listbox" command
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# of Tk.
 #
 # Copyright © 1993-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
-set fixed {Courier -12}
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc record {name args} {
     global log
@@ -53,6 +61,12 @@ proc mkPartial {{w .partial}} {
     update
 }
 
+#
+# COMMON TEST SETUP
+#
+
+set fixed {Courier -12}
+
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
 
@@ -66,6 +80,11 @@ listbox .l
 pack .l
 update
 resetGridInfo
+
+#
+# TESTS
+#
+
 test listbox-1.1 {configuration options} -body {
     .l configure -activestyle under
     list [lindex [.l configure -activestyle] 4] [.l cget -activestyle]
