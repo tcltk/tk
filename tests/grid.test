@@ -1,19 +1,30 @@
-# This file is a Tcl script to test out the *NEW* "grid" command of Tk. It is
-# (almost) organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the *NEW* "grid" command of Tk.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
-# helper routine to return "." to a sane state after a test.
-# The variable GRID_VERBOSE can be used to "look" at the result of one or all
-# of the tests
+#
+# LOCAL UTILITY PROCS
+#
 
+# grid_reset --
+#
+#    Helper routine to return "." to a sane state after a test.
+#    The variable GRID_VERBOSE can be used to "look" at the result of one or all
+#    of the tests
+#
 proc grid_reset {{test ?} {top .}} {
     global GRID_VERBOSE
     if {[info exists GRID_VERBOSE]} {
@@ -37,9 +48,17 @@ proc grid_reset {{test ?} {top .}} {
     update
 }
 
+#
+# COMMON TEST SETUP
+#
+
 grid_reset 0.0
 wm geometry . {}
 
+#
+# TESTS
+#
+
 test grid-1.1 {basic argument checking} -body {
     grid
 } -returnCodes error -result {wrong # args: should be "grid option arg ?arg ...?"}
@@ -2155,7 +2174,11 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
     grid_reset 24.8
 } -result 0
 
-# cleanup
+
+#
+# CLEANUP
+#
+
 cleanupTests
 return
 
