@@ -15,6 +15,7 @@ necessarily in Tk 8.
 # 9.1 Features and Interfaces
  - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
  - [Handle negative screen distances](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+ - [Extend Tk_CanvasTextInfo](https://core.tcl-lang.org/tips/doc/trunk/tip/704.md)
  - [Add new states to ttk::treeview and ttk::notebook](https://core.tcl-lang.org/tips/doc/trunk/tip/719.md)
 
 # Potential incompatibilities to 9.0

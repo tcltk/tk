@@ -67,14 +67,15 @@ extern "C" {
 #ifndef TK_MAJOR_VERSION
 #   define TK_MAJOR_VERSION 9
 #endif
-#if TK_MAJOR_VERSION == 9
+#if TK_MAJOR_VERSION != 9
+#   error "This header-file is for Tk 9 only"
+#endif
 #   define TK_MINOR_VERSION	1
 #   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
 #   define TK_RELEASE_SERIAL	0
 
 #   define TK_VERSION		"9.1"
 #   define TK_PATCH_LEVEL		"9.1a0"
-#endif /* TK_MAJOR_VERSION */
 
 /*
  * A special definition used to allow this header file to be included from
@@ -1136,11 +1137,9 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
-#if TK_MAJOR_VERSION > 8
-    void *reserved1;		/* reserved for future use */
-    void *reserved2;
-    void *reserved3;
-#endif
+    Tcl_Obj *insertBorderWidthObj;
+    Tcl_Obj *insertWidthObj;
+    Tcl_Obj *selBorderWidthObj;
 } Tk_CanvasTextInfo;
 
 /*
