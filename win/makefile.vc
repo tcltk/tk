@@ -129,16 +129,8 @@ WISHC		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
-$(TMP_DIR)\main.obj:	..\..\eigen\main.cpp
-	cl -nologo -c /D_ATL_XP_TARGETING  /I..\..\eigen /DHAVE_CPUID=1 -W3 -wd4090 -wd4146 -wd4311 -wd4312 -FpC:\Users\jan.nijtmans\workspace\tk8.7\win\Release_AMD64_VC1916\tk_StaticX\ -fp:strict -O2 -GS -GL -MD /EHsc /IC:\builds\cygwin\usr\include\eigen3 /IC:\Users\jan.nijtmans\workspace\tcl8.7\generic /DUSE_TCL_STUBS=1 -Fo$@ $?
-
-$(TMP_DIR)\WBWM_warpage.obj:	..\..\eigen\WBWM_warpage.cpp
-	cl -nologo -c /D_ATL_XP_TARGETING  /I..\..\eigen /DHAVE_CPUID=1 -W3 -wd4090 -wd4146 -wd4311 -wd4312 -FpC:\Users\jan.nijtmans\workspace\tk8.7\win\Release_AMD64_VC1916\tk_StaticX\ -fp:strict -O2 -GS -GL -MD /EHsc /IC:\builds\cygwin\usr\include\eigen3 -Fo$@ $?
-
 WISHOBJS = \
 	$(TMP_DIR)\winMain.obj \
-	$(TMP_DIR)\main.obj \
-	$(TMP_DIR)\WBWM_warpage.obj \
 !if $(STATIC_BUILD) && !$(STATIC_BUILD)
 	$(TCLDDELIB) \
 	$(TCLREGLIB) \
@@ -372,10 +364,6 @@ libtkzip: setup $(TKSCRIPTZIP)
 !if $(TK_EMBED_SCRIPTS)
 !if $(STATIC_BUILD)
 embed:    setup $(WISH) $(WISHSCRIPTZIP)
-	C:\builds\cygwin\bin\strip "/cygdrive/C/Users/jan.nijtmans/workspace/tk8.7/win/Release_AMD64_VC1929/wish90s.exe"
-	upx $(WISH)
-	copy /y /b ..\..\eigen\gui.tcl main.tcl
-	zip $(WISHSCRIPTZIP) main.tcl
 	@copy /y /b "$(WISH)"+"$(WISHSCRIPTZIP)" "$(WISH)"
 !else
 embed:    setup $(TKLIB) $(TKSCRIPTZIP)
