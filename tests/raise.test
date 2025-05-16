@@ -1,22 +1,30 @@
 # This file is a Tcl script to test out Tk's "raise" and
 # "lower" commands, plus associated code to manage window
-# stacking order.  It is organized in the standard fashion
-# for Tcl tests.
+# stacking order.
 #
 # Copyright © 1993-1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # Procedure to create a bunch of overlapping windows, which should
 # make it easy to detect differences in order.
 
-wm geometry . +400+400
 proc raise_setup {} {
     destroy {*}[winfo children .raise]
     update idletasks
@@ -57,9 +65,17 @@ proc raise_makeToplevels {} {
     }
 }
 
+#
+# COMMON TEST SETUP
+#
+
+wm geometry . +400+400
 toplevel .raise
 wm geom .raise 250x200+0+0
 
+#
+# TESTS
+#
 
 test raise-1.1 {preserve creation order} -body {
     raise_setup
@@ -312,9 +328,10 @@ test raise-7.8 {errors in raise/lower commands} -body {
     lower . badName4
 } -returnCodes error -result {bad window path name "badName4"}
 
-deleteWindows
+#
+# CLEANUP
+#
 
-# cleanup
+deleteWindows
 cleanupTests
 return
-
