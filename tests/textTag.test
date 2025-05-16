@@ -1,15 +1,24 @@
 # This file is a Tcl script to test the code in the file tkTextTag.c.
-# This file is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# COMMON TEST SETUP
+#
 
 #
 # Don't use the variable name "fixedFont" since that variable is already defined
@@ -50,6 +59,10 @@ Line 4
 bOy GIrl .#@? x_yz
 !@#$%
 Line 7"
+
+#
+# TESTS
+#
 
 test textTag-1.1 {tag configuration options} -body {
     .t tag configure x -background #012345
@@ -615,7 +628,13 @@ test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {unknown color name "rainbow"}
+
+#
+# COMMON TEST CLEANUP
+#
+
 .t tag delete x
+
 test textTag-5.17 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 2 -spacing2 4 -spacing3 6
@@ -1175,7 +1194,13 @@ test textTag-14.1 {SortTags} -setup {
 } -cleanup {
     .t tag delete a b c d
 } -result {a b c d}
+
+#
+# COMMON TEST CLEANUP
+#
+
 .t tag delete a b c d
+
 test textTag-14.2 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
@@ -1212,6 +1237,10 @@ test textTag-14.4 {SortTags} -setup {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
+
+#
+# COMMON TEST SETUP
+#
 
 set c [.t bbox 2.1]
 set x1 [expr {[lindex $c 0] + [lindex $c 2]/2}]
@@ -1547,8 +1576,10 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
 
-destroy .t
+#
+# CLEANUP
+#
 
-# cleanup
+destroy .t
 cleanupTests
 return

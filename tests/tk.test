@@ -1,16 +1,29 @@
 # This file is a Tcl script to test the tk command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 2002 ActiveState Corporation.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 testConstraint testprintf [llength [info command testprintf]]
+
+#
+# TESTS
+#
 
 test tk-1.1 {tk command: general} -body {
     tk
@@ -19,8 +32,13 @@ test tk-1.2 {tk command: general} -body {
     tk xyz
 } -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
 
+#
+# COMMON TEST SETUP
+#
+
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
+
 test tk-2.1 {tk command: appname} -body {
     tk appname xyz abc
 } -returnCodes error -result {wrong # args: should be "tk appname ?newName?"}
@@ -36,8 +54,13 @@ test tk-2.4 {tk command: appname} -body {
 } -result [tk appname]
 tk appname $appname
 
+#
+# COMMON TEST SETUP
+#
+
 # Value stored to restore default settings after 3.* tests
 set scaling [tk scaling]
+
 test tk-3.1 {tk command: scaling} -body {
     tk scaling -displayof
 } -returnCodes error -result {value for "-displayof" missing}
@@ -81,10 +104,15 @@ test tk-3.11 {tk command: scaling: heightmm} -body {
     expr {int((25.4*[winfo screenheight .])/(72*1.25) + 0.5) \
 	- [winfo screenmmheight .]}
 } -result 0
-tk scaling $scaling
 
+#
+# COMMON TEST SETUP
+#
+
+tk scaling $scaling
 # Value stored to restore default settings after 4.* tests
 set useim [tk useinputmethods]
+
 test tk-4.1 {tk command: useinputmethods} -body {
     tk useinputmethods -displayof
 } -returnCodes error -result {value for "-displayof" missing}
@@ -185,6 +213,9 @@ test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expec
 
 # tests of [tk busy] in busy.test
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
