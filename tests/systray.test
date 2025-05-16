@@ -1,14 +1,23 @@
 # This file is a Tcl script to test systray and sysnotify features in Tk.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
 # Copyright © 2020 Francois Vogel.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test systray-1 {systray icon creation, all options} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -236,5 +245,8 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
     tk sysnotify {Alert} {This is an alert}
 } -result {}
 
+#
+# CLEANUP
+#
 
 cleanupTests

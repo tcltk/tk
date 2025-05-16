@@ -1,15 +1,20 @@
-# This file is a Tcl script to test the Safe Tk facility. It is organized in
-# the standard fashion for Tk tests.
+# This file is a Tcl script to test the Safe Tk facility.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 ## NOTE: Any time tests fail here with an error like:
 
@@ -30,6 +35,10 @@ namespace import -force tcltest::test
 ## it indicates that something went wrong sourcing tk.tcl.
 ## Ensure that any changes that occurred to tk.tcl will work or are properly
 ## prevented in a safe interpreter.  -- hobbs
+
+#
+# COMMON TEST SETUP
+#
 
 # The set of hidden commands is platform dependent:
 
@@ -64,7 +73,11 @@ if {[llength [info commands send]]} {
 set saveAutoPath $::auto_path
 set auto_path [list [info library] $::tk_library]
 set hidden_cmds [lsort $hidden_cmds]
-
+
+#
+# TESTS
+#
+
 test safe-1.1 {Safe Tk loading into an interpreter} -setup {
     catch {safe::interpDelete a}
 } -body {
@@ -246,8 +259,11 @@ test safe-7.1 {canvas printing} -body {
 } -cleanup {
     safe::interpDelete $i
 } -returnCodes ok -match glob -result *
-
-# cleanup
+
+#
+# CLEANUP
+#
+
 set ::auto_path $saveAutoPath
 unset hidden_cmds
 cleanupTests

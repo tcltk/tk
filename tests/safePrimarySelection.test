@@ -1,47 +1,26 @@
-# This file is a Tcl script to test entry widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test entry widgets in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
-# ------------------------------------------------------------------------------
-# Tests that a Safe Base interpreter cannot write to the PRIMARY selection.
-# ------------------------------------------------------------------------------
-# - Tests 3.*, 6.* test that the fix for ticket de156e9efe implemented in branch
-#   bug-de156e9efe has been applied and still works.  They test that a Safe Base
-#   child interpreter cannot write to the PRIMARY selection.
-# - The other tests verify that the parent interpreter and an child interpreter
-#   CAN write to the PRIMARY selection, and therefore that the test scripts
-#   themselves are valid.
-# - A text, entry, ttk::entry, listbox, spinbox or ttk::spinbox widget can have
-#   option -exportselection 1, meaning (in an unsafe interpreter) that a
-#   selection made in one of these widgets is automatically written to the
-#   PRIMARY selection.
-# - A safe interpreter must not write to the PRIMARY selection.
-# - The spinbox, ttk::spinbox are variants of entry, ttk::entry respectively.
-# ------------------------------------------------------------------------------
+#
+# COMMON TEST SETUP
+#
 
 namespace eval ::_test_tmp {}
-
-# ------------------------------------------------------------------------------
-#  Proc ::_test_tmp::unsafeInterp
-# ------------------------------------------------------------------------------
-# Command that creates an child interpreter and tries to load Tk.
-# - This is necessary for loading Tk if the tests are done in the build
-#   directory without installing Tk.  In that case the usual auto_path loading
-#   mechanism cannot work because the tk binary is not where pkgIndex.tcl says
-#   it is.
-# - This command is not needed for Safe Base children because safe::loadTk does
-#   something similar and works correctly.
-# - Based on scripts in winSend.test.
-# ------------------------------------------------------------------------------
 
 namespace eval ::_test_tmp {
     variable TkLoadCmd
@@ -54,13 +33,23 @@ foreach pkg [info loaded] {
     }
 }
 
+# ::_test_tmp::unsafeInterp --
+#
+# Creates an child interpreter and tries to load Tk.
+# - This is necessary for loading Tk if the tests are done in the build
+#   directory without installing Tk.  In that case the usual auto_path loading
+#   mechanism cannot work because the tk binary is not where pkgIndex.tcl says
+#   it is.
+# - This command is not needed for Safe Base children because safe::loadTk does
+#   something similar and works correctly.
+# - Based on scripts in winSend.test.
+#
 proc ::_test_tmp::unsafeInterp {name} {
     variable TkLoadCmd
     interp create $name
     $name eval [list set argv [list -name $name]]
     catch {{*}$TkLoadCmd $name}
 }
-
 
 set ::_test_tmp::script {
     package require tk
@@ -210,6 +199,27 @@ set ::_test_tmp::script {
 
 # Do this once for the parent interpreter.
 eval $::_test_tmp::script
+
+#
+# TESTS
+#
+
+# ------------------------------------------------------------------------------
+# Tests that a Safe Base interpreter cannot write to the PRIMARY selection.
+# ------------------------------------------------------------------------------
+# - Tests 3.*, 6.* test that the fix for ticket de156e9efe implemented in branch
+#   bug-de156e9efe has been applied and still works.  They test that a Safe Base
+#   child interpreter cannot write to the PRIMARY selection.
+# - The other tests verify that the parent interpreter and an child interpreter
+#   CAN write to the PRIMARY selection, and therefore that the test scripts
+#   themselves are valid.
+# - A text, entry, ttk::entry, listbox, spinbox or ttk::spinbox widget can have
+#   option -exportselection 1, meaning (in an unsafe interpreter) that a
+#   selection made in one of these widgets is automatically written to the
+#   PRIMARY selection.
+# - A safe interpreter must not write to the PRIMARY selection.
+# - The spinbox, ttk::spinbox are variants of entry, ttk::entry respectively.
+# ------------------------------------------------------------------------------
 
 test safePrimarySelection-1.1 {parent interpreter, text, no existing selection} -setup {
     catch {interp delete child2}
@@ -1211,10 +1221,10 @@ test safePrimarySelection-6.10 {IMPORTANT, safe interpreter, ttk::spinbox spun/s
     ::_test_tmp::clearPrimarySelection
 } -result {OLD_VALUE----OLD_VALUE}
 
+#
+# CLEANUP
+#
 
 namespace delete ::_test_tmp
-
-# option clear
-# cleanup
 cleanupTests
 return
