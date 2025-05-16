@@ -1,6 +1,5 @@
 # This file is a Tcl script to test out Tk's selection management code,
-# especially the "selection" command. It is organized in the standard fashion
-# for Tcl tests.
+# especially the "selection" command.
 #
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
@@ -11,13 +10,23 @@
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import child select
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 testConstraint cliboardManagerPresent 0
 if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
@@ -25,6 +34,10 @@ if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
 	testConstraint cliboardManagerPresent 1
     }
 }
+
+#
+# COMMON TEST SETUP
+#
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races
@@ -39,7 +52,9 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
     append longValue A$j B$j C$j D$j E$j F$j G$j H$j I$j K$j L$j M$j N$j
 }
 
-# Now we start the main body of the test code
+#
+# TESTS
+#
 
 test select-1.1 {Tk_CreateSelHandler procedure} -setup {
     selectionSetup
@@ -268,7 +283,9 @@ test select-3.7 {Tk_OwnSelection procedure} -constraints x11 -setup {
     childTkProcess exit
     lappend result $lostSel
 } -result {{} . lost1}
+
 # check reentrancy on selection replacement
+
 test select-3.8 {Tk_OwnSelection procedure} -setup {
     selectionSetup
 } -body {
@@ -282,7 +299,9 @@ test select-3.9 {Tk_OwnSelection procedure} -setup {
     selection own -selection CLIPBOARD -command { destroy .f2 } .f1
     selection own -selection CLIPBOARD .f2
 } -result {}
+
 # multiple display tests
+
 test select-3.10 {Tk_OwnSelection procedure} -constraints {
     altDisplay
 } -body {
@@ -341,7 +360,9 @@ test select-4.4 {Tk_ClearSelection procedure} -constraints x11 -setup {
     childTkProcess exit
     lappend result [selection own]
 } -result {{} {}}
+
 # multiple display tests
+
 test select-4.5 {Tk_ClearSelection procedure} -constraints {
     altDisplay
 } -setup {
@@ -472,7 +493,9 @@ test select-5.10 {Tk_GetSelection procedure} -constraints x11 -setup {
     childTkProcess exit
     lappend result $selInfo
 } -result {{selection owner didn't respond} {}}
+
 # multiple display tests
+
 test select-5.11 {Tk_GetSelection procedure} -constraints {
     altDisplay
 } -setup {
@@ -629,7 +652,9 @@ test select-6.11 {Tk_SelectionCmd procedure} -setup {
 test select-6.12 {Tk_SelectionCmd procedure} -returnCodes error -body {
     selection clear foo bar
 } -result {wrong # args: should be "selection clear ?-option value ...?"}
+
 # selection get
+
 test select-6.13 {Tk_SelectionCmd procedure} -body {
     selection get -selection
 } -returnCodes error -result {value for "-selection" missing}
@@ -682,8 +707,10 @@ test select-6.21 {Tk_SelectionCmd procedure} -setup {
     set selInfo ""
     list [selection get TEST] $selInfo
 } -result {{Test value} {TEST 0 4000}}
+
 # selection handle
 # most of the handle section has been covered earlier
+
 test select-6.22 {Tk_SelectionCmd procedure} -body {
     selection handle -selection
 } -returnCodes error -result {value for "-selection" missing}
@@ -713,7 +740,9 @@ test select-6.29 {Tk_SelectionCmd procedure} -body {
     catch { destroy .f2 }
     selection handle .f2 dummy
 } -returnCodes error -result {bad window path name ".f2"}
+
 # selection own
+
 test select-6.30 {Tk_SelectionCmd procedure} -body {
     selection own -selection
 } -returnCodes error -result {value for "-selection" missing}
@@ -866,6 +895,7 @@ test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
 # note, we are not testing MULTIPLE style selections
 
 # most control paths have been exercised above
+
 test select-10.1 {ConvertSelection procedure, race with selection clear} -constraints {
     x11
 } -setup {
@@ -918,7 +948,9 @@ test select-10.3 {ConvertSelection procedure} -constraints x11 -setup {
 } -cleanup {
     childTkProcess exit
 } -result {PRIMARY selection doesn't exist or form "ERROR" not defined}
+
 # testing timers
+
 # This one hangs in Exceed
 test select-10.4 {ConvertSelection procedure} -constraints {
     x11 failsOnUbuntu
