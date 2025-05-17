@@ -84,7 +84,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
 	offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, NULL, offsetof(Content, heightObj),
-	offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, height), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),
 	0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, NULL,
@@ -98,11 +98,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	offsetof(Content, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, NULL, offsetof(Content, widthObj),
-	offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, width), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xObj),
-	offsetof(Content, x), 0, 0, 0},
+	offsetof(Content, x), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yObj),
-	offsetof(Content, y), 0, 0, 0},
+	offsetof(Content, y), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 

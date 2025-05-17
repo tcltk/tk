@@ -326,7 +326,7 @@ namespace eval ::tk::test::child {
 
     # childTkInterp --
     #
-    # 	Create a new Tk application in a child interpreter, with
+    #	Create a new Tk application in a child interpreter, with
     #	a given name and class.
     #
     #	Note (EL, 17-May-2025):
