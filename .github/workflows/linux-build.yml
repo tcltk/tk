@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "addendum2"
     tags:
     - "core-**"
 permissions:
