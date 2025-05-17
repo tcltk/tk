@@ -680,6 +680,50 @@ BytesPerLine(
  */
 
 static BOOL
+SetSizeAndColorFromHICON(      /* Helper for AdjustIconImagePointers */
+    HICON hicon,
+    LPICONIMAGE lpImage)
+{
+    ICONINFO info;
+    BOOL bRes;
+    BITMAP bmp;
+
+    memset(&info, 0, sizeof(info));
+
+    bRes = GetIconInfo(hicon, &info);
+    if (!bRes) {
+	return FALSE;
+    }
+
+    if (info.hbmColor) {
+	const int nWrittenBytes = GetObject(info.hbmColor, sizeof(bmp), &bmp);
+
+	if (nWrittenBytes > 0) {
+	    lpImage->Width = bmp.bmWidth;
+	    lpImage->Height = bmp.bmHeight;
+	    lpImage->Colors = bmp.bmBitsPixel;
+	}
+    } else if (info.hbmMask) {
+	// Icon has no color plane, image data stored in mask
+	const int nWrittenBytes = GetObject(info.hbmMask, sizeof(bmp), &bmp);
+
+	if (nWrittenBytes > 0) {
+	    lpImage->Width = bmp.bmWidth;
+	    lpImage->Height = bmp.bmHeight / 2;
+	    lpImage->Colors = 1;
+	}
+    }
+
+    if (info.hbmColor) {
+	DeleteObject(info.hbmColor);
+    }
+    if (info.hbmMask) {
+	DeleteObject(info.hbmMask);
+    }
+    return TRUE;
+}
+
+static BOOL
 AdjustIconImagePointers(
     LPICONIMAGE lpImage)
 {
@@ -698,24 +742,10 @@ AdjustIconImagePointers(
     lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
 
     /*
-     * Width - simple enough.
+     * Width, height, and number of colors.
      */
 
-    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
-
-    /*
-     * Icons are stored in funky format where height is doubled so account for
-     * that.
-     */
-
-    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
-
-    /*
-     * How many colors?
-     */
-
-    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
-	    * lpImage->lpbi->bmiHeader.biBitCount;
+    SetSizeAndColorFromHICON(lpImage->hIcon, lpImage);
 
     /*
      * XOR bits follow the header and color table.
@@ -765,10 +795,8 @@ MakeIconOrCursorFromResource(
      * Let the OS do the real work :)
      */
 
-    hIcon = (HICON) CreateIconFromResourceEx(lpIcon->lpBits,
-	    lpIcon->dwNumBytes, isIcon, 0x00030000,
-	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biWidth,
-	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biHeight/2, 0);
+    hIcon = (HICON)CreateIconFromResourceEx(lpIcon->lpBits,
+	    lpIcon->dwNumBytes, isIcon, 0x00030000, 0, 0, 0);
 
     /*
      * It failed, odds are good we're on NT so try the non-Ex way.
@@ -1304,6 +1332,7 @@ ReadIconFromFile(
     return titlebaricon;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1509,6 +1538,7 @@ GetIcon(
 	if ((lpIR->IconImages[i].Height == size)
 		&& (lpIR->IconImages[i].Width == size)
 		&& (lpIR->IconImages[i].Colors >= 4)) {
+	    //printf("Returning icon #%d\n", i+1);
 	    return lpIR->IconImages[i].hIcon;
 	}
     }
@@ -1518,6 +1548,7 @@ GetIcon(
      */
 
     if (lpIR->nNumImages >= 1) {
+	//printf("Returning first icon as last resort\n");
 	return lpIR->IconImages[0].hIcon;
     }
     return NULL;
@@ -1680,17 +1711,17 @@ ReadIconOrCursorFromFile(
 	}
 
 	/*
-	 * Set the internal pointers appropriately.
+	 * Create the icon from the resource, and set the internal pointers appropriately.
 	 */
 
+	lpIR->IconImages[i].hIcon =
+		MakeIconOrCursorFromResource(&lpIR->IconImages[i], isIcon);
 	if (!AdjustIconImagePointers(&lpIR->IconImages[i])) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Error converting to internal format", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "FORMAT", NULL);
 	    goto readError;
 	}
-	lpIR->IconImages[i].hIcon =
-		MakeIconOrCursorFromResource(&lpIR->IconImages[i], isIcon);
     }
 
     /*
