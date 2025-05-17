@@ -117,15 +117,16 @@ namespace eval ::tk::test::generic {
     }
 
     proc loadTkCommand {} {
-	set tklib {}
-	foreach pair [info loaded {}] {
-	    foreach {lib pfx} $pair break
-	    if {$pfx eq "Tk"} {
-		set tklib $lib
-		break
+	variable TkLoadCmd
+	if {! [info exists TkLoadCmd]} {
+	    foreach pkg [info loaded] {
+		if {[lindex $pkg 1] eq "Tk"} {
+		    set TkLoadCmd [list load {*}$pkg]
+		    break
+		}
 	    }
 	}
-	return [list load $tklib Tk]
+	return $TkLoadCmd
     }
 
     # Suspend script execution for a given amount of time, but continue
@@ -328,6 +329,12 @@ namespace eval ::tk::test::child {
     # 	Create a new Tk application in a child interpreter, with
     #	a given name and class.
     #
+    #	Note (EL, 17-May-2025):
+    #	The test file safePrimarySelection.test uses ::safe::loadTk for safe
+    #	base children. Proc ::safe::loadTk is very different from what's being
+    #	done in this proc with option -safe. Is it correct?
+    #	(The only invocation with the option -safe exists in winSend.test:74)
+    #
     proc childTkInterp {name args} {
 	set index [lsearch $args "-safe"]
 	if {$index >= 0} {
@@ -349,15 +356,6 @@ namespace eval ::tk::test::child {
 	    lappend cmdArgs $key $value
 	}
 
-	variable loadTkCmd
-	if {! [info exists loadTkCmd]} {
-	    foreach pkg [info loaded] {
-		if {[lindex $pkg 1] eq "Tk"} {
-		    set loadTkCmd "load $pkg"
-		    break
-		}
-	    }
-	}
 	if {$safe} {
 	    interp create -safe $name
 	} else {
@@ -365,7 +363,7 @@ namespace eval ::tk::test::child {
 	}
 
 	$name eval [list set argv $cmdArgs]
-	catch {eval $loadTkCmd $name}
+	catch {eval [loadTkCommand] $name}
     }
 
     # childTkProcess --
