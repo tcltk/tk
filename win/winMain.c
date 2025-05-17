@@ -68,7 +68,6 @@ extern Tcl_LibraryInitProc Registry_Init;
 extern Tcl_LibraryInitProc Dde_Init;
 extern Tcl_LibraryInitProc Dde_SafeInit;
 #endif
-extern Tcl_LibraryInitProc Eigen_Init;
 
 #ifdef __cplusplus
 }
@@ -259,12 +258,6 @@ Tcl_AppInit(
     }
     Tcl_StaticLibrary(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
-#ifdef _MSC_VER
-    if (Eigen_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticLibrary(interp, "Eigen", Eigen_Init, 0);
-#endif
 
     /*
      * Call the init procedures for included packages. Each call should look
