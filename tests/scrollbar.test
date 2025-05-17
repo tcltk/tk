@@ -373,7 +373,6 @@ test scrollbar-3.45 {ScrollbarWidgetCmd procedure, "get" option} {
     }
     set result
 } {0.6 0.8}
-
 test scrollbar-3.46 {ScrollbarWidgetCmd procedure, "identify" option} {
     list [catch {.s identify 0} msg] $msg
 } {1 {wrong # args: should be ".s identify x y"}}
