@@ -329,12 +329,6 @@ namespace eval ::tk::test::child {
     #	Create a new Tk application in a child interpreter, with
     #	a given name and class.
     #
-    #	Note (EL, 17-May-2025):
-    #	The test file safePrimarySelection.test uses ::safe::loadTk for safe
-    #	base children. Proc ::safe::loadTk is very different from what's being
-    #	done in this proc with option -safe. Is it correct?
-    #	(The only invocation with the option -safe exists in winSend.test:74)
-    #
     proc childTkInterp {name args} {
 	set index [lsearch $args "-safe"]
 	if {$index >= 0} {
