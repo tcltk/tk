@@ -758,7 +758,7 @@ TkWinChildProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    LRESULT result = 0;
+    LRESULT result;
 
     switch (message) {
     case WM_INPUTLANGCHANGE:
