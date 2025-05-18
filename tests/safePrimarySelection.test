@@ -31,9 +31,6 @@ testutils import child
 # - The spinbox, ttk::spinbox are variants of entry, ttk::entry respectively.
 # - The command "childTkInterp" is not needed for Safe Base children because
 #   safe::loadTk does something similar and works correctly.
-#   (EL, 17-May-2025) Proc ::safe::loadTk is very different from what
-#   "childTkInterp -safe" does. If the latter is (also) correct, the present
-#   testfile may be simplified further.
 # ------------------------------------------------------------------------------
 
 namespace eval ::_test_tmp {}
