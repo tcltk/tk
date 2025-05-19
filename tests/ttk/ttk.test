@@ -152,6 +152,8 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
+# Tests using this will fail if the top-level window contains the cursor
+
 proc checkstate {w} {
     foreach statespec {
 	{!active !disabled}
@@ -166,7 +168,6 @@ proc checkstate {w} {
     set result
 }
 
-# NB: this will fail if the top-level window pops up underneath the cursor
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]
@@ -203,7 +204,7 @@ test ttk-2.7 "instate scripts, true" -body {
     set x
 } -result 1
 
-test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
+test ttk-2.8 {Bug [3223850]: Button remains stuck when disabled as depressed on XP} -setup {
     destroy .b
     set ttk28 {}
     pack [ttk::button .b -command {set ::ttk28 failed}]
@@ -221,7 +222,7 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     unset -nocomplain ttk28 aid
 } -result 1
 
-test ttk-2.9 {Bug [7231bf9941]} -body {
+test ttk-2.9 {Bug [7231bf99]: Setting ttk state may change the variable passed by value} -body {
     pack [ttk::button .b1 -text Hi!]
     set state [list invalid disabled]
     .b1 state $state
@@ -264,7 +265,7 @@ test ttk-3.3 "Constructor failure with cursor" -body {
     ttk::button .b -cursor bottom_right_corner -style BadStyle
 } -returnCodes error -result "Layout BadStyle not found"
 
-test ttk-3.4 "SF#2009213" -body {
+test ttk-3.4 {Bug [2009213]: Segfault after setting bad -sliderrelief and packing scale} -body {
     ttk::style configure TScale -sliderrelief {}
     pack [ttk::scale .s]
     update
@@ -605,7 +606,7 @@ test ttk-14.3 "-textvariable in nonexistant namespace" -body {
 } -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
-test ttk-15.1 {Bug 3062331} -setup {
+test ttk-15.1 {Tcl bug [3062331]: segfault in variable traces with ttk::* widgets} -setup {
     destroy .b
 } -body {
     set Y {}
@@ -616,7 +617,7 @@ test ttk-15.1 {Bug 3062331} -setup {
     destroy .b
 } -result {}
 
-test ttk-15.2 {Bug 3341056} -setup {
+test ttk-15.2 {Bug [3341056]: Usage of recreated ttk::checkbutton causes crash} -setup {
     proc foo {} {
 	destroy .lf
 	ttk::labelframe .lf
