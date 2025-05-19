@@ -2669,11 +2669,11 @@ test button-1.270 {configuration options} -body {
 } -result {}
 
 test button-1.271 {configuration options: fallback to default} -setup {
-    checkbutton .c -borderwidth -2 -highlightthickness -2 -font {Helvetica -12 bold}
+    checkbutton .c -borderwidth 0 -highlightthickness 0 -font {Helvetica -12 bold}
     pack .c
     update
 } -body {
-    .c configure -padx -2 -pady -2 -wraplength -2
+    .c configure -padx 0 -pady 0 -wraplength 0
     list [.c cget -padx] [.c cget -pady] [.c cget -borderwidth] [.c cget -highlightthickness] [.c cget -wraplength]
 } -cleanup {
     destroy .c
