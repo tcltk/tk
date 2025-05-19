@@ -15,6 +15,9 @@
 # - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import child
+
 #
 # TESTS
 #
@@ -133,15 +136,7 @@ test systray-14 {systray icon creation, create one per interp, visibiliy checks}
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book -text "first interp"
-    interp create second
-    # load Tk into the 'second' interp
-    foreach pkg [info loaded] {
-	if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-	}
-    }
-    eval $loadTk second
+    childTkInterp second
     # create the icon in the 'second' interp
     second eval {
 	# should trigger an error: image _book unknown in 'second' interp'
@@ -158,15 +153,7 @@ test systray-15 {systray icon creation, create one per interp} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book -text "first interp"
-    interp create second
-    # load Tk into the 'second' interp
-    foreach pkg [info loaded] {
-	if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-	}
-    }
-    eval $loadTk second
+    childTkInterp second
     # create the icon in the 'second' interp
     second eval {
 	image create photo _page -data R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
@@ -249,4 +236,5 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
 # CLEANUP
 #
 
+testutils forget child
 cleanupTests

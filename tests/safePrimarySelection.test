@@ -16,40 +16,14 @@
 # - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import child
+
 #
 # COMMON TEST SETUP
 #
 
 namespace eval ::_test_tmp {}
-
-namespace eval ::_test_tmp {
-    variable TkLoadCmd
-}
-
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] eq "Tk"} {
-	set ::_test_tmp::TkLoadCmd [list load {*}$pkg]
-	break
-    }
-}
-
-# ::_test_tmp::unsafeInterp --
-#
-# Creates an child interpreter and tries to load Tk.
-# - This is necessary for loading Tk if the tests are done in the build
-#   directory without installing Tk.  In that case the usual auto_path loading
-#   mechanism cannot work because the tk binary is not where pkgIndex.tcl says
-#   it is.
-# - This command is not needed for Safe Base children because safe::loadTk does
-#   something similar and works correctly.
-# - Based on scripts in winSend.test.
-#
-proc ::_test_tmp::unsafeInterp {name} {
-    variable TkLoadCmd
-    interp create $name
-    $name eval [list set argv [list -name $name]]
-    catch {{*}$TkLoadCmd $name}
-}
 
 set ::_test_tmp::script {
     package require tk
@@ -219,6 +193,8 @@ eval $::_test_tmp::script
 #   PRIMARY selection.
 # - A safe interpreter must not write to the PRIMARY selection.
 # - The spinbox, ttk::spinbox are variants of entry, ttk::entry respectively.
+# - The command "childTkInterp" is not needed for Safe Base children because
+#   safe::loadTk does something similar and works correctly.
 # ------------------------------------------------------------------------------
 
 test safePrimarySelection-1.1 {parent interpreter, text, no existing selection} -setup {
@@ -347,7 +323,7 @@ test safePrimarySelection-2.1 {child interpreter, text, no existing selection} -
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryText
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -364,7 +340,7 @@ test safePrimarySelection-2.2 {child interpreter, entry, no existing selection} 
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -381,7 +357,7 @@ test safePrimarySelection-2.3 {child interpreter, ttk::entry, no existing select
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -398,7 +374,7 @@ test safePrimarySelection-2.4 {child interpreter, listbox, no existing selection
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryListbox
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -415,7 +391,7 @@ test safePrimarySelection-2.5 {child interpreter, spinbox as entry, no existing 
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -432,7 +408,7 @@ test safePrimarySelection-2.6 {child interpreter, spinbox spun, no existing sele
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -449,7 +425,7 @@ test safePrimarySelection-2.7 {child interpreter, spinbox spun/selected/spun, no
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -466,7 +442,7 @@ test safePrimarySelection-2.8 {child interpreter, ttk::spinbox as entry, no exis
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -483,7 +459,7 @@ test safePrimarySelection-2.9 {child interpreter, ttk::spinbox spun, no existing
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -500,7 +476,7 @@ test safePrimarySelection-2.10 {child interpreter, ttk::spinbox spun/selected/sp
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -847,7 +823,7 @@ test safePrimarySelection-5.1 {child interpreter, text, existing selection} -set
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryText
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -864,7 +840,7 @@ test safePrimarySelection-5.2 {child interpreter, entry, existing selection} -se
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -881,7 +857,7 @@ test safePrimarySelection-5.3 {child interpreter, ttk::entry, existing selection
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -898,7 +874,7 @@ test safePrimarySelection-5.4 {child interpreter, listbox, existing selection} -
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryListbox
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -915,7 +891,7 @@ test safePrimarySelection-5.5 {child interpreter, spinbox as entry, existing sel
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -932,7 +908,7 @@ test safePrimarySelection-5.6 {child interpreter, spinbox spun, existing selecti
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -949,7 +925,7 @@ test safePrimarySelection-5.7 {child interpreter, spinbox spun/selected/spun, ex
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -966,7 +942,7 @@ test safePrimarySelection-5.8 {child interpreter, ttk::spinbox as entry, existin
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -983,7 +959,7 @@ test safePrimarySelection-5.9 {child interpreter, ttk::spinbox spun, existing se
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -1000,7 +976,7 @@ test safePrimarySelection-5.10 {child interpreter, ttk::spinbox spun/selected/sp
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 child2
-    ::_test_tmp::unsafeInterp $int2
+    childTkInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -1226,5 +1202,6 @@ test safePrimarySelection-6.10 {IMPORTANT, safe interpreter, ttk::spinbox spun/s
 #
 
 namespace delete ::_test_tmp
+testutils forget child
 cleanupTests
 return
