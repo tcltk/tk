@@ -117,15 +117,16 @@ namespace eval ::tk::test::generic {
     }
 
     proc loadTkCommand {} {
-	set tklib {}
-	foreach pair [info loaded {}] {
-	    foreach {lib pfx} $pair break
-	    if {$pfx eq "Tk"} {
-		set tklib $lib
-		break
+	variable TkLoadCmd
+	if {! [info exists TkLoadCmd]} {
+	    foreach pkg [info loaded] {
+		if {[lindex $pkg 1] eq "Tk"} {
+		    set TkLoadCmd [list load {*}$pkg]
+		    break
+		}
 	    }
 	}
-	return [list load $tklib Tk]
+	return $TkLoadCmd
     }
 
     # Suspend script execution for a given amount of time, but continue
@@ -349,15 +350,6 @@ namespace eval ::tk::test::child {
 	    lappend cmdArgs $key $value
 	}
 
-	variable loadTkCmd
-	if {! [info exists loadTkCmd]} {
-	    foreach pkg [info loaded] {
-		if {[lindex $pkg 1] eq "Tk"} {
-		    set loadTkCmd "load $pkg"
-		    break
-		}
-	    }
-	}
 	if {$safe} {
 	    interp create -safe $name
 	} else {
@@ -365,7 +357,7 @@ namespace eval ::tk::test::child {
 	}
 
 	$name eval [list set argv $cmdArgs]
-	catch {eval $loadTkCmd $name}
+	catch {eval [loadTkCommand] $name}
     }
 
     # childTkProcess --
