@@ -114,10 +114,13 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	}
     }
 
-    /* Invalidate old intrep:
+    /* Invalidate old intrep, but make sure there's a string rep, see [7231bf9941].
      */
-    if (objPtr->typePtr && objPtr->typePtr->freeIntRepProc) {
-	objPtr->typePtr->freeIntRepProc(objPtr);
+    if (objPtr->typePtr) {
+	(void)Tcl_GetString(objPtr);
+	if (objPtr->typePtr->freeIntRepProc) {
+	    objPtr->typePtr->freeIntRepProc(objPtr);
+	}
     }
 
     objPtr->typePtr = &StateSpecObjType.objType;
