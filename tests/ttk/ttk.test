@@ -221,6 +221,16 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     unset -nocomplain ttk28 aid
 } -result 1
 
+test ttk-2.9 {Bug [7231bf9941]} -body {
+    pack [ttk::button .b1 -text Hi!]
+    set state [list invalid disabled]
+    .b1 state $state
+    set state
+} -cleanup {
+    unset state
+    destroy .b1
+} -result [list invalid disabled]
+
 foreach wc $widgetClasses {
     test ttk-coreoptions-$wc "$wc has all core options" -body {
 	ttk::$wc .w
