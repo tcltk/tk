@@ -92,7 +92,7 @@ cornsilk1	255	248 	220
 cornsilk2	238	232 	205
 cornsilk3	205	200 	177
 cornsilk4	139	136 	120
-crymson	220	20	60
+crimson	220	20	60
 cyan	0	255 	255
 cyan1	0	255 	255
 cyan2	0	238 	238
