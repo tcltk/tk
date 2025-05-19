@@ -67,14 +67,15 @@ extern "C" {
 #ifndef TK_MAJOR_VERSION
 #   define TK_MAJOR_VERSION 9
 #endif
-#if TK_MAJOR_VERSION == 9
+#if TK_MAJOR_VERSION != 9
+#   error "This header-file is for Tk 9 only"
+#endif
 #   define TK_MINOR_VERSION	1
 #   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
 #   define TK_RELEASE_SERIAL	0
 
 #   define TK_VERSION		"9.1"
 #   define TK_PATCH_LEVEL		"9.1a0"
-#endif /* TK_MAJOR_VERSION */
 
 /*
  * A special definition used to allow this header file to be included from
@@ -228,6 +229,7 @@ typedef struct Tk_OptionSpec {
 
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
 #define TK_OPTION_NULL_OK		TCL_NULL_OK
+#define TK_OPTION_NEG_OK		(1 << 6) /* For TK_OPTION_PIXELS only, so no conflict with TK_OPTION_VAR */
 #define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
@@ -1135,11 +1137,9 @@ typedef struct Tk_CanvasTextInfo {
     int cursorOn;		/* Non-zero means that an insertion cursor
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
-#if TK_MAJOR_VERSION > 8
-    void *reserved1;		/* reserved for future use */
-    void *reserved2;
-    void *reserved3;
-#endif
+    Tcl_Obj *insertBorderWidthObj;
+    Tcl_Obj *insertWidthObj;
+    Tcl_Obj *selBorderWidthObj;
 } Tk_CanvasTextInfo;
 
 /*

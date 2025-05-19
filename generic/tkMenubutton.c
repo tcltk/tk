@@ -478,8 +478,6 @@ ConfigureMenuButton(
     Tcl_Obj *errorResult = NULL;
     int error;
     Tk_Image image;
-    int borderWidth, highlightWidth;
-    int padX, padY;
 
     /*
      * Eliminate any existing trace on variables monitored by the menubutton.
@@ -530,35 +528,6 @@ ConfigureMenuButton(
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->activeBorder);
 	} else {
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
-	}
-
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->borderWidthObj, &borderWidth);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padXObj, &padX);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
-	if (borderWidth < 0) {
-	    borderWidth = 0;
-	    Tcl_DecrRefCount(mbPtr->borderWidthObj);
-	    mbPtr->borderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->borderWidthObj);
-	}
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-	    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
-	    mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->highlightWidthObj);
-	}
-	if (padX < 0) {
-	    padX = 0;
-	    Tcl_DecrRefCount(mbPtr->padXObj);
-	    mbPtr->padXObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->padXObj);
-	}
-	if (padY < 0) {
-	    padY = 0;
-	    Tcl_DecrRefCount(mbPtr->padYObj);
-	    mbPtr->padYObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*

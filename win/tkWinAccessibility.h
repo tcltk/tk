@@ -35,3 +35,4 @@ extern const struct WinRoleMap roleMap[];
 
 TkWinAccessible *GetTkAccessibleForWindow(Tk_Window win);
 Tk_Window GetTkWindowForHwnd(HWND hwnd);
+LONG GetChildIdForTkWindow(Tk_Window tkwin);
