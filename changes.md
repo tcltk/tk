@@ -28,14 +28,15 @@ to the userbase.
  - [Tk_Get3DBorderColors broken by design](https://core.tcl-lang.org/tk/tktview/517165)
  - [MS-Win: Incorrect system menu entries for transient toplevels](https://core.tcl-lang.org/tk/tktview/159aa5)
  - [MS-Win: Withdrawn Tk transient windows can reappear in Windows taskbar preview](https://core.tcl-lang.org/tk/tktview/91d0e9)
- - [Aqua windows don't always move focus correctly](https://core.tcl-lang.org/tkview/28d33f)
- - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tkview/f6d40f)
- - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tkview/855ec4)
- - [tk print command fails with canvas widget](https://core.tcl-lang.org/tkview/d2eac2)
- - [tk print command fails on windows](https://core.tcl-lang.org/tkview/bb5c3d)
- - [tk print fails for canvas items with non integer widths](https://core.tcl-lang.org/tkview/7716cb)
- - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tkview/9b23b6)
- - [Collect utility procs for the Tk test suite](https://core.tcl-lang.org/tkview/718cbc)
+ - [Aqua windows don't always move focus correctly](https://core.tcl-lang.org/tk/tktview/28d33f)
+ - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tk/tktview/f6d40f)
+ - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tk/tktview/855ec4)
+ - [tk print command fails with canvas widget](https://core.tcl-lang.org/tk/tktview/d2eac2)
+ - [tk print command fails on windows](https://core.tcl-lang.org/tk/tktview/bb5c3d)
+ - [tk print fails for canvas items with non integer widths](https://core.tcl-lang.org/tk/tktview/7716cb)
+ - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tk/tktview/9b23b6)
+ - [Collect utility procs for the Tk test suite](https://core.tcl-lang.org/tk/tktview/718cbc)
+ - [Setting ttk state may change the a variable passed by value](https://core.tcl-lang.org/tk/info/7231bf)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
