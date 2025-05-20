@@ -24,6 +24,9 @@
 
 #include "tkWinInt.h"
 
+#define DEG2RAD(x) (0.017453292519943295 * (x))
+#define ROUND32(x) ((LONG)floor((x) + 0.5))
+
 /*
  * Create a standard "DrawFunc" to make this more workable....
  */
@@ -56,7 +59,7 @@ static int		GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
  * Helper functions.
  */
 static int		GdiMakeLogFont(Tcl_Interp *interp, Tcl_Obj *specPtr,
-			    double angle, LOGFONTW *lf, HDC hDC);
+			    LOGFONTW *lf, HDC hDC);
 static int		GdiMakePen(Tcl_Interp *interp, double dwidth,
 			    int dashstyle, const char *dashstyledata,
 			    int capstyle, int joinstyle,
@@ -122,6 +125,116 @@ static const struct gdi_command {
     { "copybits",   GdiCopyBits },
 };
 
+typedef struct CanvasColor {
+    COLORREF color;
+    char isempty;
+} CanvasColor;
+
+static Tcl_Size ParseColor (
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    CanvasColor *ccolor = (CanvasColor *)dstPtr;
+    const char *colorname;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp, "option \"", Tcl_GetString(objv[-1]),
+	    "\" needs and additional argument", NULL);
+	return -1;
+    }
+
+    if (GdiGetColor(objv[0], &(ccolor->color))) {
+	ccolor->isempty = 0;
+	return 1;
+    }
+
+    colorname = Tcl_GetString(objv[0]);
+    if (colorname[0] == '\0') {
+	ccolor->color = 0;
+	ccolor->isempty = 1;
+	return 1;
+    }
+
+    Tcl_AppendResult(interp, "unknown color name \"", colorname, "\"", NULL);
+    return -1;
+}
+
+static Tcl_Size ParseJoinStyle (
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    int join;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-joinstyle\" needs and additional argument", NULL);
+	return -1;
+    }
+
+    if (Tk_GetJoinStyle(interp, Tcl_GetString(objv[0]), &join) != TCL_OK) {
+	return -1;
+    }
+    switch (join) {
+	case JoinBevel:
+	    *(int *)dstPtr = PS_JOIN_BEVEL;
+	    break;
+	case JoinMiter:
+	    *(int *)dstPtr = PS_JOIN_MITER;
+	    break;
+	case JoinRound:
+	    *(int *)dstPtr = PS_JOIN_ROUND;
+	    break;
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Arc specific: parse "-style"
+ *
+ *----------------------------------------------------------------------
+ */
+static Tcl_Size ParseStyle (
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    DrawFunc *func = (DrawFunc *)dstPtr;
+    Tcl_Size index;
+
+    static struct FuncMap {
+	const char *name;
+	DrawFunc gdifunc;
+    } funcmap[] = {
+	{"arc",      Arc  },
+	{"chord",    Chord},
+	{"pieslice", Pie  },
+	{NULL, NULL}
+    };
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-style\" needs and additional argument", NULL);
+	return -1;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], funcmap,
+	sizeof(struct FuncMap), "-style option", 0, &index) != TCL_OK) {
+	return -1;
+    }
+    *func = funcmap[index].gdifunc;
+    return 1;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -141,32 +254,31 @@ static int GdiArc(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
+/*    static const char usage_message[] =
 	"::tk::print::_gdi arc hdc x1 y1 x2 y2 "
 	"-extent angle -start angle -style arcstyle "
 	"-fill color -outline color "
 	"-width dimension -dash dashrule "
-	"-outlinestipple ignored -stipple ignored\n" ;
+	"-outlinestipple ignored -stipple ignored\n" ; */
     double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
-    double extent = 0.0, start = 0.0;
+
+    double extent = 90.0, start = 0.0;
     DrawFunc drawfunc;
-    double width = 0.0;
-    HPEN hPen;
-    COLORREF linecolor = 0, fillcolor = BS_NULL;
-    int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush = NULL;
+    double width = 1.0;
+    /* Default for arcs: -outline black -fill {} */
+    CanvasColor outline = {0, 0}, fill = {0, 1};
+    const char *dash = NULL, *stipple = NULL, *olstipple = NULL;
+
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj = NULL;
-    int dodash = 0;
-    const char *dashdata = 0;
+    HGDIOBJ oldbrush = NULL, oldpen = NULL;
 
     drawfunc = Pie;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
 
@@ -179,51 +291,30 @@ static int GdiArc(
 	return TCL_ERROR;
     }
 
-    objc -= 6;
-    objv += 6;
-    while (objc >= 2) {
-	if (strcmp(Tcl_GetString(objv[0]), "-extent") == 0) {
-	    extent = atof(Tcl_GetString(objv[1]));
-	} else if (strcmp(Tcl_GetString(objv[0]), "-start") == 0) {
-	    start = atof(Tcl_GetString(objv[1]));
-	} else if (strcmp(Tcl_GetString(objv[0]), "-style") == 0) {
-	    if (strcmp(Tcl_GetString(objv[1]), "pieslice") == 0) {
-		drawfunc = Pie;
-	    } else if (strcmp(Tcl_GetString(objv[1]), "arc") == 0) {
-		drawfunc = Arc;
-	    } else if (strcmp(Tcl_GetString(objv[1]), "chord") == 0) {
-		drawfunc = Chord;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-	    /* Handle all args, even if we don't use them yet. */
-	    if (GdiGetColor(objv[1], &fillcolor)) {
-		dofillcolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-outline") == 0) {
-	    if (GdiGetColor(objv[1], &linecolor)) {
-		dolinecolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-outlinestipple") == 0) {
-	    /* ignored */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-	    /* ignored */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    if (Tcl_GetDoubleFromObj(interp, objv[1], &width)) {
-		return TCL_ERROR;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-dash") == 0) {
-	    if (Tcl_GetString(objv[1])) {
-		dodash = 1;
-		dashdata = Tcl_GetString(objv[1]);
-	    }
-	} else {
-	    /* Don't know that option! */
-	    Tcl_AppendResult(interp, usage_message, (char *)NULL);
-	    return TCL_ERROR;
-	}
-	objc -= 2;
-	objv += 2;
+    /* stipple and outlinestipple are ignored by now */
+    const Tcl_ArgvInfo arcArgvInfo[] = {
+	{TCL_ARGV_STRING,  "-dash",    NULL,       &dash,      NULL, NULL},
+	{TCL_ARGV_FLOAT,   "-extent",  NULL,       &extent,    NULL, NULL},
+	{TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,      NULL, NULL},
+	{TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline,   NULL, NULL},
+	{TCL_ARGV_STRING,  "-outlinestipple", NULL,&olstipple, NULL, NULL},
+	{TCL_ARGV_FLOAT,   "-start",   NULL,       &start,     NULL, NULL},
+	{TCL_ARGV_STRING,  "-stipple", NULL,       &stipple,   NULL, NULL},
+	{TCL_ARGV_GENFUNC, "-style",   ParseStyle, &drawfunc,  NULL, NULL},
+	{TCL_ARGV_FLOAT,   "-width",   NULL,       &width,     NULL, NULL},
+	TCL_ARGV_TABLE_END
+    };
+
+    Tcl_Size argc = objc-5;
+    if (Tcl_ParseArgsObjv(interp, arcArgvInfo, &argc, objv+5, NULL)) {
+	return TCL_ERROR;
     }
+
+    /* a simple check: if both -outline and -fill are empty, return */
+    if (outline.isempty && fill.isempty) {
+	return TCL_OK;
+    }
+
     xr0 = xr1 = (x1 + x2) / 2;
     yr0 = yr1 = (y1 + y2) / 2;
 
@@ -233,10 +324,10 @@ static int GdiArc(
      * nice example.
      */
 
-    xr0 += (int)(100.0 * (x2 - x1) * cos((start * 2.0 * 3.14159265) / 360.0));
-    yr0 -= (int)(100.0 * (y2 - y1) * sin((start * 2.0 * 3.14159265) / 360.0));
-    xr1 += (int)(100.0 * (x2 - x1) * cos(((start+extent) * 2.0 * 3.14159265) / 360.0));
-    yr1 -= (int)(100.0 * (y2 - y1) * sin(((start+extent) * 2.0 * 3.14159265) / 360.0));
+    xr0 += (int)(100.0 * (x2 - x1) * cos(DEG2RAD(start)));
+    yr0 -= (int)(100.0 * (y2 - y1) * sin(DEG2RAD(start)));
+    xr1 += (int)(100.0 * (x2 - x1) * cos(DEG2RAD(start+extent)));
+    yr1 -= (int)(100.0 * (y2 - y1) * sin(DEG2RAD(start+extent)));
 
     /*
      * Under Win95, SetArcDirection isn't implemented--so we have to assume
@@ -254,26 +345,32 @@ static int GdiArc(
 	yr1 = yr2;
     }
 
-    if (dofillcolor) {
-	GdiMakeBrush(fillcolor, 0, &lbrush, hDC, &hBrush);
+    if (fill.isempty) {
+	oldbrush = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
     } else {
-	oldobj = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
+	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
     }
 
-    if (width || dolinecolor) {
-	GdiMakePen(interp, width, dodash, dashdata,
-		0, 0, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (outline.isempty) {
+	oldpen = SelectObject(hDC, GetStockObject(NULL_PEN));
+    } else {
+	GdiMakePen(interp, width, (dash != NULL), dash,
+	    PS_ENDCAP_FLAT, PS_JOIN_BEVEL, 0, 0,
+	    outline.color, hDC, (HGDIOBJ *)&oldpen);
     }
 
     (*drawfunc)(hDC, x1, y1, x2, y2, xr0, yr0, xr1, yr1);
 
-    if (width || dolinecolor) {
-	GdiFreePen(interp, hDC, hPen);
-    }
-    if (hBrush) {
-	GdiFreeBrush(interp, hDC, hBrush);
+    if (outline.isempty) {
+	SelectObject(hDC, oldpen);
     } else {
-	SelectObject(hDC, oldobj);
+	GdiFreePen(interp, hDC, oldpen);
+    }
+
+    if (fill.isempty) {
+	SelectObject(hDC, oldbrush);
+    } else {
+	GdiFreeBrush(interp, hDC, oldbrush);
     }
 
     return TCL_OK;
@@ -367,10 +464,10 @@ static int GdiPhoto(
 {
     static const char usage_message[] =
 	"::tk::print::_gdi photo hdc [-destination x y [w [h]]] -photo name\n";
-    HDC dst;
-    int dst_x = 0, dst_y = 0, dst_w = 0, dst_h = 0;
+    HDC hDC;
+    int hDC_x = 0, hDC_y = 0, hDC_w = 0, hDC_h = 0;
     int nx, ny, sll;
-    const char *photoname = 0;	/* For some reason Tk_FindPhoto takes a char *. */
+    const char *photoname = NULL;	/* For some reason Tk_FindPhoto takes a char *. */
     Tk_PhotoHandle photo_handle;
     Tk_PhotoImageBlock img_block;
     BITMAPINFO bitmapinfo;	/* Since we don't need the bmiColors table,
@@ -391,14 +488,14 @@ static int GdiPhoto(
 	return TCL_ERROR;
     }
 
-    dst = printDC;
+    hDC = printDC;
 
     /*
-     * Next, check to see if 'dst' can support BitBlt.
+     * Next, check to see if 'hDC' can support BitBlt.
      * If not, raise an error.
      */
 
-    if ((GetDeviceCaps(dst, RASTERCAPS) & RC_STRETCHDIB) == 0) {
+    if ((GetDeviceCaps(hDC, RASTERCAPS) & RC_STRETCHDIB) == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"::tk::print::_gdi photo not supported on device context (0x%s)",
 		Tcl_GetString(objv[1])));
@@ -425,14 +522,14 @@ static int GdiPhoto(
 		return TCL_ERROR;
 	    }
 
-	    dst_x = (int) x;
-	    dst_y = (int) y;
+	    hDC_x = (int) x;
+	    hDC_y = (int) y;
 	    if (count == 3) {
-		dst_w = (int) w;
-		dst_h = -1;
+		hDC_w = (int) w;
+		hDC_h = -1;
 	    } else if (count == 4) {
-		dst_w = (int) w;
-		dst_h = (int) h;
+		hDC_w = (int) w;
+		hDC_h = (int) h;
 	    }
 	} else if (strcmp(Tcl_GetString(objv[j]), "-photo") == 0) {
 	    photoname = Tcl_GetString(objv[++j]);
@@ -465,7 +562,7 @@ static int GdiPhoto(
      */
 
     pbuf = (char *)attemptckalloc(sll * ny * sizeof(char));
-    if (pbuf == 0) { /* Memory allocation failure. */
+    if (! pbuf) { /* Memory allocation failure. */
 	Tcl_AppendResult(interp,
 		"::tk::print::_gdi photo failed--out of memory", (char *)NULL);
 	return TCL_ERROR;
@@ -499,21 +596,21 @@ static int GdiPhoto(
     bitmapinfo.bmiHeader.biClrUsed       = 0;
     bitmapinfo.bmiHeader.biClrImportant  = 0;
 
-    oldmode = SetStretchBltMode(dst, HALFTONE);
+    oldmode = SetStretchBltMode(hDC, HALFTONE);
     /*
      * According to the Win32 Programmer's Manual, we have to set the brush
      * org, now.
      */
-    SetBrushOrgEx(dst, 0, 0, &pt);
+    SetBrushOrgEx(hDC, 0, 0, &pt);
 
-    if (dst_w <= 0) {
-	dst_w = nx;
-	dst_h = ny;
-    } else if (dst_h <= 0) {
-	dst_h = ny*dst_w / nx;
+    if (hDC_w <= 0) {
+	hDC_w = nx;
+	hDC_h = ny;
+    } else if (hDC_h <= 0) {
+	hDC_h = ny*hDC_w / nx;
     }
 
-    if (StretchDIBits(dst, dst_x, dst_y, dst_w, dst_h, 0, 0, nx, ny,
+    if (StretchDIBits(hDC, hDC_x, hDC_y, hDC_w, hDC_h, 0, 0, nx, ny,
 	    pbuf, &bitmapinfo, DIB_RGB_COLORS, SRCCOPY) == (int)GDI_ERROR) {
 	int errcode = GetLastError();
 
@@ -525,15 +622,15 @@ static int GdiPhoto(
 
     /* Clean up the hDC. */
     if (oldmode != 0) {
-	SetStretchBltMode(dst, oldmode);
-	SetBrushOrgEx(dst, pt.x, pt.y, &pt);
+	SetStretchBltMode(hDC, oldmode);
+	SetBrushOrgEx(hDC, pt.x, pt.y, &pt);
     }
 
     ckfree(pbuf);
 
     if (retval == TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%d %d %d %d", dst_x, dst_y, dst_w, dst_h));
+		"%d %d %d %d", hDC_x, hDC_y, hDC_w, hDC_h));
     }
 
     return retval;
@@ -615,6 +712,170 @@ static int Smoothize(
 /*
  *----------------------------------------------------------------------
  *
+ * Line specific: parse "-arrow"
+ *
+ *----------------------------------------------------------------------
+ */
+#define ARROW_NONE  0
+#define ARROW_FIRST 1
+#define ARROW_LAST  2
+static Tcl_Size ParseArrow (
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    int index;
+
+    static struct ArrowMap {
+	const char *name;
+	int arrow;
+    } arrowmap[] = {
+	{"none",  ARROW_NONE},
+	{"first", ARROW_FIRST},
+	{"last",  ARROW_LAST},
+	{"both",  (ARROW_FIRST | ARROW_LAST)},
+	{NULL, 0},
+    };
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-arrow\" needs and additional argument", NULL);
+	return -1;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], arrowmap,
+	sizeof(struct ArrowMap), "-arrow option", 0, &index) != TCL_OK) {
+	return -1;
+    }
+
+    *(int *)dstPtr = arrowmap[index].arrow;
+    return 1;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * Line specific: parse "-arrowshape"
+ *
+ *----------------------------------------------------------------------
+ */
+static Tcl_Size ParseArrShp(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    int *arrowShape = (int *)dstPtr;
+    Tcl_Obj **shpObjs;
+    double a0, a1, a2;
+    Tcl_Size count;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-arrowshape\" requires an additional argument", NULL);
+	return -1;
+    }
+    if (Tcl_ListObjGetElements(interp, objv[0], &count, &shpObjs) != TCL_OK) {
+	return -1;
+    }
+    if (count != 3 ||
+	    Tcl_GetDoubleFromObj(NULL, shpObjs[0], &a0) != TCL_OK ||
+	    Tcl_GetDoubleFromObj(NULL, shpObjs[1], &a1) != TCL_OK ||
+	    Tcl_GetDoubleFromObj(NULL, shpObjs[2], &a2) != TCL_OK) {
+	Tcl_AppendResult(interp, "arrow shape should be a list ",
+	    "with three integer numbers", NULL);
+	return -1;
+    }
+    arrowShape[0] = ROUND32(a0);
+    arrowShape[1] = ROUND32(a1);
+    arrowShape[2] = ROUND32(a2);
+    return 1;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * Line specific: parse "-capstyle"
+ *
+ *----------------------------------------------------------------------
+ */
+static Tcl_Size ParseCapStyle (
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    int cap;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-capstyle\" needs and additional argument", NULL);
+	return -1;
+    }
+
+    if (Tk_GetCapStyle(interp, Tcl_GetString(objv[0]), &cap) != TCL_OK) {
+	return -1;
+    }
+    switch (cap) {
+	case CapButt:
+	    *(int *)dstPtr = PS_ENDCAP_FLAT;
+	    break;
+	case CapProjecting:
+	    *(int *)dstPtr = PS_ENDCAP_SQUARE;
+	    break;
+	case CapRound:
+	    *(int *)dstPtr = PS_ENDCAP_ROUND;
+	    break;
+    }
+    return 1;
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * Line specific: parse "-smooth"
+ *
+ *----------------------------------------------------------------------
+ */
+static Tcl_Size ParseSmooth(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    int bool;
+    Tcl_Size len;
+    const char *str;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-smooth\" requires an additional argument", NULL);
+	return -1;
+    }
+//   Argument is a boolean value, "bezier" or "raw".
+    if (Tcl_GetBooleanFromObj(NULL, objv[0], &bool) == TCL_OK) {
+	*(int *)dstPtr = bool;
+	return 1;
+    }
+
+    str = Tcl_GetStringFromObj(objv[0], &len);
+    if (strncasecmp(str, "bezier", (size_t)len) == 0) {
+	*(int *)dstPtr = SMOOTH_BEZIER;
+	return 1;
+    } else if (strncasecmp(str, "raw", (size_t)len) == 0) {
+	*(int *)dstPtr = SMOOTH_RAW;
+	return 1;
+    }
+
+    Tcl_AppendResult(interp, "bad smooth value \"", str, "\"; should be "
+	"a boolean value, \"bezier\" or \"raw\"", NULL);
+	return -1;
+}
+/*
+ *----------------------------------------------------------------------
+ *
  * GdiLine --
  *
  *	Maps lines to GDI context.
@@ -631,43 +892,31 @@ static int GdiLine(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi line hdc x1 y1 ... xn yn "
-	"-arrow [first|last|both|none] -arrowshape {d1 d2 d3} "
-	"-dash dashlist "
-	"-capstyle [butt|projecting|round] -fill color "
-	"-joinstyle [bevel|miter|round] -smooth [true|false|bezier|raw] "
-	"-splinesteps number -stipple bitmap -width linewid";
-    char *strend;
     POINT *polypoints;
     int npoly;
     int x, y;
     HDC hDC;
-    HPEN hPen;
-
     LOGBRUSH lbrush;
-    HBRUSH hBrush = NULL;
+    HGDIOBJ oldpen = NULL, oldbrush = NULL;
 
-    double width       = 0.0;
-    COLORREF linecolor = 0;
-    int dolinecolor    = 0;
-    int smooth         = SMOOTH_NONE;
-    int doarrow        = 0; /* 0=none; 1=end; 2=start; 3=both. */
-    int arrowshape[3];
+     /* canvas line item defaults */
+    double width      = 1.0;
+    CanvasColor fill  = {0, 0};
+    int smooth        = SMOOTH_NONE;
+    int arrow         = ARROW_NONE; /* 0=none; 1=end; 2=start; 3=both. */
+    int arrowshape[3] = {8, 10, 3};
+    int nStep         = 12;
+    const char *dash  = NULL;
+    int capstyle      = PS_ENDCAP_FLAT;
+    int joinstyle     = PS_JOIN_ROUND;
+    /* ignored for now */
+    const char *stipple = NULL, *dashoffset = NULL;
 
-    int nStep = 12;
-
-    int dodash = 0;
-    const char *dashdata = 0;
     double p1x, p1y, p2x, p2y;
-
-    arrowshape[0] = 8;
-    arrowshape[1] = 10;
-    arrowshape[2] = 3;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1... xn yn ?option value ...?");
 	return TCL_ERROR;
     }
 
@@ -684,135 +933,61 @@ static int GdiLine(
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    polypoints[0].x = floor(p1x+0.5);
-    polypoints[0].y = floor(p1y+0.5);
-    polypoints[1].x = floor(p2x+0.5);
-    polypoints[1].y = floor(p2y+0.5);
+    polypoints[0].x = ROUND32(p1x);
+    polypoints[0].y = ROUND32(p1y);
+    polypoints[1].x = ROUND32(p2x);
+    polypoints[1].y = ROUND32(p2y);
     objc -= 6;
     objv += 6;
     npoly = 2;
 
-    while (objc >= 2) {
-	/* Check for a number. */
-	x = strtoul(Tcl_GetString(objv[0]), &strend, 0);
-	if (strend > Tcl_GetString(objv[0])) {
-	    /* One number.... */
-	    y = strtoul(Tcl_GetString(objv[1]), &strend, 0);
-	    if (strend > Tcl_GetString(objv[1])) {
-		/* TWO numbers!. */
-		polypoints[npoly].x = x;
-		polypoints[npoly].y = y;
-		npoly++;
-		objc -= 2;
-		objv += 2;
-	    } else {
-		/* Only one number... Assume a usage error. */
-		ckfree(polypoints);
-		Tcl_AppendResult(interp, usage_message, (char *)NULL);
-		return TCL_ERROR;
-	    }
-	} else {
-	    if (strcmp(Tcl_GetString(*objv), "-arrow") == 0) {
-		if (strcmp(Tcl_GetString(objv[1]), "none") == 0) {
-		    doarrow = 0;
-		} else if (strcmp(Tcl_GetString(objv[1]), "both") == 0) {
-		    doarrow = 3;
-		} else if (strcmp(Tcl_GetString(objv[1]), "first") == 0) {
-		    doarrow = 2;
-		} else if (strcmp(Tcl_GetString(objv[1]), "last") == 0) {
-		    doarrow = 1;
-		}
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-arrowshape") == 0) {
-		/* List of 3 numbers--set arrowshape array. */
-		int a1, a2, a3;
-		char dummy;
+    while (objc >= 2 &&
+	    Tcl_GetDoubleFromObj(NULL, objv[0], &p1x) == TCL_OK &&
+	    Tcl_GetDoubleFromObj(NULL, objv[1], &p1y) == TCL_OK) {
+	polypoints[npoly].x = ROUND32(p1x);
+	polypoints[npoly].y = ROUND32(p1y);
+	npoly++;
+	objc -= 2;
+	objv += 2;
+    }
 
-		if (sscanf(Tcl_GetString(objv[1]), "%d%d%d%c", &a1, &a2, &a3, &dummy) == 3
-			&& a1 > 0 && a2 > 0 && a3 > 0) {
-		    arrowshape[0] = a1;
-		    arrowshape[1] = a2;
-		    arrowshape[2] = a3;
-		}
-		/* Else the argument was bad. */
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
 
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-capstyle") == 0) {
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-fill") == 0) {
-		if (GdiGetColor(objv[1], &linecolor)) {
-		    dolinecolor = 1;
-		}
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-joinstyle") == 0) {
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-smooth") == 0) {
-		/* Argument is a boolean, "bezier" or "raw". */
-		if (Tcl_GetString(objv[1])) {
-		    switch (Tcl_GetString(objv[1])[0]) {
-		    case 't': case 'T':
-		    case '1':
-		    case 'b': case 'B': /* bezier. */
-			smooth = SMOOTH_BEZIER;
-			break;
-		    case 'r': case 'R': /* raw. */
-			smooth = SMOOTH_RAW;
-			break;
-		    default:
-			/* do nothing; SMOOTH_NONE is the default */
-			break;
-		    }
-		    objv += 2;
-		    objc -= 2;
-		}
-	    } else if (strcmp(Tcl_GetString(*objv), "-splinesteps") == 0) {
-		if (Tcl_GetIntFromObj(interp, objv[1], &nStep) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-dash") == 0) {
-		if (Tcl_GetString(objv[1])) {
-		    dodash = 1;
-		    dashdata = Tcl_GetString(objv[1]);
-		}
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-dashoffset") == 0) {
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-stipple") == 0) {
-		objv += 2;
-		objc -= 2;
-	    } else if (strcmp(Tcl_GetString(*objv), "-width") == 0) {
-		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		objv += 2;
-		objc -= 2;
-	    } else { /* It's an unknown argument!. */
-		objc--;
-		objv++;
-	    }
-	    /* Check for arguments
-	     * Most of the arguments affect the "Pen"
-	     */
+	const Tcl_ArgvInfo lineArgvInfo[] = {
+	    {TCL_ARGV_GENFUNC, "-arrow",      ParseArrow,    &arrow,     NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-arrowshape", ParseArrShp,   arrowshape, NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-capstyle",   ParseCapStyle, &capstyle,  NULL, NULL},
+	    {TCL_ARGV_STRING,  "-dash",       NULL,          &dash,      NULL, NULL},
+	    {TCL_ARGV_STRING,  "-dashoffset", NULL,          &dashoffset,NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",       ParseColor,    &fill,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-joinstyle",  ParseJoinStyle,&joinstyle, NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-smooth",     ParseSmooth,   &smooth,    NULL, NULL},
+	    {TCL_ARGV_INT,     "-splinesteps",NULL,          &nStep,     NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple",    NULL,          &stipple,   NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-width",      NULL,          &width,     NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, lineArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    ckfree(polypoints);
+	    return TCL_ERROR;
 	}
     }
 
-    if (width || dolinecolor || dodash) {
-	GdiMakePen(interp, width, dodash, dashdata,
-		0, 0, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (fill.isempty) {
+	ckfree(polypoints);
+	return TCL_OK;
     }
-    if (doarrow != 0) {
-	GdiMakeBrush(linecolor, 0, &lbrush, hDC, &hBrush);
+    if (arrow != ARROW_NONE) {
+	/* if -arrow is specified, capstyle is ignored */
+	capstyle = PS_ENDCAP_FLAT;
     }
 
+    GdiMakePen(interp, width, (dash != NULL), dash,
+	capstyle, joinstyle, 0, 0, fill.color, hDC, &oldpen);
     if (smooth) { /* Use Smoothize. */
 	int nbpoints;
 	POINT *bpoints = NULL;
@@ -829,15 +1004,17 @@ static int GdiLine(
     } else {
 	Polyline(hDC, polypoints, npoly);
     }
+    GdiFreePen(interp, hDC, oldpen);
 
-    if (dodash && doarrow) {  /* Don't use dashed or thick pen for the arrows! */
-	GdiFreePen(interp, hDC, hPen);
-	GdiMakePen(interp, width, 0, 0, 0, 0, 0, 0,
-		linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (arrow != ARROW_NONE) { 
+	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
+	GdiMakePen(interp, 1, 0, 0, 0, PS_JOIN_MITER, 0, 0,
+	    fill.color, hDC, &oldpen);
     }
+    
 
     /* Now the arrowheads, if any. */
-    if (doarrow & 1) {
+    if (arrow & ARROW_LAST) {
 	/* Arrowhead at end = polypoints[npoly-1].x, polypoints[npoly-1].y. */
 	POINT ahead[6];
 	double dx, dy, length;
@@ -873,8 +1050,8 @@ static int GdiLine(
 	Polygon(hDC, ahead, 6);
     }
 
-    if (doarrow & 2) {
-	/* Arrowhead at end = polypoints[0].x, polypoints[0].y. */
+    if (arrow & ARROW_FIRST) {
+	/* Arrowhead at beginning = polypoints[0].x, polypoints[0].y. */
 	POINT ahead[6];
 	double dx, dy, length;
 	double sinTheta, cosTheta;
@@ -909,11 +1086,9 @@ static int GdiLine(
 	Polygon(hDC, ahead, 6);
     }
 
-    if (width || dolinecolor || dodash) {
-	GdiFreePen(interp, hDC, hPen);
-    }
-    if (hBrush) {
-	GdiFreeBrush(interp, hDC, hBrush);
+    if (arrow != ARROW_NONE) {
+	GdiFreePen(interp, hDC, oldpen);
+	GdiFreeBrush(interp, hDC, oldbrush);
     }
 
     ckfree(polypoints);
@@ -1025,7 +1200,7 @@ static int GdiOval(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to right
      * and lower bounds to get appropriate behavior.
      */
-    Ellipse(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
+    Ellipse(hDC, ROUND32(x1), ROUND32(y1), ROUND32(x2+1), ROUND32(y2+1));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1102,10 +1277,10 @@ static int GdiPolygon(
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
     }
-    polypoints[0].x = floor(p1x + 0.5);
-    polypoints[0].y = floor(p1y + 0.5);
-    polypoints[1].x = floor(p2x + 0.5);
-    polypoints[1].y = floor(p2y + 0.5);
+    polypoints[0].x = ROUND32(p1x);
+    polypoints[0].y = ROUND32(p1y);
+    polypoints[1].x = ROUND32(p2x);
+    polypoints[1].y = ROUND32(p2y);
     objc -= 6;
     objv += 6;
     npoly = 2;
@@ -1331,14 +1506,14 @@ static int GdiRectangle(
 
     if (width || dolinecolor) {
 	GdiMakePen(interp, width, dodash, dashdata,
-		0, 0, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
+		0, PS_JOIN_MITER, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
     }
     /*
      * Per Win32, Rectangle includes lower and right edges--per Tcl8.3.2 and
      * earlier documentation, canvas rectangle does not. Thus, add 1 to
      * right and lower bounds to get appropriate behavior.
      */
-    Rectangle(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
+    Rectangle(hDC, ROUND32(x1), ROUND32(y1), ROUND32(x2+1), ROUND32(y2+1));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1406,7 +1581,7 @@ static int GdiCharWidths(
 	if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
 	    objc--;
 	    objv++;
-	    if (GdiMakeLogFont(interp, objv[0], 0.0, &lf, hDC)) {
+	    if (GdiMakeLogFont(interp, objv[0], &lf, hDC)) {
 		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
 		    made_font = 1;
 		    oldfont = SelectObject(hDC, hfont);
@@ -1481,6 +1656,41 @@ static int GdiCharWidths(
  *
  *----------------------------------------------------------------------
  */
+typedef struct LayoutChunk {
+    const char *start;		/* Pointer to simple string to be displayed.
+		 * This is a pointer into the TkTextLayout's
+		 * string. */
+    Tcl_Size numBytes;		/* The number of bytes in this chunk. */
+    Tcl_Size numChars;		/* The number of characters in this chunk. */
+    Tcl_Size numDisplayChars;	/* The number of characters to display when
+		 * this chunk is displayed. Can be less than
+		 * numChars if extra space characters were
+		 * absorbed by the end of the chunk. This will
+		 * be < 0 if this is a chunk that is holding a
+		 * tab or newline. */
+    int x, y;			/* The origin of the first character in this
+		 * chunk with respect to the upper-left hand
+		 * corner of the TextLayout. */
+    int totalWidth;		/* Width in pixels of this chunk. Used when
+		 * hit testing the invisible spaces at the end
+		 * of a chunk. */
+    int displayWidth;		/* Width in pixels of the displayable
+		 * characters in this chunk. Can be less than
+		 * width if extra space characters were
+		 * absorbed by the end of the chunk. */
+} LayoutChunk;
+
+typedef struct TextLayout {
+    Tk_Font tkfont;		/* The font used when laying out the text. */
+    const char *string;		/* The string that was layed out. */
+    int width;			/* The maximum width of all lines in the text
+		 * layout. */
+    Tcl_Size numChunks;		/* Number of chunks actually used in following
+		 * array. */
+    LayoutChunk chunks[TKFLEXARRAY];/* Array of chunks. The actual size will be
+		 * maxChunks. THIS FIELD MUST BE THE LAST IN
+		 * THE STRUCTURE. */
+} TextLayout;
 
 int GdiText(
     TCL_UNUSED(void *),
@@ -1493,47 +1703,38 @@ int GdiText(
 	"-angle angle -fill color -font fontname "
 	"-justify [left|right|center] "
 	"-stipple bitmap -text string -width linelen "
-	"-single -backfill";
+	"-backfill";
 
     HDC hDC;
-    double y, xi, yi, angle = 0.0;
+    double x0, y0, angle = 0.0;
     const char *string = NULL;
-    RECT sizerect;
-    UINT format_flags = DT_EXPANDTABS|DT_NOPREFIX; /* Like the canvas. */
+    Tcl_Size strlen;
     Tk_Anchor anchor = TK_ANCHOR_N;
+    Tk_Justify justify = TK_JUSTIFY_LEFT;
     LOGFONTW lf;
     HFONT hfont;
     HGDIOBJ oldfont;
-    int dofont = 0, made_font = 0;
-    int retval;
+    int wraplen = 0;
+    int made_font = 0;
     int dotextcolor = 0;
     int dobgmode = 0;
     int bgmode;
     COLORREF textcolor = 0;
-    int usesingle = 0;
-    WCHAR *wstring;
-    Tcl_DString tds;
     Tcl_Obj *fontObj = NULL;
-    UINT alignFlags;
 
     if (objc < 4) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
-
-    /* Parse the command. */
-
     hDC = printDC;
 
-    if ((Tcl_GetDoubleFromObj(interp, objv[2], &xi) != TCL_OK)
-	    || (Tcl_GetDoubleFromObj(interp, objv[3], &yi) != TCL_OK)) {
+    /* Parse the command. */
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x0) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y0) != TCL_OK)) {
 	return TCL_ERROR;
     }
     objc -= 4;
     objv += 4;
-
-    sizerect.left = sizerect.right = floor(xi+0.5);
-    sizerect.top = sizerect.bottom = floor(yi+0.5);
 
     while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
@@ -1552,26 +1753,20 @@ int GdiText(
 	    objc--;
 	    objv++;
 	    if (objc > 0) {
-		if (strcmp(Tcl_GetString(objv[0]), "left") == 0) {
-		    format_flags |= DT_LEFT;
-		} else if (strcmp(Tcl_GetString(objv[0]), "center") == 0) {
-		    format_flags |= DT_CENTER;
-		} else if (strcmp(Tcl_GetString(objv[0]), "right") == 0) {
-		    format_flags |= DT_RIGHT;
+		if (Tk_GetJustifyFromObj(interp, objv[0], &justify) != TCL_OK) {
+		    return TCL_ERROR;
 		}
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-text") == 0) {
 	    objc--;
 	    objv++;
 	    if (objc > 0) {
-		string = Tcl_GetString(objv[0]);
+		string = Tcl_GetStringFromObj(objv[0], &strlen);
 	    }
 	} else if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
 	    objc--;
 	    objv++;
-	    dofont = 1;
 	    fontObj = objv[0];
-	    /* Else leave the font alone! */
 	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
 	    objc--;
 	    objv++;
@@ -1587,16 +1782,10 @@ int GdiText(
 	    objc--;
 	    objv++;
 	    if (objc > 0) {
-		int value;
-		if (Tcl_GetIntFromObj(interp, objv[0], &value) != TCL_OK) {
+		if (Tcl_GetIntFromObj(interp, objv[0], &wraplen) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		sizerect.right += value;
 	    }
-	    /* If a width is specified, break at words. */
-	    format_flags |= DT_WORDBREAK;
-	} else if (strcmp(Tcl_GetString(objv[0]), "-single") == 0) {
-	    usesingle = 1;
 	} else if (strcmp(Tcl_GetString(objv[0]), "-backfill") == 0) {
 	    dobgmode = 1;
 	}
@@ -1605,73 +1794,24 @@ int GdiText(
 	objv++;
     }
 
+    /* if we have no text, nothing to do */
     if (! string) {
 	Tcl_AppendResult(interp, usage_message, (char *)NULL);
 	return TCL_ERROR;
     }
+    /* is an error not providing a font */
+    if (! fontObj) {
+	Tcl_AppendResult(interp, "error: font must be specified", NULL);
+	return TCL_ERROR;
+    }
 
-    if (angle != 0.0 || dofont) {
-	if (GdiMakeLogFont(interp, fontObj, angle, &lf, hDC)) {
-	    if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
-		made_font = 1;
-		oldfont = SelectObject(hDC, hfont);
-	    }
+    if (GdiMakeLogFont(interp, fontObj, &lf, hDC)) {
+	lf.lfEscapement = lf.lfOrientation = 10.0 * angle;
+	if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+	    made_font = 1;
+	    oldfont = SelectObject(hDC, hfont);
 	}
     }
-
-    /* Set the format flags for -single: Overrides -width. */
-    if (usesingle == 1) {
-	format_flags |= DT_SINGLELINE;
-	format_flags |= DT_NOCLIP;
-	format_flags &= ~DT_WORDBREAK;
-    }
-
-    Tcl_DStringInit(&tds);
-    /* Just for fun, let's try translating string to Unicode. */
-    wstring = Tcl_UtfToWCharDString(string, TCL_INDEX_NONE, &tds);
-    DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
-	    format_flags | DT_CALCRECT);
-
-    /* Adjust the rectangle according to the anchor. */
-    y = 0.0;
-    switch (anchor) {
-    case TK_ANCHOR_N:
-	alignFlags = TA_TOP | TA_CENTER;
-	break;
-    case TK_ANCHOR_S:
-	alignFlags = TA_BOTTOM | TA_CENTER;
-	break;
-    case TK_ANCHOR_E:
-	alignFlags = TA_RIGHT | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;
-	break;
-    case TK_ANCHOR_W:
-	alignFlags = TA_LEFT | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;
-	break;
-    case TK_ANCHOR_NE:
-	alignFlags = TA_TOP | TA_RIGHT;
-	break;
-    case TK_ANCHOR_NW:
-    case TK_ANCHOR_NULL: /* this is the default*/
-	alignFlags = TA_TOP | TA_LEFT;
-	break;
-    case TK_ANCHOR_SE:
-	alignFlags = TA_BOTTOM | TA_RIGHT;
-	break;
-    case TK_ANCHOR_SW:
-	alignFlags = TA_BOTTOM | TA_LEFT;
-	break;
-    default:
-	alignFlags = TA_CENTER | TA_TOP;
-	y = (sizerect.bottom - sizerect.top) / 2;
-	break;
-    }
-    /* GDI doesn't provide TA_VCENTER align. So we use TA_TOP align
-     * and adjust sizerect values for height.
-     */
-    sizerect.top    -= y;
-    sizerect.bottom -= y;
 
     /* Get the color right. */
     if (dotextcolor) {
@@ -1684,30 +1824,145 @@ int GdiText(
 	bgmode = SetBkMode(hDC, TRANSPARENT);
     }
 
-    /* Print the text. */
-    SetTextAlign(hDC, alignFlags | TA_NOUPDATECP);
-    if (angle == 0.0) {
-	retval = DrawTextW(hDC, wstring,
-	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags | DT_NOCLIP);
-    } else {
-#define DEG2RAD(x) (0.017453292519943295 * (x))
-	xi = floor(xi - y * sin(DEG2RAD(angle)) + 0.5);
-	yi = floor(yi - y * cos(DEG2RAD(angle)) + 0.5);
-	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&tds)/2);
+    /* Recreate the text layout here, so we get the same width and
+     * line breaks.
+     */
+    Tk_Window tkwin = Tk_MainWindow(interp);
+    Tk_Font tkfont = Tk_AllocFontFromObj(interp, tkwin, fontObj);
+    if (!tkfont) {
+	return TCL_ERROR;
     }
-    Tcl_DStringFree(&tds);
+    int width, height;
+    TextLayout *layout = (TextLayout *)Tk_ComputeTextLayout(tkfont,
+	string, TCL_INDEX_NONE, wraplen, TK_JUSTIFY_LEFT, 0, &width, &height);
+
+    /* Calculate the anchor position in local coordinates
+     * Origin point is x0, y0
+     */
+    int xa = 0;
+    int ya = 0;
+    /* values for the default anchor nw */
+    switch (anchor) {
+	case TK_ANCHOR_NULL:
+	case TK_ANCHOR_NW:
+	    xa = 0;
+	    ya = 0;
+	    break;
+	case TK_ANCHOR_N:
+	    xa = -width / 2;
+	    ya = 0;
+	    break;
+	case TK_ANCHOR_NE:
+	    xa = -width;
+	    ya = 0;
+	    break;
+	case TK_ANCHOR_W:
+	    xa = 0;
+	    ya = -height / 2;
+	    break;
+	case TK_ANCHOR_CENTER:
+	    xa = -width / 2;
+	    ya = -height / 2;
+	    break;
+	case TK_ANCHOR_E:
+	    xa = -width;
+	    ya = -height / 2;
+	    break;
+	case TK_ANCHOR_SW:
+	    xa = 0;
+	    ya = -height;
+	    break;
+	case TK_ANCHOR_S:
+	    xa = -width / 2;
+	    ya = -height;
+	    break;
+	case TK_ANCHOR_SE:
+	    xa = -width;
+	    ya = -height;
+	    break;
+    }
+    /* Set the align and adjust the x anchor point accordingly */
+    UINT align = TA_TOP;
+    switch (justify) {
+	case TK_JUSTIFY_NULL:
+	case TK_JUSTIFY_LEFT:
+	    align |= TA_LEFT;
+	    break;
+	case TK_JUSTIFY_CENTER:
+	    align |= TA_CENTER;
+	    xa += width / 2;
+	    break;
+	case TK_JUSTIFY_RIGHT:
+	    align |= TA_RIGHT;
+	    xa += width;
+	    break;
+    }
+    SetTextAlign(hDC, align);
+
+    Tk_FontMetrics fm;
+    Tk_GetFontMetrics(tkfont, &fm);
+    /* Our coordinate system has the y axis inverted.
+     * Invert the angle to get the values right.
+     */
+    const double sinA = sin(DEG2RAD(-angle));
+    const double cosA = cos(DEG2RAD(-angle));
+    /* now, print each text chunk adjusting the anchor point */
+    int retval = 1;
+    int nlseen = 0;
+    for (Tcl_Size i = 0; (i < layout->numChunks) && retval; i++) {
+	WCHAR *wstring;
+	Tcl_DString ds;
+	int xi, yi;
+
+	if (layout->chunks[i].start[0] == '\n') {
+	    if (nlseen) {
+		ya += fm.linespace;
+	    } else {
+		nlseen = 1;
+	    }
+	    continue;
+	}
+	xi = floor(x0 + (xa * cosA - ya * sinA) + 0.5);
+	yi = floor(y0 + (xa * sinA + ya * cosA) + 0.5);
+	Tcl_DStringInit(&ds);
+	wstring = Tcl_UtfToWCharDString(layout->chunks[i].start,
+	    layout->chunks[i].numBytes, &ds);
+	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
+	Tcl_DStringFree(&ds);
+	ya += fm.linespace;
+	nlseen = 0;
+    }
+
+    /* All done. Cleanup */
+    Tk_FreeTextLayout((Tk_TextLayout) layout);
+    Tk_FreeFont(tkfont);
 
     /* Get the color set back. */
     if (dotextcolor) {
 	textcolor = SetTextColor(hDC, textcolor);
     }
     SetBkMode(hDC, bgmode);
+
+    /* Use DrawTextW to calculate the return value
+     * This is used for printing the text widget, not canvas text items
+     */
+    RECT rect;
+    rect.left = rect.top = 0;
+    rect.right = (wraplen > 0) ? wraplen : 100000;
+    rect.bottom = 1000000;
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
+
+    retval = DrawTextW(hDC, Tcl_UtfToWCharDString(string, TCL_INDEX_NONE, &ds),
+	Tcl_DStringLength(&ds) / 2, &rect, DT_CALCRECT);
+    Tcl_DStringFree(&ds);
+
     if (made_font) {
 	SelectObject(hDC, oldfont);
 	DeleteObject(hfont);
     }
 
-    /* In this case, the return value is the height of the text. */
+    /* return value is the height of the text as calculated by DrawTextW */
     Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
     return TCL_OK;
 }
@@ -1870,7 +2125,7 @@ static int GdiMap(
 	"::tk::print::_gdi map hdc "
 	"[-logical x[y]] [-physical x[y]] "
 	"[-offset {x y} ] [-default] [-mode mode]";
-    HDC hdc;
+    HDC hDC;
     int mapmode;	/* Mapping mode. */
     SIZE wextent;	/* Device extent. */
     SIZE vextent;	/* Viewport extent. */
@@ -1892,9 +2147,9 @@ static int GdiMap(
 	return TCL_ERROR;
     }
 
-    hdc = printDC;
+    hDC = printDC;
 
-    if ((mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent)) == 0) {
+    if ((mapmode = GdiGetHdcInfo(hDC, &worigin, &wextent, &vorigin, &vextent)) == 0) {
 	/* Failed!. */
 	Tcl_AppendResult(interp, "Cannot get current HDC info", (char *)NULL);
 	return TCL_ERROR;
@@ -1994,26 +2249,26 @@ static int GdiMap(
 
     /* Call Windows CTM functions. */
     if (use_logical || use_default || use_mode) { /* Don't call for offset only. */
-	SetMapMode(hdc, mapmode);
+	SetMapMode(hDC, mapmode);
     }
 
     if (use_offset || use_default) {
 	POINT oldorg;
-	SetViewportOrgEx(hdc, vorigin.x, vorigin.y, &oldorg);
-	SetWindowOrgEx(hdc, worigin.x, worigin.y, &oldorg);
+	SetViewportOrgEx(hDC, vorigin.x, vorigin.y, &oldorg);
+	SetWindowOrgEx(hDC, worigin.x, worigin.y, &oldorg);
     }
 
     if (use_logical) {  /* Same as use_physical. */
 	SIZE oldsiz;
-	SetWindowExtEx(hdc, wextent.cx, wextent.cy, &oldsiz);
-	SetViewportExtEx(hdc, vextent.cx, vextent.cy, &oldsiz);
+	SetWindowExtEx(hDC, wextent.cx, wextent.cy, &oldsiz);
+	SetViewportExtEx(hDC, vextent.cx, vextent.cy, &oldsiz);
     }
 
     /*
      * Since we may not have set up every parameter, get them again for the
      * report.
      */
-    mapmode = GdiGetHdcInfo(hdc, &worigin, &wextent, &vorigin, &vextent);
+    mapmode = GdiGetHdcInfo(hDC, &worigin, &wextent, &vorigin, &vextent);
 
     /*
      * Output current CTM info.
@@ -2526,7 +2781,6 @@ static int GdiParseFontWords(
 static int GdiMakeLogFont(
     Tcl_Interp *interp,
     Tcl_Obj *specPtr,
-    double angle,
     LOGFONTW *lf,
     HDC hDC)
 {
@@ -2541,7 +2795,6 @@ static int GdiMakeLogFont(
     lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
     lf->lfQuality = DEFAULT_QUALITY;
     lf->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    lf->lfEscapement = lf->lfOrientation = 10.0 * angle;
 
     if (!specPtr ||
 	    Tcl_ListObjGetElements(interp, specPtr, &count, &listPtr) != TCL_OK) {
@@ -2664,8 +2917,8 @@ static int GdiMakePen(
     double dwidth,
     int dashstyle,
     const char *dashstyledata,
-    TCL_UNUSED(int),		/* Ignored for now. */
-    TCL_UNUSED(int),		/* Ignored for now. */
+    int endStyle,		/* Ignored for now. */
+    int joinStyle,		/* Ignored for now. */
     TCL_UNUSED(int),
     TCL_UNUSED(const char *),	/* Ignored for now. */
     unsigned long color,
@@ -2686,14 +2939,16 @@ static int GdiMakePen(
      * after first failure) may suffice for working around this. The
      * ExtCreatePen is not supported at all under Win32.
      */
-    int width = floor(dwidth + 0.5);
+    int width = ROUND32(dwidth);
     HPEN hPen;
     LOGBRUSH lBrush;
     DWORD pStyle = PS_SOLID;           /* -dash should override*/
-    DWORD endStyle = PS_ENDCAP_ROUND;  /* -capstyle should override. */
-    DWORD joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override. */
+//    DWORD endStyle = PS_ENDCAP_ROUND;  /* -capstyle should override. */
+//    DWORD joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override. */
     DWORD styleCount = 0;
     DWORD *styleArray = 0;
+    if (endStyle == 0) endStyle = PS_ENDCAP_ROUND;  /* -capstyle should override. */
+    if (joinStyle == 0) joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override. */
 
     /*
      * To limit the propagation of allocated memory, the dashes will have a
