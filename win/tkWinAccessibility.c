@@ -4,7 +4,7 @@
  *	  This file implements the platform-native Microsoft Active 
  *	  Accessibility API for Tk on Windows.  
  *
- * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright Â© 2024-2025 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -73,7 +73,6 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelpTopic(IAccessible *this, BS
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
 HRESULT STDMETHODCALLTYPE TkWinAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
@@ -88,6 +87,7 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accParent(IAccessible *this
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
@@ -166,11 +166,6 @@ HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDefaultAction(IAccessible *this
   return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *this, long flagsSelect, VARIANT varChild)
-{
-  return E_NOTIMPL;
-}
-
 HRESULT STDMETHODCALLTYPE TkWinAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt)
 {
   return E_NOTIMPL;
@@ -204,10 +199,11 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_QueryInterface(IAccessible *thi
   return E_NOINTERFACE;
 }
 
+/* Function to add memory reference to the MSAA object. */
 static ULONG STDMETHODCALLTYPE TkWinAccessible_AddRef(IAccessible *this)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  return ++tkAccessible->refCount;
+  return InterlockedIncrement(&tkAccessible->refCount);
 }
 
 /* Function to free the MSAA object. */
@@ -287,7 +283,19 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_Invoke(IAccessible *this, DISPI
 
     case DISPID_ACC_FOCUS:
       return TkWinAccessible_get_accFocus(this, &selfVar);   
+	
+    case DISPID_ACC_SELECT:
+      if (!pDispParams || pDispParams->cArgs < 2) {
+        return E_INVALIDARG;
+      }
 
+      VARIANT varChild = pDispParams->rgvarg[0];  
+      VARIANT varFlags = pDispParams->rgvarg[1]; 
+
+      if (varFlags.vt != VT_I4) return E_INVALIDARG;
+
+      return TkWinAccessible_accSelect(this, varFlags.lVal, varChild);
+      
     default:
       return E_NOTIMPL;
     }
@@ -304,7 +312,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, 
     Tk_Window win = tkAccessible->win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
+	
     Tcl_DString ds;
+    Tcl_DStringInit(&ds);
 	
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -314,15 +324,13 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accName(IAccessible *this, 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
     if (!hPtr2) {
-      return E_INVALIDARG;
+      SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+      return S_OK;
     }
 	
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    Tcl_DStringInit(&ds);
     if (result) {
       *pszName = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-    } else {
-      *pszName = SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
     }
     Tcl_DStringFree(&ds);
     return S_OK;
@@ -348,22 +356,26 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accRole(IAccessible *this, 
     if (!hPtr) {
       return E_INVALIDARG;
     }
+	
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
 		
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-      return E_INVALIDARG;
+      SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+      return S_OK;
     }
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    const char *tkrole = NULL;
-    if (tkrole) {
-      for (int i = 0; roleMap[i].tkrole !=NULL; i++) {
-	if (strcmp(roleMap[i].tkrole, tkrole) == 0) {
-	  role = roleMap[i].winrole;
-	  break;
-	}
+
+    char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    role = ROLE_SYSTEM_CLIENT; /* Default if no match. */
+    for (int i = 0; roleMap[i].tkrole !=NULL; i++) {
+      if (strcmp(roleMap[i].tkrole, tkrole) == 0) {
+	role = roleMap[i].winrole;
+	break;
       }
     }
+
     pvarRole->vt = VT_I4;
     pvarRole->lVal = role;
     return S_OK;
@@ -418,7 +430,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accValue(IAccessible *this,
     Tk_Window win = tkAccessible->win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
+	
     Tcl_DString ds;
+    Tcl_DStringInit(&ds);
 		
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -428,15 +442,15 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accValue(IAccessible *this,
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "value");
     if (!hPtr2) {
-      return E_INVALIDARG;
+      SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+      return S_OK;
     }
 		
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (result) {
-      Tcl_DStringInit(&ds);
       *pszValue = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-      Tcl_DStringFree(&ds);
     }
+    Tcl_DStringFree(&ds);
     return S_OK;
   }
   return E_INVALIDARG;
@@ -525,7 +539,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accChild(IAccessible *this,
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild)
 {
   TkWinAccessible *tkAccessible = (TkWinAccessible *)this;
-  if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
+  
+  /*Cover both toplevel and child ID widgets. */
+  if (varChild.vt == VT_I4 && varChild.lVal >= 0) {
     int x, y, width, height;
     Tk_Window win = Tk_NameToWindow(tkAccessible->interp, tkAccessible->pathName,  Tk_MainWindow(tkAccessible->interp));
     x = Tk_X(win);
@@ -540,6 +556,33 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_accLocation(IAccessible *this, 
   }
   return E_INVALIDARG;
 }
+
+/*Function to set accessible focus on Tk widget. */
+HRESULT STDMETHODCALLTYPE TkWinAccessible_accSelect(IAccessible *thisPtr, long flags, VARIANT varChild) 
+{
+	
+  TkWinAccessible *this = (TkWinAccessible *)thisPtr;
+  if (flags & SELFLAG_TAKEFOCUS) {
+    Tk_Window tkwin = this->win;
+    if (tkwin) {
+      Tcl_Interp *interp = Tk_Interp(tkwin);
+      if (interp) {
+	const char *pathName = Tk_PathName(tkwin);
+	Tcl_Obj *result = Tcl_NewObj();
+	Tcl_Obj *cmd = Tcl_NewObj();
+	Tcl_AppendToObj(cmd, "focus ", -1);
+	Tcl_AppendToObj(cmd, pathName, -1);
+	if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+	  return S_FALSE;
+	}
+	Tcl_DecrRefCount(cmd);
+      }
+      return S_OK;
+    }
+  }
+  return S_FALSE; 
+}
+
 
 /* Function to get button press to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkWinAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
@@ -598,7 +641,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
   Tk_Window win = tkAccessible->win;
   Tcl_HashEntry *hPtr, *hPtr2;
   Tcl_HashTable *AccessibleAttributes;
+  
   Tcl_DString ds;
+  Tcl_DStringInit(&ds);
 		
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -608,17 +653,16 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accHelp(IAccessible *this, 
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
   hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "help");
   if (!hPtr2) {
-    return E_INVALIDARG;
+    SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+    return S_OK;
   }
-		
+	
   char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-  Tcl_DStringInit(&ds);
   *pszHelp = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-  Tcl_DStringFree(&ds);
   if (!*pszHelp) {
     return E_OUTOFMEMORY;
   }
-
+  Tcl_DStringFree(&ds);
   return S_OK;
 }
 
@@ -648,7 +692,9 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
   Tk_Window win = tkAccessible->win;
   Tcl_HashEntry *hPtr, *hPtr2;
   Tcl_HashTable *AccessibleAttributes;
+  
   Tcl_DString ds;
+  Tcl_DStringInit(&ds);
 		
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -658,16 +704,18 @@ static HRESULT STDMETHODCALLTYPE TkWinAccessible_get_accDescription(IAccessible 
   AccessibleAttributes = Tcl_GetHashValue(hPtr);
   hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
   if (!hPtr2) {
-    return E_INVALIDARG;
+    SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+    return S_OK;
   }
-		
+	
   char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   Tcl_DStringInit(&ds);
   *pszDescription = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-  Tcl_DStringFree(&ds);
+
   if (!*pszDescription) {
     return E_OUTOFMEMORY;
   }
+  Tcl_DStringFree(&ds);
   return S_OK;
 }
 
@@ -684,6 +732,24 @@ static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const 
     tkAccessible->refCount = 1;
     tkAccessible->win = win;
   }
+  
+  Tcl_HashEntry *entry;
+  int newEntry;
+  entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);
+  if (!entry) {
+    ckfree(tkAccessible);
+    return NULL;
+  }
+  Tcl_SetHashValue(entry, tkAccessible);
+  
+  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
+  if (!entry) {
+    /* Remove previous entry to avoid leaks. */
+   / Tcl_DeleteHashEntry(Tcl_FindHashEntry(tkAccessibleTable, win));
+    ckfree(tkAccessible);
+    return NULL;
+  }
+  Tcl_SetHashValue(entry, win);
   return tkAccessible;
 }
 
@@ -1042,14 +1108,10 @@ int TkWinAccessibleObjCmd(
     hwnd = NULL;
   }	
 
+  /*Create accessible object and add to hash table. */
   TkWinAccessible *accessible = CreateTkAccessible(interp, hwnd, windowName);
   accessible->win = tkwin;
-  TkWinAccessible_RegisterForCleanup(tkwin, accessible);
-  TkWinAccessible_RegisterForFocus(tkwin, accessible);
-  InitTkAccessibleTable();
-  InitHwndToTkWindowTable();
-
-  
+ 
   /* Notify screen readers of creation. */
   NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
   NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
@@ -1061,7 +1123,6 @@ int TkWinAccessibleObjCmd(
   }
   return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1083,8 +1144,13 @@ int TkWinAccessibleObjCmd(
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
+
+  InitTkAccessibleTable();
+  InitHwndToTkWindowTable();
+  
   Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkWinAccessibleObjCmd, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
   return TCL_OK;
 }
+
