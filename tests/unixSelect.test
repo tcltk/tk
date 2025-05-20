@@ -1,21 +1,27 @@
 # This file contains tests for the tkUnixSelect.c file.
 #
-# This file contains a collection of tests for one or more of the Tcl
-# built-in commands.  Sourcing this file into Tcl runs the tests and
-# generates output for errors.  No output means no errors were found.
-#
 # Copyright © 1999 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import child select
+
+#
+# COMMON TEST SETUP
+#
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races
@@ -30,7 +36,9 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
     append longValue A$j B$j C$j D$j E$j F$j G$j H$j I$j K$j L$j M$j N$j
 }
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} -constraints {
     x11
@@ -190,6 +198,7 @@ test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} -constraints {
 } -cleanup {
     childTkProcess exit
 } -result [string repeat x 3999]ü[string repeat x 4000]
+
 # Now some tests to make sure that the right thing is done when
 # transferring UTF8 selections, to prevent [Bug 614650] and its ilk
 # from rearing its ugly head again.

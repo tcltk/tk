@@ -1,5 +1,4 @@
-# This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests. This
+# This file is a Tcl script to test menus in Tk. This
 # file tests the Macintosh-specific features of the menu
 # system.
 #
@@ -7,11 +6,20 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
+#
+# TESTS
+#
 
 test unixMenu-1.1 {TkpNewMenu - normal menu} -constraints unix -setup {
     destroy .m1
@@ -1267,9 +1275,10 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -constraints 
 
 test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
 
+#
+# CLEANUP
+#
 
-
-# cleanup
 deleteWindows
 cleanupTests
 return
