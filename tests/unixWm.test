@@ -2179,10 +2179,6 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
 
-#
-# COMMON TEST SETUP
-#
-
 test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} -constraints unix -setup {
     # The mac won't put an overrideredirect window above the root,
     if {[tk windowingsystem] eq "aqua"} {
