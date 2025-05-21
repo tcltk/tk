@@ -254,27 +254,23 @@ static int GdiArc(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-/*    static const char usage_message[] =
-	"::tk::print::_gdi arc hdc x1 y1 x2 y2 "
-	"-extent angle -start angle -style arcstyle "
-	"-fill color -outline color "
-	"-width dimension -dash dashrule "
-	"-outlinestipple ignored -stipple ignored\n" ; */
     double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
-
-    double extent = 90.0, start = 0.0;
     DrawFunc drawfunc;
-    double width = 1.0;
-    /* Default for arcs: -outline black -fill {} */
-    CanvasColor outline = {0, 0}, fill = {0, 1};
-    const char *dash = NULL, *stipple = NULL, *olstipple = NULL;
+
+    double extent         = 90.0;
+    double start          = 0.0;
+    double width          = 1.0;
+    CanvasColor outline   = {0, 0};
+    CanvasColor fill      = {0, 1};
+    const char *dash      = NULL;
+    const char *stipple   = NULL;
+    const char *olstipple = NULL;
+    drawfunc              = Pie;
 
     LOGBRUSH lbrush;
     HGDIOBJ oldbrush = NULL, oldpen = NULL;
-
-    drawfunc = Pie;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
@@ -290,24 +286,29 @@ static int GdiArc(
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &y2) != TCL_OK)) {
 	return TCL_ERROR;
     }
+    objv += 6;
+    objc -= 6;
 
-    /* stipple and outlinestipple are ignored by now */
-    const Tcl_ArgvInfo arcArgvInfo[] = {
-	{TCL_ARGV_STRING,  "-dash",    NULL,       &dash,      NULL, NULL},
-	{TCL_ARGV_FLOAT,   "-extent",  NULL,       &extent,    NULL, NULL},
-	{TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,      NULL, NULL},
-	{TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline,   NULL, NULL},
-	{TCL_ARGV_STRING,  "-outlinestipple", NULL,&olstipple, NULL, NULL},
-	{TCL_ARGV_FLOAT,   "-start",   NULL,       &start,     NULL, NULL},
-	{TCL_ARGV_STRING,  "-stipple", NULL,       &stipple,   NULL, NULL},
-	{TCL_ARGV_GENFUNC, "-style",   ParseStyle, &drawfunc,  NULL, NULL},
-	{TCL_ARGV_FLOAT,   "-width",   NULL,       &width,     NULL, NULL},
-	TCL_ARGV_TABLE_END
-    };
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
 
-    Tcl_Size argc = objc-5;
-    if (Tcl_ParseArgsObjv(interp, arcArgvInfo, &argc, objv+5, NULL)) {
-	return TCL_ERROR;
+	const Tcl_ArgvInfo arcArgvInfo[] = {
+	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,      NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-extent",  NULL,       &extent,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline,   NULL, NULL},
+	    {TCL_ARGV_STRING,  "-outlinestipple", NULL,&olstipple, NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-start",   NULL,       &start,     NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple", NULL,       &stipple,   NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-style",   ParseStyle, &drawfunc,  NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-width",   NULL,       &width,     NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, arcArgvInfo, &argc, objv, NULL)) {
+	    return TCL_ERROR;
+	}
     }
 
     /* a simple check: if both -outline and -fill are empty, return */
@@ -361,17 +362,8 @@ static int GdiArc(
 
     (*drawfunc)(hDC, x1, y1, x2, y2, xr0, yr0, xr1, yr1);
 
-    if (outline.isempty) {
-	SelectObject(hDC, oldpen);
-    } else {
-	GdiFreePen(interp, hDC, oldpen);
-    }
-
-    if (fill.isempty) {
-	SelectObject(hDC, oldbrush);
-    } else {
-	GdiFreeBrush(interp, hDC, oldbrush);
-    }
+    GdiFreePen(interp, hDC, oldpen);
+    GdiFreeBrush(interp, hDC, oldbrush);
 
     return TCL_OK;
 }
@@ -785,7 +777,7 @@ static Tcl_Size ParseArrShp(
 	    Tcl_GetDoubleFromObj(NULL, shpObjs[1], &a1) != TCL_OK ||
 	    Tcl_GetDoubleFromObj(NULL, shpObjs[2], &a2) != TCL_OK) {
 	Tcl_AppendResult(interp, "arrow shape should be a list ",
-	    "with three integer numbers", NULL);
+	    "with three numbers", NULL);
 	return -1;
     }
     arrowShape[0] = ROUND32(a0);
@@ -854,7 +846,7 @@ static Tcl_Size ParseSmooth(
 	    "option \"-smooth\" requires an additional argument", NULL);
 	return -1;
     }
-//   Argument is a boolean value, "bezier" or "raw".
+    /* Argument is a boolean value, "bezier" or "raw". */
     if (Tcl_GetBooleanFromObj(NULL, objv[0], &bool) == TCL_OK) {
 	*(int *)dstPtr = bool;
 	return 1;
@@ -892,10 +884,9 @@ static int GdiLine(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
+    HDC hDC;
     POINT *polypoints;
     int npoly;
-    int x, y;
-    HDC hDC;
     LOGBRUSH lbrush;
     HGDIOBJ oldpen = NULL, oldbrush = NULL;
 
@@ -910,7 +901,8 @@ static int GdiLine(
     int capstyle      = PS_ENDCAP_FLAT;
     int joinstyle     = PS_JOIN_ROUND;
     /* ignored for now */
-    const char *stipple = NULL, *dashoffset = NULL;
+    const char *stipple = NULL;
+    const char *dashoffset = NULL;
 
     double p1x, p1y, p2x, p2y;
 
@@ -1114,25 +1106,21 @@ static int GdiOval(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi oval hdc x1 y1 x2 y2 -fill color -outline color "
-	"-stipple bitmap -width linewid";
-    double x1, y1, x2, y2;
     HDC hDC;
-    HPEN hPen;
-    double width = 0.0;
-    COLORREF linecolor = 0, fillcolor = 0;
-    int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush = NULL;
-    LOGBRUSH lbrush;
-    HGDIOBJ oldobj = NULL;
 
-    int dodash = 0;
-    const char *dashdata = 0;
+    double width = 1.0;
+    CanvasColor outline = {0, 0};
+    CanvasColor fill    = {0, 1};
+    const char *dash    = NULL;
+    const char *stipple = NULL;
+
+    LOGBRUSH lbrush;
+    HGDIOBJ oldpen = NULL, oldbrush = NULL;
+    double x1, y1, x2, y2;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
 
@@ -1157,43 +1145,39 @@ static int GdiOval(
     objc -= 6;
     objv += 6;
 
-    while (objc > 0) {
-	/* Now handle any other arguments that occur. */
-	if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &fillcolor)) {
-		dofillcolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-outline") == 0) {
-	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &linecolor)) {
-		dolinecolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-	    /* Not actually implemented */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    if (Tcl_GetString(objv[1])) {
-		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-dash") == 0) {
-	    if (Tcl_GetString(objv[1])) {
-		dodash = 1;
-		dashdata = Tcl_GetString(objv[1]);
-	    }
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
+
+	const Tcl_ArgvInfo ovalArgvInfo[] = {
+	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline, NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple", NULL,       &stipple, NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-width",   NULL,       &width,   NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, ovalArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    return TCL_ERROR;
 	}
-	objv += 2;
-	objc -= 2;
+    }
+    if (outline.isempty && fill.isempty) {
+	return TCL_OK;
     }
 
-    if (dofillcolor) {
-	GdiMakeBrush(fillcolor, 0, &lbrush, hDC, &hBrush);
+    if (fill.isempty) {
+	oldbrush = SelectObject(hDC, GetStockObject(NULL_BRUSH));
     } else {
-	oldobj = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
+	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
     }
 
-    if (width || dolinecolor) {
-	GdiMakePen(interp, width, dodash, dashdata,
-		0, 0, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (outline.isempty) {
+	oldpen = SelectObject(hDC, GetStockObject(NULL_PEN));
+    } else {
+	GdiMakePen(interp, width, (dash != NULL), dash,
+	    0, 0, 0, 0, outline.color, hDC, (HGDIOBJ *)&oldpen);
     }
     /*
      * Per Win32, Rectangle includes lower and right edges--per Tcl8.3.2 and
@@ -1202,14 +1186,8 @@ static int GdiOval(
      */
     Ellipse(hDC, ROUND32(x1), ROUND32(y1), ROUND32(x2+1), ROUND32(y2+1));
 
-    if (width || dolinecolor) {
-	GdiFreePen(interp, hDC, hPen);
-    }
-    if (hBrush) {
-	GdiFreeBrush(interp, hDC, hBrush);
-    } else {
-	SelectObject(hDC, oldobj);
-    }
+    GdiFreePen(interp, hDC, oldpen);
+    GdiFreeBrush(interp, hDC, oldbrush);
 
     return TCL_OK;
 }
@@ -1274,7 +1252,7 @@ static int GdiPolygon(
     polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
     if (polypoints == NULL) {
 	/* TODO: unreachable */
-	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
+	Tcl_AppendResult(interp, "Out of memory in GdiPolygon", NULL);
 	return TCL_ERROR;
     }
     polypoints[0].x = ROUND32(p1x);
@@ -1927,7 +1905,7 @@ int GdiText(
 	Tcl_DStringInit(&ds);
 	wstring = Tcl_UtfToWCharDString(layout->chunks[i].start,
 	    layout->chunks[i].numBytes, &ds);
-	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
+	TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
 	Tcl_DStringFree(&ds);
 	ya += fm.linespace;
 	nlseen = 0;
@@ -1943,28 +1921,23 @@ int GdiText(
     }
     SetBkMode(hDC, bgmode);
 
-    /* Use DrawTextW to calculate the return value
-     * This is used for printing the text widget, not canvas text items
-     */
-    RECT rect;
-    rect.left = rect.top = 0;
-    rect.right = (wraplen > 0) ? wraplen : 100000;
-    rect.bottom = 1000000;
-    Tcl_DString ds;
-    Tcl_DStringInit(&ds);
-
-    retval = DrawTextW(hDC, Tcl_UtfToWCharDString(string, TCL_INDEX_NONE, &ds),
-	Tcl_DStringLength(&ds) / 2, &rect, DT_CALCRECT);
-    Tcl_DStringFree(&ds);
+    int result = TCL_OK;
+    TEXTMETRICW tmw;
+    if (GetTextMetricsW(hDC, &tmw) != 0) {
+	retval = (int)tmw.tmHeight;
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
+    } else {
+	Tcl_AppendResult(interp, "gdi_ text: can't determine line height",
+	    NULL);
+	result = TCL_ERROR;
+    }
 
     if (made_font) {
 	SelectObject(hDC, oldfont);
 	DeleteObject(hfont);
     }
 
-    /* return value is the height of the text as calculated by DrawTextW */
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
-    return TCL_OK;
+    return result;
 }
 
 /*
