@@ -1,4 +1,5 @@
-# This file is a Tcl script to test the tk command.
+# This file is a Tcl script to test the "tk" command, except those for
+# "tk busy", which are in the test file busy.test.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
@@ -210,8 +211,6 @@ test tk-7.2 {tk inactive reset in a safe interpreter} -body {
 test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expected on all platforms} -constraints testprintf -body {
     testprintf -21474836480
 } -result {-21474836480 18446744052234715136}
-
-# tests of [tk busy] in busy.test
 
 #
 # CLEANUP
