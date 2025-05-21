@@ -1,21 +1,30 @@
 # This file is a Tcl script to test the visual- and colormap-handling
-# procedures in the file tkVisual.c.  It is organized in the standard
-# fashion for Tcl tests.
+# procedures in the file tkVisual.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import colors
 
 update
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 # If more than one visual type is available for the screen, pick one
 # that is *not* the default.
@@ -35,7 +44,9 @@ testConstraint haveOtherVisual [expr {$other ne ""}]
 testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test visual-1.1 {Tk_GetVisual, copying from other window} -body {
     toplevel .t -visual .foo.bar
