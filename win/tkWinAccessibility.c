@@ -4,7 +4,7 @@
  *	  This file implements the platform-native Microsoft Active 
  *	  Accessibility API for Tk on Windows.  
  *
- * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (C) 2024-2025 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -733,23 +733,16 @@ static TkWinAccessible *CreateTkAccessible(Tcl_Interp *interp, HWND hwnd, const 
     tkAccessible->win = win;
   }
   
+  /*Add objects to hash tables. */
   Tcl_HashEntry *entry;
   int newEntry;
   entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);
-  if (!entry) {
-    ckfree(tkAccessible);
-    return NULL;
-  }
   Tcl_SetHashValue(entry, tkAccessible);
   
   entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
-  if (!entry) {
-    /* Remove previous entry to avoid leaks. */
-   / Tcl_DeleteHashEntry(Tcl_FindHashEntry(tkAccessibleTable, win));
-    ckfree(tkAccessible);
-    return NULL;
-  }
   Tcl_SetHashValue(entry, win);
+  
+  TkWinAccessible_AddRef((IAccessible*)tkAccessible);  
   return tkAccessible;
 }
 
@@ -1111,6 +1104,8 @@ int TkWinAccessibleObjCmd(
   /*Create accessible object and add to hash table. */
   TkWinAccessible *accessible = CreateTkAccessible(interp, hwnd, windowName);
   accessible->win = tkwin;
+  TkWinAccessible_RegisterForCleanup(tkwin, accessible);
+  TkWinAccessible_RegisterForFocus(tkwin, accessible);
  
   /* Notify screen readers of creation. */
   NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);

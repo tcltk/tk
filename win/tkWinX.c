@@ -823,7 +823,7 @@ TkWinChildProc(
 	    }
 	}
 	break;
-  
+
     /* Handle MSAA queries. */
     case WM_GETOBJECT: {
 	if ((LONG)lParam == OBJID_CLIENT) { /*Toplevel window. */
@@ -831,31 +831,13 @@ TkWinChildProc(
 	    if (tkwin) {
 		TkWinAccessible *acc = GetTkAccessibleForWindow(tkwin);
 		if (acc) {
-		    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-		    acc->lpVtbl->Release((IAccessible *)acc);
+		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 		    return result;
 		}
 	    }
-	} else if (lParam > 0) { /* Assuming positive lParam indicates a child ID. */
-	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
-	    if (tkwin) {
-		TkWindow *child;
-		TkWindow *parent = (TkWindow *)tkwin;
-		for (child = parent->childList; child != NULL; child = child->nextPtr) {
-		    LONG childID = GetChildIdForTkWindow((Tk_Window)child);
-		    if (childID == (LONG)lParam) {
-			TkWinAccessible *acc = GetTkAccessibleForWindow((Tk_Window)child);
-			if (acc) {
-			    LRESULT result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-			    acc->lpVtbl->Release((IAccessible *)acc);
-			    return result;
-			}
-		    }
-                }
-	    }
 	}
     }
-	
+
 	break;
 
     default:
