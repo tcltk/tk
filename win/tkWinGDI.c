@@ -357,7 +357,7 @@ static int GdiArc(
     } else {
 	GdiMakePen(interp, width, (dash != NULL), dash,
 	    PS_ENDCAP_FLAT, PS_JOIN_BEVEL, 0, 0,
-	    outline.color, hDC, (HGDIOBJ *)&oldpen);
+	    outline.color, hDC, &oldpen);
     }
 
     (*drawfunc)(hDC, x1, y1, x2, y2, xr0, yr0, xr1, yr1);
@@ -1177,11 +1177,11 @@ static int GdiOval(
 	oldpen = SelectObject(hDC, GetStockObject(NULL_PEN));
     } else {
 	GdiMakePen(interp, width, (dash != NULL), dash,
-	    0, 0, 0, 0, outline.color, hDC, (HGDIOBJ *)&oldpen);
+	    0, 0, 0, 0, outline.color, hDC, &oldpen);
     }
     /*
-     * Per Win32, Rectangle includes lower and right edges--per Tcl8.3.2 and
-     * earlier documentation, canvas rectangle does not. Thus, add 1 to right
+     * Per Win32, Ellipse includes lower and right edges--per Tcl8.3.2 and
+     * earlier documentation, canvas oval does not. Thus, add 1 to right
      * and lower bounds to get appropriate behavior.
      */
     Ellipse(hDC, ROUND32(x1), ROUND32(y1), ROUND32(x2+1), ROUND32(y2+1));
@@ -1211,33 +1211,26 @@ static int GdiPolygon(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi polygon hdc x1 y1 ... xn yn "
-	"-fill color -outline color -smooth [true|false|bezier|raw] "
-	"-splinesteps number -stipple bitmap -width linewid";
-
-    char *strend;
+    HDC hDC;
     POINT *polypoints;
     int npoly;
-    int smooth = SMOOTH_NONE;
-    int nStep = 12;
-    int x, y;
-    HDC hDC;
-    HPEN hPen;
-    double width = 0.0;
-    COLORREF linecolor = 0, fillcolor = BS_NULL;
-    int dolinecolor = 0, dofillcolor = 0;
-    LOGBRUSH lbrush;
-    HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj = NULL;
 
-    int dodash = 0;
-    const char *dashdata = 0;
+    double width        = 1.0;
+    CanvasColor outline = {0, 0};
+    CanvasColor fill    = {0, 1};
+    int joinstyle       = PS_JOIN_ROUND;
+    int smooth          = SMOOTH_NONE;
+    int nStep           = 12;
+    const char *dash    = NULL;
+    const char *stipple = NULL;
+
+    LOGBRUSH lbrush;
+    HGDIOBJ oldpen = NULL, oldbrush = NULL;
     double p1x, p1y, p2x, p2y;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 ... xn yn ?option value ...?");
 	return TCL_ERROR;
     }
 
@@ -1263,88 +1256,54 @@ static int GdiPolygon(
     objv += 6;
     npoly = 2;
 
-    while (objc >= 2) {
-	/* Check for a number */
-	x = strtoul(Tcl_GetString(objv[0]), &strend, 0);
-	if (strend > Tcl_GetString(objv[0])) {
-	    /* One number.... */
-	    y = strtoul(Tcl_GetString(objv[1]), &strend, 0);
-	    if (strend > Tcl_GetString(objv[1])) {
-		/* TWO numbers!. */
-		polypoints[npoly].x = x;
-		polypoints[npoly].y = y;
-		npoly++;
-		objc -= 2;
-		objv += 2;
-	    } else {
-		/* Only one number... Assume a usage error. */
-		ckfree(polypoints);
-		Tcl_AppendResult(interp, usage_message, (char *)NULL);
-		return TCL_ERROR;
-	    }
-	} else {
-	    /*
-	     * Check for arguments.
-	     * Most of the arguments affect the "Pen" and "Brush".
-	     */
-	    if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-		if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &fillcolor)) {
-		    dofillcolor = 1;
-		}
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-outline") == 0) {
-		if (GdiGetColor(objv[1], &linecolor)) {
-		    dolinecolor = 0;
-		}
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-smooth") == 0) {
-		if (Tcl_GetString(objv[1])) {
-		    switch (Tcl_GetString(objv[1])[0]) {
-		    case 't': case 'T':
-		    case '1':
-		    case 'b': case 'B': /* bezier. */
-			smooth = SMOOTH_BEZIER;
-			break;
-		    case 'r': case 'R': /* raw. */
-			smooth = SMOOTH_RAW;
-			break;
-		    default:
-			/* do nothing; SMOOTH_NONE is the default */
-			break;
-		    }
-		}
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-splinesteps") == 0) {
-		if (Tcl_GetString(objv[1])) {
-		    if (Tcl_GetIntFromObj(interp, objv[1], &nStep) != TCL_OK) {
-			return TCL_ERROR;
-		    }
-		}
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-		/* Not supported */
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-		if (Tcl_GetString(objv[1])) {
-		    if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
-			return TCL_ERROR;
-		    }
-		}
-	    } else if (strcmp(Tcl_GetString(objv[0]), "-dash") == 0) {
-		if (Tcl_GetString(objv[1])) {
-		    dodash = 1;
-		    dashdata = Tcl_GetString(objv[1]);
-		}
-	    }
-	    objc -= 2;
-	    objv += 2;
+    while (objc >= 2 &&
+	    Tcl_GetDoubleFromObj(NULL, objv[0], &p1x) == TCL_OK &&
+	    Tcl_GetDoubleFromObj(NULL, objv[1], &p1y) == TCL_OK) {
+	polypoints[npoly].x = ROUND32(p1x);
+	polypoints[npoly].y = ROUND32(p1y);
+	npoly++;
+	objc -= 2;
+	objv += 2;
+    }
+
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
+
+	const Tcl_ArgvInfo polyArgvInfo[] = {
+	    {TCL_ARGV_STRING,  "-dash",       NULL,          &dash,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",       ParseColor,    &fill,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-joinstyle",  ParseJoinStyle,&joinstyle, NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-outline",    ParseColor,    &outline,   NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-smooth",     ParseSmooth,   &smooth,    NULL, NULL},
+	    {TCL_ARGV_INT,     "-splinesteps",NULL,          &nStep,     NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple",    NULL,          &stipple,   NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-width",      NULL,          &width,     NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, polyArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    ckfree(polypoints);
+	    return TCL_ERROR;
 	}
     }
 
-    if (dofillcolor) {
-	GdiMakeBrush(fillcolor, 0, &lbrush, hDC, &hBrush);
-    } else {
-	oldobj = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
+    if (outline.isempty && fill.isempty) {
+	return TCL_OK;
     }
 
-    if (width || dolinecolor) {
-	GdiMakePen(interp, width, dodash, dashdata, 0, 0, 0, 0,
-		linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (outline.isempty) {
+	oldpen = SelectObject(hDC, GetStockObject(NULL_PEN));
+    } else {
+	GdiMakePen(interp, width, (dash != NULL), dash, 0, joinstyle, 0, 0,
+	    outline.color, hDC, &oldpen);
+    }
+
+    if (fill.isempty) {
+	oldbrush = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
+    } else {
+	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
     }
 
     if (smooth) { /* Use Smoothize. */
@@ -1364,14 +1323,8 @@ static int GdiPolygon(
 	Polygon(hDC, polypoints, npoly);
     }
 
-    if (width || dolinecolor) {
-	GdiFreePen(interp, hDC, hPen);
-    }
-    if (hBrush) {
-	GdiFreeBrush(interp, hDC, hBrush);
-    } else {
-	SelectObject(hDC, oldobj);
-    }
+    GdiFreePen(interp, hDC, oldpen);
+    GdiFreeBrush(interp, hDC, oldbrush);
 
     ckfree(polypoints);
     return TCL_OK;
@@ -1396,27 +1349,22 @@ static int GdiRectangle(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi rectangle hdc x1 y1 x2 y2 "
-	"-fill color -outline color "
-	"-stipple bitmap -width linewid";
+    HDC hDC;
+
+    double width = 1.0;
+    CanvasColor outline = {0, 0};
+    CanvasColor fill    = {0, 1};
+    const char *dash    = NULL;
+    const char *stipple = NULL;
+
+    LOGBRUSH lbrush;
+    HGDIOBJ oldpen = NULL, oldbrush = NULL;
 
     double x1, y1, x2, y2;
-    HDC hDC;
-    HPEN hPen;
-    double width = 0.0;
-    COLORREF linecolor = 0, fillcolor = BS_NULL;
-    int dolinecolor = 0, dofillcolor = 0;
-    LOGBRUSH lbrush;
-    HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj = NULL;
-
-    int dodash = 0;
-    const char *dashdata = 0;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
 
@@ -1441,51 +1389,41 @@ static int GdiRectangle(
     objc -= 6;
     objv += 6;
 
-    /* Now handle any other arguments that occur. */
-    while (objc > 1) {
-	if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &fillcolor)) {
-		dofillcolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-outline") == 0) {
-	    if (Tcl_GetString(objv[1]) && GdiGetColor(objv[1], &linecolor)) {
-		dolinecolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-	    /* Not supported; ignored */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    if (Tcl_GetString(objv[1])) {
-		if (Tcl_GetDoubleFromObj(interp, objv[1], &width) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-dash") == 0) {
-	    if (Tcl_GetString(objv[1])) {
-		dodash = 1;
-		dashdata = Tcl_GetString(objv[1]);
-	    }
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
+
+	const Tcl_ArgvInfo rectArgvInfo[] = {
+	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline, NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple", NULL,       &stipple, NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-width",   NULL,       &width,   NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, rectArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    return TCL_ERROR;
 	}
-
-	objc -= 2;
-	objv += 2;
+    }
+    if (outline.isempty && fill.isempty) {
+	return TCL_OK;
     }
 
-    /*
-     * Note: If any fill is specified, the function must create a brush and
-     * put the coordinates in a RECTANGLE structure, and call FillRect.
-     * FillRect requires a BRUSH / color.
-     * If not, the function Rectangle must be called.
-     */
-    if (dofillcolor) {
-	GdiMakeBrush(fillcolor, 0, &lbrush, hDC, &hBrush);
+    if (fill.isempty) {
+	oldbrush = SelectObject(hDC, GetStockObject(NULL_BRUSH));
     } else {
-	oldobj = SelectObject(hDC, GetStockObject(HOLLOW_BRUSH));
+	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
     }
 
-    if (width || dolinecolor) {
-	GdiMakePen(interp, width, dodash, dashdata,
-		0, PS_JOIN_MITER, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
+    if (outline.isempty) {
+	oldpen = SelectObject(hDC, GetStockObject(NULL_PEN));
+    } else {
+	GdiMakePen(interp, width, (dash != NULL), dash,
+	    0, PS_JOIN_MITER, 0, 0, outline.color, hDC, &oldpen);
     }
+
     /*
      * Per Win32, Rectangle includes lower and right edges--per Tcl8.3.2 and
      * earlier documentation, canvas rectangle does not. Thus, add 1 to
@@ -1493,14 +1431,8 @@ static int GdiRectangle(
      */
     Rectangle(hDC, ROUND32(x1), ROUND32(y1), ROUND32(x2+1), ROUND32(y2+1));
 
-    if (width || dolinecolor) {
-	GdiFreePen(interp, hDC, hPen);
-    }
-    if (hBrush) {
-	GdiFreeBrush(interp, hDC, hBrush);
-    } else {
-	SelectObject(hDC, oldobj);
-    }
+    GdiFreePen(interp, hDC, oldpen);
+    GdiFreeBrush(interp, hDC, oldbrush);
 
     return TCL_OK;
 }
@@ -2890,8 +2822,8 @@ static int GdiMakePen(
     double dwidth,
     int dashstyle,
     const char *dashstyledata,
-    int endStyle,		/* Ignored for now. */
-    int joinStyle,		/* Ignored for now. */
+    int endStyle,
+    int joinStyle,
     TCL_UNUSED(int),
     TCL_UNUSED(const char *),	/* Ignored for now. */
     unsigned long color,
@@ -2916,12 +2848,8 @@ static int GdiMakePen(
     HPEN hPen;
     LOGBRUSH lBrush;
     DWORD pStyle = PS_SOLID;           /* -dash should override*/
-//    DWORD endStyle = PS_ENDCAP_ROUND;  /* -capstyle should override. */
-//    DWORD joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override. */
     DWORD styleCount = 0;
     DWORD *styleArray = 0;
-    if (endStyle == 0) endStyle = PS_ENDCAP_ROUND;  /* -capstyle should override. */
-    if (joinStyle == 0) joinStyle = PS_JOIN_ROUND;   /* -joinstyle should override. */
 
     /*
      * To limit the propagation of allocated memory, the dashes will have a
