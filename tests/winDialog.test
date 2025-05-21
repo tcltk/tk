@@ -1,15 +1,19 @@
-# -*- tcl -*-
 # This file is a Tcl script to test the Windows specific behavior of
-# the common dialog boxes.  It is organized in the standard
-# fashion for Tcl tests.
+# the common dialog boxes.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 1998-1999 ActiveState Corporation.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
@@ -20,13 +24,9 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
 
-# Locale identifier LANG_ENGLISH is 0x09
-testConstraint english [expr {
-    [llength [info commands testwinlocale]]
-    && (([testwinlocale] & 0xff) == 9)
-}]
-
-set initialDir [tcltest::temporaryDirectory]
+#
+# LOCAL UTILITY PROCS
+#
 
 proc GetText {id} {
     variable testDialog
@@ -42,7 +42,25 @@ proc SetText {id text} {
     return [testwinevent $testDialog $id WM_SETTEXT $text]
 }
 
-# ----------------------------------------------------------------------
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+# Locale identifier LANG_ENGLISH is 0x09
+testConstraint english [expr {
+    [llength [info commands testwinlocale]]
+    && (([testwinlocale] & 0xff) == 9)
+}]
+
+#
+# COMMON TEST SETUP
+#
+
+set initialDir [tcltest::temporaryDirectory]
+
+#
+# TESTS
+#
 
 test winDialog-1.1 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
@@ -852,13 +870,13 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
     set a(text)
 } -result "Привет"
 
-if {[testConstraint testwinevent]} {
-    catch {testwinevent debug 0}
-}
-
 #
 # CLEANUP
 #
+
+if {[testConstraint testwinevent]} {
+    catch {testwinevent debug 0}
+}
 
 unset applyFontCmd initialDir
 testutils forget dialog
