@@ -125,13 +125,24 @@ static const struct gdi_command {
     { "copybits",   GdiCopyBits },
 };
 
+/*
+ * Helper functions for Tcl_ParseArgsObjv.
+ * These are used in parsing "-option value" pairs in the different GDI
+ * subcommands.
+ */
+
+/*
+ * This structure represents a canvas color, which can be any color
+ * accepted by Tk_GetColor, or the empty string to mean
+ * "don't draw the element"
+ */
 typedef struct CanvasColor {
-    COLORREF color;
-    char isempty;
+    COLORREF color; /* Color */
+    char isempty;   /* 1 if color is {}, 0 otherwise */
 } CanvasColor;
 
 static Tcl_Size ParseColor (
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv,
@@ -142,7 +153,7 @@ static Tcl_Size ParseColor (
 
     if (objc == 0) {
 	Tcl_AppendResult(interp, "option \"", Tcl_GetString(objv[-1]),
-	    "\" needs and additional argument", NULL);
+	    "\" needs an additional argument", NULL);
 	return -1;
     }
 
@@ -162,6 +173,89 @@ static Tcl_Size ParseColor (
     return -1;
 }
 
+static Tcl_Size ParseDash (
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    const char *dash;
+    Tcl_Size llen, dlen, i;
+    Tcl_Obj **dasharr;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-dash\" needs an additional argument", NULL);
+	return -1;
+    }
+
+    dash = Tcl_GetStringFromObj(objv[0], &dlen);
+    if (dash[0] == '\0') {
+	/* empty string. leave the default alone (NULL) */
+	return 1;
+    }
+
+    /* first, try out the list of integers */
+    if (Tcl_ListObjGetElements(NULL, objv[0], &llen, &dasharr) == TCL_OK) {
+	int allint = 0, dummy;
+
+	if (llen == 0) {
+	    /* this is an error */
+	    Tcl_AppendResult(interp, "bad dash pattern \"", dash, "\"", NULL);
+	    return -1;
+	}
+
+	for (i = 0; i < llen; i++) {
+	    allint = (Tcl_GetIntFromObj(NULL, dasharr[i], &dummy) == TCL_OK);
+	    if (! allint) break;
+	}
+	if (allint) {
+	    /* all integers */
+	    *(const char **)dstPtr = dash;
+	    return 1;
+	}
+    }
+
+    /* now, try the '.,-_ ' char sequence */
+    for (i = 0; i < dlen; i++) {
+	int charok;
+
+	switch (dash[i]) {
+	    case ' ':
+		if (i == 0) {
+		    /* space can't be the first char */
+		    charok = 0;
+		} else {
+		    charok = 1;
+		}
+		break;
+	    case '.':
+		charok = 1;
+		break;
+	    case ',':
+		charok = 1;
+		break;
+	    case '-':
+		charok = 1;
+		break;
+	    case '_':
+		charok = 1;
+		break;
+	    default:
+		charok = 0;
+		break;
+	}
+	if (! charok) {
+	    Tcl_AppendResult(interp, "bad dash pattern \"", dash, "\"", NULL);
+	    return -1;
+	}
+    }
+
+    *(const char **)dstPtr = dash;
+    return 1;
+}
+
 static Tcl_Size ParseJoinStyle (
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
@@ -173,7 +267,7 @@ static Tcl_Size ParseJoinStyle (
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
-	    "option \"-joinstyle\" needs and additional argument", NULL);
+	    "option \"-joinstyle\" needs an additional argument", NULL);
 	return -1;
     }
 
@@ -202,7 +296,7 @@ static Tcl_Size ParseJoinStyle (
  *----------------------------------------------------------------------
  */
 static Tcl_Size ParseStyle (
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv,
@@ -223,7 +317,7 @@ static Tcl_Size ParseStyle (
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
-	    "option \"-style\" needs and additional argument", NULL);
+	    "option \"-style\" needs an additional argument", NULL);
 	return -1;
     }
 
@@ -259,6 +353,7 @@ static int GdiArc(
     HDC hDC;
     DrawFunc drawfunc;
 
+     /* canvas arc item defaults */
     double extent         = 90.0;
     double start          = 0.0;
     double width          = 1.0;
@@ -294,7 +389,7 @@ static int GdiArc(
 	objv--;
 
 	const Tcl_ArgvInfo arcArgvInfo[] = {
-	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-dash",    ParseDash,  &dash,      NULL, NULL},
 	    {TCL_ARGV_FLOAT,   "-extent",  NULL,       &extent,    NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,      NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline,   NULL, NULL},
@@ -733,7 +828,7 @@ static Tcl_Size ParseArrow (
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
-	    "option \"-arrow\" needs and additional argument", NULL);
+	    "option \"-arrow\" needs an additional argument", NULL);
 	return -1;
     }
 
@@ -803,7 +898,7 @@ static Tcl_Size ParseCapStyle (
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
-	    "option \"-capstyle\" needs and additional argument", NULL);
+	    "option \"-capstyle\" needs an additional argument", NULL);
 	return -1;
     }
 
@@ -838,8 +933,16 @@ static Tcl_Size ParseSmooth(
     void *dstPtr)
 {
     int bool;
-    Tcl_Size len;
-    const char *str;
+    Tcl_Size index;
+
+    static const struct SmoothMethod {
+	const char *name;
+	int method;
+    } smoothmethods[] = {
+	{"bezier", SMOOTH_BEZIER},
+	{"raw",    SMOOTH_RAW},
+	{NULL,     0}
+    };
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
@@ -852,18 +955,13 @@ static Tcl_Size ParseSmooth(
 	return 1;
     }
 
-    str = Tcl_GetStringFromObj(objv[0], &len);
-    if (strncasecmp(str, "bezier", (size_t)len) == 0) {
-	*(int *)dstPtr = SMOOTH_BEZIER;
-	return 1;
-    } else if (strncasecmp(str, "raw", (size_t)len) == 0) {
-	*(int *)dstPtr = SMOOTH_RAW;
-	return 1;
-    }
-
-    Tcl_AppendResult(interp, "bad smooth value \"", str, "\"; should be "
-	"a boolean value, \"bezier\" or \"raw\"", NULL);
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], smoothmethods,
+	    sizeof(struct SmoothMethod), "smooth method", 0, &index) != TCL_OK) {
+	Tcl_AppendResult(interp, " or a boolean value", NULL);
 	return -1;
+    }
+    *(int *)dstPtr = smoothmethods[index].method;
+    return 1;
 }
 /*
  *----------------------------------------------------------------------
@@ -905,6 +1003,7 @@ static int GdiLine(
     const char *dashoffset = NULL;
 
     double p1x, p1y, p2x, p2y;
+    double shapeA, shapeB, shapeC, fracHeight, backup;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
@@ -951,7 +1050,7 @@ static int GdiLine(
 	    {TCL_ARGV_GENFUNC, "-arrow",      ParseArrow,    &arrow,     NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-arrowshape", ParseArrShp,   arrowshape, NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-capstyle",   ParseCapStyle, &capstyle,  NULL, NULL},
-	    {TCL_ARGV_STRING,  "-dash",       NULL,          &dash,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-dash",       ParseDash,     &dash,      NULL, NULL},
 	    {TCL_ARGV_STRING,  "-dashoffset", NULL,          &dashoffset,NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-fill",       ParseColor,    &fill,      NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-joinstyle",  ParseJoinStyle,&joinstyle, NULL, NULL},
@@ -978,43 +1077,37 @@ static int GdiLine(
 	capstyle = PS_ENDCAP_FLAT;
     }
 
-    GdiMakePen(interp, width, (dash != NULL), dash,
-	capstyle, joinstyle, 0, 0, fill.color, hDC, &oldpen);
-    if (smooth) { /* Use Smoothize. */
-	int nbpoints;
-	POINT *bpoints = NULL;
+    if (smooth != SMOOTH_NONE) { /* Use Smoothize. */
+	int nspoints;
+	POINT *spoints = NULL;
 
-	nbpoints = Smoothize(polypoints, npoly, nStep, smooth, &bpoints);
-	if (nbpoints > 0) {
-	    Polyline(hDC, bpoints, nbpoints);
-	} else {
-	    Polyline(hDC, polypoints, npoly); /* Out of memory? Just draw a regular line. */
+	nspoints = Smoothize(polypoints, npoly, nStep, smooth, &spoints);
+	if (nspoints > 0) {
+	    /* replace the old point list with the new one */
+	    ckfree(polypoints);
+	    polypoints = spoints;
+	    npoly = nspoints;
 	}
-	if (bpoints) {
-	    ckfree(bpoints);
-	}
-    } else {
-	Polyline(hDC, polypoints, npoly);
     }
-    GdiFreePen(interp, hDC, oldpen);
 
-    if (arrow != ARROW_NONE) { 
+    if (arrow != ARROW_NONE) {
 	GdiMakeBrush(fill.color, 0, &lbrush, hDC, (HBRUSH *)&oldbrush);
 	GdiMakePen(interp, 1, 0, 0, 0, PS_JOIN_MITER, 0, 0,
 	    fill.color, hDC, &oldpen);
+	shapeA = arrowshape[0] + 0.001;
+	shapeB = arrowshape[1] + 0.001;
+	shapeC = arrowshape[2] + width/2.0 + 0.001;
+	fracHeight = (width/2.0)/shapeC;
+	backup = fracHeight*shapeB + shapeA*(1.0 - fracHeight)/2.0;
     }
-    
 
-    /* Now the arrowheads, if any. */
+    /* draw the arrowheads, if any. */
     if (arrow & ARROW_LAST) {
 	/* Arrowhead at end = polypoints[npoly-1].x, polypoints[npoly-1].y. */
 	POINT ahead[6];
 	double dx, dy, length;
 	double sinTheta, cosTheta;
 	double vertX, vertY, temp;
-	double fracHeight;
-
-	fracHeight = 2.0 / arrowshape[2];
 
 	ahead[0].x = ahead[5].x = polypoints[npoly-1].x;
 	ahead[0].y = ahead[5].y = polypoints[npoly-1].y;
@@ -1026,20 +1119,23 @@ static int GdiLine(
 	    sinTheta = dy / length;
 	    cosTheta = dx / length;
 	}
-	vertX = ahead[0].x - arrowshape[0]*cosTheta;
-	vertY = ahead[0].y - arrowshape[0]*sinTheta;
-	temp = arrowshape[2]*sinTheta;
-	ahead[1].x = (long)(ahead[0].x - arrowshape[1]*cosTheta + temp);
-	ahead[4].x = (long)(ahead[1].x - 2 * temp);
-	temp = arrowshape[2]*cosTheta;
-	ahead[1].y = (long)(ahead[0].y - arrowshape[1]*sinTheta - temp);
-	ahead[4].y = (long)(ahead[1].y + 2 * temp);
-	ahead[2].x = (long)(ahead[1].x*fracHeight + vertX*(1.0-fracHeight));
-	ahead[2].y = (long)(ahead[1].y*fracHeight + vertY*(1.0-fracHeight));
-	ahead[3].x = (long)(ahead[4].x*fracHeight + vertX*(1.0-fracHeight));
-	ahead[3].y = (long)(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
+	vertX = ahead[0].x - shapeA*cosTheta;
+	vertY = ahead[0].y - shapeC*sinTheta;
+	temp = shapeC*sinTheta;
+	ahead[1].x = ROUND32(ahead[0].x - shapeB*cosTheta + temp);
+	ahead[4].x = ROUND32(ahead[1].x - 2 * temp);
+	temp = shapeC*cosTheta;
+	ahead[1].y = ROUND32(ahead[0].y - shapeB*sinTheta - temp);
+	ahead[4].y = ROUND32(ahead[1].y + 2 * temp);
+	ahead[2].x = ROUND32(ahead[1].x*fracHeight + vertX*(1.0-fracHeight));
+	ahead[2].y = ROUND32(ahead[1].y*fracHeight + vertY*(1.0-fracHeight));
+	ahead[3].x = ROUND32(ahead[4].x*fracHeight + vertX*(1.0-fracHeight));
+	ahead[3].y = ROUND32(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
 
 	Polygon(hDC, ahead, 6);
+
+	polypoints[npoly-1].x = ROUND32(ahead[0].x - backup*cosTheta);
+	polypoints[npoly-1].y = ROUND32(ahead[0].y - backup*sinTheta);
     }
 
     if (arrow & ARROW_FIRST) {
@@ -1048,9 +1144,6 @@ static int GdiLine(
 	double dx, dy, length;
 	double sinTheta, cosTheta;
 	double vertX, vertY, temp;
-	double fracHeight;
-
-	fracHeight = 2.0 / arrowshape[2];
 
 	ahead[0].x = ahead[5].x = polypoints[0].x;
 	ahead[0].y = ahead[5].y = polypoints[0].y;
@@ -1062,26 +1155,35 @@ static int GdiLine(
 	    sinTheta = dy / length;
 	    cosTheta = dx / length;
 	}
-	vertX = ahead[0].x - arrowshape[0]*cosTheta;
-	vertY = ahead[0].y - arrowshape[0]*sinTheta;
-	temp = arrowshape[2]*sinTheta;
-	ahead[1].x = (long)(ahead[0].x - arrowshape[1]*cosTheta + temp);
-	ahead[4].x = (long)(ahead[1].x - 2 * temp);
-	temp = arrowshape[2]*cosTheta;
-	ahead[1].y = (long)(ahead[0].y - arrowshape[1]*sinTheta - temp);
-	ahead[4].y = (long)(ahead[1].y + 2 * temp);
-	ahead[2].x = (long)(ahead[1].x*fracHeight + vertX*(1.0-fracHeight));
-	ahead[2].y = (long)(ahead[1].y*fracHeight + vertY*(1.0-fracHeight));
-	ahead[3].x = (long)(ahead[4].x*fracHeight + vertX*(1.0-fracHeight));
-	ahead[3].y = (long)(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
+	vertX = ahead[0].x - shapeA*cosTheta;
+	vertY = ahead[0].y - shapeA*sinTheta;
+	temp = shapeC*sinTheta;
+	ahead[1].x = ROUND32(ahead[0].x - shapeB*cosTheta + temp);
+	ahead[4].x = ROUND32(ahead[1].x - 2 * temp);
+	temp = shapeC*cosTheta;
+	ahead[1].y = ROUND32(ahead[0].y - shapeB*sinTheta - temp);
+	ahead[4].y = ROUND32(ahead[1].y + 2 * temp);
+	ahead[2].x = ROUND32(ahead[1].x*fracHeight + vertX*(1.0-fracHeight));
+	ahead[2].y = ROUND32(ahead[1].y*fracHeight + vertY*(1.0-fracHeight));
+	ahead[3].x = ROUND32(ahead[4].x*fracHeight + vertX*(1.0-fracHeight));
+	ahead[3].y = ROUND32(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
 
 	Polygon(hDC, ahead, 6);
+	polypoints[0].x = ROUND32(ahead[0].x - backup*cosTheta);
+	polypoints[0].y = ROUND32(ahead[0].y - backup*sinTheta);
     }
 
+    /* free arrow's pen and brush (if any) */
     if (arrow != ARROW_NONE) {
 	GdiFreePen(interp, hDC, oldpen);
 	GdiFreeBrush(interp, hDC, oldbrush);
     }
+
+    /* draw the line */
+    GdiMakePen(interp, width, (dash != NULL), dash,
+	capstyle, joinstyle, 0, 0, fill.color, hDC, &oldpen);
+    Polyline(hDC, polypoints, npoly);
+    GdiFreePen(interp, hDC, oldpen);
 
     ckfree(polypoints);
     return TCL_OK;
@@ -1108,6 +1210,7 @@ static int GdiOval(
 {
     HDC hDC;
 
+     /* canvas oval item defaults */
     double width = 1.0;
     CanvasColor outline = {0, 0};
     CanvasColor fill    = {0, 1};
@@ -1150,7 +1253,7 @@ static int GdiOval(
 	objv--;
 
 	const Tcl_ArgvInfo ovalArgvInfo[] = {
-	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-dash",    ParseDash,  &dash,    NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,    NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline, NULL, NULL},
 	    {TCL_ARGV_STRING,  "-stipple", NULL,       &stipple, NULL, NULL},
@@ -1215,6 +1318,7 @@ static int GdiPolygon(
     POINT *polypoints;
     int npoly;
 
+     /* canvas polygon item defaults */
     double width        = 1.0;
     CanvasColor outline = {0, 0};
     CanvasColor fill    = {0, 1};
@@ -1271,7 +1375,7 @@ static int GdiPolygon(
 	objv--;
 
 	const Tcl_ArgvInfo polyArgvInfo[] = {
-	    {TCL_ARGV_STRING,  "-dash",       NULL,          &dash,      NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-dash",       ParseDash,     &dash,      NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-fill",       ParseColor,    &fill,      NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-joinstyle",  ParseJoinStyle,&joinstyle, NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-outline",    ParseColor,    &outline,   NULL, NULL},
@@ -1351,6 +1455,7 @@ static int GdiRectangle(
 {
     HDC hDC;
 
+     /* canvas rectangle item defaults */
     double width = 1.0;
     CanvasColor outline = {0, 0};
     CanvasColor fill    = {0, 1};
@@ -1394,7 +1499,7 @@ static int GdiRectangle(
 	objv--;
 
 	const Tcl_ArgvInfo rectArgvInfo[] = {
-	    {TCL_ARGV_STRING,  "-dash",    NULL,       &dash,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-dash",    ParseDash,  &dash,    NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor, &fill,    NULL, NULL},
 	    {TCL_ARGV_GENFUNC, "-outline", ParseColor, &outline, NULL, NULL},
 	    {TCL_ARGV_STRING,  "-stipple", NULL,       &stipple, NULL, NULL},
