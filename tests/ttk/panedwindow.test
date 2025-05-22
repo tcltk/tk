@@ -1,9 +1,38 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc propagate-geometry {} { update idletasks }
+
+# checkorder --
+#	Ensure that Y coordinates windows in $winlist are strictly increasing.
+#
+proc checkorder {winlist} {
+    set pos -1
+    set positions [list]
+    foreach win $winlist {
+	lappend positions [set nextpos [winfo y $win]]
+	if {$nextpos <= $pos} {
+	    error "window $win out of order ($positions)"
+	}
+	set pos $nextpos
+    }
+}
+
+#
+# TESTS
+#
 
 # Basic sanity checks:
 #
@@ -122,9 +151,6 @@ test panedwindow-2.3 "..., cont'd" -body {
 
 test panedwindow-2.end "Cleanup" -body { destroy .pw }
 
-#
-# ...
-#
 test panedwindow-3.0 "configure pane" -body {
     ttk::panedwindow .pw
     .pw add [listbox .pw.lb1]
@@ -164,21 +190,6 @@ test panedwindow-4.1 "forget" -body {
 test panedwindow-4.2 "forget forgotten" -body {
     .pw forget .pw.l1
 } -returnCodes error -result ".pw.l1 is not managed by .pw"
-
-# checkorder $winlist --
-#	Ensure that Y coordinates windows in $winlist are strictly increasing.
-#
-proc checkorder {winlist} {
-    set pos -1
-    set positions [list]
-    foreach win $winlist {
-	lappend positions [set nextpos [winfo y $win]]
-	if {$nextpos <= $pos} {
-	    error "window $win out of order ($positions)"
-	}
-	set pos $nextpos
-    }
-}
 
 test panedwindow-4.3 "insert command" -body {
     .pw insert end .pw.l1
@@ -322,5 +333,9 @@ test panedwindow-6.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
+
+#
+# CLEANUP
+#
 
 tcltest::cleanupTests

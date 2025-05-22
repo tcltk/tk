@@ -1,7 +1,17 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test image-1.1 "Bad image element" -body {
     ttk::style element create BadImage image badimage
@@ -48,4 +58,7 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
 } -result {}
 
 #
+# CLEANUP
+#
+
 tcltest::cleanupTests
