@@ -117,15 +117,16 @@ namespace eval ::tk::test::generic {
     }
 
     proc loadTkCommand {} {
-	set tklib {}
-	foreach pair [info loaded {}] {
-	    foreach {lib pfx} $pair break
-	    if {$pfx eq "Tk"} {
-		set tklib $lib
-		break
+	variable TkLoadCmd
+	if {! [info exists TkLoadCmd]} {
+	    foreach pkg [info loaded] {
+		if {[lindex $pkg 1] eq "Tk"} {
+		    set TkLoadCmd [list load {*}$pkg]
+		    break
+		}
 	    }
 	}
-	return [list load $tklib Tk]
+	return $TkLoadCmd
     }
 
     # Suspend script execution for a given amount of time, but continue
@@ -325,7 +326,7 @@ namespace eval ::tk::test::child {
 
     # childTkInterp --
     #
-    # 	Create a new Tk application in a child interpreter, with
+    #	Create a new Tk application in a child interpreter, with
     #	a given name and class.
     #
     proc childTkInterp {name args} {
@@ -349,15 +350,6 @@ namespace eval ::tk::test::child {
 	    lappend cmdArgs $key $value
 	}
 
-	variable loadTkCmd
-	if {! [info exists loadTkCmd]} {
-	    foreach pkg [info loaded] {
-		if {[lindex $pkg 1] eq "Tk"} {
-		    set loadTkCmd "load $pkg"
-		    break
-		}
-	    }
-	}
 	if {$safe} {
 	    interp create -safe $name
 	} else {
@@ -365,7 +357,7 @@ namespace eval ::tk::test::child {
 	}
 
 	$name eval [list set argv $cmdArgs]
-	catch {eval $loadTkCmd $name}
+	catch {eval [loadTkCommand] $name}
     }
 
     # childTkProcess --
@@ -519,11 +511,28 @@ namespace eval ::tk::test::dialog {
     }
 
     proc Click {button} {
+	variable dialogType
 	variable testDialog
-	if {$button ni "ok cancel apply"} {
-	    return -code error "invalid button name \"$button\""
+
+	switch -- $dialogType {
+	    "fontchooser" {
+		if {$button ni "ok cancel apply"} {
+		    return -code error "invalid button name \"$button\""
+		}
+		$testDialog.$button invoke
+	    }
+	    "winDialog" {
+		switch -exact -- $button {
+		    ok     { set button 1 }
+		    cancel { set button 2 }
+		}
+		testwinevent $testDialog $button WM_LBUTTONDOWN 1 0x000a000b
+		testwinevent $testDialog $button WM_LBUTTONUP 0 0x000a000b
+	    }
+	    default {
+		return -code error "invalid dialog type \"$dialogType\""
+	    }
 	}
-	$testDialog.$button invoke
     }
 
     proc isNative {type} {

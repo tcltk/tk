@@ -95,7 +95,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(PolygonItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(PolygonItem, outline.offsetObj), TK_CONFIG_OBJS, NULL},
+	"0", offsetof(PolygonItem, outline.offsetObj), TK_CONFIG_OBJS|TK_OPTION_NEG_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(PolygonItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},

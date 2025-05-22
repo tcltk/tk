@@ -1319,12 +1319,12 @@ TkWmDeadWindow(
 	    [NSApp _setKeyWindow:nil];
 	    [NSApp _setMainWindow:nil];
 	}
-	
+
 	/*
 	 * Find a new keyWindow.  It will be assinged as the new
 	 * TkEventTarget when [NSApp WindowActivation] is called..
 	 */
-	
+
 	TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), deadNSWindow);
 
 	/*
