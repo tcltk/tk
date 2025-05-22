@@ -121,17 +121,17 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_CANVAS_INSERT_BG, offsetof(TkCanvas, textInfo.insertBorder), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_CANVAS_INSERT_BD_COLOR, offsetof(TkCanvas, textInfo.reserved1),
+	DEF_CANVAS_INSERT_BD_COLOR, offsetof(TkCanvas, textInfo.insertBorderWidthObj),
 	TK_CONFIG_OBJS|TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
-	DEF_CANVAS_INSERT_BD_MONO, offsetof(TkCanvas, textInfo.reserved1),
+	DEF_CANVAS_INSERT_BD_MONO, offsetof(TkCanvas, textInfo.insertBorderWidthObj),
 	TK_CONFIG_OBJS|TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_CANVAS_INSERT_OFF_TIME, offsetof(TkCanvas, insertOffTime), 0, NULL},
     {TK_CONFIG_INT, "-insertontime", "insertOnTime", "OnTime",
 	DEF_CANVAS_INSERT_ON_TIME, offsetof(TkCanvas, insertOnTime), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_CANVAS_INSERT_WIDTH, offsetof(TkCanvas, textInfo.reserved2), TK_CONFIG_OBJS, NULL},
+	DEF_CANVAS_INSERT_WIDTH, offsetof(TkCanvas, textInfo.insertWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_CUSTOM, "-offset", "offset", "Offset", "0,0",
 	offsetof(TkCanvas, tsoffset),TK_CONFIG_DONT_SET_DEFAULT,
 	&offsetOption},
@@ -147,10 +147,10 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_CANVAS_SELECT_MONO, offsetof(TkCanvas, textInfo.selBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_CANVAS_SELECT_BD_COLOR, offsetof(TkCanvas, textInfo.reserved3),
+	DEF_CANVAS_SELECT_BD_COLOR, offsetof(TkCanvas, textInfo.selBorderWidthObj),
 	TK_CONFIG_OBJS|TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_CANVAS_SELECT_BD_MONO, offsetof(TkCanvas, textInfo.reserved3),
+	DEF_CANVAS_SELECT_BD_MONO, offsetof(TkCanvas, textInfo.selBorderWidthObj),
 	TK_CONFIG_OBJS|TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_CANVAS_SELECT_FG_COLOR, offsetof(TkCanvas, textInfo.selFgColorPtr),
@@ -691,7 +691,7 @@ Tk_CanvasObjCmd(
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
-    canvasPtr->textInfo.reserved3 = NULL;
+    canvasPtr->textInfo.selBorderWidthObj = NULL;
     canvasPtr->textInfo.selFgColorPtr = NULL;
     canvasPtr->textInfo.selItemPtr = NULL;
     canvasPtr->textInfo.selectFirst = TCL_INDEX_NONE;
@@ -700,9 +700,9 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.selectAnchor = 0;
     canvasPtr->textInfo.insertBorder = NULL;
     canvasPtr->textInfo.insertWidth = 0;
-    canvasPtr->textInfo.reserved2 = NULL;
+    canvasPtr->textInfo.insertWidthObj = NULL;
     canvasPtr->textInfo.insertBorderWidth = 0;
-    canvasPtr->textInfo.reserved1 = NULL;
+    canvasPtr->textInfo.insertBorderWidthObj = NULL;
     canvasPtr->textInfo.focusItemPtr = NULL;
     canvasPtr->textInfo.gotFocus = 0;
     canvasPtr->textInfo.cursorOn = 0;
@@ -2283,67 +2283,13 @@ ConfigureCanvas(
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->heightObj, &height);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->highlightWidthObj, &highlightWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved1, &canvasPtr->textInfo.insertBorderWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved2, &canvasPtr->textInfo.insertWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved3, &canvasPtr->textInfo.selBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &canvasPtr->textInfo.insertBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &canvasPtr->textInfo.insertWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.selBorderWidthObj, &canvasPtr->textInfo.selBorderWidth);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->xScrollIncrementObj, &xScrollIncrement);
     Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->yScrollIncrementObj, &yScrollIncrement);
-    if (borderWidth < 0) {
-	borderWidth = 0;
-	Tcl_DecrRefCount(canvasPtr->borderWidthObj);
-	canvasPtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->borderWidthObj);
-    }
-    if (height < 0) {
-	height = 0;
-	Tcl_DecrRefCount(canvasPtr->heightObj);
-	canvasPtr->heightObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->heightObj);
-    }
-    if (highlightWidth < 0) {
-	highlightWidth = 0;
-	Tcl_DecrRefCount(canvasPtr->highlightWidthObj);
-	canvasPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->highlightWidthObj);
-    }
-    if (width < 0) {
-	width = 0;
-	Tcl_DecrRefCount(canvasPtr->widthObj);
-	canvasPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->widthObj);
-    }
-    if (xScrollIncrement < 0) {
-	xScrollIncrement = 0;
-	Tcl_DecrRefCount(canvasPtr->xScrollIncrementObj);
-	canvasPtr->xScrollIncrementObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->xScrollIncrementObj);
-    }
-    if (yScrollIncrement < 0) {
-	yScrollIncrement = 0;
-	Tcl_DecrRefCount(canvasPtr->yScrollIncrementObj);
-	canvasPtr->yScrollIncrementObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(canvasPtr->yScrollIncrementObj);
-    }
     canvasPtr->inset = borderWidth + highlightWidth;
-    if (canvasPtr->textInfo.insertBorderWidth < 0) {
-	canvasPtr->textInfo.insertBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-	canvasPtr->textInfo.reserved1 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved1);
-    }
-    if (canvasPtr->textInfo.insertWidth < 0) {
-	canvasPtr->textInfo.insertWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-	canvasPtr->textInfo.reserved2 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved2);
-    }
-    if (canvasPtr->textInfo.selBorderWidth < 0) {
-	canvasPtr->textInfo.selBorderWidth = 0;
-	Tcl_DecrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-	canvasPtr->textInfo.reserved3 = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount((Tcl_Obj *)canvasPtr->textInfo.reserved3);
-    }
 
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
@@ -2488,9 +2434,9 @@ CanvasWorldChanged(
     TkCanvas *canvasPtr = (TkCanvas *)instanceData;
     Tk_Item *itemPtr;
 
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved1, &canvasPtr->textInfo.insertBorderWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved2, &canvasPtr->textInfo.insertWidth);
-    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, (Tcl_Obj *)canvasPtr->textInfo.reserved3, &canvasPtr->textInfo.selBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertBorderWidthObj, &canvasPtr->textInfo.insertBorderWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.insertWidthObj, &canvasPtr->textInfo.insertWidth);
+    Tk_GetPixelsFromObj(NULL, canvasPtr->tkwin, canvasPtr->textInfo.selBorderWidthObj, &canvasPtr->textInfo.selBorderWidth);
 
     itemPtr = canvasPtr->firstItemPtr;
     for ( ; itemPtr != NULL; itemPtr = itemPtr->nextPtr) {

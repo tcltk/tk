@@ -27,7 +27,7 @@ AntiqueWhite1	255	239 	219
 AntiqueWhite2	238	223 	204
 AntiqueWhite3	205	192 	176
 AntiqueWhite4	139	131 	120
-agua	0	255	255
+aqua	0	255	255
 aquamarine	127	255 	212
 aquamarine1	127	255 	212
 aquamarine2	118	238 	198
@@ -92,7 +92,7 @@ cornsilk1	255	248 	220
 cornsilk2	238	232 	205
 cornsilk3	205	200 	177
 cornsilk4	139	136 	120
-crymson	220	20	60
+crimson	220	20	60
 cyan	0	255 	255
 cyan1	0	255 	255
 cyan2	0	238 	238
