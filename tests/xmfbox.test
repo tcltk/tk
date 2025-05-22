@@ -1,22 +1,27 @@
-# xmfbox.test --
-#
-#	This file is a Tcl script to test the file dialog that's used
-#	when the tk_strictMotif flag is set. Because the file dialog
-#	runs in a modal loop, the only way to test it sufficiently is
-#	to call the internal Tcl procedures in xmfbox.tcl directly.
+# This file is a Tcl script to test the file dialog that's used
+# when the tk_strictMotif flag is set. Because the file dialog
+# runs in a modal loop, the only way to test it sufficiently is
+# to call the internal Tcl procedures in xmfbox.tcl directly.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
-set testPWD [pwd]
-catch {unset data foo}
+#
+# LOCAL UTILITY PROCS
+#
 
 proc cleanup {} {
     global testPWD
@@ -57,7 +62,12 @@ proc cleanup {} {
     update
 }
 
-# ----------------------------------------------------------------------
+#
+# COMMON TEST SETUP
+#
+
+set testPWD [pwd]
+catch {unset data foo}
 
 test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
     unix
@@ -163,7 +173,10 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
 	    $::tk::dialog::file::foo(selectFile) [file normalize $tk::Priv(selectFilePath)]
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanup
 cleanupTests
 return
