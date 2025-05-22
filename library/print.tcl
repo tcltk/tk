@@ -627,7 +627,39 @@ namespace eval ::tk::print {
 
 	    # Next, we get the location and anchor
 	    set anchor [$cw itemcget $id -anchor]
-	    set coords [$cw coords $id]
+	    # this should be implemented in _gdi photo
+	    lassign [$cw coords $id] ix iy
+	    switch -- $anchor {
+		n {
+		    set ix [expr {$ix - $wid/2}]
+		}
+		ne {
+		    set ix [expr {$ix - $wid}]
+		}
+		w {
+		    set iy [expr {$iy - $hgt/2}]
+		}
+		center {
+		    set ix [expr {$ix - $wid/2}]
+		    set iy [expr {$iy - $hgt/2}]
+		}
+		e {
+		    set ix [expr {$ix - $wid}]
+		    set iy [expr {$iy - $hgt/2}]
+		}
+		sw {
+		    set iy [expr {$iy - $hgt}]
+		}
+		s {
+		    set ix [expr {$ix - $wid/2}]
+		    set iy [expr {$iy - $hgt}]
+		}
+		se {
+		    set ix [expr {$ix - $wid}]
+		    set iy [expr {$iy - $hgt}]
+		}
+	    }
+	    set coords [list $ix $iy $wid $hgt]
 
 	    _gdi photo $hdc -destination $coords -photo $imagename
 	}
