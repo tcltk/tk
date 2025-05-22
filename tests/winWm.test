@@ -1,18 +1,24 @@
 # This file tests  is a Tcl script to test the procedures in the file
-# tkWinWm.c.  It is organized in the standard fashion for Tcl tests.
-#
-# This file contains a collection of tests for one or more of the Tcl
-# built-in commands.  Sourcing this file into Tcl runs the tests and
-# generates output for errors.  No output means no errors were found.
+# tkWinWm.c.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
     destroy .t
@@ -563,13 +569,14 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constr
     unset -nocomplain winwm92 aid id
 } -result ok
 
-destroy .t
+#
+# CLEANUP
+#
 
-# cleanup
+destroy .t
 cleanupTests
 return
 
 # Local variables:
 # mode: tcl
 # End:
-

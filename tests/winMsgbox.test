@@ -2,12 +2,26 @@
 #
 # Copyright © 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint getwindowinfo [expr {[llength [info command ::testgetwindowinfo]] > 0}]
+
+#
+# COMMON TEST SETUP
+#
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
@@ -33,7 +47,9 @@ proc GetWindowInfo {title button} {
     testwinevent $hwnd $button WM_COMMAND
 }
 
-# -------------------------------------------------------------------------
+#
+# TESTS
+#
 
 test winMsgbox-1.1 {tk_messageBox ok} -constraints {win getwindowinfo} -setup {
     wm iconify .
@@ -178,7 +194,6 @@ test winMsgbox-1.13 {tk_messageBox yesnocancel} -constraints {win getwindowinfo}
     wm deiconify .
 } -result {cancel}
 
-# -------------------------------------------------------------------------
 
 test winMsgbox-2.1 {tk_messageBox message} -constraints {win getwindowinfo} -setup {
     wm iconify .
@@ -245,7 +260,6 @@ test winMsgbox-2.4 {tk_messageBox message (empty)} -constraints {
     wm deiconify .
 } -result [list ok ""]
 
-# -------------------------------------------------------------------------
 
 test winMsgbox-3.1 {tk_messageBox detail (sourceforge bug #1692927)} -constraints {
     win getwindowinfo
@@ -282,7 +296,9 @@ test winMsgbox-3.2 {tk_messageBox detail (unicode)} -constraints {
     wm deiconify .
 } -result [list ok "Поиск\n\nстраниц"]
 
-# -------------------------------------------------------------------------
+#
+# CLEANUP
+#
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}
