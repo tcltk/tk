@@ -1,14 +1,24 @@
 #
-# Tile package: entry widget tests
+# ttk::entry widget tests
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import entry scroll
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # Some of the tests raise background errors;
 # override default bgerror to catch them.
@@ -21,6 +31,9 @@ proc bgerror {error} {
 }
 
 #
+# TESTS
+#
+
 test entry-1.1 "Create entry widget" -body {
     ttk::entry .e
 } -result .e
