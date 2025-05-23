@@ -146,5 +146,8 @@ test scrollbar-11.2 "style command" -body {
     destroy .w
 } -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
 
-tcltest::cleanupTests
+#
+# CLEANUP
+#
 
+tcltest::cleanupTests
