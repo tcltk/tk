@@ -9,9 +9,13 @@
 # All rights reserved.
 
 package require tcltest 2.2
+namespace import -force tcltest::test
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+# Import utility procs for specific functional areas
+testutils import button image
+
 imageInit
 
 # Create entries in the option database to be sure that geometry options
@@ -29,11 +33,6 @@ option add *Checkbutton.font {Helvetica -12 bold}
 option add *Radiobutton.borderWidth 2
 option add *Radiobutton.highlightThickness 2
 option add *Radiobutton.font {Helvetica -12 bold}
-
-
-proc bogusTrace args {
-    error "trace aborted"
-}
 
 if {[tk windowingsystem] eq "aqua"} {
     set smallIndicator 20
@@ -258,9 +257,12 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     deleteWindows
 } -result 1
 
+#
+# CLEANUP
+#
 
-# cleanup
 imageFinish
+testutils forget button image
 cleanupTests
 return
 

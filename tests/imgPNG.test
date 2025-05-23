@@ -12,6 +12,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 namespace eval png {
@@ -1060,7 +1064,7 @@ r661tV1eju/ne8YJrkWtES0tmRe2VOviv2j2aBp5nHihiRaz/A4oCnsAsje/+AAAAAElFTkSuQmCC"
 "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA9hAAAewgEw8YEEAAAA
 FklEQVR4nGP4+vXrP11lJgYGhj9xSQAzOwXsETZ69QAAAABJRU5ErkJggg=="
 	}
-
+
 # $encoded(basn0g08), $encoded(basn2c08), $encoded(basn3p08), $encoded(basn6a08)
 test imgPNG-1.1 {reading basic images; grayscale} -setup {
     catch {rename foo ""}
@@ -1164,8 +1168,13 @@ test imgPNG-4.4 {file output with metadata} -setup {
 
 }
 
+#
+# CLEANUP
+#
+
 namespace delete png
 imageFinish
+testutils forget image
 cleanupTests
 return
 

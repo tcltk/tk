@@ -10,6 +10,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 # canvas used in 1.* and 2.* test cases
@@ -199,10 +203,13 @@ test canvPs-5.2 {test ps generation with image} -body {
     destroy .c
 } -returnCodes ok -match glob -result *
 
+#
+# CLEANUP
+#
 
-# cleanup
 unset -nocomplain foo bar
 imageFinish
+testutils forget image
 deleteWindows
 cleanupTests
 return

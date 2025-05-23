@@ -9,6 +9,10 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 namespace eval svgnano {
@@ -253,8 +257,13 @@ test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
 
 };# end of namespace svgnano
 
+#
+# CLEANUP
+#
+
 namespace delete svgnano
 imageFinish
+testutils forget image
 cleanupTests
 return
 

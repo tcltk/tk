@@ -11,82 +11,11 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+# Import utility procs for specific functional areas
+testutils import colors child
 
-namespace eval ::_test_tmp {}
-
-# ------------------------------------------------------------------------------
-#  Proc ::_test_tmp::testInterp
-# ------------------------------------------------------------------------------
-# Command that creates an child interpreter and tries to load Tk.
-# This code is borrowed from safePrimarySelection.test
-# This is necessary for loading Tktest if the tests are done in the build
-# directory without installing Tk.  In that case the usual auto_path loading
-# mechanism cannot work because the tk binary is not where pkgIndex.tcl says
-# it is.
-# ------------------------------------------------------------------------------
-
-namespace eval ::_test_tmp {
-    variable TkLoadCmd
-}
-
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] eq "Tk"} {
-	set ::_test_tmp::TkLoadCmd [list load {*}$pkg]
-	break
-    }
-}
-
-proc ::_test_tmp::testInterp {name} {
-    variable TkLoadCmd
-    interp create $name
-    $name eval [list set argv [list -name $name]]
-    catch {{*}$TkLoadCmd $name}
-}
-
-setupbg
-dobg {wm withdraw .}
-
-# eatColors --
-# Creates a toplevel window and allocates enough colors in it to
-# use up all the slots in the colormap.
-#
-# Arguments:
-# w -		Name of toplevel window to create.
-
-proc eatColors {w} {
-    catch {destroy $w}
-    toplevel $w
-    wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
-    pack $w.c
-    for {set y 0} {$y < 8} {incr y} {
-	for {set x 0} {$x < 40} {incr x} {
-	    set color [format #%02x%02x%02x [expr $x*6] [expr $y*30] 0]
-	    $w.c create rectangle [expr 10*$x] [expr 20*$y] \
-		    [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
-		    -fill $color
-	}
-    }
-    update
-}
-
-# colorsFree --
-#
-# Returns 1 if there appear to be free colormap entries in a window,
-# 0 otherwise.
-#
-# Arguments:
-# w -			Name of window in which to check.
-# red, green, blue -	Intensities to use in a trial color allocation
-#			to see if there are colormap entries free.
-
-proc colorsFree {w {red 31} {green 245} {blue 192}} {
-    set vals [winfo rgb $w [format #%02x%02x%02x $red $green $blue]]
-    expr ([lindex $vals 0]/256 == $red) && ([lindex $vals 1]/256 == $green) \
-	    && ([lindex $vals 2]/256 == $blue)
-}
+childTkProcess create
+childTkProcess eval {wm withdraw .}
 
 test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
@@ -138,8 +67,8 @@ test unixEmbed-1.5 {Tk_UseWindow procedure, creating Container records} -constra
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
     pack .f1 .f2
-    dobg "set w [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t -use $w
 	list [testembed] [expr [lindex [lindex [testembed all] 0] 0] - $w]
@@ -152,7 +81,7 @@ test unixEmbed-1.5a {Tk_UseWindow procedure, creating Container records} -constr
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -176,9 +105,9 @@ test unixEmbed-1.6 {Tk_UseWindow procedure, creating Container records} -constra
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -container 1 -width 200 -height 50
     pack .f1 .f2
-    dobg "set w1 [winfo id .f1]"
-    dobg "set w2 [winfo id .f2]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval "set w2 [winfo id .f2]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	toplevel .t2 -use $w2
@@ -192,7 +121,7 @@ test unixEmbed-1.6a {Tk_UseWindow procedure, creating Container records} -constr
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -236,15 +165,15 @@ test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	testembed
     }
     destroy .f1
     update
-    dobg {
+    childTkProcess eval {
 	testembed
     }
 } -cleanup {
@@ -255,7 +184,7 @@ test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -272,6 +201,7 @@ test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
 	testembed
     }
 } -cleanup {
+    interp delete child
     deleteWindows
 } -result {}
 test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
@@ -281,8 +211,8 @@ test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	testembed
@@ -297,7 +227,7 @@ test unixEmbed-2.2a {EmbeddedEventProc procedure} -constraints {
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -348,9 +278,9 @@ test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints 
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
+    childTkProcess eval "set w1 [winfo id .f1]"
     set x [testembed]
-    dobg {
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	wm withdraw .t1
@@ -363,7 +293,7 @@ test unixEmbed-3.1a {ContainerEventProc procedure, detect creation} -constraints
     unix testembed
 } -setup {
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -401,15 +331,15 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -bd 2 -relief raised
 	update
 	wm geometry .t1 +30+40
     }
     update
-    dobg {
+    childTkProcess eval {
 	wm geometry .t1
     }
 } -cleanup {
@@ -420,7 +350,7 @@ test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -c
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -445,15 +375,15 @@ test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -co
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
 	wm geometry .t1 300x100+30+40
     }
     update
-    dobg {
+    childTkProcess eval {
 	wm geometry .t1
     }
 } -cleanup {
@@ -464,7 +394,7 @@ test unixEmbed-3.4a {ContainerEventProc procedure, disallow position changes} -c
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -489,17 +419,17 @@ test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraint
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
-    dobg {
+    childTkProcess eval {
 	.t1 configure -width 300 -height 80
     }
     update
-    list [winfo width .f1] [winfo height .f1] [dobg {wm geometry .t1}]
+    list [winfo width .f1] [winfo height .f1] [childTkProcess eval {wm geometry .t1}]
 } -cleanup {
     deleteWindows
 } -result {300 80 300x80+0+0}
@@ -508,7 +438,7 @@ test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -constrain
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -532,15 +462,15 @@ test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	set x unmapped
 	bind .t1 <Map> {set x mapped}
     }
     update
-    dobg {
+    childTkProcess eval {
 	after 100
 	update
 	set x
@@ -553,7 +483,7 @@ test unixEmbed-3.6a {ContainerEventProc procedure, map requests} -constraints {
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -580,15 +510,15 @@ test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
+    childTkProcess eval "set w1 [winfo id .f1]"
     bind .f1 <Destroy> {set x dead}
     set x alive
-    dobg {
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
-    dobg {
+    childTkProcess eval {
 	destroy .t1
     }
     update
@@ -601,7 +531,7 @@ test unixEmbed-3.7a {ContainerEventProc procedure, destroy events} -constraints 
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -629,17 +559,17 @@ test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
-    dobg {
+    childTkProcess eval {
 	.t1 configure -width 180 -height 100
     }
     update
-    dobg {
+    childTkProcess eval {
 	winfo geometry .t1
     }
 } -cleanup {
@@ -650,7 +580,7 @@ test unixEmbed-4.1a {EmbedStructureProc procedure, configure events} -constraint
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -675,8 +605,8 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
@@ -693,7 +623,7 @@ test unixEmbed-4.2a {EmbedStructureProc procedure, destroy events} -constraints 
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -721,8 +651,8 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     update
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	bind .t1 <FocusIn> {lappend x "focus in %W"}
@@ -731,7 +661,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
     }
     focus -force .f1
     update
-    dobg {set x}
+    childTkProcess eval {set x}
 } -cleanup {
     deleteWindows
 } -result {{focus in .t1}}
@@ -740,7 +670,7 @@ test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -770,13 +700,13 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     update
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
-    dobg {
+    childTkProcess eval {
 	after 200 {destroy .t1}
     }
     after 400
@@ -790,7 +720,7 @@ test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -constra
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -818,8 +748,8 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     update
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	bind .t1 <FocusIn> {lappend x "focus in %W"}
@@ -828,10 +758,10 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
     }
     focus -force .f1
     update
-    set x [dobg {update; set x}]
+    set x [childTkProcess eval {update; set x}]
     focus .
     update
-    list $x [dobg {update; set x}]
+    list $x [childTkProcess eval {update; set x}]
 } -cleanup {
     deleteWindows
 } -result {{{focus in .t1}} {{focus in .t1} {focus out .t1}}}
@@ -840,7 +770,7 @@ test unixEmbed-5.3a {EmbedFocusProc procedure, FocusOut events} -constraints {
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -874,8 +804,8 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
@@ -893,7 +823,7 @@ test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -const
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -920,8 +850,8 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     place .f1 -width 200 -height 200
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
@@ -939,7 +869,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -971,15 +901,15 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
     deleteWindows
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     focus -force .
     bind . <Key> {lappend x {key %A %E}}
     set x {}
-    set y [dobg {
+    set y [childTkProcess eval {
 	update
 	bind .t1 <Key> {lappend y {key %A}}
 	set y {}
@@ -995,11 +925,11 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 # TkpRedirectKeyEvent is not implemented in win or aqua.  If someone
 # implements it they should change the constraints for this test.
 test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
-    unix notAqua failsOnXQuarz
+    unix notAqua failsOnXQuartz
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     deleteWindows
@@ -1034,8 +964,8 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
@@ -1044,7 +974,7 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     update
     bind . <Key> {lappend x {key %A}}
     set x {}
-    set y [dobg {
+    set y [childTkProcess eval {
 	update
 	bind .t1 <Key> {lappend y {key %A}}
 	set y {}
@@ -1062,7 +992,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -1093,21 +1023,21 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
-    unix notAqua failsOnUbuntu failsOnXQuarz
+    unix notAqua failsOnUbuntu failsOnXQuartz
 } -setup {
     deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -width 200 -height 50
     pack .f1 .f2
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
     }
     focus -force .f2
     update
-    list [dobg {
+    list [childTkProcess eval {
 	focus .t1
 	set x [list [focus]]
 	update
@@ -1121,7 +1051,7 @@ test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
 test unixEmbed-8.1a {TkpClaimFocus procedure} -constraints unix -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -1202,8 +1132,8 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
     update
-    dobg "set w1 [winfo id .f1]"
-    dobg {
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
 	set x {}
@@ -1219,7 +1149,7 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
 } -setup {
     deleteWindows
     catch {interp delete child}
-    ::_test_tmp::testInterp child
+    childTkInterp child
     load {} Tktest child
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -1322,9 +1252,12 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     deleteWindows
 } -result {.main.b {pushed .main.b} .embed.b {pushed .embed.b}}
 
+#
+# CLEANUP
+#
 
-# cleanup
 deleteWindows
-cleanupbg
+childTkProcess exit
+testutils forget child colors
 cleanupTests
 return
