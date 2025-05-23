@@ -1,8 +1,21 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::progressbar widget tests
+#
 
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test progressbar-1.1 "Setup" -body {
     ttk::progressbar .pb
@@ -159,5 +172,9 @@ test progressbar-4.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.Vertical.TProgressbar Vertical.customStyle.Vertical.TProgressbar TProgressbar}
+
+#
+# CLEANUP
+#
 
 tcltest::cleanupTests
