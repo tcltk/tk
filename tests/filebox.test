@@ -10,6 +10,9 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import dialog
+
 test fileDialog-0.1 {GetFileName: file types: MakeFilter() fails} {
     # MacOS type that is too long
 
@@ -46,24 +49,10 @@ set tk_strictMotif_old $tk_strictMotif
 #
 #----------------------------------------------------------------------
 
-proc ToPressButton {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 100 SendButtonPress $parent $btn mouse
-    }
-}
-
 proc ToEnterFileByKey {parent fileName fileDir} {
-    global isNative
-    if {!$isNative} {
+    if {! $::dialogIsNative} {
 	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
     }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
 proc EnterFileByKey {parent fileName fileDir} {
@@ -86,30 +75,6 @@ proc EnterFileByKey {parent fileName fileDir} {
     update
     SendButtonPress $parent ok mouse
 }
-
-proc SendButtonPress {parent btn type} {
-    if {$parent == "."} {
-	set w .__tk_filedialog
-    } else {
-	set w $parent.__tk_filedialog
-    }
-    upvar ::tk::dialog::file::__tk_filedialog data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 #----------------------------------------------------------------------
 #
@@ -204,11 +169,6 @@ foreach mode $modes {
     test filebox-1.6-$mode "tk_getOpenFile command" -body {
 	tk_getOpenFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
-
-    set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq ""   &&
-	[info commands ::tk::dialog::file::] eq ""
-    }]
 
     set parent .
 
@@ -350,11 +310,6 @@ test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
 	tk_getSaveFile -filetypes {Foo}
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
-    set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq "" &&
-	[info commands ::tk::dialog::file::] eq ""
-    }]
-
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -486,9 +441,12 @@ test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
     # needed on the other platforms because they use native file dialogs.
 }
 
-set tk_strictMotif $tk_strictMotif_old
+#
+# CLEANUP
+#
 
-# cleanup
+set tk_strictMotif $tk_strictMotif_old
 removeFile filebox.tmp
+testutils forget dialog
 cleanupTests
 return
