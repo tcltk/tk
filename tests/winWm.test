@@ -14,9 +14,6 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
     destroy .t
 } -body {
@@ -533,7 +530,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     destroy .tx .t .sd
 } -result ok
 
-test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuartz} -setup {
     destroy .t
     toplevel .t
     set winwm92 {}

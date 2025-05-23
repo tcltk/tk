@@ -14,27 +14,10 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import child
+
 testConstraint xhost [llength [auto_execok xhost]]
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
-# Compute a script that will load Tk into a child interpreter.
-
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-    }
-}
-
-# Procedure to create a new application with a given name and class.
-
-proc newApp {screen name class} {
-    global loadTk
-    interp create $name
-    $name eval [list set argv [list -display $screen -name $name -class $class]]
-    eval $loadTk $name
-}
 
 set name [tk appname]
 set commId ""
@@ -156,7 +139,7 @@ if {[testConstraint nonPortable] && [testConstraint xhost]} {
     winfo interps
     tk appname tktest
     update
-    setupbg
+    childTkProcess create
     set x [split [exec xhost] \n]
     foreach i [lrange $x 1 end]  {
 	exec xhost - $i
@@ -165,19 +148,19 @@ if {[testConstraint nonPortable] && [testConstraint xhost]} {
 
 test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
     set a 44
-    list [dobg [list send [tk appname] set a 55]] $a
+    list [childTkProcess eval [list send [tk appname] set a 55]] $a
 } {55 55}
 test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a 22
     exec xhost [exec hostname]
-    list [catch {dobg [list send [tk appname] set a 33]} msg] $a $msg
+    list [catch {childTkProcess eval [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
 test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a abc
     exec xhost - [exec hostname]
-    list [dobg [list send [tk appname] set a new]] $a
+    list [childTkProcess eval [list send [tk appname] set a new]] $a
 } {new new}
-cleanupbg
+childTkProcess exit
 
 test send-7.1 {Tk_SetAppName procedure} {secureserver testsend} {
     testsend prop root InterpRegistry ""
@@ -201,28 +184,28 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
 
 #macOS does not send to other processes
 test send-8.1 {Tk_SendCmd procedure, options} {secureserver notAqua} {
-    setupbg
-    set app [dobg {tk appname}]
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
     set a 66
     send -async $app [list send [tk appname] set a 77]
     set result $a
     after 200 set x 40
     tkwait variable x
-    cleanupbg
+    childTkProcess exit
     lappend result $a
 } {66 77}
 test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
-    setupbg -display $env(TK_ALT_DISPLAY)
+    childTkProcess create -display $env(TK_ALT_DISPLAY)
     tk appname xyzgorp
     set a homeDisplay
-    set result [dobg "
+    set result [childTkProcess eval "
     toplevel .t -screen [winfo screen .]
     wm geometry .t +0+0
     set a altDisplay
     tk appname xyzgorp
     list \[send xyzgorp set a\] \[send -displayof .t xyzgorp set a\]
     "]
-    cleanupbg
+    childTkProcess exit
     set result
 } {altDisplay homeDisplay}
 # Since macOS has no registry of interpreters, 8.3 and 8.10 will fail.
@@ -262,7 +245,7 @@ test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver notAqua
 } {1 {no application named "bogus_name"}}
 
 catch {
-    newApp "" t_s_1 Test
+    childTkInterp t_s_1 -class Test
     t_s_1 eval wm withdraw .
 }
 
@@ -282,7 +265,7 @@ test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {secure
     list $a [send t_s_1 {set a}]
 } {us them}
 test send-8.14 {Tk_SendCmd procedure, local interp killed by send} {secureserver testsend} {
-    newApp "" t_s_2 Test
+    childTkInterp t_s_2 -class Test
     list [catch {send t_s_2 {destroy .; concat result}} msg] $msg
 } {0 result}
 
@@ -298,7 +281,7 @@ test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver te
 "if 1 {open bogus_file_name}"
     invoked from within
 "send t_s_1 {if 1 {open bogus_file_name}}"} {POSIX ENOENT {no such file or directory}}}
-test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnUbuntu failsOnXQuarz} {
+test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnUbuntu failsOnXQuartz} {
     testsend prop root InterpRegistry "10234 bogus\n"
     set result [list [catch {send bogus bogus command} msg] $msg]
     winfo interps
@@ -313,8 +296,8 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     # requests so can't guarantee that new app's window won't
     # obscure .f, thereby masking the Expose event.
 
-    setupbg
-    set app [dobg {tk appname}]
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
     raise .		; # Don't want new app obscuring .f
     catch {destroy .f}
     frame .f
@@ -325,15 +308,15 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     lappend result [send $app send [list [tk appname]] set a]
     lappend result $a
     update
-    cleanupbg
+    childTkProcess exit
     lappend result $a
 } {{no event yet} {no event yet} exposed}
 test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
-    setupbg
-    set app [dobg {tk appname}]
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
 	    $msg $errorInfo $errorCode]]
-    cleanupbg
+    childTkProcess exit
     set result
 } {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
     while executing
@@ -341,15 +324,15 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
     invoked from within
 "send $app open bad_name"} {posix enoent {no such file or directory}}}
 test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
-    setupbg
-    set app [dobg {tk appname}]
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
     set x no
     set result ""
     after 0 {set x yes}
     lappend result [send $app {concat x y z}]
     lappend result $x
     update
-    cleanupbg
+    childTkProcess exit
     lappend result $x
 } {{x y z} no yes}
 
@@ -501,17 +484,17 @@ test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {secureserver
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {4 {} oldErrorInfo oldErrorCode}
 test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend} {
-    setupbg
-    dobg {tk appname t_s_3}
+    childTkProcess create
+    childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 destroy .} msg] $msg]
-    cleanupbg
+    childTkProcess exit
     set x
 } {0 {}}
 test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend} {
-    setupbg
-    dobg {tk appname t_s_3}
+    childTkProcess create
+    childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 exit} msg] $msg]
-    cleanupbg
+    childTkProcess exit
     set x
 } {1 {target application died}}
 
@@ -542,14 +525,14 @@ test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
     winfo interps
     tk appname tktest
     update
-    setupbg
-    set app [dobg {
+    childTkProcess create
+    set app [childTkProcess eval {
 	after 10 {after 10 {after 5000; exit}}
 	tk appname
     }]
     after 200
     set result [list [catch {send $app foo} msg] $msg]
-    cleanupbg
+    childTkProcess exit
     set result
 } {1 {target application died}}
 
@@ -557,10 +540,10 @@ test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
 winfo interps
 tk appname tktest
 test send-13.1 {DeleteProc procedure} {secureserver notAqua} {
-    setupbg
-    set app [dobg {rename send {}; tk appname}]
+    childTkProcess create
+    set app [childTkProcess eval {rename send {}; tk appname}]
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
-    cleanupbg
+    childTkProcess exit
     set result
 } {1 {no application named "tktest #2"} tktest}
 test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
@@ -574,8 +557,8 @@ test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
 } {{} {} foo send}
 
 test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay} {
-    setupbg -display $env(TK_ALT_DISPLAY)
-    set result [dobg "
+    childTkProcess create -display $env(TK_ALT_DISPLAY)
+    set result [childTkProcess eval "
     toplevel .t -screen [winfo screen .]
     wm geometry .t +0+0
     tk appname xyzgorp1
@@ -588,7 +571,7 @@ test send-14.1 {SendRestrictProc procedure, sends crossing from different displa
     set y parent
     set result [send -displayof .t xyzgorp1 {list $x [send -displayof .t xyzgorp2 set y]}]
     destroy .t
-    cleanupbg
+    childTkProcess exit
     set result
 } {child parent}
 
@@ -598,9 +581,9 @@ catch {
 }
 test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     set x [list [testsend prop comm TK_APPLICATION]]
-    newApp "" t_s_1 Test
+    childTkInterp t_s_1 -class Test
     send t_s_1 wm withdraw .
-    newApp "" t_s_2 Test
+    childTkInterp t_s_2 -class Test
     send t_s_2 wm withdraw .
     lappend x [testsend prop comm TK_APPLICATION]
     interp delete t_s_1
@@ -609,13 +592,16 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     lappend x [testsend prop comm TK_APPLICATION]
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
+#
+# CLEANUP
+#
+
 catch {
     tk appname $name
     testsend prop root InterpRegistry $registry
     testdeleteapps
 }
-rename newApp {}
 
-# cleanup
+testutils forget child
 cleanupTests
 return

@@ -1,0 +1,188 @@
+# Tests for the "testutils" command, defined in testutils.tcl
+#
+# © 2025 Erik Leunissen
+#
+# See the file "license.terms" for information on usage and redistribution of
+# this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+
+package require tcltest 2.2
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+
+# Notes:
+#
+# - All tests have been constrained with test constraint "testutils". This
+#   constraint isn't set anywhere, and therefore false by default. Therefore,
+#   the tests in this file are skipped in a regular invocation of the Tk test
+#   suite. In order to run these test, you need to use the tcltest option
+#   "-constraints testutils" in the invocation, possibly combined with the
+#   option "-file testutils.test" to exclude other test files, or with
+#   "-limitconstraints true" to exclude other tests.
+#
+# - At this place in the test file, the file "testutils.tcl" has already been
+#   sourced (through tcltest::loadTestedCommands above), and the utility procs
+#   from domain "generic" are already available. Therefore we can make use of
+#   proc "assert" here.
+#
+
+assert {"testutils" in [info procs testutils]}
+
+#
+# Section 1: invalid invocations
+#
+test testutils-1.1 {invalid subcommand} -constraints testutils -body {
+    testutils foo
+} -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
+
+test testutils-1.2 {invalid #args for subCmd export} -constraints testutils -body {
+    testutils export foo
+} -result {invalid #args. Usage: testutils export} -returnCodes error
+
+test testutils-1.3 {invalid #args for subCmd import} -constraints testutils -body {
+    testutils import
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-1.4 {invalid #args for subCmd forget} -constraints testutils -body {
+    testutils forget
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-1.5 {invalid domain for subCmd import} -constraints testutils -body {
+    testutils import foo
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
+
+test testutils-1.6 {invalid domain for subCmd forget} -constraints testutils -body {
+    testutils forget foo
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
+
+#
+# Create a domain namespace for testing export, import, forget
+#
+assert {"::tk::test::foo" ni [namespace children ::tk::test]}
+assert {"::tk::test::zez" ni [namespace children ::tk::test]}
+catch {rename init {}}
+catch {rename kuk {}}
+unset -nocomplain bar pip
+namespace eval ::tk::test::foo {
+    proc init {} {
+	variable bar 123
+	variable pip
+    }
+    proc kuk {} {}
+    testutils export
+}
+set initVars [info vars]; lappend initVars initVars
+
+#
+# 2. Domain failures for forget and import
+#
+test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
+    testutils forget foo
+} -result {testutils domain "foo" was not imported} -returnCodes error
+
+test testutils-2.2 {duplicate import} -constraints testutils -body {
+    testutils import foo
+    testutils import foo
+} -result {testutils domain "foo" was already imported} -returnCodes error -cleanup {
+    testutils forget foo
+}
+
+#
+# 3. Import procs
+#
+test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
+    testutils import foo
+    expr {([info procs kuk] eq "kuk") && ([info procs init] eq "")}
+} -result 1 -cleanup {
+    testutils forget foo
+}
+
+test testutils-3.2 {forget removes utility proc} -constraints testutils -body {
+    testutils import foo
+    testutils forget foo
+    info procs kuk
+} -result {}
+
+test testutils-3.3 {import fails: proc already exists} -constraints testutils -setup {
+    namespace eval ::zez {
+	proc kuk {} {}
+    }
+} -body {
+    namespace eval ::zez {
+	testutils import foo
+    }
+} -result "import from testutils domain \"foo\" failed: can't import command \"kuk\": already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
+}
+
+#
+# 4. Import variables
+#
+test testutils-4.1 {associated variables are imported} -constraints testutils -body {
+    testutils import foo
+    set varNames [info vars]
+    foreach name $initVars {
+	set varNames [lremove $varNames [lsearch $varNames $name]]
+    }
+    list [lsort $varNames] [info exists bar] [info exists pip] $bar
+} -result [list {bar pip} 1 0 123] -cleanup {
+    unset -nocomplain name varNames
+    testutils forget foo
+}
+
+test testutils-4.2 {
+    Repeated initialization keeps imported variable defined without value non-existent,
+    even if a test file inadvertently assigns it a value in the meantime.
+} -constraints testutils -body {
+    catch {
+	testutils import foo
+    }
+    testutils forget foo
+    set pip 11111
+    testutils import foo
+    info exists pip
+} -result 0 -cleanup {
+    testutils forget foo
+}
+
+test testutils-4.3 {import fails: variable already exists} -constraints testutils -setup {
+    #
+    # We need a pristine new namespace in which the variable bar was never imported
+    # and hence no upvar link for it exists.
+    #
+    namespace eval ::zez {
+	set bar 11
+    }
+} -body {
+    namespace eval ::zez {
+	testutils import foo
+    }
+} -result "import from testutils domain \"foo\" failed: variable \"bar\" already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
+}
+
+test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -setup {
+} -body {
+    namespace eval ::zez {
+	testutils import foo
+	testutils forget foo
+    }
+    namespace delete ::zez
+    namespace eval ::zez {
+	set pip 22
+	testutils import foo
+	list [info exists bar] [info exists pip] $bar
+    }
+} -result {1 0 123} -cleanup {
+    namespace delete ::zez
+}
+
+#
+# CLEANUP
+#
+
+namespace delete ::tk::test::foo
+unset -nocomplain bar initVars pip
+cleanupTests
+
+# EOF

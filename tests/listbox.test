@@ -3210,10 +3210,13 @@ test listbox-32.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+#
+# CLEANUP
+#
+
 resetGridInfo
 deleteWindows
 option clear
-
-# cleanup
+rename getsize {}
 cleanupTests
 return

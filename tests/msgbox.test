@@ -10,6 +10,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
+# Import utility procs for specific functional areas
+testutils import dialog
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -75,47 +77,18 @@ test msgbox-1.19 {tk_messageBox command} -body {
 } -returnCodes error -result {bad window path name "foo.bar"}
 
 
-catch {tk_messageBox -foo bar}
-set isNative [expr {[info commands tk::MessageBox] == ""}]
-
 proc ChooseMsg {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn mouse
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn mouse
     }
 }
 
 proc ChooseMsgByKey {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn key
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn key
     }
 }
 
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
-
-proc SendEventToMsg {parent btn type} {
-    if {$parent != "."} {
-	set w $parent.__tk__messagebox
-    } else {
-	set w .__tk__messagebox
-    }
-    if ![winfo ismapped $w.$btn] {
-	update
-    }
-    if {$type == "mouse"} {
-	PressButton $w.$btn
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $w.$btn <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
 #
 # Try out all combinations of (type) x (default button) and
 # (type) x (icon).
@@ -440,8 +413,10 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
     wm deiconify .
 } -result {ok}
 
-# cleanup
+#
+# CLEANUP
+#
+
+testutils forget dialog
 cleanupTests
 return
-
-

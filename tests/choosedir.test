@@ -10,28 +10,20 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+# Import utility procs for specific functional areas
+testutils import dialog
+
 #----------------------------------------------------------------------
 #
 # Procedures needed by this test file
 #
 #----------------------------------------------------------------------
 
-proc ToPressButton {parent btn} {
-    after 100 SendButtonPress $parent $btn mouse
-}
-
 proc ToEnterDirsByKey {parent dirs} {
     after 100 [list EnterDirsByKey $parent $dirs]
 }
 
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
-
 proc EnterDirsByKey {parent dirs} {
-    global tk_strictMotif
     if {$parent == "."} {
 	set w .__tk_choosedir
     } else {
@@ -47,31 +39,6 @@ proc EnterDirsByKey {parent dirs} {
 	after 50
     }
 }
-
-proc SendButtonPress {parent btn type} {
-    global tk_strictMotif
-    if {$parent == "."} {
-	set w .__tk_choosedir
-    } else {
-	set w $parent.__tk_choosedir
-    }
-    upvar ::tk::dialog::file::__tk_choosedir data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 #----------------------------------------------------------------------
 #
@@ -168,7 +135,11 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 	    -parent $parent
 } -result $real
 
-# cleanup
+#
+# CLEANUP
+#
+
 removeDirectory choosedirTest
+testutils forget dialog
 cleanupTests
 return
