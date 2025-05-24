@@ -259,7 +259,6 @@ void InitTkAccessibleTable(void);
 void InitHwndToTkWindowTable(void);
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 Tk_Window GetTkWindowForHwnd(HWND hwnd);
-static int TkRootAccessible_ActionEventHandler(Tcl_Event *event, int flags);
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenthwnd, const char *pathName);
 void ForceTkWidgetFocus(HWND hwnd, LONG childId);
