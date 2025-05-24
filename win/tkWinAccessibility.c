@@ -1047,25 +1047,6 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
   return NULL;
 }
 
-/*
- * Event proc which implements the action event procedure.
- */
-
-static int TkRootAccessible_ActionEventHandler(Tcl_Event *event, int flags)
-{
-  /*
-   * MSVC complains if these parameters are stubbed out
-   * with TCL_UNUSED.
-   */
-  (void) event;
-  (void) flags;
-  
-  TkMainInfo *info = TkGetMainInfoList();
-  Tcl_GlobalEval(info->interp, callback_command);
-  return 1;
-}
-
-
 /* Functions to implement direct script-level Tcl commands. */
 
 
