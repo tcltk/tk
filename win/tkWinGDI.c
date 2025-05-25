@@ -49,6 +49,7 @@ static Tcl_ObjCmdProc2 GdiOval;
 static Tcl_ObjCmdProc2 GdiPolygon;
 static Tcl_ObjCmdProc2 GdiRectangle;
 static Tcl_ObjCmdProc2 GdiText;
+static Tcl_ObjCmdProc2 GdiTextPlain;
 static Tcl_ObjCmdProc2 GdiMap;
 static Tcl_ObjCmdProc2 GdiCopyBits;
 
@@ -122,6 +123,7 @@ static const struct gdi_command {
     { "polygon",    GdiPolygon },
     { "rectangle",  GdiRectangle },
     { "text",       GdiText },
+    { "textplain",  GdiTextPlain },
     { "copybits",   GdiCopyBits },
 };
 
@@ -180,9 +182,9 @@ static Tcl_Size ParseDash (
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
-    const char *dash;
-    Tcl_Size llen, dlen, i;
-    Tcl_Obj **dasharr;
+    const char *dashspec;
+    Tk_Dash dash;
+    int staticsize = (int) sizeof(char *);
 
     if (objc == 0) {
 	Tcl_AppendResult(interp,
@@ -190,74 +192,93 @@ static Tcl_Size ParseDash (
 	return -1;
     }
 
-    dash = Tcl_GetStringFromObj(objv[0], &dlen);
-    if (dash[0] == '\0') {
-	/* empty string. leave the default alone (NULL) */
+    dashspec = Tcl_GetString(objv[0]);
+    if (Tk_GetDash(interp, dashspec, &dash) != TCL_OK) {
+	return -1;
+    }
+
+    if (dash.number == 0) {
+	/* empty string; do nothing */
 	return 1;
     }
 
-    /* first, try out the list of integers */
-    if (Tcl_ListObjGetElements(NULL, objv[0], &llen, &dasharr) == TCL_OK) {
-	int allint = 0, dummy;
-
-	if (llen == 0) {
-	    /* this is an error */
-	    Tcl_AppendResult(interp, "bad dash pattern \"", dash, "\"", NULL);
-	    return -1;
-	}
-
-	for (i = 0; i < llen; i++) {
-	    allint = (Tcl_GetIntFromObj(NULL, dasharr[i], &dummy) == TCL_OK);
-	    if (! allint) break;
-	}
-	if (allint) {
-	    /* all integers */
-	    *(const char **)dstPtr = dash;
-	    return 1;
-	}
+    /* cleanup the possibly allocated space */
+    if (dash.number > staticsize || dash.number < -staticsize) {
+	ckfree(dash.pattern.pt);
     }
 
-    /* now, try the '.,-_ ' char sequence */
-    for (i = 0; i < dlen; i++) {
-	int charok;
+    *(const char **)dstPtr = dashspec;
+    return 1;
+}
 
-	switch (dash[i]) {
-	    case ' ':
-		if (i == 0) {
-		    /* space can't be the first char */
-		    charok = 0;
-		} else {
-		    charok = 1;
-		}
-		break;
-	    case '.':
-		charok = 1;
-		break;
-	    case ',':
-		charok = 1;
-		break;
-	    case '-':
-		charok = 1;
-		break;
-	    case '_':
-		charok = 1;
-		break;
-	    default:
-		charok = 0;
-		break;
-	}
-	if (! charok) {
-	    Tcl_AppendResult(interp, "bad dash pattern \"", dash, "\"", NULL);
-	    return -1;
-	}
+static Tcl_Size ParseAnchor (
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    Tk_Anchor anchor;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-anchor\" needs an additional argument", NULL);
+	return -1;
     }
 
-    *(const char **)dstPtr = dash;
+    if (Tk_GetAnchorFromObj(interp, objv[0], &anchor) != TCL_OK) {
+	return -1;
+    }
+    *(Tk_Anchor *)dstPtr = anchor;
+    return 1;
+}
+
+static Tcl_Size ParseFont (
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    Tcl_Size fcount;
+    Tcl_Obj **fobjs;
+    const char *fstring;
+    int size;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-font\" needs an additional argument", NULL);
+	return -1;
+    }
+
+    fstring = Tcl_GetString(objv[0]);
+    /* Accept font description in the same format as provided by
+     * Tk_FontGetDescription(), a list of
+     * family size ?normal|bold? ?roman|italic? ?underline? ?overstrike?
+     */
+    if (Tcl_ListObjGetElements(NULL, objv[0], &fcount, &fobjs) != TCL_OK
+	    || (fcount < 2 || fcount > 6)) {
+	Tcl_AppendResult(interp, "bad font description \"", fstring,
+	    "\"", NULL);
+	return -1;
+    }
+
+    /* canvas font size should be in pixels (negative)
+     * text font size should be in points (positive)
+     */
+    if (Tcl_GetIntFromObj(interp, fobjs[1], &size) != TCL_OK) {
+	const char *value = Tcl_GetString(fobjs[1]);
+	Tcl_AppendResult(interp, "bad size \"", value,
+	    "\"; should be an integer", NULL);
+	return -1;
+    }
+
+    *(Tcl_Obj **)dstPtr = objv[0];
     return 1;
 }
 
 static Tcl_Size ParseJoinStyle (
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv,
@@ -351,7 +372,6 @@ static int GdiArc(
     double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
     HDC hDC;
-    DrawFunc drawfunc;
 
      /* canvas arc item defaults */
     double extent         = 90.0;
@@ -362,7 +382,7 @@ static int GdiArc(
     const char *dash      = NULL;
     const char *stipple   = NULL;
     const char *olstipple = NULL;
-    drawfunc              = Pie;
+    DrawFunc drawfunc     = Pie;
 
     LOGBRUSH lbrush;
     HGDIOBJ oldbrush = NULL, oldpen = NULL;
@@ -401,7 +421,7 @@ static int GdiArc(
 	    TCL_ARGV_TABLE_END
 	};
 
-	if (Tcl_ParseArgsObjv(interp, arcArgvInfo, &argc, objv, NULL)) {
+	if (Tcl_ParseArgsObjv(interp, arcArgvInfo, &argc, objv, NULL) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -549,8 +569,6 @@ static int GdiPhoto(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi photo hdc [-destination x y [w [h]]] -photo name\n";
     HDC hDC;
     int hDC_x = 0, hDC_y = 0, hDC_w = 0, hDC_h = 0;
     int nx, ny, sll;
@@ -562,19 +580,22 @@ static int GdiPhoto(
     int oldmode;		/* For saving the old stretch mode. */
     POINT pt;			/* For saving the brush org. */
     char *pbuf = NULL;
-    int i, j, k;
+    int i, k;
     int retval = TCL_OK;
+    double x, y;
+
+    Tk_Anchor anchor = TK_ANCHOR_CENTER;
 
     /*
      * Parse the arguments.
      */
 
-    /* HDC is required. */
-    if (objc < 2) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y ?option value ...?");
 	return TCL_ERROR;
     }
 
+    /* HDC is required. */
     hDC = printDC;
 
     /*
@@ -589,58 +610,46 @@ static int GdiPhoto(
 	return TCL_ERROR;
     }
 
-    /* Parse the command line arguments. */
-    for (j = 2; j < objc; j++) {
-	if (strcmp(Tcl_GetString(objv[j]), "-destination") == 0) {
-	    double x, y, w, h;
-	    int count = 0;
-	    char dummy;
+    if ((Tcl_GetDoubleFromObj(interp, objv[2], &x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    hDC_x = ROUND32(x);
+    hDC_y = ROUND32(y);
+    objc -= 4;
+    objv += 4;
 
-	    if (j < objc) {
-		count = sscanf(Tcl_GetString(objv[++j]), "%lf%lf%lf%lf%c",
-			&x, &y, &w, &h, &dummy);
-	    }
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
 
-	    if (count < 2 || count > 4) {
-		/* Destination must provide at least 2 arguments. */
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"-destination requires a list of 2 to 4 numbers\n%s",
-			usage_message));
-		return TCL_ERROR;
-	    }
+	const Tcl_ArgvInfo photoArgvInfo[] = {
+	    {TCL_ARGV_GENFUNC, "-anchor", ParseAnchor, &anchor,    NULL, NULL},
+	    {TCL_ARGV_STRING,  "-photo",  NULL,        &photoname, NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
 
-	    hDC_x = (int) x;
-	    hDC_y = (int) y;
-	    if (count == 3) {
-		hDC_w = (int) w;
-		hDC_h = -1;
-	    } else if (count == 4) {
-		hDC_w = (int) w;
-		hDC_h = (int) h;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[j]), "-photo") == 0) {
-	    photoname = Tcl_GetString(objv[++j]);
+	if (Tcl_ParseArgsObjv(interp, photoArgvInfo, &argc, objv, NULL)
+		!= TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
-    if (photoname == 0) {	/* No photo provided. */
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"No photo name provided to ::tk::print::_gdi photo\n%s",
-		usage_message));
+    if (! photoname) { /* No photo provided. */
+	Tcl_AppendResult(interp, "no photo name provided", NULL);
 	return TCL_ERROR;
     }
 
     photo_handle = Tk_FindPhoto(interp, photoname);
-    if (photo_handle == 0) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"::tk::print::_gdi photo: Photo name %s can't be located\n%s",
-		photoname, usage_message));
+    if (! photo_handle) {
+	Tcl_AppendResult(interp, "photo name \"", photoname,
+	    "\" can't be located", NULL);
 	return TCL_ERROR;
     }
     Tk_PhotoGetImage(photo_handle, &img_block);
 
-    nx  = img_block.width;
-    ny  = img_block.height;
+    hDC_w = nx = img_block.width;
+    hDC_h = ny = img_block.height;
     sll = ((3*nx + 3) / 4)*4; /* Must be multiple of 4. */
 
     /*
@@ -651,7 +660,7 @@ static int GdiPhoto(
     pbuf = (char *)attemptckalloc(sll * ny * sizeof(char));
     if (! pbuf) { /* Memory allocation failure. */
 	Tcl_AppendResult(interp,
-		"::tk::print::_gdi photo failed--out of memory", (char *)NULL);
+		"::tk::print::_gdi photo failed--out of memory", NULL);
 	return TCL_ERROR;
     }
 
@@ -690,11 +699,39 @@ static int GdiPhoto(
      */
     SetBrushOrgEx(hDC, 0, 0, &pt);
 
-    if (hDC_w <= 0) {
-	hDC_w = nx;
-	hDC_h = ny;
-    } else if (hDC_h <= 0) {
-	hDC_h = ny*hDC_w / nx;
+    /* adjust coords based on the anchor point */
+    switch (anchor) {
+	case TK_ANCHOR_N:
+	    hDC_x -= hDC_w/2;
+	    break;
+	case TK_ANCHOR_NE:
+	    hDC_x -= hDC_w;
+	    break;
+	case TK_ANCHOR_W:
+	    hDC_y -= hDC_h/2;
+	    break;
+	case TK_ANCHOR_CENTER:
+	    hDC_x -= hDC_w/2;
+	    hDC_y -= hDC_h/2;
+	    break;
+	case TK_ANCHOR_E:
+	    hDC_x -= hDC_w;
+	    hDC_y -= hDC_h/2;
+	    break;
+	case TK_ANCHOR_SW:
+	    hDC_y -= hDC_h;
+	    break;
+	case TK_ANCHOR_S:
+	    hDC_x -= hDC_w/2;
+	    hDC_y -= hDC_h;
+	    break;
+	case TK_ANCHOR_SE:
+	    hDC_x -= hDC_w;
+	    hDC_y -= hDC_h;
+	    break;
+	default:
+	    /* nothing */
+	    break;
     }
 
     if (StretchDIBits(hDC, hDC_x, hDC_y, hDC_w, hDC_h, 0, 0, nx, ny,
@@ -983,10 +1020,9 @@ static int GdiLine(
     Tcl_Obj *const *objv)
 {
     HDC hDC;
+    double p1x, p1y, p2x, p2y;
     POINT *polypoints;
     int npoly;
-    LOGBRUSH lbrush;
-    HGDIOBJ oldpen = NULL, oldbrush = NULL;
 
      /* canvas line item defaults */
     double width      = 1.0;
@@ -1002,7 +1038,8 @@ static int GdiLine(
     const char *stipple = NULL;
     const char *dashoffset = NULL;
 
-    double p1x, p1y, p2x, p2y;
+    LOGBRUSH lbrush;
+    HGDIOBJ oldpen = NULL, oldbrush = NULL;
     double shapeA, shapeB, shapeC, fracHeight, backup;
 
     /* Verrrrrry simple for now.... */
@@ -1014,12 +1051,12 @@ static int GdiLine(
     hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
-	||	(Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
-	||	(Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
-	||	(Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
+	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[4], &p2x) != TCL_OK)
+	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((objc - 2)/2 * sizeof(POINT));
     if (polypoints == NULL) {
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
@@ -1079,7 +1116,7 @@ static int GdiLine(
 
     if (smooth != SMOOTH_NONE) { /* Use Smoothize. */
 	int nspoints;
-	POINT *spoints = NULL;
+	POINT *spoints;
 
 	nspoints = Smoothize(polypoints, npoly, nStep, smooth, &spoints);
 	if (nspoints > 0) {
@@ -1346,7 +1383,7 @@ static int GdiPolygon(
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    polypoints = (POINT *)attemptckalloc((objc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((objc - 2)/2 * sizeof(POINT));
     if (polypoints == NULL) {
 	/* TODO: unreachable */
 	Tcl_AppendResult(interp, "Out of memory in GdiPolygon", NULL);
@@ -1411,21 +1448,19 @@ static int GdiPolygon(
     }
 
     if (smooth) { /* Use Smoothize. */
-	int nbpoints;
-	POINT *bpoints = NULL;
+	int nspoints;
+	POINT *spoints;
 
-	nbpoints = Smoothize(polypoints, npoly, nStep, smooth, &bpoints);
-	if (nbpoints > 0) {
-	    Polygon(hDC, bpoints, nbpoints);
-	} else {
-	    Polygon(hDC, polypoints, npoly);
+	nspoints = Smoothize(polypoints, npoly, nStep, smooth, &spoints);
+	if (nspoints > 0) {
+	    /* replace the old point list with the new one */
+	    ckfree(polypoints);
+	    polypoints = spoints;
+	    npoly = nspoints;
 	}
-	if (bpoints) {
-	    ckfree(bpoints);
-	}
-    } else {
-	Polygon(hDC, polypoints, npoly);
     }
+
+    Polygon(hDC, polypoints, npoly);
 
     GdiFreePen(interp, hDC, oldpen);
     GdiFreeBrush(interp, hDC, oldbrush);
@@ -1563,8 +1598,6 @@ static int GdiCharWidths(
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi characters hdc [-font fontname] [-array ary]";
     /*
      * Returns widths of characters from font in an associative array.
      * Font is currently selected font for HDC if not specified.
@@ -1573,17 +1606,19 @@ static int GdiCharWidths(
      */
 
     HDC hDC;
+
+    const char *aryvarname = "GdiCharWidths";
+    Tcl_Obj *fontobj       = NULL;
+
     LOGFONTW lf;
     HFONT hfont;
-    HGDIOBJ oldfont;
-    int made_font = 0;
-    const char *aryvarname = "GdiCharWidths";
+    HGDIOBJ oldfont = NULL;
     /* For now, assume 256 characters in the font.... */
     int widths[256];
     int retval;
 
     if (objc < 2) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc ?opton value ...?");
 	return TCL_ERROR;
     }
 
@@ -1592,26 +1627,34 @@ static int GdiCharWidths(
     objc -= 2;
     objv += 2;
 
-    while (objc > 0) {
-	if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
-	    objc--;
-	    objv++;
-	    if (GdiMakeLogFont(interp, objv[0], &lf, hDC)) {
-		if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
-		    made_font = 1;
-		    oldfont = SelectObject(hDC, hfont);
-		}
-	    }
-	    /* Else leave the font alone!. */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-array") == 0) {
-	    objv++;
-	    objc--;
-	    if (objc > 0) {
-		aryvarname = Tcl_GetString(objv[0]);
-	    }
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
+
+	const Tcl_ArgvInfo cwArgvInfo[] = {
+	    {TCL_ARGV_STRING,  "-array", NULL,      &aryvarname, NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-font",  ParseFont, &fontobj,    NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, cwArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    return TCL_ERROR;
 	}
-	objv++;
-	objc--;
+    }
+
+    /* is an error not providing a font */
+    if (! fontobj) {
+	Tcl_AppendResult(interp, "error: font must be specified", NULL);
+	return TCL_ERROR;
+    }
+
+    if (GdiMakeLogFont(interp, fontobj, &lf, hDC)) {
+	if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+	    oldfont = SelectObject(hDC, hfont);
+	}
+    } else {
+	return TCL_ERROR;
     }
 
     /* Now, get the widths using the correct function for font type. */
@@ -1629,7 +1672,7 @@ static int GdiCharWidths(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"::tk::print::_gdi character failed with code %ld", val));
-	if (made_font) {
+	if (oldfont) {
 	    SelectObject(hDC, oldfont);
 	    DeleteObject(hfont);
 	}
@@ -1649,7 +1692,7 @@ static int GdiCharWidths(
 	}
     }
     /* Now, remove the font if we created it only for this function. */
-    if (made_font) {
+    if (oldfont) {
 	SelectObject(hDC, oldfont);
 	DeleteObject(hfont);
     }
@@ -1707,40 +1750,60 @@ typedef struct TextLayout {
 		 * THE STRUCTURE. */
 } TextLayout;
 
-int GdiText(
+
+static Tcl_Size ParseJustify (
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    void *dstPtr)
+{
+    Tk_Justify justify;
+
+    if (objc == 0) {
+	Tcl_AppendResult(interp,
+	    "option \"-justify\" needs an additional argument", NULL);
+	return -1;
+    }
+
+    if (Tk_GetJustifyFromObj(interp, objv[0], &justify) != TCL_OK) {
+	return -1;
+    }
+
+    *(Tk_Justify *)dstPtr = justify;
+    return 1;
+}
+
+static int GdiText(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    static const char usage_message[] =
-	"::tk::print::_gdi text hdc x y -anchor [center|n|e|s|w] "
-	"-angle angle -fill color -font fontname "
-	"-justify [left|right|center] "
-	"-stipple bitmap -text string -width linelen "
-	"-backfill";
-
     HDC hDC;
-    double x0, y0, angle = 0.0;
-    const char *string = NULL;
-    Tcl_Size strlen;
-    Tk_Anchor anchor = TK_ANCHOR_N;
-    Tk_Justify justify = TK_JUSTIFY_LEFT;
+    double x0, y0;
+
+    Tk_Anchor anchor    = TK_ANCHOR_NW;
+    double angle        = 0.0;
+    CanvasColor fill    = {0, 0};
+    Tcl_Obj *fontobj    = NULL; /* -font shall be provided */
+    Tk_Justify justify  = TK_JUSTIFY_LEFT;
+    const char *string  = NULL;
+    int wraplen         = 0;
+    const char *stipple = NULL;
+
     LOGFONTW lf;
     HFONT hfont;
     HGDIOBJ oldfont;
-    int wraplen = 0;
     int made_font = 0;
-    int dotextcolor = 0;
-    int dobgmode = 0;
+    COLORREF oldtextcolor = 0;
     int bgmode;
-    COLORREF textcolor = 0;
-    Tcl_Obj *fontObj = NULL;
 
     if (objc < 4) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y ?option value ...?");
 	return TCL_ERROR;
     }
+
     hDC = printDC;
 
     /* Parse the command. */
@@ -1751,76 +1814,43 @@ int GdiText(
     objc -= 4;
     objv += 4;
 
-    while (objc > 0) {
-	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
-	    objc--;
-	    objv++;
-	    if (objc > 0) {
-		Tk_GetAnchor(interp, Tcl_GetString(objv[0]), &anchor);
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-angle") == 0) {
-	    objc--;
-	    objv++;
-	    if (objc > 0) {
-		Tcl_GetDoubleFromObj(interp, objv[0], &angle);
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-justify") == 0) {
-	    objc--;
-	    objv++;
-	    if (objc > 0) {
-		if (Tk_GetJustifyFromObj(interp, objv[0], &justify) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-text") == 0) {
-	    objc--;
-	    objv++;
-	    if (objc > 0) {
-		string = Tcl_GetStringFromObj(objv[0], &strlen);
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-font") == 0) {
-	    objc--;
-	    objv++;
-	    fontObj = objv[0];
-	} else if (strcmp(Tcl_GetString(objv[0]), "-stipple") == 0) {
-	    objc--;
-	    objv++;
-	    /* Not implemented yet. */
-	} else if (strcmp(Tcl_GetString(objv[0]), "-fill") == 0) {
-	    objc--;
-	    objv++;
-	    /* Get text color. */
-	    if (GdiGetColor(objv[0], &textcolor)) {
-		dotextcolor = 1;
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-width") == 0) {
-	    objc--;
-	    objv++;
-	    if (objc > 0) {
-		if (Tcl_GetIntFromObj(interp, objv[0], &wraplen) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	} else if (strcmp(Tcl_GetString(objv[0]), "-backfill") == 0) {
-	    dobgmode = 1;
-	}
+    if (objc > 0) {
+	Tcl_Size argc = objc + 1;
+	objv--;
 
-	objc--;
-	objv++;
+	const Tcl_ArgvInfo textArgvInfo[] = {
+	    {TCL_ARGV_GENFUNC, "-anchor",  ParseAnchor,  &anchor,  NULL, NULL},
+	    {TCL_ARGV_FLOAT,   "-angle",   NULL,         &angle,   NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-fill",    ParseColor,   &fill,    NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-font",    ParseFont,    &fontobj, NULL, NULL},
+	    {TCL_ARGV_GENFUNC, "-justify", ParseJustify, &justify, NULL, NULL},
+	    {TCL_ARGV_STRING,  "-stipple", NULL,         &stipple, NULL, NULL},
+	    {TCL_ARGV_STRING,  "-text",    NULL,         &string,  NULL, NULL},
+	    {TCL_ARGV_INT,     "-width",   NULL,         &wraplen, NULL, NULL},
+	    TCL_ARGV_TABLE_END
+	};
+
+	if (Tcl_ParseArgsObjv(interp, textArgvInfo, &argc, objv, NULL )
+		!= TCL_OK) {
+	    return TCL_ERROR;
+	}
     }
 
     /* if we have no text, nothing to do */
     if (! string) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
-	return TCL_ERROR;
+	return TCL_OK;
+    }
+    /* if we got empty color, nothing to do */
+    if (fill.isempty) {
+	return TCL_OK;
     }
     /* is an error not providing a font */
-    if (! fontObj) {
+    if (! fontobj) {
 	Tcl_AppendResult(interp, "error: font must be specified", NULL);
 	return TCL_ERROR;
     }
 
-    if (GdiMakeLogFont(interp, fontObj, &lf, hDC)) {
+    if (GdiMakeLogFont(interp, fontobj, &lf, hDC)) {
 	lf.lfEscapement = lf.lfOrientation = 10.0 * angle;
 	if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
 	    made_font = 1;
@@ -1828,28 +1858,20 @@ int GdiText(
 	}
     }
 
-    /* Get the color right. */
-    if (dotextcolor) {
-	textcolor = SetTextColor(hDC, textcolor);
-    }
-
-    if (dobgmode) {
-	bgmode = SetBkMode(hDC, OPAQUE);
-    } else {
-	bgmode = SetBkMode(hDC, TRANSPARENT);
-    }
+    oldtextcolor = SetTextColor(hDC, fill.color);
+    bgmode = SetBkMode(hDC, TRANSPARENT);
 
     /* Recreate the text layout here, so we get the same width and
      * line breaks.
      */
     Tk_Window tkwin = Tk_MainWindow(interp);
-    Tk_Font tkfont = Tk_AllocFontFromObj(interp, tkwin, fontObj);
+    Tk_Font tkfont = Tk_AllocFontFromObj(interp, tkwin, fontobj);
     if (!tkfont) {
 	return TCL_ERROR;
     }
     int width, height;
     TextLayout *layout = (TextLayout *)Tk_ComputeTextLayout(tkfont,
-	string, TCL_INDEX_NONE, wraplen, TK_JUSTIFY_LEFT, 0, &width, &height);
+	string, TCL_INDEX_NONE, wraplen, justify, 0, &width, &height);
 
     /* Calculate the anchor position in local coordinates
      * Origin point is x0, y0
@@ -1942,7 +1964,7 @@ int GdiText(
 	Tcl_DStringInit(&ds);
 	wstring = Tcl_UtfToWCharDString(layout->chunks[i].start,
 	    layout->chunks[i].numBytes, &ds);
-	TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
+	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
 	Tcl_DStringFree(&ds);
 	ya += fm.linespace;
 	nlseen = 0;
@@ -1953,29 +1975,50 @@ int GdiText(
     Tk_FreeFont(tkfont);
 
     /* Get the color set back. */
-    if (dotextcolor) {
-	textcolor = SetTextColor(hDC, textcolor);
-    }
+    SetTextColor(hDC, oldtextcolor);
     SetBkMode(hDC, bgmode);
-
-    int result = TCL_OK;
-    TEXTMETRICW tmw;
-    if (GetTextMetricsW(hDC, &tmw) != 0) {
-	retval = (int)tmw.tmHeight;
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
-    } else {
-	Tcl_AppendResult(interp, "gdi_ text: can't determine line height",
-	    NULL);
-	result = TCL_ERROR;
-    }
 
     if (made_font) {
 	SelectObject(hDC, oldfont);
 	DeleteObject(hfont);
     }
-
-    return result;
+    return TCL_OK;
 }
+
+static int GdiTextPlain(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    HDC hDC;
+    int x0, y0, retval;
+    WCHAR *wstring;
+    const char *string;
+    Tcl_Size strlen;
+    Tcl_DString ds;
+
+    if (objc != 5) {
+	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y text");
+	return TCL_ERROR;
+    }
+
+    hDC = printDC;
+
+    if ((Tcl_GetIntFromObj(interp, objv[2], &x0) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[3], &y0) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+
+    string = Tcl_GetStringFromObj(objv[4], &strlen);
+    Tcl_DStringInit(&ds);
+    wstring = Tcl_UtfToWCharDString(string, strlen, &ds);
+    retval = TextOutW(hDC, x0, y0, wstring, Tcl_DStringLength(&ds)/2);
+    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
+    return TCL_OK;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -4050,11 +4093,10 @@ int PrintOpenDoc(
     const char *jobname;
     Tcl_Size len;
 
-    if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "jobname");
+    if (objc < 2 || objc > 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "jobname ?font?");
 	return TCL_ERROR;
     }
-
 
     if (printDC == NULL) {
 	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
@@ -4076,6 +4118,36 @@ int PrintOpenDoc(
     if (output <= 0) {
 	Tcl_AppendResult(interp, "unable to start document", (char *)NULL);
 	return TCL_ERROR;
+    }
+
+    /* the optional argument "font" is useful for plain text documents.
+     * we set the font and other defaults here, and return the font width
+     * and height just once
+     */
+    if (objc == 3) {
+	LOGFONTW lf;
+	HFONT hfont;
+	TEXTMETRICW tmw;
+
+	if (GdiMakeLogFont(interp, objv[2], &lf, printDC)) {
+	    if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
+		SelectObject(printDC, hfont);
+	    }
+	}
+	SetTextAlign(printDC, TA_LEFT);
+	SetTextColor(printDC, 0);
+	SetBkMode(printDC, TRANSPARENT);
+
+	if (GetTextMetricsW(printDC, &tmw) != 0) {
+	    Tcl_Obj *ret[2];
+	    ret[0] = Tcl_NewIntObj((int)tmw.tmAveCharWidth);
+	    ret[1] = Tcl_NewIntObj((int)tmw.tmHeight);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, ret));
+	} else {
+	    Tcl_AppendResult(interp, "gdi_ opendoc: can't determine font ",
+		"width and height", NULL);
+	    return TCL_ERROR;
+	}
     }
 
     return TCL_OK;
@@ -4109,7 +4181,10 @@ int PrintCloseDoc(
 	Tcl_AppendResult(interp, "unable to establish close document", (char *)NULL);
 	return TCL_ERROR;
     }
+    /* delete the font object that might be created as default */
+    DeleteObject(SelectObject (printDC, GetStockObject(DEVICE_DEFAULT_FONT)));
     DeleteDC(printDC);
+    printDC = NULL;
     Tcl_DStringFree(&jobNameW);
     return TCL_OK;
 }
