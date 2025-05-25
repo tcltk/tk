@@ -283,6 +283,10 @@ void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 void TkRootAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
+void TkChildAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
+static void TkChildAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+void TkChildAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
+static void TkChildAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -539,7 +543,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
 	  TkChildAccessible *childAccessible = CreateChildAccessible(tkAccessible->interp, hwnd, Tk_PathName(childwin));
 	  if (childAccessible) {
 	    *ppdispChild = (IDispatch *)childAccessible;
-	    return S_OK;
 	  }
 	}
 	count++;
@@ -1213,8 +1216,9 @@ static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenth
   NotifyWinEvent(EVENT_OBJECT_CREATE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
   NotifyWinEvent(EVENT_OBJECT_SHOW, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
   NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
-  
-  
+  TkChildAccessible_RegisterForCleanup(win, tkAccessible);
+  TkChildAccessible_RegisterForFocus(win, tkAccessible);
+ 
   return tkAccessible;
 }
 
@@ -1406,8 +1410,6 @@ EmitSelectionChanged(
   return TCL_OK;
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1501,7 +1503,6 @@ static void TkRootAccessible_FocusEventHandler(ClientData clientData, XEvent *ev
     tkAccessible->focusChildId = 0;
   }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1524,6 +1525,111 @@ void TkRootAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
 			TkRootAccessible_FocusEventHandler, tkAccessible);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkChildAccessible_RegisterForCleanup --
+ *
+ * Register event handler for destroying accessibility element.
+ *
+ * Results:
+ *      Event handler is registered.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkChildAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible)
+{
+  Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+			TkChildAccessible_DestroyHandler, tkAccessible);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkChildAccessible_DestroyHandler --
+ *
+ * Clean up accessibility element structures when window is destroyed.
+ *
+ * Results:
+ *	Accessibility element is deallocated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkChildAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
+{
+  if (eventPtr->type == DestroyNotify) {
+    TkChildAccessible *tkAccessible = (TkChildAccessible *)clientData;
+    if (tkAccessible) {
+      TkChildAccessible_Release((IAccessible *)tkAccessible);
+    }
+  }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkChildAccessible_FocusHandler --
+ *
+ * Force accessibility focus when Tk receives a FocusIn event.
+ *
+ * Results:
+ *	Accessibility element is deallocated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkChildAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr) 
+{
+  if (!eventPtr || eventPtr->type != FocusIn) return;
+
+  TkChildAccessible *tkAccessible = (TkChildAccessible *)clientData;
+  Tk_Window tkwin = tkAccessible->win;
+
+  /* Get the top-level window and HWND. */
+  Tk_Window parent = GetToplevelOfWidget(tkwin);
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(parent));
+  if (!hwnd) return;
+
+  /* Determine child ID to report. */
+  LONG childId = GetChildIdForTkWindow(tkwin);
+
+  /* Fire the accessibility focus event. */
+  NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkChildAccessible_RegisterForFocus --
+ *
+ * Register event handler for destroying accessibility element.
+ *
+ * Results:
+ *      Event handler is registered.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void TkChildAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
+{
+  Tk_CreateEventHandler(tkwin, FocusChangeMask, 
+			TkChildAccessible_FocusEventHandler, tkAccessible);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1584,13 +1690,8 @@ int TkRootAccessibleObjCmd(
     hwnd = Tk_GetHWND(Tk_WindowId(toplevel)); 
   }
   TkRootAccessible *accessible = CreateRootAccessible(interp, hwnd, windowName);
-
-
-  // accessible->win = tkwin;
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
   TkRootAccessible_RegisterForFocus(tkwin, accessible);
- 
-
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
