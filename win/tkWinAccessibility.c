@@ -11,7 +11,281 @@
  *
  */
 
-#include "tkWinAccessibility.h"
+#include <tcl.h>
+#include <tk.h>
+#include "tkWinInt.h"
+#include <oleacc.h>
+#include <oaidl.h>
+#include <oleauto.h>
+#include <initguid.h>
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Data definitions for MSAA-Tk integration.  
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+/* Define the GUID for the MSAA interface. */
+DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0x0, 0x38, 0x9b, 0x71);
+
+/* TkRootAccessible structure. */
+typedef struct TkRootAccessible {
+  IAccessibleVtbl *lpVtbl;
+  Tk_Window win; 
+  Tk_Window toplevel;
+  Tcl_Interp *interp;
+  HWND hwnd;
+  char *pathName;
+  IAccessible **children;
+  int numChildren;
+  Tk_Window focusedChildWin;
+  int focusChildId; 
+  LONG refCount;
+} TkRootAccessible;
+
+/* TkChildAccessible structure. */
+typedef struct TkChildAccessible {
+  IAccessibleVtbl *lpVtbl;
+  Tk_Window win; 
+  Tcl_Interp *interp;
+  HWND parenthwnd;
+  char *pathName;
+  RECT rect;
+  LONG refCount;
+} TkChildAccessible;
+
+
+/* 
+ * Map script-level roles to C roles. 
+ */
+struct WinRoleMap {
+  const char *tkrole;
+  LONG winrole;
+};
+
+const struct WinRoleMap roleMap[] = {
+  {"Button", ROLE_SYSTEM_PUSHBUTTON},
+  {"Canvas", ROLE_SYSTEM_CLIENT},
+  {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON},
+  {"Combobox", ROLE_SYSTEM_COMBOBOX},
+  {"Entry", ROLE_SYSTEM_TEXT},
+  {"Label", ROLE_SYSTEM_STATICTEXT},
+  {"Listbox", ROLE_SYSTEM_LIST},
+  {"Menu", ROLE_SYSTEM_MENUPOPUP},
+  {"Notebook", ROLE_SYSTEM_PAGETABLIST},
+  {"Progressbar", ROLE_SYSTEM_PROGRESSBAR},
+  {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON},
+  {"Scale", ROLE_SYSTEM_SLIDER},
+  {"Scrollbar", ROLE_SYSTEM_SCROLLBAR},
+  {"Spinbox", ROLE_SYSTEM_SPINBUTTON},
+  {"Table", ROLE_SYSTEM_TABLE}, 
+  {"Text", ROLE_SYSTEM_TEXT},
+  {"Tree", ROLE_SYSTEM_OUTLINE},
+  {NULL, 0}
+};
+
+/* Hash table for managing accessibility attributes. */
+extern Tcl_HashTable *TkAccessibilityObject;
+
+/* Hash tables for linking Tk windows to accessibility object and HWND. */
+static Tcl_HashTable *tkAccessibleTable;
+static int tkAccessibleTableInitialized = 0;
+static Tcl_HashTable *hwndToTkWindowTable;
+static int hwndToTkWindowTableInitialized = 0;
+
+/* Map Tk windows to MSAA ID's. */
+typedef struct {
+  Tk_Window tkwin;
+  LONG childId;
+} WidgetMapEntry;
+
+static WidgetMapEntry widgetMap[512];
+static int widgetMapCount = 0;
+static LONG nextChildId = 1;
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes for toplevel MSAA objects.   
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+/* Protoypes of glue functions to the IAccessible COM API - toplevels. */
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
+static ULONG STDMETHODCALLTYPE TkRootAccessible_AddRef(IAccessible *this);
+static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfoCount(IAccessible *this, UINT *pctinfo);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfo(IAccessible *this, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+
+/* Prototypes of empty stub functions required by MSAA -toplevels. */
+HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
+
+/* Prototypes of the MSAA functions that actually implement accessibility for Tk widgets on Windows - toplevels. */
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this, VARIANT varChild, BSTR *pszValue);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
+static HRESULT STDMETHODCALLTYPE  TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
+
+/* VTable for root accessible. */
+static IAccessibleVtbl tkRootAccessibleVtbl = {
+  TkRootAccessible_QueryInterface,
+  TkRootAccessible_AddRef,
+  TkRootAccessible_Release,
+  TkRootAccessible_GetTypeInfoCount,
+  TkRootAccessible_GetTypeInfo,
+  TkRootAccessible_GetIDsOfNames,
+  TkRootAccessible_Invoke,
+  TkRootAccessible_get_accParent,
+  TkRootAccessible_get_accChildCount,
+  TkRootAccessible_get_accChild,
+  TkRootAccessible_get_accName,
+  TkRootAccessible_get_accValue,
+  TkRootAccessible_get_accDescription,
+  TkRootAccessible_get_accRole,
+  TkRootAccessible_get_accState,
+  TkRootAccessible_get_accHelp, 
+  TkRootAccessible_get_accHelpTopic,
+  TkRootAccessible_get_accKeyboardShortcut,
+  TkRootAccessible_get_accFocus,
+  TkRootAccessible_get_accSelection,
+  TkRootAccessible_get_accDefaultAction,
+  TkRootAccessible_accSelect,
+  TkRootAccessible_accLocation,
+  TkRootAccessible_accNavigate,
+  TkRootAccessible_accHitTest,
+  TkRootAccessible_accDoDefaultAction,
+  TkRootAccessible_put_accName,
+  TkRootAccessible_put_accValue
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes for child MSAA objects.   
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+/* Protoypes of glue functions to the IAccessible COM API - child widgets. */
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
+static ULONG STDMETHODCALLTYPE TkChildAccessible_AddRef(IAccessible *this);
+static ULONG STDMETHODCALLTYPE TkChildAccessible_Release(IAccessible *this);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_GetTypeInfoCount(IAccessible *this, UINT *pctinfo);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_GetTypeInfo(IAccessible *this, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+
+/* Prototypes of empty stub functions required by MSAA -child widgets. */
+HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_put_accName( IAccessible *this, VARIANT varChild, BSTR szName);
+HRESULT STDMETHODCALLTYPE TkChildAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
+
+/* Prototypes of the MSAA functions that actually implement accessibility for Tk widgets on Windows - child widgets. */
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accValue(IAccessible *this, VARIANT varChild, BSTR *pszValue);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
+static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
+
+/* VTable for child accessible. */
+static IAccessibleVtbl tkChildAccessibleVtbl = {
+  TkChildAccessible_QueryInterface,
+  TkChildAccessible_AddRef,
+  TkChildAccessible_Release,
+  TkChildAccessible_GetTypeInfoCount,
+  TkChildAccessible_GetTypeInfo,
+  TkChildAccessible_GetIDsOfNames,
+  TkChildAccessible_Invoke,
+  TkChildAccessible_get_accParent,
+  TkChildAccessible_get_accChildCount,
+  TkChildAccessible_get_accChild,
+  TkChildAccessible_get_accName,
+  TkChildAccessible_get_accValue,
+  TkChildAccessible_get_accDescription,
+  TkChildAccessible_get_accRole,
+  TkChildAccessible_get_accState,
+  TkChildAccessible_get_accHelp, 
+  TkChildAccessible_get_accHelpTopic,
+  TkChildAccessible_get_accKeyboardShortcut,
+  TkChildAccessible_get_accFocus,
+  TkChildAccessible_get_accSelection,
+  TkChildAccessible_get_accDefaultAction,
+  TkChildAccessible_accSelect,
+  TkChildAccessible_accLocation,
+  TkChildAccessible_accNavigate,
+  TkChildAccessible_accHitTest,
+  TkChildAccessible_accDoDefaultAction,
+  TkChildAccessible_put_accName,
+  TkChildAccessible_put_accValue
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes of Tk functions that support MSAA integration 
+ * and help implement the script-level API.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void InitTkAccessibleTable(void);
+void InitHwndToTkWindowTable(void);
+TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
+Tk_Window GetTkWindowForHwnd(HWND hwnd);
+static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
+static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenthwnd, const char *pathName);
+void ForceTkWidgetFocus(HWND hwnd, LONG childId);
+LONG SetChildIDForWidget(Tk_Window tkwin);
+LONG GetChildIdForTkWindow(Tk_Window tkwin);
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+Tk_Window GetTkWindowForChildId(LONG childId);
+int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
+int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
+static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+void TkRootAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
+static void TkRootAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
+int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkWinAccessiblity_Init(Tcl_Interp *interp);
+
 
 /*
  *----------------------------------------------------------------------
@@ -163,6 +437,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISP
 	
     }
   }
+  return S_OK;
 }
 
 /* Function to map accessible name to MSAA.*/
@@ -173,9 +448,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
 		
     Tk_Window win = tkAccessible->win;
-    char str1[50] = "Toplevel ";
-    char str2[] = tkAccessible->pathName;
-    strcat(str1, str2);
+    char str1[500] = "Toplevel ";
+    strcat(str1, tkAccessible->pathName);
     Tcl_DString ds;
     Tcl_DStringInit(&ds);
     SysAllocString(Tcl_UtfToWCharDString(str1, -1, &ds));
@@ -207,7 +481,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
   LONG state = 0;
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
     pvarState->vt = VT_I4;
-    pvarState->lVal = STATE_SYSTEM_NORMAL;
+    pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
     return S_OK;
   }
   return DISP_E_MEMBERNOTFOUND;
@@ -262,7 +536,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
 	if (count + 1 == varChild.lVal) {
 	  Tk_Window childwin = ((Tk_Window) child);
 	  HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->win));
-	  TkChildAccessible *childAccessible = CreateTkChildAccessible(tkAccessible->interp, hwnd, Tk_PathName(childwin));
+	  TkChildAccessible *childAccessible = CreateChildAccessible(tkAccessible->interp, hwnd, Tk_PathName(childwin));
 	  if (childAccessible) {
 	    *ppdispChild = (IDispatch *)childAccessible;
 	    return S_OK;
@@ -351,14 +625,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;  
   Tk_Window win = tkAccessible->win;
   
-  const char *pathName = Tk_PathName(tkwin);
-  Tcl_Obj *result = Tcl_NewObj();
+  const char *pathName = Tk_PathName(win);
   Tcl_Obj *cmd = Tcl_NewObj();
   Tcl_AppendToObj(cmd, "wm title ", -1);
   Tcl_AppendToObj(cmd, pathName, -1);
 	
-  Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
-  char *result = Tcl_GetString(interp);
+  Tcl_EvalObjEx(tkAccessible->interp, cmd, TCL_EVAL_GLOBAL);
+  char *result = Tcl_GetString(Tcl_GetObjResult(tkAccessible->interp));
   Tcl_DString ds;
   Tcl_DStringInit(&ds);
 		
@@ -523,6 +796,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_Invoke(IAccessible *this, DIS
 	
     }
   }
+  return S_OK;
 }
 
 /* Function to map accessible name to MSAA.*/
@@ -692,7 +966,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accParent(IAccessible *th
   TkChildAccessible *tkAccessible = (TkChildAccessible *)this;
 
   /* Get the top-level Tk window. */
-  Tk_Window toplevel = GetTopLevelOfWidget(tkAccessible->win);
+  Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->win);
   HWND hwndTopLevel = Tk_GetHWND(Tk_WindowId(toplevel));
 
   if (!hwndTopLevel) {
@@ -702,7 +976,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accParent(IAccessible *th
   }
 
   /* Create an accessible object for the top-level window. */
-  TkRootAccessible *topLevelAccessible = CreateTkARootccessible(tkAccessible->interp, hwndTopLevel, Tk_PathName(tkwin));
+  TkRootAccessible *topLevelAccessible = CreateRootAccessible(tkAccessible->interp, hwndTopLevel, Tk_PathName(toplevel));
   if (!topLevelAccessible) {
     /* If no accessible object is created, set ppdispParent to NULL and return S_OK. */
     *ppdispParent = NULL;
@@ -764,7 +1038,6 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_accDoDefaultAction(IAccessibl
   Tk_Window win = tkAccessible->win;
   Tcl_HashEntry *hPtr, *hPtr2;
   Tcl_HashTable *AccessibleAttributes;
-  Tcl_Event *event; 
 
   hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
@@ -778,8 +1051,8 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_accDoDefaultAction(IAccessibl
   }
 
   char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
-  if (Tcl_EvalObjEx(interp, action, TCL_EVAL_GLOBAL) != TCL_OK) {
-      return S_FALSE;
+  if (Tcl_Eval(tkAccessible->interp, action) != TCL_OK) {
+    return S_FALSE;
   }
   return S_OK;  
 }
@@ -900,14 +1173,20 @@ static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, con
   entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
   Tcl_SetHashValue(entry, win);
   
-  TkRootAccessible_AddRef((IAccessible*)tkAccessible);  
+  TkRootAccessible_AddRef((IAccessible*)tkAccessible); 
+
+  /* Notify screen readers of creation. */
+  NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
+  NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
+  NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, CHILDID_SELF);
+  
   return tkAccessible;
 }
 
 /* Function to map Tk window to MSAA attributes. */
 static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenthwnd, const char *pathName)
 {
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
+  TkChildAccessible *tkAccessible = (TkChildAccessible *)ckalloc(sizeof(TkChildAccessible));
   Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
   parenthwnd = Tk_GetHWND(Tk_WindowId(Tk_Parent(win)));   
   if (tkAccessible) {
@@ -925,23 +1204,19 @@ static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenth
   entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);
   Tcl_SetHashValue(entry, tkAccessible);
   
-  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
+  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, tkAccessible->parenthwnd, &newEntry);
   Tcl_SetHashValue(entry, win);
   
   TkRootAccessible_AddRef((IAccessible*)tkAccessible);  
+  
+  /* Notify screen readers of creation. */
+  NotifyWinEvent(EVENT_OBJECT_CREATE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
+  NotifyWinEvent(EVENT_OBJECT_SHOW, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
+  NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
+  
+  
   return tkAccessible;
 }
-
-/* TkChildAccessible structure. */
-typedef struct TkChildAccessible {
-  IAccessibleVtbl *lpVtbl;
-  Tk_Window win; 
-  Tcl_Interp *interp;
-  HWND parentHwnd;
-  char *pathName;
-  RECT rect;
-  LONG refCount;
-} TkChildAccessible;
 
 /* Function to map Tk window to MSAA ID's. */
 LONG SetChildIDForTkWindow(Tk_Window tkwin) 
@@ -1297,27 +1572,25 @@ int TkRootAccessibleObjCmd(
   }
   
   /* 
-   * The root widget/toplevel must have an associated HWND 
-   * for accessibility. Child widgets are "virtual" accessible
-   * objects without an associated HWND.
+   * The root/toplevel accessible is created with this command. 
+   * Child accessibles are created dynamically when the associated 
+   * Tk child widget gets focus. 
    */
 
   if (Tk_IsTopLevel(tkwin)) { 
     hwnd = Tk_GetHWND(Tk_WindowId(tkwin)); 
   } else {
-    hwnd = NULL;
-  }	
+    Tk_Window toplevel = GetToplevelOfWidget(tkwin);
+    hwnd = Tk_GetHWND(Tk_WindowId(toplevel)); 
+  }
+  TkRootAccessible *accessible = CreateRootAccessible(interp, hwnd, windowName);
 
-  /*Create accessible object and add to hash table. */
-  TkRootAccessible *accessible = CreateTkAccessible(interp, hwnd, windowName);
-  accessible->win = tkwin;
+
+  // accessible->win = tkwin;
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
   TkRootAccessible_RegisterForFocus(tkwin, accessible);
  
-  /* Notify screen readers of creation. */
-  NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
-  NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
-  NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, CHILDID_SELF);
+
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
