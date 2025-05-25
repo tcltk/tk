@@ -799,18 +799,12 @@ MakeIconOrCursorFromResource(
 	    lpIcon->dwNumBytes, isIcon, 0x00030000, 0, 0, 0);
 
     /*
-     * It failed, odds are good we're on NT so try the non-Ex way.
+     * It failed, the non-Ex way might work as a fallback.
      */
 
     if (hIcon == NULL) {
-	/*
-	 * We would break on NT if we try with a 16bpp image.
-	 */
-
-	if (lpIcon->lpbi->bmiHeader.biBitCount != 16) {
-	    hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
-		    isIcon, 0x00030000);
-	}
+        hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
+		isIcon, 0x00030000);
     }
     return hIcon;
 }
@@ -1538,7 +1532,6 @@ GetIcon(
 	if ((lpIR->IconImages[i].Height == size)
 		&& (lpIR->IconImages[i].Width == size)
 		&& (lpIR->IconImages[i].Colors >= 4)) {
-	    //printf("Returning icon #%d\n", i+1);
 	    return lpIR->IconImages[i].hIcon;
 	}
     }
@@ -1548,7 +1541,6 @@ GetIcon(
      */
 
     if (lpIR->nNumImages >= 1) {
-	//printf("Returning first icon as last resort\n");
 	return lpIR->IconImages[0].hIcon;
     }
     return NULL;
