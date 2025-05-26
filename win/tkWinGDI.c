@@ -201,6 +201,10 @@ static Tcl_Size ParseDash (
     }
 
     dashspec = Tcl_GetString(objv[0]);
+    /* Tk_GetDash might potentially call ckfree() on dash.pattern.pt if
+     * dash.number is not initialized to 0
+     */
+    dash.number = 0;
     if (Tk_GetDash(interp, dashspec, &dash) != TCL_OK) {
 	return -1;
     }
@@ -210,7 +214,7 @@ static Tcl_Size ParseDash (
 	return 1;
     }
 
-    /* cleanup the possibly allocated space */
+    /* free the possibly allocated space */
     if (dash.number > staticsize || dash.number < -staticsize) {
 	ckfree(dash.pattern.pt);
     }
