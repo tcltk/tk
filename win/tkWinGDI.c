@@ -54,7 +54,7 @@ static Tcl_ObjCmdProc2 GdiMap;
 static Tcl_ObjCmdProc2 GdiCopyBits;
 
 /* Local copies of similar routines elsewhere in Tcl/Tk. */
-static int		GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
+static int GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
 
 /*
  * Helper functions.
@@ -99,9 +99,17 @@ static Tcl_ObjCmdProc2 PrintClosePage;
 /*
  * Global state.
  */
+/*
 static DOCINFOW di;
 static HDC printDC;
 static Tcl_DString jobNameW;
+*/
+
+typedef struct WinprintData {
+    DOCINFOW di;
+    HDC printDC;
+    Tcl_DString jobNameW;
+} WinprintData;
 
 /*
  * To make the "subcommands" follow a standard convention, add them to this
@@ -364,14 +372,20 @@ static Tcl_Size ParseStyle (
  */
 
 static int GdiArc(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+
+    HDC hDC = dataPtr->printDC;
     double x1, y1, x2, y2;
     int xr0, yr0, xr1, yr1;
-    HDC hDC;
 
      /* canvas arc item defaults */
     double extent         = 90.0;
@@ -392,8 +406,6 @@ static int GdiArc(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
@@ -564,12 +576,17 @@ static int GdiImage(
  */
 
 static int GdiPhoto(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
     int hDC_x = 0, hDC_y = 0, hDC_w = 0, hDC_h = 0;
     int nx, ny, sll;
     const char *photoname = NULL;	/* For some reason Tk_FindPhoto takes a char *. */
@@ -583,7 +600,6 @@ static int GdiPhoto(
     int i, k;
     int retval = TCL_OK;
     double x, y;
-
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
 
     /*
@@ -594,9 +610,6 @@ static int GdiPhoto(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y ?option value ...?");
 	return TCL_ERROR;
     }
-
-    /* HDC is required. */
-    hDC = printDC;
 
     /*
      * Next, check to see if 'hDC' can support BitBlt.
@@ -1014,12 +1027,17 @@ static Tcl_Size ParseSmooth(
  */
 
 static int GdiLine(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
     double p1x, p1y, p2x, p2y;
     POINT *polypoints;
     int npoly;
@@ -1040,15 +1058,13 @@ static int GdiLine(
 
     LOGBRUSH lbrush;
     HGDIOBJ oldpen = NULL, oldbrush = NULL;
-    double shapeA, shapeB, shapeC, fracHeight, backup;
+    double shapeA = 0, shapeB = 0, shapeC = 0, fracHeight = 0, backup = 0;
 
     /* Verrrrrry simple for now.... */
     if (objc < 6) {
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1... xn yn ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
@@ -1058,7 +1074,7 @@ static int GdiLine(
     }
     polypoints = (POINT *)attemptckalloc((objc - 2)/2 * sizeof(POINT));
     if (polypoints == NULL) {
-	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
+	Tcl_AppendResult(interp, "Out of memory in GdiLine", NULL);
 	return TCL_ERROR;
     }
     polypoints[0].x = ROUND32(p1x);
@@ -1170,7 +1186,6 @@ static int GdiLine(
 	ahead[3].y = ROUND32(ahead[4].y*fracHeight + vertY*(1.0-fracHeight));
 
 	Polygon(hDC, ahead, 6);
-
 	polypoints[npoly-1].x = ROUND32(ahead[0].x - backup*cosTheta);
 	polypoints[npoly-1].y = ROUND32(ahead[0].y - backup*sinTheta);
     }
@@ -1240,12 +1255,17 @@ static int GdiLine(
  */
 
 static int GdiOval(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
 
      /* canvas oval item defaults */
     double width = 1.0;
@@ -1263,8 +1283,6 @@ static int GdiOval(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
@@ -1346,12 +1364,17 @@ static int GdiOval(
  */
 
 static int GdiPolygon(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
     POINT *polypoints;
     int npoly;
 
@@ -1374,8 +1397,6 @@ static int GdiPolygon(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 ... xn yn ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &p1x) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &p1y) != TCL_OK)
@@ -1483,12 +1504,17 @@ static int GdiPolygon(
  */
 
 static int GdiRectangle(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
 
      /* canvas rectangle item defaults */
     double width = 1.0;
@@ -1507,8 +1533,6 @@ static int GdiRectangle(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x1 y1 x2 y2 ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &x1) != TCL_OK)
 	    || (Tcl_GetDoubleFromObj(interp, objv[3], &y1) != TCL_OK)
@@ -1593,7 +1617,7 @@ static int GdiRectangle(
 
 
 static int GdiCharWidths(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
@@ -1604,8 +1628,12 @@ static int GdiCharWidths(
      * Array name is GdiCharWidths if not specified.
      * Widths should be in the same measures as all other values (1/1000 inch).
      */
-
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
 
     const char *aryvarname = "GdiCharWidths";
     Tcl_Obj *fontobj       = NULL;
@@ -1621,8 +1649,6 @@ static int GdiCharWidths(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc ?opton value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     objc -= 2;
     objv += 2;
@@ -1698,7 +1724,7 @@ static int GdiCharWidths(
     }
 
     /* The return value should be the array name(?). */
-    Tcl_AppendResult(interp, aryvarname, (char *)NULL);
+    Tcl_AppendResult(interp, aryvarname, NULL);
     return TCL_OK;
 }
 
@@ -1775,12 +1801,18 @@ static Tcl_Size ParseJustify (
 }
 
 static int GdiText(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
+
     double x0, y0;
 
     Tk_Anchor anchor    = TK_ANCHOR_NW;
@@ -1803,8 +1835,6 @@ static int GdiText(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y ?option value ...?");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     /* Parse the command. */
     if ((Tcl_GetDoubleFromObj(interp, objv[2], &x0) != TCL_OK)
@@ -1986,12 +2016,17 @@ static int GdiText(
 }
 
 static int GdiTextPlain(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
-    HDC hDC;
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
     int x0, y0, retval;
     WCHAR *wstring;
     const char *string;
@@ -2002,8 +2037,6 @@ static int GdiTextPlain(
 	Tcl_WrongNumArgs(interp, 1, objv, "hdc x y text");
 	return TCL_ERROR;
     }
-
-    hDC = printDC;
 
     if ((Tcl_GetIntFromObj(interp, objv[2], &x0) != TCL_OK)
 	    || (Tcl_GetIntFromObj(interp, objv[3], &y0) != TCL_OK)) {
@@ -2169,16 +2202,22 @@ static const char *GdiModeToName(
  */
 
 static int GdiMap(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC hDC = dataPtr->printDC;
+
     static const char usage_message[] =
 	"::tk::print::_gdi map hdc "
 	"[-logical x[y]] [-physical x[y]] "
 	"[-offset {x y} ] [-default] [-mode mode]";
-    HDC hDC;
     int mapmode;	/* Mapping mode. */
     SIZE wextent;	/* Device extent. */
     SIZE vextent;	/* Viewport extent. */
@@ -2196,15 +2235,13 @@ static int GdiMap(
 
     /* Required parameter: HDC for printer. */
     if (objc < 2) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_AppendResult(interp, usage_message, NULL);
 	return TCL_ERROR;
     }
 
-    hDC = printDC;
-
     if ((mapmode = GdiGetHdcInfo(hDC, &worigin, &wextent, &vorigin, &vextent)) == 0) {
 	/* Failed!. */
-	Tcl_AppendResult(interp, "Cannot get current HDC info", (char *)NULL);
+	Tcl_AppendResult(interp, "Cannot get current HDC info", NULL);
 	return TCL_ERROR;
     }
 
@@ -2352,11 +2389,17 @@ static int GdiMap(
  */
 
 static int GdiCopyBits(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
+    HDC dst = dataPtr->printDC;
     /* Goal: get the Tk_Window from the top-level
      * convert it to an HWND
      * get the HDC
@@ -2375,7 +2418,6 @@ static int GdiCopyBits(
     Tk_Window workwin;
     Window wnd;
     HDC src;
-    HDC dst;
     HWND hwnd = 0;
 
     HANDLE hDib;    /* Handle for device-independent bitmap. */
@@ -2408,7 +2450,7 @@ static int GdiCopyBits(
      * purpose.
      */
     if ((workwin = mainWin = Tk_MainWindow(interp)) == 0) {
-	Tcl_AppendResult(interp, "Can't find main Tk window", (char *)NULL);
+	Tcl_AppendResult(interp, "Can't find main Tk window", NULL);
 	return TCL_ERROR;
     }
 
@@ -2417,11 +2459,9 @@ static int GdiCopyBits(
      */
     /* HDC is required. */
     if (objc < 2) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_AppendResult(interp, usage_message, NULL);
 	return TCL_ERROR;
     }
-
-    dst = printDC;
 
     /*
      * Next, check to see if 'dst' can support BitBlt.  If not, raise an
@@ -2465,7 +2505,7 @@ static int GdiCopyBits(
 	    int count = sscanf(Tcl_GetString(objv[++k]), "%f%f%f%f", &a, &b, &c, &d);
 
 	    if (count < 2) { /* Can't make heads or tails of it.... */
-		Tcl_AppendResult(interp, usage_message, (char *)NULL);
+		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
 	    src_x = (int)a;
@@ -2480,7 +2520,7 @@ static int GdiCopyBits(
 
 	    count = sscanf(Tcl_GetString(objv[++k]), "%f%f%f%f", &a, &b, &c, &d);
 	    if (count < 2) { /* Can't make heads or tails of it.... */
-		Tcl_AppendResult(interp, usage_message, (char *)NULL);
+		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
 	    dst_x = (int)a;
@@ -2516,7 +2556,7 @@ static int GdiCopyBits(
      * Check to ensure no incompatible arguments were used.
      */
     if (do_window && do_screen) {
-	Tcl_AppendResult(interp, usage_message, (char *)NULL);
+	Tcl_AppendResult(interp, usage_message, NULL);
 	return TCL_ERROR;
     }
 
@@ -2530,7 +2570,7 @@ static int GdiCopyBits(
 	}
 
 	if ((wnd = Tk_WindowId(workwin)) == 0) {
-	    Tcl_AppendResult(interp, "Can't get id for Tk window", (char *)NULL);
+	    Tcl_AppendResult(interp, "Can't get id for Tk window", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2538,7 +2578,7 @@ static int GdiCopyBits(
 
 	if ((hwnd = Tk_GetHWND(wnd)) == 0) {
 	    Tcl_AppendResult(interp, "Can't get Windows handle for Tk window",
-		    (char *)NULL);
+		NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2559,7 +2599,7 @@ static int GdiCopyBits(
 
     /* Given the HWND, we can get the window's device context. */
     if ((src = GetWindowDC(hwnd)) == 0) {
-	Tcl_AppendResult(interp, "Can't get device context for Tk window", (char *)NULL);
+	Tcl_AppendResult(interp, "Can't get device context for Tk window", NULL);
 	return TCL_ERROR;
     }
 
@@ -2575,13 +2615,13 @@ static int GdiCopyBits(
 	hgt = tl.bottom - tl.top;
     } else {
 	if ((hgt = Tk_Height(workwin)) <= 0) {
-	    Tcl_AppendResult(interp, "Can't get height of Tk window", (char *)NULL);
+	    Tcl_AppendResult(interp, "Can't get height of Tk window", NULL);
 	    ReleaseDC(hwnd,src);
 	    return TCL_ERROR;
 	}
 
 	if ((wid = Tk_Width(workwin)) <= 0) {
-	    Tcl_AppendResult(interp, "Can't get width of Tk window", (char *)NULL);
+	    Tcl_AppendResult(interp, "Can't get width of Tk window", NULL);
 	    ReleaseDC(hwnd,src);
 	    return TCL_ERROR;
 	}
@@ -2644,14 +2684,14 @@ static int GdiCopyBits(
 	/* GdiFlush();. */
 
 	if (!hDib) {
-	    Tcl_AppendResult(interp, "Can't create DIB", (char *)NULL);
+	    Tcl_AppendResult(interp, "Can't create DIB", NULL);
 	    ReleaseDC(hwnd,src);
 	    return TCL_ERROR;
 	}
 
 	lpDIBHdr = (LPBITMAPINFOHEADER) GlobalLock(hDib);
 	if (!lpDIBHdr) {
-	    Tcl_AppendResult(interp, "Can't get DIB header", (char *)NULL);
+	    Tcl_AppendResult(interp, "Can't get DIB header", NULL);
 	    ReleaseDC(hwnd,src);
 	    return TCL_ERROR;
 	}
@@ -3131,7 +3171,7 @@ static int GdiMakeBrush(
     long hatch,
     LOGBRUSH *lb,
     HDC hDC,
-	HBRUSH *oldBrush)
+    HBRUSH *oldBrush)
 {
     HBRUSH hBrush;
     lb->lbStyle = BS_SOLID; /* Support other styles later. */
@@ -3821,6 +3861,29 @@ static int PalEntriesOnDevice(
 /*
  * --------------------------------------------------------------------------
  *
+ * WinprintDeleted--
+ *
+ *	Free interp's print resources.
+ *
+ * -------------------------------------------------------------------------
+ */
+static void WinprintDeleted(
+    void *clientData,
+    TCL_UNUSED(Tcl_Interp *))
+{
+    WinprintData *dataPtr = (WinprintData *)clientData;
+
+    if (dataPtr->printDC != NULL) {
+	DeleteDC(dataPtr->printDC);
+	Tcl_DStringFree(&dataPtr->jobNameW);
+    }
+    ckfree(dataPtr);
+}
+
+
+/*
+ * --------------------------------------------------------------------------
+ *
  * Winprint_Init--
  *
  *	Initializes printing module on Windows.
@@ -3839,11 +3902,11 @@ int Winprint_Init(
     static const char *gdiName = "::tk::print::_gdi";
     static const size_t numCommands =
 	    sizeof(gdi_commands) / sizeof(struct gdi_command);
+    WinprintData *dataPtr = (WinprintData *)ckalloc(sizeof(WinprintData));
 
     /*
      * Set up the low-level [_gdi] command.
      */
-
     namespacePtr = Tcl_CreateNamespace(interp, gdiName,
 	    NULL, (Tcl_NamespaceDeleteProc *) NULL);
     for (i=0; i<numCommands; i++) {
@@ -3851,7 +3914,7 @@ int Winprint_Init(
 
 	snprintf(buffer, sizeof(buffer), "%s::%s", gdiName, gdi_commands[i].command_string);
 	Tcl_CreateObjCommand2(interp, buffer, gdi_commands[i].command,
-		NULL, (Tcl_CmdDeleteProc *) 0);
+	    dataPtr, NULL);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
     }
     Tcl_CreateEnsemble(interp, gdiName, namespacePtr, 0);
@@ -3861,19 +3924,22 @@ int Winprint_Init(
      */
 
     Tcl_CreateObjCommand2(interp, "::tk::print::_selectprinter",
-	    PrintSelectPrinter, NULL, NULL);
+	    PrintSelectPrinter, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_openprinter",
-	    PrintOpenPrinter, NULL, NULL);
+	    PrintOpenPrinter, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_closeprinter",
-	    PrintClosePrinter, NULL, NULL);
+	    PrintClosePrinter, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_opendoc",
-	    PrintOpenDoc, NULL, NULL);
+	    PrintOpenDoc, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_closedoc",
-	    PrintCloseDoc, NULL, NULL);
+	    PrintCloseDoc, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_openpage",
-	    PrintOpenPage, NULL, NULL);
+	    PrintOpenPage, dataPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::print::_closepage",
-	    PrintClosePage, NULL, NULL);
+	    PrintClosePage, dataPtr, NULL);
+
+    dataPtr->printDC = NULL;
+    Tcl_CallWhenDeleted(interp, WinprintDeleted, dataPtr);
     return TCL_OK;
 }
 
@@ -3892,11 +3958,17 @@ int Winprint_Init(
  */
 
 static int PrintSelectPrinter(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj* const*))
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC != NULL) {
+	Tcl_AppendResult(interp, "device context still in use: call "
+	    "_closedoc first", NULL);
+	return TCL_ERROR;
+    }
     PRINTDLGW pd;
     LPCWSTR printerName = NULL;
     PDEVMODEW devmode = NULL;
@@ -3929,7 +4001,7 @@ static int PrintSelectPrinter(
 	if (errorcode != 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("print failed: error %04x",
 		    errorcode));
-	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", (char*)NULL);
+	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", NULL);
 	    return TCL_ERROR;
 	}
 	return TCL_OK;
@@ -3956,7 +4028,7 @@ static int PrintSelectPrinter(
     paper_width = (int) devmode->dmPaperWidth / 0.254;
     copies = pd.nCopies;
     /* Set device context here for all GDI printing operations. */
-    printDC = pd.hDC;
+    dataPtr->printDC = pd.hDC;
 
     /*
      * Store print properties in variables so they can be accessed from
@@ -3982,7 +4054,8 @@ static int PrintSelectPrinter(
     } else {
 	Tcl_UnsetVar(interp, "::tk::print::printer_name", 0);
 	Tcl_AppendResult(interp, "selected printer doesn't have name", NULL);
-	DeleteDC(printDC);
+	DeleteDC(dataPtr->printDC);
+	dataPtr->printDC = NULL;
 	returnVal = TCL_ERROR;
     }
 
@@ -4007,11 +4080,16 @@ static int PrintSelectPrinter(
  */
 
 int PrintOpenPrinter(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
     Tcl_DString ds;
 
     if (objc < 2) {
@@ -4020,21 +4098,16 @@ int PrintOpenPrinter(
     }
 
     /*Start an individual page.*/
-    if (StartPage(printDC) <= 0) {
+    if (StartPage(dataPtr->printDC) <= 0) {
 	return TCL_ERROR;
     }
 
     const char *printer = Tcl_GetString(objv[1]);
 
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
-	return TCL_ERROR;
-    }
-
     Tcl_DStringInit(&ds);
     if ((OpenPrinterW(Tcl_UtfToWCharDString(printer, -1, &ds),
-	    (LPHANDLE)&printDC, NULL)) == FALSE) {
-	Tcl_AppendResult(interp, "unable to open printer", (char *)NULL);
+	    (LPHANDLE)&dataPtr->printDC, NULL)) == FALSE) {
+	Tcl_AppendResult(interp, "unable to open printer", NULL);
 	Tcl_DStringFree(&ds);
 	return TCL_ERROR;
     }
@@ -4057,17 +4130,18 @@ int PrintOpenPrinter(
  */
 
 int PrintClosePrinter(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
 	return TCL_ERROR;
     }
 
-    ClosePrinter(printDC);
+    ClosePrinter(dataPtr->printDC);
     return TCL_OK;
 }
 
@@ -4084,11 +4158,16 @@ int PrintClosePrinter(
  * -------------------------------------------------------------------------
  */
 int PrintOpenDoc(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
+	return TCL_ERROR;
+    }
     int output = 0;
     const char *jobname;
     Tcl_Size len;
@@ -4098,25 +4177,21 @@ int PrintOpenDoc(
 	return TCL_ERROR;
     }
 
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
-	return TCL_ERROR;
-    }
-
     jobname = Tcl_GetStringFromObj(objv[1], &len);
-    Tcl_DStringInit(&jobNameW);
+    Tcl_DStringInit(&dataPtr->jobNameW);
 
     /*Get document info.*/
-    memset(&di, 0, sizeof(di));
-    di.cbSize = sizeof(di);
-    di.lpszDocName = Tcl_UtfToWCharDString(jobname, len, &jobNameW);
+    memset(&dataPtr->di, 0, sizeof(dataPtr->di));
+    dataPtr->di.cbSize = sizeof(dataPtr->di);
+    dataPtr->di.lpszDocName = Tcl_UtfToWCharDString(jobname, len,
+	&dataPtr->jobNameW);
 
     /*
      * Start printing.
      */
-    output = StartDocW(printDC, &di);
+    output = StartDocW(dataPtr->printDC, &dataPtr->di);
     if (output <= 0) {
-	Tcl_AppendResult(interp, "unable to start document", (char *)NULL);
+	Tcl_AppendResult(interp, "unable to start document", NULL);
 	return TCL_ERROR;
     }
 
@@ -4129,22 +4204,23 @@ int PrintOpenDoc(
 	HFONT hfont;
 	TEXTMETRICW tmw;
 
-	if (GdiMakeLogFont(interp, objv[2], &lf, printDC)) {
+	if (GdiMakeLogFont(interp, objv[2], &lf, dataPtr->printDC)) {
 	    if ((hfont = CreateFontIndirectW(&lf)) != NULL) {
-		SelectObject(printDC, hfont);
+		SelectObject(dataPtr->printDC, hfont);
 	    }
 	}
-	SetTextAlign(printDC, TA_LEFT);
-	SetTextColor(printDC, 0);
-	SetBkMode(printDC, TRANSPARENT);
+	SetTextAlign(dataPtr->printDC, TA_LEFT);
+	SetTextColor(dataPtr->printDC, 0);
+	SetBkMode(dataPtr->printDC, TRANSPARENT);
 
-	if (GetTextMetricsW(printDC, &tmw) != 0) {
+	if (GetTextMetricsW(dataPtr->printDC, &tmw) != 0) {
 	    Tcl_Obj *ret[2];
+
 	    ret[0] = Tcl_NewIntObj((int)tmw.tmAveCharWidth);
 	    ret[1] = Tcl_NewIntObj((int)tmw.tmHeight);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, ret));
 	} else {
-	    Tcl_AppendResult(interp, "gdi_ opendoc: can't determine font ",
+	    Tcl_AppendResult(interp, "_opendoc: can't determine font ",
 		"width and height", NULL);
 	    return TCL_ERROR;
 	}
@@ -4167,25 +4243,27 @@ int PrintOpenDoc(
  */
 
 int PrintCloseDoc(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
 	return TCL_ERROR;
     }
 
-    if (EndDoc(printDC) <= 0) {
-	Tcl_AppendResult(interp, "unable to establish close document", (char *)NULL);
+    if (EndDoc(dataPtr->printDC) <= 0) {
+	Tcl_AppendResult(interp, "unable to close document", NULL);
 	return TCL_ERROR;
     }
     /* delete the font object that might be created as default */
-    DeleteObject(SelectObject (printDC, GetStockObject(DEVICE_DEFAULT_FONT)));
-    DeleteDC(printDC);
-    printDC = NULL;
-    Tcl_DStringFree(&jobNameW);
+    DeleteObject(SelectObject (dataPtr->printDC,
+	GetStockObject(DEVICE_DEFAULT_FONT)));
+    DeleteDC(dataPtr->printDC);
+    dataPtr->printDC = NULL;
+    Tcl_DStringFree(&dataPtr->jobNameW);
     return TCL_OK;
 }
 
@@ -4203,19 +4281,20 @@ int PrintCloseDoc(
  */
 
 int PrintOpenPage(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
 	return TCL_ERROR;
     }
 
     /*Start an individual page.*/
-    if (StartPage(printDC) <= 0) {
-	Tcl_AppendResult(interp, "unable to start page", (char *)NULL);
+    if (StartPage(dataPtr->printDC) <= 0) {
+	Tcl_AppendResult(interp, "unable to start page", NULL);
 	return TCL_ERROR;
     }
 
@@ -4236,18 +4315,19 @@ int PrintOpenPage(
  */
 
 int PrintClosePage(
-    TCL_UNUSED(void *),
+    void *clientData,
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (printDC == NULL) {
-	Tcl_AppendResult(interp, "unable to establish device context", (char *)NULL);
+    WinprintData *dataPtr = (WinprintData *)clientData;
+    if (dataPtr->printDC == NULL) {
+	Tcl_AppendResult(interp, "device context not initialized", NULL);
 	return TCL_ERROR;
     }
 
-    if (EndPage(printDC) <= 0) {
-	Tcl_AppendResult(interp, "unable to close page", (char *)NULL);
+    if (EndPage(dataPtr->printDC) <= 0) {
+	Tcl_AppendResult(interp, "unable to close page", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
