@@ -242,6 +242,10 @@ namespace eval ::tk::accessible {
 	    return
 	}
 	}
+	if {[tk windowingsystem] eq "win32"} {
+	focus -force $w
+	after idle ::tk::accessible::emit_focus_change $w
+	}
     }
     
     # Set initial accessible attributes and add binding to <Map> event.
@@ -635,6 +639,9 @@ namespace eval ::tk::accessible {
     bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
     
+	if {[tk windowingsystem] eq "win32"} {
+	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	}
     
     # Finally, export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader
