@@ -41,8 +41,6 @@ typedef struct TkRootAccessible {
   char *pathName;
   IAccessible **children;
   int numChildren;
-  Tk_Window focusedChildWin;
-  int focusChildId; 
   LONG refCount;
 } TkRootAccessible;
 
@@ -272,21 +270,18 @@ TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 Tk_Window GetTkWindowForHwnd(HWND hwnd);
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenthwnd, const char *pathName);
-void ForceTkWidgetFocus(HWND hwnd, LONG childId);
-LONG SetChildIDForWidget(Tk_Window tkwin);
+LONG SetChildIdForTkWindow(Tk_Window tkwin);
 LONG GetChildIdForTkWindow(Tk_Window tkwin);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 Tk_Window GetTkWindowForChildId(LONG childId);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+int EmitFocusChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-void TkRootAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
-static void TkRootAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
 void TkChildAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkChildAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-void TkChildAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible);
-static void TkChildAccessible_FocusEventHandler (ClientData clientData, XEvent *eventPtr);
+static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -367,6 +362,12 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   ULONG count = InterlockedDecrement(&tkAccessible->refCount);
   if (count == 0) {
+    if (tkAccessible->win && tkAccessibleTable) {
+      Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->win);
+      if (entry) {
+	Tcl_DeleteHashEntry(entry);
+      }
+    }
     ckfree(tkAccessible);
   }
   return count;
@@ -464,18 +465,18 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
 }
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW.*/
+
+
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole)
 {
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-  LONG role = 0;
   if (!pvarRole) return E_INVALIDARG;
-  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-    role = ROLE_SYSTEM_WINDOW;
-    pvarRole->vt = VT_I4;
-    pvarRole->lVal = role;
-    return S_OK;
-  }
-  return E_INVALIDARG;
+
+  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF)
+    return E_INVALIDARG;
+
+  pvarRole->vt = VT_I4;
+  pvarRole->lVal = ROLE_SYSTEM_WINDOW;
+  return S_OK;
 }
 
 /* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_NORMAL. */
@@ -516,42 +517,61 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   int count = 0;
   TkWindow *child;
-  TkWindow *winPtr = (TkWindow *)Tk_MainWindow(tkAccessible->interp);
+  Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->win);
+  TkWindow *winPtr = (TkWindow *)toplevel;
   for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
     if (Tk_IsMapped(child)) { 
       count++;
     }
   }
   *pcChildren = count;
+  char cnt[256];
+  snprintf(cnt, sizeof(cnt),
+	   "puts {get_accChildCount: returning %d for %s}",
+	   count, Tk_PathName(toplevel));
+  Tcl_EvalEx(tkAccessible->interp, cnt, -1, TCL_EVAL_GLOBAL);
   return S_OK;
 }
 
 /* Function to get accessible children to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
+static STDMETHODIMP TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
 {
+  if (!ppdispChild) return E_INVALIDARG;
+  *ppdispChild = NULL;
+
+  if (varChild.vt != VT_I4 || varChild.lVal <= 0) {
+    return E_INVALIDARG;
+  }
+
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-    int count = 0;
-    TkWindow *child;
-    TkWindow *winPtr = (TkWindow* )Tk_MainWindow(tkAccessible->interp);
-		
-    for (child = winPtr->childList; child != NULL; child = child->nextPtr)  {
-      if (Tk_IsMapped(child)) {
-	if (count + 1 == varChild.lVal) {
-	  Tk_Window childwin = ((Tk_Window) child);
-	  HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->win));
-	  TkChildAccessible *childAccessible = CreateChildAccessible(tkAccessible->interp, hwnd, Tk_PathName(childwin));
-	  if (childAccessible) {
-	    *ppdispChild = (IDispatch *)childAccessible;
-	  }
-	}
-	count++;
-      }
+  int count = 0;
+  TkWindow *child;
+  Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->win);
+  TkWindow *winPtr = (TkWindow *)toplevel;
+
+  for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+    if (!Tk_IsMapped(child)) continue;
+
+    count++;
+    if (count == varChild.lVal) {
+      Tk_Window childwin = (Tk_Window)child;
+      SetChildIdForTkWindow(childwin);
+      HWND parentHwnd = Tk_GetHWND(Tk_WindowId((Tk_Window)child->parentPtr));
+
+      TkChildAccessible *childAccessible = CreateChildAccessible(
+								 tkAccessible->interp, parentHwnd, Tk_PathName(childwin)
+								 );
+      if (!childAccessible) return E_FAIL;
+
+      return childAccessible->lpVtbl->QueryInterface((IAccessible *)childAccessible, &IID_IDispatch, (void **)ppdispChild);
     }
   }
-  *ppdispChild = NULL;
-  return E_INVALIDARG;
+  
+ 
+
+  return E_INVALIDARG; 
 }
+
 
 /* Function to get accessible frame to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight,VARIANT varChild)
@@ -599,29 +619,66 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
   return E_NOTIMPL;
 }
 
-/* Function to get accessible help to MSAA. For toplevel, just return. */
-static STDMETHODIMP TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
+/* Function to get accessible focus to MSAA. */
+static STDMETHODIMP
+TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
-
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;  
- 
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);
 
-  if (tkAccessible->focusChildId > 0) {
-    pvarChild->vt = VT_I4;
-    pvarChild->lVal = tkAccessible->focusChildId;
-    return S_OK;
-  }
+  TkRootAccessible *root = (TkRootAccessible *)this;
 
-  if (tkAccessible->focusChildId == -1) {
+  // Get the currently focused widget
+  TkWindow *focusPtr = TkGetFocusWin((TkWindow *)root->win);
+  if (!focusPtr) {
+    Tcl_EvalEx(root->interp, "puts {get_accFocus: no focus window}", -1, TCL_EVAL_GLOBAL);
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
     return S_OK;
   }
 
-  return S_FALSE;
+  Tk_Window focusWin = (Tk_Window)focusPtr;
+
+  // Fallback if focus is on the toplevel itself
+  if (focusWin == root->win) {
+    Tcl_EvalEx(root->interp, "puts {get_accFocus: focus is toplevel}", -1, TCL_EVAL_GLOBAL);
+    pvarChild->vt = VT_I4;
+    pvarChild->lVal = CHILDID_SELF;
+    return S_OK;
+  }
+
+  // Refresh child ID mapping in case widgets changed
+  int idCounter = 1;
+  AssignChildIdsRecursive(root->win, &idCounter, root->interp);
+
+  // Lookup child ID for focused window
+  int childId = GetChildIdForTkWindow(focusWin);
+  if (childId > 0) {
+    pvarChild->vt = VT_I4;
+    pvarChild->lVal = childId;
+
+    char dbg[256];
+    snprintf(dbg, sizeof(dbg),
+	     "puts {get_accFocus: returning child ID %d for %s}",
+	     childId, Tk_PathName(focusWin));
+    Tcl_EvalEx(root->interp, dbg, -1, TCL_EVAL_GLOBAL);
+
+    return S_OK;
+  }
+
+  // Fallback: focus window exists, but no ID was assigned
+  char fallback[256];
+  snprintf(fallback, sizeof(fallback),
+	   "puts {get_accFocus: fallback, child ID not found for %s}",
+	   Tk_PathName(focusWin));
+  Tcl_EvalEx(root->interp, fallback, -1, TCL_EVAL_GLOBAL);
+
+  pvarChild->vt = VT_I4;
+  pvarChild->lVal = CHILDID_SELF;
+  return S_OK;
 }
+
+
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
 {
@@ -700,17 +757,29 @@ HRESULT STDMETHODCALLTYPE TkChildAccessible_accSelect(IAccessible *thisPtr, long
 
 
 /*Begin active functions.*/
-
-static HRESULT STDMETHODCALLTYPE TkChildAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject)
+static HRESULT STDMETHODCALLTYPE
+TkChildAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject)
 {
-  if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch) || IsEqualIID(riid, &IID_IAccessible)) {
+  if (!ppvObject) return E_INVALIDARG;
+
+  if (IsEqualIID(riid, &IID_IUnknown) ||
+      IsEqualIID(riid, &IID_IDispatch) ||
+      IsEqualIID(riid, &IID_IAccessible)) {
+        
     *ppvObject = this;
     TkChildAccessible_AddRef(this);
+        
+    // Optional: log to confirm it's called
+    TkChildAccessible *acc = (TkChildAccessible *)this;
+    Tcl_EvalEx(acc->interp, "puts {QueryInterface: success}", -1, TCL_EVAL_GLOBAL);
+
     return S_OK;
   }
+
   *ppvObject = NULL;
   return E_NOINTERFACE;
 }
+
 
 /* Function to add memory reference to the MSAA object. */
 static ULONG STDMETHODCALLTYPE TkChildAccessible_AddRef(IAccessible *this)
@@ -724,9 +793,20 @@ static ULONG STDMETHODCALLTYPE TkChildAccessible_Release(IAccessible *this)
 {
   TkChildAccessible *tkAccessible = (TkChildAccessible *)this;
   ULONG count = InterlockedDecrement(&tkAccessible->refCount);
+
   if (count == 0) {
+    /* Remove from hash tables. */
+    if (tkAccessible->win && tkAccessibleTable) {
+      Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->win);
+      if (entry) {
+	Tcl_DeleteHashEntry(entry);
+      }
+    }
+
+    /* Free memory. */
     ckfree(tkAccessible);
   }
+
   return count;
 }
 
@@ -846,7 +926,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accRole(IAccessible *this
 
   if (!pvarRole) return E_INVALIDARG;
 
-  if (varChild.vt != VT_I4 || varChild.lVal == CHILDID_SELF) {
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
     Tk_Window win = tkAccessible->win;
 		
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -864,6 +944,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accRole(IAccessible *this
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
       SysAllocString(Tcl_UtfToWCharDString(tkAccessible->pathName, -1, &ds));
+      Tcl_DStringFree(&ds);
       return S_OK;
     }
 
@@ -1031,9 +1112,6 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_accLocation(IAccessible *this
   return S_OK;
 }
 
-
-
-
 /* Function to get button press to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkChildAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
@@ -1055,6 +1133,7 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_accDoDefaultAction(IAccessibl
 
   char *action= Tcl_GetString(Tcl_GetHashValue(hPtr2));
   if (Tcl_Eval(tkAccessible->interp, action) != TCL_OK) {
+    Tcl_EvalEx(tkAccessible->interp, "puts {doDefaultAction: failed to execute action}", -1, TCL_EVAL_GLOBAL);
     return S_FALSE;
   }
   return S_OK;  
@@ -1100,11 +1179,16 @@ static HRESULT STDMETHODCALLTYPE TkChildAccessible_get_accHelp(IAccessible *this
 /* Function to get MSAA focus. For child widgets, just return self. */
 static STDMETHODIMP TkChildAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
+  TkChildAccessible *tkAccessible = (TkChildAccessible*) this;
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);
 
   pvarChild->vt = VT_I4;
   pvarChild->lVal = CHILDID_SELF;
+  char *pathName = Tk_PathName(tkAccessible->win);
+  char msg[256];
+  snprintf(msg, sizeof(msg), "puts {get_accFocus: returned %s}", pathName);
+  Tcl_EvalEx(tkAccessible->interp, msg, -1, TCL_EVAL_GLOBAL);
   return S_OK;
 }
 
@@ -1189,41 +1273,52 @@ static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, con
 /* Function to map Tk window to MSAA attributes. */
 static TkChildAccessible *CreateChildAccessible(Tcl_Interp *interp, HWND parenthwnd, const char *pathName)
 {
-  TkChildAccessible *tkAccessible = (TkChildAccessible *)ckalloc(sizeof(TkChildAccessible));
   Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
-  parenthwnd = Tk_GetHWND(Tk_WindowId(Tk_Parent(win)));   
-  if (tkAccessible) {
-    tkAccessible->lpVtbl = &tkChildAccessibleVtbl;
-    tkAccessible->interp = interp;
-    tkAccessible->parenthwnd = parenthwnd;
-    tkAccessible->pathName = pathName;
-    tkAccessible->refCount = 1;
-    tkAccessible->win = win;
-  }
-  
-  /*Add objects to hash tables. */
+  if (!win) return NULL;
+
+  /* Check if already cached. */
   Tcl_HashEntry *entry;
+  entry = Tcl_FindHashEntry(tkAccessibleTable, win);
+  if (entry) {
+    TkChildAccessible *cached = (TkChildAccessible *)Tcl_GetHashValue(entry);
+    if (cached) {
+      cached->lpVtbl->AddRef((IAccessible *)cached);
+      return cached;
+    }
+  }
+
+  /* Create new object. */
+  TkChildAccessible *tkAccessible = (TkChildAccessible *)ckalloc(sizeof(TkChildAccessible));
+  if (!tkAccessible) return NULL;
+
+  tkAccessible->lpVtbl = &tkChildAccessibleVtbl;
+  tkAccessible->interp = interp;
+  tkAccessible->win = win;
+  tkAccessible->parenthwnd = Tk_GetHWND(Tk_WindowId(Tk_Parent(win)));
+  tkAccessible->pathName = pathName;
+  tkAccessible->refCount = 1;
+
+  /* Cache new object. */
   int newEntry;
   entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);
   Tcl_SetHashValue(entry, tkAccessible);
-  
+
+  /* Reverse map. */
   entry = Tcl_CreateHashEntry(hwndToTkWindowTable, tkAccessible->parenthwnd, &newEntry);
   Tcl_SetHashValue(entry, win);
-  
-  TkRootAccessible_AddRef((IAccessible*)tkAccessible);  
-  
-  /* Notify screen readers of creation. */
+
+  /* Notify MSAA of creation. */
   NotifyWinEvent(EVENT_OBJECT_CREATE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
   NotifyWinEvent(EVENT_OBJECT_SHOW, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
   NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, tkAccessible->parenthwnd, OBJID_CLIENT, CHILDID_SELF);
+
   TkChildAccessible_RegisterForCleanup(win, tkAccessible);
-  TkChildAccessible_RegisterForFocus(win, tkAccessible);
- 
   return tkAccessible;
 }
 
+
 /* Function to map Tk window to MSAA ID's. */
-LONG SetChildIDForTkWindow(Tk_Window tkwin) 
+LONG SetChildIdForTkWindow(Tk_Window tkwin) 
 {
   if (widgetMapCount >= 512) return -1;
 
@@ -1326,8 +1421,38 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
   return NULL;
 }
 
-/* Functions to implement direct script-level Tcl commands. */
+static void
+AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp)
+{
+  TkWindow *winPtr = (TkWindow *)win;
+  for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
+    if (!Tk_IsMapped((Tk_Window)child)) {
+      continue;
+    }
 
+    const char *name = Tk_PathName((Tk_Window)child);
+    if (!name || name[0] == '\0') {
+      // Log unnamed child (optional)
+      char msg[256];
+      snprintf(msg, sizeof(msg),
+	       "puts {Skipped unnamed child of %s}",
+	       Tk_PathName(win));
+      Tcl_EvalEx(interp, msg, -1, TCL_EVAL_GLOBAL);
+      continue;
+    }
+
+    // Assign a unique child ID
+    SetChildIdForTkWindow((Tk_Window)child);
+
+    // Recurse
+    AssignChildIdsRecursive((Tk_Window)child, nextId, interp);
+  }
+}
+
+/* 
+ * Functions to implement direct script-level 
+ * Tcl commands. 
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -1410,6 +1535,7 @@ EmitSelectionChanged(
   return TCL_OK;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1461,12 +1587,12 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
 /*
  *----------------------------------------------------------------------
  *
- * TkRootAccessible_FocusHandler --
+ * EmitFocusChanged --
  *
- * Force accessibility focus when Tk receives a FocusIn event.
+ * Accessibility system notification when focus changed.
  *
  * Results:
- *	Accessibility element is deallocated. 
+ *	Accessibility system is made aware when focus is changed. 
  *
  * Side effects:
  *	None.
@@ -1474,56 +1600,36 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
  *----------------------------------------------------------------------
  */
 
-static void TkRootAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr) {
-  if (!eventPtr || eventPtr->type != FocusIn) return;
 
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
-  Tk_Window tkwin = tkAccessible->win;
-
-  /* Get the top-level window and HWND. */
-  Tk_Window parent = GetToplevelOfWidget(tkwin);
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(parent));
-  if (!hwnd) return;
-
-  /* Determine child ID to report. */
-  LONG childId = GetChildIdForTkWindow(tkwin);
-
-  if (childId > 0) {
-    /* Store focused child ID for accFocus support. */
-    tkAccessible->focusChildId = childId;
-
-    /* Fire the accessibility focus event. */
-    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-  } else if (childId == -1) {
-    /* Fallback: widget is itself focusable. */
-    tkAccessible->focusChildId = -1;
-    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, CHILDID_SELF);
-  } else {
-    /* No focus target; clear .*/
-    tkAccessible->focusChildId = 0;
-  }
-}
-/*
- *----------------------------------------------------------------------
- *
- * TkRootAccessible_RegisterForFocus --
- *
- * Register event handler for destroying accessibility element.
- *
- * Results:
- *      Event handler is registered.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void TkRootAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
+static int EmitFocusChanged(
+			    ClientData cd, 
+			    Tcl_Interp *interp, 
+			    int objc, 
+			    Tcl_Obj *const objv[]) 
 {
-  Tk_CreateEventHandler(tkwin, FocusChangeMask, 
-			TkRootAccessible_FocusEventHandler, tkAccessible);
+  if (objc < 2) {
+    Tcl_WrongNumArgs(interp, 1, objv, "widgetPath");
+    return TCL_ERROR;
+  }
+
+  const char *path = Tcl_GetString(objv[1]);
+  Tk_Window win = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
+  if (!win) return TCL_ERROR;
+
+  Tk_MakeWindowExist(win);
+  Tk_Window toplevel = GetToplevelOfWidget(win);
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+  LONG childId = GetChildIdForTkWindow(win);
+  TkSetFocusWin((TkWindow *)win, 1);
+  NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+
+  char msg[256];
+  snprintf(msg, sizeof(msg), "puts {EmitFocusChanged: sent EVENT_OBJECT_FOCUS for %s and %d}", path, childId);
+  Tcl_EvalEx(interp, msg, -1, TCL_EVAL_GLOBAL);
+  return TCL_OK;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -1571,64 +1677,6 @@ static void TkChildAccessible_DestroyHandler(ClientData clientData, XEvent *even
       TkChildAccessible_Release((IAccessible *)tkAccessible);
     }
   }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkChildAccessible_FocusHandler --
- *
- * Force accessibility focus when Tk receives a FocusIn event.
- *
- * Results:
- *	Accessibility element is deallocated. 
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void TkChildAccessible_FocusEventHandler(ClientData clientData, XEvent *eventPtr) 
-{
-  if (!eventPtr || eventPtr->type != FocusIn) return;
-
-  TkChildAccessible *tkAccessible = (TkChildAccessible *)clientData;
-  Tk_Window tkwin = tkAccessible->win;
-
-  /* Get the top-level window and HWND. */
-  Tk_Window parent = GetToplevelOfWidget(tkwin);
-  HWND hwnd = Tk_GetHWND(Tk_WindowId(parent));
-  if (!hwnd) return;
-
-  /* Determine child ID to report. */
-  LONG childId = GetChildIdForTkWindow(tkwin);
-
-  /* Fire the accessibility focus event. */
-  NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkChildAccessible_RegisterForFocus --
- *
- * Register event handler for destroying accessibility element.
- *
- * Results:
- *      Event handler is registered.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void TkChildAccessible_RegisterForFocus(Tk_Window tkwin, void *tkAccessible)
-{
-  Tk_CreateEventHandler(tkwin, FocusChangeMask, 
-			TkChildAccessible_FocusEventHandler, tkAccessible);
 }
 
 /*
@@ -1691,7 +1739,6 @@ int TkRootAccessibleObjCmd(
   }
   TkRootAccessible *accessible = CreateRootAccessible(interp, hwnd, windowName);
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
-  TkRootAccessible_RegisterForFocus(tkwin, accessible);
 	
   if (accessible == NULL) {		
     Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
@@ -1732,6 +1779,7 @@ int TkWinAccessiblity_Init(Tcl_Interp *interp)
   
   Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
+  Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
   return TCL_OK;
 }
