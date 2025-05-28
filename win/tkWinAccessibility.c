@@ -388,38 +388,65 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
 
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW.*/
-
-
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole)
 {
   if (!pvarRole) return E_INVALIDARG;
+  TkRootAccessible *root = (TkRootAccessible *)this;
 
-  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF)
-    return E_INVALIDARG;
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    pvarRole->vt = VT_I4;
+    pvarRole->lVal = ROLE_SYSTEM_WINDOW;
+    return S_OK;
+  }
 
-  pvarRole->vt = VT_I4;
-  pvarRole->lVal = ROLE_SYSTEM_WINDOW;
-  return S_OK;
+  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+    return GetAccRoleForChild(root->interp, child, pvarRole);
+  }
+
+  return E_INVALIDARG;
 }
 
-/* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_NORMAL. */
+/* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_FOCUSABLE. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState)
 {
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-  LONG state = 0;
+  if (!pvarState) return E_INVALIDARG;
+  TkRootAccessible *root = (TkRootAccessible *)this;
+
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
     pvarState->vt = VT_I4;
     pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
     return S_OK;
   }
+
+  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+    return GetAccStateForChild(root->interp, child, pvarState);
+  }
+
   return DISP_E_MEMBERNOTFOUND;
 }
 
 /* Function to map accessible value to MSAA. For toplevel, return NULL.*/
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this, VARIANT varChild, BSTR *pszValue)
 {
-  *pszValue = NULL;
-  return DISP_E_MEMBERNOTFOUND; 
+  if (!pszValue) return E_INVALIDARG;
+  TkRootAccessible *root = (TkRootAccessible *)this;
+
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    *pszValue = NULL;
+    return DISP_E_MEMBERNOTFOUND;
+  }
+
+  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+    return GetAccValueForChild(root->interp, child, pszValue);
+  }
+
+  return DISP_E_MEMBERNOTFOUND;
 }
 
 /* Function to get accessible parent. For toplevel, return NULL. */
@@ -475,37 +502,56 @@ static STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIAN
 
   /* 
    * MSAA expects only VT_DISPATCH if the child is *an object* — we don’t 
-   return that.  So we just say "this ID is valid but not an object". 
-   MSAA will then call get_accName/Role/etc. with that ID).
-  */
+   * return that.  So we just say "this ID is valid but not an object". 
+   * MSAA will then call get_accName/Role/etc. with that ID).
+   */
 
-  return S_FALSE;  /* Child exists but is not an object (per MSAA spec) */
+  return S_FALSE;  /* Child exists but is not an object (per MSAA spec). */
 }
 
 /* Function to get accessible frame to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight,VARIANT varChild)
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft,LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild)
 {
   if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight)
     return E_INVALIDARG;
 
-  if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF)
-    return E_INVALIDARG;
-
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
-  RECT clientRect;
-  GetClientRect(tkAccessible->hwnd, &clientRect);
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    RECT clientRect;
+    GetClientRect(tkAccessible->hwnd, &clientRect);
 
-  POINT screenCoords = { clientRect.left, clientRect.top };
-  MapWindowPoints(tkAccessible->hwnd, HWND_DESKTOP, &screenCoords, 1);
+    POINT screenCoords = { clientRect.left, clientRect.top };
+    MapWindowPoints(tkAccessible->hwnd, HWND_DESKTOP, &screenCoords, 1);
 
-  *pxLeft = screenCoords.x;
-  *pyTop = screenCoords.y;
-  *pcxWidth = clientRect.right - clientRect.left;
-  *pcyHeight = clientRect.bottom - clientRect.top;
+    *pxLeft = screenCoords.x;
+    *pyTop = screenCoords.y;
+    *pcxWidth = clientRect.right - clientRect.left;
+    *pcyHeight = clientRect.bottom - clientRect.top;
+    return S_OK;
+  }
 
-  return S_OK;
+  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+
+    Tk_MakeWindowExist(child); /* Ensure it has a window.*/
+
+    int x, y;
+    Tk_GetRootCoords(child, &x, &y);
+    int width = Tk_Width(child);
+    int height = Tk_Height(child);
+
+    *pxLeft = x;
+    *pyTop = y;
+    *pcxWidth = width;
+    *pcyHeight = height;
+    return S_OK;
+  }
+
+  return E_INVALIDARG;
 }
+
 
 /*Function to set accessible focus on Tk widget. For toplevel, just return. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *thisPtr, long flags, VARIANT varChild) 
@@ -517,8 +563,19 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *thisPtr
 /* Function to get button press to MSAA. For toplevel, just return. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;  
-  return S_OK;  
+  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    return S_OK;
+  }
+
+  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+    return DoDefaultActionForChild(tkAccessible->interp, child);
+  }
+
+  return E_INVALIDARG;
 }
 
 
@@ -585,23 +642,33 @@ static STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIAN
 /* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
 {
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;  
-  Tk_Window win = tkAccessible->win;
-  
-  const char *pathName = Tk_PathName(win);
-  Tcl_Obj *cmd = Tcl_NewObj();
-  Tcl_AppendToObj(cmd, "wm title ", -1);
-  Tcl_AppendToObj(cmd, pathName, -1);
-	
-  Tcl_EvalObjEx(tkAccessible->interp, cmd, TCL_EVAL_GLOBAL);
-  char *result = Tcl_GetString(Tcl_GetObjResult(tkAccessible->interp));
-  Tcl_DString ds;
-  Tcl_DStringInit(&ds);
-		
-  *pszDescription = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
-  Tcl_DStringFree(&ds);
-  return S_OK;
+  if (!pszDescription) return E_INVALIDARG;
+  TkRootAccessible *root = (TkRootAccessible *)this;
+
+  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+    Tk_Window win = root->win;
+    const char *pathName = Tk_PathName(win);
+    Tcl_Obj *cmd = Tcl_NewObj();
+    Tcl_AppendToObj(cmd, "wm title ", -1);
+    Tcl_AppendToObj(cmd, pathName, -1);
+    Tcl_EvalObjEx(root->interp, cmd, TCL_EVAL_GLOBAL);
+    char *result = Tcl_GetString(Tcl_GetObjResult(root->interp));
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
+    *pszDescription = SysAllocString(Tcl_UtfToWCharDString(result, -1, &ds));
+    Tcl_DStringFree(&ds);
+    return S_OK;
+  }
+
+   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+    if (!child) return E_INVALIDARG;
+    return GetAccDescriptionForChild(root->interp, child, pszDescription);
+  }
+
+  return E_INVALIDARG;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -672,7 +739,10 @@ static HRESULT GetAccStateForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *p
   long state = STATE_SYSTEM_FOCUSABLE; /* Reasonable default. */
 
   if (stateEntry) {
-    state = (long) Tcl_GetLongFromObj(NULL, Tcl_GetHashValue(stateEntry), NULL);
+    const char *stateresult = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+    if (strcmp(stateresult, "disabled") == 0) {
+      state = STATE_SYSTEM_UNAVAILABLE;
+    }
   }
 
   pvarState->vt = VT_I4;
