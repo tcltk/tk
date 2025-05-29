@@ -168,12 +168,12 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
  *----------------------------------------------------------------------
  */
 
-static HRESULT GetAccRoleForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *pvarRole);
-static HRESULT GetAccNameForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pName);
-static HRESULT GetAccStateForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *pvarState);
+static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole);
+static HRESULT GetAccNameForChild(Tk_Window win, BSTR *pName);
+static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState);
 static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild);
-static HRESULT GetAccDescriptionForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pDesc);
-static HRESULT GetAccValueForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pValue);
+static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc);
+static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue);
 static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win);
 
 /*
@@ -380,7 +380,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) return E_INVALIDARG;
-    return GetAccNameForChild(root->interp, child, pName);
+    return GetAccNameForChild(child, pName);
   }
 
   return E_INVALIDARG;
@@ -402,7 +402,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this,
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) return E_INVALIDARG;
-    return GetAccRoleForChild(root->interp, child, pvarRole);
+    return GetAccRoleForChild(child, pvarRole);
   }
 
   return E_INVALIDARG;
@@ -423,7 +423,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) return E_INVALIDARG;
-    return GetAccStateForChild(root->interp, child, pvarState);
+    return GetAccStateForChild(child, pvarState);
   }
 
   return DISP_E_MEMBERNOTFOUND;
@@ -443,7 +443,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) return E_INVALIDARG;
-    return GetAccValueForChild(root->interp, child, pszValue);
+    return GetAccValueForChild(child, pszValue);
   }
 
   return DISP_E_MEMBERNOTFOUND;
@@ -484,7 +484,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
 }
 
 /* Function to get accessible children to MSAA. */
-static STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
 {
   if (!ppdispChild) return E_INVALIDARG;
   *ppdispChild = NULL;
@@ -586,7 +586,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 }
 
 /* Function to get accessible focus to MSAA. */
-static STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
+static HRESULT STDMETHODCALLTYPE  TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);
@@ -663,7 +663,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) return E_INVALIDARG;
-    return GetAccDescriptionForChild(root->interp, child, pszDescription);
+    return GetAccDescriptionForChild(child, pszDescription);
   }
 
   return E_INVALIDARG;
@@ -681,33 +681,33 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
 
 
 /* Function to map accessible name to MSAA.*/
-static HRESULT GetAccNameForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pName)
+static HRESULT GetAccNameForChild(Tk_Window win, BSTR *pName)
 {
-  if (!interp || !win || !pName) return E_INVALIDARG;
+  if (!win || !pName) return E_INVALIDARG;
 
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!entry) return S_FALSE;
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(entry);
-  Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
-  if (!nameEntry) return S_FALSE;
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
+  if (!hPtr2) return S_FALSE;
 
-  const char *name = Tcl_GetString(Tcl_GetHashValue(nameEntry));
+  const char *name = Tcl_GetString(Tcl_GetHashValue(hPtr));
   *pName = SysAllocString(Tcl_UtfToWCharDString(name, -1, NULL));
   return S_OK;
 }
 
 
 /* Function to map accessible role to MSAA.*/
-static HRESULT GetAccRoleForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *pvarRole)
+static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole)
 {
-  if (!interp || !win || !pvarRole) return E_INVALIDARG;
+  if (!win || !pvarRole) return E_INVALIDARG;
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
-  Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(attrs, "role");
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(AccessibleAttributes, "role");
   if (!roleEntry) return S_FALSE;
 
   const char *tkrole = Tcl_GetString(Tcl_GetHashValue(roleEntry));
@@ -727,19 +727,19 @@ static HRESULT GetAccRoleForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *pv
 
 
 /* Function to map accessible state to MSAA. */
-static HRESULT GetAccStateForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *pvarState)
+static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState)
 {
-  if (!interp || !win || !pvarState) return E_INVALIDARG;
+  if (!win || !pvarState) return E_INVALIDARG;
 
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!entry) return S_FALSE;
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(entry);
-  Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
-  long state = STATE_SYSTEM_FOCUSABLE; /* Reasonable default. */
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "state");
+  long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE;; /* Reasonable default. */
 
-  if (stateEntry) {
-    const char *stateresult = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+  if (hPtr2) {
+    const char *stateresult = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (strcmp(stateresult, "disabled") == 0) {
       state = STATE_SYSTEM_UNAVAILABLE;
     }
@@ -751,37 +751,36 @@ static HRESULT GetAccStateForChild(Tcl_Interp *interp, Tk_Window win, VARIANT *p
 }
 
 /* Function to map accessible value to MSAA.*/
-static HRESULT GetAccValueForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pValue)
+static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue)
 {
-  if (!interp || !win || !pValue) return E_INVALIDARG;
+  if (!win || !pValue) return E_INVALIDARG;
 
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!entry) return S_FALSE;
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(entry);
-  Tcl_HashEntry *valEntry = Tcl_FindHashEntry(attrs, "value");
-  if (!valEntry) return S_FALSE;
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
+  if (!hPtr2) return S_FALSE;
 
-  const char *val = Tcl_GetString(Tcl_GetHashValue(valEntry));
+  const char *val = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   *pValue = SysAllocString(Tcl_UtfToWCharDString(val, -1, NULL));
   return S_OK;
 }
-
 
 /* Function to get button press to MSAA. */
 static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win)
 {
   if (!interp || !win) return E_INVALIDARG;
 
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!entry) return S_FALSE;
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(entry);
-  Tcl_HashEntry *cmdEntry = Tcl_FindHashEntry(attrs, "action");
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
 
-  if (!cmdEntry) return S_FALSE;
+  if (!hPtr2) return S_FALSE;
 
-  const char *cmd = Tcl_GetString(Tcl_GetHashValue(cmdEntry));
+  const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
     return E_FAIL;
   }
@@ -803,18 +802,18 @@ static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild)
 
 
 /* Function to get MSAA description. */
-static HRESULT GetAccDescriptionForChild(Tcl_Interp *interp, Tk_Window win, BSTR *pDesc)
+static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc)
 {
-  if (!interp || !win || !pDesc) return E_INVALIDARG;
+  if (!win || !pDesc) return E_INVALIDARG;
 
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!entry) return S_FALSE;
+  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+  if (!hPtr) return S_FALSE;
 
-  Tcl_HashTable *attrs = Tcl_GetHashValue(entry);
-  Tcl_HashEntry *descEntry = Tcl_FindHashEntry(attrs, "description");
-  if (!descEntry) return S_FALSE;
+  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
+  if (!hPtr2) return S_FALSE;
 
-  const char *desc = Tcl_GetString(Tcl_GetHashValue(descEntry));
+  const char *desc = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   *pDesc = SysAllocString(Tcl_UtfToWCharDString(desc, -1, NULL));
   return S_OK;
 }
