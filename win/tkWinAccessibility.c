@@ -82,6 +82,7 @@ static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
 static Tcl_HashTable *childIdTable = NULL;
+static int childIdTableDirty = 0;
 
 
 /*
@@ -201,6 +202,8 @@ int EmitFocusChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *co
 void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp);
+static void RebuildChildIdTable(ClientData clientData);
+static void ScheduleChildIdRebuild(Tk_Window root);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -629,41 +632,42 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
-  VariantInit(pvarChild); /* Initialize the VARIANT to VT_EMPTY. */
+  VariantInit(pvarChild);  /* Initialize to VT_EMPTY. */
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
-  /* Get the current Tk focus window.*/
-  TkWindow *focusPtr = TkGetFocusWin((TkWindow *)tkAccessible->win);
-  Tk_Window focusWin = (Tk_Window)focusPtr;
-
-  /* If no focus, or focus is on the root window itself. */
-  if (!focusWin || focusWin == tkAccessible->win) {
+  /* If ID table is out of date, fallback safely. */
+  extern int childIdTableDirty;  /* Must be declared global. */
+  if (childIdTableDirty) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
-  
     return S_OK;
   }
 
-  /* Ensure child IDs are up-to-date before looking up. */
-  ClearChildIdTable();
-  int nextId = 1; /* Child IDs start from 1. */
-  AssignChildIdsRecursive(tkAccessible->win, &nextId, tkAccessible->interp);
+  /* Get currently focused widget. */
+  TkWindow *focusPtr = TkGetFocusWin((TkWindow *)tkAccessible->win);
+  Tk_Window focusWin = (Tk_Window)focusPtr;
 
-  /* Look up ID for the focused child.*/
+  if (!focusWin || focusWin == tkAccessible->win) {
+    pvarChild->vt = VT_I4;
+    pvarChild->lVal = CHILDID_SELF;
+    return S_OK;
+  }
+
+  /* Lookup the assigned child ID (no rebuild here). */
   int childId = GetChildIdForTkWindow(focusWin);
-
   if (childId > 0) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = childId;
     return S_OK;
-  } else {
-    /* Fallback if child was focused but not found in ID table. */
-    pvarChild->vt = VT_I4;
-    pvarChild->lVal = CHILDID_SELF; /* Indicate no specific child focus found. */
-    return S_OK; 
   }
+
+  /* Fallback: child is focused but wasn't assigned an ID. */
+  pvarChild->vt = VT_I4;
+  pvarChild->lVal = CHILDID_SELF;
+  return S_OK;
 }
+
 
 /* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
@@ -1046,6 +1050,26 @@ static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *inte
   }
 }
 
+/* Function to refresh child ID's. */
+static void RebuildChildIdTable(ClientData clientData)
+{
+  childIdTableDirty = 0; /* Clear the flag. */
+  ClearChildIdTable();
+  int nextId = 1;
+  Tk_Window root = (Tk_Window)clientData;
+TkRootAccessible *tkAccessible = GetTkAccessibleForWindow(root);
+  AssignChildIdsRecursive(root, &nextId, tkAccessible->interp);
+}
+
+/* Function to schedule lazy reload of child ID's. */
+static void ScheduleChildIdRebuild(Tk_Window root)
+{
+  if (!childIdTableDirty) {
+    childIdTableDirty = 1;
+    Tcl_DoWhenIdle(RebuildChildIdTable, (ClientData) root);
+  }
+}
+
 
 /* 
  * Functions to implement direct script-level 
@@ -1214,9 +1238,8 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
   HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
   /* Ensure child ID's are assigned. */
-  ClearChildIdTable(); 
-  int nextId = 1;
-  AssignChildIdsRecursive(toplevel, &nextId, interp);
+ScheduleChildIdRebuild(toplevel);
+
 
   LONG childId = GetChildIdForTkWindow(win);
 
@@ -1287,9 +1310,7 @@ int TkRootAccessibleObjCmd(
   }
 
   /* Initial assignment of child IDs right after creating the root accessible. */
-  ClearChildIdTable(); /* Clear any previous IDs. */
-  int nextId = 1;
-  AssignChildIdsRecursive(tkwin, &nextId, interp); /* Assign IDs starting from the 'tkwin' (which should be the toplevel). */
+ScheduleChildIdRebuild(tkwin);
 
   return TCL_OK;
 }
