@@ -234,17 +234,17 @@ namespace eval ::tk::accessible {
     proc _forceTkFocus {w} {
 	
 	if {[tk windowingsystem] eq "aqua"} {
-	if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview" || [winfo class $w] eq "TProgressbar"} {
-	    if {[focus] ne $w} {
-		focus -force $w
+	    if {[winfo class $w] eq "Scale" || [winfo class $w] eq "TScale" || [winfo class $w] eq "Spinbox" || [winfo class $w] eq "TSpinbox" || [winfo class $w] eq "Listbox" || [winfo class $w] eq "Treeview" || [winfo class $w] eq "TProgressbar"} {
+		if {[focus] ne $w} {
+		    focus -force $w
+		}
+	    } else {
+		return
 	    }
-	} else {
-	    return
-	}
 	}
 	if {[tk windowingsystem] eq "win32"} {
-	focus -force $w
-	after idle ::tk::accessible::emit_focus_change $w
+	    focus -force $w
+	    after idle ::tk::accessible::emit_focus_change $w
 	}
     }
     
@@ -639,9 +639,9 @@ namespace eval ::tk::accessible {
     bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
     
-	if {[tk windowingsystem] eq "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
-	}
+    }
     
     # Finally, export the main commands.
     namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader
