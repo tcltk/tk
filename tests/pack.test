@@ -889,13 +889,10 @@ test pack-8.7 {insufficient space} -body {
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
 } -result {20x30+0+0 1 30x30+20+0 1 50x30+20+0 0}
 
-#
-# COMMON TEST SETUP
-#
-pack forget .pack.b
-update
-
-test pack-8.8 {insufficient space} -body {
+test pack-8.8 {insufficient space} -setup {
+    pack forget .pack.b
+    update
+} -body {
     list [winfo geometry .pack.a] [winfo ismapped .pack.a] \
 	[winfo geometry .pack.b] [winfo ismapped .pack.b] \
 	[winfo geometry .pack.c] [winfo ismapped .pack.c]
