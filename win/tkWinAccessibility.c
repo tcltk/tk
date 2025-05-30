@@ -558,7 +558,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-    *pszDefaultAction = NULL; // Toplevel windows usually don’t have default actions
+    *pszDefaultAction = NULL;
     return S_FALSE;
   }
 
@@ -629,7 +629,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild)
 {
   if (!pvarChild) return E_INVALIDARG;
-  VariantInit(pvarChild); // Initialize the VARIANT to VT_EMPTY
+  VariantInit(pvarChild); /* Initialize the VARIANT to VT_EMPTY. */
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -1036,10 +1036,10 @@ static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *inte
 {
   if (!Tk_IsMapped(win)) return;
 
-  // Assign an ID to this widget
+  /* Assign an ID to this widget. */
   SetChildIdForTkWindow(win, (*nextId)++);
 
-  // Recurse into children
+  /* Recurse into children. */
   TkWindow *winPtr = (TkWindow *)win;
   for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
     AssignChildIdsRecursive((Tk_Window)child, nextId, interp);
@@ -1213,17 +1213,12 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
   Tk_Window toplevel = GetToplevelOfWidget(win);
   HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
-  // 🛠️ FIX: Ensure IDs are assigned
+  /* Ensure child ID's are assigned. */
   ClearChildIdTable(); 
   int nextId = 1;
   AssignChildIdsRecursive(toplevel, &nextId, interp);
 
   LONG childId = GetChildIdForTkWindow(win);
-
-  if (childId <= 0) {
-    Tcl_AppendResult(interp, "Failed to find child ID for ", path, NULL);
-    //  return TCL_OK;
-  }
 
   TkSetFocusWin((TkWindow *)win, 1);
   NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
