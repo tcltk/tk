@@ -426,9 +426,11 @@ Tk_ClipboardObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     const char *path = NULL;
     Atom selection;
-    static const char *const optionStrings[] = { "append", "clear", "get", NULL };
-    enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
-    int index, i;
+    static const char *const optionStrings[] = {
+	"append", "clear", "get", "flush", NULL };
+    enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET,
+		   CLIPBOARD_FLUSH};
+    int index, i, result;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -543,7 +545,48 @@ Tk_ClipboardObjCmd(
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
-	return Tk_ClipboardClear(interp, tkwin);
+	result = Tk_ClipboardClear(interp, tkwin);
+	if (result == TCL_OK) {
+	    TkSelUpdateClipboard(NULL, NULL);
+	}
+	return result; 
+    }
+    case CLIPBOARD_FLUSH: {
+	static const char *const clearOptionStrings[] = { "-displayof", NULL };
+	enum clearOptions { CLEAR_DISPLAYOF };
+	int subIndex;
+
+	if (objc != 2 && objc != 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window?");
+	    return TCL_ERROR;
+	}
+
+	if (objc == 4) {
+	    if (Tcl_GetIndexFromObj(interp, objv[2], clearOptionStrings,
+		    "option", 0, &subIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if ((enum clearOptions) subIndex == CLEAR_DISPLAYOF) {
+		path = Tcl_GetString(objv[3]);
+	    }
+	}
+	if (path != NULL) {
+	    tkwin = Tk_NameToWindow(interp, path, tkwin);
+	}
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Passing two NULL arguments is a signal on macOS that the current
+	 * clipboard contents should be sent to the general NSPasteboard, and
+	 * Tk should resign ownership of its String Type.  This causes the
+	 * changeCount to be incremented, which notifies clipboard managers
+	 * that the value of the current clip has changed.
+	 */
+	
+	TkSelUpdateClipboard(NULL, NULL);
+	return TCL_OK;
     }
     case CLIPBOARD_GET: {
 	Atom target;
