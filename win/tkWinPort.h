@@ -104,6 +104,7 @@
 #if !defined(_WIN64)
 #   pragma warning(disable:4305)
 #endif
+#   pragma warning(disable:5287) /* See [1dcda0e862] in the Tcl repository */
 #endif
 
 /*
