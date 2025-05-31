@@ -26,7 +26,6 @@ static Tk_Window clipboardOwner = NULL;
 	provideDataForType: (NSString *) type
 {
     NSMutableString *string = [NSMutableString new];
-
     if (dispPtr && dispPtr->clipboardActive &&
 	    [type isEqualToString:NSStringPboardType]) {
 	for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
@@ -46,6 +45,7 @@ static Tk_Window clipboardOwner = NULL;
 	}
     }
     [sender setString:string forType:type];
+    changeCount = [sender changeCount];
     [string release];
 }
 
@@ -63,6 +63,11 @@ static Tk_Window clipboardOwner = NULL;
 {
     [self tkProvidePasteboard:TkGetDisplayList() pasteboard:sender
 	    provideDataForType:type];
+}
+
+- (void) pasteboardChangedOwner
+{
+    //printf("Lost ownership of the NSPasteboard\n");
 }
 
 - (void) tkCheckPasteboard
@@ -218,27 +223,47 @@ TkMacOSXSelDeadWindow(
  * TkSelUpdateClipboard --
  *
  *	This function is called to force the clipboard to be updated after new
- *	data is added.
+ *	data is added or the clipboard has been cleared.
+ *
+ *      Normally this makes the TKApplication object becoming the owner of
+ *      the String type on the general NSPasteboard.  When the method
+ *      [NSAppp pasteboard: provideDataForType:] is called the NSApp will
+ *      set the string value of the general NSPasteboard to the current
+ *      contents of the Tk clipboard.
+ *
+ *      When called with two NULL pointers, the owners of the String type
+ *      will be set to nil and the contents of the Tk clipboard will be
+ *      immediately sent to the general NSPasteboard.  The ownership change
+ *      causes the changeCount of the NSPasteboard to be incremented.
+ *      (It is common for clipboard managers to watch the changeCount
+ *      value as an indicator that a new clip is available.)
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Ownership contents and attributes of the general NSPasteboard
+ *      may change.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkSelUpdateClipboard(
-    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
-    TCL_UNUSED(TkClipboardTarget *))
-				/* Info about the content. */
+    TkWindow *winPtr,		/* Window associated with clipboard. */
+    TkClipboardTarget *target)  /* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
-
-    changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
-	    owner:NSApp];
+    if (winPtr || target) {
+	changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
+			     owner:NSApp];
+    } else {
+  	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+			     owner:nil];
+	[NSApp tkProvidePasteboard: TkGetDisplayList() 
+			pasteboard: (NSPasteboard *) pb
+		provideDataForType: (NSString *) NSStringPboardType];
+    }
 }
 
 /*
