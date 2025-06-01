@@ -1802,6 +1802,11 @@ is blinking. When disabling the blinking, or when setting a block cursor shape,
 it is recommended to specify the cursor width (option \fB\-insertwidth\fR)
 explicitly. Of course, in most cases the default settings for the cursor will
 be preferred.
+However, drawing the cursor as a solid blinking block is not exactly
+performed as in real or emulated terminals. The character at the cursor
+position is always drawn in it's foreground color, i.e. not in
+"reverse video", which can lead to unwanted visual effects and even
+hide the character entirely, when the cursor is in its on-state.
 .SH "THE MODIFIED FLAG"
 .PP
 The text widget can keep track of changes to the textual content of the widget
