@@ -1051,7 +1051,8 @@ MODULE_SCOPE void	TkTextBindProc(ClientData clientData,
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
-			    int *widthPtr, int *heightPtr, int *charWidthPtr);
+			    int *widthPtr, int *heightPtr, int *charWidthPtr,
+			    int *cursorWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, int noBreakYet,
