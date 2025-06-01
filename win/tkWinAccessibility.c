@@ -84,9 +84,8 @@ static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
 static Tcl_HashTable *childIdTable = NULL;
-static int childIdTableDirty = 0; /* Flag to indicate if childIdTable needs a rebuild. */
 static Tcl_ThreadId tkMainThreadId;
-static int isRebuilding = 0;
+static int nextId = 1;
 
 /*
  * Event structure for queueing tasks to the main Tk thread.
@@ -94,16 +93,11 @@ static int isRebuilding = 0;
 typedef struct TkAccessibleEvent {
   Tcl_Event event;
   enum {
-    ACCESSIBLE_REBUILD_IDS,
     ACCESSIBLE_DO_DEFAULT_ACTION,
     ACCESSIBLE_EMIT_FOCUS_CHANGE,
     ACCESSIBLE_EMIT_SELECTION_CHANGE
   } type;
   union {
-    struct {
-      Tk_Window rootWin;
-      Tcl_Interp *interp; /* Needed for AssignChildIdsRecursive. */
-    } rebuildIds;
     struct {
       Tk_Window win;
       Tcl_Interp *interp;
@@ -127,9 +121,10 @@ typedef struct {
 } DeferredActionData;
 
 typedef struct {
-  Tk_Window win;
-  Tcl_Interp *interp;
-} DeferredRebuildData;
+  HWND hwnd;
+  LONG childId;
+} DeferredFocusInfo;
+
 
 
 /*
@@ -246,15 +241,14 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 Tk_Window GetTkWindowForChildId(int id);
 static void DeferredDoDefaultAction(ClientData clientData);
 static void DoDefaultActionInternal(Tcl_Interp *interp, Tk_Window win);
-static void DeferredRebuild(ClientData clientData);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int EmitFocusChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp);
-static void RebuildChildIdTableOnMainThread(Tcl_Event *eventPtr, int flags);
-static void ScheduleChildIdRebuild(Tk_Window rootWin, Tcl_Interp *interp);
+static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr);
+static void DeferredNotifyFocus(ClientData clientData);
+static void AssignChildIdsRecursive(Tk_Window win, Tcl_Interp *interp);
 static int MainThreadAccessibleProc(Tcl_Event *eventPtr, int flags);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
@@ -423,7 +417,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISP
 /* Function to map accessible name to MSAA.*/
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pName) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pName) return E_INVALIDARG;
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
@@ -453,7 +446,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW.*/
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pvarRole) return E_INVALIDARG;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -475,7 +467,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this,
 /* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_FOCUSABLE. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pvarState) return E_INVALIDARG;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -497,7 +488,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
 /* Function to map accessible value to MSAA. For toplevel, return NULL.*/
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this, VARIANT varChild, BSTR *pszValue) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pszValue) return E_INVALIDARG;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -518,7 +508,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this
 /* Function to get accessible parent. For toplevel, return NULL. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent) 
 {
-  if (childIdTableDirty) return S_FALSE;
   /* Cast this to TkRootAccessible, assuming 'this' is of that type. */
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -530,7 +519,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accParent(IAccessible *thi
 /* Function to get number of accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren) 
 {
-  if (childIdTableDirty) return S_FALSE;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   int count = 0;
   TkWindow *child;
@@ -548,7 +536,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
 /* Function to get accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!ppdispChild) return E_INVALIDARG;
   *ppdispChild = NULL;
 
@@ -575,7 +562,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
 /* Function to get accessible frame to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft,LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight)
     return E_INVALIDARG;
 
@@ -625,7 +611,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *thisPtr
 /* Function to return default action for role. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pszDefaultAction) return E_INVALIDARG;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -677,7 +662,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 /* Function to get button press to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild) 
 {
-  if (childIdTableDirty) return S_FALSE;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
@@ -708,13 +692,15 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 /* Function to get accessible focus to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);  /* Initialize to VT_EMPTY. */
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+  Tk_Window focusWin = NULL;
   TkWindow *focusPtr = TkGetFocusWin((TkWindow *)tkAccessible->win);
-  Tk_Window focusWin = (Tk_Window)focusPtr;
+  if (focusPtr && focusPtr->window != None) {
+    focusWin = (Tk_Window)focusPtr;
+  }
 
   if (!focusWin || focusWin == tkAccessible->win) {
     pvarChild->vt = VT_I4;
@@ -740,7 +726,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
 /* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription) 
 {
-  if (childIdTableDirty) return S_FALSE;
   if (!pszDescription) return E_INVALIDARG;
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
@@ -1017,9 +1002,6 @@ static void SetChildIdForTkWindow(Tk_Window win, int id)
 static int GetChildIdForTkWindow(Tk_Window win) 
 {
   if (!childIdTable) return -1;
-  if (childIdTableDirty) {
-    return -1;
-  }	  
 
   Tcl_HashEntry *entry = Tcl_FindHashEntry(childIdTable, (ClientData)win);
   if (!entry) return -1;
@@ -1136,24 +1118,23 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd)
 }
 
 /* Function to assign childId's dynamically. */
-static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp) 
+static void AssignChildIdsRecursive(Tk_Window win, Tcl_Interp *interp) 
 {	
-  if (!win || !Tk_IsMapped(win)) return; 
-  if (isRebuilding) return; /* Prevent recursion. */
-  isRebuilding = 1;
+  if (!win || !Tk_IsMapped(win)) return;
 
+  SetChildIdForTkWindow(win, nextId++);
 
-  /* Assign an ID to this widget. */
-  SetChildIdForTkWindow(win, (*nextId)++);
-
-  /* Recurse into children. */
   TkWindow *winPtr = (TkWindow *)win;
-  for (TkWindow *child = winPtr->childList; child != NULL; child =
-	 child->nextPtr) {
-    AssignChildIdsRecursive((Tk_Window)child, nextId, interp);
+  for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
+    AssignChildIdsRecursive((Tk_Window)child, interp);
   }
-  
-  isRebuilding = 0;
+}
+
+/* Function to defer focus events to the main thread. */
+static void DeferredNotifyFocus(ClientData clientData) {
+  DeferredFocusInfo *info = (DeferredFocusInfo *)clientData;
+  NotifyWinEvent(EVENT_OBJECT_FOCUS, info->hwnd, OBJID_CLIENT, info->childId);
+  ckfree(info);
 }
 
 /*
@@ -1164,12 +1145,7 @@ static int MainThreadAccessibleProc(Tcl_Event *eventPtr, int flags)
 {
   TkAccessibleEvent *accEvent = (TkAccessibleEvent *)eventPtr;
 
-  if (accEvent->type == ACCESSIBLE_REBUILD_IDS) {
-    DeferredRebuildData *data = (DeferredRebuildData *)ckalloc(sizeof(DeferredRebuildData));
-    data->win = accEvent->data.rebuildIds.rootWin;
-    data->interp = accEvent->data.rebuildIds.interp;
-    Tcl_DoWhenIdle(DeferredRebuild, (ClientData)data);
-  } else if (accEvent->type == ACCESSIBLE_DO_DEFAULT_ACTION) {
+  if (accEvent->type == ACCESSIBLE_DO_DEFAULT_ACTION) {
     DoDefaultActionInternal(accEvent->data.doDefaultAction.interp,
 			    accEvent->data.doDefaultAction.win);
   } else if (accEvent->type == ACCESSIBLE_EMIT_FOCUS_CHANGE) {
@@ -1181,31 +1157,6 @@ static int MainThreadAccessibleProc(Tcl_Event *eventPtr, int flags)
 		   accEvent->data.emitSelectionChange.hwnd, OBJID_CLIENT, 0);
   }
   return 1;
-}
-
-/* Function to schedule lazy reload of child ID's. */
-static void ScheduleChildIdRebuild(Tk_Window rootWin, Tcl_Interp *interp) 
-{
-  if (!childIdTableDirty) {
-    childIdTableDirty = 1;
-    TkAccessibleEvent *eventPtr = (TkAccessibleEvent *)
-      Tcl_Alloc(sizeof(TkAccessibleEvent));
-    eventPtr->event.proc = MainThreadAccessibleProc;
-    eventPtr->type = ACCESSIBLE_REBUILD_IDS;
-    eventPtr->data.rebuildIds.rootWin = rootWin;
-    eventPtr->data.rebuildIds.interp = interp;
-    Tcl_ThreadQueueEvent(tkMainThreadId, (Tcl_Event *)eventPtr,
-			 TCL_QUEUE_TAIL);
-  }
-}
-/* Function to defer lazy reload of child ID's. */
-static void DeferredRebuild(ClientData clientData) {
-  DeferredRebuildData *data = (DeferredRebuildData *)clientData;
-  ClearChildIdTable();
-  int nextId = 1;
-  AssignChildIdsRecursive(data->win, &nextId, data->interp);
-  childIdTableDirty = 0;
-  ckfree(data);
 }
 
 
@@ -1339,7 +1290,6 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
     TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
     if (tkAccessible) {
       TkRootAccessible_Release((IAccessible *)tkAccessible);
-      ScheduleChildIdRebuild(tkAccessible->win, tkAccessible->interp);
     }
   }
 }
@@ -1359,17 +1309,77 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
  *
  *----------------------------------------------------------------------
  */
-static void TkWidgetStructureHandler(ClientData clientData, XEvent *eventPtr) 
-{
+static void TkWidgetStructureHandler(ClientData clientData, XEvent *eventPtr) {
   TkRootAccessible *rootAccessible = (TkRootAccessible *)clientData;
 
-  if (eventPtr->type == CreateNotify || eventPtr->type == DestroyNotify) {
-    /* * A widget in the hierarchy was created or destroyed.
-     * Schedule a rebuild of the child ID table on the main thread.
-     */
-    ScheduleChildIdRebuild(rootAccessible->win, rootAccessible->interp);
+  if (eventPtr->type == CreateNotify) {
+    /* Assign a child ID to the new widget. */
+    Window childWinId = eventPtr->xcreatewindow.window;
+    Tk_Window root = rootAccessible->win;
+
+    /* Walk children to find matching Tk window by ID. */
+    TkWindow *rootPtr = (TkWindow *)root;
+    for (TkWindow *child = rootPtr->childList; child != NULL; child = child->nextPtr) {
+      if (Tk_WindowId((Tk_Window)child) == childWinId) {
+        SetChildIdForTkWindow((Tk_Window)child, nextId++);
+        break;
+      }
+    }
+  } else if (eventPtr->type == DestroyNotify) {
+    Window destroyedWinId = eventPtr->xdestroywindow.window;
+
+    /* Look for matching Tk window and remove from childIdTable. */
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entry;
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search);
+         entry != NULL;
+         entry = Tcl_NextHashEntry(&search)) {
+      Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+      if (Tk_WindowId(win) == destroyedWinId) {
+        Tcl_DeleteHashEntry(entry);
+        break;
+      }
+    }
   }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWidgetFocusHandler --
+ *
+ * Notifies MSAA of focus updates during tab nvigation.
+ *
+ * Results:
+ * Focus notification.
+ *
+ * Side effects:
+ * None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr) 
+{
+  if (eventPtr->type != FocusIn) return;
+
+  Tk_Window win = (Tk_Window)clientData;
+  Tk_Window toplevel = GetToplevelOfWidget(win);
+  if (!toplevel) return;
+
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+  LONG childId = GetChildIdForTkWindow(win);
+  if (childId < 0) childId = CHILDID_SELF;
+
+  DeferredFocusInfo *info = (DeferredFocusInfo *)ckalloc(sizeof(DeferredFocusInfo));
+  info->hwnd = hwnd;
+  info->childId = childId;
+  Tcl_DoWhenIdle(DeferredNotifyFocus, (ClientData)info);
+}
+
+
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -1403,21 +1413,9 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
   HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
   LONG childId = GetChildIdForTkWindow(win);
-  if (childId == -1) {
-    childId = CHILDID_SELF; /* Fallback if ID not found. */
-  }
+  if (childId < 0) childId = CHILDID_SELF;
 
-  /* Queue event to main thread. */
-  TkAccessibleEvent *eventPtr = (TkAccessibleEvent *)
-    Tcl_Alloc(sizeof(TkAccessibleEvent));
-  eventPtr->event.proc = MainThreadAccessibleProc;
-  eventPtr->type = ACCESSIBLE_EMIT_FOCUS_CHANGE;
-  eventPtr->data.emitFocusChange.win = win;
-  eventPtr->data.emitFocusChange.hwnd = hwnd;
-  eventPtr->data.emitFocusChange.childId = childId;
-  Tcl_ThreadQueueEvent(tkMainThreadId, (Tcl_Event *)eventPtr,
-		       TCL_QUEUE_TAIL);
-
+  NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
   TkSetFocusWin((TkWindow *)win, 1);
   return TCL_OK;
 }
@@ -1478,18 +1476,16 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 
   Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 			TkWidgetStructureHandler, accessible);
+			
+  Tk_CreateEventHandler(tkwin, FocusChangeMask, TkWidgetFocusHandler, tkwin);
 
   if (accessible == NULL) {
     Tcl_SetResult(interp, "Failed to create accessible object.",
 		  TCL_STATIC);
     return TCL_ERROR;
   }
-
-  /* * Initial assignment of child IDs right after creating 
-   * the root widget.  This will queue the rebuild on the 
-   * main thread.
-   */
-  ScheduleChildIdRebuild(tkwin, interp);
+  
+  AssignChildIdsRecursive(tkwin, interp); 
 
   return TCL_OK;
 }
