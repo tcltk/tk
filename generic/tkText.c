@@ -736,7 +736,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (TkTextIndexBbox(textPtr, indexPtr, &x, &y, &width, &height,
-		NULL) == 0) {
+		NULL, NULL) == 0) {
 	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
@@ -3615,10 +3615,11 @@ TextBlinkProc(
     }
   redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-    if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
+    if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h,
+	    &charWidth, NULL) == 0) {
 	if (textPtr->insertCursorType) {
 	    /* Block cursor */
-	    TkTextRedrawRegion(textPtr, x - textPtr->width / 2, y,
+	    TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
 		    charWidth + textPtr->insertWidth / 2, h);
 	} else {
 	    /* I-beam cursor */
