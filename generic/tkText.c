@@ -3618,7 +3618,7 @@ TextBlinkProc(
     if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
 	if (textPtr->insertCursorType) {
 	    /* Block cursor */
-	    TkTextRedrawRegion(textPtr, x - textPtr->width / 2, y,
+	    TkTextRedrawRegion(textPtr, x - textPtr->insertWidth / 2, y,
 		    charWidth + textPtr->insertWidth / 2, h);
 	} else {
 	    /* I-beam cursor */
