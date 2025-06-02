@@ -40,6 +40,11 @@ to the userbase.
  - [wm iconbitmap does not support icon files with png images on Windows](https://core.tcl-lang.org/tk/info/17b509)
  - [block cursor size on a tab is too large](https://core.tcl-lang.org/tk/info/5d0bc3)
 
+# Incompatibilities
+ - [The ActiveCodePage element has been removed from the Windows executable manifest for wish](https://core.tcl-lang.org/tips/doc/trunk/tip/716.md)
+
+
+
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
 Tk 9.0.1 continues the Tk 9.0 series of releases.  The Tk 9.0 series
