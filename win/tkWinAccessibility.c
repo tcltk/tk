@@ -1331,7 +1331,7 @@ static void TkWidgetStructureHandler(ClientData clientData, XEvent *eventPtr) {
  *
  * TkWidgetFocusHandler --
  *
- * Notifies MSAA of focus updates during tab nvigation.
+ * Notifies MSAA of focus updates during tab navigation.
  *
  * Results:
  * Focus notification.
