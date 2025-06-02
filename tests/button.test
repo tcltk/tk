@@ -14,7 +14,8 @@
 # - setup for the application and the root window
 # - loading and configuration of the tcltest test harness
 # - loading of the testutils mechanism together with its utility procs
-# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
