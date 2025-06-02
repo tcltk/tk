@@ -258,7 +258,11 @@ namespace eval ::tk::accessible {
 		return
 	    }
 	}
-
+	if {[tk windowingsystem] eq "win32"} {
+	    #This is necessary to ensure correct accessible keyboard navigation
+	    $w configure -takefocus 1
+	}
+	
 	::tk::accessible::acc_role $w $role
 	::tk::accessible::acc_name $w $name
 	::tk::accessible::acc_description $w $description
@@ -640,7 +644,7 @@ namespace eval ::tk::accessible {
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
     
     if {[tk windowingsystem] eq "win32"} {
-	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	 bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
     }
     
     # Finally, export the main commands.
