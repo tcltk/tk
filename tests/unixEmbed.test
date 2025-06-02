@@ -1120,7 +1120,6 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} -constraints unix -setup {
 #
 # COMMON TEST CLEANUP
 #
-
 catch {interp delete child}
 
 test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} -constraints {

@@ -627,7 +627,6 @@ test unixWm-14.7 {Tk_WmCmd procedure, "colormapwindows" option} unix {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .t2
 
 test unixWm-15.1 {Tk_WmCmd procedure, "command" option} unix {
@@ -1396,7 +1395,6 @@ test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} unix {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .t .icon
 
 test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on grid} {unix nonPortable} {
@@ -2062,7 +2060,6 @@ test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
 #
 # COMMON TEST CLEANUP
 #
-
 deleteWindows
 wm deiconify .
 
@@ -2121,7 +2118,6 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
 #
 # COMMON TEST CLEANUP
 #
-
 deleteWindows
 
 test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} unix {

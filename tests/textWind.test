@@ -325,7 +325,6 @@ test textWind-2.22 {TkTextWindowCmd procedure} -setup {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .f
 
 test textWind-2.23 {TkTextWindowCmd procedure, "names" option} -setup {
