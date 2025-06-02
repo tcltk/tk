@@ -35,7 +35,8 @@ the undo stack. Only meaningful when the \fB\-undo\fR option is true.
 .OP \-blockcursor blockCursor BlockCursor
 Specifies a boolean that says whether the blinking insertion cursor should be
 drawn as a character-sized rectangular block. If false (the default) a thin
-vertical line is used for the insertion cursor.
+vertical line is used for the insertion cursor. For further discussion
+refer to section \fBTHE INSERTION CURSOR\fR below.
 .OP \-endline endLine EndLine
 Specifies an integer line index representing the line of the underlying
 textual data store that should be just after the last line contained in
@@ -917,6 +918,13 @@ with the
 widget command. The \fBinsert\fR mark represents the position of the insertion
 cursor, and the insertion cursor will automatically be drawn at this point
 whenever the text widget has the input focus.
+.PP
+The \fB\-blockcursor\fR widget option controls the drawing of the cursor.
+However, drawing the cursor as a solid blinking block is not exactly
+performed as in real or emulated terminals. The character at the cursor
+position is always drawn in it's foreground color, i.e. not in
+"reverse video", which can lead to unwanted visual effects and even
+hide the character entirely, when the cursor is in its on-state.
 .SH "THE MODIFIED FLAG"
 .PP
 The text widget can keep track of changes to the content of the widget by

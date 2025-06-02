@@ -625,15 +625,17 @@ TkTextInsertDisplayProc(
     TkTextIndex index;
     int halfWidth, insertWidth, insertBorderWidth;
     int rightSideWidth;
-    int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
+    int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0, cursorWidth = 0;
 
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
     halfWidth = insertWidth/2;
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
+	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth,
+		&cursorWidth);
 	rightSideWidth = charWidth + halfWidth;
+	charWidth = cursorWidth;
     } else {
 	rightSideWidth = halfWidth;
     }

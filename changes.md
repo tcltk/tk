@@ -37,6 +37,8 @@ to the userbase.
  - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tk/tktview/9b23b6)
  - [Collect utility procs for the Tk test suite](https://core.tcl-lang.org/tk/tktview/718cbc)
  - [Setting ttk state may change the a variable passed by value](https://core.tcl-lang.org/tk/info/7231bf)
+ - [wm iconbitmap does not support icon files with png images on Windows](https://core.tcl-lang.org/tk/info/17b509)
+ - [block cursor size on a tab is too large](https://core.tcl-lang.org/tk/info/5d0bc3)
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
