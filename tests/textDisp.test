@@ -267,7 +267,6 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete x y z
 
 test textDisp-1.2 {GetStyle procedure, wrapmode} {
@@ -290,7 +289,6 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete x y
 
 test textDisp-2.1 {LayoutDLine, basics} {
@@ -351,7 +349,6 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
 #
 # COMMON TEST CLEANUP
 #
-
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
@@ -743,7 +740,6 @@ test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t mark unset x
 
 test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
@@ -1040,7 +1036,6 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete spacing
 
 # Although the following test produces a useful result, its main
@@ -1807,7 +1802,6 @@ test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t delete 10.0 11.0
 
 test textDisp-11.13 {TkTestSetYView, partially visible last line} {
@@ -3278,7 +3272,6 @@ test textDisp-19.13 {GetYView procedure, partially visible last line} {
 #
 # COMMON TEST CLEANUP
 #
-
 catch {destroy .top}
 
 test textDisp-19.14 {GetYView procedure} {
@@ -3642,7 +3635,6 @@ test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceL
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag remove big 1.0 end
 
 test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
@@ -3845,7 +3837,6 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete x y
 
 test textDisp-24.1 {TkTextCharLayoutProc} {
@@ -5172,7 +5163,6 @@ test textDisp-33.4 {one line longer than fits in the widget} {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .tt
 
 test textDisp-33.5 {bold or italic fonts} win {
@@ -5201,7 +5191,6 @@ test textDisp-33.5 {bold or italic fonts} win {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .tt
 
 test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {

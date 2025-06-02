@@ -633,7 +633,6 @@ test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete x
 
 test textTag-5.17 {TkTextTagCmd - "configure" option} -body {
@@ -1199,7 +1198,6 @@ test textTag-14.1 {SortTags} -setup {
 #
 # COMMON TEST CLEANUP
 #
-
 .t tag delete a b c d
 
 test textTag-14.2 {SortTags} -setup {

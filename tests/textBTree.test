@@ -923,7 +923,6 @@ test btree-13.8 {tag searching} -setup {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .t
 
 test btree-14.1 {check tag presence} -setup {
