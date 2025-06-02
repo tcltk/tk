@@ -330,7 +330,6 @@ test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend fa
 #
 # COMMON TEST CLEANUP
 #
-
 catch {interp delete t_s_1}
 
 test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable} {
