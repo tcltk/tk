@@ -420,28 +420,12 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this,
   if (!pName) return E_INVALIDARG;
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-
-  if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-    Tcl_DString ds;
-    Tcl_DStringInit(&ds);
-    const char *title = Tcl_GetString(Tk_GetOption(tkAccessible->win, "-title", NULL));
-    if (!title) { /* Fallback if no title explicitly set. */
-      title = Tk_PathName(tkAccessible->win);
-    }
-    *pName = SysAllocString(Tcl_UtfToWCharDString(title, -1, &ds));
-    Tcl_DStringFree(&ds);
-    return S_OK;
-  }
-
-  if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-    Tk_Window child = GetTkWindowForChildId(varChild.lVal);
-    if (!child) return E_INVALIDARG;
-    return GetAccNameForChild(child, pName);
-  }
-
-  return E_INVALIDARG;
+  
+  /* Return NULL because the name matches the role. */
+  *pName = NULL;
+  return S_FALSE;
 }
-
+  
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW.*/
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole) 
@@ -460,7 +444,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this,
     if (!child) return E_INVALIDARG;
     return GetAccRoleForChild(child, pvarRole);
   }
-
   return E_INVALIDARG;
 }
 
@@ -1376,9 +1359,6 @@ static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr)
   info->childId = childId;
   Tcl_DoWhenIdle(DeferredNotifyFocus, (ClientData)info);
 }
-
-
-
 
 
 /*
