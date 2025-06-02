@@ -82,7 +82,7 @@ static unsigned long scrollCounter = 0;
 /* Miscellaneous accessibility data and functions. */
 #include <oleacc.h>
 typedef struct TkRootAccessible TkRootAccessible;
-extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
+extern TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
 
 
@@ -827,12 +827,12 @@ TkWinChildProc(
 	}
 	break;
 
-    /* Handle MSAA queries. */
+    /* Handle MSAA queries. */	
     case WM_GETOBJECT: {
-	if ((LONG)lParam == OBJID_CLIENT) { /*Toplevel window. */
+	if ((LONG)lParam == OBJID_CLIENT) {
 	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
 	    if (tkwin) {
-		TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
+		TkRootAccessible *acc = CreateRootAccessibleFromWindow(tkwin, hwnd);
 		if (acc) {
 		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 		    return result;

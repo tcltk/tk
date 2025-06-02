@@ -79,8 +79,6 @@ const struct WinRoleMap roleMap[] = {
 extern Tcl_HashTable *TkAccessibilityObject;
 
 /* Hash tables for linking Tk windows to accessibility object and HWND. */
-static Tcl_HashTable *tkAccessibleTable;
-static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
 static Tcl_HashTable *childIdTable = NULL;
@@ -228,13 +226,11 @@ static void DoDefaultActionForChildOnMainThread(Tcl_Interp *interp, Tk_Window wi
  *----------------------------------------------------------------------
  */
 
-void InitTkAccessibleTable(void);
 void InitHwndToTkWindowTable(void);
 void InitChildIdTable(void);
 void ClearChildIdTable(void);
-TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 Tk_Window GetTkWindowForHwnd(HWND hwnd);
-static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
+TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd);
 static void SetChildIdForTkWindow(Tk_Window win, int id);
 static int GetChildIdForTkWindow(Tk_Window win);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
@@ -323,12 +319,8 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   ULONG count = InterlockedDecrement(&tkAccessible->refCount);
   if (count == 0) {
-    if (tkAccessible->win && tkAccessibleTable) {
-      Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable,
-					       tkAccessible->win);
-      if (entry) {
-	Tcl_DeleteHashEntry(entry);
-      }
+    if (tkAccessible->pathName) {
+      ckfree(tkAccessible->pathName);
     }
     ckfree(tkAccessible);
   }
@@ -933,30 +925,34 @@ static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc)
  */
 
 /* Function to map Tk window to MSAA attributes. */
-static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName) 
-{
-  TkRootAccessible *tkAccessible = (TkRootAccessible
-				    *)ckalloc(sizeof(TkRootAccessible));
-  Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
-  if (tkAccessible) {
-    tkAccessible->lpVtbl = &tkRootAccessibleVtbl;
-    tkAccessible->interp = interp;
-    tkAccessible->hwnd = hwnd;
-    tkAccessible->pathName = pathName;
-    tkAccessible->refCount = 1;
-    tkAccessible->win = win;
-  }
+TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd) {
+  if (!win) return NULL;
 
+  TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
+  if (!tkAccessible) return NULL;
+ 
+  const char *path = Tk_PathName(win);
+
+
+  tkAccessible->lpVtbl = &tkRootAccessibleVtbl;
+  tkAccessible->interp = Tk_Interp(win);
+  tkAccessible->hwnd = hwnd;
+  if (path) {
+    size_t len = strlen(path) + 1;
+    tkAccessible->pathName = (char *)ckalloc(len);
+    memcpy(tkAccessible->pathName, path, len);
+  } else {
+    tkAccessible->pathName = NULL;
+  }
+ 
+  tkAccessible->refCount = 1;
+  tkAccessible->win = win;
+	
   /*Add objects to hash tables. */
   Tcl_HashEntry *entry;
   int newEntry;
-  entry = Tcl_CreateHashEntry(tkAccessibleTable, win, &newEntry);
-  Tcl_SetHashValue(entry, tkAccessible);
-
   entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
   Tcl_SetHashValue(entry, win);
-
-  TkRootAccessible_AddRef((IAccessible*)tkAccessible);
 
   /* Notify screen readers of creation. */
   NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
@@ -965,6 +961,7 @@ static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, con
 
   return tkAccessible;
 }
+
 
 /* Function to map Tk window to MSAA ID's. */
 static void SetChildIdForTkWindow(Tk_Window win, int id) 
@@ -1028,16 +1025,6 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
   return current;
 }
 
-/* Function to initialize Tk -> MSAA hash table. */
-void InitTkAccessibleTable(void) 
-{
-  if (!tkAccessibleTableInitialized) {
-    tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-    Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
-    tkAccessibleTableInitialized = 1;
-  }
-}
-
 /* Function to initialize HWND -> Tk hash table. */
 void InitHwndToTkWindowTable(void) 
 {
@@ -1070,20 +1057,6 @@ void ClearChildIdTable(void)
        entry = Tcl_NextHashEntry(&search)) {
     Tcl_DeleteHashEntry(entry);
   }
-}
-
-/* Function to retrieve accessible object associated with Tk window. */
-TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win) 
-{
-  if (!tkAccessibleTableInitialized) {
-    return NULL;
-  }
-  Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable,
-					   (ClientData)win);
-  if (entry) {
-    return (TkRootAccessible *)Tcl_GetHashValue(entry);
-  }
-  return NULL;
 }
 
 /* Function to retrieve Tk window associated with HWND. */
@@ -1450,8 +1423,7 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
     hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
   }
 
-  TkRootAccessible *accessible = CreateRootAccessible(interp, hwnd,
-						      windowName);
+  TkRootAccessible *accessible = CreateRootAccessibleFromWindow(tkwin, hwnd);
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
 
   Tk_CreateEventHandler(tkwin, StructureNotifyMask,
@@ -1497,7 +1469,6 @@ int TkWinAccessiblity_Init(Tcl_Interp *interp)
   tkMainThreadId = Tcl_GetCurrentThread();
 
   /*Initialize object-tracking hash tables. */
-  InitTkAccessibleTable();
   InitHwndToTkWindowTable();
 
   /*Create Tcl commands. */
