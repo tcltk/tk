@@ -721,7 +721,6 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
 #
 # COMMON TEST CLEANUP
 #
-
 deleteWindows
 
 test scrollbar-9.1 {scrollbar widget vs hidden commands} {

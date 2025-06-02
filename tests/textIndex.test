@@ -287,7 +287,6 @@ test textIndex-3.6 {TkTextGetIndex, weird image names} knownBug {
 #
 # COMMON TEST CLEANUP
 #
-
 .t delete 3.1  ; # remove the weirdEmbWin
 .t delete 2.1  ; # remove the weirdImage
 
