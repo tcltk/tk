@@ -835,6 +835,8 @@ TkWinChildProc(
 		TkRootAccessible *acc = CreateRootAccessibleFromWindow(tkwin, hwnd);
 		if (acc) {
 		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+			IUnknown *unknown = (IUnknown *)acc;
+			unknown->lpVtbl->Release(unknown);
 		    return result;
 		}
 	    }
