@@ -1434,6 +1434,7 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
   }
   
   Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
+  /*Defer creation of object until found in hash table. */
   if (!entry) {
 	  return TCL_OK;
   }
