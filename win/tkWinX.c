@@ -827,22 +827,19 @@ TkWinChildProc(
 	}
 	break;
 
-    /* Handle MSAA queries. */	
-    case WM_GETOBJECT: {
+    /* Handle MSAA queries. Here is where we actually create the accessible object. */	
+    case WM_GETOBJECT: 
 	if ((LONG)lParam == OBJID_CLIENT) {
 	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
 	    if (tkwin) {
 		TkRootAccessible *acc = CreateRootAccessibleFromWindow(tkwin, hwnd);
 		if (acc) {
 		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-			IUnknown *unknown = (IUnknown *)acc;
-			unknown->lpVtbl->Release(unknown);
 		    return result;
 		}
 	    }
 	}
-    }
-
+    
 	break;
 
     default:
