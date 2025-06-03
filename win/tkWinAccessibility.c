@@ -921,21 +921,6 @@ static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc)
 TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd) {
   if (!win) return NULL;
   
-  /*Add objects to hash tables. */
-  Tcl_HashEntry *entry;
-  int newEntry;
-  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
-  Tcl_SetHashValue(entry, win);
-  
-  /* 
-   * Guard against race condition for accessible object creation.
-   *Only create new object if not already found in hash table. 
-   */
-  entry = Tcl_FindHashEntry(accObjectTable, hwnd);
-  if (!entry) {
-    entry = Tcl_CreateHashEntry(accObjectTable, hwnd, &newEntry);
-    Tcl_SetHashValue(entry, win);
-  }
 
   TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
   if (!tkAccessible) return NULL;
@@ -947,7 +932,21 @@ TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd) {
   tkAccessible->refCount = 1;
   tkAccessible->win = win;
 
-
+  /*Add objects to hash tables. */
+  Tcl_HashEntry *entry;
+  int newEntry;
+  entry = Tcl_CreateHashEntry(hwndToTkWindowTable, hwnd, &newEntry);
+  Tcl_SetHashValue(entry, win);
+  
+  /* 
+   * Guard against race condition for accessible object creation.
+   * Only create new object if not already found in hash table. 
+   */
+  entry = Tcl_FindHashEntry(accObjectTable, hwnd);
+  if (!entry) {
+    entry = Tcl_CreateHashEntry(accObjectTable, hwnd, &newEntry);
+    Tcl_SetHashValue(entry, tkAccessible);
+  }
 
   /* Notify screen readers of creation. */
   NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
@@ -1434,17 +1433,10 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
     return TCL_ERROR;
   }
   
-  /* 
-   * Guard against race condition for accessible object creation.
-   *Only create new object if not already found in hash table. 
-   */
   Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
   if (!entry) {
-    int newEntry;
-    entry = Tcl_CreateHashEntry(accObjectTable, hwnd, &newEntry);
-    Tcl_SetHashValue(entry, tkwin);
+	  return TCL_OK;
   }
-
   TkRootAccessible *accessible = Tcl_GetHashValue(entry);
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
   Tk_CreateEventHandler(tkwin, StructureNotifyMask,
