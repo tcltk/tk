@@ -839,7 +839,7 @@ TkMacOSVersionObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPathObjCmd --
+ * TkMacOSXGetInfoAsJSONObjCmd --
  *
  *	Returns the contents of the Info.plist file in the application
  *      bundle as a JSON-encoded Tcl string.
