@@ -84,6 +84,8 @@ static unsigned long scrollCounter = 0;
 typedef struct TkRootAccessible TkRootAccessible;
 extern TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
+extern int accObjectTableInitialized;
+extern Tcl_HashTable *accObjectTable;
 
 
 /*
@@ -827,16 +829,15 @@ TkWinChildProc(
 	}
 	break;
 
-    /* Handle MSAA queries. Here is where we actually create the accessible object. */	
+	/* Handle MSAA queries.*/
     case WM_GETOBJECT: 
 	if ((LONG)lParam == OBJID_CLIENT) {
-	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
-	    if (tkwin) {
-		TkRootAccessible *acc = CreateRootAccessibleFromWindow(tkwin, hwnd);
-		if (acc) {
-		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-		    return result;
-		}
+	    if (!accObjectTableInitialized) return 0;
+	    Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
+	    if (!entry) return 0;
+	    TkRootAccessible *acc = Tcl_GetHashValue(entry);
+	    if (acc) {
+		return LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 	    }
 	}
     
