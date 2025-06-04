@@ -83,8 +83,9 @@ static int hwndToTkWindowTableInitialized = 0;
 static Tcl_HashTable *childIdTable = NULL;
 static Tcl_ThreadId tkMainThreadId;
 static int nextId = 1;
-static Tcl_HashTable *accObjectTable = NULL;
-static int accObjectTableInitialized = 0;
+Tcl_HashTable *accObjectTable = NULL;
+int accObjectTableInitialized = 0;
+int inFocusHandler = 0;
 
 
 /*
@@ -227,7 +228,7 @@ static void DoDefaultActionForChildOnMainThread(Tcl_Interp *interp, Tk_Window wi
  */
 
 void InitHwndToTkWindowTable(void);
-void InitTkRootAccesibleTable(void);
+void InitTkRootAccessibleTable(void);
 void InitChildIdTable(void);
 void ClearChildIdTable(void);
 Tk_Window GetTkWindowForHwnd(HWND hwnd);
@@ -246,7 +247,8 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
 static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr);
 static void DeferredNotifyFocus(ClientData clientData);
 static void AssignChildIdsRecursive(Tk_Window win, Tcl_Interp *interp);
-static int MainThreadAccessibleProc(Tcl_Event *eventPtr, int flags);
+static int MainThreadAccessibleProc(Tcl_Event *eventPtr, int flags);static void RegisterFocusHandlersRecursive(Tk_Window win);
+static void RegisterFocusHandlersRecursive(Tk_Window win);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
@@ -525,7 +527,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
   }
 
   /*
-   * MSAA expects only VT_DISPATCH if the child is *an object* — we don’t
+   * MSAA expects only VT_DISPATCH if the child is *an object* - we do not
    * return that.  So we just say "this ID is valid but not an object".
    * MSAA will then call get_accName/Role/etc. with that ID).
    */
@@ -947,11 +949,6 @@ TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd) {
     entry = Tcl_CreateHashEntry(accObjectTable, hwnd, &newEntry);
     Tcl_SetHashValue(entry, tkAccessible);
   }
-
-  /* Notify screen readers of creation. */
-  NotifyWinEvent(EVENT_OBJECT_CREATE, hwnd, OBJID_CLIENT, CHILDID_SELF);
-  NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
-  NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, CHILDID_SELF);
   
   return tkAccessible;
 }
@@ -1030,7 +1027,7 @@ void InitHwndToTkWindowTable(void)
 }
 
 /* Function to TkRootAccessible hash table. */
-void InitTkRootAccesibleTable(void) 
+void InitTkRootAccessibleTable(void) 
 {
   if (!accObjectTableInitialized) {
     accObjectTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
@@ -1282,7 +1279,7 @@ static void TkWidgetStructureHandler(ClientData clientData, XEvent *eventPtr) {
     TkWindow *rootPtr = (TkWindow *)root;
     for (TkWindow *child = rootPtr->childList; child != NULL; child = child->nextPtr) {
       if (Tk_WindowId((Tk_Window)child) == childWinId) {
-        SetChildIdForTkWindow((Tk_Window)child, nextId++);
+        AssignChildIdsRecursive((Tk_Window)child, rootAccessible->interp);
         break;
       }
     }
@@ -1324,9 +1321,14 @@ static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr)
 {
   if (eventPtr->type != FocusIn) return;
 
+  inFocusHandler = 1;
+
   Tk_Window win = (Tk_Window)clientData;
   Tk_Window toplevel = GetToplevelOfWidget(win);
-  if (!toplevel) return;
+  if (!toplevel) {
+    inFocusHandler = 0;
+    return;
+  }
 
   HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
   LONG childId = GetChildIdForTkWindow(win);
@@ -1336,6 +1338,34 @@ static void TkWidgetFocusHandler(ClientData clientData, XEvent *eventPtr)
   info->hwnd = hwnd;
   info->childId = childId;
   Tcl_DoWhenIdle(DeferredNotifyFocus, (ClientData)info);
+
+  inFocusHandler = 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegisterFocusHandlersResursive --
+ *
+ * Register event handler for focus across all child widgets.
+ *
+ * Results:
+ * Event handler is registered.
+ *
+ * Side effects:
+ * None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void RegisterFocusHandlersRecursive(Tk_Window win) {
+  if (!win) return;
+
+  Tk_CreateEventHandler(win, FocusChangeMask, TkWidgetFocusHandler, win);
+
+  TkWindow *winPtr = (TkWindow *)win;
+  for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
+    RegisterFocusHandlersRecursive((Tk_Window)child);
+  }
 }
 
 
@@ -1432,18 +1462,20 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
     Tcl_SetResult(interp, "Accessibility not initialized", TCL_STATIC);
     return TCL_ERROR;
   }
-  
+  /*Look for accessible object and create if necessary. */
   Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
-  /*Defer creation of object until found in hash table. */
+  TkRootAccessible *accessible = NULL;
+  Tk_Window base = GetToplevelOfWidget(tkwin);
   if (!entry) {
-	  return TCL_OK;
+    accessible = CreateRootAccessibleFromWindow(base, hwnd);
+  } else {
+    accessible = Tcl_GetHashValue(entry);
   }
-  TkRootAccessible *accessible = Tcl_GetHashValue(entry);
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
   Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 			TkWidgetStructureHandler, accessible);			
-  Tk_CreateEventHandler(tkwin, FocusChangeMask, TkWidgetFocusHandler, tkwin);
-  AssignChildIdsRecursive(tkwin, interp); 
+  RegisterFocusHandlersRecursive(tkwin);
+  AssignChildIdsRecursive(base, interp); 
 
   return TCL_OK;
 }
@@ -1468,15 +1500,12 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {
-  /* Initialize COM machinery. */
-  CoInitialize(NULL);
-  
   /* Store the thread ID of the main Tcl thread. */
   tkMainThreadId = Tcl_GetCurrentThread();
 
   /*Initialize object-tracking hash tables. */
   InitHwndToTkWindowTable();
-  InitTkRootAccesibleTable();
+  InitTkRootAccessibleTable();
   
   /*Create Tcl commands. */
 
