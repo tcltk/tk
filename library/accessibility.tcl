@@ -559,7 +559,16 @@ namespace eval ::tk::accessible {
 					   }
 
     # Activate accessibility object when mapped.
-    bind all <Map> {+::tk::accessible::add_acc_object %W}
+    if {[tk windowingsystem] eq "win32"} {
+	#MSAA objects need to be created before the map event.
+	bind all <Configure> {
+	    if {[winfo exists %W] && [winfo ismapped %W]} {
+		::tk::accessible::add_acc_object %W
+	    }
+	}
+    } else {
+	bind all <Map> {+::tk::accessible::add_acc_object %W}
+    }
 
     # Various bindings to capture data/selection changes for
     # widgets that support returning a value. 
