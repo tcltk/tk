@@ -676,13 +676,14 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 }
 
 /* Function to get accessible focus to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild) 
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *iface, VARIANT *pvarChild) 
 {
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);  /* Initialize to VT_EMPTY. */
 
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+  TkRootAccessible *tkAccessible = (TkRootAccessible *)iface;
   Tk_Window focusWin = NULL;
+
   TkWindow *focusPtr = TkGetFocusWin((TkWindow *)tkAccessible->win);
   if (focusPtr && focusPtr->window != None) {
     focusWin = (Tk_Window)focusPtr;
@@ -692,6 +693,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
     return S_OK;
+  }
+
+  /* Ensure focus is in the same toplevel. */
+  Tk_Window focusToplevel = GetToplevelOfWidget(focusWin);
+  if (focusToplevel != tkAccessible->win) {
+    pvarChild->vt = VT_EMPTY;
+    return S_FALSE;
   }
 
   /* Lookup the assigned child ID (no rebuild here). */
@@ -707,7 +715,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
   pvarChild->lVal = CHILDID_SELF;
   return S_OK;
 }
-
 
 /* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription) 
@@ -1515,17 +1522,19 @@ int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
     Tcl_SetResult(interp, "Accessibility not initialized", TCL_STATIC);
     return TCL_ERROR;
   }
-  /*Look for accessible object and create if necessary. */
+  /*Look for accessible object and create if necessary. Do not enter guard area twice. */
   ENTER_ACC_CS;
   Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
   TkRootAccessible *accessible = NULL;
   Tk_Window base = GetToplevelOfWidget(tkwin);
+  LEAVE_ACC_CS;
   if (!entry) {
     accessible = CreateRootAccessibleFromWindow(base, hwnd);
   } else {
+    ENTER_ACC_CS;
     accessible = Tcl_GetHashValue(entry);
+    LEAVE_ACC_CS;
   }
-  LEAVE_ACC_CS;
   TkRootAccessible_RegisterForCleanup(tkwin, accessible);
   Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 			TkWidgetStructureHandler, accessible);			
