@@ -676,12 +676,12 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 }
 
 /* Function to get accessible focus to MSAA. */
-static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *iface, VARIANT *pvarChild) 
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild) 
 {
   if (!pvarChild) return E_INVALIDARG;
   VariantInit(pvarChild);  /* Initialize to VT_EMPTY. */
 
-  TkRootAccessible *tkAccessible = (TkRootAccessible *)iface;
+  TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   Tk_Window focusWin = NULL;
 
   TkWindow *focusPtr = TkGetFocusWin((TkWindow *)tkAccessible->win);
