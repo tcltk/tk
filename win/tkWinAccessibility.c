@@ -997,21 +997,32 @@ static void SetChildIdForTkWindow(Tk_Window win, int id)
   Tcl_HashEntry *entry;
   int newEntry;
 
-  entry = Tcl_CreateHashEntry(childIdTable, (ClientData)win, &newEntry);
-  Tcl_SetHashValue(entry, INT2PTR(id));
+  entry = Tcl_FindHashEntry(childIdTable, (ClientData)win);
+  if (!entry) {
+    entry = Tcl_CreateHashEntry(childIdTable, (ClientData)win, &newEntry);
+    Tcl_SetHashValue(entry, INT2PTR(id));
+  }
   LEAVE_ACC_CS;
 }
 
 /* Function to retrieve MSAA ID for a specifc Tk window. */
 static int GetChildIdForTkWindow(Tk_Window win) 
 {
+  int result = 0;
   ENTER_ACC_CS;
-  if (!childIdTable) return -1;
+  if (!childIdTable) {
+    LEAVE_ACC_CS;
+    return -1;
+  }
 
   Tcl_HashEntry *entry = Tcl_FindHashEntry(childIdTable, (ClientData)win);
-  if (!entry) return -1;
-  return PTR2INT(Tcl_GetHashValue(entry));
+  if (!entry) {
+    LEAVE_ACC_CS;	  
+    return -1;
+  }
+  result = PTR2INT(Tcl_GetHashValue(entry));
   LEAVE_ACC_CS;
+  return result;
 }
 
 /* Function to retrieve Tk window for a specifc MSAA ID. */
