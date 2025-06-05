@@ -86,6 +86,19 @@ extern TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
 extern int accObjectTableInitialized;
 extern Tcl_HashTable *accObjectTable;
+#ifndef TK_WIN_ACCESSIBILITY_H
+#define TK_WIN_ACCESSIBILITY_H
+
+#include <windows.h>
+
+/* Extern declarations for use across files. */
+extern void InitAccessibilityCriticalSection(void);
+extern void DeleteAccessibilityCriticalSection(void);
+
+extern CRITICAL_SECTION accHashCriticalSection;
+extern int accHashCriticalSectionInitialized;
+
+#endif /* TK_WIN_ACCESSIBILITY_H */
 
 
 /*
@@ -832,10 +845,12 @@ TkWinChildProc(
 	/* Handle MSAA queries.*/
     case WM_GETOBJECT: 
 	if ((LONG)lParam == OBJID_CLIENT) {
+		EnterCriticalSection(&accHashCriticalSection);
 	    if (!accObjectTableInitialized) return 0;
 	    Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
 	    if (!entry) return 0;
 	    TkRootAccessible *acc = Tcl_GetHashValue(entry);
+		LeaveCriticalSection(&accHashCriticalSection);
 	    if (acc) {
 		return LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 	    }
