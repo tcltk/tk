@@ -842,15 +842,15 @@ TkWinChildProc(
 	}
 	break;
 
-	/* Handle MSAA queries.*/
+    /* Handle MSAA queries.*/
     case WM_GETOBJECT: 
 	if ((LONG)lParam == OBJID_CLIENT) {
-		EnterCriticalSection(&accHashCriticalSection);
+	    EnterCriticalSection(&accHashCriticalSection);
 	    if (!accObjectTableInitialized) return 0;
 	    Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
 	    if (!entry) return 0;
 	    TkRootAccessible *acc = Tcl_GetHashValue(entry);
-		LeaveCriticalSection(&accHashCriticalSection);
+	    LeaveCriticalSection(&accHashCriticalSection);
 	    if (acc) {
 		return LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
 	    }
