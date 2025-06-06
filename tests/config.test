@@ -1207,10 +1207,13 @@ test config-6.6 {GetOptionFromObj - synonym} -constraints testobjconfig -body {
     killTables
 } -result red
 
-
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-7.1 {Tk_SetOptions - basics} -constraints testobjconfig -body {
     .a configure -color green -rel sunken
      list [.a cget -color] [.a cget -relief]
@@ -1295,10 +1298,13 @@ test config-7.14 {Tk_SetOptions - error in DoObjConfig with custom option} -cons
     (processing "-custom" option)
     invoked from within
 ".a configure -custom bad"}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} -constraints {
     testobjconfig
@@ -1575,10 +1581,13 @@ test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} -co
     .foo configure -custom "foobar"
     destroy .foo
 } -result {}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-10.1 {Tk_GetOptionInfo - one item} -constraints testobjconfig -body {
     testobjconfig alltypes .foo
@@ -1610,14 +1619,15 @@ test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testo
 } -cleanup {
     destroy .foo
 } -result {{-three three Three three xyzzy} {-four four Four four four} {-two two Two {two and a half} {two and a half}} {-oneAgain oneAgain OneAgain {one again} {one again}} {-one one One one asdf} {-two two Two two {two and a half}}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-11.1 {GetConfigList - synonym} -constraints testobjconfig -body {
     lindex [.a configure] end
 } -result {-synonym -color}
@@ -1631,14 +1641,15 @@ test config-11.3 {GetConfigList - null default and current value} -constraints {
 } -body {
     .a configure -relief
 } -result {-relief relief Relief {} {}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig internal .a
 }
+
 test config-12.1 {GetObjectForOption - boolean} -constraints testobjconfig -body {
     .a configure -boolean 0
     .a cget -boolean
@@ -1720,10 +1731,13 @@ test config-12.17 {GetObjectForOption - null values} -constraints {
 	    [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
 	    [.a cget -window] [.a cget -custom]
 } -result {{} {} {} {} {} {} {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-13.1 {proper cleanup of options with widget destroy} -body {
     button .w -cursor crosshair
