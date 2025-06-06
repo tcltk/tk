@@ -2563,6 +2563,36 @@ test font-47.3 {Bug 3049518 - Label} -body {
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
 
+test font-47.4 {Bug c81e0ccee2 - define named font after use causes widget update} -setup {
+    # Be sure, fonts do not exist
+    catch {font delete F1}
+    catch {font delete F2}
+    # Get a measurement of the Widget size as normal
+    font create F1 -family Helvetica -size 100
+    label .l -font F1 -text LARGE
+    pack .l
+    update
+    set W1 [winfo width .l]
+    destroy .l
+    font delete F1
+} -body {
+    # Create with undefined font, so default is used
+    label .l -font F2 -text LARGE
+    pack .l
+    update
+    # create the used font
+	# Within label widget, the default font should be replaced by this font
+    font create F2 -family Helvetica -size 100
+    update
+    # compare size, so check, if label got rescaled
+    set W2 [winfo width .l]
+    expr {$W1 == $W2}
+} -cleanup {
+    destroy .l
+    font delete F2
+} -result 1
+
+
 # cleanup
 cleanupTests
 return
