@@ -301,11 +301,23 @@ TkSelUpdateClipboard(
 	     */
 	    
 	    changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
-			     owner:nil];
+				     owner:nil];
 	    [NSApp tkProvidePasteboard: TkGetDisplayList()
 			    pasteboard: (NSPasteboard *) pb
 		    provideDataForType: (NSString *) NSStringPboardType];
 	}
+	break;
+    case CLIPBOARD_CLEAR:
+	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+				 owner:nil];
+	[NSApp tkProvidePasteboard: TkGetDisplayList()
+			pasteboard: (NSPasteboard *) pb
+		provideDataForType: (NSString *) NSStringPboardType];
+	break;
+#if 0
+	[pb clearContents];
+	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+#endif				 owner:nil];
     default:
 	break;
     }
