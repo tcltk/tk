@@ -82,23 +82,8 @@ static unsigned long scrollCounter = 0;
 /* Miscellaneous accessibility data and functions. */
 #include <oleacc.h>
 typedef struct TkRootAccessible TkRootAccessible;
-extern TkRootAccessible *CreateRootAccessibleFromWindow(Tk_Window win, HWND hwnd);
+extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
-extern int accObjectTableInitialized;
-extern Tcl_HashTable *accObjectTable;
-#ifndef TK_WIN_ACCESSIBILITY_H
-#define TK_WIN_ACCESSIBILITY_H
-
-#include <windows.h>
-
-/* Extern declarations for use across files. */
-extern void InitAccessibilityCriticalSection(void);
-extern void DeleteAccessibilityCriticalSection(void);
-
-extern CRITICAL_SECTION accHashCriticalSection;
-extern int accHashCriticalSectionInitialized;
-
-#endif /* TK_WIN_ACCESSIBILITY_H */
 
 
 /*
@@ -842,20 +827,20 @@ TkWinChildProc(
 	}
 	break;
 
-    /* Handle MSAA queries.*/
-    case WM_GETOBJECT: 
-	if ((LONG)lParam == OBJID_CLIENT) {
-	    EnterCriticalSection(&accHashCriticalSection);
-	    if (!accObjectTableInitialized) return 0;
-	    Tcl_HashEntry *entry = Tcl_FindHashEntry(accObjectTable, hwnd);
-	    if (!entry) return 0;
-	    TkRootAccessible *acc = Tcl_GetHashValue(entry);
-	    LeaveCriticalSection(&accHashCriticalSection);
-	    if (acc) {
-		return LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+    /* Handle MSAA queries. */
+    case WM_GETOBJECT: {
+	if ((LONG)lParam == OBJID_CLIENT) { /*Toplevel window. */
+	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
+	    if (tkwin) {
+		TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
+		if (acc) {
+		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+		    return result;
+		}
 	    }
 	}
-    
+    }
+
 	break;
 
     default:
