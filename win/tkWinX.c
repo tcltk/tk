@@ -84,7 +84,7 @@ static unsigned long scrollCounter = 0;
 typedef struct TkRootAccessible TkRootAccessible;
 extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
-extern SRWLOCK lock = SRWLOCK_INIT;
+extern SRWLOCK lock;
 
 
 /*
