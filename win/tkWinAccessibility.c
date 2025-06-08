@@ -92,9 +92,13 @@ SRWLOCK lock = SRWLOCK_INIT;
 typedef void (*MainThreadFunc)(void*);
 
 typedef struct {
-Tcl_Event header; 
-MainThreadFunc func;
-void *data;
+  Tcl_Event header; 
+  void (*func)(void*, void*, void*, void*, void*);  /* 5-arg function pointer. */
+  void *arg1;
+  void *arg2;
+  void *arg3;
+  void *arg4;
+  void *arg5; /* Arguments. */
 } MainThreadEvent;
 
 static Tcl_ThreadId mainThreadId;
@@ -217,7 +221,7 @@ void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp);
 static int ExecuteOnMainThread(Tcl_Event *ev, int flags);
-void RunOnMainThread(MainThreadFunc func, void *data);
+void RunOnMainThread(void (*func)(void *),void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
 void InitAccessibilityMainThread(void);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
@@ -294,7 +298,7 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   ULONG count = InterlockedDecrement(&tkAccessible->refCount);
   if (count == 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     if (tkAccessible->win && tkAccessibleTable) {
       Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->win);
       if (entry) {
@@ -302,55 +306,49 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
       }
     }
     ckfree(tkAccessible);
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
   }
   return count;
 }
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfoCount(IAccessible *this, UINT *pctinfo)
 {
-    if (!ppTInfo) {
-        return E_POINTER;
-    }
-    *ppTInfo = NULL;
+  if (!pctinfo) {
+    return E_POINTER;
+  }
 
-    if (iTInfo != 0) {
-        return DISP_E_BADINDEX;
-    }
-
-    /* Check if we've already cached it. */
-    ITypeInfo *localInfo = cachedTypeInfo;
-    if (!localInfo) {
-        ITypeLib *pTypeLib = NULL;
-        HRESULT hr = LoadRegTypeLib(&LIBID_Accessibility, 1, 1, lcid, &pTypeLib);
-        if (FAILED(hr)) {
-            return hr;
-        }
-
-        hr = pTypeLib->lpVtbl->GetTypeInfoOfGuid(pTypeLib, &IID_IAccessible, &localInfo);
-        pTypeLib->lpVtbl->Release(pTypeLib);
-        if (FAILED(hr)) {
-            return hr;
-        }
-
-        /* Cache only if not already set (thread-safe). */
-        ITypeInfo *expected = NULL;
-        if (InterlockedCompareExchangePointer((void **)&cachedTypeInfo, localInfo, expected) != expected) {
-            /* Someone else beat us; release our copy. */
-            localInfo->lpVtbl->Release(localInfo);
-            localInfo = cachedTypeInfo;
-        }
-    }
-
-    /* AddRef for the caller. */
-    localInfo->lpVtbl->AddRef(localInfo);
-    *ppTInfo = localInfo;
-    return S_OK;
+  *pctinfo = 1; /* We provide one type information interface. */
+  return S_OK;
 }
+
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfo(IAccessible *this, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-  return E_NOTIMPL;
+  if (!ppTInfo) {
+    return E_POINTER;
+  }
+  *ppTInfo = NULL;
+
+  if (iTInfo != 0) {
+    return DISP_E_BADINDEX;
+  }
+
+  ITypeLib *pTypeLib = NULL;
+  HRESULT hr = LoadRegTypeLib(&LIBID_Accessibility, 1, 1, lcid, &pTypeLib);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  ITypeInfo *pTypeInfo = NULL;
+  hr = pTypeLib->lpVtbl->GetTypeInfoOfGuid(pTypeLib, &IID_IAccessible, &pTypeInfo);
+  pTypeLib->lpVtbl->Release(pTypeLib);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  *ppTInfo = pTypeInfo; 
+  return S_OK;
 }
+
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
@@ -420,13 +418,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISP
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pName)
 {
   if (!pName) return E_INVALIDARG;
-/*
-* No need to return name; same as role 
-* and screen readers read it twice. 
-*/
+  /*
+   * No need to return name; same as role 
+   * and screen readers read it twice. 
+   */
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
- pName = NULL;
- return S_OK;
+  pName = NULL;
+  return S_OK;
 }
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW.*/
@@ -442,18 +440,19 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this,
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
 
     if (!child) {
-		ReleaseSRWLockExclusive(&lock);
-		return E_INVALIDARG;
-	}
-	ReleaseSRWLockExclusive(&lock);
-    return RunOnMainThread(GetAccRoleForChild, child, pvarRole);
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
+    ReleaseSRWLockExclusive(&lock);
+    HRESULT hr = RunOnMainThread(GetAccRoleForChild, child, pvarRole, NULL, NULL, NULL);
+    return hr;
   }
 
-  return E_INVALIDARG;
+  return S_OK;
 }
 
 /* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_FOCUSABLE. */
@@ -469,18 +468,19 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     if (!child) {
-		  ReleaseSRWLockExclusive(&lock);
-		  return E_INVALIDARG;
-	}
-	  ReleaseSRWLockExclusive(&lock);
-    return RunOnMainThread(GetAccStateForChild, child, pvarState);
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
+    ReleaseSRWLockExclusive(&lock);
+    HRESULT hr = RunOnMainThread(GetAccStateForChild, child, pvarState, NULL, NULL, NULL);
+    return hr;
   }
 
-  return DISP_E_MEMBERNOTFOUND;
+  return S_OK;
 }
 
 /* Function to map accessible value to MSAA. For toplevel, return NULL.*/
@@ -495,18 +495,19 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     if (!child) {
-		  ReleaseSRWLockExclusive(&lock);
-		  return E_INVALIDARG;
-	}
-  ReleaseSRWLockExclusive(&lock);	
-    return RunOnMainThread(GetAccValueForChild, child, pszValue);
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
+    ReleaseSRWLockExclusive(&lock);	
+    HRESULT hr = RunOnMainThread(GetAccValueForChild, child, pszValue, NULL, NULL, NULL);
+    return hr;
   }
 
-  return DISP_E_MEMBERNOTFOUND;
+  return S_OK;
 }
 
 /* Function to get accessible parent. For toplevel, return NULL. */
@@ -552,13 +553,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
   }
 
   /* Lookup child Tk_Window for this ID */
- AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   Tk_Window childWin = GetTkWindowForChildId(varChild.lVal);
   if (!childWin) {
-	    ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return E_INVALIDARG;
   }
-    ReleaseSRWLockExclusive(&lock);
+  ReleaseSRWLockExclusive(&lock);
 
   /* 
    * MSAA expects only VT_DISPATCH if the child is *an object* — we don’t 
@@ -579,7 +580,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this,
 
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
     RECT clientRect;
-		  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     GetClientRect(tkAccessible->hwnd, &clientRect);
 
     POINT screenCoords = { clientRect.left, clientRect.top };
@@ -589,32 +590,32 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this,
     *pyTop = screenCoords.y;
     *pcxWidth = clientRect.right - clientRect.left;
     *pcyHeight = clientRect.bottom - clientRect.top;
-		ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return S_OK;
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) {
-		  ReleaseSRWLockExclusive(&lock);
-		  return E_INVALIDARG;
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
 		  
-	}
+    }
 
-if (Tk_IsMapped(child)) {
-    int x, y;
-    Tk_GetRootCoords(child, &x, &y);
-    int width = Tk_Width(child);
-    int height = Tk_Height(child);
+    if (Tk_IsMapped(child)) {
+      int x, y;
+      Tk_GetRootCoords(child, &x, &y);
+      int width = Tk_Width(child);
+      int height = Tk_Height(child);
 
-    *pxLeft = x;
-    *pyTop = y;
-    *pcxWidth = width;
-    *pcyHeight = height;
-	ReleaseSRWLockExclusive(&lock);
-    return S_OK;
-  }
+      *pxLeft = x;
+      *pyTop = y;
+      *pcxWidth = width;
+      *pcyHeight = height;
+      ReleaseSRWLockExclusive(&lock);
+      return S_OK;
+    }
   }
   return E_INVALIDARG;
 }
@@ -637,27 +638,27 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
 
     if (!child) {
-	ReleaseSRWLockExclusive(&lock);
-	return E_INVALIDARG;
-	}
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, child);
     if (!hPtr) {
-			ReleaseSRWLockExclusive(&lock);
-			return S_FALSE;
-	}
+      ReleaseSRWLockExclusive(&lock);
+      return S_FALSE;
+    }
 	
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
 
     if (!hPtr2) {
-			ReleaseSRWLockExclusive(&lock);
-			return S_FALSE;
-	}
+      ReleaseSRWLockExclusive(&lock);
+      return S_FALSE;
+    }
 
     const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
 
@@ -675,11 +676,11 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 
     if (action) {
       *pszDefaultAction = SysAllocString(action);
-	ReleaseSRWLockExclusive(&lock);
-	return S_OK;
+      ReleaseSRWLockExclusive(&lock);
+      return S_OK;
     }
 
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return S_FALSE; /* No default action known. */
   }
 
@@ -697,17 +698,18 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) {
-		ReleaseSRWLockExclusive(&lock);
-		return E_INVALIDARG;
-	}
-	ReleaseSRWLockExclusive(&lock);
-    return RunOnMainThread(DoDefaultActionForChild, tkAccessible->interp, child);
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
+    ReleaseSRWLockExclusive(&lock);
+    HRESULT hr = RunOnMainThread(DoDefaultActionForChild, tkAccessible->interp, child, NULL, NULL, NULL);
+    return hr;
   }
 
-  return E_INVALIDARG;
+  return S_OK;
 }
 
 
@@ -734,7 +736,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
   if (!focusWin || focusWin == tkAccessible->win) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
-  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return S_OK;
   }
 
@@ -749,13 +751,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
   if (childId > 0) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = childId;
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return S_OK;
   } else {
     /* Fallback if child was focused but not found in ID table. */
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF; /* Indicate no specific child focus found. */
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return S_OK; 
   }
 }
@@ -767,21 +769,21 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
   TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
 
   if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-/* Toplevel window. */
+    /* Toplevel window. */
     *pszDescription = L"Window";
-    Tcl_DStringFree(&ds);
     return S_OK;
   }
 
   if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  AcquireSRWLockExclusive(&lock);
+    AcquireSRWLockExclusive(&lock);
     Tk_Window child = GetTkWindowForChildId(varChild.lVal);
     if (!child) {
-		ReleaseSRWLockExclusive(&lock);
-		return E_INVALIDARG;
-	}
-	ReleaseSRWLockExclusive(&lock);
-    return GetAccDescriptionForChild(child, pszDescription);
+      ReleaseSRWLockExclusive(&lock);
+      return E_INVALIDARG;
+    }
+    ReleaseSRWLockExclusive(&lock);
+    HRESULT hr = GetAccDescriptionForChild(child, pszDescription);
+    return hr;
   }
 
   return E_INVALIDARG;
@@ -799,24 +801,24 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
 /* Function to map accessible name to MSAA.*/
 static HRESULT GetAccNameForChild(Tk_Window win, BSTR *pName)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!win || !pName) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   } 
   
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }  
 
   Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
   if (!hPtr2) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }
 	  
   const char *name = Tcl_GetString(Tcl_GetHashValue(hPtr));
@@ -832,24 +834,24 @@ ReleaseSRWLockExclusive(&lock);
 /* Function to map accessible role to MSAA.*/
 static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!win || !pvarRole) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   }	  
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }  
 
   Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
   if (!hPtr2) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }
 
   const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -864,25 +866,25 @@ static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole)
 
   pvarRole->vt = VT_I4;
   pvarRole->lVal = role;
-ReleaseSRWLockExclusive(&lock);
+  ReleaseSRWLockExclusive(&lock);
   return S_OK;
 }
 
 /* Function to map accessible state to MSAA. */
 static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!win || !pvarState) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   }
 
-AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }
 
   Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
@@ -912,26 +914,26 @@ AcquireSRWLockExclusive(&lock);
 /* Function to map accessible value to MSAA.*/
 static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue)
 {
-	  AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	  
   if (!win || !pValue) {
-	   ReleaseSRWLockExclusive(&lock);
-	   return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   }
   
   AcquireSRWLockExclusive(&lock);
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
   if (!hPtr) {
-	  AcquireSRWLockExclusive(&lock);
-	  return S_FALSE;
+    AcquireSRWLockExclusive(&lock);
+    return S_FALSE;
   }  
 
   Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
   if (!hPtr2) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return S_FALSE;
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
   }
 
   const char *val = Tcl_GetString(Tcl_GetHashValue(hPtr2));
@@ -946,11 +948,11 @@ static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue)
 /* Function to get button press to MSAA. */
 static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!interp || !win) {
-	  AcquireSRWLockExclusive(&lock);
-	  return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   }
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
@@ -963,17 +965,22 @@ static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win)
 
   const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return E_FAIL;
   }
-ReleaseSRWLockExclusive(&lock);
+  ReleaseSRWLockExclusive(&lock);
   return S_OK;
 }
 
 /* Function to get MSAA focus. */
 static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild)
 {
-  if (!win || !pvarChild) return E_INVALIDARG;
+  AcquireSRWLockExclusive(&lock);
+	
+  if (!win || !pvarChild) {
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
+  }	
 
   VariantInit(pvarChild);
   pvarChild->vt = VT_I4;
@@ -981,23 +988,28 @@ static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild)
   return S_OK;
 }
 
-
 /* Function to get MSAA description. */
 static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!win || !pDesc) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return E_INVALIDARG;
+    ReleaseSRWLockExclusive(&lock);
+    return E_INVALIDARG;
   }
 
   Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) return S_FALSE;
+  if (!hPtr) {
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
+  }
 
   Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
   Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
-  if (!hPtr2) return S_FALSE;
+  if (!hPtr2) {
+    ReleaseSRWLockExclusive(&lock);
+    return S_FALSE;
+  }  
 
   const char *desc = Tcl_GetString(Tcl_GetHashValue(hPtr2));
   Tcl_DString ds;
@@ -1059,7 +1071,7 @@ static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, con
 /* Function to map Tk window to MSAA ID's. */
 static void SetChildIdForTkWindow(Tk_Window win, int id)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   if (!childIdTable) {
     childIdTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(childIdTable, TCL_ONE_WORD_KEYS);
@@ -1076,17 +1088,17 @@ static void SetChildIdForTkWindow(Tk_Window win, int id)
 /* Function to retrieve MSAA ID for a specifc Tk window. */
 static int GetChildIdForTkWindow(Tk_Window win)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!childIdTable){
-	  ReleaseSRWLockExclusive(&lock);
-	  return -1;
+    ReleaseSRWLockExclusive(&lock);
+    return -1;
   }
   
   Tcl_HashEntry *entry = Tcl_FindHashEntry(childIdTable, (ClientData)win);
   if (!entry) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return -1;
+    ReleaseSRWLockExclusive(&lock);
+    return -1;
   }
   ReleaseSRWLockExclusive(&lock);
   return PTR2INT(Tcl_GetHashValue(entry));
@@ -1095,11 +1107,11 @@ static int GetChildIdForTkWindow(Tk_Window win)
 /* Function to retrieve Tk window for a specifc MSAA ID. */
 Tk_Window GetTkWindowForChildId(int id)
 {
-AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 
   if (!childIdTable){
-	  ReleaseSRWLockExclusive(&lock);
-	  return NULL;
+    ReleaseSRWLockExclusive(&lock);
+    return NULL;
   }	  
 
   Tcl_HashSearch search;
@@ -1108,7 +1120,7 @@ AcquireSRWLockExclusive(&lock);
        entry != NULL;
        entry = Tcl_NextHashEntry(&search)) {
     if (PTR2INT(Tcl_GetHashValue(entry)) == id) {
-		ReleaseSRWLockExclusive(&lock);
+      ReleaseSRWLockExclusive(&lock);
       return (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
     }
   }
@@ -1119,11 +1131,11 @@ AcquireSRWLockExclusive(&lock);
 /* Function to return the Tk toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   /* First check if the tkwin is NULL (destroyed). If yes, exit. */
   if (tkwin == NULL) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return NULL;
   }
 
@@ -1142,7 +1154,7 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 
 /* Function to initialize Tk -> MSAA hash table. */
 void InitTkAccessibleTable(void) {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   if (!tkAccessibleTableInitialized) {
     tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
@@ -1153,7 +1165,7 @@ void InitTkAccessibleTable(void) {
 
 /* Function to initialize HWND -> Tk hash table. */
 void InitHwndToTkWindowTable(void) {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   if (!hwndToTkWindowTableInitialized) {
     hwndToTkWindowTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(hwndToTkWindowTable, TCL_ONE_WORD_KEYS);
@@ -1166,7 +1178,7 @@ void InitHwndToTkWindowTable(void) {
 /* Function to initialize childId hash table. */
 void InitChildIdTable(void)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   if (!childIdTable) {
     childIdTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(childIdTable, TCL_ONE_WORD_KEYS);
@@ -1178,11 +1190,11 @@ void InitChildIdTable(void)
 void ClearChildIdTable(void)
 {
 	
-AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 
   if (!childIdTable) {
-	  ReleaseSRWLockExclusive(&lock);
-	  return;
+    ReleaseSRWLockExclusive(&lock);
+    return;
   }
 
   Tcl_HashSearch search;
@@ -1193,21 +1205,21 @@ AcquireSRWLockExclusive(&lock);
        entry = Tcl_NextHashEntry(&search)) {
     Tcl_DeleteHashEntry(entry);
   }
-  	  ReleaseSRWLockExclusive(&lock);
+  ReleaseSRWLockExclusive(&lock);
 }
 
 /* Function to retrieve accessible object associated with Tk window. */
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win) {
 	
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!tkAccessibleTableInitialized) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return NULL;
   }
   Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, (ClientData)win);
   if (entry) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return (TkRootAccessible *)Tcl_GetHashValue(entry);
   }
   ReleaseSRWLockExclusive(&lock);
@@ -1216,15 +1228,15 @@ TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win) {
 
 /* Function to retrieve Tk window associated with HWND. */
 Tk_Window GetTkWindowForHwnd(HWND hwnd) {
-		AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 		
   if (!hwndToTkWindowTableInitialized) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return NULL;
   }
   Tcl_HashEntry *entry = Tcl_FindHashEntry(hwndToTkWindowTable, (ClientData)hwnd);
   if (entry) {
-	  ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return (Tk_Window)Tcl_GetHashValue(entry);
   }
   ReleaseSRWLockExclusive(&lock);
@@ -1234,11 +1246,11 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
 /* Function to assign childId's dynamically. */
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (!Tk_IsMapped(win)){
-ReleaseSRWLockExclusive(&lock);
-	  return;
+    ReleaseSRWLockExclusive(&lock);
+    return;
   }
 
   /* Assign an ID to this widget. */
@@ -1255,29 +1267,30 @@ ReleaseSRWLockExclusive(&lock);
 /* Event handler (executes `func` on main thread). */
 static int ExecuteOnMainThread(Tcl_Event *ev, int flags) 
 {
-MainThreadEvent *event = (MainThreadEvent *)ev;
-event->func(event->data);
-ckfree(event);
-return 1; 
+  MainThreadEvent *event = (MainThreadEvent *)ev;
+  event->func(event->arg1, event->arg2, event->arg3, event->arg4, event->arg5);
+  ckfree(event);
+  return 1; 
 }
 
 /* Queue a function to run on main thread. */
-void RunOnMainThread(MainThreadFunc func, void *data) 
+void RunOnMainThread(void (*func)(void *),void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
-MainThreadEvent *event = (MainThreadEvent *)ckalloc(sizeof(MainThreadEvent));
-event->header.proc = ExecuteOnMainThread;
-event->func = func;
-event->data = data;
-
-Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
-Tcl_ThreadAlert(mainThreadId); /* Wake main thread if needed. */
+  /* Allocate and initialize the event. */
+  MainThreadEvent *event = (MainThreadEvent *)ckalloc(sizeof(MainThreadEvent));
+  event->header.proc = ExecuteOnMainThread;
+  event->func = func;
+  event->arg1 = arg1;
+  event->arg2 = arg2;
+  event->arg3 = arg3;
+  event->arg3 = arg3;
+  event->arg4 = arg4;
+  event->arg5 = arg5;
+	
+  /* Queue the event.*/
+  Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
+  Tcl_ThreadAlert(mainThreadId);  /* Wake main thread if needed.*/
 }
-
-/* Initialize during Tcl startup. */
-void InitAccessibilityMainThread(void) {
-mainThreadId = Tcl_GetCurrentThread();
-}
-
 
 /* 
  * Functions to implement direct script-level 
@@ -1409,14 +1422,14 @@ void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible)
 
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (eventPtr->type == DestroyNotify) {
     TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
     if (tkAccessible) {
       TkRootAccessible_Release((IAccessible *)tkAccessible);
     }
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
   }
 }
 
@@ -1438,7 +1451,7 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
 
 static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 	
   if (objc < 2) {
     Tcl_WrongNumArgs(interp, 1, objv, "widgetPath");
@@ -1461,7 +1474,7 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
 
   if (childId <= 0) {
     Tcl_AppendResult(interp, "Failed to find child ID for ", path, NULL);
-	ReleaseSRWLockExclusive(&lock);
+    ReleaseSRWLockExclusive(&lock);
     return TCL_OK;
   }
 
@@ -1496,7 +1509,7 @@ int TkRootAccessibleObjCmd(
 			   int objc, /* Number of arguments. */
 			   Tcl_Obj *const objv[]) /* Argument objects. */
 {
-	AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
   (void) clientData;
   HWND hwnd = NULL;
 
@@ -1537,7 +1550,7 @@ int TkRootAccessibleObjCmd(
   int nextId = 1;
   AssignChildIdsRecursive(tkwin, &nextId, interp); /* Assign IDs starting from the 'tkwin' (which should be the toplevel). */
 
-ReleaseSRWLockExclusive(&lock);
+  ReleaseSRWLockExclusive(&lock);
   return TCL_OK;
 }
 
@@ -1561,7 +1574,7 @@ ReleaseSRWLockExclusive(&lock);
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
-AcquireSRWLockExclusive(&lock);
+  AcquireSRWLockExclusive(&lock);
 
   /*Initialize object-tracking hash tables. */
   InitAccessibilityMainThread();
