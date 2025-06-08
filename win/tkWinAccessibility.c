@@ -93,7 +93,7 @@ typedef void (*MainThreadFunc)(void*);
 
 typedef struct {
   Tcl_Event header; 
-  void (*func)(void*, void*, void*, void*, void*);  /* 5-arg function pointer. */
+  void (*func);  /* 5-arg function pointer. */
   void *arg1;
   void *arg2;
   void *arg3;
@@ -186,13 +186,12 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
  *----------------------------------------------------------------------
  */
 
-static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole);
-static HRESULT GetAccNameForChild(Tk_Window win, BSTR *pName);
-static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState);
+static HRESULT GetAccRoleForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
+static HRESULT GetAccStateForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
 static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild);
-static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc);
-static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue);
-static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win);
+static HRESULT GetAccDescriptionForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
+static HRESULT GetAccValueForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
+static HRESULT DoDefaultActionForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
 
 /*
  *----------------------------------------------------------------------
@@ -221,7 +220,7 @@ void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp);
 static int ExecuteOnMainThread(Tcl_Event *ev, int flags);
-void RunOnMainThread(void (*func)(void *),void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
+void RunOnMainThread(void *func,void *arg1, void *arg2, void *arg3, void *arg4, void *arg5);
 void InitAccessibilityMainThread(void);
 int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
@@ -448,8 +447,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(IAccessible *this,
       return E_INVALIDARG;
     }
     ReleaseSRWLockExclusive(&lock);
-    HRESULT hr = RunOnMainThread(GetAccRoleForChild, child, pvarRole, NULL, NULL, NULL);
-    return hr;
+    RunOnMainThread(GetAccRoleForChild, child, pvarRole, NULL, NULL, NULL);
+    return S_OK;
   }
 
   return S_OK;
@@ -476,8 +475,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
       return E_INVALIDARG;
     }
     ReleaseSRWLockExclusive(&lock);
-    HRESULT hr = RunOnMainThread(GetAccStateForChild, child, pvarState, NULL, NULL, NULL);
-    return hr;
+    RunOnMainThread(GetAccStateForChild, child, pvarState, NULL, NULL, NULL);
+    return S_OK;
   }
 
   return S_OK;
@@ -503,8 +502,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this
       return E_INVALIDARG;
     }
     ReleaseSRWLockExclusive(&lock);	
-    HRESULT hr = RunOnMainThread(GetAccValueForChild, child, pszValue, NULL, NULL, NULL);
-    return hr;
+    RunOnMainThread(GetAccValueForChild, child, pszValue, NULL, NULL, NULL);
+    return S_OK;
   }
 
   return S_OK;
@@ -705,8 +704,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible
       return E_INVALIDARG;
     }
     ReleaseSRWLockExclusive(&lock);
-    HRESULT hr = RunOnMainThread(DoDefaultActionForChild, tkAccessible->interp, child, NULL, NULL, NULL);
-    return hr;
+    RunOnMainThread(DoDefaultActionForChild, tkAccessible->interp, child, NULL, NULL, NULL);
+    return S_OK;
   }
 
   return S_OK;
@@ -782,8 +781,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
       return E_INVALIDARG;
     }
     ReleaseSRWLockExclusive(&lock);
-    HRESULT hr = GetAccDescriptionForChild(child, pszDescription);
-    return hr;
+    RunOnMainThread(GetAccDescriptionForChild, child, pszDescription, NULL, NULL, NULL);
+    return S_OK;
   }
 
   return E_INVALIDARG;
@@ -797,44 +796,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible
  *----------------------------------------------------------------------
  */
 
-
-/* Function to map accessible name to MSAA.*/
-static HRESULT GetAccNameForChild(Tk_Window win, BSTR *pName)
-{
-  AcquireSRWLockExclusive(&lock);
-	
-  if (!win || !pName) {
-    ReleaseSRWLockExclusive(&lock);
-    return E_INVALIDARG;
-  } 
-  
-  Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
-  if (!hPtr) {
-    ReleaseSRWLockExclusive(&lock);
-    return S_FALSE;
-  }  
-
-  Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
-  Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
-  if (!hPtr2) {
-    ReleaseSRWLockExclusive(&lock);
-    return S_FALSE;
-  }
-	  
-  const char *name = Tcl_GetString(Tcl_GetHashValue(hPtr));
-  Tcl_DString ds;
-  Tcl_DStringInit(&ds);
-  *pName = SysAllocString(Tcl_UtfToWCharDString(name, -1, &ds));
-  Tcl_DStringFree(&ds);
-  ReleaseSRWLockExclusive(&lock);
-  return S_OK;
-}
-
-
 /* Function to map accessible role to MSAA.*/
-static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole)
+static HRESULT GetAccRoleForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
   AcquireSRWLockExclusive(&lock);
+  
+  Tk_Window win = (Tk_Window)arg1;
+  VARIANT *pvarRole = (VARIANT*) arg1; 
 	
   if (!win || !pvarRole) {
     ReleaseSRWLockExclusive(&lock);
@@ -871,9 +839,12 @@ static HRESULT GetAccRoleForChild(Tk_Window win, VARIANT *pvarRole)
 }
 
 /* Function to map accessible state to MSAA. */
-static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState)
+static HRESULT GetAccStateForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
   AcquireSRWLockExclusive(&lock);
+  
+  Tk_Window win = (Tk_Window)arg1;
+  VARIANT *pvarState = (VARIANT*)arg2; 
 	
   if (!win || !pvarState) {
     ReleaseSRWLockExclusive(&lock);
@@ -912,9 +883,13 @@ static HRESULT GetAccStateForChild(Tk_Window win, VARIANT *pvarState)
 }
 
 /* Function to map accessible value to MSAA.*/
-static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue)
+static HRESULT GetAccValueForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
   AcquireSRWLockExclusive(&lock);
+  
+  Tk_Window win = (Tk_Window)arg1;
+  BSTR *pValue = (BSTR*)arg2;
+
 	  
   if (!win || !pValue) {
     ReleaseSRWLockExclusive(&lock);
@@ -946,9 +921,12 @@ static HRESULT GetAccValueForChild(Tk_Window win, BSTR *pValue)
 }
 
 /* Function to get button press to MSAA. */
-static HRESULT DoDefaultActionForChild(Tcl_Interp *interp, Tk_Window win)
+static HRESULT DoDefaultActionForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
   AcquireSRWLockExclusive(&lock);
+  
+  Tcl_Interp *interp = (Tcl_Interp*)arg1;
+  Tk_Window win = (Tk_Window)arg2; 
 	
   if (!interp || !win) {
     ReleaseSRWLockExclusive(&lock);
@@ -989,9 +967,12 @@ static HRESULT GetAccFocusForChild(Tk_Window win, VARIANT *pvarChild)
 }
 
 /* Function to get MSAA description. */
-static HRESULT GetAccDescriptionForChild(Tk_Window win, BSTR *pDesc)
+static HRESULT GetAccDescriptionForChild(void *arg1, void *arg2, void *arg3, void *arg4, void *arg5)
 {
   AcquireSRWLockExclusive(&lock);
+  
+  Tk_Window win = (Tk_Window)arg1;
+  BSTR *pDesc = (BSTR*)arg2; 
 	
   if (!win || !pDesc) {
     ReleaseSRWLockExclusive(&lock);
@@ -1268,7 +1249,12 @@ static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *inte
 static int ExecuteOnMainThread(Tcl_Event *ev, int flags) 
 {
   MainThreadEvent *event = (MainThreadEvent *)ev;
-  event->func(event->arg1, event->arg2, event->arg3, event->arg4, event->arg5);
+  event->func;
+  event->arg1; 
+  event->arg2;
+  event->arg3;
+  event->arg4;
+  event->arg5;
   ckfree(event);
   return 1; 
 }
@@ -1290,6 +1276,11 @@ void RunOnMainThread(void (*func)(void *),void *arg1, void *arg2, void *arg3, vo
   /* Queue the event.*/
   Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
   Tcl_ThreadAlert(mainThreadId);  /* Wake main thread if needed.*/
+}
+
+/*Initialize the main thread ID. */
+void InitAccessibilityMainThread(void) {
+  mainThreadId = Tcl_GetCurrentThread();
 }
 
 /* 
