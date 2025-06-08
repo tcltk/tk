@@ -368,7 +368,7 @@ TkSelUpdateClipboard(
     TkWindow *winPtr,
     clipboardOption opt)
 {
-    if (opt == CLIPBOARD_APPEND) {
+    if (opt == CLIPBOARD_APPEND || opt == CLIPBOARD_CLEAR) {
 	HWND hwnd = TkWinGetHWND(winPtr->window);
 
 	UpdateClipboard(hwnd);
