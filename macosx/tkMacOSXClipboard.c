@@ -234,18 +234,15 @@ TkMacOSXSelDeadWindow(
  *	This function is called to force the clipboard to be updated after new
  *	data is added or the clipboard has been cleared.
  *
- *      Normally this makes the TKApplication object becoming the owner of
- *      the String type on the general NSPasteboard.  When the method
- *      [NSAppp pasteboard: provideDataForType:] is called the NSApp will
- *      set the string value of the general NSPasteboard to the current
- *      contents of the Tk clipboard.
+ *      In transient mode this makes the TKApplication object becoming the
+ *      owner of the String type on the general NSPasteboard.  When the method
+ *      [NSAppp pasteboard: provideDataForType:] is called the NSApp will set
+ *      the string value of the general NSPasteboard to the current contents of
+ *      the Tk clipboard and launch an after task to clear the pasteboard.
  *
- *      When called with two NULL pointers, the owners of the String type
- *      will be set to nil and the contents of the Tk clipboard will be
- *      immediately sent to the general NSPasteboard.  The ownership change
- *      causes the changeCount of the NSPasteboard to be incremented.
- *      (It is common for clipboard managers to watch the changeCount
- *      value as an indicator that a new clip is available.)
+ *      Otherwise, the nil Object is declared to be the owner.  This is done
+ *      in a way which triggers an incremeent of the pasteboard's changeCount
+ *      property, notifying clipboard managers that the value has changed. 
  *
  * Results:
  *	None.
