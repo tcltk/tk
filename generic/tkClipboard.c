@@ -427,7 +427,7 @@ Tk_ClipboardObjCmd(
     const char *path = NULL;
     Atom selection;
     static const char *const optionStrings[] = {
-	"append", "clear", "get", "transient", NULL };
+	"append", "clear", "get", NULL };
     int index, i, result;
 
     if (objc < 2) {
@@ -549,66 +549,6 @@ Tk_ClipboardObjCmd(
 	}
 	return result; 
     }
-    case CLIPBOARD_TRANSIENT: {
-	const char *string;
-	static const char *const appendOptionStrings[] = {
-	    "-displayof", NULL
-	};
-	enum appendOptions { TRANSIENT_DISPLAYOF};
-	int subIndex;
-	Tcl_Size length;
-
-	for (i = 2; i < objc - 1; i++) {
-	    string = Tcl_GetStringFromObj(objv[i], &length);
-	    if (string[0] != '-') {
-		break;
-	    }
-
-	    /*
-	     * If the argument is "--", it signifies the end of arguments.
-	     */
-	    if (string[1] == '-' && length == 2) {
-		i++;
-		break;
-	    }
-	    if (Tcl_GetIndexFromObj(interp, objv[i], appendOptionStrings,
-		    "option", 0, &subIndex) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-
-	    /*
-	     * Increment i so that it points to the value for the flag instead
-	     * of the flag itself.
-	     */
-
-	    i++;
-	    if (i >= objc) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", (char *)NULL);
-		return TCL_ERROR;
-	    }
-	    if (subIndex == TRANSIENT_DISPLAYOF)
-		path = Tcl_GetString(objv[i]);
-	    }
-	}
-	if (objc - i != 1) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...? data");
-	    return TCL_ERROR;
-	}
-	if (path != NULL) {
-	    tkwin = Tk_NameToWindow(interp, path, tkwin);
-	}
-	if (tkwin == NULL) {
-	    return TCL_ERROR;
-	}
-	result = Tk_ClipboardClear(interp, tkwin);
-	if (result == TCL_OK) {
-	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_TRANSIENT);
-	    result = Tk_ClipboardAppend(interp, tkwin, XA_STRING, XA_STRING,
-		Tcl_GetString(objv[i]));
-	}
-	return result;
     case CLIPBOARD_GET: {
 	Atom target;
 	const char *targetName = NULL;
