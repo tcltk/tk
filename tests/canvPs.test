@@ -24,6 +24,10 @@ testutils import image
 imageInit
 
 #
+# TESTS
+#
+
+#
 # COMMON TEST SETUP
 #
 # For tests canvas-1.* and canvas-2.*
@@ -145,8 +149,11 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
     removeFile foo.ps
     removeFile bar.ps
 } -result ok
-destroy .c
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .c
 
 test canvPs-3.1 {test ps generation with an embedded window} -setup {
     set bar [makeFile {} bar.ps]

@@ -133,8 +133,11 @@ test imageBmap-1.12 {options for bitmap images} -body {
     list [catch {image create bitmap i1 -data $data1 -maskfile bogus} msg] \
 	    [string tolower $msg]
 } -result {1 {couldn't read bitmap file "bogus": no such file or directory}}
-rename bgerror {}
 
+#
+# COMMON TEST CLEANUP
+#
+rename bgerror {}
 
 test imageBmap-2.1 {ImgBmapCreate procedure} -setup {
     imageCleanup
@@ -359,12 +362,16 @@ test imageBmap-6.3 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {   } foo3.bm
     image create bitmap i1 -file foo3.bm
 } -returnCodes error -result {format error in bitmap data}
+
+#
+# COMMON TEST SETUP
+#
+# For tests imageBmap-7.*
+#
 removeFile foo3.bm
-
-
 imageCleanup
-# Image used in 7.* tests
 image create bitmap i1
+
 test imageBmap-7.1 {ImgBmapCmd procedure} -body {
     i1
 } -returnCodes error -result {wrong # args: should be "i1 option ?arg ...?"}
@@ -397,7 +404,10 @@ test imageBmap-7.9 {ImgBmapCmd procedure} -body {
 test imageBmap-7.10 {ImgBmapCmd procedure} -body {
     i1 gorp
 } -returnCodes error -result {bad option "gorp": must be cget or configure}
-# Clean it up after use!!
+
+#
+# COMMON TEST CLEANUP
+#
 imageCleanup
 
 test imageBmap-8.1 {ImgBmapGet/Free procedures, shared instances} -setup {
@@ -456,10 +466,13 @@ test imageBmap-9.2 {ImgBmapDisplay procedure, nothing to display} -setup {
     image delete i1
     destroy .c
 } -result {}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[info exists bgerror]} {
     rename bgerror {}
 }
-
 
 test imageBmap-10.1 {ImgBmapFree procedure, resource freeing} -setup {
     destroy .c

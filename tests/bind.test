@@ -22,6 +22,9 @@ tcltest::loadTestedCommands
 # COMMON TEST SETUP
 #
 
+set keyInfo {}
+set numericKeysym {}
+
 tk useinputmethods 0
 
 toplevel .t -width 100 -height 50
@@ -56,6 +59,56 @@ proc unsetBindings {} {
     bind xyz <Enter> {}
     bind {a b} <Enter> {}
     bind .t <Enter> {}
+}
+
+proc testKey {window event type mods} {
+    global keyInfo numericKeysym
+    set keyInfo {}
+    set numericKeysym {}
+    bind $window <Key> {
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericKeysym %N
+    }
+    focus -force $window
+    update
+    event generate $window $event
+    if {$keyInfo == {}} {
+	vwait keyInfo
+    }
+    set save $keyInfo
+    set keyInfo {}
+    set injectcmd [list testinjectkeyevent $type $numericKeysym]
+    foreach {option} $mods {
+	lappend injectcmd $option
+    }
+    eval $injectcmd
+    if {$keyInfo == {}} {
+	vwait keyInfo
+    }
+    if {$save != $keyInfo} {
+	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
+    }
+    return pass
+}
+
+proc testKeyWithMods {window keysym type} {
+    set result [testKey $window "<$keysym>" $type {}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Option-$keysym>" $type {-option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
+    if {$result != {pass}} {
+	return $result
+    }
+    return pass
 }
 
 #
@@ -6932,56 +6985,6 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -cleanup {
 } -result {ok ok ok ok}
 
-set keyInfo {}
-set numericKeysym {}
-proc testKey {window event type mods} {
-    global keyInfo numericKeysym
-    set keyInfo {}
-    set numericKeysym {}
-    bind $window <Key> {
-	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-	set numericKeysym %N
-    }
-    focus -force $window
-    update
-    event generate $window $event
-    if {$keyInfo == {}} {
-	vwait keyInfo
-    }
-    set save $keyInfo
-    set keyInfo {}
-    set injectcmd [list testinjectkeyevent $type $numericKeysym]
-    foreach {option} $mods {
-	lappend injectcmd $option
-    }
-    eval $injectcmd
-    if {$keyInfo == {}} {
-	vwait keyInfo
-    }
-    if {$save != $keyInfo} {
-	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
-    }
-    return pass
-}
-proc testKeyWithMods {window keysym type} {
-    set result [testKey $window "<$keysym>" $type {}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Option-$keysym>" $type {-option}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
-    if {$result != {pass}} {
-	return $result
-    }
-    return pass
-}
 test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
     foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
 	set result [testKeyWithMods . $k press]
@@ -7122,6 +7125,7 @@ test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [435739
 #
 # CLEANUP
 #
+
 cleanupTests
 return
 

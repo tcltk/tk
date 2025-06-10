@@ -5,6 +5,28 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE:
+#
+# Any time tests fail here with an error like:
+#
+#     Can't find a usable tk.tcl in the following directories:
+# 	{$p(:26:)}
+#
+#     $p(:26:)/tk.tcl: script error
+#     script error
+# 	invoked from within
+#     "source {$p(:26:)/tk.tcl}"
+# 	("uplevel" body line 1)
+# 	invoked from within
+#     "uplevel #0 [list source $file]"
+#
+#
+#     This probably means that tk wasn't installed properly.
+#
+# it indicates that something went wrong sourcing tk.tcl.
+# Ensure that any changes that occurred to tk.tcl will work or are properly
+# prevented in a safe interpreter.  -- hobbs
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -16,26 +38,6 @@
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
 tcltest::loadTestedCommands
-
-## NOTE: Any time tests fail here with an error like:
-
-# Can't find a usable tk.tcl in the following directories:
-#     {$p(:26:)}
-#
-# $p(:26:)/tk.tcl: script error
-# script error
-#     invoked from within
-# "source {$p(:26:)/tk.tcl}"
-#     ("uplevel" body line 1)
-#     invoked from within
-# "uplevel #0 [list source $file]"
-#
-#
-# This probably means that tk wasn't installed properly.
-
-## it indicates that something went wrong sourcing tk.tcl.
-## Ensure that any changes that occurred to tk.tcl will work or are properly
-## prevented in a safe interpreter.  -- hobbs
 
 #
 # COMMON TEST SETUP

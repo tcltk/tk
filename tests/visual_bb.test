@@ -22,14 +22,9 @@ set testNum 1
 # LOCAL UTILITY PROCS
 #
 
-proc runTest {file} {
-    global testNum
-
-    test "2.$testNum" "testing $file" {userInteraction} {
-    uplevel #0 [list source [file join [testsDirectory] $file]]
-    concat ""
-    } {}
-    incr testNum
+proc end {} {
+    cleanupTests
+    set ::EndOfVisualTests 1
 }
 
 # lpr --
@@ -40,9 +35,14 @@ proc lpr {c args} {
     exec lpr <<[eval [list $c postscript] $args]
 }
 
-proc end {} {
-    cleanupTests
-    set ::EndOfVisualTests 1
+proc runTest {file} {
+    global testNum
+
+    test "2.$testNum" "testing $file" {userInteraction} {
+    uplevel #0 [list source [file join [testsDirectory] $file]]
+    concat ""
+    } {}
+    incr testNum
 }
 
 #

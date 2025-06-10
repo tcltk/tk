@@ -263,8 +263,11 @@ test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
     focus -unknown
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
-
+#
+# COMMON TEST SETUP
+#
 focusSetup
+
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
     unix nonPortable testwrapper
 } -body {
@@ -634,6 +637,10 @@ test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
     destroy .t.b2
     focus
 } -result {.t}
+
+#
+# COMMON TEST CLEANUP
+#
 childTkProcess exit
 
 
@@ -657,13 +664,16 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
 } -cleanup {
     childTkProcess exit
 } -result {.t {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 bind all <FocusIn> {}
 bind all <FocusOut> {}
 bind all <Key> {}
-
-
 fixfocus
+
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     unix  testwrapper
 } -setup {

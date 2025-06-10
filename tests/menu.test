@@ -1215,8 +1215,6 @@ test menu-2.228 {entry configuration options 5 -underline 3p radiobutton} -body 
 #
 # COMMON TEST CLEANUP
 #
-# For tests 2.31 - 2.228
-#
 deleteWindows
 image delete image1
 

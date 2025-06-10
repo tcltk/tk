@@ -57,12 +57,6 @@ proc EnterFileByKey {parent fileName fileDir} {
 # COMMON TEST SETUP
 #
 
-if {$tcl_platform(platform) == "unix"} {
-    set modes "0 1"
-} else {
-    set modes 1
-}
-
 set unknownOptionsMsg(tk_getOpenFile,notAqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
 set unknownOptionsMsg(tk_getOpenFile,aqua) {bad option "-foo": must be -command, -defaultextension, -filetypes, -initialdir, -initialfile, -message, -multiple, -parent, -title, or -typevariable}
 set unknownOptionsMsg(tk_getSaveFile,notAqua) {bad option "-foo": must be -confirmoverwrite, -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
@@ -127,14 +121,16 @@ test fileDialog-0.3 {GetFileName: file types: bad filetype} \
 } \
 -result {}
 
-#
-# TESTS FOR EACH MODE
-#
 # Test both the motif version and the "tk" version of the file dialog
 # box on Unix.
 #
 # Note that this means that test names are unusually complex.
 #
+if {$tcl_platform(platform) eq "unix"} {
+    set modes "0 1"
+} else {
+    set modes 1
+}
 foreach mode $modes {
 
     #
@@ -190,6 +186,9 @@ foreach mode $modes {
 	tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
+    #
+    # COMMON TEST SETUP
+    #
     set fileName $tmpFile
     set fileDir [tcltest::temporaryDirectory]
     set pathName [file join $fileDir $fileName]
@@ -241,14 +240,14 @@ foreach mode $modes {
 	destroy .t2
     }
 
-test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
-    #ToPressButton $parent cancel
-    set filename [tk_getOpenFile -filetypes {
-	{"Invalid extension" {x.y}}
-	{"All files" {*}}
-     }]
-     } -result {}
-}
+    test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
+	#ToPressButton $parent cancel
+	set filename [tk_getOpenFile -filetypes {
+	    {"Invalid extension" {x.y}}
+	    {"All files" {*}}
+	}]
+	} -result {}
+    }
 
     foreach x [lsort -integer [array names filters]] {
 	test filebox-3.$x-$mode "tk_getOpenFile command" nonUnixUserInteraction {
@@ -287,7 +286,6 @@ test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
     catch {tk_getSaveFile -foo 1} msg
     regsub -all ,      $msg "" options
     regsub \"-foo\" $options "" options
-
     foreach option $options {
 	if {[string index $option 0] eq "-"} {
 	    test filebox-4.2-$mode$option "tk_getSaveFile command" -body {
@@ -317,6 +315,9 @@ test fileDialog-2.7-$mode {"tk_getOpenFile: bad extension" -body {
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent
     } ""
 
+    #
+    # COMMON TEST SETUP
+    #
     set fileName "12x 455"
     set fileDir [pwd]
     set pathName [file join [pwd] $fileName]

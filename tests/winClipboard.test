@@ -1,14 +1,15 @@
 # This file is a Tcl script to test out Tk's Windows specific
 # clipboard code.
 #
-# ################################################################
-#  Note that some of these tests may fail if another application #
-#  is grabbing the clipboard (e.g. an X server, or a VNC viewer) #
-# ################################################################
-#
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
+
+# NOTE:
+#
+# Some of these tests may fail if another application is grabbing the clipboard
+# (e.g. an X server, or a VNC viewer) #
+#
 
 #
 # TESTFILE INITIALIZATION
@@ -120,7 +121,10 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} -constraints {
     clipboard clear
 } -result {{more data in string} {new data}}
 
-# cleanup
+#
+# CLEANUP
+#
+
 cleanupTests
 return
 

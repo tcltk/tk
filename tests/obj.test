@@ -4,6 +4,10 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+#
+# TESTFILE INITIALIZATION
+#
+
 # Load the main script "main.tcl", which takes care of:
 # - setup for the application and the root window
 # - loading and configuration of the tcltest test harness
