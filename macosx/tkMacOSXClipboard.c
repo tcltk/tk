@@ -17,16 +17,6 @@
 
 static NSInteger changeCount = -1;
 static Tk_Window tkClipboardOwner = NULL;
-static bool transientMode = NO;
-
-static void ClearTransientClip(void *clientData) {
-    (void) clientData;
-    transientMode = NO;
-    [[NSPasteboard generalPasteboard] clearContents];
-    if (tkClipboardOwner) {
-	Tk_ClipboardClear(NULL, tkClipboardOwner);
-    }
-}
 
 #pragma mark TKApplication(TKClipboard)
 
@@ -72,9 +62,6 @@ static void ClearTransientClip(void *clientData) {
 	provideDataForType: (NSString *) type
 {
     TkDisplay *dispPtr = TkGetDisplayList();
-    if (transientMode) {
-	Tcl_CreateTimerHandler(1000, ClearTransientClip, NULL);
-    }
     [self tkProvidePasteboard:dispPtr
 		   pasteboard:[NSPasteboard generalPasteboard]
 	   provideDataForType:NSStringPboardType];
@@ -234,15 +221,9 @@ TkMacOSXSelDeadWindow(
  *	This function is called to force the clipboard to be updated after new
  *	data is added or the clipboard has been cleared.
  *
- *      In transient mode this makes the TKApplication object becoming the
- *      owner of the String type on the general NSPasteboard.  When the method
- *      [NSAppp pasteboard: provideDataForType:] is called the NSApp will set
- *      the string value of the general NSPasteboard to the current contents of
- *      the Tk clipboard and launch an after task to clear the pasteboard.
- *
- *      Otherwise, the nil Object is declared to be the owner.  This is done
- *      in a way which triggers an incremeent of the pasteboard's changeCount
- *      property, notifying clipboard managers that the value has changed. 
+ *      The nil Object is declared to be the owner.  This is done in a way
+ *      which triggers an incremeent of the pasteboard's changeCount property,
+ *      notifying clipboard managers that the value has changed.
  *
  * Results:
  *	None.
@@ -273,36 +254,17 @@ TkSelUpdateClipboard(
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
     switch (option) {
-    case CLIPBOARD_TRANSIENT:
-	/*
-	 * Just set the transientMode flag.  We expect to be called again
-	 * with the CLIPBOARD_APPEND option in a moment.
-	 */
-	
-	transientMode = YES;
-	break;
     case CLIPBOARD_APPEND:
-	if (transientMode) {
-	    /*
-	     * Avoid changing the changeCount, which would wake up any
-	     * clipboard managers which are polling the changeCount.
-	     */
+	/*
+	 * This increments the changeCount so that clipboard managers will be
+	 * able to see and manage the clip.
+	 */
 	    
-	    [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
-		   owner:NSApp];
-	    return;
-	} else {
-	    /*
-	     * The normal behavior is to increment the changeCount so that
-	     * clipboard managers will be able to see and manage the clip.
-	     */
-	    
-	    changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
-				     owner:nil];
-	    [NSApp tkProvidePasteboard: TkGetDisplayList()
-			    pasteboard: (NSPasteboard *) pb
-		    provideDataForType: (NSString *) NSStringPboardType];
-	}
+	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+				 owner:nil];
+	[NSApp tkProvidePasteboard: TkGetDisplayList()
+			pasteboard: (NSPasteboard *) pb
+		provideDataForType: (NSString *) NSStringPboardType];
 	break;
     case CLIPBOARD_CLEAR:
 	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
@@ -311,10 +273,6 @@ TkSelUpdateClipboard(
 			pasteboard: (NSPasteboard *) pb
 		provideDataForType: (NSString *) NSStringPboardType];
 	break;
-#if 0
-	[pb clearContents];
-	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
-#endif				 owner:nil];
     default:
 	break;
     }

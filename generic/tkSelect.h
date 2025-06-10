@@ -128,7 +128,7 @@ typedef struct TkClipboardTarget {
  */
 
 typedef enum {
-    CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET, CLIPBOARD_TRANSIENT
+    CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET
 } clipboardOption;
 
 

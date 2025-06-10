@@ -326,7 +326,7 @@ test clipboard-7.15 {Tk_ClipboardCmd procedure} -body {
 } -returnCodes error -result {bad window path name "foo"}
 test clipboard-7.16 {Tk_ClipboardCmd procedure} -body {
     clipboard error
-} -returnCodes error -result {bad option "error": must be append, clear, get, or transient}
+} -returnCodes error -result {bad option "error": must be append, clear, or get}
 test clipboard-7.17 {Tk_ClipboardCmd procedure} -setup {
     clipboard clear
 } -body {
