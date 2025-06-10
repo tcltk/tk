@@ -18,8 +18,6 @@ tcltest::loadTestedCommands
 # LOCAL UTILITY PROCS
 #
 
-proc propagate-geometry {} { update idletasks }
-
 # checkorder --
 #	Ensure that Y coordinates windows in $winlist are strictly increasing.
 #
@@ -33,6 +31,17 @@ proc checkorder {winlist} {
 	}
 	set pos $nextpos
     }
+}
+
+proc propagate-geometry {} { update idletasks }
+
+proc sashpositions {pw} {
+    set positions [list]
+    set npanes [llength [winfo children $pw]]
+    for {set i 0} {$i < $npanes - 1} {incr i} {
+	lappend positions [$pw sashpos $i]
+    }
+    return $positions
 }
 
 #
@@ -231,14 +240,6 @@ test panedwindow-5.1 "Propagate Map/Unmap state to children" -body {
 
 ### sashpos tests.
 #
-proc sashpositions {pw} {
-    set positions [list]
-    set npanes [llength [winfo children $pw]]
-    for {set i 0} {$i < $npanes - 1} {incr i} {
-	lappend positions [$pw sashpos $i]
-    }
-    return $positions
-}
 
 test paned-sashpos-setup "Setup for sash position test" -body {
     ttk::style theme use default
