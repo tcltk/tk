@@ -3331,7 +3331,7 @@ test entry-19.17 {entry widget validation} -setup {
 } -result {focusout {.e -1 -1 newdata abcd {} focusout forced}}
 
 
-# proc doval changed - returns 0
+# Using validateCmd3, which returns 0
 test entry-19.18 {entry widget validation} -setup {
     unset -nocomplain textVar validationData
 } -body {
@@ -3351,7 +3351,7 @@ test entry-19.18 {entry widget validation} -setup {
 
 ## This sets validate to none because it shows that we prevent a possible
 ## loop condition in the validation, when the entry textvar is also set
-# proc doval2 used
+# Using validateCmd2
 test entry-19.19 {entry widget validation} -setup {
     unset -nocomplain textVar validationData
 } -body {
