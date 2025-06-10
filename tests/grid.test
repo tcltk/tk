@@ -55,7 +55,7 @@ proc grid_reset {{test ?} {top .}} {
 
 grid_reset 0.0
 wm geometry . {}
-
+
 #
 # TESTS
 #
@@ -813,17 +813,17 @@ test grid-10.32 {column/row configure} -body {
     destroy .f
     return $res
 } -cleanup {
-    grid_reset 10.35
+    grid_reset 10.32
 } -result {}
 test grid-10.33 {column/row configure} -body {
     grid columnconfigure . all
 } -cleanup {
-    grid_reset 10.36
+    grid_reset 10.33
 } -returnCodes error -result {expected integer but got "all" (when retrieving options only integer indices are allowed)}
 test grid-10.34 {column/row configure} -body {
     grid columnconfigure . 100000
 } -cleanup {
-    grid_reset 10.37
+    grid_reset 10.34
 } -result {-minsize 0 -pad 0 -uniform {} -weight 0}
 test grid-10.35 {column/row configure} -body {
     # This is a test for bug 1423666 where a column >= 10000 caused
@@ -838,7 +838,10 @@ test grid-10.35 {column/row configure} -body {
     lappend res [catch {grid .f -column 9998 -columnspan 2} msg] $msg ; update
     lappend res [catch {grid .f -row 9998 -rowspan 2} msg] $msg ; update
     return $res
-} -cleanup {destroy .f} -result [lrange {
+} -cleanup {
+    destroy .f
+    grid_reset 10.35
+} -result [lrange {
     1 {column out of bounds}
     1 {row out of bounds}
     1 {column out of bounds}
@@ -846,7 +849,6 @@ test grid-10.35 {column/row configure} -body {
     1 {column out of bounds}
     1 {row out of bounds}
 } 0 end]
-grid_reset 10.38
 test grid-10.36 {column/row configure} -body {
     # Additional tests for row/column overflow
     frame .f
@@ -861,13 +863,15 @@ test grid-10.36 {column/row configure} -body {
     lappend res [catch {eval grid [string repeat " x " 9999] .f} msg] $msg
     update
     return $res
-} -cleanup {destroy .f .g} -result [lrange {
+} -cleanup {
+    destroy .f .g
+    grid_reset 10.36
+} -result [lrange {
     1 {row out of bounds}
     1 {row out of bounds}
     1 {column out of bounds}
     1 {column out of bounds}
 } 0 end]
-grid_reset 10.39
 
 # auto-placement tests
 test grid-11.1 {default widget placement} -body {
@@ -1180,8 +1184,8 @@ test grid-13.4 {-in} -body {
     grid .f -in .top
 } -cleanup {
     grid_reset 13.3
+    destroy .top
 } -returnCodes error -result {can't put ".f" inside ".top"}
-destroy .top
 test grid-13.5 {-ipadx} -body {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
     grid .f -ipadx x
@@ -1989,33 +1993,36 @@ test grid-21.7 {anchor} -body {
 test grid-22.1 {remove: basic argument checking} {
     list [catch {grid remove foo} msg] $msg
 } {1 {bad window path name "foo"}}
-test grid-22.2 {remove} {
+test grid-22.2 {remove} -body {
     button .c
     grid [button .b]
     set a [grid content .]
     grid remove .b .c
     lappend a [grid content .]
     return $a
-} {.b {}}
-grid_reset 22.2
-test grid-22.3 {remove} {
+} -cleanup {
+    grid_reset 22.2
+} -result {.b {}}
+test grid-22.3 {remove} -body {
     button .c
     grid .c -row 2 -column 2 -rowspan 2 -columnspan 2 -padx 3 -pady 4 -sticky ns
     grid remove .c
     grid .c -row 0 -column 0
     grid info .c
-} {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx 3 -pady 4 -sticky ns}
-grid_reset 22.3
-test grid-22.3.1 {remove} {
+} -cleanup {
+    grid_reset 22.3
+} -result {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx 3 -pady 4 -sticky ns}
+test grid-22.3.1 {remove} -body {
     frame .a
     button .c
     grid .c -in .a -row 2 -column 2 -rowspan 2 -columnspan 2 -padx {3 5} -pady {4 7} -sticky ns
     grid remove .c
     grid .c -row 0 -column 0
     grid info .c
-} {-in .a -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
-grid_reset 22.3.1
-test grid-22.4 {remove, calling Tk_UnmaintainGeometry} {
+} -cleanup {
+    grid_reset 22.3.1
+} -result {-in .a -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
+test grid-22.4 {remove, calling Tk_UnmaintainGeometry} -body {
     frame .f -bd 2 -relief raised
     place .f -x 10 -y 20 -width 200 -height 100
     frame .f2 -width 50 -height 30 -bg red
@@ -2026,9 +2033,10 @@ test grid-22.4 {remove, calling Tk_UnmaintainGeometry} {
     place .f -x 30
     update
     lappend x [winfo ismapped .f2]
-} {1 0}
-grid_reset 22.4
-test grid-22.5 {remove} {
+} -cleanup {
+    grid_reset 22.4
+} -result {1 0}
+test grid-22.5 {remove} -body {
     frame .a
     button .c
     grid .c -in .a -row 2 -column 2 -rowspan 2 -columnspan 2 -padx {3 5} -pady {4 7} -sticky ns
@@ -2038,11 +2046,12 @@ test grid-22.5 {remove} {
     destroy .a
     grid .c -row 0 -column 0
     grid info .c
-} {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
-grid_reset 22.5
+} -cleanup {
+    grid_reset 22.5
+} -result {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
 
 test grid-23 {grid configure -in leaked from previous container window - bug
-	      6aea69fccbb266b7f0437686379fbe5b55442958} {
+	      6aea69fccbb266b7f0437686379fbe5b55442958} -body {
     frame .f
     frame .g
     pack .f .g
@@ -2057,8 +2066,9 @@ test grid-23 {grid configure -in leaked from previous container window - bug
     pack forget .f
     update
     winfo ismapped .t ; # must return 1
-} 1
-grid_reset 23
+} -cleanup {
+    grid_reset 23
+} -result 1
 
 test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -setup {
     global A
@@ -2174,7 +2184,6 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
     bind . <<NoManagedChild>> {}
     grid_reset 24.8
 } -result 0
-
 
 #
 # CLEANUP
