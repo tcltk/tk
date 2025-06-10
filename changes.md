@@ -39,6 +39,7 @@ to the userbase.
  - [Setting ttk state may change the a variable passed by value](https://core.tcl-lang.org/tk/info/7231bf)
  - [wm iconbitmap does not support icon files with png images on Windows](https://core.tcl-lang.org/tk/info/17b509)
  - [block cursor size on a tab is too large](https://core.tcl-lang.org/tk/info/5d0bc3)
+ - [macOS clipboard managers do not notice clipboard changes done by Tk](https://core.tcl-lang.org/tk/info/e94c8b)
 
 # Incompatibilities
  - [The ActiveCodePage element has been removed from the Windows executable manifest for wish](https://core.tcl-lang.org/tips/doc/trunk/tip/716.md)
