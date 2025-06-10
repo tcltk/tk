@@ -2,9 +2,12 @@
 # ttk::treeview widget tests
 #
 
+# NOTES:
 #
-# [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
-# what it currently does)
+# * [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
+#   what it currently does)
+#
+# * NEED: tests for focus item, selection
 #
 
 #
@@ -1273,8 +1276,6 @@ test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
 #
 
 destroy .tv
-
-### NEED: tests for focus item, selection
 
 ### Misc. tests:
 
