@@ -22,14 +22,33 @@ tcltest::loadTestedCommands
 # LOCAL UTILITY PROCS
 #
 
-proc record {name args} {
-    global log
-    lappend log [format {%s %.6g %.6g} $name {*}$args]
-}
-
 proc getsize w {
     regexp {(^[^+-]*)} [wm geometry $w] foo x
     return $x
+}
+
+# mkPartial --
+#
+# Creates a second listbox for checking things related
+# to partially visible lines.
+#
+proc mkPartial {{w .partial}} {
+    destroy $w
+    toplevel $w
+    wm geometry $w +0+0
+    listbox $w.l -width 30 -height 5
+    pack $w.l -expand 1 -fill both
+    $w.l insert end one two three four five six seven eight nine ten \
+	    eleven twelve thirteen fourteen fifteen
+    update
+    scan [wm geometry $w] "%dx%d" width height
+    wm geometry $w ${width}x[expr $height-3]
+    update
+}
+
+proc record {name args} {
+    global log
+    lappend log [format {%s %.6g %.6g} $name {*}$args]
 }
 
 proc resetGridInfo {} {
@@ -45,23 +64,6 @@ proc resetGridInfo {} {
     wm deiconify .
 }
 
-# Procedure that creates a second listbox for checking things related
-# to partially visible lines.
-
-proc mkPartial {{w .partial}} {
-    destroy $w
-    toplevel $w
-    wm geometry $w +0+0
-    listbox $w.l -width 30 -height 5
-    pack $w.l -expand 1 -fill both
-    $w.l insert end one two three four five six seven eight nine ten \
-	    eleven twelve thirteen fourteen fifteen
-    update
-    scan [wm geometry $w] "%dx%d" width height
-    wm geometry $w ${width}x[expr $height-3]
-    update
-}
-
 #
 # COMMON TEST SETUP
 #
@@ -70,16 +72,15 @@ set fixed {Courier -12}
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
-
 option add *Listbox.borderWidth 2
 option add *Listbox.selectBorderWidth 1
 option add *Listbox.highlightThickness 2
 option add *Listbox.font {Helvetica -12 bold}
 
-# Listbox used in 3.* configuration options tests
 listbox .l
 pack .l
 update
+
 resetGridInfo
 
 #
@@ -369,14 +370,18 @@ test listbox-2.5 {Tk_ListboxCmd procedure} -setup {
     destroy .l
 } -result {.l}
 
-
-# Listbox used in 3.1 -3.115 tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-3.1 - 3.115
+#
 destroy .l
 listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
 	el15 el16 el17
 update
+
 test listbox-3.1 {ListboxWidgetCmd procedure} -body {
     .l
 } -returnCodes error -result {wrong # args: should be ".l option ?arg ...?"}
@@ -1146,13 +1151,18 @@ test listbox-3.126 {ListboxWidgetCmd procedure, "yview" option, partial last lin
     destroy .l
 } -result {0 0.266667}
 
-# Listbox used in 3.127 -3.137 tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-3.127 - 3.137
+#
 destroy .l
 listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
 	el15 el16 el17
 update
+
 test listbox-3.127 {ListboxWidgetCmd procedure, "xview" option} -body {
     .l yview foo
 } -returnCodes error -result {bad listbox index "foo": must be active, anchor, end, @x,y, or an index}
@@ -1250,7 +1260,12 @@ test listbox-4.1 {ConfigureListbox procedure} -constraints {
 } -cleanup {
     deleteWindows
 } -result {25x15 185x263}
+
+#
+# COMMON TEST CLEANUP
+#
 resetGridInfo
+
 test listbox-4.2 {ConfigureListbox procedure} -setup {
     deleteWindows
     destroy .l
@@ -1373,7 +1388,11 @@ test listbox-4.7 {ConfigureListbox procedure} -setup {
     wm geom . {}
 } -result {30x20 26x15 26x15}
 
+#
+# COMMON TEST CLEANUP
+#
 resetGridInfo
+
 test listbox-4.8 {ConfigureListbox procedure} -setup {
     destroy .l2
 } -body {
@@ -1573,12 +1592,15 @@ test listbox-5.6 {ListboxComputeGeometry procedure} -setup {
     destroy .l
 } -result {}
 
-
-# Listbox used in 6.*, 7.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-6.* and listbox-7.*
 destroy .l
 listbox .l -height 2 -xscrollcommand "record x" -yscrollcommand "record y"
 pack .l
 update
+
 test listbox-6.1 {InsertEls procedure} -body {
     .l delete 0 end
     .l insert end a b c d
@@ -1892,7 +1914,12 @@ test listbox-8.1 {ListboxEventProc procedure} -constraints {
 } -cleanup {
     destroy .l
 } -result {20x10 150x178 0 {}}
+
+#
+# COMMON TEST CLEANUP
+#
 resetGridInfo
+
 test listbox-8.2 {ListboxEventProc procedure} -constraints {
 	fonts
 } -setup {
@@ -1950,9 +1977,6 @@ test listbox-9.2 {ListboxCmdDeletedProc procedure, disabling -setgrid} -constrai
     destroy .top
 } -result {20x10 150x178}
 
-
-# Listbox used in 10.* tests
-destroy .l
 test listbox-10.1 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
@@ -2248,13 +2272,17 @@ test listbox-11.6 {ChangeListboxView procedure, partial last line} -body {
     destroy .l
 } -result 11
 
-
-# Listbox used in 12.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-12.*
+#
 destroy .l
 listbox .l -font $fixed -xscrollcommand "record x" -width 10
 .l insert 0 0123456789a123456789b123456789c123456789d123456789e123456789f123456789g123456789h123456789i123456789
 pack .l
 update
+
 test listbox-12.1 {ChangeListboxOffset procedure} -constraints {
 	fonts
 } -body {
@@ -2283,8 +2311,11 @@ test listbox-12.3 {ChangeListboxOffset procedure} -constraints {
     list [format {%.6g %.6g} {*}[.l xview]] $log
 } -result {{0.1 0.2} {}}
 
-
-# Listbox used in 13.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-13.*
+#
 destroy .l
 listbox .l -font $fixed -width 10 -height 5
 pack .l
@@ -2293,6 +2324,7 @@ pack .l
 update
 set width [expr [lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]]
 set height [expr [lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]]
+
 test listbox-13.1 {ListboxScanTo procedure} -constraints {
 	fonts
 } -body {
@@ -2335,13 +2367,19 @@ test listbox-14.1 {NearestListboxElement procedure, partial last line} -body {
     mkPartial
     .partial.l nearest [winfo height .partial.l]
 } -result 4
-# Listbox used in 14.* tests
+
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-14.*
+#
 destroy .l
 listbox .l -font $fixed -width 20 -height 10
 .l insert 0 a b c d e f g h i j k l m n o p q r s t
 .l yview 4
 pack .l
 update
+
 test listbox-14.2 {NearestListboxElement procedure} -constraints {
 	fonts
 } -body {
@@ -2358,12 +2396,16 @@ test listbox-14.4 {NearestListboxElement procedure} -constraints {
     .l index @50,200
 } -result 13
 
-
-# Listbox used in 15.* 16.* and 17.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-15.* 16.* and 17.*
+#
 destroy .l
 listbox .l -font $fixed -width 20 -height 10
 pack .l
 update
+
 test listbox-15.1 {ListboxSelect procedure} -body {
     .l delete 0 end
     .l insert 0 a b c d e f g h i j k l m n o p
@@ -2504,12 +2546,16 @@ test listbox-17.2 {ListboxLostSelection procedure} -setup {
     destroy .e
 } -result {0 1 2 3 4}
 
-
-# Listbox used in 18.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-18.*
+#
 destroy .l
 listbox .l -font $fixed -width 10 -height 5
 pack .l
 update
+
 test listbox-18.1 {ListboxUpdateVScrollbar procedure} -body {
     .l configure -yscrollcommand "record y"
     set log {}
@@ -2545,12 +2591,16 @@ test listbox-18.3 {ListboxUpdateVScrollbar procedure} -body {
 "gorp 0.0 1.0"
     (vertical scrolling command executed by listbox)}}
 
-
-# Listbox used in 19.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-19.*
+#
 destroy .l
 listbox .l -font $fixed -width 10 -height 5
 pack .l
 update
+
 test listbox-19.1 {ListboxUpdateVScrollbar procedure} -constraints {
 	fonts
 } -body {
@@ -2894,10 +2944,15 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} -setup {
     destroy .l
 } -result {red orange yellow green blue white violet}
 
-# Listbox used in 23.6 -23.17 tests
+#
+# COMMON TEST SETUP
+#
+# For tests listbox-23.6 - 23.17
+#
 destroy .l
 listbox .l
 .l insert end a b c d
+
 test listbox-23.6 {configuration options} -body {
     .l itemconfigure 0 -background #ff0000
     list [lindex [.l itemconfigure 0 -background] 4] [.l itemcget 0 -background]

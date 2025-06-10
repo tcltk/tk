@@ -336,8 +336,6 @@ test scale-1.70 {configuration options} -body {
 #
 # COMMON TEST CLEANUP
 #
-# For tests 1.*
-#
 destroy .s
 
 test scale-2.1 {Tk_ScaleCmd procedure} -body {
@@ -510,8 +508,6 @@ test scale-3.31 {ScaleWidgetCmd procedure} -body {
 
 #
 # COMMON TEST CLEANUP
-#
-# For tests from scale-3.1
 #
 destroy .s
 

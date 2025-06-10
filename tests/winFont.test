@@ -1,22 +1,35 @@
 # This file is a Tcl script to test out the procedures in tkWinFont.c.
 # It is organized in the standard fashion for Tcl tests.
 #
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# All rights reserved.
+
+# NOTE:
+#
 # Many of these tests are visually oriented and cannot be checked
 # programmatically (such as "does an underlined font appear to be
 # underlined?"); these tests attempt to exercise the code in question,
 # but there are no results that can be checked.
 #
-# Copyright © 1996-1997 Sun Microsystems, Inc.
-# Copyright © 1998-1999 Scriptics Corporation.
-# All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import geometry
+
+#
+# TESTS
+#
 
 test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
     win
@@ -110,6 +123,10 @@ test winfont-4.1 {TkpGetFontFamilies procedure} -constraints win -body {
     font families
     set x {}
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
 
 destroy .t
 toplevel .t

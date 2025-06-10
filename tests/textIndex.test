@@ -699,13 +699,6 @@ test textIndex-15.11 {StartEnd} {
 test textIndex-15.12 {StartEnd} {
     getword 3.4
 } 12345
-
-#
-# COMMON TEST SETUP
-#
-
-.t tag add x 2.8 2.11
-
 test textIndex-15.13 {StartEnd} {
     list [catch {.t index {2.2 worde}} msg] $msg
 } {0 2.13}

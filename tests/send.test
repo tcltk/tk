@@ -405,7 +405,6 @@ test send-9.3 {Tk_GetInterpNames procedure} {secureserver testsend} {
 #
 # COMMON TEST SETUP
 #
-
 catch {testsend prop root InterpRegistry "$commId tktest\n$id dummy\n"}
 
 test send-10.1 {SendEventProc procedure, bogus comm property} {secureserver testsend} {
@@ -559,20 +558,23 @@ test send-11.2 {AppendPropCarefully and AppendErrorProc procedures} {secureserve
 #
 # COMMON TEST SETUP
 #
-
 winfo interps
 tk appname tktest
-catch {destroy .f}
-frame .f
-set id [string range [winfo id .f] 2 end]
 
-test send-12.1 {TimeoutProc procedure} {secureserver testsend} {
+test send-12.1 {TimeoutProc procedure} -constraints {secureserver testsend} -setup {
+    catch {destroy .f}
+    frame .f
+    set id [string range [winfo id .f] 2 end]
+} -body {
     testsend prop root InterpRegistry "$id dummy\n"
     list [catch {send dummy foo} msg] $msg
-} {1 {target application died or uses a Tk version before 4.0}}
+} -cleanup {
+    unset id
+    destroy .f
+} -result {1 {target application died or uses a Tk version before 4.0}}
 
 #
-# COMMON TEST SETUP
+# COMMON TEST CLEANUP
 #
 
 catch {testsend prop root InterpRegistry ""}

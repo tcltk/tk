@@ -54,6 +54,10 @@ test tk-2.3 {tk command: appname} -constraints unix -body {
 test tk-2.4 {tk command: appname} -body {
     tk appname [tk appname]
 } -result [tk appname]
+
+#
+# COMMON TEST CLEANUP
+#
 tk appname $appname
 
 #
@@ -108,10 +112,14 @@ test tk-3.11 {tk command: scaling: heightmm} -body {
 } -result 0
 
 #
+# COMMON TEST CLEANUP
+#
+tk scaling $scaling
+
+#
 # COMMON TEST SETUP
 #
 
-tk scaling $scaling
 # Value stored to restore default settings after 4.* tests
 set useim [tk useinputmethods]
 

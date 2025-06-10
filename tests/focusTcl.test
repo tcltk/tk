@@ -280,6 +280,9 @@ test focusTcl-3.9 {tk_focusPrev procedure, basic tree traversal} -body {
     cleanup1 .
 } -result {.}
 
+#
+# COMMON TEST SETUP
+#
 
 deleteWindows
 setup1 .
@@ -288,6 +291,7 @@ wm geom .t +0+0
 toplevel .t2
 wm geom .t2 -0+0
 raise .t .a
+
 test focusTcl-4.1 {tk_focusPrev procedure, toplevels} -setup {
     deleteWindows
 } -body {
@@ -490,7 +494,6 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
     bind Frame <Key> {}
 } -result {.a .b}
 
-
 #
 # CLEANUP
 #
@@ -499,6 +502,3 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
 option clear
 cleanupTests
 return
-
-
-

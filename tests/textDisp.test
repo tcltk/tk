@@ -1011,7 +1011,7 @@ test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap 
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 16] [yline 2] $fixedWidth $fixedHeight]]
 
-test textDisp-5.1 {DisplayDLine, handling of spacing} {
+test textDisp-5.1 {DisplayDLine, handling of spacing} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
@@ -1028,15 +1028,12 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {
     update
     list [winfo geometry .t.f1] [winfo geometry .t.f2] \
 	    [winfo geometry .t.f3] [winfo geometry .t.f4]
-} [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
+} -cleanup {
+    .t tag delete spacing
+} -result [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
 	10x4+[expr {[xchar 6]+10}]+[expr {[yline 1]+8+($fixedHeight-4)/2}] \
 	10x4+[xchar 1]+[expr {[yline 2]+8+2+8+($fixedHeight-4)}] \
 	10x4+[expr {[xchar 9]+10}]+[expr {[yline 2]+8+2+8+($fixedAscent-4)}]]
-
-#
-# COMMON TEST CLEANUP
-#
-.t tag delete spacing
 
 # Although the following test produces a useful result, its main
 # effect is to produce a core dump if Tk doesn't handle display
@@ -2169,26 +2166,18 @@ test textDisp-14.1 {TkTextXviewCmd procedure} {
     .t xview
 } [list 0.5 [expr {6./7.}]]
 
-#
-# COMMON TEST SETUP
-#
-
-.t configure -wrap char
-
-test textDisp-14.2 {TkTextXviewCmd procedure} {
+test textDisp-14.2 {TkTextXviewCmd procedure} -setup {
+    .t configure -wrap char
+} -body {
     .t delete 1.0 end
     update
     .t insert end xxxxxxxxx\n
     .t insert end "xxxxx\n"
     .t insert end "xxxx"
     .t xview
-} {0.0 1.0}
-
-#
-# COMMON TEST SETUP
-#
-
-.t configure -wrap none
+} -cleanup {
+    .t configure -wrap none
+} -result {0.0 1.0}
 
 test textDisp-14.3 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
@@ -3219,9 +3208,8 @@ test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
 } {16.23 16.44 16.39 16.57 16.39 16.60 16.77 16.79}
 
 #
-# COMMON TEST SETUP
+# COMMON TEST CLEANUP
 #
-
 .t tag remove elide 1.0 end
 
 test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
@@ -3233,12 +3221,6 @@ test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
       [.t index "11.5 +1 disp lines"] \
       [.t index "11.5 +0 disp lines"]
 } {10.5 12.5 12.5 10.5 10.5 12.5 11.5}
-
-#
-# COMMON TEST SETUP
-#
-
-.t tag remove elide 1.0 end
 
 test textDisp-19.12 {GetYView procedure, partially visible last line} {
     catch {destroy .top}
@@ -3460,25 +3442,17 @@ test textDisp-20.4 {FindDLine} {
 	[list [bo] [yline 10] [xw 19] $fixedHeight $fixedAscent] \
 	{}]
 
-#
-# COMMON TEST SETUP
-#
-
-.t config -wrap none
-
-test textDisp-20.5 {FindDLine} {
+test textDisp-20.5 {FindDLine} -setup {
+    .t config -wrap none
+} -body {
     .t yview 100.0
     .t yview 48.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]
-} [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+} -cleanup {
+    .t config -wrap word
+} -result [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
-
-#
-# COMMON TEST SETUP
-#
-
-.t config -wrap word
 
 test textDisp-21.1 {TkTextPixelIndex} {
     .t yview 48.0
@@ -3651,7 +3625,7 @@ test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 19] [yline 2] $fixedWidth $fixedHeight] \
 	{}]
-test textDisp-22.9 {TkTextCharBbox, handling of spacing} {
+test textDisp-22.9 {TkTextCharBbox, handling of spacing} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
@@ -3668,19 +3642,14 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} {
     update
     list [.t bbox .t.f1] [.t bbox .t.f2] [.t bbox .t.f3] [.t bbox .t.f4] \
 	    [.t bbox 1.1] [.t bbox 2.9]
-} [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
+} -cleanup {
+    .t tag delete spacing
+} -result [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
 	[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
 	[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
 	[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
 	[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
 	[list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
-
-#
-# COMMON TEST SETUP
-#
-
-.t tag delete spacing
-
 test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3742,25 +3711,18 @@ test textDisp-23.1 {TkTextDLineInfo} {
 	[list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent] \
 	{}]
 
-#
-# COMMON TEST SETUP
-#
-
 .t config -bd 4
 
-test textDisp-23.2 {TkTextDLineInfo} {
+test textDisp-23.2 {TkTextDLineInfo} -setup {
+    .t config -bd 4
+} -body {
     .t config -wrap word
     update
     .t yview 48.0
     .t dlineinfo 50.40
-} [list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent]
-
-#
-# COMMON TEST SETUP
-#
-
-.t config -bd 0
-
+} -cleanup {
+    .t config -bd 0
+} -result [list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent]
 test textDisp-23.3 {TkTextDLineInfo} {
     .t config -wrap none
     update
@@ -3819,7 +3781,7 @@ test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {
 
 .t xview moveto 0
 
-test textDisp-23.7 {TkTextDLineInfo, centering} {
+test textDisp-23.7 {TkTextDLineInfo, centering} -body {
     .t config -wrap word
     .t delete 1.0 end
     .t insert end "First line\n"
@@ -3830,14 +3792,11 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {
     .t tag add x 1.0
     .t tag add y 3.0
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
-} [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
+} -cleanup {
+    .t tag delete x y
+} -result [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
 	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
-
-#
-# COMMON TEST CLEANUP
-#
-.t tag delete x y
 
 test textDisp-24.1 {TkTextCharLayoutProc} {
     .t configure -wrap char
@@ -5159,12 +5118,6 @@ test textDisp-33.4 {one line longer than fits in the widget} {
     set idx [.tt index "1.0 + 1 displaylines"]
     set result
 } {ok}
-
-#
-# COMMON TEST CLEANUP
-#
-destroy .tt
-
 test textDisp-33.5 {bold or italic fonts} win {
     destroy .tt
     pack [text .tt -wrap char -font {{MS Sans Serif} 15}]

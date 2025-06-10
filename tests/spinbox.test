@@ -5,6 +5,15 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE:
+#
+# Collected comments about lacks from the test
+# XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
+# and SpinboxTextVarProc.
+# No tests for DisplaySpinbox.
+# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
+# No tests for EventuallyRedraw
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -3902,13 +3911,6 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 } -cleanup {
     destroy .s
 } -result {{A sample } text}
-
-# Collected comments about lacks from the test
-# XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
-# and SpinboxTextVarProc.
-# No tests for DisplaySpinbox.
-# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
-# No tests for EventuallyRedraw
 
 #
 # CLEANUP

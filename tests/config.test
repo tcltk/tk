@@ -35,17 +35,17 @@ proc killTables {} {
 }
 
 #
-# TEST INITIALIZATION
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
 #
 option clear
 deleteWindows
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
-#
-# TESTS
-#
 
 test config-1.1 {Tk_CreateOptionTable - reference counts} -constraints {
 	testobjconfig
