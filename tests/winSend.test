@@ -22,10 +22,15 @@ tcltest::loadTestedCommands
 testutils import child
 
 #
-# COMMON TEST SETUP + LOCAL TEST CONSTRAINTS
+# COMMON TEST SETUP
 #
 
 set currentInterps [winfo interps]
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 if {
     [testConstraint win] &&
     [llength [info commands send]] &&

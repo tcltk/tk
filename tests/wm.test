@@ -1,14 +1,19 @@
 # This file is a Tcl script to test out Tk's interactions with the window
-# manager, including the "wm" command.
+# manager, including the "wm" command. It tests window manager interactions
+# that work across platforms. Window manager tests that only work on a specific
+# platform should be placed in unixWm.test or winWm.test.
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-# This file tests window manager interactions that work across platforms.
-# Window manager tests that only work on a specific platform should be placed
-# in unixWm.test or winWm.test.
+# NOTE:
+#
+# Add tests for delivery of virtual events to the WM. We could check to see
+# if the window was raised after a button click for example. This sort of
+# testing may not be possible.
+#
 
 #
 # TESTFILE INITIALIZATION
@@ -26,13 +31,6 @@ tcltest::loadTestedCommands
 # LOCAL UTILITY PROCS
 #
 
-proc stdWindow {} {
-    destroy .t
-    toplevel .t -width 100 -height 50
-    wm geom .t +0+0
-    update
-}
-
 # [raise] and [lower] may return before the window manager has completed the
 # operation. The raiseDelay procedure idles for a while to give the operation
 # a chance to complete.
@@ -40,6 +38,13 @@ proc stdWindow {} {
 proc raiseDelay {} {
     after 250;
     update idletasks
+    update
+}
+
+proc stdWindow {} {
+    destroy .t
+    toplevel .t -width 100 -height 50
+    wm geom .t +0+0
     update
 }
 
@@ -235,6 +240,9 @@ test wm-client-2.1 {setting and reading values} -setup {
     lappend result [wm client .t]
 } -result [list {} Miffo {}]
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test wm-attributes-1.3.0 {default -fullscreen value} -constraints win -body {
@@ -515,9 +523,10 @@ test wm-attributes-1.5.5 {fullscreen stackorder} -setup {
     deleteWindows
 } -result {{. .a .b .c} {. .a .b .c} {. .a .b .c}}
 
-
+#
+# COMMON TEST SETUP
+#
 stdWindow
-
 
 ### wm colormapwindows ###
 test wm-colormapwindows-1.1 {usage} -returnCodes error -body {
@@ -624,7 +633,11 @@ test wm-deiconify-1.6 {usage} -constraints !win -setup {
     destroy .t.f .embed
 } -result {can't deiconify .embed: it is an embedded window}
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
+
 test wm-deiconify-2.1 {a window that has never been mapped\
 	should not be mapped by a call to deiconify} -body {
     toplevel .t
@@ -682,6 +695,9 @@ test wm-focusmodel-1.3 {usage} -returnCodes error -body {
     wm focusmodel . bogus
 } -result {bad argument "bogus": must be active or passive}
 
+#
+# COMMON TEST SETUP
+#
 stdWindow
 
 test wm-focusmodel-2.1 {setting and reading values} -setup {
@@ -907,7 +923,11 @@ test wm-iconify-1.2 {usage} -returnCodes error -body {
     wm iconify .t _
 } -result {wrong # args: should be "wm iconify window"}
 
+#
+# COMMON TEST SETUP
+#
 destroy .t2
+
 test wm-iconify-2.1 {Misc errors} -body {
     toplevel .t2
     wm overrideredirect .t2 1
@@ -1142,7 +1162,11 @@ test wm-maxsize-1.7 {maxsize must be <= screen size} -setup {
     destroy .t
 } -result 1
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
+
 test wm-maxsize-2.1 {setting the maxsize to a value smaller\
 	than the current size will resize a toplevel} -body {
     toplevel .t -width 300 -height 300
@@ -1294,6 +1318,9 @@ test wm-minsize-2.5 {Use min size if window size is not explicitly set\
     destroy .t
 } -result {{250 250} {300 300}}
 
+#
+# COMMON TEST SETUP
+#
 stdWindow
 
 ### wm overrideredirect ###
@@ -1430,6 +1457,9 @@ test wm-sizefrom-2.1 {setting and reading values} {
     lappend result [wm sizefrom .t]
 } {{} user program {}}
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 
 ### wm stackorder ###
@@ -1492,6 +1522,10 @@ test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} -body 
 } -cleanup {
     destroy .t
 } -returnCodes error -result {window ".t" isn't mapped}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
@@ -1571,6 +1605,9 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
     wm stackorder .
 } -result {.}
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuartz} -body {
@@ -1644,6 +1681,10 @@ test wm-stackorder-3.8 {toplevel mapped in idle callback} -body {
 } -cleanup {
     destroy .t1
 } -result {.}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
@@ -1677,6 +1718,10 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
 } -cleanup {
     destroy .t
 } -result 1
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
@@ -1739,6 +1784,9 @@ test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
     deleteWindows
 } -result {. .real}
 
+#
+# COMMON TEST SETUP
+#
 stdWindow
 
 ### wm title ###
@@ -1774,7 +1822,12 @@ test wm-transient-1.3 {usage} -returnCodes error -body {
     catch {destroy .t} ; toplevel .t
     wm transient foo .t
 } -result {bad window path name "foo"}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
+
 test wm-transient-1.4 {usage} -returnCodes error -body {
     toplevel .top
     toplevel .subject
@@ -2120,7 +2173,11 @@ test wm-state-1.2 {usage} -returnCodes error -body {
     wm state . _ _
 } -result {wrong # args: should be "wm state window ?state?"}
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
+
 test wm-state-2.1 {initial state} -body {
     toplevel .t
     wm state .t
@@ -2273,7 +2330,11 @@ test wm-withdraw-1.2 {usage} -returnCodes error -body {
     wm withdraw . _
 } -result {wrong # args: should be "wm withdraw window"}
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
+
 test wm-withdraw-2.1 {Misc errors} -body {
     toplevel .t
     toplevel .t2
@@ -2502,13 +2563,9 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     unset res
 } -result {pack {} wm {}}
 
-# FIXME:
-
-# Test delivery of virtual events to the WM. We could check to see if the
-# window was raised after a button click for example. This sort of testing may
-# not be possible.
-
-##############################################################################
+#
+# CLEANUP
+#
 
 deleteWindows
 cleanupTests

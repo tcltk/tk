@@ -325,8 +325,6 @@ test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints 
 #
 # COMMON TEST CLEANUP
 #
-# For tests 1.* - 8.*
-#
 destroy .t
 
 test place-9.1 {PlaceObjCmd} -body {

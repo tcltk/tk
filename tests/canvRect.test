@@ -26,8 +26,17 @@ canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
 update
 
-# Rectangle used in canvRect-1.* tests
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvRect-1.*
+#
 .c create rectangle 20 20 80 80 -tag test
+
 test canvRect-1.1 {configuration options: good value for -fill} -body {
     .c itemconfigure test -fill #ff0000
     list [.c itemcget test -fill] [lindex [.c itemconfigure test -fill] 4]
@@ -64,8 +73,11 @@ test canvRect-1.9 {configuration options: good value for -width} -body {
 test canvRect-1.10 {configuration options: bad value for -width} -body {
     .c itemconfigure test -width abc
 } -returnCodes error -result {expected screen distance but got "abc"}
-.c delete withtag all
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete withtag all
 
 test canvRect-2.1 {CreateRectOval procedure} -body {
     .c create rect
@@ -96,8 +108,11 @@ test canvRect-2.7 {CreateRectOval procedure} -body {
 test canvRect-2.8 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 4 -gorp foo
 } -returnCodes error -result {unknown option "-gorp"}
-.c delete withtag all
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete withtag all
 
 test canvRect-3.1 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
@@ -179,18 +194,13 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # On Windows the bbox of rectangle items is 1 pixel larger at each border due
 # to the "bloat" implemented in ComputeRectOvalBbox() in case -outline is {}
-if {[tk windowingsystem] eq "win32"} {
-    set result_5_1 {9 4 21 16}
-} else {
-    set result_5_1 {10 5 20 15}
-}
 test canvRect-5.1 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
     .c bbox x
 } -cleanup {
     .c delete withtag all
-} -result $result_5_1
+} -result [expr {[tk windowingsystem] eq "win32"?{9 4 21 16}:{10 5 20 15}}]
 test canvRect-5.2 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
@@ -479,7 +489,3 @@ end
 
 cleanupTests
 return
-
-
-
-

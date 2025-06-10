@@ -1268,14 +1268,9 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-if {[tk windowingsystem] eq "aqua"} {
-    set result_35_1 {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
-} else {
-    set result_35_1 {1 {bad argument "1": must be iconic, normal, or withdrawn}}
-}
 test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
-} $result_35_1
+} {1 {bad argument "1": must be iconic, normal, or withdrawn}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}

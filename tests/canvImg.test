@@ -399,11 +399,15 @@ test canvImg-7.2 {DisplayImage procedure, no image} -body {
     update
 } -result {}
 
-
-# image used in 8.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvImg-8.*
+#
 if {[testConstraint testImageType]} {
     image create test foo
 }
+
 test canvImg-8.1 {ImageToArea procedure} -constraints testImageType -setup {
 	.c create image 50 100 -image foo -tags image -anchor nw
 	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
@@ -566,6 +570,10 @@ test canvImg-8.18 {ImageToArea procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 } -result {rect}
+
+#
+# COMMON TEST CLEANUP
+#
 .c delete all
 
 test canvImg-8.19 {ImageToArea procedure} -constraints testImageType -body {
@@ -724,10 +732,13 @@ test canvImg-8.44 {ImageToArea procedure} -constraints testImageType -body {
 } -cleanup {
 	.c delete all
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testImageType]} {
 	image delete foo
 }
-
 
 test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
     .c delete all

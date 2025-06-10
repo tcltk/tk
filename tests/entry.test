@@ -6,6 +6,17 @@
 # All rights reserved.
 
 #
+# NOTES:
+#
+# Gathered comments about lacks
+# XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
+# and EntryTextVarProc.
+# No tests for DisplayEntry.
+# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
+# No tests for EventuallyRedraw
+#
+
+#
 # TESTFILE INITIALIZATION
 #
 
@@ -3608,14 +3619,6 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
 } -cleanup {
     destroy .e
 } -result {{} {}}
-
-
-# Gathered comments about lacks
-# XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
-# and EntryTextVarProc.
-# No tests for DisplayEntry.
-# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
-# No tests for EventuallyRedraw
 
 #
 # CLEANUP

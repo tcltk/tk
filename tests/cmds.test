@@ -17,6 +17,9 @@
 #   provided by the package tcltest)
 tcltest::loadTestedCommands
 
+#
+# COMMON TEST SETUP
+#
 update
 
 #
