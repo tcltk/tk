@@ -428,7 +428,6 @@ Tk_ClipboardObjCmd(
     Atom selection;
     static const char *const optionStrings[] = {
 	"append", "clear", "get", "transient", NULL };
-    clipboardOption options;  /* see tkSelect.h */
     int index, i, result;
 
     if (objc < 2) {
