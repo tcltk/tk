@@ -15,6 +15,12 @@
 tcltest::loadTestedCommands
 
 #
+# LOCAL UTILITY PROCS
+#
+
+proc inoperative {args} {}
+
+#
 # TESTS
 #
 
@@ -29,7 +35,6 @@ test notebook-1.1 "Cannot add ancestor" -body {
     .nb add .
 } -returnCodes error -result "*" -match glob
 
-proc inoperative {args} {}
 
 inoperative test notebook-1.2 "Cannot add siblings" -body {
     # This is legal now
@@ -357,9 +362,13 @@ test notebook-6.12 "Hide and re-add a tab" -setup {
 } -result [list 1 normal 2 hidden 2 normal]
 
 #
-# Insert:
+# COMMON TEST CLEANUP
 #
 unset nb
+
+#
+# Insert:
+#
 test notebook-7.0 "insert - setup" -body {
     pack [ttk::notebook .nb]
     for {set i 0} {$i < 5} {incr i} {
@@ -591,5 +600,9 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
 } -cleanup {
     destroy .n
 } -result {Managed window index "3" out of bounds} -returnCodes error
+
+#
+# CLEANUP
+#
 
 tcltest::cleanupTests

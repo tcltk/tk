@@ -350,6 +350,8 @@ test ttk-4.4 "Bad resource specifications" -body {
 #
 # COMMON TEST SETUP
 #
+# For tests ttk-8.*
+#
 
 #
 # -compound tests:
