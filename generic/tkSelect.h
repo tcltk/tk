@@ -123,6 +123,16 @@ typedef struct TkClipboardTarget {
 } TkClipboardTarget;
 
 /*
+ * Options enum for the TkClipboardObjCmd.  These are defined here
+ * so they can be used as an argument to TkSelUpdateClipboard.
+ */
+
+typedef enum {
+    CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET
+} clipboardOption;
+
+
+/*
  * It is possible for a Tk_SelectionProc to delete the handler that it
  * represents. If this happens, the code that is retrieving the selection
  * needs to know about it so it doesn't use the now-defunct handler structure.
@@ -160,8 +170,7 @@ MODULE_SCOPE Tcl_Size TkSelDefaultSelection(TkSelectionInfo *infoPtr,
 			    Atom target, char *buffer, Tcl_Size maxBytes,
 			    Atom *typePtr);
 #ifndef TkSelUpdateClipboard
-MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,
-			    TkClipboardTarget *targetPtr);
+MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option);
 #endif
 
 #endif /* _TKSELECT */
