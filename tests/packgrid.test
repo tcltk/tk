@@ -291,4 +291,3 @@ test packgrid-4.2 {content stolen after container destruction - bug [aa7679685e]
 #
 
 cleanupTests
-return

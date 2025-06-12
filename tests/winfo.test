@@ -473,7 +473,6 @@ test winfo-14.4 {mapped at idle time} -setup {
 deleteWindows
 testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

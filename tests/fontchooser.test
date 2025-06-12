@@ -181,7 +181,6 @@ test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} 
 unset applyFontCmd
 testutils forget dialog
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

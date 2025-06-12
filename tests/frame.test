@@ -1795,7 +1795,6 @@ apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
 }
 testutils forget colors
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

@@ -1369,7 +1369,6 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
 imageCleanup
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

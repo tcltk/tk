@@ -212,4 +212,3 @@ test border-4.7 {Tk_GetReliefFromObj - error} -body {
 #
 
 cleanupTests
-return

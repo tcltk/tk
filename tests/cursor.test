@@ -857,4 +857,3 @@ test cursor-7.9 {check Windows cursor wait} -constraints win -setup {
 #
 
 cleanupTests
-return

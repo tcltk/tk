@@ -1282,4 +1282,3 @@ test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
 
 deleteWindows
 cleanupTests
-return

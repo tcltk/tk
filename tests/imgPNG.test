@@ -1191,7 +1191,6 @@ namespace delete png
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

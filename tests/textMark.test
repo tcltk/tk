@@ -326,7 +326,6 @@ test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a
 destroy .pt
 destroy .t
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

@@ -838,4 +838,3 @@ cleanupTests
 if {[tk windowingsystem] eq "aqua"} {
     interp delete childInterp
 }
-return

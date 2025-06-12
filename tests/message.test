@@ -523,4 +523,3 @@ test message-4.2 {Bug [5d991b822e]} {
 #
 
 cleanupTests
-return

@@ -374,7 +374,6 @@ test clipboard-7.20 {Tk_ClipboardCmd procedure} -setup {
 
 testutils forget child
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

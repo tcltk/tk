@@ -1204,4 +1204,3 @@ test safePrimarySelection-6.10 {IMPORTANT, safe interpreter, ttk::spinbox spun/s
 namespace delete ::_test_tmp
 testutils forget child
 cleanupTests
-return

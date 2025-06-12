@@ -538,7 +538,6 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 deleteWindows
 testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

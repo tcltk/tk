@@ -270,7 +270,6 @@ test safe-7.1 {canvas printing} -body {
 set ::auto_path $saveAutoPath
 unset hidden_cmds
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

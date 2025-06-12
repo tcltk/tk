@@ -3631,5 +3631,4 @@ foreach i {1 2 3} {
 unset i
 testutils forget entry scroll
 cleanupTests
-return
 

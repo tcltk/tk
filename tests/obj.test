@@ -37,4 +37,3 @@ test obj-4.1 {SetPixelFromAny} -body {
 #
 
 cleanupTests
-return

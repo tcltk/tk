@@ -1677,4 +1677,3 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
 option clear
 testutils forget text
 cleanupTests
-return
