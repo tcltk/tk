@@ -2689,7 +2689,6 @@ test button-1.271 {configuration options: fallback to default} -setup {
     destroy .c
 } -result {0 0 0 0 0}
 
-# ex-tests 3.*
 test button-2.1 {ButtonCreate - not enough arguments} -body {
     button
 } -returnCodes error -result {wrong # args: should be "button pathName ?-option value ...?"}
@@ -2732,7 +2731,7 @@ test button-2.7 {ButtonCreate - bad window name} -body {
 } -cleanup {
     destroy foo
 } -returnCodes error -result {bad window path name "foo"}
-######### test ex 3.8
+
 test button-2.8 {ButtonCreate procedure - error in default option value} -body {
     option add *funny.background bogus
     button .funny
@@ -2763,7 +2762,6 @@ test button-2.11 {ButtonCreate procedure - option error} -body {
 }  -cleanup {
     destroy .x
 } -result 0
-######### ex 3.10
 test button-2.12 {ButtonCreate procedure - return value} -body {
     set x [button .abcd]
     return $x
@@ -2771,7 +2769,6 @@ test button-2.12 {ButtonCreate procedure - return value} -body {
     destroy .abcd
 } -result {.abcd}
 
-######### ex 4.*
 test button-3.1 {ButtonWidgetCmd - too few arguments} -body {
     button .b
     .b
@@ -2849,7 +2846,6 @@ test button-3.12 {ButtonWidgetCmd procedure, "cget" option} -body {
     destroy .r
 } -returnCodes error -result {unknown option "-onvalue"}
 
-# ex 4.6
 test button-3.13 {ButtonWidgetCmd procedure, "configure" option} -body {
     button .b -highlightthickness 3
     lindex [.b configure -highlightthickness] 4
@@ -3111,7 +3107,6 @@ test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
 *
 ".r select"} red}
 
-# ex 4.43
 test button-3.46 {ButtonWidgetCmd procedure, "toggle" option} -body {
     label .l
     .l toggle
@@ -3260,7 +3255,7 @@ test button-5.3 {ConfigureButton - textvariable trace} -body {
 } -cleanup {
     destroy .b
 } -result {From-y}
-test button-5.4 {ConfigureButton - variable trace} -body {  ;# ex 6.2a
+test button-5.4 {ConfigureButton - variable trace} -body {
     checkbutton .c -variable x
     set x 1
     set y 1
