@@ -196,9 +196,14 @@ test option-7.6 {basic option retrieval} -body {
     option get .op2.op5 z Color2
 } -result purple
 
+#
+# COMMON TEST SETUP
+#
+
 # Now try similar tests to above, except jump around non-hierarchically
 # between windows to make sure that the option stacks are pushed and
 # popped correctly.
+option get . foo Foo
 
 test option-8.1 {stack pushing/popping} -body {
     option get .op2.op5 x Color1
