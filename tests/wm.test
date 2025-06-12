@@ -8,13 +8,6 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE:
-#
-# Add tests for delivery of virtual events to the WM. We could check to see
-# if the window was raised after a button click for example. This sort of
-# testing may not be possible.
-#
-
 #
 # TESTFILE INITIALIZATION
 #
