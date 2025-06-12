@@ -373,4 +373,3 @@ test unixSelect-1.19 {Automatic UTF8_STRING support for selection handle} -const
 
 testutils forget child select
 cleanupTests
-return

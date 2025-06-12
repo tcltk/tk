@@ -483,4 +483,3 @@ test option-16.2 {ticket 766ef52f3} -body {
 
 deleteWindows
 cleanupTests
-return

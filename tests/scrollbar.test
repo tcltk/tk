@@ -822,4 +822,3 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
 catch {destroy .s}
 catch {destroy .t}
 cleanupTests
-return

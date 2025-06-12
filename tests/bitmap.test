@@ -123,4 +123,3 @@ test bitmap-4.1 {FreeBitmapObjProc} -constraints {
 #
 
 cleanupTests
-return

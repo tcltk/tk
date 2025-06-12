@@ -819,7 +819,6 @@ imageFinish
 
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

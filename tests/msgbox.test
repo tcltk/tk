@@ -432,4 +432,3 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
 
 testutils forget dialog
 cleanupTests
-return

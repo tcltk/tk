@@ -576,7 +576,6 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constr
 
 destroy .t
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

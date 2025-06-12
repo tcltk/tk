@@ -550,4 +550,3 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
 #
 
 cleanupTests
-return

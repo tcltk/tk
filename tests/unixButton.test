@@ -279,7 +279,6 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 imageFinish
 testutils forget button image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

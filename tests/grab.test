@@ -223,4 +223,3 @@ test grab-6.1 {local grab on child window} -constraints {
 #
 
 cleanupTests
-return

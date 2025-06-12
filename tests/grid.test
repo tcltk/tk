@@ -2190,7 +2190,6 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
 #
 
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

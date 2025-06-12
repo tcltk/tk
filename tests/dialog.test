@@ -76,4 +76,3 @@ test dialog-2.3 {tk_dialog operation} -body {
 
 testutils forget dialog
 cleanupTests
-return

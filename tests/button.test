@@ -4019,7 +4019,6 @@ test button-15.3 {Bug [5d991b822e]} {
 imageFinish
 testutils forget button image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

@@ -409,4 +409,3 @@ while {[llength $newInterps] != [llength $currentInterps]} {
 
 testutils forget child
 cleanupTests
-return

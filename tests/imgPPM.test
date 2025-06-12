@@ -251,7 +251,6 @@ imageFinish
 catch {file delete test.ppm}
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

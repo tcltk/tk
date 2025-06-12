@@ -2686,4 +2686,3 @@ test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
 
 destroy .t
 cleanupTests
-return

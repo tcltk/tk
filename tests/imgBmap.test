@@ -545,7 +545,6 @@ removeFile foo2.bm
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

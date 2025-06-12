@@ -1223,4 +1223,3 @@ rename create_and_pack_frames {}
 rename setup_win_mousepointer {}
 
 cleanupTests
-return

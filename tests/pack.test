@@ -1810,7 +1810,6 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 #
 
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

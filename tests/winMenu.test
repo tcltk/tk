@@ -1389,7 +1389,6 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
 
 deleteWindows
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl
