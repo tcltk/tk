@@ -2582,18 +2582,17 @@ test unixWm-59.3 {exit processing} unix {
 # NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
-if {[tk windowingsystem] eq "aqua"} {
-    set match_60_1 glob
-    set result_60_1 {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
-} else {
-    set match_60_1 exact
-    set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
-}
-test unixWm-60.1 {wm attributes - test} -constraints unix -body {
+test unixWm-60.1.1 {wm attributes - test} -constraints {unix notAqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match $match_60_1 -result $result_60_1
+} -match exact -result {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
+
+test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
+    destroy .t
+    toplevel .t
+    wm attributes .t
+} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t
