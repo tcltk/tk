@@ -21,11 +21,11 @@ tcltest::loadTestedCommands
 # Import utility procs for specific functional areas
 testutils import colors
 
-update
+#
+# COMMON TEST SETUP
+#
 
-#
-# LOCAL TEST CONSTRAINTS
-#
+update
 
 # If more than one visual type is available for the screen, pick one
 # that is *not* the default.
@@ -41,6 +41,11 @@ if {[llength $avail] > 1} {
 	}
     }
 }
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint haveOtherVisual [expr {$other ne ""}]
 testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
