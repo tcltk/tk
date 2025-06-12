@@ -305,7 +305,6 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}
 }
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

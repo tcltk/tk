@@ -654,4 +654,3 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
 imageFinish
 testutils forget image
 cleanupTests
-return

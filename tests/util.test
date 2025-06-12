@@ -83,4 +83,3 @@ test util-1.12 {Tk_GetScrollInfo procedure} -body {
 #
 
 cleanupTests
-return

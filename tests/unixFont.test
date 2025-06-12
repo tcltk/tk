@@ -360,4 +360,3 @@ test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
 
 testutils forget geometry
 cleanupTests
-return

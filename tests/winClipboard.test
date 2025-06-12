@@ -126,7 +126,6 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} -constraints {
 #
 
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

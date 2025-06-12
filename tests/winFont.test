@@ -403,7 +403,6 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
 
 testutils forget geometry
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

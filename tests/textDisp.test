@@ -5220,4 +5220,3 @@ testutils forget scroll text
 deleteWindows
 option clear
 cleanupTests
-return

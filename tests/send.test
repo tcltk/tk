@@ -673,4 +673,3 @@ catch {
 
 testutils forget child
 cleanupTests
-return

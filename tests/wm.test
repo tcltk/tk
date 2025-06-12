@@ -2564,7 +2564,6 @@ deleteWindows
 cleanupTests
 catch {unset results}
 catch {unset focusin}
-return
 
 # Local variables:
 # mode: tcl

@@ -3294,4 +3294,3 @@ deleteWindows
 option clear
 rename getsize {}
 cleanupTests
-return

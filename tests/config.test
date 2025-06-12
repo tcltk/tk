@@ -1956,4 +1956,3 @@ if {[testConstraint testobjconfig]} {
     killTables
 }
 cleanupTests
-return

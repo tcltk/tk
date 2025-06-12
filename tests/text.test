@@ -7844,7 +7844,6 @@ test text-38.1 {Extending selection with mouse going outside the widget - Bug a9
 #
 
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

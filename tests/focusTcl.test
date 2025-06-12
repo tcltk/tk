@@ -501,4 +501,3 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
 . configure -takefocus 0 -highlightthickness 0
 option clear
 cleanupTests
-return

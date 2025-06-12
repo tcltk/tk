@@ -73,4 +73,3 @@ test pkgconfig-2.5 {error: query with to many arguments} {
 #
 
 cleanupTests
-return

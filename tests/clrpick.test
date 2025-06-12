@@ -183,4 +183,3 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
 
 testutils forget dialog
 cleanupTests
-return

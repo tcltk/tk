@@ -230,7 +230,6 @@ imageFinish
 testutils forget image
 deleteWindows
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

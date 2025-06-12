@@ -1278,4 +1278,3 @@ deleteWindows
 childTkProcess exit
 testutils forget child colors
 cleanupTests
-return

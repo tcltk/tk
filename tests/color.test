@@ -316,4 +316,3 @@ test color-4.1 {FreeColorObjProc} -constraints {
 destroy .t
 testutils forget colors
 cleanupTests
-return

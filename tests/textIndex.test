@@ -1062,4 +1062,3 @@ rename textimage {}
 catch {destroy .t}
 testutils forget text
 cleanupTests
-return

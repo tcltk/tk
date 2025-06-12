@@ -64,4 +64,3 @@ test bell-1.8 {bell command} -body {
 #
 
 cleanupTests
-return

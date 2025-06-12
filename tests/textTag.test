@@ -1581,4 +1581,3 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
 
 destroy .t
 cleanupTests
-return

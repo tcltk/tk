@@ -7127,7 +7127,6 @@ test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [435739
 #
 
 cleanupTests
-return
 
 # vi:set ts=4 sw=4 et:
 # Local Variables:

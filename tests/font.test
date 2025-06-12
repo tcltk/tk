@@ -2628,4 +2628,3 @@ test font-47.3 {Bug 3049518 - Label} -body {
 #
 
 cleanupTests
-return

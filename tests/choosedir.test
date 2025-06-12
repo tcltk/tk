@@ -148,4 +148,3 @@ unset fake parent real
 removeDirectory choosedirTest
 testutils forget dialog
 cleanupTests
-return

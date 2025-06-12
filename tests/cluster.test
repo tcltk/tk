@@ -260,4 +260,3 @@ test cluster-8.6 {::tk::wordBreakAfter} -body {
 #
 
 cleanupTests
-return

@@ -1113,7 +1113,6 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 
 testutils forget child select
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

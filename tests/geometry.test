@@ -298,4 +298,3 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
 #
 
 cleanupTests
-return

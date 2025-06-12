@@ -96,4 +96,3 @@ test embed-1.5.nonwin {Tk_UseWindow procedure, -container must be set} -constrai
 #
 
 cleanupTests
-return

@@ -1331,4 +1331,3 @@ test btree-18.9 {tag search back, large complex btree spans} -setup {
 
 rename setup {}
 cleanupTests
-return

@@ -452,4 +452,3 @@ set tk_strictMotif $tk_strictMotif_old
 removeFile filebox.tmp
 testutils forget dialog
 cleanupTests
-return
