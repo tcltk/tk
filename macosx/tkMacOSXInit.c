@@ -703,10 +703,10 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetInfoAsJSON",
+	    TkMacOSXGetInfoAsJSONObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::mac::macOSVersion",
 	    TkMacOSVersionObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::mac::getInfoAsJSON",
-	    TkMacOSXGetInfoAsJSONObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
 
