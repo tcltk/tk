@@ -1595,6 +1595,19 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -constraints un
     update
     list [winfo width .t] [winfo height .t]
 } -result {100 1}
+
+#
+# COMMON TEST SETUP
+#
+if {! [testConstraint unix]} {
+    # Although the tests in this test file are constrained by "unix", the test
+    # commands themselves are being evaluated regardless any test constraint.
+    # Therefore, the expected results defined for tests 44.7 and 44.8 are also
+    # evaluated regardless any test constraint. This means that a dummy window
+    # .t must be defined, otherwise a testfile error occurs.
+    frame .t
+}
+
 test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} -constraints unix -setup {
     destroy .t
     toplevel .t -width 80 -height 60
