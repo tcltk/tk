@@ -192,15 +192,22 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # I can't come up with any good tests for DeleteRectOval.
 
-# On Windows the bbox of rectangle items is 1 pixel larger at each border due
-# to the "bloat" implemented in ComputeRectOvalBbox() in case -outline is {}
-test canvRect-5.1 {ComputeRectOvalBbox procedure} -body {
+test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints nonwin -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
     .c bbox x
 } -cleanup {
     .c delete withtag all
-} -result [expr {[tk windowingsystem] eq "win32"?{9 4 21 16}:{10 5 20 15}}]
+} -result {10 5 20 15}
+# On Windows the bbox of rectangle items is 1 pixel larger at each border due
+# to the "bloat" implemented in ComputeRectOvalBbox() in case -outline is {}
+test canvRect-5.1.2 {ComputeRectOvalBbox procedure} -constraints win32 -body {
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c coords x 20 15 10 5
+    .c bbox x
+} -cleanup {
+    .c delete withtag all
+} -result {9 4 21 16}
 test canvRect-5.2 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
