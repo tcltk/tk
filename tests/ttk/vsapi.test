@@ -1,4 +1,9 @@
 #
+# Tests exercising Microsoft Visual Styles elements, defined through
+# the command "ttk::style element create XXX vsapi"
+#
+
+#
 # TESTFILE INITIALIZATION
 #
 
