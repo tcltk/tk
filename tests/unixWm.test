@@ -47,7 +47,6 @@ proc makeToplevels {} {
 # macOS 15 (Sequoia) it became impossible for the y coordinate of the top
 # of a window to be less than 10 plus the menubar height (as reported by
 # [[NSApp mainMenu] menuBarHeight]).
-
 if {[tk windowingsystem] eq "aqua"} {
     set mb [expr [testmenubarheight] + 11]
     set X  100
@@ -61,6 +60,10 @@ if {[tk windowingsystem] eq "aqua"} {
     set Y5 5
 }
 
+#
+# TESTS
+#
+
 set i 1
 foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
     destroy .t
@@ -73,12 +76,14 @@ foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
     incr i
 }
 
+#
+# COMMON TEST SETUP
+#
+
 # The tests below are tricky because window managers don't all move
 # windows correctly.  Try one motion and compute the window manager's
 # error, then factor this error into the actual tests.  In other words,
 # this just makes sure that things are consistent between moves.
-
-set i 1
 destroy .t
 toplevel .t -width 100 -height 150
 wm geom .t +200+200
@@ -88,6 +93,8 @@ update
 scan [wm geom .t] %dx%d+%d+%d width height x y
 set xerr [expr 150-$x]
 set yerr [expr 150-$y]
+
+set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-2.$i {moving window while mapped} unix {
 	wm geom .t $geom
@@ -129,10 +136,6 @@ foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     } 100x150$geom
     incr i
 }
-
-#
-# TESTS
-#
 
 test unixWm-5.1 {compounded state changes} {unix nonPortable} {
     destroy .t
