@@ -84,7 +84,6 @@ static unsigned long scrollCounter = 0;
 typedef struct TkRootAccessible TkRootAccessible;
 extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
-extern SRWLOCK lock;
 
 
 /*
@@ -831,13 +830,11 @@ TkWinChildProc(
 	/* Handle MSAA queries. */
     case WM_GETOBJECT: {
 	if ((LONG)lParam == OBJID_CLIENT) { /*Toplevel window. */
-	    AcquireSRWLockExclusive(&lock);
 	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
 	    if (tkwin) {
 		TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
 		if (acc) {
 		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-		    ReleaseSRWLockExclusive(&lock);
 		    return result;
 		}
 	    }
