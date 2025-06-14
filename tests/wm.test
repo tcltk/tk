@@ -212,24 +212,6 @@ test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -isdark, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
 
-### wm client ###
-test wm-client-1.1 {usage} -returnCodes error -body {
-    wm client
-} -result {wrong # args: should be "wm option window ?arg ...?"}
-test wm-client-1.2 {usage} -returnCodes error -body {
-    wm client . _ _
-} -result {wrong # args: should be "wm client window ?name?"}
-
-test wm-client-2.1 {setting and reading values} -setup {
-    set result {}
-} -body {
-    lappend result [wm client .t]
-    wm client .t Miffo
-    lappend result [wm client .t]
-    wm client .t {}
-    lappend result [wm client .t]
-} -result [list {} Miffo {}]
-
 #
 # COMMON TEST CLEANUP
 #
@@ -512,6 +494,27 @@ test wm-attributes-1.5.5 {fullscreen stackorder} -setup {
 } -cleanup {
     deleteWindows
 } -result {{. .a .b .c} {. .a .b .c} {. .a .b .c}}
+
+### wm client ###
+test wm-client-1.1 {usage} -returnCodes error -body {
+    wm client
+} -result {wrong # args: should be "wm option window ?arg ...?"}
+test wm-client-1.2 {usage} -returnCodes error -body {
+    wm client . _ _
+} -result {wrong # args: should be "wm client window ?name?"}
+
+test wm-client-2.1 {setting and reading values} -setup {
+    toplevel .t
+    set result {}
+} -body {
+    lappend result [wm client .t]
+    wm client .t Miffo
+    lappend result [wm client .t]
+    wm client .t {}
+    lappend result [wm client .t]
+} -cleanup {
+    destroy .t
+} -result [list {} Miffo {}]
 
 #
 # COMMON TEST SETUP
