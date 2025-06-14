@@ -6,10 +6,11 @@
 # All rights reserved.
 
 #
-# Note that:
-# * multiple display clipboard handling will only be tested if the environment
+# NOTES:
+#
+# * Multiple display clipboard handling will only be tested if the environment
 #   variable TK_ALT_DISPLAY is set to an alternate display.
-# * some of these tests may fail if another application is grabbing the
+# * Some of these tests may fail if another application is grabbing the
 #   clipboard (e.g. an X server, or a VNC viewer)
 #
 

@@ -6,7 +6,9 @@
 # All rights reserved.
 
 #
-# Note: Multiple display selection handling will only be tested if the
+# NOTE:
+#
+# Multiple display selection handling will only be tested if the
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
