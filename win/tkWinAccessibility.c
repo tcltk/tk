@@ -309,47 +309,41 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfoCount(IAccessible *this, UINT *pctinfo)
 {
-    if (!ppTInfo) {
-        return E_POINTER;
-    }
-    *ppTInfo = NULL;
+  if (!pctinfo) {
+    return E_POINTER;
+  }
 
-    if (iTInfo != 0) {
-        return DISP_E_BADINDEX;
-    }
-
-    /* Check if we've already cached it. */
-    ITypeInfo *localInfo = cachedTypeInfo;
-    if (!localInfo) {
-        ITypeLib *pTypeLib = NULL;
-        HRESULT hr = LoadRegTypeLib(&LIBID_Accessibility, 1, 1, lcid, &pTypeLib);
-        if (FAILED(hr)) {
-            return hr;
-        }
-
-        hr = pTypeLib->lpVtbl->GetTypeInfoOfGuid(pTypeLib, &IID_IAccessible, &localInfo);
-        pTypeLib->lpVtbl->Release(pTypeLib);
-        if (FAILED(hr)) {
-            return hr;
-        }
-
-        /* Cache only if not already set (thread-safe). */
-        ITypeInfo *expected = NULL;
-        if (InterlockedCompareExchangePointer((void **)&cachedTypeInfo, localInfo, expected) != expected) {
-            /* Someone else beat us; release our copy. */
-            localInfo->lpVtbl->Release(localInfo);
-            localInfo = cachedTypeInfo;
-        }
-    }
-
-    /* AddRef for the caller. */
-    localInfo->lpVtbl->AddRef(localInfo);
-    *ppTInfo = localInfo;
-    return S_OK;
+  *pctinfo = 1; /* We provide one type information interface. */
+  return S_OK;
 }
+}
+
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfo(IAccessible *this, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-  return E_NOTIMPL;
+    if (!ppTInfo) {
+    return E_POINTER;
+  }
+  *ppTInfo = NULL;
+
+  if (iTInfo != 0) {
+    return DISP_E_BADINDEX;
+  }
+
+  ITypeLib *pTypeLib = NULL;
+  HRESULT hr = LoadRegTypeLib(&LIBID_Accessibility, 1, 1, lcid, &pTypeLib);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  ITypeInfo *pTypeInfo = NULL;
+  hr = pTypeLib->lpVtbl->GetTypeInfoOfGuid(pTypeLib, &IID_IAccessible, &pTypeInfo);
+  pTypeLib->lpVtbl->Release(pTypeLib);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  *ppTInfo = pTypeInfo; 
+  return S_OK;
 }
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
