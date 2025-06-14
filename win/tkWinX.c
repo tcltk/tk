@@ -84,6 +84,7 @@ static unsigned long scrollCounter = 0;
 typedef struct TkRootAccessible TkRootAccessible;
 extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
+extern void RunOnMainThreadSync(MainThreadFunc func, void *data);
 
 
 /*
@@ -828,18 +829,32 @@ TkWinChildProc(
 	break;
 
 	/* Handle MSAA queries. */
-    case WM_GETOBJECT: {
-	if ((LONG)lParam == OBJID_CLIENT) { /*Toplevel window. */
-	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
-	    if (tkwin) {
+    case WM_GETOBJECT: 
+	if ((LONG)lParam == OBJID_CLIENT) {
+	    /* Local struct to hold parameters and result. */
+	    struct {
+		HWND hwnd;
+		WPARAM wParam;
+		LRESULT result;
+	    } req = { hwnd, wParam, 0 };
+
+	    /* Inner function to run on main thread .*/
+	    void HandleGetObject(void *data) {
+		typeof(req) *r = (typeof(req) *)data;
+
+		Tk_Window tkwin = GetTkWindowForHwnd(r->hwnd);
+		if (!tkwin) return;
+
 		TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
-		if (acc) {
-		    result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-		    return result;
-		}
+		if (!acc) return;
+
+		r->result = LresultFromObject(&IID_IAccessible, r->wParam, (IUnknown *)acc);
 	    }
+
+	    /* Synchronously dispatch to main thread. */
+	    RunOnMainThreadSync(HandleGetObject, &req);
+	    return req.result;
 	}
-    }
 
 	break;
 
