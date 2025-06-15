@@ -833,8 +833,8 @@ TkWinChildProc(
     case WM_GETOBJECT:
 	if ((LONG)lParam == OBJID_CLIENT) {
 	    LRESULT resultOnMainThread = 0;
-	    void *args[4] = { hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread };
-	    RunOnMainThreadSync(HandleWMGetObjectOnMainThread, 4, args);
+		MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
+	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
 	    return resultOnMainThread;
 	}
 	break;
