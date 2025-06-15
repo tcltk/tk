@@ -82,10 +82,11 @@ static unsigned long scrollCounter = 0;
 /* Miscellaneous accessibility data and functions. */
 #include <oleacc.h>
 typedef struct TkRootAccessible TkRootAccessible;
+typedef void (*MainThreadFunc)(int num_args, void **args);
 extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
-extern void RunOnMainThreadSync(MainThreadFunc func, void *data);
-
+extern void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
+extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
 
 /*
  * Declarations of static variables used in this file.
@@ -829,34 +830,15 @@ TkWinChildProc(
 	break;
 
 	/* Handle MSAA queries. */
-    case WM_GETOBJECT: 
+    case WM_GETOBJECT:
 	if ((LONG)lParam == OBJID_CLIENT) {
-	    /* Local struct to hold parameters and result. */
-	    struct {
-		HWND hwnd;
-		WPARAM wParam;
-		LRESULT result;
-	    } req = { hwnd, wParam, 0 };
-
-	    /* Inner function to run on main thread .*/
-	    void HandleGetObject(void *data) {
-		typeof(req) *r = (typeof(req) *)data;
-
-		Tk_Window tkwin = GetTkWindowForHwnd(r->hwnd);
-		if (!tkwin) return;
-
-		TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
-		if (!acc) return;
-
-		r->result = LresultFromObject(&IID_IAccessible, r->wParam, (IUnknown *)acc);
-	    }
-
-	    /* Synchronously dispatch to main thread. */
-	    RunOnMainThreadSync(HandleGetObject, &req);
-	    return req.result;
+	    LRESULT resultOnMainThread = 0;
+	    void *args[4] = { hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread };
+	    RunOnMainThreadSync(HandleWMGetObjectOnMainThread, 4, args);
+	    return resultOnMainThread;
 	}
-
 	break;
+
 
     default:
 	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
