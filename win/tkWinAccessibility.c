@@ -34,6 +34,7 @@ DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0
 
 /* Define global lock constants. */
 static CRITICAL_SECTION TkGlobalLock;
+static INIT_ONCE TkInitOnce = INIT_ONCE_STATIC_INIT;
 #define TkGlobalLock()   EnterCriticalSection(&TkGlobalLock)
 #define TkGlobalUnlock() LeaveCriticalSection(&TkGlobalLock)
 
@@ -97,7 +98,7 @@ typedef struct {
     Tcl_Event header;
     MainThreadFunc func;
     int num_args;
-    void* args[5];
+    void* args[6];
     HANDLE completionEvent;
 } MainThreadEvent;
 
@@ -105,7 +106,7 @@ typedef struct {
     Tcl_Event header;       
     MainThreadFunc func;    
     int num_args;           
-    void* args[5];          
+    void* args[6];          
     HANDLE doneEvent;       
 } MainThreadSyncEvent;
 
@@ -200,7 +201,7 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
 
 static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole);
 static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState);
-static HRESULT TkAccFocus(Tk_Window win, VARIANT *pvarChild);
+static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild);
 static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win);
@@ -211,6 +212,8 @@ void RunOnMainThread(MainThreadFunc func, int num_args, ...);
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
 HRESULT HandleWMGetObjectOnMainThreadVaList(va_list args);
+BOOL CALLBACK InitGlobalLockOnce(PINIT_ONCE InitOnce, PVOID param, PVOID *Context);
+void EnsureGlobalLockInitialized(void);
 
 /*
  *----------------------------------------------------------------------
@@ -742,14 +745,17 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
     if (!pvarChild) return E_INVALIDARG;
     VariantInit(pvarChild); /* Initialize the VARIANT to VT_EMPTY.*/
 
+    HWND hwnd = NULL;
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    Tk_Window win = tkAccessible->win;
+    Tk_Window win = tkAccessible->win; /*Safe because it's called inside the lock. */
     TkGlobalUnlock();
+
     MainThreadFunc func = (MainThreadFunc)TkAccFocus;
-    RunOnMainThreadSync(func, 2, win, pvarChild);
+    RunOnMainThreadSync(func, 2, hwnd, pvarChild);
     return S_OK;
 }
+
 
 /* Function to get accessible description to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription)
@@ -816,7 +822,6 @@ static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole)
 	    break;
 	}
     }
-
     pvarRole->vt = VT_I4;
     pvarRole->lVal = role;
 
@@ -898,7 +903,7 @@ static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win)
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
-    if (hPtr) return S_FALSE;
+    if (!hPtr) return S_FALSE;
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
@@ -906,7 +911,7 @@ static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win)
     if (!hPtr2) return S_FALSE;
 
     const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
+    if (Tcl_Eval(interp, cmd) != TCL_OK) {
 	return E_FAIL;
     }
 
@@ -914,10 +919,13 @@ static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win)
 }
 
 /* Function to get MSAA focus. */
-static HRESULT TkAccFocus(Tk_Window win, VARIANT *pvarChild)
+static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild)
 {
-    if (!win || !pvarChild) return E_INVALIDARG;
 
+	
+    Tk_Window win = GetTkWindowForHwnd(hwnd);  /* Now running on main thread — safe. */
+    if (!win || !pvarChild) return E_INVALIDARG;
+	   
     /* Get the current Tk focus window.*/
     TkWindow *focusPtr = TkGetFocusWin((TkWindow *)win);
     Tk_Window focusWin = (Tk_Window)focusPtr;
@@ -1224,6 +1232,10 @@ void HandleWMGetObjectOnMainThread(int num_args, void **args) {
     LPARAM lParam = (LPARAM)args[2];
     LRESULT *outResult = (LRESULT *)args[3];
 
+    if (outResult) {
+	*outResult = 0;
+    }
+
     if ((LONG)lParam == OBJID_CLIENT) {
         Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
         if (tkwin) {
@@ -1234,7 +1246,6 @@ void HandleWMGetObjectOnMainThread(int num_args, void **args) {
             }
         }
     }
-    *outResult = 0;
 }
 
 
@@ -1255,26 +1266,26 @@ int ExecuteOnMainThread(Tcl_Event *ev, int flags)
 	/* Handle error case */
 	if (event->completionEvent) {
 	    SetEvent(event->completionEvent);
+	    ckfree(event);
+	    return 0; 
 	}
-	ckfree(event);
-	return 0; 
-    }
     
-    /* Clean up */
-    if (event->completionEvent) {
-        SetEvent(event->completionEvent);
+	/* Clean up */
+	if (event->completionEvent) {
+	    SetEvent(event->completionEvent);
+	    ckfree(event);
+	    return 1;  
+	}
     }
-    ckfree(event);
-    return 1;  
+    return 1;
 }
-
 void RunOnMainThread(MainThreadFunc func, int num_args, ...) 
 {
     /* Allocate and initialize event. */
     MainThreadEvent *event = (MainThreadEvent *)ckalloc(sizeof(MainThreadEvent));
     event->func = func;
     event->num_args = num_args;
-    event->completionEvent = CreateEvent(NULL, TRUE, FALSE, NULL);  // Manual-reset event
+    event->completionEvent = CreateEvent(NULL, TRUE, FALSE, NULL); 
 
     /* Extract variadic arguments. */
     va_list ap;
@@ -1285,7 +1296,7 @@ void RunOnMainThread(MainThreadFunc func, int num_args, ...)
     va_end(ap);
 
     /* Queue event to main thread. */
-    event->header.proc = ExecuteOnMainThreadSync;
+    event->header.proc = ExecuteOnMainThread;
     Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
     Tcl_ThreadAlert(mainThreadId);
 }
@@ -1314,7 +1325,21 @@ int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags)
 /* Synchronous execution with variable arguments */
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...) 
 {
-    /* Allocate and initialize event. */
+    /* If already on the main thread, call function directly. */
+    if (Tcl_GetCurrentThread() == mainThreadId) {
+        void *args[6];  /*Support up to 6 args here.*/
+        va_list ap;
+        va_start(ap, num_args);
+        for (int i = 0; i < num_args; i++) {
+            args[i] = va_arg(ap, void*);
+        }
+        va_end(ap);
+
+        func(num_args, args);
+        return;
+    }
+	
+    /* Otherwise, allocate and initialize event. */
     MainThreadSyncEvent *event = (MainThreadSyncEvent *)ckalloc(sizeof(MainThreadSyncEvent));
     event->header.proc = ExecuteOnMainThreadSync ;
     event->func = func;
@@ -1339,6 +1364,19 @@ void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...)
 /* Initialize during Tcl startup. */
 void InitAccessibilityMainThread(void) {
     mainThreadId = Tcl_GetCurrentThread();
+}
+
+/* Initiate global thread lock. */
+BOOL CALLBACK InitGlobalLockOnce(PINIT_ONCE InitOnce, PVOID param, PVOID *Context) 
+{
+    InitializeCriticalSection(&TkGlobalLock);
+    return TRUE;
+}
+
+/* Wrapper for global thread lock. */
+void EnsureGlobalLockInitialized(void) 
+{
+    InitOnceExecuteOnce(&TkInitOnce, InitGlobalLockOnce, NULL, NULL);
 }
 
 /* 
@@ -1619,10 +1657,10 @@ int TkRootAccessibleObjCmd(
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
     /*Initialize object-tracking hash tables. */
+    EnsureGlobalLockInitialized();
     InitAccessibilityMainThread();
     InitTkAccessibleTable();
     InitHwndToTkWindowTable();
-  
   
     /*Create Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
