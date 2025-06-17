@@ -20,6 +20,7 @@
 #include <initguid.h>
 #include <windows.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 /*
  *----------------------------------------------------------------------
@@ -110,7 +111,9 @@ typedef struct {
     HANDLE doneEvent;       
 } MainThreadSyncEvent;
 
+/* Need main thread and main interp for accessible operations on main thread defined here. */
 static Tcl_ThreadId mainThreadId;
+static Tcl_Interp *accessibleInterp = NULL;
 
 /*
  *----------------------------------------------------------------------
@@ -204,9 +207,9 @@ static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState);
 static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild);
 static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
-static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win);
+static HRESULT TkDoDefaultAction(char *path);
 static int TkAccChildCount(Tk_Window win);
-static HRESULT TkAccChild_GetRect(Tk_Window child, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight);
+static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
 int ExecuteOnMainThread(Tcl_Event *ev, int flags);
 void RunOnMainThread(MainThreadFunc func, int num_args, ...);
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
@@ -291,10 +294,13 @@ HRESULT STDMETHODCALLTYPE TkRootAccessible_put_accValue(IAccessible *this, VARIA
     return E_NOTIMPL;
 }
 
-/* 
+
+/*
+ *----------------------------------------------------------------------
  * Begin active MSAA functions. These are run on a background thread 
  * and if they need to call into Tk to read data, a global thread lock
- * will be applied. 
+ * will be applied.
+ *----------------------------------------------------------------------
  */
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject)
@@ -330,7 +336,6 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(IAccessible *this)
 	}
 	ckfree(tkAccessible);
 	TkGlobalUnlock();
-	
     }
     return count;
 }
@@ -504,13 +509,13 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(IAccessible *this
   
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    
+
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
 	  
 	Tk_Window child = GetTkWindowForChildId(varChild.lVal);
 	
 	if (!child) {
-	    TkGlobalLock();	  
+	    TkGlobalUnlock();	  
 	    return E_INVALIDARG;
 	}
 	HRESULT hr = TkAccState(child, pvarState);
@@ -533,6 +538,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accValue(IAccessible *this
   
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
 	  
 	Tk_Window child = GetTkWindowForChildId(varChild.lVal);
@@ -565,6 +571,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
 
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+	
     int count = TkAccChildCount(tkAccessible->win);
     TkGlobalUnlock();
      
@@ -589,13 +596,20 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this
 	return E_INVALIDARG;
     }
 
+
     /* Lookup child Tk_Window for this ID. */
     TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    ClearChildIdTable();     
+    Tk_Window toplevel = GetToplevelOfWidget(tkAccessible->win);
+    int nextId = 1;
+    AssignChildIdsRecursive(toplevel, &nextId, accessibleInterp);
     Tk_Window childWin = GetTkWindowForChildId(varChild.lVal);
     if (!childWin) {
 	TkGlobalUnlock();
 	return E_INVALIDARG;
     }
+	
     TkGlobalUnlock();
 
     /* 
@@ -640,11 +654,19 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this,
 	    return E_INVALIDARG;	  
 	}
 
-	LONG left, top, width, height;
-	HRESULT hr = TkAccChild_GetRect(child, &left, &top, &width, &height);
 	TkGlobalUnlock();
-	return hr;
+	RECT rect = { 0 };
+	MainThreadFunc func = (MainThreadFunc)TkAccChild_GetRect;
+	RunOnMainThreadSync(func, 3, accessibleInterp, Tk_PathName(child), &rect);
+	if (rect.right > rect.left && rect.bottom > rect.top) {
+	    *pxLeft = rect.left;
+	    *pyTop =  rect.top;
+	    *pcxWidth = rect.right - rect.left; 
+	    *pcyHeight = rect.bottom - rect.top;
+	    return S_OK;
+	}
     }
+    TkGlobalUnlock();
     return E_INVALIDARG;
 }
 
@@ -668,7 +690,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 
     VARIANT varRole;
     VariantInit(&varRole);
-
 
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   
@@ -712,21 +733,21 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 /* Function to get button press to MSAA. For toplevel, just return. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
-    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-
+ 
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-	return S_OK;
+        return S_OK;
     }
 
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	  
-	Tk_Window child = GetTkWindowForChildId(varChild.lVal);
-	if (!child) {
-	    return E_INVALIDARG;
-	}
+	/*Get path of widget. */
+	TkGlobalLock();
+	TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+	char *path = tkAccessible->pathName;
+	TkGlobalUnlock();
+	
 	MainThreadFunc func = (MainThreadFunc)TkDoDefaultAction;
-	RunOnMainThread(func, 2, tkAccessible->interp, child);
-	return S_OK;
+	RunOnMainThread(func, 1, path);
+        return S_OK;
     }
 
     return E_INVALIDARG;
@@ -748,7 +769,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
     HWND hwnd = NULL;
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    Tk_Window win = tkAccessible->win; /*Safe because it's called inside the lock. */
+    Tk_Window win = tkAccessible->win; 
     TkGlobalUnlock();
 
     MainThreadFunc func = (MainThreadFunc)TkAccFocus;
@@ -896,33 +917,29 @@ static HRESULT TkAccValue(Tk_Window win, BSTR *pValue)
 }
 
 /* Function to get button press to MSAA. */
-static HRESULT TkDoDefaultAction(Tcl_Interp *interp, Tk_Window win)
+static HRESULT TkDoDefaultAction(char *path)
 {
-    if (!interp || !win) {	  
-	return E_INVALIDARG;
+    if (!path) return E_INVALIDARG;
+
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "%s cget -command", path);
+
+    /*Get the command string. */
+    if (Tcl_EvalEx(accessibleInterp, buf, -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	/*We have the command string. Now process it. */
+        const char *cmd = Tcl_GetStringResult(accessibleInterp);
+	if (Tcl_EvalEx(accessibleInterp, cmd, -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	    return S_OK;
+	}
     }
-
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
-    if (!hPtr) return S_FALSE;
-
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
-
-    if (!hPtr2) return S_FALSE;
-
-    const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    if (Tcl_Eval(interp, cmd) != TCL_OK) {
-	return E_FAIL;
-    }
-
-    return S_OK;
+    return S_FALSE;
 }
+
 
 /* Function to get MSAA focus. */
 static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild)
 {
 
-	
     Tk_Window win = GetTkWindowForHwnd(hwnd);  /* Now running on main thread — safe. */
     if (!win || !pvarChild) return E_INVALIDARG;
 	   
@@ -941,7 +958,7 @@ static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild)
     ClearChildIdTable();
     int nextId = 1; /* Child IDs start from 1. */
     TkRootAccessible *tkAccessible = GetTkAccessibleForWindow(win);
-    AssignChildIdsRecursive(tkAccessible->win, &nextId, tkAccessible->interp);
+    AssignChildIdsRecursive(tkAccessible->win, &nextId, accessibleInterp);
 
     /* Look up ID for the focused child.*/
     int childId = GetChildIdForTkWindow(focusWin);
@@ -1000,18 +1017,22 @@ static int TkAccChildCount(Tk_Window win)
 }
 
 /* Function to get child rect. */
-static HRESULT TkAccChild_GetRect(Tk_Window child, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight) 
+static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect)
 {
+	Tk_Window child = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
+
     if (!child || !Tk_IsMapped(child)) {
 	return S_FALSE; 
     }
 
     int x, y;
     Tk_GetRootCoords(child, &x, &y);
-    *pxLeft = x;
-    *pyTop = y;
-    *pcxWidth = Tk_Width(child);
-    *pcyHeight = Tk_Height(child);
+    int w = Tk_Width(child);
+    int h = Tk_Height(child);
+    rect->left = x;
+    rect->top = y;
+    rect->right = x+w;
+    rect->bottom = y+h;
 
     return S_OK;
 }
@@ -1030,7 +1051,6 @@ static HRESULT TkAccChild_GetRect(Tk_Window child, LONG *pxLeft, LONG *pyTop, LO
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
     TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
-  
   
     Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
     if (tkAccessible) {
@@ -1211,6 +1231,7 @@ Tk_Window GetTkWindowForHwnd(HWND hwnd) {
 /* Function to assign childId's dynamically. */
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp)
 {
+	
     if (!Tk_IsMapped(win)){
 	return;
     }
@@ -1411,7 +1432,7 @@ int IsScreenReaderRunning(
      * with TCL_UNUSED.
      */
     (void) clientData;
-  
+	
     BOOL screenReader = FALSE;
     SystemParametersInfo(SPI_GETSCREENREADER, 0, &screenReader, 0);
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(screenReader));
@@ -1447,6 +1468,7 @@ EmitSelectionChanged(
      * with TCL_UNUSED.
      */
     (void) clientData;
+	
   
     if (objc < 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
@@ -1656,6 +1678,9 @@ int TkRootAccessibleObjCmd(
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
+    /*Set base interpreter for accessing on main thread. */
+    accessibleInterp = interp; 
+	
     /*Initialize object-tracking hash tables. */
     EnsureGlobalLockInitialized();
     InitAccessibilityMainThread();
@@ -1663,10 +1688,10 @@ int TkWinAccessiblity_Init(Tcl_Interp *interp)
     InitHwndToTkWindowTable();
   
     /*Create Tcl commands. */
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
+    Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
+    Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
+    Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
     return TCL_OK;
 }
 
