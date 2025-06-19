@@ -96,14 +96,6 @@ static Tcl_HashTable *childIdTable = NULL;
 typedef void (*MainThreadFunc)(int num_args, void** args);
 
 typedef struct {
-    Tcl_Event header;
-    MainThreadFunc func;
-    int num_args;
-    void* args[6];
-    HANDLE completionEvent;
-} MainThreadEvent;
-
-typedef struct {
     Tcl_Event header;       
     MainThreadFunc func;    
     int num_args;           
@@ -114,6 +106,7 @@ typedef struct {
 /* Need main thread and main interp for accessible operations on main thread defined here. */
 static Tcl_ThreadId mainThreadId;
 static Tcl_Interp *accessibleInterp = NULL;
+static volatile HRESULT mainThreadResult = E_FAIL;
 
 /*
  *----------------------------------------------------------------------
@@ -204,14 +197,12 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
 
 static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole);
 static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState);
-static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild);
+static HRESULT TkAccFocus(int num_args, void **args);
 static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
-static HRESULT TkDoDefaultAction(char *path);
+static HRESULT TkDoDefaultAction(int num_args, void **args);
 static int TkAccChildCount(Tk_Window win);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
-int ExecuteOnMainThread(Tcl_Event *ev, int flags);
-void RunOnMainThread(MainThreadFunc func, int num_args, ...);
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
 HRESULT HandleWMGetObjectOnMainThreadVaList(va_list args);
@@ -237,7 +228,7 @@ static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, con
 static void SetChildIdForTkWindow(Tk_Window win, int id);
 static int GetChildIdForTkWindow(Tk_Window win);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
-Tk_Window GetTkWindowForChildId(intid);
+Tk_Window GetTkWindowForChildId(int id);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
 int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int EmitFocusChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
@@ -654,15 +645,14 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this,
 	    return E_INVALIDARG;	  
 	}
 
-	TkGlobalUnlock();
 	RECT rect = { 0 };
-	MainThreadFunc func = (MainThreadFunc)TkAccChild_GetRect;
-	RunOnMainThreadSync(func, 3, accessibleInterp, Tk_PathName(child), &rect);
-	if (rect.right > rect.left && rect.bottom > rect.top) {
+	HRESULT hr = TkAccChild_GetRect(tkAccessible->interp, Tk_PathName(child), &rect);
+	if (hr == S_OK) {
 	    *pxLeft = rect.left;
 	    *pyTop =  rect.top;
 	    *pcxWidth = rect.right - rect.left; 
 	    *pcyHeight = rect.bottom - rect.top;
+	    TkGlobalUnlock();
 	    return S_OK;
 	}
     }
@@ -733,23 +723,18 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 /* Function to get button press to MSAA. For toplevel, just return. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild)
 {
- 
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
         return S_OK;
     }
 
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	/*Get path of widget. */
-	TkGlobalLock();
-	TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-	char *path = tkAccessible->pathName;
-	TkGlobalUnlock();
-	
+	/* Pass childId to main thread. */
+	mainThreadResult = E_FAIL;
 	MainThreadFunc func = (MainThreadFunc)TkDoDefaultAction;
-	RunOnMainThread(func, 1, path);
-        return S_OK;
+	int childId = varChild.lVal;
+	RunOnMainThreadSync(func, 1, (void*)childId);
+	return mainThreadResult;
     }
-
     return E_INVALIDARG;
 }
 
@@ -769,11 +754,11 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(IAccessible *this
     HWND hwnd = NULL;
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    Tk_Window win = tkAccessible->win; 
+    hwnd = tkAccessible->hwnd; 
     TkGlobalUnlock();
 
     MainThreadFunc func = (MainThreadFunc)TkAccFocus;
-    RunOnMainThreadSync(func, 2, hwnd, pvarChild);
+    RunOnMainThreadSync(func, 2, (void*)hwnd, (void*)pvarChild);
     return S_OK;
 }
 
@@ -917,29 +902,70 @@ static HRESULT TkAccValue(Tk_Window win, BSTR *pValue)
 }
 
 /* Function to get button press to MSAA. */
-static HRESULT TkDoDefaultAction(char *path)
+static HRESULT TkDoDefaultAction(int num_args, void **args)
 {
-    if (!path) return E_INVALIDARG;
+    int childId = (int)args[0];
 
-    char buf[1024];
-    snprintf(buf, sizeof(buf), "%s cget -command", path);
+    HRESULT result = S_FALSE;
 
-    /*Get the command string. */
-    if (Tcl_EvalEx(accessibleInterp, buf, -1, TCL_EVAL_GLOBAL) == TCL_OK) {
-	/*We have the command string. Now process it. */
-        const char *cmd = Tcl_GetStringResult(accessibleInterp);
-	if (Tcl_EvalEx(accessibleInterp, cmd, -1, TCL_EVAL_GLOBAL) == TCL_OK) {
-	    return S_OK;
-	}
+    if (!childId) {
+        result = E_INVALIDARG;
+        goto done;
     }
-    return S_FALSE;
+
+    if (!accessibleInterp) {
+        result = E_INVALIDARG;
+        goto done;
+    }
+
+    Tk_Window win = GetTkWindowForChildId(childId);
+    if (!win) {
+        result = E_INVALIDARG;
+        goto done;
+    }
+	
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+        result = E_INVALIDARG;
+        goto done;	 
+    }
+  
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
+    if (!hPtr2) {
+        result = E_INVALIDARG;
+		goto done;
+    }
+
+    const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+	if (!cmd) {
+		result = E_INVALIDARG;
+		goto done;
+	}
+	
+    if (Tcl_EvalEx(accessibleInterp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
+	OutputDebugString("failed to process command!\n");
+	result = E_INVALIDARG;
+	Tcl_ResetResult(accessibleInterp);
+    } else {
+	OutputDebugString("execution succeeded!\n"); 
+	result = S_OK;
+    }
+
+ done:
+    mainThreadResult = result;
+    return result;
 }
 
 
+
+
 /* Function to get MSAA focus. */
-static HRESULT TkAccFocus(HWND hwnd, VARIANT *pvarChild)
+static HRESULT TkAccFocus(int num_args, void **args)
 {
 
+    HWND hwnd = (HWND)args[0];
+    VARIANT *pvarChild = (VARIANT*)args[1]; 
     Tk_Window win = GetTkWindowForHwnd(hwnd);  /* Now running on main thread — safe. */
     if (!win || !pvarChild) return E_INVALIDARG;
 	   
@@ -1019,7 +1045,7 @@ static int TkAccChildCount(Tk_Window win)
 /* Function to get child rect. */
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect)
 {
-	Tk_Window child = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
+    Tk_Window child = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
 
     if (!child || !Tk_IsMapped(child)) {
 	return S_FALSE; 
@@ -1267,59 +1293,6 @@ void HandleWMGetObjectOnMainThread(int num_args, void **args) {
             }
         }
     }
-}
-
-
-/* Event handler (executes `func` on main thread). */
-int ExecuteOnMainThread(Tcl_Event *ev, int flags) 
-{
-    MainThreadEvent *event = (MainThreadEvent *)ev;
-    
-    /* Call the function with the appropriate number of arguments */
-    switch(event->num_args) {
-    case 0: event->func(0, NULL); break;
-    case 1: event->func(1, event->args); break;
-    case 2: event->func(2, event->args); break;
-    case 3: event->func(3, event->args); break;
-    case 4: event->func(4, event->args); break;
-    case 5: event->func(5, event->args); break;
-    default:
-	/* Handle error case */
-	if (event->completionEvent) {
-	    SetEvent(event->completionEvent);
-	    ckfree(event);
-	    return 0; 
-	}
-    
-	/* Clean up */
-	if (event->completionEvent) {
-	    SetEvent(event->completionEvent);
-	    ckfree(event);
-	    return 1;  
-	}
-    }
-    return 1;
-}
-void RunOnMainThread(MainThreadFunc func, int num_args, ...) 
-{
-    /* Allocate and initialize event. */
-    MainThreadEvent *event = (MainThreadEvent *)ckalloc(sizeof(MainThreadEvent));
-    event->func = func;
-    event->num_args = num_args;
-    event->completionEvent = CreateEvent(NULL, TRUE, FALSE, NULL); 
-
-    /* Extract variadic arguments. */
-    va_list ap;
-    va_start(ap, num_args);
-    for (int i = 0; i < num_args; i++) {
-        event->args[i] = va_arg(ap, void*);  // Store each argument
-    }
-    va_end(ap);
-
-    /* Queue event to main thread. */
-    event->header.proc = ExecuteOnMainThread;
-    Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
-    Tcl_ThreadAlert(mainThreadId);
 }
 
 /* Event handler that executes on main thread */
