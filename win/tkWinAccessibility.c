@@ -116,6 +116,7 @@ static char *callback_command = NULL;
 typedef struct {
     Tcl_Event header;
     char *command; 
+    Tk_Window win;
 } ActionEvent;
 
 /*
@@ -919,20 +920,30 @@ static HRESULT TkAccValue(Tk_Window win, BSTR *pValue)
 static int ActionEventProc(Tcl_Event *ev, int flags)
 {
     (void) flags;
-
     ActionEvent *event = (ActionEvent *)ev;
 	
-    int code = Tcl_GlobalEval(accessibleInterp, event->command);
+    /* Make sure key fields are not NULL. */
+    if (!event || !event->win || !event->command) {
+	return 1;
+    }
+
+    /*
+     * Get the interpreter associated with this Tk_Window. 
+     * This is critical to ensure correct command processing - 
+     * if the interpreter is a different one, the command will
+     * silently fail. 
+     */
+    Tcl_Interp *interp = Tk_Interp(event->win);
+    if (!interp) {
+	return 1;
+    }
+
+    int code = Tcl_EvalEx(interp, event->command, -1, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	return TCL_ERROR;
     }
-
-    if (event->command != NULL) {
-        ckfree(event->command);
-        event->command = NULL;
-    }
-    
-    ckfree(event);
+ 
+    ckfree(event->command);
     return 1;
 }
 
@@ -997,6 +1008,7 @@ static HRESULT TkDoDefaultAction(int num_args, void **args)
     const char *cmd = action; 
     event->command = ckalloc(strlen(cmd) + 1);
     strcpy(event->command, cmd); 
+    event->win = win; 
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     result = S_OK;
 
