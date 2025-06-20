@@ -103,10 +103,20 @@ typedef struct {
     HANDLE doneEvent;       
 } MainThreadSyncEvent;
 
-/* Need main thread and main interp for accessible operations on main thread defined here. */
+/*
+ * Need main thread, main interp, and command struct
+ * for accessible operations on main thread
+ * defined here.
+ */
 static Tcl_ThreadId mainThreadId;
 static Tcl_Interp *accessibleInterp = NULL;
 static volatile HRESULT mainThreadResult = E_FAIL;
+static char *callback_command = NULL;
+
+typedef struct {
+    Tcl_Event header;
+    char *command; 
+} ActionEvent;
 
 /*
  *----------------------------------------------------------------------
@@ -202,6 +212,7 @@ static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static HRESULT TkDoDefaultAction(int num_args, void **args);
 static int TkAccChildCount(Tk_Window win);
+static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
@@ -901,69 +912,101 @@ static HRESULT TkAccValue(Tk_Window win, BSTR *pValue)
     return S_OK;
 }
 
+/*
+ * Event proc which calls the ActionEventProc procedure.
+ */
+
+static int ActionEventProc(Tcl_Event *ev, int flags)
+{
+    (void) flags;
+
+    ActionEvent *event = (ActionEvent *)ev;
+	
+    int code = Tcl_GlobalEval(accessibleInterp, event->command);
+    if (code != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    if (event->command != NULL) {
+        ckfree(event->command);
+        event->command = NULL;
+    }
+    
+    ckfree(event);
+    return 1;
+}
+
 /* Function to get button press to MSAA. */
 static HRESULT TkDoDefaultAction(int num_args, void **args)
 {
+
     int childId = (int)args[0];
+    ActionEvent *event = NULL; 
 
-    HRESULT result = S_FALSE;
+    HRESULT result = S_FALSE; 
 
-    if (!childId) {
-        result = E_INVALIDARG;
-        goto done;
-    }
-
-    if (!accessibleInterp) {
-        result = E_INVALIDARG;
-        goto done;
+    if (!childId  || !accessibleInterp) {
+	result = E_INVALIDARG;
+	mainThreadResult = result;
+	return mainThreadResult;
     }
 
     Tk_Window win = GetTkWindowForChildId(childId);
     if (!win) {
-        result = E_INVALIDARG;
-        goto done;
+	result = E_INVALIDARG;
+	mainThreadResult = result;
+	return mainThreadResult;
     }
-	
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+		
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
-        result = E_INVALIDARG;
-        goto done;	 
+	result = E_INVALIDARG;
+	mainThreadResult = result;
+	return mainThreadResult;
     }
-  
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+    if (!AccessibleAttributes) {
+	result = E_INVALIDARG;
+	mainThreadResult = result;
+	return mainThreadResult;
+    }
+
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
     if (!hPtr2) {
-        result = E_INVALIDARG;
-		goto done;
-    }
-
-    const char *cmd = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-	if (!cmd) {
-		result = E_INVALIDARG;
-		goto done;
-	}
-	
-    if (Tcl_EvalEx(accessibleInterp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	OutputDebugString("failed to process command!\n");
 	result = E_INVALIDARG;
-	Tcl_ResetResult(accessibleInterp);
-    } else {
-	OutputDebugString("execution succeeded!\n"); 
-	result = S_OK;
+	mainThreadResult = result;
+	return mainThreadResult;
+    }
+	
+    const char *action = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    if (!action) {
+	result = E_INVALIDARG;
+	mainThreadResult = result;
+	return mainThreadResult;
+    }
+    
+    event = (ActionEvent *)ckalloc(sizeof(ActionEvent));
+    if (event == NULL) {
+	result = E_OUTOFMEMORY;
+	mainThreadResult = result;
+	return mainThreadResult;
     }
 
- done:
+    event->header.proc = ActionEventProc;
+    const char *cmd = action; 
+    event->command = ckalloc(strlen(cmd) + 1);
+    strcpy(event->command, cmd); 
+    Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+    result = S_OK;
+
     mainThreadResult = result;
     return result;
 }
 
-
-
-
 /* Function to get MSAA focus. */
 static HRESULT TkAccFocus(int num_args, void **args)
 {
-
     HWND hwnd = (HWND)args[0];
     VARIANT *pvarChild = (VARIANT*)args[1]; 
     Tk_Window win = GetTkWindowForHwnd(hwnd);  /* Now running on main thread — safe. */
