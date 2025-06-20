@@ -111,7 +111,6 @@ typedef struct {
 static Tcl_ThreadId mainThreadId;
 static Tcl_Interp *accessibleInterp = NULL;
 static volatile HRESULT mainThreadResult = E_FAIL;
-static char *callback_command = NULL;
 
 typedef struct {
     Tcl_Event header;
