@@ -111,7 +111,6 @@ typedef struct {
 static Tcl_ThreadId mainThreadId;
 static Tcl_Interp *accessibleInterp = NULL;
 static volatile HRESULT mainThreadResult = E_FAIL;
-static char *callback_command = NULL;
 
 typedef struct {
     Tcl_Event header;
@@ -212,6 +211,8 @@ static HRESULT TkAccFocus(int num_args, void **args);
 static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static HRESULT TkDoDefaultAction(int num_args, void **args);
+static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp);
+
 static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
@@ -751,10 +752,27 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible
 }
 
 
-/* Function to get accessible help to MSAA. For toplevel, just return. */
+/* Function to get accessible help to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp)
 {
-    return E_NOTIMPL;
+	
+    if (!pszHelp) return E_INVALIDARG;
+  
+    TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {  
+	Tk_Window child = GetTkWindowForChildId(varChild.lVal);
+	if (!child) {
+	    TkGlobalUnlock();	
+	    return E_INVALIDARG;
+	}
+	HRESULT hr = TkAccHelp(child, pszHelp);
+	TkGlobalUnlock();
+	return hr;
+    }
+
+    return E_INVALIDARG;
 }
 
 /* Function to get accessible focus to MSAA. */
@@ -1080,6 +1098,31 @@ static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc)
   
     return S_OK;
 }
+
+/* Function to get MSAA help. */
+static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp)
+{
+
+    if (!win || !pszHelp) {	  
+	return E_INVALIDARG;
+    }
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) return S_FALSE;
+
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "help");
+    if (!hPtr2) return S_FALSE;
+
+    const char *help = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
+    *pszHelp = SysAllocString(Tcl_UtfToWCharDString(help, -1, &ds));
+    Tcl_DStringFree(&ds);
+  
+    return S_OK;
+}
+
 
 /* Function to get number of child window objects. */
 static int TkAccChildCount(Tk_Window win) 
