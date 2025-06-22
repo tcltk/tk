@@ -82,12 +82,9 @@ static unsigned long scrollCounter = 0;
 /* Miscellaneous accessibility data and functions. */
 #include <oleacc.h>
 typedef struct TkRootAccessible TkRootAccessible;
-typedef void (*MainThreadFunc)(int num_args, void **args);
 extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
-extern void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
-extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
-
+extern __declspec(thread) int inAccessibilityCall;
 /*
  * Declarations of static variables used in this file.
  */
@@ -829,16 +826,34 @@ TkWinChildProc(
 	}
 	break;
 
-	/* Handle MSAA queries. */
+    /* Handle MSAA queries. */
     case WM_GETOBJECT:
+	
 	if ((LONG)lParam == OBJID_CLIENT) {
-	    LRESULT resultOnMainThread = 0;
-		MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
-	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
-	    return resultOnMainThread;
+	    inAccessibilityCall++;
+
+	    Tk_Window tkwin = GetTkWindowForHwnd(hwnd);
+	    if (!tkwin) {
+		inAccessibilityCall--;
+		return 0;
+	    }
+     	
+	    TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
+	    if (!acc)  {
+		inAccessibilityCall--;
+		return 0;
+	    }
+ 	
+	    if (acc) {
+		result = LresultFromObject(&IID_IAccessible, 0, (IUnknown*)acc);
+		if (result == 0) {
+		    inAccessibilityCall--;
+		    return result; 
+		}
+	    }
+	    return result;
 	}
 	break;
-
 
     default:
 	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
