@@ -845,7 +845,12 @@ TkWinChildProc(
 	    }
  	
 	    if (acc) {
-		result = LresultFromObject(&IID_IAccessible, 0, (IUnknown*)acc);
+		/*
+		 * This check is needed to check the result - otherwise 
+		 * it crashes.
+		 */	    
+		if (wParam == 0)
+		result = LresultFromObject(&IID_IAccessible, wParam, (IUnknown*)acc);
 		if (result == 0) {
 		    inAccessibilityCall--;
 		    return result; 
