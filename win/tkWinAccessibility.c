@@ -1856,7 +1856,7 @@ int TkRootAccessibleObjCmd(
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
     /* Ensure COM is initialized. */
-    CoInitialize(NULL);
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 	
     /*Set base interpreter for accessing on main thread. */
     accessibleInterp = interp; 
