@@ -693,12 +693,15 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 
     VARIANT varRole;
     VariantInit(&varRole);
-
+	
+	
+    TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
   
     HRESULT hr = tkAccessible->lpVtbl->get_accRole(this, varChild, &varRole);
     if (FAILED(hr) || varRole.vt != VT_I4) {
 	VariantClear(&varRole);
+	TkGlobalUnlock();
 	return S_FALSE;
     }
 
@@ -727,9 +730,11 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessib
 
     if (action) {
 	*pszDefaultAction = SysAllocString(action);
+	TkGlobalUnlock();
 	return S_OK;
     }
 
+    TkGlobalUnlock();
     return S_FALSE;
 }
 
@@ -771,7 +776,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this,
 	TkGlobalUnlock();
 	return hr;
     }
-
+	
+    TkGlobalUnlock();
     return E_INVALIDARG;
 }
 
@@ -1054,6 +1060,7 @@ static HRESULT TkAccFocus(int num_args, void **args)
     }
 
     /* Ensure child IDs are up-to-date before looking up. */
+    TkGlobalLock();
     ClearChildIdTable();
     int nextId = 1; /* Child IDs start from 1. */
     TkRootAccessible *tkAccessible = GetTkAccessibleForWindow(win);
@@ -1064,13 +1071,14 @@ static HRESULT TkAccFocus(int num_args, void **args)
 
     if (childId > 0) {
 	pvarChild->vt = VT_I4;
-	pvarChild->lVal = childId;	
+	pvarChild->lVal = childId;
+	TkGlobalUnlock();
 	return S_OK;
     } else {
 	/* Fallback if child was focused but not found in ID table. */
 	pvarChild->vt = VT_I4;
 	pvarChild->lVal = CHILDID_SELF; /* Indicate no specific child focus found. */
-	
+	TkGlobalUnlock();
 	return S_OK; 
     }
 }
@@ -1239,7 +1247,6 @@ static int GetChildIdForTkWindow(Tk_Window win)
 /* Function to retrieve Tk window for a specifc MSAA ID. */
 Tk_Window GetTkWindowForChildId(int id)
 {
-
     if (!childIdTable){	  
 	return NULL;
     }	  
@@ -1249,7 +1256,7 @@ Tk_Window GetTkWindowForChildId(int id)
     for (entry = Tcl_FirstHashEntry(childIdTable, &search);
 	 entry != NULL;
 	 entry = Tcl_NextHashEntry(&search)) {
-	if (PTR2INT(Tcl_GetHashValue(entry)) == id) {		
+	if (PTR2INT(Tcl_GetHashValue(entry)) == id) {	
 	    return (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
 	}
     }
@@ -1449,7 +1456,11 @@ void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...)
     /* Queue and wait for completion. */
     Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
     Tcl_ThreadAlert(mainThreadId);
-    WaitForSingleObject(event->doneEvent, INFINITE);
+    DWORD result = WaitForSingleObject(event->doneEvent, 500);
+    if (result == WAIT_TIMEOUT) {
+	CloseHandle(event->doneEvent);
+	ckfree(event);
+    }
     CloseHandle(event->doneEvent);
 }
 
@@ -1602,10 +1613,13 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
 {
 		
     if (eventPtr->type == DestroyNotify) {
+	TkGlobalLock();
 	TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
+	Tk_Window win = tkAccessible->win; 
 	if (tkAccessible) {
 	    TkRootAccessible_Release((IAccessible *)tkAccessible);
 	}
+	TkGlobalUnlock();
 	
     }
 }
@@ -1641,6 +1655,7 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
     Tk_Window toplevel = GetToplevelOfWidget(win);
     HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
+    TkGlobalLock();
     ClearChildIdTable(); 
     int nextId = 1;
     AssignChildIdsRecursive(toplevel, &nextId, interp);
@@ -1649,13 +1664,12 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
 
     if (childId <= 0) {
 	Tcl_AppendResult(interp, "Failed to find child ID for ", path, NULL);
-	
+	TkGlobalUnlock();
 	return TCL_OK;
     }
 
-    TkSetFocusWin((TkWindow *)win, 1);
     NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-  
+    TkGlobalUnlock();
     return TCL_OK;
 }
 
@@ -1712,6 +1726,7 @@ int TkRootAccessibleObjCmd(
 	hwnd = Tk_GetHWND(Tk_WindowId(toplevel)); 
     }
 
+    TkGlobalLock();
     TkRootAccessible *accessible = CreateRootAccessible(interp, hwnd, windowName);
     TkRootAccessible_RegisterForCleanup(tkwin, accessible);
 	
@@ -1724,7 +1739,7 @@ int TkRootAccessibleObjCmd(
     ClearChildIdTable(); /* Clear any previous IDs. */
     int nextId = 1;
     AssignChildIdsRecursive(tkwin, &nextId, interp); /* Assign IDs starting from the 'tkwin' (which should be the toplevel). */
-
+    TkGlobalUnlock();
 
     return TCL_OK;
 }
@@ -1749,20 +1764,24 @@ int TkRootAccessibleObjCmd(
 
 int TkWinAccessiblity_Init(Tcl_Interp *interp)
 {	
+
     /*Set base interpreter for accessing on main thread. */
     accessibleInterp = interp; 
-	
-    /*Initialize object-tracking hash tables. */
+
+    /*Initialize object-tracking hash tables. */	
     EnsureGlobalLockInitialized();
+    TkGlobalLock();
     InitAccessibilityMainThread();
     InitTkAccessibleTable();
     InitHwndToTkWindowTable();
+    TkGlobalUnlock();
   
     /*Create Tcl commands. */
     Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
     Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(accessibleInterp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
+
     return TCL_OK;
 }
 
