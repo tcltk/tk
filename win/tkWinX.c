@@ -829,11 +829,11 @@ TkWinChildProc(
 	}
 	break;
 
-	/* Handle MSAA queries. */
+     /* Handle MSAA queries. */
     case WM_GETOBJECT:
 	if ((LONG)lParam == OBJID_CLIENT) {
 	    LRESULT resultOnMainThread = 0;
-		MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
+	    MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
 	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
 	    return resultOnMainThread;
 	}
@@ -849,7 +849,6 @@ TkWinChildProc(
 /*
  * Handle any newly queued events before returning control to Windows.
  */
-
 Tcl_ServiceAll();
 return result;
 }
