@@ -366,11 +366,13 @@ TkWinClipboardRender(
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
-    TCL_UNUSED(TkClipboardTarget *))
+    clipboardOption opt)
 {
-    HWND hwnd = TkWinGetHWND(winPtr->window);
+    if (opt == CLIPBOARD_APPEND || opt == CLIPBOARD_CLEAR) {
+	HWND hwnd = TkWinGetHWND(winPtr->window);
 
-    UpdateClipboard(hwnd);
+	UpdateClipboard(hwnd);
+    }
 }
 
 /*
