@@ -394,7 +394,7 @@ Tk_ClipboardAppend(
     cbPtr->buffer = (char *)ckalloc(cbPtr->length + 1);
     strcpy(cbPtr->buffer, buffer);
 
-    TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, targetPtr);
+    TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, CLIPBOARD_APPEND);
 
     return TCL_OK;
 }
@@ -426,9 +426,9 @@ Tk_ClipboardObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     const char *path = NULL;
     Atom selection;
-    static const char *const optionStrings[] = { "append", "clear", "get", NULL };
-    enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
-    int index, i;
+    static const char *const optionStrings[] = {
+	"append", "clear", "get", NULL };
+    int index, i, result;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -440,7 +440,7 @@ Tk_ClipboardObjCmd(
 	return TCL_ERROR;
     }
 
-    switch ((enum options) index) {
+    switch ((clipboardOption) index) {
     case CLIPBOARD_APPEND: {
 	Atom target, format;
 	const char *targetName = NULL;
@@ -543,13 +543,16 @@ Tk_ClipboardObjCmd(
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
-	return Tk_ClipboardClear(interp, tkwin);
+	result = Tk_ClipboardClear(interp, tkwin);
+	if (result == TCL_OK) {
+	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_CLEAR);
+	}
+	return result; 
     }
     case CLIPBOARD_GET: {
 	Atom target;
 	const char *targetName = NULL;
 	Tcl_DString selBytes;
-	int result;
 	const char *string;
 	static const char *const getOptionStrings[] = {
 	    "-displayof", "-type", NULL
