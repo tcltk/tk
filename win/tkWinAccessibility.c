@@ -1182,9 +1182,12 @@ static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect)
 /* Function to map Tk window to MSAA attributes. */
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName)
 {
+	
     TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
   
     Tk_Window win = Tk_NameToWindow(interp, pathName, Tk_MainWindow(interp));
+	Tk_MakeWindowExist(win);
+	
     if (tkAccessible) {
 	tkAccessible->lpVtbl = &tkRootAccessibleVtbl;
 	tkAccessible->interp = interp;
@@ -1709,6 +1712,7 @@ int TkRootAccessibleObjCmd(
 
     char *windowName = Tcl_GetString(objv[1]);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+	Tk_MakeWindowExist(tkwin);
 
     if (tkwin == NULL) {
 	Tcl_SetResult(interp, "Invalid window name.", TCL_STATIC);
