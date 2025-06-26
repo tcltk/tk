@@ -754,7 +754,7 @@ static int AddTab(
     if (Ttk_ContentIndex(nb->notebook.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
 	    Tk_PathName(window)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", (char *)NULL);
 	return TCL_ERROR;
     }
 #endif
@@ -870,7 +870,7 @@ static int FindTabIndex(
     if (*index_rtn == Ttk_NumberContent(nb->notebook.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Invalid tab specification %s", string));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "SPEC", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "SPEC", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -891,14 +891,14 @@ static int GetTabIndex(
 	if (status == TCL_OK && *index_rtn  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Tab index \"%s\" out of bounds", Tcl_GetString(objPtr)));
-	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "Tab '%s' not found", Tcl_GetString(objPtr)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", (char *)NULL);
 	status = TCL_ERROR;
     }
     return status;
