@@ -22,7 +22,7 @@ static Tk_Window tkClipboardOwner = NULL;
 
 @implementation TKApplication(TKClipboard)
 - (void) tkProvidePasteboard: (TkDisplay *) dispPtr
-        pasteboard: (NSPasteboard *) sender
+	pasteboard: (NSPasteboard *) sender
 	provideDataForType: (NSString *) type
 {
     NSMutableString *string = [NSMutableString new];
@@ -259,7 +259,7 @@ TkSelUpdateClipboard(
 	 * This increments the changeCount so that clipboard managers will be
 	 * able to see and manage the clip.
 	 */
-	    
+
 	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
 				 owner:nil];
 	[NSApp tkProvidePasteboard: TkGetDisplayList()
