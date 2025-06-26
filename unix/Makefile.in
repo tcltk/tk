@@ -1781,8 +1781,8 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
 		$(TOP_DIR)/doc/man.macros $(DISTDIR)/doc
 	$(INSTALL_DATA_DIR) $(DISTDIR)/tests
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
-		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,png,ppm,xbm} \
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TEST_DIR)/testutils.GUIDE \
+		$(TEST_DIR)/README $(TEST_DIR)/*.{test,tcl,gif,png,ppm,xbm} \
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 	$(INSTALL_DATA_DIR) $(DISTDIR)/tests/ttk
 	$(DIST_INSTALL_DATA) $(TEST_DIR)/ttk/*.{svg,test,tcl} $(DISTDIR)/tests/ttk
