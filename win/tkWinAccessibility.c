@@ -1946,3 +1946,10 @@ int TkWinAccessiblity_Init(Tcl_Interp *interp)
 }
 
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
