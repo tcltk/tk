@@ -1385,7 +1385,9 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     }
     Tk_MakeWindowExist(path);
     HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, 0);
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+    LONG childId = GetChildIdForTkWindow(path, childIdTable);
+    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
     return TCL_OK;
 }
 
