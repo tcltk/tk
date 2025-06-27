@@ -436,7 +436,7 @@ TkTextWindowCmd(
 	if (ewPtr->typePtr != &tkTextEmbWindowType) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded window at index \"%s\"", Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -476,7 +476,7 @@ TkTextWindowCmd(
 	if (ewPtr->typePtr != &tkTextEmbWindowType) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded window at index \"%s\"", Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
@@ -866,7 +866,7 @@ EmbWinConfigure(
 		    || (ewPtr->body.ew.tkwin == textPtr->tkwin)) {
 		Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf("can't embed %s in %s",
 			Tk_PathName(ewPtr->body.ew.tkwin), Tk_PathName(textPtr->tkwin)));
-		Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+		Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
 		ewPtr->body.ew.tkwin = NULL;
 		if (client) {
 		    client->tkwin = NULL;
@@ -1493,7 +1493,7 @@ EmbWinLayoutProc(
 		|| textPtr->tkwin == ewPtr->body.ew.tkwin) {
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf("can't embed %s relative to %s",
 		    Tk_PathName(ewPtr->body.ew.tkwin), Tk_PathName(textPtr->tkwin)));
-	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
 	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    ewPtr->body.ew.tkwin = NULL;
 	    goto gotWindow;

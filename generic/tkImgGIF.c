@@ -935,7 +935,7 @@ ReadOneByte(
 
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"premature end of image data", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", (char *)NULL);
 	return -1;
     }
     return buf[0];

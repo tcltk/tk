@@ -333,7 +333,7 @@ TkpNewMenu(
     if (winMenuHdl == NULL) {
 	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
 		"No more menus can be allocated.", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES", NULL);
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES", (char *)NULL);
 	return TCL_ERROR;
     }
 
