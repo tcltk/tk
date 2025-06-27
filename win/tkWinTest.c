@@ -191,7 +191,7 @@ AppendSystemError(
     }
 
     snprintf(id, sizeof(id), "%ld", error);
-    Tcl_SetErrorCode(interp, "WINDOWS", id, msg, NULL);
+    Tcl_SetErrorCode(interp, "WINDOWS", id, msg, (char *)NULL);
     Tcl_AppendToObj(resultPtr, msg, length);
     Tcl_SetObjResult(interp, resultPtr);
 
