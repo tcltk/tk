@@ -158,7 +158,7 @@ static int ConfigurePane(
     if (pane->weight < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"-weight must be non-negative", -1));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "WEIGHT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "WEIGHT", (char *)NULL);
 	goto error;
     }
 
@@ -422,7 +422,7 @@ static int AddPane(
     if (Ttk_ContentIndex(pw->paned.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s already added", Tk_PathName(window)));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -852,7 +852,7 @@ static int PanedSashposCommand(
     if (sashIndex < 0 || sashIndex >= Ttk_NumberContent(pw->paned.mgr) - 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %" TCL_LL_MODIFIER "d out of range", sashIndex));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
 

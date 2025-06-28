@@ -16,7 +16,7 @@
 #include "tkSelect.h"
 
 static NSInteger changeCount = -1;
-static Tk_Window clipboardOwner = NULL;
+static Tk_Window tkClipboardOwner = NULL;
 
 #pragma mark TKApplication(TKClipboard)
 
@@ -26,7 +26,6 @@ static Tk_Window clipboardOwner = NULL;
 	provideDataForType: (NSString *) type
 {
     NSMutableString *string = [NSMutableString new];
-
     if (dispPtr && dispPtr->clipboardActive &&
 	    [type isEqualToString:NSStringPboardType]) {
 	for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
@@ -36,8 +35,8 @@ static Tk_Window clipboardOwner = NULL;
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
 		    NSString *s = [[TKNSString alloc]
-				      initWithTclUtfBytes:cbPtr->buffer
-						   length:(NSUInteger)cbPtr->length];
+			initWithTclUtfBytes:cbPtr->buffer
+				     length:(NSUInteger)cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -46,6 +45,7 @@ static Tk_Window clipboardOwner = NULL;
 	}
     }
     [sender setString:string forType:type];
+    changeCount = [sender changeCount];
     [string release];
 }
 
@@ -61,26 +61,28 @@ static Tk_Window clipboardOwner = NULL;
 - (void) pasteboard: (NSPasteboard *) sender
 	provideDataForType: (NSString *) type
 {
-    [self tkProvidePasteboard:TkGetDisplayList() pasteboard:sender
-	    provideDataForType:type];
+    TkDisplay *dispPtr = TkGetDisplayList();
+    [self tkProvidePasteboard:dispPtr
+		   pasteboard:[NSPasteboard generalPasteboard]
+	   provideDataForType:NSStringPboardType];
 }
 
 - (void) tkCheckPasteboard
 {
-    if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
+    if (tkClipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
 	    changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
 	if (dispPtr) {
 	    XEvent event;
 	    event.xany.type = SelectionClear;
-	    event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
+	    event.xany.serial = NextRequest(Tk_Display(tkClipboardOwner));
 	    event.xany.send_event = False;
-	    event.xany.window = Tk_WindowId(clipboardOwner);
-	    event.xany.display = Tk_Display(clipboardOwner);
+	    event.xany.window = Tk_WindowId(tkClipboardOwner);
+	    event.xany.display = Tk_Display(tkClipboardOwner);
 	    event.xselectionclear.selection = dispPtr->clipboardAtom;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	}
-	clipboardOwner = NULL;
+	tkClipboardOwner = NULL;
     }
 }
 @end
@@ -144,7 +146,7 @@ TkSelGetSelection(
 	     "%s selection doesn't exist or form \"%s\" not defined",
 	     Tk_GetAtomName(tkwin, selection),
 	     Tk_GetAtomName(tkwin, target)));
-	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     }
     return result;
 }
@@ -176,10 +178,9 @@ XSetSelectionOwner(
     TkDisplay *dispPtr = TkGetDisplayList();
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
-	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
+	tkClipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
-
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -198,7 +199,7 @@ XSetSelectionOwner(
  *	None.
  *
  * Side effects:
- *	clipboardOwner is cleared.
+ *	tkClipboardOwner is cleared.
  *
  *----------------------------------------------------------------------
  */
@@ -207,8 +208,8 @@ void
 TkMacOSXSelDeadWindow(
     TkWindow *winPtr)
 {
-    if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
-	clipboardOwner = NULL;
+    if (winPtr && winPtr == (TkWindow *)tkClipboardOwner) {
+	tkClipboardOwner = NULL;
     }
 }
 
@@ -218,27 +219,63 @@ TkMacOSXSelDeadWindow(
  * TkSelUpdateClipboard --
  *
  *	This function is called to force the clipboard to be updated after new
- *	data is added.
+ *	data is added or the clipboard has been cleared.
+ *
+ *      The nil Object is declared to be the owner.  This is done in a way
+ *      which triggers an incremeent of the pasteboard's changeCount property,
+ *      notifying clipboard managers that the value has changed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Ownership contents and attributes of the general NSPasteboard
+ *      may change.
  *
  *----------------------------------------------------------------------
  */
 
+/*
+ * Apple says that the changeCount is incremented whenever the ownership
+ * of a pasteboard type changes.  They actually mean that the changeCount
+ * is incremented when declareTypes is called, but is left unchanged when
+ * addTypes is called.  (Both methods can change ownership in some sense
+ * and both return the new changeCount.)
+ *
+ * Apple also says that addTypes "promises" that the owner object (if not nil)
+ * will provide data of the specified type, while declareTypes "prepares" the
+ * pasteboard.  Maybe that explains something.
+ */
+
 void
 TkSelUpdateClipboard(
-    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
-    TCL_UNUSED(TkClipboardTarget *))
-				/* Info about the content. */
+    TCL_UNUSED(TkWindow*),		/* Window associated with clipboard. */
+    clipboardOption option)	/* option passed to clipboard command */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
+    switch (option) {
+    case CLIPBOARD_APPEND:
+	/*
+	 * This increments the changeCount so that clipboard managers will be
+	 * able to see and manage the clip.
+	 */
 
-    changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
-	    owner:NSApp];
+	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+				 owner:nil];
+	[NSApp tkProvidePasteboard: TkGetDisplayList()
+			pasteboard: (NSPasteboard *) pb
+		provideDataForType: (NSString *) NSStringPboardType];
+	break;
+    case CLIPBOARD_CLEAR:
+	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
+				 owner:nil];
+	[NSApp tkProvidePasteboard: TkGetDisplayList()
+			pasteboard: (NSPasteboard *) pb
+		provideDataForType: (NSString *) NSStringPboardType];
+	break;
+    default:
+	break;
+    }
 }
 
 /*
@@ -264,7 +301,7 @@ TkSelEventProc(
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
-	clipboardOwner = NULL;
+	tkClipboardOwner = NULL;
 	TkSelClearSelection(tkwin, eventPtr);
     }
 }

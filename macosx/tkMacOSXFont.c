@@ -463,7 +463,7 @@ startOfClusterObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
     if (idx >= ulen) {
@@ -522,7 +522,7 @@ endOfClusterObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
     if (idx >= ulen) {

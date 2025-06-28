@@ -360,13 +360,13 @@ Tk_GetCursorFromData(
     if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), fg, &fgColor) == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"invalid color name \"%s\"", fg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", (char *)NULL);
 	goto error;
     }
     if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), bg, &bgColor) == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"invalid color name \"%s\"", bg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", (char *)NULL);
 	goto error;
     }
 

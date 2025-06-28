@@ -124,7 +124,7 @@ TkGetFileFilters(
 		    "\"typeName {extension ?extensions ...?} "
 		    "?{macType ?macTypes ...?}?\"",
 		    Tcl_GetString(listObjv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FILE_TYPE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FILE_TYPE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -294,7 +294,7 @@ AddClause(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad Macintosh file type \"%s\"",
 			Tcl_GetString(ostypeList[i])));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "MAC_TYPE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "MAC_TYPE", (char *)NULL);
 		code = TCL_ERROR;
 		goto done;
 	    }

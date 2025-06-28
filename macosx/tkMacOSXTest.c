@@ -342,7 +342,7 @@ TestinjectkeyeventObjCmd(
     if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			 "keysym must be an integer"));
-	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", (char *)NULL);
 	return TCL_ERROR;
     }
     macKC.uint = XKeysymToKeycode(NULL, keysym);
