@@ -5,6 +5,13 @@
 # All rights reserved.
 
 #
+# NOTE
+#
+# Some testing of the default error dialog would be needed too, but that's
+# not easy at all to emulate.
+#
+
+#
 # TESTFILE INITIALIZATION
 #
 
@@ -66,10 +73,6 @@ test bgerror-1.3 {bgerror / tkerror compat / accumulation / break} -setup {
 } -cleanup {
     catch {rename tkerror {}}
 } -result {err1}
-
-# some testing of the default error dialog
-# would be needed too, but that's not easy at all
-# to emulate.
 
 #
 # CLEANUP
