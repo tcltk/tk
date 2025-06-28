@@ -46,17 +46,17 @@ static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static int GtkEventLoop(ClientData clientData, Tcl_Interp *interp, int argc, const char **argv);
+static int GtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 void InstallGtkEventLoop();
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
-static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]));
-int IsScreenReaderRunning(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]));
+static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 void TkAtkAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-int TkAtkAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]));
+int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /* Core Atk/Tk accessible struct. */
@@ -86,22 +86,22 @@ struct AtkRoleMap {
 }
   
 static const struct AtkRoleMap roleMap[] = {
-  {"Button", ATK_ROLE_PUSH_BUTTON},
-  {"Checkbox", ATK_ROLE_CHECK_BOX},
-  {"Menuitem", ATK_ROLE_CHECK_MENU_ITEM},
-  {"Combobox", ATK_ROLE_COMBOBOX},
-  {"Entry", ATK_ROLE_ENTRY},		
-  {"Label", ATK_ROLE_LABEL},
-  {"Listbox", ATK_ROLE_LIST},
-  {"Menu", ATK_ROLE_MENU},
-  {"Tree", ATK_ROLE_OUTLINE},
-  {"Notebook", ATK_ROLE_PAGE_TAB},
-  {"Progressbar", ATK_ROLE_PROGRESS_BAR},
-  {"Radiobutton",ATK_ROLE_RADIOBUTTON},				      
-  {"Scale", ATK_ROLE_SLIDER},
-  {"Spinbox", ATK_ROLE_SPINBUTTON},
-  {"Table", ATK_ROLE_TABLE},
-  {NULL, 0}
+    {"Button", ATK_ROLE_PUSH_BUTTON},
+    {"Checkbox", ATK_ROLE_CHECK_BOX},
+    {"Menuitem", ATK_ROLE_CHECK_MENU_ITEM},
+    {"Combobox", ATK_ROLE_COMBOBOX},
+    {"Entry", ATK_ROLE_ENTRY},		
+    {"Label", ATK_ROLE_LABEL},
+    {"Listbox", ATK_ROLE_LIST},
+    {"Menu", ATK_ROLE_MENU},
+    {"Tree", ATK_ROLE_OUTLINE},
+    {"Notebook", ATK_ROLE_PAGE_TAB},
+    {"Progressbar", ATK_ROLE_PROGRESS_BAR},
+    {"Radiobutton",ATK_ROLE_RADIOBUTTON},				      
+    {"Scale", ATK_ROLE_SLIDER},
+    {"Spinbox", ATK_ROLE_SPINBUTTON},
+    {"Table", ATK_ROLE_TABLE},
+    {NULL, 0}
 };
 
 /* Hash table for managing accessibility attributes. */
@@ -112,12 +112,7 @@ extern Tcl_HashTable *TkAccessibilityObject;
  * Functions to get accessible frame to Atk. 
  */
 
-static void GetWidgetExtents(
-			     Tk_Window tkwin,
-			     int *x,
-			     int *y,
-			     int *w,
-			     int *h)
+static void GetWidgetExtents(Tk_Window tkwin, int *x,int *y, int *w,int *h)
 {
   if (tkwin) {
     *x = Tk_X(tkwin);
@@ -129,13 +124,7 @@ static void GetWidgetExtents(
   }
 }
 
-static void tk_get_extents(
-			   AtkComponent *component,
-			   gint *x,
-			   gint *y,
-			   gint *width,
-			   gint *height,
-			   AtkCoordType coord_type)
+static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type)
 {
   TkAtkAccessible *acc = (TkAtkAccessible *)component;
   GetWidgetExtents(acc->tkwin, x, y, width, height);
@@ -380,10 +369,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass) {
 
 
 /* Function to map Tk window to Atk attributes. */
-AtkObject *TkCreateAccessibleAtkObject(
-				       Tcl_Interp *interp,
-				       Tk_Window tkwin,
-				       const char *path)
+AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin,const char *path)
 {
   TkAtkAccessible *acc = g_object_new(tk_atk_accessible_get_type(), NULL);
   acc->interp = interp;
@@ -402,11 +388,7 @@ AtkObject *TkCreateAccessibleAtkObject(
  * Functions to integrate Tk and Gtk event loops. 
  */
 
-static int GtkEventLoop(
-			ClientData clientData,
-			Tcl_Interp *interp,
-			int argc,
-			const char **argv)
+static int GtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
 
   /* Let GTK process its events. */
@@ -511,11 +493,7 @@ EmitSelectionChanged(
  *----------------------------------------------------------------------
  */
 
-int IsScreenReaderRunning(
-			  TCL_UNUSED(void *),
-			  Tcl_Interp *interp, /* Current interpreter. */
-			  int argc, /* Number of arguments. */
-			  Tcl_Obj *const argv[]) /* Argument objects. */
+int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
 	
   DBusError error;
@@ -629,11 +607,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
  */
 
 
-int TkAtkAccessibleObjCmd(
-			  TCL_UNUSED(void *),
-			  Tcl_Interp *interp, /* Current interpreter. */
-			  int argc, /* Number of arguments. */
-			  Tcl_Obj *const argv[]) /* Argument objects. */
+int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
   if (objc != 2) {
     Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -715,4 +689,11 @@ TkAtkAccessibility_Init(Tcl_Interp *interp) {
 	
     }
 
-
+  /*
+   * Local Variables:
+   * mode: objc
+   * c-basic-offset: 4
+   * fill-column: 79
+   * coding: utf-8
+   * End:
+   */
