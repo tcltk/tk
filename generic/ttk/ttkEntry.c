@@ -1430,7 +1430,7 @@ EntryIndex(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
 		    Tk_PathName(entryPtr->core.tkwin)));
-	    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "NO_SELECTION", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "NO_SELECTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (strncmp(string, "sel.first", length) == 0) {
@@ -1478,7 +1478,7 @@ EntryIndex(
 badIndex:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad entry index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -1894,14 +1894,14 @@ static int ComboboxCurrentCommand(
 	    if (idx < 0 || idx >= nValues) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"index \"%s\" out of range", Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    currentIndex = idx;
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad index \"%s\"", Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 

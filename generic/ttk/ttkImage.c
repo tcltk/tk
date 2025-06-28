@@ -100,7 +100,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"image specification must contain an odd number of elements",
 		-1));
-	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "SPEC", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "SPEC", (char *)NULL);
 	}
 	goto error;
     }
@@ -380,7 +380,7 @@ Ttk_CreateImageElement(
     if (objc + 1 < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Must supply a base image", -1));
-	Tcl_SetErrorCode(interp, "TTK", "IMAGE", "BASE", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "IMAGE", "BASE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -405,7 +405,7 @@ Ttk_CreateImageElement(
 	if (i == objc - 1) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "Value for %s missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "VALUE", (char *)NULL);
 	    goto error;
 	}
 
