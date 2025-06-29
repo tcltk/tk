@@ -501,6 +501,7 @@ AC_SUBST([ATK_LIBS])
 
 fi
 
+
 #--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.

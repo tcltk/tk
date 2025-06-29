@@ -512,6 +512,7 @@ TTK_STUB_SRCS = \
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
+	$(UNIX_DIR)/tkUnixAccessibility.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
 	$(UNIX_DIR)/tkUnixConfig.c \
 	$(UNIX_DIR)/tkUnixCursor.c \
@@ -1284,6 +1285,9 @@ tkUnix.o: $(UNIX_DIR)/tkUnix.c
 
 tkUnix3d.o: $(UNIX_DIR)/tkUnix3d.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix3d.c
+
+tkUnixAccessibility.o: $(UNIX_DIR)/tkUnixAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
 
 tkUnixButton.o: $(UNIX_DIR)/tkUnixButton.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixButton.c
