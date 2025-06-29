@@ -7440,10 +7440,10 @@ TkTextIndexBbox(
 	 * line.
 	 */
 
-        *charWidthPtr = dInfoPtr->maxX - *xPtr;
-        if (*charWidthPtr > textPtr->charWidth) {
-            *charWidthPtr = textPtr->charWidth;
-        }
+	*charWidthPtr = dInfoPtr->maxX - *xPtr;
+	if (*charWidthPtr > textPtr->charWidth) {
+	    *charWidthPtr = textPtr->charWidth;
+	}
 	if (*xPtr > dInfoPtr->maxX) {
 	    *xPtr = dInfoPtr->maxX;
 	}

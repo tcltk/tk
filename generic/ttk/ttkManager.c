@@ -465,7 +465,7 @@ int Ttk_GetContentIndexFromObj(
 	if (index < 0 || (index - !!lastOK) >= mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "Managed window index \"%s\" out of bounds", Tcl_GetString(objPtr)));
-	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -481,7 +481,7 @@ int Ttk_GetContentIndexFromObj(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
 		    Tk_PathName(mgr->window)));
-	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "MANAGER", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "MANAGER", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -490,7 +490,7 @@ int Ttk_GetContentIndexFromObj(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "Invalid managed window specification %s", string));
-    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "SPEC", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "SPEC", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -551,7 +551,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window window, Tk_Window container)
 badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot add \"%s\" as content of \"%s\"",
 	    Tk_PathName(window), Tk_PathName(container)));
-    Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", (char *)NULL);
     return 0;
 }
 

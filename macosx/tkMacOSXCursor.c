@@ -393,7 +393,7 @@ TkGetCursorByName(
 	    macCursorPtr->type != NONE)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad cursor spec \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
 	if (macCursorPtr) {
 	    ckfree(macCursorPtr);
 	    macCursorPtr = NULL;

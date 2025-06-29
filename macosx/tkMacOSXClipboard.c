@@ -22,7 +22,7 @@ static Tk_Window tkClipboardOwner = NULL;
 
 @implementation TKApplication(TKClipboard)
 - (void) tkProvidePasteboard: (TkDisplay *) dispPtr
-        pasteboard: (NSPasteboard *) sender
+	pasteboard: (NSPasteboard *) sender
 	provideDataForType: (NSString *) type
 {
     NSMutableString *string = [NSMutableString new];
@@ -146,7 +146,7 @@ TkSelGetSelection(
 	     "%s selection doesn't exist or form \"%s\" not defined",
 	     Tk_GetAtomName(tkwin, selection),
 	     Tk_GetAtomName(tkwin, target)));
-	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     }
     return result;
 }
@@ -249,7 +249,7 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
+    TCL_UNUSED(TkWindow*),		/* Window associated with clipboard. */
     clipboardOption option)	/* option passed to clipboard command */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
@@ -259,7 +259,7 @@ TkSelUpdateClipboard(
 	 * This increments the changeCount so that clipboard managers will be
 	 * able to see and manage the clip.
 	 */
-	    
+
 	changeCount = [pb declareTypes:[NSArray arrayWithObject:NSStringPboardType]
 				 owner:nil];
 	[NSApp tkProvidePasteboard: TkGetDisplayList()

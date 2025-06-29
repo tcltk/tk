@@ -547,7 +547,7 @@ Tk_ClipboardObjCmd(
 	if (result == TCL_OK) {
 	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_CLEAR);
 	}
-	return result; 
+	return result;
     }
     case CLIPBOARD_GET: {
 	Atom target;
