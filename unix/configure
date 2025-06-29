@@ -8591,13 +8591,6 @@ printf "%s\n" "$as_me: ATK and/or Atk-bridge not found, accessibility support wi
 fi
 
 
-# Substitute
-
-
-
-fi
-
-
 #--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.

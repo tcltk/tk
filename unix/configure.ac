@@ -501,13 +501,6 @@ if test "$tk_aqua" = no; then
 fi
 
 
-# Substitute
-AC_SUBST([ATK_CFLAGS])
-AC_SUBST([ATK_LIBS])
-
-fi
-
-
 #--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
