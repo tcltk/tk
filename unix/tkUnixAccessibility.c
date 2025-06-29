@@ -28,7 +28,6 @@
 #include <gtk/gtk.h>
 #include <dbus/dbus.h>
 
-
 /* Data declarations and protoypes of functions used in this file. */
 
 /* Core Atk/Tk accessible struct. */
