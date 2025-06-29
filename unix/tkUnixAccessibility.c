@@ -19,8 +19,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef HAVE_ATK
-#include <AtkObject.h>
+#ifdef USE_ATK
+#include <atk/atkobject.h>
 #include <atk/atk.h>
 #include <atk-bridge.h> 
 #include <gtk/gtk.h>
@@ -538,8 +538,6 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
   return TCL_OK;
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -636,7 +634,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
   return TCL_OK;
 }
 
-#endif /*HAVE_ATK*/
+#endif /*USE_ATK*/
 /*
  *----------------------------------------------------------------------
  *
@@ -656,7 +654,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  */
 
 int 
-#ifdef HAVE_ATK
+#ifdef USE_ATK
 TkAtkAccessibility_Init(Tcl_Interp *interp) {
 	
   /* Handle Atk initialization. */
