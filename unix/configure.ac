@@ -477,25 +477,28 @@ fi
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
-  # Combined manual check for ATK and Atk-bridge using pkg-config
-  AC_MSG_CHECKING([for ATK and Atk-bridge (manual pkg-config check)])
+  # Combined manual check for ATK, Atk-bridge, GTK, and D-Bus using pkg-config
+  AC_MSG_CHECKING([for ATK, Atk-bridge, GTK, and D-Bus (manual pkg-config check)])
 
-  if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+  if pkg-config --exists atk \
+     && pkg-config --exists atk-bridge-2.0 \
+     && pkg-config --exists gtk+-3.0 \
+     && pkg-config --exists dbus-1; then
+
     AC_MSG_RESULT([yes])
-    ATK_CFLAGS="`pkg-config --cflags atk` `pkg-config --cflags atk-bridge-2.0`"
-    ATK_LIBS="`pkg-config --libs atk` `pkg-config --libs atk-bridge-2.0`"
-    AC_DEFINE([USE_ATK], [1], [Define if ATK and Atk-bridge are available])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0 gtk+-3.0 dbus-1`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0 gtk+-3.0 dbus-1`"
+    AC_DEFINE([USE_ATK], [1], [Define if ATK, Atk-bridge, GTK, and D-Bus are available])
     have_atk=yes
-    AC_MSG_NOTICE([ATK and Atk-bridge found, enabling accessibility support])
+    AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
   else
     AC_MSG_RESULT([no])
     ATK_CFLAGS=""
     ATK_LIBS=""
     have_atk=no
-    AC_MSG_NOTICE([ATK and/or Atk-bridge not found, accessibility support will be disabled])
+    AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
   fi
 
-  # Substitute
   AC_SUBST([ATK_CFLAGS])
   AC_SUBST([ATK_LIBS])
 fi
