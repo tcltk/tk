@@ -18,16 +18,35 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <tcl.h>
+#include <tk.h>
 
 #ifdef USE_ATK
 #include <atk/atkobject.h>
 #include <atk/atk.h>
-#include <atk/atk-bridge.h> 
+#include <atk-bridge.h> 
 #include <gtk/gtk.h>
 #include <dbus/dbus.h>
 
 
 /* Data declarations and protoypes of functions used in this file. */
+
+/* Core Atk/Tk accessible struct. */
+typedef struct {
+  AtkObject parent;
+  Tk_Window tkwin;
+  Tcl_Interp *interp;
+  char *path;
+} TkAtkAccessible;
+
+typedef struct {
+  AtkObjectClass parent_class;
+} TkAtkAccessibleClass;
+
+G_DEFINE_TYPE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT)
+
+static GList *global_accessible_objects = NULL;
+static GHashTable *tk_to_atk_map = NULL;
 
 static void GetWidgetExtents(Tk_Window tkwin, int *x, int *y, int *w, int *h);
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -46,35 +65,18 @@ static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static int GtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+static int GtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); 
 void InstallGtkEventLoop();
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
-int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 void TkAtkAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
-TkAtkAccessibility_Init(Tcl_Interp *interp);
-
-/* Core Atk/Tk accessible struct. */
-typedef struct {
-  AtkObject parent;
-  Tk_Window tkwin;
-  Tcl_Interp *interp;
-  char *path;
-} TkAtkAccessible;
-
-typedef struct {
-  AtkObjectClass parent_class;
-} TkAtkAccessibleClass;
-
-G_DEFINE_TYPE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT)
-
-static GList *global_accessible_objects = NULL;
-static GHashTable *tk_to_atk_map = NULL;
+int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /*
  * Struct to map Tk roles into Atk roles.
