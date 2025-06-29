@@ -362,7 +362,7 @@ namespace eval ::tk::test::child {
 
     # childTkProcess --
     #
-    # 	Create a new Tk application in a child process, and enable it to
+    #	Create a new Tk application in a child process, and enable it to
     #	evaluate scripts on our behalf.
     #
     #	Suggestion: replace with child interp or thread ?

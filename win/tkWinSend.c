@@ -147,7 +147,7 @@ Tk_SetAppName(
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "failed to initialize the COM library", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", (char *)NULL);
 	    return "";
 	}
 	tsdPtr->initialized = 1;

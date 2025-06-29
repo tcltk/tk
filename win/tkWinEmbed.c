@@ -249,7 +249,7 @@ Tk_UseWindow(
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", (char *)NULL);
 	return TCL_ERROR;
     }
 */
@@ -282,7 +282,7 @@ Tk_UseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" does not exist", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "EXIST", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "EXIST", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -292,13 +292,13 @@ Tk_UseWindow(
 	if (!SendMessageW(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "The container is already in use", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", (char *)NULL);
 	    return TCL_ERROR;
 	}
     } else if (id == -PTR2INT(hwnd)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"the window to use is not a Tk container", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", (char *)NULL);
 	return TCL_ERROR;
     } else {
 	/*
@@ -314,7 +314,7 @@ Tk_UseWindow(
 		MB_OKCANCEL | MB_ICONWARNING)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Operation has been canceled", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CANCEL", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CANCEL", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
