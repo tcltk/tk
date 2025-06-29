@@ -22,7 +22,7 @@
 #ifdef USE_ATK
 #include <atk/atkobject.h>
 #include <atk/atk.h>
-#include <atk-bridge.h> 
+#include <atk/atk-bridge.h> 
 #include <gtk/gtk.h>
 #include <dbus/dbus.h>
 
