@@ -249,7 +249,7 @@ FileReadSVG(
 	    /* in case of an error reading the file */
 	    Tcl_DecrRefCount(dataObj);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	data = Tcl_GetStringFromObj(dataObj, &length);
@@ -406,7 +406,7 @@ ParseSVGWithOptions(
     inputCopy = (char *)attemptckalloc(length+1);
     if (inputCopy == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", (char *)NULL);
 	goto error;
     }
     memcpy(inputCopy, input, length);
@@ -530,7 +530,7 @@ ParseSVGWithOptions(
     nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
     if (nsvgImage == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", (char *)NULL);
 	goto error;
     }
     ckfree(inputCopy);
@@ -594,14 +594,14 @@ RasterizeSVG(
     wh = (Tcl_WideUInt)w * (Tcl_WideUInt)h;
     if ( w < 0 || h < 0 || wh > INT_MAX / 4) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "IMAGE_SIZE_OVERFLOW", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "IMAGE_SIZE_OVERFLOW", (char *)NULL);
 	goto cleanRAST;
     }
 
     imgData = (unsigned char *)attemptckalloc(wh * 4);
     if (imgData == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", (char *)NULL);
 	goto cleanRAST;
     }
     nsvgRasterize(rast, nsvgImage, 0, 0,
