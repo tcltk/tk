@@ -15,6 +15,9 @@ necessarily in Tk 8.
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
 
+## Improved widget appearance
+ - [Visible grip element added in ttk::panedwindow sashes of most built-in themes](https://core.tcl-lang.org/tk/tktview/9902d8)
+
 # Bug fixes
  - [inaccurate scrollbar error-message](https://core.tcl-lang.org/tk/tktview/f88118)
  - [Build tk 9.0.1 failed on macos 10.13](https://core.tcl-lang.org/tk/tktview/cb5d77)
@@ -24,7 +27,6 @@ to the userbase.
  - [Bug in the ttk::scale widget of the "default" theme](https://core.tcl-lang.org/tk/tktview/126d07)
  - [Wrong appearance of the ttk::menubutton indicator of the "xpnative" theme](https://core.tcl-lang.org/tk/tktview/525536)
  - [English shortcuts for Chinese locale](https://core.tcl-lang.org/tk/tktview/c99266)
- - [No grip element in ttk::panedwindow sashes of most built-in themes](https://core.tcl-lang.org/tk/tktview/9902d8)
  - [Tk_Get3DBorderColors broken by design](https://core.tcl-lang.org/tk/tktview/517165)
  - [MS-Win: Incorrect system menu entries for transient toplevels](https://core.tcl-lang.org/tk/tktview/159aa5)
  - [MS-Win: Withdrawn Tk transient windows can reappear in Windows taskbar preview](https://core.tcl-lang.org/tk/tktview/91d0e9)
