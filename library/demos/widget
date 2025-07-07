@@ -10,7 +10,7 @@ exec wish "$0" ${1+"$@"}
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 
-package require tk	8.7-
+package require tk	9.0
 package require msgcat
 
 destroy {*}[winfo children .]
@@ -31,26 +31,26 @@ if {[tk windowingsystem] eq "x11"} {
 if {"defaultFont" ni [font names]} {
     # TIP #145 defines some standard named fonts
     if {"TkDefaultFont" in [font names] && "TkFixedFont" in [font names]} {
-        # FIX ME: the following technique of cloning the font to copy it works
-        #         fine but means that if the system font is changed by Tk
-        #         cannot update the copied font. font alias might be useful
-        #         here -- or fix the app to use TkDefaultFont etc.
-        font create mainFont   {*}[font configure TkDefaultFont]
-        font create fixedFont  {*}[font configure TkFixedFont]
-        font create boldFont   {*}[font configure TkDefaultFont] -weight bold
-        font create titleFont  {*}[font configure TkDefaultFont] -weight bold
-        font create statusFont {*}[font configure TkDefaultFont]
-        font create varsFont   {*}[font configure TkDefaultFont]
+	# FIX ME: the following technique of cloning the font to copy it works
+	#         fine but means that if the system font is changed by Tk
+	#         cannot update the copied font. font alias might be useful
+	#         here -- or fix the app to use TkDefaultFont etc.
+	font create mainFont   {*}[font configure TkDefaultFont]
+	font create fixedFont  {*}[font configure TkFixedFont]
+	font create boldFont   {*}[font configure TkDefaultFont] -weight bold
+	font create titleFont  {*}[font configure TkDefaultFont] -weight bold
+	font create statusFont {*}[font configure TkDefaultFont]
+	font create varsFont   {*}[font configure TkDefaultFont]
 	if {[tk windowingsystem] eq "aqua"} {
 	    font configure titleFont -size 17
 	}
     } else {
-        font create mainFont   -family Helvetica -size 12
-        font create fixedFont  -family Courier   -size 10
-        font create boldFont   -family Helvetica -size 12 -weight bold
-        font create titleFont  -family Helvetica -size 18 -weight bold
-        font create statusFont -family Helvetica -size 10
-        font create varsFont   -family Helvetica -size 14
+	font create mainFont   -family Helvetica -size 12
+	font create fixedFont  -family Courier   -size 10
+	font create boldFont   -family Helvetica -size 12 -weight bold
+	font create titleFont  -family Helvetica -size 18 -weight bold
+	font create statusFont -family Helvetica -size 10
+	font create varsFont   -family Helvetica -size 14
     }
 }
 
@@ -142,7 +142,7 @@ if {[tk windowingsystem] ne "aqua"} {
 	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
     bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
-    if {[string match win* [tk windowingsystem]]} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Windows doesn't usually have a Meta key
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
 		-command {exit} -accelerator [mc "Ctrl+Q"]
