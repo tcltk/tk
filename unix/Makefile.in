@@ -275,7 +275,7 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @A
 
 STLIB_LD		= @STLIB_LD@
 SHLIB_LD		= @SHLIB_LD@
-SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@ @ATK_LIBS@
+SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 TK_SHLIB_LD_EXTRAS	= @TK_SHLIB_LD_EXTRAS@
 
 # Additional search flags needed to find the various shared libraries
