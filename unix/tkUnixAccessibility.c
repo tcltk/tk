@@ -165,8 +165,8 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 		
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-		role = ATK_ROLE_UNKNOWN;
-		return role;
+	role = ATK_ROLE_UNKNOWN;
+	return role;
     }
 		
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
@@ -175,12 +175,20 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 	role = ATK_ROLE_UNKNOWN;
 	return role;
     }
+
+    size_t count = sizeof(roleMap) / sizeof(roleMap[0]);
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    for (long unsigned int i = 0; i < sizeof(roleMap); i++) {
+    if (!result) {
+	role = ATK_ROLE_UNKNOWN;
+	return role;
+    }
+    
+    for (long unsigned int i = 0; i < count; i++) {
 	if (strcmp(roleMap[i].tkrole, result) != 0) {
-	continue;
+	    continue;
 	}
 	role = roleMap[i].atkrole;
+	break;
     }
     return role;
 }
