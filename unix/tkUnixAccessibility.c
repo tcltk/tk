@@ -165,13 +165,15 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 		
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-		role = ATK_ROLE_UNKNOWN;	  
+		role = ATK_ROLE_UNKNOWN;
+		return role;
     }
 		
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
 	role = ATK_ROLE_UNKNOWN;
+	return role;
     }
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     for (long unsigned int i = 0; i < sizeof(roleMap); i++) {
