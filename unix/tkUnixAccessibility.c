@@ -731,7 +731,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp) {
     }
 
     /* This triggers the AT-SPI bridge startup. */
-   OverrideAtkGetRoot();
+    OverrideAtkGetRoot();
 
     atk_bridge_adaptor_init(NULL, NULL);
     g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
