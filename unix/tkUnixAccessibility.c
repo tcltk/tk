@@ -42,6 +42,8 @@ typedef struct _TkAtkAccessibleClass {
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 G_DEFINE_TYPE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT)
 
+static AtkObject *tk_root_accessible = NULL;
+
 static GList *global_accessible_objects = NULL;
 static GHashTable *tk_to_atk_map = NULL;
 
@@ -72,6 +74,8 @@ void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
+static AtkObject *tk_util_get_root(void);
+static void OverrideAtkGetRoot(void);
 
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -423,6 +427,30 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
     }
 }
 
+static AtkObject *tk_util_get_root(void) {
+    if (!tk_root_accessible) {
+        tk_root_accessible = g_object_new(ATK_TYPE_OBJECT, NULL);
+        atk_object_initialize(tk_root_accessible, NULL);
+        atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+        atk_object_set_name(tk_root_accessible, "Tk");
+    }
+    return tk_root_accessible;
+}
+
+static void OverrideAtkGetRoot(void) {
+    static gboolean initialized = FALSE;
+    if (initialized)
+        return;
+
+    GType util_type = atk_util_get_type();
+    AtkUtilClass *klass = g_type_class_ref(util_type);
+    klass->get_root = tk_util_get_root;
+    g_type_class_unref(klass);
+
+    initialized = TRUE;
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -701,6 +729,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp) {
 	Tcl_SetResult(interp, "ATK version 2.0 or higher is required.", TCL_STATIC);
 	return TCL_ERROR;
     }
+
+    /* This triggers the AT-SPI bridge startup. */
+   OverrideAtkGetRoot();
 
     atk_bridge_adaptor_init(NULL, NULL);
     g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
