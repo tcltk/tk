@@ -534,6 +534,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_
 
     /* Emit focus-event with TRUE to indicate focus gained */
     g_signal_emit_by_name(G_OBJECT(acc), "focus-event", TRUE);
+    g_signal_emit_by_name(G_OBJECT(acc), "state-change", ATK_STATE_FOCUSED, TRUE);
 
     return TCL_OK;
 }
