@@ -339,7 +339,7 @@ static void tk_atk_accessible_init(TkAtkAccessible *self) {
 
 /* Initialize Tk-Atk class. */
 static void tk_atk_accessible_finalize(GObject *gobject) {
-    TkAtkAccessible *self = TK_ATK_ACCESSIBLE(gobject);
+    TkAtkAccessible *self = (TkAtkAccessible*)gobject;
     g_free(self->path);
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
