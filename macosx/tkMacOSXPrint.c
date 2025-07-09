@@ -343,10 +343,10 @@ FinishPrint(
  */
 
 int MakePDF(
- TCL_UNUSED(void *),
- Tcl_Interp *ip,
- int objc,
- Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),
+    Tcl_Interp *ip,
+    int objc,
+    Tcl_Obj *const objv[])
 {
     Tk_Window path;
     Drawable d;
