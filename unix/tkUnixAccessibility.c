@@ -76,7 +76,6 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
-static void OverrideAtkGetRoot(void);
 AtkObject *atk_get_root(void);
 
 /* Script-level commands and helper functions. */
@@ -526,29 +525,6 @@ AtkObject *atk_get_root(void)
     return tk_util_get_root();
 }
 
-static void OverrideAtkGetRoot(void)
-{
-    static gboolean initialized = FALSE;
-    if (initialized) return;
-
-
-    /* Ensure GTK is initialized first. */
-    if (!gtk_init_check(0, NULL)) {
-	g_warning("GTK initialization failed");
-	return;
-    }
-
-    GType util_type = atk_util_get_type();
-    AtkUtilClass *klass = g_type_class_ref(util_type);
-    if (klass) {
-	klass->get_root = tk_util_get_root;
-	g_type_class_unref(klass);
-    }
-
-    initialized = TRUE;
-
-}
-
 /* 
  * Functions to integrate Tk and Gtk event loops. 
  */
@@ -885,18 +861,18 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     }
 
     /* Set up root window */
-    OverrideAtkGetRoot();
+    atk_get_root();
+
+    /* Install event loop integration */
+    InstallGtkEventLoop();
 
     /* Initialize AT-SPI bridge. */
     if (!atk_bridge_adaptor_init(NULL, NULL)) {
-	g_warning("AT-SPI bridge initialization failed");
+	g_warning("AT-SPI bridge initialization failed.");
     }
 
     /* Ensure our type is registered. */
     g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
-
-    /* Install event loop integration */
-    InstallGtkEventLoop();
 
     /* Register Tcl commands */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", 
