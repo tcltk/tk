@@ -4,6 +4,20 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
+Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
+
+Tk 9.0.3 continues the Tk 9.0 series of releases.  The Tk 9.0 series
+does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
+To make use of Tk 9.0.3, first a Tcl 9.0 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [Pressing Alt-<key> triggers an error popup](https://core.tcl-lang.org/tk/tktview/a30d3e)
+
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
 Tk 9.0.2 continues the Tk 9.0 series of releases.  The Tk 9.0 series
@@ -45,8 +59,6 @@ to the userbase.
 
 # Incompatibilities
  - [The ActiveCodePage element has been removed from the Windows executable manifest for wish](https://core.tcl-lang.org/tips/doc/trunk/tip/716.md)
-
-
 
 Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
 
