@@ -77,6 +77,7 @@ AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 static void OverrideAtkGetRoot(void);
+AtkObject *atk_get_root(void);
 
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -520,6 +521,11 @@ static AtkObject *tk_util_get_root(void)
 
 }
 
+AtkObject *atk_get_root(void)
+{
+    return tk_util_get_root();
+}
+
 static void OverrideAtkGetRoot(void)
 {
     static gboolean initialized = FALSE;
@@ -913,7 +919,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus__change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", NULL, NULL, NULL);
-
     return TCL_OK;	
 }
 #endif
