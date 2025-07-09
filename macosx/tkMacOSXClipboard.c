@@ -249,7 +249,7 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
+    TCL_UNUSED(TkWindow*),		/* Window associated with clipboard. */
     clipboardOption option)	/* option passed to clipboard command */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
