@@ -361,7 +361,7 @@ TkMacOSXIconBitmapObjCmd(
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", (char *)NULL);
 	goto end;
     }
     if (Tcl_GetIntFromObj(interp, objv[i++], &ib.width) != TCL_OK) {
@@ -377,7 +377,7 @@ TkMacOSXIconBitmapObjCmd(
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", (char *)NULL);
 	goto end;
     }
 #if 0
@@ -392,7 +392,7 @@ TkMacOSXIconBitmapObjCmd(
 	if (len > 4) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid bitmap value", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", (char *)NULL);
 	    goto end;
 	}
     }

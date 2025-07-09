@@ -1472,7 +1472,7 @@ TkMacOSXNSImageConfigureModel(
 
     if (modelPtr->sourceObj == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	goto errorExit;
     }
 
@@ -1483,7 +1483,7 @@ TkMacOSXNSImageConfigureModel(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "Unknown interpretation for source in -as option.  "
 	    "Should be name, file, path, or filetype.", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	goto errorExit;
     }
 
@@ -1544,18 +1544,18 @@ TkMacOSXNSImageConfigureModel(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
 		"Try omitting ImageName, "
 		"e.g. use NSCaution for NSImageNameCaution.", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	case FILE_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Failed to load image file.\n", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	default:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Unrecognized file type.\n"
 		"If using a filename extension, do not include the dot.\n", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	}
     }
