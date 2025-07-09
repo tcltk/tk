@@ -39,11 +39,6 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
-#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
-G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
 
 static AtkObject *tk_root_accessible = NULL;
 static GList *global_accessible_objects = NULL;
@@ -127,6 +122,12 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Variable for widget values. */
 static GValue *tkvalue = NULL;
 
+#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
+G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
+
 /* 
  * Map Atk component interface to Tk.
  */
@@ -147,7 +148,7 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width
     /* Handle coordinate type conversion. */
     if (coord_type == ATK_XY_SCREEN) {
 	int root_x, root_y;
-	Tk_GetRootCoords(acc->tkwin, 0, 0, &root_x, &root_y);
+	Tk_GetRootCoords(acc->tkwin, &root_x, &root_y);
 	*x = root_x;
 	*y = root_y;
     }
@@ -199,7 +200,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 	return NULL;
     }
 
-    if (i < 0 || i >= g_list_length(child_widgets)) {
+    if (i >= g_list_length(child_widgets)) {
 	return NULL;
     }
 
@@ -245,9 +246,9 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
     if (Tk_IsTopLevel(win)) {
 	role = ATK_ROLE_WINDOW;
     }
+    return role;
 }
-return role;
-}
+
 static AtkRole tk_get_role(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
@@ -356,8 +357,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	atk_state_set_add_state(set, ATK_STATE_SHOWING);
     }
 
-    /* Check for focusable widgets */
-    if (Tk_IsFocusable(acc->tkwin)) {
+    /* Check for focusable widgets. */
+    if (Tk_IsMapped(acc->tkwin)) {
 	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
 
@@ -400,6 +401,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	}
 	return TCL_OK;
     }
+    return TCL_OK;
 }
 
 static gint tk_action_get_n_actions(AtkAction *action)
@@ -506,7 +508,7 @@ static AtkObject *tk_util_get_root(void)
 	tk_root_accessible = g_object_new(ATK_TYPE_OBJECT, NULL);
 	atk_object_initialize(tk_root_accessible, NULL);
 	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-	atk_object_set_name(tk_root_accessible, “Tk Application”);
+	atk_object_set_name(tk_root_accessible, "Tk Application");
 
 
 	/*  Set up virtual functions for root. */
@@ -866,10 +868,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
     /* Check ATK version. */
     if (atk_get_major_version() < 2) {
-	Tcl_SetResult(interp, “ATK version 2.0 or higher is required.”, TCL_STATIC);
+	Tcl_SetResult(interp, "ATK version 2.0 or higher is required.", TCL_STATIC);
 	return TCL_ERROR;
     }
-
 
     /* Initialize GTK and ATK. */
     if (!gtk_init_check(0, NULL)) {
