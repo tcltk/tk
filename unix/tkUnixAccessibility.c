@@ -26,6 +26,7 @@
 #include <atk/atk.h>
 #include <atk-bridge.h> 
 #include <dbus/dbus.h>
+#include <glib.h>
 
 /* Data declarations used in this file. */
 typedef struct _TkAtkAccessible {
@@ -69,8 +70,8 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 static void tk_atk_accessible_init(TkAtkAccessible *accessible);
 static void tk_atk_accessible_finalize(GObject *gobject);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static gboolean  GtkEventLoop(ClientData clientData); 
-void InstallGtkEventLoop();
+static void GtkEventLoop(ClientData clientData); 
+void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
@@ -541,13 +542,12 @@ static gboolean GtkEventLoop(void *clientData)
         g_main_context_iteration(context, FALSE);
     }
 
-    /* Schedule again. */
-    Tcl_DoWhenIdle(GtkEventLoop, NULL);
-    return FALSE;
+    /* Schedule again to run in 25 MS. */
+    Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
 }
 
 void InstallGtkEventLoop() {
-    Tcl_DoWhenIdle(GtkEventLoop, NULL);
+    Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
 }
 
 /* 
