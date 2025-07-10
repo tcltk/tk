@@ -22,7 +22,6 @@
 #include <tk.h>
 
 #ifdef USE_ATK
-#include <gtk/gtk.h>
 #include <atk/atk.h>
 #include <atk-bridge.h> 
 #include <dbus/dbus.h>
@@ -121,6 +120,9 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 /* Variable for widget values. */
 static GValue *tkvalue = NULL;
+
+/*Gtk main event loop. */
+static GMainLoop *main_loop = NULL;
 
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
@@ -531,12 +533,9 @@ static void GtkEventLoop(void *clientData)
 {
     (void) clientData;
  
-    /* Use the default GLib context. */
-    GMainContext *context = g_main_context_default();
-
-    /* Spin once non-blocking. */
-    while (g_main_context_pending(context)) {
-        g_main_context_iteration(context, FALSE);
+    if (!main_loop) {
+	main_loop = g_main_loop_new(NULL, FALSE);
+	g_main_loop_run(main_loop);
     }
 
     /* Schedule again to run in 25 MS. */
@@ -860,7 +859,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     }
 
     /* Initialize GTK and ATK. */
-    if (!gtk_init_check(0, NULL)) {
+    if (!g_type_init()) {
 	Tcl_SetResult(interp, "GTK initialization failed.", TCL_STATIC);
 	return TCL_ERROR;
     }
@@ -872,6 +871,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     tk_root_accessible = tk_util_get_root();   
 
     /* Initialize AT-SPI bridge. */
+    atk_get_default_registry();
     if (!atk_bridge_adaptor_init(NULL, NULL)) {
 	g_warning("AT-SPI bridge initialization failed.");
     }
