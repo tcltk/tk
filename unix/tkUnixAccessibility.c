@@ -530,7 +530,7 @@ AtkObject *atk_get_root(void)
  * Functions to integrate Tk and Gtk event loops. 
  */
 
-static gboolean GtkEventLoop(void *clientData)
+static void GtkEventLoop(void *clientData)
 {
     (void) clientData;
  
