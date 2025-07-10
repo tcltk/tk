@@ -121,9 +121,6 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Variable for widget values. */
 static GValue *tkvalue = NULL;
 
-/*Gtk main event loop. */
-static GMainLoop *main_loop = NULL;
-
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
@@ -511,16 +508,8 @@ static AtkObject *tk_util_get_root(void)
     if (!tk_root_accessible) {
         /* Use a subclass or ATK_TYPE_NO_OP_OBJECT. */
 	tk_root_accessible = atk_get_root();
-	g_print("Root object type: %s\n", G_OBJECT_TYPE_NAME(tk_root_accessible));
-
-        atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-        atk_object_set_name(tk_root_accessible, "Tk Application");
-
-        /* Assign virtual methods. */
-        AtkObjectClass *klass = ATK_OBJECT_GET_CLASS(tk_root_accessible);
-        klass->get_n_children = tk_get_n_children;
-        klass->ref_child = tk_ref_child;
     }
+    
     return tk_root_accessible;
 }
 
@@ -533,9 +522,9 @@ static void GtkEventLoop(void *clientData)
 {
     (void) clientData;
  
-    if (!main_loop) {
-	main_loop = g_main_loop_new(NULL, FALSE);
-	g_main_loop_run(main_loop);
+    /* Non-blocking GLib iteration. */
+    while (g_main_context_pending(NULL)) {
+        g_main_context_iteration(NULL, FALSE);
     }
 
     /* Schedule again to run in 25 MS. */
@@ -854,43 +843,53 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
     /* Check ATK version. */
     if (atk_get_major_version() < 2) {
-	Tcl_SetResult(interp, "ATK version 2.0 or higher is required.", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(interp, "ATK version 2.0 or higher is required.", TCL_STATIC);
+        return TCL_ERROR;
     }
 
-    /* Initialize GTK and ATK. */
-    if (!g_type_init()) {
-	Tcl_SetResult(interp, "GTK initialization failed.", TCL_STATIC);
-	return TCL_ERROR;
-    }
+    /* If GLib < 2.36 is supported. */
+#if !GLIB_CHECK_VERSION(2,36,0)
+    g_type_init();  /* Deprecated in newer GLib.*/
+#endif
 
-    /* Ensure our type is registered. */
+    /* Set env to enable AT-SPI bridge.*/
+    g_setenv("NO_AT_BRIDGE", "0", TRUE);
+    g_setenv("G_ENABLE_ACCESSIBILITY", "1", TRUE);
+
+    /* Ensure Atk is initialized. */
+    atk_get_default_registry();
+
+    /* Ensure our custom AtkObject type is registered */
     g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
 
-    /* Initialize root object. */
-    tk_root_accessible = tk_util_get_root();   
+    /*  Prime the GLib main loop once to allow bridge setup. */
+    while (g_main_context_iteration(NULL, FALSE));
 
-    /* Initialize AT-SPI bridge. */
-    atk_get_default_registry();
-    if (!atk_bridge_adaptor_init(NULL, NULL)) {
-	g_warning("AT-SPI bridge initialization failed.");
+    /* Start AT-SPI connection. */
+    atk_bridge_adaptor_init(NULL, NULL);
+
+    /* Confirm root is available. */
+    tk_root_accessible = tk_util_get_root();
+    if (!ATK_IS_OBJECT(tk_root_accessible)) {
+	g_warning("ATK root object is not available");
     }
 
-    /*Spin GLib event loop. */
-    InstallGtkEventLoop();
+    /* Start GLib event loop with Tcl integration. */
+    InstallGtkEventLoop(); 
 
-    /* Register Tcl commands */
+    /* Register Tcl accessibility commands */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", 
-			 TkAtkAccessibleObjCmd, NULL, NULL);
+                         TkAtkAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", 
-			 EmitSelectionChanged, NULL, NULL);
+                         EmitSelectionChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", 
-			 EmitFocusChanged, NULL, NULL);
+                         EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", 
-			 IsScreenReaderRunning, NULL, NULL);
+                         IsScreenReaderRunning, NULL, NULL);
 
     return TCL_OK;
 }
+
 #else
 /* No Atk found. */
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
