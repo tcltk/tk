@@ -77,7 +77,6 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
-AtkObject *atk_get_root(void);
 
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -480,19 +479,21 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     atk_object_set_role(obj, GetAtkRoleForWidget(tkwin));
     atk_object_set_name(obj, path);
 
-    /* Set up parent-child relationships */
+    /* Set up parent-child relationships. */
     if (tkwin) {
 	Tk_Window parent = Tk_Parent(tkwin);
 	if (parent) {
 	    AtkObject *parent_obj = GetAtkObjectForTkWindow(parent);
 	    if (parent_obj) {
 		atk_object_set_parent(obj, parent_obj);
+		g_signal_emit_by_name(parent_obj, "children-changed::add", 0, obj); 
 	    }
 	} else {
 	    /* This is a toplevel, make it a child of root. */
 	    atk_object_set_parent(obj, tk_root_accessible);
+	    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, obj);
+				  }
 	}
-    }
 
     /* Add to global list and child widgets. */
     global_accessible_objects = g_list_prepend(global_accessible_objects, acc);
@@ -507,7 +508,8 @@ static AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
         /* Use a subclass or ATK_TYPE_NO_OP_OBJECT. */
-        tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
+	tk_root_accessible = atk_get_root();
+	g_print("Root object type: %s\n", G_OBJECT_TYPE_NAME(tk_root_accessible));
 
         atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
         atk_object_set_name(tk_root_accessible, "Tk Application");
@@ -520,11 +522,6 @@ static AtkObject *tk_util_get_root(void)
     return tk_root_accessible;
 }
 
-
-AtkObject *atk_get_root(void)
-{
-    return tk_util_get_root();
-}
 
 /* 
  * Functions to integrate Tk and Gtk event loops. 
@@ -870,9 +867,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Ensure our type is registered. */
     g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
-    
-    /* Create and register root object */
-    atk_get_root();
+
+    /* Initialize root object. */
+    tk_root_accessible = tk_util_get_root();   
 
     /* Initialize AT-SPI bridge. */
     if (!atk_bridge_adaptor_init(NULL, NULL)) {
