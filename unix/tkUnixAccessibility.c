@@ -69,7 +69,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 static void tk_atk_accessible_init(TkAtkAccessible *accessible);
 static void tk_atk_accessible_finalize(GObject *gobject);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static void  GtkEventLoop(); 
+static gboolean  GtkEventLoop(ClientData clientData); 
 void InstallGtkEventLoop();
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
@@ -505,20 +505,20 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 static AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
-	tk_root_accessible = g_object_new(ATK_TYPE_OBJECT, NULL);
-	atk_object_initialize(tk_root_accessible, NULL);
-	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-	atk_object_set_name(tk_root_accessible, "Tk Application");
+        /* Use a subclass or ATK_TYPE_NO_OP_OBJECT. */
+        tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
 
+        atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+        atk_object_set_name(tk_root_accessible, "Tk Application");
 
-	/*  Set up virtual functions for root. */
-	AtkObjectClass *klass = ATK_OBJECT_GET_CLASS(tk_root_accessible);
-	klass->get_n_children = tk_get_n_children;
-	klass->ref_child = tk_ref_child;
+        /* Assign virtual methods. */
+        AtkObjectClass *klass = ATK_OBJECT_GET_CLASS(tk_root_accessible);
+        klass->get_n_children = tk_get_n_children;
+        klass->ref_child = tk_ref_child;
     }
     return tk_root_accessible;
-
 }
+
 
 AtkObject *atk_get_root(void)
 {
@@ -529,13 +529,21 @@ AtkObject *atk_get_root(void)
  * Functions to integrate Tk and Gtk event loops. 
  */
 
-static void GtkEventLoop(void *clientData)
+static gboolean GtkEventLoop(void *clientData)
 {
     (void) clientData;
-    
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
+ 
+    /* Use the default GLib context. */
+    GMainContext *context = g_main_context_default();
+
+    /* Spin once non-blocking. */
+    while (g_main_context_pending(context)) {
+        g_main_context_iteration(context, FALSE);
     }
+
+    /* Schedule again. */
+    Tcl_DoWhenIdle(GtkEventLoop, NULL);
+    return FALSE;
 }
 
 void InstallGtkEventLoop() {
@@ -557,7 +565,7 @@ void InitAtkTkMapping(void)
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj)
 {
     InitAtkTkMapping();
-    g_object_ref(atkobj);  // FIXED: Proper reference counting
+    g_object_ref(atkobj);
     g_hash_table_insert(tk_to_atk_map, tkwin, atkobj);
 }
 
@@ -860,19 +868,19 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    /* Set up root window */
+    /* Ensure our type is registered. */
+    g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
+    
+    /* Create and register root object */
     atk_get_root();
-
-    /* Install event loop integration */
-    InstallGtkEventLoop();
 
     /* Initialize AT-SPI bridge. */
     if (!atk_bridge_adaptor_init(NULL, NULL)) {
 	g_warning("AT-SPI bridge initialization failed.");
     }
 
-    /* Ensure our type is registered. */
-    g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
+    /*Spin GLib event loop. */
+    InstallGtkEventLoop();
 
     /* Register Tcl commands */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", 
