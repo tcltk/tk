@@ -504,7 +504,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 
 }
 
-/* Root window setup. */
+/* Root window setup. atk_get_root() is the critical link to at-spi. */
 AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
@@ -528,15 +528,14 @@ AtkObject *atk_get_root(void) {
 static void GtkEventLoop(void *clientData)
 {
     (void) clientData;
- 
-    /* Non-blocking GLib iteration. */
-    while (g_main_context_pending(NULL)) {
-        g_main_context_iteration(NULL, FALSE);
-    }
 
-    /* Schedule again to run in 25 MS. */
+    /* One safe, non-blocking iteration. */
+    g_main_context_iteration(NULL, FALSE);
+
+    /* Schedule again. */
     Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
 }
+
 
 void InstallGtkEventLoop() {
     Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
