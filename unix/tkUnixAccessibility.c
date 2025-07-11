@@ -192,7 +192,6 @@ static gint tk_get_n_children(AtkObject *obj)
         }
         return count;
     }
-
     return 0;
 }
 
@@ -565,6 +564,8 @@ AtkObject *tk_util_get_root(void)
     }
     return tk_root_accessible;
 }
+
+/* Core function linking Tk objects to the Atk root object and at-spi. */
 AtkObject *atk_get_root(void) {
     return tk_util_get_root();
 }
