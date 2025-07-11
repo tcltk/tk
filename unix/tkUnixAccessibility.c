@@ -39,7 +39,6 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
-
 static AtkObject *tk_root_accessible = NULL;
 static GList *global_accessible_objects = NULL;
 static GHashTable *tk_to_atk_map = NULL;
@@ -126,6 +125,8 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
+
+static AtkObjectClass *parent_class = NULL;
 
 /* 
  * Map Atk component interface to Tk.
@@ -490,9 +491,10 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 	} else {
 	    /* This is a toplevel, make it a child of root. */
 	    atk_object_set_parent(obj, tk_root_accessible);
+	    atk_object_set_role(ATK_OBJECT(acc), ATK_ROLE_WINDOW);
 	    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, obj);
-				  }
 	}
+    }
 
     /* Add to global list and child widgets. */
     global_accessible_objects = g_list_prepend(global_accessible_objects, acc);
@@ -503,14 +505,19 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 }
 
 /* Root window setup. */
-static AtkObject *tk_util_get_root(void)
+AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
-        /* Use a subclass or ATK_TYPE_NO_OP_OBJECT. */
-	tk_root_accessible = atk_get_root();
+        tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
+        atk_object_initialize(tk_root_accessible, NULL);
+        atk_object_set_name(tk_root_accessible, "Tk Application");
+        atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
     }
-    
     return tk_root_accessible;
+}
+
+AtkObject *atk_get_root(void) {
+    return tk_util_get_root();
 }
 
 
@@ -809,7 +816,11 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     TkAtkAccessible *accessible = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, tkwin, windowName);
     TkAtkAccessible_RegisterForCleanup(tkwin, accessible);
     RegisterAtkObjectForTkWindow(tkwin, (AtkObject*)accessible);
-
+ 
+    if (Tk_IsTopLevel(tkwin)) {
+	atk_object_set_parent(ATK_OBJECT(accessible), tk_root_accessible);
+	atk_object_set_role(accessible, ATK_ROLE_WINDOW);
+    }
 	
     if (accessible == NULL) {		
 	Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
@@ -841,38 +852,24 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    /* Check ATK version. */
-    if (atk_get_major_version() < 2) {
-        Tcl_SetResult(interp, "ATK version 2.0 or higher is required.", TCL_STATIC);
-        return TCL_ERROR;
-    }
 
-    /* If GLib < 2.36 is supported. */
-#if !GLIB_CHECK_VERSION(2,36,0)
-    g_type_init();  /* Deprecated in newer GLib.*/
-#endif
-
-    /* Set env to enable AT-SPI bridge.*/
-    g_setenv("NO_AT_BRIDGE", "0", TRUE);
-    g_setenv("G_ENABLE_ACCESSIBILITY", "1", TRUE);
-
-    /* Ensure Atk is initialized. */
-    atk_get_default_registry();
-
-    /* Ensure our custom AtkObject type is registered */
-    g_type_ensure(TK_ATK_TYPE_ACCESSIBLE);
-
-    /*  Prime the GLib main loop once to allow bridge setup. */
-    while (g_main_context_iteration(NULL, FALSE));
-
-    /* Start AT-SPI connection. */
-    atk_bridge_adaptor_init(NULL, NULL);
+    /* Force accessibility module. */
+    g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
+   
 
     /* Confirm root is available. */
     tk_root_accessible = tk_util_get_root();
-    if (!ATK_IS_OBJECT(tk_root_accessible)) {
-	g_warning("ATK root object is not available");
-    }
+    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+    atk_object_set_name(tk_root_accessible, "Tk Application");;
+
+    /*  Prime the GLib main loop once to allow bridge setup. */
+    while (g_main_context_iteration(NULL, FALSE));
+ 
+    /* Start AT-SPI connection. */
+    atk_bridge_adaptor_init(NULL, NULL);
+
+    /* Signal window update. */
+    g_signal_emit_by_name(tk_root_accessible, "children-changed", 0, NULL);
 
     /* Start GLib event loop with Tcl integration. */
     InstallGtkEventLoop(); 
