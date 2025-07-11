@@ -128,8 +128,6 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
 
-static AtkObjectClass *parent_class = NULL;
-
 /* 
  * Map Atk component interface to Tk.
  */
@@ -398,6 +396,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 
     return set;
 }
+
 /* 
  * Functions that implement actions (i.e. button press)
  * from Tk to Atk. 
@@ -499,7 +498,9 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 }
 
 
- /* Function to recursively register child widgets using childList. */
+/* 
+ * Function to recursively register child widgets using childList.
+ */
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
@@ -530,6 +531,8 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
                 }
                 /* Emit children-changed signal on parent to update AT-SPI. */
                 g_signal_emit_by_name(parent_obj, "children-changed::add", g_list_length(child_widgets) - 1, child_obj);
+                /* Force a main loop iteration to ensure AT-SPI updates. */
+                g_main_context_iteration(NULL, FALSE);
                 /* Recursively register children of this child widget. */
                 RegisterChildWidgets(interp, child, child_obj);
             }
@@ -541,19 +544,27 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 }
 
 
-
 /* Root window setup. atk_get_root() is the critical link to at-spi. */
 AtkObject *tk_util_get_root(void)
 {
+    /* Check if the root accessible object is already initialized. */
     if (!tk_root_accessible) {
+        /* Create a new root accessible object. */
         tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
+        /* Initialize the root object. */
         atk_object_initialize(tk_root_accessible, NULL);
+        /* Set the name for the root object. */
         atk_object_set_name(tk_root_accessible, "Tk Application");
+        /* Set the role to application. */
         atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+        /* Log the initialization of the root object for debugging. */
+        fprintf(stderr, "Initialized root accessible object\n");
+    } else {
+        /* Log if the root object is already initialized to detect duplicates. */
+        fprintf(stderr, "Root accessible object already exists\n");
     }
     return tk_root_accessible;
 }
-
 AtkObject *atk_get_root(void) {
     return tk_util_get_root();
 }
@@ -583,6 +594,8 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
             atk_object_set_parent(obj, parent_obj);
             /* Emit children-changed signal for the parent to update AT-SPI. */
             g_signal_emit_by_name(parent_obj, "children-changed::add", g_list_length(child_widgets), obj);
+            /* Log the parent-child relationship for debugging. */
+            fprintf(stderr, "Set parent for %s to %s\n", path, parent ? Tk_PathName(parent) : "root");
         }
     }
 
@@ -594,6 +607,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 
     return obj;
 }
+
 
 
 /* 
@@ -869,6 +883,8 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
             child_widgets = g_list_remove(child_widgets, tkAccessible);
             /* Unregister the widget from the global mapping. */
             UnregisterAtkObjectForTkWindow(tkAccessible->tkwin);
+            /* Force a main loop iteration to ensure AT-SPI updates. */
+            g_main_context_iteration(NULL, FALSE);
         }
     }
 }
@@ -914,6 +930,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
     /* Check if the window is already registered to avoid duplicates. */
     if (GetAtkObjectForTkWindow(tkwin)) {
+        /* Log if the window is already registered for debugging. */
         fprintf(stderr, "Window %s already has an accessible object\n", windowName);
         return TCL_OK;
     }
@@ -946,6 +963,8 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         RegisterChildWidgets(interp, tkwin, (AtkObject*)accessible);
         /* Emit children-changed signal for the root to update AT-SPI. */
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", g_list_length(child_widgets) - 1, (AtkObject*)accessible);
+        /* Force a main loop iteration to ensure AT-SPI updates. */
+        g_main_context_iteration(NULL, FALSE);
         /* Log the toplevel registration for debugging. */
         fprintf(stderr, "Registered toplevel %s and its children\n", windowName);
     }
@@ -971,33 +990,35 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  *
  *----------------------------------------------------------------------
  */
-
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-
     /* Force accessibility module. */
     g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
    
+    /* Initialize the AT-SPI bridge before creating any objects. */
+    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
+        /* Log bridge initialization failure for debugging. */
+        fprintf(stderr, "Failed to initialize AT-SPI bridge\n");
+        return TCL_ERROR;
+    }
 
     /* Confirm root is available. */
     tk_root_accessible = tk_util_get_root();
+    /* Ensure root object is properly set up. */
     atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-    atk_object_set_name(tk_root_accessible, "Tk Application");;
+    atk_object_set_name(tk_root_accessible, "Tk Application");
 
-    /*  Prime the GLib main loop once to allow bridge setup. */
+    /* Prime the GLib main loop to allow bridge setup. */
     while (g_main_context_iteration(NULL, FALSE));
- 
-    /* Start AT-SPI connection. */
-    atk_bridge_adaptor_init(NULL, NULL);
 
-    /* Signal window update. */
+    /* Signal window update to refresh AT-SPI hierarchy. */
     g_signal_emit_by_name(tk_root_accessible, "children-changed", 0, NULL);
 
     /* Start GLib event loop with Tcl integration. */
     InstallGtkEventLoop(); 
 
-    /* Register Tcl accessibility commands */
+    /* Register Tcl accessibility commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", 
                          TkAtkAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", 
@@ -1007,14 +1028,16 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", 
                          IsScreenReaderRunning, NULL, NULL);
 
+    /* Log successful initialization for debugging. */
+    fprintf(stderr, "Accessibility module initialized\n");
+
     return TCL_OK;
 }
-
 #else
 /* No Atk found. */
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    /*Create empty commands if Atk not available. */
+    /* Create empty commands if Atk not available. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus__change", NULL, NULL, NULL);
