@@ -43,6 +43,7 @@ typedef struct _TkAtkAccessibleClass {
 static AtkObject *tk_root_accessible = NULL;
 static GList *global_accessible_objects = NULL;
 static GList *toplevel_accessible_objects = NULL;
+static GList *child_widgets = NULL; 
 static GHashTable *tk_to_atk_map = NULL;
 
 /* Atk/Tk glue functions. */
