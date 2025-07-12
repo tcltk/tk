@@ -965,7 +965,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
     atk_object_set_name(tk_root_accessible, "Tk Application");
 
-    /* Align the root windwo with the accessible root. */
+    /* Align the root window with the accessible root. */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (mainWin) {
         RegisterAtkObjectForTkWindow(mainWin, tk_root_accessible);
