@@ -516,9 +516,6 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         /* Critical: Emit children-changed signal for AT-SPI update */
         int index = g_list_length(toplevel_accessible_objects) - 1;
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
-        
-        /* For Orca: Also emit window-activate signal */
-        g_signal_emit_by_name(accessible, "window-activate");
     }
     
     /* Register child widgets recursively */
@@ -579,12 +576,12 @@ static AtkObject *tk_util_get_root(void)
         atk_object_initialize(tk_root_accessible, NULL);
         
         /* Set proper application name - get from Tcl if available. */
-        const char *app_name = "Tk Application";}
-    atk_object_set_name(tk_root_accessible, app_name);
-    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-}
+        const char *app_name = "Tk Application";
+	atk_object_set_name(tk_root_accessible, app_name);
+	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+    }
     
-return tk_root_accessible;
+    return tk_root_accessible;
 }
 
 /* Core function linking Tk objects to the Atk root object and at-spi. */
@@ -675,21 +672,6 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
 {
     if (tk_to_atk_map) {
 	g_hash_table_remove(tk_to_atk_map, tkwin);
-    }
-}
-
-/* Force system notification that Tk windows created. */
-void TkAtkNotifyToplevelCreated(Tk_Window tkwin)
-{
-    AtkObject *accessible = GetAtkObjectForTkWindow(tkwin);
-    if (accessible && Tk_IsTopLevel(tkwin)) {
-        /* Emit signals that Orca specifically listens for. */
-        g_signal_emit_by_name(accessible, "window-create");
-        g_signal_emit_by_name(accessible, "window-activate");
-        
-        /* Also emit state changes. */
-        g_signal_emit_by_name(accessible, "state-change", ATK_STATE_ACTIVE, TRUE);
-        g_signal_emit_by_name(accessible, "state-change", ATK_STATE_SHOWING, TRUE);
     }
 }
 
@@ -969,10 +951,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         
         /* Register as toplevel and notify system of creation. */
         RegisterToplevelWindow(interp, tkwin, (AtkObject*)accessible);
-	TkAtkNotifyToplevelCreated(tkwin);
         
-        /* Force AT-SPI update. */
-        g_signal_emit_by_name(ATK_OBJECT(accessible), "window-create");
     } else {
         /* Handle regular widgets */
         if (!g_list_find(child_widgets, (AtkObject*)accessible)) {
