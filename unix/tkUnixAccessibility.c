@@ -42,8 +42,8 @@ typedef struct _TkAtkAccessibleClass {
 
 static AtkObject *tk_root_accessible = NULL;
 static GList *global_accessible_objects = NULL;
+static GList *toplevel_accessible_objects = NULL;
 static GHashTable *tk_to_atk_map = NULL;
-static GList *child_widgets = NULL; 
 
 /* Atk/Tk glue functions. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -122,6 +122,8 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Variable for widget values. */
 static GValue *tkvalue = NULL;
 
+
+/* Define custom Atk object bridged to Tcl/Tk. */
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
@@ -170,71 +172,71 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
     iface->contains = tk_contains;
 }
 
-/* Functions to manage child count and individual child widgets. */
+/* 
+ * Functions to manage child count and individual child widgets. 
+ */
 static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
 
-    /* Return children for root or toplevel windows. */
-    if (!acc->tkwin || obj == tk_root_accessible || Tk_IsTopLevel(acc->tkwin)) {
-        return g_list_length(child_widgets);
+    if (obj == tk_root_accessible) {
+        return g_list_length(toplevel_accessible_objects);
     }
 
-    /* Handle container widgets (e.g., frames). */
-    if (acc->tkwin && GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_PANEL) {
-        int count = 0;
-        TkWindow *winPtr = (TkWindow *)acc->tkwin;
-        TkWindow *childPtr;
-        for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-            if (GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
-                count++;
-            }
-        }
-        return count;
+    if (!acc->tkwin) {
+        return 0;
     }
-    return 0;
+
+    /* Count direct child windows with accessible objects. */
+    int count = 0;
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    TkWindow *childPtr;
+    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+        if (GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
+            count++;
+        }
+    }
+    return count;
 }
+
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
 
-    if (!acc->tkwin && obj != tk_root_accessible) {
-        return NULL;
-    }
-
-    /* Handle root or toplevel. */
-    if (obj == tk_root_accessible || Tk_IsTopLevel(acc->tkwin)) {
-        if (i >= g_list_length(child_widgets)) {
+    if (obj == tk_root_accessible) {
+        if (i >= g_list_length(toplevel_accessible_objects)) {
             return NULL;
         }
-        AtkObject *child = g_list_nth_data(child_widgets, i);
+	/* Get accessible object from Tk child window. */
+        AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
         if (child) {
             g_object_ref(child);
         }
         return child;
     }
 
-    /* Handle container widgets (e.g., frames). */
-    if (acc->tkwin && GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_PANEL) {
-        int index = 0;
-        TkWindow *winPtr = (TkWindow *)acc->tkwin;
-        TkWindow *childPtr;
-        for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+    if (!acc->tkwin) {
+        return NULL;
+    }
+
+    /* Return i-th direct child with accessible object. */
+    int index = 0;
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    TkWindow *childPtr;
+    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+        AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
+        if (child_obj) {
             if (index == i) {
-                AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
-                if (child_obj) {
-                    g_object_ref(child_obj);
-                    return child_obj;
-                }
-                return NULL;
+                g_object_ref(child_obj);
+                return child_obj;
             }
             index++;
         }
     }
-
     return NULL;
 }
+
 /* 
  * Functions to map accessible role to Atk.
  */
@@ -321,8 +323,8 @@ static const gchar *tk_get_description(AtkObject *obj)
 /* 
  * Functions to map accessible value to Atk using 
  * AtkValue interface. 
-
  */
+
 static void tk_get_current_value(AtkValue *obj, GValue *value)
 {
     AtkObject *atkObj = ATK_OBJECT(obj);
@@ -361,9 +363,7 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
 /* Function to map accessible state to Atk. */
 static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
-    /* Cast the object to TkAtkAccessible. */
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    /* Create a new state set for the accessible object. */
     AtkStateSet *set = atk_state_set_new();
 
     if (!acc->tkwin) {
@@ -374,10 +374,9 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
-    /* Check if the widget is visible based on mapping or dimensions. */
+    /* Is the widget mapped? Add appropriate states. */
     if (Tk_IsMapped(acc->tkwin) || Tk_Width(acc->tkwin) > 0 || Tk_Height(acc->tkwin) > 0) {
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        /* Add showing state only if the widget is mapped. */
         if (Tk_IsMapped(acc->tkwin)) {
             atk_state_set_add_state(set, ATK_STATE_SHOWING);
         }
@@ -387,11 +386,6 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
     if (Tk_IsMapped(acc->tkwin)) {
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
-
-    /* Log the state set for debugging visibility and showing states. */
-    fprintf(stderr, "State set for %s: visible=%d, showing=%d\n", Tk_PathName(acc->tkwin),
-            atk_state_set_contains_state(set, ATK_STATE_VISIBLE),
-            atk_state_set_contains_state(set, ATK_STATE_SHOWING));
 
     return set;
 }
@@ -404,12 +398,14 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 static gboolean tk_action_do_action(AtkAction *action, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
+	
     if (i == 0) {
 	Tk_Window win = acc->tkwin;
-	/*Retrieve command string from hash table. */
 	if (!win) {
 	    return false;    
 	}
+	
+	/* Retrieve the command string. */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
 	if (!hPtr) {
 	    return false;
@@ -456,8 +452,9 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
 }
 
 /* 
- * Functions to initialize the Atk class and objects. 
+ * Functions to initialize and manage the parent Atk class and object instances. 
  */
+
 static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     self->tkwin = NULL;
@@ -469,13 +466,16 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 {
     TkAtkAccessible *self = (TkAtkAccessible*)gobject;
 
-    /* Remove from child_widgets. */
+    /* Remove from toplevel and child lists as needed. */
+    if (Tk_IsTopLevel(self->tkwin)) {
+        toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
+    }
+	
     child_widgets = g_list_remove(child_widgets, self);
 
-    /* Free path. */
+    /* Free path and call parent finalize. */
     g_free(self->path);
 
-    /* Call parent finalize. */
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
 
@@ -487,7 +487,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 
     gobject_class->finalize = tk_atk_accessible_finalize;
 
-    /* Set up virtual functions. */
+    /* Map Atk class functions Tk functions. */
     atk_class->get_name = tk_get_name;
     atk_class->get_description = tk_get_description;
     atk_class->get_role = tk_get_role;
@@ -505,63 +505,48 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *childPtr;
 
-    /* Log the start of child registration for debugging. */
-    fprintf(stderr, "Registering children for %s\n", Tk_PathName(tkwin));
-
-    /* Iterate over the childList of the TkWindow. */
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
-        /* Check if the child is already registered to avoid duplicates. */
         if (!GetAtkObjectForTkWindow(child)) {
-            /* Create an accessible object for the child widget. */
             AtkObject *child_obj = TkCreateAccessibleAtkObject(interp, child, Tk_PathName(child));
             if (child_obj) {
-                /* Set the parent to the toplevel or container's accessible object. */
                 atk_object_set_parent(child_obj, parent_obj);
-                /* Register the child in the global mapping. */
                 RegisterAtkObjectForTkWindow(child, child_obj);
-                /* Register the child for cleanup on destruction. */
                 TkAtkAccessible_RegisterForCleanup(child, (TkAtkAccessible *)child_obj);
-                /* Append to child_widgets if not already present. */
-                if (!g_list_find(child_widgets, child_obj)) {
-                    child_widgets = g_list_prepend(child_widgets, child_obj);
-                    /* Log the addition to child_widgets for debugging. */
-                    fprintf(stderr, "Added %s to child_widgets, list length=%d\n", Tk_PathName(child), g_list_length(child_widgets));
-                }
-                /* Emit children-changed signal on parent to update AT-SPI. */
-                g_signal_emit_by_name(parent_obj, "children-changed::add", g_list_length(child_widgets) - 1, child_obj);
-                /* Force a main loop iteration to ensure AT-SPI updates. */
-                g_main_context_iteration(NULL, FALSE);
-                /* Recursively register children of this child widget. */
+                
+                /* Emit signal of object creation with proper index. */
+                int child_index = atk_object_get_n_accessible_children(parent_obj) - 1;
+                g_signal_emit_by_name(parent_obj, "children-changed::add", child_index, child_obj);
+                
+                /* Recursive registration. */
                 RegisterChildWidgets(interp, child, child_obj);
             }
-        } else {
-            /* Log if the child is already registered to skip duplicates. */
-            fprintf(stderr, "Skipping already registered child %s\n", Tk_PathName(child));
         }
     }
 }
 
 
-/* Root window setup. atk_get_root() is the critical link to at-spi. */
+/* 
+ * Root window setup. These are the foundation of the 
+ * accessibility object system in Atk. atk_get_root() is the 
+ * critical link to at-spi - it is called by the Atk system
+ * and at-spi bridge initialization will silently fail if this 
+ * function is not implemented. This API is confusing because 
+ * atk_get_root cannot be called directly in our functions, but 
+ * it still must be implemented if we are using a custom setup, 
+ * as we are here. 
+ */
+
 AtkObject *tk_util_get_root(void)
 {
-    /* Check if the root accessible object is already initialized. */
     if (!tk_root_accessible) {
-        /* Create a new root accessible object. */
         tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
-        /* Initialize the root object. */
         atk_object_initialize(tk_root_accessible, NULL);
-        /* Set the name for the root object. */
         atk_object_set_name(tk_root_accessible, "Tk Application");
-        /* Set the role to application. */
+
         atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-        /* Log the initialization of the root object for debugging. */
-        fprintf(stderr, "Initialized root accessible object\n");
-    } else {
-        /* Log if the root object is already initialized to detect duplicates. */
-        fprintf(stderr, "Root accessible object already exists\n");
     }
+    
     return tk_root_accessible;
 }
 
@@ -579,10 +564,9 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     acc->tkwin = tkwin;
     acc->path = g_strdup(path);
 
-    /* Cast to AtkObject for further manipulation. */
-    AtkObject *obj = ATK_OBJECT(acc);
 
     /* Set initial accessibility properties (role and name). */
+    AtkObject *obj = ATK_OBJECT(acc);
     atk_object_set_role(obj, GetAtkRoleForWidget(tkwin));
     atk_object_set_name(obj, path);
 
@@ -591,24 +575,18 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         Tk_Window parent = Tk_Parent(tkwin);
         AtkObject *parent_obj = parent ? GetAtkObjectForTkWindow(parent) : tk_root_accessible;
         if (parent_obj) {
-            /* Set the parent of the accessible object. */
             atk_object_set_parent(obj, parent_obj);
+			
             /* Emit children-changed signal for the parent to update AT-SPI. */
             g_signal_emit_by_name(parent_obj, "children-changed::add", g_list_length(child_widgets), obj);
-            /* Log the parent-child relationship for debugging. */
-            fprintf(stderr, "Set parent for %s to %s\n", path, parent ? Tk_PathName(parent) : "root");
-        }
+	}
     }
 
     /* Add the accessible object to the global list. */
     global_accessible_objects = g_list_prepend(global_accessible_objects, acc);
 
-    /* Log the creation of the accessible object for debugging. */
-    fprintf(stderr, "Created accessible object for %s, role=%d\n", path, GetAtkRoleForWidget(tkwin));
-
     return obj;
 }
-
 
 
 /* 
@@ -662,7 +640,6 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
 	g_hash_table_remove(tk_to_atk_map, tkwin);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -724,6 +701,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
  *
  *----------------------------------------------------------------------
  */
+
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_Obj *const objv[])
 {
     (void) clientData;
@@ -854,38 +832,21 @@ void TkAtkAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible) {
  *
  *----------------------------------------------------------------------
  */
+
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr) 
 {
     if (eventPtr->type == DestroyNotify) {
-        /* Cast clientData to TkAtkAccessible. */
         TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
         if (tkAccessible && tkAccessible->tkwin) {
-            /* Log the destruction of the accessible object for debugging. */
-            fprintf(stderr, "Destroying accessible object for %s\n", Tk_PathName(tkAccessible->tkwin));
-            /* Recursively remove children from child_widgets. */
-            TkWindow *winPtr = (TkWindow *)tkAccessible->tkwin;
-            TkWindow *childPtr;
-            for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-                AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
-                if (child_obj) {
-                    /* Remove the child from child_widgets. */
-                    child_widgets = g_list_remove(child_widgets, child_obj);
-                    /* Emit children-changed::remove signal for the child. */
-                    g_signal_emit_by_name(child_obj, "children-changed::remove", 0, NULL);
-                    /* Unregister the child from the global mapping. */
-                    UnregisterAtkObjectForTkWindow((Tk_Window)childPtr);
-                    /* Release the child object. */
-                    g_object_unref(child_obj);
-                    /* Log the removal of the child for debugging. */
-                    fprintf(stderr, "Removed child %s from child_widgets\n", Tk_PathName((Tk_Window)childPtr));
-                }
+            /* Notify parent about removal. */
+            AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
+            if (parent) {
+                g_signal_emit_by_name(parent, "children-changed::remove", -1, ATK_OBJECT(tkAccessible));
             }
-            /* Remove the widget itself from child_widgets. */
-            child_widgets = g_list_remove(child_widgets, tkAccessible);
-            /* Unregister the widget from the global mapping. */
+            
+            /* Unregister and cleanup. */
             UnregisterAtkObjectForTkWindow(tkAccessible->tkwin);
-            /* Force a main loop iteration to ensure AT-SPI updates. */
-            g_main_context_iteration(NULL, FALSE);
+            g_object_unref(tkAccessible);
         }
     }
 }
@@ -918,21 +879,15 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         return TCL_ERROR;
     }
 
-    /* Get the window name from the Tcl object. */
     char *windowName = Tcl_GetString(objv[1]);
-    /* Convert the window name to a Tk_Window. */
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
 
-    /* Validate the window name. */
     if (tkwin == NULL) {
         Tcl_SetResult(interp, "Invalid window name.", TCL_STATIC);
         return TCL_ERROR;
     }
 
-    /* Check if the window is already registered to avoid duplicates. */
     if (GetAtkObjectForTkWindow(tkwin)) {
-        /* Log if the window is already registered for debugging. */
-        fprintf(stderr, "Window %s already has an accessible object\n", windowName);
         return TCL_OK;
     }
 
@@ -943,31 +898,26 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         return TCL_ERROR;
     }
 
-    /* Register the accessible object for cleanup on destruction. */
+    /* Register the accessible object for cleanup and mapping. */
     TkAtkAccessible_RegisterForCleanup(tkwin, accessible);
-    /* Register the Tk window to the Atk object mapping. */
     RegisterAtkObjectForTkWindow(tkwin, (AtkObject*)accessible);
+	
     /* Append to child_widgets if not already present. */
     if (!g_list_find(child_widgets, (AtkObject*)accessible)) {
         child_widgets = g_list_prepend(child_widgets, (AtkObject*)accessible);
-        /* Log the addition to child_widgets for debugging. */
-        fprintf(stderr, "Added %s to child_widgets, list length=%d\n", windowName, g_list_length(child_widgets));
     }
  
-    /* Handle toplevel windows specifically. */
     if (Tk_IsTopLevel(tkwin)) {
-        /* Set the parent to the root accessible object. */
         atk_object_set_parent(ATK_OBJECT(accessible), tk_root_accessible);
-        /* Set the role to window for toplevels. */
         atk_object_set_role(accessible, ATK_ROLE_WINDOW);
-        /* Register all child widgets of the toplevel. */
+        
+        /* Add to toplevel list and register children. */
+        toplevel_accessible_objects = g_list_prepend(toplevel_accessible_objects, accessible);
         RegisterChildWidgets(interp, tkwin, (AtkObject*)accessible);
-        /* Emit children-changed signal for the root to update AT-SPI. */
-        g_signal_emit_by_name(tk_root_accessible, "children-changed::add", g_list_length(child_widgets) - 1, (AtkObject*)accessible);
-        /* Force a main loop iteration to ensure AT-SPI updates. */
-        g_main_context_iteration(NULL, FALSE);
-        /* Log the toplevel registration for debugging. */
-        fprintf(stderr, "Registered toplevel %s and its children\n", windowName);
+        
+        /* Emit signal for root. */
+        int index = g_list_length(toplevel_accessible_objects) - 1;
+        g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, (AtkObject*)accessible);
     }
     
     return TCL_OK;
@@ -999,14 +949,11 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
    
     /* Initialize the AT-SPI bridge before creating any objects. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        /* Log bridge initialization failure for debugging. */
-        fprintf(stderr, "Failed to initialize AT-SPI bridge\n");
-        return TCL_ERROR;
+        g_warning("Failed to initialize AT-SPI bridge\n");
     }
 
-    /* Confirm root is available. */
+    /* Get root object. */
     tk_root_accessible = tk_util_get_root();
-    /* Ensure root object is properly set up. */
     atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
     atk_object_set_name(tk_root_accessible, "Tk Application");
 
@@ -1028,9 +975,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
                          EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", 
                          IsScreenReaderRunning, NULL, NULL);
-
-    /* Log successful initialization for debugging. */
-    fprintf(stderr, "Accessibility module initialized\n");
 
     return TCL_OK;
 }
