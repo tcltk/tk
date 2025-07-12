@@ -505,24 +505,31 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *childPtr;
+    int index = 0;
 
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
-        if (!GetAtkObjectForTkWindow(child)) {
-            AtkObject *child_obj = TkCreateAccessibleAtkObject(interp, child, Tk_PathName(child));
-            if (child_obj) {
-                atk_object_set_parent(child_obj, parent_obj);
-                RegisterAtkObjectForTkWindow(child, child_obj);
-                TkAtkAccessible_RegisterForCleanup(child, (TkAtkAccessible *)child_obj);
-                
-                /* Emit signal of object creation with proper index. */
-                int child_index = atk_object_get_n_accessible_children(parent_obj) - 1;
-                g_signal_emit_by_name(parent_obj, "children-changed::add", child_index, child_obj);
-                
-                /* Recursive registration. */
-                RegisterChildWidgets(interp, child, child_obj);
-            }
+        if (!Tk_WindowId(child)) continue;
+
+        AtkObject *child_obj = GetAtkObjectForTkWindow(child);
+        if (!child_obj) {
+            child_obj = TkCreateAccessibleAtkObject(interp, child, Tk_PathName(child));
+            if (!child_obj) continue;
+            
+            RegisterAtkObjectForTkWindow(child, child_obj);
+            TkAtkAccessible_RegisterForCleanup(child, (TkAtkAccessible *)child_obj);
         }
+
+        /* Ensure proper parent relationship. */
+        AtkObject *current_parent = atk_object_get_parent(child_obj);
+        if (current_parent != parent_obj) {
+            atk_object_set_parent(child_obj, parent_obj);
+            g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
+        }
+
+        /* Recursively register children. */
+        RegisterChildWidgets(interp, child, child_obj);
+        index++;
     }
 }
 
@@ -541,7 +548,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
-        tk_root_accessible = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
+        tk_root_accessible = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
         atk_object_initialize(tk_root_accessible, NULL);
         atk_object_set_name(tk_root_accessible, "Tk Application");
 
@@ -957,6 +964,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     tk_root_accessible = tk_util_get_root();
     atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
     atk_object_set_name(tk_root_accessible, "Tk Application");
+
+    /* Align the root windwo with the accessible root. */
+    Tk_Window mainWin = Tk_MainWindow(interp);
+    if (mainWin) {
+        RegisterAtkObjectForTkWindow(mainWin, tk_root_accessible);
+        RegisterChildWidgets(interp, mainWin, tk_root_accessible);
+    }
 
     /* Prime the GLib main loop to allow bridge setup. */
     while (g_main_context_iteration(NULL, FALSE));
