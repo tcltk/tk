@@ -59,7 +59,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, guint i);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
 static AtkRole tk_get_role(AtkObject *obj);
 static const gchar *tk_get_name(AtkObject *obj);
-static const gchar *tk_get_description(AtkObject *obj);
+int *tk_set_name(AtkObject *obj);
 static const gchar *tk_get_description(AtkObject *obj);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static AtkStateSet *tk_ref_state_set(AtkObject *obj);
@@ -92,8 +92,9 @@ static gboolean delayed_init();
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-void TkAtkAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
+void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -344,6 +345,54 @@ static const gchar *tk_get_name(AtkObject *obj)
     /* Default: use window path. */
     return Tk_PathName(acc->tkwin);
 }
+
+/* Called if name changes. */
+int *tk_set_name(AtkObject *obj)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+
+    gchar *name = NULL;
+
+    if (!acc->tkwin) {
+        /* Handle root case.*/
+        if (obj == tk_root_accessible) {
+            name = "Tk Application";
+        }
+    }
+
+    /* For toplevel windows: use WM title */
+    if (Tk_IsTopLevel(acc->tkwin)) {
+	Tcl_DString cmd;
+	Tcl_DStringInit(&cmd);
+
+	Tcl_DStringAppend(&cmd, "wm title ", -1);
+	Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
+
+	const char *result = Tcl_GetStringResult(acc->interp);
+	gchar *ret = g_strdup(result);
+
+	Tcl_DStringFree(&cmd);
+	name = ret; 
+    }
+
+    /* For other widgets: use accessible name if set. */
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, acc->tkwin);
+    if (hPtr) {
+	Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+	Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
+	if (hPtr2) {
+	    name = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+	}
+    }
+
+    /* Default: use window path. */
+    name = Tk_PathName(acc->tkwin);
+
+ atk_object_set_name(acc, name);
+  g_object_notify(G_OBJECT(acc), "accessible-name");
+return TCL_OK;
+}
+
 
 static const gchar *tk_get_description(AtkObject *obj)
 {
@@ -616,7 +665,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
             if (!child_obj) continue;
             
             RegisterAtkObjectForTkWindow(child, child_obj);
-            TkAtkAccessible_RegisterForCleanup(child, (TkAtkAccessible *)child_obj);
+            TkAtkAccessible_RegisterEventHandlers(child, (TkAtkAccessible *)child_obj);
         }
 
         /* Ensure proper parent relationship. */
@@ -843,11 +892,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_
         Tcl_AppendResult(ip, "No accessible object for window", NULL);
         return TCL_ERROR;
     }
-
-    /* If widget name has changed in Tk, i.e. "wm title", get new string here. */
-    atk_object_set_name(acc, tk_get_name(acc));
-    g_object_notify(G_OBJECT(acc), "accessible-name");
-
+  
     /* Emit focus-event with TRUE to indicate focus gained. */
     g_signal_emit_by_name(G_OBJECT(acc), "focus-event", TRUE);
     g_signal_emit_by_name(G_OBJECT(acc), "state-change", "focused", TRUE);
@@ -930,7 +975,7 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
 /*
  *----------------------------------------------------------------------
  *
- * TkAtkAccessible_RegisterForCleanup --
+ * TkAtkAccessible_RegisterEventHandlers --
  *
  * Register event handler for destroying accessibility element.
  *
@@ -943,9 +988,11 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
  *----------------------------------------------------------------------
  */
 
-void TkAtkAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible) {
+void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) {
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
 			  TkAtkAccessible_DestroyHandler, tkAccessible);
+   Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+			  TkAtkAccessible_NameHandler, tkAccessible);
 }
 
 /*
@@ -981,6 +1028,38 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
         }
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAtkAccessible_NameHandler --
+ *
+ * Update accessible names of Tk widgets.
+ *
+ * Results:
+ *	Accessibility name is updated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr) 
+{
+  
+    if (eventPtr->type != ConfigureNotify) {
+        return;
+    }
+
+    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
+
+    AtkObject *atk_obj = (AtkObject*) tkAccessible;
+    if (atk_obj) {
+        tk_set_name(atk_obj);
+    }
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -1030,7 +1109,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     }
 
     /* Register for cleanup and mapping. */
-    TkAtkAccessible_RegisterForCleanup(tkwin, accessible);
+    TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
     RegisterAtkObjectForTkWindow(tkwin, (AtkObject*)accessible);
     
     /* Handle toplevels specially. */
