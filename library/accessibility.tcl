@@ -454,7 +454,7 @@ namespace eval ::tk::accessible {
 			     [%W entrycget active -label] \
 			     [%W entrycget active -label] \
 			     {} \
-			     [%W cget -state] \
+			     {} \
 			     {%W invoke}\
 			 }
     }
@@ -652,7 +652,7 @@ namespace eval ::tk::accessible {
     }
 
     if {[tk windowingsystem] eq "x11"} {
-	bind all <Configure> {+::tk::accessible::emit_focus_change}
+	bind all <Configure> {+::tk::accessible::emit_focus_change %W}
     }
     
     
