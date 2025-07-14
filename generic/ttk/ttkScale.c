@@ -443,14 +443,27 @@ static double
 PointToValue(Scale *scalePtr, int x, int y)
 {
     Ttk_Box troughBox = TroughRange(scalePtr);
-    double from = 0, to = 1, fraction;
+    double value = 0, from = 0, to = 1, fraction;
 
+    Tcl_GetDoubleFromObj(NULL, scalePtr->scale.valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.toObj, &to);
 
     if (scalePtr->scale.orient == TTK_ORIENT_HORIZONTAL) {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.width <= 0) {
+	    return value;
+	}
 	fraction = (double)(x - troughBox.x) / (double)troughBox.width;
     } else {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.height <= 0) {
+	    return value;
+	}
 	fraction = (double)(y - troughBox.y) / (double)troughBox.height;
     }
 
