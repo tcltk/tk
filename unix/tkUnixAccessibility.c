@@ -313,7 +313,7 @@ static const gchar *tk_get_name(AtkObject *obj)
     }
 
     /* For toplevel windows: use WM title */
-    if (Tk_IsTopLevel(acc->tkwin)) {
+    if ((Tk_IsTopLevel(acc->tkwin)) && (Tk_PathName(acc->tkwin))) {
 	Tcl_DString cmd;
 	Tcl_DStringInit(&cmd);
 
@@ -388,9 +388,9 @@ int *tk_set_name(AtkObject *obj)
     /* Default: use window path. */
     name = Tk_PathName(acc->tkwin);
 
- atk_object_set_name(acc, name);
-  g_object_notify(G_OBJECT(acc), "accessible-name");
-return TCL_OK;
+    atk_object_set_name(acc, name);
+    g_object_notify(G_OBJECT(acc), "accessible-name");
+    return TCL_OK;
 }
 
 
@@ -991,7 +991,7 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) {
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
 			  TkAtkAccessible_DestroyHandler, tkAccessible);
-   Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
 			  TkAtkAccessible_NameHandler, tkAccessible);
 }
 
