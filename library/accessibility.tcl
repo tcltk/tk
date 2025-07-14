@@ -257,7 +257,7 @@ namespace eval ::tk::accessible {
 		return
 	    }
 	}
-	if {[tk windowingsystem] eq "win32"} {
+	if {[tk windowingsystem] ne "aqua"} {
 	    #This is necessary to ensure correct accessible keyboard navigation
 	    $w configure -takefocus 1
 	}
