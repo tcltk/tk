@@ -8271,4 +8271,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-07-03 (bug) [6b0f77] gcc 14 breaks configure test for bigendian leading to broken floating point (nijtmans)
 
+2025-07-14 (bug) [d25b72] error popup on ttk::scale with invisible trough (nemethi)
+
 - (to be) Released 8.6.17, Aug ??, 2025 - https://core.tcl-lang.org/tk/ for details
