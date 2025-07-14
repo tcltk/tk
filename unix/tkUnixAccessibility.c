@@ -843,6 +843,8 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     }
     
     AtkObject *acc = GetAtkObjectForTkWindow(path);
+
+    AtkRole role = atk_object_get_role(acc);
     
     if (!acc) {
         Tcl_AppendResult(ip, "No accessible object for window", NULL);
@@ -852,6 +854,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     GValue gval = G_VALUE_INIT;
     tk_get_current_value(ATK_VALUE(acc), &gval);
     g_signal_emit_by_name(G_OBJECT(acc), "value-changed", &tkvalue);
+
+    if (role = ATK_ROLE_TEXT) {
+	g_signal_emit_by_name(acc, "text-selection-changed");
+    }
 	
     return TCL_OK;
 }
