@@ -299,37 +299,50 @@ static AtkRole tk_get_role(AtkObject *obj)
  * Name and description getters
  * for Tk-Atk objects. 
  */
- 
+
 static const gchar *tk_get_name(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
     if (!acc->tkwin) {
-        /* Handle root case.*/
         if (obj == tk_root_accessible) {
             return "Tk Application";
         }
         return NULL;
     }
+	
+    /* For labels, use text content as the accessible name. */
+    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_LABEL) {
+        Tcl_DString cmd;
+        Tcl_DStringInit(&cmd);
+        Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
+	Tcl_DStringAppend(&cmd, "cget -text ", -1);
 
-    /* For toplevel windows: use WM title */
-    if ((Tk_IsTopLevel(acc->tkwin)) && (Tk_PathName(acc->tkwin))) {
-	Tcl_DString cmd;
-	Tcl_DStringInit(&cmd);
+        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
+            const char *result = Tcl_GetStringResult(acc->interp);
+            if (result && *result) {
+                gchar *ret = g_strdup(result);
+                Tcl_DStringFree(&cmd);
+                return ret;
+            }
+        }
+        Tcl_DStringFree(&cmd);
+    }
 
-	Tcl_DStringAppend(&cmd, "wm title ", -1);
-	Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
+    if (Tk_IsTopLevel(acc->tkwin) && Tk_PathName(acc->tkwin)) {
+        Tcl_DString cmd;
+        Tcl_DStringInit(&cmd);
+        Tcl_DStringAppend(&cmd, "wm title ", -1);
+        Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
 
-	if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
-	    Tcl_DStringFree(&cmd);
-	    return g_strdup("");
-	}  
+        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
+            Tcl_DStringFree(&cmd);
+            return g_strdup(Tk_PathName(acc->tkwin)); /* Fallback to pathname. */
+        }
 
-	const char *result = Tcl_GetStringResult(acc->interp);
-	gchar *ret = g_strdup(result);
-
-	Tcl_DStringFree(&cmd);
-	return ret; 
+        const char *result = Tcl_GetStringResult(acc->interp);
+        gchar *ret = g_strdup(result && *result ? result : Tk_PathName(acc->tkwin));
+        Tcl_DStringFree(&cmd);
+        return ret;
     }
 
     /* For other widgets: use accessible name if set. */
@@ -481,7 +494,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
     return set;
 }
 
-
+/* Function to retrieve text from Tk widget. */
 static gchar* tk_get_text(AtkText *text)
 {
     TkAtkAccessible *acc = (TkAtkAccessible*)text;
@@ -490,23 +503,24 @@ static gchar* tk_get_text(AtkText *text)
     const char *path = acc->path;
 
     if (!interp || !tkwin || !path) {
+        g_warning("Invalid interp, tkwin, or path in tk_get_text");
         return g_strdup("");
     }
 
     Tcl_DString cmd;
     Tcl_DStringInit(&cmd);
-
-    Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext", -1);
+    Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext ", -1);
     Tcl_DStringAppend(&cmd, path, -1);
 
     if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
+        g_warning("Failed to execute ::tk::accessible::_gettext for %s: %s",
+                  path, Tcl_GetStringResult(interp));
         Tcl_DStringFree(&cmd);
         return g_strdup("");
     }
 
     const char *result = Tcl_GetStringResult(interp);
-    gchar *ret = g_strdup(result);
-
+    gchar *ret = g_strdup(result && *result ? result : "");
     Tcl_DStringFree(&cmd);
     return ret;
 }
@@ -641,6 +655,10 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         int index = g_list_length(toplevel_accessible_objects) - 1;
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
     }
+	
+    /* Explicitly set and notify accessible name */
+    tk_set_name(accessible);
+    g_signal_emit_by_name(accessible, "property-change::accessible-name", NULL);
     
     /* Register child widgets recursively. */
     RegisterChildWidgets(interp, tkwin, accessible);
@@ -756,13 +774,13 @@ static void GtkEventLoop(void *clientData)
     /* One safe, non-blocking iteration. */
     g_main_context_iteration(NULL, FALSE);
 
-    /* Schedule again. */
-    Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
+    /* Schedule again - run every 10 milliseconds. */
+    Tcl_CreateTimerHandler(10, GtkEventLoop, NULL);
 }
 
 
 void InstallGtkEventLoop() {
-    Tcl_CreateTimerHandler(25, GtkEventLoop, NULL);
+    Tcl_CreateTimerHandler(10, GtkEventLoop, NULL);
 }
 
 /* 
@@ -855,8 +873,12 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     tk_get_current_value(ATK_VALUE(acc), &gval);
     g_signal_emit_by_name(G_OBJECT(acc), "value-changed", &tkvalue);
 
-    if (role = ATK_ROLE_TEXT) {
+    if (role == ATK_ROLE_TEXT) {
 	g_signal_emit_by_name(acc, "text-selection-changed");
+	/* Spin GLib event loop to force processing of notification. */
+	while (g_main_context_pending(NULL)) {
+	    g_main_context_iteration(NULL, FALSE);
+	}
     }
 	
     return TCL_OK;
@@ -903,6 +925,11 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_
     g_signal_emit_by_name(G_OBJECT(acc), "focus-event", TRUE);
     g_signal_emit_by_name(G_OBJECT(acc), "state-change", "focused", TRUE);
     g_signal_emit_by_name(G_OBJECT(acc), "state-change", ATK_STATE_FOCUSED, TRUE);
+
+    /* Force immediate processing of GLib events. */
+    while (g_main_context_pending(NULL)) {
+        g_main_context_iteration(NULL, FALSE);
+    }
 	        
     return TCL_OK;
 }
