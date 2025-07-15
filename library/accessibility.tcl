@@ -103,7 +103,15 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
-	
+	# Menu only needs to be tracked on X11 - native on Aqua and Windows
+	if {[tk windowingsystem] eq "x11"} {
+	if {[winfo class $w] eq "Menu"} {
+        set data [$w entrycget active -label]
+        ::tk::accessible::acc_value $w $data
+        ::tk::accessible::emit_selection_change $w
+        ::tk::accessible::emit_focus_change $w ;
+    }
+    }
     }
 
     # Increment values in various widgets in response to keypress events. 
@@ -577,17 +585,33 @@ namespace eval ::tk::accessible {
 
 	bind all <Map> {+::tk::accessible::add_acc_object %W}
 	
+	
 	# Various bindings to capture data/selection changes for
 	# widgets that support returning a value. 
 
-	#Selection changes.
+	# Selection changes.
 	bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
 	bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 	bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
 	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+	# Only need to track menu selection changes on X11.
+	if {[tk windowingsystem] eq "x11"} {
+    bind Menu <Up> {+
+        %W activate [expr {[%W index active] - 1}]
+        ::tk::accessible::_updateselection %W
+    }
+    bind Menu <Down> {+
+        %W activate [expr {[%W index active] + 1}]
+        ::tk::accessible::_updateselection %W
+    }
+    bind Menu <Return> {+
+        %W invoke active
+        ::tk::accessible::_updateselection %W
+    }
+}
 
 	
-	#Capture value changes from scale widgets.
+	# Capture value changes from scale widgets.
 	bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
 	bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
 	bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
