@@ -310,12 +310,25 @@ static const gchar *tk_get_name(AtkObject *obj)
         return NULL;
     }
 	
-    /* For labels, use text content as the accessible name. */
+		/* For menus, use entry label as the accessible name. */
+	    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_MENU) {
+        Tcl_DString cmd;
+        Tcl_DStringInit(&cmd);
+		Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
+        Tcl_DStringAppend(&cmd, "entrycget active -label ", -1);
+        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
+            const char *result = Tcl_GetStringResult(acc->interp);
+            if (result && *result) return g_strdup(result);
+        }
+        Tcl_DStringFree(&cmd);
+    }
+	
+	/* For labels, use text content as the accessible name. */
     if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_LABEL) {
         Tcl_DString cmd;
         Tcl_DStringInit(&cmd);
         Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
-	Tcl_DStringAppend(&cmd, "cget -text ", -1);
+		Tcl_DStringAppend(&cmd, "cget -text ", -1);
 
         if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
             const char *result = Tcl_GetStringResult(acc->interp);
@@ -656,7 +669,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
     }
 	
-    /* Explicitly set and notify accessible name */
+	/* Explicitly set and notify accessible name */
     tk_set_name(accessible);
     g_signal_emit_by_name(accessible, "property-change::accessible-name", NULL);
     
@@ -877,8 +890,8 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 	g_signal_emit_by_name(acc, "text-selection-changed");
 	/* Spin GLib event loop to force processing of notification. */
 	while (g_main_context_pending(NULL)) {
-	    g_main_context_iteration(NULL, FALSE);
-	}
+        g_main_context_iteration(NULL, FALSE);
+    }
     }
 	
     return TCL_OK;
