@@ -27,6 +27,7 @@ accessible \- Adds screenreader support for core Tk and ttk  widgets.
 \fBtk accessible get_acc_help \fIwindow\fR
 \fBtk accessible add_acc_object \fIwindow\fR
 \fBtk accessible emit_selection_change \fIwindow\fR
+\fBtk accessible emit_focus_change \fIwindow\fR
 \fBtk accessible check_screenreader\fR
 .fi
 .BE
@@ -142,6 +143,10 @@ enables accessibility for the widget.
 .
 Notifies the system when selection, value or other data associated with
 the widget changes.
+.TP
+\fBtk accessible emit_focus_change \fIwindow\fR
+.
+Notifies the accessibility system when focus changes.
 .TP
 \fBtk accessible check_screenreader\fR
 .
