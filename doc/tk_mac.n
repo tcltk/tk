@@ -27,7 +27,7 @@ tk::mac \- Access Mac-Specific Functionality on macOS from Tk
 \fB::tk::mac::PerformService\fR
 \fB::tk::mac::LaunchURL \fIURL...\fR
 \fB::tk::mac::GetAppPath\fR
-\fB::tk::mac::GetInfoAsJSON
+\fB::tk::mac::GetInfoAsJSON\fR
 
 \fB::tk::mac::standardAboutPanel\fR
 
