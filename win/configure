@@ -4325,7 +4325,7 @@ printf "%s\n" "yes" >&6; }
 
     if test "${GCC}" = "yes" ; then
 	extra_cflags="-pipe"
-	extra_ldflags="-pipe -static-libgcc"
+	extra_ldflags="-pipe -static-libgcc --disable-high-entropy-va"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mingw32 version of gcc" >&5
 printf %s "checking for mingw32 version of gcc... " >&6; }
 if test ${ac_cv_win32+y}
@@ -4363,7 +4363,7 @@ printf "%s\n" "$ac_cv_win32" >&6; }
 	if test "$ac_cv_win32" != "yes"; then
 	    as_fn_error $? "${CC} cannot produce win32 executables." "$LINENO" 5
 	fi
-	if test "$do64bit" != "arm64"; then
+	if test "$do64bit" != "arm64" -a "$do64bit" != "aarch64"; then
 	    extra_cflags="$extra_cflags -DHAVE_CPUID=1"
 	fi
 
@@ -4728,7 +4728,7 @@ printf "%s\n" "using shared flags" >&6; }
 	    EXESUFFIX=".exe"
 	    case "x`echo \${VisualStudioVersion}`" in
 		x1[4-9]*)
-		    lflags="${lflags} -nodefaultlib:libucrt.lib"
+		    lflags="${lflags} -nodefaultlib:ucrt.lib"
 		    ;;
 		*)
 		    ;;
