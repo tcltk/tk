@@ -579,7 +579,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
     if test "${GCC}" = "yes" ; then
 	extra_cflags="-pipe"
-	extra_ldflags="-pipe -static-libgcc"
+	extra_ldflags="-pipe -static-libgcc --disable-high-entropy-va"
 	AC_CACHE_CHECK(for mingw32 version of gcc,
 	    ac_cv_win32,
 	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -593,7 +593,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	if test "$ac_cv_win32" != "yes"; then
 	    AC_MSG_ERROR([${CC} cannot produce win32 executables.])
 	fi
-	if test "$do64bit" != "arm64"; then
+	if test "$do64bit" != "arm64" -a "$do64bit" != "aarch64"; then
 	    extra_cflags="$extra_cflags -DHAVE_CPUID=1"
 	fi
 
@@ -785,7 +785,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    EXESUFFIX=".exe"
 	    case "x`echo \${VisualStudioVersion}`" in
 		x1[[4-9]]*)
-		    lflags="${lflags} -nodefaultlib:libucrt.lib"
+		    lflags="${lflags} -nodefaultlib:ucrt.lib"
 		    ;;
 		*)
 		    ;;
@@ -991,7 +991,7 @@ AC_DEFUN([SC_WITH_TCL], [
 	TCL_BIN_DEFAULT=../../tcl9.0/win
     fi
 
-    AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 9.0 binaries from DIR],
+    AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 9.x binaries from DIR],
 	    TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd $TCL_BIN_DEFAULT; pwd`)
     if test ! -d $TCL_BIN_DIR; then
 	AC_MSG_ERROR(Tcl directory $TCL_BIN_DIR does not exist)

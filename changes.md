@@ -18,6 +18,7 @@ to the userbase.
 # Bug fixes
  - [Pressing Alt-<key> triggers an error popup](https://core.tcl-lang.org/tk/tktview/a30d3e)
  - [error popup on ttk::scale with invisible trough](https://core.tcl-lang.org/tk/tktview/d25b72)
+ - [loading windows dll's in Cygwin doesn't work with high-entropy-va](https://core.tcl-lang.org/tk/tktview/06892c)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
