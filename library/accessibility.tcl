@@ -41,15 +41,18 @@ namespace eval ::tk::accessible {
 
     # Get data from ttk::treeview.
     proc _gettreeviewdata {w} {
+	#tree
 	if {[::tk::accessible::_checktree $w] eq "Tree"} {
-	    #Tree
 	    set data [$w item [$w selection] -text]
 	} else {
-	    #Table
-	    set data [$w item [$w selection] -values]
+	    #table
+	    set values [$w item [$w selection] -values]
+	    set headers [::tk::accessible::_getcolumnnames $w]
+	    set data [join [lmap h $headers v $values {format "%s: %s" $h $v}] ", "]
 	}
 	return $data
     }
+
 
     # Get treeview column names.
     proc _getcolumnnames {w} {
@@ -65,11 +68,6 @@ namespace eval ::tk::accessible {
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get [$w curselection]]
-	    ::tk::accessible::acc_value $w $data
-	    ::tk::accessible::emit_selection_change $w
-	}
-	if {[winfo class $w] eq "Menu"} {
-	    set data [$w entrycget active -label]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
@@ -105,13 +103,13 @@ namespace eval ::tk::accessible {
 	}
 	# Menu only needs to be tracked on X11 - native on Aqua and Windows
 	if {[tk windowingsystem] eq "x11"} {
-	if {[winfo class $w] eq "Menu"} {
-        set data [$w entrycget active -label]
-        ::tk::accessible::acc_value $w $data
-        ::tk::accessible::emit_selection_change $w
-        ::tk::accessible::emit_focus_change $w ;
-    }
-    }
+	    if {[winfo class $w] eq "Menu"} {
+		set data [$w entrycget active -label]
+		::tk::accessible::acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		::tk::accessible::emit_focus_change $w
+	    }
+	}
     }
 
     # Increment values in various widgets in response to keypress events. 
@@ -223,16 +221,11 @@ namespace eval ::tk::accessible {
 
     # Get value of progress bar.
     proc _getpbvalue {w} {
-	
-	# This variable exists if the progress bar is running, otherwise no.
 	variable ::ttk::progressbar::Timers
-	
 	if {![info exists ::ttk::progressbar::Timers($w)]} {
-	    return "not running"
+	    return [$w cget -value]
 	}
-	if {[info exists ::ttk::progressbar::Timers($w)]} {
-	    return "busy"
-	}
+	return "busy ([expr {int([$w cget -value])}]%)"
     }
     
     # Some widgets will not respond to keypress events unless
@@ -247,7 +240,7 @@ namespace eval ::tk::accessible {
 		}
 	    }
 	} elseif {[tk windowingsystem] eq "x11"} {
-	    if {[winfo class $w] in {Button TButton Checkbutton TCheckbutton Radiobutton TRadiobutton Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
+	    if {[winfo class $w] ni {Canvas}} {
 		if {[focus] ne $w} {
 		    focus -force $w
 		    ::tk::accessible::emit_focus_change $w
@@ -270,7 +263,7 @@ namespace eval ::tk::accessible {
 	    }
 	}
 	if {[tk windowingsystem] ne "aqua"} {
-	    #This is necessary to ensure correct accessible keyboard navigation
+	    # This is necessary to ensure correct accessible keyboard navigation
 	    $w configure -takefocus 1
 	}
 	
@@ -570,18 +563,16 @@ namespace eval ::tk::accessible {
 					   }
 
     # Activate accessibility object when mapped.
-    if {[tk windowingsystem] eq "win32"} {
-	bind Toplevel <Map> {
-	    after 0 [list ::tk::accessible::add_acc_object %W]
-	}
-    }
-    
-    if {[tk windowingsystem] eq "x11"} {
-	bind Toplevel <Map> {+
+    bind Toplevel <Map> {+
+	if {[winfo exists %W]} {
+	    set title [wm title %W]
+	    if {$title eq ""} {
+		set title "Tk Application"
+	    }
 	    ::tk::accessible::_init %W Toplevel [wm title %W] [wm title %W] {} {} {}
 	    ::tk::accessible::add_acc_object %W
 	}
-    }
+	
 
 	bind all <Map> {+::tk::accessible::add_acc_object %W}
 	
@@ -596,19 +587,19 @@ namespace eval ::tk::accessible {
 	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
 	# Only need to track menu selection changes on X11.
 	if {[tk windowingsystem] eq "x11"} {
-    bind Menu <Up> {+
-        %W activate [expr {[%W index active] - 1}]
-        ::tk::accessible::_updateselection %W
-    }
-    bind Menu <Down> {+
-        %W activate [expr {[%W index active] + 1}]
-        ::tk::accessible::_updateselection %W
-    }
-    bind Menu <Return> {+
-        %W invoke active
-        ::tk::accessible::_updateselection %W
-    }
-}
+	    bind Menu <Up> {+
+		%W activate [expr {[%W index active] - 1}]
+		::tk::accessible::_updateselection %W
+	    }
+	    bind Menu <Down> {+
+		%W activate [expr {[%W index active] + 1}]
+		::tk::accessible::_updateselection %W
+	    }
+	    bind Menu <Return> {+
+		%W invoke active
+		::tk::accessible::_updateselection %W
+	    }
+	}
 
 	
 	# Capture value changes from scale widgets.
@@ -637,21 +628,33 @@ namespace eval ::tk::accessible {
 	bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
 	bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
 
-	#
-	# VoiceOver/macOS does not respond to the virtual <<SelectAll>> event
-	# in entry widgets but does respond to the corresponding keysyms.
-	#
-	
-	if {[tk windowingsystem] eq "aqua"} {
-	    bind Entry <Command-a> {+::tk::accessible::_updateselection %W}
-	    bind TEntry <Command-a> {+::tk::accessible::_updateselection %W}
-	} else  {
-	    bind Entry <Control-a> {+::tk::accessible::_updateselection %W}
-	    bind TEntry <Control-a> {+::tk::accessible::_updateselection %W}
-	}
+	# Capture text selection in entry widgets.
+	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
+	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
+	bind Entry <Left> {+::tk::accessible::_updateselection %W}
+	bind TEntry <Left> {+::tk::accessible::_updateselection %W}
+	bind Entry <Right> {+::tk::accessible::_updateselection %W}
+	bind TEntry <Right> {+::tk::accessible::_updateselection %W}
+	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
+	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
 
-	#Progressbar updates.
+
+	# Progressbar updates.
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
+	
+	# Additional miscellaneous keyboard bindings for accessibility. 	
+	bind Button <Space> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
+	bind Button <Return> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
+	bind TButton <Space> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
+	bind TButton <Return> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
+
+	bind Scrollbar <Up> {+ %W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind Scrollbar <Down> {+ %W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind TScrollbar <Up> {+ %W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind TScrollbar <Down> {+ %W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
+
+	bind Dialog <Return> {+ tk::dialog::OK %W; ::tk::accessible::emit_selection_change %W}
+	bind Dialog <Escape> {+ tk::dialog::Cancel %W; ::tk::accessible::emit_selection_change %W}
 
 
 	# Help text for widgets that require additional direction
@@ -682,11 +685,7 @@ namespace eval ::tk::accessible {
 	bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
 	bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
 	bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
-	
-	if {[tk windowingsystem] eq "win32"} {
-	    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
-	}
-	
+		
 	# Finally, export the main commands.
 	namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
 	namespace ensemble create
