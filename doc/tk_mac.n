@@ -27,6 +27,7 @@ tk::mac \- Access Mac-Specific Functionality on macOS from Tk
 \fB::tk::mac::PerformService\fR
 \fB::tk::mac::LaunchURL \fIURL...\fR
 \fB::tk::mac::GetAppPath\fR
+\fB::tk::mac::GetInfoAsJSON
 
 \fB::tk::mac::standardAboutPanel\fR
 
@@ -36,6 +37,7 @@ tk::mac \- Access Mac-Specific Functionality on macOS from Tk
 \fB::tk::mac::useThemedToplevel \fIboolean\fR
 
 \fB::tk::mac::iconBitmap \fIname width height \-kind value\fR
+
 .fi
 .BE
 .SH "EVENT HANDLER CALLBACKS"
@@ -220,6 +222,11 @@ customized for the specific URL scheme the developer wants to support.
 \fB::tk::mac::GetAppPath\fR
 .
 Returns the current applications's file path.
+.TP
+\fB::tk::mac::GetInfoAsJSON\fR
+.
+Returns a JSON-encoded Tcl string which serializes the application's
+\fBmainBundle.infoDictionary\fR (defined by its \fIInfo.plist\fR file).
 .PP
 .SH "ADDITIONAL DIALOGS"
 .PP
