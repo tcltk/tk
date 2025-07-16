@@ -214,9 +214,7 @@ namespace eval ::tk::accessible {
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
-	}
-
-	
+	}	
     }
 
     # Get value of progress bar.
@@ -685,11 +683,12 @@ namespace eval ::tk::accessible {
 	bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
 	bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
 	bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
-		
+	
 	# Finally, export the main commands.
 	namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
 	namespace ensemble create
     }
+}
 
     # Add these commands to the tk command ensemble: tk accessible.
     namespace ensemble configure tk -map \

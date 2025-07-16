@@ -901,7 +901,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     tk_get_current_value(ATK_VALUE(acc), &gval);
     g_signal_emit_by_name(G_OBJECT(acc), "value-changed", &tkvalue);
 
-    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY)) {
+    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
     g_signal_emit_by_name(acc, "text-selection-changed");
     /* Spin GLib event loop to force processing of notification. */
     while (g_main_context_pending(NULL)) {
