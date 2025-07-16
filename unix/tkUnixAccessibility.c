@@ -147,7 +147,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 /* 
  * Map Atk component interface to Tk.
  */
-static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
+    static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
@@ -305,16 +305,34 @@ static const gchar *tk_get_name(AtkObject *obj)
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc->tkwin) {
         if (obj == tk_root_accessible) {
-            return "Tk Application";
+            Tcl_Interp *interp = Tcl_CreateInterp(); // Use a temporary interpreter
+            Tk_Window mainWin = Tk_MainWindow(interp);
+            if (mainWin) {
+                Tcl_DString cmd;
+                Tcl_DStringInit(&cmd);
+                Tcl_DStringAppend(&cmd, "wm title .", -1); // Get title of main toplevel
+                if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
+                    const char *result = Tcl_GetStringResult(interp);
+                    if (result && *result) {
+                        gchar *ret = g_strdup(result);
+                        Tcl_DStringFree(&cmd);
+                        Tcl_DeleteInterp(interp);
+                        return ret;
+                    }
+                }
+                Tcl_DStringFree(&cmd);
+            }
+            Tcl_DeleteInterp(interp);
+            return g_strdup("Tk Application"); // Fallback if no title or main window
         }
         return NULL;
     }
 	
-		/* For menus, use entry label as the accessible name. */
-	    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_MENU) {
+    /* For menus, use entry label as the accessible name. */
+    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_MENU) {
         Tcl_DString cmd;
         Tcl_DStringInit(&cmd);
-		Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
+	Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
         Tcl_DStringAppend(&cmd, "entrycget active -label ", -1);
         if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
             const char *result = Tcl_GetStringResult(acc->interp);
@@ -323,12 +341,12 @@ static const gchar *tk_get_name(AtkObject *obj)
         Tcl_DStringFree(&cmd);
     }
 	
-	/* For labels, use text content as the accessible name. */
+    /* For labels, use text content as the accessible name. */
     if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_LABEL) {
         Tcl_DString cmd;
         Tcl_DStringInit(&cmd);
         Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
-		Tcl_DStringAppend(&cmd, "cget -text ", -1);
+	Tcl_DStringAppend(&cmd, "cget -text ", -1);
 
         if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
             const char *result = Tcl_GetStringResult(acc->interp);
@@ -482,28 +500,21 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
+    if (!acc->tkwin) return set;
 
-    if (!acc->tkwin) {
-        return set;
-    }
-
-    /* Add basic states for enabled and sensitive properties. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-
-    /* Is the widget mapped? Add appropriate states. */
+    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_ENTRY) {
+        atk_state_set_add_state(set, ATK_STATE_EDITABLE);
+        atk_state_set_add_state(set, ATK_STATE_SINGLE_LINE);
+    }
     if (Tk_IsMapped(acc->tkwin) || Tk_Width(acc->tkwin) > 0 || Tk_Height(acc->tkwin) > 0) {
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
         if (Tk_IsMapped(acc->tkwin)) {
             atk_state_set_add_state(set, ATK_STATE_SHOWING);
         }
-    }
-
-    /* Add focusable state if the widget is mapped. */
-    if (Tk_IsMapped(acc->tkwin)) {
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
-
     return set;
 }
 
@@ -522,12 +533,16 @@ static gchar* tk_get_text(AtkText *text)
 
     Tcl_DString cmd;
     Tcl_DStringInit(&cmd);
-    Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext ", -1);
+    if (GetAtkRoleForWidget(tkwin) == ATK_ROLE_ENTRY) {
+        Tcl_DStringAppend(&cmd, "$w get", -1);
+    } else {
+        Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext ", -1);
+    }
+    Tcl_DStringAppend(&cmd, " ", -1);
     Tcl_DStringAppend(&cmd, path, -1);
 
     if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
-        g_warning("Failed to execute ::tk::accessible::_gettext for %s: %s",
-                  path, Tcl_GetStringResult(interp));
+        g_warning("Failed to execute text retrieval for %s: %s", path, Tcl_GetStringResult(interp));
         Tcl_DStringFree(&cmd);
         return g_strdup("");
     }
@@ -669,7 +684,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
     }
 	
-	/* Explicitly set and notify accessible name */
+    /* Explicitly set and notify accessible name */
     tk_set_name(accessible);
     g_signal_emit_by_name(accessible, "property-change::accessible-name", NULL);
     
@@ -886,15 +901,15 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     tk_get_current_value(ATK_VALUE(acc), &gval);
     g_signal_emit_by_name(G_OBJECT(acc), "value-changed", &tkvalue);
 
-    if (role == ATK_ROLE_TEXT) {
-	g_signal_emit_by_name(acc, "text-selection-changed");
-	/* Spin GLib event loop to force processing of notification. */
-	while (g_main_context_pending(NULL)) {
+    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY)) {
+    g_signal_emit_by_name(acc, "text-selection-changed");
+    /* Spin GLib event loop to force processing of notification. */
+    while (g_main_context_pending(NULL)) {
         g_main_context_iteration(NULL, FALSE);
     }
-    }
+}
 	
-    return TCL_OK;
+return TCL_OK;
 }
 
 /*
@@ -1125,6 +1140,7 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
  *
  *----------------------------------------------------------------------
  */
+
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
     (void) clientData;
@@ -1212,7 +1228,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     
     /* Create and configure root object. */
     tk_root_accessible = tk_util_get_root();
-    
+    tk_root_accessible = tk_util_get_root();
+    if (tk_root_accessible) {
+        const gchar *name = tk_get_name(tk_root_accessible);
+        atk_object_set_name(tk_root_accessible, name);
+        g_signal_emit_by_name(tk_root_accessible, "property-change::accessible-name", NULL);
+    }
+
     /* Initialize mapping table. */
     InitAtkTkMapping();
     
@@ -1268,7 +1290,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
 /*
  * Local Variables:
- * mode: objc
+ * mode: c
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
