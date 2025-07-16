@@ -8269,8 +8269,12 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2025-05-17 (bug) [7231bf99] Setting ttk state may change the variable passed by
 	value (nijtmans)
 
-2025-07-03 (bug) [6b0f77] gcc 14 breaks configure test for bigendian leading to broken floating point (nijtmans)
+2025-07-03 (bug) [6b0f77] gcc 14 breaks configure test for bigendian leading to
+	broken floating point (nijtmans)
 
 2025-07-14 (bug) [d25b72] error popup on ttk::scale with invisible trough (nemethi)
+
+2025-07-16 (bug) [770fa0]  loading windows dll's in Cygwin doesn't work with
+	high-entropy-va (nijtmans)
 
 - (to be) Released 8.6.17, Aug ??, 2025 - https://core.tcl-lang.org/tk/ for details
