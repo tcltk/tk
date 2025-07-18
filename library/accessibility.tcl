@@ -21,6 +21,9 @@ namespace eval ::tk::accessible {
 
     # Get text in text widget.
     proc _gettext {w} {
+	if {[winfo class $w] ne "Text"} {
+	    return ""
+	}
 	if {[$w tag ranges sel] eq ""} {
 	    set data [$w get 1.0 end]	
 	}  else {  
