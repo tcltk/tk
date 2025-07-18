@@ -505,6 +505,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 }
 
 /* Function to retrieve text from Tk widget. */
+
 static gchar* tk_get_text(AtkText *text)
 {
     TkAtkAccessible *acc = (TkAtkAccessible*)text;
@@ -517,16 +518,22 @@ static gchar* tk_get_text(AtkText *text)
         return g_strdup("");
     }
 
+    AtkRole role = GetAtkRoleForWidget(tkwin);
+    if (role != ATK_ROLE_ENTRY && role != ATK_ROLE_TEXT) {
+        /* Only ENTRY and TEXT roles support text retrieval */
+        g_warning("Text retrieval not supported for widget %s with role %d", path, role);
+        return g_strdup("");
+    }
+
     Tcl_DString cmd;
     Tcl_DStringInit(&cmd);
-    if (GetAtkRoleForWidget(tkwin) == ATK_ROLE_ENTRY) {
+    if (role == ATK_ROLE_ENTRY) {
         Tcl_DStringAppend(&cmd, Tk_PathName(tkwin), -1);
         Tcl_DStringAppend(&cmd, " get", -1);
-    } else {
+    } else if (role == ATK_ROLE_TEXT) {
         Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext ", -1);
         Tcl_DStringAppend(&cmd, path, -1);
     }
-
 
     if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
         g_warning("Failed to execute text retrieval for %s: %s", path, Tcl_GetStringResult(interp));
@@ -543,6 +550,11 @@ static gchar* tk_get_text(AtkText *text)
 static void tk_atk_text_interface_init(AtkTextIface *iface)
 {
     iface->get_text = tk_get_text;
+    /* Stub out methods that may cause assertions. */
+    iface->get_text_at_offset = NULL;
+    iface->get_range_extents = NULL;
+    iface->get_character_count = NULL;
+    /* Add other AtkText methods as needed, setting to NULL or safe implementations */
 }
 
 /*
