@@ -42,6 +42,8 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 static Tcl_ObjCmdProc2 TkMacOSXGetAppPathObjCmd;
 static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
+static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
+
 
 #pragma mark TKApplication(TKInit)
 
@@ -701,6 +703,8 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetInfoAsJSON",
+	    TkMacOSXGetInfoAsJSONObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::mac::macOSVersion",
 	    TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
@@ -727,7 +731,7 @@ TkpInit(
 
 static int
 TkMacOSXGetAppPathObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
@@ -815,7 +819,7 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
@@ -830,6 +834,58 @@ TkMacOSVersionObjCmd(
     }
     Tcl_SetResult(interp, version, NULL);
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetInfoAsJSONObjCmd --
+ *
+ *	Returns the contents of the Info.plist file in the application
+ *      bundle as a JSON-encoded Tcl string.
+ *
+ * Results:
+ *	Returns the JSON encoding of the Info.plist file..
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetInfoAsJSONObjCmd(
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
+{
+    static char *bytes = NULL;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    if (bytes == NULL) {
+	NSJSONWritingOptions opt = NSJSONWritingPrettyPrinted;
+	NSDictionary<NSString *, id> *infoDict = [[NSBundle mainBundle]
+						     infoDictionary];
+	NSData *infoAsJSON = [NSJSONSerialization
+				 dataWithJSONObject: infoDict
+					    options:opt
+					      error:nil];
+	if (infoAsJSON.length) {
+	    int buffer_size = (int) infoAsJSON.length + 1;
+	    bytes = malloc(buffer_size);
+	    strlcpy(bytes, infoAsJSON.bytes, buffer_size);
+	}
+    }
+    if (bytes) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(bytes, TCL_INDEX_NONE));
+	return TCL_OK;
+    }
+    return TCL_ERROR;
 }
 
 /*
