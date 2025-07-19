@@ -355,7 +355,7 @@ test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
 } {0 1 1 1 1 2}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget geometry

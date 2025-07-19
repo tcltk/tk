@@ -1363,7 +1363,7 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageCleanup

@@ -222,7 +222,7 @@ test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expec
 } -result {-21474836480 18446744052234715136}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

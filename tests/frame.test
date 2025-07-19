@@ -1786,7 +1786,7 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
 } -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 10} {gorp display 0 0 20 15} {gorp display 0 0 20 10}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

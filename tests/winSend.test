@@ -391,7 +391,7 @@ test winSend-10.18 {Tk_DDEObjCmd - services} winSend {
 } {0 1}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 # Get rid of the other app and all of its interps

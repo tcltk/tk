@@ -120,7 +120,7 @@ test main-3.3 {Tk_ParseArgv: -help option} -setup {
 } -returnCodes error -match glob -result {Command-specific options:*}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

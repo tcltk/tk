@@ -68,7 +68,7 @@ test cmds-1.6 {tkwait visibility, window gets deleted} -setup {
 } -result {deleted}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

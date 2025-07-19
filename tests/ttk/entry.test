@@ -415,7 +415,7 @@ test entry-12.2 "style command" -body {
 } -result {customStyle.TEntry customStyle.TEntry TEntry}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget entry scroll

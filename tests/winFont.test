@@ -398,7 +398,7 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget geometry

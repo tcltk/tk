@@ -284,7 +284,7 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
 test treetags-end "Cleanup" -body { destroy $tv }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

@@ -1198,7 +1198,7 @@ test safePrimarySelection-6.10 {IMPORTANT, safe interpreter, ttk::spinbox spun/s
 } -result {OLD_VALUE----OLD_VALUE}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete ::_test_tmp

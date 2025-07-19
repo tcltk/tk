@@ -341,7 +341,7 @@ test panedwindow-6.2 "style command" -body {
 } -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

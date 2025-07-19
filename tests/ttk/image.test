@@ -63,7 +63,7 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

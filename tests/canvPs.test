@@ -222,7 +222,7 @@ test canvPs-5.2 {test ps generation with image} -body {
 } -returnCodes ok -match glob -result *
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 unset -nocomplain foo bar

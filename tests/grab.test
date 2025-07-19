@@ -219,7 +219,7 @@ test grab-6.1 {local grab on child window} -constraints {
 } -result {inside outside : outside : inside outside :}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

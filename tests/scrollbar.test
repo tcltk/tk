@@ -816,7 +816,7 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 catch {destroy .s}

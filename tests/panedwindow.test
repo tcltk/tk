@@ -5558,7 +5558,7 @@ test panedwindow-29.2 {display on depths other than the default one} -constraint
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

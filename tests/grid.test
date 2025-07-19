@@ -2186,7 +2186,7 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
 } -result 0
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

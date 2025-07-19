@@ -42,7 +42,7 @@ test layout-2 "Empty -children not allowed" -body {
 } -returnCodes error -result {Invalid -children value}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

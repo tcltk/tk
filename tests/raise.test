@@ -330,7 +330,7 @@ test raise-7.8 {errors in raise/lower commands} -body {
 } -returnCodes error -result {bad window path name "badName4"}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

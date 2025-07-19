@@ -274,7 +274,7 @@ test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
 };# end of namespace svgnano
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete svgnano

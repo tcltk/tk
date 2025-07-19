@@ -2624,7 +2624,7 @@ test font-47.3 {Bug 3049518 - Label} -body {
 } -result {{1 1} {1 1} {1 1} {1 1}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

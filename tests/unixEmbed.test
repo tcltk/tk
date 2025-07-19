@@ -1271,7 +1271,7 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
 } -result {.main.b {pushed .main.b} .embed.b {pushed .embed.b}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

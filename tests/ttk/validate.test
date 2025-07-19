@@ -300,7 +300,7 @@ test validate-3.6 "...until the value becomes valid" -constraints NA -body {
 test validate-3.last "Cleanup" -body { destroy .e }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 foreach i {1 2 3 4} {

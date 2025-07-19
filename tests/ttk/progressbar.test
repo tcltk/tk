@@ -175,7 +175,7 @@ test progressbar-4.2 "style command" -body {
 } -result {customStyle.Vertical.TProgressbar Vertical.customStyle.Vertical.TProgressbar TProgressbar}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

@@ -7840,7 +7840,7 @@ test text-38.1 {Extending selection with mouse going outside the widget - Bug a9
 } -result {1.0}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

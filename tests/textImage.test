@@ -477,7 +477,7 @@ test textImage-5.1 {peer widget images} -setup {
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 destroy .t

@@ -72,7 +72,7 @@ test radiobutton-2.2 "style command" -body {
 } -result {customStyle.TRadiobutton customStyle.TRadiobutton TRadiobutton}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

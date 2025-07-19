@@ -75,7 +75,7 @@ test bgerror-1.3 {bgerror / tkerror compat / accumulation / break} -setup {
 } -result {err1}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

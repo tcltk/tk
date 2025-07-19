@@ -69,7 +69,7 @@ test pkgconfig-2.5 {error: query with to many arguments} {
 } {wrong # args: should be "::tk::pkgconfig subcommand ?arg?"}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

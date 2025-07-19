@@ -63,7 +63,7 @@ test vsapi-1.3 "EXPLORERBAR EBP_HEADERCLOSE" -constraints {xpnative} -body {
 } -cleanup { destroy .b } -result [list 16 16]
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

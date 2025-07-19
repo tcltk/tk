@@ -97,7 +97,7 @@ test checkbutton-2.2 "style command" -body {
 } -result {customStyle.TCheckbutton customStyle.TCheckbutton TCheckbutton}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

@@ -166,7 +166,7 @@ test canvWind-2.1 {DisplayWinItem, window gets destroyed during <Configure>} -se
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

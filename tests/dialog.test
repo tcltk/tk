@@ -71,7 +71,7 @@ test dialog-2.3 {tk_dialog operation} -body {
 } -result -1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget dialog

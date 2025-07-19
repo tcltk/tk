@@ -1184,7 +1184,7 @@ test imgPNG-4.4 {file output with metadata} -setup {
 }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete png

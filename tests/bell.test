@@ -60,7 +60,7 @@ test bell-1.8 {bell command} -body {
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

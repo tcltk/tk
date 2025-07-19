@@ -537,7 +537,7 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

@@ -3913,7 +3913,7 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 } -result {{A sample } text}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 foreach i {1 2 3} {

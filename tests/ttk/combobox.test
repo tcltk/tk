@@ -130,7 +130,7 @@ test combobox-4.2 "style command" -body {
 } -result {customStyle.TCombobox customStyle.TCombobox TCombobox}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

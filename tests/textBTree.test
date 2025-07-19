@@ -1326,7 +1326,7 @@ test btree-18.9 {tag search back, large complex btree spans} -setup {
 } -result {{500.0 520.0} {200.0 220.0}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 rename setup {}
