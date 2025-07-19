@@ -1576,7 +1576,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 destroy .t

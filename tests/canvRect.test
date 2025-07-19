@@ -491,7 +491,7 @@ end
 }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

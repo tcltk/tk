@@ -208,7 +208,7 @@ test border-4.7 {Tk_GetReliefFromObj - error} -body {
 } -returnCodes error -result {bad relief "upanddown": must be flat, groove, raised, ridge, solid, or sunken}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

@@ -273,7 +273,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish

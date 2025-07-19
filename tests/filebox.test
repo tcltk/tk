@@ -445,7 +445,7 @@ foreach mode $modes {
 }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 set tk_strictMotif $tk_strictMotif_old

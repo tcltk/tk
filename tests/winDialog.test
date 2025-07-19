@@ -872,7 +872,7 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
 } -result "Привет"
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 if {[testConstraint testwinevent]} {

@@ -122,7 +122,7 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} -constraints {
 } -result {{more data in string} {new data}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

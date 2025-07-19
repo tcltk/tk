@@ -256,7 +256,7 @@ test cluster-8.6 {::tk::wordBreakAfter} -body {
 } -returnCodes 1 -result {wrong # args: should be "::tk::wordBreakAfter str start ?locale?"}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

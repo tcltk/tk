@@ -294,7 +294,7 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

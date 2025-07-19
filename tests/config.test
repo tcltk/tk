@@ -1948,7 +1948,7 @@ test config-14.14 {Tk_CreateOptionTable - use with namespace import} -setup {
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

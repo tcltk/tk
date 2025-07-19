@@ -3286,7 +3286,7 @@ test listbox-32.2 {Bug [5d991b822e]} {
 } {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 resetGridInfo

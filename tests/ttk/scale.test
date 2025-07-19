@@ -65,7 +65,7 @@ test scale-3.2 "style command" -body {
 } -result {customStyle.Vertical.TScale Vertical.customStyle.Vertical.TScale TScale}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

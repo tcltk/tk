@@ -828,7 +828,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -result {{foo2 display 0 0 80 60}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish

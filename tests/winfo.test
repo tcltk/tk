@@ -467,7 +467,7 @@ test winfo-14.4 {mapped at idle time} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

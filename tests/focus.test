@@ -829,7 +829,7 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
 } -result {Reached}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

@@ -475,7 +475,7 @@ test option-16.2 {ticket 766ef52f3} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

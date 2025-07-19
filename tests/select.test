@@ -1110,7 +1110,7 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 } -result {abcd}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget child select

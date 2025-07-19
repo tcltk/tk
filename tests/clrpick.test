@@ -178,7 +178,7 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
 } -result [winfo screen .]
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget dialog

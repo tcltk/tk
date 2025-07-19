@@ -1540,7 +1540,7 @@ test treeview-23.1 "cell padding" -setup {
 } -result {2 4 6 8}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget scroll

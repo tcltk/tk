@@ -1009,7 +1009,7 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

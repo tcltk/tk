@@ -810,7 +810,7 @@ test menubutton-9.2 {Bug [5d991b822e]} {
 } {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

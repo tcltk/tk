@@ -1671,7 +1671,7 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
 
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 option clear

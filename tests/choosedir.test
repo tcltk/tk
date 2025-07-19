@@ -141,7 +141,7 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 } -result $real
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 unset fake parent real

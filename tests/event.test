@@ -1205,7 +1205,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
 } -result {|}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 # macOS sometimes has trouble deleting the test window,

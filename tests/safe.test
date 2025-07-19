@@ -264,7 +264,7 @@ test safe-7.1 {canvas printing} -body {
 } -returnCodes ok -match glob -result *
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 set ::auto_path $saveAutoPath

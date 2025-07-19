@@ -4305,7 +4305,7 @@ test menu-41.14 {identifiers - reserved word} -setup {
 } -result {2}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 unset earthPhotoFile

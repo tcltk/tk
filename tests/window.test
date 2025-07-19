@@ -389,7 +389,7 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

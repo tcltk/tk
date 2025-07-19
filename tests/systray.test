@@ -234,7 +234,7 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget child

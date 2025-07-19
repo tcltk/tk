@@ -571,7 +571,7 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constr
 } -result ok
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 destroy .t
