@@ -602,7 +602,7 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
 } -result {Managed window index "3" out of bounds} -returnCodes error
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

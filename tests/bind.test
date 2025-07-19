@@ -7123,7 +7123,7 @@ test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [435739
 } -returnCodes ok -result {}  ; # shall not crash (assertion failed)
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

@@ -495,7 +495,7 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
 } -result {.a .b}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 . configure -takefocus 0 -highlightthickness 0

@@ -1277,7 +1277,7 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -constraints 
 test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

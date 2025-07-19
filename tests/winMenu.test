@@ -1384,7 +1384,7 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
 } -body {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

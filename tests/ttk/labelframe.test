@@ -158,7 +158,7 @@ test labelframe-7.2 "style command" -body {
 } -result {customStyle.TLabelframe customStyle.TLabelframe TLabelframe}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

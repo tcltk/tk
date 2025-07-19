@@ -537,7 +537,7 @@ test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
 } -result {0 1 {invalid command name "i2"}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 removeFile foo.bm

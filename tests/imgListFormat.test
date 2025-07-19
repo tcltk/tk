@@ -648,7 +648,7 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
 } -returnCodes error -result {invalid color name "#1111#1"}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish

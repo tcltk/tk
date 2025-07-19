@@ -1055,7 +1055,7 @@ test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outsi
    {bad text index ".f"} 1.3 {text doesn't contain any characters tagged with "mytag"}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 rename textimage {}

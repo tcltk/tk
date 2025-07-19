@@ -409,7 +409,7 @@ test spinbox-5.2 "style command" -body {
 } -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 tcltest::cleanupTests

@@ -298,7 +298,7 @@ test winMsgbox-3.2 {tk_messageBox detail (unicode)} -constraints {
 } -result [list ok "Поиск\n\nстраниц"]
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 if {[testConstraint testwinevent]} {

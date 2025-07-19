@@ -175,7 +175,7 @@ test fontchooser-5.1 {fontchooser multiple configure} -constraints {scriptImpl} 
 } -result {TestTitle}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 unset applyFontCmd

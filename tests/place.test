@@ -546,7 +546,7 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
 } -result {0 0 0}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

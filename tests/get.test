@@ -143,7 +143,7 @@ test get-2.4 {Tk_GetJustifyFromObj - error} -setup {
 } -returnCodes error -result {bad justification "stupid": must be left, right, or center}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 # cleanup

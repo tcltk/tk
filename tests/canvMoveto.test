@@ -61,7 +61,7 @@ test canvMoveto-2.3 {Canvas "moveto" command, blank x coordinate} {
 } {200 200 272 282}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 .c delete withtag all

@@ -5213,7 +5213,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget scroll text

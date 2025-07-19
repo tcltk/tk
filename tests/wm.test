@@ -2557,7 +2557,7 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
 } -result {pack {} wm {}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows

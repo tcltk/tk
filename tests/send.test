@@ -662,7 +662,7 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 catch {

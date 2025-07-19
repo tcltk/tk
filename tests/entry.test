@@ -3621,7 +3621,7 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
 } -result {{} {}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 # option clear

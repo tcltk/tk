@@ -79,7 +79,7 @@ test util-1.12 {Tk_GetScrollInfo procedure} -body {
 } -returnCodes error -result {unknown option "dropdead": must be moveto or scroll}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests

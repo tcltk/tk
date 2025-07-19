@@ -699,7 +699,7 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 destroy {*}[winfo children .]

@@ -179,7 +179,7 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanup

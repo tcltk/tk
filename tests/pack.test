@@ -1806,7 +1806,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 } -result 0
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 cleanupTests
