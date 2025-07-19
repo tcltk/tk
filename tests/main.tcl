@@ -18,6 +18,7 @@ if {[namespace exists tk::test]} {
     return
 }
 
+package require tk
 tk appname tktest
 wm title . tktest
 # If the main window isn't already mapped (e.g. because the tests are
@@ -33,7 +34,7 @@ if {![winfo ismapped .]} {
 # LOAD AND CONFIGURE TEST HARNESS
 #
 package require tcltest 2.2
-tcltest::configure {*}$argv
+eval tcltest::configure $argv
 namespace import -force tcltest::test
 namespace import -force tcltest::makeFile
 namespace import -force tcltest::removeFile
