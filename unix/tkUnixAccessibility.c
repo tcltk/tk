@@ -75,7 +75,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 int GetAccessibleChildIndexFromTkList(Tk_Window parent, Tk_Window targetChild);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static void GtkEventLoop(ClientData clientData);
+static int GtkEventLoop(ClientData clientData);
 void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
@@ -651,12 +651,14 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
 
-	/* 
-	 * Critical: Emit children-changed signal for AT-SPI update.
-	 * The index should be the position where it was added.
-	 */
+        /* 
+         * Emit children-changed signal for AT-SPI update with correct index.
+         */
         int index = g_list_length(toplevel_accessible_objects) - 1;
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
+        /* Emit state-changed signals to ensure Orca picks up the toplevel. */
+        g_signal_emit_by_name(accessible, "state-change", "showing", TRUE);
+        g_signal_emit_by_name(accessible, "state-change", "visible", TRUE);
     }
 
     /* Explicitly set and notify accessible name */
@@ -669,7 +671,6 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     /* Register child widgets recursively. */
     RegisterChildWidgets(interp, tkwin, accessible);
 }
-
 /*
  * Function to recursively register child widgets using childList.
  */
@@ -704,6 +705,9 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         if (current_parent != parent_obj) {
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
+            /* Emit state-changed signals to ensure Orca picks up the child. */
+            g_signal_emit_by_name(child_obj, "state-change", "showing", TRUE);
+            g_signal_emit_by_name(child_obj, "state-change", "visible", TRUE);
         }
 
         /* Set the name for the child object. */
@@ -717,7 +721,6 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         RegisterChildWidgets(interp, child, child_obj);
     }
 }
-
 
 /* Helper function to calculate index from Tk window list. */
 int GetAccessibleChildIndexFromTkList(Tk_Window parent, Tk_Window targetChild)
@@ -831,28 +834,31 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     return obj;
 }
 
-
-
 /*
  * Functions to integrate Tk and Gtk event loops.
  */
 
-static void GtkEventLoop(ClientData clientData)
+static int GtkEventLoop(ClientData clientData)
 {
-    (void) clientData;
+    GMainContext *context = (GMainContext *)clientData;
+    if (!context) return 0;
 
-    /* One safe, non-blocking iteration. */
-    g_main_context_iteration(NULL, FALSE);
+    /* Process pending GLib events without blocking. */
+    while (g_main_context_pending(context)) {
+        g_main_context_iteration(context, FALSE);
+    }
 
-    /* Schedule again - run every 50 milliseconds. */
-    Tcl_CreateTimerHandler(50, GtkEventLoop, NULL);
+    return 1; /* Keep the file handler active. */
 }
 
+void InstallGtkEventLoop(void)
+{
+    GMainContext *context = g_main_context_default();
+    if (!context) return;
 
-void InstallGtkEventLoop() {
-    Tcl_CreateTimerHandler(50, GtkEventLoop, NULL);
+    /* Use timer-based approach to integrate GLib with Tcl event loop. */
+    Tcl_CreateTimerHandler(50, (Tcl_TimerProc *)GtkEventLoop, (ClientData)context);
 }
-
 /*
  * Functions to map Tk window to its corresponding Atk object.
  */
