@@ -202,7 +202,7 @@ static gint tk_get_n_children(AtkObject *obj)
     TkWindow *childPtr;
     /* Iterate through Tk's internal child list. */
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-        if (GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
+        if (Tk_WindowId((Tk_Window)childPtr)&& GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
             count++;
         }
     }
@@ -388,6 +388,7 @@ static const gchar *tk_get_name(AtkObject *obj)
     }
     return NULL;
 }
+
 
 /* Function to set new name if change made. */
 static void tk_set_name(AtkObject *obj, const gchar *name)
@@ -843,13 +844,13 @@ static void GtkEventLoop(ClientData clientData)
     /* One safe, non-blocking iteration. */
     g_main_context_iteration(NULL, FALSE);
 
-    /* Schedule again - run every 10 milliseconds. */
-    Tcl_CreateTimerHandler(10, GtkEventLoop, NULL);
+    /* Schedule again - run every 50 milliseconds. */
+    Tcl_CreateTimerHandler(50, GtkEventLoop, NULL);
 }
 
 
 void InstallGtkEventLoop() {
-    Tcl_CreateTimerHandler(10, GtkEventLoop, NULL);
+    Tcl_CreateTimerHandler(50, GtkEventLoop, NULL);
 }
 
 /*
@@ -1097,7 +1098,6 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
