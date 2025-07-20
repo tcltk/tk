@@ -246,11 +246,14 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
-void RunOnMainThread(void (*func)(void *), void *data);
+static gboolean RunOnMainThreadCallback(gpointer user_data);
 void RunOnMainThread(void (*func)(void *), void *data);
 static void GtkEventLoop(ClientData clientData);
 void InstallGtkEventLoop(void);
 static AtkObject *tk_util_get_root(void);
+static AtkObject *tk_ref_child(AtkObject *obj, guint i);
+static gint tk_get_n_children(AtkObject *obj);
+static AtkRole tk_get_role(AtkObject *obj);
 static AtkRole GetAtkRoleForWidget_core(Tk_Window win);
 static const gchar *tk_get_name_core(AtkObject *obj);
 static void tk_set_name_core(AtkObject *obj, const gchar *name);
@@ -353,10 +356,10 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
     /* Map Atk class functions to thread-safe Tk functions */
     atk_class->get_name = tk_get_name_core;
     atk_class->get_description = tk_get_description_core;
-    atk_class->get_role = tk_get_role_core;
+    atk_class->get_role = tk_get_role;
     atk_class->ref_state_set = tk_ref_state_set_core;
-    atk_class->get_n_children = tk_get_n_children_core;
-    atk_class->ref_child = tk_ref_child_core;
+    atk_class->get_n_children = tk_get_n_children;
+    atk_class->ref_child = tk_ref_child;
 }
 
 /*
@@ -1746,21 +1749,21 @@ void InstallGtkEventLoop(void) {
 }
 
 void RunOnMainThread(void (*func)(void *), void *data) {
-    DispatcherJob *job = (DispatcherJob *)user_data;
-    if (job && job->func) {
-        job->func(job->data);
-    }
-    g_free(job);
-    return G_SOURCE_REMOVE;
-}
-
-void RunOnMainThread(void (*func)(void *), void *data) {
     DispatcherJob *job = g_new(DispatcherJob, 1);
     job->func = func;
     job->data = data;
     g_idle_add(RunOnMainThreadCallback, job);
 }
 
+static gboolean RunOnMainThreadCallback(gpointer user_data)
+{
+    DispatcherJob *job = (DispatcherJob *)user_data;
+    if (job && job->func) {
+	job->func(job->data);
+    }
+    g_free(job);
+    return G_SOURCE_REMOVE;
+}
 #endif
 /*
  *----------------------------------------------------------------------
