@@ -37,11 +37,18 @@ typedef struct _TkAtkAccessible {
     Tcl_Interp *interp;
     char *path;
     gchar *cached_name;
+    GPtrArray *cached_children;
+    gboolean cache_dirty;
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
+
+typedef struct {
+    void (*func)(void *);
+    void *data;
+} DispatcherJob;
 
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
@@ -74,10 +81,13 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj);
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 int GetAccessibleChildIndexFromTkList(Tk_Window parent, Tk_Window targetChild);
+void UpdateAtkChildrenCache(TkAtkAccessible *acc);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 static void GtkEventLoop(ClientData clientData);
 void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
+static gboolean RunOnMainThreadCallback(gpointer user_data);
+void RunOnMainThread(void (*func)(void *), void *data);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
@@ -91,6 +101,7 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -181,73 +192,51 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 /*
  * Functions to manage child count and individual child widgets.
  */
+ 
 static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
     if (!acc) return 0;
 
     if (obj == tk_root_accessible) {
-        /* The root's children are the toplevel windows. */
         return g_list_length(toplevel_accessible_objects);
     }
 
-    if (!acc->tkwin) {
-        return 0;
+    if (acc->cache_dirty) {
+        UpdateAtkChildrenCache(acc);
+        acc->cache_dirty = FALSE;
     }
 
-    /* Count direct child windows with accessible objects. */
-    int count = 0;
-    TkWindow *winPtr = (TkWindow *)acc->tkwin;
-    TkWindow *childPtr;
-    /* Iterate through Tk's internal child list. */
-    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-        if (Tk_WindowId((Tk_Window)childPtr)&& GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
-            count++;
-        }
-    }
-    g_warning("count is: %d", count);
-    return count;
+    return acc->cached_children ? acc->cached_children->len : 0;
 }
+
 
 static AtkObject *tk_ref_child(AtkObject *obj, guint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
     if (!acc) return NULL;
 
     if (obj == tk_root_accessible) {
-        if (i >= g_list_length(toplevel_accessible_objects)) {
-            return NULL;
-        }
-	/* Get accessible object from toplevel list. */
+        if (i >= g_list_length(toplevel_accessible_objects)) return NULL;
         AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
-        if (child) {
-            g_object_ref(child); /* Increment ref count as per ATK interface contract. */
-        }
+        if (child) g_object_ref(child);
         return child;
     }
 
-    if (!acc->tkwin) {
-        return NULL;
+    if (acc->cache_dirty) {
+        UpdateAtkChildrenCache(acc);
+        acc->cache_dirty = FALSE;
     }
 
-    /* Return i-th direct child with accessible object. */
-    int index = 0;
-    TkWindow *winPtr = (TkWindow *)acc->tkwin;
-    TkWindow *childPtr;
-    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-        AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
-        if (child_obj) {
-            if (index == i) {
-                g_object_ref(child_obj); /* Increment ref count as per ATK interface contract. */
-                return child_obj;
-            }
-            index++;
-        }
+    if (acc->cached_children && i < acc->cached_children->len) {
+        AtkObject *child = g_ptr_array_index(acc->cached_children, i);
+        g_object_ref(child);
+        return child;
     }
+
     return NULL;
 }
+
 
 /*
  * Functions to map accessible role to Atk.
@@ -674,6 +663,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 /*
  * Function to recursively register child widgets using childList.
  */
+ 
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj)
 {
     if (!tkwin || !parent_obj) return;
@@ -745,6 +735,29 @@ int GetAccessibleChildIndexFromTkList(Tk_Window parent, Tk_Window targetChild)
 
     return -1;
 }
+
+/* Cache list of accessible children and only update with Configure/Map events. */
+void UpdateAtkChildrenCache(TkAtkAccessible *acc) 
+{
+    if (!acc || !acc->tkwin) return;
+
+    if (acc->cached_children) {
+        g_ptr_array_free(acc->cached_children, TRUE);
+    }
+    acc->cached_children = g_ptr_array_new_with_free_func(g_object_unref);
+
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (Tk_WindowId((Tk_Window)child)) {
+            AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)child);
+            if (child_obj) {
+                g_object_ref(child_obj);
+                g_ptr_array_add(acc->cached_children, child_obj);
+            }
+        }
+    }
+}
+
 
 /*
  * Root window setup. These are the foundation of the
@@ -877,8 +890,28 @@ void InstallGtkEventLoop(void)
     }
 
     /* Use timer-based approach with a longer interval to reduce pressure. */
-    Tcl_CreateTimerHandler(100, (Tcl_TimerProc *)GtkEventLoop, (ClientData)context);
+    Tcl_CreateTimerHandler(5, (Tcl_TimerProc *)GtkEventLoop, (ClientData)context);
     g_message("InstallGtkEventLoop: Installed timer-based GLib event loop with 100ms interval");
+}
+
+
+
+static gboolean RunOnMainThreadCallback(gpointer user_data)
+{
+    DispatcherJob *job = (DispatcherJob *)user_data;
+    if (job && job->func) {
+        job->func(job->data);
+    }
+    g_free(job);
+    return G_SOURCE_REMOVE;
+}
+
+void RunOnMainThread(void (*func)(void *), void *data)
+{
+    DispatcherJob *job = g_new(DispatcherJob, 1);
+    job->func = func;
+    job->data = data;
+    g_idle_add(RunOnMainThreadCallback, job);
 }
 
 
@@ -1146,10 +1179,9 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, T
 
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) {
     if (!tkwin || !tkAccessible) return; 
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-			  TkAtkAccessible_DestroyHandler, tkAccessible);
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-			  TkAtkAccessible_NameHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkAtkAccessible_DestroyHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,TkAtkAccessible_NameHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkAtkAccessible_ConfigureHandler, tkAccessible);
 }
 
 /*
@@ -1225,6 +1257,49 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
     }
 }
 
+/*
+*----------------------------------------------------------------------
+*
+* TkAtkAccessible_ConfigureHandler --
+*
+* Rebuild child widget cache after X events.
+*
+* Results:
+*	Child cache is rebuilt.
+*
+* Side effects:
+*	None.
+*
+*----------------------------------------------------------------------
+*/
+
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
+{
+    if (!eventPtr) return;
+
+    Tk_Window tkwin = (Tk_Window)clientData;
+    if (!Tk_IsMapped(tkwin)) {
+        return;
+    }
+
+    AtkObject *atkObj = GetAtkObjectForTkWindow(tkwin);
+    if (!atkObj) {
+        return;
+    }
+
+    TkAtkAccessible *acc = (TkAtkAccessible *)atkObj;
+
+    switch (eventPtr->type) {
+    case ConfigureNotify:
+    case MapNotify:
+    case VisibilityNotify:
+	acc->cache_dirty = TRUE;
+	break;
+
+    default:
+	break;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
