@@ -529,7 +529,7 @@ namespace eval ::tk::accessible {
 		     }
     
     # Label/TLabel bindings.
-    bind Label <Map>    {+::tk::accessible::_init \
+    bind Label <Map>  {+::tk::accessible::_init \
 			     %W \
 			     Label \
 			     Label \
@@ -639,23 +639,22 @@ namespace eval ::tk::accessible {
 	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
 	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
 
-
 	# Progressbar updates.
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
 	
 	# Additional miscellaneous keyboard bindings for accessibility. 	
-	bind Button <Space> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
-	bind Button <Return> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
-	bind TButton <Space> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
-	bind TButton <Return> {+ %W invoke; ::tk::accessible::emit_focus_change %W}
+#	bind Button <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+#	bind Button <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+#	bind TButton <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+#	bind TButton <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
 
-	bind Scrollbar <Up> {+ %W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
-	bind Scrollbar <Down> {+ %W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
-	bind TScrollbar <Up> {+ %W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
-	bind TScrollbar <Down> {+ %W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind Scrollbar <Up> {+%W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind Scrollbar <Down> {+%W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind TScrollbar <Up> {+%W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
+	bind TScrollbar <Down> {+%W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
 
-	bind Dialog <Return> {+ tk::dialog::OK %W; ::tk::accessible::emit_selection_change %W}
-	bind Dialog <Escape> {+ tk::dialog::Cancel %W; ::tk::accessible::emit_selection_change %W}
+	bind Dialog <Return> {+::tk::dialog::OK %W; ::tk::accessible::emit_selection_change %W}
+	bind Dialog <Escape> {+::tk::dialog::Cancel %W; ::tk::accessible::emit_selection_change %W}
 
 
 	# Help text for widgets that require additional direction
