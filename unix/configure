@@ -7763,9 +7763,6 @@ if test $tk_aqua = yes; then
 printf "%s\n" "#define MAC_OSX_TK 1" >>confdefs.h
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
-    if test -d /System/Library/Frameworks/UserNotifications.framework; then
-	LIBS="$LIBS -framework UserNotifications"
-    fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
 	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
