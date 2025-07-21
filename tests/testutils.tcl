@@ -986,4 +986,40 @@ namespace eval ::tk::test::text {
     testutils export
 }
 
+namespace eval ::tk::test::timing {
+
+    # init --
+    #
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
+    #
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
+    #
+    # For more information, see the documentation in the file "testutils.GUIDE"
+    #
+    proc init {} {
+	variable dt
+	set dt(granularity) milliseconds
+	set dt(t0) [clock milliseconds]
+    }
+
+    proc dt.get {} {
+	variable dt
+	set now [clock $dt(granularity)]
+	set result [expr {$now - $dt(t0)}]
+	set dt(t0) $now
+	return $result
+    }
+
+    proc dt.reset {} {
+	variable dt
+	set dt(t0) [clock $dt(granularity)]
+    }
+
+    testutils export
+}
+
 # EOF

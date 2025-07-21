@@ -162,8 +162,7 @@ test testutils-4.3 {import fails: variable already exists} -constraints testutil
     namespace delete ::zez
 }
 
-test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -setup {
-} -body {
+test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -body {
     namespace eval ::zez {
 	testutils import foo
 	testutils forget foo
@@ -176,6 +175,19 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
     }
 } -result {1 0 123} -cleanup {
     namespace delete ::zez
+}
+
+#
+# 10. domain timing
+#
+
+test testutils-10.1 {} -constraints testutils -setup {
+    testutils import timing
+} -body {
+    dt.reset
+    expr {[dt.get] <= 1}
+} -result {1} -cleanup {
+    testutils forget timing
 }
 
 #
