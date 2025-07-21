@@ -16,8 +16,8 @@ ttk_vsapi \- Define a Microsoft Visual Styles element
 .PP
 The \fBvsapi\fR element factory creates a new element
 in the current theme whose visual appearance is drawn using the
-Microsoft Visual Styles API which is responsible for the themed styles
-on Windows XP and Vista. This factory permits any of the Visual
+Microsoft Visual Styles API which is used in ttk for the MS-Windows
+native styles. This factory permits any of the Visual
 Styles parts to be declared as Ttk elements that can then be
 included in a style layout to modify the appearance of Ttk widgets.
 .PP
