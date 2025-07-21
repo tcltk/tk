@@ -75,7 +75,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 int GetAccessibleChildIndexFromTkList(Tk_Window parent, Tk_Window targetChild);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static int GtkEventLoop(ClientData clientData);
+static void GtkEventLoop(ClientData clientData);
 void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
@@ -834,31 +834,54 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     return obj;
 }
 
+
 /*
  * Functions to integrate Tk and Gtk event loops.
  */
 
-static int GtkEventLoop(ClientData clientData)
+static void GtkEventLoop(ClientData clientData)
 {
     GMainContext *context = (GMainContext *)clientData;
-    if (!context) return 0;
-
-    /* Process pending GLib events without blocking. */
-    while (g_main_context_pending(context)) {
-        g_main_context_iteration(context, FALSE);
+    if (!context) {
+        g_warning("GtkEventLoop: No GLib main context available");
+        return 0;
     }
 
-    return 1; /* Keep the file handler active. */
+    /* Limit the number of iterations to prevent blocking. */
+    int max_iterations = 10;
+    int iterations = 0;
+    GTimer *timer = g_timer_new();
+    gdouble start_time = g_timer_elapsed(timer, NULL);
+
+    while (g_main_context_pending(context) && iterations < max_iterations) {
+        g_main_context_iteration(context, FALSE);
+        iterations++;
+        /* Check if processing is taking too long (e.g., >100ms). */
+        if (g_timer_elapsed(timer, NULL) - start_time > 0.1) {
+            g_warning("GtkEventLoop: Breaking after %d iterations to avoid blocking", iterations);
+            break;
+        }
+    }
+
+    g_timer_destroy(timer);
+    g_message("GtkEventLoop: Processed %d GLib events", iterations);
+
 }
 
 void InstallGtkEventLoop(void)
 {
     GMainContext *context = g_main_context_default();
-    if (!context) return;
+    if (!context) {
+        g_warning("InstallGtkEventLoop: Failed to get default GLib main context");
+        return;
+    }
 
-    /* Use timer-based approach to integrate GLib with Tcl event loop. */
-    Tcl_CreateTimerHandler(50, (Tcl_TimerProc *)GtkEventLoop, (ClientData)context);
+    /* Use timer-based approach with a longer interval to reduce pressure. */
+    Tcl_CreateTimerHandler(100, (Tcl_TimerProc *)GtkEventLoop, (ClientData)context);
+    g_message("InstallGtkEventLoop: Installed timer-based GLib event loop with 100ms interval");
 }
+
+
 /*
  * Functions to map Tk window to its corresponding Atk object.
  */
@@ -1407,4 +1430,5 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * coding: utf-8
  * End:
  */
+
 
