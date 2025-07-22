@@ -30,16 +30,6 @@
 
 /* Data declarations used in this file. */
 
-/* Hash table for managing accessibility attributes. */
-extern Tcl_HashTable *TkAccessibilityObject;
-
-/* Define custom ATK object bridged to Tcl/Tk. */
-#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
-G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
-
 typedef struct _TkAtkAccessible {
     AtkObject parent;
     Tk_Window tkwin;
@@ -85,6 +75,16 @@ typedef struct {
     void (*func)(void *);
     void *data;
 } DispatcherJob;
+
+/* Hash table for managing accessibility attributes. */
+extern Tcl_HashTable *TkAccessibilityObject;
+
+/* Define custom ATK object bridged to Tcl/Tk. */
+#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
+G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
+            G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+            G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+            G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
 
 /* Structs for thread-safe operation data. */
 typedef struct {
