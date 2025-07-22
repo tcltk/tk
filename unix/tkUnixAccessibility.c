@@ -206,6 +206,9 @@ typedef struct {
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL;
 static GHashTable *tk_to_atk_map = NULL;
+static GMutex toplevel_list_mutex;
+static GMutex root_accessible_mutex;
+static GMutex atk_map_mutex;
 
 /* Forward declarations of thread-safe functions. */
 static void ThreadSafe_GetExtents(gpointer data);
@@ -308,6 +311,9 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 
     static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
+    if (!g_type_is_a(TK_ATK_TYPE_ACCESSIBLE, ATK_TYPE_OBJECT)) {
+        g_error("TK_ATK_TYPE_ACCESSIBLE is not properly registered");
+    }
     self->tkwin = NULL;
     self->interp = NULL;
     self->path = NULL;
@@ -322,31 +328,39 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 
     if (self->tkwin) { 
         if (Tk_IsTopLevel(self->tkwin)) {
-            /* Remove from toplevel list - must be done on main thread */
             GListRemoveData *remove_data = g_new(GListRemoveData, 1);
             remove_data->list = &toplevel_accessible_objects;
             remove_data->data = self;
             RunOnMainThread(ThreadSafe_GListRemove, remove_data);
         }
         
-        /* Unregister from the Tk_Window to AtkObject map - must be done on main thread. */
+        SignalData *state_data = g_new(SignalData, 1);
+        state_data->obj = ATK_OBJECT(self);
+        state_data->signal_name = "state-change";
+        state_data->data = (gpointer)"defunct";
+        RunOnMainThread(ThreadSafe_EmitSignal, state_data);
+
         UnregisterObjectData *unreg_data = g_new(UnregisterObjectData, 1);
         unreg_data->tkwin = self->tkwin;
         RunOnMainThread(ThreadSafe_UnregisterAtkObject, unreg_data);
     }
 
-    /* Free local resources. */
-    g_free(self->path);
-    g_free(self->cached_name);
+    if (self->path) {
+        g_free(self->path);
+        self->path = NULL; 
+    }
+    if (self->cached_name) {
+        g_free(self->cached_name);
+        self->cached_name = NULL;
+    }
     
     if (self->cached_children) {
         g_ptr_array_free(self->cached_children, TRUE);
+        self->cached_children = NULL;
     }
 
-    /* Call parent finalize last. */
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
-
 /* Initialize ATK object class. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 {
@@ -862,10 +876,11 @@ static void ThreadSafe_AccessibleObjCmd(gpointer user_data)
 static void ThreadSafe_GListRemove(gpointer user_data)
 {
     GListRemoveData *data = (GListRemoveData *)user_data;
+    g_mutex_lock(&toplevel_list_mutex);
     *(data->list) = g_list_remove(*(data->list), data->data);
+    g_mutex_unlock(&toplevel_list_mutex);
     g_free(data);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1221,16 +1236,30 @@ static void RegisterChildWidgets_core(Tcl_Interp *interp, Tk_Window tkwin, AtkOb
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow_core(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible) 
 {
-    if (!accessible) return;
+    if (!accessible || !tkwin) {
+        g_warning("RegisterToplevelWindow_core: Invalid accessible or tkwin");
+        return;
+    }
 
     if (!tk_root_accessible) {
         tk_root_accessible = tk_util_get_root();
+        if (!tk_root_accessible) {
+            g_warning("RegisterToplevelWindow_core: Failed to initialize tk_root_accessible");
+            return;
+        }
+    }
+
+    if (!G_OBJECT(accessible)->ref_count) {
+        g_warning("RegisterToplevelWindow_core: accessible object is not referenced");
+        return;
     }
 
     atk_object_set_parent(accessible, tk_root_accessible);
 
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
+        g_mutex_lock(&toplevel_list_mutex);
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
+        g_mutex_unlock(&toplevel_list_mutex);
 
         int index = g_list_length(toplevel_accessible_objects) - 1;
         SignalData *signal_data = g_new(SignalData, 1);
@@ -1315,6 +1344,49 @@ static void UpdateAtkChildrenCache_core(TkAtkAccessible *acc)
 }
 
 /*
+ * Functions to map Tk window to its corresponding Atk object.
+ */
+
+static GMutex atk_map_mutex;
+
+static void InitAtkTkMapping(void) 
+{
+    if (!tk_to_atk_map) {
+        g_mutex_lock(&atk_map_mutex);
+        tk_to_atk_map = g_hash_table_new_full(g_direct_hash, g_direct_equal,
+                                              NULL, (GDestroyNotify)g_object_unref);
+        g_mutex_unlock(&atk_map_mutex);
+    }
+}
+
+static void RegisterAtkObjectForTkWindow_core(Tk_Window tkwin, AtkObject *atkobj) 
+{
+    if (!tkwin || !atkobj) return; 
+    InitAtkTkMapping();
+    g_mutex_lock(&atk_map_mutex);
+    g_object_ref(atkobj);
+    g_hash_table_insert(tk_to_atk_map, tkwin, atkobj);
+    g_mutex_unlock(&atk_map_mutex);
+}
+
+static AtkObject *GetAtkObjectForTkWindow_core(Tk_Window tkwin) 
+{
+    if (!tk_to_atk_map || !tkwin) return NULL; 
+    g_mutex_lock(&atk_map_mutex);
+    AtkObject *obj = (AtkObject *)g_hash_table_lookup(tk_to_atk_map, tkwin);
+    g_mutex_unlock(&atk_map_mutex);
+    return obj;
+}
+
+static void UnregisterAtkObjectForTkWindow_core(Tk_Window tkwin) 
+{
+    if (tk_to_atk_map && tkwin) { 
+        g_mutex_lock(&atk_map_mutex);
+        g_hash_table_remove(tk_to_atk_map, tkwin);
+        g_mutex_unlock(&atk_map_mutex);
+    }
+}
+/*
  * Root window setup. These are the foundation of the
  * accessibility object system in Atk. atk_get_root() is the
  * critical link to at-spi - it is called by the Atk system
@@ -1331,12 +1403,17 @@ static AtkObject *tk_util_get_root(void)
         TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
         tk_root_accessible = ATK_OBJECT(acc);
         atk_object_initialize(tk_root_accessible, NULL);
-
         atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+
         SetNameData *name_data = g_new(SetNameData, 1);
         name_data->obj = tk_root_accessible;
         name_data->name = "Tk Application";
         RunOnMainThread(ThreadSafe_SetName, name_data);
+
+        /* Ensure root is registered in the ATK map. */
+        InitAtkTkMapping();
+        g_object_ref(tk_root_accessible);
+        g_hash_table_insert(tk_to_atk_map, NULL, tk_root_accessible);
     }
 
     return tk_root_accessible;
@@ -1349,16 +1426,26 @@ AtkObject *atk_get_root(void)
 
 /* Atk-Tk object creation with proper parent relationship. */
 static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window tkwin, const char *path) 
-{
+{ 
     if (!interp || !tkwin || !path) {
         g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path.");
         return NULL;
     }
 
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+    if (!acc) {
+        g_warning("TkCreateAccessibleAtkObject: Failed to create TkAtkAccessible object");
+        return NULL;
+    }
+
     acc->interp = interp;
     acc->tkwin = tkwin;
-    acc->path = g_strdup(path); 
+    acc->path = g_strdup(path);
+    if (!acc->path) {
+        g_warning("TkCreateAccessibleAtkObject: Failed to duplicate path");
+        g_object_unref(acc);
+        return NULL;
+    }
 
     AtkObject *obj = ATK_OBJECT(acc);
     atk_object_initialize(obj, NULL);
@@ -1371,21 +1458,25 @@ static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window
         name_data->name = name;
         RunOnMainThread(ThreadSafe_SetName, name_data);
         g_free((gpointer)name);
+    } else {
+        g_warning("TkCreateAccessibleAtkObject: Failed to get name for object");
     }
 
     if (tkwin) {
         Tk_Window parent_tkwin = Tk_Parent(tkwin);
         AtkObject *parent_obj = NULL;
 
+        g_mutex_lock(&root_accessible_mutex);
         if (parent_tkwin) {
             parent_obj = GetAtkObjectForTkWindow_core(parent_tkwin);
-        } else {
+	} else {
             parent_obj = tk_root_accessible;
+           
         }
+        g_mutex_unlock(&root_accessible_mutex);
 
         if (parent_obj) {
-            atk_object_set_parent(obj, parent_obj);
-
+            atk_object_set_parent(obj, parent_obj);    
             int index = GetAccessibleChildIndexFromTkList_core(parent_tkwin ? parent_tkwin : NULL, tkwin);
             if (index < 0) {
                 index = -1;
@@ -1396,44 +1487,15 @@ static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window
             signal_data->signal_name = "children-changed::add";
             signal_data->data = GINT_TO_POINTER(index);
             RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
+        } else {
+            g_warning("TkCreateAccessibleAtkObject: No parent object available");
         }
     }
 
+    g_object_ref(obj);
     return obj;
 }
 
-/*
- * Functions to map Tk window to its corresponding Atk object.
- */
-
-static void InitAtkTkMapping(void) 
-{
-    if (!tk_to_atk_map) {
-        tk_to_atk_map = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-					      NULL, (GDestroyNotify)g_object_unref);
-    }
-}
-
-static void RegisterAtkObjectForTkWindow_core(Tk_Window tkwin, AtkObject *atkobj) 
-{
-    if (!tkwin || !atkobj) return; 
-    InitAtkTkMapping();
-    g_object_ref(atkobj);
-    g_hash_table_insert(tk_to_atk_map, tkwin, atkobj);
-}
-
-static AtkObject *GetAtkObjectForTkWindow_core(Tk_Window tkwin) 
-{
-    if (!tk_to_atk_map || !tkwin) return NULL; 
-    return (AtkObject *)g_hash_table_lookup(tk_to_atk_map, tkwin);
-}
-
-static void UnregisterAtkObjectForTkWindow_core(Tk_Window tkwin) 
-{
-    if (tk_to_atk_map && tkwin) { 
-        g_hash_table_remove(tk_to_atk_map, tkwin);
-    }
-}
 /* Tk event handlers to signal updates to ATK. */
 static void TkAtkAccessible_RegisterEventHandlers_core(Tk_Window tkwin, void *tkAccessible) {
     if (!tkwin || !tkAccessible) return; 
@@ -1447,7 +1509,6 @@ static void TkAtkAccessible_DestroyHandler_core(ClientData clientData, XEvent *e
     if (eventPtr->type == DestroyNotify) {
         TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
         if (tkAccessible) {
-            /* Mark as destroyed first. */
             tkAccessible->is_destroyed = TRUE;
             
             AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
@@ -1459,8 +1520,8 @@ static void TkAtkAccessible_DestroyHandler_core(ClientData clientData, XEvent *e
                 RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
             }
 
-            /* Let the finalize handle the actual cleanup. */
-            g_object_unref(tkAccessible);
+            /* Defer unref to ensure AT-SPI processes signals. */
+            g_idle_add((GSourceFunc)g_object_unref, tkAccessible);
         }
     }
 }
@@ -1653,67 +1714,26 @@ static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc
 
 static int IsScreenReaderRunning_core(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
-    (void) clientData;
-    (void) objc;
-    (void) *objv;
+    (void)clientData;
+    (void)objc;
+    (void)objv;
 
-    DBusError error;
-    DBusConnection *connection;
-    dbus_bool_t has_owner = FALSE; 
-    bool result = false; 
-
-    dbus_error_init(&error);
-
-    connection = dbus_bus_get(DBUS_BUS_SESSION, &error);
-    if (dbus_error_is_set(&error)) {
-        g_warning("DBus connection error: %s", error.message);
-        dbus_error_free(&error);
-        goto cleanup;
+    int result = 0;
+    FILE *fp = popen("pgrep -x orca", "r");
+    if (fp == NULL) {
+	result = 0;
     }
 
-    if (!connection) {
-        g_warning("Failed to get DBus connection.");
-        goto cleanup;
-    }
+    char buffer[16];
+    /* If output exists, Orca is running. */
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
 
-    has_owner = dbus_bus_name_has_owner(connection, "org.a11y.Bus", &error);
-    if (dbus_error_is_set(&error)) {
-        g_warning("DBus error checking org.a11y.Bus owner: %s", error.message);
-        dbus_error_free(&error);
-        goto cleanup;
+    pclose(fp);
+    if (running) {
+	result = 1;
     }
-    if (!has_owner) {
-        g_warning("org.a11y.Bus not owned.");
-        goto cleanup;
-    }
-
-    has_owner = dbus_bus_name_has_owner(connection, "org.gnome.Orca", &error);
-    if (dbus_error_is_set(&error)) {
-        g_warning("DBus error checking org.gnome.Orca owner: %s", error.message);
-        dbus_error_free(&error);
-        goto cleanup;
-    }
-    if (has_owner) {
-        result = true;
-        goto cleanup;
-    }
-
-    has_owner = dbus_bus_name_has_owner(connection, "org.a11y.atspi.Registry", &error);
-    if (dbus_error_is_set(&error)) {
-        g_warning("DBus error checking org.a11y.atspi.Registry owner: %s", error.message);
-        dbus_error_free(&error);
-        goto cleanup;
-    }
-    if (has_owner) {
-        result = true;
-    }
-
- cleanup:
-    if (connection) {
-        dbus_connection_unref(connection);
-    }
-
-    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
+    
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
 
@@ -1808,32 +1828,6 @@ static int TkAtkAccessibleObjCmd_core(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 }
 
-static gboolean delayed_init(gpointer user_data) 
-{
-    Tcl_Interp *interp = (Tcl_Interp *)user_data; 
-
-    if (!tk_root_accessible) return FALSE;
-
-    SignalData *signal_data = g_new(SignalData, 1);
-    signal_data->obj = tk_root_accessible;
-    signal_data->signal_name = "children-changed";
-    RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
-
-    SignalData *state_data1 = g_new(SignalData, 1);
-    state_data1->obj = tk_root_accessible;
-    state_data1->signal_name = "state-change";
-    state_data1->data = (gpointer)"enabled";
-    RunOnMainThread(ThreadSafe_EmitSignal, state_data1);
-
-    SignalData *state_data2 = g_new(SignalData, 1);
-    state_data2->obj = tk_root_accessible;
-    state_data2->signal_name = "state-change";
-    state_data2->data = (gpointer)"sensitive";
-    RunOnMainThread(ThreadSafe_EmitSignal, state_data2);
-
-    return FALSE;
-}
-
 /* 
  * Functions to support GLib / Tk event loop and threading 
  * integration. 
@@ -1902,16 +1896,22 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
+    g_mutex_init(&toplevel_list_mutex);
+    g_mutex_init(&root_accessible_mutex);
+    g_mutex_init(&atk_map_mutex);
     g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
     g_setenv("NO_AT_BRIDGE", "0", FALSE);
 
     g_type_init();
 
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        g_warning("Failed to initialize AT-SPI bridge\n");
+        g_warning("Failed to initialize AT-SPI bridge");
+        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
         return TCL_ERROR;
+    } else {
     }
 
+    g_mutex_lock(&root_accessible_mutex);
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
         const gchar *name = tk_get_name_core(tk_root_accessible);
@@ -1922,56 +1922,83 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
             RunOnMainThread(ThreadSafe_SetName, name_data);
             g_free((gpointer)name);
         }
+        g_object_ref(tk_root_accessible);
+    } else {
+        g_warning("Failed to initialize tk_root_accessible");
+        g_mutex_unlock(&root_accessible_mutex);
+        Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
+        return TCL_ERROR;
     }
+    g_mutex_unlock(&root_accessible_mutex);
 
     InitAtkTkMapping();
 
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (mainWin) {
+        const char *path = Tk_PathName(mainWin);
+        if (!path) {
+            g_warning("Main window path is NULL");
+            Tcl_SetResult(interp, "Main window path is NULL", TCL_STATIC);
+            return TCL_ERROR;
+        }
         CreateObjectData *create_data = g_new(CreateObjectData, 1);
+        if (!create_data) {
+            g_warning("Failed to allocate CreateObjectData");
+            Tcl_SetResult(interp, "Memory allocation failed", TCL_STATIC);
+            return TCL_ERROR;
+        }
         create_data->interp = interp;
         create_data->tkwin = mainWin;
-        create_data->path = Tk_PathName(mainWin);
+        create_data->path = path;
         RunOnMainThread(ThreadSafe_CreateAccessibleAtkObject, create_data);
+        
+        /* Wait for creation to complete. */
+        int iterations = 0;
+        while (!create_data->result && iterations < 100) {
+            g_main_context_iteration(NULL, FALSE);
+            iterations++;
+        }
         AtkObject *main_acc = create_data->result;
         
         if (main_acc) {
             RegisterToplevelData *toplevel_data = g_new(RegisterToplevelData, 1);
+            if (!toplevel_data) {
+                g_warning("Failed to allocate RegisterToplevelData");
+                g_object_unref(main_acc);
+                Tcl_SetResult(interp, "Memory allocation failed", TCL_STATIC);
+                return TCL_ERROR;
+            }
             toplevel_data->interp = interp;
             toplevel_data->tkwin = mainWin;
             toplevel_data->accessible = main_acc;
             RunOnMainThread(ThreadSafe_RegisterToplevelWindow, toplevel_data);
+        } else {
+            g_warning("Failed to create accessible object for main window");
+            Tcl_SetResult(interp, "Failed to create accessible object for main window", TCL_STATIC);
+            return TCL_ERROR;
         }
+    } else {
+        g_warning("No main window available");
+        Tcl_SetResult(interp, "No main window available", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     int iterations = 0;
     while (g_main_context_pending(NULL) && iterations < 100) {
+        g_main_context_iteration(NULL, FALSE);
         iterations++;
     }
 
     InstallGtkEventLoop();
 
-    CommandData *check_data = g_new(CommandData, 1);
-    check_data->interp = interp;
-    check_data->objc = 0;
-    check_data->objv = NULL;
-    RunOnMainThread(ThreadSafe_CheckScreenReader, check_data);
-    int has_screen_reader = check_data->result;
-
-    if (has_screen_reader) {
-        g_timeout_add(500, (GSourceFunc)delayed_init, interp);
-    } else {
-        delayed_init(interp);
-    }
-
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
-			 TkAtkAccessibleObjCmd_core, NULL, NULL);
+                         TkAtkAccessibleObjCmd_core, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
-			 EmitSelectionChanged_core, NULL, NULL);
+                         EmitSelectionChanged_core, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
-			 EmitFocusChanged_core, NULL, NULL);
+                         EmitFocusChanged_core, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
-			 IsScreenReaderRunning_core, NULL, NULL);
+                         IsScreenReaderRunning_core, NULL, NULL);
 
     SignalData *signal_data = g_new(SignalData, 1);
     signal_data->obj = tk_root_accessible;
@@ -1980,12 +2007,11 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
 #else
 /* No ATK found. */
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", NULL, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk:de:accessible::add_acc_object", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", NULL, NULL, NULL);
