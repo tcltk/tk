@@ -1023,6 +1023,26 @@ namespace eval ::tk::test::timing {
 	set dt(t0) [clock $dt(granularity)]
     }
 
+    # progress.* --
+    #
+    # This set of procs has been derived from tests/ttk/ttk.test, where they
+    # were used (by a different name) to monitor progress and total duration of
+    # a procedure in a loop. See:
+    #
+    #	https://core.tcl-lang.org/tk/file?ci=f94f84b254b0c5ad&name=tests/ttk/ttk.test&ln=335-340
+    #
+    proc progress.init {{granularity milliseconds}} {
+	dt.reset $granularity
+    }
+
+    proc progress.iter {} {
+	puts -nonewline stderr "+" ; flush stderr
+    }
+
+    proc progress.endtime {} {
+	puts stderr " [dt.get] $::tk::test::timing::dt(granularity)"
+    }
+
     testutils export
 }
 
