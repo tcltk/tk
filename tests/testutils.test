@@ -131,8 +131,9 @@ test testutils-4.1 {associated variables are imported} -constraints testutils -b
 }
 
 test testutils-4.2 {
-    Repeated initialization keeps imported variable defined without value non-existent,
-    even if a test file inadvertently assigns it a value in the meantime.
+    Repeated initialization keeps imported variable non-existent if it was
+    defined without a value, even if a test file inadvertently assigns it
+    a value in the meantime.
 } -constraints testutils -body {
     catch {
 	testutils import foo
