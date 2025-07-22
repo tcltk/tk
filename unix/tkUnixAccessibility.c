@@ -255,6 +255,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, guint i);
 static gint tk_get_n_children(AtkObject *obj);
 static AtkRole tk_get_role(AtkObject *obj);
 static AtkRole GetAtkRoleForWidget_core(Tk_Window win);
+static gchar *sanitize_utf8(const gchar *str);
 static const gchar *tk_get_name_core(AtkObject *obj);
 static void tk_set_name_core(AtkObject *obj, const gchar *name);
 static const gchar *tk_get_description_core(AtkObject *obj);
@@ -444,6 +445,12 @@ static const gchar *tk_get_description(AtkObject *obj) {
     data->obj = obj;
     RunOnMainThread(ThreadSafe_GetDescription, data);
     return data->result;
+}
+
+static gchar *sanitize_utf8(const gchar *str)
+{
+    if (!str) return NULL;
+    return g_utf8_make_valid(str, -1);
 }
 
 /*
@@ -836,9 +843,9 @@ static const gchar *tk_get_name_core(AtkObject *obj) {
 
     if (obj == tk_root_accessible) {
         if (acc->cached_name) {
-            return g_strdup(acc->cached_name);
+            return sanitize_utf8(acc->cached_name);
         }
-        return g_strdup("Tk Application");
+        return sanitize_utf8("Tk Application");
     }
 
     if (!acc->tkwin || !acc->interp) {
@@ -897,14 +904,14 @@ static const gchar *tk_get_name_core(AtkObject *obj) {
             if (hPtr2) {
                 const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
                 if (result) {
-                    return g_strdup(result);
+                    return sanitize_utf8(result);
                 }
             }
         }
     }
 
     if (Tk_PathName(acc->tkwin)) {
-        return g_strdup(Tk_PathName(acc->tkwin));
+        return sanitize_utf8(Tk_PathName(acc->tkwin));
     }
     return NULL;
 }
@@ -940,7 +947,7 @@ static const gchar *tk_get_description_core(AtkObject *obj) {
 
     const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (result) {
-        return g_strdup(result);
+        return sanitize_utf8(result);
     }
     return NULL;
 }
