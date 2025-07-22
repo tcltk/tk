@@ -216,7 +216,9 @@ test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -
 	progress.iter
     }
     progress.endtime
-} -errorOutput "+++++++++ * microseconds\n" -match glob
+} -errorOutput "+++++++++ * microseconds\n" -match glob -cleanup {
+    unset i
+}
 
 #
 # COMMON TEST CLEANUP
