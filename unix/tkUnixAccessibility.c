@@ -199,6 +199,7 @@ typedef struct {
     int objc;
     Tcl_Obj *const *objv;
     int result;
+    ClientData clientData;
 } CommandData;
 
 static AtkObject *tk_root_accessible = NULL;
@@ -245,6 +246,11 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
+void RunOnMainThread(void (*func)(void *), void *data);
+void RunOnMainThread(void (*func)(void *), void *data);
+static void GtkEventLoop(ClientData clientData);
+void InstallGtkEventLoop(void);
+static AtkObject *tk_util_get_root(void);
 static AtkRole GetAtkRoleForWidget_core(Tk_Window win);
 static const gchar *tk_get_name_core(AtkObject *obj);
 static void tk_set_name_core(AtkObject *obj, const gchar *name);
@@ -345,12 +351,12 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
     gobject_class->finalize = tk_atk_accessible_finalize;
 
     /* Map Atk class functions to thread-safe Tk functions */
-    atk_class->get_name = tk_get_name;
-    atk_class->get_description = tk_get_description;
-    atk_class->get_role = tk_get_role;
-    atk_class->ref_state_set = tk_ref_state_set;
-    atk_class->get_n_children = tk_get_n_children;
-    atk_class->ref_child = tk_ref_child;
+    atk_class->get_name = tk_get_name_core;
+    atk_class->get_description = tk_get_description_core;
+    atk_class->get_role = tk_get_role_core;
+    atk_class->ref_state_set = tk_ref_state_set_core;
+    atk_class->get_n_children = tk_get_n_children_core;
+    atk_class->ref_child = tk_ref_child_core;
 }
 
 /*
@@ -1297,7 +1303,7 @@ static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window
     return obj;
 }
 
-*
+/*
 * Functions to map Tk window to its corresponding Atk object.
 */
 
@@ -1739,7 +1745,7 @@ void InstallGtkEventLoop(void) {
     Tcl_CreateTimerHandler(10, GtkEventLoop, context);
 }
 
-static gboolean RunOnMainThreadCallback(gpointer user_data) {
+void RunOnMainThread(void (*func)(void *), void *data) {
     DispatcherJob *job = (DispatcherJob *)user_data;
     if (job && job->func) {
         job->func(job->data);
