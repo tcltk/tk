@@ -38,6 +38,7 @@ typedef struct _TkAtkAccessible {
     gchar *cached_name;
     GPtrArray *cached_children;
     gboolean cache_dirty;
+    gboolean is_destroyed;
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
@@ -287,9 +288,9 @@ extern Tcl_HashTable *TkAccessibilityObject;
 /* Define custom ATK object bridged to Tcl/Tk. */
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-            G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
 
 
 /*
@@ -305,7 +306,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Functions to initialize and manage the parent Atk class and object instances.
  */
 
-static void tk_atk_accessible_init(TkAtkAccessible *self)
+    static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     self->tkwin = NULL;
     self->interp = NULL;
@@ -377,20 +378,39 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
     RunOnMainThread(ThreadSafe_GetExtents, data);
 }
 
-static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type) {
+static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type) 
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)component;
+    
+    if (!acc || acc->is_destroyed || !acc->tkwin) {
+        return FALSE;
+    }
+
+    ExtentsData data = {component, NULL, NULL, NULL, NULL, coord_type};
     gint comp_x, comp_y, comp_width, comp_height;
-    if (!component) return FALSE;
+    data.x = &comp_x;
+    data.y = &comp_y;
+    data.width = &comp_width;
+    data.height = &comp_height;
     
-    ExtentsData extents_data = {component, &comp_x, &comp_y, &comp_width, &comp_height, coord_type};
-    ThreadSafe_GetExtents(&extents_data);
-    
+    ThreadSafe_GetExtents(&data);
     return (x >= comp_x && x < comp_x + comp_width &&
-            y >= comp_y && y < comp_y + comp_height);
+	    y >= comp_y && y < comp_y + comp_height);
 }
 
-static void tk_atk_component_interface_init(AtkComponentIface *iface) {
+
+static void tk_atk_component_interface_init(AtkComponentIface *iface) 
+{
     iface->get_extents = tk_get_extents;
     iface->contains = tk_contains;
+    iface->get_layer = NULL;
+    iface->get_mdi_zorder = NULL;
+    iface->grab_focus = NULL;
+    iface->get_alpha = NULL;
+    iface->get_position = NULL;
+    iface->get_size = NULL;
+    iface->scroll_to = NULL;
+    iface->scroll_to_point = NULL;
 }
 
 /*
@@ -403,18 +423,31 @@ static gint tk_get_n_children(AtkObject *obj) {
     return data->result;
 }
 
-static AtkObject *tk_ref_child(AtkObject *obj, guint i) {
+static AtkObject* tk_ref_child(AtkObject *obj, guint i) 
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+    
+    if (!acc || acc->is_destroyed) {
+        return NULL;
+    }
+    
     RefChildData *data = g_new(RefChildData, 1);
     data->obj = obj;
     data->i = i;
     RunOnMainThread(ThreadSafe_RefChild, data);
-    return data->result;
+    
+    AtkObject *result = data->result;
+    g_free(data);
+    
+    return result;
 }
+
 
 /*
  * Functions to map accessible role to ATK.
  */
-static AtkRole tk_get_role(AtkObject *obj) {
+static AtkRole tk_get_role(AtkObject *obj) 
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     RoleData *data = g_new(RoleData, 1);
     data->win = acc->tkwin;
@@ -426,14 +459,16 @@ static AtkRole tk_get_role(AtkObject *obj) {
  * Name and description getters
  * for Tk-ATK objects.
  */
-static const gchar *tk_get_name(AtkObject *obj) {
+static const gchar *tk_get_name(AtkObject *obj) 
+{
     NameData *data = g_new(NameData, 1);
     data->obj = obj;
     RunOnMainThread(ThreadSafe_GetName, data);
     return data->result;
 }
 
-static void tk_set_name(AtkObject *obj, const gchar *name) {
+static void tk_set_name(AtkObject *obj, const gchar *name) 
+{
     SetNameData *data = g_new(SetNameData, 1);
     data->obj = obj;
     data->name = name;
@@ -457,19 +492,22 @@ static gchar *sanitize_utf8(const gchar *str)
  * Functions to map accessible value to ATK using
  * AtkValue interface.
  */
-static void tk_get_current_value(AtkValue *obj, GValue *value) {
+static void tk_get_current_value(AtkValue *obj, GValue *value) 
+{
     ValueData *data = g_new(ValueData, 1);
     data->obj = obj;
     data->value = value;
     RunOnMainThread(ThreadSafe_GetCurrentValue, data);
 }
 
-static void tk_atk_value_interface_init(AtkValueIface *iface) {
+static void tk_atk_value_interface_init(AtkValueIface *iface) 
+{
     iface->get_current_value = tk_get_current_value;
 }
 
 /* Function to map accessible state to ATK. */
-static AtkStateSet *tk_ref_state_set(AtkObject *obj) {
+static AtkStateSet *tk_ref_state_set(AtkObject *obj) 
+{
     StateSetData *data = g_new(StateSetData, 1);
     data->obj = obj;
     RunOnMainThread(ThreadSafe_RefStateSet, data);
@@ -480,7 +518,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj) {
  * Functions that implement actions (i.e. button press)
  * from Tk to ATK.
  */
-static gboolean tk_action_do_action(AtkAction *action, gint i) {
+static gboolean tk_action_do_action(AtkAction *action, gint i) 
+{
     ActionData *data = g_new(ActionData, 1);
     data->action = action;
     data->i = i;
@@ -488,14 +527,16 @@ static gboolean tk_action_do_action(AtkAction *action, gint i) {
     return data->result;
 }
 
-static gint tk_action_get_n_actions(AtkAction *action) {
+static gint tk_action_get_n_actions(AtkAction *action) 
+{
     NChildrenData *data = g_new(NChildrenData, 1);
     data->obj = ATK_OBJECT(action);
     RunOnMainThread(ThreadSafe_GetNActions, data);
     return data->result;
 }
 
-static const gchar *tk_action_get_name(AtkAction *action, gint i) {
+static const gchar *tk_action_get_name(AtkAction *action, gint i) 
+{
     ActionNameData *data = g_new(ActionNameData, 1);
     data->action = action;
     data->i = i;
@@ -503,7 +544,8 @@ static const gchar *tk_action_get_name(AtkAction *action, gint i) {
     return data->result;
 }
 
-static void tk_atk_action_interface_init(AtkActionIface *iface) {
+static void tk_atk_action_interface_init(AtkActionIface *iface) 
+{
     iface->do_action = tk_action_do_action;
     iface->get_n_actions = tk_action_get_n_actions;
     iface->get_name = tk_action_get_name;
@@ -519,7 +561,8 @@ static void tk_atk_action_interface_init(AtkActionIface *iface) {
 
 
 /* Get accessible frame. */
-static void ThreadSafe_GetExtents(gpointer user_data) {
+static void ThreadSafe_GetExtents(gpointer user_data) 
+{
     ExtentsData *data = (ExtentsData *)user_data;
     TkAtkAccessible *acc = (TkAtkAccessible *)data->component;
 
@@ -544,7 +587,8 @@ static void ThreadSafe_GetExtents(gpointer user_data) {
 }
 
 /* Get number of accessible children. */
-static void ThreadSafe_GetNChildren(gpointer user_data) {
+static void ThreadSafe_GetNChildren(gpointer user_data) 
+{
     NChildrenData *data = (NChildrenData *)user_data;
     TkAtkAccessible *acc = (TkAtkAccessible *)data->obj;
     if (!acc) {
@@ -571,10 +615,11 @@ static void ThreadSafe_GetNChildren(gpointer user_data) {
 }
 
 /* Get accessible child widget. */
-static void ThreadSafe_RefChild(gpointer user_data) {
+static void ThreadSafe_RefChild(gpointer user_data) 
+{
     RefChildData *data = (RefChildData *)user_data;
     TkAtkAccessible *acc = (TkAtkAccessible *)data->obj;
-    if (!acc) {
+    if (!acc || acc->is_destroyed) {
         data->result = NULL;
         g_free(data);
         return;
@@ -607,178 +652,207 @@ static void ThreadSafe_RefChild(gpointer user_data) {
     } else {
         data->result = NULL;
     }
+    if (data->result) {
+        g_object_ref(data->result);
+    }
     g_free(data);
 }
 
 /* Get accessible role. */
-static void ThreadSafe_GetRole(gpointer user_data) {
+static void ThreadSafe_GetRole(gpointer user_data) 
+{
     RoleData *data = (RoleData *)user_data;
     data->result = GetAtkRoleForWidget_core(data->win);
     g_free(data);
 }
 
 /* Get accessible name. */
-static void ThreadSafe_GetName(gpointer user_data) {
+static void ThreadSafe_GetName(gpointer user_data) 
+{
     NameData *data = (NameData *)user_data;
     data->result = tk_get_name_core(data->obj);
     g_free(data);
 }
 
 /* Set accessible name. */
-static void ThreadSafe_SetName(gpointer user_data) {
+static void ThreadSafe_SetName(gpointer user_data) 
+{
     SetNameData *data = (SetNameData *)user_data;
     tk_set_name_core(data->obj, data->name);
     g_free(data);
 }
 
 /* Get accessible escription. */
-static void ThreadSafe_GetDescription(gpointer user_data) {
+static void ThreadSafe_GetDescription(gpointer user_data) 
+{
     NameData *data = (NameData *)user_data;
     data->result = tk_get_description_core(data->obj);
     g_free(data);
 }
 
 /* Get accessible value. */
-static void ThreadSafe_GetCurrentValue(gpointer user_data) {
+static void ThreadSafe_GetCurrentValue(gpointer user_data) 
+{
     ValueData *data = (ValueData *)user_data;
     tk_get_current_value_core(data->obj, data->value);
     g_free(data);
 }
 
 /* Get accessible state. */
-static void ThreadSafe_RefStateSet(gpointer user_data) {
+static void ThreadSafe_RefStateSet(gpointer user_data) 
+{
     StateSetData *data = (StateSetData *)user_data;
     data->result = tk_ref_state_set_core(data->obj);
     g_free(data);
 }
 
 /* Process widget action. */
-static void ThreadSafe_DoAction(gpointer user_data) {
+static void ThreadSafe_DoAction(gpointer user_data) 
+{
     ActionData *data = (ActionData *)user_data;
     data->result = tk_action_do_action_core(data->action, data->i);
     g_free(data);
 }
 
 /* Get number of available actions. */
-static void ThreadSafe_GetNActions(gpointer user_data) {
+static void ThreadSafe_GetNActions(gpointer user_data) 
+{
     NChildrenData *data = (NChildrenData *)user_data;
     data->result = tk_action_get_n_actions_core(ATK_ACTION(data->obj));
     g_free(data);
 }
 
 /* Get action names. */
-static void ThreadSafe_GetActionName(gpointer user_data) {
+static void ThreadSafe_GetActionName(gpointer user_data) 
+{
     ActionNameData *data = (ActionNameData *)user_data;
     data->result = tk_action_get_name_core(data->action, data->i);
     g_free(data);
 }
 
 /* Register toplevel window with ATK object. */
-static void ThreadSafe_RegisterToplevelWindow(gpointer user_data) {
+static void ThreadSafe_RegisterToplevelWindow(gpointer user_data) 
+{
     RegisterToplevelData *data = (RegisterToplevelData *)user_data;
     RegisterToplevelWindow_core(data->interp, data->tkwin, data->accessible);
     g_free(data);
 }
 
 /* Register child widgets. */
-static void ThreadSafe_RegisterChildWidgets(gpointer user_data) {
+static void ThreadSafe_RegisterChildWidgets(gpointer user_data) 
+{
     RegisterChildData *data = (RegisterChildData *)user_data;
     RegisterChildWidgets_core(data->interp, data->tkwin, data->parent_obj);
     g_free(data);
 }
 
 /* Rebuild tree of child widgets. */
-static void ThreadSafe_UpdateAtkChildrenCache(gpointer user_data) {
+static void ThreadSafe_UpdateAtkChildrenCache(gpointer user_data) 
+{
     UpdateCacheData *data = (UpdateCacheData *)user_data;
     UpdateAtkChildrenCache_core(data->acc);
     g_free(data);
 }
 
 /* Create accessible ATK object. */
-static void ThreadSafe_CreateAccessibleAtkObject(gpointer user_data) {
+static void ThreadSafe_CreateAccessibleAtkObject(gpointer user_data) 
+{
     CreateObjectData *data = (CreateObjectData *)user_data;
     data->result = TkCreateAccessibleAtkObject_core(data->interp, data->tkwin, data->path);
     g_free(data);
 }
 
 /* Register ATK object for window. */
-static void ThreadSafe_RegisterAtkObject(gpointer user_data) {
+static void ThreadSafe_RegisterAtkObject(gpointer user_data) 
+{
     RegisterObjectData *data = (RegisterObjectData *)user_data;
     RegisterAtkObjectForTkWindow_core(data->tkwin, data->atkobj);
     g_free(data);
 }
+
 /* Unregister Atk object.*/
-static void ThreadSafe_UnregisterAtkObject(gpointer user_data) {
+static void ThreadSafe_UnregisterAtkObject(gpointer user_data) 
+{
     UnregisterObjectData *data = (UnregisterObjectData *)user_data;
     UnregisterAtkObjectForTkWindow_core(data->tkwin);
     g_free(data);
 }
 
 /* Emit signal / ATK notification. */
-static void ThreadSafe_EmitSignal(gpointer user_data) {
+static void ThreadSafe_EmitSignal(gpointer user_data) 
+{
     SignalData *data = (SignalData *)user_data;
     g_signal_emit_by_name(data->obj, data->signal_name, data->data);
     g_free(data);
 }
 
 /* Get index of child widget in accessibility list. */
-static void ThreadSafe_GetChildIndex(gpointer user_data) {
+static void ThreadSafe_GetChildIndex(gpointer user_data) 
+{
     ChildIndexData *data = (ChildIndexData *)user_data;
     data->result = GetAccessibleChildIndexFromTkList_core(data->tkwin, data->targetChild);
     g_free(data);
 }
 
 /* Register Tk event handlers. */
-static void ThreadSafe_RegisterEventHandlers(gpointer user_data) {
+static void ThreadSafe_RegisterEventHandlers(gpointer user_data) 
+{
     RegisterHandlersData *data = (RegisterHandlersData *)user_data;
     TkAtkAccessible_RegisterEventHandlers_core(data->tkwin, data->tkAccessible);
     g_free(data);
 }
 
 /* Tk event handler for widget destruction. */
-static void ThreadSafe_DestroyHandler(gpointer user_data) {
+static void ThreadSafe_DestroyHandler(gpointer user_data) 
+{
     EventHandlerData *data = (EventHandlerData *)user_data;
     TkAtkAccessible_DestroyHandler_core(data->clientData, data->eventPtr);
     g_free(data);
 }
 
 /* Tk event handler for updating names. */
-static void ThreadSafe_NameHandler(gpointer user_data) {
+static void ThreadSafe_NameHandler(gpointer user_data) 
+{
     EventHandlerData *data = (EventHandlerData *)user_data;
     TkAtkAccessible_NameHandler_core(data->clientData, data->eventPtr);
     g_free(data);
 }
 
 /* Tk event handler for widget update processes. */
-static void ThreadSafe_ConfigureHandler(gpointer user_data) {
+static void ThreadSafe_ConfigureHandler(gpointer user_data) 
+{
     EventHandlerData *data = (EventHandlerData *)user_data;
     TkAtkAccessible_ConfigureHandler_core(data->clientData, data->eventPtr);
     g_free(data);
 }
 
 /* Notify system that selection has changed. */
-static void ThreadSafe_EmitSelectionChanged(gpointer user_data) {
+static void ThreadSafe_EmitSelectionChanged(gpointer user_data) 
+{
     CommandData *data = (CommandData *)user_data;
     data->result = EmitSelectionChanged_core(data->clientData, data->interp, data->objc, data->objv);
     g_free(data);
 }
 
 /* Notify system that focus has changed. */
-static void ThreadSafe_EmitFocusChanged(gpointer user_data) {
+static void ThreadSafe_EmitFocusChanged(gpointer user_data) 
+{
     CommandData *data = (CommandData *)user_data;
     data->result = EmitFocusChanged_core(data->clientData, data->interp, data->objc, data->objv);
     g_free(data);
 }
 
 /* Check if screen reader running. */
-static void ThreadSafe_CheckScreenReader(gpointer user_data) {
+static void ThreadSafe_CheckScreenReader(gpointer user_data) 
+{
     CommandData *data = (CommandData *)user_data;
     data->result = IsScreenReaderRunning_core(data->clientData, data->interp, data->objc, data->objv);
     g_free(data);
 }
 
 /* Core Tk command for accessible objects. */
-static void ThreadSafe_AccessibleObjCmd(gpointer user_data) {
+static void ThreadSafe_AccessibleObjCmd(gpointer user_data) 
+{
     CommandData *data = (CommandData *)user_data;
     data->result = TkAtkAccessibleObjCmd_core(data->clientData, data->interp, data->objc, data->objv);
     g_free(data);
@@ -802,7 +876,8 @@ static void ThreadSafe_GListRemove(gpointer user_data)
 
 
 /* Get widget role. */
-static AtkRole GetAtkRoleForWidget_core(Tk_Window win) {
+static AtkRole GetAtkRoleForWidget_core(Tk_Window win) 
+{
     if (!win) return ATK_ROLE_UNKNOWN;
 
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -835,7 +910,8 @@ static AtkRole GetAtkRoleForWidget_core(Tk_Window win) {
 }
 
 /* Get widget name. */
-static const gchar *tk_get_name_core(AtkObject *obj) {
+static const gchar *tk_get_name_core(AtkObject *obj) 
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     gchar *ret = NULL;
 
@@ -917,7 +993,8 @@ static const gchar *tk_get_name_core(AtkObject *obj) {
 }
 
 /* Set widget name. */
-static void tk_set_name_core(AtkObject *obj, const gchar *name) {
+static void tk_set_name_core(AtkObject *obj, const gchar *name) 
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
 
     if (!acc) return; 
@@ -953,7 +1030,8 @@ static const gchar *tk_get_description_core(AtkObject *obj) {
 }
 
 /* Get current widget value. */
-static void tk_get_current_value_core(AtkValue *obj, GValue *value) {
+static void tk_get_current_value_core(AtkValue *obj, GValue *value) 
+{
     AtkObject *atkObj = ATK_OBJECT(obj);
     TkAtkAccessible *acc = (TkAtkAccessible *)atkObj;
 
@@ -994,7 +1072,8 @@ static void tk_get_current_value_core(AtkValue *obj, GValue *value) {
 }
 
 /* Get widget state. */
-static AtkStateSet *tk_ref_state_set_core(AtkObject *obj) {
+static AtkStateSet *tk_ref_state_set_core(AtkObject *obj) 
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
     if (!acc || !acc->tkwin) return set; 
@@ -1016,7 +1095,8 @@ static AtkStateSet *tk_ref_state_set_core(AtkObject *obj) {
 }
 
 /* Execute widget action . */
-static gboolean tk_action_do_action_core(AtkAction *action, gint i) {
+static gboolean tk_action_do_action_core(AtkAction *action, gint i) 
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
 
     if (!acc || !acc->tkwin || !acc->interp) {
@@ -1055,13 +1135,15 @@ static gboolean tk_action_do_action_core(AtkAction *action, gint i) {
 }
 
 /* Get number of available actions. */
-static gint tk_action_get_n_actions_core(AtkAction *action) {
+static gint tk_action_get_n_actions_core(AtkAction *action) 
+{
     (void) action;
     return 1;
 }
 
 /* Get action names. */
-static const gchar *tk_action_get_name_core(AtkAction *action, gint i) {
+static const gchar *tk_action_get_name_core(AtkAction *action, gint i) 
+{
     (void) action;
     if (i == 0) {
         return "click";
@@ -1070,7 +1152,8 @@ static const gchar *tk_action_get_name_core(AtkAction *action, gint i) {
 }
 
 /* Function to recursively register child widgets using childList. */
-static void RegisterChildWidgets_core(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj) {
+static void RegisterChildWidgets_core(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj) 
+{
     if (!tkwin || !parent_obj) return;
 
     TkWindow *winPtr = (TkWindow *)tkwin;
@@ -1136,7 +1219,8 @@ static void RegisterChildWidgets_core(Tcl_Interp *interp, Tk_Window tkwin, AtkOb
 }
 
 /* Function to complete toplevel registration with proper hierarchy. */
-static void RegisterToplevelWindow_core(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible) {
+static void RegisterToplevelWindow_core(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible) 
+{
     if (!accessible) return;
 
     if (!tk_root_accessible) {
@@ -1185,7 +1269,8 @@ static void RegisterToplevelWindow_core(Tcl_Interp *interp, Tk_Window tkwin, Atk
 }
 
 /* Helper function to calculate index from Tk window list. */
-static int GetAccessibleChildIndexFromTkList_core(Tk_Window parent, Tk_Window targetChild) {
+static int GetAccessibleChildIndexFromTkList_core(Tk_Window parent, Tk_Window targetChild) 
+{
     if (!parent || !targetChild) return -1;
 
     TkWindow *winPtr = (TkWindow *)parent;
@@ -1208,7 +1293,8 @@ static int GetAccessibleChildIndexFromTkList_core(Tk_Window parent, Tk_Window ta
 }
 
 /* Cache list of accessible children and only update with Configure/Map events. */
-static void UpdateAtkChildrenCache_core(TkAtkAccessible *acc) {
+static void UpdateAtkChildrenCache_core(TkAtkAccessible *acc) 
+{
     if (!acc || !acc->tkwin) return;
 
     if (acc->cached_children) {
@@ -1239,7 +1325,8 @@ static void UpdateAtkChildrenCache_core(TkAtkAccessible *acc) {
  * as we are here.
  */
 
-static AtkObject *tk_util_get_root(void) {
+static AtkObject *tk_util_get_root(void) 
+{
     if (!tk_root_accessible) {
         TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
         tk_root_accessible = ATK_OBJECT(acc);
@@ -1255,12 +1342,14 @@ static AtkObject *tk_util_get_root(void) {
     return tk_root_accessible;
 }
 
-AtkObject *atk_get_root(void) {
+AtkObject *atk_get_root(void) 
+{
     return tk_util_get_root();
 }
 
 /* Atk-Tk object creation with proper parent relationship. */
-static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window tkwin, const char *path) {
+static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window tkwin, const char *path) 
+{
     if (!interp || !tkwin || !path) {
         g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path.");
         return NULL;
@@ -1314,29 +1403,33 @@ static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window
 }
 
 /*
-* Functions to map Tk window to its corresponding Atk object.
-*/
+ * Functions to map Tk window to its corresponding Atk object.
+ */
 
-static void InitAtkTkMapping(void) {
+static void InitAtkTkMapping(void) 
+{
     if (!tk_to_atk_map) {
         tk_to_atk_map = g_hash_table_new_full(g_direct_hash, g_direct_equal,
 					      NULL, (GDestroyNotify)g_object_unref);
     }
 }
 
-static void RegisterAtkObjectForTkWindow_core(Tk_Window tkwin, AtkObject *atkobj) {
+static void RegisterAtkObjectForTkWindow_core(Tk_Window tkwin, AtkObject *atkobj) 
+{
     if (!tkwin || !atkobj) return; 
     InitAtkTkMapping();
     g_object_ref(atkobj);
     g_hash_table_insert(tk_to_atk_map, tkwin, atkobj);
 }
 
-static AtkObject *GetAtkObjectForTkWindow_core(Tk_Window tkwin) {
+static AtkObject *GetAtkObjectForTkWindow_core(Tk_Window tkwin) 
+{
     if (!tk_to_atk_map || !tkwin) return NULL; 
     return (AtkObject *)g_hash_table_lookup(tk_to_atk_map, tkwin);
 }
 
-static void UnregisterAtkObjectForTkWindow_core(Tk_Window tkwin) {
+static void UnregisterAtkObjectForTkWindow_core(Tk_Window tkwin) 
+{
     if (tk_to_atk_map && tkwin) { 
         g_hash_table_remove(tk_to_atk_map, tkwin);
     }
@@ -1349,10 +1442,14 @@ static void TkAtkAccessible_RegisterEventHandlers_core(Tk_Window tkwin, void *tk
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkAtkAccessible_ConfigureHandler_core, tkAccessible);
 }
 
-static void TkAtkAccessible_DestroyHandler_core(ClientData clientData, XEvent *eventPtr) {
+static void TkAtkAccessible_DestroyHandler_core(ClientData clientData, XEvent *eventPtr) 
+{
     if (eventPtr->type == DestroyNotify) {
         TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-        if (tkAccessible && tkAccessible->tkwin) {
+        if (tkAccessible) {
+            /* Mark as destroyed first. */
+            tkAccessible->is_destroyed = TRUE;
+            
             AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
             if (parent) {
                 SignalData *signal_data = g_new(SignalData, 1);
@@ -1362,12 +1459,14 @@ static void TkAtkAccessible_DestroyHandler_core(ClientData clientData, XEvent *e
                 RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
             }
 
+            /* Let the finalize handle the actual cleanup. */
             g_object_unref(tkAccessible);
         }
     }
 }
 
-static void TkAtkAccessible_NameHandler_core(ClientData clientData, XEvent *eventPtr) {
+static void TkAtkAccessible_NameHandler_core(ClientData clientData, XEvent *eventPtr) 
+{
     if (eventPtr->type != ConfigureNotify) {
         return;
     }
@@ -1388,7 +1487,9 @@ static void TkAtkAccessible_NameHandler_core(ClientData clientData, XEvent *even
     }
 }
 
-static void TkAtkAccessible_ConfigureHandler_core(ClientData clientData, XEvent *eventPtr) {
+static void TkAtkAccessible_ConfigureHandler_core(ClientData clientData, XEvent *eventPtr) 
+{
+
     if (!eventPtr) return;
 
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1429,7 +1530,8 @@ static void TkAtkAccessible_ConfigureHandler_core(ClientData clientData, XEvent 
  *----------------------------------------------------------------------
  */
 
-static int EmitSelectionChanged_core(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]) {
+static int EmitSelectionChanged_core(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]) 
+{
     (void) clientData;
 
     if (objc < 2) {
@@ -1486,7 +1588,8 @@ static int EmitSelectionChanged_core(ClientData clientData, Tcl_Interp *ip, int 
  *
  *----------------------------------------------------------------------
  */
-static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]) {
+static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]) 
+{
     (void)clientData;
 
     if (objc < 2) {
@@ -1548,7 +1651,8 @@ static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc
  *----------------------------------------------------------------------
  */
 
-static int IsScreenReaderRunning_core(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+static int IsScreenReaderRunning_core(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+{
     (void) clientData;
     (void) objc;
     (void) *objv;
@@ -1632,7 +1736,8 @@ static int IsScreenReaderRunning_core(ClientData clientData, Tcl_Interp *interp,
  *----------------------------------------------------------------------
  */
 
-static int TkAtkAccessibleObjCmd_core(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+static int TkAtkAccessibleObjCmd_core(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+{
     (void)clientData;
 
     if (objc != 2) {
@@ -1703,7 +1808,8 @@ static int TkAtkAccessibleObjCmd_core(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 }
 
-static gboolean delayed_init(gpointer user_data) {
+static gboolean delayed_init(gpointer user_data) 
+{
     Tcl_Interp *interp = (Tcl_Interp *)user_data; 
 
     if (!tk_root_accessible) return FALSE;
@@ -1730,9 +1836,10 @@ static gboolean delayed_init(gpointer user_data) {
 
 /* 
  * Functions to support GLib / Tk event loop and threading 
- *  integration. 
+ * integration. 
  */
-static void GtkEventLoop(ClientData clientData) {
+static void GtkEventLoop(ClientData clientData) 
+{
     GMainContext *context = g_main_context_default();
     if (!context) return;
 
@@ -1745,7 +1852,8 @@ static void GtkEventLoop(ClientData clientData) {
     Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
 }
 
-void InstallGtkEventLoop(void) {
+void InstallGtkEventLoop(void) 
+{
     GMainContext *context = g_main_context_default();
     if (!context) {
         g_warning("InstallGtkEventLoop: Failed to get default GLib main context");
@@ -1755,7 +1863,8 @@ void InstallGtkEventLoop(void) {
     Tcl_CreateTimerHandler(10, GtkEventLoop, context);
 }
 
-void RunOnMainThread(void (*func)(void *), void *data) {
+void RunOnMainThread(void (*func)(void *), void *data) 
+{
     DispatcherJob *job = g_new(DispatcherJob, 1);
     job->func = func;
     job->data = data;
@@ -1791,7 +1900,8 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
  */
 
 #ifdef USE_ATK
-int TkAtkAccessibility_Init(Tcl_Interp *interp) {
+int TkAtkAccessibility_Init(Tcl_Interp *interp) 
+{
     g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
     g_setenv("NO_AT_BRIDGE", "0", FALSE);
 
@@ -1873,7 +1983,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp) {
 
 #else
 /* No ATK found. */
-int TkAtkAccessibility_Init(Tcl_Interp *interp) {
+int TkAtkAccessibility_Init(Tcl_Interp *interp) 
+{
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", NULL, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", NULL, NULL, NULL);
