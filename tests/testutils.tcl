@@ -1014,8 +1014,12 @@ namespace eval ::tk::test::timing {
 	return $result
     }
 
-    proc dt.reset {} {
+    proc dt.reset {{granularity milliseconds}} {
+	if {$granularity ni "microseconds milliseconds seconds"} {
+	    return -code error "invalid parameter \"$granularity\", expected \"microseconds\", \"milliseconds\" or \"seconds\""
+	}
 	variable dt
+	set dt(granularity) $granularity
 	set dt(t0) [clock $dt(granularity)]
     }
 
