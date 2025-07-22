@@ -185,52 +185,44 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
 # Domain "timing"
 #
 
+#
+# COMMON TEST SETUP
+#
+testutils import timing
+
 test dt-1.1 {Exercise a timing run, default granularity (milliseconds)} -constraints testutils -setup {
-    testutils import timing
 } -body {
     dt.reset
     expr {[dt.get] <= 1}
-} -result 1 -cleanup {
-    testutils forget timing
-}
+} -result 1
 
-test dt-1.2 {Exercise granularity microseconds} -constraints testutils -setup {
-    testutils import timing
-} -body {
+test dt-1.2 {Exercise granularity microseconds} -constraints testutils -body {
     dt.reset microseconds
     expr {[dt.get] <= 1000}
-} -result 1 -cleanup {
-    testutils forget timing
-}
+} -result 1
 
-test dt-1.3 {Exercise granularity seconds} -constraints testutils -setup {
-    testutils import timing
-} -body {
+test dt-1.3 {Exercise granularity seconds} -constraints testutils -body {
     dt.reset seconds
     dt.get
-} -result 0 -cleanup {
-    testutils forget timing
-}
+} -result 0
 
-test dt-1.4 {Invalid value for granularity} -constraints testutils -setup {
-    testutils import timing
-} -body {
+test dt-1.4 {Invalid value for granularity} -constraints testutils -body {
     dt.reset bogus
-} -returnCodes error -result {invalid parameter "bogus", expected "microseconds", "milliseconds" or "seconds"} -cleanup {
-    testutils forget timing
-}
+} -returnCodes error -result {invalid parameter "bogus", expected "microseconds", "milliseconds" or "seconds"}
 
-test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -constraints testutils -setup {
-    testutils import timing
-} -body {
+test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -constraints testutils -body {
     progress.init microseconds
     while {[incr i] < 10} {
 	progress.iter
     }
     progress.endtime
-} -errorOutput "+++++++++ * microseconds\n" -match glob -cleanup {
-    testutils forget timing
-}
+} -errorOutput "+++++++++ * microseconds\n" -match glob
+
+#
+# COMMON TEST CLEANUP
+#
+testutils forget timing
+
 
 #
 # CLEANUP
