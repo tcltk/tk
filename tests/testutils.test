@@ -178,15 +178,48 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
 }
 
 #
+# TESTS FOR SPECIFIC TESTUTILS DOMAINS FOLLOW
+#
+# Each testutils domain uses a different major test number > 9 as
+# a category ID.
+#
+
+#
 # 10. domain timing
 #
 
-test testutils-10.1 {} -constraints testutils -setup {
+test testutils-10.1 {Exercise a timing run, default granularity (milliseconds)} -constraints testutils -setup {
     testutils import timing
 } -body {
     dt.reset
     expr {[dt.get] <= 1}
-} -result {1} -cleanup {
+} -result 1 -cleanup {
+    testutils forget timing
+}
+
+test testutils-10.2 {Exercise granularity microseconds} -constraints testutils -setup {
+    testutils import timing
+} -body {
+    dt.reset microseconds
+    expr {[dt.get] <= 1000}
+} -result 1 -cleanup {
+    testutils forget timing
+}
+
+test testutils-10.3 {Exercise granularity seconds} -constraints testutils -setup {
+    testutils import timing
+} -body {
+    dt.reset seconds
+    dt.get
+} -result 0 -cleanup {
+    testutils forget timing
+}
+
+test testutils-10.4 {Invalid value for granularity} -constraints testutils -setup {
+    testutils import timing
+} -body {
+    dt.reset bogus
+} -returnCodes error -result {invalid parameter "bogus", expected "microseconds", "milliseconds" or "seconds"} -cleanup {
     testutils forget timing
 }
 
