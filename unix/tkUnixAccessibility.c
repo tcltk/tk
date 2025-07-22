@@ -1347,8 +1347,6 @@ static void UpdateAtkChildrenCache_core(TkAtkAccessible *acc)
  * Functions to map Tk window to its corresponding Atk object.
  */
 
-static GMutex atk_map_mutex;
-
 static void InitAtkTkMapping(void) 
 {
     if (!tk_to_atk_map) {
@@ -1921,13 +1919,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
             name_data->name = name;
             RunOnMainThread(ThreadSafe_SetName, name_data);
             g_free((gpointer)name);
-        }
-        g_object_ref(tk_root_accessible);
+	}
     } else {
-        g_warning("Failed to initialize tk_root_accessible");
-        g_mutex_unlock(&root_accessible_mutex);
-        Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
-        return TCL_ERROR;
+	g_warning("Failed to initialize tk_root_accessible");
+	g_mutex_unlock(&root_accessible_mutex);
+	Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
+	return TCL_ERROR;
     }
     g_mutex_unlock(&root_accessible_mutex);
 
@@ -1960,6 +1957,11 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         }
         AtkObject *main_acc = create_data->result;
         
+	if (main_acc) {
+	    /* We now explicitly hold a ref to the main window. */
+            g_object_ref(main_acc); 
+        }
+	
         if (main_acc) {
             RegisterToplevelData *toplevel_data = g_new(RegisterToplevelData, 1);
             if (!toplevel_data) {
