@@ -5,13 +5,12 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE:
+# NOTE
 #
 # Many of these tests are visually oriented and cannot be checked
 # programmatically (such as "does an underlined font appear to be
 # underlined?"); these tests attempt to exercise the code in question,
 # but there are no results that can be checked.
-#
 
 #
 # TESTFILE INITIALIZATION

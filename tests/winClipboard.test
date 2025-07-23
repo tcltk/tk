@@ -5,11 +5,10 @@
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE:
+# NOTE
 #
 # Some of these tests may fail if another application is grabbing the clipboard
 # (e.g. an X server, or a VNC viewer) #
-#
 
 #
 # TESTFILE INITIALIZATION

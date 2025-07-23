@@ -2,7 +2,7 @@
 # ttk::scrollbar widget tests
 #
 
-# NOTE:
+# NOTE
 #
 # Before 2019 the code in library/ttk/scrollbar.tcl would replace the
 # constructor of ttk::scrollbar with the constructor of tk::scrollbar

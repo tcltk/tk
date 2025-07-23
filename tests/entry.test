@@ -5,16 +5,11 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-#
-# NOTES:
+# NOTE
 #
 # Gathered comments about lacks
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
-# and EntryTextVarProc.
-# No tests for DisplayEntry.
-# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
-# No tests for EventuallyRedraw
-#
+# EntryTextVarProc, EntryScanTo and EntrySelectTo, DisplayEntry, EventuallyRedraw.
 
 #
 # TESTFILE INITIALIZATION

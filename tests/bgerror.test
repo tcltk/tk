@@ -4,12 +4,10 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-#
 # NOTE
 #
 # Some testing of the default error dialog would be needed too, but that's
 # not easy at all to emulate.
-#
 
 #
 # TESTFILE INITIALIZATION

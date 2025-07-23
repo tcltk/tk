@@ -5,6 +5,8 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE
+#
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
 # XXX but many procedures have no tests.
