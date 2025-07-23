@@ -309,7 +309,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Functions to initialize and manage the parent Atk class and object instances.
  */
 
-    static void tk_atk_accessible_init(TkAtkAccessible *self)
+static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     if (!g_type_is_a(TK_ATK_TYPE_ACCESSIBLE, ATK_TYPE_OBJECT)) {
         g_error("TK_ATK_TYPE_ACCESSIBLE is not properly registered");
