@@ -1036,7 +1036,7 @@ namespace eval ::tk::test::timing {
     }
 
     proc progress.iter {} {
-	puts -nonewline stderr "+" ; flush stderr
+	puts -nonewline stderr "." ; flush stderr
     }
 
     proc progress.end {} {
