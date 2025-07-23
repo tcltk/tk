@@ -1039,7 +1039,7 @@ namespace eval ::tk::test::timing {
 	puts -nonewline stderr "+" ; flush stderr
     }
 
-    proc progress.endtime {} {
+    proc progress.end {} {
 	puts stderr " [dt.get] $::tk::test::timing::dt(granularity)"
     }
 
