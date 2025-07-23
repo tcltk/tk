@@ -1051,9 +1051,8 @@ static void tk_get_current_value_core(AtkValue *obj, GValue *value)
     TkAtkAccessible *acc = (TkAtkAccessible *)atkObj;
 
     if (!acc || !acc->tkwin) {
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, "");
-        return;
+	g_value_set_string(value, "");
+	return;
     }
 
     Tk_Window win = acc->tkwin;
@@ -1931,6 +1930,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     g_object_unref(state_set);
     
     g_mutex_unlock(&root_accessible_mutex);
+    
+    /* Initialize ATK bridge immediately after root is established. */
+    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
+        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
+        return TCL_ERROR;
+    }
 
     /* Initialize window-to-accessible mapping. */
     InitAtkTkMapping();
@@ -1965,11 +1970,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     RegisterAtkObjectForTkWindow_core(mainWin, main_acc);
     atk_object_set_parent(main_acc, tk_root_accessible);
 
-    /* Initialize ATK bridge AFTER hierarchy is established. */
-    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
-        return TCL_ERROR;
-    }
 
     /* Complete initialization. */
     InstallGtkEventLoop();
