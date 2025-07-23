@@ -215,7 +215,7 @@ test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -
     while {[incr i] < 10} {
 	progress.iter
     }
-    progress.endtime
+    progress.end
 } -errorOutput "+++++++++ * microseconds\n" -match glob -cleanup {
     unset i
 }
