@@ -5,7 +5,7 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE:
+# NOTE
 #
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,

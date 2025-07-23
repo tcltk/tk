@@ -2,13 +2,12 @@
 # ttk::treeview widget tests
 #
 
-# NOTES:
+# NOTES
 #
 # * [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 #   what it currently does)
 #
 # * NEED: tests for focus item, selection
-#
 
 #
 # TESTFILE INITIALIZATION

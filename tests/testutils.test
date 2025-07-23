@@ -6,7 +6,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-# NOTE:
+# NOTE
 #
 # All tests in this testfile have been constrained with test constraint "testutils".
 # This constraint isn't set anywhere, and therefore false by default. Therefore,
@@ -15,7 +15,6 @@
 # "-constraints testutils" in the invocation, possibly combined with the option
 # "-file testutils.test" to exclude other test files, or with
 # "-limitconstraints true" to exclude other tests.
-#
 
 #
 # TESTFILE INITIALIZATION

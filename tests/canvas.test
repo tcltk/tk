@@ -6,6 +6,8 @@
 # Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
+# NOTE
+#
 # XXX - This test file is woefully incomplete. At present, only a few of the
 # features are tested.
 

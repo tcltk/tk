@@ -9,8 +9,9 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 
+# NOTES
 #
-# This file is somewhat caothic: the order of the tests does not
+# This file is somewhat chaotic: the order of the tests does not
 # really follow the order of the corresponding functions in
 # tkImgPhoto.c. Probably, because early versions had only a few tests
 # and over time test cases were added in bits and pieces.
@@ -20,8 +21,6 @@
 # To help keeping the overview, the table below lists where to find
 # tests for each of the functions in tkImgPhoto.c. The function are
 # listed in the order as they appear in the source file.
-#
-
 #
 # Function name                         Tests for function
 #--------------------------------------------------------------------------
@@ -54,11 +53,8 @@
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------
 #
-
 #
 # Some tests are not specific to a function in tkImgPhoto.c. They are:
-#
-
 #
 # Test name(s)          Description
 #--------------------------------------------------------------------------
@@ -71,7 +67,6 @@
 # imgPhoto-13.*         Tests for separation in different interpreters
 # imgPhoto-14.*         Test GIF format. Would belong to imgGIF.test
 #                       - which does not exist.
-#
 
 #
 # TESTFILE INITIALIZATION
