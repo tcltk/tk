@@ -1894,118 +1894,115 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
+    /* Initialize mutexes and environment. */
     g_mutex_init(&toplevel_list_mutex);
     g_mutex_init(&root_accessible_mutex);
     g_mutex_init(&atk_map_mutex);
-    g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
-    g_setenv("NO_AT_BRIDGE", "0", FALSE);
+    
+    /* Ensure accessibility bridge will load. */
+    g_setenv("GTK_MODULES", "gail:atk-bridge", TRUE);
+    g_setenv("NO_AT_BRIDGE", "0", TRUE);
+    g_setenv("ACCESSIBILITY_ENABLED", "1", TRUE);
 
+    /* Initialize GLib type system */
+    if (!g_thread_supported()) {
+        g_thread_init(NULL);
+    }
     g_type_init();
 
-    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        g_warning("Failed to initialize AT-SPI bridge");
-        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
-        return TCL_ERROR;
-    } else {
-    }
-
+    /* Create and initialize root accessible object. */
     g_mutex_lock(&root_accessible_mutex);
     tk_root_accessible = tk_util_get_root();
-    if (tk_root_accessible) {
-        const gchar *name = tk_get_name_core(tk_root_accessible);
-        if (name) {
-            SetNameData *name_data = g_new(SetNameData, 1);
-            name_data->obj = tk_root_accessible;
-            name_data->name = name;
-            RunOnMainThread(ThreadSafe_SetName, name_data);
-            g_free((gpointer)name);
-	}
-    } else {
-	g_warning("Failed to initialize tk_root_accessible");
-	g_mutex_unlock(&root_accessible_mutex);
-	Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
-	return TCL_ERROR;
+    if (!tk_root_accessible) {
+        g_mutex_unlock(&root_accessible_mutex);
+        Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
+        return TCL_ERROR;
     }
+
+    /* Add permanent reference to root. */
+    g_object_ref(tk_root_accessible);
+    atk_object_set_name(tk_root_accessible, "Tk Application");
+    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+    
+    /* Explicitly set root as focusable. */
+    AtkStateSet *state_set = atk_object_ref_state_set(tk_root_accessible);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    atk_state_set_add_state(state_set, ATK_STATE_ACTIVE);
+    g_object_unref(state_set);
+    
     g_mutex_unlock(&root_accessible_mutex);
 
+    /* Initialize window-to-accessible mapping. */
     InitAtkTkMapping();
 
+    /* Create main window accessible. */
     Tk_Window mainWin = Tk_MainWindow(interp);
-    if (mainWin) {
-        const char *path = Tk_PathName(mainWin);
-        if (!path) {
-            g_warning("Main window path is NULL");
-            Tcl_SetResult(interp, "Main window path is NULL", TCL_STATIC);
-            return TCL_ERROR;
-        }
-        CreateObjectData *create_data = g_new(CreateObjectData, 1);
-        if (!create_data) {
-            g_warning("Failed to allocate CreateObjectData");
-            Tcl_SetResult(interp, "Memory allocation failed", TCL_STATIC);
-            return TCL_ERROR;
-        }
-        create_data->interp = interp;
-        create_data->tkwin = mainWin;
-        create_data->path = path;
-        RunOnMainThread(ThreadSafe_CreateAccessibleAtkObject, create_data);
-        
-        /* Wait for creation to complete. */
-        int iterations = 0;
-        while (!create_data->result && iterations < 100) {
-            g_main_context_iteration(NULL, FALSE);
-            iterations++;
-        }
-        AtkObject *main_acc = create_data->result;
-        
-	if (main_acc) {
-	    /* We now explicitly hold a ref to the main window. */
-            g_object_ref(main_acc); 
-        }
-	
-        if (main_acc) {
-            RegisterToplevelData *toplevel_data = g_new(RegisterToplevelData, 1);
-            if (!toplevel_data) {
-                g_warning("Failed to allocate RegisterToplevelData");
-                g_object_unref(main_acc);
-                Tcl_SetResult(interp, "Memory allocation failed", TCL_STATIC);
-                return TCL_ERROR;
-            }
-            toplevel_data->interp = interp;
-            toplevel_data->tkwin = mainWin;
-            toplevel_data->accessible = main_acc;
-            RunOnMainThread(ThreadSafe_RegisterToplevelWindow, toplevel_data);
-        } else {
-            g_warning("Failed to create accessible object for main window");
-            Tcl_SetResult(interp, "Failed to create accessible object for main window", TCL_STATIC);
-            return TCL_ERROR;
-        }
-    } else {
-        g_warning("No main window available");
+    if (!mainWin) {
         Tcl_SetResult(interp, "No main window available", TCL_STATIC);
         return TCL_ERROR;
     }
 
-    int iterations = 0;
-    while (g_main_context_pending(NULL) && iterations < 100) {
-        g_main_context_iteration(NULL, FALSE);
-        iterations++;
+    const char *path = Tk_PathName(mainWin);
+    if (!path) {
+        Tcl_SetResult(interp, "Main window path is NULL", TCL_STATIC);
+        return TCL_ERROR;
     }
 
+    /* Create main window accessible object synchronously. */
+    AtkObject *main_acc = TkCreateAccessibleAtkObject_core(interp, mainWin, path);
+    if (!main_acc) {
+        Tcl_SetResult(interp, "Failed to create accessible object for main window", TCL_STATIC);
+        return TCL_ERROR;
+    }
+
+    /* Set main window as focusable */
+    state_set = atk_object_ref_state_set(main_acc);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);  /* Initially focused. */
+    g_object_unref(state_set);
+
+    /* Register main window with root */
+    RegisterAtkObjectForTkWindow_core(mainWin, main_acc);
+    atk_object_set_parent(main_acc, tk_root_accessible);
+
+    /* Initialize ATK bridge AFTER hierarchy is established. */
+    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
+        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
+        return TCL_ERROR;
+    }
+
+    /* Complete initialization. */
     InstallGtkEventLoop();
 
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
-                         TkAtkAccessibleObjCmd_core, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
-                         EmitSelectionChanged_core, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
-                         EmitFocusChanged_core, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
-                         IsScreenReaderRunning_core, NULL, NULL);
+    /* Register event handlers */
+    TkAtkAccessible_RegisterEventHandlers_core(mainWin, main_acc);
 
-    SignalData *signal_data = g_new(SignalData, 1);
-    signal_data->obj = tk_root_accessible;
-    signal_data->signal_name = "children-changed";
-    RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
+    /* Force initial focus event. */
+    SignalData *focus_signal = g_new(SignalData, 1);
+    focus_signal->obj = main_acc;
+    focus_signal->signal_name = "focus-event";
+    focus_signal->data = GINT_TO_POINTER(TRUE);
+    RunOnMainThread(ThreadSafe_EmitSignal, focus_signal);
+
+    /* Force initial hierarchy update. */
+    SignalData *hierarchy_signal = g_new(SignalData, 1);
+    hierarchy_signal->obj = tk_root_accessible;
+    hierarchy_signal->signal_name = "children-changed";
+    hierarchy_signal->data = GINT_TO_POINTER(0); /* CHILD_ADDED */
+    RunOnMainThread(ThreadSafe_EmitSignal, hierarchy_signal);
+
+    /* Register Tcl commands. */
+    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
+			 TkAtkAccessibleObjCmd_core, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
+			 EmitSelectionChanged_core, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
+			 EmitFocusChanged_core, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
+			 IsScreenReaderRunning_core, NULL, NULL);
+
+    /* Set initial focus to main window. */
+    atk_focus_tracker_notify(main_acc);
 
     return TCL_OK;
 }
