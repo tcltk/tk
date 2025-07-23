@@ -8,7 +8,7 @@
 # NOTE
 #
 # Gathered comments about lacks
-# XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
+# Still need to write tests for EntryBlinkProc, EntryFocusProc,
 # EntryTextVarProc, EntryScanTo and EntrySelectTo, DisplayEntry, EventuallyRedraw.
 
 #
@@ -2870,7 +2870,7 @@ test entry-13.26 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result {0 1}
 
-# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
+# Still need to write tests for EntryScanTo and EntrySelectTo.
 
 
 test entry-14.1 {EntryFetchSelection procedure} -body {

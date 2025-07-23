@@ -7,7 +7,7 @@
 
 # NOTE
 #
-# XXX This test file is woefully incomplete.  Right now it only tests
+# This test file is woefully incomplete.  Right now it only tests
 # a few of the procedures in tkEvent.c.  Please add more tests whenever
 # possible.
 
