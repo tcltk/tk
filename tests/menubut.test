@@ -7,9 +7,9 @@
 
 # NOTE
 #
-# XXX This test file is woefully incomplete right now.  If any part
-# XXX of a procedure has tests then the whole procedure has tests,
-# XXX but many procedures have no tests.
+# This test file is woefully incomplete right now.  If any part
+# of a procedure has tests then the whole procedure has tests,
+# but many procedures have no tests.
 
 #
 # TESTFILE INITIALIZATION
@@ -414,8 +414,8 @@ test menubutton-3.11 {ButtonWidgetCmd procedure, "configure" option} -body {
 #
 deleteWindows
 
-# XXX Need to add tests for several procedures here.   The tests for   XXX
-# XXX ConfigureMenuButton aren't complete either.                      XXX
+# Need to add tests for several procedures here.   The tests for   XXX
+# ConfigureMenuButton aren't complete either.                      XXX
 
 test menubutton-4.1 {ConfigureMenuButton procedure} -setup {
     deleteWindows
@@ -543,7 +543,7 @@ test menubutton-4.11 {ConfigureMenuButton procedure - bad direction} -setup {
     deleteWindows
 } -result {below {}}
 
-# XXX Need to add tests for several procedures here. XXX
+# Need to add tests for several procedures here. XXX
 
 test menubutton-5.1 {MenuButtonEventProc procedure} -setup {
     deleteWindows

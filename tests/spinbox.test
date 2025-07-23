@@ -8,11 +8,11 @@
 # NOTE
 #
 # Collected comments about lacks from the test
-# XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
-# and SpinboxTextVarProc.
-# No tests for DisplaySpinbox.
-# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
-# No tests for EventuallyRedraw
+# - Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
+#   and SpinboxTextVarProc.
+# - No tests for DisplaySpinbox.
+# - Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
+# - No tests for EventuallyRedraw
 
 #
 # TESTFILE INITIALIZATION
@@ -3145,7 +3145,7 @@ test spinbox-13.25 {GetSpinboxIndex procedure} -body {
     destroy .e
 } -result 21
 
-# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
+# Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
 
 test spinbox-14.1 {SpinboxFetchSelection procedure} -body {
     spinbox .e
