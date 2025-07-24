@@ -23,10 +23,6 @@ testutils import dialog
 # LOCAL UTILITY PROCS
 #
 
-proc ToEnterDirsByKey {parent dirs} {
-    after 100 [list EnterDirsByKey $parent $dirs]
-}
-
 proc EnterDirsByKey {parent dirs} {
     if {$parent == "."} {
 	set w .__tk_choosedir
@@ -42,6 +38,10 @@ proc EnterDirsByKey {parent dirs} {
 	SendButtonPress $parent ok mouse
 	after 50
     }
+}
+
+proc ToEnterDirsByKey {parent dirs} {
+    after 100 [list EnterDirsByKey $parent $dirs]
 }
 
 #

@@ -26,12 +26,6 @@ set tk_strictMotif_old $tk_strictMotif
 # LOCAL UTILITY PROCS
 #
 
-proc ToEnterFileByKey {parent fileName fileDir} {
-    if {! $::dialogIsNative} {
-	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
-    }
-}
-
 proc EnterFileByKey {parent fileName fileDir} {
     global tk_strictMotif
     if {$parent == "."} {
@@ -51,6 +45,12 @@ proc EnterFileByKey {parent fileName fileDir} {
 
     update
     SendButtonPress $parent ok mouse
+}
+
+proc ToEnterFileByKey {parent fileName fileDir} {
+    if {! $::dialogIsNative} {
+	after 100 EnterFileByKey $parent [list $fileName] [list $fileDir]
+    }
 }
 
 #

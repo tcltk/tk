@@ -24,28 +24,6 @@ testutils import child
 # LOCAL UTILITY PROCS
 #
 
-proc focusSetup {} {
-    destroy .t
-    toplevel .t
-    wm geom .t +0+0
-    foreach i {b1 b2 b3 b4} {
-	button .t.$i -text .t.$i -relief raised -bd 2
-	pack .t.$i
-    }
-    tkwait visibility .t.b4
-}
-
-proc focusSetupAlt {} {
-    global env
-    destroy .alt
-    toplevel .alt -screen $env(TK_ALT_DISPLAY)
-    foreach i {a b c d} {
-	button .alt.$i -text .alt.$i -relief raised -bd 2
-	pack .alt.$i
-    }
-    tkwait visibility .alt.d
-}
-
 # focusClear --
 #
 #    Ensures that there is no input focus in this application.  It does it by
@@ -73,6 +51,28 @@ if {[tk windowingsystem] eq "aqua"} {
 	after 400
 	update
     }
+}
+
+proc focusSetup {} {
+    destroy .t
+    toplevel .t
+    wm geom .t +0+0
+    foreach i {b1 b2 b3 b4} {
+	button .t.$i -text .t.$i -relief raised -bd 2
+	pack .t.$i
+    }
+    tkwait visibility .t.b4
+}
+
+proc focusSetupAlt {} {
+    global env
+    destroy .alt
+    toplevel .alt -screen $env(TK_ALT_DISPLAY)
+    foreach i {a b c d} {
+	button .alt.$i -text .alt.$i -relief raised -bd 2
+	pack .alt.$i
+    }
+    tkwait visibility .alt.d
 }
 
 #
