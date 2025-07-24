@@ -25,6 +25,16 @@ testutils import colors
 # LOCAL UTILITY PROCS
 #
 
+# optnames --
+#
+# Returns the option names out of a list of option details.
+#
+# Arguments:
+# options -		The option detail list.
+proc optnames {options} {
+    lsort [lmap desc $options {lindex $desc 0}]
+}
+
 # uniq --
 #
 # Returns the unique items of a list in the order they first appear.
@@ -37,16 +47,6 @@ proc uniq {list} {
 	dict set d $item {}
     }
     return [dict keys $d]
-}
-
-# optnames --
-#
-# Returns the option names out of a list of option details.
-#
-# Arguments:
-# options -		The option detail list.
-proc optnames {options} {
-    lsort [lmap desc $options {lindex $desc 0}]
 }
 
 #

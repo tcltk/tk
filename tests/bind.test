@@ -52,15 +52,6 @@ destroy .top
 # LOCAL UTILITY PROCS
 #
 
-proc unsetBindings {} {
-    bind all <Enter> {}
-    bind Test <Enter> {}
-    bind Toplevel <Enter> {}
-    bind xyz <Enter> {}
-    bind {a b} <Enter> {}
-    bind .t <Enter> {}
-}
-
 proc testKey {window event type mods} {
     global keyInfo numericKeysym
     set keyInfo {}
@@ -109,6 +100,15 @@ proc testKeyWithMods {window keysym type} {
 	return $result
     }
     return pass
+}
+
+proc unsetBindings {} {
+    bind all <Enter> {}
+    bind Test <Enter> {}
+    bind Toplevel <Enter> {}
+    bind xyz <Enter> {}
+    bind {a b} <Enter> {}
+    bind .t <Enter> {}
 }
 
 #

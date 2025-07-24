@@ -23,25 +23,10 @@ tcltest::loadTestedCommands
 # LOCAL UTILITY PROCS
 #
 
-# Procedure to create a bunch of overlapping windows, which should
-# make it easy to detect differences in order.
-
-proc raise_setup {} {
-    destroy {*}[winfo children .raise]
-    update idletasks
-    foreach i {a b c d e} {
-	    label .raise.$i -text $i -relief raised -bd 2
-    }
-    place .raise.a -x 20 -y 60 -width 60 -height 80
-    place .raise.b -x 60 -y 60 -width 60 -height 80
-    place .raise.c -x 100 -y 60 -width 60 -height 80
-    place .raise.d -x 40 -y 20 -width 100 -height 60
-    place .raise.e -x 40 -y 120 -width 100 -height 60
-}
-
-# Procedure to return information about which windows are on top
-# of which other windows.
-
+# raise_getOrder --
+#
+# Return information about which windows are on top of which other windows.
+#
 proc raise_getOrder {} {
     set x [winfo rootx .raise]
     set y [winfo rooty .raise]
@@ -55,8 +40,10 @@ proc raise_getOrder {} {
 	    [winfo name [winfo containing [expr $x+130] [expr $y+130]]]
 }
 
-# Procedure to set up a collection of top-level windows
-
+# raise_makeToplevels --
+#
+# Set up a collection of top-level windows
+#
 proc raise_makeToplevels {} {
     deleteWindows
     foreach i {.raise1 .raise2 .raise3} {
@@ -64,6 +51,24 @@ proc raise_makeToplevels {} {
 	wm geom $i 150x100+0+0
 	update
     }
+}
+
+# raise_setup --
+#
+# Create a bunch of overlapping windows, which should make it easy to detect
+# differences in order.
+#
+proc raise_setup {} {
+    destroy {*}[winfo children .raise]
+    update idletasks
+    foreach i {a b c d e} {
+	    label .raise.$i -text $i -relief raised -bd 2
+    }
+    place .raise.a -x 20 -y 60 -width 60 -height 80
+    place .raise.b -x 60 -y 60 -width 60 -height 80
+    place .raise.c -x 100 -y 60 -width 60 -height 80
+    place .raise.d -x 40 -y 20 -width 100 -height 60
+    place .raise.e -x 40 -y 120 -width 100 -height 60
 }
 
 #
