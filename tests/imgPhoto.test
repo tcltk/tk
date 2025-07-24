@@ -87,6 +87,29 @@ testutils import image
 # LOCAL UTILITY PROCS
 #
 
+proc checkImgTrans {img} {
+    set result {}
+    foreachPixel $img x y {
+	if {[$img transparency get $x $y]} {
+	    lappend result $x,$y
+	}
+    }
+    return $result
+}
+
+proc checkImgTransLoop {img script1 script2} {
+    set result {}
+    foreachPixel $img x y {
+	eval $script1
+	lappend result {*}[checkImgTrans $img]
+	append result :
+	eval $script2
+	lappend result {*}[checkImgTrans $img]
+	append result .
+    }
+    return $result
+}
+
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
 #
@@ -99,27 +122,6 @@ proc foreachPixel {img xVar yVar script} {
 	    uplevel 1 $script
 	}
     }
-}
-proc checkImgTrans {img} {
-    set result {}
-    foreachPixel $img x y {
-	if {[$img transparency get $x $y]} {
-	    lappend result $x,$y
-	}
-    }
-    return $result
-}
-proc checkImgTransLoop {img script1 script2} {
-    set result {}
-    foreachPixel $img x y {
-	eval $script1
-	lappend result {*}[checkImgTrans $img]
-	append result :
-	eval $script2
-	lappend result {*}[checkImgTrans $img]
-	append result .
-    }
-    return $result
 }
 
 #

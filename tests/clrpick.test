@@ -61,12 +61,6 @@ if {[testConstraint defaultPseudocolor8]} {
 # LOCAL UTILITY PROCS
 #
 
-proc ToChooseColorByKey {parent r g b} {
-    if {! $::dialogIsNative} {
-	after 200 ChooseColorByKey . $r $g $b
-    }
-}
-
 proc ChooseColorByKey {parent r g b} {
     set w .__tk__color
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -86,6 +80,12 @@ proc ChooseColorByKey {parent r g b} {
     tk::dialog::color::HandleRGBEntry $w
 
     SendButtonPress . ok mouse
+}
+
+proc ToChooseColorByKey {parent r g b} {
+    if {! $::dialogIsNative} {
+	after 200 ChooseColorByKey . $r $g $b
+    }
 }
 
 #

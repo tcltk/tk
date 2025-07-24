@@ -24,23 +24,15 @@ testutils import scroll text
 # LOCAL UTILITY PROCS
 #
 
-# The delay procedure needs to wait long enough for the asynchronous updates
-# performed by the text widget to run.
-proc delay {} {
-    update
-    after 100
-    update
+proc bizarre_scroll args {
+    .t2.t delete 5.0 end
 }
 
-# The procedure below is used to generate errors during scrolling commands.
-
-proc scrollError args {
-    error "scrolling error"
-}
-
+# lequal --
+#
 # Return 1 if the two given lists are the same, otherwise return the two lists.
 # This is used to compare a test actual result with a test expected result.
-
+#
 proc lequal {res expected} {
     if {[llength $res] != [llength $expected]} {
 	return [list "Lengths differ"  result: $res - expected: $expected]
@@ -53,17 +45,39 @@ proc lequal {res expected} {
     return 1
 }
 
-# x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
+# delay --
+#
+# Wait long enough for the asynchronous updates performed by the text widget to run.
+#
+proc delay {} {
+    update
+    after 100
+    update
+}
+
+# scrollError --
+#
+# Generate errors during scrolling commands
+#
+proc scrollError args {
+    error "scrolling error"
+}
+
+# xcharr --
+#
+# Return x-coordinate in widget $w of the first pixel of $n-th char
+# counted from the right, right justified
+#
 proc xcharr {n {w .t}} {
     return [expr {[winfo width $w] - [bo $w] - [xw $n]}]
 }
-# x-pixels of empty space in widget $w on a line containing $n chars
+
+# xe --
+#
+# Return x-pixels of empty space in widget $w on a line containing $n chars
+#
 proc xe {n {w .t}} {
     return [expr {[winfo width $w] - (2 * [bo $w]) - [xw $n]}]
-}
-
-proc bizarre_scroll args {
-    .t2.t delete 5.0 end
 }
 
 #

@@ -27,6 +27,20 @@ tcltest::loadTestedCommands
 # LOCAL UTILITY PROCS
 #
 
+# _get_selection --
+#
+#    Return selection only if owned by the given widget
+#
+proc _get_selection {widget} {
+    if {[string compare $widget [selection own]] != 0} {
+	return ""
+    }
+    if {[catch {selection get} sel]} {
+	return ""
+    }
+    return $sel
+}
+
 # _init_keypress_lookup --
 #
 #    Setup table used to query key events.
@@ -51,6 +65,30 @@ proc _init_keypress_lookup {} {
 	    \xA0 nobreakspace \
 	    "\n" Return \
 	    "\t" Tab]
+}
+
+# _keypress --
+#
+#    Lookup and generate a pair of Key and KeyRelease events
+#
+proc _keypress {win key} {
+    set keysym [_keypress_lookup $key]
+
+    # Force focus to the window before delivering
+    # each event so that a window manager using
+    # a focus follows mouse will not steal away
+    # the focus if the mouse is moved around.
+
+    if {[focus] != $win} {
+	focus -force $win
+    }
+    event generate $win <Key-$keysym>
+    pause 50
+    if {[focus] != $win} {
+	focus -force $win
+    }
+    event generate $win <KeyRelease-$keysym>
+    pause 50
 }
 
 # _keypress_lookup --
@@ -82,30 +120,6 @@ proc _keypress_lookup {char} {
     }
 }
 
-# _keypress --
-#
-#    Lookup and generate a pair of Key and KeyRelease events
-#
-proc _keypress {win key} {
-    set keysym [_keypress_lookup $key]
-
-    # Force focus to the window before delivering
-    # each event so that a window manager using
-    # a focus follows mouse will not steal away
-    # the focus if the mouse is moved around.
-
-    if {[focus] != $win} {
-	focus -force $win
-    }
-    event generate $win <Key-$keysym>
-    pause 50
-    if {[focus] != $win} {
-	focus -force $win
-    }
-    event generate $win <KeyRelease-$keysym>
-    pause 50
-}
-
 # _keypress_string --
 #
 #    Call _keypress for each character in the given string
@@ -128,20 +142,6 @@ proc _text_ind_to_x_y {text ind} {
     foreach {x1 y1 width height} $bbox break
     set middle_y [expr {$y1 + ($height / 2)}]
     return [list $x1 $middle_y]
-}
-
-# _get_selection --
-#
-#    Return selection only if owned by the given widget
-#
-proc _get_selection {widget} {
-    if {[string compare $widget [selection own]] != 0} {
-	return ""
-    }
-    if {[catch {selection get} sel]} {
-	return ""
-    }
-    return $sel
 }
 
 proc create_and_pack_frames {{w {}}} {
