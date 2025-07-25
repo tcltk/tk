@@ -45,6 +45,14 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
+typedef struct _CustomAtkUtil {
+    AtkUtil parent;
+} CustomAtkUtil;
+
+typedef struct _CustomAtkUtilClass {
+    AtkUtilClass parent_class;
+} CustomAtkUtilClass;
+
 typedef struct AtkRoleMap {
     const char *tkrole;
     AtkRole atkrole;
@@ -256,6 +264,8 @@ static void GtkEventLoop(ClientData clientData);
 void InstallGtkEventLoop(void);
 static AtkObject *tk_util_get_root(void);
 AtkObject *tk_create_root_accessible(void);
+static GType custom_atk_util_get_type(void);
+static AtkObject* custom_atk_util_get_root(void);
 static AtkObject *tk_ref_child(AtkObject *obj, guint i);
 static gint tk_get_n_children(AtkObject *obj);
 static AtkRole tk_get_role(AtkObject *obj);
@@ -309,8 +319,55 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 /*
  * Functions to initialize and manage the parent Atk class and object instances.
  */
+ 
+/* Custom AtkUtil class initialization. */
+    static void custom_atk_util_class_init(CustomAtkUtilClass *klass)
+{
+    AtkUtilClass *util_class = ATK_UTIL_CLASS(klass);
+    util_class->get_root = custom_atk_util_get_root;
+}
 
-    static void tk_atk_accessible_init(TkAtkAccessible *self)
+/* GType registration for CustomAtkUtil. */
+static GType custom_atk_util_get_type(void)
+{
+    static GType type = 0;
+    if (!type) {
+        static const GTypeInfo tinfo = {
+            sizeof(CustomAtkUtilClass),
+            NULL, /* base_init */
+            NULL, /* base_finalize */
+            (GClassInitFunc) custom_atk_util_class_init,
+            NULL, /* class_finalize */
+            NULL, /* class_data */
+            sizeof(CustomAtkUtil),
+            0,    /* n_preallocs */
+            NULL, /* instance_init */
+            NULL  /* value_table */
+        };
+        type = g_type_register_static(ATK_TYPE_UTIL,
+                                      "CustomAtkUtil",
+                                      &tinfo, 0);
+    }
+    return type;
+}
+
+/* Custom get_root implementation to return tk_root_accessible */
+static AtkObject* custom_atk_util_get_root(void)
+{
+    g_mutex_lock(&root_accessible_mutex);
+    if (tk_root_accessible) {
+        AtkObject *root = tk_root_accessible;
+        g_object_ref(root);
+        g_mutex_unlock(&root_accessible_mutex);
+        g_debug("custom_atk_util_get_root: Returning tk_root_accessible %p", root);
+        return root;
+    }
+    g_mutex_unlock(&root_accessible_mutex);
+    g_debug("custom_atk_util_get_root: tk_root_accessible is NULL");
+    return NULL;
+}
+
+static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     if (!g_type_is_a(TK_ATK_TYPE_ACCESSIBLE, ATK_TYPE_OBJECT)) {
         g_error("TK_ATK_TYPE_ACCESSIBLE is not properly registered");
@@ -385,6 +442,8 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
     atk_class->get_n_children = tk_get_n_children;
     atk_class->ref_child = tk_ref_child;
 }
+
+
 
 /*
  * Functions to map ATK component interface to Tk.
@@ -1450,7 +1509,8 @@ AtkObject *tk_create_root_accessible(void)
         AtkObject *root = tk_root_accessible;
         g_object_ref(root);
         g_mutex_unlock(&root_accessible_mutex);
-        g_debug("tk_create_root_accessible: Returning existing root %p", root);
+        g_debug("tk_create_root_accessible: Returning existing root %p (ref_count=%d)", 
+                root, G_OBJECT(root)->ref_count);
         return root;
     }
 
@@ -1464,14 +1524,9 @@ AtkObject *tk_create_root_accessible(void)
     AtkObject *obj = ATK_OBJECT(acc);
     atk_object_initialize(obj, NULL);
     atk_object_set_role(obj, ATK_ROLE_APPLICATION);
+    atk_object_set_name(obj, "Tk Application");
 
-    /* Set application name. */
-    SetNameData *name_data = g_new(SetNameData, 1);
-    name_data->obj = obj;
-    name_data->name = "Tk Application";
-    RunOnMainThread(ThreadSafe_SetName, name_data);
-
-    /* Register with ATK map. */
+    /* Register with ATK map */
     InitAtkTkMapping();
     if (!tk_to_atk_map) {
         g_warning("tk_create_root_accessible: tk_to_atk_map is NULL");
@@ -1480,21 +1535,33 @@ AtkObject *tk_create_root_accessible(void)
         return NULL;
     }
 
-    g_object_ref(obj); // Permanent reference
+    g_object_ref(obj); /* Permanent reference */
     tk_root_accessible = obj;
+    g_mutex_lock(&atk_map_mutex);
     g_hash_table_insert(tk_to_atk_map, NULL, obj);
+    g_mutex_unlock(&atk_map_mutex);
+    g_debug("tk_create_root_accessible: Created and registered root %p (ref_count=%d)", 
+            obj, G_OBJECT(obj)->ref_count);
 
     g_mutex_unlock(&root_accessible_mutex);
-    g_debug("tk_create_root_accessible: Created and registered root %p", obj);
 
-    /* Ensure AT-SPI is aware of the root. */
+    /* Explicitly notify AT-SPI of the root object */
+    if (atk_get_root() == obj) {
+        g_debug("tk_create_root_accessible: Root object %p successfully registered with atk_get_root", obj);
+    } else {
+        g_warning("tk_create_root_accessible: atk_get_root() does not return tk_root_accessible %p", obj);
+    }
+
+    /* Emit signal to notify AT-SPI of the new root */
     SignalData *signal_data = g_new(SignalData, 1);
     signal_data->obj = obj;
     signal_data->signal_name = "children-changed";
+    signal_data->data = NULL;
     RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
 
     return g_object_ref(obj);
 }
+
 
 AtkObject *atk_get_root(void) 
 {
@@ -2019,73 +2086,102 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
-    /* Initialize mutexes for thread safety. */
+    /* Initialize mutexes for thread safety */
     g_mutex_init(&toplevel_list_mutex);
     g_mutex_init(&root_accessible_mutex);
     g_mutex_init(&atk_map_mutex);
 
-    /* Set required environment variables for ATK bridge. */
+    /* Set required environment variables for ATK bridge */
     g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
     g_setenv("NO_AT_BRIDGE", "0", FALSE);
-    
-    /* Initialize tk_to_atk_map early. */
+    g_debug("TkAtkAccessibility_Init: Environment variables set for ATK bridge");
+
+    /* Initialize tk_to_atk_map early */
     InitAtkTkMapping();
     if (!tk_to_atk_map) {
         Tcl_SetResult(interp, "Failed to initialize tk_to_atk_map", TCL_STATIC);
         return TCL_ERROR;
     }
+    g_debug("TkAtkAccessibility_Init: tk_to_atk_map initialized");
 
-    /* Initialize GObject type system (noop since GLib 2.36). */
+    /* Initialize GObject type system (noop since GLib 2.36) */
     g_type_init();
 
-    /* Create the root accessible object first. */
+    /* Register custom AtkUtil class */
+    GType util_type = custom_atk_util_get_type();
+    g_type_class_unref(g_type_class_ref(util_type));
+    g_debug("TkAtkAccessibility_Init: Custom AtkUtil registered with GType %lu", (gulong)util_type);
+
+    /* Create the root accessible object */
     AtkObject *root = tk_create_root_accessible();
     if (!root) {
         Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
         return TCL_ERROR;
     }
+    g_debug("TkAtkAccessibility_Init: Root accessible object created: %p (ref_count=%d)", 
+            root, G_OBJECT(root)->ref_count);
 
-    /* Initialize ATK bridge AFTER creating the root. */
-    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
-        return TCL_ERROR;
+    /* Verify atk_get_root returns the correct object */
+    if (atk_get_root() != tk_root_accessible) {
+        g_warning("TkAtkAccessibility_Init: atk_get_root() does not return tk_root_accessible %p", 
+                  tk_root_accessible);
+    } else {
+        g_debug("TkAtkAccessibility_Init: atk_get_root() correctly returns tk_root_accessible %p", 
+                tk_root_accessible);
     }
 
-    /* Get main application window. */
+    /* Initialize ATK bridge AFTER creating the root */
+    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
+        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
+        g_object_unref(root);
+        return TCL_ERROR;
+    }
+    g_debug("TkAtkAccessibility_Init: ATK bridge initialized");
+
+    /* Get main application window */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (!mainWin) {
         Tcl_SetResult(interp, "No main window available", TCL_STATIC);
+        g_object_unref(root);
         return TCL_ERROR;
     }
 
     const char *path = Tk_PathName(mainWin);
     if (!path) {
         Tcl_SetResult(interp, "Main window path is NULL", TCL_STATIC);
+        g_object_unref(root);
         return TCL_ERROR;
     }
 
-    /* Create main window accessible object. */
+    /* Create main window accessible object */
     AtkObject *main_acc = TkCreateAccessibleAtkObject_core(interp, mainWin, path);
     if (!main_acc) {
         Tcl_SetResult(interp, "Failed to create accessible object for main window", TCL_STATIC);
+        g_object_unref(root);
         return TCL_ERROR;
     }
+    g_debug("TkAtkAccessibility_Init: Main window accessible object created: %p", main_acc);
 
     RegisterToplevelWindow_core(interp, mainWin, main_acc);
     TkAtkAccessible_RegisterEventHandlers_core(mainWin, main_acc);
 
-    /* Install GLib-Tk event loop integration. */
+    /* Install GLib-Tk event loop integration */
     InstallGtkEventLoop();
+    g_debug("TkAtkAccessibility_Init: GLib-Tk event loop installed");
 
-    /* Notify AT-SPI of hierarchy changes. */
+    /* Notify AT-SPI of hierarchy changes */
     SignalData *signal_data = g_new(SignalData, 1);
     signal_data->obj = root;
     signal_data->signal_name = "children-changed";
+    signal_data->data = NULL;
     RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
+    g_debug("TkAtkAccessibility_Init: Emitted children-changed signal for root");
 
-    g_main_context_iteration(NULL, TRUE); /* Flush. */
+    /* Flush the event queue to ensure AT-SPI processes signals */
+    g_main_context_iteration(NULL, TRUE);
+    g_debug("TkAtkAccessibility_Init: Event queue flushed");
 
-    /* Register Tcl commands. */
+    /* Register Tcl commands */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
                          TkAtkAccessibleObjCmd_core, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
@@ -2094,11 +2190,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
                          EmitFocusChanged_core, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
                          IsScreenReaderRunning_core, NULL, NULL);
+    g_debug("TkAtkAccessibility_Init: Tcl commands registered");
 
     return TCL_OK;
 }
 #else
-/* No ATK found. */
+/* No ATK found */
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
     Tcl_CreateObjCommand(interp, "::tk:de:accessible::add_acc_object", NULL, NULL, NULL);
@@ -2108,7 +2205,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     return TCL_OK;
 }
 #endif
-
 /*
  * Local Variables:
  * mode: c
