@@ -310,7 +310,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Functions to initialize and manage the parent Atk class and object instances.
  */
 
-    static void tk_atk_accessible_init(TkAtkAccessible *self)
+static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     if (!g_type_is_a(TK_ATK_TYPE_ACCESSIBLE, ATK_TYPE_OBJECT)) {
         g_error("TK_ATK_TYPE_ACCESSIBLE is not properly registered");
@@ -323,18 +323,24 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
     self->cache_dirty = FALSE;
 }
 
-static void tk_atk_accessible_finalize(GObject *gobject)
+static void tk_atk_accessible_finalize(GObject *gobject) 
 {
-    TkAtkAccessible *self = (TkAtkAccessible*)gobject;
+    TkAtkAccessible *self = (TkAtkAccessible *)gobject;
 
-    if (self->tkwin) { 
+    /* Prevent finalization of the root accessible object. */
+    if (self == (TkAtkAccessible *)tk_root_accessible) {
+        g_warning("tk_atk_accessible_finalize: Attempt to finalize root accessible object ignored");
+        return;
+    }
+
+    if (self->tkwin) {
         if (Tk_IsTopLevel(self->tkwin)) {
             GListRemoveData *remove_data = g_new(GListRemoveData, 1);
             remove_data->list = &toplevel_accessible_objects;
             remove_data->data = self;
             RunOnMainThread(ThreadSafe_GListRemove, remove_data);
         }
-        
+
         SignalData *state_data = g_new(SignalData, 1);
         state_data->obj = ATK_OBJECT(self);
         state_data->signal_name = "state-change";
@@ -348,13 +354,12 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 
     if (self->path) {
         g_free(self->path);
-        self->path = NULL; 
+        self->path = NULL;
     }
     if (self->cached_name) {
         g_free(self->cached_name);
         self->cached_name = NULL;
     }
-    
     if (self->cached_children) {
         g_ptr_array_free(self->cached_children, TRUE);
         self->cached_children = NULL;
@@ -362,6 +367,8 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
+
+
 /* Initialize ATK object class. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 {
@@ -1407,14 +1414,24 @@ AtkObject *tk_util_get_root(void) {
 }
 
 /* Explicit root creation (must be called after atk_bridge_adaptor_init). */
-AtkObject *tk_create_root_accessible(void) {
+AtkObject *tk_create_root_accessible(void) 
+{
+    g_mutex_lock(&root_accessible_mutex);
     if (tk_root_accessible) {
-        return tk_root_accessible;
+        AtkObject *root = tk_root_accessible;
+        g_object_ref(root); /* Ensure caller gets a referenced object. */
+        g_mutex_unlock(&root_accessible_mutex);
+        return root;
     }
 
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
-    AtkObject *obj = ATK_OBJECT(acc);
+    if (!acc) {
+        g_warning("tk_create_root_accessible: Failed to create root accessible object");
+        g_mutex_unlock(&root_accessible_mutex);
+        return NULL;
+    }
 
+    AtkObject *obj = ATK_OBJECT(acc);
     atk_object_initialize(obj, NULL);
     atk_object_set_role(obj, ATK_ROLE_APPLICATION);
 
@@ -1424,16 +1441,14 @@ AtkObject *tk_create_root_accessible(void) {
     name_data->name = "Tk Application";
     RunOnMainThread(ThreadSafe_SetName, name_data);
 
-    /* Ensure root is registered in the ATK map. */
+    /* Ensure root is registered in the ATK map with a permanent reference. */
     InitAtkTkMapping();
-    g_object_ref(obj); /* Permanent reference. */
-
-    g_mutex_lock(&root_accessible_mutex);
+    g_object_ref(obj); /* Permanent reference for application lifetime. */
     tk_root_accessible = obj;
     g_hash_table_insert(tk_to_atk_map, NULL, obj);
-    g_mutex_unlock(&root_accessible_mutex);
 
-    return obj;
+    g_mutex_unlock(&root_accessible_mutex);
+    return g_object_ref(obj); /* Return a referenced object. */
 }
 
 
@@ -1918,7 +1933,7 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
  */
 
 #ifdef USE_ATK
-int TkAtkAccessibility_Init(Tcl_Interp *interp) 
+iint TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
     /* Initialize mutexes for thread safety. */
     g_mutex_init(&toplevel_list_mutex);
@@ -1931,15 +1946,15 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Initialize GObject type system (noop since GLib 2.36). */
     g_type_init();
-    
-    /* Now create the root accessible object. */
+
+    /* Create the root accessible object first. */
     AtkObject *root = tk_create_root_accessible();
     if (!root) {
         Tcl_SetResult(interp, "Failed to initialize root accessible object", TCL_STATIC);
         return TCL_ERROR;
     }
 
-    /* Initialize ATK bridge BEFORE creating any AtkObjects besides the root. */
+    /* Initialize ATK bridge AFTER creating the root. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
         Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
         return TCL_ERROR;
@@ -1977,7 +1992,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     signal_data->signal_name = "children-changed";
     RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
 
-    g_main_context_iteration(NULL, TRUE); // Flush
+    g_main_context_iteration(NULL, TRUE); /* Flush. */
 
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
@@ -1991,8 +2006,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
-
 #else
 /* No ATK found. */
 int TkAtkAccessibility_Init(Tcl_Interp *interp) 
