@@ -310,7 +310,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Functions to initialize and manage the parent Atk class and object instances.
  */
 
-static void tk_atk_accessible_init(TkAtkAccessible *self)
+    static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
     if (!g_type_is_a(TK_ATK_TYPE_ACCESSIBLE, ATK_TYPE_OBJECT)) {
         g_error("TK_ATK_TYPE_ACCESSIBLE is not properly registered");
@@ -1370,31 +1370,60 @@ static void InitAtkTkMapping(void)
 
 static void RegisterAtkObjectForTkWindow_core(Tk_Window tkwin, AtkObject *atkobj) 
 {
-    if (!tkwin || !atkobj) return; 
+    if (!tkwin || !atkobj) {
+        g_warning("RegisterAtkObjectForTkWindow_core: Invalid tkwin or atkobj");
+        return;
+    }
     InitAtkTkMapping();
+    if (!tk_to_atk_map) {
+        g_warning("RegisterAtkObjectForTkWindow_core: tk_to_atk_map is NULL");
+        return;
+    }
     g_mutex_lock(&atk_map_mutex);
     g_object_ref(atkobj);
     g_hash_table_insert(tk_to_atk_map, tkwin, atkobj);
     g_mutex_unlock(&atk_map_mutex);
+    g_debug("RegisterAtkObjectForTkWindow_core: Registered atkobj %p for tkwin %p", atkobj, tkwin);
 }
 
 static AtkObject *GetAtkObjectForTkWindow_core(Tk_Window tkwin) 
 {
-    if (!tk_to_atk_map || !tkwin) return NULL; 
+    if (!tk_to_atk_map) {
+        g_warning("GetAtkObjectForTkWindow_core: tk_to_atk_map is NULL");
+        return NULL;
+    }
+    
+    if (!tkwin) {
+        g_warning("GetAtkObjectForTkWindow_core: tkwin is NULL");
+        return NULL;
+    }
+    
     g_mutex_lock(&atk_map_mutex);
     AtkObject *obj = (AtkObject *)g_hash_table_lookup(tk_to_atk_map, tkwin);
     g_mutex_unlock(&atk_map_mutex);
+    if (!obj) {
+        g_warning("GetAtkObjectForTkWindow_core: No accessible object found for tkwin %p", tkwin);
+    }
     return obj;
 }
 
 static void UnregisterAtkObjectForTkWindow_core(Tk_Window tkwin) 
 {
-    if (tk_to_atk_map && tkwin) { 
-        g_mutex_lock(&atk_map_mutex);
-        g_hash_table_remove(tk_to_atk_map, tkwin);
-        g_mutex_unlock(&atk_map_mutex);
+    if (!tk_to_atk_map) {
+        g_warning("UnregisterAtkObjectForTkWindow_core: tk_to_atk_map is NULL");
+        return;
     }
+    if (!tkwin) {
+        g_warning("UnregisterAtkObjectForTkWindow_core: tkwin is NULL");
+        return;
+    }
+    g_mutex_lock(&atk_map_mutex);
+    if (g_hash_table_remove(tk_to_atk_map, tkwin)) {
+        g_debug("UnregisterAtkObjectForTkWindow_core: Unregistered tkwin %p", tkwin);
+    }
+    g_mutex_unlock(&atk_map_mutex);
 }
+
 /*
  * Root window setup. These are the foundation of the
  * accessibility object system in Atk. atk_get_root() is the
@@ -1419,8 +1448,9 @@ AtkObject *tk_create_root_accessible(void)
     g_mutex_lock(&root_accessible_mutex);
     if (tk_root_accessible) {
         AtkObject *root = tk_root_accessible;
-        g_object_ref(root); /* Ensure caller gets a referenced object. */
+        g_object_ref(root);
         g_mutex_unlock(&root_accessible_mutex);
+        g_debug("tk_create_root_accessible: Returning existing root %p", root);
         return root;
     }
 
@@ -1435,22 +1465,36 @@ AtkObject *tk_create_root_accessible(void)
     atk_object_initialize(obj, NULL);
     atk_object_set_role(obj, ATK_ROLE_APPLICATION);
 
-    /* Set application name on main thread. */
+    /* Set application name. */
     SetNameData *name_data = g_new(SetNameData, 1);
     name_data->obj = obj;
     name_data->name = "Tk Application";
     RunOnMainThread(ThreadSafe_SetName, name_data);
 
-    /* Ensure root is registered in the ATK map with a permanent reference. */
+    /* Register with ATK map. */
     InitAtkTkMapping();
-    g_object_ref(obj); /* Permanent reference for application lifetime. */
+    if (!tk_to_atk_map) {
+        g_warning("tk_create_root_accessible: tk_to_atk_map is NULL");
+        g_object_unref(obj);
+        g_mutex_unlock(&root_accessible_mutex);
+        return NULL;
+    }
+
+    g_object_ref(obj); // Permanent reference
     tk_root_accessible = obj;
     g_hash_table_insert(tk_to_atk_map, NULL, obj);
 
     g_mutex_unlock(&root_accessible_mutex);
-    return g_object_ref(obj); /* Return a referenced object. */
-}
+    g_debug("tk_create_root_accessible: Created and registered root %p", obj);
 
+    /* Ensure AT-SPI is aware of the root. */
+    SignalData *signal_data = g_new(SignalData, 1);
+    signal_data->obj = obj;
+    signal_data->signal_name = "children-changed";
+    RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
+
+    return g_object_ref(obj);
+}
 
 AtkObject *atk_get_root(void) 
 {
@@ -1459,11 +1503,23 @@ AtkObject *atk_get_root(void)
 
 /* Atk-Tk object creation with proper parent relationship. */
 static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window tkwin, const char *path) 
-{ 
+{
     if (!interp || !tkwin || !path) {
         g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path.");
         return NULL;
     }
+
+    /* Ensure root accessible exists. */
+    g_mutex_lock(&root_accessible_mutex);
+    if (!tk_root_accessible) {
+        tk_root_accessible = tk_create_root_accessible();
+        if (!tk_root_accessible) {
+            g_warning("TkCreateAccessibleAtkObject: Failed to create root accessible object");
+            g_mutex_unlock(&root_accessible_mutex);
+            return NULL;
+        }
+    }
+    g_mutex_unlock(&root_accessible_mutex);
 
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     if (!acc) {
@@ -1491,38 +1547,32 @@ static AtkObject *TkCreateAccessibleAtkObject_core(Tcl_Interp *interp, Tk_Window
         name_data->name = name;
         RunOnMainThread(ThreadSafe_SetName, name_data);
         g_free((gpointer)name);
-    } else {
-        g_warning("TkCreateAccessibleAtkObject: Failed to get name for object");
     }
 
-    if (tkwin) {
-        Tk_Window parent_tkwin = Tk_Parent(tkwin);
-        AtkObject *parent_obj = NULL;
+    /* Set parent, defaulting to tk_root_accessible. */
+    Tk_Window parent_tkwin = Tk_Parent(tkwin);
+    AtkObject *parent_obj = NULL;
+    if (parent_tkwin) {
+        parent_obj = GetAtkObjectForTkWindow_core(parent_tkwin);
+    }
+    if (!parent_obj) {
+        parent_obj = tk_root_accessible;
+    }
 
-        g_mutex_lock(&root_accessible_mutex);
-        if (parent_tkwin) {
-            parent_obj = GetAtkObjectForTkWindow_core(parent_tkwin);
-	} else {
-            parent_obj = tk_root_accessible;
-           
+    if (parent_obj) {
+        atk_object_set_parent(obj, parent_obj);
+        int index = GetAccessibleChildIndexFromTkList_core(parent_tkwin ? parent_tkwin : NULL, tkwin);
+        if (index < 0) {
+            index = g_list_length(toplevel_accessible_objects);
         }
-        g_mutex_unlock(&root_accessible_mutex);
 
-        if (parent_obj) {
-            atk_object_set_parent(obj, parent_obj);    
-            int index = GetAccessibleChildIndexFromTkList_core(parent_tkwin ? parent_tkwin : NULL, tkwin);
-            if (index < 0) {
-                index = -1;
-            }
-
-            SignalData *signal_data = g_new(SignalData, 1);
-            signal_data->obj = parent_obj;
-            signal_data->signal_name = "children-changed::add";
-            signal_data->data = GINT_TO_POINTER(index);
-            RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
-        } else {
-            g_warning("TkCreateAccessibleAtkObject: No parent object available");
-        }
+        SignalData *signal_data = g_new(SignalData, 1);
+        signal_data->obj = parent_obj;
+        signal_data->signal_name = "children-changed::add";
+        signal_data->data = GINT_TO_POINTER(index);
+        RunOnMainThread(ThreadSafe_EmitSignal, signal_data);
+    } else {
+        g_warning("TkCreateAccessibleAtkObject: No valid parent object found");
     }
 
     g_object_ref(obj);
@@ -1692,7 +1742,7 @@ static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc
     }
 
     Tk_Window path_tkwin = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-    if (path_tkwin == NULL) {
+    if (!path_tkwin) {
         Tcl_SetResult(ip, "Invalid window path", TCL_STATIC);
         return TCL_ERROR;
     }
@@ -1703,32 +1753,49 @@ static int EmitFocusChanged_core(ClientData clientData, Tcl_Interp *ip, int objc
         return TCL_ERROR;
     }
 
+    /* Ensure the object is focusable. */
+    AtkStateSet *state_set = tk_ref_state_set_core(acc);
+    if (!atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
+        atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+        SignalData *state_signal = g_new(SignalData, 1);
+        state_signal->obj = acc;
+        state_signal->signal_name = "state-change";
+        state_signal->data = (gpointer)"focusable";
+        RunOnMainThread(ThreadSafe_EmitSignal, state_signal);
+    }
+    g_object_unref(state_set);
+
+    /* Emit focus-event signal. */
     SignalData *focus_signal = g_new(SignalData, 1);
-    focus_signal->obj = G_OBJECT(acc);
+    focus_signal->obj = acc;
     focus_signal->signal_name = "focus-event";
     focus_signal->data = GINT_TO_POINTER(TRUE);
     RunOnMainThread(ThreadSafe_EmitSignal, focus_signal);
-    
+
+    /* Emit state-change: focused signal. */
     SignalData *state_signal = g_new(SignalData, 1);
-    state_signal->obj = G_OBJECT(acc);
+    state_signal->obj = acc;
     state_signal->signal_name = "state-change";
     state_signal->data = (gpointer)"focused";
     RunOnMainThread(ThreadSafe_EmitSignal, state_signal);
 
+    /* Notify parent of hierarchy change. */
     TkWindow *winPtr = (TkWindow *)path_tkwin;
     if (winPtr->parentPtr) {
         AtkObject *parent_acc = GetAtkObjectForTkWindow_core((Tk_Window)winPtr->parentPtr);
         if (parent_acc) {
+            int index = GetAccessibleChildIndexFromTkList_core((Tk_Window)winPtr->parentPtr, path_tkwin);
             SignalData *child_signal = g_new(SignalData, 1);
             child_signal->obj = parent_acc;
-            child_signal->signal_name = "children-changed";
+            child_signal->signal_name = "children-changed::add";
+            child_signal->data = GINT_TO_POINTER(index);
             RunOnMainThread(ThreadSafe_EmitSignal, child_signal);
         }
     }
 
+    g_debug("EmitFocusChanged_core: Emitted focus signals for tkwin %p, atkobj %p", path_tkwin, acc);
     return TCL_OK;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1871,20 +1938,7 @@ static int TkAtkAccessibleObjCmd_core(ClientData clientData, Tcl_Interp *interp,
  * Functions to support GLib / Tk event loop and threading 
  * integration. 
  */
-static void GtkEventLoop(ClientData clientData) 
-{
-    GMainContext *context = g_main_context_default();
-    if (!context) return;
-
-    /* Process pending events without blocking. */
-    while (g_main_context_pending(context)) {
-        g_main_context_iteration(context, FALSE);
-    }
-
-    /* Reschedule ourselves. */
-    Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
-}
-
+ 
 void InstallGtkEventLoop(void) 
 {
     GMainContext *context = g_main_context_default();
@@ -1893,9 +1947,39 @@ void InstallGtkEventLoop(void)
         return;
     }
 
+    if (!g_main_context_acquire(context)) {
+        g_warning("InstallGtkEventLoop: Failed to acquire GLib main context");
+        return;
+    }
+
     Tcl_CreateTimerHandler(10, GtkEventLoop, context);
+    g_debug("InstallGtkEventLoop: Installed GLib event loop");
 }
 
+static void GtkEventLoop(ClientData clientData) 
+{
+    GMainContext *context = (GMainContext *)clientData;
+    if (!context) {
+        g_warning("GtkEventLoop: Context is NULL");
+        return;
+    }
+
+    /* Process all pending events.*/
+    int iterations = 0;
+    while (g_main_context_pending(context) && iterations < 100) {
+        if (!g_main_context_iteration(context, FALSE)) {
+            break;
+        }
+        iterations++;
+    }
+    if (iterations >= 100) {
+        g_warning("GtkEventLoop: Excessive iterations (%d), possible event loop issue", iterations);
+    }
+
+    /* Reschedule the event loop. */
+    Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
+    g_debug("GtkEventLoop: Processed %d iterations", iterations);
+}
 void RunOnMainThread(void (*func)(void *), void *data) 
 {
     DispatcherJob *job = g_new(DispatcherJob, 1);
@@ -1933,7 +2017,7 @@ static gboolean RunOnMainThreadCallback(gpointer user_data)
  */
 
 #ifdef USE_ATK
-iint TkAtkAccessibility_Init(Tcl_Interp *interp) 
+int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
     /* Initialize mutexes for thread safety. */
     g_mutex_init(&toplevel_list_mutex);
@@ -1943,6 +2027,13 @@ iint TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Set required environment variables for ATK bridge. */
     g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
     g_setenv("NO_AT_BRIDGE", "0", FALSE);
+    
+    /* Initialize tk_to_atk_map early. */
+    InitAtkTkMapping();
+    if (!tk_to_atk_map) {
+        Tcl_SetResult(interp, "Failed to initialize tk_to_atk_map", TCL_STATIC);
+        return TCL_ERROR;
+    }
 
     /* Initialize GObject type system (noop since GLib 2.36). */
     g_type_init();
