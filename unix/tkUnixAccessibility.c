@@ -65,7 +65,6 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
-static void tk_atk_text_interface_init(AtkTextIface *iface);
 
 /* Lower-level functions providing integration between Atk objects and Tcl/Tk. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
@@ -407,7 +406,7 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
     }
     atk_object_set_name(acc, name);
     g_object_notify(G_OBJECT(acc), "accessible-name");
-    g_signal_emit_by_name(, "name-changed");
+    g_signal_emit_by_name(acc, "name-changed");
 }
 
 
@@ -671,7 +670,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     if (name) {
         tk_set_name(accessible, name);
         g_object_notify(G_OBJECT(accessible), "accessible-name");
-        g_signal_emit_by_name(, "name-changed");
+        g_signal_emit_by_name(accessible, "name-changed");
         g_free((gpointer)name); /* Free the string returned by tk_get_name. */
     }
 
@@ -757,7 +756,7 @@ static AtkObject *tk_util_get_root(void)
         /* Set an initial name for the root, can be updated later. */
         tk_set_name(tk_root_accessible, "Tk Application");
         g_object_notify(G_OBJECT(tk_root_accessible), "accessible-name");
-        g_signal_emit_by_name(, "name-changed");
+        g_signal_emit_by_name(tk_root_accessible, "name-changed");
     }
 
     return tk_root_accessible;
@@ -1141,7 +1140,7 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
 	if (name) {
 	    tk_set_name(atk_obj, name);
 	    g_object_notify(G_OBJECT(atk_obj), "accessible-name");
-	    g_signal_emit_by_name(_obj, "name-changed");
+	    g_signal_emit_by_name(atk_obj, "name-changed");
 	    g_free((gpointer)name); /* Free the string returned by tk_get_name. */
 	}
     }
