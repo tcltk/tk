@@ -602,26 +602,6 @@ int TkpPutRGBAImage(
  *      two functions are in the stubs table and therefore could be used by
  *      extensions.
  *
- *      The implementation here does not always work correctly when the source
- *      is a window.  The original version of this function relied on
- *      [NSBitmapImageRep initWithFocusedViewRect:view_rect] which was
- *      deprecated by Apple in OSX 10.14 and also required the use of other
- *      deprecated functions such as [NSView lockFocus]. Apple's suggested
- *      replacement is [NSView cacheDisplayInRect: toBitmapImageRep:] and that
- *      is being used here.  However, cacheDisplayInRect works by calling
- *      [NSView drawRect] after setting the current graphics context to be one
- *      which draws to a bitmap.  There are situations in which this can be
- *      used, e.g. when taking a screenshot of a window.  But it cannot be used
- *      as part of a normal display procedure, using the copy-modify-paste
- *      paradigm that is the basis of the explicit double-buffering.  Since the
- *      copy operation will call the same display procedure that is calling
- *      this function via XGetImage or XCopyArea, this would create an infinite
- *      recursion.
- *
- *      An alternative to the copy-modify-paste paradigm is to use GPU-based
- *      graphics composition, clipping to the specified rectangle.  That is
- *      the approach that must be followed by display procedures on macOS.
- *
  * Results:
  *	Returns an NSBitmapRep representing the image of the given rectangle of
  *      the given drawable. This object is retained. The caller is responsible
@@ -1059,7 +1039,8 @@ XCopyArea(
     CGRect dstRect;
 
     // XXXX Need to deal with pixmaps!
-
+    MacDrawable *srcDraw = (MacDrawable *)dst;
+    MacDrawable *dstDraw = (MacDrawable *)dst;
     NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
     NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
     CGRect srcBounds = [srcView bounds];
@@ -1092,18 +1073,32 @@ XCopyArea(
 	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
 	return BadDrawable;
     }
-
-    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height, &scaleFactor);
-
-    if (img) {
-	unsigned int w = (unsigned int) (CGImageGetWidth(img) / scaleFactor);
-	unsigned int h = (unsigned int) (CGImageGetHeight(img) / scaleFactor);
-	dstRect = CGRectMake(dst_x, dst_y, w, h);
-	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-		gc->foreground, gc->background, dstRect);
-	CFRelease(img);
+    
+    if ((srcDraw->flags & TK_IS_PIXMAP) && (dstDraw->flags & TK_IS_PIXMAP)){
+	// If source and destination are both pixmaps we don't need to scale.
+	CGRect srcRect = CGRectMake(src_x, src_y, width, height);
+	CGImageRef full = CreateCGImageFromPixmap(src);
+	img =  CGImageCreateWithImageInRect(full, srcRect);
+	if (img) {
+	    dstRect = CGRectMake(dst_x, dst_y, width, height);
+	    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
+				gc->foreground, gc->background, dstRect);
+	    CFRelease(img);
+	} else {
+	    TkMacOSXDbgMsg("Failed to construct CGImage.");
+	}
     } else {
-	TkMacOSXDbgMsg("Failed to construct CGImage.");
+	img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height, &scaleFactor);
+	if (img) {
+	    unsigned int w = (unsigned int) (CGImageGetWidth(img) / scaleFactor);
+	    unsigned int h = (unsigned int) (CGImageGetHeight(img) / scaleFactor);
+	    dstRect = CGRectMake(dst_x, dst_y, w, h);
+	    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
+				gc->foreground, gc->background, dstRect);
+	    CFRelease(img);
+	} else {
+	    TkMacOSXDbgMsg("Failed to construct CGImage.");
+	}
     }
 
     TkMacOSXRestoreDrawingContext(&dc);
