@@ -65,7 +65,6 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
-static gchar *tk_get_text(AtkText *text);
 static void tk_atk_text_interface_init(AtkTextIface *iface);
 
 /* Lower-level functions providing integration between Atk objects and Tcl/Tk. */
@@ -82,7 +81,6 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
-static gboolean delayed_init(gpointer user_data);
 
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -140,7 +138,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Map Atk component interface to Tk.
  */
  
-    static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
+static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
@@ -258,6 +256,8 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
     if (!win) return ATK_ROLE_UNKNOWN;
 
+    AtkObject *obj = GetAtkObjectForTkWindow(win);
+
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
     AtkRole role = ATK_ROLE_UNKNOWN;
@@ -286,6 +286,9 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
     if (Tk_IsTopLevel(win)) {
 	role = ATK_ROLE_WINDOW;
     }
+    
+    /* Notify system of role attribute. */
+    g_object_notify(G_OBJECT(obj), "accessible-role");
     return role;
 }
 
@@ -404,6 +407,7 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
     }
     atk_object_set_name(acc, name);
     g_object_notify(G_OBJECT(acc), "accessible-name");
+    g_signal_emit_by_name(, "name-changed");
 }
 
 
@@ -424,6 +428,8 @@ static const gchar *tk_get_description(AtkObject *obj)
 
     const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (result) {
+        g_object_notify(G_OBJECT(obj), "accessible-description");
+        g_signal_emit_by_name(obj, "description-changed");
         return g_strdup(result); /* ATK expects a newly allocated string. */
     }
     return NULL;
@@ -473,6 +479,7 @@ static void tk_get_current_value(AtkValue *obj, GValue *value)
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     g_value_init(value, G_TYPE_STRING);
     g_value_set_string(value, result ? result : "");
+    g_object_notify(G_OBJECT(atkObj), "accessible-value");
 }
 
 static void tk_atk_value_interface_init(AtkValueIface *iface)
@@ -503,58 +510,6 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
     return set;
 }
 
-/* Function to retrieve text from Tk widget. */
-
-static gchar* tk_get_text(AtkText *text)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible*)text;
-    Tcl_Interp *interp = acc->interp;
-    Tk_Window tkwin = acc->tkwin;
-    const char *path = acc->path;
-
-    if (!interp || !tkwin || !path) {
-        g_warning("Invalid interp, tkwin, or path in tk_get_text");
-        return g_strdup("");
-    }
-
-    AtkRole role = GetAtkRoleForWidget(tkwin);
-    if (role != ATK_ROLE_ENTRY && role != ATK_ROLE_TEXT) {
-        /* Only ENTRY and TEXT roles support text retrieval */
-        g_warning("Text retrieval not supported for widget %s with role %d", path, role);
-        return g_strdup("");
-    }
-
-    Tcl_DString cmd;
-    Tcl_DStringInit(&cmd);
-    if (role == ATK_ROLE_ENTRY) {
-        Tcl_DStringAppend(&cmd, Tk_PathName(tkwin), -1);
-        Tcl_DStringAppend(&cmd, " get", -1);
-    } else if (role == ATK_ROLE_TEXT) {
-        Tcl_DStringAppend(&cmd, "::tk::accessible::_gettext ", -1);
-        Tcl_DStringAppend(&cmd, path, -1);
-    }
-
-    if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
-        g_warning("Failed to execute text retrieval for %s: %s", path, Tcl_GetStringResult(interp));
-        Tcl_DStringFree(&cmd);
-        return g_strdup("");
-    }
-
-    const char *result = Tcl_GetStringResult(interp);
-    gchar *ret = g_strdup(result && *result ? result : "");
-    Tcl_DStringFree(&cmd);
-    return ret;
-}
-
-static void tk_atk_text_interface_init(AtkTextIface *iface)
-{
-    iface->get_text = tk_get_text;
-    /* Stub out methods that may cause assertions. */
-    iface->get_text_at_offset = NULL;
-    iface->get_range_extents = NULL;
-    iface->get_character_count = NULL;
-    /* Add other AtkText methods as needed, setting to NULL or safe implementations */
-}
 
 /*
  * Functions that implement actions (i.e. button press)
@@ -647,10 +602,10 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 	 */
         if (Tk_IsTopLevel(self->tkwin)) {
             toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
-            /* 
+	    /* 
 	     * No need to unref here, as the object is being finalized,
 	     * and the list only held a pointer, not an owning ref.
-             * If the list *did* own a ref, it would be unreffed when removed from list.
+	     * If the list *did* own a ref, it would be unreffed when removed from list.
 	     */
         }
         /* Unregister from the Tk_Window to AtkObject map. */
@@ -693,6 +648,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     /* Set proper parent-child relationship. */
     atk_object_set_parent(accessible, tk_root_accessible);
+    g_object_notify(G_OBJECT(accessible), "accessible-parent");
 
     /* 
      * Add to toplevel list if not already present.
@@ -702,7 +658,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
 
-        /* 
+	/* 
 	 * Critical: Emit children-changed signal for AT-SPI update.
 	 * The index should be the position where it was added.
 	 */
@@ -714,6 +670,8 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     const gchar *name = tk_get_name(accessible); 
     if (name) {
         tk_set_name(accessible, name);
+        g_object_notify(G_OBJECT(accessible), "accessible-name");
+        g_signal_emit_by_name(, "name-changed");
         g_free((gpointer)name); /* Free the string returned by tk_get_name. */
     }
 
@@ -754,6 +712,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 	     * For simplicity, we'll just set the parent and emit 'add' for the new parent.
 	     */
             atk_object_set_parent(child_obj, parent_obj);
+	    g_object_notify(G_OBJECT(child_obj), "accessible-parent");
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
         }
 
@@ -761,6 +720,8 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         const gchar *child_name = tk_get_name(child_obj);
         if (child_name) {
             tk_set_name(child_obj, child_name);
+            g_object_notify(G_OBJECT(child_obj), "accessible-name");
+            g_signal_emit_by_name(child_obj, "name-changed");
             g_free((gpointer)child_name);
         }
 
@@ -791,8 +752,12 @@ static AtkObject *tk_util_get_root(void)
 
         /* Set proper application name. */
 	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+        g_object_notify(G_OBJECT(tk_root_accessible), "accessible-role");
+
         /* Set an initial name for the root, can be updated later. */
         tk_set_name(tk_root_accessible, "Tk Application");
+        g_object_notify(G_OBJECT(tk_root_accessible), "accessible-name");
+        g_signal_emit_by_name(, "name-changed");
     }
 
     return tk_root_accessible;
@@ -820,11 +785,14 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     /* Set initial accessibility properties (role and name). */
     AtkObject *obj = ATK_OBJECT(acc);
     atk_object_set_role(obj, GetAtkRoleForWidget(tkwin));
+    g_object_notify(G_OBJECT(obj), "accessible-role");
 
     /* Initial name setting for the object. */
     const gchar *name = tk_get_name(obj);
     if (name) {
         tk_set_name(obj, name);
+        g_object_notify(G_OBJECT(obj), "accessible-name");
+        g_signal_emit_by_name(obj, "name-changed");
         g_free((gpointer)name); /* Free the string returned by tk_get_name. */
     }
 
@@ -842,6 +810,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 
         if (parent_obj) {
             atk_object_set_parent(obj, parent_obj);
+            g_object_notify(G_OBJECT(obj), "accessible-parent");
 	    /* 
 	     * Emit children-changed signal for the parent to update AT-SPI.
 	     * The index here is an approximation; a more precise index would require
@@ -939,23 +908,6 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
     }
 }
 
-/*Helper function for screen reader initialization. */
-static gboolean delayed_init(gpointer user_data) 
-{
-    Tcl_Interp *interp = (Tcl_Interp *)user_data; 
-
-    if (!tk_root_accessible) return FALSE;
-
-    /* Re-emit all structure signals for Orca. */
-    g_signal_emit_by_name(tk_root_accessible, "children-changed", 0, NULL);
-
-    /* Notify that the application is now fully accessible. */
-    g_signal_emit_by_name(tk_root_accessible, "state-change", "enabled", TRUE);
-    g_signal_emit_by_name(tk_root_accessible, "state-change", "sensitive", TRUE);
-
-    return FALSE;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -999,6 +951,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     GValue gval = G_VALUE_INIT;
     tk_get_current_value(ATK_VALUE(acc), &gval);
+    g_object_notify(G_OBJECT(acc), "accessible-value");
     g_signal_emit_by_name(G_OBJECT(acc), "value-changed", &gval);
     g_value_unset(&gval); /* Unset the GValue to free any allocated memory. */
 
@@ -1187,6 +1140,8 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
 	const gchar *name = tk_get_name(atk_obj);
 	if (name) {
 	    tk_set_name(atk_obj, name);
+	    g_object_notify(G_OBJECT(atk_obj), "accessible-name");
+	    g_signal_emit_by_name(_obj, "name-changed");
 	    g_free((gpointer)name); /* Free the string returned by tk_get_name. */
 	}
     }
@@ -1285,20 +1240,22 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Initialize Glib type system first. */
     g_type_init();
 
-    /* Initialize AT-SPI bridge. */
-    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-	g_warning("Failed to initialize AT-SPI bridge\n");
-	return TCL_ERROR;
-    }
-
     /* Create and configure root object. */
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
 	const gchar *name = tk_get_name(tk_root_accessible);
 	if (name) {
 	    tk_set_name(tk_root_accessible, name); /* Set the name and notify. */
+	    g_object_notify(G_OBJECT(tk_root_accessible), "accessible-name");
+	    g_signal_emit_by_name(tk_root_accessible, "name-changed");
 	    g_free((gpointer)name); /* Free the string returned by tk_get_name. */
 	}
+    }
+
+    /* Initialize AT-SPI bridge. */
+    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
+	g_warning("Failed to initialize AT-SPI bridge\n");
+	return TCL_ERROR;
     }
 
     /* Initialize mapping table. */
@@ -1330,17 +1287,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Install event loop integration. */
     InstallGtkEventLoop();
 
-    /* 
-     * Add delay for screen reader connection.
-     * Pass the interp to delayed_init for potential future use, 
-     * though not used in current delayed_init.
-     */
-    if (IsScreenReaderRunning(NULL, interp, 0, NULL)) {
-	g_timeout_add(500, (GSourceFunc)delayed_init, interp);
-    } else {
-	delayed_init(interp); /* Call directly if no screen reader. */
-    }
-
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
 			 TkAtkAccessibleObjCmd, NULL, NULL);
@@ -1352,8 +1298,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 			 IsScreenReaderRunning, NULL, NULL);
 
     /* 
-     * Force initial hierarchy update. This is often done by delayed_init, 
-     * but can be here too for immediate setup.
+     * Force initial hierarchy update. 
      */
     g_signal_emit_by_name(tk_root_accessible, "children-changed", 0, NULL);
 
