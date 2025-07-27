@@ -90,6 +90,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -485,7 +486,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
-    if (!acc || !acc->tkwin) return set; 
+    if (!acc || !acc->tkwin) return set;
 
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
@@ -499,10 +500,13 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             atk_state_set_add_state(set, ATK_STATE_SHOWING);
         }
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+        /* Check if the widget has focus */
+        if (TkGetFocusWin((TkWindow *)acc->tkwin) == (TkWindow *)acc->tkwin) {
+            atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+        }
     }
     return set;
 }
-
 
 /*
  * Functions that implement actions (i.e. button press)
@@ -588,29 +592,18 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 {
     TkAtkAccessible *self = (TkAtkAccessible*)gobject;
 
-    if (self->tkwin) { 
-	/*
-	 * Only attempt removal if tkwin is still valid.
-	 * Remove from toplevel list if it was a toplevel.
-	 */
+    if (self->tkwin) {
         if (Tk_IsTopLevel(self->tkwin)) {
             toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
-	    /* 
-	     * No need to unref here, as the object is being finalized,
-	     * and the list only held a pointer, not an owning ref.
-	     * If the list *did* own a ref, it would be unreffed when
-	     * removed from list.
-	     */
+            g_debug("Removed toplevel %s from toplevel_accessible_objects", Tk_PathName(self->tkwin));
         }
-        /* Unregister from the Tk_Window to AtkObject map. */
         UnregisterAtkObjectForTkWindow(self->tkwin);
+        g_debug("Unregistered Tk_Window %s from tk_to_atk_map", Tk_PathName(self->tkwin));
     }
 
-    /* Free path and cached name. */
     g_free(self->path);
     g_free(self->cached_name);
 
-    /* Call parent finalize last. */
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
 
@@ -633,46 +626,49 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible)
 {
-    if (!accessible) return;
+    if (!accessible || !tkwin) return;
 
-    /* Ensure root exists. */
+    /* Ensure root exists */
     if (!tk_root_accessible) {
         tk_root_accessible = tk_util_get_root();
+    }
+
+    /* Check if already registered in tk_to_atk_map. */
+    AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
+    if (existing && existing != accessible) {
+        g_warning("Toplevel %s already registered with different AtkObject", Tk_PathName(tkwin));
+        return;
     }
 
     /* Set proper parent-child relationship. */
     atk_object_set_parent(accessible, tk_root_accessible);
 
-    /* 
-     * Add to toplevel list if not already present.
-     * The list now holds a non-owning reference. 
-     * Ownership is with tk_to_atk_map. 
-     */
+    /* Add to toplevel list if not already present. */
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
-
-	/* 
-	 * Critical: Emit children-changed signal for AT-SPI update.
-	 * The index should be the position where it was added.
-	 */
         int index = g_list_length(toplevel_accessible_objects) - 1;
-        g_signal_emit_by_name((AtkObject*)tk_root_accessible, "children-changed::add", index, accessible);
+        g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
+        g_debug("Registered toplevel %s at index %d", Tk_PathName(tkwin), index);
+    } else {
+        g_debug("Toplevel %s already in toplevel_accessible_objects", Tk_PathName(tkwin));
     }
 
-    /* Explicitly set and notify accessible name */
-    const gchar *name = tk_get_name(accessible); 
+    /* Set and notify accessible name */
+    const gchar *name = tk_get_name(accessible);
     if (name) {
         tk_set_name(accessible, name);
-        g_free((gpointer)name); /* Free the string returned by tk_get_name. */
+        g_free((gpointer)name);
     }
 
-    /* Register child widgets recursively. */
+    /* Register child widgets.*/
     RegisterChildWidgets(interp, tkwin, accessible);
 }
+
 
 /*
  * Function to recursively register child widgets using childList.
  */
+ 
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj)
 {
     if (!tkwin || !parent_obj) return;
@@ -693,17 +689,30 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
             RegisterAtkObjectForTkWindow(child, child_obj);
             TkAtkAccessible_RegisterEventHandlers(child, (TkAtkAccessible *)child_obj);
 
-            /* Set a default role if none found. */
             AtkRole role = GetAtkRoleForWidget(child);
             if (role == ATK_ROLE_UNKNOWN) {
                 atk_object_set_role(child_obj, ATK_ROLE_PANEL);
             }
+
+            AtkStateSet *state_set = atk_state_set_new();
+            if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
+                role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
+                role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
+                role == ATK_ROLE_SPIN_BUTTON) {
+                atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+            }
+            g_object_unref(state_set);
+
+            g_debug("Registered child widget %s with role %d", Tk_PathName(child), role);
+        } else {
+            g_debug("Child widget %s already registered", Tk_PathName(child));
         }
 
         AtkObject *current_parent = atk_object_get_parent(child_obj);
         if (current_parent != parent_obj) {
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
+            g_debug("Set parent for %s, emitted children-changed::add at index %d", Tk_PathName(child), index);
         }
 
         const gchar *child_name = tk_get_name(child_obj);
@@ -807,7 +816,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
  * Functions to integrate Tk and Gtk event loops.
  */
 
-void InstallGtkEventLoop(void) 
+void InstallGtkEventLoop(void)
 {
     GMainContext *context = g_main_context_default();
     if (!context) {
@@ -820,26 +829,26 @@ void InstallGtkEventLoop(void)
         return;
     }
 
-    Tcl_CreateTimerHandler(50, GtkEventLoop, context);
+    Tcl_CreateTimerHandler(10, GtkEventLoop, context); /* Reduced interval for responsiveness */
     g_debug("InstallGtkEventLoop: Installed GLib event loop");
 }
 
-static void GtkEventLoop(ClientData clientData) 
+static void GtkEventLoop(ClientData clientData)
 {
     GMainContext *context = (GMainContext *)clientData;
     if (!context) return;
 
-    /* Process GLib events immediately. */
+    /* Process GLib events with a strict limit to avoid starving Tcl */
     int iterations = 0;
-    while (g_main_context_pending(context) && iterations < 100) {
+    while (g_main_context_pending(context) && iterations < 10) { /* Reduced limit */
         if (!g_main_context_iteration(context, FALSE)) break;
         iterations++;
+        g_debug("GtkEventLoop: Processed GLib iteration %d", iterations);
     }
 
-    /* Reschedule the event loop. */
-    Tcl_CreateTimerHandler(50, GtkEventLoop, clientData);
+    /* Reschedule with a shorter interval */
+    Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
 }
-
 
 /*
  * Functions to map Tk window to its corresponding Atk object.
@@ -936,10 +945,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
  *
  * EmitFocusChanged --
  *
- * Accessibility system notification when selection changed.
+ * Accessibility system notification when focus changed.
  *
  * Results:
- *	Accessibility system is made aware when a selection is changed.
+ *	Accessibility system is made aware when focus is changed.
  *
  * Side effects:
  *	None.
@@ -947,34 +956,37 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
  *----------------------------------------------------------------------
  */
 
-static int EmitFocusChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_Obj *const objv[])
+static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void) clientData;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv, "window");
+        return TCL_ERROR;
     }
 
-    Tk_Window path_tkwin = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    Tk_Window path_tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), Tk_MainWindow(interp));
     if (path_tkwin == NULL) {
-	Tcl_SetResult(ip, "Invalid window path", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(interp, "Invalid window path", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     AtkObject *acc = GetAtkObjectForTkWindow(path_tkwin);
     if (!acc) {
-	Tcl_SetResult(ip, "No accessible object for window", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(interp, "No accessible object for window", TCL_STATIC);
+        return TCL_ERROR;
     }
 
-    /* Emit focus-event with TRUE to indicate focus gained. */
+    /* Ensure the widget is focusable */
+    AtkStateSet *state_set = atk_state_set_new();
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
     g_signal_emit_by_name(acc, "focus-event", TRUE);
     g_signal_emit_by_name(acc, "state-change", "focused", TRUE);
+    g_object_unref(state_set);
 
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1034,13 +1046,18 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  */
 
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) {
-    if (!tkwin || !tkAccessible) return; 
+    if (!tkwin || !tkAccessible) return;
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-			  TkAtkAccessible_DestroyHandler, tkAccessible);
+                          TkAtkAccessible_DestroyHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-			  TkAtkAccessible_NameHandler, tkAccessible);
+                          TkAtkAccessible_NameHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, MapNotify,
+                          TkAtkAccessible_MapHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, UnmapNotify,
+                          TkAtkAccessible_UnmapHandler, tkAccessible);
+    Tk_CreateEventHandler(tkwin, FocusChangeMask,
+                          TkAtkAccessible_FocusHandler, tkAccessible);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1096,22 +1113,29 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
 {
-    if (eventPtr->type != ConfigureNotify) {
-	return;
-    }
+    if (eventPtr->type != ConfigureNotify) return;
 
     TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-    if (!tkAccessible || !tkAccessible->tkwin) return;
+    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
 
-    AtkObject *atk_obj = (AtkObject*) tkAccessible;
-    if (atk_obj) {
-	/* Get the current name and then set it to trigger notification. */
-	const gchar *name = tk_get_name(atk_obj);
-	if (name) {
-	    tk_set_name(atk_obj, name);
-	    g_free((gpointer)name); /* Free the string returned by tk_get_name. */
-	}
+    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    RegisterChildWidgets(tkAccessible->interp, tkAccessible->tkwin, atk_obj);
+    const gchar *name = tk_get_name(atk_obj);
+    if (name) {
+        tk_set_name(atk_obj, name);
+        g_free((gpointer)name);
     }
+    AtkStateSet *state_set = atk_state_set_new();
+    if (Tk_IsMapped(tkAccessible->tkwin)) {
+        atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+        g_signal_emit_by_name(atk_obj, "state-change", "visible", TRUE);
+        g_signal_emit_by_name(atk_obj, "state-change", "showing", TRUE);
+    } else {
+        atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
+        g_signal_emit_by_name(atk_obj, "state-change", "showing", FALSE);
+    }
+    g_object_unref(state_set);
 }
 
 /*
@@ -1177,6 +1201,41 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
     g_object_unref(state_set);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAtkAccessible_FocusHandler --
+ *
+ * Align Atk and Tk focus.
+ *
+ * Results:
+ *	Focus updated.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
+{
+    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
+    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
+
+    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    AtkStateSet *state_set = atk_state_set_new();
+
+    if (eventPtr->type == FocusIn) {
+        atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
+        g_signal_emit_by_name(atk_obj, "focus-event", TRUE);
+        g_signal_emit_by_name(atk_obj, "state-change", "focused", TRUE);
+    } else if (eventPtr->type == FocusOut) {
+        atk_state_set_remove_state(state_set, ATK_STATE_FOCUSED);
+        g_signal_emit_by_name(atk_obj, "focus-event", FALSE);
+        g_signal_emit_by_name(atk_obj, "state-change", "focused", FALSE);
+    }
+
+    g_object_unref(state_set);
+}
 
 /*
  *----------------------------------------------------------------------
