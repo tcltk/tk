@@ -50,7 +50,7 @@ static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 /* Atk/Tk glue functions. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
 static gint tk_get_n_children(AtkObject *obj);
-static AtkObject *tk_ref_child(AtkObject *obj, guint i);
+static AtkObject *tk_ref_child(AtkObject *obj, gint i);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
 static AtkRole tk_get_role(AtkObject *obj);
 static const gchar *tk_get_name(AtkObject *obj);
@@ -137,7 +137,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * Map Atk component interface to Tk.
  */
  
-static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
+    static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
@@ -208,14 +208,15 @@ static gint tk_get_n_children(AtkObject *obj)
 }
 
 
-static AtkObject *tk_ref_child(AtkObject *obj, guint i)
+static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
 
     if (!acc) return NULL;
 
     if (obj == tk_root_accessible) {
-        if (i >= g_list_length(toplevel_accessible_objects)) {
+        if (i >= (gint)g_list_length(toplevel_accessible_objects))
+ {
             return NULL;
         }
 	/* Get accessible object from toplevel list. */
@@ -231,13 +232,13 @@ static AtkObject *tk_ref_child(AtkObject *obj, guint i)
     }
 
     /* Return i-th direct child with accessible object. */
-    int index = 0;
+    guint index = 0;
     TkWindow *winPtr = (TkWindow *)acc->tkwin;
     TkWindow *childPtr;
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
         if (child_obj) {
-            if (index == i) {
+	    if (i >= 0 && (guint)i == index) {
                 g_object_ref(child_obj); /* Increment ref count as per ATK interface contract. */
                 return child_obj;
             }
@@ -254,8 +255,6 @@ static AtkObject *tk_ref_child(AtkObject *obj, guint i)
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
     if (!win) return ATK_ROLE_UNKNOWN;
-
-    AtkObject *obj = GetAtkObjectForTkWindow(win);
 
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
@@ -597,7 +596,8 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 	    /* 
 	     * No need to unref here, as the object is being finalized,
 	     * and the list only held a pointer, not an owning ref.
-	     * If the list *did* own a ref, it would be unreffed when removed from list.
+	     * If the list *did* own a ref, it would be unreffed when
+	     * removed from list.
 	     */
         }
         /* Unregister from the Tk_Window to AtkObject map. */
@@ -696,8 +696,8 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         AtkObject *current_parent = atk_object_get_parent(child_obj);
         if (current_parent != parent_obj) {
 	    /* 
-         * If the child was previously parented to something else or unparented,
-         * emit a remove signal from the old parent first if known.
+	     * If the child was previously parented to something else or unparented,
+	     * emit a remove signal from the old parent first if known.
 	     * For simplicity, we'll just set the parent and emit 'add' for the new parent.
 	     */
             atk_object_set_parent(child_obj, parent_obj);
@@ -737,7 +737,7 @@ static AtkObject *tk_util_get_root(void)
         atk_object_initialize(tk_root_accessible, NULL);
 
         /* Set proper application name. */
-		atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
 
         /* Set an initial name for the root, can be updated later. */
         tk_set_name(tk_root_accessible, "Tk Application");
@@ -830,14 +830,14 @@ static void GtkEventLoop(ClientData clientData)
     GMainContext *context = (GMainContext *)clientData;
     if (!context) return;
 
-/* Process GLib events immediately. */
+    /* Process GLib events immediately. */
     int iterations = 0;
-    while (g_main_context_pending(context) && iterations < 25) {
+    while (g_main_context_pending(context) && iterations < 100) {
         if (!g_main_context_iteration(context, FALSE)) break;
         iterations++;
     }
 
-     /* Reschedule the event loop. */
+    /* Reschedule the event loop. */
     Tcl_CreateTimerHandler(50, GtkEventLoop, clientData);
 }
 
@@ -1201,13 +1201,6 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    /* Set environment variables for proper AT-SPI operation. */
-    g_setenv("GTK_MODULES", "gail:atk-bridge", FALSE);
-    g_setenv("NO_AT_BRIDGE", "0", FALSE);
-
-    /* Initialize Glib type system first. */
-    g_type_init();
-
     /* Create and configure root object. */
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
