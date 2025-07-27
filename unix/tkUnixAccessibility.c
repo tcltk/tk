@@ -74,6 +74,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 static void GtkEventLoop(ClientData clientData);
+void GtkIdleProc(ClientData data);
 void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
@@ -838,10 +839,19 @@ static void GtkEventLoop(ClientData clientData)
         if (!g_main_context_iteration(context, FALSE)) break;
         iterations++;
     }
+    
+    /* Idle handler. */
+    Tcl_DoWhenIdle(GtkIdleProc, context);
 
     /* Reschedule with a short interval. */
     Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
 }
+
+void GtkIdleProc(ClientData data) 
+{
+    GtkEventLoop(data);
+}
+
 
 /*
  * Functions to map Tk window to its corresponding Atk object.
@@ -1363,13 +1373,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
             RegisterToplevelWindow(interp, mainWin, (AtkObject*)main_acc);
             g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, (AtkObject*)main_acc);
         }
-    }
-
-    /* Process pending GLib events with high iteration limit. */
-    int iterations = 0;
-    while (g_main_context_pending(NULL) && iterations < 1000) {
-        g_main_context_iteration(NULL, FALSE);
-        iterations++;
     }
 
     /* Install event loop integration. */
