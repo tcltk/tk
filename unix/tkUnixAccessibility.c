@@ -500,7 +500,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             atk_state_set_add_state(set, ATK_STATE_SHOWING);
         }
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-        /* Check if the widget has focus */
+        /* Check if the widget has focus. */
         if (TkGetFocusWin((TkWindow *)acc->tkwin) == (TkWindow *)acc->tkwin) {
             atk_state_set_add_state(set, ATK_STATE_FOCUSED);
         }
@@ -595,10 +595,8 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     if (self->tkwin) {
         if (Tk_IsTopLevel(self->tkwin)) {
             toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
-            g_debug("Removed toplevel %s from toplevel_accessible_objects", Tk_PathName(self->tkwin));
         }
         UnregisterAtkObjectForTkWindow(self->tkwin);
-        g_debug("Unregistered Tk_Window %s from tk_to_atk_map", Tk_PathName(self->tkwin));
     }
 
     g_free(self->path);
@@ -648,9 +646,8 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
         int index = g_list_length(toplevel_accessible_objects) - 1;
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
-        g_debug("Registered toplevel %s at index %d", Tk_PathName(tkwin), index);
     } else {
-        g_debug("Toplevel %s already in toplevel_accessible_objects", Tk_PathName(tkwin));
+        g_warning("Toplevel %s already in toplevel_accessible_objects", Tk_PathName(tkwin));
     }
 
     /* Set and notify accessible name */
@@ -703,18 +700,16 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
             }
             g_object_unref(state_set);
 
-            g_debug("Registered child widget %s with role %d", Tk_PathName(child), role);
         } else {
-            g_debug("Child widget %s already registered", Tk_PathName(child));
+            g_warning("Child widget %s already registered", Tk_PathName(child));
         }
 
         AtkObject *current_parent = atk_object_get_parent(child_obj);
         if (current_parent != parent_obj) {
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
-            g_debug("Set parent for %s, emitted children-changed::add at index %d", Tk_PathName(child), index);
-        }
-
+            }
+           
         const gchar *child_name = tk_get_name(child_obj);
         if (child_name) {
             tk_set_name(child_obj, child_name);
@@ -829,8 +824,7 @@ void InstallGtkEventLoop(void)
         return;
     }
 
-    Tcl_CreateTimerHandler(10, GtkEventLoop, context); /* Reduced interval for responsiveness */
-    g_debug("InstallGtkEventLoop: Installed GLib event loop");
+    Tcl_CreateTimerHandler(10, GtkEventLoop, context);
 }
 
 static void GtkEventLoop(ClientData clientData)
@@ -843,10 +837,9 @@ static void GtkEventLoop(ClientData clientData)
     while (g_main_context_pending(context) && iterations < 10) { /* Reduced limit */
         if (!g_main_context_iteration(context, FALSE)) break;
         iterations++;
-        g_debug("GtkEventLoop: Processed GLib iteration %d", iterations);
     }
 
-    /* Reschedule with a shorter interval */
+    /* Reschedule with a short interval. */
     Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
 }
 
@@ -977,7 +970,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
         return TCL_ERROR;
     }
 
-    /* Ensure the widget is focusable */
+    /* Ensure the widget is focusable. */
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
@@ -1372,7 +1365,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         }
     }
 
-    /* Process pending GLib events with higher iteration limit */
+    /* Process pending GLib events with high iteration limit. */
     int iterations = 0;
     while (g_main_context_pending(NULL) && iterations < 1000) {
         g_main_context_iteration(NULL, FALSE);
