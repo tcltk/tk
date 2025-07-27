@@ -88,6 +88,8 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -216,9 +218,9 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 
     if (obj == tk_root_accessible) {
         if (i >= (gint)g_list_length(toplevel_accessible_objects))
- {
-            return NULL;
-        }
+	    {
+		return NULL;
+	    }
 	/* Get accessible object from toplevel list. */
         AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
         if (child) {
@@ -677,46 +679,43 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *childPtr;
-    int index = 0; /* Track child index for children-changed::add signal. */
+    int index = 0;
 
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
-        if (!child || !Tk_WindowId(child)) continue; 
+        if (!child) continue;
 
         AtkObject *child_obj = GetAtkObjectForTkWindow(child);
         if (!child_obj) {
             child_obj = TkCreateAccessibleAtkObject(interp, child, Tk_PathName(child));
-            if (!child_obj) continue; 
+            if (!child_obj) continue;
 
             RegisterAtkObjectForTkWindow(child, child_obj);
             TkAtkAccessible_RegisterEventHandlers(child, (TkAtkAccessible *)child_obj);
+
+            /* Set a default role if none found. */
+            AtkRole role = GetAtkRoleForWidget(child);
+            if (role == ATK_ROLE_UNKNOWN) {
+                atk_object_set_role(child_obj, ATK_ROLE_PANEL);
+            }
         }
 
-        /* Ensure proper parent relationship. */
         AtkObject *current_parent = atk_object_get_parent(child_obj);
         if (current_parent != parent_obj) {
-	    /* 
-	     * If the child was previously parented to something else or unparented,
-	     * emit a remove signal from the old parent first if known.
-	     * For simplicity, we'll just set the parent and emit 'add' for the new parent.
-	     */
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
         }
 
-        /* Set the name for the child object. */
         const gchar *child_name = tk_get_name(child_obj);
         if (child_name) {
             tk_set_name(child_obj, child_name);
             g_free((gpointer)child_name);
         }
 
-        /* Recursively register children. */
         RegisterChildWidgets(interp, child, child_obj);
         index++;
     }
 }
-
 
 /*
  * Root window setup. These are the foundation of the
@@ -1115,6 +1114,69 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAtkAccessible_MapHandler --
+ *
+ * Notify ATK system when Tk window is mapped. 
+ *
+ * Results:
+ *	Window visibility is registered.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
+{
+    if (eventPtr->type != MapNotify) return;
+
+    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
+    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
+
+    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    RegisterChildWidgets(tkAccessible->interp, tkAccessible->tkwin, atk_obj);
+    AtkStateSet *state_set = atk_state_set_new();
+    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+    g_signal_emit_by_name(atk_obj, "state-change", "visible", TRUE);
+    g_signal_emit_by_name(atk_obj, "state-change", "showing", TRUE);
+    g_object_unref(state_set);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAtkAccessible_UnmapHandler --
+ *
+ * Notify ATK system when Tk window is unmapped. 
+ *
+ * Results:
+ *	Window visibility is removed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr)
+{
+    if (eventPtr->type != UnmapNotify) return;
+
+    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
+    if (!tkAccessible || !tkAccessible->tkwin) return;
+
+    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    AtkStateSet *state_set = atk_state_set_new();
+    atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
+    g_signal_emit_by_name(atk_obj, "state-change", "showing", FALSE);
+    g_object_unref(state_set);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -1204,17 +1266,38 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Create and configure root object. */
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
-	const gchar *name = tk_get_name(tk_root_accessible);
-	if (name) {
-	    tk_set_name(tk_root_accessible, name); /* Set the name and notify. */
-	    g_free((gpointer)name); /* Free the string returned by tk_get_name. */
-	}
+        const gchar *name = tk_get_name(tk_root_accessible);
+        if (name) {
+            tk_set_name(tk_root_accessible, name);
+            g_free((gpointer)name);
+        } else {
+            /* Fallback to main window title. */
+            Tk_Window mainWin = Tk_MainWindow(interp);
+            if (mainWin) {
+                Tcl_DString cmd;
+                Tcl_DStringInit(&cmd);
+                Tcl_DStringAppend(&cmd, "wm title ", -1);
+                Tcl_DStringAppend(&cmd, Tk_PathName(mainWin), -1);
+                if (Tcl_Eval(interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
+                    const char *title = Tcl_GetStringResult(interp);
+                    tk_set_name(tk_root_accessible, title && *title ? title : "Tk Application");
+                }
+                Tcl_DStringFree(&cmd);
+            }
+        }
+        /* Ensure root is marked as visible and showing. */
+        AtkStateSet *state_set = atk_state_set_new();
+        atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+        g_signal_emit_by_name(tk_root_accessible, "state-change", "visible", TRUE);
+        g_signal_emit_by_name(tk_root_accessible, "state-change", "showing", TRUE);
+        g_object_unref(state_set);
     }
 
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-	g_warning("Failed to initialize AT-SPI bridge\n");
-	return TCL_ERROR;
+        g_warning("Failed to initialize AT-SPI bridge\n");
+        return TCL_ERROR;
     }
 
     /* Initialize mapping table. */
@@ -1223,24 +1306,18 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Register main window with root. */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (mainWin) {
-	/* 
-	 * Create accessible object for main window, which will also register it
-	 * and set its parent to the root.
-	 */
-	TkAtkAccessible *main_acc = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
-	if (main_acc) {
-	    /* Ensure the main window is treated as a toplevel for ATK hierarchy. */
-	    RegisterToplevelWindow(interp, mainWin, (AtkObject*)main_acc);
-	}
+        TkAtkAccessible *main_acc = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
+        if (main_acc) {
+            RegisterToplevelWindow(interp, mainWin, (AtkObject*)main_acc);
+            g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, (AtkObject*)main_acc);
+        }
     }
 
-    /* 
-     * Process pending GLib events to establish AT-SPI connection. 
-     * Limiting iterations to prevent blocking.
-     */
+    /* Process pending GLib events with higher iteration limit */
     int iterations = 0;
-    while (g_main_context_pending(NULL) && iterations < 100) {
-	iterations++;
+    while (g_main_context_pending(NULL) && iterations < 1000) {
+        g_main_context_iteration(NULL, FALSE);
+        iterations++;
     }
 
     /* Install event loop integration. */
@@ -1248,18 +1325,16 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
-			 TkAtkAccessibleObjCmd, NULL, NULL);
+                         TkAtkAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
-			 EmitSelectionChanged, NULL, NULL);
+                         EmitSelectionChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
-			 EmitFocusChanged, NULL, NULL);
+                         EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
-			 IsScreenReaderRunning, NULL, NULL);
+                         IsScreenReaderRunning, NULL, NULL);
 
-    /* 
-     * Force initial hierarchy update. 
-     */
-    g_signal_emit_by_name((AtkObject*)tk_root_accessible, "children-changed", 0, NULL);
+    /* Force initial hierarchy update. */
+    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, NULL);
 
     return TCL_OK;
 }
