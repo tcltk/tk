@@ -520,6 +520,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible)
 {
+    (void) interp;
     if (!accessible || !tkwin) return;
 
     /* Ensure root exists */
@@ -824,12 +825,9 @@ static void GtkEventLoop(ClientData clientData)
     GMainContext *context = (GMainContext *)clientData;
     if (!context) return;
 
-    
-    /* Idle handler. */
-    Tcl_DoWhenIdle(GtkIdleProc, context);
-
     /* Reschedule with a short interval. */
     Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
+	
 }
 
 void GtkIdleProc(ClientData data) 
