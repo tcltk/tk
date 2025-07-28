@@ -81,7 +81,6 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 static void GtkEventLoop(ClientData clientData);
-void GtkIdleProc(ClientData data);
 void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
@@ -829,12 +828,6 @@ static void GtkEventLoop(ClientData clientData)
     Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
 	
 }
-
-void GtkIdleProc(ClientData data) 
-{
-    GtkEventLoop(data);
-}
-
 
 /*
  * Functions to map Tk window to its corresponding Atk object.
