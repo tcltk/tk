@@ -1,7 +1,8 @@
 /*
  * tkUnixAccessibility.c --
  *
- *	This file implements accessibility/screen-reader support
+ *
+ This file implements accessibility/screen-reader support
  * on Unix-like systems based on the Gnome Accessibility Toolkit,
  * the standard accessibility library for X11 systems.
  *
@@ -37,6 +38,12 @@ typedef struct _TkAtkAccessible {
     Tcl_Interp *interp;
     char *path;
     gchar *cached_name;
+    gchar *cached_description;
+    gchar *cached_value;
+    AtkRole cached_role;
+    gint x, y, width, height;
+    gboolean is_mapped;
+    gboolean has_focus;
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
@@ -82,13 +89,21 @@ AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 
+/* Cache update functions so that direct Tcl/Tk calls are not made from Atk. */
+static void UpdateGeometryCache(TkAtkAccessible *acc);
+static void UpdateNameCache(TkAtkAccessible *acc);
+static void UpdateDescriptionCache(TkAtkAccessible *acc);
+static void UpdateValueCache(TkAtkAccessible *acc);
+static void UpdateRoleCache(TkAtkAccessible *acc);
+static void UpdateStateCache(TkAtkAccessible *acc);
+
 /* Script-level commands and helper functions. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
@@ -135,25 +150,26 @@ extern Tcl_HashTable *TkAccessibilityObject;
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init))
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
+			)
 
 /*
  * Map Atk component interface to Tk.
  */
- 
+
     static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
-    if (!acc || !acc->tkwin) {
+    if (!acc) {
 	*x = *y = *width = *height = 0;
 	return;
     }
 
-    *x = Tk_X(acc->tkwin);
-    *y = Tk_Y(acc->tkwin);
-    *width = Tk_Width(acc->tkwin);
-    *height = Tk_Height(acc->tkwin);
+    *x = acc->x;
+    *y = acc->y;
+    *width = acc->width;
+    *height = acc->height;
 
     /* Handle coordinate type conversion. */
     if (coord_type == ATK_XY_SCREEN) {
@@ -295,8 +311,7 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 static AtkRole tk_get_role(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    Tk_Window win = acc->tkwin;
-    return GetAtkRoleForWidget(win);
+    return acc->cached_role;
 }
 
 /*
@@ -307,90 +322,7 @@ static AtkRole tk_get_role(AtkObject *obj)
 static const gchar *tk_get_name(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    gchar *ret = NULL;
-
-    if (!acc) return NULL;
-
-    if (obj == tk_root_accessible) {
-        /* For the root, use the cached name or fallback. */
-        if (acc->cached_name) {
-            return g_strdup(acc->cached_name);
-        }
-        /* Fallback if cached name not set (should be set during init). */
-        return g_strdup("Tk Application");
-    }
-
-    if (!acc->tkwin || !acc->interp) {
-        return NULL;
-    }
-
-    Tcl_DString cmd;
-    Tcl_DStringInit(&cmd);
-
-    /* For menus, use entry label as the accessible name. */
-    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_MENU) {
-        Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
-        Tcl_DStringAppend(&cmd, " entrycget active -label", -1);
-        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
-            const char *result = Tcl_GetStringResult(acc->interp);
-            if (result && *result) {
-                ret = g_strdup(result);
-            }
-        }
-        Tcl_DStringFree(&cmd);
-        if (ret) return ret;
-    }
-
-    /* For labels, use text content as the accessible name. */
-    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_LABEL) {
-        Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
-	Tcl_DStringAppend(&cmd, " cget -text", -1);
-
-        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) == TCL_OK) {
-            const char *result = Tcl_GetStringResult(acc->interp);
-            if (result && *result) {
-                ret = g_strdup(result);
-            }
-        }
-        Tcl_DStringFree(&cmd);
-        if (ret) return ret;
-    }
-
-    if (Tk_IsTopLevel(acc->tkwin) && Tk_PathName(acc->tkwin)) {
-        Tcl_DStringAppend(&cmd, "wm title ", -1);
-        Tcl_DStringAppend(&cmd, Tk_PathName(acc->tkwin), -1);
-
-        if (Tcl_Eval(acc->interp, Tcl_DStringValue(&cmd)) != TCL_OK) {
-            /* Fallback to pathname if wm title fails. */
-            ret = g_strdup(Tk_PathName(acc->tkwin));
-        } else {
-            const char *result = Tcl_GetStringResult(acc->interp);
-            ret = g_strdup(result && *result ? result : Tk_PathName(acc->tkwin));
-        }
-        Tcl_DStringFree(&cmd);
-        if (ret) return ret;
-    }
-
-    /* For other widgets: use accessible name if set. */
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-    if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-        if (AccessibleAttributes) {
-            Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
-            if (hPtr2) {
-                const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-                if (result) {
-                    return g_strdup(result); /* ATK expects a newly allocated string. */
-                }
-            }
-        }
-    }
-
-    /* Default: use window path. */
-    if (Tk_PathName(acc->tkwin)) {
-        return g_strdup(Tk_PathName(acc->tkwin));
-    }
-    return NULL;
+    return acc->cached_name;
 }
 
 /* Function to set new name if change made. */
@@ -412,23 +344,7 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
 static const gchar *tk_get_description(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
-    if (!acc || !acc->tkwin) return NULL;
-
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-    if (!hPtr) return NULL;
-
-    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!AccessibleAttributes) return NULL;
-
-    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
-    if (!hPtr2) return NULL;
-
-    const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    if (result) {
-        return g_strdup(result); /* ATK expects a newly allocated string. */
-    }
-    return NULL;
+    return acc->cached_description;
 }
 
 /*
@@ -438,43 +354,9 @@ static const gchar *tk_get_description(AtkObject *obj)
 
 static void tk_get_current_value(AtkValue *obj, GValue *value)
 {
-    AtkObject *atkObj = ATK_OBJECT(obj);
-    TkAtkAccessible *acc = (TkAtkAccessible *)atkObj;
-
-    if (!acc || !acc->tkwin) {
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, "");
-        return;
-    }
-
-    Tk_Window win = acc->tkwin;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_HashTable *AccessibleAttributes;
-
-    hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (!hPtr) {
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, "");
-        return;
-    }
-
-    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!AccessibleAttributes) {
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, "");
-        return;
-    }
-
-    hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
-    if (!hPtr2) {
-        g_value_init(value, G_TYPE_STRING);
-        g_value_set_string(value, "");
-        return;
-    }
-
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(obj);
     g_value_init(value, G_TYPE_STRING);
-    g_value_set_string(value, result ? result : "");
+    g_value_set_string(value, acc->cached_value);
 }
 
 static void tk_atk_value_interface_init(AtkValueIface *iface)
@@ -487,22 +369,24 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
-    if (!acc || !acc->tkwin) return set;
+    if (!acc) return set;
 
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-    if (GetAtkRoleForWidget(acc->tkwin) == ATK_ROLE_ENTRY) {
+    
+    if (acc->cached_role == ATK_ROLE_ENTRY) {
         atk_state_set_add_state(set, ATK_STATE_EDITABLE);
         atk_state_set_add_state(set, ATK_STATE_SINGLE_LINE);
     }
-    if (Tk_IsMapped(acc->tkwin) || Tk_Width(acc->tkwin) > 0 || Tk_Height(acc->tkwin) > 0) {
+    
+    if (acc->is_mapped || acc->width > 0 || acc->height > 0) {
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        if (Tk_IsMapped(acc->tkwin)) {
+        if (acc->is_mapped) {
             atk_state_set_add_state(set, ATK_STATE_SHOWING);
         }
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
         /* Check if the widget has focus. */
-        if (TkGetFocusWin((TkWindow *)acc->tkwin) == (TkWindow *)acc->tkwin) {
+        if (acc->has_focus) {
             atk_state_set_add_state(set, ATK_STATE_FOCUSED);
         }
     }
@@ -587,6 +471,15 @@ static void tk_atk_accessible_init(TkAtkAccessible *self)
     self->interp = NULL;
     self->path = NULL;
     self->cached_name = NULL;
+    self->cached_description = NULL;
+    self->cached_value = NULL;
+    self->cached_role = ATK_ROLE_UNKNOWN;
+    self->x = 0;
+    self->y = 0;
+    self->width = 0;
+    self->height = 0;
+    self->is_mapped = FALSE;
+    self->has_focus = FALSE;
 }
 
 static void tk_atk_accessible_finalize(GObject *gobject)
@@ -602,6 +495,8 @@ static void tk_atk_accessible_finalize(GObject *gobject)
 
     g_free(self->path);
     g_free(self->cached_name);
+    g_free(self->cached_description);
+    g_free(self->cached_value);
 
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
@@ -655,13 +550,109 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     const gchar *name = tk_get_name(accessible);
     if (name) {
         tk_set_name(accessible, name);
-        g_free((gpointer)name);
     }
-
-    /* Register child widgets.*/
-    RegisterChildWidgets(interp, tkwin, accessible);
 }
 
+/*
+ * Cache update functions so that Tcl/Tk calls are not made from within Atk functions
+ * controlled by the GLib event loop.
+ */
+static void UpdateGeometryCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin) return;
+    
+    acc->x = Tk_X(acc->tkwin);
+    acc->y = Tk_Y(acc->tkwin);
+    acc->width = Tk_Width(acc->tkwin);
+    acc->height = Tk_Height(acc->tkwin);
+}
+
+static void UpdateNameCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin || !acc->interp) return;
+
+    g_free(acc->cached_name);
+    acc->cached_name = NULL;
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+    if (hPtr) {
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        if (AccessibleAttributes) {
+            Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
+            if (hPtr2) {
+                const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+                if (result) {
+                    acc->cached_name = g_strdup(result);
+                }
+            }
+        }
+    }
+
+    if (!acc->cached_name && Tk_PathName(acc->tkwin)) {
+        acc->cached_name = g_strdup(Tk_PathName(acc->tkwin));
+    }
+}
+
+static void UpdateDescriptionCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin) return;
+
+    g_free(acc->cached_description);
+    acc->cached_description = NULL;
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+    if (hPtr) {
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        if (AccessibleAttributes) {
+            Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
+            if (hPtr2) {
+                const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+                if (result) {
+                    acc->cached_description = g_strdup(result);
+                }
+            }
+        }
+    }
+}
+
+static void UpdateValueCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin) return;
+
+    g_free(acc->cached_value);
+    acc->cached_value = NULL;
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+    if (hPtr) {
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        if (AccessibleAttributes) {
+            Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
+            if (hPtr2) {
+                const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+                if (result) {
+                    acc->cached_value = g_strdup(result);
+                }
+            }
+        }
+    }
+
+    if (!acc->cached_value) {
+        acc->cached_value = g_strdup("");
+    }
+}
+
+static void UpdateRoleCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin) return;
+    acc->cached_role = GetAtkRoleForWidget(acc->tkwin);
+}
+
+static void UpdateStateCache(TkAtkAccessible *acc)
+{
+    if (!acc || !acc->tkwin) return;
+    acc->is_mapped = Tk_IsMapped(acc->tkwin);
+    acc->has_focus = (TkGetFocusWin((TkWindow *)acc->tkwin) == (TkWindow *)acc->tkwin);
+}
 
 /*
  * Function to recursively register child widgets using childList.
@@ -709,12 +700,11 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         if (current_parent != parent_obj) {
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
-            }
+	}
            
         const gchar *child_name = tk_get_name(child_obj);
         if (child_name) {
             tk_set_name(child_obj, child_name);
-            g_free((gpointer)child_name);
         }
 
         RegisterChildWidgets(interp, child, child_obj);
@@ -769,16 +759,17 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     acc->tkwin = tkwin;
     acc->path = g_strdup(path); 
 
+    /* Update all caches */
+    UpdateGeometryCache(acc);
+    UpdateNameCache(acc);
+    UpdateDescriptionCache(acc);
+    UpdateValueCache(acc);
+    UpdateRoleCache(acc);
+    UpdateStateCache(acc);
+
     /* Set initial accessibility properties (role and name). */
     AtkObject *obj = ATK_OBJECT(acc);
-    atk_object_set_role(obj, GetAtkRoleForWidget(tkwin));
-
-    /* Initial name setting for the object. */
-    const gchar *name = tk_get_name(obj);
-    if (name) {
-        tk_set_name(obj, name);
-        g_free((gpointer)name); /* Free the string returned by tk_get_name. */
-    }
+    atk_object_set_role(obj, acc->cached_role);
 
     /* Set up parent-child relationships for the widget. */
     if (tkwin) {
@@ -833,12 +824,6 @@ static void GtkEventLoop(ClientData clientData)
     GMainContext *context = (GMainContext *)clientData;
     if (!context) return;
 
-    /* Process GLib events with a strict limit to avoid starving Tcl */
-    int iterations = 0;
-    while (g_main_context_pending(context) && iterations < 10) { /* Reduced limit */
-        if (!g_main_context_iteration(context, FALSE)) break;
-        iterations++;
-    }
     
     /* Idle handler. */
     Tcl_DoWhenIdle(GtkIdleProc, context);
@@ -898,10 +883,12 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
  * Accessibility system notification when selection changed.
  *
  * Results:
- *	Accessibility system is made aware when a selection is changed.
+ *
+ Accessibility system is made aware when a selection is changed.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -914,7 +901,6 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
 	return TCL_ERROR;
     }
-	
     Tk_Window path_tkwin; 
     path_tkwin = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (path_tkwin == NULL) {
@@ -929,7 +915,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
         return TCL_ERROR;
     }
 
-    AtkRole role = atk_object_get_role(acc);
+    TkAtkAccessible *tk_acc = (TkAtkAccessible *)acc;
+    UpdateValueCache(tk_acc);
+
+    AtkRole role = tk_acc->cached_role;
 
     GValue gval = G_VALUE_INIT;
     tk_get_current_value(ATK_VALUE(acc), &gval);
@@ -951,10 +940,12 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
  * Accessibility system notification when focus changed.
  *
  * Results:
- *	Accessibility system is made aware when focus is changed.
+ *
+ Accessibility system is made aware when focus is changed.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -980,6 +971,9 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
         return TCL_ERROR;
     }
 
+    TkAtkAccessible *tk_acc = (TkAtkAccessible *)acc;
+    UpdateStateCache(tk_acc);
+
     /* Ensure the widget is focusable. */
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
@@ -999,10 +993,12 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
  * Runtime check to see if screen reader is running.
  *
  * Results:
- *	Returns if screen reader is active or not.
+ *
+ Returns if screen reader is active or not.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -1043,7 +1039,8 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  * Event handler is registered.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -1053,7 +1050,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) 
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
                           TkAtkAccessible_DestroyHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-                          TkAtkAccessible_NameHandler, tkAccessible);
+                          TkAtkAccessible_ConfigureHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, MapNotify,
                           TkAtkAccessible_MapHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, UnmapNotify,
@@ -1069,10 +1066,12 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) 
  * Clean up accessibility element structures when window is destroyed.
  *
  * Results:
- *	Accessibility element is deallocated.
+ *
+ Accessibility element is deallocated.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -1101,44 +1100,41 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 /*
  *----------------------------------------------------------------------
  *
- * TkAtkAccessible_NameHandler --
+ * TkAtkAccessible_ConfigureHandler --
  *
- * Update accessible names of Tk widgets.
+ * Update accessible names and geometry of Tk widgets.
  *
  * Results:
- *	Accessibility name is updated.
+ *
+ Accessibility name and geometry are updated.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
 
-static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != ConfigureNotify) return;
 
-    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin) return;
 
-    AtkObject *atk_obj = (AtkObject*)tkAccessible;
-    RegisterChildWidgets(tkAccessible->interp, tkAccessible->tkwin, atk_obj);
-    const gchar *name = tk_get_name(atk_obj);
-    if (name) {
-        tk_set_name(atk_obj, name);
-        g_free((gpointer)name);
+    /* Update geometry cache */
+    UpdateGeometryCache(acc);
+
+    /* Update name and description caches */
+    UpdateNameCache(acc);
+    UpdateDescriptionCache(acc);
+
+    /* Notify ATK of changes */
+    g_signal_emit_by_name(acc, "bounds-changed", 
+                          acc->x, acc->y, acc->width, acc->height);
+    if (acc->cached_name) {
+        tk_set_name(ATK_OBJECT(acc), acc->cached_name);
     }
-    AtkStateSet *state_set = atk_state_set_new();
-    if (Tk_IsMapped(tkAccessible->tkwin)) {
-        atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-        atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-        g_signal_emit_by_name(atk_obj, "state-change", "visible", TRUE);
-        g_signal_emit_by_name(atk_obj, "state-change", "showing", TRUE);
-    } else {
-        atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
-        g_signal_emit_by_name(atk_obj, "state-change", "showing", FALSE);
-    }
-    g_object_unref(state_set);
 }
 
 /*
@@ -1149,10 +1145,12 @@ static void TkAtkAccessible_NameHandler(ClientData clientData, XEvent *eventPtr)
  * Notify ATK system when Tk window is mapped. 
  *
  * Results:
- *	Window visibility is registered.
+ *
+ Window visibility is registered.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -1161,11 +1159,12 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != MapNotify) return;
 
-    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin) return;
 
-    AtkObject *atk_obj = (AtkObject*)tkAccessible;
-    RegisterChildWidgets(tkAccessible->interp, tkAccessible->tkwin, atk_obj);
+    UpdateStateCache(acc);
+    AtkObject *atk_obj = (AtkObject*)acc;
+    RegisterChildWidgets(acc->interp, acc->tkwin, atk_obj);
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
     atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
@@ -1182,10 +1181,12 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
  * Notify ATK system when Tk window is unmapped. 
  *
  * Results:
- *	Window visibility is removed.
+ *
+ Window visibility is removed.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
@@ -1194,10 +1195,11 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
 {
     if (eventPtr->type != UnmapNotify) return;
 
-    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-    if (!tkAccessible || !tkAccessible->tkwin) return;
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin) return;
 
-    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    UpdateStateCache(acc);
+    AtkObject *atk_obj = (AtkObject*)acc;
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
     g_signal_emit_by_name(atk_obj, "state-change", "showing", FALSE);
@@ -1212,19 +1214,22 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
  * Align Atk and Tk focus.
  *
  * Results:
- *	Focus updated.
+ *
+ Focus updated.
  *
  * Side effects:
- *	None.
+ *
+ None.
  *
  *----------------------------------------------------------------------
  */
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
-    TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-    if (!tkAccessible || !tkAccessible->tkwin || !tkAccessible->interp) return;
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin) return;
 
-    AtkObject *atk_obj = (AtkObject*)tkAccessible;
+    UpdateStateCache(acc);
+    AtkObject *atk_obj = (AtkObject*)acc;
     AtkStateSet *state_set = atk_state_set_new();
 
     if (eventPtr->type == FocusIn) {
@@ -1245,7 +1250,8 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *
  * TkAtkAccessibleObjCmd --
  *
- *	Main command for adding and managing accessibility objects to Tk
+ *
+ Main command for adding and managing accessibility objects to Tk
  * widgets on Linux using the Atk accessibility API.
  *
  * Results:
@@ -1254,7 +1260,8 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *
  * Side effects:
  *
- *	Tk widgets are now accessible to screen readers.
+ *
+ Tk widgets are now accessible to screen readers.
  *
  *----------------------------------------------------------------------
  */
@@ -1310,7 +1317,8 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  *
  * TkAtkAccessibility_Init --
  *
- *	Initializes the accessibility module.
+ *
+ Initializes the accessibility module.
  *
  * Results:
  *
@@ -1318,7 +1326,8 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  *
  * Side effects:
  *
- *	Accessibility module is now activated.
+ *
+ Accessibility module is now activated.
  *
  *----------------------------------------------------------------------
  */
@@ -1331,7 +1340,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         const gchar *name = tk_get_name(tk_root_accessible);
         if (name) {
             tk_set_name(tk_root_accessible, name);
-            g_free((gpointer)name);
         } else {
             /* Fallback to main window title. */
             Tk_Window mainWin = Tk_MainWindow(interp);
@@ -1415,4 +1423,3 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * coding: utf-8
  * End:
  */
-
