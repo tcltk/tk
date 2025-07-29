@@ -1006,19 +1006,27 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
  *----------------------------------------------------------------------
  */
 
-static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
     (void)clientData;
     (void)objc;
     (void)objv;
 
     int result = 0;
-    DBusConnection *bus = dbus_bus_get(DBUS_BUS_SESSION, NULL);
-    if (bus) {
-        result = dbus_bus_name_has_owner(bus, "org.a11y.atspi.Registry", NULL);
-        dbus_connection_unref(bus);
+    FILE *fp = popen("pgrep -x orca", "r");
+    if (fp == NULL) {
+	result = 0;
     }
 
+    char buffer[16];
+    /* If output exists, Orca is running. */
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
+
+    pclose(fp);
+    if (running) {
+	result = 1;
+    }
+    
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
