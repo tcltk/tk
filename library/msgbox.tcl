@@ -422,7 +422,7 @@ proc ::tk::MessageBox {args} {
     # At <Destroy> the buttons have vanished, so must do this directly.
     bind $w.msg <Destroy> [list set tk::Priv.${disp}(button) $cancel]
 
-    # 6b. Limit window size to the physical screen
+    # 7. Limit window size to the physical screen (Ticket [e19f1d89])
     # The message widget size may exceed the screen size on small screens.
     # In this case, the message wraplength is changed so the window fits
     # on the physical screen.
@@ -443,13 +443,13 @@ proc ::tk::MessageBox {args} {
 	}
     }
 
-    # 7. Withdraw the window, then update all the geometry information
+    # 8. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow $w widget $data(-parent)
 
-    # 8. Set a grab and claim the focus too.
+    # 9. Set a grab and claim the focus too.
 
     if {$data(-default) ne ""} {
 	set focus $w.$data(-default)
@@ -458,7 +458,7 @@ proc ::tk::MessageBox {args} {
     }
     ::tk::SetFocusGrab $w $focus
 
-    # 9. Wait for the user to respond, then restore the focus and
+    # 10. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,
