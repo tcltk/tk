@@ -1039,7 +1039,7 @@ XCopyArea(
     CGRect dstRect;
 
     // XXXX Need to deal with pixmaps!
-    MacDrawable *srcDraw = (MacDrawable *)dst;
+    MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
     NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
     NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
