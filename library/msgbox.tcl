@@ -422,6 +422,27 @@ proc ::tk::MessageBox {args} {
     # At <Destroy> the buttons have vanished, so must do this directly.
     bind $w.msg <Destroy> [list set tk::Priv.${disp}(button) $cancel]
 
+    # 6b. Limit window size to the physical screen
+    # The message widget size may exceed the screen size on small screens.
+    # In this case, the message wraplength is changed so the window fits
+    # on the physical screen.
+    # A window manager border width of 15 is assumed, leading to 30 on both 
+    # sides.
+    update idletasks
+    if {[winfo reqwidth $w] + 30 > [winfo screenwidth $w]} {
+	# Calculate the wrap length by the screen width minus all other
+	# but the current message label.
+	set wraplength [expr {[winfo screenwidth $w] - 30
+		- ([winfo reqwidth $w] - [winfo reqwidth $w.msg])}]
+	# Emergency break, 60 pixels minimum
+	if {$wraplength > 60} {
+	    $w.msg configure -wraplength $wraplength
+	    if {[winfo exists $w.dtl]} {
+		$w.dtl configure -wraplength $wraplength
+	    }
+	}
+    }
+
     # 7. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display (Motif style) and de-iconify it.
