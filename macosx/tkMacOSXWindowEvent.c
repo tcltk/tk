@@ -338,6 +338,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
     TkpChangeFocus(winPtr, 1);
+    Tcl_Release(winPtr);
 }
 
 #pragma mark TKApplication(TKApplicationEvent)
@@ -374,6 +375,7 @@ static void RefocusGrabWindow(void *data) {
 	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_Preserve(winPtr);
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
 	}
 	if (iconifiedWindow == nil && [win isMiniaturized]) {
