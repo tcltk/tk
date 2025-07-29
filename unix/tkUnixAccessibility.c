@@ -72,6 +72,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
+static gchar *sanitize_utf8(const gchar *str);
 
 /* Lower-level functions providing integration between Atk objects and Tcl/Tk. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
@@ -151,12 +152,19 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
 			)
+			
+			
+/* Helper function to integrate strings. */			
+    static gchar *sanitize_utf8(const gchar *str) {
+    if (!str) return NULL;
+    return g_utf8_make_valid(str, -1);
+}
 
 /*
  * Map Atk component interface to Tk.
  */
 
-    static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
+static void tk_get_extents(AtkComponent *component, gint *x, gint *y,gint *width, gint *height, AtkCoordType coord_type)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
@@ -334,7 +342,7 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
     if (obj == tk_root_accessible) {
 	/* Free old cached name, store new one. */
         g_free(acc->cached_name);
-        acc->cached_name = g_strdup(name); 
+        acc->cached_name = sanitize_utf8(name); 
     }
     atk_object_set_name(obj, name);
 }
@@ -488,6 +496,7 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     if (self->tkwin) {
         if (Tk_IsTopLevel(self->tkwin)) {
             toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
+            g_signal_emit_by_name(tk_root_accessible, "children-changed::remove", -1, self);
         }
         UnregisterAtkObjectForTkWindow(self->tkwin);
     }
@@ -582,14 +591,14 @@ static void UpdateNameCache(TkAtkAccessible *acc)
             if (hPtr2) {
                 const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
                 if (result) {
-                    acc->cached_name = g_strdup(result);
+                    acc->cached_name = sanitize_utf8(result);
                 }
             }
         }
     }
 
     if (!acc->cached_name && Tk_PathName(acc->tkwin)) {
-        acc->cached_name = g_strdup(Tk_PathName(acc->tkwin));
+        acc->cached_name = sanitize_utf8(Tk_PathName(acc->tkwin));
     }
 }
 
@@ -608,7 +617,7 @@ static void UpdateDescriptionCache(TkAtkAccessible *acc)
             if (hPtr2) {
                 const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
                 if (result) {
-                    acc->cached_description = g_strdup(result);
+                    acc->cached_description = sanitize_utf8(result);
                 }
             }
         }
@@ -630,14 +639,14 @@ static void UpdateValueCache(TkAtkAccessible *acc)
             if (hPtr2) {
                 const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
                 if (result) {
-                    acc->cached_value = g_strdup(result);
+                    acc->cached_value = sanitize_utf8(result);
                 }
             }
         }
     }
 
     if (!acc->cached_value) {
-        acc->cached_value = g_strdup("");
+        acc->cached_value = sanitize_utf8("");
     }
 }
 
@@ -691,17 +700,14 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
                 atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
             }
             g_object_unref(state_set);
-
-        } else {
-            g_warning("Child widget %s already registered", Tk_PathName(child));
         }
 
         AtkObject *current_parent = atk_object_get_parent(child_obj);
         if (current_parent != parent_obj) {
             atk_object_set_parent(child_obj, parent_obj);
             g_signal_emit_by_name(parent_obj, "children-changed::add", index, child_obj);
-	}
-           
+        }
+
         const gchar *child_name = tk_get_name(child_obj);
         if (child_name) {
             tk_set_name(child_obj, child_name);
@@ -711,7 +717,6 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
         index++;
     }
 }
-
 /*
  * Root window setup. These are the foundation of the
  * accessibility object system in Atk. atk_get_root() is the
@@ -752,12 +757,12 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path.");
         return NULL;
     }
-
+ 
     /* Create a new TkAtkAccessible object. */
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
-    acc->path = g_strdup(path); 
+    acc->path = sanitize_utf8(path); 
 
     /* Update all caches */
     UpdateGeometryCache(acc);
@@ -824,9 +829,16 @@ static void GtkEventLoop(ClientData clientData)
     GMainContext *context = (GMainContext *)clientData;
     if (!context) return;
 
-    /* Reschedule with a short interval. */
-    Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
-	
+    /* Process pending events. */
+    while (g_main_context_pending(context)) {
+        g_main_context_iteration(context, FALSE);
+    }
+
+    /* Reschedule only if context is still valid.*/
+    if (g_main_context_acquire(context)) {
+        Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
+        g_main_context_release(context);
+    }
 }
 
 /*
@@ -994,27 +1006,19 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
  *----------------------------------------------------------------------
  */
 
-static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData;
     (void)objc;
     (void)objv;
 
     int result = 0;
-    FILE *fp = popen("pgrep -x orca", "r");
-    if (fp == NULL) {
-	result = 0;
+    DBusConnection *bus = dbus_bus_get(DBUS_BUS_SESSION, NULL);
+    if (bus) {
+        result = dbus_bus_name_has_owner(bus, "org.a11y.atspi.Registry", NULL);
+        dbus_connection_unref(bus);
     }
 
-    char buffer[16];
-    /* If output exists, Orca is running. */
-    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
-
-    pclose(fp);
-    if (running) {
-	result = 1;
-    }
-    
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
@@ -1113,12 +1117,13 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
 
-    /* Update geometry cache */
+    /* Update all caches */
     UpdateGeometryCache(acc);
-
-    /* Update name and description caches */
     UpdateNameCache(acc);
     UpdateDescriptionCache(acc);
+    UpdateValueCache(acc);
+    UpdateRoleCache(acc);
+    UpdateStateCache(acc);
 
     /* Notify ATK of changes */
     g_signal_emit_by_name(acc, "bounds-changed", 
@@ -1126,8 +1131,12 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     if (acc->cached_name) {
         tk_set_name(ATK_OBJECT(acc), acc->cached_name);
     }
+    if (acc->cached_description) {
+        atk_object_set_description(ATK_OBJECT(acc), acc->cached_description);
+    }
+    g_signal_emit_by_name(acc, "state-change", "visible", acc->is_mapped);
+    g_signal_emit_by_name(acc, "state-change", "showing", acc->is_mapped);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1357,7 +1366,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        g_warning("Failed to initialize AT-SPI bridge\n");
+        g_warning("Failed to initialize AT-SPI bridge");
         return TCL_ERROR;
     }
 
