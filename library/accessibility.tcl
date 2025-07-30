@@ -4,6 +4,7 @@
 # on X11, Windows, and macOS. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
+# Copyright © 2009 Allen B. Taylor.
 # Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
 #
 # See the file "license.terms" for information on usage and redistribution
@@ -11,6 +12,53 @@
 #
 
 namespace eval ::tk::accessible {
+    
+    # Variables and procedures to drive Atk event loop on X11.
+    if {[tk windowingsystem] eq "x11"} {
+	
+	variable atk_iterate_delay
+	variable atk_iterate_delay_step
+	variable atk_max_iterate_delay
+	variable atk_delay_init
+	variable atk_iterate_id
+
+	set atk_iterate_delay 50
+	set atk_iterate_delay_step 50
+	set atk_max_iterate_delay 1000
+	set atk_delay_init 0
+	set atk_iterate_id {}
+
+
+	proc _atk_iterate {} {
+	    
+	    variable atk_iterate_delay
+	    variable atk_iterate_delay_step
+	    variable atk_max_iterate_delay
+	    variable atk_delay_init
+	    variable atk_iterate_id
+	    
+
+	    # Cap delay growth.
+	    if {$atk_delay_init < $atk_max_iterate_delay} {
+		incr atk_delay_init  $atk_iterate_delay_step
+	    }
+
+	    # Run iteration. If there was any activity,
+	    # schedule the next run  as soon as possible.
+	    # Otherwise, delay a little longer than the last
+	    # time, up to the maximum delay.
+	    
+	    while { [catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result } {
+		set atk_delay_init 0
+	    }
+
+	    if {$atk_delay_init == 0} {
+		set atk_iterate_id [after idle [list ::tk::accessible::_atk_iterate]]
+	    } else {
+		set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
+	    }
+	}
+    }
 
     # Check message text on dialog. 
     proc _getdialogtext {w} {
@@ -228,11 +276,11 @@ namespace eval ::tk::accessible {
 	}
 	return "busy ([expr {int([$w cget -value])}]%)"
     }
-    
+
     # Some widgets will not respond to keypress events unless
     # they have focus. Force Tk focus on the widget that currently has
     # accessibility focus if needed.
-    
+
     proc _forceTkFocus {w} {
 	if {[tk windowingsystem] eq "aqua"} {
 	    if {[winfo class $w] in {Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
@@ -251,12 +299,12 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_focus_change $w
 	}
     }
-    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+
 
     # Set initial accessible attributes and add binding to <Map> event.
     # If the accessibility role is already set, return because
     # we only want these to fire once.
-    
+
     proc _init {w role name description value state action} {
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
 	    if {$msg == $role} {
@@ -296,7 +344,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W invoke}\
 			}
-    
+
     # Menubutton/TMButton bindings.
     bind Menubutton <Map> {+::tk::accessible::_init \
 			       %W \
@@ -316,7 +364,7 @@ namespace eval ::tk::accessible {
 				[%W cget -state] \
 				{%W invoke}\
 			    }
-    
+
     # Canvas bindings. 
     bind Canvas <Map> {+::tk::accessible::_init \
 			   %W \
@@ -327,7 +375,7 @@ namespace eval ::tk::accessible {
 			   {} \
 			   {}\
 		       }
-    
+
     # Checkbutton/TCheckbutton bindings.
     bind Checkbutton <Map> {+::tk::accessible::_init \
 				%W \
@@ -347,7 +395,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -state] \
 				 {%W invoke}\
 			     }
-    
+
     # Combobox bindings.			    
     bind TCombobox <Map> {+::tk::accessible::_init \
 			      %W \
@@ -358,7 +406,7 @@ namespace eval ::tk::accessible {
 			      [%W cget -state] \
 			      {} \
 			  }
-    
+
     # Dialog bindings.
     bind Dialog <Map> {+::tk::accessible::_init\
 			   %W \
@@ -464,7 +512,7 @@ namespace eval ::tk::accessible {
 			     {%W invoke}\
 			 }
     }
-    
+
     # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \
@@ -484,7 +532,7 @@ namespace eval ::tk::accessible {
 			       {} \
 			       {}\
 			   }
-    
+
     # Spinbox/TSpinbox bindings.
     bind Spinbox <Map> {+::tk::accessible::_init \
 			    %W \
@@ -527,17 +575,17 @@ namespace eval ::tk::accessible {
 			 [%W cget -state] \
 			 {}\
 		     }
-    
+
     # Label/TLabel bindings.
     bind Label <Map>  {+::tk::accessible::_init \
-			     %W \
-			     Label \
-			     Label \
-			     Label \
-			     [%W cget -text] \
-			     {}\
-			     {}\
-			 }
+			   %W \
+			   Label \
+			   Label \
+			   Label \
+			   [%W cget -text] \
+			   {}\
+			   {}\
+		       }
 
     bind TLabel <Map>    {+::tk::accessible::_init \
 			      %W \
@@ -643,10 +691,10 @@ namespace eval ::tk::accessible {
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
 	
 	# Additional miscellaneous keyboard bindings for accessibility. 	
-#	bind Button <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
-#	bind Button <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
-#	bind TButton <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
-#	bind TButton <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+	#	bind Button <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+	#	bind Button <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+	#	bind TButton <Space> {+%W invoke; ::tk::accessible::emit_focus_change %W}
+	#	bind TButton <Return> {+%W invoke; ::tk::accessible::emit_focus_change %W}
 
 	bind Scrollbar <Up> {+%W set [expr {[%W get] - 0.1}]; ::tk::accessible::emit_selection_change %W}
 	bind Scrollbar <Down> {+%W set [expr {[%W get] + 0.1}]; ::tk::accessible::emit_selection_change %W}
@@ -686,16 +734,25 @@ namespace eval ::tk::accessible {
 	bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
 	bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
 	
+	# Initialize the main window and start the Atk event loop on X11. 
+	if {[tk windowingsystem] eq "x11"} {
+	    ::tk::accessible::add_acc_object .
+	    after idle ::tk::accessible::_atk_iterate 
+	}
+	
+	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	
 	# Finally, export the main commands.
 	namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
 	namespace ensemble create
     }
 }
 
-    # Add these commands to the tk command ensemble: tk accessible.
-    namespace ensemble configure tk -map \
-	[dict merge [namespace ensemble configure tk -map] \
-	     {accessible ::tk::accessible}]
+
+# Add these commands to the tk command ensemble: tk accessible.
+namespace ensemble configure tk -map \
+    [dict merge [namespace ensemble configure tk -map] \
+	 {accessible ::tk::accessible}]
 
 
 
