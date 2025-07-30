@@ -808,6 +808,21 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
  * Functions to integrate Tk and Gtk event loops.
  */
 
+static void GtkEventLoop(ClientData clientData) 
+{
+
+    /* Let GTK process its events. */
+
+    while (g_main_context_iteration(NULL, FALSE)) {}
+    Tcl_DoWhenIdle((Tcl_IdleProc *)GtkEventLoop, NULL); 
+    return TCL_OK;
+}
+
+void InstallGtkEventLoop() {
+    Tcl_DoWhenIdle((Tcl_IdleProc *)GtkEventLoop, NULL);
+}
+
+#if 0
 void InstallGtkEventLoop(void)
 {
     GMainContext *context = g_main_context_default();
@@ -840,6 +855,7 @@ static void GtkEventLoop(ClientData clientData)
         g_main_context_release(context);
     }
 }
+#endif
 
 /*
  * Functions to map Tk window to its corresponding Atk object.
