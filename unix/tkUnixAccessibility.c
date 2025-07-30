@@ -81,8 +81,6 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj);
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
-static void GtkEventLoop(ClientData clientData);
-void InstallGtkEventLoop(void);
 void InitAtkTkMapping(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
@@ -101,6 +99,7 @@ static void UpdateStateCache(TkAtkAccessible *acc);
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
@@ -805,59 +804,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 
 
 /*
- * Functions to integrate Tk and Gtk event loops.
- */
-
-static void GtkEventLoop(ClientData clientData) 
-{
-
-    /* Let GTK process its events. */
-
-    while (g_main_context_iteration(NULL, FALSE)) {}
-    Tcl_DoWhenIdle((Tcl_IdleProc *)GtkEventLoop, NULL); 
-    return TCL_OK;
-}
-
-void InstallGtkEventLoop() {
-    Tcl_DoWhenIdle((Tcl_IdleProc *)GtkEventLoop, NULL);
-}
-
-#if 0
-void InstallGtkEventLoop(void)
-{
-    GMainContext *context = g_main_context_default();
-    if (!context) {
-        g_warning("InstallGtkEventLoop: Failed to get default GLib main context");
-        return;
-    }
-
-    if (!g_main_context_acquire(context)) {
-        g_warning("InstallGtkEventLoop: Failed to acquire GLib main context");
-        return;
-    }
-
-    Tcl_CreateTimerHandler(10, GtkEventLoop, context);
-}
-
-static void GtkEventLoop(ClientData clientData)
-{
-    GMainContext *context = (GMainContext *)clientData;
-    if (!context) return;
-
-    /* Process pending events. */
-    while (g_main_context_pending(context)) {
-        g_main_context_iteration(context, FALSE);
-    }
-
-    /* Reschedule only if context is still valid.*/
-    if (g_main_context_acquire(context)) {
-        Tcl_CreateTimerHandler(10, GtkEventLoop, clientData);
-        g_main_context_release(context);
-    }
-}
-#endif
-
-/*
  * Functions to map Tk window to its corresponding Atk object.
  */
 
@@ -1040,6 +986,42 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
 
     pclose(fp);
     if (running) {
+	result = 1;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AtkEventLoop --
+ *
+ * Spins GLib event loop.
+ *
+ * Results:
+ *
+ * Atk/GLib events are processed.
+ *
+ * Side effects:
+ *
+ None.
+ *
+ *----------------------------------------------------------------------
+ */
+static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+{
+    (void)clientData;
+    (void)objc;
+    (void)objv;
+
+    int result = 0;
+    
+    /* Let GTK process its events. */
+
+    if  (g_main_context_iteration(g_main_context_default(),  FALSE)) {
 	result = 1;
     }
     
@@ -1407,9 +1389,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         }
     }
 
-    /* Install event loop integration. */
-    InstallGtkEventLoop();
-
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
                          TkAtkAccessibleObjCmd, NULL, NULL);
@@ -1419,6 +1398,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
                          EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
                          IsScreenReaderRunning, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::accessible::_run_atk_eventloop",
+			 AtkEventLoop, NULL, NULL);
 
     /* Force initial hierarchy update. */
     g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, NULL);
