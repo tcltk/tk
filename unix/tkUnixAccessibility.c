@@ -1037,23 +1037,21 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  *
  *----------------------------------------------------------------------
  */
-static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
-{
+int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     (void)clientData;
     (void)objc;
     (void)objv;
 
-    int result = 0;
-    
-    /* Let GTK process its events. */
+    static GMainContext *atk_context = NULL;
 
-    if  (g_main_context_iteration(g_main_context_default(),  FALSE)) {
-	result = 1;
+    if (!atk_context) {
+        atk_context = g_main_context_new();
     }
-    
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+
+    g_main_context_iteration(atk_context, FALSE);
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
