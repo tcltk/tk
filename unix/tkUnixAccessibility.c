@@ -668,7 +668,7 @@ static void UpdateStateCache(TkAtkAccessible *acc) {
     if (!acc->has_focus && focus_win) {
         Tk_Window parent = (Tk_Window)Tk_Parent((Tk_Window)focus_win);
         while (parent) {
-            if (parent == (TkWindow *)acc->tkwin) {
+            if (parent == acc->tkwin) {
                 acc->has_focus = TRUE;
                 break;
             }
@@ -1037,27 +1037,22 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  *
  *----------------------------------------------------------------------
  */
+
 int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     (void)clientData;
     (void)objc;
     (void)objv;
 
-    static GMainContext *atk_context = NULL;
-
     int result = 0;
 
-    if (!atk_context) {
-        atk_context = g_main_context_new();
-    }
-
-    if (g_main_context_iteration(atk_context, FALSE)) {
-	result = 1;
+    if (g_main_context_iteration(g_main_context_default(), FALSE)) {
+        result = 1;
     }
 
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
-    
     return TCL_OK;
 }
+
 
 
 /*
@@ -1406,6 +1401,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
+
     /* Create and configure root object. */
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
