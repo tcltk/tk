@@ -282,21 +282,24 @@ namespace eval ::tk::accessible {
     # accessibility focus if needed.
 
     proc _forceTkFocus {w} {
-	if {[tk windowingsystem] eq "aqua"} {
-	    if {[winfo class $w] in {Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
-		if {[focus] ne $w} {
-		    focus -force $w
+	# Check to make sure window is not destroyed. 
+	if {[winfo exists $w]} {
+	    if {[tk windowingsystem] eq "aqua"} {
+		if {[winfo class $w] in {Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
+		    if {[focus] ne $w} {
+			focus -force $w
+		    }
 		}
-	    }
-	} elseif {[tk windowingsystem] eq "x11"} {
-	    if {[winfo class $w] ni {Canvas}} {
-		if {[focus] ne $w} {
-		    focus -force $w
-		    ::tk::accessible::emit_focus_change $w
+	    } elseif {[tk windowingsystem] eq "x11"} {
+		if {[winfo class $w] ni {Canvas}} {
+		    if {[focus] ne $w} {
+			focus -force $w
+			::tk::accessible::emit_focus_change $w
+		    }
 		}
+	    } elseif {[tk windowingsystem] eq "win32"} {
+		::tk::accessible::emit_focus_change $w
 	    }
-	} elseif {[tk windowingsystem] eq "win32"} {
-	    ::tk::accessible::emit_focus_change $w
 	}
     }
 
