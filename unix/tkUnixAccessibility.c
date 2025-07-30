@@ -655,11 +655,26 @@ static void UpdateRoleCache(TkAtkAccessible *acc)
     acc->cached_role = GetAtkRoleForWidget(acc->tkwin);
 }
 
-static void UpdateStateCache(TkAtkAccessible *acc)
-{
+static void UpdateStateCache(TkAtkAccessible *acc) {
     if (!acc || !acc->tkwin) return;
     acc->is_mapped = Tk_IsMapped(acc->tkwin);
-    acc->has_focus = (TkGetFocusWin((TkWindow *)acc->tkwin) == (TkWindow *)acc->tkwin);
+    
+    /* Check if this window OR any of its children have focus. */
+    TkWindow *focuswin = TkGetFocusWin((TkWindow *)acc->tkwin);
+    Tk_Window focus_win = (Tk_Window)focuswin;
+    acc->has_focus = (focus_win == acc->tkwin);
+    
+    /* If this is a container, check if any child has focus. */
+    if (!acc->has_focus && focus_win) {
+        Tk_Window parent = (Tk_Window)Tk_Parent((Tk_Window)focus_win);
+        while (parent) {
+            if (parent == (TkWindow *)acc->tkwin) {
+                acc->has_focus = TRUE;
+                break;
+            }
+            parent = (Tk_Window)Tk_Parent((Tk_Window)parent);
+        }
+    }
 }
 
 /*
@@ -1045,7 +1060,7 @@ static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
  *
  * TkAtkAccessible_RegisterEventHandlers --
  *
- * Register event handler for interacting with accessibility element.
+ * Register event handlers for interacting with accessibility element.
  *
  * Results:
  * Event handler is registered.
@@ -1172,7 +1187,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
  *----------------------------------------------------------------------
  */
 
-static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr) 
 {
     if (eventPtr->type != MapNotify) return;
 
@@ -1181,13 +1196,24 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
 
     UpdateStateCache(acc);
     AtkObject *atk_obj = (AtkObject*)acc;
-    RegisterChildWidgets(acc->interp, acc->tkwin, atk_obj);
-    AtkStateSet *state_set = atk_state_set_new();
-    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+    
+    /* Recursively register child widgets. */
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    for (TkWindow *childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr) {
+        Tk_Window child = (Tk_Window)childPtr;
+        if (!GetAtkObjectForTkWindow(child)) {
+            AtkObject *child_acc = TkCreateAccessibleAtkObject(acc->interp, child, Tk_PathName(child));
+            if (child_acc) {
+                RegisterAtkObjectForTkWindow(child, child_acc);
+                atk_object_set_parent(child_acc, atk_obj);
+                TkAtkAccessible_RegisterEventHandlers(child, (TkAtkAccessible *)child_acc);
+            }
+        }
+    }
+    
+    /* Emit state changes. */
     g_signal_emit_by_name(atk_obj, "state-change", "visible", TRUE);
     g_signal_emit_by_name(atk_obj, "state-change", "showing", TRUE);
-    g_object_unref(state_set);
 }
 
 /*
@@ -1240,26 +1266,50 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
  *
  *----------------------------------------------------------------------
  */
-static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
+ 
+static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr) 
 {
+	(void) eventPtr;
+	
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
 
-    UpdateStateCache(acc);
-    AtkObject *atk_obj = (AtkObject*)acc;
-    AtkStateSet *state_set = atk_state_set_new();
+    /* Get the Tk window that actually received focus. */
+    TkWindow *focuswin = TkGetFocusWin((TkWindow *)acc->tkwin);
+    Tk_Window focused_win = (Tk_Window)focuswin;
+    if (!focused_win) return;
 
-    if (eventPtr->type == FocusIn) {
-        atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
-        g_signal_emit_by_name(atk_obj, "focus-event", TRUE);
-        g_signal_emit_by_name(atk_obj, "state-change", "focused", TRUE);
-    } else if (eventPtr->type == FocusOut) {
-        atk_state_set_remove_state(state_set, ATK_STATE_FOCUSED);
-        g_signal_emit_by_name(atk_obj, "focus-event", FALSE);
-        g_signal_emit_by_name(atk_obj, "state-change", "focused", FALSE);
+    /* Ensure accessible object exists for focused window. */
+    AtkObject *focused_acc = GetAtkObjectForTkWindow(focused_win);
+    if (!focused_acc) {
+        /* Create accessible object directly without Tcl commands. */
+        focused_acc = TkCreateAccessibleAtkObject(acc->interp, focused_win, Tk_PathName(focused_win));
+        if (focused_acc) {
+            RegisterAtkObjectForTkWindow(focused_win, focused_acc);
+            
+            /* Set parent relationship. */
+            Tk_Window parent_win = Tk_Parent(focused_win);
+            if (parent_win) {
+                AtkObject *parent_acc = GetAtkObjectForTkWindow(parent_win);
+                if (parent_acc) {
+                    atk_object_set_parent(focused_acc, parent_acc);
+                }
+            }
+            
+            /* Update state and register event handlers. */
+            TkAtkAccessible *tk_acc = (TkAtkAccessible *)focused_acc;
+            UpdateStateCache(tk_acc);
+            TkAtkAccessible_RegisterEventHandlers(focused_win, tk_acc);
+        }
     }
 
-    g_object_unref(state_set);
+    /* Update focus state for all relevant widgets. */
+    if (focused_acc) {
+        TkAtkAccessible *tk_focused_acc = (TkAtkAccessible *)focused_acc;
+        UpdateStateCache(tk_focused_acc);
+        g_signal_emit_by_name(focused_acc, "focus-event", TRUE);
+        g_signal_emit_by_name(focused_acc, "state-change", "focused", TRUE);
+    }
 }
 
 /*
