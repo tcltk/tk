@@ -29,17 +29,17 @@ namespace eval ::tk::accessible {
 	    variable atk_delay_init
 	    variable atk_iterate_id
 
-	    # Cap delay growth
+	    # Cap delay growth.
 	    if {$atk_delay_init < $atk_max_iterate_delay} {
 		incr atk_delay_init $atk_iterate_delay_step
 	    }
 
-	    # Run iteration loop until no GLib events are pending
+	    # Run iteration loop until no GLib events are pending.
 	    if {[catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result} {
 		set atk_delay_init 0
 	    }
 
-	    # Schedule next iteration based on activity
+	    # Schedule next iteration based on activity.
 	    if {$atk_delay_init == 0} {
 		set atk_iterate_id [after idle [list ::tk::accessible::_atk_iterate]]
 	    } else {
@@ -47,7 +47,6 @@ namespace eval ::tk::accessible {
 	    }
 	}
     }
-
 
     # Check message text on dialog. 
     proc _getdialogtext {w} {
