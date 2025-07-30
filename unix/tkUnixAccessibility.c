@@ -932,8 +932,19 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
 
     AtkObject *acc = GetAtkObjectForTkWindow(path_tkwin);
     if (!acc) {
-        Tcl_SetResult(interp, "No accessible object for window", TCL_STATIC);
-        return TCL_ERROR;
+        g_warning("EmitFocusChanged: No accessible object for %s, re-registering", Tcl_GetString(objv[1]));
+        acc = TkCreateAccessibleAtkObject(interp, path_tkwin, Tcl_GetString(objv[1]));
+        if (!acc) {
+            Tcl_SetResult(interp, "Failed to create accessible object", TCL_STATIC);
+            return TCL_ERROR;
+        }
+        RegisterAtkObjectForTkWindow(path_tkwin, acc);
+        if (Tk_IsTopLevel(path_tkwin)) {
+            RegisterToplevelWindow(interp, path_tkwin, acc);
+        } else {
+	    RegisterChildWidgets(interp, path_tkwin, acc);
+
+	}
     }
 
     TkAtkAccessible *tk_acc = (TkAtkAccessible *)acc;
@@ -1034,7 +1045,7 @@ static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
  *
  * TkAtkAccessible_RegisterEventHandlers --
  *
- * Register event handler for destroying accessibility element.
+ * Register event handler for interacting with accessibility element.
  *
  * Results:
  * Event handler is registered.
