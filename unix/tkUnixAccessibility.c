@@ -765,58 +765,51 @@ AtkObject *atk_get_root(void) {
 }
 
 /* Atk-Tk object creation with proper parent relationship. */
-AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path)
+AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path) 
 {
     if (!interp || !tkwin || !path) {
-        g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path.");
+        g_warning("TkCreateAccessibleAtkObject: Invalid interp, tkwin, or path for %s", path ? path : "null");
         return NULL;
     }
- 
-    /* Create a new TkAtkAccessible object. */
+    g_message("Creating AtkObject for %s", path);
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
-    acc->path = sanitize_utf8(path); 
-
-    /* Update all caches */
+    acc->path = sanitize_utf8(path);
     UpdateGeometryCache(acc);
     UpdateNameCache(acc);
     UpdateDescriptionCache(acc);
     UpdateValueCache(acc);
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
-
-    /* Set initial accessibility properties (role and name). */
     AtkObject *obj = ATK_OBJECT(acc);
-    atk_object_set_role(obj, acc->cached_role);
-
-    /* Set up parent-child relationships for the widget. */
+    AtkRole role = acc->cached_role;
+    if (role == ATK_ROLE_UNKNOWN && Tk_IsTopLevel(tkwin)) {
+        role = ATK_ROLE_WINDOW; /* Ensure root window and toplevels get WINDOW role. */
+        atk_object_set_role(obj, role);
+    } else {
+        atk_object_set_role(obj, role);
+    }
     if (tkwin) {
         Tk_Window parent_tkwin = Tk_Parent(tkwin);
         AtkObject *parent_obj = NULL;
-
         if (parent_tkwin) {
             parent_obj = GetAtkObjectForTkWindow(parent_tkwin);
         } else {
-            /* If no Tk parent, it's a toplevel, parent it to the root accessible. */
+            /* Root window or toplevels parent to tk_root_accessible. */
             parent_obj = tk_root_accessible;
         }
-
         if (parent_obj) {
             atk_object_set_parent(obj, parent_obj);
-	    /* 
-	     * Emit children-changed signal for the parent to update AT-SPI.
-	     * The index here is an approximation; a more precise index would require
-	     * knowing the exact position in the parent's child list.
-	     */
             g_signal_emit_by_name(parent_obj, "children-changed::add", -1, obj);
+            g_message("Set parent for %s to %s", path, 
+                      parent_tkwin ? Tk_PathName(parent_tkwin) : "root");
+        } else {
+            g_warning("No parent found for %s", path);
         }
     }
-
-    /* No longer adding to global_accessible_objects, tk_to_atk_map handles ownership. */
     return obj;
 }
-
 
 /*
  * Functions to map Tk window to its corresponding Atk object.
@@ -1039,6 +1032,7 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  */
 
 int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    
     (void)clientData;
     (void)objc;
     (void)objv;
@@ -1052,8 +1046,6 @@ int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -1399,10 +1391,9 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  *----------------------------------------------------------------------
  */
 #ifdef USE_ATK
-int TkAtkAccessibility_Init(Tcl_Interp *interp)
+int TkAtkAccessibility_Init(Tcl_Interp *interp) 
 {
-
-    /* Create and configure root object. */
+    /* Create and configure root accessible object (ATK_ROLE_APPLICATION). */
     tk_root_accessible = tk_util_get_root();
     if (tk_root_accessible) {
         const gchar *name = tk_get_name(tk_root_accessible);
@@ -1441,14 +1432,39 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Initialize mapping table. */
     InitAtkTkMapping();
 
-    /* Register main window with root. */
+    /* Register main window (root window) as an accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (mainWin) {
-        TkAtkAccessible *main_acc = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
-        if (main_acc) {
-            RegisterToplevelWindow(interp, mainWin, (AtkObject*)main_acc);
-            g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, (AtkObject*)main_acc);
+        AtkObject *main_acc = GetAtkObjectForTkWindow(mainWin);
+        if (!main_acc) {
+            g_message("Creating AtkObject for root window %s", Tk_PathName(mainWin));
+            main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
+            if (main_acc) {
+                /* Set role to ATK_ROLE_WINDOW for the root window. */
+                atk_object_set_role(main_acc, ATK_ROLE_WINDOW);
+                RegisterAtkObjectForTkWindow(mainWin, main_acc);
+                TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
+                
+                /* Parent the root window to tk_root_accessible. */
+                atk_object_set_parent(main_acc, tk_root_accessible);
+                
+                /* Add to toplevel_accessible_objects. */
+                if (!g_list_find(toplevel_accessible_objects, main_acc)) {
+                    toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, main_acc);
+                    int index = g_list_length(toplevel_accessible_objects) - 1;
+                    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, main_acc);
+                    g_message("Registered root window %s as toplevel accessible object", Tk_PathName(mainWin));
+                }
+                
+                /* Register child widgets of the root window. */
+                RegisterChildWidgets(interp, mainWin, main_acc);
+            } else {
+                g_warning("Failed to create AtkObject for root window %s", Tk_PathName(mainWin));
+            }
         }
+    } else {
+        g_warning("No main window found for interpreter");
+        return TCL_ERROR;
     }
 
     /* Register Tcl commands. */
@@ -1461,14 +1477,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
                          IsScreenReaderRunning, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::_run_atk_eventloop",
-			 AtkEventLoop, NULL, NULL);
+                         AtkEventLoop, NULL, NULL);
 
     /* Force initial hierarchy update. */
     g_signal_emit_by_name(tk_root_accessible, "children-changed::add", 0, NULL);
 
     return TCL_OK;
 }
-
 #else
 /* No Atk found. */
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
