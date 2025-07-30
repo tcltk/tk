@@ -1044,11 +1044,18 @@ int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
 
     static GMainContext *atk_context = NULL;
 
+    int result = 0;
+
     if (!atk_context) {
         atk_context = g_main_context_new();
     }
 
-    g_main_context_iteration(atk_context, FALSE);
+    if (g_main_context_iteration(atk_context, FALSE)) {
+	result = 1;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    
     return TCL_OK;
 }
 

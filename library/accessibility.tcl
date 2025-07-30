@@ -16,15 +16,47 @@ namespace eval ::tk::accessible {
     # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
 	
+	variable atk_iterate_delay
+	variable atk_iterate_delay_step
+	variable atk_max_iterate_delay
+	variable atk_delay_init
+	variable atk_iterate_id
+
+	set atk_iterate_delay 50
+	set atk_iterate_delay_step 50
+	set atk_max_iterate_delay 1000
+	set atk_delay_init 0
+	set atk_iterate_id {}
+
+
 	proc _atk_iterate {} {
+	    
+	    variable atk_iterate_delay
+	    variable atk_iterate_delay_step
+	    variable atk_max_iterate_delay
+	    variable atk_delay_init
 	    variable atk_iterate_id
+	    
 
-	    # Run one non-blocking iteration of the GLib loop.
-	    set result 0
-	    catch {set result [::tk::accessible::_run_atk_eventloop]}
+	    # Cap delay growth.
+	    if {$atk_delay_init < $atk_max_iterate_delay} {
+		incr atk_delay_init  $atk_iterate_delay_step
+	    }
 
-	    # Schedule next iteration.
-	    set atk_iterate_id [after 50 ::tk::accessible::_atk_iterate]
+	    # Run iteration. If there was any activity,
+	    # schedule the next run  as soon as possible.
+	    # Otherwise, delay a little longer than the last
+	    # time, up to the maximum delay.
+	    
+	    while { [catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result } {
+		set atk_delay_init 0
+	    }
+
+	    if {$atk_delay_init == 0} {
+		set atk_iterate_id [after idle [list ::tk::accessible::_atk_iterate]]
+	    } else {
+		set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
+	    }
 	}
     }
 
