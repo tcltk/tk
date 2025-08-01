@@ -8260,14 +8260,24 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2025-01-03 (bug) [13ac26] wm iconbitmap does not correctly set the icon
 	pixmap hint on macOS (serhiy.storchaka)
 
+2025-01-27 (bug) [080a28] Aqua: tk_getOpenFile crash (fbf,culler)
+
+2025-01-28 (bug) [c99266] console menu zh_cn translations
+
 2025-03-17 (bug) [159aa5] MS-Win: Incorrect system menu entries for transient
 	toplevels (cjmcdonald)
 
 2025-03-17 (bug) [91d0e9] MS-Win: Withdrawn Tk transient windows can reappear in
 	Windows taskbar preview (cjmcdonald)
 
+2025-04-26 (bug) [111f66] Aqua: cannot iconify all windows (nicolas,culler)
+
 2025-05-17 (bug) [7231bf99] Setting ttk state may change the variable passed by
 	value (nijtmans)
+
+2025-05-29 (feature) [17b509] Win: support PNG images in icon files.
+
+2025-06-01 (bug) [5d0bc3] block cursor size on a tab is too large (werner,vogel)
 
 2025-07-03 (bug) [6b0f77] gcc 14 breaks configure test for bigendian leading to
 	broken floating point (nijtmans)
@@ -8277,4 +8287,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2025-07-16 (bug) [770fa0]  loading windows dll's in Cygwin doesn't work with
 	high-entropy-va (nijtmans)
 
-- (to be) Released 8.6.17, Aug ??, 2025 - https://core.tcl-lang.org/tk/ for details
+2025-07-25 (bug) [3d13f8,e90e8c] Aqua: dark mode improvements (culler)
+
+2025-07-25 (bug) [e94c8b] interop with clipboard managers (ilyagr,culler)
+
+- Released 8.6.17, Aug 15, 2025 - https://core.tcl-lang.org/tk/ for details
