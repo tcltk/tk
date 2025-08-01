@@ -1037,16 +1037,13 @@ int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
     (void)objc;
     (void)objv;
 
-    static GMainContext *atk_context = NULL;
+    int result = 0;
 
-    if (!atk_context) {
-        atk_context = g_main_context_default(); 
+    if (g_main_context_iteration(g_main_context_default(), FALSE)) {
+        result = 1;
     }
 
-    /* Return only if event loop actually processes something. */
-    gboolean did_work = g_main_context_iteration(atk_context, FALSE);
-
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(did_work ? 1 : 0));
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
 
@@ -1417,6 +1414,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
                 Tcl_DStringFree(&cmd);
             }
         }
+        /* Ensure root is marked as visible and showing. */
+        AtkStateSet *state_set = atk_state_set_new();
+        atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+        g_signal_emit_by_name(tk_root_accessible, "state-change", "visible", TRUE);
+        g_signal_emit_by_name(tk_root_accessible, "state-change", "showing", TRUE);
+        g_object_unref(state_set);
     }
 
     /* Initialize AT-SPI bridge. */
@@ -1427,8 +1431,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Initialize mapping table and GLib event loop. */
     InitAtkTkMapping();
-    GMainContext *context = g_main_context_default();
-    g_main_context_iteration(context, FALSE);
+    AtkEventLoop(NULL, interp, NULL, NULL);
 
     /* Register main window (root window) as an accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);
