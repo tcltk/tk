@@ -15,46 +15,34 @@ namespace eval ::tk::accessible {
     
     # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
-	
-	variable atk_iterate_delay 10
-	variable atk_iterate_delay_step 10
-	variable atk_max_iterate_delay 500
-	variable atk_delay_init 0
-	variable atk_iterate_id ""
 
+	variable atk_delay_init 0
+	variable atk_iterate_delay_step 20
+	variable atk_max_iterate_delay 200
+	variable atk_iterate_id ""
+	
 	proc _atk_iterate {} {
-	    variable atk_iterate_delay
+	    variable atk_delay_init
 	    variable atk_iterate_delay_step
 	    variable atk_max_iterate_delay
-	    variable atk_delay_init
 	    variable atk_iterate_id
 
-	    # Cap delay growth.
-	    if {$atk_delay_init < $atk_max_iterate_delay} {
+	    set activity 0
+	    if {[catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result} {
+		set atk_delay_init 0
+		set activity 1
+	    } elseif {$atk_delay_init < $atk_max_iterate_delay} {
 		incr atk_delay_init $atk_iterate_delay_step
 	    }
 
-	    # Run iteration loop until no GLib events are pending.
-	    if {[catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result} {
-		set atk_delay_init 0
-	    }
+	    puts "ATK iterate: activity=$activity delay=${atk_delay_init}ms"
 
-	    # Schedule next iteration based on activity.
-	    if {$atk_delay_init == 0} {
-		set atk_iterate_id [after idle [list ::tk::accessible::_atk_iterate]]
-	    } else {
-		set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
-	    }
+	    set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
 	}
     }
 
-    # Check message text on dialog. 
-    proc _getdialogtext {w} {
-	if {[winfo exists $w.msg]} {
-	    return [$w.msg cget -text]
-	}
-    }
 
+	
     # Get text in text widget.
     proc _gettext {w} {
 	if {[winfo class $w] ne "Text"} {

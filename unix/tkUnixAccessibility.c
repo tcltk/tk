@@ -1261,7 +1261,7 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
  
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr) 
 {
-	(void) eventPtr;
+    (void) eventPtr;
 	
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
@@ -1429,8 +1429,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         return TCL_ERROR;
     }
 
-    /* Initialize mapping table. */
+    /* Initialize mapping table and GLib event loop. */
     InitAtkTkMapping();
+    AtkEventLoop(NULL, interp, NULL, NULL);
 
     /* Register main window (root window) as an accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);
