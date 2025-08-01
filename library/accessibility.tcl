@@ -16,28 +16,30 @@ namespace eval ::tk::accessible {
     # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
 
-	variable atk_delay_init 0
-	variable atk_iterate_delay_step 20
-	variable atk_max_iterate_delay 200
 	variable atk_iterate_id ""
-	
-	proc _atk_iterate {} {
-	    variable atk_delay_init
-	    variable atk_iterate_delay_step
-	    variable atk_max_iterate_delay
-	    variable atk_iterate_id
+	variable atk_delay_init 0
+	variable atk_iterate_running 0
 
-	    set activity 0
-	    if {[catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result} {
-		set atk_delay_init 0
-		set activity 1
-	    } elseif {$atk_delay_init < $atk_max_iterate_delay} {
-		incr atk_delay_init $atk_iterate_delay_step
+
+	proc _atk_iterate {} {
+	    
+	    variable atk_iterate_id
+	    variable atk_delay_init
+	    variable atk_iterate_running
+
+	    if {$atk_iterate_running} return
+	    set atk_iterate_running 1
+
+
+	    # Schedule delayed second call if needed.
+	    if {$atk_delay_init == 0} {
+		set atk_iterate_id [after 5 [list ::tk::accessible::_atk_iterate]]
+	    } else {
+		set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
 	    }
 
-	    puts "ATK iterate: activity=$activity delay=${atk_delay_init}ms"
-
-	    set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
+	    # Clear flag after returning.
+	    set atk_iterate_running 0
 	}
     }
 
