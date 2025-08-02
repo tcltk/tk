@@ -1137,7 +1137,8 @@ TkScrollWindow(
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     HIShapeRef srcRgn, dstRgn;
     HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect bounds, viewSrcRect, srcRect, dstRect;
+    NSRect bounds, viewSrcRect;
+    CGRect srcRect, dstRect;
     int result = 0;
 
     if (view) {
