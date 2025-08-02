@@ -422,17 +422,35 @@ proc ::tk::MessageBox {args} {
     # At <Destroy> the buttons have vanished, so must do this directly.
     bind $w.msg <Destroy> [list set tk::Priv.${disp}(button) $cancel]
 
-    # 7. Limit window size to the physical screen (Ticket [e19f1d89])
-    # The message widget size may exceed the screen size on small screens.
-    # In this case, the message wraplength is changed so the window fits
-    # on the physical screen.
-    # A window manager border width of 15 is assumed, leading to 30 on both 
-    # sides.
+    # 7. Limit window width by that of physical screen.
+    # On small screens the message widget's width may exceed the screen's
+    # width.  In this case, change the message label's wrap length so the
+    # window fits on the physical screen.
+    # First, get the frame width of toplevel windows.  On most systems it
+    # is 0 or some other small value, while in SDL2 Tk (e.g., in AndroWish)
+    # it is a number between 6 and 27, depending on the screen's DPI value:
+    set frameWidth 0
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set frameWidth 6
+	} elseif {$dpi < 190} {
+	    set frameWidth 9
+	} elseif {$dpi < 240} {
+	    set frameWidth 12
+	} elseif {$dpi < 320} {
+	    set frameWidth 15
+	} elseif {$dpi < 420} {
+	    set frameWidth 21
+	} else {
+	    set frameWidth 27
+	}
+    }
     update idletasks
-    if {[winfo reqwidth $w] + 30 > [winfo screenwidth $w]} {
+    if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
 	# Calculate the wrap length by the screen width minus all other
 	# but the current message label.
-	set wraplength [expr {[winfo screenwidth $w] - 30
+	set wraplength [expr {[winfo screenwidth $w] - 2*$frameWidth
 		- ([winfo reqwidth $w] - [winfo reqwidth $w.msg])}]
 	# Emergency break, 60 pixels minimum
 	if {$wraplength > 60} {
