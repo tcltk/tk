@@ -531,7 +531,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible)
 {
-	(void) interp;
+    (void) interp;
     if (!accessible || !tkwin) {
         g_warning("RegisterToplevelWindow: Invalid tkwin or accessible");
         return;
@@ -1044,23 +1044,27 @@ int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
     (void)clientData;
     (void)objc;
     (void)objv;
-    int result = 0;
     
-    /* Process one GLib iteration. */
-    if (g_main_context_iteration(g_main_context_default(), FALSE)) {
-        result = 1;
+    /* Process all pending Tk events first (keyboard priority). */
+    int tk_processed = 0;
+    const int max_tk_events = 20;
+    while (tk_processed < max_tk_events && 
+           Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
+        tk_processed++;
     }
     
-    /* Process a limited number of Tk events to avoid starving GLib. */
-    int tk_events_processed = 0;
-    const int max_tk_events = 10; /* Limit to prevent Tk from dominating. */
-    while (tk_events_processed < max_tk_events && Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
-        tk_events_processed++;
+    /* Process GLib events only if no Tk events were pending. */
+    int glib_processed = 0;
+    if (tk_processed == 0) {
+        while (g_main_context_iteration(g_main_context_default(), FALSE)) {
+            glib_processed++;
+        }
     }
     
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(glib_processed));
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
