@@ -378,7 +378,7 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
-		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+		[[view layer] setNeedsDisplayInRect:NSRectToCGRect([view tkDirtyRect])];
 		[view setNeedsDisplay:YES];
 	    }
 	} else {
