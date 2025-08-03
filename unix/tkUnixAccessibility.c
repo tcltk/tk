@@ -549,8 +549,6 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
         int index = g_list_length(toplevel_accessible_objects) - 1;
         g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
-        g_message("RegisterToplevelWindow: Registered toplevel %s at index %d",
-                  Tk_PathName(tkwin), index);
     }
     const gchar *name = tk_get_name(accessible);
     if (name) {
@@ -781,7 +779,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     acc->tkwin = tkwin;
     acc->path = sanitize_utf8(path);
     
-    /* Ensure toplevel is mapped before processing */
+    /* Ensure toplevel is mapped before processing. */
     if (Tk_IsTopLevel(tkwin) && tkwin != Tk_MainWindow(interp)) {
         Tk_MakeWindowExist(tkwin);
         Tk_MapWindow(tkwin);
@@ -823,7 +821,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         RegisterChildWidgets(interp, tkwin, obj);
     }
 
-    g_message("TkCreateAccessibleAtkObject: Created for %s", Tk_PathName(tkwin));
+  g_message("TkCreateAccessibleAtkObject: Created for %s", Tk_PathName(tkwin));
     return obj;
 }
 
@@ -1043,24 +1041,31 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
  *----------------------------------------------------------------------
  */
 
-int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    
+int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+{
     (void)clientData;
     (void)objc;
     (void)objv;
-
     int result = 0;
-
+    
+    /* Process one GLib iteration. */
     if (g_main_context_iteration(g_main_context_default(), FALSE)) {
         result = 1;
     }
-    /* Drain the Tcl event loop after running GLib event loop. */
-    while (Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {}
-
+    
+    /* Process a limited number of Tk events to avoid starving GLib. */
+    int tk_events_processed = 0;
+    const int max_tk_events = 10; /* Limit to prevent Tk from dominating. */
+    while (tk_events_processed < max_tk_events && Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
+        tk_events_processed++;
+    }
+    
+    /* Log for debugging. */
+    //  g_message("AtkEventLoop: Processed %d GLib events, %d Tk events", result, tk_events_processed);
+    
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1168,8 +1173,6 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     
     /* Notify ATK of changes only if geometry is valid. */
     if (acc->width > 0 && acc->height > 0) {
-        g_message("TkAtkAccessible_ConfigureHandler: Emitting bounds-changed for %s (%d, %d, %d, %d)",
-                  Tk_PathName(acc->tkwin), acc->x, acc->y, acc->width, acc->height);
         g_signal_emit_by_name(acc, "bounds-changed", acc->x, acc->y, acc->width, acc->height);
     } else {
         g_warning("TkAtkAccessible_ConfigureHandler: Skipping bounds-changed for %s due to invalid geometry",
@@ -1417,7 +1420,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
         return TCL_ERROR;
     }
     /* Create and configure root accessible object (ATK_ROLE_APPLICATION). */
-    tk_root_accessible = atk_get_root(); //tk_util_get_root();
+    tk_root_accessible = atk_get_root();
     if (tk_root_accessible) {
 	tk_set_name(tk_root_accessible, "Tk Application");
     }
