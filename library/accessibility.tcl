@@ -16,15 +16,19 @@ namespace eval ::tk::accessible {
     # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
 	proc _atk_iterate {} {
-	    set result [::tk::accessible::_run_atk_eventloop]
-	    if {$result == 1} {
-		# GLib processed events, schedule sooner.
-		after 10 ::tk::accessible::_atk_iterate
+	    set glib_count [::tk::accessible::_run_atk_eventloop]
+	    
+	    # Adaptive scheduling based on activity
+	    if {$glib_count > 0} {
+		# GLib activity detected - check again quickly
+		after 5 ::tk::accessible::_atk_iterate
 	    } else {
-		# No GLib events, wait longer.
+		# No GLib activity - wait longer
 		after 50 ::tk::accessible::_atk_iterate
 	    }
 	}
+	# Start the loop after Tk is initialized
+	after 1000 ::tk::accessible::_atk_iterate
     }
 	
     # Get text in text widget.
@@ -696,13 +700,7 @@ namespace eval ::tk::accessible {
 	bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
 	bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
 	bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
-	
-	# Initialize the main window and start the Atk event loop on X11. 
-	if {[tk windowingsystem] eq "x11"} {
-	    #after idle
-	    ::tk::accessible::_atk_iterate 
-	}
-	
+
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
 	
 	# Finally, export the main commands.
