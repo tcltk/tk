@@ -531,6 +531,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible)
 {
+	(void) interp;
     if (!accessible || !tkwin) {
         g_warning("RegisterToplevelWindow: Invalid tkwin or accessible");
         return;
@@ -812,8 +813,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     AtkObject *parent_obj = parent_tkwin ? GetAtkObjectForTkWindow(parent_tkwin) : tk_root_accessible;
     if (parent_obj) {
         atk_object_set_parent(obj, parent_obj);
-    } else {
-        g_warning("TkCreateAccessibleAtkObject: No parent found for %s", Tk_PathName(tkwin));
     }
     
     if (Tk_IsTopLevel(tkwin)) {
@@ -821,7 +820,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         RegisterChildWidgets(interp, tkwin, obj);
     }
 
-  g_message("TkCreateAccessibleAtkObject: Created for %s", Tk_PathName(tkwin));
     return obj;
 }
 
@@ -1059,9 +1057,6 @@ int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
     while (tk_events_processed < max_tk_events && Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
         tk_events_processed++;
     }
-    
-    /* Log for debugging. */
-    //  g_message("AtkEventLoop: Processed %d GLib events, %d Tk events", result, tk_events_processed);
     
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
