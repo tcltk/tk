@@ -448,16 +448,24 @@ proc ::tk::MessageBox {args} {
     }
     update idletasks
     if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
-	# Calculate the wrap length by the screen width minus all other
-	# but the current message label.
+	# Calculate the wrap length as the screen width minus the
+	# width requested by the dialog without the message label
 	set wraplength [expr {[winfo screenwidth $w] - 2*$frameWidth
 		- ([winfo reqwidth $w] - [winfo reqwidth $w.msg])}]
-	# Emergency break, 60 pixels minimum
-	if {$wraplength > 60} {
-	    $w.msg configure -wraplength $wraplength
-	    if {[winfo exists $w.dtl]} {
-		$w.dtl configure -wraplength $wraplength
-	    }
+
+	# Make sure that the wrap length is no less than the width
+	# of 20 average-size characters in the message label's font
+	set msgFont [$w.msg cget -font]
+	set str [string repeat "0" 20]
+	set minWraplength [font measure $msgFont -displayof $w $str]
+	if {$wraplength < $minWraplength} {	;# this is rather unprobable
+	    set wraplength $minWraplength
+	}
+
+	# Apply the wrap length
+	$w.msg configure -wraplength $wraplength
+	if {[winfo exists $w.dtl]} {
+	    $w.dtl configure -wraplength $wraplength
 	}
     }
 
