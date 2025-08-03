@@ -13,12 +13,17 @@
 
 namespace eval ::tk::accessible {
     
-      # Variables and procedures to drive Atk event loop on X11.
+    # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
-
-        proc _atk_iterate {} {
-	    ::tk::accessible::_run_atk_eventloop
-	    after idle ::tk::accessible::_atk_iterate
+	proc _atk_iterate {} {
+	    set result [::tk::accessible::_run_atk_eventloop]
+	    if {$result == 1} {
+		# GLib processed events, schedule sooner.
+		after 10 ::tk::accessible::_atk_iterate
+	    } else {
+		# No GLib events, wait longer.
+		after 50 ::tk::accessible::_atk_iterate
+	    }
 	}
     }
 	
