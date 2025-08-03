@@ -13,35 +13,14 @@
 
 namespace eval ::tk::accessible {
     
-    # Variables and procedures to drive Atk event loop on X11.
+      # Variables and procedures to drive Atk event loop on X11.
     if {[tk windowingsystem] eq "x11"} {
 
-	variable atk_delay_init 0
-	variable atk_iterate_delay_step 20
-	variable atk_max_iterate_delay 200
-	variable atk_iterate_id ""
-	
-	proc _atk_iterate {} {
-	    variable atk_delay_init
-	    variable atk_iterate_delay_step
-	    variable atk_max_iterate_delay
-	    variable atk_iterate_id
-
-	    set activity 0
-	    if {[catch {::tk::accessible::_run_atk_eventloop} result] == 0 && $result} {
-		set atk_delay_init 0
-		set activity 1
-	    } elseif {$atk_delay_init < $atk_max_iterate_delay} {
-		incr atk_delay_init $atk_iterate_delay_step
-	    }
-
-	    puts "ATK iterate: activity=$activity delay=${atk_delay_init}ms"
-
-	    set atk_iterate_id [after $atk_delay_init [list ::tk::accessible::_atk_iterate]]
+        proc _atk_iterate {} {
+	    ::tk::accessible::_run_atk_eventloop
+	    after idle ::tk::accessible::_atk_iterate
 	}
     }
-
-
 	
     # Get text in text widget.
     proc _gettext {w} {
@@ -715,7 +694,8 @@ namespace eval ::tk::accessible {
 	
 	# Initialize the main window and start the Atk event loop on X11. 
 	if {[tk windowingsystem] eq "x11"} {
-	    after idle ::tk::accessible::_atk_iterate 
+	    #after idle
+	    ::tk::accessible::_atk_iterate 
 	}
 	
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
