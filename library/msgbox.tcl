@@ -426,26 +426,11 @@ proc ::tk::MessageBox {args} {
     # On small screens the message widget's width may exceed the screen's
     # width.  In this case, change the message label's wrap length so the
     # window fits on the physical screen.
-    # First, get the frame width of toplevel windows.  On most systems it
-    # is 0 or some other small value, while in SDL2 Tk (e.g., in AndroWish)
-    # it is a number between 6 and 27, depending on the screen's DPI value:
-    set frameWidth 0
-    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
-	variable dpi
-	if {$dpi < 140} {
-	    set frameWidth 6
-	} elseif {$dpi < 190} {
-	    set frameWidth 9
-	} elseif {$dpi < 240} {
-	    set frameWidth 12
-	} elseif {$dpi < 320} {
-	    set frameWidth 15
-	} elseif {$dpi < 420} {
-	    set frameWidth 21
-	} else {
-	    set frameWidth 27
-	}
-    }
+    # First, get the window manager frame width of toplevel windows.
+    # On most systems it is 0 or some other small value, while in SDL2 Tk
+    # (e.g., in AndroWish) it is a number between 6 and 27, depending on
+    # the screen's DPI value.
+    set frameWidth [::tk::WMFrameWidth]
     update idletasks
     if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
 	# Calculate the wrap length as the screen width minus the

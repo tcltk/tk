@@ -128,6 +128,9 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	}
     }
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
+    set frameWidth [WMFrameWidth]
+    incr x -$frameWidth
+    incr y -$frameWidth
     wm geometry $w +$x+$y
     wm deiconify $w
 }
@@ -690,6 +693,31 @@ proc ::tk::AltKeyInDialog {path key} {
     if {$target ne ""} {
 	event generate $target <<AltUnderlined>>
     }
+}
+
+# ::tk::WMFrameWidth
+#
+#	Return window manager frame width if known, else 0.
+
+proc ::tk::WMFrameWidth {} {
+    set frameWidth 0
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set frameWidth 6
+    	} elseif {$dpi < 190} {
+	    set frameWidth 9
+    	} elseif {$dpi < 240} {
+	    set frameWidth 12
+    	} elseif {$dpi < 320} {
+	    set frameWidth 15
+    	} elseif {$dpi < 420} {
+	    set frameWidth 21
+    	} else {
+	    set frameWidth 27
+   	}
+    }
+    return $frameWidth
 }
 
 # ::tk::mcmaxamp --
