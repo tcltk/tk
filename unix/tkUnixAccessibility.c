@@ -570,16 +570,30 @@ static void UpdateGeometryCache(TkAtkAccessible *acc)
         return;
     }
     
-    if (!Tk_IsMapped(acc->tkwin)) {
-        g_warning("UpdateGeometryCache: Widget %s is not mapped", Tk_PathName(acc->tkwin));
+    if (!Tk_IsMapped(acc->tkwin) || !Tk_WindowId(acc->tkwin)) {
+        g_warning("UpdateGeometryCache: Widget %s is not mapped or has no window ID", Tk_PathName(acc->tkwin));
         acc->x = acc->y = acc->width = acc->height = 0;
         return;
     }
     
-    acc->x = Tk_X(acc->tkwin);
-    acc->y = Tk_Y(acc->tkwin);
-    acc->width = Tk_Width(acc->tkwin);
-    acc->height = Tk_Height(acc->tkwin);
+    /* Safely retrieve geometry. */
+    int x, y, width, height;
+    x = Tk_X(acc->tkwin);
+    y = Tk_Y(acc->tkwin);
+    width = Tk_Width(acc->tkwin);
+    height = Tk_Height(acc->tkwin);
+    
+    /* Validate geometry values. */
+    if (width <= 0 || height <= 0) {
+        g_warning("UpdateGeometryCache: Invalid geometry for %s (width: %d, height: %d)",
+                  Tk_PathName(acc->tkwin), width, height);
+        acc->x = acc->y = acc->width = acc->height = 0;
+    } else {
+        acc->x = x;
+        acc->y = y;
+        acc->width = width;
+        acc->height = height;
+    }
 }
 
 static void UpdateNameCache(TkAtkAccessible *acc)
@@ -1154,15 +1168,21 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
 {
-    if (eventPtr->type != ConfigureNotify) return;
-    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) {
-        g_warning("TkAtkAccessible_ConfigureHandler: Invalid or unmapped tkwin %s",
-                  acc && acc->tkwin ? Tk_PathName(acc->tkwin) : "null");
+    if (eventPtr->type != ConfigureNotify) {
         return;
     }
     
-    /* Update all caches. */
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin) {
+        g_warning("TkAtkAccessible_ConfigureHandler: Invalid or null acc/tkwin");
+        return;
+    }
+    if (!Tk_IsMapped(acc->tkwin)) {
+        g_warning("TkAtkAccessible_ConfigureHandler: Widget %s is not mapped", Tk_PathName(acc->tkwin));
+        return;
+    }
+    
+    /* Update all caches with additional validation. */
     UpdateGeometryCache(acc);
     UpdateNameCache(acc);
     UpdateDescriptionCache(acc);
@@ -1170,12 +1190,12 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
     
-    /* Notify ATK of changes only if geometry is valid. */
-    if (acc->width > 0 && acc->height > 0) {
+    /* Notify ATK of changes only if geometry is valid and non-zero. */
+    if (acc->width > 0 && acc->height > 0 && Tk_IsMapped(acc->tkwin)) {
         g_signal_emit_by_name(acc, "bounds-changed", acc->x, acc->y, acc->width, acc->height);
     } else {
-        g_warning("TkAtkAccessible_ConfigureHandler: Skipping bounds-changed for %s due to invalid geometry",
-                  Tk_PathName(acc->tkwin));
+        g_warning("TkAtkAccessible_ConfigureHandler: Skipping bounds-changed for %s due to invalid geometry (width: %d, height: %d)",
+                  Tk_PathName(acc->tkwin), acc->width, acc->height);
     }
     
     if (acc->cached_name) {
@@ -1186,6 +1206,12 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     }
     g_signal_emit_by_name(acc, "state-change", "visible", acc->is_mapped);
     g_signal_emit_by_name(acc, "state-change", "showing", acc->is_mapped);
+    
+    /* Process GLib events to ensure AT-SPI updates. */
+    int glib_iterations = 0;
+    while (g_main_context_iteration(g_main_context_default(), FALSE) && glib_iterations < 20) {
+        glib_iterations++;
+    }
 }
 
 /*
