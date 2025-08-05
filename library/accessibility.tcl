@@ -30,7 +30,15 @@ namespace eval ::tk::accessible {
 	# Start the loop after Tk is initialized
 	after 1000 ::tk::accessible::_atk_iterate
     }
-	
+
+
+    #check message text on dialog 
+    proc _getdialogtext {w} {
+	if {[winfo exists $w.msg]} {
+	    return [$w.msg cget -text]
+	}
+    }
+    
     # Get text in text widget.
     proc _gettext {w} {
 	if {[winfo class $w] ne "Text"} {
