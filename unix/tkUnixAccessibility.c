@@ -1185,10 +1185,17 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateValueCache(acc);
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
+
+    AtkRectangle rect = {
+	.x = acc->x,
+	.y = acc->y,
+	.width = acc->width,
+	.height = acc->height
+    };
     
     /* Notify ATK of changes only if geometry is valid and non-zero. */
     if (acc->width > 0 && acc->height > 0 && Tk_IsMapped(acc->tkwin)) {
-        g_signal_emit_by_name(acc, "bounds-changed", acc->x, acc->y, acc->width, acc->height);
+        g_signal_emit_by_name(acc, "bounds-changed", &rect);
     } else {
         g_warning("TkAtkAccessible_ConfigureHandler: Skipping bounds-changed for %s due to invalid geometry (width: %d, height: %d)",
                   Tk_PathName(acc->tkwin), acc->width, acc->height);
