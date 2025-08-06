@@ -571,8 +571,6 @@ static void UpdateGeometryCache(TkAtkAccessible *acc)
     }
     
     if (!Tk_IsMapped(acc->tkwin) || !Tk_WindowId(acc->tkwin)) {
-        g_warning("UpdateGeometryCache: Widget %s is not mapped or has no window ID", Tk_PathName(acc->tkwin));
-        acc->x = acc->y = acc->width = acc->height = 0;
         return;
     }
     
@@ -714,8 +712,6 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
     for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
         if (!child || !Tk_IsMapped(child)) {
-            g_warning("RegisterChildWidgets: Skipping unmapped child %s",
-                      child ? Tk_PathName(child) : "null");
             continue;
         }
         AtkObject *child_obj = GetAtkObjectForTkWindow(child);
@@ -1249,8 +1245,6 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
     for (TkWindow *childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
         if (!child || !Tk_IsMapped(child)) {
-            g_warning("TkAtkAccessible_MapHandler: Skipping unmapped child %s",
-                      child ? Tk_PathName(child) : "null");
             continue;
         }
         if (!GetAtkObjectForTkWindow(child)) {
