@@ -24,9 +24,6 @@ tcltest::loadTestedCommands
 # COMMON TEST SETUP
 #
 
-set keyInfo {}
-set numericKeysym {}
-
 tk useinputmethods 0
 
 toplevel .t -width 100 -height 50
