@@ -142,33 +142,39 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 /*Foundational method. All actions derive from the role returned here.*/
 - (NSAccessibilityRole)accessibilityRole {
-
-    NSAccessibilityRole macrole = nil;
-
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
 
-    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!win) {
+        return nil;
+    }
+
+    hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	return nil;
+        return nil;
     }
 
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "role");
+    hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-	return nil;
+        return nil;
     }
+
     char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    for (NSUInteger i = 0; i < sizeof(roleMap); i++) {
-	if(strcmp(roleMap[i].tkrole, result) != 0) {
-	    continue;
-	}
-	macrole = roleMap[i].macrole;
-	return macrole;
+    if (!result) {
+        return nil;
     }
-    return macrole;
+
+    for (NSUInteger i = 0; roleMap[i].tkrole != NULL; i++) {
+        if (strcmp(roleMap[i].tkrole, result) == 0) {
+            return roleMap[i].macrole;
+        }
+    }
+
+    return nil;
 }
+
 
 - (NSString *)accessibilityLabel {
 
