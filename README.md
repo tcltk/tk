@@ -23,7 +23,7 @@ cross-platform GUI toolkit implemented with the Tcl scripting language.
 For details on features, incompatibilities, and potential problems with
 this release, see [the Tcl/Tk 9.1 Web page](https://www.tcl-lang.org/software/tcltk/9.1.html)
 or refer to the "changes" file in this directory, which contains a
-historical record of all changes to Tk.
+description of the changes in Tk 9.1 compared to Tk 9.0
 
 Tk is maintained, enhanced, and distributed freely by the Tcl community.
 Source code development and tracking of bug reports and feature requests
