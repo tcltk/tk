@@ -912,5 +912,12 @@ TkAccessibility_Init(
   return TCL_OK;
 }
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
 
 
