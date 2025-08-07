@@ -229,7 +229,7 @@ static gint tk_get_n_children(AtkObject *obj)
 	if (Tk_WindowId((Tk_Window)childPtr) && GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
             count++;
 	} else {
-	    AtkObject *child_obj = TkCreateAccessibleAtkObject(interp, (Tk_Window)childPtr, Tk_PathName((Tk_Window)childPtr));
+	    AtkObject *child_obj = TkCreateAccessibleAtkObject(acc->interp, (Tk_Window)childPtr, Tk_PathName((Tk_Window)childPtr));
 	    RegisterAtkObjectForTkWindow((Tk_Window)childPtr, child_obj);
 	    count++;
 	}
