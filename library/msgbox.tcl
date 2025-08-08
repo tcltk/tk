@@ -425,19 +425,15 @@ proc ::tk::MessageBox {args} {
     # 7. Limit window width by that of physical screen.
     # On small screens the message widget's width may exceed the screen's
     # width.  In this case, change the message label's wrap length so the
-    # window fits on the physical screen.
-    # First, get the window manager frame width of toplevel windows.
-    # On most systems it is 0 or some other small value, while in SDL2 Tk
-    # (e.g., in AndroWish) it is a number between 6 and 27, depending on
-    # the screen's DPI value.
+    # window fits on the physical screen. Tk Ticket e19f1d89
     set frameWidth [::tk::WMFrameWidth]
     update idletasks
     if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
 	# Calculate the wrap length as the screen width minus the
-	# width requested by the dialog without the message label
+	# width requested by the dialog without the message label and
+	# window decoration frame
 	set wraplength [expr {[winfo screenwidth $w] - 2*$frameWidth
 		- ([winfo reqwidth $w] - [winfo reqwidth $w.msg])}]
-
 	# Make sure that the wrap length is no less than the width
 	# of 20 average-size characters in the message label's font
 	set msgFont [$w.msg cget -font]
@@ -446,7 +442,6 @@ proc ::tk::MessageBox {args} {
 	if {$wraplength < $minWraplength} {	;# this is rather unprobable
 	    set wraplength $minWraplength
 	}
-
 	# Apply the wrap length
 	$w.msg configure -wraplength $wraplength
 	if {[winfo exists $w.dtl]} {
