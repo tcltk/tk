@@ -91,7 +91,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     # so we know how big it wants to be, then center the window in the
     # display (Motif style) and de-iconify it.
 
-    ::tk::PlaceWindow $w widget $data(-parent)
+    ::tk::PlaceWindow $w -zoomnospace widget $data(-parent)
     wm title $w $data(-title)
 
     # Set a grab and claim the focus too.

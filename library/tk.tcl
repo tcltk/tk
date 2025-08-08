@@ -73,16 +73,36 @@ catch {tk useinputmethods 1}
 #   place a toplevel at a particular position
 # Arguments:
 #   toplevel	name of toplevel window
-#   ?placement?	pointer ?center? ; places $w centered on the pointer
-#		widget widgetPath ; centers $w over widget_name
-#		defaults to placing toplevel in the middle of the screen
-#   ?anchor?	center or widgetPath
+#   ?-zoomnospace?	show zoomed if size exceeds screen size
+#   ?placement?		pointer ?center? ; places $w centered on the pointer
+#			widget widgetPath ; centers $w over widget_name
+#			defaults to placing toplevel in the middle of the screen
+#   ?anchor?		center or widgetPath
 # Results:
 #   Returns nothing
 #
-proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
+proc ::tk::PlaceWindow {w args} {
+    
+    set args [lassign $args place]
+    set zoomNoSpace [expr {$place eq "-zoomnospace"}]
+    if {$zoomNoSpace} {set args [lassign $args place]}
+    set args [lassign $args anchor]
+    if {[llength $args] >0} {return -code error "to many arguments"}
+
     wm withdraw $w
     update idletasks
+    set frameWidth [WMFrameWidth]
+    set titleHeight [WMTitleHeight]
+
+    # Check if window gets zoomed if it does not fit on the screen
+    if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]
+	    || [winfo reqwidth $w] + $titleHeight + $frameWidth
+	     > [winfo screenheight $w]
+    } {
+	wm attributes $w -fullscreen 1    
+	wm deiconify $w
+	return
+    }
     set checkBounds 1
     if {$place eq ""} {
 	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
@@ -130,8 +150,8 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
     # "wm geometry" operates in window manager coordinates and thus includes
     # an eventual decoration frame.
-    incr x -[WMFrameWidth]
-    incr y -[WMTitleHeight]
+    incr x -$frameWidth
+    incr y -$titleHeight
     # Set geometry and show window
     wm geometry $w +$x+$y
     wm deiconify $w
