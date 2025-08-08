@@ -96,7 +96,7 @@ proc ::tk::PlaceWindow {w args} {
 
     # Check if window gets zoomed if it does not fit on the screen
     if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]
-	    || [winfo reqwidth $w] + $titleHeight + $frameWidth
+	    || [winfo reqheight $w] + $titleHeight + $frameWidth
 	     > [winfo screenheight $w]
     } {
 	wm attributes $w -fullscreen 1    
