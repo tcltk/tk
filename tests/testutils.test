@@ -213,7 +213,7 @@ test dt-1.4 {Invalid value for granularity} -constraints testutils -body {
 test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -constraints testutils -body {
     progress.init microseconds
     while {[incr i] < 10} {
-	progress.iter
+	progress.update
     }
     progress.end
 } -errorOutput "......... * microseconds\n" -match glob -cleanup {

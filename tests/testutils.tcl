@@ -1035,7 +1035,7 @@ namespace eval ::tk::test::timing {
 	dt.reset $granularity
     }
 
-    proc progress.iter {} {
+    proc progress.update {} {
 	puts -nonewline stderr "." ; flush stderr
     }
 
