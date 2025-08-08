@@ -130,9 +130,8 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
     # "wm geometry" operates in window manager coordinates and thus includes
     # an eventual decoration frame.
-    set frameWidth [WMFrameWidth]
-    incr x -$frameWidth
-    incr y -$frameWidth
+    incr x -[WMFrameWidth]
+    incr y -[WMTitleHeight]
     # Set geometry and show window
     wm geometry $w +$x+$y
     wm deiconify $w
@@ -723,6 +722,31 @@ proc ::tk::WMFrameWidth {} {
    	}
     }
     return $frameWidth
+}
+
+# ::tk::WMTitleHeight
+#
+#	Return window manager height of window title, if known, else 0.
+
+proc ::tk::WMTitleHeight {} {
+    set titleHeight 0
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set titleHeight 20
+    	} elseif {$dpi < 190} {
+	    set titleHeight 30
+    	} elseif {$dpi < 240} {
+	    set titleHeight 38
+    	} elseif {$dpi < 320} {
+	    set titleHeight 46
+    	} elseif {$dpi < 420} {
+	    set titleHeight 60
+    	} else {
+	    set titleHeight 78
+   	}
+    }
+    return $titleHeight
 }
 
 # ::tk::mcmaxamp --
