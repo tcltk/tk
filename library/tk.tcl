@@ -128,9 +128,12 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	}
     }
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
+    # "wm geometry" operates in window manager coordinates and thus includes
+    # an eventual decoration frame.
     set frameWidth [WMFrameWidth]
     incr x -$frameWidth
     incr y -$frameWidth
+    # Set geometry and show window
     wm geometry $w +$x+$y
     wm deiconify $w
 }
@@ -701,6 +704,8 @@ proc ::tk::AltKeyInDialog {path key} {
 
 proc ::tk::WMFrameWidth {} {
     set frameWidth 0
+    # In SDL2 Tk, the frame width is a number between 6 and 27, depending on
+    # the screen's DPI value.
     if {[info exists ::tk::sdltk] && $::tk::sdltk} {
 	variable dpi
 	if {$dpi < 140} {
