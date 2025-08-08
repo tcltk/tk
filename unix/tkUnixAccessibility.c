@@ -96,13 +96,39 @@ struct AtkRoleMap roleMap[] = {
     {NULL, 0}
 };
 
-/* Define custom Atk object bridged to Tcl/Tk. */
-#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
-G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
-			)
+/* Structs for signals data. */
+typedef struct {
+    AtkObject *obj;
+    GValue value;
+} ValueChangedData;
+
+typedef struct {
+    AtkObject *obj;
+    gboolean state;
+} FocusEventData;
+
+typedef struct {
+    AtkObject *obj;
+    gchar *name;
+    gboolean state;
+} StateChangeData;
+
+typedef struct {
+    AtkObject *obj;
+    AtkRectangle rect;
+} BoundsChangedData;
+
+typedef struct {
+    AtkObject *parent;
+    gint index;
+    AtkObject *child;
+} ChildrenChangedRemoveData;
+
+typedef struct {
+    gint index;
+    AtkObject *child;
+} ChildrenChangedAddData;
+
 
 /* Variables for managing Atk objects. */
 static AtkObject *tk_root_accessible = NULL;
@@ -135,14 +161,13 @@ static gpointer get_main_window_main(gpointer data);
 static gpointer get_window_handle_main(gpointer data);
 
 /* Signal emission helpers. */
-static void emit_children_changed(gpointer data);
-static void emit_children_changed_add(gpointer index, gpointer child);
-static void emit_children_changed_remove(gpointer parent, gpointer index, gpointer child);
-static void emit_value_changed(gpointer obj, gpointer value);
-static void emit_text_selection_changed(gpointer obj, gpointer unused);
-static void emit_focus_event(gpointer obj, gpointer state);
-static void emit_state_change(gpointer obj, gpointer name, gpointer state);
-static void emit_bounds_changed(gpointer obj, gpointer rect);
+static gboolean emit_children_changed_add(gpointer data);
+static gboolean emit_children_changed_remove(gpointer data);
+static gboolean emit_value_changed(gpointer data);
+static gboolean emit_text_selection_changed(gpointer data);
+static gboolean emit_focus_event(gpointer data);
+static gboolean emit_state_change(gpointer data);
+static gboolean emit_bounds_changed(gpointer data);
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -205,8 +230,16 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 
+/* Define custom Atk object bridged to Tcl/Tk. */
+#define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
+G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
+			)
+
 /* Helper function to integrate strings. */			
-static gchar *sanitize_utf8(const gchar *str) {
+    static gchar *sanitize_utf8(const gchar *str) {
     if (!str) return NULL;
     return g_utf8_make_valid(str, -1);
 }
@@ -341,6 +374,77 @@ static gpointer map_window_main(gpointer data) {
     return NULL;
 }
 
+/* Check if a window has a window ID.  */
+static gpointer has_window_id_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    if (!mt_data || !mt_data->tkwin) return NULL;
+
+    Window win = Tk_WindowId(mt_data->tkwin);
+    return (win != None) ? (gpointer)1 : NULL;
+}
+
+/* Check if a window is toplevel.  */
+static gpointer is_toplevel_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gpointer)(uintptr_t)Tk_IsTopLevel(mt_data->tkwin);
+}
+
+/* Get the Tk window.  */
+static gpointer get_window_handle_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gpointer)mt_data->tkwin;
+}
+
+/* Find a hash entry.  */
+static gpointer find_hash_entry_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gpointer)Tcl_FindHashEntry(TkAccessibilityObject, (char *)mt_data->tkwin);
+}
+
+/* Get a hash value.  */
+static gpointer get_hash_value_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    Tcl_HashEntry *hPtr = (Tcl_HashEntry *)mt_data->result;
+    return hPtr ? (gpointer)Tcl_GetHashValue(hPtr) : NULL;
+}
+
+/* Find hash entry by key. */
+static gpointer find_hash_entry_by_key_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    Tcl_HashTable *table = (Tcl_HashTable *)mt_data->result;
+    return (gpointer)Tcl_FindHashEntry(table, "role");
+}
+
+/* Obtain the string value for a hash entry. */ 
+static gpointer get_hash_string_value_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    Tcl_HashEntry *hPtr = (Tcl_HashEntry *)mt_data->result;
+    return hPtr ? (gpointer)Tcl_GetString(Tcl_GetHashValue(hPtr)) : NULL;
+}
+
+/* Obtain a window name.  */
+static gpointer name_to_window_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gpointer)Tk_NameToWindow(mt_data->interp, 
+                                     Tcl_GetString(mt_data->result), 
+                                     Tk_MainWindow(mt_data->interp));
+}
+
+/* Get the main Tk window.  */
+static gpointer get_main_window_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gpointer)Tk_MainWindow(mt_data->interp);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -349,94 +453,84 @@ static gpointer map_window_main(gpointer data) {
  *
  *----------------------------------------------------------------------
  */
- 
-
-/* Generic children changed signal emitter. */
-static void emit_children_changed(gpointer data)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible *)data;
-    if (!acc) return;
-    
-    g_signal_emit_by_name(acc, "children-changed");
-}
 
 /* Emit children-changed::add signal. */
-static void emit_children_changed_add(gpointer index, gpointer child)
+static gboolean emit_children_changed_add(gpointer data)
 {
-    gint idx = GPOINTER_TO_INT(index);
-    AtkObject *obj = (AtkObject *)child;
-    
-    if (!obj) return;
-    
-    g_signal_emit_by_name(obj, "children-changed::add", idx, child);
+    if (data) {
+        AtkObject *child = (AtkObject *)data;
+        g_signal_emit_by_name(child, "children-changed::add", -1, child);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /* Emit children-changed::remove signal. */
-static void emit_children_changed_remove(gpointer parent, gpointer index, gpointer child)
+static gboolean emit_children_changed_remove(gpointer data)
 {
-    gint idx = GPOINTER_TO_INT(index);
-    AtkObject *parent_obj = (AtkObject *)parent;
-    AtkObject *child_obj = (AtkObject *)child;
-    
-    if (!parent_obj || !child_obj) return;
-    
-    g_signal_emit_by_name(parent_obj, "children-changed::remove", idx, child_obj);
+    if (data) {
+        AtkObject *child = (AtkObject *)data;
+        AtkObject *parent = atk_object_get_parent(child);
+        if (parent) {
+            g_signal_emit_by_name(parent, "children-changed::remove", -1, child);
+        }
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /* Emit value-changed signal. */
-static void emit_value_changed(gpointer obj, gpointer value)
+static gboolean emit_value_changed(gpointer data)
 {
-    AtkObject *atk_obj = (AtkObject *)obj;
-    GValue *gval = (GValue *)value;
-    
-    if (!atk_obj || !gval) return;
-    
-    g_signal_emit_by_name(atk_obj, "value-changed", gval);
+    if (data) {
+        ValueChangedData *vcd = (ValueChangedData *)data;
+        g_signal_emit_by_name(vcd->obj, "value-changed", &vcd->value);
+        g_value_unset(&vcd->value);
+        g_free(vcd);
+    }
+    return G_SOURCE_REMOVE;
 }
 
+
 /* Emit text-selection-changed signal. */
-static void emit_text_selection_changed(gpointer obj, gpointer unused)
+static gboolean emit_text_selection_changed(gpointer data)
 {
-    AtkObject *atk_obj = (AtkObject *)obj;
-    (void)unused;
-    
-    if (!atk_obj) return;
-    
-    g_signal_emit_by_name(atk_obj, "text-selection-changed");
+    if (data) {
+        g_signal_emit_by_name(data, "text-selection-changed");
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /* Emit focus-event signal. */
-static void emit_focus_event(gpointer obj, gpointer state)
+static gboolean emit_focus_event(gpointer data)
 {
-    AtkObject *atk_obj = (AtkObject *)obj;
-    gboolean has_focus = GPOINTER_TO_INT(state);
-    
-    if (!atk_obj) return;
-    
-    g_signal_emit_by_name(atk_obj, "focus-event", has_focus);
+    if (data) {
+        FocusEventData *fed = (FocusEventData *)data;
+        g_signal_emit_by_name(fed->obj, "focus-event", fed->state);
+        g_free(fed);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /* Emit state-change signal. */
-static void emit_state_change(gpointer obj, gpointer name, gpointer state)
+static gboolean emit_state_change(gpointer data)
 {
-    AtkObject *atk_obj = (AtkObject *)obj;
-    const gchar *state_name = (const gchar *)name;
-    gboolean new_state = GPOINTER_TO_INT(state);
-    
-    if (!atk_obj || !state_name) return;
-    
-    g_signal_emit_by_name(atk_obj, "state-change", state_name, new_state);
+    if (data) {
+        StateChangeData *scd = (StateChangeData *)data;
+        g_signal_emit_by_name(scd->obj, "state-change", scd->name, scd->state);
+        g_free(scd->name);
+        g_free(scd);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /* Emit bounds-changed signal. */
-static void emit_bounds_changed(gpointer obj, gpointer rect)
+static gboolean emit_bounds_changed(gpointer data)
 {
-    AtkObject *atk_obj = (AtkObject *)obj;
-    AtkRectangle *bounds = (AtkRectangle *)rect;
-    
-    if (!atk_obj || !bounds) return;
-    
-    g_signal_emit_by_name(atk_obj, "bounds-changed", bounds);
+    if (data) {
+        BoundsChangedData *bcd = (BoundsChangedData *)data;
+        g_signal_emit_by_name(bcd->obj, "bounds-changed", &bcd->rect);
+        g_free(bcd);
+    }
+    return G_SOURCE_REMOVE;
 }
 
 /*
@@ -794,11 +888,11 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     TkAtkAccessible *self = (TkAtkAccessible*)gobject;
 
     if (self->tkwin) {
-	if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &(MainThreadData){self->tkwin, NULL, NULL})) {
-	    toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
-	    RunOnMainThreadAsync((GSourceFunc)emit_children_changed, self);
-	}
-	UnregisterAtkObjectForTkWindow(self->tkwin);
+        if (RunOnMainThread(is_toplevel_main, &(MainThreadData){self->tkwin, NULL, NULL})) {
+            toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
+            RunOnMainThreadAsync(emit_children_changed_remove, ATK_OBJECT(self));
+        }
+        UnregisterAtkObjectForTkWindow(self->tkwin);
     }
 
     g_free(self->path);
@@ -853,9 +947,8 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     }
     atk_object_set_parent(accessible, tk_root_accessible);
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
-	toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
-	int index = g_list_length(toplevel_accessible_objects) - 1;
-	RunOnMainThreadAsync((GSourceFunc)emit_children_changed_add, GINT_TO_POINTER(index), accessible);
+        toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
+        RunOnMainThreadAsync(emit_children_changed_add, accessible);
     }
     const gchar *name = tk_get_name(accessible);
     if (name) {
@@ -911,7 +1004,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 	    }
 	    g_object_unref(state_set);
 	    atk_object_set_parent(child_obj, parent_obj);
-	    RunOnMainThreadAsync((GSourceFunc)emit_children_changed_add, GINT_TO_POINTER(index), child_obj);
+	    RunOnMainThreadAsync(emit_children_changed_add, child_obj);
 	    RegisterChildWidgets(interp, child, child_obj);
 	}
 	index++;
@@ -1214,19 +1307,14 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) 
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type == DestroyNotify) {
-	TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
-	if (tkAccessible && tkAccessible->tkwin) {
-	    /* Notify parent about removal. */
-	    AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
-	    if (parent) {
-		RunOnMainThreadAsync((GSourceFunc)emit_children_changed_remove, parent, GINT_TO_POINTER(-1), tkAccessible);
-	    }
-	    /* 
-	     * Unregister and cleanup. g_object_unref will trigger finalize, 
-	     * which handles unregistering from map. 
-	     */
-	    g_object_unref(tkAccessible);
-	}
+        TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
+        if (tkAccessible && tkAccessible->tkwin) {
+            /* Notify parent about removal. */
+            RunOnMainThreadAsync(emit_children_changed_remove, ATK_OBJECT(tkAccessible));
+            
+            /* Unregister and cleanup. */
+            g_object_unref(tkAccessible);
+        }
     }
 }
 
@@ -1258,20 +1346,16 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateValueCache(acc);
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
-
-    AtkRectangle rect = {
-	.x = acc->x,
-	.y = acc->y,
-	.width = acc->width,
-	.height = acc->height
-    };
     
     /*  Notify ATK of changes only if geometry is valid and non-zero. */
     if (acc->width > 0 && acc->height > 0 && is_mapped) {
-	RunOnMainThreadAsync((GSourceFunc)emit_bounds_changed, acc, &rect);
-    } else {
-	g_warning("TkAtkAccessible_ConfigureHandler: Skipping bounds-changed for %s due to invalid geometry (width: %d, height: %d)",
-		  (const char *)RunOnMainThread(get_window_name_main, &data), acc->width, acc->height);
+        BoundsChangedData *bcd = g_new0(BoundsChangedData, 1);
+        bcd->obj = ATK_OBJECT(acc);
+        bcd->rect.x = acc->x;
+        bcd->rect.y = acc->y;
+        bcd->rect.width = acc->width;
+        bcd->rect.height = acc->height;
+        RunOnMainThreadAsync(emit_bounds_changed, bcd);
     }
     
     if (acc->cached_name) {
@@ -1281,9 +1365,18 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 	atk_object_set_description(ATK_OBJECT(acc), acc->cached_description);
     }
     
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, acc, "visible", GINT_TO_POINTER(acc->is_mapped));
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, acc, "showing", GINT_TO_POINTER(acc->is_mapped));
+    StateChangeData *visible_scd = g_new0(StateChangeData, 1);
+    visible_scd->obj = ATK_OBJECT(acc);
+    visible_scd->name = g_strdup("visible");
+    visible_scd->state = acc->is_mapped;
+    RunOnMainThreadAsync(emit_state_change, visible_scd);
     
+    StateChangeData *showing_scd = g_new0(StateChangeData, 1);
+    showing_scd->obj = ATK_OBJECT(acc);
+    showing_scd->name = g_strdup("showing");
+    showing_scd->state = acc->is_mapped;
+    RunOnMainThreadAsync(emit_state_change, showing_scd);
+     
     /* Update GLib event loop. */
     int glib_iterations = 0;
     while (g_main_context_iteration(g_main_context_default(), FALSE) && glib_iterations < 20) {
@@ -1331,8 +1424,17 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
 	}
     }
     
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, atk_obj, "visible", GINT_TO_POINTER(TRUE));
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, atk_obj, "showing", GINT_TO_POINTER(TRUE));
+    StateChangeData *visible_scd = g_new0(StateChangeData, 1);
+    visible_scd->obj = atk_obj;
+    visible_scd->name = g_strdup("visible");
+    visible_scd->state = TRUE;
+    RunOnMainThreadAsync(emit_state_change, visible_scd);
+    
+    StateChangeData *showing_scd = g_new0(StateChangeData, 1);
+    showing_scd->obj = atk_obj;
+    showing_scd->name = g_strdup("showing");
+    showing_scd->state = TRUE;
+    RunOnMainThreadAsync(emit_state_change, showing_scd);
 }
 
 /* Respond to <Unmap> event. */
@@ -1345,8 +1447,11 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
     AtkObject *atk_obj = (AtkObject*)acc;
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_remove_state(state_set, ATK_STATE_SHOWING);
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, atk_obj, "showing", GINT_TO_POINTER(FALSE));
-    g_object_unref(state_set);
+    StateChangeData *scd = g_new0(StateChangeData, 1);
+    scd->obj = atk_obj;
+    scd->name = g_strdup("showing");
+    scd->state = FALSE;
+    RunOnMainThreadAsync(emit_state_change, scd);
 }
 
 /* Respond to <FocusIn/Out> events. */
@@ -1368,15 +1473,28 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
 	atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     }
     if (eventPtr->type == FocusIn) {
-	atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
-	RunOnMainThreadAsync((GSourceFunc)emit_focus_event, atk_obj, GINT_TO_POINTER(TRUE));
-	RunOnMainThreadAsync((GSourceFunc)emit_state_change, atk_obj, "focused", GINT_TO_POINTER(TRUE));
+        FocusEventData *fed = g_new0(FocusEventData, 1);
+        fed->obj = atk_obj;
+        fed->state = TRUE;
+        RunOnMainThreadAsync(emit_focus_event, fed);
+        
+        StateChangeData *scd = g_new0(StateChangeData, 1);
+        scd->obj = atk_obj;
+        scd->name = g_strdup("focused");
+        scd->state = TRUE;
+        RunOnMainThreadAsync(emit_state_change, scd);
     } else if (eventPtr->type == FocusOut) {
-	atk_state_set_remove_state(state_set, ATK_STATE_FOCUSED);
-	RunOnMainThreadAsync((GSourceFunc)emit_focus_event, atk_obj, GINT_TO_POINTER(FALSE));
-	RunOnMainThreadAsync((GSourceFunc)emit_state_change, atk_obj, "focused", GINT_TO_POINTER(FALSE));
+        FocusEventData *fed = g_new0(FocusEventData, 1);
+        fed->obj = atk_obj;
+        fed->state = FALSE;
+        RunOnMainThreadAsync(emit_focus_event, fed);
+        
+        StateChangeData *scd = g_new0(StateChangeData, 1);
+        scd->obj = atk_obj;
+        scd->name = g_strdup("focused");
+        scd->state = FALSE;
+        RunOnMainThreadAsync(emit_state_change, scd);
     }
-    g_object_unref(state_set);
 }
 
 
@@ -1438,11 +1556,17 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     GValue gval = G_VALUE_INIT;
     tk_get_current_value(ATK_VALUE(acc), &gval);
-    RunOnMainThreadAsync((GSourceFunc)emit_value_changed, acc, &gval);
+    
+    ValueChangedData *vcd = g_new0(ValueChangedData, 1);
+    vcd->obj = acc;
+    g_value_init(&vcd->value, G_TYPE_STRING);
+    g_value_set_string(&vcd->value, g_value_get_string(&gval));
     g_value_unset(&gval);
+    
+    RunOnMainThreadAsync(emit_value_changed, vcd);
 
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-	RunOnMainThreadAsync((GSourceFunc)emit_text_selection_changed, acc, NULL);
+        RunOnMainThreadAsync(emit_text_selection_changed, acc);
     }
    
     return TCL_OK;
@@ -1498,7 +1622,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
 	    AtkObject *parent_obj = parent_tkwin ? GetAtkObjectForTkWindow(parent_tkwin) : tk_root_accessible;
 	    if (parent_obj) {
 		atk_object_set_parent(acc, parent_obj);
-		RunOnMainThreadAsync((GSourceFunc)emit_children_changed_add, GINT_TO_POINTER(-1), acc);
+		RunOnMainThreadAsync(emit_children_changed_add, acc);
 	    }
 	}
     }
@@ -1508,8 +1632,17 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
     AtkStateSet *state_set = atk_state_set_new();
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
-    RunOnMainThreadAsync((GSourceFunc)emit_focus_event, acc, GINT_TO_POINTER(TRUE));
-    RunOnMainThreadAsync((GSourceFunc)emit_state_change, acc, "focused", GINT_TO_POINTER(TRUE));
+    
+    FocusEventData *fed = g_new0(FocusEventData, 1);
+    fed->obj = acc;
+    fed->state = TRUE;
+    RunOnMainThreadAsync(emit_focus_event, fed);
+    
+    StateChangeData *scd = g_new0(StateChangeData, 1);
+    scd->obj = acc;
+    scd->name = g_strdup("focused");
+    scd->state = TRUE;
+    RunOnMainThreadAsync(emit_state_change, scd);
     g_object_unref(state_set);
     return TCL_OK;
 }
@@ -1646,22 +1779,22 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 	return TCL_OK;
     }
 
-    /* Create accessible object. */ */
-	TkAtkAccessible *accessible = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, tkwin, windowName);
-	if (accessible == NULL) {
-	    Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
-	    return TCL_ERROR;
-	}
+    /* Create accessible object. */
+    TkAtkAccessible *accessible = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, tkwin, windowName);
+    if (accessible == NULL) {
+	Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
+	return TCL_ERROR;
+    }
 
-	/* Register for cleanup, mapping and other events. */
-	TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
+    /* Register for cleanup, mapping and other events. */
+    TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
 
-	/* Handle toplevels. */
-	if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &(MainThreadData){tkwin, interp, NULL})) {
-	    RegisterToplevelWindow(interp, tkwin, (AtkObject*)accessible);
-	}
+    /* Handle toplevels. */
+    if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &(MainThreadData){tkwin, interp, NULL})) {
+	RegisterToplevelWindow(interp, tkwin, (AtkObject*)accessible);
+    }
 
-	return TCL_OK;
+    return TCL_OK;
 }
 #endif
 
@@ -1701,17 +1834,20 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Initialize mapping table.  */
     InitAtkTkMapping();
 
-    /* Register root window as an accessible object.  */
-    MainThreadData data = {NULL, interp, NULL};
-    Tk_Window mainWin = (Tk_Window)RunOnMainThread(get_main_window_main, &data);
-    RunOnMainThread(make_window_exist_main, &(MainThreadData){mainWin, interp, NULL});
-    RunOnMainThread(map_window_main, &(MainThreadData){mainWin, interp, NULL});
+    /* Register root window as an accessible object - NO THREADING */
+    Tk_Window mainWin = Tk_MainWindow(interp);
+    if (!mainWin) {
+	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
+	return TCL_ERROR;
+    }
+
+    Tk_MakeWindowExist(mainWin);
+    Tk_MapWindow(mainWin);
 
     /* Process events to ensure window is fully displayed.  */
     while (Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {} 
 
-    AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, 
-						      (const char *)RunOnMainThread(get_window_name_main, &(MainThreadData){mainWin, interp, NULL}));
+    AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {
 	Tcl_SetResult(interp, "Failed to create AtkObject for root window", TCL_STATIC);
 	return TCL_ERROR;
