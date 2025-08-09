@@ -1,8 +1,7 @@
 /*
  * tkUnixAccessibility.c --
  *
- *
- This file implements accessibility/screen-reader support
+ * This file implements accessibility/screen-reader support
  * on Unix-like systems based on the Gnome Accessibility Toolkit,
  * the standard accessibility library for X11 systems.
  *
@@ -30,7 +29,7 @@
 #include <dbus/dbus.h>
 #include <glib.h>
 
-/* Structs for custom Atk objects bound to Tk. */
+/* Structs for custom ATK objects bound to Tk. */
 typedef struct _TkAtkAccessible {
     AtkObject parent;
     Tk_Window tkwin;
@@ -43,6 +42,7 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     gboolean is_mapped;
     gboolean has_focus;
+    GList *children;  /* Track child accessible objects */
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
@@ -135,6 +135,7 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
+static int glib_pipe_fd = -1;
 
 /* Thread management functions. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer user_data), gpointer user_data);
@@ -225,9 +226,16 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
+
+/* GLib-Tcl event loop integration */
+static void GlibFileHandler(ClientData data, int mask);
+static void SetupGlibIntegration(void);
+
+/* Child management functions */
+static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child);
+static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child);
 
 
 /* Define custom Atk object bridged to Tcl/Tk. */
@@ -238,8 +246,9 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
 			)
 
-/* Helper function to integrate strings. */			
-    static gchar *sanitize_utf8(const gchar *str) {
+/* Helper function to integrate strings. */         
+    static gchar *sanitize_utf8(const gchar *str) 
+{
     if (!str) return NULL;
     return g_utf8_make_valid(str, -1);
 }
@@ -252,7 +261,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  *
  *----------------------------------------------------------------------
  */
-			
+            
 
 /* Callback function to main thread. */
 static gboolean run_main_thread_callback(gpointer data)
@@ -309,6 +318,71 @@ void RunOnMainThreadAsync(GSourceFunc func, gpointer user_data)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLib-Tcl event loop integration
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void GlibFileHandler(ClientData data, int mask) 
+{
+    (void)data;
+    (void)mask;
+    /* Process pending GLib events without blocking. */
+    g_main_context_iteration(g_main_context_default(), FALSE);
+}
+
+static void SetupGlibIntegration(void) 
+{
+	 /* Reference the default GLib context. */
+    GMainContext *context = g_main_context_default();
+    g_main_context_ref(context);
+
+    gint timeout;
+    gint n_fds = g_main_context_query(context, 0, &timeout, NULL, 0);
+    
+    if (n_fds > 0) {
+        GPollFD *fds = g_new(GPollFD, n_fds);
+        g_main_context_query(context, 0, &timeout, fds, n_fds);
+        
+        /* Register with Tcl's event system. */
+        for (gint i = 0; i < n_fds; i++) {
+            if (fds[i].events & G_IO_IN) {
+                glib_pipe_fd = fds[i].fd;
+                Tcl_CreateFileHandler(glib_pipe_fd, TCL_READABLE, GlibFileHandler, NULL);
+                break;
+            }
+        }
+        g_free(fds);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Child management functions
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child) 
+{
+    if (!parent || !child) return;
+    
+    /* Prevent duplicates. */
+    if (g_list_find(parent->children, child)) return;
+    
+    parent->children = g_list_append(parent->children, child);
+    atk_object_set_parent(child, ATK_OBJECT(parent));
+}
+
+static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child) 
+{
+    if (!parent || !child) return;
+    parent->children = g_list_remove(parent->children, child);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -319,19 +393,22 @@ void RunOnMainThreadAsync(GSourceFunc func, gpointer user_data)
  */
 
 /* Get accessible role. */
-static gpointer get_atk_role_for_widget_main(gpointer data) {
+static gpointer get_atk_role_for_widget_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     return (gpointer)(uintptr_t)GetAtkRoleForWidget(mt_data->tkwin);
 }
 
 /* Get accessible name. */
-static gpointer get_window_name_main(gpointer data) {
+static gpointer get_window_name_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     return (gpointer)Tk_PathName(mt_data->tkwin);
 }
 
 /* Get window geometry. */
-static gpointer get_window_geometry_main(gpointer data) {
+static gpointer get_window_geometry_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     Tk_Window tkwin = mt_data->tkwin;
     gint *geometry = g_new(gint, 4);
@@ -343,13 +420,15 @@ static gpointer get_window_geometry_main(gpointer data) {
 }
 
 /* Check if window is mapped. */
-static gpointer is_window_mapped_main(gpointer data) {
+static gpointer is_window_mapped_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     return (gpointer)(uintptr_t)Tk_IsMapped(mt_data->tkwin);
 }
 
 /* Get focused window. */
-static gpointer get_focus_window_main(gpointer data) {
+static gpointer get_focus_window_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     return (gpointer)TkGetFocusWin((TkWindow *)mt_data->tkwin);
 }
@@ -361,27 +440,19 @@ static gpointer get_window_parent_main(gpointer data) {
 }
 
 /* Force window creation. */
-static gpointer make_window_exist_main(gpointer data) {
+static gpointer make_window_exist_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     Tk_MakeWindowExist(mt_data->tkwin);
     return NULL;
 }
 
 /* Force window mapping. */
-static gpointer map_window_main(gpointer data) {
+static gpointer map_window_main(gpointer data) 
+{
     MainThreadData *mt_data = (MainThreadData *)data;
     Tk_MapWindow(mt_data->tkwin);
     return NULL;
-}
-
-/* Check if a window has a window ID.  */
-static gpointer has_window_id_main(gpointer data)
-{
-    MainThreadData *mt_data = (MainThreadData *)data;
-    if (!mt_data || !mt_data->tkwin) return NULL;
-
-    Window win = Tk_WindowId(mt_data->tkwin);
-    return (win != None) ? (gpointer)1 : NULL;
 }
 
 /* Check if a window is toplevel.  */
@@ -489,7 +560,6 @@ static gboolean emit_value_changed(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
-
 /* Emit text-selection-changed signal. */
 static gboolean emit_text_selection_changed(gpointer data)
 {
@@ -561,7 +631,7 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
     *width = acc->width;
     *height = acc->height;
 
-    /*Handle coordinate type conversion.  */
+    /* Handle coordinate type conversion.  */
     if (coord_type == ATK_XY_SCREEN) {
 	MainThreadData data = {acc->tkwin, acc->interp, NULL};
 	gint *root_coords = RunOnMainThread(get_window_geometry_main, &data);
@@ -596,81 +666,19 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
     if (!acc) return 0;
-
-    if (obj == tk_root_accessible) {
-	/*The root's children are the toplevel windows.  */
-	return g_list_length(toplevel_accessible_objects);
-    }
-
-    if (!acc->tkwin) {
-	return 0;
-    }
-
-    /* Count direct child windows with accessible objects.  */
-    int count = 0;
-    MainThreadData data = {acc->tkwin, acc->interp, NULL};
-    TkWindow *winPtr = (TkWindow *)RunOnMainThread(get_window_handle_main, &data);
-    TkWindow *childPtr;
-    
-    /* Iterate through Tk's internal child list.  */
-    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-	MainThreadData child_data = {(Tk_Window)childPtr, acc->interp, NULL};
-	gboolean has_window_id = (gboolean)(uintptr_t)RunOnMainThread(has_window_id_main, &child_data);
-	if (has_window_id && GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
-	    count++;
-	} else {
-	    AtkObject *child_obj = TkCreateAccessibleAtkObject(acc->interp, (Tk_Window)childPtr, 
-							       (const char *)RunOnMainThread(get_window_name_main, &child_data));
-	    RegisterAtkObjectForTkWindow((Tk_Window)childPtr, child_obj);
-	    count++;
-	}
-    }
-    return count;
+    return g_list_length(acc->children);
 }
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-
     if (!acc) return NULL;
-
-    if (obj == tk_root_accessible) {
-	if (i >= (gint)g_list_length(toplevel_accessible_objects)) {
-	    return NULL;
-	}
-	/*Get accessible object from toplevel list.  */
-	AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
-	if (child) {
-	    g_object_ref(child);
-	}
-	return child;
-    }
-
-    if (!acc->tkwin) {
-	return NULL;
-    }
     
-    /*Return i-th direct child with accessible object.  */
-    guint index = 0;
-    MainThreadData data = {acc->tkwin, acc->interp, NULL};
-    TkWindow *winPtr = (TkWindow *)RunOnMainThread(get_window_handle_main, &data);
-    TkWindow *childPtr;
-    
-    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-	AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
-	if (child_obj) {
-	    if (i >= 0 && (guint)i == index) {
-		g_object_ref(child_obj);
-		return child_obj;
-	    }
-	    index++;
-	}
-    }
-    
-    if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data)) {
-	toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, obj);
+    GList *child = g_list_nth(acc->children, i);
+    if (child) {
+        g_object_ref(child->data);
+        return ATK_OBJECT(child->data);
     }
     return NULL;
 }
@@ -809,7 +817,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     }
 
     if (i == 0) {
-	/*Retrieve the command string.  */
+	/* Retrieve the command string.  */
 	MainThreadData data = {acc->tkwin, acc->interp, NULL};
 	Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
 	if (!hPtr) {
@@ -831,7 +839,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	    return FALSE;
 	}
 
-	/*Finally, execute command.  */
+	/* Finally, execute command.  */
 	if (Tcl_EvalEx(acc->interp, cmd, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
 	    return FALSE;
 	}
@@ -881,6 +889,7 @@ static void tk_atk_accessible_init(TkAtkAccessible *self)
     self->height = 0;
     self->is_mapped = FALSE;
     self->has_focus = FALSE;
+    self->children = NULL;
 }
 
 static void tk_atk_accessible_finalize(GObject *gobject)
@@ -899,6 +908,9 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     g_free(self->cached_name);
     g_free(self->cached_description);
     g_free(self->cached_value);
+    
+    /* Free child list */
+    g_list_free(self->children);
 
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
@@ -910,7 +922,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 
     gobject_class->finalize = tk_atk_accessible_finalize;
 
-    /*Map ATK class functions to Tk functions.  */
+    /* Map ATK class functions to Tk functions.  */
     atk_class->get_name = tk_get_name;
     atk_class->get_description = tk_get_description;
     atk_class->get_role = tk_get_role;
@@ -1003,8 +1015,11 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 		atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
 	    }
 	    g_object_unref(state_set);
-	    atk_object_set_parent(child_obj, parent_obj);
+        
+	    /* Add to parent's child list. */
+	    AddChildToParent((TkAtkAccessible*)parent_obj, child_obj);
 	    RunOnMainThreadAsync(emit_children_changed_add, child_obj);
+        
 	    RegisterChildWidgets(interp, child, child_obj);
 	}
 	index++;
@@ -1143,34 +1158,26 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
  *----------------------------------------------------------------------
  */
  
-static void UpdateGeometryCache(TkAtkAccessible *acc)
+static void UpdateGeometryCache(TkAtkAccessible *acc) 
 {
-    if (!acc || !acc->tkwin) {
-	g_warning("UpdateGeometryCache: Invalid acc or tkwin");
-	acc->x = acc->y = acc->width = acc->height = 0;
-	return;
-    }
+    if (!acc || !acc->tkwin) return;
     
     MainThreadData data = {acc->tkwin, acc->interp, NULL};
-    gboolean is_mapped = (gboolean)(uintptr_t)RunOnMainThread(is_window_mapped_main, &data);
-    if (!is_mapped) {
-	return;
-    }
-    
     gint *geometry = RunOnMainThread(get_window_geometry_main, &data);
     if (geometry) {
-	if (geometry[2] <= 0 || geometry[3] <= 0) {
-	    g_warning("UpdateGeometryCache: Invalid geometry for %s (width: %d, height: %d)",
-		      (const char *)RunOnMainThread(get_window_name_main, &data), 
-		      geometry[2], geometry[3]);
-	    acc->x = acc->y = acc->width = acc->height = 0;
-	} else {
-	    acc->x = geometry[0];
-	    acc->y = geometry[1];
-	    acc->width = geometry[2];
-	    acc->height = geometry[3];
-	}
-	g_free(geometry);
+        acc->x = geometry[0];
+        acc->y = geometry[1];
+        acc->width = geometry[2];
+        acc->height = geometry[3];
+        
+        // Convert to root coordinates
+        Tk_Window parent = Tk_Parent(acc->tkwin);
+        while (parent) {
+            acc->x += Tk_X(parent);
+            acc->y += Tk_Y(parent);
+            parent = Tk_Parent(parent);
+        }
+        g_free(geometry);
     }
 }
 
@@ -1258,7 +1265,8 @@ static void UpdateRoleCache(TkAtkAccessible *acc)
     acc->cached_role = (AtkRole)(uintptr_t)RunOnMainThread(get_atk_role_for_widget_main, &data);
 }
 
-static void UpdateStateCache(TkAtkAccessible *acc) {
+static void UpdateStateCache(TkAtkAccessible *acc) 
+{
     if (!acc || !acc->tkwin) return;
     
     MainThreadData data = {acc->tkwin, acc->interp, NULL};
@@ -1309,6 +1317,12 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
     if (eventPtr->type == DestroyNotify) {
         TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
         if (tkAccessible && tkAccessible->tkwin) {
+            AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
+            if (parent) {
+                /* Remove from parent's child list. */
+                RemoveChildFromParent((TkAtkAccessible*)parent, ATK_OBJECT(tkAccessible));
+            }
+            
             /* Notify parent about removal. */
             RunOnMainThreadAsync(emit_children_changed_remove, ATK_OBJECT(tkAccessible));
             
@@ -1347,7 +1361,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
     
-    /*  Notify ATK of changes only if geometry is valid and non-zero. */
+    /* Notify ATK of changes only if geometry is valid and non-zero. */
     if (acc->width > 0 && acc->height > 0 && is_mapped) {
         BoundsChangedData *bcd = g_new0(BoundsChangedData, 1);
         bcd->obj = ATK_OBJECT(acc);
@@ -1376,12 +1390,6 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     showing_scd->name = g_strdup("showing");
     showing_scd->state = acc->is_mapped;
     RunOnMainThreadAsync(emit_state_change, showing_scd);
-     
-    /* Update GLib event loop. */
-    int glib_iterations = 0;
-    while (g_main_context_iteration(g_main_context_default(), FALSE) && glib_iterations < 20) {
-	glib_iterations++;
-    }
 }
 
 /* Respond to <Map> event. */
@@ -1415,7 +1423,7 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
 							       (const char *)RunOnMainThread(get_window_name_main, &child_data));
 	    if (child_acc) {
 		RegisterAtkObjectForTkWindow(child, child_acc);
-		atk_object_set_parent(child_acc, atk_obj);
+		AddChildToParent(acc, child_acc);
 		TkAtkAccessible_RegisterEventHandlers(child, (TkAtkAccessible *)child_acc);
 	    } else {
 		g_warning("TkAtkAccessible_MapHandler: Failed to create accessible object for %s",
@@ -1691,50 +1699,6 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
 /*
  *----------------------------------------------------------------------
  *
- * AtkEventLoop --
- *
- *   Spins GLib event loop.
- *
- * Results:
- *
- *   ATK/GLib events are processed.
- *
- * Side effects:
- *
- *    None.
- *
- *----------------------------------------------------------------------
- */
- 
-int AtkEventLoop(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
-{
-    (void)clientData;
-    (void)objc;
-    (void)objv;
-    
-    /* Process all pending Tk events first (keyboard priority).  */
-    int tk_processed = 0;
-    const int max_tk_events = 20;
-    while (tk_processed < max_tk_events && 
-	   Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
-	tk_processed++;
-    }
-    
-    /* Process GLib events only if no Tk events were pending. */
-    int glib_processed = 0;
-    if (tk_processed == 0) {
-	while (g_main_context_iteration(g_main_context_default(), FALSE)) {
-	    glib_processed++;
-	}
-    }
-    
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(glib_processed));
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkAtkAccessibleObjCmd --
  *
  *   Main command for adding and managing accessibility objects to Tk
@@ -1862,6 +1826,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     }
     RegisterChildWidgets(interp, mainWin, main_acc);
 
+    /* Set up GLib event loop integration */
+    SetupGlibIntegration();
+
     /* Finally, register Tcl commands.  */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
 			 TkAtkAccessibleObjCmd, NULL, NULL);
@@ -1871,8 +1838,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 			 EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
 			 IsScreenReaderRunning, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::_run_atk_eventloop",
-			 AtkEventLoop, NULL, NULL);
 
     return TCL_OK;
 }
