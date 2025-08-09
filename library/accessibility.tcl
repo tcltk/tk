@@ -12,25 +12,6 @@
 #
 
 namespace eval ::tk::accessible {
-    
-    # Variables and procedures to drive Atk event loop on X11.
-    if {[tk windowingsystem] eq "x11"} {
-	proc _atk_iterate {} {
-	    set glib_count [::tk::accessible::_run_atk_eventloop]
-	    
-	    # Adaptive scheduling based on activity
-	    if {$glib_count > 0} {
-		# GLib activity detected - check again quickly
-		after 5 ::tk::accessible::_atk_iterate
-	    } else {
-		# No GLib activity - wait longer
-		after 50 ::tk::accessible::_atk_iterate
-	    }
-	}
-	# Start the loop after Tk is initialized
-	after 1000 ::tk::accessible::_atk_iterate
-    }
-
 
     #check message text on dialog 
     proc _getdialogtext {w} {
