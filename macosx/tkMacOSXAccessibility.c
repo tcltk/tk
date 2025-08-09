@@ -22,6 +22,8 @@
 #include <tkMacOSXInt.h>
 #include "tkMacOSXImage.h"
 #include "tkMacOSXPrivate.h"
+#include <AppKit/NSAccessibility.h>
+
 
 /* Data declarations and protoypes of functions used in this file. */
 extern Tcl_HashTable *TkAccessibilityObject;
@@ -42,31 +44,38 @@ static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
 
 char *callback_command;
 
-/* Map script-level roles to C roles. */
+/* 
+ * Map script-level roles to AX role strings - NSAccessibilityRole constants will
+ * not compile in C code. The equivalent NSStrings, e.g. NSAccessibilityListRole,
+ * can be used for comparison in functions. 
+ */
+
 struct MacRoleMap {
-    const char *tkrole;
-    NSAccessibilityRole  macrole;
+    const char *tkrole;           /* Tk role string */
+    NSAccessibilityRole macrole;  /* AX role constant (NSString *) */
 };
 
 const struct MacRoleMap roleMap[] = {
-    {"Button", @"NSAccessibilityButtonRole"},
-    {"Canvas", @"NSAccessibilityScrollAreaRole"},
-    {"Checkbutton", @"NSAccessibilityCheckBoxRole"},
-    {"Combobox",  @"NSAccessibilityComboBoxRole"},
-    {"Entry",  @"NSAccessibilityTextFieldRole"},
-    {"Label", @"NSAccessibilityStaticTextRole"},
-    {"Listbox", @"NSAccessibilityListRole"},
-    {"Notebook", @"NSAccessibilityTabGroupRole"},
-    {"Progressbar",  @"NSAccessibilityProgressIndicatorRole"},
-    {"Radiobutton",  @"NSAccessibilityRadioButtonRole"},
-    {"Scale", @"NSAccessibilitySliderRole"},
-    {"Scrollbar",   @"NSAccessibilityScrollBarRole"},
-    {"Spinbox", @"NSAccessibilityIncrementorRole"},
-    {"Table",  @"NSAccessibilityTableRole"}, 
-    {"Text",  @"NSAccessibilityTextAreaRole"},
-    {"Tree",  @"NSAccessibilityTableRole"},
-    {NULL, 0}
+    {"Button",        @"AXButton"},
+    {"Canvas",        @"AXScrollArea"},
+    {"Checkbutton",   @"AXCheckBox"},
+    {"Combobox",      @"AXComboBox"},
+    {"Entry",         @"AXTextField"},
+    {"Label",         @"AXStaticText"},
+    {"Listbox",       @"AXList"},
+    {"Notebook",      @"AXTabGroup"},
+    {"Progressbar",   @"AXProgressIndicator"},
+    {"Radiobutton",   @"AXRadioButton"},
+    {"Scale",         @"AXSlider"},
+    {"Scrollbar",     @"AXScrollBar"},
+    {"Spinbox",       @"AXIncrementor"},
+    {"Table",         @"AXTable"},
+    {"Text",          @"AXTextArea"},
+    {"Tree",          @"AXTable"},
+    {NULL,            nil}
 };
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -143,25 +152,22 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 /*Foundational method. All actions derive from the role returned here.*/
 - (NSAccessibilityRole)accessibilityRole {
     Tk_Window win = self.tk_win;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_HashTable *AccessibleAttributes;
-
     if (!win) {
         return nil;
     }
 
-    hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
         return nil;
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
         return nil;
     }
 
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (!result) {
         return nil;
     }
@@ -176,6 +182,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 
+
 - (NSString *)accessibilityLabel {
 
       NSAccessibilityRole role = self.accessibilityRole;
@@ -183,7 +190,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
       /* Return the help text for listbox as the label, because
 	 VoiceOver does not seem to read the help text.
       */ 
-      if ((role = NSAccessibilityListRole)) {
+      if ([role isEqualToString:NSAccessibilityListRole]) {
 	  return self.accessibilityHint;
       }
 
@@ -239,7 +246,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
      * title, because VoiceOver does not seem to pick up the accessibiility
      * value for these widgets.
     */ 
-    if ((role = NSAccessibilityStaticTextRole) || (role = NSAccessibilityTextAreaRole)) {
+    if ([role isEqualToString:NSAccessibilityStaticTextRole] || [role isEqualToString:NSAccessibilityTextAreaRole]) {
 	return self.accessibilityValue;
     }
     
@@ -337,7 +344,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
      *  is required.
      */
     
-    if ((role = NSAccessibilitySliderRole) || (role = NSAccessibilityIncrementorRole) || (role = NSAccessibilityListRole) || (role = NSAccessibilityTableRole) || (role = NSAccessibilityProgressIndicatorRole)) {
+    if ([role isEqualToString:NSAccessibilitySliderRole] || [role isEqualToString:NSAccessibilityIncrementorRole] || [role isEqualToString:NSAccessibilityListRole] || [role isEqualToString:NSAccessibilityTableRole] || [role isEqualToString:NSAccessibilityProgressIndicatorRole]) {
 	[self forceFocus];
     }
  
@@ -594,7 +601,7 @@ EmitSelectionChanged(
     NSAccessibilityRole role = widget.accessibilityRole;
 
 
-    if ((role = NSAccessibilityListRole) || (role = NSAccessibilityTextFieldRole)) {
+    if ([role isEqualToString:NSAccessibilityListRole] || [role isEqualToString:NSAccessibilityTextFieldRole]) {
 
 	/*
 	 * We access some data through the virtual or keyboard events at the
