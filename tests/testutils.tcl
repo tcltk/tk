@@ -1025,9 +1025,10 @@ namespace eval ::tk::test::timing {
 
     # progress.* --
     #
-    # This set of procs has been derived from tests/ttk/ttk.test, where they
-    # were used (by a different name) to monitor progress and total duration of
-    # a procedure in a loop. See:
+    #	This set of procs monitors progress and total duration of a procedure
+    #	in a loop.
+    #
+    #	Derived from tests/ttk/ttk.test, see:
     #
     #	https://core.tcl-lang.org/tk/file?ci=f94f84b254b0c5ad&name=tests/ttk/ttk.test&ln=335-340
     #
