@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "testutils_timing_procs"
     tags:
     - "core-**"
 permissions:
