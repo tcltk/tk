@@ -4,7 +4,6 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
-    - "uniform_test_file_structure"
     tags:
     - "core-**"
 permissions:
