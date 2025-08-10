@@ -1,8 +1,9 @@
 # main.tcl --
 #
 # This file is loaded by each test file when invoking "tcltest::loadTestedCommands".
-# It performs an initial Tk setup for the root window, and loads, in turn,
-# definitions of global utility procs and test constraints.
+# It performs an initial Tk setup for the root window, imports commands from
+# the tcltest namespace, and loads definitions of global utility procs and
+# test constraints.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -33,14 +34,9 @@ if {![winfo ismapped .]} {
 #
 # IMPORT TCLTEST COMMANDS
 #
-namespace import -force tcltest::test
-namespace import -force tcltest::makeFile
-namespace import -force tcltest::removeFile
-namespace import -force tcltest::makeDirectory
-namespace import -force tcltest::removeDirectory
-namespace import -force tcltest::interpreter
-namespace import -force tcltest::testsDirectory
-namespace import -force tcltest::cleanupTests
+namespace import -force tcltest::cleanupTests tcltest::interpreter \
+	tcltest::makeDirectory tcltest::makeFile tcltest::removeDirectory \
+	tcltest::removeFile tcltest::test tcltest::testsDirectory
 
 #
 # SOURCE DEFINITIONS OF GLOBAL UTILITY PROCS AND CONSTRAINTS
