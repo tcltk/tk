@@ -1,6 +1,10 @@
 # main.tcl --
 #
-# This file is loaded by each test file when invoking "tcltest::loadTestedCommands".
+# This file holds initialization code that is common to each testfile. In mode
+# "-singleproc 0" it is loaded into each interpreter by invoking the command
+# "tcltest::loadTestedCommands". In mode "-singleproc 1" it is sourced once into
+# the current interpreter by all.tcl, before evaluating any test file.
+#
 # It performs an initial Tk setup for the root window, imports commands from
 # the tcltest namespace, and loads definitions of global utility procs and
 # test constraints.
