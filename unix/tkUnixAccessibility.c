@@ -127,6 +127,7 @@ typedef struct {
 } ChildrenChangedRemoveData;
 
 typedef struct {
+    AtkObject *parent;
     gint index;
     AtkObject *child;
 } ChildrenChangedAddData;
@@ -547,22 +548,27 @@ static gpointer get_main_window_main(gpointer data)
 /* Emit children-changed::add signal. */
 static gboolean emit_children_changed_add(gpointer data)
 {
-    if (data) {
-        AtkObject *child = (AtkObject *)data;
-        g_signal_emit_by_name(child, "children-changed::add", -1, child);
+    ChildrenChangedAddData *cad = (ChildrenChangedAddData *)data;
+    if (cad && cad->parent) {
+        g_signal_emit_by_name(cad->parent, "children-changed::add", cad->index, cad->child);
     }
+    g_free(cad);
     return G_SOURCE_REMOVE;
 }
 
 /* Emit children-changed::remove signal. */
 static gboolean emit_children_changed_remove(gpointer data)
 {
-    if (data) {
-        AtkObject *child = (AtkObject *)data;
-        AtkObject *parent = atk_object_get_parent(child);
-        if (parent) {
-            g_signal_emit_by_name(parent, "children-changed::remove", -1, child);
-        }
+    ChildrenChangedRemoveData *crd = (ChildrenChangedRemoveData *)data;
+    if (crd && crd->parent && G_IS_OBJECT(crd->parent) && crd->child && G_IS_OBJECT(crd->child)) {
+        g_signal_emit_by_name(crd->parent, "children-changed::remove", crd->index, crd->child);
+    } else {
+        g_warning("emit_children_changed_remove: Invalid parent or child object");
+    }
+    if (crd) {
+        if (crd->parent && G_IS_OBJECT(crd->parent)) g_object_unref(crd->parent);
+        if (crd->child && G_IS_OBJECT(crd->child)) g_object_unref(crd->child);
+        g_free(crd);
     }
     return G_SOURCE_REMOVE;
 }
@@ -686,7 +692,9 @@ static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return 0;
-    return g_list_length(acc->children);
+    int count = g_list_length(acc->children);
+    g_warning("count is %d\n", count);
+    return count; 
 }
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
@@ -918,18 +926,47 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     if (self->tkwin) {
         if (RunOnMainThread(is_toplevel_main, &(MainThreadData){self->tkwin, NULL, NULL, NULL})) {
             toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, self);
-            RunOnMainThreadAsync(emit_children_changed_remove, ATK_OBJECT(self));
+            /* Remove from root's children. */
+            gint index = g_list_index(((TkAtkAccessible *)tk_root_accessible)->children, self);
+            if (index >= 0) {
+                RemoveChildFromParent((TkAtkAccessible *)tk_root_accessible, ATK_OBJECT(self));
+                ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+                crd->parent = tk_root_accessible;
+                crd->index = index;
+                crd->child = ATK_OBJECT(self);
+                if (crd->parent) g_object_ref(crd->parent);
+                if (crd->child) g_object_ref(crd->child);
+                RunOnMainThreadAsync(emit_children_changed_remove, crd);
+            }
         }
         UnregisterAtkObjectForTkWindow(self->tkwin);
     }
+
+    /* Clean up children. */
+    GList *iter = self->children;
+    while (iter) {
+        AtkObject *child = (AtkObject *)iter->data;
+        if (child && G_IS_OBJECT(child)) {
+            gint index = g_list_index(self->children, child);
+            RemoveChildFromParent(self, child);
+            ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+            crd->parent = ATK_OBJECT(self);
+            crd->index = index;
+            crd->child = child;
+            if (crd->parent) g_object_ref(crd->parent);
+            if (crd->child) g_object_ref(crd->child);
+            RunOnMainThreadAsync(emit_children_changed_remove, crd);
+            g_object_unref(child);
+        }
+        iter = g_list_next(iter);
+    }
+    g_list_free(self->children);
+    self->children = NULL;
 
     g_free(self->path);
     g_free(self->cached_name);
     g_free(self->cached_description);
     g_free(self->cached_value);
-    
-    /* Free child list */
-    g_list_free(self->children);
 
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
@@ -979,9 +1016,19 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         return;
     }
     atk_object_set_parent(accessible, tk_root_accessible);
+    
+    /* Add to root's children list .*/
+    AddChildToParent((TkAtkAccessible *)tk_root_accessible, accessible);
+    
+    /* Emit signal on root with valid index. */
+    ChildrenChangedAddData *cad = g_new0(ChildrenChangedAddData, 1);
+    cad->parent = tk_root_accessible;
+    cad->index = g_list_length(((TkAtkAccessible *)tk_root_accessible)->children) - 1;
+    cad->child = accessible;
+    RunOnMainThreadAsync(emit_children_changed_add, cad);
+    
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
-        RunOnMainThreadAsync(emit_children_changed_add, accessible);
     }
     const gchar *name = tk_get_name(accessible);
     if (name) {
@@ -995,8 +1042,20 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
     if (!accessible) return;
 
     if (g_list_find(toplevel_accessible_objects, accessible)) {
+        /* Compute index before removal. */
+        gint index = g_list_index(((TkAtkAccessible *)tk_root_accessible)->children, accessible);
+        
+        /* Remove from root's children. */
+        RemoveChildFromParent((TkAtkAccessible *)tk_root_accessible, accessible);
+        
+        /* Emit signal. */
+        ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+        crd->parent = tk_root_accessible;
+        crd->index = index;
+        crd->child = accessible;
+        RunOnMainThreadAsync(emit_children_changed_remove, crd);
+        
         toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, accessible);
-        RunOnMainThreadAsync(emit_children_changed_remove, accessible);
     }
 }
 
@@ -1050,8 +1109,14 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
 	    }
 	    g_object_unref(state_set);
         
-	    /* Add to parent's child list. */
-	    AddChildToParent((TkAtkAccessible*)parent_obj, child_obj);
+    AddChildToParent((TkAtkAccessible*)parent_obj, child_obj);
+    
+    /* Emit with valid index. */
+    ChildrenChangedAddData *cad = g_new0(ChildrenChangedAddData, 1);
+    cad->parent = parent_obj;
+    cad->index = g_list_length(((TkAtkAccessible *)parent_obj)->children) - 1;
+    cad->child = child_obj;
+    RunOnMainThreadAsync(emit_children_changed_add, cad);
 	    RunOnMainThreadAsync(emit_children_changed_add, child_obj);
         
 	    RegisterChildWidgets(interp, child, child_obj);
@@ -1137,13 +1202,21 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     
     Tk_Window parent_tkwin = (Tk_Window)RunOnMainThread(get_window_parent_main, &data);
     AtkObject *parent_obj = parent_tkwin ? GetAtkObjectForTkWindow(parent_tkwin) : tk_root_accessible;
+   
     if (parent_obj) {
-	atk_object_set_parent(obj, parent_obj);
+        atk_object_set_parent(obj, parent_obj);
+        AddChildToParent((TkAtkAccessible *)parent_obj, obj);
+        
+        ChildrenChangedAddData *cad = g_new0(ChildrenChangedAddData, 1);
+        cad->parent = parent_obj;
+        cad->index = g_list_length(((TkAtkAccessible *)parent_obj)->children) - 1;
+        cad->child = obj;
+        RunOnMainThreadAsync(emit_children_changed_add, cad);
     }
     
     if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data)) {
-	RegisterToplevelWindow(interp, tkwin, obj);
-	RegisterChildWidgets(interp, tkwin, obj);
+        RegisterToplevelWindow(interp, tkwin, obj);
+        RegisterChildWidgets(interp, tkwin, obj);
     }
 
     return obj;
@@ -1352,24 +1425,41 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) 
 			  TkAtkAccessible_FocusHandler, tkAccessible);
 }
 
-/* Respond to <Destroy> event. */
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type == DestroyNotify) {
         TkAtkAccessible *tkAccessible = (TkAtkAccessible *)clientData;
         if (tkAccessible && tkAccessible->tkwin) {
             AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
-            if (parent) {
-                /* Remove from parent's child list. */
-                RemoveChildFromParent((TkAtkAccessible*)parent, ATK_OBJECT(tkAccessible));
+            if (parent && G_IS_OBJECT(parent)) {
+                /* Compute index before removal. */
+                gint index = g_list_index(((TkAtkAccessible *)parent)->children, ATK_OBJECT(tkAccessible));
+                if (index >= 0) {
+                    /* Remove from parent's children list. */
+                    RemoveChildFromParent((TkAtkAccessible*)parent, ATK_OBJECT(tkAccessible));
+                    
+                    /* Emit children-changed::remove signal. */
+                    ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+                    crd->parent = parent;
+                    crd->index = index;
+                    crd->child = ATK_OBJECT(tkAccessible);
+                    if (crd->parent) g_object_ref(crd->parent); // Hold reference
+                    if (crd->child) g_object_ref(crd->child);   // Hold reference
+                    RunOnMainThreadAsync(emit_children_changed_remove, crd);
+                } else {
+                    g_warning("TkAtkAccessible_DestroyHandler: Object not found in parent's children list");
+                }
+            } else {
+                g_warning("TkAtkAccessible_DestroyHandler: Invalid or null parent object");
             }
             
-            /* Notify parent about removal. */
-            RunOnMainThreadAsync(emit_children_changed_remove, ATK_OBJECT(tkAccessible));
-	    UnregisterAtkObjectForTkWindow(tkwin);
+            /* Unregister from tk_to_atk_map. */
+            UnregisterAtkObjectForTkWindow(tkAccessible->tkwin);
             
-            /* Unregister and cleanup. */
+            /* Unref the accessible object. */
             g_object_unref(tkAccessible);
+        } else {
+            g_warning("TkAtkAccessible_DestroyHandler: Invalid or null tkAccessible/tkwin");
         }
     }
 }
@@ -1483,7 +1573,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     AtkStateSet *state_set = atk_state_set_new();
 	atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     AtkRole role = acc->cached_role;
-    
+    g_warning("Object has focus: %s\n", Tk_PathName(acc->tkwin));
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
 	role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
 	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
@@ -1619,17 +1709,18 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
     MainThreadData data = {NULL, interp, NULL, NULL};
     Tk_Window path_tkwin = (Tk_Window)RunOnMainThread(name_to_window_main, &data);
     if (path_tkwin == NULL) {
-        Tcl_SetResult(interp, "Invalid window path", TCL_STATIC);
-        return TCL_ERROR;
+		g_warning("Invalid window path\n");
+		return TCL_OK;
     }
 
     AtkObject *acc = GetAtkObjectForTkWindow(path_tkwin);
     if (!acc) {
         acc = TkCreateAccessibleAtkObject(interp, path_tkwin, Tcl_GetString(objv[1]));
         if (!acc) {
-            Tcl_SetResult(interp, "Failed to create accessible object", TCL_STATIC);
-            return TCL_ERROR;
+			g_warning("Failed to create accessible object\n");
+            return TCL_OK;
         }
+        
         RegisterAtkObjectForTkWindow(path_tkwin, acc);
 
         if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &(MainThreadData){path_tkwin, interp, NULL, NULL})) {
@@ -1825,19 +1916,25 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
     
-    atk_object_set_role(main_acc, ATK_ROLE_WINDOW);
-    RegisterAtkObjectForTkWindow(mainWin, main_acc);
-    TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
     atk_object_set_parent(main_acc, tk_root_accessible);
     if (!g_list_find(toplevel_accessible_objects, main_acc)) {
-	toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, main_acc);
+        toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, main_acc);
     }
+    
+    /* Add to root's children and emit signal. */
+    AddChildToParent((TkAtkAccessible *)tk_root_accessible, main_acc);
+    ChildrenChangedAddData *cad = g_new0(ChildrenChangedAddData, 1);
+    cad->parent = tk_root_accessible;
+    cad->index = g_list_length(((TkAtkAccessible *)tk_root_accessible)->children) - 1;
+    cad->child = main_acc;
+    RunOnMainThreadAsync(emit_children_changed_add, cad);
+    
     RegisterChildWidgets(interp, mainWin, main_acc);
 
-    /* Set up GLib event loop integration */
+    /* Set up GLib event loop integration.*/
     SetupGlibIntegration();
 
-    /* Start event processing */
+    /* Start event processing. */
     Tcl_DoWhenIdle(ProcessPendingEvents, NULL);
 
     /* Finally, register Tcl commands.  */
