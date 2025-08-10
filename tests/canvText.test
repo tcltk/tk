@@ -1,23 +1,38 @@
 # This file is a Tcl script to test out the procedures in tkCanvText.c,
-# which implement canvas "text" items.  It is organized in the standard
-# fashion for Tcl tests.
+# which implement canvas "text" items.
 #
 # Copyright © 1996-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
-# Canvas used in 1.* - 17.* tests
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.* - 17.*
+#
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
 update
-
-# Item used in 1.*  tests
 .c create text 20 20 -tag test
+
 test canvText-1.1 {configuration options: good value for "anchor"} -body {
     .c itemconfigure test -anchor nw
     list [lindex [.c itemconfigure test -anchor] 4] [.c itemcget test -anchor]
@@ -90,8 +105,11 @@ test canvasText-1.19 {configuration options: bounding of "angle"} -body {
     .c itemconfigure test -angle -360
     lappend result [.c itemcget test -angle]
 } -result {30.0 330.0 0.0}
-.c delete test
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete test
 
 test canvText-2.1 {CreateText procedure: args} -body {
     .c create text
@@ -378,14 +396,13 @@ test canvText-6.9 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz
     .c delete test
 } -result 1
 
-
-#.c delete test
-#.c create text 20 20 -tag test
-#focus -force .c
-#.c focus test
+#
+# COMMON TEST SETUP
+#
 focus .c
 .c focus test
 .c itemconfig test -text "abcd\nefghi\njklmnopq"
+
 test canvText-7.1 {DisplayText procedure: stippling} -body {
     .c create text 20 20 -tag test
     .c itemconfig test -stipple gray50
@@ -585,8 +602,13 @@ test canvText-8.9 {TextInsert procedure: inserting after cursor} -setup {
     .c index test insert
 } -result 3
 
-# Item used in 9.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests canvasText-9.*
+#
 .c create text 20 20 -tag test
+
 test canvText-9.1 {TextInsert procedure: before beginning/after end} -body {
     # Can't test this because GetTextIndex filters out those numbers.
 } -result {}
@@ -686,8 +708,11 @@ test canvText-9.15 {TextInsert procedure: cursor doesn't move} -body {
     .c dchars test 7 9
     .c index test insert
 } -result 5
-.c delete test
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete test
 
 test canvText-10.1 {TextToPoint procedure} -body {
     .c create text 0 0 -tag test
@@ -985,6 +1010,8 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
     destroy .c
 } -result {}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return

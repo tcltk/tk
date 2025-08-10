@@ -1,21 +1,42 @@
 # This file is a Tcl script to test out images of type "bitmap" (i.e.,
-# the procedures in the file tkImgBmap.c).  It is organized in the
-# standard fashion for Tcl tests.
+# the procedures in the file tkImgBmap.c).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc bgerror msg {
+    global errMsg
+    set errMsg $msg
+}
+
+#
+# COMMON TEST SETUP
+#
 
 set data1 {#define foo_width 16
 #define foo_height 16
@@ -38,16 +59,10 @@ makeFile $data1 foo.bm
 makeFile $data2 foo2.bm
 
 imageCleanup
-#canvas .c
-#pack .c
-#update
-#image create bitmap i1
-#.c create image 200 100 -image i1
-update
-proc bgerror msg {
-    global errMsg
-    set errMsg $msg
-}
+
+#
+# TESTS
+#
 
 test imageBmap-1.1 {options for bitmap images} -body {
     image create bitmap i1 -background #123456
@@ -120,8 +135,11 @@ test imageBmap-1.12 {options for bitmap images} -body {
     list [catch {image create bitmap i1 -data $data1 -maskfile bogus} msg] \
 	    [string tolower $msg]
 } -result {1 {couldn't read bitmap file "bogus": no such file or directory}}
-rename bgerror {}
 
+#
+# COMMON TEST CLEANUP
+#
+rename bgerror {}
 
 test imageBmap-2.1 {ImgBmapCreate procedure} -setup {
     imageCleanup
@@ -346,12 +364,16 @@ test imageBmap-6.3 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {   } foo3.bm
     image create bitmap i1 -file foo3.bm
 } -returnCodes error -result {format error in bitmap data}
+
+#
+# COMMON TEST SETUP
+#
+# For tests imageBmap-7.*
+#
 removeFile foo3.bm
-
-
 imageCleanup
-# Image used in 7.* tests
 image create bitmap i1
+
 test imageBmap-7.1 {ImgBmapCmd procedure} -body {
     i1
 } -returnCodes error -result {wrong # args: should be "i1 option ?arg ...?"}
@@ -384,7 +406,10 @@ test imageBmap-7.9 {ImgBmapCmd procedure} -body {
 test imageBmap-7.10 {ImgBmapCmd procedure} -body {
     i1 gorp
 } -returnCodes error -result {bad option "gorp": must be cget or configure}
-# Clean it up after use!!
+
+#
+# COMMON TEST CLEANUP
+#
 imageCleanup
 
 test imageBmap-8.1 {ImgBmapGet/Free procedures, shared instances} -setup {
@@ -443,10 +468,13 @@ test imageBmap-9.2 {ImgBmapDisplay procedure, nothing to display} -setup {
     image delete i1
     destroy .c
 } -result {}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[info exists bgerror]} {
     rename bgerror {}
 }
-
 
 test imageBmap-10.1 {ImgBmapFree procedure, resource freeing} -setup {
     destroy .c
@@ -511,7 +539,7 @@ test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
 } -result {0 1 {invalid command name "i2"}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 removeFile foo.bm
@@ -519,7 +547,6 @@ removeFile foo2.bm
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl
