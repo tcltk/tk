@@ -249,7 +249,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			)
 			
 /* Helper function to integrate strings. */         
-    static gchar *sanitize_utf8(const gchar *str) 
+static gchar *sanitize_utf8(const gchar *str) 
 {
     if (!str) return NULL;
     return g_utf8_make_valid(str, -1);
@@ -365,11 +365,11 @@ static void ProcessPendingEvents(ClientData clientData)
     /* Then let GLib run pending sources on the captured context (non-blocking). */
     if (glib_context) {
         while (g_main_context_iteration(glib_context, FALSE)) {
-            /* iterate until no more work */
+            /* Iterate until no more work. */
         }
     }
 
-    /* Re-arm the timer for the next iteration */
+    /* Re-arm the timer for the next iteration. */
     Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
 
@@ -448,7 +448,7 @@ static gpointer get_focus_window_main(gpointer data)
     return (gpointer)TkGetFocusWin((TkWindow *)mt_data->tkwin);
 }
 
-/* Get parent winodw. */
+/* Get parent window. */
 static gpointer get_window_parent_main(gpointer data) {
     MainThreadData *mt_data = (MainThreadData *)data;
     return (gpointer)Tk_Parent(mt_data->tkwin);
@@ -523,7 +523,7 @@ static gpointer name_to_window_main(gpointer data)
     if (!mt_data || !mt_data->windowName) {
         return NULL;
     }
-
+    
     return (gpointer)Tk_NameToWindow(mt_data->interp, mt_data->windowName, Tk_MainWindow(mt_data->interp));
 }
 
@@ -1491,7 +1491,9 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     UpdateStateCache(acc);
     AtkObject *atk_obj = (AtkObject*)acc;
     AtkStateSet *state_set = atk_state_set_new();
+	atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     AtkRole role = acc->cached_role;
+    
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
 	role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
 	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
