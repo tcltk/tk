@@ -1,11 +1,63 @@
+#
+# Diverse tests for ttk
+#
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-proc skip args {}
-proc ok {} { return }
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc bgerror {error} {
+    variable bgerror $error
+    variable bgerrorInfo $::errorInfo
+    variable bgerrorCode $::errorCode
+}
+
+# Tests using this will fail if the top-level window contains the cursor
+proc checkstate {w} {
+    foreach statespec {
+	{!active !disabled}
+	{!active disabled}
+	{active !disabled}
+	{active disabled}
+	active
+	disabled
+    } {
+	lappend result [$w instate $statespec]
+    }
+    set result
+}
+
+proc selfdestruct {w args} {
+    destroy $w
+}
+
+proc wrong#args {args} {
+    return "wrong # args: should be \"$args\""
+}
+
+proc wrong#varargs {varpart args} {
+    set usage $args
+    append usage " ?$varpart ...?"
+    return "wrong # args: should be \"$usage\""
+}
+
+#
+# COMMON TEST SETUP
+#
 
 variable widgetClasses {
     button checkbutton radiobutton menubutton label entry
@@ -15,18 +67,15 @@ variable widgetClasses {
     scale
 }
 
-proc bgerror {error} {
-    variable bgerror $error
-    variable bgerrorInfo $::errorInfo
-    variable bgerrorCode $::errorCode
-}
+#
+# TESTS
+#
 
+#
 # Self-destruct tests.
 # Do these early, so any memory corruption has a longer time to cause a crash.
 #
-proc selfdestruct {w args} {
-    destroy $w
-}
+
 test ttk-6.1 "Self-destructing checkbutton" -body {
     pack [ttk::checkbutton .sd -text "Self-destruction" -variable ::sd]
     trace add variable sd write [list selfdestruct .sd]
@@ -154,22 +203,6 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
-# Tests using this will fail if the top-level window contains the cursor
-
-proc checkstate {w} {
-    foreach statespec {
-	{!active !disabled}
-	{!active disabled}
-	{active !disabled}
-	{active disabled}
-	active
-	disabled
-    } {
-	lappend result [$w instate $statespec]
-    }
-    set result
-}
-
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]
@@ -285,7 +318,7 @@ test ttk-4.0 "Setup" -body {
     catch { destroy .t }
     pack [ttk::label .t -text "Button 1"]
     testConstraint fontOption [expr {![catch { set prevFont [.t cget -font] }]}]
-    ok
+    return -code ok
 }
 
 test ttk-4.1 "Change font" -constraints fontOption -body {
@@ -317,6 +350,12 @@ test ttk-4.4 "Bad resource specifications" -body {
 }
 
 #
+# COMMON TEST SETUP
+#
+# For tests ttk-8.*
+#
+
+#
 # -compound tests:
 #
 variable iconData \
@@ -331,26 +370,12 @@ zCDoBooud2PMDIKuRqDocgtGzMwg6O4Eii5z4Kgi6DIMhqLoagQGjiqCLvPgYOgqji6CLrfi
 
 variable compoundStrings {text image center top bottom left right none}
 
-if {0} {
-    proc now {} { set ::now [clock clicks -milliseconds] }
-    proc tick {} { puts -nonewline stderr "+" ; flush stderr }
-    proc tock {} {
-	set then $::now; set ::now [clock clicks -milliseconds]
-	puts stderr " [expr {$::now - $then}] ms"
-    }
-} else {
-    proc now {} {} ; proc tick {} {} ; proc tock {} {}
-}
-
-now ; tick
 test ttk-8.0 "Setup for 8.X" -body {
     ttk::button .ctb
     image create photo icon -data $::iconData;
     pack .ctb
 }
-tock
 
-now
 test ttk-8.1 "Test -compound options" -body {
     # Exhaustively test each combination.
     # Main goal is to make sure no code paths crash.
@@ -358,12 +383,11 @@ test ttk-8.1 "Test -compound options" -body {
 	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.2 "Test -compound options with regular button" -body {
     button .rtb
@@ -373,31 +397,28 @@ test ttk-8.2 "Test -compound options with regular button" -body {
 	foreach text {"Hi!" ""} {
 	    foreach compound [lrange $::compoundStrings 2 end] {
 		.rtb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
 	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.4 "ImageChanged" -body {
     ttk::button .b -image icon
     icon blank
 } -cleanup { destroy .b }
 
-#------------------------------------------------------------------------
 
 test ttk-9.1 "Traces on nonexistant namespaces" -body {
     ttk::checkbutton .tcb -variable foo::bar
@@ -640,14 +661,6 @@ test ttk-15.2 {Bug [3341056]: Usage of recreated ttk::checkbutton causes crash} 
 #
 # (See also: SF#2021443)
 #
-proc wrong#args {args} {
-    return "wrong # args: should be \"$args\""
-}
-proc wrong#varargs {varpart args} {
-    set usage $args
-    append usage " ?$varpart ...?"
-    return "wrong # args: should be \"$usage\""
-}
 
 test ttk-ensemble-0 "style element create: insufficient args" -body {
      ttk::style
@@ -687,9 +700,9 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     expr {[llength [ttk::style theme styles alt]] > 0}
 } -result 1
 
+#
+# TESTFILE CLEANUP
+#
 
 destroy {*}[winfo children .]
-
 tcltest::cleanupTests
-
-#*EOF*

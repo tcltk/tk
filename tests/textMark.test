@@ -1,15 +1,27 @@
 # This file is a Tcl script to test the code in the file tkTextMark.c.
-# This file is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# COMMON TEST SETUP
+#
 
 destroy .t
 text .t -width 20 -height 10
@@ -36,6 +48,10 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
+#
+# TESTS
+#
+
 test textMark-1.1 {TkTextMarkCmd - missing option} -returnCodes error -body {
     .t mark
 } -result {wrong # args: should be ".t mark option ?arg ...?"}
@@ -305,12 +321,13 @@ test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a
     lsort [list [.pt mark prev end] [.pt mark prev current] [.pt mark prev insert]]
 } -result {current insert mymark}
 
+#
+# TESTFILE CLEANUP
+#
+
 destroy .pt
 destroy .t
-
-# cleanup
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

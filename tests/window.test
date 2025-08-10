@@ -1,22 +1,40 @@
 # This file is a Tcl script to test the procedures in the file
-# tkWindow.c.  It is organized in the standard fashion for Tcl tests.
+# tkWindow.c.
 #
 # Copyright © 1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+# NOTE
+#
+# This file is woefully incomplete.  Right now it only tests
+# a few parts of a few procedures in tkWindow.c
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# COMMON TEST SETUP
+#
 
 update
 # Move the mouse out of the way for window-2.1
 event generate {} <Motion> -warp 1 -x 640 -y 10
-# XXX This file is woefully incomplete.  Right now it only tests
-# a few parts of a few procedures in tkWindow.c
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test window-1.1 {Tk_CreateWindowFromPath procedure, parent dead} -setup {
     destroy .t
@@ -374,11 +392,11 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
     destroy .t
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
-
-# cleanup
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

@@ -1,23 +1,35 @@
-# This file is a Tcl script to test out the "winfo" command.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "winfo" command.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+# NOTE
+#
+# This test file is woefully incomplete.  At present, only a
+# few of the winfo options are tested.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import colors
 
-# XXX - This test file is woefully incomplete.  At present, only a
-# few of the winfo options are tested.
-
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test winfo-1.1 {"winfo atom" command} -body {
     winfo atom
@@ -374,12 +386,8 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
 
 # Windows does not destroy the container when an embedded window is
 # destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
-if {[tk windowingsystem] eq "win32"} {
-   set result_13_2 {embedded 0 container 1}
-} else {
-   set result_13_2 {embedded 0 container 0}
-}
-test winfo-13.2 {destroying embedded toplevel} -setup {
+test winfo-13.2 {destroying embedded toplevel
+} -setup {
     deleteWindows
 } -body {
     frame .con -container 1
@@ -394,7 +402,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
     list embedded [winfo exists .emb.b] container [winfo exists .con]
 } -cleanup {
     deleteWindows
-} -result $result_13_2
+} -result [expr {[tk windowingsystem] eq "win32"?{embedded 0 container 1}:{embedded 0 container 0}}]
 
 test winfo-13.3 {destroying container window} -setup {
     deleteWindows
@@ -463,13 +471,12 @@ test winfo-14.4 {mapped at idle time} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
 testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

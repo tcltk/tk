@@ -6,27 +6,35 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+# NOTE
+#
+# All tests in this testfile have been constrained with test constraint "testutils".
+# This constraint isn't set anywhere, and therefore false by default. Therefore,
+# the tests in this file are skipped in a regular invocation of the Tk test suite.
+# In order to run these test, you need to use the tcltest option
+# "-constraints testutils" in the invocation, possibly combined with the option
+# "-file testutils.test" to exclude other test files, or with
+# "-limitconstraints true" to exclude other tests.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
-# Notes:
-#
-# - All tests have been constrained with test constraint "testutils". This
-#   constraint isn't set anywhere, and therefore false by default. Therefore,
-#   the tests in this file are skipped in a regular invocation of the Tk test
-#   suite. In order to run these test, you need to use the tcltest option
-#   "-constraints testutils" in the invocation, possibly combined with the
-#   option "-file testutils.test" to exclude other test files, or with
-#   "-limitconstraints true" to exclude other tests.
-#
-# - At this place in the test file, the file "testutils.tcl" has already been
-#   sourced (through tcltest::loadTestedCommands above), and the utility procs
-#   from domain "generic" are already available. Therefore we can make use of
-#   proc "assert" here.
-#
-
 assert {"testutils" in [info procs testutils]}
+
+#
+# TESTS
+#
 
 #
 # Section 1: invalid invocations
@@ -56,8 +64,10 @@ test testutils-1.6 {invalid domain for subCmd forget} -constraints testutils -bo
 } -result {testutils domain "foo" doesn't exist} -returnCodes error
 
 #
-# Create a domain namespace for testing export, import, forget
+# COMMON TEST SETUP
 #
+
+# Create a domain namespace for testing export, import, forget
 assert {"::tk::test::foo" ni [namespace children ::tk::test]}
 assert {"::tk::test::zez" ni [namespace children ::tk::test]}
 catch {rename init {}}
@@ -74,7 +84,7 @@ namespace eval ::tk::test::foo {
 set initVars [info vars]; lappend initVars initVars
 
 #
-# 2. Domain failures for forget and import
+# Section 2. Domain failures for forget and import
 #
 test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
     testutils forget foo
@@ -88,7 +98,7 @@ test testutils-2.2 {duplicate import} -constraints testutils -body {
 }
 
 #
-# 3. Import procs
+# Section 3. Import procs
 #
 test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
     testutils import foo
@@ -116,7 +126,7 @@ test testutils-3.3 {import fails: proc already exists} -constraints testutils -s
 }
 
 #
-# 4. Import variables
+# Section 4. Import variables
 #
 test testutils-4.1 {associated variables are imported} -constraints testutils -body {
     testutils import foo
@@ -179,7 +189,7 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
 }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete ::tk::test::foo
