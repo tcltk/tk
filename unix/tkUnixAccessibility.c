@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include <tcl.h>
 #include <tk.h>
 #include "tkInt.h"
@@ -52,20 +53,21 @@ typedef struct _TkAtkAccessibleClass {
 
 /* Structs for passing data to main thread. */
 typedef struct {
+    gpointer (*func)(gpointer);
+    gpointer user_data;
+    gpointer result;
+    gboolean done;
     GMutex mutex;
     GCond cond;
-    gboolean done;
-    gpointer result;
-
-    gpointer (*func)(gpointer user_data);
-    gpointer user_data;
 } TkMainThreadCall;
+
 
 typedef struct {
     Tk_Window tkwin;
     Tcl_Interp *interp;
     gpointer result;
 } MainThreadData;
+
 
 /* Structs to map Tk roles into Atk roles. */
 
@@ -135,7 +137,7 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
-static int glib_pipe_fd = -1;
+static GMainContext *glib_context = NULL;
 
 /* Thread management functions. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer user_data), gpointer user_data);
@@ -230,8 +232,8 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /* GLib-Tcl event loop integration */
-static void GlibFileHandler(ClientData data, int mask);
 static void SetupGlibIntegration(void);
+static void ProcessPendingEvents(ClientData clientData);
 
 /* Child management functions */
 static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child);
@@ -245,7 +247,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
 			)
-
+			
 /* Helper function to integrate strings. */         
     static gchar *sanitize_utf8(const gchar *str) 
 {
@@ -262,8 +264,11 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  *----------------------------------------------------------------------
  */
             
-
-/* Callback function to main thread. */
+/* 
+ * Callback function to main thread. This runs on 
+ * the main thread (GLib main context). 
+ */
+ 
 static gboolean run_main_thread_callback(gpointer data)
 {
     TkMainThreadCall *call = (TkMainThreadCall *)data;
@@ -278,12 +283,15 @@ static gboolean run_main_thread_callback(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
-
-/* Run a function on the main thread and wait for the result. */
+/* Synchronous run-on-main-thread.  Calls function and waits for result. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
 {
-    if (g_main_context_is_owner(g_main_context_default())) {
-	return func(user_data);
+    if (!glib_context) {
+        return func(user_data);
+    }
+
+    if (g_main_context_is_owner(glib_context)) {
+        return func(user_data);
     }
 
     TkMainThreadCall call;
@@ -295,10 +303,11 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
     g_mutex_init(&call.mutex);
     g_cond_init(&call.cond);
 
+    g_main_context_invoke(glib_context, run_main_thread_callback, &call);
+
     g_mutex_lock(&call.mutex);
-    g_main_context_invoke(NULL, run_main_thread_callback, &call);
     while (!call.done) {
-	g_cond_wait(&call.cond, &call.mutex);
+        g_cond_wait(&call.cond, &call.mutex);
     }
     g_mutex_unlock(&call.mutex);
 
@@ -308,13 +317,18 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
     return call.result;
 }
 
-/* Run a function on the main thread asynchronously (no wait). */
+/* Run a function on the main thread asynchronously (no wait) */
 void RunOnMainThreadAsync(GSourceFunc func, gpointer user_data)
 {
-    if (g_main_context_is_owner(g_main_context_default())) {
-	func(user_data);
+    if (!glib_context) {
+        func(user_data);
+        return;
+    }
+
+    if (g_main_context_is_owner(glib_context)) {
+        func(user_data);
     } else {
-	g_main_context_invoke(NULL, func, user_data);
+        g_main_context_invoke(glib_context, func, user_data);
     }
 }
 
@@ -326,38 +340,39 @@ void RunOnMainThreadAsync(GSourceFunc func, gpointer user_data)
  *----------------------------------------------------------------------
  */
 
-static void GlibFileHandler(ClientData data, int mask) 
+/* 
+ * Establish integration between Tcl and GLib 
+ * event loops. Call once, from the main thread early 
+ * during startup. 
+ */
+ 
+static void SetupGlibIntegration(void)
 {
-    (void)data;
-    (void)mask;
-    /* Process pending GLib events without blocking. */
-    g_main_context_iteration(g_main_context_default(), FALSE);
+    /* Capture the context the main thread actually uses. */
+    glib_context = g_main_context_ref_thread_default();
+    /* Start a periodic timer that will iterate GLib without blocking. */
+    Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
 
-static void SetupGlibIntegration(void) 
+/* Process GLib and Tcl events periodically on the Tcl/Tk main thread. */
+static void ProcessPendingEvents(ClientData clientData)
 {
-	 /* Reference the default GLib context. */
-    GMainContext *context = g_main_context_default();
-    g_main_context_ref(context);
+    (void)clientData;
 
-    gint timeout;
-    gint n_fds = g_main_context_query(context, 0, &timeout, NULL, 0);
-    
-    if (n_fds > 0) {
-        GPollFD *fds = g_new(GPollFD, n_fds);
-        g_main_context_query(context, 0, &timeout, fds, n_fds);
-        
-        /* Register with Tcl's event system. */
-        for (gint i = 0; i < n_fds; i++) {
-            if (fds[i].events & G_IO_IN) {
-                glib_pipe_fd = fds[i].fd;
-                Tcl_CreateFileHandler(glib_pipe_fd, TCL_READABLE, GlibFileHandler, NULL);
-                break;
-            }
+    /* First let Tcl process any queued events (non-blocking). */
+    while (Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {}
+
+    /* Then let GLib run pending sources on the captured context (non-blocking). */
+    if (glib_context) {
+        while (g_main_context_iteration(glib_context, FALSE)) {
+            /* iterate until no more work */
         }
-        g_free(fds);
     }
+
+    /* Re-arm the timer for the next iteration */
+    Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1828,6 +1843,9 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Set up GLib event loop integration */
     SetupGlibIntegration();
+
+    /* Start event processing */
+    Tcl_DoWhenIdle(ProcessPendingEvents, NULL);
 
     /* Finally, register Tcl commands.  */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
