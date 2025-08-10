@@ -10,6 +10,7 @@
 #
 # SETUP FOR APPLICATION AND ROOT WINDOW
 #
+encoding system utf-8
 if {[namespace exists tk::test]} {
     # reset windows
     deleteWindows

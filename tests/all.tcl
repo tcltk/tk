@@ -17,5 +17,4 @@ tcltest::configure -loadfile \
     [file join [tcltest::testsDirectory] main.tcl]
 tcltest::configure -singleproc 1
 set ErrorOnFailures [info exists env(ERROR_ON_FAILURES)]
-encoding system utf-8
 if {[tcltest::runAllTests] && $ErrorOnFailures} {exit 1}
