@@ -20,8 +20,13 @@ if {[namespace exists tk::test]} {
     return
 }
 
+if {[tcltest::configure -singleproc] == 0} {
+    # Support test suite invocation by tclsh (as is the case with "-singleproc 1")
+    package require tk
+}
 tk appname tktest
 wm title . tktest
+
 # If the main window isn't already mapped (e.g. because the tests are
 # being run automatically) , specify a precise size for it so that the
 # user won't have to position it manually.
