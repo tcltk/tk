@@ -12,6 +12,11 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
+# Error out if this file is loaded repeatedly into the same interpreter
+if {[namespace exists ::tk::test]} {
+    return -code error "repeated loading of file \"main.tcl\""
+}
+
 #
 # SETUP FOR APPLICATION AND ROOT WINDOW
 #
