@@ -8293,4 +8293,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-08-11 (bug) [dc38c9] Aqua: NSHighResolutionCapable should be a Boolean value (chavez)
 
+2025-08-11 (bug) [4e1e10] Aqua: CGRect/NSRect type mismatch on 32-bit (root)
+
 - (to be) Released 8.6.17, Aug ??, 2025 - https://core.tcl-lang.org/tk/ for details
