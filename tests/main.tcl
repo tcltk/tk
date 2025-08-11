@@ -39,11 +39,10 @@ namespace import -force tcltest::cleanupTests tcltest::interpreter \
 #
 # SOURCE DEFINITIONS OF GLOBAL UTILITY PROCS AND CONSTRAINTS
 #
-# Note: tcltest uses [uplevel] to evaluate this script. Therefore, [info script]
-#       cannot be used to determine the main Tk test directory, and we use
-#       [tcltest::configure -loadfile] instead.
-#
-set mainTestDir [file dirname [tcltest::configure -loadfile]]
+set mainTestDir [tcltest::configure -testdir]
+if {[file tail $mainTestDir] eq "ttk"} {
+    set mainTestDir [file dirname $mainTestDir]
+}
 source [file join $mainTestDir testutils.tcl]
 source [file join $mainTestDir constraints.tcl]
 unset mainTestDir
