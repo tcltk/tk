@@ -91,28 +91,42 @@ proc ::tk::PlaceWindow {w args} {
 
     wm withdraw $w
     update idletasks
+
+    set screenWidth [winfo screenwidth $w]
+    set screenHeight [winfo screenheight $w]
+    set width [winfo reqwidth $w]
+    set height [winfo reqheight $w]
+    ## "wm geometry" operates in window manager coordinates and thus includes
+    ## a possible decoration frame and the title bar.
     set frameWidth [WMFrameWidth]
     set titleHeight [WMTitleHeight]
+    set constrain 0
+    if {$width + 2*$frameWidth > $screenWidth} {
+	set width [expr {$screenWidth - 2*$frameWidth}]
+	set constrain 1
+    }
+    if {$height + $titleHeight + $frameWidth > $screenHeight} {
+	set height [expr {$screenHeight - $titleHeight - $frameWidth}]
+	set constrain 1
+    }
+
 
     # Check if window gets zoomed if it does not fit on the screen
-    if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]
-	    || [winfo reqheight $w] + $titleHeight + $frameWidth
-	     > [winfo screenheight $w]
-    } {
+    if {$constrain && $zoomNoSpace} {
 	wm attributes $w -fullscreen 1    
 	wm deiconify $w
 	return
     }
     set checkBounds 1
     if {$place eq ""} {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {($screenWidth - $width)/2}]
+	set y [expr {($screenHeight - $height)/2}]
 	set checkBounds 0
     } elseif {[string equal -length [string length $place] $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
 	if {[string equal -length [string length $anchor] $anchor "center"]} {
-	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
-	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
+	    set x [expr {[winfo pointerx $w] - $width/2}]
+	    set y [expr {[winfo pointery $w] - $height/2}]
 	} else {
 	    set x [winfo pointerx $w]
 	    set y [winfo pointery $w]
@@ -120,40 +134,48 @@ proc ::tk::PlaceWindow {w args} {
     } elseif {[string equal -length [string length $place] $place "widget"] && \
 	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
 	## center about WIDGET $anchor, widget must be mapped
-	set x [expr {[winfo rootx $anchor] + \
-		([winfo width $anchor]-[winfo reqwidth $w])/2}]
-	set y [expr {[winfo rooty $anchor] + \
-		([winfo height $anchor]-[winfo reqheight $w])/2}]
+	set x [expr {[winfo rootx $anchor] +
+		([winfo width $anchor] - $width)/2}]
+	set y [expr {[winfo rooty $anchor] +
+		([winfo height $anchor] - $height)/2}]
     } else {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {($screenWidth - $width)/2}]
+	set y [expr {($screenHeight - $height)/2}]
 	set checkBounds 0
     }
+
     if {$checkBounds} {
-	if {$x < [winfo vrootx $w]} {
-	    set x [winfo vrootx $w]
-	} elseif {$x > ([winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w])} {
-	    set x [expr {[winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w]}]
+	set vrootX [winfo vrootx $w]; set vrootWidth [winfo vrootwidth $w]
+	if {$x + $width + $frameWidth > $vrootX + $vrootWidth} {
+	    set x [expr {$vrootX + $vrootWidth - $width - $frameWidth}]
 	}
-	if {$y < [winfo vrooty $w]} {
-	    set y [winfo vrooty $w]
-	} elseif {$y > ([winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w])} {
-	    set y [expr {[winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w]}]
+	if {$x < $vrootX + $frameWidth} {
+	    set x [expr {$vrootX + $frameWidth}]
 	}
+
+	set vrootY [winfo vrooty $w]; set vrootHeight [winfo vrootheight $w]
+	if {$y + $height + $frameWidth > $vrootY + $vrootHeight} {
+	    set y [expr {$vrootY + $vrootHeight - $height - $frameWidth}]
+	}
+	if {$y < $vrootY + $titleHeight} {
+	    set y [expr {$vrootY + $titleHeight}]
+	}
+
 	if {[tk windowingsystem] eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 22} {
-		set y 22
+	    if {$y < 22 + $titleHeight} {
+		set y [expr {22 + $titleHeight}]
 	    }
 	}
     }
+
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
-    # "wm geometry" operates in window manager coordinates and thus includes
-    # an eventual decoration frame.
+    ## Set geometry and show window
+    set geom [expr {$constrain ? "${width}x${height}" : ""}]
     incr x -$frameWidth
     incr y -$titleHeight
-    # Set geometry and show window
-    wm geometry $w +$x+$y
+    append geom +$x+$y
+    wm geometry $w $geom
     wm deiconify $w
 }
 
@@ -717,10 +739,9 @@ proc ::tk::AltKeyInDialog {path key} {
     }
 }
 
-# ::tk::WMFrameWidth
-#
+# ::tk::WMFrameWidth --
 #	Return window manager frame width if known, else 0.
-
+#
 proc ::tk::WMFrameWidth {} {
     set frameWidth 0
     # In SDL2 Tk, the frame width is a number between 6 and 27, depending on
@@ -744,12 +765,13 @@ proc ::tk::WMFrameWidth {} {
     return $frameWidth
 }
 
-# ::tk::WMTitleHeight
+# ::tk::WMTitleHeight --
+#	Return window manager height of window title bar if known, else 0.
 #
-#	Return window manager height of window title, if known, else 0.
-
 proc ::tk::WMTitleHeight {} {
     set titleHeight 0
+    # In SDL2 Tk, the title height is a number between 20 and 78, depending on
+    # the screen's DPI value.
     if {[info exists ::tk::sdltk] && $::tk::sdltk} {
 	variable dpi
 	if {$dpi < 140} {
@@ -772,7 +794,6 @@ proc ::tk::WMTitleHeight {} {
 # ::tk::mcmaxamp --
 #	Replacement for mcmax, used for texts with "magic ampersand" in it.
 #
-
 proc ::tk::mcmaxamp {args} {
     set maxlen 0
     foreach arg $args {
