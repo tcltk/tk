@@ -19,6 +19,7 @@ to the userbase.
  - [Pressing Alt-<key> triggers an error popup](https://core.tcl-lang.org/tk/tktview/a30d3e)
  - [error popup on ttk::scale with invisible trough](https://core.tcl-lang.org/tk/tktview/d25b72)
  - [loading windows dll's in Cygwin doesn't work with high-entropy-va](https://core.tcl-lang.org/tk/tktview/06892c)
+ - [TIP 604 widget demo: canvas text fill color not specified](https://core.tcl-lang.org/tk/tktview/6cc48b)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
