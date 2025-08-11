@@ -167,8 +167,8 @@ Note that the namespace variables "doneNess" and "seasonings" are initialized
 with a value, while the namespace variable "tasteVerdict" is not. Both variants
 of declaring/defining a namespace variable are supported.
 
-B3. Tricky aspects of repeated initialization
----------------------------------------------
+B3. Tricky aspects of repeated initialization (in mode "-singleproc 1")
+-----------------------------------------------------------------------
 While the entire Tk test suite is running, many test files are loaded, each of
 which may import and subsequently forget utility domains. When tracking a single
 utility domain across test files that come and go, associated namespace variables
