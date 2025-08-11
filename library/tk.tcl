@@ -779,7 +779,6 @@ proc ::tk::WMTitleHeight {} {
 # ::tk::mcmaxamp --
 #	Replacement for mcmax, used for texts with "magic ampersand" in it.
 #
-
 proc ::tk::mcmaxamp {args} {
     set maxlen 0
     foreach arg $args {
