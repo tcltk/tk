@@ -47,9 +47,4 @@ source [file join $mainTestDir testutils.tcl]
 source [file join $mainTestDir constraints.tcl]
 unset mainTestDir
 
-#
-# RESET WINDOWS
-#
-resetWindows
-
 # EOF
