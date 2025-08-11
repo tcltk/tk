@@ -21,14 +21,6 @@ if {[namespace exists ::tk::test]} {
 # SETUP FOR APPLICATION AND ROOT WINDOW
 #
 encoding system utf-8
-if {[namespace exists tk::test]} {
-    # reset windows
-    deleteWindows
-    wm geometry . {}
-    raise .
-    return
-}
-
 if {[tcltest::configure -singleproc] == 0} {
     # Support test suite invocation by tclsh (as is the case with "-singleproc 1")
     package require tk
