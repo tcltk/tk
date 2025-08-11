@@ -427,6 +427,7 @@ proc ::tk::MessageBox {args} {
     # width.  In this case, change the message label's wrap length so the
     # window fits on the physical screen. Tk Ticket e19f1d89
     set frameWidth [::tk::WMFrameWidth]
+    wm withdraw $w
     update idletasks
     if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
 	# Calculate the wrap length as the screen width minus the
