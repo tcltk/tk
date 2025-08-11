@@ -141,6 +141,18 @@ namespace eval ::tk::test::generic {
 	vwait [namespace current]::_pause($num)
     }
 
+    # resetWindows --
+    #
+    #	Restores a proper initial window setup for a test file, cleaning up from
+    #	the state brought about by a previous testfile.
+    #
+    proc resetWindows {} {
+	deleteWindows
+	wm geometry . {}
+	raise .
+	update
+    }
+
     # On macOS windows are not allowed to overlap the menubar at the top of the
     # screen or the dock.  So tests which move a window and then check whether it
     # got moved to the requested location should use a y coordinate larger than the

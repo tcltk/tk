@@ -51,9 +51,6 @@ unset mainTestDir
 #
 # RESET WINDOWS
 #
-deleteWindows
-wm geometry . {}
-raise .
-update
+resetWindows
 
 # EOF
