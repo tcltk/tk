@@ -1426,9 +1426,6 @@ tkMacOSXPrint.o: $(MAC_OSX_DIR)/tkMacOSXPrint.c
 tkMacOSXRegion.o: $(MAC_OSX_DIR)/tkMacOSXRegion.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXRegion.c
 
-tkMacOSXScale.o: $(MAC_OSX_DIR)/tkMacOSXScale.c
-	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXScale.c
-
 tkMacOSXScrlbr.o: $(MAC_OSX_DIR)/tkMacOSXScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXScrlbr.c
 
