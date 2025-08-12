@@ -27,7 +27,14 @@ if {[tcltest::configure -singleproc] == 0} {
 }
 tk appname tktest
 wm title . tktest
-wm geometry . +0+0
+
+# If the main window isn't already mapped (e.g. because the tests are
+# being run automatically) , specify a precise size for it so that the
+# user won't have to position it manually.
+if {![winfo ismapped .]} {
+    wm geometry . +0+0
+    update
+}
 
 #
 # IMPORT TCLTEST COMMANDS
