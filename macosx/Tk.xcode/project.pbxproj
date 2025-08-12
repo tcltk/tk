@@ -1056,7 +1056,6 @@
 		F966BBE308F27A3B005CB29B /* tkMacOSXNotify.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXNotify.c; sourceTree = "<group>"; };
 		F966BBEA08F27A3C005CB29B /* tkMacOSXPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXPort.h; sourceTree = "<group>"; };
 		F966BBEB08F27A3C005CB29B /* tkMacOSXRegion.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXRegion.c; sourceTree = "<group>"; };
-		F966BBEC08F27A3C005CB29B /* tkMacOSXScale.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXScale.c; sourceTree = "<group>"; };
 		F966BBED08F27A3C005CB29B /* tkMacOSXScrlbr.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXScrlbr.c; sourceTree = "<group>"; };
 		F966BBEE08F27A3C005CB29B /* tkMacOSXSend.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXSend.c; sourceTree = "<group>"; };
 		F966BBEF08F27A3C005CB29B /* tkMacOSXSubwindows.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXSubwindows.c; sourceTree = "<group>"; };
@@ -2600,7 +2599,6 @@
 				F966BBEA08F27A3C005CB29B /* tkMacOSXPort.h */,
 				F976F6A70C325FB6005066D9 /* tkMacOSXPrivate.h */,
 				F966BBEB08F27A3C005CB29B /* tkMacOSXRegion.c */,
-				F966BBEC08F27A3C005CB29B /* tkMacOSXScale.c */,
 				F966BBED08F27A3C005CB29B /* tkMacOSXScrlbr.c */,
 				F966BBEE08F27A3C005CB29B /* tkMacOSXSend.c */,
 				F966BBEF08F27A3C005CB29B /* tkMacOSXSubwindows.c */,
