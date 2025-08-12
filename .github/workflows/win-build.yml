@@ -27,11 +27,11 @@ jobs:
           - "OPTS=static,staticpkg"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: tk
       - name: Checkout Tcl 8.6
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -119,9 +119,9 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Checkout Tcl 8.6
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
