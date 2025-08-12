@@ -557,7 +557,7 @@ MakeIconOrCursorFromResource(
      */
 
     if (hIcon == NULL) {
-        hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
+	hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
 		isIcon, 0x00030000);
     }
     return hIcon;
