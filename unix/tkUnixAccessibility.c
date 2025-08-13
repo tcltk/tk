@@ -1272,14 +1272,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 	g_object_unref(state_set);
     }
     
-    /* Notify state changes to ensure Orca receives them. */
-    atk_object_notify_state_change(obj, ATK_STATE_VISIBLE, TRUE);
-    atk_object_notify_state_change(obj, ATK_STATE_SHOWING, TRUE);
-    atk_object_notify_state_change(obj, ATK_STATE_ENABLED, TRUE);
-    if (atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
-        atk_object_notify_state_change(obj, ATK_STATE_FOCUSABLE, TRUE);
-    }
-    
     /* Get parent window. */
     Tk_Window parent_tkwin = (Tk_Window)RunOnMainThread(get_window_parent_main, &data);
     AtkObject *parent_obj = NULL;
@@ -1737,28 +1729,43 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
- 
-    if (!acc || !acc->tkwin ) {
-	return;
+    if (!acc || !acc->tkwin || !G_IS_OBJECT(acc)) {
+        g_warning("TkAtkAccessible_FocusHandler: Invalid or null acc/tkwin");
+        return;
     }
 
     UpdateStateCache(acc);
-    AtkObject *atk_obj = (AtkObject*)acc;
-    AtkStateSet *state_set = atk_state_set_new();
-    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    if (!acc->is_mapped) {
+        g_debug("TkAtkAccessible_FocusHandler: Window %s is not mapped, skipping focus handling",
+                Tk_PathName(acc->tkwin));
+        return;
+    }
+
+    AtkObject *atk_obj = ATK_OBJECT(acc);
+    AtkStateSet *state_set = atk_object_ref_state_set(atk_obj);
+    if (!state_set) {
+        g_warning("TkAtkAccessible_FocusHandler: Failed to get state set for %s",
+                  Tk_PathName(acc->tkwin));
+        return;
+    }
+
     AtkRole role = acc->cached_role;
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
-	role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
-	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
-	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_WINDOW) {
-	atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+        role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
+        role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
+        role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_WINDOW) {
+        atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     }
+
+    g_debug("TkAtkAccessible_FocusHandler: Object %s focus state: %s",
+            Tk_PathName(acc->tkwin), eventPtr->type == FocusIn ? "FocusIn" : "FocusOut");
+
     if (eventPtr->type == FocusIn) {
         FocusEventData *fed = g_new0(FocusEventData, 1);
         fed->obj = atk_obj;
         fed->state = TRUE;
         RunOnMainThreadAsync(emit_focus_event, fed);
-        
+
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
@@ -1769,15 +1776,16 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         fed->obj = atk_obj;
         fed->state = FALSE;
         RunOnMainThreadAsync(emit_focus_event, fed);
-        
+
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
         scd->state = FALSE;
         RunOnMainThreadAsync(emit_state_change, scd);
     }
-}
 
+    g_object_unref(state_set);
+}
 
 
 
