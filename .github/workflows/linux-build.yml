@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "simplify_test_file_init_for_singleproc_1"
     tags:
     - "core-**"
 permissions:
