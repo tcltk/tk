@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -241,9 +241,6 @@ fi
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
-    if test -d /System/Library/Frameworks/UserNotifications.framework; then
-	LIBS="$LIBS -framework UserNotifications"
-    fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
 	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi

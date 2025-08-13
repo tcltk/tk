@@ -986,4 +986,65 @@ namespace eval ::tk::test::text {
     testutils export
 }
 
+namespace eval ::tk::test::timing {
+
+    # init --
+    #
+    # This is a reserved proc that is part of the mechanism that the proc
+    # testutils employs when making utility procs and associated namespace
+    # variables available to test files.
+    #
+    # Test authors should define and initialize namespace variables here if
+    # they need to be imported into the namespace in which tests are executing.
+    # This proc must not be exported.
+    #
+    # For more information, see the documentation in the file "testutils.GUIDE"
+    #
+    proc init {} {
+	variable dt
+	set dt(granularity) milliseconds
+	set dt(t0) [clock milliseconds]
+    }
+
+    proc dt.get {} {
+	variable dt
+	set now [clock $dt(granularity)]
+	set result [expr {$now - $dt(t0)}]
+	set dt(t0) $now
+	return $result
+    }
+
+    proc dt.reset {{granularity milliseconds}} {
+	if {$granularity ni "microseconds milliseconds seconds"} {
+	    return -code error "invalid parameter \"$granularity\", expected \"microseconds\", \"milliseconds\" or \"seconds\""
+	}
+	variable dt
+	set dt(granularity) $granularity
+	set dt(t0) [clock $dt(granularity)]
+    }
+
+    # progress.* --
+    #
+    #	This set of procs monitors progress and total duration of a procedure
+    #	in a loop.
+    #
+    #	Derived from tests/ttk/ttk.test, see:
+    #
+    #	https://core.tcl-lang.org/tk/file?ci=f94f84b254b0c5ad&name=tests/ttk/ttk.test&ln=335-340
+    #
+    proc progress.init {{granularity milliseconds}} {
+	dt.reset $granularity
+    }
+
+    proc progress.update {} {
+	puts -nonewline stderr "." ; flush stderr
+    }
+
+    proc progress.end {} {
+	puts stderr " [dt.get] $::tk::test::timing::dt(granularity)"
+    }
+
+    testutils export
+}
+
 # EOF

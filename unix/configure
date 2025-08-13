@@ -2605,7 +2605,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -7763,9 +7763,6 @@ if test $tk_aqua = yes; then
 printf "%s\n" "#define MAC_OSX_TK 1" >>confdefs.h
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
-    if test -d /System/Library/Frameworks/UserNotifications.framework; then
-	LIBS="$LIBS -framework UserNotifications"
-    fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
 	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
