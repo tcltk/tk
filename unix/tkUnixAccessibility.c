@@ -139,6 +139,7 @@ static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
 static GMainContext *glib_context = NULL;
+static gboolean in_process_pending = FALSE;
 
 /* Thread management functions. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer user_data), gpointer user_data);
@@ -251,7 +252,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			)
 			
 /* Helper function to integrate strings. */         
-static gchar *sanitize_utf8(const gchar *str) 
+    static gchar *sanitize_utf8(const gchar *str) 
 {
     if (!str) return NULL;
     return g_utf8_make_valid(str, -1);
@@ -361,17 +362,25 @@ static void ProcessPendingEvents(ClientData clientData)
 {
     (void)clientData;
 
-    /* First let Tcl process any queued events (non-blocking). */
+    /* Prevent reentrancy from nested timers/callbacks. */
+    if (in_process_pending) {
+        Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
+        return;
+    }
+    in_process_pending = TRUE;
+
+    /* Let Tk service anything queued without blocking. */
     while (Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {}
 
-    /* Then let GLib run pending sources on the captured context (non-blocking). */
+    /* Let GLib service anything queued without blocking. */
     if (glib_context) {
         while (g_main_context_iteration(glib_context, FALSE)) {
-            /* Iterate until no more work. */
         }
     }
 
-    /* Re-arm the timer for the next iteration. */
+    in_process_pending = FALSE;
+
+    /* Re-scheudle. */
     Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
 
@@ -698,9 +707,7 @@ static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return 0;
-    int count = g_list_length(acc->children);
-    g_warning("count is %d\n", count);
-    return count; 
+    return g_list_length(acc->children);
 }
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
@@ -1017,13 +1024,16 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         if (tk_root_accessible) {
             tk_set_name(tk_root_accessible, "Tk Application");
             AtkStateSet *state_set = atk_object_ref_state_set(tk_root_accessible);
-            atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-            atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-            atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
-            g_object_unref(state_set);
-            atk_object_notify_state_change(tk_root_accessible, ATK_STATE_VISIBLE, TRUE);
-            atk_object_notify_state_change(tk_root_accessible, ATK_STATE_SHOWING, TRUE);
-            atk_object_notify_state_change(tk_root_accessible, ATK_STATE_ENABLED, TRUE);
+            if (state_set != NULL) {
+		atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+		atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+		atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+		
+		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_VISIBLE, TRUE);
+		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_SHOWING, TRUE);
+		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_ENABLED, TRUE);
+		g_object_unref(state_set);
+	    }
         }
     }
     
@@ -1070,13 +1080,16 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     /* Set states and notify. */
     AtkStateSet *state_set = atk_object_ref_state_set(accessible);
-    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+    if (state_set != NULL) {
+	atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+    
+	atk_object_notify_state_change(accessible, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(accessible, ATK_STATE_SHOWING, TRUE);
+	atk_object_notify_state_change(accessible, ATK_STATE_ENABLED, TRUE);
+    }
     g_object_unref(state_set);
-    atk_object_notify_state_change(accessible, ATK_STATE_VISIBLE, TRUE);
-    atk_object_notify_state_change(accessible, ATK_STATE_SHOWING, TRUE);
-    atk_object_notify_state_change(accessible, ATK_STATE_ENABLED, TRUE);
 
     /* Register child widgets. */
     RegisterChildWidgets(interp, tkwin, accessible);
@@ -1146,11 +1159,6 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
             /* Register children recursively. */
             RegisterChildWidgets(interp, child, child_obj);
         }
-    }
-
-    /* Force event loop processing. */
-    if (glib_context) {
-        while (g_main_context_iteration(glib_context, FALSE)) {}
     }
 }
 
@@ -1239,18 +1247,30 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         atk_object_set_description(obj, path);
     }
     
+
     /* Set states: VISIBLE, SHOWING, ENABLED, and FOCUSABLE where applicable. */
     AtkStateSet *state_set = atk_object_ref_state_set(obj);
-    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
-    if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
-        role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
-        role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
-        role == ATK_ROLE_SPIN_BUTTON) {
-        atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    if (state_set != NULL) {
+	atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+	if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
+	    role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
+	    role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
+	    role == ATK_ROLE_SPIN_BUTTON) {
+	    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+	}
+
+	/* Notify state changes to ensure Orca receives them. */
+	atk_object_notify_state_change(obj, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(obj, ATK_STATE_SHOWING, TRUE);
+	atk_object_notify_state_change(obj, ATK_STATE_ENABLED, TRUE);
+	if (atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
+	    atk_object_notify_state_change(obj, ATK_STATE_FOCUSABLE, TRUE);
+	}
+
+	g_object_unref(state_set);
     }
-    g_object_unref(state_set);
     
     /* Notify state changes to ensure Orca receives them. */
     atk_object_notify_state_change(obj, ATK_STATE_VISIBLE, TRUE);
@@ -1292,13 +1312,17 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
             }
             /* Set parent states. */
             state_set = atk_object_ref_state_set(parent_obj);
-            atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-            atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-            atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
-            g_object_unref(state_set);
-            atk_object_notify_state_change(parent_obj, ATK_STATE_VISIBLE, TRUE);
-            atk_object_notify_state_change(parent_obj, ATK_STATE_SHOWING, TRUE);
-            atk_object_notify_state_change(parent_obj, ATK_STATE_ENABLED, TRUE);
+            if (state_set !=NULL) {
+		atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+		atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+		atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+		
+		atk_object_notify_state_change(parent_obj, ATK_STATE_VISIBLE, TRUE);
+		atk_object_notify_state_change(parent_obj, ATK_STATE_SHOWING, TRUE);
+		atk_object_notify_state_change(parent_obj, ATK_STATE_ENABLED, TRUE);
+            
+		g_object_unref(state_set);
+	    }
             
             RegisterAtkObjectForTkWindow(parent_tkwin, parent_obj);
             TkAtkAccessible_RegisterEventHandlers(parent_tkwin, parent_acc);
@@ -1353,11 +1377,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     
     if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data)) {
         RegisterToplevelWindow(interp, tkwin, obj);
-    }
-    
-    /* Force event loop processing to ensure signals reach Orca. */
-    if (glib_context) {
-        while (g_main_context_iteration(glib_context, FALSE)) {}
     }
     
     return obj;
@@ -1617,14 +1636,6 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 	return;
     }
     
-    MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
-    gboolean is_mapped = (gboolean)(uintptr_t)RunOnMainThread(is_window_mapped_main, &data);
-    if (!is_mapped) {
-	g_warning("TkAtkAccessible_ConfigureHandler: Widget %s is not mapped", 
-		  (const char *)RunOnMainThread(get_window_name_main, &data));
-	return;
-    }
-    
     /* Update all caches with additional validation. */
     UpdateGeometryCache(acc);
     UpdateNameCache(acc);
@@ -1634,7 +1645,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateStateCache(acc);
     
     /* Notify ATK of changes only if geometry is valid and non-zero. */
-    if (acc->width > 0 && acc->height > 0 && is_mapped) {
+    if (acc->width > 0 && acc->height > 0 && Tk_IsMapped(acc->tkwin)) {
         BoundsChangedData *bcd = g_new0(BoundsChangedData, 1);
         bcd->obj = ATK_OBJECT(acc);
         bcd->rect.x = acc->x;
@@ -1680,33 +1691,31 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr)
 
     AtkObject *atk_obj = ATK_OBJECT(acc);
     AtkStateSet *state_set = atk_object_ref_state_set(atk_obj);
-    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
-    if (atk_object_get_role(atk_obj) == ATK_ROLE_PUSH_BUTTON ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_ENTRY ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_COMBO_BOX ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_CHECK_BOX ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_RADIO_BUTTON ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_SLIDER ||
-        atk_object_get_role(atk_obj) == ATK_ROLE_SPIN_BUTTON) {
-        atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
-    }
-    g_object_unref(state_set);
-    atk_object_notify_state_change(atk_obj, ATK_STATE_VISIBLE, TRUE);
-    atk_object_notify_state_change(atk_obj, ATK_STATE_SHOWING, TRUE);
-    atk_object_notify_state_change(atk_obj, ATK_STATE_ENABLED, TRUE);
-    if (atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
-        atk_object_notify_state_change(atk_obj, ATK_STATE_FOCUSABLE, TRUE);
+    if (state_set != NULL) {
+	atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+	if (atk_object_get_role(atk_obj) == ATK_ROLE_PUSH_BUTTON ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_ENTRY ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_COMBO_BOX ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_CHECK_BOX ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_RADIO_BUTTON ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_SLIDER ||
+	    atk_object_get_role(atk_obj) == ATK_ROLE_SPIN_BUTTON) {
+	    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+	}
+	
+	atk_object_notify_state_change(atk_obj, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(atk_obj, ATK_STATE_SHOWING, TRUE);
+	atk_object_notify_state_change(atk_obj, ATK_STATE_ENABLED, TRUE);
+	if (atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
+	    atk_object_notify_state_change(atk_obj, ATK_STATE_FOCUSABLE, TRUE);
+	}
+	g_object_unref(state_set);
     }
 
     /* Re-register children to ensure hierarchy is updated. */
     RegisterChildWidgets(acc->interp, acc->tkwin, atk_obj);
-
-    /* Force event loop processing. */
-    if (glib_context) {
-        while (g_main_context_iteration(glib_context, FALSE)) {}
-    }
 }
 
 /* Respond to <Unmap> event. */
@@ -1728,16 +1737,16 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !(gboolean)(uintptr_t)RunOnMainThread(is_window_mapped_main, &(MainThreadData){acc->tkwin, acc->interp, NULL, NULL})) {
-	g_warning("No accessible object!\n");
+ 
+    if (!acc || !acc->tkwin ) {
 	return;
     }
+
     UpdateStateCache(acc);
     AtkObject *atk_obj = (AtkObject*)acc;
     AtkStateSet *state_set = atk_state_set_new();
-	atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
     AtkRole role = acc->cached_role;
-    g_warning("Object has focus: %s\n", Tk_PathName(acc->tkwin));
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_ENTRY ||
 	role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_CHECK_BOX ||
 	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_SLIDER ||
@@ -1812,8 +1821,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     MainThreadData data = {NULL, ip, NULL, NULL};
     Tk_Window path_tkwin = (Tk_Window)RunOnMainThread(name_to_window_main, &data);
     if (path_tkwin == NULL) {
-	Tcl_SetResult(ip, "Invalid window path", TCL_STATIC);
-	return TCL_ERROR; 
+	return TCL_OK;
     }
 
     AtkObject *acc = GetAtkObjectForTkWindow(path_tkwin);
@@ -1875,15 +1883,14 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
     MainThreadData data = {NULL, interp, NULL, NULL};
     Tk_Window path_tkwin = (Tk_Window)RunOnMainThread(name_to_window_main, &data);
     if (path_tkwin == NULL) {
-		g_warning("Invalid window path\n");
-		return TCL_OK;
+	return TCL_OK;
     }
 
     AtkObject *acc = GetAtkObjectForTkWindow(path_tkwin);
     if (!acc) {
         acc = TkCreateAccessibleAtkObject(interp, path_tkwin, Tcl_GetString(objv[1]));
         if (!acc) {
-			g_warning("Failed to create accessible object\n");
+	    g_warning("Failed to create accessible object\n");
             return TCL_OK;
         }
         
@@ -1994,8 +2001,8 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 	return TCL_ERROR;
     }
 
-	MainThreadData data = {NULL, interp, NULL, windowName};
-	Tk_Window tkwin = (Tk_Window)RunOnMainThread(name_to_window_main, &data);
+    MainThreadData data = {NULL, interp, NULL, windowName};
+    Tk_Window tkwin = (Tk_Window)RunOnMainThread(name_to_window_main, &data);
 
 
     if (tkwin == NULL) {
@@ -2064,13 +2071,15 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
     atk_object_set_description(tk_root_accessible, "Tk Application");
     AtkStateSet *state_set = atk_object_ref_state_set(tk_root_accessible);
-    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
-    atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
-    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
-    g_object_unref(state_set);
-    atk_object_notify_state_change(tk_root_accessible, ATK_STATE_VISIBLE, TRUE);
-    atk_object_notify_state_change(tk_root_accessible, ATK_STATE_SHOWING, TRUE);
-    atk_object_notify_state_change(tk_root_accessible, ATK_STATE_ENABLED, TRUE);
+    if (state_set != NULL) {
+	atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+	atk_object_notify_state_change(tk_root_accessible, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(tk_root_accessible, ATK_STATE_SHOWING, TRUE);
+	atk_object_notify_state_change(tk_root_accessible, ATK_STATE_ENABLED, TRUE);
+	g_object_unref(state_set);
+    }
 
     InitAtkTkMapping();
 
@@ -2114,11 +2123,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     }
     
     RegisterChildWidgets(interp, mainWin, main_acc);
-
-    /* Force event loop processing. */
-    if (glib_context) {
-        while (g_main_context_iteration(glib_context, FALSE)) {}
-    }
 
     SetupGlibIntegration();
     Tcl_DoWhenIdle(ProcessPendingEvents, NULL);
