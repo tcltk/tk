@@ -616,13 +616,13 @@ winfo interps
 tk appname tktest
 
 #macOS does not send to other processes
-test send-13.1 {DeleteProc procedure} {secureserver notAqua} {
+test send-13.1 {DeleteProc procedure} -constraints {secureserver notAqua} -body {
     childTkProcess create
     set app [childTkProcess eval {rename send {}; tk appname}]
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
     childTkProcess exit
     set result
-} {1 {no application named "tktest #2"} tktest}
+} -result {1 {no application named "tktest[0-9]+"} tktest} -match regexp
 test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
     winfo interps
     tk appname tktest

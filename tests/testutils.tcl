@@ -381,13 +381,22 @@ namespace eval ::tk::test::child {
     #
     proc childTkProcess {subcmd args} {
 	variable fd
+	variable interpCount
 	switch -- $subcmd {
 	    create {
 		if {[info exists fd] && [string length $fd]} {
 		    childTkProcess exit
 		}
+		# Beware of bug #280189e35d. We prevent that bug by not relying
+		# on the automatic detection of duplicate interp names, as
+		# advertised by the manual page for "tk appname". Instead, we
+		# pass a unique appname to the executable that is being invoked
+		# below.
+		if {! [info exists interpCount]} {
+		    set interpCount 1
+		}
 		set fd [open "|[list [::tcltest::interpreter] \
-			-geometry +0+0 -name tktest] $args" r+]
+			-geometry +0+0 -name tktest[incr interpCount]] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {
