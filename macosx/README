@@ -461,7 +461,7 @@ the shared library and set the DESTDIR variable to the pathname of a staging
 directory where the frameworks will be written.  The Tcl framework must be
 built first.
 For example, running the commands:
-	make -C ../tcl8.7/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
+	make -C ../tcl9.0/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tcl.framework
 	make -C macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tk.framework
