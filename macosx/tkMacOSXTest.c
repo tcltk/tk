@@ -93,7 +93,7 @@ DebuggerObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     TCL_UNUSED(Tcl_Interp *),			/* Not used. */
     TCL_UNUSED(int),				/* Not used. */
-    TCL_UNUSED(Tcl_Obj *const *)			/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))			/* Not used. */
 {
     Debugger();
     return TCL_OK;

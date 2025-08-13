@@ -89,7 +89,7 @@
     <key>OSAScriptingDefinition</key>
     <string>Wish.sdef</string>
     <key>NSHighResolutionCapable</key>
-    <string>True</string>
+    <true/>
     <key>NSServices</key>
     <array>
       <dict>
