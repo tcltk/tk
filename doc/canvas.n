@@ -221,9 +221,9 @@ Canvases do not support scaling or rotation of the canvas coordinate
 system relative to the window coordinate system.
 .PP
 Individual items may be moved, scaled
-.VS "8.7, TIP164"
+.VS "9.0, TIP164"
 or rotated
-.VE "8.7, TIP164"
+.VE "9.0, TIP164"
 using widget commands
 described below.
 .PP
@@ -1016,7 +1016,7 @@ use as a replacement). The other items ignore this operation.
 .\" METHOD: rotate
 .TP
 \fIpathName \fBrotate \fItagOrId xOrigin yOrigin angle\fR
-.VS "8.7, TIP164"
+.VS "9.0, TIP164"
 Rotate the coordinates of all of the items given by \fItagOrId\fR in canvas
 coordinate space.
 \fIXOrigin\fR and \fIyOrigin\fR identify the origin for the rotation
@@ -1034,7 +1034,7 @@ computed center point instead of moving the bounding box coordinates directly.
 Some items (currently \fBarc\fR and\fB text\fR) have angles in their options;
 this command \fIdoes not\fR affect those options.
 .RE
-.VE "8.7, TIP164"
+.VE "9.0, TIP164"
 .\" METHOD: scale
 .TP
 \fIpathName \fBscale \fItagOrId xOrigin yOrigin xScale yScale\fR

@@ -44,9 +44,9 @@ procedural interface.  At present, only
 PNG,
 .VE 8.6
 GIF, PPM/PGM,
-.VS 8.7
+.VS 9.0
 and (read-only) SVG
-.VE 8.7
+.VE 9.0
 formats are supported, but an interface exists to
 allow additional image file formats to be added easily.  A photo image
 is (semi)transparent if the image data it was obtained from had
@@ -63,10 +63,10 @@ Photos support the following \fIoptions\fR:
 \fB\-data \fIstring\fR
 .
 Specifies the contents of the image as a string.
-.VS 8.7
+.VS 9.0
 The string should
 contain data in the default list-of-lists form,
-.VE 8.7
+.VE 9.0
 binary data or, for some formats, base64-encoded data (this is
 currently guaranteed to be supported for PNG and GIF images). The
 format of the string must be one of those for which there is an image
@@ -110,7 +110,7 @@ Specifies the height of the image, in pixels.  This option is useful
 primarily in situations where the user wishes to build up the contents
 of the image piece by piece.  A value of zero (the default) allows the
 image to expand or shrink vertically to fit the data stored in it.
-.VS 8.7
+.VS 9.0
 .\" OPTION: -metadata
 .TP
 \fB\-metadata \fImetadata\fR
@@ -120,7 +120,7 @@ Additional keys may be set within the metadata dictionary of the image,
 if image data is processed due to a \fB\-file\fR or \fB\-data\fR options
 and the driver outputs any metadata keys.
 See section \fBMETADATA DICTIONARY\fR below.
-.VE 8.7
+.VE 9.0
 .\" OPTION: -palette
 .TP
 \fB\-palette \fIpalette-spec\fR
@@ -195,10 +195,10 @@ modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create\fR \fBphoto\fR command.
-.VS 8.7
+.VS 9.0
 Note that setting the \fB\-metadata\fR option without any other option
 will not invoke the image format driver to recreate the bitmap.
-.VE 8.7
+.VE 9.0
 .\" METHOD: copy
 .TP
 \fIimageName \fBcopy\fI sourceImage\fR ?\fIoption value(s) ...\fR?
@@ -278,12 +278,12 @@ the source image is used as-is.  The default compositing rule is
 \fIimageName \fBdata\fR ?\fIoption value(s) ...\fR?
 .
 Returns image data in the form of a string.
-.VS 8.7
+.VS 9.0
 The format of the string depends on the format handler. By default, a
 human readable format as a list of lists of pixel data is used, other
 formats can be chosen with the \fB\-format\fR option.
 See \fBIMAGE FORMATS\fR below for details.
-.VE 8.7
+.VE 9.0
 The following options may be specified:
 .RS
 .\" OPTION: -background
@@ -302,13 +302,13 @@ optionally, arguments to the format handler.  Specifically, this
 subcommand searches for the first handler whose name matches an
 initial substring of \fIformat-name\fR and which has the capability to
 write a string containing this image data.
-.VS 8.7
+.VS 9.0
 If this option is not given, this subcommand uses the default format
 that consists of a list (one element per row) of lists (one element
 per pixel/column) of colors in
 .QW \fB#\fIrrggbb\fR
 format (see \fBIMAGE FORMATS\fR below).
-.VE 8.7
+.VE 9.0
 Note that the value of this option must be a Tcl list.
 This means that the braces may be omitted if the argument has only one
 word. Also, instead of braces, double quotes may be used for quoting.
@@ -329,7 +329,7 @@ whole image.
 .
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
-.VS 8.7
+.VS 9.0
 .\" OPTION: -metadata
 .TP
 \fB\-metadata\fI metadata\fR
@@ -340,7 +340,7 @@ The specified \fImetadata\fR is passed to the driver for inclusion in the
 data.
 If no \fB\-metadata\fR option is given, the current metadata of the
 image is used.
-.VE 8.7
+.VE 9.0
 .RE
 .\" METHOD: get
 .TP
@@ -357,12 +357,12 @@ representing the alpha value of the pixel as an integer between 0 and
 \fIimageName \fBput\fI data\fR ?\fIoption value(s) ...\fR?
 .
 Sets pixels in \fI imageName\fR to the data specified in \fIdata\fR.
-.VS 8.7
+.VS 9.0
 This command searches the list of image file format handlers for
 a handler that can interpret the data in \fIdata\fR, and then reads
 the image encoded within into \fIimageName\fR (the destination image).
 See \fBIMAGE FORMATS\fR below for details on formats for image data.
-.VE 8.7
+.VE 9.0
 The following options may be specified:
 .RS
 .\" OPTION: -format
@@ -377,7 +377,7 @@ format handler to read the data.
 Note that the value of this option must be a Tcl list.
 This means that the braces may be omitted if the argument has only one
 word. Also, instead of braces, double quotes may be used for quoting.
-.VS 8.7
+.VS 9.0
 .\" OPTION: -metadata
 .TP
 \fB\-metadata\fI metadata\fR
@@ -386,7 +386,7 @@ A specified \fImetadata\fR is passed to the image format driver when interpretin
 the data.
 Note that the current metadata of the image is not passed to the format driver
 and is not changed by the command.
-.VE 8.7
+.VE 9.0
 .\" OPTION: -to
 .TP
 \fB\-to \fIx1 y1\fR ?\fIx2 y2\fR?
@@ -436,7 +436,7 @@ corner of the image in the image file.  If all four coordinates are
 specified, they specify diagonally opposite corners or the region.
 The default, if this option is not specified, is the whole of the
 image in the image file.
-.VS 8.7
+.VS 9.0
 .\" OPTION: -metadata
 .TP
 \fB\-metadata\fI metadata\fR
@@ -445,7 +445,7 @@ A specified \fImetadata\fR is passed to the image format driver when interpretin
 the data.
 Note that the current metadata of the image is not passed to the format driver
 and is not changed by the command.
-.VE 8.7
+.VE 9.0
 .\" OPTION: -shrink
 .TP
 \fB\-shrink\fR
@@ -484,21 +484,21 @@ the photo image.  Several subcommands are available:
 .RS
 .TP
 \fIimageName \fBtransparency get \fIx y\fR ?\fB\-alpha\fR?
-.VS 8.7
+.VS 9.0
 Returns true if the pixel at (\fIx\fR,\fIy\fR) is fully transparent,
 false otherwise.  If the option \fB\-alpha\fR is passed, returns the
 alpha value of the pixel instead, as an integer in the range 0 to 255.
-.VE 8.7
+.VE 9.0
 .TP
 \fIimageName \fBtransparency set \fIx y newVal\fR ?\fB\-alpha\fR?
-.VS 8.7
+.VS 9.0
 Change the transparency of the pixel at (\fIx\fR,\fIy\fR) to
 \fInewVal.\fR If no additional option is passed, \fInewVal\fR is
 interpreted as a boolean and the pixel is made fully transparent if
 that value is true, fully opaque otherwise.  If the \fB\-alpha\fR
 option is passed, \fInewVal\fR is interpreted as an integral alpha
 value for the pixel, which must be in the range 0 to 255.
-.VE 8.7
+.VE 9.0
 .RE
 .\" METHOD: write
 .TP
@@ -545,7 +545,7 @@ if this option is not given, is the whole image.
 .
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
-.VS 8.7
+.VS 9.0
 .\" OPTION: -metadata
 .TP
 \fB\-metadata\fI metadata\fR
@@ -555,7 +555,7 @@ The specified \fImetadata\fR is passed to the driver for inclusion in the
 file.
 If no \fB\-metadata\fR option is given, the current metadata of the
 image is used.
-.VE 8.7
+.VE 9.0
 .RE
 .SH "IMAGE FORMATS"
 .PP
@@ -565,10 +565,10 @@ a list of these handlers.  Handlers are added to the list by
 registering them with a call to \fBTk_CreatePhotoImageFormat\fR.  The
 standard Tk distribution comes with handlers for PPM/PGM, PNG, GIF and
 (read-only) SVG formats,
-.VS 8.7
+.VS 9.0
 as well as the \fBdefault\fR handler to encode/decode image
 data in a human readable form.
-.VE 8.7
+.VE 9.0
 These handlers are automatically registered on initialization.
 .PP
 When reading an image file or processing string data specified with
@@ -592,7 +592,7 @@ that, which the handler can use, for example, to specify which variant
 to use of the formats supported by the handler.
 Note that not all image handlers may support writing transparency data
 to a file, even where the target image format does.
-.VS 8.7
+.VS 9.0
 .SS "THE DEFAULT IMAGE HANDLER"
 .PP
 The \fBdefault\fR image handler cannot be used to read or write data
@@ -608,7 +608,7 @@ list of scan-lines, with each scan-line being a (left-to-right) list
 of pixel data. Every scan-line has the same length. The color
 and, optionally, alpha value of each pixel is specified in any of
 the forms described in the \fBCOLOR FORMATS\fR section below.
-.VE 8.7
+.VE 9.0
 
 .SS "FORMAT SUBOPTIONS"
 .PP
@@ -620,7 +620,7 @@ string. The nature and values of these options is up to the format
 handler.
 The built-in handlers support these suboptions:
 .\" OPTION -colorformat
-.VS 8.7
+.VS 9.0
 .TP
 \fBdefault \-colorformat\fI formatType\fR
 .
@@ -631,7 +631,7 @@ encode pixel data in the form \fB#\fIRRGGBB\fR, \fBrgba\fR to encode
 pixel data in the form \fB#\fIRRGGBBAA\fR or \fBlist\fR to encode
 pixel data as a list with four elements. See \fBCOLOR FORMATS\fR
 below for details. The default is \fBrgb\fR.
-.VE 8.7
+.VE 9.0
 .\" OPTION -index
 .TP
 \fBgif \-index\fI indexValue\fR
@@ -732,7 +732,7 @@ format) photos is supported: Tk does not (yet) support bundling photo
 images in SVG vector graphics.
 .RE
 .VE 8.6
-.VS 8.7
+.VS 9.0
 .SH "COLOR FORMATS"
 .PP
 The default image handler can represent/parse color and alpha values
@@ -778,7 +778,7 @@ channels respectively. Each digit will be expanded internally to
 \fB#\fR\fIRRGGBBAA\fR format: \fB#\fR followed by eight hexadecimal digits,
 where each pair of  subsequent digits represents the value for the red,
 green, blue and alpha channels respectively.
-.VE 8.7
+.VE 9.0
 .SH "COLOR ALLOCATION"
 .PP
 When a photo image is displayed in a window, the photo image code
@@ -808,7 +808,7 @@ each primary color to try to allocate.  It can also be used to force
 the image to be displayed in shades of gray, even on a color display,
 by giving a single number rather than three numbers separated by
 slashes.
-.VS 8.7
+.VS 9.0
 .SH "METADATA DICTIONARY"
 .PP
 Each image has a metadata dictionary property.
@@ -861,7 +861,7 @@ Otherwise, the key is not present.
 Update region of the current subimage, if subimage has not the same size as
 the full image. The pixel outside of this box are all fully transparent.
 .PP
-.VE 8.7
+.VE 9.0
 .SH CREDITS
 .PP
 The photo image type was designed and implemented by Paul Mackerras,
@@ -897,7 +897,7 @@ button .b -image icon -disabledimage iconDisabled
 .CE
 .VE 8.6
 .PP
-.VS 8.7
+.VS 9.0
 Create a green box with a simple shadow effect
 .PP
 .CS
@@ -911,7 +911,7 @@ for {set i 14} {$i > 0} {incr i -1} {
 
 # Put a solid green rectangle on top
 foo \fBput\fR #F080 -to 0 0 30 30
-.VE 8.7
+.VE 9.0
 .CE
 .SH "SEE ALSO"
 image(n)
