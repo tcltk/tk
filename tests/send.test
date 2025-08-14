@@ -406,15 +406,13 @@ test send-8.18.alt {Tk_SendCmd procedure, error in remote app} {secureserver} {
 test send-8.18.altsimple {Tk_SendCmd procedure, error in remote app} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
-    set result [string tolower [list [catch {send $app error bork} msg] \
+    set result [string tolower [list [catch {send $app {error bork bork_info BORK_CODE}} msg] \
 	    $msg $errorInfo $errorCode]]
     childTkProcess exit
     set result
-} {1 bork {bork
-    while executing
-"error bork"
+} {1 bork {bork_info
     invoked from within
-"send $app error bork"} none}
+"send $app {error bork bork_info bork_code}"} bork_code}
 test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
