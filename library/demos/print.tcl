@@ -67,6 +67,7 @@ lassign [$c bbox $imgId] x1 y1 x2 y2		;# x1, y1, x2, y2 are in pixels
 incr y2 [expr {round(15 * [tk scaling])}]	;# convert 15 pt to pixels
 
 $c create text 15p $y2 -anchor nw -font {Helvetica 12} \
+	-fill black \
 	-text "A short demo of simple canvas elements."
 
 set txt {
