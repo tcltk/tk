@@ -95,7 +95,6 @@ struct AtkRoleMap roleMap[] = {
     {"Text", ATK_ROLE_TEXT},
     {"Toplevel", ATK_ROLE_WINDOW},
     {"Frame", ATK_ROLE_PANEL},
-    /* Added more common Tk widget classes for better coverage in complex demos */
     {"Canvas", ATK_ROLE_CANVAS},
     {"Scrollbar", ATK_ROLE_SCROLL_BAR},
     {"Menubar", ATK_ROLE_MENU_BAR},
@@ -168,7 +167,6 @@ static gpointer get_hash_string_value_main(gpointer data);
 static gpointer name_to_window_main(gpointer data);
 static gpointer get_main_window_main(gpointer data);
 static gpointer get_window_handle_main(gpointer data);
-/* Added: New helper for root/screen coordinates to fix extents */
 static gpointer get_root_coords_main(gpointer data);
 
 /* Signal emission helpers. */
@@ -258,7 +256,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			)
 			
 /* Helper function to integrate strings. */         
-    static gchar *sanitize_utf8(const gchar *str) 
+static gchar *sanitize_utf8(const gchar *str) 
 {
     if (!str) return NULL;
     return g_utf8_make_valid(str, -1);
@@ -386,7 +384,7 @@ static void ProcessPendingEvents(ClientData clientData)
 
     in_process_pending = FALSE;
 
-    /* Re-scheudle. */
+    /* Re-schedule. */
     Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
 
@@ -394,7 +392,7 @@ static void ProcessPendingEvents(ClientData clientData)
 /*
  *----------------------------------------------------------------------
  *
- * Child management functions
+ * Child management functions.
  *
  *----------------------------------------------------------------------
  */
@@ -551,7 +549,7 @@ static gpointer get_main_window_main(gpointer data)
     return (gpointer)Tk_MainWindow(mt_data->interp);
 }
 
-/* Added: Get root/screen coordinates for correct extents in ATK_XY_SCREEN */
+/* Get root/screen coordinates for correct extents in ATK_XY_SCREEN. */
 static gpointer get_root_coords_main(gpointer data)
 {
     MainThreadData *mt_data = (MainThreadData *)data;
@@ -685,10 +683,12 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
 
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
 
-    /* Modified: Use correct coordinates based on coord_type.
+    /*
+     * Use correct coordinates based on coord_type.
      * - ATK_XY_WINDOW: Cached relative to toplevel window (sum of Tk_X/Tk_Y).
      * - ATK_XY_SCREEN: Absolute screen via Tk_GetRootCoords (fixes navigation issues).
      */
+    
     if (coord_type == ATK_XY_SCREEN) {
         gint *coords = (gint *)RunOnMainThread(get_root_coords_main, &data);
         if (coords) {
@@ -778,7 +778,7 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 	}
     }
 
-    /* Modified: Fallback to widget class if no attribute set (fixes missing roles like "button"). */
+    /* Fallback to widget class if no role attribute set (fixes missing roles like "button"). */
     const char *widgetClass = Tk_Class(win);
     if (widgetClass) {
         for (int i = 0; roleMap[i].tkrole != NULL; i++) {
@@ -810,7 +810,11 @@ static AtkRole tk_get_role(AtkObject *obj)
 static const gchar *tk_get_name(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    return acc->cached_name;
+    /* 
+     * Orca already says "push button" as the role,
+     * so return the description to avoid redundancy. 
+     */
+    return acc->cached_description;
 }
 
 static void tk_set_name(AtkObject *obj, const gchar *name)
@@ -1124,7 +1128,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 	atk_object_notify_state_change(accessible, ATK_STATE_VISIBLE, TRUE);
 	atk_object_notify_state_change(accessible, ATK_STATE_SHOWING, TRUE);
 	atk_object_notify_state_change(accessible, ATK_STATE_ENABLED, TRUE);
-	    g_object_unref(state_set);
+	g_object_unref(state_set);
     }
 
 
@@ -1162,7 +1166,6 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
         toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, accessible);
     }
 }
-
 
 /* 
 * Register child widgets of a given window 
@@ -1219,7 +1222,7 @@ static AtkObject *tk_util_get_root(void)
 	TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
 	tk_root_accessible = ATK_OBJECT(acc);
 	atk_object_initialize(tk_root_accessible, NULL);
-	/*Set proper name and role.  */
+	/* Set proper name and role.  */
 	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
 	tk_set_name(tk_root_accessible, "Tk Application");
     }
@@ -1246,48 +1249,50 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     acc->interp = interp;
     acc->tkwin = tkwin;
     acc->path = sanitize_utf8(path);
-    
     /* Ensure toplevel windows exist and are mapped. */
     MainThreadData data = {tkwin, interp, NULL, NULL};
-    if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data) && 
-        tkwin != (Tk_Window)RunOnMainThread(get_main_window_main, &(MainThreadData){NULL, interp, NULL, NULL})) {
-        RunOnMainThread(make_window_exist_main, &data);
-        RunOnMainThread(map_window_main, &data);
+    if ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data) &&
+	tkwin != (Tk_Window)RunOnMainThread(get_main_window_main,
+					    &(MainThreadData){NULL, interp, NULL, NULL})) {
+	RunOnMainThread(make_window_exist_main, &data);
+	RunOnMainThread(map_window_main, &data);
     }
-    
+
     /* Update cached properties. */
     UpdateGeometryCache(acc);
-    UpdateNameCache(acc);
-    UpdateDescriptionCache(acc);
+    UpdateNameCache(acc);         /* now fixed with correct thread handoff */
+    UpdateDescriptionCache(acc);  /* now fixed with correct thread handoff */
     UpdateValueCache(acc);
     UpdateRoleCache(acc);
     UpdateStateCache(acc);
-    
+
     /* Initialize AtkObject. */
     AtkObject *obj = ATK_OBJECT(acc);
     AtkRole role = acc->cached_role;
-    if (role == ATK_ROLE_UNKNOWN && 
-        ((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data) || 
-         tkwin == (Tk_Window)RunOnMainThread(get_main_window_main, &(MainThreadData){NULL, interp, NULL, NULL}))) {
-        role = ATK_ROLE_WINDOW;
+    if (role == ATK_ROLE_UNKNOWN &&
+	((gboolean)(uintptr_t)RunOnMainThread(is_toplevel_main, &data) ||
+	 tkwin == (Tk_Window)RunOnMainThread(get_main_window_main,
+					     &(MainThreadData){NULL, interp, NULL, NULL}))) {
+	role = ATK_ROLE_WINDOW;
     }
     atk_object_set_role(obj, role);
-    
-    /* Set name, falling back to path if cached_name is NULL. */
-    if (acc->cached_name) {
-        atk_object_set_name(obj, acc->cached_name);
-    } else {
-        atk_object_set_name(obj, path);
-    }
-    
-    /* Set description if available, or use a default. */
-    if (acc->cached_description) {
-        atk_object_set_description(obj, acc->cached_description);
-    } else {
-        atk_object_set_description(obj, path);
-    }
-    
 
+    /* Set ATK name from description if available.*/
+    if (acc->cached_description && *acc->cached_description) {
+	atk_object_set_name(obj, acc->cached_description);
+    } else if (acc->cached_name && *acc->cached_name) {
+	atk_object_set_name(obj, acc->cached_name);
+    } else {
+	atk_object_set_name(obj, path);
+    }
+
+    /* Always set description property separately. */
+    if (acc->cached_description && *acc->cached_description) {
+	atk_object_set_description(obj, acc->cached_description);
+    } else {
+	atk_object_set_description(obj, path);
+    }
+  
     /* Set states: VISIBLE, SHOWING, ENABLED, and FOCUSABLE where applicable. */
     AtkStateSet *state_set = atk_object_ref_state_set(obj);
     if (state_set != NULL) {
@@ -1308,7 +1313,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 	if (atk_state_set_contains_state(state_set, ATK_STATE_FOCUSABLE)) {
 	    atk_object_notify_state_change(obj, ATK_STATE_FOCUSABLE, TRUE);
 	}
-
 	g_object_unref(state_set);
     }
     
@@ -1494,47 +1498,69 @@ static void UpdateNameCache(TkAtkAccessible *acc)
     acc->cached_name = NULL;
 
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
+
+    /* Get the top-level hash entry for this Tk window. */
     Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
     if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
-	if (AccessibleAttributes) {
-	    Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
-	    if (hPtr2) {
-		const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
-		if (result) {
-		    acc->cached_name = sanitize_utf8(result);
-		}
-	    }
-	}
+        data.result = hPtr;  /* Pass to get_hash_value_main() */
+        Tcl_HashTable *AccessibleAttributes =
+            (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
+        if (AccessibleAttributes) {
+            /* Lookup the "name" attribute key inside this table. */
+            data.result = AccessibleAttributes; /* Pass table to find_hash_entry_by_key_main() */
+            Tcl_HashEntry *hPtr2 =
+                (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
+            if (hPtr2) {
+                data.result = hPtr2; /* Pass entry to get_hash_string_value_main() */
+                const char *result =
+                    (const char *)RunOnMainThread(get_hash_string_value_main, &data);
+                if (result) {
+                    acc->cached_name = sanitize_utf8(result);
+                }
+            }
+        }
     }
 
+    /* Fallback to the Tk widget name/path */
     if (!acc->cached_name) {
-	acc->cached_name = sanitize_utf8((const char *)RunOnMainThread(get_window_name_main, &data));
+        acc->cached_name =
+            sanitize_utf8((const char *)RunOnMainThread(get_window_name_main, &data));
     }
 }
 
 static void UpdateDescriptionCache(TkAtkAccessible *acc)
 {
-    if (!acc || !acc->tkwin) return;
+    if (!acc || !acc->tkwin || !acc->interp) return;
 
     g_free(acc->cached_description);
     acc->cached_description = NULL;
 
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
+
+    /* Get the top-level hash entry for this Tk window. */
     Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
     if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
-	if (AccessibleAttributes) {
-	    Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
-	    if (hPtr2) {
-		const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
-		if (result) {
-		    acc->cached_description = sanitize_utf8(result);
-		}
-	    }
-	}
+        data.result = hPtr;  /* Pass to get_hash_value_main() */
+        Tcl_HashTable *AccessibleAttributes =
+            (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
+        if (AccessibleAttributes) {
+            /* Step 2: Lookup the "description" attribute key inside this table. */
+            data.result = AccessibleAttributes; /* Pass table to find_hash_entry_by_key_main() */
+            Tcl_HashEntry *hPtr2 =
+                (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
+            if (hPtr2) {
+                data.result = hPtr2; /* Pass entry to get_hash_string_value_main() */
+                const char *result =
+                    (const char *)RunOnMainThread(get_hash_string_value_main, &data);
+                    g_warning("result is %s\n", result);
+                if (result) {
+                    acc->cached_description = sanitize_utf8(result);
+                } 
+            }
+        }
     }
 }
+
 
 static void UpdateValueCache(TkAtkAccessible *acc)
 {
@@ -1677,7 +1703,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateStateCache(acc);
     
     /* Notify ATK of changes only if geometry is valid and non-zero. */
-    if (acc->width > 0 && acc->height > 0 && Tk_IsMapped(acc->tkwin)) {
+    if (acc->width > 0 && acc->height > 0 && acc->is_mapped) {
         BoundsChangedData *bcd = g_new0(BoundsChangedData, 1);
         bcd->obj = ATK_OBJECT(acc);
         bcd->rect.x = acc->x;
