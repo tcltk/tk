@@ -488,6 +488,14 @@ VISIBILITY_HIDDEN
 - (NSMenuItem *)itemInSupermenu;
 @end
 
+// Need undocumented appearance: argument
+@interface NSMenu(TKMenu)
+- (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
+		      atLocation:(NSPoint)location
+			  inView:(NSView *)view
+		      appearance:(NSAppearance *)appearance;
+@end
+
 @interface NSMenuItem(TKUtils)
 + (id)itemWithSubmenu:(NSMenu *)submenu;
 + (id)itemWithTitle:(NSString *)title submenu:(NSMenu *)submenu;
