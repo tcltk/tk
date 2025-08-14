@@ -95,6 +95,10 @@ struct AtkRoleMap roleMap[] = {
     {"Text", ATK_ROLE_TEXT},
     {"Toplevel", ATK_ROLE_WINDOW},
     {"Frame", ATK_ROLE_PANEL},
+    /* Added more common Tk widget classes for better coverage in complex demos */
+    {"Canvas", ATK_ROLE_CANVAS},
+    {"Scrollbar", ATK_ROLE_SCROLL_BAR},
+    {"Menubar", ATK_ROLE_MENU_BAR},
     {NULL, 0}
 };
 
@@ -164,6 +168,8 @@ static gpointer get_hash_string_value_main(gpointer data);
 static gpointer name_to_window_main(gpointer data);
 static gpointer get_main_window_main(gpointer data);
 static gpointer get_window_handle_main(gpointer data);
+/* Added: New helper for root/screen coordinates to fix extents */
+static gpointer get_root_coords_main(gpointer data);
 
 /* Signal emission helpers. */
 static gpointer emit_children_changed_add(gpointer data);
@@ -545,6 +551,17 @@ static gpointer get_main_window_main(gpointer data)
     return (gpointer)Tk_MainWindow(mt_data->interp);
 }
 
+/* Added: Get root/screen coordinates for correct extents in ATK_XY_SCREEN */
+static gpointer get_root_coords_main(gpointer data)
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    gint *coords = g_new(gint, 4);
+    Tk_GetRootCoords(mt_data->tkwin, &coords[0], &coords[1]);
+    coords[2] = Tk_Width(mt_data->tkwin);
+    coords[3] = Tk_Height(mt_data->tkwin);
+    return coords;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -666,20 +683,29 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
 	return;
     }
 
-    *x = acc->x;
-    *y = acc->y;
-    *width = acc->width;
-    *height = acc->height;
+    MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
 
-    /* Handle coordinate type conversion.  */
+    /* Modified: Use correct coordinates based on coord_type.
+     * - ATK_XY_WINDOW: Cached relative to toplevel window (sum of Tk_X/Tk_Y).
+     * - ATK_XY_SCREEN: Absolute screen via Tk_GetRootCoords (fixes navigation issues).
+     */
     if (coord_type == ATK_XY_SCREEN) {
-	MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL};
-	gint *root_coords = RunOnMainThread(get_window_geometry_main, &data);
-	if (root_coords) {
-	    *x = root_coords[0];
-	    *y = root_coords[1];
-	    g_free(root_coords);
-	}
+        gint *coords = (gint *)RunOnMainThread(get_root_coords_main, &data);
+        if (coords) {
+            *x = coords[0];
+            *y = coords[1];
+            *width = coords[2];
+            *height = coords[3];
+            g_free(coords);
+        } else {
+            *x = *y = *width = *height = 0;
+        }
+    } else {
+        /* ATK_XY_WINDOW: Use cached values (relative to toplevel). */
+        *x = acc->x;
+        *y = acc->y;
+        *width = acc->width;
+        *height = acc->height;
     }
 }
 
@@ -750,6 +776,16 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 		}
 	    }
 	}
+    }
+
+    /* Modified: Fallback to widget class if no attribute set (fixes missing roles like "button"). */
+    const char *widgetClass = Tk_Class(win);
+    if (widgetClass) {
+        for (int i = 0; roleMap[i].tkrole != NULL; i++) {
+            if (strcasecmp(roleMap[i].tkrole, widgetClass) == 0) {  /* Case-insensitive for robustness */
+                return roleMap[i].atkrole;
+            }
+        }
     }
 
     /* Special case for toplevel windows. */
@@ -1088,8 +1124,9 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 	atk_object_notify_state_change(accessible, ATK_STATE_VISIBLE, TRUE);
 	atk_object_notify_state_change(accessible, ATK_STATE_SHOWING, TRUE);
 	atk_object_notify_state_change(accessible, ATK_STATE_ENABLED, TRUE);
+	    g_object_unref(state_set);
     }
-    g_object_unref(state_set);
+
 
     /* Register child widgets. */
     RegisterChildWidgets(interp, tkwin, accessible);
@@ -1127,8 +1164,11 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 }
 
 
-/* Register child widgets as accessible objects. */
-/* Register child widgets of a given window. */
+/* 
+* Register child widgets of a given window 
+* as accessible objects. 
+*/
+
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj)
 {
     /* Validate inputs. */
@@ -2164,3 +2204,4 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * fill-column: 78
  * End:
  */
+
