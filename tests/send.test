@@ -419,12 +419,13 @@ test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
     set x no
     set result ""
     after 0 {set x yes}
+    lappend result [expr {$app in [winfo interps]}]
     lappend result [send $app {concat x y z}]
     lappend result $x
     update
     childTkProcess exit
     lappend result $x
-} {{x y z} no yes}
+} {1 {x y z} no yes}
 
 #
 # COMMON TEST SETUP
