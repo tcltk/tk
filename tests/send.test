@@ -365,6 +365,19 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     childTkProcess exit
     lappend result $a
 } {{no event yet} {no event yet} exposed}
+test send-8.18.dbg {Tk_SendCmd procedure, error in remote app} {secureserver} {
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
+    set fe [file exists bad_name]
+    set result [string tolower [list [catch {send $app open bad_name} msg] \
+	    $msg $errorInfo $errorCode $fe]]
+    childTkProcess exit
+    set result
+} {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
+    while executing
+"open bad_name"
+    invoked from within
+"send $app open bad_name"} {posix enoent {no such file or directory}} 0}
 test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
@@ -377,6 +390,31 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
 "open bad_name"
     invoked from within
 "send $app open bad_name"} {posix enoent {no such file or directory}}}
+test send-8.18.alt {Tk_SendCmd procedure, error in remote app} {secureserver} {
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
+    set fe [file exists @non_existent_foobar@]
+    set result [string tolower [list [catch {send $app open @non_existent_foobar@} msg] \
+	    $msg $errorInfo $errorCode $fe]]
+    childTkProcess exit
+    set result
+} {1 {couldn't open "@non_existent_foobar@": no such file or directory} {couldn't open "@non_existent_foobar@": no such file or directory
+    while executing
+"open @non_existent_foobar@"
+    invoked from within
+"send $app open @non_existent_foobar@"} {posix enoent {no such file or directory}} 0}
+test send-8.18.altsimple {Tk_SendCmd procedure, error in remote app} {secureserver} {
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
+    set result [string tolower [list [catch {send $app error bork} msg] \
+	    $msg $errorInfo $errorCode]]
+    childTkProcess exit
+    set result
+} {1 bork {bork
+    while executing
+"error bork"
+    invoked from within
+"send $app error bork"} none}
 test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
