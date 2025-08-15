@@ -391,7 +391,7 @@ static void ProcessPendingEvents(ClientData clientData)
 
     in_process_pending = FALSE;
 
-    /* Re-scheudle. */
+    /* Re-schedule. */
     Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
 }
 
