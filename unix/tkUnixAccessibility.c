@@ -899,20 +899,27 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
     if (!win) return NULL;
     
     gchar *name = NULL;
-
     MainThreadData data = {win, NULL, NULL, NULL, "name"};
+    
+    /* Find the window's hash entry. */
     Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
     if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
-	if (AccessibleAttributes) {
-	    Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
-	    if (hPtr2) {
-		const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
-		if (result) {
-		    name = sanitize_utf8(result);
-		}
-	    }
-	}
+        /* Get the attributes table, passing hPtr as result. */
+        data.result = (gpointer)hPtr;
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
+        if (AccessibleAttributes) {
+            /* Find the name key, passing the table as result. */
+            data.result = (gpointer)AccessibleAttributes;
+            Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
+            if (hPtr2) {
+                /* Get the string value, passing hPtr2 as result. */
+                data.result = (gpointer)hPtr2;
+                const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
+                if (result) {
+                    name = sanitize_utf8(result);
+                }
+            }
+        }
     }
     return name;
 }
@@ -920,6 +927,8 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
 static const gchar *tk_get_name(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+    gchar *name = GetAtkNameForWidget(acc->tkwin);
+    acc->cached_name = name;
     return acc->cached_name;
 }
 
@@ -940,22 +949,29 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
 static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 {
     if (!win) return NULL;
-
+    
     gchar *description = NULL;
-
     MainThreadData data = {win, NULL, NULL, NULL, "description"};
+    
+    /* Find the window's hash entry. */
     Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
     if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
-	if (AccessibleAttributes) {
-	    Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
-	    if (hPtr2) {
-		const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
-		if (result) {
-		    description = sanitize_utf8(result);
-		}
-	    }
-	}
+        /* Get the attributes table, passing hPtr as result. */
+        data.result = (gpointer)hPtr;
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
+        if (AccessibleAttributes) {
+            /* Find the name key, passing the table as result. */
+            data.result = (gpointer)AccessibleAttributes;
+            Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
+            if (hPtr2) {
+                /* Get the string value, passing hPtr2 as result. */
+                data.result = (gpointer)hPtr2;
+                const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
+                if (result) {
+                    description = sanitize_utf8(result);
+                }
+            }
+        }
     }
     return description;
 }
@@ -977,20 +993,27 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
     if (!win) return NULL;
     
     gchar *value = NULL;
-
     MainThreadData data = {win, NULL, NULL, NULL, "value"};
+    
+    /* Find the window's hash entry. */
     Tcl_HashEntry *hPtr = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_main, &data);
     if (hPtr) {
-	Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
-	if (AccessibleAttributes) {
-	    Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
-	    if (hPtr2) {
-		const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
-		if (result) {
-		    value = sanitize_utf8(result);
-		}
-	    }
-	}
+        /* Get the attributes table, passing hPtr as result. */
+        data.result = (gpointer)hPtr;
+        Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)RunOnMainThread(get_hash_value_main, &data);
+        if (AccessibleAttributes) {
+            /* Find the name key, passing the table as result. */
+            data.result = (gpointer)AccessibleAttributes;
+            Tcl_HashEntry *hPtr2 = (Tcl_HashEntry *)RunOnMainThread(find_hash_entry_by_key_main, &data);
+            if (hPtr2) {
+                /* Get the string value, passing hPtr2 as result. */
+                data.result = (gpointer)hPtr2;
+                const char *result = (const char *)RunOnMainThread(get_hash_string_value_main, &data);
+                if (result) {
+                    value = sanitize_utf8(result);
+                }
+            }
+        }
     }
     return value;
 }
@@ -1434,6 +1457,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     }
     atk_object_set_role(obj, role);
 
+#if 0
     /* Set ATK name and description. */
     if (acc->cached_description && *acc->cached_description) {
         atk_object_set_name(obj, acc->cached_description);
@@ -1447,6 +1471,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     } else {
         atk_object_set_description(obj, path);
     }
+    #endif
 
     /* Set initial states. */
     AtkStateSet *state_set = atk_object_ref_state_set(obj);
@@ -1650,13 +1675,14 @@ static void UpdateNameCache(TkAtkAccessible *acc)
     if (!acc || !acc->tkwin) return;
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL, "name"};
     acc->cached_name = (gchar*)RunOnMainThread(get_atk_name_for_widget_main, &data);
+    g_warning("name is %s\n", acc->cached_name);
 }
 
 static void UpdateDescriptionCache(TkAtkAccessible *acc)
 {
     if (!acc || !acc->tkwin) return;
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL, "description"};
-    acc->cached_value = (gchar*)RunOnMainThread(get_atk_description_for_widget_main, &data);
+    acc->cached_description = (gchar*)RunOnMainThread(get_atk_description_for_widget_main, &data);
 }
 
 static void UpdateValueCache(TkAtkAccessible *acc)
