@@ -3795,6 +3795,9 @@ ImgGetPhoto(
     int x, y, greenOffset, blueOffset, alphaOffset;
 
     Tk_PhotoGetImage((Tk_PhotoHandle) modelPtr, blockPtr);
+    if (!blockPtr->pixelPtr) {
+	return NULL;
+    }
     blockPtr->pixelPtr += optPtr->fromY * blockPtr->pitch
 	    + optPtr->fromX * blockPtr->pixelSize;
     blockPtr->width = optPtr->fromX2 - optPtr->fromX;

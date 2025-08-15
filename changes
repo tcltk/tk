@@ -8297,6 +8297,10 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.17, Aug 15, 2025 - https://core.tcl-lang.org/tk/ for details
 
+2025-08-14 (bug) [07cfc9]: Aqua: Non-menubar menu invisible if toplevel is on another display (chavez).
+
 2025-08-15 (bug) [a91b24] Correct macOSVersion on future macOS for older SDK builds (chavez)
+
+2025-08-15 (bug) [d93d96]: Pointer arithmetic with NULL in ImgGetPhoto() (chavez)
 
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
