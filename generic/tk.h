@@ -61,7 +61,7 @@ extern "C" {
  * library/tk.tcl	(1 LOC patch)
  * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.in	(as above)
- * README		(sections 0 and 1)
+ * README.md		(sections 0 and 1)
  * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
@@ -75,10 +75,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	6
 #define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	17
+#define TK_RELEASE_SERIAL	18
 
 #define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.17"
+#define TK_PATCH_LEVEL		"8.6.18"
 
 /*
  * A special definition used to allow this header file to be included from
