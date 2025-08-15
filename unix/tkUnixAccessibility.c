@@ -183,11 +183,11 @@ static gpointer get_root_coords_main(gpointer data);
 /* Signal emission helpers. */
 static gpointer emit_children_changed_add(gpointer data);
 static gpointer emit_children_changed_remove(gpointer data);
-static gboolean emit_value_changed(gpointer data);
-static gboolean emit_text_selection_changed(gpointer data);
-static gboolean emit_focus_event(gpointer data);
-static gboolean emit_state_change(gpointer data);
-static gboolean emit_bounds_changed(gpointer data);
+static gpointer emit_value_changed(gpointer data);
+static gpointer emit_text_selection_changed(gpointer data);
+static gpointer emit_focus_event(gpointer data);
+static gpointer emit_state_change(gpointer data);
+static gpointer emit_bounds_changed(gpointer data);
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -202,7 +202,7 @@ static const gchar *tk_get_name(AtkObject *obj);
 static void tk_set_name(AtkObject *obj, const gchar *name);
 static gchar *GetAtkDescriptionForWidget(Tk_Window win);
 static const gchar *tk_get_description(AtkObject *obj);
-static gchar *GetAtkValueforTkWidget(Tk_Window win);
+static gchar *GetAtkValueForWidget(Tk_Window win);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 static AtkStateSet *tk_ref_state_set(AtkObject *obj);
@@ -237,8 +237,9 @@ static void UpdateDescriptionCache(TkAtkAccessible *acc);
 static void UpdateValueCache(TkAtkAccessible *acc);
 static void UpdateRoleCache(TkAtkAccessible *acc);
 static void UpdateStateCache(TkAtkAccessible *acc);
-static void UpdateChildrenCache(TkAtkAccessible *acc);
+static void UpdateChildrenCache(ClientData object);
 static gboolean DeferredChildrenUpdate(gpointer user_data);
+static void DeferredChildrenUpdateTcl(ClientData clientData);
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -449,17 +450,22 @@ static gchar *sanitize_utf8(const gchar *str)
 static gpointer get_atk_value_for_widget_main(gpointer data) 
 {
     MainThreadData *mt_data = (MainThreadData *)data;
-    return (gpointer)GetAtkValueForWidget(mt_data->tkwin);
+    return (gchar*)GetAtkValueForWidget(mt_data->tkwin);
 }
 
 /* Get accessible name. */
 static gpointer get_atk_name_for_widget_main(gpointer data) 
 {
     MainThreadData *mt_data = (MainThreadData *)data;
-    return (gpointer)(GetAtkNameForWidget(mt_data->tkwin));
+    return (gchar*)(GetAtkNameForWidget(mt_data->tkwin));
 }
 
-
+/* Get accessible description. */
+static gpointer get_atk_description_for_widget_main(gpointer data) 
+{
+    MainThreadData *mt_data = (MainThreadData *)data;
+    return (gchar*)(GetAtkDescriptionForWidget(mt_data->tkwin));
+}
 
 /* Get accessible role. */
 static gpointer get_atk_role_for_widget_main(gpointer data) 
@@ -687,7 +693,7 @@ static gpointer emit_children_changed_remove(gpointer data)
 
 
 /* Emit value-changed signal. */
-static gboolean emit_value_changed(gpointer data)
+static gpointer emit_value_changed(gpointer data)
 {
     if (data) {
         ValueChangedData *vcd = (ValueChangedData *)data;
@@ -699,7 +705,7 @@ static gboolean emit_value_changed(gpointer data)
 }
 
 /* Emit text-selection-changed signal. */
-static gboolean emit_text_selection_changed(gpointer data)
+static gpointer emit_text_selection_changed(gpointer data)
 {
     if (data) {
         g_signal_emit_by_name(data, "text-selection-changed");
@@ -708,7 +714,7 @@ static gboolean emit_text_selection_changed(gpointer data)
 }
 
 /* Emit focus-event signal. */
-static gboolean emit_focus_event(gpointer data)
+static gpointer emit_focus_event(gpointer data)
 {
     if (data) {
         FocusEventData *fed = (FocusEventData *)data;
@@ -719,7 +725,7 @@ static gboolean emit_focus_event(gpointer data)
 }
 
 /* Emit state-change signal. */
-static gboolean emit_state_change(gpointer data)
+static gpointer emit_state_change(gpointer data)
 {
     if (data) {
         StateChangeData *scd = (StateChangeData *)data;
@@ -731,7 +737,7 @@ static gboolean emit_state_change(gpointer data)
 }
 
 /* Emit bounds-changed signal. */
-static gboolean emit_bounds_changed(gpointer data)
+static gpointer emit_bounds_changed(gpointer data)
 {
     if (data) {
         BoundsChangedData *bcd = (BoundsChangedData *)data;
@@ -933,7 +939,7 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
 
 static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 {
-    if (!win) return;
+    if (!win) return NULL;
 
     gchar *description = NULL;
 
@@ -966,9 +972,9 @@ static const gchar *tk_get_description(AtkObject *obj)
  * AtkValue interface.
  */
 
-static gchar *GetAtkValueforTkWidget(Tk_Window win)
+static gchar *GetAtkValueForWidget(Tk_Window win)
 {
-    if (!win) return;
+    if (!win) return NULL;
     
     gchar *value = NULL;
 
@@ -1336,8 +1342,7 @@ static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject 
     }
 
     TkAtkAccessible *acc = (TkAtkAccessible *)parent_obj;
-    /* Update children cache asynchronously. */
-    UpdateChildrenCache(acc);
+    Tcl_DoWhenIdle(UpdateChildrenCache, (ClientData) acc);
 }
 
 
@@ -1555,7 +1560,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     g_hash_table_remove(creation_in_progress, tkwin);
 
     /* Shedule children update for LATER, not now. This breaks the recursion cycle. */
-    g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)DeferredChildrenUpdate, acc, NULL);
+	Tcl_DoWhenIdle(DeferredChildrenUpdateTcl, acc);
 
     return obj;
 }
@@ -1691,8 +1696,9 @@ static void UpdateStateCache(TkAtkAccessible *acc)
     }
 }
 
-static void UpdateChildrenCache(TkAtkAccessible *acc)
+static void UpdateChildrenCache(ClientData object)
 {
+	TkAtkAccessible *acc = (TkAtkAccessible*) object;
     if (!acc || !acc->tkwin || !acc->interp) return;
     if (acc->is_being_destroyed || acc->is_being_created) return;
 
@@ -1811,15 +1817,19 @@ static gboolean DeferredChildrenUpdate(gpointer user_data)
             }
             
             /* Update the children cache now that all objects exist. */
-            UpdateChildrenCache(acc);
+            UpdateChildrenCache((ClientData)acc);
         }
     }
 
     return G_SOURCE_REMOVE;
 }
 
-
-
+/* Run DeferredChildrenUpdate on Tcl's event loop. */
+static void DeferredChildrenUpdateTcl(ClientData clientData) 
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    DeferredChildrenUpdate(acc);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1919,7 +1929,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
         UpdateStateCache(acc);
         
         /* Update children cache asynchronously to avoid recursion */
-        g_idle_add((GSourceFunc)UpdateChildrenCache, acc);
+        Tcl_DoWhenIdle(UpdateChildrenCache, (ClientData) acc);
     }
 
     updating = FALSE;
@@ -2069,7 +2079,7 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
     }
 
     /* Update children cache asynchronously. */
-    RunOnMainThread((GSourceFunc)UpdateChildrenCache, acc);
+    Tcl_DoWhenIdle(UpdateChildrenCache, (ClientData) acc);
 }
 
 
