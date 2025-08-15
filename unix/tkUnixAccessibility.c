@@ -1703,7 +1703,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     UpdateChildrenCache(acc); /* Added to update children on configure */
 
     /* Notify ATK of changes */
-    if (acc->width > 0 && a.cc->height > 0 && acc->is_mapped) {
+    if (acc->width > 0 && acc->height > 0 && acc->is_mapped) {
 	BoundsChangedData *bcd = g_new0(BoundsChangedData, 1);
 	bcd->obj = ATK_OBJECT(acc);
 	bcd->rect.x = acc->x;
