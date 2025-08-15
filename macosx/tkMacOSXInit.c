@@ -39,8 +39,7 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TkMacOSXGetAppPathObjCmd;
 
 #pragma mark TKApplication(TKInit)
 
@@ -51,6 +50,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize needsToDraw = _needsToDraw;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;
+
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
     if (winPtr) {
@@ -143,6 +143,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
 {
+    (void) app;
     return YES;
 }
 
@@ -187,7 +188,6 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
-
     }
 
 
@@ -283,7 +283,10 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	struct utsname name;
 	char *endptr;
 	if (uname(&name) == 0) {
-	    majorVersion = (int)strtol(name.release, &endptr, 10) - 9;
+	    majorVersion = (int)strtol(name.release, &endptr, 10) + 1;
+	    if (majorVersion < 26) {
+		majorVersion -= 10;
+	    }
 	    minorVersion = 0;
 	}
     }
@@ -394,7 +397,7 @@ static void closePanels(
 	[[NSFontPanel sharedFontPanel] orderOut:nil];
     }
     if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
+	[[NSColorPanel sharedColorPanel] orderOut:nil];
     }
 }
 
@@ -471,7 +474,7 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
-        Bool stdinIsNullish = (!isatty(0) &&
+	Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
@@ -495,7 +498,7 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
-            # if 0 /* This is not really an error.  Wish still runs fine. */
+	    # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	    # endif
 	}
@@ -517,40 +520,40 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 
-        /*
-         * WARNING: The finishLaunching method runs asynchronously. This
-         * creates a race between the initialization of the NSApplication and
-         * the initialization of Tk.  If Tk wins the race bad things happen
-         * with the root window (see below).  If the NSApplication wins then an
-         * AppleEvent created during launch, e.g. by dropping a file icon on
-         * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is handled in
-         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * AppleEvent later, after the required procedure has been defined.
-         */
+	/*
+	 * WARNING: The finishLaunching method runs asynchronously. This
+	 * creates a race between the initialization of the NSApplication and
+	 * the initialization of Tk.  If Tk wins the race bad things happen
+	 * with the root window (see below).  If the NSApplication wins then an
+	 * AppleEvent created during launch, e.g. by dropping a file icon on
+	 * the application icon, will be delivered before the procedure meant
+	 * to to handle the AppleEvent has been defined.  This is handled in
+	 * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+	 * AppleEvent later, after the required procedure has been defined.
+	 */
 
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
-        /*
-         * Create a Tk event source based on the Appkit event queue.
-         */
+	/*
+	 * Create a Tk event source based on the Appkit event queue.
+	 */
 
 	Tk_MacOSXSetupTkNotifier();
 
 	/*
 	 * If Tk initialization wins the race, the root window is mapped before
-         * the NSApplication is initialized.  This can cause bad things to
-         * happen.  The root window can open off screen with no way to make it
-         * appear on screen until the app icon is clicked.  This will happen if
-         * a Tk application opens a modal window in its startup script (see
-         * ticket 56a1823c73).  In other cases, an empty root window can open
-         * on screen and remain visible for a noticeable amount of time while
-         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
-         * below forces Tk to block until the Appkit event queue has been
-         * created.  This seems to be sufficient to ensure that the
-         * NSApplication initialization wins the race, avoiding these bad
-         * window behaviors.
+	 * the NSApplication is initialized.  This can cause bad things to
+	 * happen.  The root window can open off screen with no way to make it
+	 * appear on screen until the app icon is clicked.  This will happen if
+	 * a Tk application opens a modal window in its startup script (see
+	 * ticket 56a1823c73).  In other cases, an empty root window can open
+	 * on screen and remain visible for a noticeable amount of time while
+	 * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+	 * below forces Tk to block until the Appkit event queue has been
+	 * created.  This seems to be sufficient to ensure that the
+	 * NSApplication initialization wins the race, avoiding these bad
+	 * window behaviors.
 	 */
 
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
@@ -631,6 +634,7 @@ TkpInit(
 	 */
 
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
 	    if (winPtr && Tk_IsMapped(winPtr)) {
@@ -657,7 +661,6 @@ TkpInit(
 	signal(SIGHUP, TkMacOSXSignalHandler);
 	signal(SIGTERM, TkMacOSXSignalHandler);
     }
-
     /*
      * Initialization steps that are needed for all interpreters.
      */
@@ -674,7 +677,56 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
-	    TkMacOSXGetAppPathCmd, NULL, NULL);
+	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPathObjCmd --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetAppPathObjCmd(
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
+
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
 
     return TCL_OK;
 }
@@ -714,54 +766,6 @@ TkpGetAppName(
 	}
     }
     Tcl_DStringAppend(namePtr, name, -1);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetAppPathCmd --
- *
- *	Returns the path of the Wish application bundle.
- *
- * Results:
- *	Returns the application path.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TkMacOSXGetAppPathCmd(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
-{
-    if (objc != 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, NULL);
-	return TCL_ERROR;
-    }
-
-    /*
-     * Get the application path URL and convert it to a string path reference.
-     */
-
-    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    CFStringRef appPath =
-	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
-
-    /*
-     * Convert (and copy) the string reference into a Tcl result.
-     */
-
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
-
-    CFRelease(mainBundleURL);
-    CFRelease(appPath);
-    return TCL_OK;
 }
 
 /*
@@ -832,7 +836,7 @@ TkMacOSXDefaultStartupScript(void)
 
 	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
-		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
+		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript, -1), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
 			appMainURL);
 		if (scriptFldrURL != NULL) {

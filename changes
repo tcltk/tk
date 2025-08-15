@@ -8296,3 +8296,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2025-08-11 (bug) [4e1e10] Aqua: CGRect/NSRect type mismatch on 32-bit (root)
 
 - Released 8.6.17, Aug 15, 2025 - https://core.tcl-lang.org/tk/ for details
+
+2025-08-15 (bug) [a91b24] Correct macOSVersion on future macOS for older SDK builds (chavez)
+
+- (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
