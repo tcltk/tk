@@ -12,7 +12,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
-testutils import colors
+testutils import child colors
 
 # XXX - This test file is woefully incomplete.  At present, only a
 # few of the winfo options are tested.
@@ -170,6 +170,33 @@ test winfo-5.4 {"winfo interps" command} -constraints unix -body {
 test winfo-5.5 {"winfo interps" command} -constraints unix -body {
     expr {[lsearch -exact [winfo interps -displayof .] [tk appname]] >= 0}
 } -result 1
+test winfo-5.6 {"winfo interps" command, two interps, same process} -constraints unix -setup {
+    childTkInterp child
+    tk appname tktest
+} -body {
+    child eval {tk appname foo}
+    lsort [winfo interps]
+} -result {foo tktest} -cleanup {
+    interp delete child
+}
+test winfo-5.7.1 {"winfo interps" command, two interps, different processes} -constraints {unix notAqua} -setup {
+    tk appname tktest
+    childTkProcess create
+} -body {
+    childTkProcess eval {tk appname foo}
+    lsort [winfo interps]
+} -result {foo tktest} -cleanup {
+    childTkProcess exit
+}
+test winfo-5.7.2 {"winfo interps" command, two interps, different processes} -constraints aqua -setup {
+    tk appname tktest
+    childTkProcess create
+} -body {
+    childTkProcess eval {tk appname foo}
+    lsort [winfo interps]
+} -result foo -cleanup {
+    childTkProcess exit
+}
 
 
 test winfo-6.1 {"winfo exists" command} -body {
@@ -467,7 +494,7 @@ test winfo-14.4 {mapped at idle time} -setup {
 #
 
 deleteWindows
-testutils forget colors
+testutils forget child colors
 cleanupTests
 return
 
