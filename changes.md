@@ -20,6 +20,7 @@ to the userbase.
  - [error popup on ttk::scale with invisible trough](https://core.tcl-lang.org/tk/tktview/d25b72)
  - [loading windows dll's in Cygwin doesn't work with high-entropy-va](https://core.tcl-lang.org/tk/tktview/06892c)
  - [TIP 604 widget demo: canvas text fill color not specified](https://core.tcl-lang.org/tk/tktview/6cc48b)
+ - [Undefined behavior while touchpad scrolling](https://core.tcl-lang.org/tk/tktview/92e408)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
@@ -131,7 +132,6 @@ writing Tcl scripts containing Tk commands.
 
 ## Known bugs
  - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
- - [Inconsistency in whether widgets allow negative borderwidths](https://core.tcl-lang.org/tk/tktview/5f739d)
  - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
  - [The wm manage command does not work on current macOS versions](https://core.tcl-lang.org/tk/tktview/8a6012)
  - [Slow processing irregular transparencies](https://core.tcl-lang.org/tk/tktview/919066)
