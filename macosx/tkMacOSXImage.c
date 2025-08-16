@@ -21,7 +21,7 @@
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
-     int x, int y, unsigned int width, unsigned int height, CGFloat *scale);
+	   int x, int y, unsigned int width, unsigned int height);
 static inline CGRect ClipCopyRects(CGRect srcBounds, CGRect dstBounds,
      int src_x, int src_y, unsigned int width,  unsigned int height);
 
@@ -649,13 +649,12 @@ CreateCGImageFromDrawableRect(
     int x,
     int y,
     unsigned int width,
-    unsigned int height,
-    CGFloat *scalePtr)
+    unsigned int height)
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
-    CGFloat scaleFactor = 1.0;
+    CGFloat srcScaleFactor = 1.0;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	CGContextRetain(cg_context);
@@ -665,46 +664,39 @@ CreateCGImageFromDrawableRect(
 	    TkMacOSXDbgMsg("Invalid source drawable");
 	    return NULL;
 	}
-	scaleFactor = view.layer.contentsScale;
+	srcScaleFactor = view.layer.contentsScale;
 	cg_context = ((TKContentView *)view).tkLayerBitmapContext;
 	CGContextRetain(cg_context);
-    }
-    if (scalePtr != nil) {
-	*scalePtr = scaleFactor;
     }
     if (cg_context) {
 	cg_image = CGBitmapContextCreateImage(cg_context);
 	CGContextRelease(cg_context);
     }
     if (cg_image) {
-	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
-				 width, height);
-	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
-	if (force_1x_scale && (scaleFactor != 1.0)) {
-	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
-	    // create context, keeping original image properties
-	    CGColorSpaceRef colorspace = CGImageGetColorSpace(cg_image);
-	    cg_context = CGBitmapContextCreate(NULL, width, height,
-		    CGImageGetBitsPerComponent(cg_image),
-		    //CGImageGetBytesPerRow(cg_image), // wastes space?
-		    CGImageGetBitsPerPixel(cg_image) * width / 8,
-		    colorspace,
-		    CGImageGetAlphaInfo(cg_image));
-	    CGColorSpaceRelease(colorspace);
-	    if (cg_context) {
-		// Extract the subimage in the specified rectangle.
-		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
-		// Draw the subimage in our context (resizing it to fit).
-		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
-			subimage);
-		// We will return the image we just drew.
-		result = CGBitmapContextCreateImage(cg_context);
-		CGContextRelease(cg_context);
-		CGImageRelease(subimage);
-	    }
-	} else {
-	    // No resizing is needed.  Just return the subimage
-	    result = CGImageCreateWithImageInRect(cg_image, rect);
+	CGFloat dstScaleFactor = force_1x_scale ? 1.0 : srcScaleFactor;
+	CGRect rect = CGRectMake(-srcScaleFactor*(x + mac_drawable->xOff),
+		srcScaleFactor*((int)height + y + mac_drawable->yOff) - (int)CGImageGetHeight(cg_image),
+		CGImageGetWidth(cg_image), CGImageGetHeight(cg_image));
+	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(
+		dstScaleFactor/srcScaleFactor, dstScaleFactor/srcScaleFactor));
+
+	// See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
+	// create context, keeping original image properties; must have the requested width and height
+	CGColorSpaceRef colorspace = CGImageGetColorSpace(cg_image);
+	cg_context = CGBitmapContextCreate(NULL,
+		width * dstScaleFactor,
+		height * dstScaleFactor,
+		CGImageGetBitsPerComponent(cg_image),
+		CGImageGetBitsPerPixel(cg_image) * width * dstScaleFactor / 8,
+		colorspace,
+		CGImageGetAlphaInfo(cg_image));
+	CGColorSpaceRelease(colorspace);
+	if (cg_context) {
+	    // Draw the source at an offset in our context (resizing it to fit).
+	    CGContextDrawImage(cg_context, rect, cg_image);
+	    // We will return the image we just drew.
+	    result = CGBitmapContextCreateImage(cg_context);
+	    CGContextRelease(cg_context);
 	}
 	CGImageRelease(cg_image);
     }
@@ -840,7 +832,7 @@ XGetImage(
 	}
 
 	// Request 1x-scale image for compatibility
-	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height, nil);
+	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height);
 	if (cgImage) {
 	    bitmapRep = [NSBitmapImageRep alloc];
 	    [bitmapRep initWithCGImage:cgImage];
@@ -988,8 +980,7 @@ TkScrollWindow(
 
     /*
      * To compute the damage region correctly we need to clip the source and
-     * destination rectangles to the NSView bounds in the same way that
-     * XCopyArea does.
+     * destination rectangles to the NSView bounds.
      */
 
     CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y, width, height);
@@ -1058,26 +1049,6 @@ XCopyArea(
     CGImageRef img = NULL;
     CGRect dstRect;
 
-    // XXXX Need to deal with pixmaps!
-
-    NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
-    NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
-    CGRect srcBounds = [srcView bounds];
-    CGRect dstBounds = [dstView bounds];
-
-    // To avoid distorting the image when it is drawn we must ensure that
-    // the source and destination rectangles have the same size.  This is
-    // tricky because each of those rectangles will be clipped to the
-    // bounds of its containing NSView.  If the source gets clipped and
-    // the destination does not, for example, then the shapes will differ.
-    // We deal with this by reducing their common size  enough so that both
-    // rectangles are  contained in their respective views.
-
-    CGRect bounds = ClipCopyRects(srcBounds, dstBounds, src_x, src_y, width, height);
-    width = (int) bounds.size.width;
-    height = (int) bounds.size.height;
-    CGFloat scaleFactor;
-
     LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	return BadDrawable;
@@ -1093,12 +1064,11 @@ XCopyArea(
 	return BadDrawable;
     }
 
-    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height, &scaleFactor);
+    // Use unscaled source (TkMacOSXDrawCGImage() will implicitly downscale)
+    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height);
 
     if (img) {
-	unsigned int w = (unsigned int) (CGImageGetWidth(img) / scaleFactor);
-	unsigned int h = (unsigned int) (CGImageGetHeight(img) / scaleFactor);
-	dstRect = CGRectMake(dst_x, dst_y, w, h);
+	dstRect = CGRectMake(dst_x, dst_y, width, height);
 	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
 		gc->foreground, gc->background, dstRect);
 	CFRelease(img);
