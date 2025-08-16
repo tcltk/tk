@@ -135,7 +135,7 @@ test send-5.4 {ValidateName procedure} {secureserver testsend} {
     winfo interps
 } {test}
 
-if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint aqua]} {
+if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint notAqua]} {
     winfo interps
     tk appname tktest
     update
