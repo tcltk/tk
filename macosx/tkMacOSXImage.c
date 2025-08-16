@@ -691,6 +691,8 @@ CreateCGImageFromDrawableRect(
 		colorspace,
 		CGImageGetAlphaInfo(cg_image));
 	CGColorSpaceRelease(colorspace);
+	// Prevent a faint outline from appearing when downscaling Retina captures; possibly also faster
+	CGContextSetInterpolationQuality(cg_context, kCGInterpolationNone);
 	if (cg_context) {
 	    // Draw the source at an offset in our context (resizing it to fit).
 	    CGContextDrawImage(cg_context, rect, cg_image);
