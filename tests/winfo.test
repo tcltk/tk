@@ -193,7 +193,7 @@ test winfo-5.7.2 {"winfo interps" command, two interps, different processes} -co
     childTkProcess create
 } -body {
     childTkProcess eval {tk appname foo}
-    lsort [winfo interps]
+    winfo interps
 } -result foo -cleanup {
     childTkProcess exit
 }
