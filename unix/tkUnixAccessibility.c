@@ -360,7 +360,7 @@ static gint tk_get_n_children(AtkObject *obj)
 
     /* 
      * For widgets, refresh children to catch dynamic changes.
-     /* For the root object (no tkwin), children are managed 
+     * For the root object (no tkwin), children are managed 
      * manually. 
      */
     if (acc->tkwin) {
@@ -436,6 +436,10 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 
 static AtkRole tk_get_role(AtkObject *obj)
 {
+	if (obj == tk_root_accessible) {
+		return ATK_ROLE_APPLICATION;
+	}
+	
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return ATK_ROLE_UNKNOWN;
    
@@ -466,11 +470,14 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
 
 static const gchar *tk_get_name(AtkObject *obj)
 {
+	if (obj == tk_root_accessible) {
+		return "Tk Application";
+	}
+	
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return NULL;
    
-    gchar *name = GetAtkNameForWidget(acc->tkwin);
-    return name;
+    return GetAtkNameForWidget(acc->tkwin);
 }
 
 static void tk_set_name(AtkObject *obj, const gchar *name)
