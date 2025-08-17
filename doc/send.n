@@ -94,8 +94,7 @@ functionality is provided by the \fBdde\fR command instead.
 .PP
 Under macOS/aqua, the send command works only with interpreters that exist in
 the same process (these are returned by "winfo interps"). Invocations that
-target an interpreter that exists in another process return an empty string
-without accomplishing anything; no error is returned.
+target an interpreter that exists in another process don't accomplish anything.
 .SH EXAMPLE
 .PP
 This script fragment can be used to make an application that only runs
