@@ -358,14 +358,6 @@ static gint tk_get_n_children(AtkObject *obj)
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return 0;
 
-    /* 
-     * For widgets, refresh children to catch dynamic changes.
-     * For the root object (no tkwin), children are managed 
-     * manually. 
-     */
-    if (acc->tkwin) {
-        RefreshChildren(acc);
-    }
     return g_list_length(acc->children);
 }
 
@@ -373,11 +365,6 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return NULL;
-
-    /* For widgets, refresh children to catch dynamic changes. */
-    if (acc->tkwin) {
-        RefreshChildren(acc);
-    }
 
     /* Consistently retrieve the child from the acc->children list. */
     GList *child_node = g_list_nth(acc->children, i);
@@ -436,9 +423,9 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 
 static AtkRole tk_get_role(AtkObject *obj)
 {
-	if (obj == tk_root_accessible) {
-		return ATK_ROLE_APPLICATION;
-	}
+    if (obj == tk_root_accessible) {
+	return ATK_ROLE_APPLICATION;
+    }
 	
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return ATK_ROLE_UNKNOWN;
@@ -470,9 +457,9 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
 
 static const gchar *tk_get_name(AtkObject *obj)
 {
-	if (obj == tk_root_accessible) {
-		return "Tk Application";
-	}
+    if (obj == tk_root_accessible) {
+	return "Tk Application";
+    }
 	
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return NULL;
@@ -1253,9 +1240,30 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     /* Register for cleanup, mapping and other events. */
     TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
 
-    /* Handle toplevels. */
+    /* Handle toplevels separately. */
     if (Tk_IsTopLevel(tkwin)) {
-	RegisterToplevelWindow(interp, tkwin, (AtkObject*)accessible);
+	RegisterToplevelWindow(interp, tkwin, ATK_OBJECT(accessible));
+    } else {
+	Tk_Window parent_win = Tk_Parent(tkwin);
+	if (parent_win) {
+	    AtkObject *parent_obj = GetAtkObjectForTkWindow(parent_win);
+	    if (!parent_obj) {
+		/* Recursively register parent. */
+		Tcl_Obj *parent_cmd_objv[2];
+		parent_cmd_objv[0] = objv[0];  /* Command name. */
+		parent_cmd_objv[1] = Tcl_NewStringObj(Tk_PathName(parent_win), -1);
+		if (TkAtkAccessibleObjCmd(clientData, interp, 2, parent_cmd_objv) != TCL_OK) {
+		    Tcl_DecrRefCount(parent_cmd_objv[1]);
+		    return TCL_ERROR;
+		}
+		Tcl_DecrRefCount(parent_cmd_objv[1]);
+		parent_obj = GetAtkObjectForTkWindow(parent_win);  /* Now it should exist. */
+	    }
+	    if (parent_obj) {
+		atk_object_set_parent(ATK_OBJECT(accessible), parent_obj);
+		AddChildToParent((TkAtkAccessible *)parent_obj, ATK_OBJECT(accessible));
+	    }
+	}
     }
 
     return TCL_OK;
