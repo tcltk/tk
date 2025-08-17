@@ -261,7 +261,10 @@ static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child)
     g_object_ref(child);
     parent->children = g_list_append(parent->children, child);
     atk_object_set_parent(child, ATK_OBJECT(parent));
-    
+    gint index = g_list_index(parent->children, child);
+    if (index >= 0) {
+	g_signal_emit_by_name(parent, "children-changed::add", index, child);
+    }   
 }
 
 static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child) 
@@ -271,6 +274,10 @@ static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child)
     GList *found = g_list_find(parent->children, child);
     if (found) {
         parent->children = g_list_remove(parent->children, child);
+	gint index = g_list_index(parent->children, child);
+	if (index >= 0) {
+	    g_signal_emit_by_name(parent, "children-changed::remove", index, child);
+	}  
         /* Release the reference we took in AddChildToParent. */
         g_object_unref(child);
     }
@@ -931,6 +938,10 @@ static void RefreshChildren(TkAtkAccessible *acc)
        
 	if (child_obj) {
 	    acc->children = g_list_append(acc->children, child_obj);
+	    gint index = g_list_index(acc->children, child_obj);
+	    if (index >= 0) {
+		g_signal_emit_by_name(acc, "children-changed::add", index, child_obj);
+	    }   
 	}
     }
 }
@@ -1245,17 +1256,18 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 #ifdef USE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
+	
+    /* Get and initialize root accessible. */
+    tk_root_accessible = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
+    atk_object_set_name(tk_root_accessible, "Tk Application");
+    
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
 	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
 	return TCL_ERROR;
     }
     
-    /* Get and initialize root accessible. */
-    tk_root_accessible = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
-    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-    atk_object_set_name(tk_root_accessible, "Tk Application");
-   
     InitAtkTkMapping();
     TkAtk_InstallGlibBridge();
 	
@@ -1277,7 +1289,10 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     }
     
     atk_object_set_role(main_acc, ATK_ROLE_WINDOW);
+    tk_set_name(main_acc, "Tk Application");
     RegisterAtkObjectForTkWindow(mainWin, main_acc);
+    RegisterToplevelWindow(interp, mainWin, main_acc);
+    RegisterChildWidgets(interp, mainWin, main_acc);
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
    
     /* Register Tcl commands. */
