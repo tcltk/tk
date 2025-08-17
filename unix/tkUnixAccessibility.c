@@ -45,6 +45,11 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
+typedef struct {
+    GMainContext *context;
+    int installed;
+} TkAtkGlibBridge;
+
 
 /* Structs to map Tk roles into Atk roles. */
 
@@ -83,6 +88,16 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
+static TkAtkGlibBridge g_bridge = {0};
+
+/* GLib integration functions. */
+static void GlibEventSetup(ClientData clientData, int flags);
+static void GlibEventCheck(ClientData clientData, int flags);
+static void GlibExitHandler(ClientData clientData);
+
+/* Child management functions. */
+static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child);
+static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child);
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -123,7 +138,6 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static void RefreshChildren(TkAtkAccessible *acc);
-
 static AtkObject *tk_util_get_root(void);
 AtkObject *atk_get_root(void);
 
@@ -139,10 +153,6 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
-/* Child management functions. */
-static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child);
-static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child);
-
 
 /* Define custom Atk object bridged to Tcl/Tk. */
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
@@ -153,6 +163,81 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
 			)
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLib integration functions. These create a Tcl event source so that 
+ * the GLib event loop can be smoothly integrated with Tcl/Tk.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* SetupProc: called before Tcl waits. */
+static void GlibEventSetup(ClientData clientData, int flags)
+{
+    (void)clientData;
+    (void)flags;
+
+    if (!g_bridge.context) {
+	g_bridge.context = g_main_context_default();
+    }
+
+    /* Check if GLib has pending events. */
+    if (g_main_context_pending(g_bridge.context)) {
+	/* Force Tcl to wake immediately. */
+	Tcl_Time wake = {0, 0};
+	Tcl_SetTimer(&wake);
+	return;
+    }
+
+    /* Otherwise, query GLib for timeout. */
+    gint timeout = -1;
+    g_main_context_prepare(g_bridge.context, NULL);
+    g_main_context_query(g_bridge.context, 0, &timeout, NULL, 0);
+
+    if (timeout >= 0) {
+	Tcl_Time wake;
+	wake.sec = timeout / 1000;
+	wake.usec = (timeout % 1000) * 1000;
+	Tcl_SetTimer(&wake);
+    } else {
+	/* No timeout requested; let Tcl sleep. */
+	Tcl_SetTimer(NULL);
+    }
+}
+
+/* CheckProc: called after Tcl wakes. */
+static void GlibEventCheck(ClientData clientData, int flags)
+{
+    (void)clientData;
+    (void)flags;
+
+    GMainContext *ctx = g_bridge.context;
+    if (!ctx) return;
+
+    /* Drain all pending GLib sources. */
+    while (g_main_context_pending(ctx)) {
+	g_main_context_iteration(ctx, FALSE);
+    }
+}
+
+/* Exit handler. */
+static void GlibExitHandler(ClientData clientData)
+{
+    (void)clientData;
+    g_bridge.context = NULL;
+    g_bridge.installed = 0;
+}
+
+/* Public initialization. */
+void TkAtk_InstallGlibBridge(void)
+{
+    if (g_bridge.installed) return;
+
+    Tcl_CreateEventSource(GlibEventSetup, GlibEventCheck, NULL);
+    Tcl_CreateExitHandler(GlibExitHandler, NULL);
+    g_bridge.installed = 1;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1172,6 +1257,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     atk_object_set_name(tk_root_accessible, "Tk Application");
    
     InitAtkTkMapping();
+    TkAtk_InstallGlibBridge();
 	
     /* Initialize main window. */
     Tk_Window mainWin = Tk_MainWindow(interp);
