@@ -215,10 +215,12 @@ static void GlibEventCheck(ClientData clientData, int flags)
     GMainContext *ctx = g_bridge.context;
     if (!ctx) return;
 
-    /* Drain all pending GLib sources. */
-    while (g_main_context_pending(ctx)) {
-	g_main_context_iteration(ctx, FALSE);
-    }
+    /* 
+     * Dispatch available GLib events without blocking.
+     * We want to prevent a livelock where the GLib loop
+     * starves the Tcl loop.
+     */
+    g_main_context_iteration(ctx, FALSE);
 }
 
 /* Exit handler. */
@@ -350,70 +352,41 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
  * Functions to manage child count and individual child widgets.
  */
  
+
 static gint tk_get_n_children(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return 0;
-   
-    /* Rebuild children list fresh each time. */
-    RefreshChildren(acc);
-    int count = g_list_length(acc->children);
-    g_warning("count is %d\n", count);
+    if (!acc) return 0;
+
+    /* 
+     * For widgets, refresh children to catch dynamic changes.
+    /* For the root object (no tkwin), children are managed 
+     * manually. 
+     * */
+    if (acc->tkwin) {
+        RefreshChildren(acc);
+    }
     return g_list_length(acc->children);
 }
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return NULL;
-   
-    /* Always refresh to catch dynamic changes. */
-    RefreshChildren(acc);
+    if (!acc) return NULL;
 
-    #if 0
-   
-    GList *child = g_list_nth(acc->children, i);
-    if (child && G_IS_OBJECT(child->data)) {
-        g_object_ref(child->data);
-        return ATK_OBJECT(child->data);
-    }
-    return NULL;
-    #endif
-    if (obj == tk_root_accessible) {
-        if (i >= (gint)g_list_length(toplevel_accessible_objects))
-	    {
-		return NULL;
-	    }
-	/* Get accessible object from toplevel list. */
-        AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
-        if (child) {
-            g_object_ref(child); /* Increment ref count as per ATK interface contract. */
-        }
-        return child;
+    /* For widgets, refresh children to catch dynamic changes. */
+    if (acc->tkwin) {
+        RefreshChildren(acc);
     }
 
-    if (!acc->tkwin) {
-        return NULL;
+    /* Consistently retrieve the child from the acc->children list. */
+    GList *child_node = g_list_nth(acc->children, i);
+    if (child_node && child_node->data) {
+        /* Increment ref count as per ATK interface contract. */
+        g_object_ref(child_node->data);
+        return ATK_OBJECT(child_node->data);
     }
 
-    /* Return i-th direct child with accessible object. */
-    guint index = 0;
-    TkWindow *winPtr = (TkWindow *)acc->tkwin;
-    TkWindow *childPtr;
-    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-        AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
-        if (child_obj) {
-	    if (i >= 0 && (guint)i == index) {
-                g_object_ref(child_obj); /* Increment ref count as per ATK interface contract. */
-                return child_obj;
-            }
-            index++;
-        }
-    }
-    
-    if (Tk_IsTopLevel(acc->tkwin)) {
-	toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, obj);
-    }
     return NULL;
 }
 
@@ -761,7 +734,6 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     AddChildToParent((TkAtkAccessible *)tk_root_accessible, accessible);
 	
     /* Emit children-changed::add signal. */
-    RefreshChildren((TkAtkAccessible *)tk_root_accessible);
     gint index = g_list_index(((TkAtkAccessible *)tk_root_accessible)->children, accessible);
     if (index >= 0) {
 	g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
@@ -955,10 +927,16 @@ static void RefreshChildren(TkAtkAccessible *acc)
     TkWindow *winPtr = (TkWindow *)acc->tkwin;
     if (!winPtr) return;
    
-    /* Clear old children list. */
+   /* Clear old children list, unreferencing each object to prevent leaks. */
     if (acc->children) {
-	g_list_free(acc->children);
-	acc->children = NULL;
+        GList *iter;
+        for (iter = acc->children; iter != NULL; iter = g_list_next(iter)) {
+            if (G_IS_OBJECT(iter->data)) {
+                g_object_unref(iter->data);
+            }
+        }
+        g_list_free(acc->children);
+        acc->children = NULL;
     }
    
     /* Walk Tk's current child list. */
