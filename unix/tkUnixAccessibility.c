@@ -173,7 +173,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* SetupProc: called before Tcl waits. */
-static void GlibEventSetup(ClientData clientData, int flags)
+    static void GlibEventSetup(ClientData clientData, int flags)
 {
     (void)clientData;
     (void)flags;
@@ -360,9 +360,9 @@ static gint tk_get_n_children(AtkObject *obj)
 
     /* 
      * For widgets, refresh children to catch dynamic changes.
-    /* For the root object (no tkwin), children are managed 
+     /* For the root object (no tkwin), children are managed 
      * manually. 
-     * */
+     */
     if (acc->tkwin) {
         RefreshChildren(acc);
     }
@@ -927,7 +927,7 @@ static void RefreshChildren(TkAtkAccessible *acc)
     TkWindow *winPtr = (TkWindow *)acc->tkwin;
     if (!winPtr) return;
    
-   /* Clear old children list, unreferencing each object to prevent leaks. */
+    /* Clear old children list, unreferencing each object to prevent leaks. */
     if (acc->children) {
         GList *iter;
         for (iter = acc->children; iter != NULL; iter = g_list_next(iter)) {
@@ -1277,15 +1277,17 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
 	
-    /* Get and initialize root accessible. */
-    tk_root_accessible = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
-    atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
-    atk_object_set_name(tk_root_accessible, "Tk Application");
-    
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
 	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
 	return TCL_ERROR;
+    }
+    
+    /* Get and initialize root accessible. */
+    tk_root_accessible = tk_util_get_root();
+    if (!tk_root_accessible) {
+        Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
+        return TCL_ERROR;
     }
     
     InitAtkTkMapping();
