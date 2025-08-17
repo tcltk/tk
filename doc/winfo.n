@@ -154,8 +154,6 @@ Returns a list whose members are the names of all Tcl interpreters
 If the \fB\-displayof\fR option is given then the return value refers
 to the display of \fIwindow\fR;  otherwise it refers to
 the display of the application's main window.
-Under macOS/aqua, the command returns only the interpreters that exist in the
-same process as the current interpreter.
 .\" METHOD: ismapped
 .TP
 \fBwinfo ismapped \fIwindow\fR
