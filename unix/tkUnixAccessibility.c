@@ -355,25 +355,73 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 
 static gint tk_get_n_children(AtkObject *obj)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return 0;
 
-    return g_list_length(acc->children);
+    if (obj == tk_root_accessible) {
+        /* The root's children are the toplevel windows. */
+        return g_list_length(toplevel_accessible_objects);
+    }
+
+    if (!acc->tkwin) {
+        return 0;
+    }
+
+    /* Count direct child windows with accessible objects. */
+    int count = 0;
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    TkWindow *childPtr;
+    /* Iterate through Tk's internal child list. */
+    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+	if (Tk_WindowId((Tk_Window)childPtr) && GetAtkObjectForTkWindow((Tk_Window)childPtr)) {
+            count++;
+	} else {
+	    AtkObject *child_obj = TkCreateAccessibleAtkObject(acc->interp, (Tk_Window)childPtr, Tk_PathName((Tk_Window)childPtr));
+	    RegisterAtkObjectForTkWindow((Tk_Window)childPtr, child_obj);
+	    count++;
+	}
+    }
+    return count;
 }
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc) return NULL;
 
-    /* Consistently retrieve the child from the acc->children list. */
-    GList *child_node = g_list_nth(acc->children, i);
-    if (child_node && child_node->data) {
-        /* Increment ref count as per ATK interface contract. */
-        g_object_ref(child_node->data);
-        return ATK_OBJECT(child_node->data);
+    if (obj == tk_root_accessible) {
+        if (i >= (gint)g_list_length(toplevel_accessible_objects))
+	    {
+		return NULL;
+	    }
+	/* Get accessible object from toplevel list. */
+        AtkObject *child = g_list_nth_data(toplevel_accessible_objects, i);
+        if (child) {
+            g_object_ref(child); /* Increment ref count as per ATK interface contract. */
+        }
+        return child;
     }
 
+    if (!acc->tkwin) {
+        return NULL;
+    }
+
+    /* Return i-th direct child with accessible object. */
+    guint index = 0;
+    TkWindow *winPtr = (TkWindow *)acc->tkwin;
+    TkWindow *childPtr;
+    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+        AtkObject *child_obj = GetAtkObjectForTkWindow((Tk_Window)childPtr);
+        if (child_obj) {
+	    if (i >= 0 && (guint)i == index) {
+                g_object_ref(child_obj); /* Increment ref count as per ATK interface contract. */
+                return child_obj;
+            }
+            index++;
+        }
+    }
+    
+    if (Tk_IsTopLevel(acc->tkwin)) {
+	toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, obj);
+    }
     return NULL;
 }
 
@@ -1361,4 +1409,5 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * fill-column: 78
  * End:
  */
+
 
