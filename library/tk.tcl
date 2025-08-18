@@ -128,6 +128,11 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	}
     }
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
+    # "wm geometry" operates in window manager coordinates and thus includes
+    # an eventual decoration frame.
+    incr x -[WMFrameWidth]
+    incr y -[WMTitleHeight]
+    # Set geometry and show window
     wm geometry $w +$x+$y
     wm deiconify $w
 }
@@ -690,6 +695,58 @@ proc ::tk::AltKeyInDialog {path key} {
     if {$target ne ""} {
 	event generate $target <<AltUnderlined>>
     }
+}
+
+# ::tk::WMFrameWidth
+#
+#	Return window manager frame width if known, else 0.
+
+proc ::tk::WMFrameWidth {} {
+    set frameWidth 0
+    # In SDL2 Tk, the frame width is a number between 6 and 27, depending on
+    # the screen's DPI value.
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set frameWidth 6
+    	} elseif {$dpi < 190} {
+	    set frameWidth 9
+    	} elseif {$dpi < 240} {
+	    set frameWidth 12
+    	} elseif {$dpi < 320} {
+	    set frameWidth 15
+    	} elseif {$dpi < 420} {
+	    set frameWidth 21
+    	} else {
+	    set frameWidth 27
+   	}
+    }
+    return $frameWidth
+}
+
+# ::tk::WMTitleHeight
+#
+#	Return window manager height of window title, if known, else 0.
+
+proc ::tk::WMTitleHeight {} {
+    set titleHeight 0
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set titleHeight 20
+    	} elseif {$dpi < 190} {
+	    set titleHeight 30
+    	} elseif {$dpi < 240} {
+	    set titleHeight 38
+    	} elseif {$dpi < 320} {
+	    set titleHeight 46
+    	} elseif {$dpi < 420} {
+	    set titleHeight 60
+    	} else {
+	    set titleHeight 78
+   	}
+    }
+    return $titleHeight
 }
 
 # ::tk::mcmaxamp --
