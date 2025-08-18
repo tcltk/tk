@@ -272,7 +272,10 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 	struct utsname name;
 	char *endptr;
 	if (uname(&name) == 0) {
-	    majorVersion = (int)strtol(name.release, &endptr, 10) - 9;
+	    majorVersion = (int)strtol(name.release, &endptr, 10) + 1;
+	    if (majorVersion < 26) {
+		majorVersion -= 10;
+	    }
 	    minorVersion = 0;
 	}
     }
