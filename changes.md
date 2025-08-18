@@ -17,6 +17,7 @@ necessarily in Tk 8.
  - [Handle negative screen distances](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
  - [Extend Tk_CanvasTextInfo](https://core.tcl-lang.org/tips/doc/trunk/tip/704.md)
  - [Add new states to ttk::treeview and ttk::notebook](https://core.tcl-lang.org/tips/doc/trunk/tip/719.md)
+ - [Limit tk_messageBox to physical screen width](https://core.tcl-lang.org/tk/info/e19f1d891)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
