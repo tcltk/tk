@@ -289,7 +289,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  * the main thread (GLib main context). 
  */
  
-    static gboolean run_main_thread_callback(gpointer data)
+static gboolean run_main_thread_callback(gpointer data)
 {
     TkMainThreadCall *call = (TkMainThreadCall *)data;
 
@@ -356,7 +356,7 @@ static void SetupGlibIntegration(void)
     /* Capture the context the main thread actually uses. */
     glib_context = g_main_context_ref_thread_default();
     /* Start a periodic timer that will iterate GLib without blocking. */
-    Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
+    Tcl_CreateTimerHandler(5, ProcessPendingEvents, NULL);
 }
 
 /* Process GLib and Tcl events periodically on the Tcl/Tk main thread. */
@@ -380,10 +380,13 @@ static void ProcessPendingEvents(ClientData clientData)
         }
     }
 
+    /*Yield to other threads.  */
+    g_thread_yield();
+
     in_process_pending = FALSE;
 
     /* Re-schedule. */
-    Tcl_CreateTimerHandler(10, ProcessPendingEvents, NULL);
+    Tcl_CreateTimerHandler(5, ProcessPendingEvents, NULL);
 }
 
 
@@ -625,34 +628,28 @@ static gpointer emit_children_changed_add(gpointer data)
         return G_SOURCE_REMOVE;
     }
     
-    /* Validate objects before emission. */
-    if (cad->parent && G_IS_OBJECT(cad->parent) && 
-        cad->child && G_IS_OBJECT(cad->child)) {
-        
-        /* Check if objects are still valid (not being destroyed). */
-        if (TK_ATK_IS_ACCESSIBLE(cad->parent)) {
-            TkAtkAccessible *parent_acc = (TkAtkAccessible *)cad->parent;
-            if (!parent_acc->is_being_destroyed) {
-                g_signal_emit_by_name(cad->parent, "children-changed::add", cad->index, cad->child);
-            }
-        }
-    } else {
-        g_warning("emit_children_changed_add: Invalid parent=%p or child=%p object", 
-                  cad->parent, cad->child);
+    if (!cad->parent || !G_IS_OBJECT(cad->parent) || !cad->child || !G_IS_OBJECT(cad->child)) {
+        g_warning("emit_children_changed_add: Invalid parent=%p or child=%p", cad->parent, cad->child);
+        if (cad->parent && G_IS_OBJECT(cad->parent)) g_object_unref(cad->parent);
+        if (cad->child && G_IS_OBJECT(cad->child)) g_object_unref(cad->child);
+        g_free(cad);
+        return G_SOURCE_REMOVE;
     }
     
-    /* Safe cleanup .*/
-    if (cad->parent && G_IS_OBJECT(cad->parent)) {
-        g_object_unref(cad->parent);
+    if (TK_ATK_IS_ACCESSIBLE(cad->parent)) {
+        TkAtkAccessible *parent_acc = (TkAtkAccessible *)cad->parent;
+        if (!parent_acc->is_being_destroyed) {
+            g_debug("Emitting children-changed::add for parent=%s, index=%d", parent_acc->path, cad->index);
+            g_signal_emit_by_name(cad->parent, "children-changed::add", cad->index, cad->child);
+        }
     }
-    if (cad->child && G_IS_OBJECT(cad->child)) {
-        g_object_unref(cad->child);
-    }
+    
+    g_object_unref(cad->parent);
+    g_object_unref(cad->child);
     g_free(cad);
     
     return G_SOURCE_REMOVE;
 }
-
 
 /* Emit children-changed::remove signal. */
 static gpointer emit_children_changed_remove(gpointer data)
@@ -664,28 +661,24 @@ static gpointer emit_children_changed_remove(gpointer data)
         return G_SOURCE_REMOVE;
     }
     
-    /* Validate objects before emission. */
-    if (crd->parent && G_IS_OBJECT(crd->parent) && 
-        crd->child && G_IS_OBJECT(crd->child)) {
-        
-        if (TK_ATK_IS_ACCESSIBLE(crd->parent)) {
-            TkAtkAccessible *parent_acc = (TkAtkAccessible *)crd->parent;
-            if (!parent_acc->is_being_destroyed) {
-                g_signal_emit_by_name(crd->parent, "children-changed::remove", crd->index, crd->child);
-            }
-        }
-    } else {
-        g_warning("emit_children_changed_remove: Invalid parent=%p or child=%p object", 
-                  crd->parent, crd->child);
+    if (!crd->parent || !G_IS_OBJECT(crd->parent) || !crd->child || !G_IS_OBJECT(crd->child)) {
+        g_warning("emit_children_changed_remove: Invalid parent=%p or child=%p", crd->parent, crd->child);
+        if (crd->parent && G_IS_OBJECT(crd->parent)) g_object_unref(crd->parent);
+        if (crd->child && G_IS_OBJECT(crd->child)) g_object_unref(crd->child);
+        g_free(crd);
+        return G_SOURCE_REMOVE;
     }
     
-    /* Safe cleanup */
-    if (crd->parent && G_IS_OBJECT(crd->parent)) {
-        g_object_unref(crd->parent);
+    if (TK_ATK_IS_ACCESSIBLE(crd->parent)) {
+        TkAtkAccessible *parent_acc = (TkAtkAccessible *)crd->parent;
+        if (!parent_acc->is_being_destroyed) {
+            g_debug("Emitting children-changed::remove for parent=%s, index=%d", parent_acc->path, crd->index);
+            g_signal_emit_by_name(crd->parent, "children-changed::remove", crd->index, crd->child);
+        }
     }
-    if (crd->child && G_IS_OBJECT(crd->child)) {
-        g_object_unref(crd->child);
-    }
+    
+    g_object_unref(crd->parent);
+    g_object_unref(crd->child);
     g_free(crd);
     
     return G_SOURCE_REMOVE;
@@ -765,20 +758,16 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)component;
 
-    if (!acc) {
-	*x = *y = *width = *height = 0;
-	return;
+    if (!acc || !acc->tkwin || acc->is_being_destroyed) {
+        *x = *y = *width = *height = 0;
+        return;
     }
 
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL, NULL};
-
-    /* Use correct coordinates based on coord_type.
-     * ATK_XY_WINDOW: Cached relative to toplevel window (sum of Tk_X/Tk_Y).
-     * ATK_XY_SCREEN: Absolute screen via Tk_GetRootCoords (fixes navigation issues).
-     */
     if (coord_type == ATK_XY_SCREEN) {
+	/* ATK_XY_SCREEN: Absolute screen via Tk_GetRootCoords.*/ 
         gint *coords = (gint *)RunOnMainThread(get_root_coords_main, &data);
-        if (coords) {
+        if (coords && (gboolean)(uintptr_t)RunOnMainThread(is_window_mapped_main, &data)) {
             *x = coords[0];
             *y = coords[1];
             *width = coords[2];
@@ -786,13 +775,18 @@ static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *widt
             g_free(coords);
         } else {
             *x = *y = *width = *height = 0;
+            g_free(coords);
         }
     } else {
-        /* ATK_XY_WINDOW: Use cached values (relative to toplevel). */
-        *x = acc->x;
-        *y = acc->y;
-        *width = acc->width;
-        *height = acc->height;
+        if (acc->is_mapped) {
+	    /* ATK_XY_WINDOW: relative to toplevel. */
+            *x = acc->x;
+            *y = acc->y;
+            *width = acc->width;
+            *height = acc->height;
+        } else {
+            *x = *y = *width = *height = 0;
+        }
     }
 }
 
@@ -1283,8 +1277,9 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     if (cad->child) g_object_ref(cad->child);
     g_debug("RegisterToplevelWindow: Emitting children-changed::add for %s, parent=%p, index=%d",
             ((TkAtkAccessible *)accessible)->path, tk_root_accessible, cad->index);
-    RunOnMainThread(emit_children_changed_add, cad);
-    
+    /* Signal on GLib main context (not Tcl thread). */
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_add, cad);
+ 
     /* Add to toplevel_accessible_objects. */
     if (!g_list_find(toplevel_accessible_objects, accessible)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
@@ -1343,7 +1338,9 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
         crd->parent = tk_root_accessible;
         crd->index = index;
         crd->child = accessible;
-        RunOnMainThread(emit_children_changed_remove, crd);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_remove, crd);
+ 
         
         toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, accessible);
     }
@@ -1357,16 +1354,17 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj) 
 {
-    (void) interp;
-    
     if (!tkwin || !parent_obj || !G_IS_OBJECT(parent_obj)) {
-	g_warning("RegisterChildWidgets: Invalid tkwin or parent_obj");
-	return;
+        g_warning("RegisterChildWidgets: Invalid tkwin or parent_obj");
+        return;
     }
 
     TkAtkAccessible *acc = (TkAtkAccessible *)parent_obj;
-    Tcl_DoWhenIdle(UpdateChildrenCache, (ClientData) acc);
+    if (!acc->children_initialized) {
+        Tcl_DoWhenIdle(DeferredChildrenUpdateTcl, acc); /* Defer child updates. */
+    }
 }
+
 
 
 /*
@@ -1456,22 +1454,6 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         role = ATK_ROLE_WINDOW;
     }
     atk_object_set_role(obj, role);
-
-#if 0
-    /* Set ATK name and description. */
-    if (acc->cached_description && *acc->cached_description) {
-        atk_object_set_name(obj, acc->cached_description);
-    } else if (acc->cached_name && *acc->cached_name) {
-        atk_object_set_name(obj, acc->cached_name);
-    } else {
-        atk_object_set_name(obj, path);
-    }
-    if (acc->cached_description && *acc->cached_description) {
-        atk_object_set_description(obj, acc->cached_description);
-    } else {
-        atk_object_set_description(obj, path);
-    }
-    #endif
 
     /* Set initial states. */
     AtkStateSet *state_set = atk_object_ref_state_set(obj);
@@ -1565,7 +1547,8 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
         cad->parent = g_object_ref(parent_obj);
         cad->index = g_list_length(((TkAtkAccessible *)parent_obj)->children) - 1;
         cad->child = g_object_ref(obj);
-        RunOnMainThread(emit_children_changed_add, cad);
+        /* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_add, cad);
     } else {
         g_warning("TkCreateAccessibleAtkObject: Invalid parent for %s", path);
         g_hash_table_remove(creation_in_progress, tkwin);  /* Clean up tracking */
@@ -1585,7 +1568,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     g_hash_table_remove(creation_in_progress, tkwin);
 
     /* Shedule children update for LATER, not now. This breaks the recursion cycle. */
-	Tcl_DoWhenIdle(DeferredChildrenUpdateTcl, acc);
+    Tcl_DoWhenIdle(DeferredChildrenUpdateTcl, acc);
 
     return obj;
 }
@@ -1723,11 +1706,11 @@ static void UpdateStateCache(TkAtkAccessible *acc)
 
 static void UpdateChildrenCache(ClientData object)
 {
-	TkAtkAccessible *acc = (TkAtkAccessible*) object;
-    if (!acc || !acc->tkwin || !acc->interp) return;
-    if (acc->is_being_destroyed || acc->is_being_created) return;
+    TkAtkAccessible *acc = (TkAtkAccessible*) object;
+    if (!acc || !acc->tkwin || !acc->interp || acc->is_being_destroyed || acc->is_being_created) {
+        return;
+    }
 
-    /* Prevent recursive calls. */
     static GHashTable *updating_objects = NULL;
     if (!updating_objects) {
         updating_objects = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -1750,16 +1733,13 @@ static void UpdateChildrenCache(ClientData object)
         return;
     }
 
-    /* Store old children for comparison. */
     GList *old_children = g_list_copy(acc->children);
-    
-    /* Build new children list - but DON'T create objects if they don't exist.*/
     GList *new_children = NULL;
+
+    /* Only add existing ATK objects. */
     for (TkWindow *childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
         Tk_Window child = (Tk_Window)childPtr;
         AtkObject *child_obj = GetAtkObjectForTkWindow(child);
-        
-        /* Only add existing objects - don't create new ones here. */
         if (child_obj && G_IS_OBJECT(child_obj)) {
             g_object_ref(child_obj);
             new_children = g_list_append(new_children, child_obj);
@@ -1767,31 +1747,32 @@ static void UpdateChildrenCache(ClientData object)
         }
     }
 
-    /* Replace children list. */
     acc->children = new_children;
     acc->children_initialized = TRUE;
     
     g_mutex_unlock(&acc->cleanup_mutex);
 
-    /* Clean up old children. */
+    /* Emit signals for removed children. */
     GList *iter = old_children;
     while (iter) {
         AtkObject *old_child = (AtkObject *)iter->data;
+        if (old_child && G_IS_OBJECT(old_child) && !g_list_find(new_children, old_child)) {
+            gint old_index = g_list_index(old_children, old_child);
+            ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+            crd->parent = g_object_ref(ATK_OBJECT(acc));
+            crd->index = old_index;
+            crd->child = g_object_ref(old_child);
+	    /* Always emit from the GLib main context. */
+	    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_remove, crd);
+        }
         if (old_child && G_IS_OBJECT(old_child)) {
-            if (!g_list_find(new_children, old_child)) {
-                gint old_index = g_list_index(old_children, old_child);
-                ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
-                crd->parent = g_object_ref(ATK_OBJECT(acc));
-                crd->index = old_index;
-                crd->child = g_object_ref(old_child);
-                RunOnMainThread(emit_children_changed_remove, crd);
-            }
             g_object_unref(old_child);
         }
         iter = g_list_next(iter);
     }
- 
-    /* Emit addition signals for genuinely new children. */
+    g_list_free(old_children);
+
+    /* Emit signals for added children. */
     iter = new_children;
     gint index = 0;
     while (iter) {
@@ -1801,14 +1782,19 @@ static void UpdateChildrenCache(ClientData object)
             cad->parent = g_object_ref(ATK_OBJECT(acc));
             cad->index = index;
             cad->child = g_object_ref(new_child);
-            RunOnMainThread(emit_children_changed_add, cad);
+	    /* Always emit from the GLib main context. */
+	    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_add, cad);
         }
         iter = g_list_next(iter);
         index++;
     }
-       
-    g_list_free(old_children);
+
     g_hash_table_remove(updating_objects, acc);
+
+    /* Schedule creation of missing child objects. */
+    if (!acc->is_being_destroyed) {
+        Tcl_DoWhenIdle(DeferredChildrenUpdateTcl, acc);
+    }
 }
 
 
@@ -1892,40 +1878,64 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
         return;
     }
 
-    /* Thread-safe cleanup check. */
     g_mutex_lock(&tkAccessible->cleanup_mutex);
     if (tkAccessible->is_being_destroyed) {
         g_mutex_unlock(&tkAccessible->cleanup_mutex);
-        return; /* Already being cleaned up. */
+        return;
     }
     tkAccessible->is_being_destroyed = TRUE;
     g_mutex_unlock(&tkAccessible->cleanup_mutex);
 
-    /* Remove from parent's children list safely. */
+    /* Unregister all children. */
+    GList *children = g_list_copy(tkAccessible->children);
+    GList *iter = children;
+    while (iter) {
+        AtkObject *child = (AtkObject *)iter->data;
+        if (child && G_IS_OBJECT(child) && TK_ATK_IS_ACCESSIBLE(child)) {
+            TkAtkAccessible *child_acc = (TkAtkAccessible *)child;
+            if (child_acc->tkwin) {
+                UnregisterAtkObjectForTkWindow(child_acc->tkwin);
+            }
+            gint index = g_list_index(tkAccessible->children, child);
+            ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
+            crd->parent = g_object_ref(ATK_OBJECT(tkAccessible));
+            crd->index = index;
+            crd->child = g_object_ref(child);
+            /* Always emit from the GLib main context. */
+	    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_remove, crd);
+ 
+        }
+        iter = g_list_next(iter);
+    }
+    g_list_free(children);
+
+    /* Remove from parent's children list. */
     AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
     if (parent && G_IS_OBJECT(parent) && TK_ATK_IS_ACCESSIBLE(parent)) {
         TkAtkAccessible *parent_acc = (TkAtkAccessible *)parent;
         g_mutex_lock(&parent_acc->cleanup_mutex);
-        
         gint index = g_list_index(parent_acc->children, tkAccessible);
         if (index >= 0) {
             RemoveChildFromParent(parent_acc, ATK_OBJECT(tkAccessible));
-            
-            /* Emit signal safely. */
             ChildrenChangedRemoveData *crd = g_new0(ChildrenChangedRemoveData, 1);
-            crd->parent = g_object_ref(parent);  /* Take explicit ref */
+            crd->parent = g_object_ref(parent);
             crd->index = index;
-            crd->child = g_object_ref(ATK_OBJECT(tkAccessible));  /* Take explicit ref. */
-            RunOnMainThread(emit_children_changed_remove, crd);
+            crd->child = g_object_ref(ATK_OBJECT(tkAccessible));
+	    /* Always emit from the GLib main context. */
+	    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_remove, crd);
+ 
+	    
         }
         g_mutex_unlock(&parent_acc->cleanup_mutex);
     }
 
-    /* Unregister from mapping - this is safe.*/
+    /* Unregister from mapping. */
     if (tkAccessible->tkwin) {
         UnregisterAtkObjectForTkWindow(tkAccessible->tkwin);
-        tkAccessible->tkwin = NULL; /* Prevent reuse */
+        tkAccessible->tkwin = NULL;
     }
+
+    g_object_unref(tkAccessible); /* Ensure final unref. */
 }
 
 
@@ -1967,7 +1977,9 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
         bcd->rect.y = acc->y;
         bcd->rect.width = acc->width;
         bcd->rect.height = acc->height;
-        RunOnMainThread(emit_bounds_changed, bcd);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_boundsn_changed_remove, bcd);
+ 
     }
 }
 
@@ -2069,23 +2081,36 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         fed->obj = atk_obj;
         fed->state = TRUE;
         RunOnMainThread(emit_focus_event, fed);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
+ 
 
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
         scd->state = TRUE;
         RunOnMainThread(emit_state_change, scd);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_changed_remove, scd);
+ 
     } else if (eventPtr->type == FocusOut) {
         FocusEventData *fed = g_new0(FocusEventData, 1);
         fed->obj = atk_obj;
         fed->state = FALSE;
         RunOnMainThread(emit_focus_event, fed);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_changed, fed);
+ 
 
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
         scd->state = FALSE;
         RunOnMainThread(emit_state_change, scd);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
+ 
+	
     }
 
     g_object_unref(state_set);
@@ -2174,9 +2199,15 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     g_value_unset(&gval);
     
     RunOnMainThread(emit_value_changed, vcd);
+    /* Always emit from the GLib main context. */
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_change, scd);
+ 
 
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
         RunOnMainThread(emit_text_selection_changed, acc);
+	/* Always emit from the GLib main context. */
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_text_selection_changed, acc);
+ 
     }
    
     return TCL_OK;
@@ -2445,8 +2476,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     if (cad->child) g_object_ref(cad->child);
     g_debug("TkAtkAccessibility_Init: Emitting children-changed::add for main window, parent=%p, index=%d",
             tk_root_accessible, cad->index);
-    RunOnMainThread(emit_children_changed_add, cad);
-    
+    /* Signal on GLib main context (not Tcl thread). */
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_add, cad);
     if (!g_list_find(toplevel_accessible_objects, main_acc)) {
         toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, main_acc);
     }
