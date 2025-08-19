@@ -13,7 +13,7 @@
 #
 # Under macOS/aqua, the send command works only with interpreters that exist in
 # the same process. Tests in this test file that target an interpreter in another
-# process carry a constraint "notAqua" so that are skipped under macos/aqua.
+# process carry a constraint "notAqua" so that they are skipped under macos/aqua.
 #
 
 #
