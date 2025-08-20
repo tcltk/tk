@@ -2083,35 +2083,38 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
             Tk_PathName(acc->tkwin), eventPtr->type == FocusIn ? "FocusIn" : "FocusOut");
 
     if (eventPtr->type == FocusIn) {
-        FocusEventData *fed = g_new0(FocusEventData, 1);
-        fed->obj = atk_obj;
-        fed->state = TRUE;
-	/* Always emit from the GLib main context. */
+	FocusEventData *fed = g_new0(FocusEventData, 1);
+	fed->obj = atk_obj;
+	fed->state = TRUE;
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
-	//TkAtkHighlightBorder(acc->tkwin, 1);
-	
-        StateChangeData *scd = g_new0(StateChangeData, 1);
-        scd->obj = atk_obj;
-        scd->name = g_strdup("focused");
-        scd->state = TRUE;
-	/* Always emit from the GLib main context. */
+
+	StateChangeData *scd = g_new0(StateChangeData, 1);
+	scd->obj = atk_obj;
+	scd->name = g_strdup("focused");
+	scd->state = TRUE;
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
- 
+
+	/* Draw highlight border if a11y is enabled */
+	if (atk_get_default_registry())
+	    TkAtkHighlightBorder(acc->tkwin, 1);
+
     } else if (eventPtr->type == FocusOut) {
-        FocusEventData *fed = g_new0(FocusEventData, 1);
-        fed->obj = atk_obj;
-        fed->state = FALSE;
-	/* Always emit from the GLib main context. */
+	FocusEventData *fed = g_new0(FocusEventData, 1);
+	fed->obj = atk_obj;
+	fed->state = FALSE;
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
-	//TkAtkHighlightBorder(acc->tkwin, 0);
- 
-        StateChangeData *scd = g_new0(StateChangeData, 1);
-        scd->obj = atk_obj;
-        scd->name = g_strdup("focused");
-        scd->state = FALSE;
-	/* Always emit from the GLib main context. */
+
+	StateChangeData *scd = g_new0(StateChangeData, 1);
+	scd->obj = atk_obj;
+	scd->name = g_strdup("focused");
+	scd->state = FALSE;
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
+
+	/* Clear highlight border if a11y is enabled */
+	if (atk_get_default_registry())
+	    TkAtkHighlightBorder(acc->tkwin, 0);
     }
+
     g_object_unref(state_set);
 }
 
