@@ -2132,31 +2132,44 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
 }
 
 /* Draw or clear a 3-pixel blue highlight border when widget has ATK focus. */
+/* Draw or clear a 3-pixel blue highlight border when widget has ATK focus. */
 static void TkAtkHighlightBorder(Tk_Window tkwin, int hasFocus)
 {
     if (!tkwin) return;
 
     Drawable d = Tk_WindowId(tkwin);
-    XColor *color = Tk_GetColor(NULL, tkwin, "blue");
-    GC gc = None;
+    if (d == None) return; /* window not realized yet */
 
-    if (color) {
-        XGCValues gcValues;
-        gcValues.foreground = color->pixel;
-        gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    Display *disp = Tk_Display(tkwin);
+
+    /* Helper: always return a valid GC (fallback to black). */
+    GC make_gc_for_color(const char *name) {
+        XColor *col = Tk_GetColor(disp, tkwin, (char *)name);
+        if (!col) {
+            col = Tk_GetColor(disp, tkwin, "black");
+            if (!col) {
+                /* Absolute last-ditch: create a 1-pixel GC with foreground 0 */
+                XGCValues v; v.foreground = BlackPixelOfScreen(Tk_Screen(tkwin));
+                return Tk_GetGC(tkwin, GCForeground, &v);
+            }
+        }
+        XGCValues v; v.foreground = col->pixel;
+        return Tk_GetGC(tkwin, GCForeground, &v);
     }
 
     if (hasFocus) {
-        Tk_DrawHighlightBorder(tkwin, gc, None, 3, d);
+        GC fg = make_gc_for_color("blue");
+        Tk_DrawHighlightBorder(tkwin, fg, None, 3, d);
+        Tk_FreeGC(disp, fg);
     } else {
-        /* Clear highlight by redrawing with width 0 */
-        Tk_DrawHighlightBorder(tkwin, None, None, 0, d);
-    }
-
-    if (gc != None) {
-        Tk_FreeGC(Tk_Display(tkwin), gc);
+        /* Some Tk versions still touch fgGC when width==0 → pass a real GC. */
+        GC safe = make_gc_for_color("black");
+        Tk_DrawHighlightBorder(tkwin, safe, None, 0, d);
+        Tk_FreeGC(disp, safe);
     }
 }
+
+
 
 
 
