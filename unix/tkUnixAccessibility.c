@@ -179,13 +179,13 @@ static gpointer get_window_handle_main(gpointer data);
 static gpointer get_root_coords_main(gpointer data);
 
 /* Signal emission helpers. */
-static gpointer emit_children_changed_add(gpointer data);
-static gpointer emit_children_changed_remove(gpointer data);
-static gpointer emit_value_changed(gpointer data);
-static gpointer emit_text_selection_changed(gpointer data);
-static gpointer emit_focus_event(gpointer data);
-static gpointer emit_state_change(gpointer data);
-static gpointer emit_bounds_changed(gpointer data);
+static gboolean emit_children_changed_add(gpointer data);
+static gboolean emit_children_changed_remove(gpointer data);
+static gboolean emit_value_changed(gpointer data);
+static gboolean emit_text_selection_changed(gpointer data);
+static gboolean emit_focus_event(gpointer data);
+static gboolean emit_state_change(gpointer data);
+static gboolean emit_bounds_changed(gpointer data);
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -623,7 +623,7 @@ static gpointer get_root_coords_main(gpointer data)
  */
 
 /* Emit children-changed::add signal. */
-static gpointer emit_children_changed_add(gpointer data)
+static gboolean emit_children_changed_add(gpointer data)
 {
     ChildrenChangedAddData *cad = (ChildrenChangedAddData *)data;
     
@@ -656,7 +656,7 @@ static gpointer emit_children_changed_add(gpointer data)
 }
 
 /* Emit children-changed::remove signal. */
-static gpointer emit_children_changed_remove(gpointer data)
+static gboolean emit_children_changed_remove(gpointer data)
 {
     ChildrenChangedRemoveData *crd = (ChildrenChangedRemoveData *)data;
     
@@ -690,7 +690,7 @@ static gpointer emit_children_changed_remove(gpointer data)
 
 
 /* Emit value-changed signal. */
-static gpointer emit_value_changed(gpointer data)
+static gboolean emit_value_changed(gpointer data)
 {
     if (data) {
         ValueChangedData *vcd = (ValueChangedData *)data;
@@ -702,7 +702,7 @@ static gpointer emit_value_changed(gpointer data)
 }
 
 /* Emit text-selection-changed signal. */
-static gpointer emit_text_selection_changed(gpointer data)
+static gboolean emit_text_selection_changed(gpointer data)
 {
     if (data) {
         g_signal_emit_by_name(data, "text-selection-changed");
@@ -711,7 +711,7 @@ static gpointer emit_text_selection_changed(gpointer data)
 }
 
 /* Emit focus-event signal. */
-static gpointer emit_focus_event(gpointer data)
+static gboolean emit_focus_event(gpointer data)
 {
     if (data) {
         FocusEventData *fed = (FocusEventData *)data;
@@ -722,7 +722,7 @@ static gpointer emit_focus_event(gpointer data)
 }
 
 /* Emit state-change signal. */
-static gpointer emit_state_change(gpointer data)
+static gboolean emit_state_change(gpointer data)
 {
     if (data) {
         StateChangeData *scd = (StateChangeData *)data;
@@ -734,7 +734,7 @@ static gpointer emit_state_change(gpointer data)
 }
 
 /* Emit bounds-changed signal. */
-static gpointer emit_bounds_changed(gpointer data)
+static gboolean emit_bounds_changed(gpointer data)
 {
     if (data) {
         BoundsChangedData *bcd = (BoundsChangedData *)data;
@@ -1358,6 +1358,8 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 
 static void RegisterChildWidgets(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *parent_obj) 
 {
+	(void) interp;
+	
     if (!tkwin || !parent_obj || !G_IS_OBJECT(parent_obj)) {
         g_warning("RegisterChildWidgets: Invalid tkwin or parent_obj");
         return;
@@ -2086,7 +2088,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         fed->state = TRUE;
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
-	TkAtkHighlightBorder(acc->tkwin, 1);
+	//TkAtkHighlightBorder(acc->tkwin, 1);
 	
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
@@ -2101,7 +2103,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         fed->state = FALSE;
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
-	TkAtkHighlightBorder(acc->tkwin, 0);
+	//TkAtkHighlightBorder(acc->tkwin, 0);
  
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
