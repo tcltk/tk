@@ -329,11 +329,11 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
 
     g_main_context_invoke(glib_context, run_main_thread_callback, &call);
 
-    TK_MAINTHREAD_LOCK(call);
+  g_mutex_lock(&call.mutex);
     while (!call.done) {
         g_cond_wait(&call.cond, &call.mutex);
     }
-    TK_MAINTHREAD_UNLOCK(call);
+    g_mutex_unlock(&call.mutex);
 	
     g_mutex_clear(&call.mutex);
     g_cond_clear(&call.cond);
@@ -1982,7 +1982,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
         bcd->rect.width = acc->width;
         bcd->rect.height = acc->height;
 	/* Always emit from the GLib main context. */
-	g_main_context_invoke(glib_context, (GSourceFunc)emit_boundsn_changed_remove, bcd);
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_bounds_changed, bcd);
  
     }
 }
@@ -2093,14 +2093,14 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         scd->name = g_strdup("focused");
         scd->state = TRUE;
 	/* Always emit from the GLib main context. */
-	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_changed_remove, scd);
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
  
     } else if (eventPtr->type == FocusOut) {
         FocusEventData *fed = g_new0(FocusEventData, 1);
         fed->obj = atk_obj;
         fed->state = FALSE;
 	/* Always emit from the GLib main context. */
-	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_changed, fed);
+	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
 	TkAtkHighlightBorder(acc->tkwin, 0);
  
         StateChangeData *scd = g_new0(StateChangeData, 1);
@@ -2133,19 +2133,29 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
 static void TkAtkHighlightBorder(Tk_Window tkwin, int hasFocus)
 {
     if (!tkwin) return;
-    Display *dpy = Tk_Display(tkwin);
+
     Drawable d = Tk_WindowId(tkwin);
-    GC gc = Tk_GCForColor(Tk_GetColor(NULL, tkwin, "blue"), d);
+    XColor *color = Tk_GetColor(NULL, tkwin, "blue");
+    GC gc = None;
+
+    if (color) {
+        XGCValues gcValues;
+        gcValues.foreground = color->pixel;
+        gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    }
 
     if (hasFocus) {
-        Tk_DrawHighlightBorder(dpy, d, gc, None,
-			       Tk_Width(tkwin), Tk_Height(tkwin), 3, Tk_WindowId(tkwin));
+        Tk_DrawHighlightBorder(tkwin, gc, None, 3, d);
     } else {
-        /* Clear highlight by redrawing without GC. */
-        Tk_DrawHighlightBorder(dpy, d, None, None,
-			       Tk_Width(tkwin), Tk_Height(tkwin), 0, Tk_WindowId(tkwin));
+        /* Clear highlight by redrawing with width 0 */
+        Tk_DrawHighlightBorder(tkwin, None, None, 0, d);
+    }
+
+    if (gc != None) {
+        Tk_FreeGC(Tk_Display(tkwin), gc);
     }
 }
+
 
 
 
@@ -2212,14 +2222,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     g_value_init(&vcd->value, G_TYPE_STRING);
     g_value_set_string(&vcd->value, g_value_get_string(&gval));
     g_value_unset(&gval);
-    
-    RunOnMainThread(emit_value_changed, vcd);
     /* Always emit from the GLib main context. */
-    g_main_context_invoke(glib_context, (GSourceFunc)emit_children_change, scd);
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_value_changed, vcd);
  
-
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-        RunOnMainThread(emit_text_selection_changed, acc);
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_text_selection_changed, acc);
  
@@ -2277,7 +2283,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
             AtkObject *parent_obj = parent_tkwin ? GetAtkObjectForTkWindow(parent_tkwin) : tk_root_accessible;
             if (parent_obj) {
                 atk_object_set_parent(acc, parent_obj);
-                RunOnMainThread(emit_children_changed_add, acc);
+                g_main_context_invoke(glib_context, (GSourceFunc)emit_children_changed_add, acc);
             }
         }
     }
