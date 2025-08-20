@@ -73,8 +73,6 @@ typedef struct {
     const char *key;
 } MainThreadData;
 
-
-
 /* Structs to map Tk roles into Atk roles. */
 
 typedef struct AtkRoleMap {
@@ -249,6 +247,7 @@ static void TkAtkAccessible_MapHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkHighlightBorder(Tk_Window tkwin, int hasFocus);
 
 /* Tcl command implementations. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -274,7 +273,12 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
 			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
 			)
-			
+
+/* Global macro definitions for mutex operations. */
+#define TK_ATK_LOCK_MUTEX(acc) g_mutex_lock(&(acc)->cleanup_mutex)
+#define TK_ATK_UNLOCK_MUTEX(acc) g_mutex_unlock(&(acc)->cleanup_mutex)
+#define TK_MAINTHREAD_LOCK(c) g_mutex_lock(&(c)->mutex)
+#define TK_MAINTHREAD_UNLOCK(c)	g_mutex_unlock(&(c)->mutex)		
 /*
  *----------------------------------------------------------------------
  *
@@ -295,10 +299,10 @@ static gboolean run_main_thread_callback(gpointer data)
 
     call->result = call->func(call->user_data);
 
-    g_mutex_lock(&call->mutex);
+    TK_MAINTHREAD_LOCK(call);
     call->done = TRUE;
     g_cond_signal(&call->cond);
-    g_mutex_unlock(&call->mutex);
+    TK_MAINTHREAD_UNLOCK(call);
 
     return G_SOURCE_REMOVE;
 }
@@ -325,12 +329,12 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
 
     g_main_context_invoke(glib_context, run_main_thread_callback, &call);
 
-    g_mutex_lock(&call.mutex);
+    TK_MAINTHREAD_LOCK(call);
     while (!call.done) {
         g_cond_wait(&call.cond, &call.mutex);
     }
-    g_mutex_unlock(&call.mutex);
-
+    TK_MAINTHREAD_UNLOCK(call);
+	
     g_mutex_clear(&call.mutex);
     g_cond_clear(&call.cond);
 
@@ -340,7 +344,7 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
 /*
  *----------------------------------------------------------------------
  *
- * GLib-Tcl event loop integration
+ * GLib-Tcl event loop integration.
  *
  *----------------------------------------------------------------------
  */
@@ -402,11 +406,11 @@ static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child)
 {
     if (!parent || !child || !G_IS_OBJECT(child)) return;
     
-    g_mutex_lock(&parent->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(parent);
     
     /* Prevent duplicates. */
     if (g_list_find(parent->children, child)) {
-        g_mutex_unlock(&parent->cleanup_mutex);
+        TK_ATK_UNLOCK_MUTEX(parent);
         return;
     }
     
@@ -415,14 +419,14 @@ static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child)
     parent->children = g_list_append(parent->children, child);
     atk_object_set_parent(child, ATK_OBJECT(parent));
     
-    g_mutex_unlock(&parent->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(parent);
 }
 
 static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child) 
 {
     if (!parent || !child) return;
     
-    g_mutex_lock(&parent->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(parent);
     
     GList *found = g_list_find(parent->children, child);
     if (found) {
@@ -431,7 +435,7 @@ static void RemoveChildFromParent(TkAtkAccessible *parent, AtkObject *child)
         g_object_unref(child);
     }
     
-    g_mutex_unlock(&parent->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(parent);
 }
 
 /*
@@ -1152,9 +1156,9 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     if (!self) return;
 
     /* Mark as being destroyed. */
-    g_mutex_lock(&self->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(self);
     self->is_being_destroyed = TRUE;
-    g_mutex_unlock(&self->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(self);
 
     /* Clean up Tk window association. */
     if (self->tkwin) {
@@ -1168,12 +1172,12 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     }
 
     /* Clean up children safely. */
-    g_mutex_lock(&self->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(self);
     GList *children_copy = g_list_copy(self->children);
     /* Clear the list but don't free yet. */
     g_list_free(self->children);
     self->children = NULL;
-    g_mutex_unlock(&self->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(self);
 
     /* Release children references outside mutex.*/
     GList *iter = children_copy;
@@ -1723,12 +1727,12 @@ static void UpdateChildrenCache(ClientData object)
     
     g_hash_table_add(updating_objects, acc);
 
-    g_mutex_lock(&acc->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(acc);
 
     MainThreadData data = {acc->tkwin, acc->interp, NULL, NULL, NULL};
     TkWindow *winPtr = (TkWindow *)RunOnMainThread(get_window_handle_main, &data);
     if (!winPtr) {
-        g_mutex_unlock(&acc->cleanup_mutex);
+        TK_ATK_UNLOCK_MUTEX(acc);
         g_hash_table_remove(updating_objects, acc);
         return;
     }
@@ -1750,7 +1754,7 @@ static void UpdateChildrenCache(ClientData object)
     acc->children = new_children;
     acc->children_initialized = TRUE;
     
-    g_mutex_unlock(&acc->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(acc);
 
     /* Emit signals for removed children. */
     GList *iter = old_children;
@@ -1864,7 +1868,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible) 
     Tk_CreateEventHandler(tkwin, FocusChangeMask,
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, CreateNotify,
-			  TkAtkAccessible_CreateHandler, tkAccessible);
+			  TkAtkAccessible_CreateHandler, tkAccessible);  
 }
 
 /* Respond to <Destroy> events. */
@@ -1878,13 +1882,13 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
         return;
     }
 
-    g_mutex_lock(&tkAccessible->cleanup_mutex);
+    TK_ATK_LOCK_MUTEX(tkAccessible);
     if (tkAccessible->is_being_destroyed) {
-        g_mutex_unlock(&tkAccessible->cleanup_mutex);
+        TK_ATK_UNLOCK_MUTEX(tkAccessible);
         return;
     }
     tkAccessible->is_being_destroyed = TRUE;
-    g_mutex_unlock(&tkAccessible->cleanup_mutex);
+    TK_ATK_UNLOCK_MUTEX(tkAccessible);
 
     /* Unregister all children. */
     GList *children = g_list_copy(tkAccessible->children);
@@ -1913,7 +1917,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
     AtkObject *parent = atk_object_get_parent(ATK_OBJECT(tkAccessible));
     if (parent && G_IS_OBJECT(parent) && TK_ATK_IS_ACCESSIBLE(parent)) {
         TkAtkAccessible *parent_acc = (TkAtkAccessible *)parent;
-        g_mutex_lock(&parent_acc->cleanup_mutex);
+        TK_ATK_LOCK_MUTEX(parent_acc);
         gint index = g_list_index(parent_acc->children, tkAccessible);
         if (index >= 0) {
             RemoveChildFromParent(parent_acc, ATK_OBJECT(tkAccessible));
@@ -1926,7 +1930,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
  
 	    
         }
-        g_mutex_unlock(&parent_acc->cleanup_mutex);
+        TK_ATK_UNLOCK_MUTEX(parent_acc);
     }
 
     /* Unregister from mapping. */
@@ -2080,16 +2084,14 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         FocusEventData *fed = g_new0(FocusEventData, 1);
         fed->obj = atk_obj;
         fed->state = TRUE;
-        RunOnMainThread(emit_focus_event, fed);
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
- 
-
+	TkAtkHighlightBorder(acc->tkwin, 1);
+	
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
         scd->state = TRUE;
-        RunOnMainThread(emit_state_change, scd);
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_changed_remove, scd);
  
@@ -2097,22 +2099,17 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
         FocusEventData *fed = g_new0(FocusEventData, 1);
         fed->obj = atk_obj;
         fed->state = FALSE;
-        RunOnMainThread(emit_focus_event, fed);
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_changed, fed);
+	TkAtkHighlightBorder(acc->tkwin, 0);
  
-
         StateChangeData *scd = g_new0(StateChangeData, 1);
         scd->obj = atk_obj;
         scd->name = g_strdup("focused");
         scd->state = FALSE;
-        RunOnMainThread(emit_state_change, scd);
 	/* Always emit from the GLib main context. */
 	g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
- 
-	
     }
-
     g_object_unref(state_set);
 }
 
@@ -2130,6 +2127,24 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
 
     /* Update children cache asynchronously. */
     Tcl_DoWhenIdle(UpdateChildrenCache, (ClientData) acc);
+}
+
+/* Draw or clear a 3-pixel blue highlight border when widget has ATK focus. */
+static void TkAtkHighlightBorder(Tk_Window tkwin, int hasFocus)
+{
+    if (!tkwin) return;
+    Display *dpy = Tk_Display(tkwin);
+    Drawable d = Tk_WindowId(tkwin);
+    GC gc = Tk_GCForColor(Tk_GetColor(NULL, tkwin, "blue"), d);
+
+    if (hasFocus) {
+        Tk_DrawHighlightBorder(dpy, d, gc, None,
+			       Tk_Width(tkwin), Tk_Height(tkwin), 3, Tk_WindowId(tkwin));
+    } else {
+        /* Clear highlight by redrawing without GC. */
+        Tk_DrawHighlightBorder(dpy, d, None, None,
+			       Tk_Width(tkwin), Tk_Height(tkwin), 0, Tk_WindowId(tkwin));
+    }
 }
 
 
@@ -2273,13 +2288,15 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
     FocusEventData *fed = g_new0(FocusEventData, 1);
     fed->obj = acc;
     fed->state = TRUE;
-    RunOnMainThread(emit_focus_event, fed);
+    /* Always emit from the GLib main context. */
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_focus_event, fed);
 
     StateChangeData *scd = g_new0(StateChangeData, 1);
     scd->obj = acc;
     scd->name = g_strdup("focused");
     scd->state = TRUE;
-    RunOnMainThread(emit_state_change, scd);
+    /* Always emit from the GLib main context. */
+    g_main_context_invoke(glib_context, (GSourceFunc)emit_state_change, scd);
 
     return TCL_OK;
 }
@@ -2516,4 +2533,3 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * fill-column: 78
  * End:
  */
-
