@@ -150,11 +150,15 @@ static Tcl_TimerToken pending_timer = NULL;
 static gboolean integration_active = FALSE;
 static GHashTable *creation_in_progress = NULL;  /* Track windows being created. */
 static Tcl_TimerToken configure_debounce_timer = NULL;
+static Tcl_ThreadId tcl_main_thread = NULL;
+
+
 
 /* Thread management functions. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer user_data), gpointer user_data);
 void EmitBoundsChanged(AtkObject *obj, gint x, gint y, gint width, gint height);
 static gboolean run_main_thread_callback(gpointer data);
+static inline gboolean on_tcl_main_thread(void);
 
 /* Helper functions for main thread operations. */
 static gpointer get_atk_role_for_widget_main(gpointer data);
@@ -316,7 +320,13 @@ static gboolean run_main_thread_callback(gpointer data)
 /* Synchronous run-on-main-thread.  Calls function and waits for result. */
 gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
 {
-    if (!glib_context) {
+
+    /* If we don't have a GLib context yet, or we are on 
+     * the Tcl main thread, just call directly 
+     * to avoid deadlocks. 
+     */
+     
+    if (!glib_context || on_tcl_main_thread()) {
         return func(user_data);
     }
     
@@ -352,6 +362,13 @@ gpointer RunOnMainThread(gpointer (*func)(gpointer), gpointer user_data)
     
     return call.result;
 }
+
+/* Check to see if we are running on Tcl main thread. */
+static inline gboolean on_tcl_main_thread(void) 
+{
+    return tcl_main_thread && Tcl_GetCurrentThread() == tcl_main_thread;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -371,6 +388,8 @@ static void SetupGlibIntegration(void)
     if (integration_active) {
 	return; /* Already initialized. */
     }
+    /* Record Tcl main thread. */
+    tcl_main_thread = Tcl_GetCurrentThread();
   
     /* Use the default main context instead of thread-default. */
     glib_context = g_main_context_default();
@@ -397,34 +416,29 @@ static void ProcessPendingEvents(ClientData clientData)
     }
     
     in_process_pending = TRUE;
-    
-    int tcl_iterations = 0;
-    const int MAX_TCL_ITERATIONS = 3; /* Reduced to prevent overload. */
-    
-    while (tcl_iterations < MAX_TCL_ITERATIONS &&
-           Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)) {
-        tcl_iterations++;
-    }
-    
+   
     if (glib_context) {
         glib_iterations = 0;
-        const int MAX_GLIB_ITERATIONS = 2; /* Reduced to prevent blocking. */
+        const int MAX_GLIB_ITERATIONS = 50;  /* High enough to drain during bursts, but prevents runaway loops. */
         
         if (g_main_context_acquire(glib_context)) {
-            /* Check if events are pending to avoid unnecessary iterations. */
-            while (glib_iterations < MAX_GLIB_ITERATIONS &&
-                   g_main_context_pending(glib_context) &&
-                   g_main_context_iteration(glib_context, FALSE)) {
+            while (g_main_context_pending(glib_context) && glib_iterations < MAX_GLIB_ITERATIONS) {
+                g_main_context_iteration(glib_context, FALSE);
                 glib_iterations++;
             }
             g_main_context_release(glib_context);
+        }
+        
+        if (glib_iterations >= MAX_GLIB_ITERATIONS) {
+            g_warning("ProcessPendingEvents: Reached max GLib iterations (%d) - possible event storm", MAX_GLIB_ITERATIONS);
         }
     }
     
     g_thread_yield();
     in_process_pending = FALSE;
     
-    int next_delay = (tcl_iterations > 0 || glib_iterations > 0) ? 5 : 15;
+    /* Tighten delay when busy to process backlogs faster (min Tcl timer resolution is ~1ms). */
+    int next_delay = (glib_iterations > 0) ? 1 : 20;
     if (integration_active) {
         pending_timer = Tcl_CreateTimerHandler(next_delay, ProcessPendingEvents, NULL);
     }
@@ -852,7 +866,7 @@ static gboolean emit_value_changed_safe(gpointer data)
         }
     }
     
-cleanup:
+ cleanup:
     if (vcd) {
         g_value_unset(&vcd->value);
         g_free(vcd);
@@ -940,7 +954,7 @@ static gboolean emit_state_change_safe(gpointer data)
         }
     }
     
-cleanup:
+ cleanup:
     if (scd) {
         g_free(scd->name);
         if (scd->obj && G_IS_OBJECT(scd->obj)) g_object_unref(scd->obj);
@@ -991,7 +1005,7 @@ static gboolean emit_bounds_changed_safe(gpointer data)
         }
     }
     
-cleanup:
+ cleanup:
     if (bcd) {
         if (bcd->obj && G_IS_OBJECT(bcd->obj)) g_object_unref(bcd->obj);
         g_free(bcd);
@@ -1524,9 +1538,9 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 		atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
 		atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
 		
-		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_VISIBLE, TRUE);
-		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_SHOWING, TRUE);
-		atk_object_notify_state_change(tk_root_accessible, ATK_STATE_ENABLED, TRUE);
+		EmitStateChangeSafe(tk_root_accessible, "visible", TRUE);
+		EmitStateChangeSafe(tk_root_accessible, "showing", TRUE);
+		EmitStateChangeSafe(tk_root_accessible, "enabled", TRUE);
 		g_object_unref(state_set);
 	    }
         }
@@ -2336,10 +2350,10 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     if (eventPtr->type == FocusIn) {
         EmitFocusEventSafe(atk_obj, TRUE);
         EmitStateChangeSafe(atk_obj, "focused", TRUE);
-        } else if (eventPtr->type == FocusOut) {
+    } else if (eventPtr->type == FocusOut) {
         EmitFocusEventSafe(atk_obj, FALSE);
         EmitStateChangeSafe(atk_obj, "focused", FALSE);
-        }
+    }
 
     g_object_unref(state_set);
 }
@@ -2625,7 +2639,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Set up main window properly. */
     atk_object_set_role(main_acc, ATK_ROLE_WINDOW);
     RegisterAtkObjectForTkWindow(mainWin, main_acc);
-	RegisterToplevelWindow(interp, mainWin, main_acc);
+    RegisterToplevelWindow(interp, mainWin, main_acc);
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
   
     /* Add to root with safe emission. */
