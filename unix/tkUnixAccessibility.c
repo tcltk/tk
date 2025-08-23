@@ -138,6 +138,17 @@ typedef struct {
     AtkObject *child;
 } ChildrenChangedAddData;
 
+/* Struct for event loop managment. */
+typedef struct {
+    GMainContext *context;
+    gint max_priority;
+    gint timeout_ms; /* Next timeout in ms, -1 if none */
+    GPollFD *fds;
+    guint n_fds;
+    GPollFD *prev_fds;
+    guint prev_n_fds;
+} GLibTclState;
+
 
 /* Variables for managing Atk objects. */
 static AtkObject *tk_root_accessible = NULL;
@@ -145,13 +156,11 @@ static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
 static GMainContext *glib_context = NULL;
-static gboolean in_process_pending = FALSE;
-static Tcl_TimerToken pending_timer = NULL;
 static gboolean integration_active = FALSE;
 static GHashTable *creation_in_progress = NULL;  /* Track windows being created. */
 static Tcl_TimerToken configure_debounce_timer = NULL;
 static Tcl_ThreadId tcl_main_thread = NULL;
-
+static GLibTclState glib_state = {NULL, 0, -1, NULL, 0, NULL, 0};
 
 
 /* Thread management functions. */
@@ -228,6 +237,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 static void UnregisterToplevelWindow(AtkObject *accessible);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 void InitAtkTkMapping(void);
+static void InitAtkBridge(ClientData clientData);
 static void InitRecursionTracking(void);
 void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
@@ -235,7 +245,6 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 AtkObject *atk_get_root(void);
 static int IsScreenReaderActive(void);
-
 
 /* Cache update functions. */
 static void UpdateGeometryCache(TkAtkAccessible *acc);
@@ -258,7 +267,6 @@ static void TkAtkAccessible_UnmapHandler(ClientData clientData, XEvent *eventPtr
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr);
 
-
 /* Tcl command implementations. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -267,8 +275,16 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /* GLib-Tcl event loop integration. */
+static void GLibAddFileHandler(gint fd, gint events);
+static void GLibRemoveFileHandler(gint fd);
+static void GLibFileProc(ClientData clientData, int mask);
+static void GLibTimerProc(ClientData data);
+static void GLibSetupProc(ClientData clientData, int flags);
+static void GLibCheckProc(ClientData clientData, int flags);
+static int GLibDispatchProc(Tcl_Event *evPtr, int flags);
 static void SetupGlibIntegration(void);
-static void ProcessPendingEvents(ClientData clientData);
+static void CleanupGlibIntegration(void);
+static void DeferGlibSetup(ClientData clientData);
 
 /* Child management functions. */
 static void AddChildToParent(TkAtkAccessible *parent, AtkObject *child);
@@ -377,98 +393,229 @@ static inline gboolean on_tcl_main_thread(void)
  *----------------------------------------------------------------------
  */
 
-/* 
- * Establish integration between Tcl and GLib 
- * event loops. Call once, from the main thread early 
- * during startup. 
- */
- 
-static void SetupGlibIntegration(void)
+/* Helpers to add/remove file handlers. */
+static void GLibAddFileHandler(gint fd, gint events) 
 {
-    if (integration_active) {
-	return; /* Already initialized. */
-    }
-    /* Record Tcl main thread. */
-    tcl_main_thread = Tcl_GetCurrentThread();
-  
-    /* Use the default main context instead of thread-default. */
-    glib_context = g_main_context_default();
-    g_main_context_ref(glib_context);
-  
-    integration_active = TRUE;
-  
-    /* Start with a longer initial delay to let Tk stabilize. */
-    pending_timer = Tcl_CreateTimerHandler(50, ProcessPendingEvents, NULL);
+    int mask = 0;
+    if (events & G_IO_IN) mask |= TCL_READABLE;
+    if (events & G_IO_OUT) mask |= TCL_WRITABLE;
+    Tcl_CreateFileHandler(fd, mask, GLibFileProc, (ClientData)(intptr_t)fd);
 }
 
+static void GLibRemoveFileHandler(gint fd) 
+{
+    Tcl_DeleteFileHandler(fd);
+}
 
-/* Process GLib and Tcl events periodically on the Tcl/Tk main thread. */
-static void ProcessPendingEvents(ClientData clientData)
+/* Schedule GLib event source registration after Tk initialization. */
+static void DeferGlibSetup(ClientData clientData) 
 {
     (void)clientData;
-    int glib_iterations;
-    
-    if (!integration_active || in_process_pending) {
-        if (integration_active) {
-            pending_timer = Tcl_CreateTimerHandler(20, ProcessPendingEvents, NULL);
-        }
-        return;
-    }
-    
-    in_process_pending = TRUE;
-   
-    if (glib_context) {
-        glib_iterations = 0;
-        const int MAX_GLIB_ITERATIONS = 50;  /* High enough to drain during bursts, but prevents runaway loops. */
-        
-        if (g_main_context_acquire(glib_context)) {
-            while (g_main_context_pending(glib_context) && glib_iterations < MAX_GLIB_ITERATIONS) {
-                g_main_context_iteration(glib_context, FALSE);
-                glib_iterations++;
-            }
-            g_main_context_release(glib_context);
-        }
-        
-        if (glib_iterations >= MAX_GLIB_ITERATIONS) {
-            g_warning("ProcessPendingEvents: Reached max GLib iterations (%d) - possible event storm", MAX_GLIB_ITERATIONS);
-        }
-    }
-    
-    g_thread_yield();
-    in_process_pending = FALSE;
-    
-    /* Tighten delay when busy to process backlogs faster (min Tcl timer resolution is ~1ms). */
-    int next_delay = (glib_iterations > 0) ? 1 : 20;
-    if (integration_active) {
-        pending_timer = Tcl_CreateTimerHandler(next_delay, ProcessPendingEvents, NULL);
+    if (!integration_active) {
+        Tcl_CreateEventSource(GLibSetupProc, GLibCheckProc, NULL);
+        integration_active = TRUE;
     }
 }
 
-/* Cleanup function to call on shutdown. */
-static void CleanupGlibIntegration(void)
+/* Check and dispatch GLib. */
+static void GLibFileProc(ClientData clientData, int mask) 
 {
-    if (pending_timer) {
-        Tcl_DeleteTimerHandler(pending_timer);
-        pending_timer = NULL;
+    int fd = (int)(intptr_t)clientData; /* Get the actual FD from clientData. */
+    
+    /* Update revents for the matching fd. */
+    for (guint i = 0; i < glib_state.n_fds; i++) {
+        if (glib_state.fds[i].fd == fd) {
+            glib_state.fds[i].revents = 0;
+            if (mask & TCL_READABLE) glib_state.fds[i].revents |= G_IO_IN;
+            if (mask & TCL_WRITABLE) glib_state.fds[i].revents |= G_IO_OUT;
+            break;
+        }
     }
     
-    /* Cancel all pending idle callbacks. */
-    Tcl_CancelIdleCall(UpdateChildrenCache, NULL);
-    Tcl_CancelIdleCall(DeferredChildrenUpdateTcl, NULL);
-    
-    if (glib_context) {
-        /* Process any remaining GLib events before cleanup. */
-        if (g_main_context_acquire(glib_context)) {
+    /* Check and dispatch. */
+    if (g_main_context_acquire(glib_state.context)) {
+        g_main_context_check(glib_state.context, glib_state.max_priority, 
+                            glib_state.fds, glib_state.n_fds);
+        g_main_context_dispatch(glib_state.context);
+        g_main_context_release(glib_state.context);
+    }
+}
+/* Dispatch on timeout. */
+static void GLibTimerProc(ClientData data) 
+{
+    (void)data;
+    if (g_main_context_acquire(glib_state.context)) {
+        g_main_context_dispatch(glib_state.context);
+        g_main_context_release(glib_state.context);
+    }
+}
+
+/* Prepare and query GLib, set block time and handlers. */
+static void GLibSetupProc(ClientData clientData, int flags) 
+{
+    (void)clientData;
+    (void)flags;
+
+    if (!glib_state.context) return;
+
+    /* Prepare context. */
+    g_main_context_prepare(glib_state.context, &glib_state.max_priority);
+
+    /* Free old fds and query new ones */
+    g_free(glib_state.fds);
+    glib_state.fds = NULL;
+    gint timeout = -1;
+    glib_state.n_fds = g_main_context_query(glib_state.context, glib_state.max_priority, &timeout, NULL, 0);
+    glib_state.fds = g_new(GPollFD, glib_state.n_fds);
+    g_main_context_query(glib_state.context, glib_state.max_priority, &timeout, glib_state.fds, glib_state.n_fds);
+
+    /* Handle fd changes: remove old, add new. */
+    for (guint i = 0; i < glib_state.prev_n_fds; i++) {
+        gboolean found = FALSE;
+        for (guint j = 0; j < glib_state.n_fds; j++) {
+            if (glib_state.prev_fds[i].fd == glib_state.fds[j].fd) {
+                found = TRUE;
+                break;
+            }
+        }
+        if (!found) {
+            GLibRemoveFileHandler(glib_state.prev_fds[i].fd);
+        }
+    }
+
+    for (guint i = 0; i < glib_state.n_fds; i++) {
+        gboolean found = FALSE;
+        for (guint j = 0; j < glib_state.prev_n_fds; j++) {
+            if (glib_state.fds[i].fd == glib_state.prev_fds[j].fd) {
+                found = TRUE;
+                break;
+            }
+        }
+        if (!found) {
+            GLibAddFileHandler(glib_state.fds[i].fd, glib_state.fds[i].events);
+        }
+    }
+
+    /* Update prev fds. */
+    g_free(glib_state.prev_fds);
+    glib_state.prev_fds = g_memdup2(glib_state.fds, sizeof(GPollFD) * glib_state.n_fds);
+    glib_state.prev_n_fds = glib_state.n_fds;
+
+    /* Set Tcl max block time and timer based on timeout */
+    if (timeout == -1) {
+        Tcl_Time blockTime = {0, 2000}; /* 2ms poll when no timeout */
+        Tcl_SetMaxBlockTime(&blockTime);
+    } else if (timeout > 0) { /* Only set block time and timer for positive timeouts */
+        Tcl_Time blockTime = {0, timeout * 1000};
+        Tcl_SetMaxBlockTime(&blockTime);
+        Tcl_CreateTimerHandler(timeout, GLibTimerProc, NULL);
+    }
+}
+
+/* If ready, queue event for dispatch. */
+static void GLibCheckProc(ClientData clientData, int flags) {
+    (void)clientData;
+    (void)flags;
+
+    if (g_main_context_pending(glib_state.context)) {
+        Tcl_Event *evPtr = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
+        evPtr->proc = GLibDispatchProc;
+        Tcl_QueueEvent(evPtr, TCL_QUEUE_TAIL);
+    }
+}
+
+/* Check and dispatch. */
+static int GLibDispatchProc(Tcl_Event *evPtr, int flags) 
+{
+    (void)evPtr;
+    (void)flags;
+    if (g_main_context_acquire(glib_state.context)) {
+        g_main_context_check(glib_state.context, glib_state.max_priority, 
+                            glib_state.fds, glib_state.n_fds);
+        g_main_context_dispatch(glib_state.context);
+        g_main_context_release(glib_state.context);
+    }
+    return 1;
+}
+
+/* Initializes GLib-Tcl event loop integration using Tcl event source. */
+static void SetupGlibIntegration(void) 
+{
+    if (integration_active) {
+        return; /* Already initialized. */
+    }
+
+    tcl_main_thread = Tcl_GetCurrentThread();
+    glib_context = g_main_context_default();
+    g_main_context_ref(glib_context);
+
+    /* Initialize global state. */
+    glib_state.context = glib_context;
+    glib_state.max_priority = 0;
+    glib_state.timeout_ms = -1;
+    glib_state.fds = NULL;
+    glib_state.n_fds = 0;
+    glib_state.prev_fds = NULL;
+    glib_state.prev_n_fds = 0;
+
+    /* Flush X11 events with timeout to ensure main window draws. */
+    Tcl_Time timeout = {0, 500000}; /* 500ms timeout. */
+    Tcl_SetMaxBlockTime(&timeout);
+    for (int i = 0; i < 100 && Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT); i++) {
+        /* Process up to 100 X11 events or until none remain */
+    }
+    Tcl_Time reset = {0, 0};
+    Tcl_SetMaxBlockTime(&reset);
+
+    /* Defer AT-SPI initialization to ensure Tk is ready. */
+    Tcl_CreateTimerHandler(500, InitAtkBridge, NULL);
+
+    /* Defer GLib event source registration. */
+    Tcl_CreateTimerHandler(500, DeferGlibSetup, NULL);
+}
+
+/* Clean up GLib-Tcl event loop integration.*/
+static void CleanupGlibIntegration(void) 
+{
+    if (integration_active) {
+        /* Remove Tcl event source. */
+        Tcl_DeleteEventSource(GLibSetupProc, GLibCheckProc, NULL);
+
+        /* Remove all file handlers. */
+        for (guint i = 0; i < glib_state.n_fds; i++) {
+            GLibRemoveFileHandler(glib_state.fds[i].fd);
+        }
+
+        /* Free fds arrays. */
+        g_free(glib_state.fds);
+        g_free(glib_state.prev_fds);
+        glib_state.fds = NULL;
+        glib_state.n_fds = 0;
+        glib_state.prev_fds = NULL;
+        glib_state.prev_n_fds = 0;
+        glib_state.timeout_ms = -1;
+        glib_state.max_priority = 0;
+
+        /* Cancel pending idle callbacks. */
+        Tcl_CancelIdleCall(UpdateChildrenCache, NULL);
+        Tcl_CancelIdleCall(DeferredChildrenUpdateTcl, NULL);
+
+        /* Process remaining GLib events. */
+        if (glib_context && g_main_context_acquire(glib_context)) {
             while (g_main_context_iteration(glib_context, FALSE)) {}
             g_main_context_release(glib_context);
         }
-        g_main_context_unref(glib_context);
-        glib_context = NULL;
-    }
-    
-    integration_active = FALSE;
-}
 
+        /* Clean up GLib context. */
+        if (glib_context) {
+            g_main_context_unref(glib_context);
+            glib_context = NULL;
+            glib_state.context = NULL;
+        }
+
+        integration_active = FALSE;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1902,6 +2049,14 @@ static int IsScreenReaderActive(void)
     pclose(fp);
 
     return running ? 1 : 0;
+}
+
+/* Initializes AT-SPI bridge after Tk is ready. */
+static void InitAtkBridge(ClientData clientData) 
+{
+    (void)clientData;
+    atk_bridge_adaptor_init(NULL, NULL);
+    Tcl_DoOneEvent(TCL_DONT_WAIT); /* Flush X11 events after AT-SPI init */
 }
 
 
