@@ -83,13 +83,10 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
-static int glib_dispatch_in_flight = 0;
 
 /* GLib-Tcl event loop integration. */
 static void Atk_Event_Setup (ClientData clientData, int flags);
 static void Atk_Event_Check(ClientData clientData, int flags);
-static int Atk_Event_Run (Tcl_Event *event, int flags);
-
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -136,6 +133,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
 
 /* Tcl command implementations. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -164,75 +162,38 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* Configure event loop. */
-static void Atk_Event_Setup(ClientData clientData, int flags)
+    static void Atk_Event_Setup(ClientData clientData, int flags)
 {
     (void)clientData;
 
-    static Tcl_Time block_time = {0, 0};
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
+  
+    static Tcl_Time block_time;
 
-    if (g_main_context_pending(NULL)) {
-        block_time.sec = 0;
-        block_time.usec = 1000;   /* 1ms: responsive but not spinny. */
-    } else {
-        block_time.sec = 0;
-        block_time.usec = 50000;  /* 50ms when idle. */
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+	return;
     }
+
+    /* Ask GLib how long it wants to sleep. */
+    gint timeout = g_main_context_iteration(NULL, FALSE);
+    if (timeout > 0) {
+	block_time.sec = timeout / 1000;
+	block_time.usec = (timeout % 1000) * 1000;
+    } else {
+	/* If GLib has pending events, don't block. */
+	block_time.sec = 0;
+	block_time.usec = 0;
+    }
+
     Tcl_SetMaxBlockTime(&block_time);
 }
 
 
-/* Run event loop. */
-static int Atk_Event_Run(Tcl_Event *event, int flags)
-{
-    (void)event;
-
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return 0;
-    }
-
-    /* Process GLib with a small budget: a few iterations OR ~2ms. */
-    gint64 deadline = g_get_monotonic_time() + 2 * G_TIME_SPAN_MILLISECOND;
-    int iterations = 0;
-
-    while (g_get_monotonic_time() < deadline) {
-        /* g_main_context_iteration returns TRUE if it dispatched something. */
-        if (!g_main_context_iteration(NULL, FALSE)) {
-            break; /* Nothing to do right now. */
-        }
-        if (++iterations >= 4) {
-            break; /* Capped to avoid starving Tk. */
-        }
-    }
-
-    /* If there's more GLib work pending (often just idles), requeue once. */
-    if (g_main_context_pending(NULL)) {
-        Tcl_Event *again = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
-        again->proc = Atk_Event_Run;
-        Tcl_QueueEvent(again, TCL_QUEUE_TAIL);
-        /* Keep glib_dispatch_in_flight = 1 */
-    } else {
-        glib_dispatch_in_flight = 0; /* allow future queueing from Check */
-    }
-
-    return 1; /* we handled "an event" (GLib slice), let Tk continue. */
-}
-
 /* Check event queue. */
-static void Atk_Event_Check(ClientData clientData, int flags)
-{
+static void Atk_Event_Check(ClientData clientData, int flags) {
     (void)clientData;
+    (void)flags;
 
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
-
-    if (!glib_dispatch_in_flight && g_main_context_pending(NULL)) {
-        Tcl_Event *event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
-        event->proc = Atk_Event_Run;
-        Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
-        glib_dispatch_in_flight = 1;
-    }
+    /* No-op. The real work is done in Atk_Event_Setup. */
 }
 
 
@@ -882,6 +843,8 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
 			  TkAtkAccessible_CreateHandler, tkwin);
+      Tk_CreateEventHandler(tkwin, ConfigureNotify,
+			  TkAtkAccessible_ConfigureHandler, tkwin);
 }
 
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr)
@@ -958,6 +921,25 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     g_signal_emit_by_name(obj, "state-change", "focused", focused);
 }
 
+/* Respond to <Configure> events. */
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
+
+    if (eventPtr->type == ConfigureNotify) {
+        AtkObject *obj = ATK_OBJECT(acc);  
+
+        /* Build the bounds rectangle. */
+        AtkRectangle rect;
+        Tk_GetRootCoords(acc->tkwin, &rect.x, &rect.y);
+        rect.width  = Tk_Width(acc->tkwin);
+        rect.height = Tk_Height(acc->tkwin);
+
+        /* Direct signal emission. */
+        g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1060,20 +1042,8 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp,
 	Tcl_WrongNumArgs(interp, 1, objv, "window");
 	return TCL_ERROR;
     }
-   
-    const char *windowName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_OK;
-   
-    AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
-    if (!obj) {
-	obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
-	if (!obj) return TCL_OK;
-	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
-    }
-   
-    g_signal_emit_by_name(obj, "focus-event", TRUE);
-    g_signal_emit_by_name(obj, "state-change", "focused", TRUE);
+    
+    /* No-op on X11. All work is done in FocusHandler. */
    
     return TCL_OK;
 }
