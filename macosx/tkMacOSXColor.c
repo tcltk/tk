@@ -33,6 +33,51 @@ static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
 
+#pragma mark TKApplication(TKColor)
+
+/*
+ * Method in which to perform any appearance-dependent code.
+ *
+ * On macOS 11 and later, this simply wraps
+ * NSAppearance performAsCurrentDrawingAppearance:.
+ *
+ * On macOS 10.14 and 10.15, this uses the workaround
+ * of saving, temporarily setting, and then restoring
+ * the deprecated NSAppearance.currentAppearance property.
+ *
+ * On earlier macOS versions this simply performs block().
+ */
+@implementation TKApplication(TKColor)
+- (void) performAsCurrentDrawingAppearance:(void (^)(void))block
+		       usingDarkAppearance:(BOOL)useDarkAppearance
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    NSAppearance *appearance = useDarkAppearance ? darkAqua : lightAqua;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+    if(@available(macOS 11.0, *)) {
+	[appearance performAsCurrentDrawingAppearance:block];
+	return;
+    }
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+    if(@available(macOS 10.14, *)) {
+	NSAppearance *savedAppearance = NSAppearance.currentAppearance;
+	NSAppearance.currentAppearance = appearance;
+	block();
+	NSAppearance.currentAppearance = savedAppearance;
+	return;
+    }
+#endif
+
+#endif
+
+    block();
+}
+@end
+#pragma mark -
+
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
