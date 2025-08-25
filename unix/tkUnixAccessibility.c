@@ -127,6 +127,7 @@ AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 AtkObject *atk_get_root(void);
+static int CheckScreenReader(void);
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -824,6 +825,25 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
     }
 }
 
+static int CheckScreenReader(void) 
+{
+   
+    int result = 0;
+    FILE *fp = popen("pgrep -x orca", "r");
+    if (fp == NULL) {
+	result = 0;
+    }
+
+    char buffer[16];
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
+    pclose(fp);
+    if (running) {
+	result = 1;
+    }
+
+    return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -843,7 +863,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
 			  TkAtkAccessible_CreateHandler, tkwin);
-      Tk_CreateEventHandler(tkwin, ConfigureNotify,
+    Tk_CreateEventHandler(tkwin, ConfigureNotify,
 			  TkAtkAccessible_ConfigureHandler, tkwin);
 }
 
@@ -919,6 +939,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     /* Direct signal emission. */
     g_signal_emit_by_name(obj, "focus-event", focused);
     g_signal_emit_by_name(obj, "state-change", "focused", focused);
+
 }
 
 /* Respond to <Configure> events. */
@@ -940,6 +961,8 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
         g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
     }
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -1073,18 +1096,7 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
     (void)objc;
     (void)objv;
 
-    int result = 0;
-    FILE *fp = popen("pgrep -x orca", "r");
-    if (fp == NULL) {
-	result = 0;
-    }
-
-    char buffer[16];
-    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
-    pclose(fp);
-    if (running) {
-	result = 1;
-    }
+    int result = CheckScreenReader();
 
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
