@@ -83,6 +83,7 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
+static int glib_dispatch_in_flight = 0;
 
 /* GLib-Tcl event loop integration. */
 static void Atk_Event_Setup (ClientData clientData, int flags);
@@ -162,54 +163,75 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  *----------------------------------------------------------------------
  */
 
-static void Atk_Event_Setup (ClientData clientData, int flags)
+/* Configure event loop. */
+static void Atk_Event_Setup(ClientData clientData, int flags)
 {
-    (void) clientData;
-	
-    static Tcl_Time block_time = {0, 0};  
+    (void)clientData;
 
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-	return;
-    }
+    static Tcl_Time block_time = {0, 0};
+    if (!(flags & TCL_WINDOW_EVENTS)) return;
 
-    if (g_main_context_pending(0)) {
-	block_time.sec = 0;
-	block_time.usec = 1000;  /* don’t spin at 0 usec */
+    if (g_main_context_pending(NULL)) {
+        block_time.sec = 0;
+        block_time.usec = 1000;   /* 1ms: responsive but not spinny. */
     } else {
-	block_time.sec = 0;
-	block_time.usec = 50000;
+        block_time.sec = 0;
+        block_time.usec = 50000;  /* 50ms when idle. */
     }
-
-    Tcl_SetMaxBlockTime (&block_time);
+    Tcl_SetMaxBlockTime(&block_time);
 }
 
+
+/* Run event loop. */
 static int Atk_Event_Run(Tcl_Event *event, int flags)
 {
-	(void) event;
-	
+    (void)event;
+
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return 0;
     }
 
-    g_main_context_iteration(0, FALSE);  /* single iteration only */
-    return 1;
-}
+    /* Process GLib with a small budget: a few iterations OR ~2ms. */
+    gint64 deadline = g_get_monotonic_time() + 2 * G_TIME_SPAN_MILLISECOND;
+    int iterations = 0;
 
-static void Atk_Event_Check(ClientData clientData, int flags)
-{
-    (void) clientData; 
-	
-    Tcl_Event *event;
-
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-	return;                   
+    while (g_get_monotonic_time() < deadline) {
+        /* g_main_context_iteration returns TRUE if it dispatched something. */
+        if (!g_main_context_iteration(NULL, FALSE)) {
+            break; /* Nothing to do right now. */
+        }
+        if (++iterations >= 4) {
+            break; /* Capped to avoid starving Tk. */
+        }
     }
 
+    /* If there's more GLib work pending (often just idles), requeue once. */
+    if (g_main_context_pending(NULL)) {
+        Tcl_Event *again = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+        again->proc = Atk_Event_Run;
+        Tcl_QueueEvent(again, TCL_QUEUE_TAIL);
+        /* Keep glib_dispatch_in_flight = 1 */
+    } else {
+        glib_dispatch_in_flight = 0; /* allow future queueing from Check */
+    }
 
-    if (g_main_context_pending (0)) {
-	event = (Tcl_Event *) ckalloc (sizeof (Tcl_Event));
-	event->proc = Atk_Event_Run;
-	Tcl_QueueEvent (event, TCL_QUEUE_TAIL);
+    return 1; /* we handled "an event" (GLib slice), let Tk continue. */
+}
+
+/* Check event queue. */
+static void Atk_Event_Check(ClientData clientData, int flags)
+{
+    (void)clientData;
+
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
+    }
+
+    if (!glib_dispatch_in_flight && g_main_context_pending(NULL)) {
+        Tcl_Event *event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+        event->proc = Atk_Event_Run;
+        Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
+        glib_dispatch_in_flight = 1;
     }
 }
 
@@ -562,8 +584,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	
 	const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
 	if (!actionString) return FALSE;
-	  
-	
+	  	
 	/* Finally, execute command.  */
 	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
 	    return FALSE;
@@ -758,7 +779,7 @@ static AtkObject *tk_util_get_root(void)
 	TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
 	tk_root_accessible = ATK_OBJECT(acc);
 	atk_object_initialize(tk_root_accessible, NULL);
-	/*Set proper name and role.  */
+	/* Set proper name and role.  */
 	atk_object_set_role(tk_root_accessible, ATK_ROLE_APPLICATION);
 	tk_set_name(tk_root_accessible, "Tk Application");
     }
