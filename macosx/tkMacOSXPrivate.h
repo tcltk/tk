@@ -348,6 +348,10 @@ VISIBILITY_HIDDEN
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
 @end
+@interface TKApplication(TKColor)
+- (void) performAsCurrentDrawingAppearance:(void (^)(void))block
+		       usingDarkAppearance:(BOOL)useDarkAppearance;
+@end
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
 @end
