@@ -252,7 +252,7 @@ MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
-			    CGContextRef context);
+			    CGContextRef context, BOOL useDarkAppearance);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
@@ -290,6 +290,8 @@ MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
 MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
+			    BOOL useDarkAppearance);
 MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
 			    NSColor *color, BOOL useDarkAppearance);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
