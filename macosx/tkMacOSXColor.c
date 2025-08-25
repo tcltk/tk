@@ -78,6 +78,37 @@ static NSAppearance *darkAqua = nil;
 @end
 #pragma mark -
 
+MODULE_SCOPE
+CGColorRef
+TkMacOSXGetCGColorFromNSColorUsingAppearance(
+    NSColor *color,
+    BOOL useDarkAppearance)
+{
+    __block CGColorRef result = NULL;
+    [NSApp performAsCurrentDrawingAppearance:^{
+	    result = color.CGColor;
+	}
+	usingDarkAppearance:useDarkAppearance
+    ];
+    return result;
+}
+
+MODULE_SCOPE
+NSColor *
+TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+    NSColor *color,
+    NSColorSpace *colorSpace,
+    BOOL useDarkAppearance)
+{
+    __block NSColor *result = nil;
+    [NSApp performAsCurrentDrawingAppearance:^{
+	    result = [color colorUsingColorSpace:colorSpace];
+	}
+	usingDarkAppearance:useDarkAppearance
+    ];
+    return result;
+}
+
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
