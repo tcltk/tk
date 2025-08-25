@@ -607,7 +607,6 @@ TkpGetColor(
     TkColor *tkColPtr;
     XColor color;
     Colormap colormap = TK_DYNAMIC_COLORMAP;
-    NSView *view = nil;
     Bool haveValidXColor = False;
     static Bool initialized = NO;
 
@@ -617,8 +616,6 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
-	Drawable d = Tk_WindowId(tkwin);
-	view = TkMacOSXGetNSViewForDrawable(d);
     }
 
     /*
@@ -637,60 +634,12 @@ TkpGetColor(
 	    p.pixel.value = (unsigned int)entry->index;
 	    color.pixel = p.ulong;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	    NSAppearance *windowAppearance;
-	    /* See comments in tkMacOSXDraw.c */
-	    if (@available(macOS 12.0, *)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
-		NSAppearance *current = NSAppearance.currentDrawingAppearance;
-		NSAppearance *effective = view.effectiveAppearance;
-		if( current != effective) {
-		    // printf("Appearances are out of sync!\n");
-		    // Deprecations be damned!
-		    NSAppearance.currentAppearance = effective;
-		}
-#endif
-	    }
-	    if (@available(macOS 10.14, *)) {
-		if (view) {
-		    windowAppearance = [view effectiveAppearance];
-		} else {
-		    windowAppearance = [NSApp effectiveAppearance];
-		}
-	    }
-#endif
-
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		if (@available(macOS 10.14, *)) {
-		    if (@available(macOS 11.0, *)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
-			CGFloat *rgbaPtr = rgba;
-			[windowAppearance performAsCurrentDrawingAppearance:^{
-				GetRGBA(entry, p.ulong, rgbaPtr);
-			    }];
-			color.red   = (unsigned short)(rgba[0] * 65535.0);
-			color.green = (unsigned short)(rgba[1] * 65535.0);
-			color.blue  = (unsigned short)(rgba[2] * 65535.0);
-#endif
-		    } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-			[NSAppearance setCurrentAppearance:windowAppearance];
-			GetRGBA(entry, p.ulong, rgba);
-			[NSAppearance setCurrentAppearance:savedAppearance];
-#endif
-		    }
-		} else {
-		    GetRGBA(entry, p.ulong, rgba);
-		}
-#else //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		GetRGBA(entry, p.ulong, rgba);
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
-#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		haveValidXColor = True;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
