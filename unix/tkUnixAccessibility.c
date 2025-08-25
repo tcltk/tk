@@ -22,6 +22,8 @@
 #include <tcl.h>
 #include <tk.h>
 #include "tkInt.h"
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #ifdef USE_ATK
 #include <atk/atk.h>
@@ -37,14 +39,13 @@ typedef struct _TkAtkAccessible {
     Tcl_Interp *interp;
     gint x, y, width, height;
     char *path;
+    int is_focused;
 } TkAtkAccessible;
 
 
 typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
-
-
 
 /* Structs to map Tk roles into Atk roles. */
 
@@ -127,7 +128,7 @@ AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 AtkObject *atk_get_root(void);
-static int CheckScreenReader(void);
+
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -140,6 +141,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int IsScreenReaderActive(void);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -825,25 +827,6 @@ void UnregisterAtkObjectForTkWindow(Tk_Window tkwin)
     }
 }
 
-static int CheckScreenReader(void) 
-{
-   
-    int result = 0;
-    FILE *fp = popen("pgrep -x orca", "r");
-    if (fp == NULL) {
-	result = 0;
-    }
-
-    char buffer[16];
-    int running = (fgets(buffer, sizeof(buffer), fp) != NULL); 
-    pclose(fp);
-    if (running) {
-	result = 1;
-    }
-
-    return result;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -862,11 +845,13 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
     Tk_CreateEventHandler(tkwin, FocusChangeMask,
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
-			  TkAtkAccessible_CreateHandler, tkwin);
+			  TkAtkAccessible_CreateHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, ConfigureNotify,
-			  TkAtkAccessible_ConfigureHandler, tkwin);
+			  TkAtkAccessible_ConfigureHandler, tkAccessible);	
+
 }
 
+/* Respond to <CreateNotify> events. */
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != CreateNotify) return;
@@ -902,28 +887,35 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
     }
 }
 
-/* Respond to <Destroy> events. */
+/* Respond to <DestroyNotify> events. */
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != DestroyNotify) return;
     
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc) return;
-    
-    /* Notify parent about removal. */
-    AtkObject *parent = atk_object_get_parent(ATK_OBJECT(acc));
-    if (parent) {
-        /* We don't know index, so use -1 */
-        g_signal_emit_by_name(parent, "children-changed::remove", -1, ATK_OBJECT(acc));
-    }
-    
-    /* Clean up window references. */
-    if (acc->tkwin) {
-        UnregisterAtkObjectForTkWindow(acc->tkwin);
-        if (Tk_IsTopLevel(acc->tkwin)) {
-            UnregisterToplevelWindow(ATK_OBJECT(acc));
-        }
-        acc->tkwin = NULL;
+    GObject *obj =  (GObject*)acc; 
+    tk_atk_accessible_finalize(obj); 
+}
+
+
+/* Respond to <Configure> events. */
+static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
+
+    if (eventPtr->type == ConfigureNotify) {
+	AtkObject *obj = ATK_OBJECT(acc);  
+
+	/* Build the bounds rectangle. */
+	AtkRectangle rect;
+	Tk_GetRootCoords(acc->tkwin, &rect.x, &rect.y);
+	rect.width  = Tk_Width(acc->tkwin);
+	rect.height = Tk_Height(acc->tkwin);
+
+	/* Direct signal emission. */
+	g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
     }
 }
 
@@ -941,28 +933,6 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     g_signal_emit_by_name(obj, "state-change", "focused", focused);
 
 }
-
-/* Respond to <Configure> events. */
-static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
-
-    if (eventPtr->type == ConfigureNotify) {
-        AtkObject *obj = ATK_OBJECT(acc);  
-
-        /* Build the bounds rectangle. */
-        AtkRectangle rect;
-        Tk_GetRootCoords(acc->tkwin, &rect.x, &rect.y);
-        rect.width  = Tk_Width(acc->tkwin);
-        rect.height = Tk_Height(acc->tkwin);
-
-        /* Direct signal emission. */
-        g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
-    }
-}
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -1096,11 +1066,31 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
     (void)objc;
     (void)objv;
 
-    int result = CheckScreenReader();
+    int result = IsScreenReaderActive();
 
     Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
     return TCL_OK;
 }
+
+/* 
+ * Helper function to determine if screen reader is running. Separate function because it can be called 
+ * internally as well as a Tcl command. 
+ */
+
+/* Helper function to check if screen reader is running. */
+static int IsScreenReaderActive(void)
+{
+    FILE *fp = popen("pgrep -x orca", "r");
+    if (!fp) return 0;
+
+    char buffer[16];
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
+    pclose(fp);
+
+    return running ? 1 : 0;
+}
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -1218,8 +1208,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     /* Get and initialize root accessible. */
     tk_root_accessible = tk_util_get_root();
     if (!tk_root_accessible) {
-        Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
+	return TCL_ERROR;
     }
     
     InitAtkTkMapping();
@@ -1235,7 +1225,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     Tk_MakeWindowExist(mainWin);
     Tk_MapWindow(mainWin);
-
 
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {
@@ -1278,5 +1267,4 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
  * fill-column: 78
  * End:
  */
-
 
