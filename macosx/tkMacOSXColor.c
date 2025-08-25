@@ -363,7 +363,8 @@ static void
 GetRGBA(
     SystemColorDatum *entry,
     unsigned long pixel,
-    CGFloat *rgba)
+    CGFloat *rgba,
+    BOOL useDarkAppearance)
 {
     NSColor *bgColor, *color = nil;
     int OSVersion = [NSApp macOSVersion];
@@ -390,7 +391,8 @@ GetRGBA(
 		rgba[i] = WINDOWBACKGROUND[i];
 	    }
 	} else {
-	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
+	    bgColor = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		    [NSColor windowBackgroundColor], sRGB, useDarkAppearance);
 	    [bgColor getComponents: rgba];
 	}
 	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
@@ -419,14 +421,16 @@ GetRGBA(
 	     * Taken from NSColor.controlAlternatingRowBackgroundColors (which was
 	     * replaced by NSColor.alternatingContentBackgroundColors on 10.14).
 	     */
-	    color = [[NSColor colorWithCatalogName:@"System"
-					 colorName:@"controlAlternatingRowColor"]
-			colorUsingColorSpace:sRGB];
+	    color = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		    [NSColor colorWithCatalogName:@"System"
+					colorName:@"controlAlternatingRowColor"],
+		    sRGB, useDarkAppearance);
 	} else if (entry->index == selectedTabTextIndex) {
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
-		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
+		color = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+			[NSColor textColor], sRGB, useDarkAppearance);
 	    }
 	} else if (entry->index == pressedButtonTextIndex) {
 	    if (OSVersion < 120000) {
@@ -435,7 +439,8 @@ GetRGBA(
 		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
 	    }
 	} else {
-	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
+	    color = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		    [NSColor valueForKey:entry->selector], sRGB, useDarkAppearance);
 	}
 	[color getComponents: rgba];
 	break;
@@ -468,7 +473,8 @@ static Bool
 SetCGColorComponents(
     SystemColorDatum *entry,
     unsigned long pixel,
-    CGColorRef *c)
+    CGColorRef *c,
+    BOOL useDarkAppearance)
 {
     CGFloat rgba[4] = {0, 0, 0, 1};
 
@@ -484,7 +490,7 @@ SetCGColorComponents(
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-    GetRGBA(entry, pixel, rgba);
+    GetRGBA(entry, pixel, rgba, useDarkAppearance);
     *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];
     return true;
@@ -555,11 +561,21 @@ TkSetMacColor(
     unsigned long pixel,	/* Pixel value to convert. */
     void *macColor)		/* CGColorRef to modify. */
 {
-    CGColorRef *color = (CGColorRef*)macColor;
+    // Arbitrary; existing usage of TkSetMacColor() does not seem to depend on appearance
+    BOOL useDarkAppearance = NO;
+
+    return TkSetMacColor2(pixel, macColor, useDarkAppearance);
+}
+int
+TkSetMacColor2(
+    unsigned long pixel,	/* Pixel value to convert. */
+    CGColorRef *color,		/* CGColorRef to modify. */
+    BOOL useDarkAppearance)
+{
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
     if (entry) {
-	return SetCGColorComponents(entry, pixel, color);
+	return SetCGColorComponents(entry, pixel, color, useDarkAppearance);
     } else {
 	return false;
     }
@@ -622,7 +638,8 @@ void
 TkMacOSXSetColorInContext(
     TCL_UNUSED(GC),
     unsigned long pixel,
-    CGContextRef context)
+    CGContextRef context,
+    BOOL useDarkAppearance)
 {
     OSStatus err = noErr;
     CGColorRef cgColor = NULL;
@@ -639,7 +656,7 @@ TkMacOSXSetColorInContext(
 	    }
 	    break;
 	default:
-	    SetCGColorComponents(entry, pixel, &cgColor);
+	    SetCGColorComponents(entry, pixel, &cgColor, useDarkAppearance);
 	    break;
 	}
     }
@@ -705,6 +722,7 @@ TkpGetColor(
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
 	    CGColorRef c = NULL;
+	    BOOL windowAppearanceIsDark = TkMacOSXInDarkMode(tkwin);
 
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = (unsigned int)entry->index;
@@ -712,12 +730,12 @@ TkpGetColor(
 
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
-		GetRGBA(entry, p.ulong, rgba);
+		GetRGBA(entry, p.ulong, rgba, windowAppearanceIsDark);
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
 		haveValidXColor = True;
-	    } else if (SetCGColorComponents(entry, 0, &c)) {
+	    } else if (SetCGColorComponents(entry, 0, &c, windowAppearanceIsDark)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
 
