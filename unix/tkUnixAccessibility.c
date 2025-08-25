@@ -953,7 +953,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
    
-    /* Direct signal emission */
+    /* Direct signal emission. */
     g_signal_emit_by_name(obj, "focus-event", focused);
     g_signal_emit_by_name(obj, "state-change", "focused", focused);
 }
