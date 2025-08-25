@@ -566,23 +566,8 @@ namespace eval ::tk::accessible {
 					       {} \
 					       {}\
 					   }
-
-    # Activate accessibility object when mapped on X11.
-    if {[tk windowingsystem] eq "x11"} {
-	bind Toplevel <Map> {+
-	    if {[winfo exists %W]} {
-		set title [wm title %W]
-		if {$title eq ""} {
-		    set title "Tk Application"
-		}
-		::tk::accessible::_init %W Toplevel [wm title %W] [wm title %W] {} {} {}
-		::tk::accessible::add_acc_object %W
-	    }
-	}
-    }
-
-    bind all <Map> {+::tk::accessible::add_acc_object %W}
     
+    bind all <Map> {+::tk::accessible::add_acc_object %W}
     
     # Various bindings to capture data/selection changes for
     # widgets that support returning a value. 
