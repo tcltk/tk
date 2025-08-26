@@ -22,8 +22,6 @@
 #include <tcl.h>
 #include <tk.h>
 #include "tkInt.h"
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #ifdef USE_ATK
 #include <atk/atk.h>
@@ -165,7 +163,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* Configure event loop. */
-    static void Atk_Event_Setup(ClientData clientData, int flags)
+static void Atk_Event_Setup(ClientData clientData, int flags)
 {
     (void)clientData;
 
@@ -962,13 +960,14 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *----------------------------------------------------------------------
  */
 
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,Tcl_Obj *const objv[])
+static int
+EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(ip, 1, objv, "window");
+        return TCL_ERROR;
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
@@ -977,37 +976,51 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
-	obj = TkCreateAccessibleAtkObject(ip, tkwin, windowName);
-	if (!obj) return TCL_OK;
-	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
+        obj = TkCreateAccessibleAtkObject(ip, tkwin, windowName);
+        if (!obj) return TCL_OK;
+        TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
     AtkRole role = tk_get_role(obj);
 
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-	/* Text/entry widget selection changed. */
-	g_signal_emit_by_name(obj, "text-selection-changed");
+        /* Text/entry widget selection changed. */
+        g_signal_emit_by_name(obj, "text-selection-changed");
+
+    } else if (role == ATK_ROLE_SCROLL_BAR ||
+               role == ATK_ROLE_SLIDER ||
+               role == ATK_ROLE_SPIN_BUTTON ||
+               role == ATK_ROLE_PROGRESS_BAR) {
+        /* Numeric widgets (scale, scrollbar, spinbox, progress). */
+        GValue gval = G_VALUE_INIT;
+        tk_get_current_value(ATK_VALUE(obj), &gval);
+        gdouble new_val = 0.0;
+
+        if (G_VALUE_HOLDS_DOUBLE(&gval)) {
+            new_val = g_value_get_double(&gval);
+        } else if (G_VALUE_HOLDS_STRING(&gval)) {
+            const char *s = g_value_get_string(&gval);
+            if (s) new_val = g_ascii_strtod(s, NULL);
+        }
+        g_value_unset(&gval);
+
+        g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
+
     } else {
-	/* Inline conversion: string -> gdouble for ATK value-changed. */
-	GValue gval = G_VALUE_INIT;
-	gdouble new_val = 0.0;
+        /* String-valued widgets (listbox, combobox, etc.). */
+        GValue gval = G_VALUE_INIT;
+        tk_get_current_value(ATK_VALUE(obj), &gval);
 
-	tk_get_current_value(ATK_VALUE(obj), &gval);
-
-	if (G_VALUE_HOLDS_STRING(&gval)) {
-	    const char *s = g_value_get_string(&gval);
-	    if (s) new_val = g_ascii_strtod(s, NULL);
-	} else if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-	    new_val = g_value_get_double(&gval);
-	}
-
-	g_value_unset(&gval);
-
-	g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
+        if (G_VALUE_HOLDS_STRING(&gval)) {
+            const char *s = g_value_get_string(&gval);
+            g_signal_emit_by_name(obj, "value-changed", s, NULL);
+        }
+        g_value_unset(&gval);
     }
 
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1027,8 +1040,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
  *----------------------------------------------------------------------
  */
  
-static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[])
+static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData;
     if (objc < 2) {
