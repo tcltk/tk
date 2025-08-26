@@ -11,6 +11,74 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
+
+if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} { 
+
+    # Add border to ALL X11 widgets with accessible focus. A highlight rectangle
+    # is drawn over focused widgets handled  by the screen reader app on 
+    # macOS and Windows (VoiceOver, NVDA), but not on X11. Configuring
+    # "-relief groove" and binding to FocusIn/Out events is the cleanest
+    # way to accomplish this.
+
+    namespace eval ::tk::accessible {
+	variable origConfig
+	array set origConfig {}
+
+	# Apply to classic Tk widgets
+	proc ClassicFocusIn {w} {
+	    variable origConfig
+	    if {![info exists origConfig($w)]} {
+		set origConfig($w) [list [$w cget -relief] [$w cget -borderwidth]]
+	    }
+	    $w configure -relief groove -borderwidth 2
+	}
+
+	proc ClassicFocusOut {w} {
+	    variable origConfig
+	    if {[info exists origConfig($w)]} {
+		lassign $origConfig($w) relief border
+		$w configure -relief $relief -borderwidth $border
+	    }
+	}
+
+	# Apply focus bindings to a widget
+	proc AddClassic {w} {
+	    bindtags $w [linsert [bindtags $w] 0 FocusBorder]
+	}
+
+	# Setup global ttk styles
+	proc InitTtk {} {
+	    foreach class {TButton TEntry TCombobox TCheckbutton TRadiobutton \
+			       Treeview TScrollbar TScale TSpinbox TLabel} {
+		ttk::style map $class \
+		    -relief {focus groove !focus flat} \
+		    -borderwidth {focus 2 !focus 1}
+	    }
+	}
+
+	# Install focusborder bindtag for classic widgets
+	bind FocusBorder <FocusIn>  {+::tk::accessible::ClassicFocusIn %W}
+	bind FocusBorder <FocusOut> {+::tk::accessible::ClassicFocusOut %W}
+
+	# Install ttk mappings
+	::tk::accessible::InitTtk
+
+	# Save the original widget commands and replace with wrappers
+	foreach wtype {button entry text listbox scale spinbox scrollbar label radiobutton checkbutton} {
+	    if {[llength [info commands ::tk::accessible::orig_$wtype]] == 0} {
+		rename ::$wtype ::tk::accessible::orig_$wtype
+		proc ::$wtype {args} [string map [list %TYPE% $wtype] {
+		    # Create the widget with the original command
+		    set w [::tk::accessible::orig_%TYPE% {*}$args]
+		    # Add focus bindings
+		    ::tk::accessible::AddClassic $w
+		    return $w
+		}]
+	    }
+	}
+    }
+}
+
 namespace eval ::tk::accessible {
 
     #check message text on dialog 
