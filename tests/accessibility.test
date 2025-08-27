@@ -12,8 +12,18 @@ tcltest::loadTestedCommands
 
 package require tk
 
-# The tests should not be wrapped in if statements.
-# Instead, use the -constraints option on each test.
+# Force-enable Aqua tests on macOS
+if {[tk windowingsystem] eq "aqua"} {
+    tcltest::testConstraint aqua 1
+}
+
+if {[tk windowingsystem] eq "win32"} {
+    tcltest::testConstraint win32 1
+}
+if {[tk windowingsystem] eq "x11"} {
+    tcltest::testConstraint x11 1
+}
+
 
 # macOS Test
 test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints {aqua} -setup {
