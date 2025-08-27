@@ -900,6 +900,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 /* Respond to <Configure> events. */
 static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
 {
+    #if 0
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
 
@@ -915,6 +916,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 	/* Direct signal emission. */
 	g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
     }
+    #endif
 }
 
 /* Respond to <FocusIn/Out> events. */
