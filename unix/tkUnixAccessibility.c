@@ -77,8 +77,6 @@ struct AtkRoleMap roleMap[] = {
     {NULL, 0}
 };
 
-ATK_ROLE_TREE || ATK_ROLE_LIST || ATK_ROLE_TABLE
-
 /* Variables for managing Atk objects. */
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
