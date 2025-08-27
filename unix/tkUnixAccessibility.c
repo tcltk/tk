@@ -77,6 +77,8 @@ struct AtkRoleMap roleMap[] = {
     {NULL, 0}
 };
 
+ATK_ROLE_TREE || ATK_ROLE_LIST || ATK_ROLE_TABLE
+
 /* Variables for managing Atk objects. */
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
@@ -960,8 +962,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *----------------------------------------------------------------------
  */
 
-static int
-EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])
+static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData;
 
@@ -1006,7 +1007,9 @@ EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *c
 
         g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
 
-    } else {
+    } else if (role == ATK_ROLE_TREE ||
+	       role == ATK_ROLE_LIST ||
+	       role == ATK_ROLE_TABLE) {
         /* String-valued widgets (listbox, combobox, etc.). */
         GValue gval = G_VALUE_INIT;
         tk_get_current_value(ATK_VALUE(obj), &gval);
@@ -1085,8 +1088,8 @@ static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int 
 }
 
 /* 
- * Helper function to determine if screen reader is running. Separate function because it can be called 
- * internally as well as a Tcl command. 
+ * Helper function to determine if screen reader is running. Separate function 
+ * because it can be called internally as well as a Tcl command. 
  */
 
 /* Helper function to check if screen reader is running. */

@@ -15,7 +15,7 @@
 if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} { 
 
     # Add border to ALL X11 widgets with accessible focus. A highlight rectangle
-    # is drawn over focused widgets handled  by the screen reader app on 
+    # is drawn over focused widgets by the screen reader app on 
     # macOS and Windows (VoiceOver, NVDA), but not on X11. Configuring
     # "-relief groove" and binding to FocusIn/Out events is the cleanest
     # way to accomplish this.
