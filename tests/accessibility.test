@@ -16,7 +16,7 @@ package require tk
 # Instead, use the -constraints option on each test.
 
 # macOS Test
-test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints {macos} -setup {
+test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints {aqua} -setup {
     toplevel .t
     button .t.b -text "Hello"
     pack .t.b
@@ -40,7 +40,7 @@ test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints
 } -result {AXButton:Hello}
 
 # Windows Test
-test accessibility-windows-1.1 {Check button via PowerShell UIA} -constraints {windows} -setup {
+test accessibility-windows-1.1 {Check button via PowerShell UIA} -constraints {win32} -setup {
     toplevel .t
     button .t.b -text "Click me"
     pack .t.b
@@ -67,7 +67,7 @@ $button.Current.Name + ":" + $button.Current.ControlType.ProgrammaticName
 } -result {Click me:ControlType.Button}
 
 # Linux Test
-test accessibility-linux-1.1 {Check accessible entry via at-spi-dump} -constraints {unix} -setup {
+test accessibility-linux-1.1 {Check accessible entry via at-spi-dump} -constraints {x11} -setup {
     toplevel .t
     entry .t.e
     .t.e insert 0 "Username"
