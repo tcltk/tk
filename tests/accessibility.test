@@ -5,49 +5,50 @@
 # Copyright © 1998-2000 Scriptics Corporation.
 # Copyright © 2025 Kevin Walzer/WordTech Communications LLC. 
 
-# All rights reserved.
-
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-if {[tk windowingsystem] eq "aqua"} {
+package require tk
 
-    test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints {macOS} -setup {
-        toplevel .t
-        button .t.b -text "Hello"
-        pack .t.b
-        update
-        after 500
-    } -body {
-        set script {
-            tell application "System Events"
-                set frontApp to name of first application process whose frontmost is true
-                tell application process frontApp
-                    set axrole to value of attribute "AXRole" of first button
-                    set axname to value of attribute "AXTitle" of first button
-                    return axrole & ":" & axname
-                end tell
+# The tests should not be wrapped in if statements.
+# Instead, use the -constraints option on each test.
+
+# macOS Test
+test accessibility-macos-1.1 {Check button role via AppleScript/AX} -constraints {macos} -setup {
+    toplevel .t
+    button .t.b -text "Hello"
+    pack .t.b
+    update
+    after 500
+} -body {
+    set script {
+        tell application "System Events"
+            set frontApp to name of first application process whose frontmost is true
+            tell application process frontApp
+                set axrole to value of attribute "AXRole" of first button
+                set axname to value of attribute "AXTitle" of first button
+                return axrole & ":" & axname
             end tell
-        }
-        set result [exec osascript -e $script]
-        return $result
-    } -cleanup {
-        destroy .t
-    } -result {AXButton:Hello}
+        end tell
+    }
+    set result [exec osascript -e $script]
+    return $result
+} -cleanup {
+    destroy .t
+} -result {AXButton:Hello}
 
-} elseif {[tk windowingsystem] eq "win32"} {
-
-    test accessibility-windows-1.1 {Check button via PowerShell UIA} -constraints {windows} -setup {
-        toplevel .t
-        button .t.b -text "Click me"
-        pack .t.b
-        wm title .t "Tk Accessibility Test"
-        update
-        after 1000
-    } -body {
-        set psScript {
+# Windows Test
+test accessibility-windows-1.1 {Check button via PowerShell UIA} -constraints {windows} -setup {
+    toplevel .t
+    button .t.b -text "Click me"
+    pack .t.b
+    wm title .t "Tk Accessibility Test"
+    update
+    after 1000
+} -body {
+    set psScript {
 Add-Type -AssemblyName UIAutomationClient
 $root = [System.Windows.Automation.AutomationElement]::RootElement
 $cond = New-Object System.Windows.Automation.PropertyCondition `
@@ -59,37 +60,35 @@ $button = $win.FindFirst([System.Windows.Automation.TreeScope]::Descendants, `
      [System.Windows.Automation.ControlType]::Button)))
 $button.Current.Name + ":" + $button.Current.ControlType.ProgrammaticName
 }
-        set result [exec powershell -Command $psScript]
-        return $result
-    } -cleanup {
-        destroy .t
-    } -result {Click me:ControlType.Button}
+    set result [exec powershell -Command $psScript]
+    return $result
+} -cleanup {
+    destroy .t
+} -result {Click me:ControlType.Button}
 
-} elseif {[tk windowingsystem] eq "x11"} {
-
-    test accessibility-linux-1.1 {Check accessible entry via at-spi-dump} -constraints {unix} -setup {
-        toplevel .t
-        entry .t.e
-        .t.e insert 0 "Username"
-        pack .t.e
-        wm title .t "TkAccessibilityApp"
-        update
-        after 1000
-    } -body {
-        set output [exec at-spi-dump --name "TkAccessibilityApp"]
-        set lines [split $output "\n"]
-        set entryInfo ""
-        foreach line $lines {
-            if {[string match "*entry*Username*" $line]} {
-                set entryInfo $line
-                break
-            }
+# Linux Test
+test accessibility-linux-1.1 {Check accessible entry via at-spi-dump} -constraints {unix} -setup {
+    toplevel .t
+    entry .t.e
+    .t.e insert 0 "Username"
+    pack .t.e
+    wm title .t "TkAccessibilityApp"
+    update
+    after 1000
+} -body {
+    set output [exec at-spi-dump --name "Tk Application"]
+    set lines [split $output "\n"]
+    set entryInfo ""
+    foreach line $lines {
+        if {[string match "*entry*Username*" $line]} {
+            set entryInfo $line
+            break
         }
-        return $entryInfo
-    } -cleanup {
-        destroy .t
-    } -result {*entry*Username*}
+    }
+    return $entryInfo
+} -cleanup {
+    destroy .t
+} -result {*entry*Username*}
 
-} else {
-    puts "Accessibility tests are not supported on this platform."
-}
+# Cleanup after all tests in the file have been registered and run.
+tcltest::cleanupTests
