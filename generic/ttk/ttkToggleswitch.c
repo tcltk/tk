@@ -126,10 +126,9 @@ static void TglswitchInitialize(Tcl_Interp *interp, void *recordPtr)
     /*
      * Set the -variable option to the widget's path name
      */
-    Tcl_Obj *variableObj =
+    tglswPtr->tglsw.variableObj =
 	    Tcl_NewStringObj(Tk_PathName(tglswPtr->core.tkwin), -1);
-    Tcl_IncrRefCount(variableObj);
-    tglswPtr->tglsw.variableObj = variableObj;
+    Tcl_IncrRefCount(tglswPtr->tglsw.variableObj);
 
     TtkTrackElementState(&tglswPtr->core);
 }
@@ -164,32 +163,35 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	 * "(*.)Toggleswitch{1|2|3}" if its value is of the same form.
 	 */
 
-	char *styleName = 0;
-	const char *sizeStr = Tcl_GetString(tglswPtr->tglsw.sizeObj);
+	const char *styleName = 0, *lastDot = 0, *nameTail = 0;
 
 	if (tglswPtr->core.styleObj) {
 	    styleName = Tcl_GetString(tglswPtr->core.styleObj);
 	}
-	if (styleName) {
-	    const char *lastDot = strrchr(styleName, '.');
-	    const char *nameTail = lastDot ? lastDot + 1 : styleName;
-	    if (!strcmp(nameTail, "Toggleswitch1") 
-		    || !strcmp(nameTail, "Toggleswitch2")
-		    || !strcmp(nameTail, "Toggleswitch3")) {
-		styleName = strdup(styleName);
-		styleName[strlen(styleName)-1] = *sizeStr;
+	if (!styleName || *styleName == '\0') {
+	    styleName = "Toggleswitch2";
+	}
+	lastDot = strrchr(styleName, '.');
+	nameTail = lastDot ? lastDot + 1 : styleName;
 
-		Tcl_DecrRefCount(tglswPtr->core.styleObj);
-		tglswPtr->core.styleObj = Tcl_NewStringObj(styleName, -1);
-		Tcl_IncrRefCount(tglswPtr->core.styleObj);
+	if (!strcmp(nameTail, "Toggleswitch1") 
+		|| !strcmp(nameTail, "Toggleswitch2")
+		|| !strcmp(nameTail, "Toggleswitch3")) {
+	    char *styleName2 = strdup(styleName);
+	    const char *sizeStr = Tcl_GetString(tglswPtr->tglsw.sizeObj);
 
-		free(styleName);
+	    styleName2[strlen(styleName2)-1] = *sizeStr;
 
-		/*
-		 * Update the layout according to the new style
-		 */
-		TtkCoreConfigure(interp, recordPtr, STYLE_CHANGED);
-	    }
+	    Tcl_DecrRefCount(tglswPtr->core.styleObj);
+	    tglswPtr->core.styleObj = Tcl_NewStringObj(styleName2, -1);
+	    Tcl_IncrRefCount(tglswPtr->core.styleObj);
+
+	    free(styleName2);
+
+	    /*
+	     * Update the layout according to the new style
+	     */
+	    TtkCoreConfigure(interp, recordPtr, STYLE_CHANGED);
 	}
     } else if (mask & STYLE_CHANGED) {		/* intentionally "else if" */
 	/*
