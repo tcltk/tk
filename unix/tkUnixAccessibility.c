@@ -82,10 +82,12 @@ static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
+static GMainContext *context = NULL;
 
 /* GLib-Tcl event loop integration. */
 static void Atk_Event_Setup (ClientData clientData, int flags);
 static void Atk_Event_Check(ClientData clientData, int flags);
+static int Atk_Event_Run(Tcl_Event *event, int flags);
 
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -163,40 +165,64 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* Configure event loop. */
-static void Atk_Event_Setup(ClientData clientData, int flags)
+static void Atk_Event_Setup(ClientData clientData, int flags) 
 {
     (void)clientData;
-
-  
     static Tcl_Time block_time;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
-	return;
+        return;
     }
 
-    /* Ask GLib how long it wants to sleep. */
-    gint timeout = g_main_context_iteration(NULL, FALSE);
-    if (timeout > 0) {
-	block_time.sec = timeout / 1000;
-	block_time.usec = (timeout % 1000) * 1000;
+    if (g_main_context_pending(NULL)) {
+        block_time.sec = 0;
+        block_time.usec = 500; /* 500µs for busy GLib */
     } else {
-	/* If GLib has pending events, don't block. */
-	block_time.sec = 0;
-	block_time.usec = 0;
+        block_time.sec = 0;
+        block_time.usec = 20000; /* 20ms idle time */
     }
-
     Tcl_SetMaxBlockTime(&block_time);
 }
 
-
 /* Check event queue. */
-static void Atk_Event_Check(ClientData clientData, int flags) {
+static void Atk_Event_Check(ClientData clientData, int flags) 
+{
     (void)clientData;
-    (void)flags;
 
-    /* No-op. The real work is done in Atk_Event_Setup. */
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
+    }
+
+    if (g_main_context_pending(context)) {
+        Tcl_Event *event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+        event->proc = Atk_Event_Run;
+        Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
+    }
 }
 
+/* Run the event. */
+static int Atk_Event_Run(Tcl_Event *event, int flags) 
+{
+    (void)event;
+
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return 0;
+    }
+
+    gint64 deadline = g_get_monotonic_time() + G_TIME_SPAN_MILLISECOND / 2; /* 0.5ms */
+    int iterations = 0;
+
+    while (g_get_monotonic_time() < deadline && g_main_context_pending(NULL)) {
+        if (!g_main_context_iteration(NULL, FALSE)) {
+            break;
+        }
+        if (++iterations >= 1) { /* Single iteration */
+            break;
+        }
+    }
+
+    return 1;
+}
 
 /*
  *----------------------------------------------------------------------

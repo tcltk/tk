@@ -17,6 +17,12 @@ destroy {*}[winfo children .]
 set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 ::msgcat::mcload $tk_demoDirectory
 namespace import ::msgcat::mc
+
+# Divert to the accessible widget demo if screen reader is on.
+if {[::tk::accessible::check_screenreader] eq "1"} {
+source -encoding utf-8 [file join $tk_demoDirectory accessiblewidget]
+}
+
 wm title . [mc "Widget Demonstration"]
 if {[tk windowingsystem] eq "x11"} {
     # This won't work everywhere, but there's no other way in core Tk at the
@@ -707,6 +713,9 @@ proc tkAboutDialog {} {
 [mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]
 [mc "Copyright © %s" {2021 Kevin Walzer}]"
 }
+
+
+
 
 # Local Variables:
 # mode: tcl
