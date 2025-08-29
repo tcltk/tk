@@ -38,6 +38,12 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     int is_focused;
+    gchar *cached_name;
+    gchar *cached_description;
+    gchar *cached_value;
+    gint cached_child_count;
+    AtkRole cached_role;
+    guint cache_generation; 
 } TkAtkAccessible;
 
 
@@ -97,14 +103,10 @@ static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordTyp
 static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
-static AtkRole GetAtkRoleForWidget(Tk_Window win);
 static AtkRole tk_get_role(AtkObject *obj);
-static gchar *GetAtkNameForWidget(Tk_Window win);
 static const gchar *tk_get_name(AtkObject *obj);
 static void tk_set_name(AtkObject *obj, const gchar *name);
-static gchar *GetAtkDescriptionForWidget(Tk_Window win);
 static const gchar *tk_get_description(AtkObject *obj);
-static gchar *GetAtkValueForWidget(Tk_Window win);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 static AtkStateSet *tk_ref_state_set(AtkObject *obj);
@@ -112,6 +114,9 @@ static gboolean tk_action_do_action(AtkAction *action, gint i);
 static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
+static void DoActionOnTcl(ClientData clientData);
+static void UpdateCacheOnTcl(ClientData clientData);
+static void ScheduleCacheUpdate(TkAtkAccessible *acc);
 
 
 /* Object lifecycle functions. */
@@ -207,15 +212,15 @@ static int Atk_Event_Run(Tcl_Event *event, int flags)
 {
     (void)event;
 	
-	static int in_atk_event_run = 0;
+    static int in_atk_event_run = 0;
 	
-	if (in_atk_event_run) {
-		/* Already servicing GLib events - avoid recursion. */
-		return 0; 
-	}
+    if (in_atk_event_run) {
+	/* Already servicing GLib events - avoid recursion. */
+	return 0; 
+    }
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
-		in_atk_event_run = 0;
+	in_atk_event_run = 0;
         return 0;
     }
 
@@ -231,7 +236,7 @@ static int Atk_Event_Run(Tcl_Event *event, int flags)
         }
     }
 
-	in_atk_event_run = 0;
+    in_atk_event_run = 0;
     return 1;
 }
 
@@ -303,28 +308,24 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 static gint tk_get_n_children(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-        /* Root has only toplevel windows as children. */
         return g_list_length(toplevel_accessible_objects);
     }
-    
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return 0;
-    
-    int count = 0;
-    TkWindow *childPtr;
-    /* Traverse Tk's native child list. */
-    for (childPtr = ((TkWindow*)acc->tkwin)->childList; 
-         childPtr != NULL; 
-         childPtr = childPtr->nextPtr) {
-        count++;
+    if (!acc) return 0;
+
+    /* If we have no cache yet, schedule an update and return 0 for now. */
+    if (acc->cache_generation == 0) {
+        ScheduleCacheUpdate(acc);
     }
-    return count;
+
+    return acc->cached_child_count;
 }
+
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     if (obj == tk_root_accessible) {
-        /* Handle root's children (toplevel windows). */
         GList *child = g_list_nth(toplevel_accessible_objects, i);
         if (child) {
             g_object_ref(child->data);
@@ -335,123 +336,77 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return NULL;
-    
+
+    /* If the object was already created and registered for the child tkwin,
+     * return it. Otherwise, schedule a cache/children refresh and return NULL.
+     *
+     * Creating Atk objects for children may require Tcl work (and may block),
+     * so we avoid creating children here on the GLib thread.
+     */
     TkWindow *childPtr;
     gint index = 0;
-    /* Iterate through Tk's native child list. */
-    for (childPtr = ((TkWindow*)acc->tkwin)->childList; 
-         childPtr != NULL; 
+    for (childPtr = ((TkWindow*)acc->tkwin)->childList;
+         childPtr != NULL;
          childPtr = childPtr->nextPtr, index++) {
         if (index == i) {
             Tk_Window child_tkwin = (Tk_Window)childPtr;
             AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
-            if (!child_obj) {
-                /* Create ATK object only when needed. */
-                child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin,Tk_PathName(child_tkwin));
-                if (child_obj) {
-                    /* Establish parent-child relationship. */
-                    atk_object_set_parent(child_obj, obj);
-                    TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
-                }
-            }
             if (child_obj) {
-                /* ATK requires caller to free this reference. */
                 g_object_ref(child_obj);
                 return child_obj;
+            } else {
+                /* Not yet created — schedule creation on Tcl side and return NULL. */
+                ScheduleCacheUpdate(acc);
+                return NULL;
             }
-            break;
         }
     }
+
     return NULL;
 }
+
 
 /*
  * Functions to map accessible role to ATK.
  */
 
-static AtkRole GetAtkRoleForWidget(Tk_Window win)
-{
-    if (!win) return ATK_ROLE_UNKNOWN;
-   
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (hPtr) {
-        Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-        if (attrs) {
-            Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(attrs, "role");
-            if (roleEntry) {
-                const char *result = Tcl_GetString(Tcl_GetHashValue(roleEntry));
-                if (result) {
-                    for (int i = 0; roleMap[i].tkrole != NULL; i++) {
-                        if (strcmp(roleMap[i].tkrole, result) == 0) {
-                            return roleMap[i].atkrole;
-                        }
-                    }
-                }
-            }
-        }
-    }
-   
-    /* Fallback to widget class. */
-    const char *widgetClass = Tk_Class(win);
-    if (widgetClass) {
-        for (int i = 0; roleMap[i].tkrole != NULL; i++) {
-            if (strcasecmp(roleMap[i].tkrole, widgetClass) == 0) {
-                return roleMap[i].atkrole;
-            }
-        }
-    }
-   
-    if (Tk_IsTopLevel(win)) {
-        return ATK_ROLE_WINDOW;
-    }
-   
-    return ATK_ROLE_UNKNOWN;
-}
-
 static AtkRole tk_get_role(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-	return ATK_ROLE_APPLICATION;
+        return ATK_ROLE_APPLICATION;
     }
-	
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return ATK_ROLE_UNKNOWN;
-   
-    return GetAtkRoleForWidget(acc->tkwin);
+
+    if (acc->cache_generation == 0) {
+        ScheduleCacheUpdate(acc);
+    }
+
+    return acc->cached_role ? acc->cached_role : ATK_ROLE_UNKNOWN;
 }
+
 
 /*
  * Name and description getters
  * for Tk-ATK objects.
  */
 
-static gchar *GetAtkNameForWidget(Tk_Window win)
-{
-    if (!win) return NULL;
-   
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (!hPtr) return NULL;
-   
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!attrs) return NULL;
-   
-    Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
-    if (!nameEntry) return NULL;
-   
-    const char *name = Tcl_GetString(Tcl_GetHashValue(nameEntry));
-    return name ? g_utf8_make_valid(name, -1) : NULL;
-}
-
 static const gchar *tk_get_name(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-	return "Tk Application";
+        return "Tk Application";
     }
-	
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return NULL;
-   
-    return GetAtkNameForWidget(acc->tkwin);
+    if (!acc) return NULL;
+
+    if (!acc->cached_name) {
+        /* Schedule an asynchronous update; return empty string while we wait. */
+        ScheduleCacheUpdate(acc);
+        return "";
+    }
+    return acc->cached_name;
 }
 
 static void tk_set_name(AtkObject *obj, const gchar *name)
@@ -463,28 +418,18 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
 }
 
 
-static gchar *GetAtkDescriptionForWidget(Tk_Window win)
-{
-    if (!win) return NULL;
-   
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (!hPtr) return NULL;
-   
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!attrs) return NULL;
-   
-    Tcl_HashEntry *descriptionEntry = Tcl_FindHashEntry(attrs, "description");
-    if (!descriptionEntry) return NULL;
-   
-    const char *description = Tcl_GetString(Tcl_GetHashValue(descriptionEntry));
-    return description ? g_utf8_make_valid(description, -1) : NULL;
-}
-
 static const gchar *tk_get_description(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    return GetAtkDescriptionForWidget(acc->tkwin);
+    if (!acc) return NULL;
+
+    if (!acc->cached_description) {
+        ScheduleCacheUpdate(acc);
+        return "";
+    }
+    return acc->cached_description;
 }
+
 
 
 /*
@@ -492,35 +437,20 @@ static const gchar *tk_get_description(AtkObject *obj)
  * AtkValue interface.
  */
 
-static gchar *GetAtkValueForWidget(Tk_Window win)
-{
-    if (!win) return NULL;
-   
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (!hPtr) return NULL;
-   
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!attrs) return NULL;
-   
-    Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
-    if (!valueEntry) return NULL;
-   
-    const char *value = Tcl_GetString(Tcl_GetHashValue(valueEntry));
-    return value ? g_utf8_make_valid(value, -1) : NULL;
-}
-
  
 static void tk_get_current_value(AtkValue *obj, GValue *value)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) {
+    if (!acc) {
         return;
     }
 
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    if (!acc->cached_value) {
+        ScheduleCacheUpdate(acc);
+    }
 
     g_value_init(value, G_TYPE_STRING);
-    g_value_set_string(value, val ? val : "");
+    g_value_set_string(value, acc->cached_value ? acc->cached_value : "");
 }
 
 
@@ -557,31 +487,14 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 static gboolean tk_action_do_action(AtkAction *action, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
-
-    if (!acc || !acc->tkwin || !acc->interp) {
-	return FALSE;
+    if (!acc || !acc->tkwin) {
+        return FALSE;
     }
 
-    if (i == 0) {
-	/* Retrieve the command string.  */
-	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-	if (!hPtr) return FALSE;
-	
-	
-	Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-	if (!attrs) return FALSE;
-	
-	Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-	if (!actionEntry) return false;
-	
-	const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-	if (!actionString) return FALSE;
-	  	
-	/* Finally, execute command.  */
-	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	    return FALSE;
-	}
-    }
+    if (i != 0) return FALSE;
+
+    /* Schedule action on Tcl main thread and return immediately. */
+    Tcl_CreateTimerHandler(0, (Tcl_TimerProc *)DoActionOnTcl, (ClientData)acc);
     return TRUE;
 }
 
@@ -607,8 +520,160 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
     iface->get_name = tk_action_get_name;
 }
 
+/* Helper run on Tcl main thread to evaluate the action command. */
+static void DoActionOnTcl(ClientData clientData)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->interp || !acc->tkwin) return;
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+    if (!hPtr) return;
+    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+    if (!attrs) return;
+    Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
+    if (!actionEntry) return;
+
+    const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
+    if (!actionString || !*actionString) return;
+
+    /* Evaluate the command on the Tcl main thread (non-blocking from ATK). */
+    if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
+        /* Optionally log errors to stderr */
+        const char *err = Tcl_GetStringResult(acc->interp);
+        fprintf(stderr, "DoActionOnTcl: action eval failed: %s\n", err ? err : "(no msg)");
+        fflush(stderr);
+    }
+}
+
+
+
+/* 
+ * This function updates Tk widgets attribute/state via direct calls to
+ * the Tcl hash tables  on Tcl main thread (via Tcl_CreateTimerHandler(0, ...)).
+ * This function reads the Tcl hash entries / Tk state and updates the
+ * cached fields inside the TkAtkAccessible struct. It then notifies ATK
+ * listeners by updating the AtkObject fields or emitting signals.
+ * This is a method to update this data in an asynchronous way and 
+ * avoid deadlocks between the Tcl and GLib event loops.
+ */
+
+static void UpdateCacheOnTcl(ClientData clientData)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    if (!acc || !acc->interp || !acc->tkwin) return;
+
+    /* Read values under Tcl/Tk runtime (we are on Tcl main thread). */
+    gchar *new_name = NULL;
+    gchar *new_desc = NULL;
+    gchar *new_value = NULL;
+    gint new_child_count = 0;
+    AtkRole new_role = ATK_ROLE_UNKNOWN;
+
+    /* Read attributes from the TkAccessibilityObject hash, if present. */
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+    if (hPtr) {
+        Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        if (attrs) {
+            Tcl_HashEntry *entry;
+
+            entry = Tcl_FindHashEntry(attrs, "name");
+            if (entry) {
+                const char *s = Tcl_GetString(Tcl_GetHashValue(entry));
+                if (s && *s) new_name = g_strdup(s);
+            }
+
+            entry = Tcl_FindHashEntry(attrs, "description");
+            if (entry) {
+                const char *s = Tcl_GetString(Tcl_GetHashValue(entry));
+                if (s && *s) new_desc = g_strdup(s);
+            }
+
+            entry = Tcl_FindHashEntry(attrs, "value");
+            if (entry) {
+                const char *s = Tcl_GetString(Tcl_GetHashValue(entry));
+                if (s && *s) new_value = g_strdup(s);
+            }
+
+            entry = Tcl_FindHashEntry(attrs, "role");
+            if (entry) {
+                const char *s = Tcl_GetString(Tcl_GetHashValue(entry));
+                if (s && *s) {
+                    for (int i = 0; roleMap[i].tkrole != NULL; i++) {
+                        if (strcmp(roleMap[i].tkrole, s) == 0) {
+                            new_role = roleMap[i].atkrole;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /* Child count: compute from Tk window childList on Tcl thread. */
+    if (acc->tkwin) {
+        TkWindow *childPtr;
+        for (childPtr = ((TkWindow*)acc->tkwin)->childList;
+             childPtr != NULL;
+             childPtr = childPtr->nextPtr) {
+            new_child_count++;
+        }
+    }
+
+    /* Atomically swap caches (free old memory). */
+    if (acc->cached_name) { g_free(acc->cached_name); acc->cached_name = NULL; }
+    if (new_name) acc->cached_name = new_name;
+
+    if (acc->cached_description) { g_free(acc->cached_description); acc->cached_description = NULL; }
+    if (new_desc) acc->cached_description = new_desc;
+
+    if (acc->cached_value) { g_free(acc->cached_value); acc->cached_value = NULL; }
+    if (new_value) acc->cached_value = new_value;
+
+    acc->cached_child_count = new_child_count;
+    acc->cached_role = new_role;
+    acc->cache_generation++;
+
+    /* Propagate changes to ATK consumers.  Update AtkObject fields and
+     * emit signals as appropriate. These calls run on the same (Tcl) thread,
+     * which is the right place to call into ATK.
+     */
+    if (acc->cached_name) {
+        atk_object_set_name(ATK_OBJECT(acc), acc->cached_name);
+    }
+    if (acc->cached_description) {
+        /* There's no direct atk_object_set_description API in older ATK;
+         * if present, call it. Otherwise, you can emit a property-change signal
+         * or ignore (assistive clients normally read description lazily).
+         * We'll set the description property if the API is available:
+         */
+#if GLIB_CHECK_VERSION(2,36,0)
+        atk_object_set_description(ATK_OBJECT(acc), acc->cached_description);
+#endif
+    }
+
+    /* If child count changed, notify via 'children-changed' event. */
+    /* There are multiple ways; simplest: notify that children changed on this object */
+    atk_object_notify_children_changed(ATK_OBJECT(acc), 0, acc->cached_child_count);
+}
+
+/* 
+ * Schedule a cache refresh on the Tcl main thread. Uses a zero-delay
+ * timer so it runs as soon as Tcl services timers (i.e. on the main loop).
+ */
+
+static void ScheduleCacheUpdate(TkAtkAccessible *acc)
+{
+    if (!acc) return;
+    /* Schedule single-shot timer to run UpdateCacheOnTcl with acc as clientData. */
+    Tcl_CreateTimerHandler(0, (Tcl_TimerProc *)UpdateCacheOnTcl, (ClientData)acc);
+}
+
 /*
- * Functions to initialize and manage the parent ATK class and object instances.
+ *----------------------------------------------------------------------
+ *
+ * Functions to initialize and finalize the ATK object and class. 
+ *
+ *----------------------------------------------------------------------
  */
 
 static void tk_atk_accessible_init(TkAtkAccessible *self)
@@ -616,6 +681,12 @@ static void tk_atk_accessible_init(TkAtkAccessible *self)
     self->tkwin = NULL;
     self->interp = NULL;
     self->path = NULL;
+    self->cached_name = NULL;
+    self->cached_description = NULL;
+    self->cached_value = NULL;
+    self->cached_child_count = 0;
+    self->cached_role = ATK_ROLE_UNKNOWN;
+    self->cache_generation = 0;
 }
 
 static void tk_atk_accessible_finalize(GObject *gobject)
@@ -630,6 +701,21 @@ static void tk_atk_accessible_finalize(GObject *gobject)
             UnregisterToplevelWindow(ATK_OBJECT(self));
         }
         self->tkwin = NULL;
+    }
+    
+    if (self->cached_name) {
+	g_free(self->cached_name);
+	self->cached_name = NULL;
+    }
+      
+    if (self->cached_description) {
+	g_free(self->cached_description);
+	self->cached_description = NULL;
+    }
+    
+    if (self->cached_value) {
+	g_free(self->cached_value);
+	self->cached_value = NULL;
     }
 
     g_free(self->path);
@@ -684,8 +770,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     /* Check for existing registration. */
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing && existing != accessible) {
-	g_warning("RegisterToplevelWindow: Toplevel %s already registered with different AtkObject",
-		  Tk_PathName(tkwin));
+	g_warning("RegisterToplevelWindow: Toplevel %s already registered with different AtkObject", Tk_PathName(tkwin));
 	return;
     }
 
@@ -897,11 +982,7 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
     AtkObject *childObj = GetAtkObjectForTkWindow(newWin);
     if (!childObj) {
         /* Create accessibility object for new window. */
-        childObj = TkCreateAccessibleAtkObject(
-					       ((TkAtkAccessible*)parentObj)->interp,
-					       newWin,
-					       Tk_PathName(newWin)
-					       );
+        childObj = TkCreateAccessibleAtkObject(((TkAtkAccessible*)parentObj)->interp, newWin, Tk_PathName(newWin));
     }
     
     if (childObj) {
