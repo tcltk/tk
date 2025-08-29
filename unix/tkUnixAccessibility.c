@@ -45,7 +45,7 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
-/* Structs to map Tk roles into Atk roles. */
+/* Structs to map Tk roles into ATK roles. */
 
 typedef struct AtkRoleMap {
     const char *tkrole;
@@ -77,12 +77,14 @@ struct AtkRoleMap roleMap[] = {
     {NULL, 0}
 };
 
-/* Variables for managing Atk objects. */
+#define ATK_CONTEXT g_main_context_default()
+
+/* Variables for managing ATK objects. */
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
 static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
 extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
-static GMainContext *context = NULL;
+static GMainContext *acc_context = NULL;
 
 /* GLib-Tcl event loop integration. */
 static void Atk_Event_Setup (ClientData clientData, int flags);
@@ -146,7 +148,7 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 
-/* Define custom Atk object bridged to Tcl/Tk. */
+/* Define custom ATK object bridged to Tcl/Tk. */
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 #define TK_ATK_IS_ACCESSIBLE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), TK_ATK_TYPE_ACCESSIBLE))
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
@@ -174,12 +176,12 @@ static void Atk_Event_Setup(ClientData clientData, int flags)
         return;
     }
 
-    if (g_main_context_pending(NULL)) {
+    if (g_main_context_pending(acc_context)) {
         block_time.sec = 0;
-        block_time.usec = 500; /* 500µs for busy GLib */
+        block_time.usec = 500; /* 500µs for busy GLib. */
     } else {
         block_time.sec = 0;
-        block_time.usec = 20000; /* 20ms idle time */
+        block_time.usec = 20000; /* 20ms idle time. */
     }
     Tcl_SetMaxBlockTime(&block_time);
 }
@@ -193,7 +195,7 @@ static void Atk_Event_Check(ClientData clientData, int flags)
         return;
     }
 
-    if (g_main_context_pending(context)) {
+    if (g_main_context_pending(acc_context)) {
         Tcl_Event *event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
         event->proc = Atk_Event_Run;
         Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
@@ -204,23 +206,32 @@ static void Atk_Event_Check(ClientData clientData, int flags)
 static int Atk_Event_Run(Tcl_Event *event, int flags) 
 {
     (void)event;
+	
+	static int in_atk_event_run = 0;
+	
+	if (in_atk_event_run) {
+		/* Already servicing GLib events - avoid recursion. */
+		return 0; 
+	}
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
+		in_atk_event_run = 0;
         return 0;
     }
 
-    gint64 deadline = g_get_monotonic_time() + G_TIME_SPAN_MILLISECOND / 2; /* 0.5ms */
+    gint64 deadline = g_get_monotonic_time() + G_TIME_SPAN_MILLISECOND / 2; /* 0.5ms. */
     int iterations = 0;
 
-    while (g_get_monotonic_time() < deadline && g_main_context_pending(NULL)) {
-        if (!g_main_context_iteration(NULL, FALSE)) {
+    while (g_get_monotonic_time() < deadline && g_main_context_pending(acc_context)) {
+        if (!g_main_context_iteration(acc_context, FALSE)) {
             break;
         }
-        if (++iterations >= 1) { /* Single iteration */
+        if (++iterations >= 1) { /* Single iteration. */
             break;
         }
     }
 
+	in_atk_event_run = 0;
     return 1;
 }
 
@@ -336,18 +347,11 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
             AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
             if (!child_obj) {
                 /* Create ATK object only when needed. */
-                child_obj = TkCreateAccessibleAtkObject(
-							acc->interp, 
-							child_tkwin, 
-							Tk_PathName(child_tkwin)
-							);
+                child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin,Tk_PathName(child_tkwin));
                 if (child_obj) {
                     /* Establish parent-child relationship. */
                     atk_object_set_parent(child_obj, obj);
-                    TkAtkAccessible_RegisterEventHandlers(
-							  child_tkwin, 
-							  (TkAtkAccessible *)child_obj
-							  );
+                    TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
                 }
             }
             if (child_obj) {
@@ -811,7 +815,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 }
 
 /*
- * Functions to map Tk window to its corresponding Atk object.
+ * Functions to map Tk window to its corresponding ATK object.
  */
 
 void InitAtkTkMapping(void)
@@ -977,7 +981,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *
  * Results:
  *
- * Accessibility system is made aware when a selection is changed.
+ * Accessibility system is made aware when selection or value data is changed.
  *
  * Side effects:
  *
@@ -1137,7 +1141,7 @@ static int IsScreenReaderActive(void)
  * TkAtkAccessibleObjCmd --
  *
  *   Main command for adding and managing accessibility objects to Tk
- *   widgets on Linux using the Atk accessibility API.
+ *   widgets on Linux using the ATK accessibility API.
  *
  * Results:
  *
@@ -1251,11 +1255,19 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
     
+    /* Activate widget-object hash table mapping. */
     InitAtkTkMapping();
+
+    /* 
+     * Establish GLib context for event loop processing. 
+     * We are creating a custom GLib event source that the
+     * Tcl event loop will respond to. 
+     */	
+    acc_context = ATK_CONTEXT;
     Tcl_CreateEventSource (Atk_Event_Setup, Atk_Event_Check, 0);
-    Tcl_SetServiceMode (TCL_SERVICE_ALL);
+
 	
-    /* Initialize main window. */
+    /* Initialize main window and create accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (!mainWin) {
 	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
@@ -1275,6 +1287,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     tk_set_name(main_acc, "Tk Application");
     RegisterAtkObjectForTkWindow(mainWin, main_acc);
     RegisterToplevelWindow(interp, mainWin, main_acc);
+	
+    /* Register X event handlers. */
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
    
     /* Register Tcl commands. */
@@ -1286,6 +1300,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 			 EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
 			 IsScreenReaderRunning, NULL, NULL);
+    
     return TCL_OK;
 }
 #else

@@ -715,8 +715,6 @@ proc tkAboutDialog {} {
 }
 
 
-
-
 # Local Variables:
 # mode: tcl
 # End:
