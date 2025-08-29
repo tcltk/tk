@@ -64,7 +64,7 @@ The value to store in the associated \fB\-variable\fR
 when the widget's switch state is set to on.  Defaults to \fB1\fR.
 .OP \-size size Size
 Specifies the size identifier of the toggleswitch widget.  The supported
-values are the strings \fB\1\fR, \fB\2\fR (the default), and \fB\3\fR.
+values are the strings \fB1\fR, \fB2\fR (the default), and \fB3\fR.
 .RS
 .PP
 Note that by setting this option to a value \fIsize\fR, the \fB-style\fR
@@ -75,28 +75,28 @@ its previous or requested value was \fIprefix\fR.\fBToggleswitch1\fR,
 \fIprefix\fR.\fBToggleswitch2\fR, or \fIprefix\fR.\fBToggleswitch3\fR. 
 Conversely, by setting the \fB-style\fR option to a value of the form
 \fBToggleswitch\fR\fIsize\fR or \fIprefix\fR.\fBToggleswitch\fR\fIsize\fR
-(where \fIsize\fR is one of \fB\1\fR, \fB\2\fR, or \fB\3\fR), the \fB-size\fR
+(where \fIsize\fR is one of \fB1\fR, \fB2\fR, or \fB3\fR), the \fB-size\fR
 option will automatically be set to \fIsize\fR.  When configuring both options
 \fB-size\fR and \fB-style\fR, the former will take precedence over the latter,
 regardless of the order in which they were specified.
 .PP
 For example, if you create the widget with
-.CS
 .PP
+.CS
 \fBttk::toggleswitch\fR \fIpathName\fR \fB-size 3 -style\fR My.\fBToggleswitch3\fR
 .CE
 .PP
 or invoke
-.CS
 .PP
+.CS
 \fIpathName\fR \fBconfigure -style\fR My.\fBToggleswitch3\fR
 .CE
 .PP
 then the \fB-style\fR option will be set to My.\fBToggleswitch3\fR (and the
 \fB-size\fR option will have the value \fB3\fR).  On the other hand, if you
 create the widget with
-.CS
 .PP
+.CS
 \fBttk::toggleswitch\fR \fIpathName\fR \fB-style\fR My.\fBToggleswitch3\fR
 .CE
 .PP
