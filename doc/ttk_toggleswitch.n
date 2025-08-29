@@ -64,7 +64,9 @@ The value to store in the associated \fB\-variable\fR
 when the widget's switch state is set to on.  Defaults to \fB1\fR.
 .OP \-size size Size
 Specifies the size identifier of the toggleswitch widget.  The supported
-values are the strings \fB1\fR, \fB2\fR (the default), and \fB3\fR.
+values are the strings \fB1\fR, \fB2\fR (the default), and \fB3\fR.  In the
+case of the \fBaqua\fR theme, these size IDs correspond to the control sizes
+"mini", "small", and "large" of the native toggle switches on macOS.
 .RS
 .PP
 Note that by setting this option to a value \fIsize\fR, the \fB-style\fR
