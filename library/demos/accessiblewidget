@@ -46,6 +46,12 @@ pack $btn -fill x -expand no
 return
 
 
+# Local Variables:
+# mode: tcl
+# End:
+
+
+
 
 
 
