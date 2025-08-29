@@ -914,6 +914,7 @@ Tk_SendObjCmd(
 	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
 	}
 	command  = Tcl_DStringValue(&request2);
+	Tcl_DStringFree(&request2);
     }
 
     /*
@@ -922,7 +923,6 @@ Tk_SendObjCmd(
      */
 
     int code = sendAEDoScript(interp, info.pid, command, async);
-    Tcl_DStringFree(&request2);
     if (code != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
