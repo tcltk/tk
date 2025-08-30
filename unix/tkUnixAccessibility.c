@@ -113,7 +113,6 @@ static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
 
-
 /* Object lifecycle functions. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
 static void tk_atk_accessible_init(TkAtkAccessible *accessible);
@@ -167,22 +166,18 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* Configure event loop. */
-static void Atk_Event_Setup(ClientData clientData, int flags) 
+    static void Atk_Event_Setup(ClientData clientData, int flags) 
 {
     (void)clientData;
-    static Tcl_Time block_time;
+    static Tcl_Time block_time = {0, 10000};
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return;
     }
 
     if (g_main_context_pending(acc_context)) {
-        block_time.sec = 0;
-        block_time.usec = 500; /* 500µs for busy GLib. */
-    } else {
-        block_time.sec = 0;
-        block_time.usec = 20000; /* 20ms idle time. */
-    }
+        block_time.usec = 0;
+    } 
     Tcl_SetMaxBlockTime(&block_time);
 }
 
@@ -206,32 +201,15 @@ static void Atk_Event_Check(ClientData clientData, int flags)
 static int Atk_Event_Run(Tcl_Event *event, int flags) 
 {
     (void)event;
-	
-	static int in_atk_event_run = 0;
-	
-	if (in_atk_event_run) {
-		/* Already servicing GLib events - avoid recursion. */
-		return 0; 
-	}
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
-		in_atk_event_run = 0;
         return 0;
     }
-
-    gint64 deadline = g_get_monotonic_time() + G_TIME_SPAN_MILLISECOND / 2; /* 0.5ms. */
-    int iterations = 0;
-
-    while (g_get_monotonic_time() < deadline && g_main_context_pending(acc_context)) {
-        if (!g_main_context_iteration(acc_context, FALSE)) {
-            break;
-        }
-        if (++iterations >= 1) { /* Single iteration. */
-            break;
-        }
+    
+    while (g_main_context_pending(acc_context)) {
+	g_main_context_iteration(acc_context, FALSE);
     }
-
-	in_atk_event_run = 0;
+		
     return 1;
 }
 
@@ -934,6 +912,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
 
     if (eventPtr->type == ConfigureNotify) {
+		
 	AtkObject *obj = ATK_OBJECT(acc);  
 
 	/* Build the bounds rectangle. */
