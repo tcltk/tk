@@ -36,6 +36,7 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
+ * Information that we record about an application.
  * RegFindName returns a struct of this type.
  */
 
@@ -43,6 +44,43 @@ typedef struct AppInfo {
     pid_t pid;
     Window comm;
 } AppInfo;
+
+/*
+ * Construct an AppInfo from a ListObj value of the appNameDict.
+ */
+
+static AppInfo
+ObjToAppInfo(
+    Tcl_Obj *value)
+{
+    AppInfo result = {0};
+    Tcl_Size objc;
+    Tcl_Obj **objvPtr;
+    if (TCL_OK != Tcl_ConvertToType(NULL, value, Tcl_GetObjType("list"))) {
+	fprintf(stderr, "failed to get list obj from dict value\n");
+    } else if (Tcl_ListObjGetElements(NULL, value, &objc, &objvPtr) == TCL_OK) {
+	if (objc != 2) {
+	    fprintf(stderr, "Expected a list of 2 items, but got %ld\n", objc);
+	    return result;
+	}
+	Tcl_GetIntFromObj(NULL, objvPtr[0], &result.pid);
+	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.comm);
+    }
+    return result;
+}
+
+/*
+ * Construct a ListObj value for the appNameDict from an AppInfo.
+ */
+
+static Tcl_Obj*
+AppInfoToObj(
+    AppInfo info)
+{
+    Tcl_Obj *objv[2] = {Tcl_NewIntObj(info.pid),
+			Tcl_NewLongObj(info.comm)};
+    return Tcl_NewListObj(2, objv);
+}
 
 /*
  * A registry of all interpreters owned by the current user is maintained in
@@ -54,7 +92,8 @@ typedef struct AppInfo {
  * that interpreter.
  */
 
-static NSString *appNameRegistryPath;
+//static NSString *appNameRegistryPath;
+static char *appNameRegistryPath;
 static NSString *appNameRegistryLockPath;
 static NSDistributedLock *appNamesLock;
 
@@ -69,10 +108,9 @@ typedef struct NameRegistry {
     int modified;		/* Non-zero means that the property has been
 				 * modified, so it needs to be written out
 				 * when the NameRegistry is closed. */
-    NSMutableDictionary *appNameDict; /* NSMutable Dictionary mapping each
-				       * interpreter name to an NSArray
-				       * [pid, commwindow]; nil if the registry
-				       * is closed. */
+    Tcl_Obj *appNameDict;     /* Tcl dict mapping interpreter names to
+				 * a Tcl list {pid, commWindow}
+				 */
 } NameRegistry;
 
 typedef struct {
@@ -140,9 +178,7 @@ sendAEDoScript(
     int async)
 {
     AppleEvent event, reply;
-    AEDesc desc;
     OSStatus status;
-    int resultCode = 0;
     char *buf = NULL;
     
     // Build an AppleEvent targeting the provided pid.
@@ -153,7 +189,7 @@ sendAEDoScript(
 			       kAnyTransactionID,
 			       &event,
 			       NULL,             // No error struct is needed.
-			       "'----':utf8(@)", // direct parameter of type utf8 bytes
+			       "'----':utf8(@)", // direct parameter: utf8 bytes
 			       strlen(command),
 			       command);
     CHECK("AEBuildAppleEvent")
@@ -241,15 +277,70 @@ static struct {
  */
 
 static Tcl_CmdDeleteProc DeleteProc;
-static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr, int lock);
+static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr);
 static void		RegClose(NameRegistry *regPtr);
 static void		RegAddName(NameRegistry *regPtr, const char *name,
 				    Window commWindow);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
-static void		SendEventProc(void *clientData, XEvent *eventPtr);
 static int		SendInit(TkDisplay *dispPtr);
-static Tk_RestrictProc  SendRestrictProc;
+
+static void
+saveAppNameRegistry(
+    Tcl_Obj *dict,
+    const char *path)
+{
+    FILE *appNameFile = fopen(path, "wb");
+    if (appNameFile) {
+	Tcl_Size length, bytesWritten;
+	char *bytes = Tcl_GetStringFromObj(dict, &length);
+	bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
+	fclose(appNameFile);
+	if (bytesWritten != length) {
+	    fprintf(stderr, "write failed: length: %lu wrote: %lu\n",
+		    length, bytesWritten);
+	    return;
+	}
+    } else {
+	fprintf(stderr, "fopen failed\n");
+	return;
+    }
+}
+
+static Tcl_Obj*
+loadAppNameRegistry(
+    const char *path)
+{
+    FILE *appNameFile = fopen(path, "ab+");
+    Tcl_Obj *result = NULL;
+    if (appNameFile) {
+	size_t bytesRead;
+	size_t length = ftell(appNameFile);
+	char *bytes = ckalloc(length);
+	fseek(appNameFile, 0, SEEK_SET);
+	if (bytes) {
+	    bytesRead = fread(bytes, 1, length, appNameFile);
+	} else {
+	    fprintf(stderr, "Out of memory\n");
+	    return NULL;
+	}
+	fclose(appNameFile);
+	if (bytesRead != length) {
+	    fprintf(stderr, "read failed: length %lu; read %lu,\n",
+		    length, bytesRead);
+	    return NULL;
+	}
+	result = Tcl_NewStringObj(bytes, length);
+	ckfree(bytes);
+	if (TCL_OK != Tcl_ConvertToType(NULL, result, Tcl_GetObjType("dict"))){
+	    result = Tcl_NewDictObj();
+	}
+    } else {
+	fprintf(stderr, "fopen failed\n");
+	return NULL;
+    }
+    return result;
+}
 
 /*
  *--------------------------------------------------------------
@@ -298,10 +389,13 @@ SendInit(
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
 			     NSUserDomainMask, YES);
     NSString *cachesDirectory = [searchPaths objectAtIndex:0];
-    appNameRegistryPath = [cachesDirectory
+    NSString *RegistryPath = [cachesDirectory
         stringByAppendingPathComponent:@"com.tcltk.appnames"];
     appNameRegistryLockPath = [cachesDirectory
         stringByAppendingPathComponent:@"com.tcltk.appnames.lock"];
+    size_t length = 1 + strlen(RegistryPath.UTF8String);
+    appNameRegistryPath = ckalloc(length);
+    strlcpy(appNameRegistryPath, RegistryPath.UTF8String, length);
     return TCL_OK;
 }
 
@@ -309,11 +403,10 @@ SendInit(
 /*
  *----------------------------------------------------------------------
  *
- * RegOpen --
+ * lockRegistryFile --
  *
- *	This function loads the name registry for a display into memory so
- *	that it can be manipulated.  It reads json data from a file
- *	and deserializes it as an NSMutableDictionary.
+ *	This function locks the registry file.  It is called by RegOpen
+ *      before doing any operation onthe file.
  *
  * Results:
  *	The return value is a pointer to a NameRegistry structure.
@@ -323,34 +416,7 @@ SendInit(
  *----------------------------------------------------------------------
  */
 
-static NameRegistry *
-RegOpen(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting
-				 * (errors cause a panic so in fact no error
-				 * is ever returned, but the interpreter is
-				 * needed anyway). */
-    TkDisplay *dispPtr,		/* Display whose name registry is to be
-				 * opened. */
-    int lock)			/* Non-zero means lock the window server when
-				 * opening the registry, so no-one else can
-				 * use the registry until we close it. */
-{
-    NameRegistry *regPtr;
-    Tk_ErrorHandler handler;
-    NSMutableArray *deadInterpreters = [NSMutableArray array];
-    NSFileManager *fm = [NSFileManager defaultManager];
-    NSError *error = nil;
-
-    if (dispPtr->commTkwin == NULL) {
-	SendInit(dispPtr);
-    }
-
-    //  XXXX Should we use the error handler here ???
-    handler = Tk_CreateErrorHandler(dispPtr->display, -1, -1, -1, NULL, NULL);
-
-    regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
-    regPtr->dispPtr = dispPtr;
-    regPtr->modified = 0;
+static void lockRegistryFile() {
 
     /*
      * NSDistributedLock is a fancy name for old-fashioned dot-locking,
@@ -377,47 +443,110 @@ RegOpen(
 	    break;
 	}
     }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * unlockRegistryFile --
+ *
+ *	This function unlocks the registry file.  It is called by RegClose
+ *      after any operation on the file.
+ *
+ * Results:
+ *	The return value is a pointer to a NameRegistry structure.
+ *
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void unlockRegistryFile() {
+    [appNamesLock unlock];
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegOpen --
+ *
+ *	This function loads the name registry for a display into memory so
+ *	that it can be manipulated.  It reads a string representation of
+ *      a Tcl dict from a file and constructs the dict.
+ *
+ * Results:
+ *	The return value is a pointer to a NameRegistry structure.
+ *
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NameRegistry *
+RegOpen(
+    Tcl_Interp *interp,		/* Interpreter to use for error reporting
+				 * (errors cause a panic so in fact no error
+				 * is ever returned, but the interpreter is
+				 * needed anyway). */
+    TkDisplay *dispPtr)		/* Display whose name registry is to be
+				 * opened. */
+{
+    NameRegistry *regPtr;
+    Tk_ErrorHandler handler;
+
+    if (dispPtr->commTkwin == NULL) {
+	SendInit(dispPtr);
+    }
+
+    //  XXXX Should we use the error handler here ???
+    handler = Tk_CreateErrorHandler(dispPtr->display, -1, -1, -1, NULL, NULL);
+    regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
+    regPtr->dispPtr = dispPtr;
+    regPtr->modified = 0;
+    lockRegistryFile();
 
     /*
-     * Read the registry file into an NSData object and deserialize it
-     * as an NSMutableDictionary.
+     * Deserialize the registry file as a Tcl dict.
      */
 
-    NSData *dataObj = [NSData dataWithContentsOfFile:appNameRegistryPath];
-    if (dataObj) {		
-	regPtr->appNameDict = [NSJSONSerialization
-	    JSONObjectWithData:dataObj
-		       options:NSJSONReadingMutableContainers
-			 error:&error];
-       if (error) {
-	   // XXXX
-	   // Oh, No! The JSON data is invalid.
-	   // We probably should generate a Tcl Error here.
-	   // Should we remove the file???
-	   regPtr->appNameDict = [NSMutableDictionary dictionary];
-       }
+    Tcl_Obj *dict = loadAppNameRegistry(appNameRegistryPath);
+    //appNameRegistryPath.UTF8String);
+    if (dict) {
+	regPtr->appNameDict = dict;
     } else {
-	regPtr->appNameDict = [NSMutableDictionary dictionary];
+	regPtr->appNameDict = Tcl_NewDictObj();
     }
-    // XXXX Should we be using this error handler???
-    Tk_DeleteErrorHandler(handler);
 
     /*
      * Find and remove any interpreter name for which the process is no longer
      * running.  This cleans up after a crash of some other wish process.
      */
 
-    for (NSString *interpName in regPtr->appNameDict) {
-	NSArray *info = [regPtr->appNameDict objectForKey:interpName];
-	pid_t pid = ((NSNumber *)[info objectAtIndex:0]).intValue;
-	if (kill(pid, 0)) {
-	    [deadInterpreters addObject: (id) interpName];
+    Tcl_Size dictSize;
+    Tcl_DictObjSize(NULL, regPtr->appNameDict, &dictSize);
+    Tcl_Obj **deadinterps = (Tcl_Obj**) ckalloc(dictSize * sizeof(Tcl_Obj*));
+    int count = 0;
+    Tcl_DictSearch search;
+    Tcl_Obj *keyTcl, *value;
+    int done = 0, i;
+    AppInfo infoTcl;
+    for (Tcl_DictObjFirst(
+	  interp, regPtr->appNameDict, &search, &keyTcl, &value, &done) ;
+	     !done ;
+	     Tcl_DictObjNext(&search, &keyTcl, &value, &done)) {
+	infoTcl = ObjToAppInfo(value);
+	if (kill(infoTcl.pid, 0)) {
+	    deadinterps[count++] = keyTcl;
 	}
     }
-    for (NSString *interpName in deadInterpreters) {
-	fprintf(stderr, "Removing %s\n", interpName.UTF8String); 
-	[regPtr->appNameDict removeObjectForKey:interpName];
+    for (i = 0; i < count; i++) {
+	Tcl_DictObjRemove(NULL, regPtr->appNameDict, deadinterps[i]);
     }
+    ckfree(deadinterps);
+
+    // XXXX Should we be using this error handler???
+    Tk_DeleteErrorHandler(handler);
     return regPtr;
 }
 
@@ -448,26 +577,13 @@ RegClose(
     NSError *error = nil;
     Tk_ErrorHandler handler;
 
-    // XXXX Agein, do we need this?
+    // XXXX Agein, should we use this?
     handler = Tk_CreateErrorHandler(regPtr->dispPtr->display, -1, -1, -1,
 	    NULL, NULL);
-
-    NSData *appNameData = [NSJSONSerialization
-	dataWithJSONObject:regPtr->appNameDict
-		   options:0
-		     error:&error];
-    [appNameData writeToFile:appNameRegistryPath
-		     options:NSDataWritingAtomic
-		       error:&error];
-    if (error) {
-	// XXXX Use the error handler here?
-	fprintf(stderr, "RegClose: %s",
-		error.localizedDescription.UTF8String);
-	return;
-    }
-    regPtr->appNameDict = nil;
+    saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
+    //appNameRegistryPath.UTF8String);
     ckfree(regPtr);
-    [appNamesLock unlock];
+    unlockRegistryFile();
     Tk_DeleteErrorHandler(handler);
 }
 
@@ -497,21 +613,14 @@ RegFindName(
 				 * previous call to RegOpen. */
     const char *name)		/* Name of an application. */
 {
-    NSString *key = [NSString stringWithUTF8String:name];
-    NSArray *value = [regPtr->appNameDict objectForKey:key];
+    Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, -1);
+    Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
     // XXXX Maybe using pid 0 as the default is a bad idea?
-    AppInfo result = {0};
-    if (value) {
-	result.pid = ((NSNumber *)[value objectAtIndex:0]).intValue;
-	result.comm = ((NSNumber *)[value objectAtIndex:1]).intValue;
-	if (localData.sendDebug) {
-	fprintf(stderr, "   Found pid: %d; comm %ld for %s\n",
-		result.pid, result.comm, name);
-	}
-    } else if (localData.sendDebug) {
-	    fprintf(stderr, "%s not found.\n", name);
+    AppInfo resultTcl = {0};
+    if (valuePtr) {
+	resultTcl = ObjToAppInfo(valuePtr);
     }
-    return result;
+    return resultTcl;
 }
 
 
@@ -540,9 +649,8 @@ RegDeleteName(
 				 * previous call to RegOpen. */
     const char *name)		/* Name of an application. */
 {
-    NSString *key = [NSString stringWithUTF8String: name];
-    [regPtr->appNameDict removeObjectForKey: key];
-    regPtr->modified = 1;
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, -1);
+    Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
 }
 
 
@@ -573,10 +681,10 @@ RegAddName(
     Window commWindow)		/* X identifier for comm. window of
 				 * application. */
 {
-    NSString *key = [NSString stringWithUTF8String: name];
-    NSArray *value = @[[NSNumber numberWithUnsignedLong:getpid()],
-		       [NSNumber numberWithUnsignedLong:commWindow]];
-    [regPtr->appNameDict setValue:value forKey:key];
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, -1);
+    AppInfo valueTcl = {getpid(), commWindow};
+    Tcl_Obj *valuePtr = AppInfoToObj(valueTcl);
+    Tcl_DictObjPut(NULL, regPtr->appNameDict, keyPtr, valuePtr);
     regPtr->modified = 1;
 }
 
@@ -615,9 +723,7 @@ Tk_SetAppName(
 				 * interpreter in later "send" commands. Must
 				 * be globally unique. */
 {
-    RegisteredInterp *riPtr, *riPtr2;
-    Window w;
-    pid_t pid;
+    RegisteredInterp *riPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     NameRegistry *regPtr;
@@ -638,7 +744,7 @@ Tk_SetAppName(
      * name from the registry.
      */
 
-    regPtr = RegOpen(interp, winPtr->dispPtr, 1);
+    regPtr = RegOpen(interp, winPtr->dispPtr);
     for (riPtr = tsdPtr->interpListPtr; ; riPtr = riPtr->nextPtr) {
 	if (riPtr == NULL) {
 	    /*
@@ -698,9 +804,6 @@ Tk_SetAppName(
 	if (info.comm == None) {
 	    break;
 	}
-	
-    nextSuffix:
-	continue;
     }
 
     /*
@@ -756,10 +859,7 @@ Tk_SendObjCmd(
     Window commWindow;
     RegisteredInterp *riPtr;
     int result, async, i, firstArg, index;
-    Tk_RestrictProc *prevProc;
-    void *prevArg;
     TkDisplay *dispPtr;
-    Tcl_Time timeout;
     NameRegistry *regPtr;
     Tcl_DString request;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -881,7 +981,7 @@ Tk_SendObjCmd(
      * Make sure the interpreter exists.
      */
 
-    regPtr = RegOpen(interp, winPtr->dispPtr, 0);
+    regPtr = RegOpen(interp, winPtr->dispPtr);
     AppInfo info = RegFindName(regPtr, destName);
     RegClose(regPtr);
     commWindow = info.comm;
@@ -919,7 +1019,7 @@ Tk_SendObjCmd(
 
     /*
      * If async is 0, the call below simply blocks until a reply is received.
-     * Perhaps we should run a background thread to process timer events.
+     * Perhaps we should run a background thread to process timer events?
      */
 
     int code = sendAEDoScript(interp, info.pid, command, async);
@@ -958,22 +1058,20 @@ TkGetInterpNames(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     NameRegistry *regPtr;
-    Tcl_Obj *resultObj = Tcl_NewObj();
-    char *p;
-
-    /*
-     * Read the registry property, then scan through all of its entries.
-     * Validate each entry to be sure that its application still exists.
-     */
-
-    regPtr = RegOpen(interp, winPtr->dispPtr, 1);
-    for (id key in regPtr->appNameDict) {
-	NSString *name = (NSString *) key;
-	Tcl_ListObjAppendElement(NULL, resultObj,
-		    Tcl_NewStringObj(name.UTF8String, TCL_INDEX_NONE));
+    //Tcl_Obj *resultObj = Tcl_NewObj();
+    Tcl_Obj *resultObjTcl = Tcl_NewListObj(2, NULL);
+    regPtr = RegOpen(interp, winPtr->dispPtr);
+    Tcl_DictSearch search;
+    Tcl_Obj *keyTcl, *value;
+    int done = 0;
+    for (Tcl_DictObjFirst(
+	  interp, regPtr->appNameDict, &search, &keyTcl, &value, &done) ;
+	     !done ;
+	     Tcl_DictObjNext(&search, &keyTcl, &value, &done)) {
+	Tcl_ListObjAppendElement(NULL, resultObjTcl, keyTcl);
     }
     RegClose(regPtr);
-    Tcl_SetObjResult(interp, resultObj);
+    Tcl_SetObjResult(interp, resultObjTcl);
     return TCL_OK;
 }
 
@@ -1065,7 +1163,7 @@ DeleteProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    regPtr = RegOpen(riPtr->interp, riPtr->dispPtr, 1);
+    regPtr = RegOpen(riPtr->interp, riPtr->dispPtr);
     RegDeleteName(regPtr, riPtr->name);
     RegClose(regPtr);
 
