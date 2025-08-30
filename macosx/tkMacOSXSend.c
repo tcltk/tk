@@ -92,10 +92,7 @@ AppInfoToObj(
  * that interpreter.
  */
 
-//static NSString *appNameRegistryPath;
 static char *appNameRegistryPath;
-static NSString *appNameRegistryLockPath;
-static NSDistributedLock *appNamesLock;
 
 /* When the registry is being manipulated by an application (e.g. to add or
  * remove an entry), it is loaded into memory using a structure of the
@@ -290,11 +287,18 @@ saveAppNameRegistry(
     Tcl_Obj *dict,
     const char *path)
 {
-    FILE *appNameFile = fopen(path, "wb");
+    FILE *appNameFile = fopen(path, "rb+");
+    if (appNameFile == NULL) {
+	fprintf(stderr, "fopen failed\n");
+    }
+    if (flock(fileno(appNameFile), LOCK_EX)) {
+	fprintf(stderr, "flock failed\n");
+    }
     if (appNameFile) {
 	Tcl_Size length, bytesWritten;
 	char *bytes = Tcl_GetStringFromObj(dict, &length);
 	bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
+	flock(fileno(appNameFile), LOCK_UN);
 	fclose(appNameFile);
 	if (bytesWritten != length) {
 	    fprintf(stderr, "write failed: length: %lu wrote: %lu\n",
@@ -312,6 +316,12 @@ loadAppNameRegistry(
     const char *path)
 {
     FILE *appNameFile = fopen(path, "ab+");
+    if (appNameFile == NULL) {
+	fprintf(stderr, "fopen failed\n");
+    }
+    if (flock(fileno(appNameFile), LOCK_EX)) {
+	fprintf(stderr, "flock failed\n");
+    }
     Tcl_Obj *result = NULL;
     if (appNameFile) {
 	size_t bytesRead;
@@ -324,6 +334,7 @@ loadAppNameRegistry(
 	    fprintf(stderr, "Out of memory\n");
 	    return NULL;
 	}
+	flock(fileno(appNameFile), LOCK_UN);
 	fclose(appNameFile);
 	if (bytesRead != length) {
 	    fprintf(stderr, "read failed: length %lu; read %lu,\n",
@@ -383,7 +394,7 @@ SendInit(
     Tk_MakeWindowExist(dispPtr->commTkwin);
 
     /*
-     * Intialize the paths used for the appname registry and the lock.
+     * Intialize the path used for the appname registry.
      */
     
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
@@ -391,80 +402,12 @@ SendInit(
     NSString *cachesDirectory = [searchPaths objectAtIndex:0];
     NSString *RegistryPath = [cachesDirectory
         stringByAppendingPathComponent:@"com.tcltk.appnames"];
-    appNameRegistryLockPath = [cachesDirectory
-        stringByAppendingPathComponent:@"com.tcltk.appnames.lock"];
     size_t length = 1 + strlen(RegistryPath.UTF8String);
     appNameRegistryPath = ckalloc(length);
     strlcpy(appNameRegistryPath, RegistryPath.UTF8String, length);
     return TCL_OK;
 }
 
-
-/*
- *----------------------------------------------------------------------
- *
- * lockRegistryFile --
- *
- *	This function locks the registry file.  It is called by RegOpen
- *      before doing any operation onthe file.
- *
- * Results:
- *	The return value is a pointer to a NameRegistry structure.
- *
- *
- *
- *----------------------------------------------------------------------
- */
-
-static void lockRegistryFile() {
-
-    /*
-     * NSDistributedLock is a fancy name for old-fashioned dot-locking,
-     * which seems adequate for dealing with concurrent access to the
-     * file used to store the AppName Registry.  This lock will be
-     * released in RegClose.
-     */
-    
-    appNamesLock = [NSDistributedLock lockWithPath:appNameRegistryLockPath];
-
-    /*
-     * We don't keep the registry file open for long.  So wait for up to .1
-     * seconds to acquire the lock.  If that is not long enough, something has
-     * gone wrong with some other wish process and we punt by breaking the
-     * lock.
-     */
-    
-    int count = 0;
-    while (![appNamesLock tryLock]) {
-	[NSThread sleepForTimeInterval:0.01];
-	count++;
-	if (count > 10) {
-	    [appNamesLock breakLock];
-	    break;
-	}
-    }
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * unlockRegistryFile --
- *
- *	This function unlocks the registry file.  It is called by RegClose
- *      after any operation on the file.
- *
- * Results:
- *	The return value is a pointer to a NameRegistry structure.
- *
- *
- *
- *----------------------------------------------------------------------
- */
-
-static void unlockRegistryFile() {
-    [appNamesLock unlock];
-}
 
 /*
  *----------------------------------------------------------------------
@@ -504,7 +447,6 @@ RegOpen(
     regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
     regPtr->dispPtr = dispPtr;
     regPtr->modified = 0;
-    lockRegistryFile();
 
     /*
      * Deserialize the registry file as a Tcl dict.
@@ -581,9 +523,7 @@ RegClose(
     handler = Tk_CreateErrorHandler(regPtr->dispPtr->display, -1, -1, -1,
 	    NULL, NULL);
     saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
-    //appNameRegistryPath.UTF8String);
     ckfree(regPtr);
-    unlockRegistryFile();
     Tk_DeleteErrorHandler(handler);
 }
 
