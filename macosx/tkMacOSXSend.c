@@ -287,26 +287,27 @@ saveAppNameRegistry(
     Tcl_Obj *dict,
     const char *path)
 {
-    FILE *appNameFile = fopen(path, "rb+");
+    Tcl_Size length, bytesWritten;
+    /* Open the file ab+ to avoid truncating it before flocking it. */
+    FILE *appNameFile = fopen(path, "ab+");
+    char *bytes;
     if (appNameFile == NULL) {
 	fprintf(stderr, "fopen failed\n");
+	return;
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
 	fprintf(stderr, "flock failed\n");
     }
-    if (appNameFile) {
-	Tcl_Size length, bytesWritten;
-	char *bytes = Tcl_GetStringFromObj(dict, &length);
-	bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
-	flock(fileno(appNameFile), LOCK_UN);
-	fclose(appNameFile);
-	if (bytesWritten != length) {
-	    fprintf(stderr, "write failed: length: %lu wrote: %lu\n",
-		    length, bytesWritten);
-	    return;
-	}
-    } else {
-	fprintf(stderr, "fopen failed\n");
+    /* Now we can truncate the file. */
+    ftruncate(fileno(appNameFile), 0);
+    bytes = Tcl_GetStringFromObj(dict, &length);
+    bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
+    flock(fileno(appNameFile), LOCK_UN);
+	
+    fclose(appNameFile);
+    if (bytesWritten != length) {
+	fprintf(stderr, "write failed: length: %lu wrote: %lu\n",
+		length, bytesWritten);
 	return;
     }
 }
@@ -315,40 +316,39 @@ static Tcl_Obj*
 loadAppNameRegistry(
     const char *path)
 {
+    size_t bytesRead;
+    size_t length;
+    char *bytes;
+    /* Open in ab+ so position will be at the end. */
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
 	fprintf(stderr, "fopen failed\n");
+	return NULL;
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
 	fprintf(stderr, "flock failed\n");
     }
     Tcl_Obj *result = NULL;
-    if (appNameFile) {
-	size_t bytesRead;
-	size_t length = ftell(appNameFile);
-	char *bytes = ckalloc(length);
-	fseek(appNameFile, 0, SEEK_SET);
-	if (bytes) {
-	    bytesRead = fread(bytes, 1, length, appNameFile);
-	} else {
-	    fprintf(stderr, "Out of memory\n");
-	    return NULL;
-	}
-	flock(fileno(appNameFile), LOCK_UN);
-	fclose(appNameFile);
-	if (bytesRead != length) {
-	    fprintf(stderr, "read failed: length %lu; read %lu,\n",
-		    length, bytesRead);
-	    return NULL;
-	}
-	result = Tcl_NewStringObj(bytes, length);
-	ckfree(bytes);
-	if (TCL_OK != Tcl_ConvertToType(NULL, result, Tcl_GetObjType("dict"))){
-	    result = Tcl_NewDictObj();
-	}
+    length = ftell(appNameFile);
+    bytes = ckalloc(length);
+    fseek(appNameFile, 0, SEEK_SET);
+    if (bytes) {
+	bytesRead = fread(bytes, 1, length, appNameFile);
     } else {
-	fprintf(stderr, "fopen failed\n");
+	fprintf(stderr, "Out of memory\n");
 	return NULL;
+    }
+    flock(fileno(appNameFile), LOCK_UN);
+    fclose(appNameFile);
+    if (bytesRead != length) {
+	fprintf(stderr, "read failed: length %lu; read %lu,\n",
+		length, bytesRead);
+	return NULL;
+    }
+    result = Tcl_NewStringObj(bytes, length);
+    ckfree(bytes);
+    if (TCL_OK != Tcl_ConvertToType(NULL, result, Tcl_GetObjType("dict"))){
+	result = Tcl_NewDictObj();
     }
     return result;
 }
@@ -453,7 +453,6 @@ RegOpen(
      */
 
     Tcl_Obj *dict = loadAppNameRegistry(appNameRegistryPath);
-    //appNameRegistryPath.UTF8String);
     if (dict) {
 	regPtr->appNameDict = dict;
     } else {
@@ -470,16 +469,15 @@ RegOpen(
     Tcl_Obj **deadinterps = (Tcl_Obj**) ckalloc(dictSize * sizeof(Tcl_Obj*));
     int count = 0;
     Tcl_DictSearch search;
-    Tcl_Obj *keyTcl, *value;
+    Tcl_Obj *key, *value;
     int done = 0, i;
-    AppInfo infoTcl;
     for (Tcl_DictObjFirst(
-	  interp, regPtr->appNameDict, &search, &keyTcl, &value, &done) ;
+	  interp, regPtr->appNameDict, &search, &key, &value, &done) ;
 	     !done ;
-	     Tcl_DictObjNext(&search, &keyTcl, &value, &done)) {
-	infoTcl = ObjToAppInfo(value);
-	if (kill(infoTcl.pid, 0)) {
-	    deadinterps[count++] = keyTcl;
+	     Tcl_DictObjNext(&search, &key, &value, &done)) {
+	AppInfo info = ObjToAppInfo(value);
+	if (kill(info.pid, 0)) {
+	    deadinterps[count++] = key;
 	}
     }
     for (i = 0; i < count; i++) {
