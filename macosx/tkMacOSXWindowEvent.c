@@ -586,26 +586,28 @@ GenerateUpdates(
      */
 
     damageBounds = CGRectIntersection(bounds, *updateBounds);
-    event.xany.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xany.send_event = false;
-    event.xany.window = Tk_WindowId(winPtr);
-    event.xany.display = Tk_Display(winPtr);
-    event.type = Expose;
-    event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
-    event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
-    event.xexpose.width = damageBounds.size.width;
-    event.xexpose.height = damageBounds.size.height;
-    event.xexpose.count = 0;
-    if ([view inLiveResize]) {
-	Tk_HandleEvent(&event);
-    } else {
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    }
+    if (!CGRectIsNull(damageBounds)) {
+	event.xany.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
+	event.xany.send_event = false;
+	event.xany.window = Tk_WindowId(winPtr);
+	event.xany.display = Tk_Display(winPtr);
+	event.type = Expose;
+	event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
+	event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
+	event.xexpose.width = damageBounds.size.width;
+	event.xexpose.height = damageBounds.size.height;
+	event.xexpose.count = 0;
+	if ([view inLiveResize]) {
+	    Tk_HandleEvent(&event);
+	} else {
+	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+	}
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"Exposed %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
-	event.xexpose.y, event.xexpose.width, event.xexpose.height);
+	TKLog(@"Exposed %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
+	    event.xexpose.y, event.xexpose.width, event.xexpose.height);
 #endif
+    }
 
     /*
      * Generate updates for the children of this window
