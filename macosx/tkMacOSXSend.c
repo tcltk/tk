@@ -135,18 +135,23 @@ static const char *getError(OSStatus status) {
     case -600:
       errorName = "procNotFound";
       break;
+    case -609:
+      errorName = "connectionInvalid";
     case -1700:
       errorName = "errAETimeout";
       break;
     case -1701:
       errorName = "errAEDescNotFound";
       break;
+    case -1704:
+      errorName = "errAENotAEDesc";
+      break;
     case -1708:
       errorName = "errAEEventNotHandled";
       break;
     default:
       errorName = aeErrorString;
-      snprintf(aeErrorString, 30, "%x", status);
+      snprintf(aeErrorString, 30, "%d", status);
       break;
     }
     return errorName;
@@ -799,9 +804,9 @@ Tk_SendObjCmd(
     int result, async, i, firstArg, index;
     TkDisplay *dispPtr;
     NameRegistry *regPtr;
-    Tcl_DString request;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_DString request, request2;
     Tcl_Interp *localInterp;	/* Used when the interpreter to send the
 				 * command to is within the same process. */
 
@@ -869,7 +874,7 @@ Tk_SendObjCmd(
 		|| (strcmp(riPtr->name, destName) != 0)) {
 	    continue;
 	}
-	// This is our target interpreter
+	/* We have found our target interpreter */
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
@@ -886,6 +891,7 @@ Tk_SendObjCmd(
 	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request),
 				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(&request);
+
 	}
 	if (interp != localInterp) {
 	    if (result == TCL_ERROR) {
@@ -916,7 +922,8 @@ Tk_SendObjCmd(
     }
 
     /*
-     * Make sure the interpreter exists.
+     * We are using an interpreter in another process.  First make sure the
+     * interpreter exists.
      */
 
     regPtr = RegOpen(interp, winPtr->dispPtr);
@@ -933,35 +940,24 @@ Tk_SendObjCmd(
     }
     
     /*
-     * Send the command to the target interpreter by appending it to the comm
-     * window in the communication window.
+     * Send the command with args to the non-local target interpreter
      */
-    char *command = NULL;
-    Tcl_DString request2;
-    if (firstArg == objc - 1) {
-	command = Tcl_GetString(objv[firstArg]);
-    } else {
-	Tcl_DStringInit(&request2);
-	Tcl_DStringAppend(&request2, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
+
+    Tcl_DStringInit(&request2);
+    Tcl_DStringAppend(&request2, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
+    if (firstArg < objc - 1) {
 	for (i = firstArg+1; i < objc; i++) {
 	    Tcl_DStringAppend(&request2, " ", 1);
 	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
 	}
-	for (i = firstArg+1; i < objc; i++) {
-	    Tcl_DStringAppend(&request2, " ", 1);
-	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
-	}
-	command  = Tcl_DStringValue(&request2);
-	Tcl_DStringFree(&request2);
     }
 
-    /*
-     * If async is 0, the call below simply blocks until a reply is received.
-     * Perhaps we should run a background thread to process timer events?
-     */
+     // When async is 0, the call below simply blocks until a reply is received.
+     // Perhaps we should run a background thread to process timer events?
 
-    int code = sendAEDoScript(interp, info.pid, command, async);
-    if (code != TCL_OK) {
+    int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
+			      async);
+     if (code != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
     return code;
