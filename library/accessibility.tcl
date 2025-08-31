@@ -744,7 +744,7 @@ namespace eval ::tk::accessible {
     bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
     bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
 
-    if {[tk windowingsystem] ne "aqua"} {
+    if {[tk windowingsystem] eq "win32"} {
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
     }
     
