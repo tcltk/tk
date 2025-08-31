@@ -176,7 +176,6 @@ sendAEDoScript(
 {
     AppleEvent event, reply;
     OSStatus status;
-    char *buf = NULL;
     
     // Build an AppleEvent targeting the provided pid.
     status = AEBuildAppleEvent(kAEMiscStandards, // NOT kAECoreSuite!!!
@@ -220,37 +219,38 @@ sendAEDoScript(
 	// Read the reply and extract relevant info.
 	int code = 0;
 	DescType actualType = 0;
-	Size actualSize = 0;
-	AEGetParamPtr(&reply, keyErrorNumber, typeSInt32, &actualType,
-			  &code, 4, &actualSize);
+	//Size actualSize = 0;
+	AEGetParamPtr(&reply, keyErrorNumber, typeSInt32, &actualType, &code, 4, NULL);
 	CHECK2("AEGetParamPtr")
 	if (code == TCL_OK) {
 	    // Get the result string.
-	    AEGetParamPtr(&reply, keyDirectObject, typeUTF8Text, &actualType,
-			  buf, 1024, &actualSize);
-	    status = AESizeOfParam(&reply, keyErrorString, &actualType, &actualSize);
+	    Size resultSize = 0;
+	    status = AESizeOfParam(&reply, keyDirectObject, &actualType, &resultSize);
 	    CHECK2("AESizeOfParam")
-	    buf = ckalloc(actualSize + 1);
+	    char *resultBuffer = ckalloc(resultSize + 1);
+	    AEGetParamPtr(&reply, keyDirectObject, typeUTF8Text, &actualType,
+			  resultBuffer, resultSize, NULL);
 	    CHECK2("AEGetParamPtr")
-	    if (actualSize > 0) {
-		buf[actualSize] = '\0';
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	    if (resultSize > 0) {
+		resultBuffer[resultSize] = '\0';
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer, -1));
 	    }
 	    result = TCL_OK;
-	    ckfree(buf);
+	    ckfree(resultBuffer);
 	} else {
 	    // Get the error string.
-	    status = AESizeOfParam(&reply, keyErrorString, &actualType, &actualSize);
+	    Size errorSize;
+	    status = AESizeOfParam(&reply, keyErrorString, &actualType, &errorSize);
 	    CHECK2("AESizeOfParam")
-	    buf = ckalloc(actualSize + 1);
+	    char *errorBuffer = ckalloc(errorSize + 1);
 	    AEGetParamPtr(&reply, keyErrorString, typeUTF8Text, &actualType,
-			  buf, actualSize+ + 1, &actualSize);
-	    if (actualSize > 0) {
-		buf[actualSize] = '\0';
-		Tcl_AddErrorInfo(interp, buf);
+			  errorBuffer, errorSize, NULL);
+	    if (errorSize > 0) {
+		errorBuffer[errorSize] = '\0';
+		Tcl_AddErrorInfo(interp, errorBuffer);
 	    }
 	    result = TCL_ERROR;
-	    ckfree(buf);
+	    ckfree(errorBuffer);
 	}
 	AEDisposeDesc(&reply);
      }
@@ -1140,6 +1140,11 @@ DeleteProc(
  *----------------------------------------------------------------------
  */
 
+// We are not ready for the TestSendCmd yet.  The unix code is
+// below.  Much of it seems to involve inspecting X properties
+// which aren't being used here.
+#if 0
+
 int
 TkpTestsendCmd(
     void *clientData,	/* Main window for application. */
@@ -1147,9 +1152,6 @@ TkpTestsendCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-// We are not ready for the TestSendCmd yet.  Save the unix code
-#if 0
-
     enum {
 	TESTSEND_BOGUS, TESTSEND_PROP, TESTSEND_SERIAL
     };
@@ -1237,9 +1239,9 @@ TkpTestsendCmd(
     } else if (index == TESTSEND_SERIAL) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(localData.sendSerial+1));
     }
-#endif
     return TCL_OK;
 }
+#endif
 
 
 /*
