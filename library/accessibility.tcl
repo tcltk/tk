@@ -316,13 +316,6 @@ namespace eval ::tk::accessible {
 			focus -force $w
 		    }
 		}
-	    } elseif {[tk windowingsystem] eq "x11"} {
-		if {[winfo class $w] ni {Canvas}} {
-		    if {[focus] ne $w} {
-			focus -force $w
-			::tk::accessible::emit_focus_change $w
-		    }
-		}
 	    } elseif {[tk windowingsystem] eq "win32"} {
 		::tk::accessible::emit_focus_change $w
 	    }
@@ -531,15 +524,39 @@ namespace eval ::tk::accessible {
     # Menu bindings - macOS/Windows menus are native and
     # already accessible-enabled.
     if {[tk windowingsystem] eq "x11"} {
-	bind Menu <Map> {+::tk::accessible::_init \
+	# Initialize the menu container itself when mapped.
+	bind Menu <Map> {+
+	    ::tk::accessible::_init \
 			     %W \
-			     Menu \
-			     [%W entrycget active -label] \
-			     [%W entrycget active -label] \
+			     menu \
+			     [winfo name %W] \
+			     "" \
+			     "" \
 			     {} \
 			     {} \
-			     {%W invoke}\
 			 }
+	# Initialize/update the currently active entry
+	# whenever the selection changes.
+	bind Menu <<MenuSelect>> {+
+	    set idx [%W index active]
+	    if {$idx ne ""} {
+		set label [%W entrycget $idx -label]
+		# Construct a unique ID for this entry under %W
+		set entryId "%W:$idx"
+		::tk::accessible::_init \
+		    $entryId \
+		    menuitem \
+		    $label \
+		    $label \
+		    {} \
+		    {} \
+		    [list %W invoke $idx]
+
+		# Update value and fire selection-change
+		::tk::accessible::acc_value $entryId $label
+		::tk::accessible::emit_selection_change $entryId
+	    }
+	}
     }
 
     # Scrollbar/TScrollbar bindings.
