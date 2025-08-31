@@ -238,7 +238,7 @@ sendAEDoScript(
 	    CHECK2("AEGetParamPtr")
 	    if (resultSize > 0) {
 		resultBuffer[resultSize] = '\0';
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer, TCL_INDEX_NONE));
 	    }
 	    result = TCL_OK;
 	    ckfree(resultBuffer);
@@ -254,6 +254,8 @@ sendAEDoScript(
 		errorBuffer[errorSize] = '\0';
 		Tcl_AddErrorInfo(interp, errorBuffer);
 	    }
+	    Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(errorBuffer,
+						      TCL_INDEX_NONE));              
 	    result = TCL_ERROR;
 	    ckfree(errorBuffer);
 	}
@@ -556,7 +558,7 @@ RegFindName(
 				 * previous call to RegOpen. */
     const char *name)		/* Name of an application. */
 {
-    Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, -1);
+    Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
     // XXXX Maybe using pid 0 as the default is a bad idea?
     AppInfo resultTcl = {0};
@@ -592,7 +594,7 @@ RegDeleteName(
 				 * previous call to RegOpen. */
     const char *name)		/* Name of an application. */
 {
-    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, -1);
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
 }
 
@@ -624,7 +626,7 @@ RegAddName(
     Window commWindow)		/* X identifier for comm. window of
 				 * application. */
 {
-    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, -1);
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     AppInfo valueTcl = {getpid(), commWindow};
     Tcl_Obj *valuePtr = AppInfoToObj(valueTcl);
     Tcl_DictObjPut(NULL, regPtr->appNameDict, keyPtr, valuePtr);
@@ -878,7 +880,7 @@ Tk_SendObjCmd(
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
-	if (firstArg == (objc-1)) {
+	if (firstArg == (objc - 1)) {
 	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]),
 				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
@@ -957,9 +959,9 @@ Tk_SendObjCmd(
 
     int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
 			      async);
-     if (code != TCL_OK) {
-	Tcl_BackgroundError(interp);
-    }
+    //    if (code != TCL_OK) {
+    //	Tcl_BackgroundError(interp);
+    //    }
     return code;
 }
 

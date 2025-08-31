@@ -146,16 +146,21 @@ if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint no
     }
 }
 
-test send-6.1 {ServerSecure procedure} {nonPortable secureserver notAqua} {
+# For aqua, just start the child Tk process.
+if {[testConstraint aqua]} {
+    childTkProcess create
+}
+
+test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
     set a 44
     list [childTkProcess eval [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a 22
     exec xhost [exec hostname]
     list [catch {childTkProcess eval [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a abc
     exec xhost - [exec hostname]
     list [childTkProcess eval [list send [tk appname] set a new]] $a
@@ -183,7 +188,7 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
 #macOS does not send to other processes
-test send-8.1 {Tk_SendCmd procedure, options} {secureserver notAqua} {
+test send-8.1 {Tk_SendCmd procedure, options} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set a 66
@@ -194,7 +199,7 @@ test send-8.1 {Tk_SendCmd procedure, options} {secureserver notAqua} {
     childTkProcess exit
     lappend result $a
 } {66 77}
-test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay notAqua} {
+test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
     childTkProcess create -display $env(TK_ALT_DISPLAY)
     tk appname xyzgorp
     set a homeDisplay
@@ -209,7 +214,7 @@ test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay notAqua} 
     set result
 } {altDisplay homeDisplay}
 # Since macOS has no registry of interpreters, 8.3 and 8.10 will fail.
-test send-8.3 {Tk_SendCmd procedure, options} {secureserver notAqua} {
+test send-8.3 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
 test send-8.4 {Tk_SendCmd procedure, options} {secureserver} {
@@ -240,7 +245,7 @@ test send-8.9 {Tk_SendCmd procedure, local execution} {secureserver} {
 "open bad_file"
     invoked from within
 "send [tk appname] open bad_file"} {posix enoent {no such file or directory}}}
-test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver notAqua} {
+test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver} {
     list [catch {send bogus_name bogus_command} msg] $msg
 } {1 {no application named "bogus_name"}}
 
@@ -291,7 +296,7 @@ test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend fa
 
 catch {interp delete t_s_1}
 
-test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable notAqua} {
+test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable nonAqua} {
     # Non-portable because some window managers ignore "raise"
     # requests so can't guarantee that new app's window won't
     # obscure .f, thereby masking the Expose event.
@@ -311,19 +316,28 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     childTkProcess exit
     lappend result $a
 } {{no event yet} {no event yet} exposed}
-test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver notAqua} {
+
+if {[testConstraint aqua]} {
+    set result_8_18  {1 {} {couldn't open "bad_name": no such file or directory
+    invoked from within
+"send $app open bad_name"} {couldn't open "bad_name": no such file or directory}}
+} else {
+    set result_8_18 {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
+    while executing
+"open bad_name"
+    invoked from within
+"send $app open bad_name"} {posix enoent {no such file or directory}}}
+}
+
+test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
 	    $msg $errorInfo $errorCode]]
     childTkProcess exit
     set result
-} {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
-    while executing
-"open bad_name"
-    invoked from within
-"send $app open bad_name"} {posix enoent {no such file or directory}}}
-test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver notAqua} {
+} $result_8_18
+test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set x no
@@ -483,14 +497,14 @@ test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {secureserver
     set errorInfo oldErrorInfo
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {4 {} oldErrorInfo oldErrorCode}
-test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend notAqua} {
+test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend} {
     childTkProcess create
     childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 destroy .} msg] $msg]
     childTkProcess exit
     set x
 } {0 {}}
-test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend notAqua} {
+test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend} {
     childTkProcess create
     childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 exit} msg] $msg]
@@ -520,8 +534,8 @@ test send-12.1 {TimeoutProc procedure} {secureserver testsend} {
 
 catch {testsend prop root InterpRegistry ""}
 
-#macOS does not send to other processes
-test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
+#macOS does not support the TimeoutProc
+test send-12.2 {TimeoutProc procedure} {secureserver nonAqua} {
     winfo interps
     tk appname tktest
     update
@@ -536,17 +550,16 @@ test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
     set result
 } {1 {target application died}}
 
-#macOS does not send to other processes
 winfo interps
 tk appname tktest
-test send-13.1 {DeleteProc procedure} {secureserver notAqua} {
+test send-13.1 {DeleteProc procedure} {secureserver} {
     childTkProcess create
     set app [childTkProcess eval {rename send {}; tk appname}]
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
     childTkProcess exit
     set result
 } {1 {no application named "tktest #2"} tktest}
-test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
+test send-13.2 {DeleteProc procedure} {secureserver} {
     winfo interps
     tk appname tktest
     rename send {}
@@ -556,7 +569,7 @@ test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
     lappend result [winfo interps] [info commands send]
 } {{} {} foo send}
 
-test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay notAqua} {
+test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay} {
     childTkProcess create -display $env(TK_ALT_DISPLAY)
     set result [childTkProcess eval "
     toplevel .t -screen [winfo screen .]
