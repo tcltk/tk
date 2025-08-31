@@ -406,6 +406,12 @@ static AtkRole tk_get_role(AtkObject *obj)
 static gchar *GetAtkNameForWidget(Tk_Window win)
 {
     if (!win) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(win);
+    /* If label, return the value instead of the name so Orca does not say "label" twice. */
+    if (role == ATK_ROLE_LABEL) {
+	return GetAtkValueForWidget(win); 
+    }
    
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) return NULL;
@@ -444,6 +450,12 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
 static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 {
     if (!win) return NULL;
+    
+    AtkRole role = GetAtkRoleForWidget(win);
+    /* If label, return the value instead of the description. */
+    if (role == ATK_ROLE_LABEL) {
+		return GetAtkValueForWidget(win); 
+	}
    
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) return NULL;

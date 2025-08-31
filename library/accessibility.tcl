@@ -11,7 +11,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 
-if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 0} {
+if {[tk windowingsystem] eq "x11" && ([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq "")} {
     # On X11, do not load if screen reader is not running - macOS and Windows
     # handle this automatically.
     
@@ -610,7 +610,7 @@ namespace eval ::tk::accessible {
 			   %W \
 			   Label \
 			   Label \
-			   Label \
+			   {} \
 			   [%W cget -text] \
 			   {}\
 			   {}\
@@ -620,7 +620,7 @@ namespace eval ::tk::accessible {
 			      %W \
 			      Label \
 			      Label \
-			      Label \
+			      {} \
 			      [%W cget -text] \
 			      {}\
 			      {}\
