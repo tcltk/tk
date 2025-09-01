@@ -36,6 +36,18 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
+ * A registry of all interpreters owned by the current user is maintained in
+ * the file ~/Library/Caches/com.tcltk.appnames. The file contains a jsaon
+ * serialization of an NSMutableDictionary.  The dictionary keys are appname
+ * strings and the value assigned to a key is an NSArray containing two
+ * NSNumbers whose integer values are, respectively, the pid of the process
+ * which registered the interpreter and the Tk Window ID of the comm window in
+ * that interpreter.
+ */
+
+static char *appNameRegistryPath;
+
+/*
  * Information that we record about an application.
  * RegFindName returns a struct of this type.
  */
@@ -56,12 +68,12 @@ ObjToAppInfo(
     AppInfo result = {0};
     Tcl_Size objc;
     Tcl_Obj **objvPtr;
+    static const char *failure = "AppName registry is corrupted.  Try deleting %s";
     if (TCL_OK != Tcl_ConvertToType(NULL, value, Tcl_GetObjType("list"))) {
-	fprintf(stderr, "failed to get list obj from dict value\n");
+	Tcl_Panic(failure, appNameRegistryPath);
     } else if (Tcl_ListObjGetElements(NULL, value, &objc, &objvPtr) == TCL_OK) {
 	if (objc != 2) {
-	    fprintf(stderr, "Expected a list of 2 items, but got %ld\n", objc);
-	    return result;
+	    Tcl_Panic(failure, appNameRegistryPath);
 	}
 	Tcl_GetIntFromObj(NULL, objvPtr[0], &result.pid);
 	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.comm);
@@ -82,20 +94,8 @@ AppInfoToObj(
     return Tcl_NewListObj(2, objv);
 }
 
-/*
- * A registry of all interpreters owned by the current user is maintained in
- * the file ~/Library/Caches/com.tcltk.appnames. The file contains a jsaon
- * serialization of an NSMutableDictionary.  The dictionary keys are appname
- * strings and the value assigned to a key is an NSArray containing two
- * NSNumbers whose integer values are, respectively, the pid of the process
- * which registered the interpreter and the Tk Window ID of the comm window in
- * that interpreter.
- */
-
-static char *appNameRegistryPath;
-
-/* When the registry is being manipulated by an application (e.g. to add or
- * remove an entry), it is loaded into memory using a structure of the
+/* When the AppName registry is being manipulated by an application (e.g. to
+ * add or remove an entry), it is loaded into memory using a structure of the
  * following type:
  */
 
@@ -305,11 +305,11 @@ saveAppNameRegistry(
     FILE *appNameFile = fopen(path, "ab+");
     char *bytes;
     if (appNameFile == NULL) {
-	fprintf(stderr, "fopen failed\n");
+	Tcl_Panic("fopen failed on %s", path);
 	return;
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
-	fprintf(stderr, "flock failed\n");
+	Tcl_Panic("flock failed on %s", path);
     }
     /* Now we can truncate the file. */
     ftruncate(fileno(appNameFile), 0);
@@ -319,7 +319,7 @@ saveAppNameRegistry(
 	
     fclose(appNameFile);
     if (bytesWritten != length) {
-	fprintf(stderr, "write failed: length: %lu wrote: %lu\n",
+	Tcl_Panic("write failed on %s: length: %lu wrote: %lu", path,
 		length, bytesWritten);
 	return;
     }
@@ -335,11 +335,10 @@ loadAppNameRegistry(
     /* Open in ab+ so position will be at the end. */
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
-	fprintf(stderr, "fopen failed\n");
-	return NULL;
+	Tcl_Panic("fopen failed on %s", path);
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
-	fprintf(stderr, "flock failed\n");
+	Tcl_Panic("flock failed on %s", path);
     }
     Tcl_Obj *result = NULL;
     length = ftell(appNameFile);
@@ -348,13 +347,12 @@ loadAppNameRegistry(
     if (bytes) {
 	bytesRead = fread(bytes, 1, length, appNameFile);
     } else {
-	fprintf(stderr, "Out of memory\n");
-	return NULL;
+	Tcl_Panic("Out of memory");
     }
     flock(fileno(appNameFile), LOCK_UN);
     fclose(appNameFile);
     if (bytesRead != length) {
-	fprintf(stderr, "read failed: length %lu; read %lu,\n",
+	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
 		length, bytesRead);
 	return NULL;
     }
