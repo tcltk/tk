@@ -177,16 +177,18 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (!strcmp(nameTail, "Toggleswitch1") 
 		|| !strcmp(nameTail, "Toggleswitch2")
 		|| !strcmp(nameTail, "Toggleswitch3")) {
-	    char *styleName2 = strdup(styleName);
+	    size_t length = strlen(styleName);
+	    char *styleName2 = (char *)ckalloc(length + 1);
 	    const char *sizeStr = Tcl_GetString(tglswPtr->tglsw.sizeObj);
 
-	    styleName2[strlen(styleName2)-1] = *sizeStr;
+	    memcpy(styleName2, styleName, length + 1);
+	    styleName2[length-1] = *sizeStr;
 
 	    Tcl_DecrRefCount(tglswPtr->core.styleObj);
 	    tglswPtr->core.styleObj = Tcl_NewStringObj(styleName2, -1);
 	    Tcl_IncrRefCount(tglswPtr->core.styleObj);
 
-	    free(styleName2);
+	    ckfree(styleName2);
 
 	    /*
 	     * Update the layout according to the new style
