@@ -158,15 +158,25 @@ static const char *getError(OSStatus status) {
 }
 
 /* Macros for checking OSStatus values. */
-#define CHECK(func) \
-  if (status != noErr) {                                                \
-    fprintf(stderr, func " returned error %s\n", getError(status));	\
-  }
+#define CHECK(func)							\
+    if (status != noErr) {						\
+        char msg[512];							\
+	snprintf(msg, 512, "%s returned error %s",			\
+		   func, getError(status));				\
+	Tcl_AddErrorInfo(interp, msg);					\
+	Tcl_AppendResult(interp, msg, (char *)NULL);			\
+	return TCL_ERROR;						\
+    }
 
-#define CHECK2(func) \
-  if (status != noErr && status != errAEDescNotFound) {                 \
-    fprintf(stderr, func " returned error %s\n", getError(status));	\
-  }
+#define CHECK2(func)							\
+    if (status != noErr && status != errAEDescNotFound) {		\
+        char msg[512];							\
+	snprintf(msg, 512, "%s returned error %s",			\
+		   func, getError(status));				\
+	Tcl_AddErrorInfo(interp, msg);					\
+	Tcl_AppendResult(interp, msg, (char *)NULL);			\
+	return TCL_ERROR;						\
+    }
 
 /*
  * Sends an AppleEvent of type DoScript to a Tk app identified by its pid.
