@@ -224,13 +224,14 @@ sendAEDoScript(
 	// Read the reply and extract relevant info.
 	int code = 0;
 	DescType actualType = 0;
-	//Size actualSize = 0;
-	AEGetParamPtr(&reply, keyErrorNumber, typeSInt32, &actualType, &code, 4, NULL);
+	AEGetParamPtr(&reply, keyErrorNumber, typeSInt32, &actualType,
+		      &code, 4, NULL);
 	CHECK2("AEGetParamPtr")
 	if (code == TCL_OK) {
 	    // Get the result string.
 	    Size resultSize = 0;
-	    status = AESizeOfParam(&reply, keyDirectObject, &actualType, &resultSize);
+	    status = AESizeOfParam(&reply, keyDirectObject, &actualType,
+				   &resultSize);
 	    CHECK2("AESizeOfParam")
 	    char *resultBuffer = ckalloc(resultSize + 1);
 	    AEGetParamPtr(&reply, keyDirectObject, typeUTF8Text, &actualType,
@@ -238,24 +239,29 @@ sendAEDoScript(
 	    CHECK2("AEGetParamPtr")
 	    if (resultSize > 0) {
 		resultBuffer[resultSize] = '\0';
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer, TCL_INDEX_NONE));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer,
+							  TCL_INDEX_NONE));
 	    }
 	    result = TCL_OK;
 	    ckfree(resultBuffer);
 	} else {
 	    // Get the error string.
 	    Size errorSize;
-	    status = AESizeOfParam(&reply, keyErrorString, &actualType, &errorSize);
+	    status = AESizeOfParam(&reply, keyErrorString,
+				   &actualType, &errorSize);
 	    CHECK2("AESizeOfParam")
 	    char *errorBuffer = ckalloc(errorSize + 1);
 	    AEGetParamPtr(&reply, keyErrorString, typeUTF8Text, &actualType,
 			  errorBuffer, errorSize, NULL);
+	    CHECK2("AEGetParamPtr")
 	    if (errorSize > 0) {
 		errorBuffer[errorSize] = '\0';
 		Tcl_AddErrorInfo(interp, errorBuffer);
 	    }
 	    Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(errorBuffer,
-						      TCL_INDEX_NONE));              
+						      TCL_INDEX_NONE));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(errorBuffer,
+						      TCL_INDEX_NONE));
 	    result = TCL_ERROR;
 	    ckfree(errorBuffer);
 	}
@@ -1037,41 +1043,11 @@ TkSendCleanup(
 	Tk_DestroyWindow(dispPtr->commTkwin);
 	Tcl_Release(dispPtr->commTkwin);
 	dispPtr->commTkwin = NULL;
+	ckfree(appNameRegistryPath);
     }
 }
 
 
-#if 0
-/*
- *--------------------------------------------------------------
- *
- * SendEventProc --
- *
- *	This function is invoked automatically by the toolkit event manager
- *	when a property changes on the communication window. This function
- *	reads the property and handles command requests and responses.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	If there are command requests in the property, they are executed. If
- *	there are responses in the property, their information is saved for
- *	the (ostensibly waiting) "send" commands. The property is deleted.
- *
- *--------------------------------------------------------------
- */
-
-static void
-SendEventProc(
-    void *clientData,	/* Display information. */
-    XEvent *eventPtr)		/* Information about event. */
-{
-    // no-op for macOS    
-}
-
-
-#endif
 /*
  *--------------------------------------------------------------
  *

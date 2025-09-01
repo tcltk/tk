@@ -318,7 +318,7 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
 } {{no event yet} {no event yet} exposed}
 
 if {[testConstraint aqua]} {
-    set result_8_18  {1 {} {couldn't open "bad_name": no such file or directory
+    set result_8_18 {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
     invoked from within
 "send $app open bad_name"} {couldn't open "bad_name": no such file or directory}}
 } else {
