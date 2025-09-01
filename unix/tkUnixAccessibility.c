@@ -112,6 +112,14 @@ static gboolean tk_action_do_action(AtkAction *action, gint i);
 static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
+static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset);
+static gint tk_text_get_caret_offset(AtkText *text);
+static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections);
+static void tk_atk_text_interface_init(AtkTextIface *iface);
+static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i);
+static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i);
+static gboolean tk_selection_select_all(AtkSelection *selection);
+static void tk_atk_selection_interface_init(AtkSelectionIface *iface);
 
 /* Object lifecycle functions. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
@@ -151,10 +159,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp);
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 #define TK_ATK_IS_ACCESSIBLE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), TK_ATK_TYPE_ACCESSIBLE))
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
-			)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT, tk_atk_text_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_SELECTION, tk_atk_selection_interface_init)
+)
 
 /*
  *----------------------------------------------------------------------
@@ -592,6 +602,238 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
 }
 
 /*
+ * Functions to map the AtkText interface to allow text in Tk widgets to be
+ * made accessible.  This is not required on macOS and Windows, which can 
+ * support data being piped to the accessible system with the 
+ * appropriate notification. ATK requires the formal protocol. 
+ */
+
+static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)text;
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " get", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    const char *text_str = Tcl_GetStringResult(acc->interp);
+    if (!text_str) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    /* Handle offsets */
+    int len = strlen(text_str);
+    if (end_offset == -1) end_offset = len;
+    if (start_offset < 0 || end_offset > len || start_offset > end_offset) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    gchar *result = g_utf8_substring(text_str, start_offset, end_offset);
+    Tcl_DecrRefCount(cmd);
+    return result;
+}
+
+static gint tk_text_get_caret_offset(AtkText *text)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)text;
+    if (!acc || !acc->tkwin || !acc->interp) return 0;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " index insert", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return 0;
+    }
+
+    int offset;
+    if (Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(acc->interp), &offset) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return 0;
+    }
+
+    Tcl_DecrRefCount(cmd);
+    return offset;
+}
+
+static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)text;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        *n_selections = 0;
+        return NULL;
+    }
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+        *n_selections = 0;
+        return NULL;
+    }
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " selection range 0 end", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        *n_selections = 0;
+        return NULL;
+    }
+
+    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
+    int range_count;
+    Tcl_Obj **range_list;
+    if (Tcl_ListObjGetElements(acc->interp, result, &range_count, &range_list) != TCL_OK || range_count < 2) {
+        Tcl_DecrRefCount(cmd);
+        *n_selections = 0;
+        return NULL;
+    }
+
+    int start, end;
+    if (Tcl_GetIntFromObj(acc->interp, range_list[0], &start) != TCL_OK ||
+        Tcl_GetIntFromObj(acc->interp, range_list[1], &end) != TCL_OK || start >= end) {
+        Tcl_DecrRefCount(cmd);
+        *n_selections = 0;
+        return NULL;
+    }
+
+    AtkTextRange **ranges = g_new0(AtkTextRange *, 1);
+    ranges[0] = g_new0(AtkTextRange, 1);
+    ranges[0]->start_offset = start;
+    ranges[0]->end_offset = end;
+    ranges[0]->content = tk_text_get_text(text, start, end);
+    *n_selections = 1;
+
+    Tcl_DecrRefCount(cmd);
+    return ranges;
+}
+
+static void tk_atk_text_interface_init(AtkTextIface *iface)
+{
+    iface->get_text = tk_text_get_text;
+    iface->get_caret_offset = tk_text_get_caret_offset;
+    iface->get_selection = tk_text_get_selection;
+}
+
+/* 
+ * Functions to allow Tk text selection to interact with ATK. This is not
+ * required on macOS and Windows, which can support data being piped to the
+ * accessible system with the appropriate notification. ATK requires the formal
+ * protocol. 
+ */
+
+static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)selection;
+    if (!acc || !acc->tkwin || !acc->interp) return FALSE;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+        return FALSE;
+    }
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " curselection", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return FALSE;
+    }
+
+    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
+    int sel_count;
+    Tcl_Obj **sel_list;
+    if (Tcl_ListObjGetElements(acc->interp, result, &sel_count, &sel_list) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return FALSE;
+    }
+
+    for (int j = 0; j < sel_count; j++) {
+        int index;
+        if (Tcl_GetIntFromObj(acc->interp, sel_list[j], &index) == TCL_OK && index == i) {
+            Tcl_DecrRefCount(cmd);
+            return TRUE;
+        }
+    }
+
+    Tcl_DecrRefCount(cmd);
+    return FALSE;
+}
+
+static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)selection;
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+        return NULL;
+    }
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " curselection", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
+    int sel_count;
+    Tcl_Obj **sel_list;
+    if (Tcl_ListObjGetElements(acc->interp, result, &sel_count, &sel_list) != TCL_OK || i >= sel_count) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    int index;
+    if (Tcl_GetIntFromObj(acc->interp, sel_list[i], &index) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return NULL;
+    }
+
+    AtkObject *child = tk_ref_child(ATK_OBJECT(acc), index);
+    Tcl_DecrRefCount(cmd);
+    return child;
+}
+
+static gboolean tk_selection_select_all(AtkSelection *selection)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)selection;
+    if (!acc || !acc->tkwin || !acc->interp) return FALSE;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+        return FALSE;
+    }
+
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_AppendStringsToObj(cmd, " selection set 0 end", NULL);
+    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd);
+        return FALSE;
+    }
+
+    Tcl_DecrRefCount(cmd);
+    g_signal_emit_by_name(ATK_OBJECT(acc), "selection-changed");
+    return TRUE;
+}
+
+static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
+{
+    iface->is_child_selected = tk_selection_is_child_selected;
+    iface->ref_selection = tk_selection_ref_selection;
+    iface->select_all_selection = tk_selection_select_all;
+}
+
+/*
  * Functions to initialize and manage the parent ATK class and object instances.
  */
 
@@ -1000,11 +1242,11 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
         /* Text/entry widget selection changed. */
         g_signal_emit_by_name(obj, "text-selection-changed");
-
-    } else if (role == ATK_ROLE_SCROLL_BAR ||
-               role == ATK_ROLE_SLIDER ||
-               role == ATK_ROLE_SPIN_BUTTON ||
-               role == ATK_ROLE_PROGRESS_BAR) {
+    } else if (role == ATK_ROLE_LIST || role == ATK_ROLE_TABLE || role == ATK_ROLE_TREE || role == ATK_ROLE_MENU) {
+        /* Listbox, table, tree, or menu selection changed. */
+        g_signal_emit_by_name(obj, "selection-changed");
+    } else if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
+               role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR) {
         /* Numeric widgets (scale, scrollbar, spinbox, progress). */
         GValue gval = G_VALUE_INIT;
         tk_get_current_value(ATK_VALUE(obj), &gval);
@@ -1019,19 +1261,6 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
         g_value_unset(&gval);
 
         g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
-
-    } else if (role == ATK_ROLE_TREE ||
-	       role == ATK_ROLE_LIST ||
-	       role == ATK_ROLE_TABLE) {
-        /* String-valued widgets (listbox, combobox, etc.). */
-        GValue gval = G_VALUE_INIT;
-        tk_get_current_value(ATK_VALUE(obj), &gval);
-
-        if (G_VALUE_HOLDS_STRING(&gval)) {
-            const char *s = g_value_get_string(&gval);
-            g_signal_emit_by_name(obj, "value-changed", s, NULL);
-        }
-        g_value_unset(&gval);
     }
 
     return TCL_OK;
@@ -1175,6 +1404,13 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
     /* Register for cleanup, mapping and other events. */
     TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
+
+    AtkRole role = GetAtkRoleForWidget(tkwin);
+    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
+	G_IMPLEMENT_INTERFACE_DYNAMIC(ATK_TYPE_TEXT, tk_atk_text_interface_init);
+    } else if (role == ATK_ROLE_LIST || role == ATK_ROLE_TABLE || role == ATK_ROLE_TREE || role == ATK_ROLE_MENU) {
+	G_IMPLEMENT_INTERFACE_DYNAMIC(ATK_TYPE_SELECTION, tk_atk_selection_interface_init);
+    }
 
     /* Handle toplevels separately. */
     if (Tk_IsTopLevel(tkwin)) {
