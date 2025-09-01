@@ -449,14 +449,11 @@ RegOpen(
 				 * opened. */
 {
     NameRegistry *regPtr;
-    Tk_ErrorHandler handler;
 
     if (dispPtr->commTkwin == NULL) {
 	SendInit(dispPtr);
     }
 
-    //  XXXX Should we use the error handler here ???
-    handler = Tk_CreateErrorHandler(dispPtr->display, -1, -1, -1, NULL, NULL);
     regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
     regPtr->dispPtr = dispPtr;
     regPtr->modified = 0;
@@ -497,9 +494,6 @@ RegOpen(
 	Tcl_DictObjRemove(NULL, regPtr->appNameDict, deadinterps[i]);
     }
     ckfree(deadinterps);
-
-    // XXXX Should we be using this error handler???
-    Tk_DeleteErrorHandler(handler);
     return regPtr;
 }
 
@@ -528,14 +522,8 @@ RegClose(
 				 * previous call to RegOpen. */
 {
     NSError *error = nil;
-    Tk_ErrorHandler handler;
-
-    // XXXX Agein, should we use this?
-    handler = Tk_CreateErrorHandler(regPtr->dispPtr->display, -1, -1, -1,
-	    NULL, NULL);
     saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     ckfree(regPtr);
-    Tk_DeleteErrorHandler(handler);
 }
 
 
@@ -1133,7 +1121,6 @@ TkpTestsendCmd(
 	"bogus",   "prop",   "serial",  NULL
     };
     TkWindow *winPtr = (TkWindow *)clientData;
-    Tk_ErrorHandler handler;
     int index;
 
     if (objc < 2) {
