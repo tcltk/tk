@@ -451,12 +451,6 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 {
     if (!win) return NULL;
     
-    AtkRole role = GetAtkRoleForWidget(win);
-    /* If label, return the value instead of the description. */
-    if (role == ATK_ROLE_LABEL) {
-		return GetAtkValueForWidget(win); 
-	}
-   
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) return NULL;
    
