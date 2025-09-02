@@ -37,12 +37,12 @@ typedef struct RegisteredInterp {
 
 /*
  * A registry of all interpreters owned by the current user is maintained in
- * the file ~/Library/Caches/com.tcltk.appnames. The file contains a jsaon
- * serialization of an NSMutableDictionary.  The dictionary keys are appname
- * strings and the value assigned to a key is an NSArray containing two
- * NSNumbers whose integer values are, respectively, the pid of the process
- * which registered the interpreter and the Tk Window ID of the comm window in
- * that interpreter.
+ * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
+ * representatikon of a TclDictObj.  The dictionary keys are appname strings
+ * and the value assigned to a key is an NSArray containing two Tcl_IntObj
+ * items whose integer values are, respectively, the pid of the process which
+ * registered the interpreter and the Tk Window ID of the comm window in that
+ * interpreter.
  */
 
 static char *appNameRegistryPath;
@@ -926,8 +926,8 @@ Tk_SendObjCmd(
     }
 
     /*
-     * We are using an interpreter in another process.  First make sure the
-     * interpreter exists.
+     * We are targetng an interpreter in another process.  First make sure the
+     * interpreter is registered.
      */
 
     regPtr = RegOpen(interp, winPtr->dispPtr);
@@ -961,9 +961,6 @@ Tk_SendObjCmd(
 
     int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
 			      async);
-    //    if (code != TCL_OK) {
-    //	Tcl_BackgroundError(interp);
-    //    }
     return code;
 }
 
@@ -996,8 +993,7 @@ TkGetInterpNames(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     NameRegistry *regPtr;
-    //Tcl_Obj *resultObj = Tcl_NewObj();
-    Tcl_Obj *resultObjTcl = Tcl_NewListObj(2, NULL);
+    Tcl_Obj *resultObj = Tcl_NewObj();
     regPtr = RegOpen(interp, winPtr->dispPtr);
     Tcl_DictSearch search;
     Tcl_Obj *keyTcl, *value;
@@ -1006,10 +1002,10 @@ TkGetInterpNames(
 	  interp, regPtr->appNameDict, &search, &keyTcl, &value, &done) ;
 	     !done ;
 	     Tcl_DictObjNext(&search, &keyTcl, &value, &done)) {
-	Tcl_ListObjAppendElement(NULL, resultObjTcl, keyTcl);
+	Tcl_ListObjAppendElement(NULL, resultObj, keyTcl);
     }
     RegClose(regPtr);
-    Tcl_SetObjResult(interp, resultObjTcl);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
