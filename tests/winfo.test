@@ -386,8 +386,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
 
 # Windows does not destroy the container when an embedded window is
 # destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
-test winfo-13.2 {destroying embedded toplevel
-} -setup {
+test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -body {
     frame .con -container 1
