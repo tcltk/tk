@@ -39,7 +39,7 @@ typedef struct RegisteredInterp {
  * A registry of all interpreters owned by the current user is maintained in
  * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
  * representatikon of a TclDictObj.  The dictionary keys are appname strings
- * and the value assigned to a key is an NSArray containing two Tcl_IntObj
+ * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
  * items whose integer values are, respectively, the pid of the process which
  * registered the interpreter and the Tk Window ID of the comm window in that
  * interpreter.
@@ -533,7 +533,6 @@ RegClose(
     NameRegistry *regPtr)	/* Pointer to a registry opened with a
 				 * previous call to RegOpen. */
 {
-    NSError *error = nil;
     saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     ckfree(regPtr);
 }
@@ -548,9 +547,9 @@ RegClose(
  *	name, if there is one, and returns information about that entry.
  *
  * Results:
- *	The return value is an NSArray containing the processIdentifier and
- *      the X identifier for the comm window for the application named "name",
- *      or nil if there is no such entry in the registry.
+ *      The return value is an AppInfo struct containing the pid and the X
+ *	identifier for the comm window for the application named "name", or
+ *	nil if there is no such entry in the registry.
  *
  * Side effects:
  *	None.
@@ -960,11 +959,12 @@ Tk_SendObjCmd(
 	}
     }
 
-     // When async is 0, the call below simply blocks until a reply is received.
+     // When async is 0, the call below blocks until a reply is received.
      // Perhaps we should run a background thread to process timer events?
 
     int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
 			      async);
+    localData.sendSerial++;
     return code;
 }
 
