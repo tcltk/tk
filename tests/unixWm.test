@@ -1273,9 +1273,12 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
+test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be iconic, normal, or withdrawn}}
+test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {unix aqua} {
+    list [catch {wm state .t 1} msg]  $msg
+} {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}
@@ -1604,12 +1607,12 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -constraints un
 #
 # COMMON TEST SETUP
 #
-if {! [testConstraint unix]} {
-    # Although the tests in this test file are constrained by "unix", the test
-    # commands themselves are being evaluated regardless any test constraint.
-    # Therefore, the expected results defined for tests 44.7 and 44.8 are also
-    # evaluated regardless any test constraint. This means that a dummy window
-    # .t must be defined, otherwise a testfile error occurs.
+if {! [winfo exists .t]} {
+    # The expected results for tests 44.7 and 44.8 require that window .t exists.
+    # That might not be the case if no previous tests are being run that create
+    # the window (because of the constraint unix or because of test selection
+    # using the tcltest option "-match" or "-skip"). Therefore, we create a dummy
+    # window .t here.
     frame .t
 }
 
