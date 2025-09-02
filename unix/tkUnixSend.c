@@ -961,7 +961,8 @@ Tk_SendObjCmd(
     Window commWindow;
     PendingCommand pending;
     RegisteredInterp *riPtr;
-    int result, async, i, firstArg, index;
+    int result, async, index;
+    Tcl_Size i, firstArg;
     Tk_RestrictProc *prevProc;
     void *prevArg;
     TkDisplay *dispPtr;

@@ -1200,7 +1200,7 @@ StyleMapCmd(
     Ttk_Theme theme = pkgPtr->currentTheme;
     const char *styleName;
     Style *stylePtr;
-    int i;
+    Tcl_Size i;
 
     if (objc < 3) {
 usage:
@@ -1264,7 +1264,7 @@ static int StyleConfigureCmd(
     Ttk_Theme theme = pkgPtr->currentTheme;
     const char *styleName;
     Style *stylePtr;
-    int i;
+    Tcl_Size i;
 
     if (objc < 3) {
 usage:
@@ -1400,7 +1400,7 @@ static int StyleThemeCreateCmd(
     Ttk_Theme parentTheme = pkgPtr->defaultTheme, newTheme;
     Tcl_Obj *settingsScript = NULL;
     const char *themeName;
-    int i;
+    Tcl_Size i;
 
     if (objc < 4 || objc % 2 != 0) {
 	Tcl_WrongNumArgs(interp, 3, objv, "name ?-option value ...?");
