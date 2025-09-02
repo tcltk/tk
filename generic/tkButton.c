@@ -561,7 +561,7 @@ int
 Tk_ButtonObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_BUTTON);
@@ -571,7 +571,7 @@ int
 Tk_CheckbuttonObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_CHECK_BUTTON);
@@ -581,7 +581,7 @@ int
 Tk_LabelObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_LABEL);
@@ -591,7 +591,7 @@ int
 Tk_RadiobuttonObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_RADIO_BUTTON);

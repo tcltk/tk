@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep;
     int result = TCL_OK;
-    int i, async = 0, index;
+    int async = 0, index;
+    Tcl_Size i;
 
     /*
      * Process the command options.

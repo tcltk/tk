@@ -180,7 +180,7 @@ typedef struct PanedWindow {
 
 static void		PanedWindowCmdDeletedProc(void *clientData);
 static int		ConfigurePanedWindow(Tcl_Interp *interp,
-			    PanedWindow *pwPtr, int objc,
+			    PanedWindow *pwPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		DestroyPanedWindow(PanedWindow *pwPtr);
 static void		DisplayPanedWindow(void *clientData);
@@ -203,14 +203,14 @@ static void		GetFirstLastVisiblePane(PanedWindow *pwPtr,
 static void		PaneStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		PanedWindowSashCommand(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static int		PanedWindowProxyCommand(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static void		ComputeGeometry(PanedWindow *pwPtr);
 static int		ConfigurePanes(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static void		DestroyOptionTables(void *clientData,
 			    Tcl_Interp *interp);
@@ -375,7 +375,7 @@ int
 Tk_PanedWindowObjCmd(
     TCL_UNUSED(void *),	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     PanedWindow *pwPtr;
@@ -604,7 +604,7 @@ PanedWindowWidgetObjCmd(
 	/*
 	 * Clean up each window named in the arg list.
 	 */
-	for (count = 0, i = 2; i < objc; i++) {
+	for (count = 0, i = 2; i < (int)objc; i++) {
 	    Tk_Window pane = Tk_NameToWindow(interp, Tcl_GetString(objv[i]),
 		    pwPtr->tkwin);
 
@@ -756,10 +756,11 @@ static int
 ConfigurePanes(
     PanedWindow *pwPtr,		/* Information about paned window. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int i, firstOptionArg, j, found, doubleBw, index, numNewPanes, haveLoc;
+    int firstOptionArg, j, found, doubleBw, index, numNewPanes, haveLoc;
+    Tcl_Size i;
     int insertIndex;
     Tk_Window tkwin = NULL, ancestor, parent;
     Pane *panePtr, **inserts, **newPanes;
@@ -854,7 +855,7 @@ ConfigurePanes(
     if (options.after != NULL) {
 	tkwin = options.after;
 	haveLoc = 1;
-	for (i = 0; i < pwPtr->numPanes; i++) {
+	for (i = 0; i < (Tcl_Size)pwPtr->numPanes; i++) {
 	    if (options.after == pwPtr->panes[i]->tkwin) {
 		index = i + 1;
 		break;
@@ -863,7 +864,7 @@ ConfigurePanes(
     } else if (options.before != NULL) {
 	tkwin = options.before;
 	haveLoc = 1;
-	for (i = 0; i < pwPtr->numPanes; i++) {
+	for (i = 0; i < (Tcl_Size)pwPtr->numPanes; i++) {
 	    if (options.before == pwPtr->panes[i]->tkwin) {
 		index = i;
 		break;
@@ -902,7 +903,7 @@ ConfigurePanes(
      * pre-existing pane structures).
      */
 
-    for (i = 0, numNewPanes = 0; i < firstOptionArg - 2; i++) {
+    for (i = 0, numNewPanes = 0; i < (Tcl_Size)firstOptionArg - 2; i++) {
 	/*
 	 * We don't check that tkwin is NULL here, because the pre-pass above
 	 * guarantees that the input at this stage is good.
@@ -1022,7 +1023,7 @@ ConfigurePanes(
 	 * array.
 	 */
 
-	for (i = 0, j = 0; i < index; i++) {
+	for (i = 0, j = 0; i < (Tcl_Size)index; i++) {
 	    if (pwPtr->panes[i] != NULL) {
 		newPanes[j] = pwPtr->panes[i];
 		j++;
@@ -1032,7 +1033,7 @@ ConfigurePanes(
 	memcpy(&newPanes[j], inserts, sizeof(Pane *)*insertIndex);
 	j += firstOptionArg - 2;
 
-	for (i = index; i < pwPtr->numPanes; i++) {
+	for (i = index; i < (Tcl_Size)pwPtr->numPanes; i++) {
 	    if (pwPtr->panes[i] != NULL) {
 		newPanes[j] = pwPtr->panes[i];
 		j++;
@@ -1081,7 +1082,7 @@ static int
 PanedWindowSashCommand(
     PanedWindow *pwPtr,		/* Pointer to paned window information. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const sashOptionStrings[] = {
@@ -1234,7 +1235,7 @@ static int
 ConfigurePanedWindow(
     Tcl_Interp *interp,		/* Used for error reporting. */
     PanedWindow *pwPtr,		/* Information about widget. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
@@ -2891,7 +2892,7 @@ static int
 PanedWindowProxyCommand(
     PanedWindow *pwPtr,		/* Pointer to paned window information. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const optionStrings[] = {
