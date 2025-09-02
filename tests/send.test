@@ -187,8 +187,9 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
     list [tk appname foo] [testsend prop root InterpRegistry]
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
-#macOS does not send to other processes
-test send-8.1 {Tk_SendCmd procedure, options} {secureserver} {
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.1 {Tk_SendCmd procedure, options} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set a 66
@@ -329,7 +330,9 @@ if {[testConstraint aqua]} {
 "send $app open bad_name"} {posix enoent {no such file or directory}}}
 }
 
-test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \

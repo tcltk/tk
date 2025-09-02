@@ -149,6 +149,9 @@ static const char *getError(OSStatus status) {
     case -1708:
       errorName = "errAEEventNotHandled";
       break;
+    case -1712:
+      errorName = "errAETimeout";
+      break;
     default:
       errorName = aeErrorString;
       snprintf(aeErrorString, 30, "%d", status);
