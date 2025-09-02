@@ -31,6 +31,12 @@
 #include <glib.h>
 
 /* Structs for custom ATK objects bound to Tk. */
+typedef struct _TkAtkVirtualChild {
+    AtkObject *obj;
+    gint index;
+    gchar *name;
+} TkAtkVirtualChild;
+
 typedef struct _TkAtkAccessible {
     AtkObject parent;
     Tk_Window tkwin;
@@ -38,8 +44,8 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     int is_focused;
+    GList *virtual_children;
 } TkAtkAccessible;
-
 
 typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
@@ -162,13 +168,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp);
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 #define TK_ATK_IS_ACCESSIBLE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), TK_ATK_TYPE_ACCESSIBLE))
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT, tk_atk_text_interface_init)
-			G_IMPLEMENT_INTERFACE(ATK_TYPE_SELECTION, tk_atk_selection_interface_init)
-			)
-
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT, tk_atk_text_interface_init)
+    G_IMPLEMENT_INTERFACE(ATK_TYPE_SELECTION, tk_atk_selection_interface_init)
+)
 /*
  *----------------------------------------------------------------------
  *
