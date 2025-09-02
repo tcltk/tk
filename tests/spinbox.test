@@ -3147,8 +3147,6 @@ test spinbox-13.25 {GetSpinboxIndex procedure} -body {
     destroy .e
 } -result 21
 
-# Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
-
 test spinbox-14.1 {SpinboxFetchSelection procedure} -body {
     spinbox .e
     .e insert end "This is a test string"
