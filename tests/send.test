@@ -340,7 +340,10 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver nonPort
     childTkProcess exit
     set result
 } $result_8_18
-test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
+
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set x no
