@@ -94,6 +94,7 @@ static int Atk_Event_Run(Tcl_Event *event, int flags);
 /* ATK interface implementations. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
+static gboolean tk_grab_focus(AtkComponent *component);
 static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
@@ -115,6 +116,8 @@ static void tk_atk_action_interface_init(AtkActionIface *iface);
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset);
 static gint tk_text_get_caret_offset(AtkText *text);
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections);
+static inline gchar *tk_acc_value_dup(Tk_Window win);
+static gint tk_text_get_character_count(AtkText *text);
 static void tk_atk_text_interface_init(AtkTextIface *iface);
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i);
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i);
@@ -278,10 +281,28 @@ static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordTyp
 	    y >= comp_y && y < comp_y + comp_height);
 }
 
+static gboolean tk_grab_focus(AtkComponent *component)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)component;
+    if (!acc || !acc->tkwin) return FALSE;
+
+    /* Give keyboard focus to the Tk widget. */
+    TkWindow *focuswin = (TkWindow*) acc->tkwin; 
+    TkSetFocusWin(focuswin, 1);
+
+    /* Mirror what your FocusIn handler emits. */
+    AtkObject *obj = ATK_OBJECT(acc);
+    g_signal_emit_by_name(obj, "focus-event", TRUE);
+    g_signal_emit_by_name(obj, "state-change", "focused", TRUE);
+
+    return TRUE;
+}
+
 static void tk_atk_component_interface_init(AtkComponentIface *iface)
 {
     iface->get_extents = tk_get_extents;
-    iface->contains = tk_contains;
+    iface->contains    = tk_contains;
+    iface->grab_focus  = tk_grab_focus;   
 }
 
 /*
@@ -480,7 +501,6 @@ static const gchar *tk_get_description(AtkObject *obj)
     return GetAtkDescriptionForWidget(acc->tkwin);
 }
 
-
 /*
  * Functions to map accessible value to ATK using
  * AtkValue interface.
@@ -528,20 +548,25 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
-   
     if (!acc || !acc->tkwin) return set;
-   
+
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-   
+
     if (Tk_IsMapped(acc->tkwin)) {
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
         atk_state_set_add_state(set, ATK_STATE_SHOWING);
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
-   
+
+    /* Match ATK focus with Tk focus. */
+    if (acc->is_focused) {
+        atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+    }
+
     return set;
 }
+
 
 /*
  * Functions that implement actions (i.e. button press)
@@ -610,21 +635,33 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
 
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset)
 {
-    (void) start_offset;
-    (void) end_offset;
-    
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(text));
-    
-    if (!acc->tkwin || !acc->interp) return NULL;
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
 
-    /* 
-     * Return data written to the "value" field in the hash table, mirroring
-     * the implementaiton on macOS and Windows. 
-     */
-    return GetAtkValueForWidget(acc->tkwin); 
+    gchar *val = tk_acc_value_dup(acc->tkwin);
+    if (!val) return NULL;
+
+    /* Normalize offsets to character indices. */
+    const gint total = g_utf8_strlen(val, -1);
+    gint start = start_offset < 0 ? 0 : start_offset;
+    gint end   = (end_offset < 0 || end_offset > total) ? total : end_offset;
+    if (end < start) { /* Avoid ATK assertions downstream. */
+        g_free(val);
+        return g_strdup(""); 
+    }
+
+    /* Convert char offsets to byte offsets for slicing. */
+    const gchar *start_p = g_utf8_offset_to_pointer(val, start);
+    const gchar *end_p   = g_utf8_offset_to_pointer(val, end);
+
+    /* Return a newly allocated substring (ATK expects caller-owned memory). */
+    gchar *out = g_strndup(start_p, end_p - start_p);
+    g_free(val);
+    return out;
 }
 
 static gint tk_text_get_caret_offset(AtkText *text)
@@ -641,21 +678,40 @@ static gint tk_text_get_caret_offset(AtkText *text)
 
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 {
-    (void) n_selections;
-    
-    TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(text));
-    
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return NULL;
-    }
+    (void) text;
+    if (n_selections) *n_selections = 0;
+    /* We don't model selection ranges in the hash; returning none avoids invalid offsets. */
+    return NULL;
+}
+
+static inline gchar *tk_acc_value_dup(Tk_Window win) 
+{
+    /* 
+     * Text data is pulled from the "value" field of 
+     * the hash table, which is controlled from the script level. 
+     * This matches the implementation on macOS and Windows. 
+     */
+	  
+    gchar *v = GetAtkValueForWidget(win);
+    /* GetAtkValueForWidget already g_utf8_make_valid's the string. It returns a newly allocated gchar* per call. */
+    return v; 
+}
+
+static gint tk_text_get_character_count(AtkText *text) 
+{
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return 0;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return 0;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
-        return NULL;
-    }
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
 
-    /* We do not get into this level of specificity in accessible text. */
-    return NULL; 
+    gchar *val = tk_acc_value_dup(acc->tkwin);
+    if (!val) return 0;
+
+    gint count = g_utf8_strlen(val, -1);
+    g_free(val);
+    return count;
 }
 
 static void tk_atk_text_interface_init(AtkTextIface *iface)
@@ -663,6 +719,7 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
     iface->get_text = tk_text_get_text;
     iface->get_caret_offset = tk_text_get_caret_offset;
     iface->get_selection = tk_text_get_selection;
+    iface->get_character_count = tk_text_get_character_count;
 }
 
 /* 
@@ -674,6 +731,7 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
+    (void) i;
     TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(selection));
     if (!acc || !acc->tkwin || !acc->interp) return FALSE;
 
@@ -688,20 +746,28 @@ static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
+    (void) i;
     TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(selection));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
+        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
         return NULL;
     }
 
-      /* 
-     * Return data written to the "value" field in the hash table, mirroring
-     * the implementaiton on macOS and Windows. 
-     */
-    return GetAtkValueForWidget(acc->tkwin); 
+    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    if (!val) return NULL;
+
+    /* Wrap the string as a dummy child object. */
+    AtkObject *child = g_object_new(ATK_TYPE_NO_OP_OBJECT, NULL);
+    atk_object_set_role(child, ATK_ROLE_UNKNOWN);
+    atk_object_set_name(child, val);
+
+    g_free(val); /* Free hash string copy. */
+    return child;
 }
+
 
 static gboolean tk_selection_select_all(AtkSelection *selection)
 {
