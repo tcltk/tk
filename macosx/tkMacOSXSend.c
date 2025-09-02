@@ -371,7 +371,8 @@ loadAppNameRegistry(
     }
     result = Tcl_NewStringObj(bytes, length);
     ckfree(bytes);
-    if (TCL_OK != Tcl_ConvertToType(NULL, result, Tcl_GetObjType("dict"))){
+    Tcl_Size size;
+    if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
 	result = Tcl_NewDictObj();
     }
     return result;
