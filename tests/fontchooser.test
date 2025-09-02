@@ -24,6 +24,9 @@ set applyFontCmd [list set testDialogFont]
 #
 # LOCAL TEST CONSTRAINTS
 #
+
+# The catch command allows proc ::tk::fontchooser::Configure to become defined on
+# platforms that don't provide a native implementation of the font selection dialog.
 catch {tk fontchooser -invalidOption}
 testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
 
