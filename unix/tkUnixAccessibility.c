@@ -610,35 +610,21 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
 
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset)
 {
+    (void) start_offset;
+    (void) end_offset;
+    
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(text));
     
     if (!acc->tkwin || !acc->interp) return NULL;
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
-    
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " get", NULL);
-    
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return NULL;
-    }
-    
-    const char *text_str = Tcl_GetStringResult(acc->interp);
-    if (!text_str) {
-        return NULL;
-    }
-    
-    /* Convert offsets to byte offsets for g_utf8_substring. */
-    const char *start_ptr = g_utf8_offset_to_pointer(text_str, start_offset);
-    const char *end_ptr = g_utf8_offset_to_pointer(text_str, end_offset);
-    
-    if (!start_ptr || !end_ptr) {
-        return NULL;
-    }
-    
-    gchar *result = g_strndup(start_ptr, end_ptr - start_ptr);
-    return result;
+
+    /* 
+     * Return data written to the "value" field in the hash table, mirroring
+     * the implementaiton on macOS and Windows. 
+     */
+    return GetAtkValueForWidget(acc->tkwin); 
 }
 
 static gint tk_text_get_caret_offset(AtkText *text)
@@ -649,28 +635,16 @@ static gint tk_text_get_caret_offset(AtkText *text)
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
 
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " index insert", NULL);
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return 0;
-    }
-
-    int offset;
-    if (Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(acc->interp), &offset) != TCL_OK) {
-        return 0;
-    }
-
-    return offset;
+    /* We do not reach this level of specificity in accessible text. */
+    return 0;
 }
 
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 {
+    (void) n_selections;
+    
     TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(text));
     
-    if (n_selections) {
-        *n_selections = 0;
-    }
-
     if (!acc || !acc->tkwin || !acc->interp) {
         return NULL;
     }
@@ -680,55 +654,8 @@ static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
         return NULL;
     }
 
-    /* Query selection range. */
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " selection range", NULL);
-
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return NULL;
-    }
-
-    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
-    int range_count;
-    Tcl_Obj **range_list;
-    if (Tcl_ListObjGetElements(acc->interp, result,
-                               &range_count, &range_list) != TCL_OK ||
-        range_count < 2) {
-        return NULL;
-    }
-
-    int start_off, end_off;
-    if (Tcl_GetIntFromObj(acc->interp, range_list[0], &start_off) != TCL_OK ||
-        Tcl_GetIntFromObj(acc->interp, range_list[1], &end_off) != TCL_OK ||
-        end_off <= start_off) {
-        return NULL;
-    }
-
-    /* Get the selected text. */
-    Tcl_Obj *getCmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(getCmd, " get", NULL);
-    if (Tcl_EvalObjEx(acc->interp, getCmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return NULL;
-    }
-
-    const char *fullText = Tcl_GetStringResult(acc->interp);
-    
-    /* Convert Tcl's character offsets to byte offsets for g_strndup */
-    const char *start_ptr = g_utf8_offset_to_pointer(fullText, start_off);
-    const char *end_ptr   = g_utf8_offset_to_pointer(fullText, end_off);
-
-    if (!start_ptr || !end_ptr) {
-        return NULL;
-    }
-
-    AtkTextRange **ranges = g_new0(AtkTextRange *, 1);
-    ranges[0] = g_new0(AtkTextRange, 1);
-    ranges[0]->start_offset = start_off;
-    ranges[0]->end_offset   = end_off;
-    ranges[0]->content      = g_strndup(start_ptr, end_ptr - start_ptr);
-
-    *n_selections = 1;
-    return ranges;
+    /* We do not get into this level of specificity in accessible text. */
+    return NULL; 
 }
 
 static void tk_atk_text_interface_init(AtkTextIface *iface)
@@ -755,27 +682,8 @@ static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
         return FALSE;
     }
 
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " curselection", NULL);
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return FALSE;
-    }
-
-    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
-    int sel_count;
-    Tcl_Obj **sel_list;
-    if (Tcl_ListObjGetElements(acc->interp, result, &sel_count, &sel_list) != TCL_OK) {
-        return FALSE;
-    }
-
-    for (int j = 0; j < sel_count; j++) {
-        int index;
-        if (Tcl_GetIntFromObj(acc->interp, sel_list[j], &index) == TCL_OK && index == i) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
+    /* Just return true because we are pulling data from the hash table. */
+    return TRUE;
 }
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
@@ -788,27 +696,11 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
         return NULL;
     }
 
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " curselection", NULL);
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        Tcl_DecrRefCount(cmd);
-        return NULL;
-    }
-
-    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
-    int sel_count;
-    Tcl_Obj **sel_list;
-    if (Tcl_ListObjGetElements(acc->interp, result, &sel_count, &sel_list) != TCL_OK || i >= sel_count) {
-        return NULL;
-    }
-
-    int index;
-    if (Tcl_GetIntFromObj(acc->interp, sel_list[i], &index) != TCL_OK) {
-        return NULL;
-    }
-
-    AtkObject *child = tk_ref_child(ATK_OBJECT(acc), index);
-    return child;
+      /* 
+     * Return data written to the "value" field in the hash table, mirroring
+     * the implementaiton on macOS and Windows. 
+     */
+    return GetAtkValueForWidget(acc->tkwin); 
 }
 
 static gboolean tk_selection_select_all(AtkSelection *selection)
@@ -821,18 +713,10 @@ static gboolean tk_selection_select_all(AtkSelection *selection)
         return FALSE;
     }
 
-    /* Build command string for selecting all content. */
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_AppendStringsToObj(cmd, " selection set 0 end", NULL);
-
-    /* Execute the command. */
-    if (Tcl_EvalObjEx(acc->interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-        return FALSE;
-    }
-
-    /* Notify ATK that the selection has changed */
-    g_signal_emit_by_name(ATK_OBJECT(acc), "selection-changed");
-
+    /* 
+     * Just return because we do not get into this level of specificity
+     * in the selection implementation. 
+     */
     return TRUE;
 }
 
