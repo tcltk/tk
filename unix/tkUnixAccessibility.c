@@ -31,12 +31,6 @@
 #include <glib.h>
 
 /* Structs for custom ATK objects bound to Tk. */
-typedef struct _TkAtkVirtualChild {
-    AtkObject *obj;
-    gint index;
-    gchar *name;
-} TkAtkVirtualChild;
-
 typedef struct _TkAtkAccessible {
     AtkObject parent;
     Tk_Window tkwin;
@@ -44,7 +38,6 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     int is_focused;
-    GList *virtual_children;
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
