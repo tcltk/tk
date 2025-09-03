@@ -138,7 +138,7 @@ static const char *getError(OSStatus status) {
     case -609:
       errorName = "connectionInvalid";
     case -1700:
-      errorName = "errAETimeout";
+      errorName = "errAECoercionFail";
       break;
     case -1701:
       errorName = "errAEDescNotFound";
