@@ -90,11 +90,13 @@ static void Atk_Event_Setup (ClientData clientData, int flags);
 static void Atk_Event_Check(ClientData clientData, int flags);
 static int Atk_Event_Run(Tcl_Event *event, int flags);
 
-/* ATK interface implementations. */
+/* ATK component interface . */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
 static gboolean tk_grab_focus(AtkComponent *component);
 static void tk_atk_component_interface_init(AtkComponentIface *iface);
+
+/* ATK child, attribute and state management. */
 static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
@@ -104,20 +106,38 @@ static const gchar *tk_get_name(AtkObject *obj);
 static void tk_set_name(AtkObject *obj, const gchar *name);
 static gchar *GetAtkDescriptionForWidget(Tk_Window win);
 static const gchar *tk_get_description(AtkObject *obj);
+static AtkStateSet *tk_ref_state_set(AtkObject *obj);
+
+/*ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
-static AtkStateSet *tk_ref_state_set(AtkObject *obj);
+
+/* ATK action interface. */
 static gboolean tk_action_do_action(AtkAction *action, gint i);
 static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
+
+/*ATK text interface. */
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset);
 static gint tk_text_get_caret_offset(AtkText *text);
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections);
 static inline gchar *tk_acc_value_dup(Tk_Window win);
 static gint tk_text_get_character_count(AtkText *text);
+static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
+static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
+static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
+static AtkAttributeSet *tk_text_get_run_attributes(AtkText *text, gint offset, gint *start_offset, gint *end_offset);
+static AtkAttributeSet *tk_text_get_default_attributes(AtkText *text);
+static void tk_text_get_character_extents(AtkText *text, gint offset, gint *x, gint *y, gint *width, gint *height, AtkCoordType coords);
+static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordType coords);
+static gboolean tk_text_set_caret_offset(AtkText *text, gint offset);
 static void tk_atk_text_interface_init(AtkTextIface *iface);
+
+/* ATK selection interface. */
+static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset);
+static gint tk_text_get_n_selections(AtkText *text);
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i);
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i);
 static gboolean tk_selection_select_all(AtkSelection *selection);
@@ -139,7 +159,6 @@ AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
 AtkObject *atk_get_root(void);
-
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -227,14 +246,16 @@ static int Atk_Event_Run(Tcl_Event *event, int flags)
 /*
  *----------------------------------------------------------------------
  *
- * Function to map Tk data to ATK's API. These functions do the heavy 
- * lifting of implementing the Tk-ATK interface. 
+ * ATK interface functions. These do the heavy lifting of mapping Tk to ATK 
+ * functionality. ATK has a more rigid structure than NSAccessibility and 
+ * Microsoft Active Accessibility and requires a great deal more specific 
+ * implementation for accessibility to work ropertly. 
  *
  *----------------------------------------------------------------------
  */
 
 /*
- * Map ATK component interface to Tk.
+ * ATK component interface. 
  */
  
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type)
@@ -304,7 +325,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 }
 
 /*
- * Functions to manage child count and individual child widgets.
+ * Accessible children, attributes and state.
  */
  
 static gint tk_get_n_children(AtkObject *obj)
@@ -372,10 +393,6 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
     return NULL;
 }
 
-/*
- * Functions to map accessible role to ATK.
- */
-
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
     if (!win) return ATK_ROLE_UNKNOWN;
@@ -427,10 +444,6 @@ static AtkRole tk_get_role(AtkObject *obj)
     return GetAtkRoleForWidget(acc->tkwin);
 }
 
-/*
- * Name and description getters
- * for Tk-ATK objects.
- */
 
 static gchar *GetAtkNameForWidget(Tk_Window win)
 {
@@ -499,9 +512,31 @@ static const gchar *tk_get_description(AtkObject *obj)
     return GetAtkDescriptionForWidget(acc->tkwin);
 }
 
+static AtkStateSet *tk_ref_state_set(AtkObject *obj)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+    AtkStateSet *set = atk_state_set_new();
+    if (!acc || !acc->tkwin) return set;
+
+    atk_state_set_add_state(set, ATK_STATE_ENABLED);
+    atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
+
+    if (Tk_IsMapped(acc->tkwin)) {
+        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(set, ATK_STATE_SHOWING);
+        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+    }
+
+    /* Match ATK focus with Tk focus. */
+    if (acc->is_focused) {
+        atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+    }
+
+    return set;
+}
+
 /*
- * Functions to map accessible value to ATK using
- * AtkValue interface.
+ * ATK value interface.
  */
 
 static gchar *GetAtkValueForWidget(Tk_Window win)
@@ -541,34 +576,9 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
     iface->get_current_value = tk_get_current_value;
 }
 
-/* Function to map accessible state to ATK. */
-static AtkStateSet *tk_ref_state_set(AtkObject *obj)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    AtkStateSet *set = atk_state_set_new();
-    if (!acc || !acc->tkwin) return set;
-
-    atk_state_set_add_state(set, ATK_STATE_ENABLED);
-    atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-
-    if (Tk_IsMapped(acc->tkwin)) {
-        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        atk_state_set_add_state(set, ATK_STATE_SHOWING);
-        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-    }
-
-    /* Match ATK focus with Tk focus. */
-    if (acc->is_focused) {
-        atk_state_set_add_state(set, ATK_STATE_FOCUSED);
-    }
-
-    return set;
-}
-
 
 /*
- * Functions that implement actions (i.e. button press)
- * from Tk to ATK.
+ * ATK action interface.
  */
 
 static gboolean tk_action_do_action(AtkAction *action, gint i)
@@ -598,8 +608,8 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
 	    return FALSE;
 	}
+	return TRUE;
     }
-    return TRUE;
 }
 
 static gint tk_action_get_n_actions(AtkAction *action)
@@ -625,10 +635,7 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
 }
 
 /*
- * Functions to map the AtkText interface to allow text in Tk widgets to be
- * made accessible.  This is not required on macOS and Windows, which can 
- * support data being piped to the accessible system with the 
- * appropriate notification. ATK requires the formal protocol. 
+ * ATK text interface.
  */
 
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset)
@@ -684,14 +691,8 @@ static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 
 static inline gchar *tk_acc_value_dup(Tk_Window win) 
 {
-    /* 
-     * Text data is pulled from the "value" field of 
-     * the hash table, which is controlled from the script level. 
-     * This matches the implementation on macOS and Windows. 
-     */
-	  
+   
     gchar *v = GetAtkValueForWidget(win);
-    /* GetAtkValueForWidget already g_utf8_make_valid's the string. It returns a newly allocated gchar* per call. */
     return v; 
 }
 
@@ -712,19 +713,117 @@ static gint tk_text_get_character_count(AtkText *text)
     return count;
 }
 
+static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
+{
+    /* For simplicity, return the entire text for any boundary type. */
+    gchar *full_text = tk_text_get_text(text, 0, -1);
+    if (start_offset) *start_offset = 0;
+    if (end_offset) *end_offset = g_utf8_strlen(full_text, -1);
+    return full_text;
+}
+
+static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
+{
+    gchar *full_text = tk_text_get_text(text, 0, -1);
+    gint length = g_utf8_strlen(full_text, -1);
+    if (start_offset) *start_offset = offset + 1;
+    if (end_offset) *end_offset = length;
+    g_free(full_text);
+    return tk_text_get_text(text, offset + 1, -1);
+}
+
+static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
+{
+    if (start_offset) *start_offset = 0;
+    if (end_offset) *end_offset = offset;
+    return tk_text_get_text(text, 0, offset);
+}
+
+static AtkAttributeSet *tk_text_get_run_attributes(AtkText *text, gint offset, gint *start_offset, gint *end_offset)
+{
+    if (start_offset) *start_offset = 0;
+    if (end_offset) *end_offset = tk_text_get_character_count(text);
+    return NULL; /* No attributes for now. */
+}
+
+static AtkAttributeSet *tk_text_get_default_attributes(AtkText *text)
+{
+    return NULL; /* No default attributes. */
+}
+
+static void tk_text_get_character_extents(AtkText *text, gint offset, gint *x, gint *y, gint *width, gint *height, AtkCoordType coords)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
+    if (!acc || !acc->tkwin) return;
+    
+    /* Approximate character extents based on widget size and text length. */
+    gint char_count = tk_text_get_character_count(text);
+    if (char_count == 0) return;
+    
+    gint widget_width = Tk_Width(acc->tkwin);
+    gint char_width = widget_width / char_count;
+    
+    if (x) *x = offset * char_width;
+    if (y) *y = 0;
+    if (width) *width = char_width;
+    if (height) *height = Tk_Height(acc->tkwin);
+}
+
+static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordType coords)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
+    if (!acc || !acc->tkwin) return 0;
+    
+    gint char_count = tk_text_get_character_count(text);
+    if (char_count == 0) return 0;
+    
+    gint widget_width = Tk_Width(acc->tkwin);
+    gint char_width = widget_width / char_count;
+    
+    return x / char_width;
+}
+
+static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
+{
+    /* Not implemented for read-only text. */
+    return FALSE;
+}
+
+static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
+{
+    /* Not implemented for read-only text. */
+    return FALSE;
+}
+
+static gint tk_text_get_n_selections(AtkText *text)
+{
+    return 0; /* No selections supported. */
+}
+
+
 static void tk_atk_text_interface_init(AtkTextIface *iface)
 {
     iface->get_text = tk_text_get_text;
     iface->get_caret_offset = tk_text_get_caret_offset;
     iface->get_selection = tk_text_get_selection;
     iface->get_character_count = tk_text_get_character_count;
+    iface->get_text_at_offset = tk_text_get_text_at_offset;
+    iface->get_text_after_offset = tk_text_get_text_after_offset;
+    iface->get_text_before_offset = tk_text_get_text_before_offset;
+    iface->get_run_attributes = tk_text_get_run_attributes;
+    iface->get_default_attributes = tk_text_get_default_attributes;
+    iface->get_character_extents = tk_text_get_character_extents;
+    iface->get_offset_at_point = tk_text_get_offset_at_point;
+    iface->set_caret_offset = tk_text_set_caret_offset;
+    iface->set_selection = tk_text_set_selection;
+    iface->get_n_selections = tk_text_get_n_selections;
+    iface->get_range_extents = NULL; 
+    iface->get_bounded_ranges = NULL;
 }
 
+
 /* 
- * Functions to allow Tk text selection to interact with ATK. This is not
- * required on macOS and Windows, which can support data being piped to the
- * accessible system with the appropriate notification. ATK requires the formal
- * protocol. 
+ * ATK select interface.
  */
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
@@ -784,11 +883,47 @@ static gboolean tk_selection_select_all(AtkSelection *selection)
     return TRUE;
 }
 
+static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
+{
+    /* Not implemented for read-only selection. */
+    return FALSE;
+}
+
+static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
+{
+    /* Not implemented for read-only selection. */
+    return FALSE;
+}
+
+static gboolean tk_selection_clear_selection(AtkSelection *selection)
+{
+    /* Not implemented for read-only selection. */
+    return FALSE;
+}
+
+static gint tk_selection_get_selection_count(AtkSelection *selection)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
+    if (!acc || !acc->tkwin || !acc->interp) return 0;
+
+    /* Return 1 if we have a value (indicating something is selected). */
+    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    gboolean has_selection = (val != NULL && val[0] != '\0');
+    g_free(val);
+    
+    return has_selection ? 1 : 0;
+}
+
+
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
+    iface->add_selection = tk_selection_add_selection;
+    iface->clear_selection = tk_selection_clear_selection;
+    iface->get_selection_count = tk_selection_get_selection_count;
     iface->is_child_selected = tk_selection_is_child_selected;
     iface->ref_selection = tk_selection_ref_selection;
-    iface->select_all_selection = tk_selection_select_all;
+    iface->remove_selection = tk_selection_remove_selection;
+    iface->select_all_selection = tk_selection_select_all_selection;
 }
 
 /*
@@ -1058,7 +1193,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
 			  TkAtkAccessible_CreateHandler, tkAccessible);
-    Tk_CreateEventHandler(tkwin, ConfigureNotify,
+    Tk_CreateEventHandler(tkwin, ConfigureMask,
 			  TkAtkAccessible_ConfigureHandler, tkAccessible);	
 
 }
