@@ -1036,7 +1036,6 @@ TkFindStateNumObj(
 {
     const TkStateMap *mPtr;
     const char *key;
-    const Tcl_ObjType *typePtr;
 
     /*
      * See if the value is in the object cache.
@@ -1054,10 +1053,8 @@ TkFindStateNumObj(
     key = Tcl_GetString(keyPtr);
     for (mPtr = mapPtr; mPtr->strKey != NULL; mPtr++) {
 	if (strcmp(key, mPtr->strKey) == 0) {
-	    typePtr = keyPtr->typePtr;
-	    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-		typePtr->freeIntRepProc(keyPtr);
-	    }
+	    Tcl_FreeInternalRep(keyPtr);
+
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
 	    keyPtr->typePtr = &tkStateKeyObjType.objType;

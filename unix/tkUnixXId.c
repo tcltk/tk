@@ -104,9 +104,7 @@ TkpScanWindowId(
     if (obj.refCount > 1) {
 	Tcl_Panic("invalid sharing of Tcl_Obj on C stack");
     }
-    if (obj.typePtr && obj.typePtr->freeIntRepProc) {
-	obj.typePtr->freeIntRepProc(&obj);
-    }
+    Tcl_FreeInternalRep(&obj);
     return code;
 }
 

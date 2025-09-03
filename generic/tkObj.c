@@ -485,7 +485,6 @@ SetPixelFromAny(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     ThreadSpecificData *typeCache = GetTypeCache();
-    const Tcl_ObjType *typePtr;
     char *string;
     char *rest;
     double d;
@@ -551,15 +550,7 @@ SetPixelFromAny(
 	*rest = savechar;
     }
 
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
-
+    Tcl_FreeInternalRep(objPtr);
     objPtr->typePtr = &pixelObjType.objType;
 
     i = (int) d;
@@ -764,7 +755,6 @@ SetMMFromAny(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     ThreadSpecificData *typeCache = GetTypeCache();
-    const Tcl_ObjType *typePtr;
     char *string;
     char *rest;
     double d;
@@ -833,15 +823,7 @@ SetMMFromAny(
 	*rest = savechar;
     }
 
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
-
+    Tcl_FreeInternalRep(objPtr);
     objPtr->typePtr = &mmObjType.objType;
 
     mmPtr = (MMRep *)ckalloc(sizeof(MMRep));
@@ -942,18 +924,10 @@ SetWindowFromAny(
     TCL_UNUSED(Tcl_Interp *),
     Tcl_Obj *objPtr)	/* The object to convert. */
 {
-    const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
 
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
     Tcl_GetString(objPtr);
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
+    Tcl_FreeInternalRep(objPtr);
 
     winPtr = (WindowRep *)ckalloc(sizeof(WindowRep));
     winPtr->tkwin = NULL;
