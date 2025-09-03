@@ -1313,17 +1313,14 @@ Tk_Get3DBorderFromObj(
  *
  * InitBorderObj --
  *
- *	Attempt to generate a border internal form for the Tcl object
- *	"objPtr".
+ *	Generate a border internal form for the Tcl object "objPtr".
  *
  * Results:
- *	The return value is a standard Tcl result. If an error occurs during
- *	conversion, an error message is left in the interpreter's result
- *	unless "interp" is NULL.
+ *	None.
  *
  * Side effects:
- *	If no error occurs, a blank internal format for a border value is
- *	initialized. The final form cannot be done without a Tk_Window.
+ *	A blank internal format for a border value is initialized.
+ *	The final form cannot be done without a Tk_Window.
  *
  *----------------------------------------------------------------------
  */
@@ -1332,17 +1329,8 @@ static void
 InitBorderObj(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    const Tcl_ObjType *typePtr;
-
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
     Tcl_GetString(objPtr);
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
+    Tcl_FreeInternalRep(objPtr);
     objPtr->typePtr = &tkBorderObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }

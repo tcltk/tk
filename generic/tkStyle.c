@@ -1435,19 +1435,11 @@ SetStyleFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    const Tcl_ObjType *typePtr;
     const char *name;
     Tk_Style style;
 
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
     name = Tcl_GetString(objPtr);
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
+    Tcl_FreeInternalRep(objPtr);
 
     style = Tk_GetStyle(interp, name);
     if (style == NULL) {

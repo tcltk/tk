@@ -235,14 +235,8 @@ TkTextGetIndexFromObj(
 	return NULL;
     }
 
-    if (objPtr->typePtr != NULL) {
-	if (objPtr->bytes == NULL) {
-	    objPtr->typePtr->updateStringProc(objPtr);
-	}
-	if (objPtr->typePtr->freeIntRepProc != NULL) {
-	    objPtr->typePtr->freeIntRepProc(objPtr);
-	}
-    }
+    Tcl_GetString(objPtr);	/* Probably not needed; called above */
+    Tcl_FreeInternalRep(objPtr);
 
     return MakeObjIndex((cache ? textPtr : NULL), objPtr, &index);
 }

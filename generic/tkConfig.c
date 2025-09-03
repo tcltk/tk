@@ -1267,10 +1267,7 @@ GetOptionFromObj(
 	goto error;
     }
 
-    if ((objPtr->typePtr != NULL)
-	    && (objPtr->typePtr->freeIntRepProc != NULL)) {
-	objPtr->typePtr->freeIntRepProc(objPtr);
-    }
+    Tcl_FreeInternalRep(objPtr);
     objPtr->internalRep.twoPtrValue.ptr1 = (void *) tablePtr;
     objPtr->internalRep.twoPtrValue.ptr2 = (void *) bestPtr;
     objPtr->typePtr = &optionObjType.objType;

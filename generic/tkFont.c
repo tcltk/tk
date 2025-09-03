@@ -1372,17 +1372,8 @@ SetFontFromAny(
     TCL_UNUSED(Tcl_Interp *),	/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    const Tcl_ObjType *typePtr;
-
-    /*
-     * Free the old internalRep before setting the new one.
-     */
-
     Tcl_GetString(objPtr);
-    typePtr = objPtr->typePtr;
-    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	typePtr->freeIntRepProc(objPtr);
-    }
+    Tcl_FreeInternalRep(objPtr);
     objPtr->typePtr = &tkFontObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
