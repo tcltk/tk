@@ -691,7 +691,11 @@ static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 
 static inline gchar *tk_acc_value_dup(Tk_Window win) 
 {
-   
+    /* 
+     * Text data is written to the "value" field of the TkAccessibleObject
+     * hash table and queried there. 
+     */
+    
     gchar *v = GetAtkValueForWidget(win);
     return v; 
 }
@@ -799,7 +803,6 @@ static gint tk_text_get_n_selections(AtkText *text)
 {
     return 0; /* No selections supported. */
 }
-
 
 static void tk_atk_text_interface_init(AtkTextIface *iface)
 {
