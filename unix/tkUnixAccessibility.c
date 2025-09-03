@@ -93,7 +93,6 @@ static int Atk_Event_Run(Tcl_Event *event, int flags);
 /* ATK component interface . */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
-static gboolean tk_grab_focus(AtkComponent *component);
 static void tk_atk_component_interface_init(AtkComponentIface *iface);
 
 /* ATK child, attribute and state management. */
@@ -304,28 +303,10 @@ static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordTyp
 	    y >= comp_y && y < comp_y + comp_height);
 }
 
-static gboolean tk_grab_focus(AtkComponent *component)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible *)component;
-    if (!acc || !acc->tkwin) return FALSE;
-
-    /* Give keyboard focus to the Tk widget. */
-    TkWindow *focuswin = (TkWindow*) acc->tkwin; 
-    TkSetFocusWin(focuswin, 1);
-
-    /* Mirror what FocusIn handler emits. */
-    AtkObject *obj = ATK_OBJECT(acc);
-    g_signal_emit_by_name(obj, "focus-event", TRUE);
-    g_signal_emit_by_name(obj, "state-change", "focused", TRUE);
-
-    return TRUE;
-}
-
 static void tk_atk_component_interface_init(AtkComponentIface *iface)
 {
     iface->get_extents = tk_get_extents;
     iface->contains    = tk_contains;
-    iface->grab_focus  = tk_grab_focus;   
 }
 
 /*
@@ -793,8 +774,6 @@ static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordT
 
 static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
 {
-static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
-{
     if (!TK_ATK_IS_ACCESSIBLE(text)) {
         return FALSE;
     }
@@ -806,11 +785,6 @@ static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
         return FALSE;
-    }
-
-    /* Ensure the widget has focus */
-    if (!acc->is_focused) {
-        tk_grab_focus(ATK_COMPONENT(acc));
     }
 
     /* Validate offset */
@@ -841,7 +815,7 @@ static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
     }
     return FALSE;
 }
-}
+
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
 {
@@ -856,11 +830,6 @@ static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint st
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
         return FALSE;
-    }
-
-    /* Ensure the widget has focus. */
-    if (!acc->is_focused) {
-        tk_grab_focus(ATK_COMPONENT(acc));
     }
 
     /* Validate offsets. */
@@ -1351,7 +1320,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
 			  TkAtkAccessible_CreateHandler, tkAccessible);
-    Tk_CreateEventHandler(tkwin, ConfigureMask,
+    Tk_CreateEventHandler(tkwin, ConfigureNotify,
 			  TkAtkAccessible_ConfigureHandler, tkAccessible);	
 
 }
@@ -1410,7 +1379,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
 
-    if (eventPtr->type == ConfigureMask) {
+    if (eventPtr->type == ConfigureNotify) {
 		
 	AtkObject *obj = ATK_OBJECT(acc);  
 
@@ -1429,21 +1398,14 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
-
+    if (!acc || !Tk_IsMapped(acc->tkwin)) return;
+   
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
-
-    if (focused && !acc->is_focused) {
-        /* Reinforce focus for ATK consistency. */
-        tk_grab_focus(ATK_COMPONENT(acc));
-    } else if (!focused) {
-        /* Update focus state */
-        acc->is_focused = FALSE;
-        g_signal_emit_by_name(obj, "focus-event", FALSE);
-        g_signal_emit_by_name(obj, "state-change", "focused", FALSE);
-    }
-}
+   
+    /* Direct signal emission. */
+    g_signal_emit_by_name(obj, "focus-event", focused);
+    g_signal_emit_by_name(obj, "state-change", "focused", focused);
 
 /*
  *----------------------------------------------------------------------
