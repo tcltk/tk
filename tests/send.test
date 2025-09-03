@@ -135,7 +135,7 @@ test send-5.4 {ValidateName procedure} {secureserver testsend} {
     winfo interps
 } {test}
 
-if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint nonAqua]} {
+if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint notAqua]} {
     winfo interps
     tk appname tktest
     update
@@ -297,7 +297,7 @@ test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend fa
 
 catch {interp delete t_s_1}
 
-test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable nonAqua} {
+test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable notAqua} {
     # Non-portable because some window managers ignore "raise"
     # requests so can't guarantee that new app's window won't
     # obscure .f, thereby masking the Expose event.
@@ -541,7 +541,7 @@ test send-12.1 {TimeoutProc procedure} {secureserver testsend} {
 catch {testsend prop root InterpRegistry ""}
 
 #macOS does not support the TimeoutProc
-test send-12.2 {TimeoutProc procedure} {secureserver nonAqua} {
+test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
     winfo interps
     tk appname tktest
     update
