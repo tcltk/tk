@@ -484,88 +484,94 @@ SetPixelFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    ThreadSpecificData *typeCache = GetTypeCache();
-    char *string;
-    char *rest;
     double d;
-    int i, units;
+    int code;
+    int units = -1;
+    void *cd;
+    int numType;
 
-    if (objPtr->typePtr != typeCache->doubleTypePtr
-	    && Tcl_GetIntFromObj(NULL, objPtr, &units) == TCL_OK) {
-	d = (double) units;
-	units = -1;
-
-	/*
-	 * In the case of ints, we need to ensure that a valid string exists
-	 * in order for int-but-not-string objects to be converted back to
-	 * ints again from pixel obj types.
-	 */
-
-	(void) Tcl_GetString(objPtr);
-    } else if (Tcl_GetDoubleFromObj(NULL, objPtr, &d) == TCL_OK) {
-	units = -1;
+    code = Tcl_GetNumberFromObj(NULL, objPtr, &cd, &numType);
+    if (code == TCL_OK) {
+	if (numType == TCL_NUMBER_DOUBLE) {
+	    d = *(double *)cd;
+	} else if (numType == TCL_NUMBER_INT) {
+	    Tcl_WideInt w = *(Tcl_WideInt *)cd;
+	    if ((w >= INT_MIN) && (w <= INT_MAX)) {
+		d = (double) w;
+	    } else {
+		code = TCL_ERROR;
+	    }
+	} else {
+	    /* Other valid number formats cannot pass further parsing. */
+	    code = TCL_ERROR;
+	}
     } else {
-	char savechar;
-	string = Tcl_GetString(objPtr);
-
-	rest = string + strlen(string);
+	char *string = Tcl_GetString(objPtr);
+	char *rest = string + strlen(string);
 	while ((rest > string) && isspace(UCHAR(rest[-1]))) {
-	    --rest; /* skip all spaces at the end */
+	    /* skip all spaces at the end */
+	    --rest;
 	}
 	if (rest > string) {
-	    --rest; /* point to the character just before the last space */
+	    /* point to the character just before the last space */
+	    --rest;
 	}
-	if (rest == string) {
-	error:
-	    if (interp != NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"expected screen distance but got \"%.50s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
+	if (rest > string) {
+	    /* Need at least one character to continue parsing */
+	    switch (*rest) {
+		case 'm':
+		    units = 0;
+		    break;
+		case 'c':
+		    units = 1;
+		    break;
+		case 'i':
+		    units = 2;
+		    break;
+		case 'p':
+		    units = 3;
+		    break;
 	    }
-	    return TCL_ERROR;
+	    if (units >= 0) {
+		char savechar = *rest;
+		*rest = '\0';
+		code = Tcl_GetDouble(NULL, string, &d);
+		*rest = savechar;
+	    }
 	}
-
-	switch (*rest) {
-	case 'm':
-	    units = 0;
-	    break;
-	case 'c':
-	    units = 1;
-	    break;
-	case 'i':
-	    units = 2;
-	    break;
-	case 'p':
-	    units = 3;
-	    break;
-	default:
-	    goto error;
-	}
-	savechar = *rest;
-	*rest = '\0';
-	if (Tcl_GetDouble(NULL, string, &d) != TCL_OK) {
-	    *rest = savechar;
-	    goto error;
-	}
-	*rest = savechar;
     }
 
-    Tcl_FreeInternalRep(objPtr);
-    objPtr->typePtr = &pixelObjType.objType;
+    if (code == TCL_OK) {
+	int i = (int) d;
 
-    i = (int) d;
-    if ((units < 0) && (i == d)) {
-	SET_SIMPLEPIXEL(objPtr, i);
-    } else {
-	PixelRep *pixelPtr = (PixelRep *)ckalloc(sizeof(PixelRep));
+ 	Tcl_GetString(objPtr); /* Make sure pure numbers can convert back */
+	Tcl_FreeInternalRep(objPtr);
+	objPtr->typePtr = &pixelObjType.objType;
 
-	pixelPtr->value = d;
-	pixelPtr->units = units;
-	pixelPtr->tkwin = NULL;
-	pixelPtr->returnValue = i;
-	SET_COMPLEXPIXEL(objPtr, pixelPtr);
+	if ((units < 0) && (i == d)) {
+	    SET_SIMPLEPIXEL(objPtr, i);
+	} else {
+	    PixelRep *pixelPtr = (PixelRep *)ckalloc(sizeof(PixelRep));
+
+	    pixelPtr->value = d;
+	    pixelPtr->units = units;
+	    pixelPtr->tkwin = NULL;
+	    pixelPtr->returnValue = i;
+	    SET_COMPLEXPIXEL(objPtr, pixelPtr);
+	}
+	return TCL_OK;
     }
-    return TCL_OK;
+
+    if (interp != NULL) {
+	Tcl_Obj *msg = Tcl_NewStringObj(
+		"expected screen distance but got \"", TCL_INDEX_NONE);
+	Tcl_AppendLimitedToObj(msg,
+		Tcl_GetString(objPtr), TCL_INDEX_NONE, 50, NULL);
+	Tcl_AppendToObj(msg, "\"", TCL_INDEX_NONE);
+	Tcl_SetObjResult(interp, msg);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
+    }
+    return TCL_ERROR;
 }
 
 /*
