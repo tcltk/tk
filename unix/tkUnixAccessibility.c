@@ -183,12 +183,12 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp);
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
 #define TK_ATK_IS_ACCESSIBLE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), TK_ATK_TYPE_ACCESSIBLE))
 G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
-    G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
-    G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
-    G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
-    G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT, tk_atk_text_interface_init)
-    G_IMPLEMENT_INTERFACE(ATK_TYPE_SELECTION, tk_atk_selection_interface_init)
-)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT, tk_atk_component_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_ACTION, tk_atk_action_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_VALUE, tk_atk_value_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_TEXT, tk_atk_text_interface_init)
+			G_IMPLEMENT_INTERFACE(ATK_TYPE_SELECTION, tk_atk_selection_interface_init)
+			)
 /*
  *----------------------------------------------------------------------
  *
@@ -1406,6 +1406,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     /* Direct signal emission. */
     g_signal_emit_by_name(obj, "focus-event", focused);
     g_signal_emit_by_name(obj, "state-change", "focused", focused);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1440,8 +1441,8 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     (void)clientData;
 
     if (objc < 2) {
-        Tcl_WrongNumArgs(ip, 1, objv, "window");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(ip, 1, objv, "window");
+	return TCL_ERROR;
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
@@ -1450,35 +1451,35 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
-        obj = TkCreateAccessibleAtkObject(ip, tkwin, windowName);
-        if (!obj) return TCL_OK;
-        TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
+	obj = TkCreateAccessibleAtkObject(ip, tkwin, windowName);
+	if (!obj) return TCL_OK;
+	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
     AtkRole role = tk_get_role(obj);
 
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-        /* Text/entry widget selection changed. */
-        g_signal_emit_by_name(obj, "text-selection-changed");
+	/* Text/entry widget selection changed. */
+	g_signal_emit_by_name(obj, "text-selection-changed");
     } else if (role == ATK_ROLE_LIST || role == ATK_ROLE_TABLE || role == ATK_ROLE_TREE || role == ATK_ROLE_MENU) {
-        /* Listbox, table, tree, or menu selection changed. */
-        g_signal_emit_by_name(obj, "selection-changed");
+	/* Listbox, table, tree, or menu selection changed. */
+	g_signal_emit_by_name(obj, "selection-changed");
     } else if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
-               role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR) {
-        /* Numeric widgets (scale, scrollbar, spinbox, progress). */
-        GValue gval = G_VALUE_INIT;
-        tk_get_current_value(ATK_VALUE(obj), &gval);
-        gdouble new_val = 0.0;
+	       role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR) {
+	/* Numeric widgets (scale, scrollbar, spinbox, progress). */
+	GValue gval = G_VALUE_INIT;
+	tk_get_current_value(ATK_VALUE(obj), &gval);
+	gdouble new_val = 0.0;
 
-        if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-            new_val = g_value_get_double(&gval);
-        } else if (G_VALUE_HOLDS_STRING(&gval)) {
-            const char *s = g_value_get_string(&gval);
-            if (s) new_val = g_ascii_strtod(s, NULL);
-        }
-        g_value_unset(&gval);
+	if (G_VALUE_HOLDS_DOUBLE(&gval)) {
+	    new_val = g_value_get_double(&gval);
+	} else if (G_VALUE_HOLDS_STRING(&gval)) {
+	    const char *s = g_value_get_string(&gval);
+	    if (s) new_val = g_ascii_strtod(s, NULL);
+	}
+	g_value_unset(&gval);
 
-        g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
+	g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
     }
 
     return TCL_OK;
