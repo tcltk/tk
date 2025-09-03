@@ -145,6 +145,7 @@ static gint tk_selection_get_selection_count(AtkSelection *selection);
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i);
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i);
 static gboolean tk_selection_select_all_selection(AtkSelection *selection);
+static void tk_atk_selection_interface_init(AtkSelectionIface *iface);
 
 /* Object lifecycle functions. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
@@ -312,7 +313,7 @@ static gboolean tk_grab_focus(AtkComponent *component)
     TkWindow *focuswin = (TkWindow*) acc->tkwin; 
     TkSetFocusWin(focuswin, 1);
 
-    /* Mirror what your FocusIn handler emits. */
+    /* Mirror what FocusIn handler emits. */
     AtkObject *obj = ATK_OBJECT(acc);
     g_signal_emit_by_name(obj, "focus-event", TRUE);
     g_signal_emit_by_name(obj, "state-change", "focused", TRUE);
@@ -792,16 +793,107 @@ static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordT
 
 static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
 {
-    /* Not implemented for read-only text. */
+static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
+{
+    if (!TK_ATK_IS_ACCESSIBLE(text)) {
+        return FALSE;
+    }
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return FALSE;
+    }
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+        return FALSE;
+    }
+
+    /* Ensure the widget has focus */
+    if (!acc->is_focused) {
+        tk_grab_focus(ATK_COMPONENT(acc));
+    }
+
+    /* Validate offset */
+    gint char_count = tk_text_get_character_count(text);
+    if (offset < 0 || offset > char_count) {
+        return FALSE;
+    }
+
+    /* Set caret position using Tcl command: [$w icursor offset] */
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_IncrRefCount(cmd);
+    Tcl_Obj *cmdArray[3];
+    cmdArray[0] = cmd;
+    cmdArray[1] = Tcl_NewStringObj("icursor", -1);
+    cmdArray[2] = Tcl_NewIntObj(offset);
+    Tcl_IncrRefCount(cmdArray[1]);
+    Tcl_IncrRefCount(cmdArray[2]);
+
+    int result = Tcl_EvalObjv(acc->interp, 3, cmdArray, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmd);
+    Tcl_DecrRefCount(cmdArray[1]);
+    Tcl_DecrRefCount(cmdArray[2]);
+
+    if (result == TCL_OK) {
+        /* Emit text-caret-moved signal */
+        g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
+        return TRUE;
+    }
     return FALSE;
+}
 }
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
 {
-    /* Not implemented for read-only text. */
+    if (!TK_ATK_IS_ACCESSIBLE(text) || selection_num != 0) {
+        return FALSE; /* Support only single selection. */
+    }
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return FALSE;
+    }
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+        return FALSE;
+    }
+
+    /* Ensure the widget has focus. */
+    if (!acc->is_focused) {
+        tk_grab_focus(ATK_COMPONENT(acc));
+    }
+
+    /* Validate offsets. */
+    gint char_count = tk_text_get_character_count(text);
+    if (start_offset < 0 || end_offset > char_count || start_offset > end_offset) {
+        return FALSE;
+    }
+
+    /* Set selection using Tcl command: [$w selection range start end.] */
+    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    Tcl_IncrRefCount(cmd);
+    Tcl_Obj *cmdArray[5];
+    cmdArray[0] = cmd;
+    cmdArray[1] = Tcl_NewStringObj("selection", -1);
+    cmdArray[2] = Tcl_NewStringObj("range", -1);
+    cmdArray[3] = Tcl_NewIntObj(start_offset);
+    cmdArray[4] = Tcl_NewIntObj(end_offset);
+    for (int i = 1; i < 5; i++) {
+        Tcl_IncrRefCount(cmdArray[i]);
+    }
+
+    int result = Tcl_EvalObjv(acc->interp, 5, cmdArray, TCL_EVAL_GLOBAL);
+    for (int i = 0; i < 5; i++) {
+        Tcl_DecrRefCount(cmdArray[i]);
+    }
+
+    if (result == TCL_OK) {
+        /* Emit text-selection-changed signal. */
+        g_signal_emit_by_name(ATK_OBJECT(acc), "text-selection-changed");
+        return TRUE;
+    }
     return FALSE;
 }
-
 static gint tk_text_get_n_selections(AtkText *text)
 {
     return 0; /* No selections supported. */
@@ -1318,7 +1410,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
 
-    if (eventPtr->type == ConfigureNotify) {
+    if (eventPtr->type == ConfigureMask) {
 		
 	AtkObject *obj = ATK_OBJECT(acc);  
 
@@ -1337,15 +1429,20 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !Tk_IsMapped(acc->tkwin)) return;
-   
+    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
+
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
-   
-    /* Direct signal emission. */
-    g_signal_emit_by_name(obj, "focus-event", focused);
-    g_signal_emit_by_name(obj, "state-change", "focused", focused);
 
+    if (focused && !acc->is_focused) {
+        /* Reinforce focus for ATK consistency. */
+        tk_grab_focus(ATK_COMPONENT(acc));
+    } else if (!focused) {
+        /* Update focus state */
+        acc->is_focused = FALSE;
+        g_signal_emit_by_name(obj, "focus-event", FALSE);
+        g_signal_emit_by_name(obj, "state-change", "focused", FALSE);
+    }
 }
 
 /*
