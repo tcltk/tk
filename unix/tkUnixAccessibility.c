@@ -668,10 +668,30 @@ static gint tk_text_get_caret_offset(AtkText *text)
 
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 {
-    (void) text;
-    if (n_selections) *n_selections = 0;
-    /* We don't model selection ranges in the hash; returning none avoids invalid offsets. */
-    return NULL;
+	
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+      
+    /* Normalize offsets to character indices. */
+    const gint total = g_utf8_strlen(text, -1);
+    gint start = 0;
+    gint end   = total + 1;
+    if (end < start) { /* Avoid ATK assertions downstream. */
+        g_free(text);
+        return g_strdup(""); 
+    }
+
+    /* Convert char offsets to byte offsets for slicing. */
+    const gchar *start_p = g_utf8_offset_to_pointer(text, start);
+    const gchar *end_p   = g_utf8_offset_to_pointer(text, end);
+
+    /* Return a newly allocated substring (ATK expects caller-owned memory). */
+    gchar *selected = g_strndup(start_p, end_p - start_p);
+    return selected;
 }
 
 static inline gchar *tk_acc_value_dup(Tk_Window win) 
@@ -704,6 +724,13 @@ static gint tk_text_get_character_count(AtkText *text)
 
 static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+    
     /* For simplicity, return the entire text for any boundary type. */
     gchar *full_text = tk_text_get_text(text, 0, -1);
     if (start_offset) *start_offset = 0;
@@ -713,6 +740,13 @@ static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoun
 
 static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+    
     gchar *full_text = tk_text_get_text(text, 0, -1);
     gint length = g_utf8_strlen(full_text, -1);
     if (start_offset) *start_offset = offset + 1;
@@ -723,6 +757,13 @@ static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextB
 
 static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+    
     if (start_offset) *start_offset = 0;
     if (end_offset) *end_offset = offset;
     return tk_text_get_text(text, 0, offset);
@@ -730,6 +771,13 @@ static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkText
 
 static AtkAttributeSet *tk_text_get_run_attributes(AtkText *text, gint offset, gint *start_offset, gint *end_offset)
 {
+    if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+   
     if (start_offset) *start_offset = 0;
     if (end_offset) *end_offset = tk_text_get_character_count(text);
     return NULL; /* No attributes for now. */
@@ -742,8 +790,12 @@ static AtkAttributeSet *tk_text_get_default_attributes(AtkText *text)
 
 static void tk_text_get_character_extents(AtkText *text, gint offset, gint *x, gint *y, gint *width, gint *height, AtkCoordType coords)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
-    if (!acc || !acc->tkwin) return;
+
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
     
     /* Approximate character extents based on widget size and text length. */
     gint char_count = tk_text_get_character_count(text);
@@ -762,6 +814,10 @@ static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordT
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
     if (!acc || !acc->tkwin) return 0;
+  
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
     
     gint char_count = tk_text_get_character_count(text);
     if (char_count == 0) return 0;
