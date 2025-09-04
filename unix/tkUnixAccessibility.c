@@ -30,6 +30,7 @@
 #include <dbus/dbus.h>
 #include <glib.h>
 
+
 /* Structs for custom ATK objects bound to Tk. */
 typedef struct _TkAtkAccessible {
     AtkObject parent;
@@ -89,6 +90,7 @@ static GMainContext *acc_context = NULL;
 static void Atk_Event_Setup (ClientData clientData, int flags);
 static void Atk_Event_Check(ClientData clientData, int flags);
 static int Atk_Event_Run(Tcl_Event *event, int flags);
+static void ignore_atk_critical(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
 /* ATK component interface . */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
@@ -107,7 +109,7 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win);
 static const gchar *tk_get_description(AtkObject *obj);
 static AtkStateSet *tk_ref_state_set(AtkObject *obj);
 
-/*ATK value interface. */
+/* ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
@@ -118,10 +120,10 @@ static gint tk_action_get_n_actions(AtkAction *action);
 static const gchar *tk_action_get_name(AtkAction *action, gint i);
 static void tk_atk_action_interface_init(AtkActionIface *iface);
 
-/*ATK text interface. */
+/* ATK text interface. */
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset);
 static gint tk_text_get_caret_offset(AtkText *text);
-static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections);
+static gchar *tk_text_get_selection(AtkText *text,gint selection_num, gint *start_offset, gint *end_offset);
 static inline gchar *tk_acc_value_dup(Tk_Window win);
 static gint tk_text_get_character_count(AtkText *text);
 static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
@@ -245,6 +247,15 @@ static int Atk_Event_Run(Tcl_Event *event, int flags)
     }
 		
     return 1;
+}
+
+/* Disable GLib warnings that can pollute the console - dummy function.  */
+static void ignore_atk_critical(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message,gpointer user_data)
+{
+    (void)log_domain;
+    (void)log_level;
+    (void)message;
+    (void)user_data;
 }
 
 /*
@@ -594,8 +605,8 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
 	    return FALSE;
 	}
-	return TRUE;
     }
+    return TRUE;
 }
 
 static gint tk_action_get_n_actions(AtkAction *action)
@@ -657,73 +668,85 @@ static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset
 
 static gint tk_text_get_caret_offset(AtkText *text)
 {
-    if (!TK_ATK_IS_ACCESSIBLE(text))
+    TkAtkAccessible *acc = (TkAtkAccessible *) ATK_OBJECT(text);
+    if (!acc || !acc->tkwin || !acc->interp) return 0;
+
+    Tcl_Obj *cmd[3];
+    cmd[0] = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    cmd[1] = Tcl_NewStringObj("index", -1);
+    cmd[2] = Tcl_NewStringObj("insert", -1);
+    Tcl_IncrRefCount(cmd[0]);
+    Tcl_IncrRefCount(cmd[1]);
+    Tcl_IncrRefCount(cmd[2]);
+
+    if (Tcl_EvalObjv(acc->interp, 3, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        Tcl_DecrRefCount(cmd[0]);
+        Tcl_DecrRefCount(cmd[1]);
+        Tcl_DecrRefCount(cmd[2]);
         return 0;
-
-    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin)
-        return 0;
-
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
-        return 0;
-
-    const char *className = Tk_ClassName(acc->tkwin);
-
-    /* Entry widgets. */
-    if (strcmp(className, "Entry") == 0 || strcmp(className, "TEntry") == 0) {
-        Entry *entryPtr = (Entry *) ((TkWindow *)acc->tkwin)->instanceData;
-        if (entryPtr) {
-            return entryPtr->insertPos; /* Already character index. */
-        }
     }
 
-    /* Text widget. */
-    if (strcmp(className, "Text") == 0) {
-        TkText *textPtr = (TkText *) ((TkWindow *)acc->tkwin)->instanceData;
-        if (textPtr) {
-            TkTextIndex index;
-            TkTextMakeByteIndex(textPtr, textPtr->insertMark->linePtr,
-                                textPtr->insertMark->charIndex, &index);
-            return TkTextIndexToOffset(textPtr, &index);
+    const char *idx = Tcl_GetStringResult(acc->interp);
+    Tcl_DecrRefCount(cmd[0]);
+    Tcl_DecrRefCount(cmd[1]);
+    Tcl_DecrRefCount(cmd[2]);
+
+    /* "line.char" form, convert to offset. */
+    int line, col;
+    if (sscanf(idx, "%d.%d", &line, &col) == 2) {
+        Tcl_Obj *countCmd[5];
+        countCmd[0] = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+        countCmd[1] = Tcl_NewStringObj("count", -1);
+        countCmd[2] = Tcl_NewStringObj("-chars", -1);
+        countCmd[3] = Tcl_NewStringObj("1.0", -1);
+        countCmd[4] = Tcl_NewStringObj("insert", -1);
+        for (int i=0;i<5;i++) Tcl_IncrRefCount(countCmd[i]);
+
+        int offset = 0;
+        if (Tcl_EvalObjv(acc->interp, 5, countCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+	    Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &offset);
         }
+        for (int i=0;i<5;i++) Tcl_DecrRefCount(countCmd[i]);
+
+        return offset;
     }
 
     return 0;
 }
 
-
-static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
+static gchar *tk_text_get_selection(AtkText *text, gint selection_num, gint *start_offset, gint *end_offset)
 {
+	(void) selection_num;
 	
+    if (!start_offset || !end_offset) return NULL;
+
+    *start_offset = 0;
+    *end_offset   = 0;
+
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
+
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
-      
-    /* Normalize offsets to character indices. */
-     gchar *val = tk_acc_value_dup(acc->tkwin);
-    if (!val)
-        return NULL;
-    
+
+    gchar *val = tk_acc_value_dup(acc->tkwin);
+    if (!val) return NULL;
+
     const gint total = g_utf8_strlen(val, -1);
-    gint start = 0;
-    gint end   = total + 1;
-    if (end < start) { /* Avoid ATK assertions downstream. */
+    if (total <= 0) {
         g_free(val);
-        return g_strdup(""); 
+        return NULL;
     }
 
-    /* Convert char offsets to byte offsets for slicing. */
-    const gchar *start_p = g_utf8_offset_to_pointer(val, start);
-    const gchar *end_p   = g_utf8_offset_to_pointer(val, end);
+    /* Return full selection for now. */
+    *start_offset = 0;
+    *end_offset   = total;
 
-    /* Return a newly allocated substring (ATK expects caller-owned memory). */
-    gchar *selected = g_strndup(start_p, end_p - start_p);
-    return selected;
+    return val;  /* Caller will g_free(). */
 }
+
 
 static inline gchar *tk_acc_value_dup(Tk_Window win) 
 {
@@ -755,6 +778,9 @@ static gint tk_text_get_character_count(AtkText *text)
 
 static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+    (void) offset;
+    (void) boundary_type;
+	
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
@@ -771,6 +797,8 @@ static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoun
 
 static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+    (void) boundary_type; 
+	
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
@@ -788,6 +816,8 @@ static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextB
 
 static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
+	(void) boundary_type;
+	
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
@@ -802,6 +832,8 @@ static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkText
 
 static AtkAttributeSet *tk_text_get_run_attributes(AtkText *text, gint offset, gint *start_offset, gint *end_offset)
 {
+    (void) offset; 
+	
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
@@ -816,17 +848,19 @@ static AtkAttributeSet *tk_text_get_run_attributes(AtkText *text, gint offset, g
 
 static AtkAttributeSet *tk_text_get_default_attributes(AtkText *text)
 {
+    (void) text;
     return NULL; /* No default attributes. */
 }
 
 static void tk_text_get_character_extents(AtkText *text, gint offset, gint *x, gint *y, gint *width, gint *height, AtkCoordType coords)
 {
+    (void) coords;
 
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+    if (!acc || !acc->tkwin || !acc->interp) return;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return;
     
     /* Approximate character extents based on widget size and text length. */
     gint char_count = tk_text_get_character_count(text);
@@ -841,15 +875,19 @@ static void tk_text_get_character_extents(AtkText *text, gint offset, gint *x, g
     if (height) *height = Tk_Height(acc->tkwin);
 }
 
-static void tk_text_get_range_extents(AtkText *text,gint start_offset, gint end_offset, AtkCoordType    coords, AtkTextRectangle *rect)
+static void tk_text_get_range_extents(AtkText *text, gint start_offset, gint end_offset, AtkCoordType coords, AtkTextRectangle *rect)
 {
+    if (!rect) return;
+
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin || !acc->interp || !rect) {
+    if (!acc || !acc->tkwin || !acc->interp) {
+        rect->x = rect->y = rect->width = rect->height = 0;
         return;
     }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+        rect->x = rect->y = rect->width = rect->height = 0;
         return;
     }
 
@@ -859,30 +897,37 @@ static void tk_text_get_range_extents(AtkText *text,gint start_offset, gint end_
         return;
     }
 
-    /* Clamp. */
+    /* Clamp offsets. */
     if (start_offset < 0) start_offset = 0;
     if (end_offset > char_count) end_offset = char_count;
-    if (start_offset > end_offset) {
-        gint tmp = start_offset;
-        start_offset = end_offset;
-        end_offset = tmp;
+
+    /* Ensure ATK requirement: start < end. */
+    if (start_offset >= end_offset) {
+        if (start_offset > 0) {
+            start_offset--;
+            end_offset = start_offset + 1;
+        } else if (char_count > 0) {
+            start_offset = 0;
+            end_offset = 1;
+        } else {
+            rect->x = rect->y = rect->width = rect->height = 0;
+            return;
+        }
     }
 
     gint widget_width  = Tk_Width(acc->tkwin);
     gint widget_height = Tk_Height(acc->tkwin);
-    gint char_width    = (char_count > 0 ? widget_width / char_count : widget_width);
+    gint char_width    = (widget_width / char_count);
+    if (char_width <= 0) char_width = 1;
 
     gint range_width = (end_offset - start_offset) * char_width;
-    if (range_width <= 0) {
-        range_width = 1;
-    }
+    if (range_width <= 0) range_width = 1;
 
     rect->x      = start_offset * char_width;
     rect->y      = 0;
     rect->width  = range_width;
     rect->height = widget_height;
 
-    /* If coords == ATK_XY_SCREEN, translate widget-relative -> screen coords. */
     if (coords == ATK_XY_SCREEN) {
         int root_x, root_y;
         Tk_GetRootCoords(acc->tkwin, &root_x, &root_y);
@@ -891,10 +936,12 @@ static void tk_text_get_range_extents(AtkText *text,gint start_offset, gint end_
     }
 }
 
-    
 
 static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordType coords)
 {
+    (void) y;
+    (void) coords;
+	
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
     if (!acc || !acc->tkwin) return 0;
   
@@ -913,53 +960,29 @@ static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordT
 
 static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
 {
-    if (!TK_ATK_IS_ACCESSIBLE(text))
-        return FALSE;
+    TkAtkAccessible *acc = (TkAtkAccessible *) ATK_OBJECT(text);
+    if (!acc || !acc->tkwin || !acc->interp) return FALSE;
 
-    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin)
-        return FALSE;
+    Tcl_Obj *cmd[3];
+    cmd[0] = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    cmd[1] = Tcl_NewStringObj("mark", -1);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "1.0 + %d chars", offset);
+    cmd[2] = Tcl_NewStringObj(buf, -1);
 
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
-        return FALSE;
+    Tcl_IncrRefCount(cmd[0]);
+    Tcl_IncrRefCount(cmd[1]);
+    Tcl_IncrRefCount(cmd[2]);
 
-    const char *className = Tk_ClassName(acc->tkwin);
+    Tcl_Obj *args[4] = { cmd[0], cmd[1], Tcl_NewStringObj("set", -1), Tcl_NewStringObj("insert", -1) };
+    Tcl_IncrRefCount(args[2]);
+    Tcl_IncrRefCount(args[3]);
 
-    /* Entry widgets.*/
-    if (strcmp(className, "Entry") == 0 || strcmp(className, "TEntry") == 0) {
-        Entry *entryPtr = (Entry *) ((TkWindow *)acc->tkwin)->instanceData;
-        if (entryPtr) {
-            int charCount = (int) Tcl_GetCharLength(entryPtr->string);
-            if (offset < 0 || offset > charCount)
-                return FALSE;
+    int ok = (Tcl_EvalObjv(acc->interp, 4, args, TCL_EVAL_GLOBAL) == TCL_OK);
 
-            entryPtr->insertPos = offset;
-            Tk_SetCaretPos(acc->tkwin, offset, 0, charCount);
-            g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
-            return TRUE;
-        }
-    }
+    for (int i=0;i<4;i++) Tcl_DecrRefCount(args[i]);
 
-    /* Text widget. */
-    if (strcmp(className, "Text") == 0) {
-        TkText *textPtr = (TkText *) ((TkWindow *)acc->tkwin)->instanceData;
-        if (textPtr) {
-            int charCount = TkTextNumChars(textPtr);
-            if (offset < 0 || offset > charCount)
-                return FALSE;
-
-            TkTextIndex index;
-            if (TkTextMakeIndexFromOffset(textPtr, offset, &index)) {
-                TkTextSetMark(textPtr, "insert", &index);
-                Tk_SetCaretPos(acc->tkwin, offset, 0, charCount);
-                g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
-                return TRUE;
-            }
-        }
-    }
-
-    return FALSE;
+    return ok ? TRUE : FALSE;
 }
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
@@ -1003,6 +1026,7 @@ static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint st
 
 static gint tk_text_get_n_selections(AtkText *text)
 {
+    (void) text;
     return 1; /* One selection supported. */
 }
 
@@ -1010,7 +1034,7 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 {
     iface->get_text = tk_text_get_text;
     iface->get_caret_offset = tk_text_get_caret_offset;
-    iface->get_selection = tk_text_get_selection;
+    iface -> get_selection = tk_text_get_selection;
     iface->get_character_count = tk_text_get_character_count;
     iface->get_text_at_offset = tk_text_get_text_at_offset;
     iface->get_text_after_offset = tk_text_get_text_after_offset;
@@ -1781,8 +1805,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
      */	
     acc_context = ATK_CONTEXT;
     Tcl_CreateEventSource (Atk_Event_Setup, Atk_Event_Check, 0);
+    
+    /* 
+	 * GLib is VERY noisy. Shut off warnings to prevent logs/console 
+	 * from being polluted. 
+	 */
+	 g_log_set_handler("Atk", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
 
-	
     /* Initialize main window and create accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (!mainWin) {
