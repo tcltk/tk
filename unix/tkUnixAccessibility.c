@@ -657,15 +657,41 @@ static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset
 
 static gint tk_text_get_caret_offset(AtkText *text)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *) (ATK_OBJECT(text));
-    if (!acc || !acc->tkwin || !acc->interp) return 0;
+    if (!TK_ATK_IS_ACCESSIBLE(text))
+        return 0;
+
+    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
+    if (!acc || !acc->tkwin)
+        return 0;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
+        return 0;
 
-    /* We do not reach this level of specificity in accessible text. */
+    const char *className = Tk_ClassName(acc->tkwin);
+
+    /* Entry widgets. */
+    if (strcmp(className, "Entry") == 0 || strcmp(className, "TEntry") == 0) {
+        Entry *entryPtr = (Entry *) ((TkWindow *)acc->tkwin)->instanceData;
+        if (entryPtr) {
+            return entryPtr->insertPos; /* Already character index. */
+        }
+    }
+
+    /* Text widget. */
+    if (strcmp(className, "Text") == 0) {
+        TkText *textPtr = (TkText *) ((TkWindow *)acc->tkwin)->instanceData;
+        if (textPtr) {
+            TkTextIndex index;
+            TkTextMakeByteIndex(textPtr, textPtr->insertMark->linePtr,
+                                textPtr->insertMark->charIndex, &index);
+            return TkTextIndexToOffset(textPtr, &index);
+        }
+    }
+
     return 0;
 }
+
 
 static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
 {
@@ -678,17 +704,21 @@ static AtkTextRange **tk_text_get_selection(AtkText *text, gint *n_selections)
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
       
     /* Normalize offsets to character indices. */
-    const gint total = g_utf8_strlen(text, -1);
+     gchar *val = tk_acc_value_dup(acc->tkwin);
+    if (!val)
+        return NULL;
+    
+    const gint total = g_utf8_strlen(val, -1);
     gint start = 0;
     gint end   = total + 1;
     if (end < start) { /* Avoid ATK assertions downstream. */
-        g_free(text);
+        g_free(val);
         return g_strdup(""); 
     }
 
     /* Convert char offsets to byte offsets for slicing. */
-    const gchar *start_p = g_utf8_offset_to_pointer(text, start);
-    const gchar *end_p   = g_utf8_offset_to_pointer(text, end);
+    const gchar *start_p = g_utf8_offset_to_pointer(val, start);
+    const gchar *end_p   = g_utf8_offset_to_pointer(val, end);
 
     /* Return a newly allocated substring (ATK expects caller-owned memory). */
     gchar *selected = g_strndup(start_p, end_p - start_p);
@@ -883,98 +913,97 @@ static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordT
 
 static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
 {
-    if (!TK_ATK_IS_ACCESSIBLE(text)) {
+    if (!TK_ATK_IS_ACCESSIBLE(text))
         return FALSE;
-    }
+
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin || !acc->interp) {
+    if (!acc || !acc->tkwin)
         return FALSE;
-    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
         return FALSE;
+
+    const char *className = Tk_ClassName(acc->tkwin);
+
+    /* Entry widgets.*/
+    if (strcmp(className, "Entry") == 0 || strcmp(className, "TEntry") == 0) {
+        Entry *entryPtr = (Entry *) ((TkWindow *)acc->tkwin)->instanceData;
+        if (entryPtr) {
+            int charCount = (int) Tcl_GetCharLength(entryPtr->string);
+            if (offset < 0 || offset > charCount)
+                return FALSE;
+
+            entryPtr->insertPos = offset;
+            Tk_SetCaretPos(acc->tkwin, offset, 0, charCount);
+            g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
+            return TRUE;
+        }
     }
 
-    /* Validate offset */
-    gint char_count = tk_text_get_character_count(text);
-    if (offset < 0 || offset > char_count) {
-        return FALSE;
+    /* Text widget. */
+    if (strcmp(className, "Text") == 0) {
+        TkText *textPtr = (TkText *) ((TkWindow *)acc->tkwin)->instanceData;
+        if (textPtr) {
+            int charCount = TkTextNumChars(textPtr);
+            if (offset < 0 || offset > charCount)
+                return FALSE;
+
+            TkTextIndex index;
+            if (TkTextMakeIndexFromOffset(textPtr, offset, &index)) {
+                TkTextSetMark(textPtr, "insert", &index);
+                Tk_SetCaretPos(acc->tkwin, offset, 0, charCount);
+                g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
+                return TRUE;
+            }
+        }
     }
 
-    /* Set caret position using Tcl command: [$w icursor offset] */
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_IncrRefCount(cmd);
-    Tcl_Obj *cmdArray[3];
-    cmdArray[0] = cmd;
-    cmdArray[1] = Tcl_NewStringObj("icursor", -1);
-    cmdArray[2] = Tcl_NewIntObj(offset);
-    Tcl_IncrRefCount(cmdArray[1]);
-    Tcl_IncrRefCount(cmdArray[2]);
-
-    int result = Tcl_EvalObjv(acc->interp, 3, cmdArray, TCL_EVAL_GLOBAL);
-    Tcl_DecrRefCount(cmd);
-    Tcl_DecrRefCount(cmdArray[1]);
-    Tcl_DecrRefCount(cmdArray[2]);
-
-    if (result == TCL_OK) {
-        /* Emit text-caret-moved signal */
-        g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
-        return TRUE;
-    }
     return FALSE;
 }
-
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
 {
-    if (!TK_ATK_IS_ACCESSIBLE(text) || selection_num != 0) {
-        return FALSE; /* Support only single selection. */
-    }
-    TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
-    if (!acc || !acc->tkwin || !acc->interp) {
+    if (!TK_ATK_IS_ACCESSIBLE(text) || selection_num != 0)
         return FALSE;
-    }
+
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(text);
+    if (!acc || !acc->tkwin)
+        return FALSE;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) {
+    if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
         return FALSE;
-    }
 
-    /* Validate offsets. */
-    gint char_count = tk_text_get_character_count(text);
-    if (start_offset < 0 || end_offset > char_count || start_offset > end_offset) {
+    gchar *full_text = tk_acc_value_dup(acc->tkwin);
+    if (!full_text)
         return FALSE;
+
+    gint char_count = g_utf8_strlen(full_text, -1);
+    if (start_offset < 0) start_offset = 0;
+    if (end_offset > char_count) end_offset = char_count;
+    if (start_offset > end_offset) {
+        gint tmp = start_offset;
+        start_offset = end_offset;
+        end_offset = tmp;
     }
 
-    /* Set selection using Tcl command: [$w selection range start end.] */
-    Tcl_Obj *cmd = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
-    Tcl_IncrRefCount(cmd);
-    Tcl_Obj *cmdArray[5];
-    cmdArray[0] = cmd;
-    cmdArray[1] = Tcl_NewStringObj("selection", -1);
-    cmdArray[2] = Tcl_NewStringObj("range", -1);
-    cmdArray[3] = Tcl_NewIntObj(start_offset);
-    cmdArray[4] = Tcl_NewIntObj(end_offset);
-    for (int i = 1; i < 5; i++) {
-        Tcl_IncrRefCount(cmdArray[i]);
-    }
+    const gchar *start_p = g_utf8_offset_to_pointer(full_text, start_offset);
+    const gchar *end_p   = g_utf8_offset_to_pointer(full_text, end_offset);
+    gchar *selected_text = g_strndup(start_p, end_p - start_p);
+    g_free(full_text);
 
-    int result = Tcl_EvalObjv(acc->interp, 5, cmdArray, TCL_EVAL_GLOBAL);
-    for (int i = 0; i < 5; i++) {
-        Tcl_DecrRefCount(cmdArray[i]);
-    }
-
-    if (result == TCL_OK) {
-        /* Emit text-selection-changed signal. */
-        g_signal_emit_by_name(ATK_OBJECT(acc), "text-selection-changed");
-        return TRUE;
-    }
-    return FALSE;
+    /* Actual updating of text selection in the hash table is handled
+     * at the script level, so just free the text and fire signal. 
+     */
+    g_free(selected_text);
+    g_signal_emit_by_name(ATK_OBJECT(acc), "text-selection-changed");
+    return TRUE;
 }
+
 static gint tk_text_get_n_selections(AtkText *text)
 {
-    return 1; /* No selections supported. */
+    return 1; /* One selection supported. */
 }
 
 static void tk_atk_text_interface_init(AtkTextIface *iface)
@@ -1004,117 +1033,79 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 
 static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return FALSE;
-    }
-
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
-        return FALSE;
-    }
-
-    /* For Tk, selection is managed internally - we just return success. */
+    /* Selection is managed internally by Tk. */
+    (void)selection;
+    (void)i;
     return TRUE;
 }
 
 static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return FALSE;
-    }
-
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
-        return FALSE;
-    }
-
-    /* For Tk, selection is managed internally - we just return success. */
+    /* Selection is managed internally by Tk. */
+    (void)selection;
+    (void)i;
     return TRUE;
 }
 
 static gboolean tk_selection_clear_selection(AtkSelection *selection)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return FALSE;
-    }
-
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
-        return FALSE;
-    }
-
-    /* For Tk, selection is managed internally - we just return success. */
+    /* Selection is managed internally by Tk. */
+    (void)selection;
     return TRUE;
 }
 
 static gint tk_selection_get_selection_count(AtkSelection *selection)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
+    if (!acc || !acc->tkwin)
         return 0;
-    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
+        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
         return 0;
-    }
 
-    /* Check if we have a selected value. */
     gchar *val = GetAtkValueForWidget(acc->tkwin);
-    gboolean has_selection = (val != NULL && val[0] != '\0');
+    gboolean has_selection = (val && val[0] != '\0');
     g_free(val);
-    
+
     return has_selection ? 1 : 0;
 }
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
+    if (!acc || !acc->tkwin)
         return FALSE;
-    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
+        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
         return FALSE;
-    }
 
-    /* For simple implementation, assume index 0 is selected if we have a value. */
-    if (i == 0) {
-        gchar *val = GetAtkValueForWidget(acc->tkwin);
-        gboolean has_selection = (val != NULL && val[0] != '\0');
-        g_free(val);
-        return has_selection;
-    }
-    
-    return FALSE;
+    if (i != 0)
+        return FALSE;
+
+    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    gboolean has_selection = (val && val[0] != '\0');
+    g_free(val);
+
+    return has_selection;
 }
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
+    if (!acc || !acc->tkwin)
         return NULL;
-    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
+        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
         return NULL;
-    }
 
-    /* Only support single selection at index 0. */
-    if (i != 0) {
+    if (i != 0)
         return NULL;
-    }
 
     gchar *val = GetAtkValueForWidget(acc->tkwin);
     if (!val || val[0] == '\0') {
@@ -1122,32 +1113,19 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
         return NULL;
     }
 
-    /* Create a simple object representing the selection. */
-    AtkObject *selected_obj = g_object_new(ATK_TYPE_OBJECT, NULL);
-    atk_object_set_role(selected_obj, ATK_ROLE_LIST_ITEM);
-    atk_object_set_name(selected_obj, val);
-    
+    /* Represent the selected row/item as a simple object. */
+    AtkObject *obj = g_object_new(ATK_TYPE_OBJECT, NULL);
+    atk_object_set_role(obj, ATK_ROLE_LIST_ITEM);
+    atk_object_set_name(obj, val);
+
     g_free(val);
-    
-    /* ATK requires the caller to free this reference. */
-    g_object_ref(selected_obj);
-    return selected_obj;
+    return obj; /* ATK expects a floating reference, caller will ref if needed. */
 }
 
 static gboolean tk_selection_select_all_selection(AtkSelection *selection)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return FALSE;
-    }
-
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE && 
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU) {
-        return FALSE;
-    }
-
-    /* For Tk, selection is managed internally - we just return success. */
+    /* Selection is managed internally by Tk. */
+    (void)selection;
     return TRUE;
 }
 
