@@ -126,6 +126,25 @@ namespace eval ::tk::accessible {
 	}
     }
 
+    # Get text from index in listbox, treeview, and menu. 
+    # Only required by ATK on X11, but might be useful elsewhere. 
+    proc _getitemtext {w i} {
+	set class [winfo class $w]
+	switch -- $class {
+	    Listbox {
+		return [$w get $i]
+	    }
+	    Menu {
+		return [$w entrycget $i -label]
+	    }
+	    Treeview {
+		set id [lindex [$w children {}] $i]
+		return [$w item $id -text]
+	    }
+	    default   { return "" }
+	}
+    }
+
     # Check message text on dialog.
     proc _getdialogtext {w} {
 	if {[winfo exists $w.msg]} {
