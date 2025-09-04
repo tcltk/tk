@@ -29,7 +29,7 @@ set data {
 {{Combo-boxes} combo.tcl} 
 {{Entry} entry1.tcl}
 {{Editable text} text.tcl}
-{{Spin-box} ttspin.tcl}
+{{Spin-box} ttkspin.tcl}
 {{Menus} menu.tcl}
 {{Notebook} ttknote.tcl}
 {{Paned window} ttkpane.tcl}

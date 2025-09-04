@@ -553,6 +553,7 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
     return value ? g_utf8_make_valid(value, -1) : NULL;
 }
 
+
  
 static void tk_get_current_value(AtkValue *obj, GValue *value)
 {
@@ -1124,6 +1125,7 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
         return NULL;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    
     if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
         role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
         return NULL;
@@ -1141,7 +1143,7 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
     AtkObject *obj = g_object_new(ATK_TYPE_OBJECT, NULL);
     atk_object_set_role(obj, ATK_ROLE_LIST_ITEM);
     atk_object_set_name(obj, val);
-
+    atk_object_set_parent(obj, ATK_OBJECT(selection));
     g_free(val);
     return obj; /* ATK expects a floating reference, caller will ref if needed. */
 }
@@ -1513,6 +1515,9 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
    
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
+    
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+	atk_object_set_role(obj, role);
    
     /* Direct signal emission. */
     g_signal_emit_by_name(obj, "focus-event", focused);
@@ -1595,6 +1600,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     return TCL_OK;
 }
+
 
 
 /*
