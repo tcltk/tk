@@ -100,6 +100,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface);
 /* ATK child, attribute and state management. */
 static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
+static AtkObject *TkCreateVirtualChild(TkAtkAccessible *parentAcc, int index, AtkRole role);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
 static AtkRole tk_get_role(AtkObject *obj);
 static gchar *GetAtkNameForWidget(Tk_Window win);
@@ -325,20 +326,49 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
  * Accessible children, attributes and state.
  */
  
+static AtkObject *TkCreateVirtualChild(TkAtkAccessible *parentAcc, int index, AtkRole role)
+{
+	(void) index;
+	
+    Tk_Window tkwin = parentAcc->tkwin;
+    if (!tkwin) return NULL;
+
+    const char *val = GetAtkValueForWidget(parentAcc->tkwin);
+    if (!val || !*val) return NULL;
+
+    /* Create ATK object. */
+    AtkObject *childObj = g_object_new(ATK_TYPE_OBJECT, NULL);
+    atk_object_set_role(childObj, role);
+    atk_object_set_name(childObj, val);
+    atk_object_set_parent(childObj, ATK_OBJECT(parentAcc));
+
+    return childObj; /* Floating reference; caller will ref. */
+}
+ 
 static gint tk_get_n_children(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-        /* Root has only toplevel windows as children. */
         return g_list_length(toplevel_accessible_objects);
     }
-    
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return 0;
-    
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role == ATK_ROLE_LIST || role == ATK_ROLE_MENU ||
+        role == ATK_ROLE_TREE || role == ATK_ROLE_TABLE) {
+        /* Query number of items from Tk. */
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "::tk::accessible::_getvirtualchildren %s", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            return atoi(Tcl_GetStringResult(acc->interp));
+        }
+        return 0;
+    }
+
+    /* Fallback: native Tk subwindows */
     int count = 0;
-    TkWindow *childPtr;
-    /* Traverse Tk's native child list. */
-    for (childPtr = ((TkWindow*)acc->tkwin)->childList; 
+    for (TkWindow *childPtr = ((TkWindow*)acc->tkwin)->childList; 
          childPtr != NULL; 
          childPtr = childPtr->nextPtr) {
         count++;
@@ -349,7 +379,6 @@ static gint tk_get_n_children(AtkObject *obj)
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
     if (obj == tk_root_accessible) {
-        /* Handle root's children (toplevel windows). */
         GList *child = g_list_nth(toplevel_accessible_objects, i);
         if (child) {
             g_object_ref(child->data);
@@ -360,35 +389,57 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) return NULL;
+
+    /*
+     * Create virtual children for listboxes, tree/tables,
+       and menus.
+    */
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     
-    TkWindow *childPtr;
+    if (role == ATK_ROLE_LIST || role == ATK_ROLE_MENU ||
+        role == ATK_ROLE_TREE || role == ATK_ROLE_TABLE) {
+        const char *label = GetAtkValueForWidget(acc->tkwin);
+        
+	AtkRole child_role;
+        if (role == ATK_ROLE_MENU) {
+            child_role = ATK_ROLE_MENU_ITEM;
+	}
+	if ((role == ATK_ROLE_TREE) || (role == ATK_ROLE_TABLE)) {
+	    child_role = ATK_ROLE_TREE_ITEM;
+	}
+	if (role == ATK_ROLE_LIST) {
+	    child_role = ATK_ROLE_LIST_ITEM;
+	}
+	AtkObject *child_obj = TkCreateVirtualChild(acc, i, child_role);
+
+	atk_object_set_name(child_obj, label);
+	return child_obj;
+    }
+
+    /* Otherwise, traverse native Tk subwindows. */
     gint index = 0;
-    /* Iterate through Tk's native child list. */
-    for (childPtr = ((TkWindow*)acc->tkwin)->childList; 
-         childPtr != NULL; 
-         childPtr = childPtr->nextPtr, index++) {
-        if (index == i) {
-            Tk_Window child_tkwin = (Tk_Window)childPtr;
-            AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
-            if (!child_obj) {
-                /* Create ATK object only when needed. */
-                child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin,Tk_PathName(child_tkwin));
-                if (child_obj) {
-                    /* Establish parent-child relationship. */
-                    atk_object_set_parent(child_obj, obj);
-                    TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
-                }
-            }
-            if (child_obj) {
-                /* ATK requires caller to free this reference. */
-                g_object_ref(child_obj);
-                return child_obj;
-            }
-            break;
-        }
+    for (TkWindow *childPtr = ((TkWindow*)acc->tkwin)->childList; 
+	 childPtr != NULL; 
+	 childPtr = childPtr->nextPtr, index++) {
+	if (index == i) {
+	    Tk_Window child_tkwin = (Tk_Window)childPtr;
+	    AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
+	    if (!child_obj) {
+		child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, Tk_PathName(child_tkwin));
+		if (child_obj) {
+		    atk_object_set_parent(child_obj, obj);
+		    TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
+		}
+	    }
+	    if (child_obj) {
+		g_object_ref(child_obj);
+		return child_obj;
+	    }
+	}
     }
     return NULL;
 }
+
 
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
@@ -717,7 +768,7 @@ static gint tk_text_get_caret_offset(AtkText *text)
 
 static gchar *tk_text_get_selection(AtkText *text, gint selection_num, gint *start_offset, gint *end_offset)
 {
-	(void) selection_num;
+    (void) selection_num;
 	
     if (!start_offset || !end_offset) return NULL;
 
@@ -817,7 +868,7 @@ static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextB
 
 static gchar *tk_text_get_text_before_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset)
 {
-	(void) boundary_type;
+    (void) boundary_type;
 	
     if (!TK_ATK_IS_ACCESSIBLE(text)) return NULL;
     TkAtkAccessible *acc = (TkAtkAccessible *)(ATK_OBJECT(text));
@@ -936,7 +987,6 @@ static void tk_text_get_range_extents(AtkText *text, gint start_offset, gint end
         rect->y += root_y;
     }
 }
-
 
 static gint tk_text_get_offset_at_point(AtkText *text, gint x, gint y, AtkCoordType coords)
 {
@@ -1058,10 +1108,20 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 
 static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
 {
-    /* Selection is managed internally by Tk. */
-    (void)selection;
-    (void)i;
-    return TRUE;
+    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
+    if (!acc || !acc->tkwin) return FALSE;
+
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s selection set %d", Tk_PathName(acc->tkwin), i);
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        AtkObject *child = tk_ref_child(ATK_OBJECT(selection), i);
+        if (child) {
+            atk_object_notify_state_change(child, ATK_STATE_SELECTED, TRUE);
+            g_object_unref(child);
+        }
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
@@ -1082,71 +1142,39 @@ static gboolean tk_selection_clear_selection(AtkSelection *selection)
 static gint tk_selection_get_selection_count(AtkSelection *selection)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin)
-        return 0;
+    if (!acc || !acc->tkwin) return 0;
 
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
-        return 0;
-
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
-    gboolean has_selection = (val && val[0] != '\0');
-    g_free(val);
-
-    return has_selection ? 1 : 0;
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindex %s", Tk_PathName(acc->tkwin));
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        int idx = atoi(Tcl_GetStringResult(acc->interp));
+        return (idx >= 0) ? 1 : 0;
+    }
+    return 0;
 }
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin)
-        return FALSE;
+    if (!acc || !acc->tkwin) return FALSE;
 
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
-        return FALSE;
-
-    if (i != 0)
-        return FALSE;
-
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
-    gboolean has_selection = (val && val[0] != '\0');
-    g_free(val);
-
-    return has_selection;
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindex %s", Tk_PathName(acc->tkwin));
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        int idx = atoi(Tcl_GetStringResult(acc->interp));
+        return (idx == i);
+    }
+    return FALSE;
 }
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin)
+    if (!tk_selection_is_child_selected(selection, i))
         return NULL;
 
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
-        role != ATK_ROLE_TREE && role != ATK_ROLE_MENU)
-        return NULL;
-
-    if (i != 0)
-        return NULL;
-
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
-    if (!val || val[0] == '\0') {
-        g_free(val);
-        return NULL;
-    }
-
-    /* Represent the selected row/item as a simple object. */
-    AtkObject *obj = g_object_new(ATK_TYPE_OBJECT, NULL);
-    atk_object_set_role(obj, ATK_ROLE_LIST_ITEM);
-    atk_object_set_name(obj, val);
-    atk_object_set_parent(obj, ATK_OBJECT(selection));
-    g_free(val);
-    return obj; /* ATK expects a floating reference, caller will ref if needed. */
+    return tk_ref_child(ATK_OBJECT(selection), i);
 }
+
 
 static gboolean tk_selection_select_all_selection(AtkSelection *selection)
 {
@@ -1517,7 +1545,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     gboolean focused = (eventPtr->type == FocusIn);
     
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-	atk_object_set_role(obj, role);
+    atk_object_set_role(obj, role);
    
     /* Direct signal emission. */
     g_signal_emit_by_name(obj, "focus-event", focused);
@@ -1813,10 +1841,10 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateEventSource (Atk_Event_Setup, Atk_Event_Check, 0);
     
     /* 
-	 * GLib is VERY noisy. Shut off warnings to prevent logs/console 
-	 * from being polluted. 
-	 */
-	 g_log_set_handler("Atk", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
+     * GLib is VERY noisy. Shut off warnings to prevent logs/console 
+     * from being polluted. 
+     */
+    g_log_set_handler("Atk", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
 
     /* Initialize main window and create accessible object. */
     Tk_Window mainWin = Tk_MainWindow(interp);

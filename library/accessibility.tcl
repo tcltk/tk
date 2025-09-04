@@ -85,8 +85,48 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 }
 
 namespace eval ::tk::accessible {
+	
+    # Get number of "virtual" child items for selection events. 
+    # Only required by ATK on X11, but might be useful elsewhere. 
+    proc _getvirtualchildren {w} {
+	variable count
+	set parent [winfo class $w]
+	switch -- $parent {
+	    Listbox {
+		set count [$w size]
+	    }
+	    Treeview {
+		set count [llength [$w children {}]]
+	    }
+	    Menu {
+		set items [$w cget -menu]
+		set count [llength $items]
+	    }
+	    return $count
+	}
+    }
+    
+    # Get index of selected row in listbox, treeview, and menu. 
+    # Only required by ATK on X11, but might be useful elsewhere. 
+    proc _getselectedindex {w} {
+	variable idx
+	set parent [winfo class $w]
+	switch -- $parent {
+	    Listbox {
+		set idx [$w curselection]
+	    }
+	    Treeview {
+		set selection [$w selection]
+		set idx [$w index $selection]
+	    }
+	    Menu {
+		set idx [$w index active]
+	    }
+	    return $idx
+	}
+    }
 
-    #check message text on dialog 
+    # Check message text on dialog.
     proc _getdialogtext {w} {
 	if {[winfo exists $w.msg]} {
 	    return [$w.msg cget -text]
