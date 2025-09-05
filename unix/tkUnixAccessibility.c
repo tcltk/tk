@@ -1321,31 +1321,29 @@ static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i) {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp || i != 0) return NULL;
+    if (!acc || !acc->tkwin || !acc->interp) return NULL;
 
+    /* Get all selected indices. */
     char cmd[512];
-    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindex %s", Tk_PathName(acc->tkwin));
+    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindices %s", Tk_PathName(acc->tkwin));
     if (Tcl_Eval(acc->interp, cmd) != TCL_OK) return NULL;
 
-    int sel_index;
-    if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &sel_index) != TCL_OK || sel_index < 0) {
+    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
+    int list_size;
+    Tcl_Obj **indices;
+    if (Tcl_ListObjGetElements(acc->interp, result, &list_size, &indices) != TCL_OK ||
+        i >= list_size) {
         return NULL;
     }
 
-    AtkRole parentRole = GetAtkRoleForWidget(acc->tkwin);
-    AtkRole childRole = ATK_ROLE_LIST_ITEM;
-    if (parentRole == ATK_ROLE_MENU) childRole = ATK_ROLE_MENU_ITEM;
-    else if (parentRole == ATK_ROLE_TREE) childRole = ATK_ROLE_TREE_ITEM;
-    else if (parentRole == ATK_ROLE_TABLE) childRole = ATK_ROLE_TABLE_CELL;
-
-    AtkObject *child = TkCreateVirtualChild(acc->interp, acc->tkwin, sel_index, childRole);
-    if (child) {
-        g_object_ref(child); /* Ensure child persists. */
-        atk_object_notify_state_change(child, ATK_STATE_SELECTED, TRUE);
+    int sel_index;
+    if (Tcl_GetIntFromObj(acc->interp, indices[i], &sel_index) != TCL_OK || sel_index < 0) {
+        return NULL;
     }
+
+    AtkObject *child = tk_ref_child(ATK_OBJECT(selection), sel_index);
     return child;
 }
-
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
