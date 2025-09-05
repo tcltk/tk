@@ -1298,13 +1298,16 @@ static gint tk_selection_get_selection_count(AtkSelection *selection)
     if (!acc || !acc->tkwin) return 0;
 
     char cmd[256];
-    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindex %s", Tk_PathName(acc->tkwin));
+    snprintf(cmd, sizeof(cmd), "%s index active", Tk_PathName(acc->tkwin));
     if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        int idx = atoi(Tcl_GetStringResult(acc->interp));
-        return (idx >= 0) ? 1 : 0;
+        int idx;
+        if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &idx) == TCL_OK) {
+            return (idx >= 0) ? 1 : 0;
+        }
     }
     return 0;
 }
+
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
@@ -1321,28 +1324,23 @@ static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i) {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin || !acc->interp) return NULL;
+    if (!acc || !acc->tkwin || !acc->interp || i != 0) return NULL;
 
-    /* Get all selected indices. */
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "::tk::accessible::_getselectedindices %s", Tk_PathName(acc->tkwin));
+    /* Use a simpler approach to get the selected index. */
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s index active", Tk_PathName(acc->tkwin));
     if (Tcl_Eval(acc->interp, cmd) != TCL_OK) return NULL;
-
-    Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
-    int list_size;
-    Tcl_Obj **indices;
-    if (Tcl_ListObjGetElements(acc->interp, result, &list_size, &indices) != TCL_OK ||
-        i >= list_size) {
-        return NULL;
-    }
-
+    
     int sel_index;
-    if (Tcl_GetIntFromObj(acc->interp, indices[i], &sel_index) != TCL_OK || sel_index < 0) {
+    if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &sel_index) != TCL_OK) {
         return NULL;
     }
-
-    AtkObject *child = tk_ref_child(ATK_OBJECT(selection), sel_index);
-    return child;
+    
+    /* Check if the index is valid. */
+    if (sel_index < 0) return NULL;
+    
+    /* Use the standard child reference function. */
+    return tk_ref_child(ATK_OBJECT(selection), sel_index);
 }
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
