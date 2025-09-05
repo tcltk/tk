@@ -86,55 +86,6 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 
 namespace eval ::tk::accessible {
 	
-    # Get number of "virtual" child items for selection events. 
-    # Only required by ATK on X11, but might be useful elsewhere. 
-    proc _getvirtualchildren {w} {
-	variable count
-	set parent [winfo class $w]
-	switch -- $parent {
-	    Listbox {
-		set count [$w size]
-	    }
-	    Treeview {
-		set count [llength [$w children {}]]
-	    }
-	    Menu {
-		set items [$w cget -menu]
-		set count [llength $items]
-	    }
-	    return $count
-	}
-    }
-    
-    # Get index of selected rows in listbox, treeview, and menu. 
-    # Only required by ATK on X11, but might be useful elsewhere. 
-    proc ::tk::accessible::_getselectedindices {widget} {
-	set selected [list]
-	catch {
-	    set selected [$widget curselection]
-	}
-	return $selected
-    }
-
-    # Get text from index in listbox, treeview, and menu. 
-    # Only required by ATK on X11, but might be useful elsewhere. 
-    proc _getitemtext {w i} {
-	set class [winfo class $w]
-	switch -- $class {
-	    Listbox {
-		return [$w get $i]
-	    }
-	    Menu {
-		return [$w entrycget $i -label]
-	    }
-	    Treeview {
-		set id [lindex [$w children {}] $i]
-		return [$w item $id -text]
-	    }
-	    default   { return "" }
-	}
-    }
-
     # Check message text on dialog.
     proc _getdialogtext {w} {
 	if {[winfo exists $w.msg]} {
@@ -371,7 +322,6 @@ namespace eval ::tk::accessible {
 	}
     }
 
-
     # Set initial accessible attributes and add binding to <Map> event.
     # If the accessibility role is already set, return because
     # we only want these to fire once.
@@ -570,20 +520,29 @@ namespace eval ::tk::accessible {
 			   {%W set} \
 		       }
 
-    # Menu bindings - macOS/Windows menus are native and
-    # already accessible-enabled.
+    # Menu accessibility bindings for X11 only. Menus are native
+    # on macOS/Windows, so we don’t expose them here.
     if {[tk windowingsystem] eq "x11"} {
+
 	# Initialize the menu container itself when mapped.
 	bind Menu <Map> {+
+	    # If this menu is attached as a toplevel menubar, use role=menubar.
+	    if {[winfo manager %W] eq "menubar"} {
+		set role Menubar   ;# ATK_ROLE_MENU_BAR
+	    } else {
+		set role Menu      ;# ATK_ROLE_MENU
+	    }
+
 	    ::tk::accessible::_init \
 			     %W \
-			     menu \
+			     $role \
 			     [winfo name %W] \
 			     "" \
 			     "" \
 			     {} \
-			     {} \
-			 }
+			     {}
+	}
+
 	# Initialize/update the currently active entry
 	# whenever the selection changes.
 	bind Menu <<MenuSelect>> {+
@@ -592,18 +551,20 @@ namespace eval ::tk::accessible {
 		set label [%W entrycget $idx -label]
 		# Construct a unique ID for this entry under %W
 		set entryId "%W:$idx"
+
 		::tk::accessible::_init \
 		    $entryId \
-		    menuitem \
-		    $label \
+		    menuitem \       ;# ATK_ROLE_MENU_ITEM
+                $label \
 		    $label \
 		    {} \
 		    {} \
 		    [list %W invoke $idx]
 
-		# Update value and fire selection-change
+		# Update value and fire events
 		::tk::accessible::acc_value $entryId $label
 		::tk::accessible::emit_selection_change $entryId
+		::tk::accessible::emit_focus_change $entryId
 	    }
 	}
     }
