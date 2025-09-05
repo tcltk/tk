@@ -104,6 +104,7 @@ static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
 static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role);
 static char *make_virtual_child_key(const char *parent_path, int index);
+static void cleanup_virtual_child_cache(void);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
 static AtkRole tk_get_role(AtkObject *obj);
 static gchar *GetAtkNameForWidget(Tk_Window win);
@@ -333,6 +334,14 @@ static char *make_virtual_child_key(const char *parent_path, int index)
     gchar *key = g_strdup_printf("%s#%d", parent_path ? parent_path : "<null>", index);
     return key;
 } 
+
+static void cleanup_virtual_child_cache(void) 
+{
+    if (virtual_child_cache) {
+        g_hash_table_destroy(virtual_child_cache);
+        virtual_child_cache = NULL;
+    }
+}
  
 static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role)
 {
@@ -340,7 +349,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
 
     const char *parent_path = Tk_PathName(parent);
 
-    /* Ask Tcl for label/text for item. */
+    /* Ask Tk for label/text for item. */
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "::tk::accessible::_getitemtext %s %d", parent_path, index);
     if (Tcl_Eval(interp, cmd) != TCL_OK) {
@@ -351,17 +360,38 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
         return NULL;
     }
 
-    /* Create and initialize AtkObject. */
-    AtkObject *child = g_object_new(ATK_TYPE_OBJECT, NULL);
+    /* Create TkAtkAccessible instead of generic AtkObject. */
+    TkAtkAccessible *child_acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+    child_acc->interp = interp;
+    child_acc->tkwin = parent; /* Virtual children share parent's tkwin. */
+    child_acc->path = g_strdup_printf("%s#%d", parent_path, index);
+    child_acc->virtual_count = index; /* Store virtual index */
+    
+    AtkObject *child = ATK_OBJECT(child_acc);
+    
+    /* Proper initialization with all required properties. */
     atk_object_initialize(child, NULL);
     atk_object_set_role(child, role);
     atk_object_set_name(child, label);
+    
+    /* Set description for better screen reader support. */
+    char *description = g_strdup_printf("%s item %d", 
+        (role == ATK_ROLE_LIST_ITEM) ? "List" :
+        (role == ATK_ROLE_MENU_ITEM) ? "Menu" :
+        (role == ATK_ROLE_TREE_ITEM) ? "Tree" :
+        (role == ATK_ROLE_TABLE_CELL) ? "Table" : "Item", 
+        index);
+    atk_object_set_description(child, description);
+    g_free(description);
 
-    /* Set parent to the AtkObject for the Tk window. */
+    /* Set parent relationship. */
     AtkObject *accParent = GetAtkObjectForTkWindow(parent);
     if (accParent) {
         atk_object_set_parent(child, accParent);
     }
+
+    /* Emit proper signals for AT discovery. */
+    g_signal_emit_by_name(accParent, "children-changed::add", index, child);
 
     return child;
 }
@@ -427,57 +457,64 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
         else if (role == ATK_ROLE_TABLE) childRole = ATK_ROLE_TABLE_CELL;
         else if (role == ATK_ROLE_MENU) childRole = ATK_ROLE_MENU_ITEM;
 
-	if (!virtual_child_cache) {
-	    virtual_child_cache = g_hash_table_new_full(
-							g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
-	}
+        /* Initialize cache if needed. */
+        if (!virtual_child_cache) {
+            virtual_child_cache = g_hash_table_new_full(
+                g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+        }
 
-	const char *parent_path = Tk_PathName(acc->tkwin);
-	char *key = make_virtual_child_key(parent_path, i);
+        const char *parent_path = Tk_PathName(acc->tkwin);
+        char *key = make_virtual_child_key(parent_path, i);
 
-	AtkObject *child = g_hash_table_lookup(virtual_child_cache, key);
-	if (child) {
-	    g_object_ref(child);   /* Hand back a ref. */
-	    g_free(key);
-	    return child;
-	}
+        AtkObject *child = g_hash_table_lookup(virtual_child_cache, key);
+        if (child) {
+            g_object_ref(child);
+            g_free(key);
+            return child;
+        }
 
-	/* Otherwise create a new child and put it in cache. */
-	child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
-	if (child) {
-		atk_object_set_parent(child, obj);
-	    g_object_ref(child);   /* extra ref for hash table */
-	    g_hash_table_insert(virtual_child_cache, key, child);
-	} else {
-	    g_free(key);
-	}
-	return child;
+        /* Use proper ATK object creation instead of generic AtkObject. */
+        child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
+        if (child) {
+            atk_object_set_parent(child, obj);
+            /* Set proper accessible states. */
+            AtkStateSet *state_set = atk_state_set_new();
+            atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+            atk_state_set_add_state(state_set, ATK_STATE_SENSITIVE);
+            atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+            atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+            /* Store reference in cache. */
+            g_object_ref(child);
+            g_hash_table_insert(virtual_child_cache, key, child);
+        } else {
+            g_free(key);
+        }
+        return child;
     } else {
-	/* Fallback: native child windows. */
-	TkWindow *childPtr;
-	gint index = 0;
-	for (childPtr = ((TkWindow*)acc->tkwin)->childList; childPtr != NULL; childPtr = childPtr->nextPtr, index++) {
-	    if (index == i) {
-		Tk_Window child_tkwin = (Tk_Window)childPtr;
-		AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
-		if (!child_obj) {
-		    child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, Tk_PathName(child_tkwin));
-		    if (child_obj) {
-			atk_object_set_parent(child_obj, obj);
-			TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
-		    }
-		}
-		if (child_obj) {
-		    g_object_ref(child_obj);
-		    return child_obj;
-		}
-		break;
-	    }
-	}
+        /* Fallback: native child windows. */
+        TkWindow *childPtr;
+        gint index = 0;
+        for (childPtr = ((TkWindow*)acc->tkwin)->childList; childPtr != NULL; childPtr = childPtr->nextPtr, index++) {
+            if (index == i) {
+                Tk_Window child_tkwin = (Tk_Window)childPtr;
+                AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
+                if (!child_obj) {
+                    child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, Tk_PathName(child_tkwin));
+                    if (child_obj) {
+                        atk_object_set_parent(child_obj, obj);
+                        TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
+                    }
+                }
+                if (child_obj) {
+                    g_object_ref(child_obj);
+                    return child_obj;
+                }
+                break;
+            }
+        }
     }
     return NULL;
 }
-    
 
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
@@ -602,8 +639,38 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
-    if (!acc || !acc->tkwin) return set;
+    
+    if (!acc) {
+        /* Handle virtual children without tkwin. */
+        if (obj && ATK_IS_OBJECT(obj)) {
+            atk_state_set_add_state(set, ATK_STATE_ENABLED);
+            atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
+            atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+            atk_state_set_add_state(set, ATK_STATE_SHOWING);
+            
+            /* Check if this is a virtual child by examining parent. */
+            AtkObject *parent = atk_object_get_parent(obj);
+            if (parent && TK_ATK_IS_ACCESSIBLE(parent)) {
+                TkAtkAccessible *parent_acc = (TkAtkAccessible *)parent;
+                if (parent_acc->tkwin && Tk_IsMapped(parent_acc->tkwin)) {
+                    atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+                }
+            }
+        }
+        return set;
+    }
 
+    if (!acc->tkwin) {
+        /* This is a virtual child - set basic states. */
+        atk_state_set_add_state(set, ATK_STATE_ENABLED);
+        atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
+        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(set, ATK_STATE_SHOWING);
+        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+        return set;
+    }
+
+    /* Normal widget states. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
@@ -613,7 +680,6 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
 
-    /* Match ATK focus with Tk focus. */
     if (acc->is_focused) {
         atk_state_set_add_state(set, ATK_STATE_FOCUSED);
     }
@@ -662,7 +728,6 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
 {
     iface->get_current_value = tk_get_current_value;
 }
-
 
 /*
  * ATK action interface.
@@ -836,7 +901,6 @@ static gchar *tk_text_get_selection(AtkText *text, gint selection_num, gint *sta
 
     return val;  /* Caller will g_free(). */
 }
-
 
 static inline gchar *tk_acc_value_dup(Tk_Window win) 
 {
@@ -1139,7 +1203,6 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
     iface->get_bounded_ranges = NULL;
 }
 
-
 /* 
  * ATK select interface.
  */
@@ -1312,6 +1375,30 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     if (!self) return;
 
     if (self->tkwin) {
+        /* Clean up any virtual children in cache for this window. */
+        if (virtual_child_cache) {
+            const char *parent_path = Tk_PathName(self->tkwin);
+            GHashTableIter iter;
+            gpointer key, value;
+            GList *keys_to_remove = NULL;
+            
+            g_hash_table_iter_init(&iter, virtual_child_cache);
+            while (g_hash_table_iter_next(&iter, &key, &value)) {
+                const char *cache_key = (const char *)key;
+                if (strstr(cache_key, parent_path) == cache_key) {
+                    keys_to_remove = g_list_prepend(keys_to_remove, g_strdup(cache_key));
+                }
+            }
+            
+            for (GList *l = keys_to_remove; l != NULL; l = l->next) {
+                g_hash_table_remove(virtual_child_cache, l->data);
+                g_free(l->data);
+            }
+            g_list_free(keys_to_remove);
+        }
+    
+        cleanup_virtual_child_cache();
+        
         /* Unregister from tracking structures. */
         UnregisterAtkObjectForTkWindow(self->tkwin);
         if (Tk_IsTopLevel(self->tkwin)) {
@@ -1477,11 +1564,11 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 {
     if (!interp || !tkwin) return NULL;
    
-    /* Check if exists */
+    /* Check if exists. */
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing) return existing;
    
-    /* Create simple object */
+    /* Create simple object. */
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
@@ -1585,11 +1672,7 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
     AtkObject *childObj = GetAtkObjectForTkWindow(newWin);
     if (!childObj) {
         /* Create accessibility object for new window. */
-        childObj = TkCreateAccessibleAtkObject(
-					       ((TkAtkAccessible*)parentObj)->interp,
-					       newWin,
-					       Tk_PathName(newWin)
-					       );
+        childObj = TkCreateAccessibleAtkObject( ((TkAtkAccessible*)parentObj)->interp, newWin, Tk_PathName(newWin));
     }
     
     if (childObj) {
@@ -1598,8 +1681,7 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
         /* Register event handlers for new window. */
         TkAtkAccessible_RegisterEventHandlers(newWin, (TkAtkAccessible*)childObj);
         /* Notify ATK about new child. */
-        g_signal_emit_by_name(parentObj, "children-changed::add", 
-			      tk_get_n_children(parentObj)-1, childObj);
+        g_signal_emit_by_name(parentObj, "children-changed::add", tk_get_n_children(parentObj)-1, childObj);
     }
 }
 
@@ -1708,15 +1790,34 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
         if (Tcl_Eval(ip, cmd) == TCL_OK) {
             sel_index = atoi(Tcl_GetStringResult(ip));
         }
+        
+        /* Ensure all children are properly updated and visible. */
         for (int i = 0; i < n; i++) {
             AtkObject *child = tk_ref_child(obj, i);
             if (child) {
                 gboolean is_selected = (i == sel_index);
                 atk_object_notify_state_change(child, ATK_STATE_SELECTED, is_selected);
+                
+                /* Also notify about focus changes for selected items. */
+                if (is_selected) {
+                    atk_object_notify_state_change(child, ATK_STATE_FOCUSED, TRUE);
+                    /* Emit focus event to ensure AT tools notice */
+                    g_signal_emit_by_name(child, "focus-event", TRUE);
+                }
+                
                 g_object_unref(child);
             }
         }
+        
+        /* Emit both selection-changed and active-descendant-changed. */
         g_signal_emit_by_name(obj, "selection-changed");
+        if (sel_index >= 0) {
+            AtkObject *selected_child = tk_ref_child(obj, sel_index);
+            if (selected_child) {
+                g_signal_emit_by_name(obj, "active-descendant-changed", selected_child);
+                g_object_unref(selected_child);
+            }
+        }
     } else if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
         g_signal_emit_by_name(obj, "text-selection-changed");
     } else if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
@@ -1736,7 +1837,6 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 
     return TCL_OK;
 }
-
 
 
 /*
