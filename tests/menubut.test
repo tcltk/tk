@@ -542,8 +542,6 @@ test menubutton-4.11 {ConfigureMenuButton procedure - bad direction} -setup {
     deleteWindows
 } -result {below {}}
 
-# Need to add tests for several procedures here. XXX
-
 test menubutton-5.1 {MenuButtonEventProc procedure} -setup {
     deleteWindows
     set x {}
