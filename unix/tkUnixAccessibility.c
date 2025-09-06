@@ -1458,8 +1458,9 @@ static gint tk_selection_get_selection_count(AtkSelection *selection)
 
     Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
     Tcl_Size list_size = 0;
+    Tcl_Obj **objv = NULL;
     
-    if (Tcl_ListObjGetElements(acc->interp, result, &list_size, NULL) == TCL_OK) {
+    if (Tcl_ListObjGetElements(acc->interp, result, &list_size, &objv) == TCL_OK) {
         return list_size;
     } else {
         /* Single selection case. */
