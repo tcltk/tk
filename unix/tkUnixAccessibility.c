@@ -391,6 +391,14 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     
     /* Set parent relationship. */
     AtkObject *accParent = GetAtkObjectForTkWindow(parent);
+    
+      if (!accParent) {
+        /* If parent window has a toplevel parent, try its accessible. */
+        Tk_Window toplevel = GetToplevelOfWidget(parent);
+        if (toplevel) {
+            accParent = GetAtkObjectForTkWindow(toplevel);
+        }
+    }
     if (accParent) {
         atk_object_set_parent(child, accParent);
     }
@@ -471,8 +479,6 @@ static gint tk_get_n_children(AtkObject *obj)
     
     return virtual_count + native_count;
 }
-
-
 
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
@@ -1354,7 +1360,7 @@ static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
             atk_object_notify_state_change(child, ATK_STATE_SELECTED, TRUE);
             g_object_unref(child);
         }
-        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed");
+        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed", i);
         return TRUE;
     }
     return FALSE;
@@ -1373,7 +1379,7 @@ static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
             atk_object_notify_state_change(child, ATK_STATE_SELECTED, FALSE);
             g_object_unref(child);
         }
-        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed");
+        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed", i);
         return TRUE;
     }
     return FALSE;
@@ -1396,7 +1402,7 @@ static gboolean tk_selection_clear_selection(AtkSelection *selection)
                 g_object_unref(child);
             }
         }
-        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed");
+        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed", -1);
         return TRUE;
     }
     return FALSE;
@@ -1418,7 +1424,7 @@ static gboolean tk_selection_select_all_selection(AtkSelection *selection)
                 g_object_unref(child);
             }
         }
-        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed");
+        g_signal_emit_by_name(ATK_OBJECT(selection), "selection-changed", -1);
         return TRUE;
     }
     return FALSE;
@@ -1496,68 +1502,101 @@ static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
     return FALSE;
 }
 
-static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i) {
+static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
+{
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
     if (!acc || !acc->tkwin || !acc->interp) return NULL;
 
-    /* Determine widget type and get selection info. */
     AtkRole parentRole = GetAtkRoleForWidget(acc->tkwin);
     const char *selection_cmd = NULL;
     const char *index_cmd = NULL;
-    
+
+    /* Decide which Tcl command to query for selection. */
     switch (parentRole) {
     case ATK_ROLE_LIST:
     case ATK_ROLE_LIST_BOX:
-	selection_cmd = "curselection";
-	break;
+    case ATK_ROLE_TABLE:
+        /* Listbox, table: curselection -> list of numeric indices. */
+        selection_cmd = "curselection";
+        break;
     case ATK_ROLE_MENU:
     case ATK_ROLE_MENU_BAR:
-	index_cmd = "index active";
-	break;
+        selection_cmd = "selection";
+        break;
     case ATK_ROLE_TREE:
     case ATK_ROLE_TREE_TABLE:
-	selection_cmd = "selection";
-	break;
-    case ATK_ROLE_TABLE:
-	selection_cmd = "curselection";
-	break;
+        /* Treeview: selection returns item ids (strings). We'll try 'index' later. */
+        selection_cmd = "selection";
+        /* Some widgets expose an 'index' command that maps item id -> index */
+        index_cmd = "index";
+        break;
     default:
-	return NULL;
+        return NULL;
     }
 
     int sel_index = -1;
-    
+    Tcl_Obj *result = NULL;
+
+    /* If selection_cmd returns a list of selected indices (listbox), fetch the i-th element. */
     if (selection_cmd) {
-        /* Handle widgets that return a list of selected indices. */
         char cmd[512];
         snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(acc->tkwin), selection_cmd);
-        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) return NULL;
-        
-        Tcl_Obj *result = Tcl_GetObjResult(acc->interp);
-        Tcl_Size list_size = 0;
-        Tcl_Obj **indices = NULL;
-        
-        if (Tcl_ListObjGetElements(acc->interp, result, &list_size, &indices) == TCL_OK) {
-            if (i >= list_size) return NULL;
-            if (Tcl_GetIntFromObj(acc->interp, indices[i], &sel_index) != TCL_OK) return NULL;
-        } else {
-            /* Single selection case. */
-            if (i != 0) return NULL;
-            if (Tcl_GetIntFromObj(acc->interp, result, &sel_index) != TCL_OK) return NULL;
+
+        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+            return NULL;
         }
-    } else if (index_cmd) {
-        /* Handle widgets that return a single active index. */
-        if (i != 0) return NULL;
-        char cmd[256];
-        snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(acc->tkwin), index_cmd);
-        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) return NULL;
-        if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &sel_index) != TCL_OK) return NULL;
+        result = Tcl_GetObjResult(acc->interp);
+
+        /* Try to treat result as a list and fetch element i. */
+        Tcl_Size list_len = 0;
+        Tcl_Obj **elems = NULL;
+        if (Tcl_ListObjGetElements(acc->interp, result, &list_len, &elems) == TCL_OK) {
+            if (i < 0 || i >= (gint)list_len) return NULL;
+            Tcl_Obj *elem = elems[i];
+            if (elem && Tcl_GetIntFromObj(acc->interp, elem, &sel_index) == TCL_OK) {
+                /* Got numeric index directly, done. */
+            } else if (elem) {
+                /* Element is not numeric (likely an item id) -> try to map via index_cmd below. */
+                const char *itemid = Tcl_GetString(elem);
+                if (index_cmd) {
+                    char idxcmd[512];
+                    snprintf(idxcmd, sizeof(idxcmd), "%s %s %s", Tk_PathName(acc->tkwin), index_cmd, itemid);
+                    if (Tcl_Eval(acc->interp, idxcmd) == TCL_OK) {
+                        Tcl_Obj *idxobj = Tcl_GetObjResult(acc->interp);
+                        if (Tcl_GetIntFromObj(acc->interp, idxobj, &sel_index) != TCL_OK) {
+                            sel_index = -1;
+                        }
+                    }
+                }
+            }
+        } else {
+            /* Not a list. Maybe the widget returned a single item id or single index. */
+            if (Tcl_GetIntFromObj(acc->interp, result, &sel_index) != TCL_OK) {
+                /* Not numeric: attempt to map using index_cmd if available. */
+                if (index_cmd) {
+                    const char *itemid = Tcl_GetString(result);
+                    char idxcmd[512];
+                    snprintf(idxcmd, sizeof(idxcmd), "%s %s %s", Tk_PathName(acc->tkwin), index_cmd, itemid);
+                    if (Tcl_Eval(acc->interp, idxcmd) == TCL_OK) {
+                        Tcl_Obj *idxobj = Tcl_GetObjResult(acc->interp);
+                        if (Tcl_GetIntFromObj(acc->interp, idxobj, &sel_index) != TCL_OK) {
+                            sel_index = -1;
+                        }
+                    }
+                } else {
+                    /* Nothing we can do. */
+                    sel_index = -1;
+                }
+            }
+        }
     }
-    
+
     if (sel_index < 0) return NULL;
-    
+
+    /* Return the virtual child for the numeric index (this increments refcount for caller). */
     return tk_ref_child(ATK_OBJECT(selection), sel_index);
 }
+
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
@@ -1654,13 +1693,11 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 {
     (void) interp;
     
-    /* Validate inputs. */
     if (!accessible || !tkwin || !G_IS_OBJECT(accessible)) {
         g_warning("RegisterToplevelWindow: Invalid tkwin or accessible");
         return;
     }
     
-    /* Initialize root accessible if not set. */
     if (!tk_root_accessible) {
         tk_root_accessible = tk_util_get_root();
         if (tk_root_accessible) {
@@ -1668,7 +1705,6 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         }
     }
     
-    /* Check for existing registration. */
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing && existing != accessible) {
         g_warning("RegisterToplevelWindow: Toplevel %s already registered with different AtkObject",
@@ -1676,24 +1712,38 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         return;
     }
 
-    /* Hold a reference to the accessible object. */
     g_object_ref(accessible);
 
-    /* Set parent and add to root's children. */
-    atk_object_set_parent(accessible, tk_root_accessible);
-        
-    /* Add to toplevel_accessible_objects if not already present. */
-    if (!g_list_find(toplevel_accessible_objects, accessible)) {
-        toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
-        
-        /* Notify about new child AFTER adding to list. */
-        gint index = g_list_index(toplevel_accessible_objects, accessible);
-        if (index >= 0) {
-            g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
+    /* Decide correct parent: root for real toplevels, otherwise the toplevel's accessible. */
+    AtkObject *parentAcc = NULL;
+    if (Tk_IsTopLevel(tkwin)) {
+        parentAcc = tk_root_accessible;
+    } else {
+        Tk_Window top = GetToplevelOfWidget(tkwin);   /* Get the ancestor toplevel. */
+        parentAcc = GetAtkObjectForTkWindow(top);
+        if (!parentAcc) {
+            parentAcc = tk_root_accessible;   /* Fallback. */
+        }
+    }
+    atk_object_set_parent(accessible, parentAcc);
+
+    /* Add to toplevel_accessible_objects only if it's a toplevel */
+    if (Tk_IsTopLevel(tkwin)) {
+        if (!g_list_find(toplevel_accessible_objects, accessible)) {
+            toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
+            gint index = g_list_index(toplevel_accessible_objects, accessible);
+            if (index >= 0 && tk_root_accessible) {
+                g_signal_emit_by_name(tk_root_accessible, "children-changed::add", index, accessible);
+            }
+        }
+    } else {
+        /* For non-root children, emit add on their parent. */
+        if (parentAcc) {
+            gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
+            g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accessible);
         }
     }
 
-    /* Set name, role, and description. */
     const gchar *name = tk_get_name(accessible);
     if (name) {
         tk_set_name(accessible, name);
@@ -1704,12 +1754,11 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     atk_object_set_role(accessible, ATK_ROLE_WINDOW);
     atk_object_set_description(accessible, name ? name : ((TkAtkAccessible *)accessible)->path);
 
-    /* Register event handlers. */
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
-    
-    /* Force AT to discover this toplevel. */
+
     g_signal_emit_by_name(accessible, "state-change", "showing", TRUE);
 }
+
 
 /* Remove toplevel window from ATK object list. */
 static void UnregisterToplevelWindow(AtkObject *accessible)
@@ -2046,7 +2095,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
         }
         
         /* Emit both selection-changed and active-descendant-changed. */
-        g_signal_emit_by_name(obj, "selection-changed");
+        g_signal_emit_by_name(obj, "selection-changed", -1);
         
         if (active_index >= 0) {
             AtkObject *active_child = tk_ref_child(obj, active_index);
