@@ -207,9 +207,6 @@ test wm-attributes-1.2.2 {usage} -constraints win -returnCodes error -body {
 test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
     wm attributes . -to
 } -result {bad attribute "-to": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
-test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
-    wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
 test wm-attributes-1.2.5.1 {usage} -constraints x11 -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
