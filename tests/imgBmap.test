@@ -359,10 +359,14 @@ test imageBmap-6.1 {NextBitmapWord procedure} -setup {imageCleanup} -body {
 test imageBmap-6.2 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890} foo3.bm
     image create bitmap i1 -file foo3.bm
+} -cleanup {
+    removeFile foo3.bm
 } -returnCodes error -result {format error in bitmap data}
 test imageBmap-6.3 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {   } foo3.bm
     image create bitmap i1 -file foo3.bm
+} -cleanup {
+    removeFile foo3.bm
 } -returnCodes error -result {format error in bitmap data}
 
 #
@@ -370,7 +374,6 @@ test imageBmap-6.3 {NextBitmapWord procedure} -setup {imageCleanup} -body {
 #
 # For tests imageBmap-7.*
 #
-removeFile foo3.bm
 imageCleanup
 image create bitmap i1
 
