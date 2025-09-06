@@ -210,12 +210,15 @@ test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
 test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
-test wm-attributes-1.2.5.1 {usage} -constraints aqua -returnCodes error -body {
+test wm-attributes-1.2.5.1 {usage} -constraints x11 -returnCodes error -body {
+    wm attributes . _
+} -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
+test wm-attributes-1.2.5.2 {usage} -constraints win32 -returnCodes error -body {
+    wm attributes . _
+} -result {bad attribute "_": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
+test wm-attributes-1.2.5.3 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -isdark, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
-test wm-attributes-1.2.5.2 {usage} -constraints {notAqua knownBug} -returnCodes error -body {
-    wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}
 
 #
 # COMMON TEST CLEANUP
