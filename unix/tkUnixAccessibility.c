@@ -104,6 +104,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface);
 static gint tk_get_n_children(AtkObject *obj);
 static AtkObject *tk_ref_child(AtkObject *obj, gint i);
 static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role);
+void InvalidateVirtualChildren(Tk_Window parent);
 static char *make_virtual_child_key(const char *parent_path, int index);
 static void cleanup_virtual_child_cache(void);
 static AtkRole GetAtkRoleForWidget(Tk_Window win);
@@ -409,6 +410,32 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
 
     return child;
 }
+
+void InvalidateVirtualChildren(Tk_Window parent)
+{
+    if (!virtual_child_cache) return;
+    
+    const char *parent_path = Tk_PathName(parent);
+    GList *to_remove = NULL;
+    
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init(&iter, virtual_child_cache);
+    
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        const char *cache_key = (const char *)key;
+        if (strstr(cache_key, parent_path) == cache_key) {
+            to_remove = g_list_prepend(to_remove, g_strdup(cache_key));
+        }
+    }
+    
+    for (GList *l = to_remove; l != NULL; l = l->next) {
+        g_hash_table_remove(virtual_child_cache, l->data);
+        g_free(l->data);
+    }
+    g_list_free(to_remove);
+}
+
 static gint tk_get_n_children(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
@@ -601,15 +628,11 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 		 * object (obj).
 		 */
 		atk_object_set_parent(child, obj);
+		
 
-		/* Register event handlers so the virtual child
-		 * can receive events. Note: child->tkwin is NULL
-		 * for virtual children, but RegisterEventHandlers 
-		 * may still be useful for wiring up focus/activate callbacks 
-		 * that map to the parent widget. 
-		 */
-		TkAtkAccessible_RegisterEventHandlers(acc->tkwin, (TkAtkAccessible *)child);
-
+		if (acc->tkwin) {  /* Only register handlers for real windows. */
+		    TkAtkAccessible_RegisterEventHandlers(acc->tkwin, acc);
+}
 		/* Insert into cache: store a referenced child.
 		 * Use the allocated key as the hash key.
 		 * g_hash_table_insert takes ownership of key and
@@ -806,6 +829,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
 	atk_state_set_add_state(set, ATK_STATE_SHOWING);
 	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+	atk_state_set_add_state(set, ATK_STATE_SELECTABLE); 
 	return set;
     }
 
@@ -1737,7 +1761,8 @@ static void tk_atk_accessible_finalize(GObject *gobject)
             }
             g_list_free(keys_to_remove);
         }
-    
+        
+		InvalidateVirtualChildren(self->tkwin);
         cleanup_virtual_child_cache();
         
         /* Unregister from tracking structures. */
@@ -2058,6 +2083,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
     if (eventPtr->type == ConfigureNotify) {
 		
 	AtkObject *obj = ATK_OBJECT(acc);  
+	InvalidateVirtualChildren(acc->tkwin);
 
 	/* Build the bounds rectangle. */
 	AtkRectangle rect;
@@ -2078,6 +2104,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
    
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
+     InvalidateVirtualChildren(acc->tkwin);
     
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     atk_object_set_role(obj, role);
@@ -2128,6 +2155,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     const char *windowName = Tcl_GetString(objv[1]);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) return TCL_OK;  /* Window not found, nothing to do. */
+    InvalidateVirtualChildren(tkwin);
 
     /* Ensure AtkObject exists for this window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
