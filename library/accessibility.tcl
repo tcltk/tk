@@ -538,7 +538,7 @@ namespace eval ::tk::accessible {
 			     $role \
 			     [winfo name %W] \
 			     "" \
-			     "" \
+			     [%W entrycget -active label] \
 			     {} \
 			     {}
 	}
