@@ -1729,11 +1729,8 @@ char* TkAtkGetSelectionText(Tk_Window tkwin, int index) {
     if (Tcl_Eval(interp, cmd) != TCL_OK) return NULL;
     const char *s = Tcl_GetString(Tcl_GetObjResult(interp));
     if (!s || !*s) return NULL;
-    return g_strdup(s);  /* Caller must g_free() */
+    return g_strdup(s);  /* Caller must g_free(). */
 }
-
-
-
 
 /*
  * Functions to initialize and manage the parent ATK class and object instances.
