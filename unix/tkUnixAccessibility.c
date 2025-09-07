@@ -39,7 +39,7 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     int is_focused;
-    int virtual_count; 
+    int virtual_count;
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
@@ -451,7 +451,7 @@ static gint tk_get_n_children(AtkObject *obj)
             char cmd[256];
             snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(acc->tkwin), count_cmd);
             
-            /* Use TRY/CATCH equivalent to prevent crashes. */
+            /* Try to prevent crashes. */
             Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
             Tcl_IncrRefCount(savedResult);
             
@@ -614,7 +614,8 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 		/* Insert into cache: store a referenced child.
 		 * Use the allocated key as the hash key.
 		 * g_hash_table_insert takes ownership of key and
-		 * value pointers. */
+		 * value pointers.
+		 */
 		g_hash_table_insert(virtual_child_cache, key, g_object_ref(child)); /* Cache holds one ref. */
 
 		/* Notify AT clients that a child was added at index i. */
@@ -741,12 +742,22 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
 static const gchar *tk_get_name(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-	return "Tk Application";
+        return "Tk Application";
     }
-	
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return NULL;
-   
+    if (!acc) return NULL;
+
+    if (!acc->tkwin) {
+	 /* Virtual child: Return the name set in GetAtkValueForWidget.*/
+	AtkObject *parent_obj = atk_object_get_parent(obj);
+	TkAtkAccessible *parent = (TkAtkAccessible*)parent_obj;
+	Tk_Window parentwin = parent->tkwin; 
+	gchar *name = GetAtkValueForWidget(parentwin);
+        return name;
+    }
+
+    /* Real widget: Existing logic.*/
     return GetAtkNameForWidget(acc->tkwin);
 }
 
@@ -1611,7 +1622,7 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         /* Try to get list elements. */
 	if (Tcl_ListObjGetElements(interp, selection_list, &selection_count, &elems) != TCL_OK) {
 	    /* Single-element fallback. */
-	    elems = selection_elems;          /* Point to single-element array. */
+	    elems = selection_elems; /* Point to single-element array. */
 	    selection_count = 1;
 	}
     }
