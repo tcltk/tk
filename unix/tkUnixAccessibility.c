@@ -155,7 +155,6 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i);
 static gboolean tk_selection_select_all_selection(AtkSelection *selection);
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface);
 static void TkAtkNotifySelectionChanged(Tk_Window tkwin);
-static char *TkAtkGetSelectionText(Tk_Window tkwin, int index);
 
 /* Object lifecycle functions. */
 static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass);
@@ -1538,7 +1537,7 @@ static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
     /* Set textual value as child name for ATK. */
     AtkObject *child = tk_ref_child(obj, sel_index);
     if (child) {
-        char *text = TkAtkGetSelectionText(acc->tkwin, sel_index);
+        gchar *text = GetAtkValueForWidget(acc->tkwin);
         if (text) {
             atk_object_set_name(child, text);
             g_free(text);
@@ -1678,7 +1677,7 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         }
 
         /* Update child name to textual value for Orca. */
-        char *text = TkAtkGetSelectionText(tkwin, i);
+        gchar *text = GetAtkValueForWidget(tkwin); 
         if (text) {
             atk_object_set_name(child, text);
             g_free(text);
@@ -1699,38 +1698,6 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
     }
 }
 
-
-/* Get the text of the selected index for announcement by screen reader. */
-char* TkAtkGetSelectionText(Tk_Window tkwin, int index) {
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    if (!interp) return NULL;
-
-    AtkRole role = tk_get_role(GetAtkObjectForTkWindow(tkwin));
-    char cmd[512];
-
-    switch (role) {
-        case ATK_ROLE_LIST:
-        case ATK_ROLE_LIST_BOX:
-        case ATK_ROLE_TABLE:
-            snprintf(cmd, sizeof(cmd), "%s get %d", Tk_PathName(tkwin), index);
-            break;
-        case ATK_ROLE_TREE:
-        case ATK_ROLE_TREE_TABLE:
-            snprintf(cmd, sizeof(cmd), "%s item %d -text", Tk_PathName(tkwin), index);
-            break;
-        case ATK_ROLE_MENU:
-        case ATK_ROLE_MENU_BAR:
-            snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", Tk_PathName(tkwin), index);
-            break;
-        default:
-            return NULL;
-    }
-
-    if (Tcl_Eval(interp, cmd) != TCL_OK) return NULL;
-    const char *s = Tcl_GetString(Tcl_GetObjResult(interp));
-    if (!s || !*s) return NULL;
-    return g_strdup(s);  /* Caller must g_free(). */
-}
 
 /*
  * Functions to initialize and manage the parent ATK class and object instances.
