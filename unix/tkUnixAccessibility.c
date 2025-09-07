@@ -594,14 +594,36 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
             }
             
             /* Create new virtual child. */
-            child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
-            if (child) {
-                g_hash_table_insert(virtual_child_cache, key, g_object_ref(child));
-                g_object_ref(child);
-                return child;
-            }
-            
-            g_free(key);
+	    child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
+	    if (child) {
+		/* Ensure parent relationship points to this accessible
+		 * object (obj).
+		 */
+		atk_object_set_parent(child, obj);
+
+		/* Register event handlers so the virtual child
+		 * can receive events. Note: child->tkwin is NULL
+		 * for virtual children, but RegisterEventHandlers 
+		 * may still be useful for wiring up focus/activate callbacks 
+		 * that map to the parent widget. 
+		 */
+		TkAtkAccessible_RegisterEventHandlers(acc->tkwin, (TkAtkAccessible *)child);
+
+		/* Insert into cache: store a referenced child.
+		 * Use the allocated key as the hash key.
+		 * g_hash_table_insert takes ownership of key and
+		 * value pointers. */
+		g_hash_table_insert(virtual_child_cache, key, g_object_ref(child)); /* Cache holds one ref. */
+
+		/* Notify AT clients that a child was added at index i. */
+		g_signal_emit_by_name(obj, "children-changed::add", i, child);
+
+		/* Return a referenced child to the caller (callers expect a ref). */
+		g_object_ref(child);
+		return child;
+	    }
+	    /* If child creation failed, free the key we allocated. */
+	    g_free(key);
         }
     }
     
@@ -680,7 +702,12 @@ static AtkRole tk_get_role(AtkObject *obj)
     }
 	
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) return ATK_ROLE_UNKNOWN;
+    if (!acc) return ATK_ROLE_UNKNOWN;
+    
+    if (!acc->tkwin) {
+        /* Virtual child: return the role already stored in obj->role. */
+        return obj->role;
+    }
    
     return GetAtkRoleForWidget(acc->tkwin);
 }
@@ -755,51 +782,33 @@ static const gchar *tk_get_description(AtkObject *obj)
 
 static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
+    if (!obj) return atk_state_set_new();
+
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
-    
-    if (!acc) {
-        /* Handle virtual children without tkwin. */
-        if (obj && ATK_IS_OBJECT(obj)) {
-            atk_state_set_add_state(set, ATK_STATE_ENABLED);
-            atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-            atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-            atk_state_set_add_state(set, ATK_STATE_SHOWING);
-            
-            /* Check if this is a virtual child by examining parent. */
-            AtkObject *parent = atk_object_get_parent(obj);
-            if (parent && TK_ATK_IS_ACCESSIBLE(parent)) {
-                TkAtkAccessible *parent_acc = (TkAtkAccessible *)parent;
-                if (parent_acc->tkwin && Tk_IsMapped(parent_acc->tkwin)) {
-                    atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-                }
-            }
-        }
-        return set;
-    }
 
+    /* Virtual child: tkwin == NULL. */
     if (!acc->tkwin) {
-        /* This is a virtual child - set basic states. */
-        atk_state_set_add_state(set, ATK_STATE_ENABLED);
-        atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        atk_state_set_add_state(set, ATK_STATE_SHOWING);
-        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-        return set;
+	atk_state_set_add_state(set, ATK_STATE_ENABLED);
+	atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
+	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+	return set;
     }
 
-    /* Normal widget states. */
+    /* Real widget path. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
     if (Tk_IsMapped(acc->tkwin)) {
-        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        atk_state_set_add_state(set, ATK_STATE_SHOWING);
-        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+	atk_state_set_add_state(set, ATK_STATE_SHOWING);
+	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
 
     if (acc->is_focused) {
-        atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+	atk_state_set_add_state(set, ATK_STATE_FOCUSED);
     }
 
     return set;
@@ -1756,7 +1765,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
 
-    g_signal_emit_by_name(accessible, "state-change", "showing", TRUE);
+    atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
 }
 
 
@@ -1984,7 +1993,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !Tk_IsMapped(acc->tkwin)) return;
+    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
    
     AtkObject *obj = ATK_OBJECT(acc);
     gboolean focused = (eventPtr->type == FocusIn);
