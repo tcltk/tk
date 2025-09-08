@@ -95,7 +95,7 @@ static void Atk_Event_Check(ClientData clientData, int flags);
 static int Atk_Event_Run(Tcl_Event *event, int flags);
 static void ignore_atk_critical(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
-/* ATK component interface . */
+/* ATK component interface. */
 static void tk_get_extents(AtkComponent *component, gint *x, gint *y, gint *width, gint *height, AtkCoordType coord_type);
 static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordType coord_type);
 static void tk_atk_component_interface_init(AtkComponentIface *iface);
@@ -332,7 +332,8 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
  * Accessible children, attributes and state. Here we create accessible objects
  * from "virtual" children (listbox rows, tree rows/cells, menu items), cache
  * them, and assign them the appropriate ATK role for selection events and other
- * interactions. 
+ * interactions. We also create accessible objects from native Tk widgets (buttons,
+ * entries, etc.), map them them to the appropriate role, and track them. 
  */
  
 static char *make_virtual_child_key(const char *parent_path, int index) 
@@ -358,7 +359,16 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     const char *label = NULL;
     char *label_copy = NULL;
 
-    /* Retrieve label text depending on role. */
+    /*
+     * Retrieve label text depending on role. In other areas we
+     * pull this data from the core TkAccessibleObject hash table
+     * via GetAtkValueForWidget, because selection events update
+     * the "value" field in that hash table with the string value
+     * from the selection event. However, in virtual widget creation,
+     * it makes sense to pull the data via direct inquiry of the
+     * virtual widget so there is no conlfict. The hash table will
+     * automatically be updated by this selection event. 
+     */
     switch (role) {
     case ATK_ROLE_LIST_ITEM:
         /* Listbox: use get index. */
@@ -411,7 +421,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     /* Create minimal virtual child. */ 
     TkAtkAccessible *child_acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     child_acc->interp = interp;
-    child_acc->tkwin = NULL; // Virtual child
+    child_acc->tkwin = NULL; /* Virtual child - real widgets have a Tk_Window associated. */
     child_acc->path = g_strdup_printf("%s#%d", parent_path, index);
     child_acc->virtual_count = index;
 
@@ -633,7 +643,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
             Tcl_DecrRefCount(savedResult);
         }
         
-        /* Check if requested index is in virtual range */
+        /* Check if requested index is in virtual range. */
         if (i < virtual_count && childRole != ATK_ROLE_UNKNOWN) {
             /* Initialize cache if needed. */
             if (!virtual_child_cache) {
@@ -802,7 +812,15 @@ static const gchar *tk_get_name(AtkObject *obj)
     if (!acc) return NULL;
 
     if (!acc->tkwin) {
-	 /* Virtual child: Return the name set in GetAtkValueForWidget.*/
+	 /*
+	  * Virtual child: Return the name set in GetAtkValueForWidget.
+	  * This is written via selection events at the script levels.
+	  * Callbacks into the Tcl interpreter to get the directly selected
+	  * index in the Atk selection functions also retrieve this value.
+	  * However, those calls are ncessary for fine-grained index tracking in
+	  * the accessible selection API. Here it's simpler to retrieve
+	  * the string from the value field in the hash table. 
+	  */
 	AtkObject *parent_obj = atk_object_get_parent(obj);
 	TkAtkAccessible *parent = (TkAtkAccessible*)parent_obj;
 	Tk_Window parentwin = parent->tkwin; 
@@ -1428,6 +1446,7 @@ static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "%s %s %d", Tk_PathName(acc->tkwin), cmd_name, i);
 
+    /* Fire selection event. */
     if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
         TkAtkNotifySelectionChanged(acc->tkwin);
         return TRUE;
@@ -1435,6 +1454,7 @@ static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
 
     return FALSE;
 }
+
 static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
@@ -1443,6 +1463,7 @@ static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "%s selection clear %d", Tk_PathName(acc->tkwin), i);
 
+    /* Fire selection event. */
     if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
         TkAtkNotifySelectionChanged(acc->tkwin);
         return TRUE;
@@ -1459,6 +1480,7 @@ static gboolean tk_selection_clear_selection(AtkSelection *selection)
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "%s selection clear all", Tk_PathName(acc->tkwin));
 
+    /* Fire selection event. */
     if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
         TkAtkNotifySelectionChanged(acc->tkwin);
         return TRUE;
@@ -1475,6 +1497,7 @@ static gboolean tk_selection_select_all_selection(AtkSelection *selection)
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "%s selection set all", Tk_PathName(acc->tkwin));
 
+    /* Fire selection event. */
     if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
         TkAtkNotifySelectionChanged(acc->tkwin);
         return TRUE;
@@ -1854,7 +1877,7 @@ static void tk_atk_accessible_finalize(GObject *gobject)
             g_list_free(keys_to_remove);
         }
         
-		InvalidateVirtualChildren(self->tkwin);
+	InvalidateVirtualChildren(self->tkwin);
         cleanup_virtual_child_cache();
         
         /* Unregister from tracking structures. */
@@ -1934,7 +1957,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     }
     atk_object_set_parent(accessible, parentAcc);
 
-    /* Add to toplevel_accessible_objects only if it's a toplevel */
+    /* Add to toplevel_accessible_objects only if it's a toplevel. */
     if (Tk_IsTopLevel(tkwin)) {
         if (!g_list_find(toplevel_accessible_objects, accessible)) {
             toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);

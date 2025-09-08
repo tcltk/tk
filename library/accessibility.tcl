@@ -33,16 +33,22 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 	proc ClassicFocusIn {w} {
 	    variable origConfig
 	    if {![info exists origConfig($w)]} {
-		set origConfig($w) [list [$w cget -relief] [$w cget -borderwidth]]
+		set origConfig($w) [list [$w cget -highlightthickness] \
+					[$w cget -highlightcolor] \
+					[$w cget -highlightbackground]]
 	    }
-	    $w configure -relief groove -borderwidth 2
+	    $w configure -highlightthickness 3 \
+		-highlightcolor blue \
+		-highlightbackground blue
 	}
 
 	proc ClassicFocusOut {w} {
 	    variable origConfig
 	    if {[info exists origConfig($w)]} {
-		lassign $origConfig($w) relief border
-		$w configure -relief $relief -borderwidth $border
+		lassign $origConfig($w) thickness color bg
+		$w configure -highlightthickness $thickness \
+		    -highlightcolor $color \
+		    -highlightbackground $bg
 	    }
 	}
 
@@ -55,9 +61,10 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 	proc InitTtk {} {
 	    foreach class {TButton TEntry TCombobox TCheckbutton TRadiobutton \
 			       Treeview TScrollbar TScale TSpinbox TLabel} {
+		# Set a 3-pixel blue focus outline
 		ttk::style map $class \
-		    -relief {focus groove !focus flat} \
-		    -borderwidth {focus 2 !focus 1}
+		    -focuscolor   {focus blue !focus ""} \
+		    -focuswidth   {focus 3 !focus 0}
 	    }
 	}
 
@@ -345,6 +352,17 @@ namespace eval ::tk::accessible {
 	::tk::accessible::acc_action $w $action
 	
     }
+
+    # Toplevel bindings.
+    bind Toplevel <Map> {+::tk::accessible::_init \
+			     %W \
+			     Toplevel \
+			     [wm title %W] \
+			     {}  \
+			     {} \
+			     [%W cget -state] \
+			     {} \
+			 }
 
     # Button/TButton bindings.
     bind Button <Map> {+::tk::accessible::_init \
