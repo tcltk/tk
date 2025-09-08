@@ -1393,6 +1393,25 @@ Tk_DestroyWindow(
 	SendEnterLeaveForDestroy(tkwin);
     }
 
+    if (winPtr->pathName != NULL) {
+	/*
+	 * Evaluate the script "::tk_cargo unset winPtr->pathName".
+	 */
+
+	Tcl_Interp *interp = Tk_Interp(tkwin);
+	const char *format = "::tk_cargo unset %s";
+	size_t scriptSize = strlen(format) + strlen(winPtr->pathName) - 1;
+	char *script = (char *)ckalloc(scriptSize);
+	int code;
+
+	snprintf(script, scriptSize, format, winPtr->pathName);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	ckfree(script);
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
+	}
+    }
+
     winPtr->flags |= TK_ALREADY_DEAD;
 
     /*
