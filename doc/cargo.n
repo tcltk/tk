@@ -1,0 +1,88 @@
+.\"
+.\" Copyright (c) 2025 Csaba Nemethi
+.\" 
+.\" See the file "license.terms" for information on usage and redistribution
+.\" of this file, and for a DISCLAIMER OF ALL WARRANTIES. 
+.\" 
+.TH tk_cargo n 9.1 Tk "Tk Built-In Commands"
+.so man.macros
+.BS 
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+tk_cargo \- Query or modify arbitrary attributes of a widget
+.SH SYNOPSIS
+\fBtk_cargo set\fR|\fBget\fR|\fBunset\fR|\fBexists\fR \fIpathName\fR ...
+.BE
+.SH DESCRIPTION
+.PP
+This procedure queries or modifies arbitrary data attached to a given widget
+\fIpathName\fR.  These data are commonly called \fIattributes\fR.  The
+procedure supports the following forms:
+.\" METHOD: set
+.TP
+\fBtk_cargo set\fR \fIpathName name value\fR ?\fIname value\fR ...?
+.
+Sets (i.e., adds or updates) the attribute(s) identified by the \fIname\fR
+argument(s) to the value(s) given by the \fIvalue\fR argument(s).  Returns an
+empty string.  Example:
+.RS
+.PP
+.CS
+# Save and then change the button's text
+\fBtk_cargo set\fR .btn prevText [.btn cget -text]
+\&.btn configure -text "NewText"
+.CE
+.RE
+.\" METHOD: get
+.TP
+\fBtk_cargo get\fR \fIpathName\fR ?\fIname\fR?
+.
+If \fIname\fR is specified then returns the corresponding attribute value, or
+an empty string if no corresponding value exists.  (You can use \fBtk_cargo
+exists\fR ... below to distinguish this case from the one that the value of an
+\fIexisting\fR attribute is an empty string.)  Otherwise returns a list
+consisting of all attribute names and values.  Example:
+.RS
+.PP
+.CS
+# Restore the button's previous text
+\&.btn configure -text [\fBtk_cargo get\fR .btn prevText]
+.CE
+.RE
+.\" METHOD: unset
+.TP
+\fBtk_cargo unset\fR \fIpathName\fR ?\fIname\fR ...?
+.
+Unsets the attribute(s) identified by the \fIname\fR argument(s), or all
+attributes if no names are given.  Returns an empty string.  Example:
+.RS
+.PP
+.CS
+\fBtk_cargo unset\fR .btn prevText
+.CE
+.RE
+.\" METHOD: exists
+.TP
+\fBtk_cargo exists\fR \fIpathName \fIname\fR
+.
+Returns \fB1\fR if the attribute identified by \fIname\fR exists and \fB0\fR
+otherwise.  Example:
+.RS
+.PP
+.CS
+if [\fBtk_cargo exists\fR .btn prevText] {
+    # Restore the button's previous text
+    \&.btn configure -text [\fBtk_cargo get\fR .btn prevText]
+}
+.CE
+.RE
+.PP
+\fBREMARK:\fR  When the widget \fIpathName\fR is destroyed, all of its
+attributes are automatically unset.  This will free all the memory used by the
+widget's attributes.
+.SH KEYWORDS
+tk_cargo, widget, attribute
+.\" Local Variables:
+.\" mode: nroff
+.\" fill-column: 78
+.\" End:
