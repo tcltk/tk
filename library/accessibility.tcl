@@ -33,22 +33,16 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 	proc ClassicFocusIn {w} {
 	    variable origConfig
 	    if {![info exists origConfig($w)]} {
-		set origConfig($w) [list [$w cget -highlightthickness] \
-					[$w cget -highlightcolor] \
-					[$w cget -highlightbackground]]
+		set origConfig($w) [list [$w cget -relief] [$w cget -borderwidth]]
 	    }
-	    $w configure -highlightthickness 3 \
-		-highlightcolor blue \
-		-highlightbackground blue
+	    $w configure -relief groove -borderwidth 2
 	}
 
 	proc ClassicFocusOut {w} {
 	    variable origConfig
 	    if {[info exists origConfig($w)]} {
-		lassign $origConfig($w) thickness color bg
-		$w configure -highlightthickness $thickness \
-		    -highlightcolor $color \
-		    -highlightbackground $bg
+		lassign $origConfig($w) relief border
+		$w configure -relief $relief -borderwidth $border
 	    }
 	}
 
@@ -61,10 +55,9 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 	proc InitTtk {} {
 	    foreach class {TButton TEntry TCombobox TCheckbutton TRadiobutton \
 			       Treeview TScrollbar TScale TSpinbox TLabel} {
-		# Set a 3-pixel blue focus outline
 		ttk::style map $class \
-		    -focuscolor   {focus blue !focus ""} \
-		    -focuswidth   {focus 3 !focus 0}
+		    -relief {focus groove !focus flat} \
+		    -borderwidth {focus 2 !focus 1}
 	    }
 	}
 
