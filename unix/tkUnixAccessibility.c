@@ -354,48 +354,81 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     if (!interp || !parent) return NULL;
 
     const char *parent_path = Tk_PathName(parent);
-    char label_buffer[64];
+    char cmd[512];
     const char *label = NULL;
+    char *label_copy = NULL;
 
-    /* Simple label creation - avoid complex Tcl evaluation during creation. */
+    /* Retrieve label text depending on role. */
     switch (role) {
     case ATK_ROLE_LIST_ITEM:
-	snprintf(label_buffer, sizeof(label_buffer), "List item %d", index);
-	label = label_buffer;
-	break;
+        /* Listbox: use get index. */
+        snprintf(cmd, sizeof(cmd), "%s get %d", parent_path, index);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            label = Tcl_GetString(Tcl_GetObjResult(interp));
+        }
+        break;
+
     case ATK_ROLE_MENU_ITEM:
-	snprintf(label_buffer, sizeof(label_buffer), "Menu item %d", index);
-	label = label_buffer;
-	break;
+         /* Menu: use entrycget -label. */
+        snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", parent_path, index);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            label = Tcl_GetString(Tcl_GetObjResult(interp));
+        }
+        break;
+
     case ATK_ROLE_TREE_ITEM:
-	snprintf(label_buffer, sizeof(label_buffer), "Tree item %d", index);
-	label = label_buffer;
-	break;
-    default:
-	snprintf(label_buffer, sizeof(label_buffer), "Item %d", index);
-	label = label_buffer;
-	break;
+    {
+        /* Treeview: map index → item ID → cget -text. */
+        snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            Tcl_Obj *list = Tcl_GetObjResult(interp);
+            Tcl_Size count;
+            Tcl_Obj **elems;
+            if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
+                const char *itemid = Tcl_GetString(elems[index]);
+                snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+                if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                    label = Tcl_GetString(Tcl_GetObjResult(interp));
+                }
+            }
+        }
+        break;
     }
 
-    /* Create minimal virtual child - set tkwin to NULL for virtual children. */
+    default:
+        break;
+    }
+
+    if (!label || !*label) {
+        /* Fallback to generic name. */
+        char buf[64];
+        snprintf(buf, sizeof(buf), "Item %d", index);
+        label_copy = g_strdup(buf);
+    } else {
+        label_copy = g_strdup(label);
+    }
+
+    /* Create minimal virtual child. */ 
     TkAtkAccessible *child_acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     child_acc->interp = interp;
-    child_acc->tkwin = NULL; /* Virtual children must have NULL tkwin to prevent recursion. */
+    child_acc->tkwin = NULL; // Virtual child
     child_acc->path = g_strdup_printf("%s#%d", parent_path, index);
     child_acc->virtual_count = index;
-    
+
     AtkObject *child = ATK_OBJECT(child_acc);
-    
-    /* Basic initialization. */
+
     atk_object_initialize(child, NULL);
     atk_object_set_role(child, role);
-    atk_object_set_name(child, label);
-    
+    atk_object_set_name(child, label_copy);
+
+    g_free(label_copy);
+
+    /* Store index for selection tracking. */
+    g_object_set_data(G_OBJECT(child), "tk-index", GINT_TO_POINTER(index));
+
     /* Set parent relationship. */
     AtkObject *accParent = GetAtkObjectForTkWindow(parent);
-    
-      if (!accParent) {
-        /* If parent window has a toplevel parent, try its accessible. */
+    if (!accParent) {
         Tk_Window toplevel = GetToplevelOfWidget(parent);
         if (toplevel) {
             accParent = GetAtkObjectForTkWindow(toplevel);
@@ -405,9 +438,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
         atk_object_set_parent(child, accParent);
     }
 
-    /* Store index for selection tracking. */
-    g_object_set_data(G_OBJECT(child), "tk-index", GINT_TO_POINTER(index));
-
+    
     return child;
 }
 
@@ -1504,15 +1535,64 @@ static gint tk_selection_get_selection_count(AtkSelection *selection)
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)ATK_OBJECT(selection);
-    if (!acc || !acc->tkwin) return FALSE;
+    if (!acc) return FALSE;
 
-    AtkObject *child = tk_selection_ref_selection(selection, i);
-    if (!child) return FALSE;
+    /* Virtual child. */
+    if (!acc->tkwin) {
+        AtkObject *parent = atk_object_get_parent(ATK_OBJECT(selection));
+        if (parent && ATK_IS_SELECTION(parent)) {
+            gpointer index_ptr = g_object_get_data(G_OBJECT(selection), "tk-index");
+            gint my_index = GPOINTER_TO_INT(index_ptr);
+            return tk_selection_is_child_selected(ATK_SELECTION(parent), my_index);
+        }
+        return FALSE;
+    }
 
-    g_object_unref(child);
-    return TRUE; /* If tk_selection_ref_selection() returned a child, it is selected. */
+    Tcl_Interp *interp = acc->interp;
+    if (!interp) return FALSE;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    char cmd[256];
+
+    if (role == ATK_ROLE_LIST || role == ATK_ROLE_LIST_BOX) {
+        snprintf(cmd, sizeof(cmd), "%s selection includes %d", Tk_PathName(acc->tkwin), i);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            int result;
+            if (Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &result) == TCL_OK) {
+                return result ? TRUE : FALSE;
+            }
+        }
+    } else if (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE || role == ATK_ROLE_TABLE) {
+        /* Treeview: need to compare against $tree selection. */
+        snprintf(cmd, sizeof(cmd), "%s selection", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            Tcl_Obj *list = Tcl_GetObjResult(interp);
+            Tcl_Size count;
+            Tcl_Obj **elems;
+            if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK) {
+                for (Tcl_Size j = 0; j < count; j++) {
+                    const char *itemid = Tcl_GetString(elems[j]);
+                    int sel_idx = -1;
+                    snprintf(cmd, sizeof(cmd), "%s index %s", Tk_PathName(acc->tkwin), itemid);
+                    if (Tcl_Eval(interp, cmd) == TCL_OK &&
+                        Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &sel_idx) == TCL_OK) {
+                        if (sel_idx == i) return TRUE;
+                    }
+                }
+            }
+        }
+    } else if (role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR) {
+        /* Only active index counts. */
+        int active = -1;
+        snprintf(cmd, sizeof(cmd), "%s index active", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(interp, cmd) == TCL_OK &&
+            Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &active) == TCL_OK) {
+            return active == i;
+        }
+    }
+
+    return FALSE;
 }
-
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
@@ -1588,73 +1668,75 @@ static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
  * Updates child names to their textual values and emits selection signals.
  */
 
-/* Notify ATK that selection has changed for the given Tk window. */
 void TkAtkNotifySelectionChanged(Tk_Window tkwin)
 {
-    if (!tkwin) return;  /* Window is gone, nothing to do. */
+    if (!tkwin) return;
 
-    /* Get AtkObject for this Tk window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) return;
 
     AtkRole role = tk_get_role(obj);
-
-    /* Only update widgets that have children/selections. */
-    if (role != ATK_ROLE_LIST && role != ATK_ROLE_TABLE &&
-        role != ATK_ROLE_TREE && role != ATK_ROLE_TREE_TABLE &&
-        role != ATK_ROLE_MENU && role != ATK_ROLE_MENU_BAR)
+    /* Only update widgets that can have children/selections. */
+    if (role != ATK_ROLE_LIST && role != ATK_ROLE_LIST_BOX &&
+        role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE &&
+        role != ATK_ROLE_TREE_TABLE && role != ATK_ROLE_MENU &&
+        role != ATK_ROLE_MENU_BAR)
     {
         return;
     }
 
-    /* Get the number of virtual children. */
-    int n_children = tk_get_n_children(obj);
-    if (n_children <= 0) return;
-
     Tcl_Interp *interp = Tk_Interp(tkwin);
     if (!interp) return;
 
-    /* Prepare selection array. */
-    Tcl_Obj *selection_list = NULL;
-    Tcl_Obj *selection_elems[1] = { NULL };
-    Tcl_Size selection_count = 0;
-    Tcl_Obj **elems = NULL;   
+    /* Get the number of children (this will create virtual children if needed). */
+    int n_children = tk_get_n_children(obj);
+    if (n_children <= 0) return;
 
-    /* Choose appropriate command to get selected indices or IDs. */
-    char cmd[512];
+    /* Selection variables — always initialized defensively. */
+    Tcl_Obj *selection_list = NULL;
+    Tcl_Obj **elems = NULL;
+    Tcl_Size selection_count = 0;
+    char cmd[512] = {0}; /* Initialize to avoid garbage data. */
+
+    /* Choose appropriate command to get selection list. */
     switch (role) {
         case ATK_ROLE_LIST:
         case ATK_ROLE_LIST_BOX:
         case ATK_ROLE_TABLE:
-            snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(tkwin));
+            snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
             break;
         case ATK_ROLE_MENU:
         case ATK_ROLE_MENU_BAR:
         case ATK_ROLE_TREE:
         case ATK_ROLE_TREE_TABLE:
-            snprintf(cmd, sizeof(cmd), "%s selection", Tk_PathName(tkwin));
+            snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
             break;
         default:
-            return;
+            return; /* Should not reach here due to earlier role check. */
     }
 
-    /* Evaluate selection command. */
+    /* Evaluate selection command safely. */
     if (Tcl_Eval(interp, cmd) == TCL_OK) {
         selection_list = Tcl_GetObjResult(interp);
-
-        /* Try to get list elements. */
-	if (Tcl_ListObjGetElements(interp, selection_list, &selection_count, &elems) != TCL_OK) {
-	    /* Single-element fallback. */
-	    elems = selection_elems; /* Point to single-element array. */
-	    selection_count = 1;
-	}
+        if (selection_list && Tcl_ListObjGetElements(interp, selection_list, &selection_count, &elems) != TCL_OK) {
+            /* If parsing fails, treat as empty selection. */
+            selection_count = 0;
+            elems = NULL;
+        }
+    } else {
+        /* Eval failed -> no selection. */
+        selection_count = 0;
+        elems = NULL;
     }
 
     /* Get active index if available. */
     int active_index = -1;
-    snprintf(cmd, sizeof(cmd), "%s index active", Tk_PathName(tkwin));
+    snprintf(cmd, sizeof(cmd) - 1, "%s index active", Tk_PathName(tkwin));
     if (Tcl_Eval(interp, cmd) == TCL_OK) {
-        Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &active_index);
+        Tcl_Obj *result = Tcl_GetObjResult(interp);
+        if (result && Tcl_GetIntFromObj(interp, result, &active_index) != TCL_OK) {
+            active_index = -1; /* Reset on failure. */
+        }
     }
 
     /* Walk all children and update states. */
@@ -1664,24 +1746,31 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
 
         gboolean is_selected = FALSE;
 
-        /* Check if this child index matches any selected index. */
-        for (Tcl_Size j = 0; j < selection_count; j++) {
-            int sel_idx = -1;
-
-            /* Try numeric index first. */
-            if (Tcl_GetIntFromObj(interp, selection_elems[j], &sel_idx) == TCL_OK) {
-                if (sel_idx == i) {
-                    is_selected = TRUE;
-                    break;
+        /* Handle selections based on role. */
+        if (elems && selection_count > 0) {
+            if (role == ATK_ROLE_LIST || role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_TABLE ||
+                role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR)
+            {
+                for (Tcl_Size j = 0; j < selection_count; j++) {
+                    if (!elems[j]) continue; /* Skip invalid elements. */
+                    int sel_idx = -1;
+                    if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
+                        is_selected = TRUE;
+                        break;
+                    }
                 }
-            } else {
-                /* For tree/tree_table/menu, map ID to index. */
-                const char *itemid = Tcl_GetString(selection_elems[j]);
-                if (itemid && (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)) {
-                    snprintf(cmd, sizeof(cmd), "%s index %s", Tk_PathName(tkwin), itemid);
-                    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                        if (Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &sel_idx) == TCL_OK) {
-                            if (sel_idx == i) {
+            }
+            else if (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)
+            {
+                for (Tcl_Size j = 0; j < selection_count; j++) {
+                    if (!elems[j]) continue; /* Skip invalid elements. */
+                    const char *itemid = Tcl_GetString(elems[j]);
+                    if (itemid && *itemid) {
+                        snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
+                        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                            Tcl_Obj *result = Tcl_GetObjResult(interp);
+                            int sel_idx = -1;
+                            if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
                                 is_selected = TRUE;
                                 break;
                             }
@@ -1691,17 +1780,22 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
             }
         }
 
-        /* Update selected state. */
+        /* Update SELECTED state for this child. */
         atk_object_notify_state_change(child, ATK_STATE_SELECTED, is_selected);
 
-        /* Update active/focus state. */
+        /* Emit selection-changed signal on the child if selected. */
+        if (is_selected) {
+            g_signal_emit_by_name(child, "selection-changed");
+        }
+
+        /* Update active/focused state. */
         if (i == active_index) {
             atk_object_notify_state_change(child, ATK_STATE_FOCUSED, TRUE);
             g_signal_emit_by_name(child, "focus-event", TRUE);
         }
 
-        /* Update child name to textual value for Orca. */
-        gchar *text = GetAtkValueForWidget(tkwin); 
+        /* Update child name so Orca has fresh text. */
+        gchar *text = GetAtkValueForWidget(tkwin);
         if (text) {
             atk_object_set_name(child, text);
             g_free(text);
@@ -1710,10 +1804,9 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         g_object_unref(child);
     }
 
-    /* Emit signals on parent object. */
-    g_signal_emit_by_name(obj, "selection-changed", -1);
-
-    if (active_index >= 0) {
+    /* Emit signals on the parent object for completeness. */
+    g_signal_emit_by_name(obj, "selection-changed");
+    if (active_index >= 0 && active_index < n_children) {
         AtkObject *active_child = tk_ref_child(obj, active_index);
         if (active_child) {
             g_signal_emit_by_name(obj, "active-descendant-changed", active_child);
@@ -1721,7 +1814,6 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         }
     }
 }
-
 
 /*
  * Functions to initialize and manage the parent ATK class and object instances.
