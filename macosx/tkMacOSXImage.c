@@ -689,7 +689,7 @@ CreateCGImageFromDrawableRect(
 		    //CGImageGetBytesPerRow(cg_image), // wastes space?
 		    CGImageGetBitsPerPixel(cg_image) * width / 8,
 		    colorspace,
-		    CGImageGetAlphaInfo(cg_image));
+		    CGImageGetBitmapInfo(cg_image));
 	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
 		// Extract the subimage in the specified rectangle.
