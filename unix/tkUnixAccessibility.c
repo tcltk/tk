@@ -189,6 +189,10 @@ static int IsScreenReaderActive(void);
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
+/* Signal IDs for custom AT-SPI signals. */
+static guint window_create_signal_id;
+static guint window_activate_signal_id;
+static guint window_deactivate_signal_id;
 
 /* Define custom ATK object bridged to Tcl/Tk. */
 #define TK_ATK_TYPE_ACCESSIBLE (tk_atk_accessible_get_type())
@@ -1887,6 +1891,31 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     AtkObjectClass *atk_class = ATK_OBJECT_CLASS(klass);
+
+    /* Register custom AT-SPI signals. */
+    window_create_signal_id = g_signal_new("window:create",
+					   TK_ATK_TYPE_ACCESSIBLE,
+					   G_SIGNAL_RUN_LAST,
+					   0,
+					   NULL, NULL,
+					   g_cclosure_marshal_VOID__VOID,
+					   G_TYPE_NONE, 0);
+
+    window_activate_signal_id = g_signal_new("window:activate",
+					     TK_ATK_TYPE_ACCESSIBLE,
+					     G_SIGNAL_RUN_LAST,
+					     0,
+					     NULL, NULL,
+					     g_cclosure_marshal_VOID__VOID,
+					     G_TYPE_NONE, 0);
+
+    window_deactivate_signal_id = g_signal_new("window:deactivate",
+					       TK_ATK_TYPE_ACCESSIBLE,
+					       G_SIGNAL_RUN_LAST,
+					       0,
+					       NULL, NULL,
+					       g_cclosure_marshal_VOID__VOID,
+					       G_TYPE_NONE, 0);
 
     gobject_class->finalize = tk_atk_accessible_finalize;
 
