@@ -379,7 +379,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
         break;
 
     case ATK_ROLE_MENU_ITEM:
-         /* Menu: use entrycget -label. */
+	/* Menu: use entrycget -label. */
         snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", parent_path, index);
         if (Tcl_Eval(interp, cmd) == TCL_OK) {
             label = Tcl_GetString(Tcl_GetObjResult(interp));
@@ -387,23 +387,23 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
         break;
 
     case ATK_ROLE_TREE_ITEM:
-    {
-        /* Treeview: map index → item ID → cget -text. */
-        snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
-        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-            Tcl_Obj *list = Tcl_GetObjResult(interp);
-            Tcl_Size count;
-            Tcl_Obj **elems;
-            if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
-                const char *itemid = Tcl_GetString(elems[index]);
-                snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
-                if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                    label = Tcl_GetString(Tcl_GetObjResult(interp));
-                }
-            }
-        }
-        break;
-    }
+	{
+	    /* Treeview: map index → item ID → cget -text. */
+	    snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
+	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+		Tcl_Obj *list = Tcl_GetObjResult(interp);
+		Tcl_Size count;
+		Tcl_Obj **elems;
+		if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
+		    const char *itemid = Tcl_GetString(elems[index]);
+		    snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+		    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+			label = Tcl_GetString(Tcl_GetObjResult(interp));
+		    }
+		}
+	    }
+	    break;
+	}
 
     default:
         break;
@@ -673,7 +673,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 
 		if (acc->tkwin) {  /* Only register handlers for real windows. */
 		    TkAtkAccessible_RegisterEventHandlers(acc->tkwin, acc);
-}
+		}
 		/* Insert into cache: store a referenced child.
 		 * Use the allocated key as the hash key.
 		 * g_hash_table_insert takes ownership of key and
@@ -812,15 +812,15 @@ static const gchar *tk_get_name(AtkObject *obj)
     if (!acc) return NULL;
 
     if (!acc->tkwin) {
-	 /*
-	  * Virtual child: Return the name set in GetAtkValueForWidget.
-	  * This is written via selection events at the script levels.
-	  * Callbacks into the Tcl interpreter to get the directly selected
-	  * index in the Atk selection functions also retrieve this value.
-	  * However, those calls are ncessary for fine-grained index tracking in
-	  * the accessible selection API. Here it's simpler to retrieve
-	  * the string from the value field in the hash table. 
-	  */
+	/*
+	 * Virtual child: Return the name set in GetAtkValueForWidget.
+	 * This is written via selection events at the script levels.
+	 * Callbacks into the Tcl interpreter to get the directly selected
+	 * index in the Atk selection functions also retrieve this value.
+	 * However, those calls are ncessary for fine-grained index tracking in
+	 * the accessible selection API. Here it's simpler to retrieve
+	 * the string from the value field in the hash table. 
+	 */
 	AtkObject *parent_obj = atk_object_get_parent(obj);
 	TkAtkAccessible *parent = (TkAtkAccessible*)parent_obj;
 	Tk_Window parentwin = parent->tkwin; 
@@ -1428,19 +1428,19 @@ static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
     const char *cmd_name = NULL;
 
     switch (parentRole) {
-        case ATK_ROLE_LIST:
-        case ATK_ROLE_LIST_BOX:
-        case ATK_ROLE_TABLE:
-        case ATK_ROLE_TREE:
-        case ATK_ROLE_TREE_TABLE:
-            cmd_name = "selection set";
-            break;
-        case ATK_ROLE_MENU:
-        case ATK_ROLE_MENU_BAR:
-            cmd_name = "activate";
-            break;
-        default:
-            return FALSE;
+    case ATK_ROLE_LIST:
+    case ATK_ROLE_LIST_BOX:
+    case ATK_ROLE_TABLE:
+    case ATK_ROLE_TREE:
+    case ATK_ROLE_TREE_TABLE:
+	cmd_name = "selection set";
+	break;
+    case ATK_ROLE_MENU:
+    case ATK_ROLE_MENU_BAR:
+	cmd_name = "activate";
+	break;
+    default:
+	return FALSE;
     }
 
     char cmd[256];
@@ -1704,9 +1704,9 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE &&
         role != ATK_ROLE_TREE_TABLE && role != ATK_ROLE_MENU &&
         role != ATK_ROLE_MENU_BAR)
-    {
-        return;
-    }
+	{
+	    return;
+	}
 
     Tcl_Interp *interp = Tk_Interp(tkwin);
     if (!interp) return;
@@ -1723,19 +1723,19 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
 
     /* Choose appropriate command to get selection list. */
     switch (role) {
-        case ATK_ROLE_LIST:
-        case ATK_ROLE_LIST_BOX:
-        case ATK_ROLE_TABLE:
-            snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
-            break;
-        case ATK_ROLE_MENU:
-        case ATK_ROLE_MENU_BAR:
-        case ATK_ROLE_TREE:
-        case ATK_ROLE_TREE_TABLE:
-            snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
-            break;
-        default:
-            return; /* Should not reach here due to earlier role check. */
+    case ATK_ROLE_LIST:
+    case ATK_ROLE_LIST_BOX:
+    case ATK_ROLE_TABLE:
+	snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
+	break;
+    case ATK_ROLE_MENU:
+    case ATK_ROLE_MENU_BAR:
+    case ATK_ROLE_TREE:
+    case ATK_ROLE_TREE_TABLE:
+	snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
+	break;
+    default:
+	return; /* Should not reach here due to earlier role check. */
     }
 
     /* Evaluate selection command safely. */
@@ -1773,34 +1773,34 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         if (elems && selection_count > 0) {
             if (role == ATK_ROLE_LIST || role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_TABLE ||
                 role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR)
-            {
-                for (Tcl_Size j = 0; j < selection_count; j++) {
-                    if (!elems[j]) continue; /* Skip invalid elements. */
-                    int sel_idx = -1;
-                    if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
-                        is_selected = TRUE;
-                        break;
-                    }
-                }
-            }
+		{
+		    for (Tcl_Size j = 0; j < selection_count; j++) {
+			if (!elems[j]) continue; /* Skip invalid elements. */
+			int sel_idx = -1;
+			if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
+			    is_selected = TRUE;
+			    break;
+			}
+		    }
+		}
             else if (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)
-            {
-                for (Tcl_Size j = 0; j < selection_count; j++) {
-                    if (!elems[j]) continue; /* Skip invalid elements. */
-                    const char *itemid = Tcl_GetString(elems[j]);
-                    if (itemid && *itemid) {
-                        snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
-                        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                            Tcl_Obj *result = Tcl_GetObjResult(interp);
-                            int sel_idx = -1;
-                            if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
-                                is_selected = TRUE;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+		{
+		    for (Tcl_Size j = 0; j < selection_count; j++) {
+			if (!elems[j]) continue; /* Skip invalid elements. */
+			const char *itemid = Tcl_GetString(elems[j]);
+			if (itemid && *itemid) {
+			    snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
+			    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+				Tcl_Obj *result = Tcl_GetObjResult(interp);
+				int sel_idx = -1;
+				if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
+				    is_selected = TRUE;
+				    break;
+				}
+			    }
+			}
+		    }
+		}
         }
 
         /* Update SELECTED state for this child. */
@@ -1877,7 +1877,7 @@ static void tk_atk_accessible_finalize(GObject *gobject)
             g_list_free(keys_to_remove);
         }
         
-	InvalidateVirtualChildren(self->tkwin);
+		InvalidateVirtualChildren(self->tkwin);
         cleanup_virtual_child_cache();
         
         /* Unregister from tracking structures. */
@@ -1921,8 +1921,6 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 /* Function to complete toplevel registration with proper hierarchy. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible)
 {
-    (void) interp;
-    
     if (!accessible || !tkwin || !G_IS_OBJECT(accessible)) {
         g_warning("RegisterToplevelWindow: Invalid tkwin or accessible");
         return;
@@ -1944,21 +1942,13 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     g_object_ref(accessible);
 
-    /* Decide correct parent: root for real toplevels, otherwise the toplevel's accessible. */
+    /* Ensure proper parent hierarchy for all windows. */
     AtkObject *parentAcc = NULL;
     if (Tk_IsTopLevel(tkwin)) {
+        /* True toplevels get root as parent. */
         parentAcc = tk_root_accessible;
-    } else {
-        Tk_Window top = GetToplevelOfWidget(tkwin);   /* Get the ancestor toplevel. */
-        parentAcc = GetAtkObjectForTkWindow(top);
-        if (!parentAcc) {
-            parentAcc = tk_root_accessible;   /* Fallback. */
-        }
-    }
-    atk_object_set_parent(accessible, parentAcc);
-
-    /* Add to toplevel_accessible_objects only if it's a toplevel. */
-    if (Tk_IsTopLevel(tkwin)) {
+        
+        /* Add to toplevel list only for real toplevels. */
         if (!g_list_find(toplevel_accessible_objects, accessible)) {
             toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
             gint index = g_list_index(toplevel_accessible_objects, accessible);
@@ -1967,13 +1957,40 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
             }
         }
     } else {
-        /* For non-root children, emit add on their parent. */
-        if (parentAcc) {
-            gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
-            g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accessible);
+        /* Non-toplevels: find and ensure parent is registered first. */
+        Tk_Window parentWin = Tk_Parent(tkwin);
+        if (parentWin) {
+            /* Ensure parent is registered before setting hierarchy. */
+            parentAcc = GetAtkObjectForTkWindow(parentWin);
+            if (!parentAcc) {
+                /* Recursively create parent accessibility object. */
+                parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
+                if (parentAcc && Tk_IsTopLevel(parentWin)) {
+                    /* If parent is toplevel, register it properly. */
+                    RegisterToplevelWindow(interp, parentWin, parentAcc);
+                }
+            }
+        }
+        
+        if (!parentAcc) {
+            /* Last resort fallback. */
+            parentAcc = tk_root_accessible;
+        }
+        
+        /* Emit child-added signal on the actual parent. */
+        if (parentAcc && parentAcc != tk_root_accessible) {
+            /* Get current child count before adding. */
+            gint child_count = atk_object_get_n_accessible_children(parentAcc);
+            g_signal_emit_by_name(parentAcc, "children-changed::add", child_count, accessible);
         }
     }
+    
+    /* Set parent relationship in ATK. */
+    if (parentAcc) {
+        atk_object_set_parent(accessible, parentAcc);
+    }
 
+    /* Set accessible properties. */
     const gchar *name = tk_get_name(accessible);
     if (name) {
         tk_set_name(accessible, name);
@@ -1981,11 +1998,11 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         tk_set_name(accessible, Tk_PathName(tkwin));
     }
                     
-    atk_object_set_role(accessible, ATK_ROLE_WINDOW);
+    AtkRole role = GetAtkRoleForWidget(tkwin);
+    atk_object_set_role(accessible, role);
     atk_object_set_description(accessible, name ? name : ((TkAtkAccessible *)accessible)->path);
 
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
-
     atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
 }
 
@@ -2149,33 +2166,61 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 /* Respond to <CreateNotify> events. */
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr)
 {
-    if (eventPtr->type != CreateNotify) return;
-    
-    Tk_Window parentWin = (Tk_Window)clientData;
-    /* Convert X window ID to Tk_Window. */
-    Tk_Window newWin = Tk_IdToWindow(eventPtr->xcreatewindow.display, 
-				     eventPtr->xcreatewindow.window);
-    
-    if (!newWin || !parentWin) return;
-    
-    AtkObject *parentObj = GetAtkObjectForTkWindow(parentWin);
-    if (!parentObj) return;
-    
-    AtkObject *childObj = GetAtkObjectForTkWindow(newWin);
-    if (!childObj) {
-        /* Create accessibility object for new window. */
-        childObj = TkCreateAccessibleAtkObject( ((TkAtkAccessible*)parentObj)->interp, newWin, Tk_PathName(newWin));
+    if (!eventPtr || eventPtr->type != CreateNotify) {
+	return;
     }
-    
-    if (childObj) {
-        /* Set parent-child relationship. */
-        atk_object_set_parent(childObj, parentObj);
-        /* Register event handlers for new window. */
-        TkAtkAccessible_RegisterEventHandlers(newWin, (TkAtkAccessible*)childObj);
-        /* Notify ATK about new child. */
-        g_signal_emit_by_name(parentObj, "children-changed::add", tk_get_n_children(parentObj)-1, childObj);
+
+    Tk_Window tkwin = (Tk_Window)clientData;
+    if (!tkwin) {
+	return;
+    }
+
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    if (!interp) {
+	return;
+    }
+
+    /* Don’t recreate if we already have an accessible for this window. */
+    if (GetAtkObjectForTkWindow(tkwin)) {
+	return;
+    }
+
+    /* Create a new accessible object for this widget. */
+    AtkObject *accObj = TkCreateAccessibleAtkObject(interp, tkwin, Tk_PathName(tkwin));
+    if (!accObj) {
+	return;
+    }
+
+    if (Tk_IsTopLevel(tkwin)) {
+	/* Root or non-root toplevel window */
+	RegisterToplevelWindow(interp, tkwin, accObj);
+    } else {
+	/* Child widget inside some toplevel. */
+	Tk_Window parentWin = Tk_Parent(tkwin);
+	AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
+	if (!parentAcc && parentWin) {
+	    /* Parent not yet registered: create it now */
+	    parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
+	    if (parentAcc) {
+		atk_object_set_parent(parentAcc, GetAtkObjectForTkWindow(GetToplevelOfWidget(parentWin)));
+		RegisterAtkObjectForTkWindow(parentWin, parentAcc);
+	    }
+	}
+
+	if (parentAcc) {
+	    atk_object_set_parent(accObj, parentAcc);
+
+	    /* Insert into our Tk→Atk mapping. */
+	    RegisterAtkObjectForTkWindow(tkwin, accObj);
+
+	    /* Notify AT clients that a child was added. */
+	    gint idx = atk_object_get_n_accessible_children(parentAcc);
+	    g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accObj);
+	}
     }
 }
+
+
 
 /* Respond to <DestroyNotify> events. */
 static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
@@ -2184,7 +2229,9 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
     
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc) return;
-    GObject *obj =  (GObject*)acc; 
+	
+    GObject *obj =  (GObject*)acc;
+	  
     tk_atk_accessible_finalize(obj); 
 }
 
@@ -2192,24 +2239,46 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 /* Respond to <Configure> events. */
 static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
+    if (!eventPtr || eventPtr->type != ConfigureNotify) {
+	return;
+    }
 
-    if (eventPtr->type == ConfigureNotify) {
-		
-	AtkObject *obj = ATK_OBJECT(acc);  
-	InvalidateVirtualChildren(acc->tkwin);
+    Tk_Window tkwin = (Tk_Window)clientData;
+    if (!tkwin) {
+	return;
+    }
 
-	/* Build the bounds rectangle. */
-	AtkRectangle rect;
-	Tk_GetRootCoords(acc->tkwin, &rect.x, &rect.y);
-	rect.width  = Tk_Width(acc->tkwin);
-	rect.height = Tk_Height(acc->tkwin);
+    AtkObject *accObj = GetAtkObjectForTkWindow(tkwin);
+    if (!accObj) {
+	return;
+    }
 
-	/* Direct signal emission. */
-	g_signal_emit_by_name(obj, "bounds-changed", &rect, TRUE);
+    /* Update geometry on configure. */
+    gint x, y, w, h;
+    tk_get_extents(ATK_COMPONENT(accObj), &x, &y, &w, &h, ATK_XY_SCREEN);
+
+    /* If the widget just became mapped/visible, fire state-change signals. */
+    if (Tk_IsMapped(tkwin)) {
+	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
+
+	/* For child widgets of a non-root toplevel, also nudge with children-changed. */
+	if (!Tk_IsTopLevel(tkwin)) {
+	    Tk_Window parentWin = Tk_Parent(tkwin);
+	    AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
+	    if (parentAcc) {
+		gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
+		if (idx < 0) idx = 0;
+		g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accObj);
+	    }
+	}
+    } else {
+	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, FALSE);
+	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
     }
 }
+
+
 
 /* Respond to <FocusIn/Out> events. */
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
@@ -2218,8 +2287,8 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
    
     AtkObject *obj = ATK_OBJECT(acc);
-    gboolean focused = (eventPtr->type == FocusIn);
-     InvalidateVirtualChildren(acc->tkwin);
+    gboolean focused = (eventPtr->type == FocusIn);    
+    InvalidateVirtualChildren(acc->tkwin);
     
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     atk_object_set_role(obj, role);
@@ -2263,21 +2332,21 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 
     /* Validate arguments. */
     if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
+	return TCL_ERROR;
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) return TCL_OK;  /* Window not found, nothing to do. */
-    InvalidateVirtualChildren(tkwin);
+	InvalidateVirtualChildren(tkwin);
 
     /* Ensure AtkObject exists for this window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
-        obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
-        if (!obj) return TCL_OK;
-        TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
+	obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
+	if (!obj) return TCL_OK;
+	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
     /* Call the robust selection-change notifier. */
@@ -2286,25 +2355,25 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     /* Handle text/entry widgets separately. */
     AtkRole role = tk_get_role(obj);
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-        g_signal_emit_by_name(obj, "text-selection-changed");
+	g_signal_emit_by_name(obj, "text-selection-changed");
     }
 
     /* Handle value-changed for sliders, spin buttons, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
-        role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
-    {
-        GValue gval = G_VALUE_INIT;
-        tk_get_current_value(ATK_VALUE(obj), &gval);
-        gdouble new_val = 0.0;
-        if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-            new_val = g_value_get_double(&gval);
-        } else if (G_VALUE_HOLDS_STRING(&gval)) {
-            const char *s = g_value_get_string(&gval);
-            if (s) new_val = g_ascii_strtod(s, NULL);
-        }
-        g_value_unset(&gval);
-        g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
-    }
+	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
+	{
+	    GValue gval = G_VALUE_INIT;
+	    tk_get_current_value(ATK_VALUE(obj), &gval);
+	    gdouble new_val = 0.0;
+	    if (G_VALUE_HOLDS_DOUBLE(&gval)) {
+		new_val = g_value_get_double(&gval);
+	    } else if (G_VALUE_HOLDS_STRING(&gval)) {
+		const char *s = g_value_get_string(&gval);
+		if (s) new_val = g_ascii_strtod(s, NULL);
+	    }
+	    g_value_unset(&gval);
+	    g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
+	}
 
     return TCL_OK;
 }
@@ -2411,8 +2480,8 @@ static int IsScreenReaderActive(void)
  
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    (void) clientData;
-
+	(void) clientData; 
+	
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
         return TCL_ERROR;
@@ -2425,7 +2494,6 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     }
 
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-
     if (tkwin == NULL) {
         Tcl_SetResult(interp, "Invalid window name.", TCL_STATIC);
         return TCL_ERROR;
@@ -2443,38 +2511,12 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         return TCL_ERROR;
     }
 
-    /* Handle ALL toplevels, not just main window. */
-    if (Tk_IsTopLevel(tkwin)) {
-        RegisterToplevelWindow(interp, tkwin, ATK_OBJECT(accessible));
-    } else {
-        /* For non-toplevel widgets, ensure parent chain is registered. */
-        Tk_Window parent_win = Tk_Parent(tkwin);
-        if (parent_win) {
-            AtkObject *parent_obj = GetAtkObjectForTkWindow(parent_win);
-            if (!parent_obj) {
-                /* Recursively register parent. */
-                Tcl_Obj *parent_cmd_objv[2];
-                parent_cmd_objv[0] = objv[0];  /* Command name. */
-                parent_cmd_objv[1] = Tcl_NewStringObj(Tk_PathName(parent_win), -1);
-                Tcl_IncrRefCount(parent_cmd_objv[1]);
-                if (TkAtkAccessibleObjCmd(clientData, interp, 2, parent_cmd_objv) == TCL_OK) {
-                    parent_obj = GetAtkObjectForTkWindow(parent_win);
-                }
-                Tcl_DecrRefCount(parent_cmd_objv[1]);
-            }
-            if (parent_obj) {
-                atk_object_set_parent(ATK_OBJECT(accessible), parent_obj);
-                /* Emit signal for child addition. */
-                g_signal_emit_by_name(parent_obj, "children-changed::add", tk_get_n_children(parent_obj)-1, ATK_OBJECT(accessible));
-            }
-        }
-        
-        /* Register event handlers for non-toplevel widgets too */
-        TkAtkAccessible_RegisterEventHandlers(tkwin, accessible);
-    }
+    /* Always use RegisterToplevelWindow for proper hierarchy. */
+    RegisterToplevelWindow(interp, tkwin, ATK_OBJECT(accessible));
 
     return TCL_OK;
 }
+
 #endif
 
 /*
