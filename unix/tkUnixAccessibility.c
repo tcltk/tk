@@ -873,27 +873,35 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 
     /* Virtual child: tkwin == NULL. */
     if (!acc->tkwin) {
-	atk_state_set_add_state(set, ATK_STATE_ENABLED);
-	atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-	atk_state_set_add_state(set, ATK_STATE_SHOWING);
-	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-	atk_state_set_add_state(set, ATK_STATE_SELECTABLE); 
-	return set;
+        atk_state_set_add_state(set, ATK_STATE_ENABLED);
+        atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
+        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(set, ATK_STATE_SHOWING);
+        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+        atk_state_set_add_state(set, ATK_STATE_SELECTABLE);
+        /* Check if this virtual child is focused (e.g., active in parent). */
+        AtkObject *parent_obj = atk_object_get_parent(obj);
+        if (parent_obj && ATK_IS_SELECTION(parent_obj)) {
+            gint index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(obj), "tk-index"));
+            if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
+                atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+            }
+        }
+        return set;
     }
 
-    /* Real widget path. */
+    /* Real widget. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
     if (Tk_IsMapped(acc->tkwin)) {
-	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-	atk_state_set_add_state(set, ATK_STATE_SHOWING);
-	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(set, ATK_STATE_SHOWING);
+        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
     }
 
     if (acc->is_focused) {
-	atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+        atk_state_set_add_state(set, ATK_STATE_FOCUSED);
     }
 
     return set;
@@ -1704,120 +1712,110 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE &&
         role != ATK_ROLE_TREE_TABLE && role != ATK_ROLE_MENU &&
         role != ATK_ROLE_MENU_BAR)
-	{
-	    return;
-	}
+    {
+        return;
+    }
 
     Tcl_Interp *interp = Tk_Interp(tkwin);
     if (!interp) return;
 
-    /* Get the number of children (this will create virtual children if needed). */
+    /* Get the number of children. */
     int n_children = tk_get_n_children(obj);
     if (n_children <= 0) return;
 
-    /* Selection variables — always initialized defensively. */
     Tcl_Obj *selection_list = NULL;
     Tcl_Obj **elems = NULL;
     Tcl_Size selection_count = 0;
-    char cmd[512] = {0}; /* Initialize to avoid garbage data. */
+    char cmd[512] = {0};
 
-    /* Choose appropriate command to get selection list. */
     switch (role) {
-    case ATK_ROLE_LIST:
-    case ATK_ROLE_LIST_BOX:
-    case ATK_ROLE_TABLE:
-	snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
-	break;
-    case ATK_ROLE_MENU:
-    case ATK_ROLE_MENU_BAR:
-    case ATK_ROLE_TREE:
-    case ATK_ROLE_TREE_TABLE:
-	snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
-	break;
-    default:
-	return; /* Should not reach here due to earlier role check. */
+        case ATK_ROLE_LIST:
+        case ATK_ROLE_LIST_BOX:
+        case ATK_ROLE_TABLE:
+            snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
+            break;
+        case ATK_ROLE_MENU:
+        case ATK_ROLE_MENU_BAR:
+        case ATK_ROLE_TREE:
+        case ATK_ROLE_TREE_TABLE:
+            snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
+            break;
+        default:
+            return;
     }
 
-    /* Evaluate selection command safely. */
     if (Tcl_Eval(interp, cmd) == TCL_OK) {
         selection_list = Tcl_GetObjResult(interp);
         if (selection_list && Tcl_ListObjGetElements(interp, selection_list, &selection_count, &elems) != TCL_OK) {
-            /* If parsing fails, treat as empty selection. */
             selection_count = 0;
             elems = NULL;
         }
     } else {
-        /* Eval failed -> no selection. */
         selection_count = 0;
         elems = NULL;
     }
 
-    /* Get active index if available. */
     int active_index = -1;
     snprintf(cmd, sizeof(cmd) - 1, "%s index active", Tk_PathName(tkwin));
     if (Tcl_Eval(interp, cmd) == TCL_OK) {
         Tcl_Obj *result = Tcl_GetObjResult(interp);
         if (result && Tcl_GetIntFromObj(interp, result, &active_index) != TCL_OK) {
-            active_index = -1; /* Reset on failure. */
+            active_index = -1;
         }
     }
 
-    /* Walk all children and update states. */
     for (int i = 0; i < n_children; i++) {
         AtkObject *child = tk_ref_child(obj, i);
         if (!child) continue;
 
         gboolean is_selected = FALSE;
-
-        /* Handle selections based on role. */
         if (elems && selection_count > 0) {
             if (role == ATK_ROLE_LIST || role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_TABLE ||
                 role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR)
-		{
-		    for (Tcl_Size j = 0; j < selection_count; j++) {
-			if (!elems[j]) continue; /* Skip invalid elements. */
-			int sel_idx = -1;
-			if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
-			    is_selected = TRUE;
-			    break;
-			}
-		    }
-		}
+            {
+                for (Tcl_Size j = 0; j < selection_count; j++) {
+                    if (!elems[j]) continue;
+                    int sel_idx = -1;
+                    if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
+                        is_selected = TRUE;
+                        break;
+                    }
+                }
+            }
             else if (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)
-		{
-		    for (Tcl_Size j = 0; j < selection_count; j++) {
-			if (!elems[j]) continue; /* Skip invalid elements. */
-			const char *itemid = Tcl_GetString(elems[j]);
-			if (itemid && *itemid) {
-			    snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
-			    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-				Tcl_Obj *result = Tcl_GetObjResult(interp);
-				int sel_idx = -1;
-				if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
-				    is_selected = TRUE;
-				    break;
-				}
-			    }
-			}
-		    }
-		}
+            {
+                for (Tcl_Size j = 0; j < selection_count; j++) {
+                    if (!elems[j]) continue;
+                    const char *itemid = Tcl_GetString(elems[j]);
+                    if (itemid && *itemid) {
+                        snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
+                        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                            Tcl_Obj *result = Tcl_GetObjResult(interp);
+                            int sel_idx = -1;
+                            if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
+                                is_selected = TRUE;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        /* Update SELECTED state for this child. */
         atk_object_notify_state_change(child, ATK_STATE_SELECTED, is_selected);
-
-        /* Emit selection-changed signal on the child if selected. */
         if (is_selected) {
             g_signal_emit_by_name(child, "selection-changed");
         }
 
-        /* Update active/focused state. */
+        /* Update focus state for active child. */
         if (i == active_index) {
             atk_object_notify_state_change(child, ATK_STATE_FOCUSED, TRUE);
             g_signal_emit_by_name(child, "focus-event", TRUE);
+            g_signal_emit_by_name(obj, "active-descendant-changed", child);
+        } else {
+            atk_object_notify_state_change(child, ATK_STATE_FOCUSED, FALSE);
         }
 
-        /* Update child name so Orca has fresh text. */
         gchar *text = GetAtkValueForWidget(tkwin);
         if (text) {
             atk_object_set_name(child, text);
@@ -1827,15 +1825,7 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         g_object_unref(child);
     }
 
-    /* Emit signals on the parent object for completeness. */
     g_signal_emit_by_name(obj, "selection-changed");
-    if (active_index >= 0 && active_index < n_children) {
-        AtkObject *active_child = tk_ref_child(obj, active_index);
-        if (active_child) {
-            g_signal_emit_by_name(obj, "active-descendant-changed", active_child);
-            g_object_unref(active_child);
-        }
-    }
 }
 
 /*
@@ -2072,29 +2062,38 @@ AtkObject *atk_get_root(void) {
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path)
 {
     if (!interp || !tkwin) return NULL;
-   
-    /* Check if exists. */
+
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing) return existing;
-   
-    /* Create simple object. */
+
     TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
     acc->path = g_utf8_make_valid(path, -1);
-   
+
     AtkObject *obj = ATK_OBJECT(acc);
     AtkRole role = GetAtkRoleForWidget(tkwin);
     atk_object_set_role(obj, role);
-   
+
     gchar *name = GetAtkNameForWidget(tkwin);
     if (name) {
-	atk_object_set_name(obj, name);
-	g_free(name);
+        atk_object_set_name(obj, name);
+        g_free(name);
     }
-   
+
+    /* Check if widget has focus using TkGetFocusWin. */
+    if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_CHECK_BOX || 
+        role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_ENTRY || 
+        role == ATK_ROLE_TEXT || role == ATK_ROLE_LIST_ITEM || 
+        role == ATK_ROLE_MENU_ITEM || role == ATK_ROLE_TREE_ITEM || 
+        role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_SPIN_BUTTON) {
+        TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
+        acc->is_focused = (focusPtr == (TkWindow*)tkwin) ? 1 : 0;
+    }
+
     RegisterAtkObjectForTkWindow(tkwin, obj);
-   
+    TkAtkAccessible_RegisterEventHandlers(tkwin, acc);
+
     return obj;
 }
 
@@ -2285,17 +2284,59 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
-   
+
     AtkObject *obj = ATK_OBJECT(acc);
-    gboolean focused = (eventPtr->type == FocusIn);    
-    InvalidateVirtualChildren(acc->tkwin);
-    
+    gboolean focused = (eventPtr->type == FocusIn);
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    atk_object_set_role(obj, role);
-   
-    /* Direct signal emission. */
+
+    InvalidateVirtualChildren(acc->tkwin);
+
+    /* Emit window-level signals for toplevels. */
+    if (role == ATK_ROLE_WINDOW) {
+        if (focused) {
+            g_signal_emit_by_name(obj, "window:activate");
+        } else {
+            g_signal_emit_by_name(obj, "window:deactivate");
+        }
+    }
+
+    /* Update focus state. */
+    acc->is_focused = focused ? 1 : 0;
+    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, focused);
     g_signal_emit_by_name(obj, "focus-event", focused);
-    g_signal_emit_by_name(obj, "state-change", "focused", focused);
+
+    /* Handle child widget focus */
+    if (focused && role != ATK_ROLE_WINDOW) {
+        /* Verify this widget is the focused one using TkGetFocusWin. */
+        TkWindow *focusPtr = TkGetFocusWin((TkWindow*)acc->tkwin);
+        if (focusPtr == (TkWindow*)acc->tkwin) {
+            /* Ensure the child widget's accessible object is created. */
+            AtkObject *child_obj = GetAtkObjectForTkWindow(acc->tkwin);
+            if (!child_obj) {
+                child_obj = TkCreateAccessibleAtkObject(acc->interp, acc->tkwin, Tk_PathName(acc->tkwin));
+                if (child_obj) {
+                    AtkObject *parent_obj = GetAtkObjectForTkWindow(Tk_Parent(acc->tkwin));
+                    if (parent_obj) {
+                        atk_object_set_parent(child_obj, parent_obj);
+                        TkAtkAccessible_RegisterEventHandlers(acc->tkwin, (TkAtkAccessible *)child_obj);
+                    }
+                }
+            }
+            if (child_obj) {
+                /* Emit focus signals for the child. */
+                atk_object_notify_state_change(child_obj, ATK_STATE_FOCUSED, TRUE);
+                g_signal_emit_by_name(child_obj, "focus-event", TRUE);
+
+                /* Notify parent of active descendant change for containers. */
+                AtkObject *parent_obj = atk_object_get_parent(child_obj);
+                if (parent_obj && (role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_MENU || 
+                                   role == ATK_ROLE_MENU_BAR || role == ATK_ROLE_TREE || 
+                                   role == ATK_ROLE_TREE_TABLE)) {
+                    g_signal_emit_by_name(parent_obj, "active-descendant-changed", child_obj);
+                }
+            }
+        }
+    }
 }
 
 /*
