@@ -531,27 +531,37 @@ namespace eval ::tk::accessible {
 			   {%W set} \
 		       }
 
+
+
+
     # Menu accessibility bindings for X11 only. Menus are native
     # on macOS/Windows, so we don’t expose them here.
     if {[tk windowingsystem] eq "x11"} {
 
 	# Initialize the menu container itself when mapped.
-	bind Menu <Map> {+
-	    # If this menu is attached as a toplevel menubar, use role=menubar.
+	bind Menu {+
+	    # Determine role based on whether this is a menubar
 	    if {[winfo manager %W] eq "menubar"} {
-		set role Menubar   ;# ATK_ROLE_MENU_BAR
+		set role Menubar ;# ATK_ROLE_MENU_BAR
 	    } else {
-		set role Menu      ;# ATK_ROLE_MENU
+		set role Menu ;# ATK_ROLE_MENU
+	    }
+
+	    # Only fetch label if there is an active entry
+	    set label ""
+	    set idx [%W index active]
+	    if {$idx ne ""} {
+		set label [%W entrycget $idx -label]
 	    }
 
 	    ::tk::accessible::_init \
-			     %W \
-			     $role \
-			     [winfo name %W] \
-			     "" \
-			     [%W entrycget -active label] \
-			     {} \
-			     {}
+		       %W \
+		       $role \
+		       [winfo name %W] \
+		       "" \
+		       $label \
+		       {} \
+		       {}
 	}
 
 	# Initialize/update the currently active entry
