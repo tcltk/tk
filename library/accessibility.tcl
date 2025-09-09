@@ -539,7 +539,7 @@ namespace eval ::tk::accessible {
     if {[tk windowingsystem] eq "x11"} {
 
 	# Initialize the menu container itself when mapped.
-	bind Menu {+
+	bind Menu <Map> {+
 	    # Determine role based on whether this is a menubar
 	    if {[winfo manager %W] eq "menubar"} {
 		set role Menubar ;# ATK_ROLE_MENU_BAR
