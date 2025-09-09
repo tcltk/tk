@@ -353,7 +353,7 @@ namespace eval ::tk::accessible {
 			     [wm title %W] \
 			     {}  \
 			     {} \
-			     [%W cget -state] \
+			     {} \
 			     {} \
 			 }
 
