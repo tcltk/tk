@@ -1893,7 +1893,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
     AtkObjectClass *atk_class = ATK_OBJECT_CLASS(klass);
 
     /* Register custom AT-SPI signals. */
-    window_create_signal_id = g_signal_new("window:create",
+    window_create_signal_id = g_signal_new("window-create",
 					   TK_ATK_TYPE_ACCESSIBLE,
 					   G_SIGNAL_RUN_LAST,
 					   0,
@@ -1901,7 +1901,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 					   g_cclosure_marshal_VOID__VOID,
 					   G_TYPE_NONE, 0);
 
-    window_activate_signal_id = g_signal_new("window:activate",
+    window_activate_signal_id = g_signal_new("window-activate",
 					     TK_ATK_TYPE_ACCESSIBLE,
 					     G_SIGNAL_RUN_LAST,
 					     0,
@@ -1909,7 +1909,7 @@ static void tk_atk_accessible_class_init(TkAtkAccessibleClass *klass)
 					     g_cclosure_marshal_VOID__VOID,
 					     G_TYPE_NONE, 0);
 
-    window_deactivate_signal_id = g_signal_new("window:deactivate",
+    window_deactivate_signal_id = g_signal_new("window-deactivate",
 					       TK_ATK_TYPE_ACCESSIBLE,
 					       G_SIGNAL_RUN_LAST,
 					       0,
@@ -2323,9 +2323,9 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     /* Emit window-level signals for toplevels. */
     if (role == ATK_ROLE_WINDOW) {
         if (focused) {
-            g_signal_emit_by_name(obj, "window:activate");
+            g_signal_emit_by_name(obj, "window-activate");
         } else {
-            g_signal_emit_by_name(obj, "window:deactivate");
+            g_signal_emit_by_name(obj, "window-deactivate");
         }
     }
 

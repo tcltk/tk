@@ -698,23 +698,45 @@ namespace eval ::tk::accessible {
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+    
     # Only need to track menu selection changes on X11.
     if {[tk windowingsystem] eq "x11"} {
 	bind Menu <Up> {+
-	    %W activate [expr {[%W index active] - 1}]
-	    ::tk::accessible::_updateselection %W
+	    set idx [%W index active]
+	    if {$idx eq ""} {
+		# no active item yet, start at the last entry
+		set idx [%W index last]
+	    } else {
+		incr idx -1
+	    }
+	    if {$idx ne ""} {
+		%W activate $idx
+		::tk::accessible::_updateselection %W
+	    }
 	}
+
 	bind Menu <Down> {+
-	    %W activate [expr {[%W index active] + 1}]
-	    ::tk::accessible::_updateselection %W
+	    set idx [%W index active]
+	    if {$idx eq ""} {
+		# no active item yet, start at the first entry
+		set idx 0
+	    } else {
+		incr idx
+	    }
+	    if {$idx ne ""} {
+		%W activate $idx
+		::tk::accessible::_updateselection %W
+	    }
 	}
+
 	bind Menu <Return> {+
-	    %W invoke active
-	    ::tk::accessible::_updateselection %W
+	    if {[%W index active] ne ""} {
+		%W invoke active
+		::tk::accessible::_updateselection %W
+	    }
 	}
     }
 
-    
     # Capture value changes from scale widgets.
     bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
     bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
