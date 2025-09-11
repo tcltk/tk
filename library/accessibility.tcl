@@ -702,36 +702,43 @@ namespace eval ::tk::accessible {
     # Only need to track menu selection changes on X11.
     if {[tk windowingsystem] eq "x11"} {
 	bind Menu <Up> {+
-	    set idx [%W index active]
-	    if {$idx eq ""} {
-		# no active item yet, start at the last entry
+	    set current [%W index active]
+	    if {$current eq ""} {
 		set idx [%W index last]
 	    } else {
+		set idx [expr {$current - 1}]
+	    }
+	    set lastIndex [%W index last]
+	    while {$idx >= 0} {
+		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		    %W activate $idx
+		    ::tk::accessible::_updateselection %W
+		    break
+		}
 		incr idx -1
 	    }
-	    if {$idx ne ""} {
-		%W activate $idx
-		::tk::accessible::_updateselection %W
-	    }
 	}
-
 	bind Menu <Down> {+
-	    set idx [%W index active]
-	    if {$idx eq ""} {
-		# no active item yet, start at the first entry
+	    set current [%W index active]
+	    if {$current eq ""} {
 		set idx 0
 	    } else {
+		set idx [expr {$current + 1}]
+	    }
+	    set lastIndex [%W index last]
+	    while {$idx <= $lastIndex} {
+		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		    %W activate $idx
+		    ::tk::accessible::_updateselection %W
+		    break
+		}
 		incr idx
 	    }
-	    if {$idx ne ""} {
-		%W activate $idx
-		::tk::accessible::_updateselection %W
-	    }
 	}
-
 	bind Menu <Return> {+
-	    if {[%W index active] ne ""} {
-		%W invoke active
+	    set idx [%W index active]
+	    if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		%W invoke $idx
 		::tk::accessible::_updateselection %W
 	    }
 	}
