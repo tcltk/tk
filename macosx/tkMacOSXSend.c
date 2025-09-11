@@ -45,7 +45,7 @@ typedef struct RegisteredInterp {
  * interpreter.
  */
 
-static char *appNameRegistryPath;
+static const char *appNameRegistryPath;
 
 /*
  * Information that we record about an application.
@@ -325,11 +325,12 @@ saveAppNameRegistry(
 	Tcl_Panic("flock failed on %s", path);
     }
     /* Now we can truncate the file. */
-    ftruncate(fileno(appNameFile), 0);
+    if (ftruncate(fileno(appNameFile), 0) != 0) {
+	Tcl_Panic("ftruncate failed on %s", path);
+    }
     bytes = Tcl_GetStringFromObj(dict, &length);
     bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
     flock(fileno(appNameFile), LOCK_UN);
-	
     fclose(appNameFile);
     if (bytesWritten != length) {
 	Tcl_Panic("write failed on %s: length: %lu wrote: %lu", path,
@@ -342,10 +343,10 @@ static Tcl_Obj*
 loadAppNameRegistry(
     const char *path)
 {
-    size_t bytesRead;
-    size_t length;
-    char *bytes;
-    /* Open in ab+ so position will be at the end. */
+    size_t length, bytesRead;
+    char *bytes = NULL;
+    Tcl_Obj *result;
+    
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
 	Tcl_Panic("fopen failed on %s", path);
@@ -353,24 +354,37 @@ loadAppNameRegistry(
     if (flock(fileno(appNameFile), LOCK_EX)) {
 	Tcl_Panic("flock failed on %s", path);
     }
-    Tcl_Obj *result = NULL;
+    /*
+     * In macOS, "ab+" sets read and write position at the end.
+     * But this is not a posix requirement and does not happen
+     * on linux.  So we seek to the end anyway.
+     */
+    fseek(appNameFile, 0, SEEK_END);
     length = ftell(appNameFile);
-    bytes = ckalloc(length);
-    fseek(appNameFile, 0, SEEK_SET);
-    if (bytes) {
-	bytesRead = fread(bytes, 1, length, appNameFile);
-    } else {
-	Tcl_Panic("Out of memory");
+    if (length > 0) {
+	bytes = ckalloc(length);
+	if (bytes) {
+	    fseek(appNameFile, 0, SEEK_SET);
+	    bytesRead = fread(bytes, 1, length, appNameFile);
+	} else {
+	    Tcl_Panic("Out of memory");
+	}
     }
     flock(fileno(appNameFile), LOCK_UN);
     fclose(appNameFile);
+    if (length == 0) {
+	return Tcl_NewDictObj();
+    }
     if (bytesRead != length) {
 	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
 		length, bytesRead);
-	return NULL;
     }
     result = Tcl_NewStringObj(bytes, length);
     ckfree(bytes);
+    /*
+     * Convert the string object to a dict. If that fails the file
+     * must be corrupt, so all we can do is return an empty dict.
+     */
     Tcl_Size size;
     if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
 	result = Tcl_NewDictObj();
@@ -378,6 +392,7 @@ loadAppNameRegistry(
     return result;
 }
 
+
 /*
  *--------------------------------------------------------------
  *
@@ -1039,7 +1054,7 @@ TkSendCleanup(
 	Tk_DestroyWindow(dispPtr->commTkwin);
 	Tcl_Release(dispPtr->commTkwin);
 	dispPtr->commTkwin = NULL;
-	ckfree(appNameRegistryPath);
+	ckfree((char *) appNameRegistryPath);
     }
 }
 
