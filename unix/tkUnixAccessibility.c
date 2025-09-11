@@ -40,8 +40,6 @@ typedef struct _TkAtkAccessible {
     char *path;
     int is_focused;
     int virtual_count;
-    Tk_Window widget; /* Owning treeview widget for virtual children. */
-    char *itemid;     /* Item ID for treeview items, e.g., "I001" */
 } TkAtkAccessible;
 
 typedef struct _TkAtkAccessibleClass {
@@ -356,23 +354,24 @@ static void cleanup_virtual_child_cache(void)
     }
 }
  
-static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role) {
-    
+static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role)
+{
     if (!interp || !parent) return NULL;
+
     const char *parent_path = Tk_PathName(parent);
     char cmd[512];
     const char *label = NULL;
     char *label_copy = NULL;
-    char *itemid = NULL;
+
     /*
      * Retrieve label text depending on role. In other areas we
-     * pull this data from the core TkAccessibilityObject hash table
+     * pull this data from the core TkAccessibleObject hash table
      * via GetAtkValueForWidget, because selection events update
      * the "value" field in that hash table with the string value
      * from the selection event. However, in virtual widget creation,
      * it makes sense to pull the data via direct inquiry of the
-     * virtual widget so there is no conflict. The hash table will
-     * automatically be updated by this selection event.
+     * virtual widget so there is no conlfict. The hash table will
+     * automatically be updated by this selection event. 
      */
     switch (role) {
     case ATK_ROLE_LIST_ITEM:
@@ -382,44 +381,38 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
             label = Tcl_GetString(Tcl_GetObjResult(interp));
         }
         break;
+
     case ATK_ROLE_MENU_ITEM:
-        /* Menu: use entrycget -label. */
+	/* Menu: use entrycget -label. */
         snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", parent_path, index);
         if (Tcl_Eval(interp, cmd) == TCL_OK) {
             label = Tcl_GetString(Tcl_GetObjResult(interp));
         }
         break;
+
     case ATK_ROLE_TREE_ITEM:
-        /* Treeview: map index → item ID → cget -text or -values. */
-        snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
-        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-            Tcl_Obj *list = Tcl_GetObjResult(interp);
-            Tcl_Size count;
-            Tcl_Obj **elems;
-            if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
-                itemid = Tcl_GetString(elems[index]);
-                snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
-                if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                    label = Tcl_GetString(Tcl_GetObjResult(interp));
-                }
-                if (!label || !*label) {
-                    /* Fallback to first value in -values */
-                    snprintf(cmd, sizeof(cmd), "%s item %s -values", parent_path, itemid);
-                    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                        Tcl_Obj *val_list = Tcl_GetObjResult(interp);
-                        Tcl_Size val_count;
-                        Tcl_Obj **val_elems;
-                        if (Tcl_ListObjGetElements(interp, val_list, &val_count, &val_elems) == TCL_OK && val_count > 0) {
-                            label = Tcl_GetString(val_elems[0]);
-                        }
-                    }
-                }
-            }
-        }
-        break;
+	{
+	    /* Treeview: map index → item ID → cget -text. */
+	    snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
+	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+		Tcl_Obj *list = Tcl_GetObjResult(interp);
+		Tcl_Size count;
+		Tcl_Obj **elems;
+		if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
+		    const char *itemid = Tcl_GetString(elems[index]);
+		    snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+		    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+			label = Tcl_GetString(Tcl_GetObjResult(interp));
+		    }
+		}
+	    }
+	    break;
+	}
+
     default:
         break;
     }
+
     if (!label || !*label) {
         /* Fallback to generic name. */
         char buf[64];
@@ -428,21 +421,25 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     } else {
         label_copy = g_strdup(label);
     }
-    /* Create minimal virtual child. */
+
+    /* Create minimal virtual child. */ 
     TkAtkAccessible *child_acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     child_acc->interp = interp;
     child_acc->tkwin = NULL; /* Virtual child - real widgets have a Tk_Window associated. */
-    child_acc->widget = parent; /* Store owning widget for hierarchy */
-    child_acc->itemid = itemid ? g_strdup(itemid) : NULL; /* Store item ID for tree items */
     child_acc->path = g_strdup_printf("%s#%d", parent_path, index);
     child_acc->virtual_count = index;
+
     AtkObject *child = ATK_OBJECT(child_acc);
+
     atk_object_initialize(child, NULL);
     atk_object_set_role(child, role);
     atk_object_set_name(child, label_copy);
+
     g_free(label_copy);
+
     /* Store index for selection tracking. */
     g_object_set_data(G_OBJECT(child), "tk-index", GINT_TO_POINTER(index));
+
     /* Set parent relationship. */
     AtkObject *accParent = GetAtkObjectForTkWindow(parent);
     if (!accParent) {
@@ -454,6 +451,8 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
     if (accParent) {
         atk_object_set_parent(child, accParent);
     }
+
+    
     return child;
 }
 
@@ -513,28 +512,7 @@ static gint tk_get_n_children(AtkObject *obj)
 	    break;
 	case ATK_ROLE_TREE:
 	case ATK_ROLE_TREE_TABLE:
-	    count_cmd = NULL; /* Use children list. */
-	    if (!acc->tkwin) { /* Virtual tree item. */
-		if (acc->widget && acc->itemid) {
-		    snprintf(cmd, sizeof(cmd), "%s children %s", Tk_PathName(acc->widget), acc->itemid);
-		    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-			Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-			Tcl_Size count;
-			if (Tcl_ListObjLength(acc->interp, list, &count) == TCL_OK) {
-			    virtual_count = count;
-			}
-		    }
-		}
-	    } else { /* Treeview widget. */
-		snprintf(cmd, sizeof(cmd), "%s children {}", Tk_PathName(acc->tkwin));
-		if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-		    Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-		    Tcl_Size count;
-		    if (Tcl_ListObjLength(acc->interp, list, &count) == TCL_OK) {
-			virtual_count = count;
-		    }
-		}
-	    }
+	    count_cmd = "size";
 	    break;
 	default:
 	    break;
@@ -670,31 +648,54 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
         }
         
         /* Check if requested index is in virtual range. */
-	if (i < virtual_count && childRole != ATK_ROLE_UNKNOWN) {
-	    char *cache_key = make_virtual_child_key(Tk_PathName(acc->tkwin ? acc->tkwin : acc->widget), i);
-	    AtkObject *child = g_hash_table_lookup(virtual_child_cache, cache_key);
-	    if (!child) {
-		if (acc->tkwin) {
-		    child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
-		} else if (acc->widget && acc->itemid) {
-		    child = TkCreateVirtualChild(acc->interp, acc->widget, i, childRole);
-		    if (child) {
-			TkAtkAccessible *child_acc = (TkAtkAccessible *)child;
-			child_acc->widget = acc->widget;
-			child_acc->itemid = g_strdup(acc->itemid);
-		    }
+        if (i < virtual_count && childRole != ATK_ROLE_UNKNOWN) {
+            /* Initialize cache if needed. */
+            if (!virtual_child_cache) {
+                virtual_child_cache = g_hash_table_new_full(
+							    g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+            }
+
+            /* Check cache first. */
+            const char *parent_path = Tk_PathName(acc->tkwin);
+            char *key = make_virtual_child_key(parent_path, i);
+
+            AtkObject *child = g_hash_table_lookup(virtual_child_cache, key);
+            if (child) {
+                g_object_ref(child);
+                g_free(key);
+                return child;
+            }
+            
+            /* Create new virtual child. */
+	    child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
+	    if (child) {
+		/* Ensure parent relationship points to this accessible
+		 * object (obj).
+		 */
+		atk_object_set_parent(child, obj);
+		
+
+		if (acc->tkwin) {  /* Only register handlers for real windows. */
+		    TkAtkAccessible_RegisterEventHandlers(acc->tkwin, acc);
 		}
-		if (child) {
-		    g_hash_table_insert(virtual_child_cache, g_strdup(cache_key), child);
-		    g_object_ref(child);
-		    AtkObject *parent = acc->tkwin ? obj : GetAtkObjectForTkWindow(acc->widget);
-		    if (parent) atk_object_set_parent(child, parent);
-		}
+		/* Insert into cache: store a referenced child.
+		 * Use the allocated key as the hash key.
+		 * g_hash_table_insert takes ownership of key and
+		 * value pointers.
+		 */
+		g_hash_table_insert(virtual_child_cache, key, g_object_ref(child)); /* Cache holds one ref. */
+
+		/* Notify AT clients that a child was added at index i. */
+		g_signal_emit_by_name(obj, "children-changed::add", i, child);
+
+		/* Return a referenced child to the caller (callers expect a ref). */
+		g_object_ref(child);
+		return child;
 	    }
-	    g_free(cache_key);
-	    if (child) g_object_ref(child);
-	    return child;
-	}
+	    /* If child creation failed, free the key we allocated. */
+	    g_free(key);
+        }
+    }
     
     /* Handle native children - adjust index for virtual children. */
     gint native_index = i - virtual_count;
@@ -770,11 +771,15 @@ static AtkRole tk_get_role(AtkObject *obj)
 	return ATK_ROLE_APPLICATION;
     }
 	
-   if (acc->tkwin) {
-        return GetAtkRoleForWidget(acc->tkwin);
-    } else {
-        return atk_object_get_role(obj); /* Use role set during initialization */
+    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+    if (!acc) return ATK_ROLE_UNKNOWN;
+    
+    if (!acc->tkwin) {
+        /* Virtual child: return the role already stored in obj->role. */
+        return obj->role;
     }
+   
+    return GetAtkRoleForWidget(acc->tkwin);
 }
 
 
@@ -886,42 +891,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
                 atk_state_set_add_state(set, ATK_STATE_FOCUSED);
             }
         }
-
-	/* Additional deail for tree items. */
-	if (role == ATK_ROLE_TREE_ITEM && acc->widget && acc->itemid) {
-	    atk_state_set_add_state(state_set, ATK_STATE_SELECTABLE);
-	    char cmd[256];
-	    snprintf(cmd, sizeof(cmd), "%s selection", Tk_PathName(acc->widget));
-	    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-		Tcl_Size count;
-		Tcl_Obj **elems;
-		if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
-		    for (Tcl_Size j = 0; j < count; j++) {
-			if (strcmp(Tcl_GetString(elems[j]), acc->itemid) == 0) {
-			    atk_state_set_add_state(state_set, ATK_STATE_SELECTED);
-			    break;
-			}
-		    }
-		}
-	    }
-	    snprintf(cmd, sizeof(cmd), "%s children %s", Tk_PathName(acc->widget), acc->itemid);
-	    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-		Tcl_Size count;
-		if (Tcl_ListObjLength(acc->interp, list, &count) == TCL_OK && count > 0) {
-		    atk_state_set_add_state(state_set, ATK_STATE_EXPANDABLE);
-		    snprintf(cmd, sizeof(cmd), "%s item %s -open", Tk_PathName(acc->widget), acc->itemid);
-		    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-			int open;
-			if (Tcl_GetBooleanFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &open) == TCL_OK && open) {
-			    atk_state_set_add_state(state_set, ATK_STATE_EXPANDED);
-			}
-		    }
-		}
-	    }
-	    return set;
-	}
+        return set;
+    }
 
     /* Real widget. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
@@ -1865,24 +1836,11 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
  * Functions to initialize and manage the parent ATK class and object instances.
  */
 
-static void tk_atk_accessible_init(TkAtkAccessible *accessible)
+static void tk_atk_accessible_init(TkAtkAccessible *self)
 {
-    accessible->tkwin = NULL;
-    accessible->interp = NULL;
-    accessible->x = accessible->y = accessible->width = accessible->height = 0;
-    accessible->path = NULL;
-    accessible->is_focused = 0;
-    accessible->virtual_count = 0;
-    accessible->widget = NULL;
-    accessible->itemid = NULL;
-}
-
-static void tk_atk_accessible_finalize(GObject *gobject)
-{
-    TkAtkAccessible *acc = (TkAtkAccessible *)gobject;
-    if (acc->path) g_free(acc->path);
-    if (acc->itemid) g_free(acc->itemid);
-    G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
+    self->tkwin = NULL;
+    self->interp = NULL;
+    self->path = NULL;
 }
 
 static void tk_atk_accessible_finalize(GObject *gobject)
@@ -2592,7 +2550,8 @@ static int IsScreenReaderActive(void)
  
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    (void)clientData;
+	(void) clientData; 
+	
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
         return TCL_ERROR;
@@ -2610,29 +2569,20 @@ int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
         return TCL_ERROR;
     }
 
-    /* Check if window already has an accessible object. */
+    /* Check if already registered. */
     if (GetAtkObjectForTkWindow(tkwin)) {
         return TCL_OK;
     }
 
+    /* Create accessible object. */
     TkAtkAccessible *accessible = (TkAtkAccessible*) TkCreateAccessibleAtkObject(interp, tkwin, windowName);
     if (accessible == NULL) {
         Tcl_SetResult(interp, "Failed to create accessible object.", TCL_STATIC);
         return TCL_ERROR;
     }
 
-    /* Register toplevel windows only. */
-    if (Tk_IsTopLevel(tkwin)) {
-        RegisterToplevelWindow(interp, tkwin, ATK_OBJECT(accessible));
-    } else {
-        AtkObject *parent = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
-        if (!parent) {
-            Tk_Window toplevel = GetToplevelOfWidget(tkwin);
-            if (toplevel) parent = GetAtkObjectForTkWindow(toplevel);
-        }
-        if (parent) atk_object_set_parent(ATK_OBJECT(accessible), parent);
-        RegisterAtkObjectForTkWindow(tkwin, ATK_OBJECT(accessible));
-    }
+    /* Always use RegisterToplevelWindow for proper hierarchy. */
+    RegisterToplevelWindow(interp, tkwin, ATK_OBJECT(accessible));
 
     return TCL_OK;
 }
