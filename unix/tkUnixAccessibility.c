@@ -512,8 +512,25 @@ static gint tk_get_n_children(AtkObject *obj)
 	    break;
 	case ATK_ROLE_TREE:
 	case ATK_ROLE_TREE_TABLE:
-	    count_cmd = "size";
+	    /* Tree: get the top-level children list and count its length. */
+	    char tcmd[256];
+	    snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
+	    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+	    Tcl_IncrRefCount(savedResult);
+	    if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
+		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
+		Tcl_Size count;
+		Tcl_Obj **elems;
+		if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
+		    virtual_count = (int)count;
+		    if (virtual_count < 0) virtual_count = 0;
+		}
+	    }
+	    Tcl_SetObjResult(acc->interp, savedResult);
+	    Tcl_DecrRefCount(savedResult);
+	    /* We handled the tree case here — don't use the generic integer-path below. */
 	    break;
+
 	default:
 	    break;
         }
@@ -618,8 +635,22 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 	    break;
 	case ATK_ROLE_TREE:
 	case ATK_ROLE_TREE_TABLE:
-	    childRole = ATK_ROLE_TREE_ITEM;
-	    count_cmd = "size";
+	    /* Tree: get the top-level children list and count its length. */
+	    char tcmd[256];
+	    snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
+	    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+	    Tcl_IncrRefCount(savedResult);
+	    if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
+		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
+		Tcl_Size count;
+		Tcl_Obj **elems;
+		if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
+		    virtual_count = (int)count;
+		    if (virtual_count < 0) virtual_count = 0;
+		}
+	    }
+	    Tcl_SetObjResult(acc->interp, savedResult);
+	    Tcl_DecrRefCount(savedResult);
 	    break;
 	default:
 	    break;
