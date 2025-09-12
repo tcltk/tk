@@ -392,7 +392,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
 
     case ATK_ROLE_TREE_ITEM:
 	{
-	    /* Treeview: map index → item ID → cget -text. */
+	    /* Treeview: map index → item ID → cget -values. */
 	    snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
 	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
 		Tcl_Obj *list = Tcl_GetObjResult(interp);
@@ -400,10 +400,10 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
 		Tcl_Obj **elems;
 		if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
 		    const char *itemid = Tcl_GetString(elems[index]);
-		    snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+		    snprintf(cmd, sizeof(cmd), "%s item [lindex %s 0] -values", parent_path, itemid);
 		    if (Tcl_Eval(interp, cmd) == TCL_OK) {
 			label = Tcl_GetString(Tcl_GetObjResult(interp));
-		    }
+		    } 
 		}
 	    }
 	    break;
@@ -1716,9 +1716,9 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         role != ATK_ROLE_TABLE && role != ATK_ROLE_TREE &&
         role != ATK_ROLE_TREE_TABLE && role != ATK_ROLE_MENU &&
         role != ATK_ROLE_MENU_BAR)
-    {
-        return;
-    }
+	{
+	    return;
+	}
 
     Tcl_Interp *interp = Tk_Interp(tkwin);
     if (!interp) return;
@@ -1733,19 +1733,19 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
     char cmd[512] = {0};
 
     switch (role) {
-        case ATK_ROLE_LIST:
-        case ATK_ROLE_LIST_BOX:
-        case ATK_ROLE_TABLE:
-            snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
-            break;
-        case ATK_ROLE_MENU:
-        case ATK_ROLE_MENU_BAR:
-        case ATK_ROLE_TREE:
-        case ATK_ROLE_TREE_TABLE:
-            snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
-            break;
-        default:
-            return;
+    case ATK_ROLE_LIST:
+    case ATK_ROLE_LIST_BOX:
+    case ATK_ROLE_TABLE:
+	snprintf(cmd, sizeof(cmd) - 1, "%s curselection", Tk_PathName(tkwin));
+	break;
+    case ATK_ROLE_MENU:
+    case ATK_ROLE_MENU_BAR:
+    case ATK_ROLE_TREE:
+    case ATK_ROLE_TREE_TABLE:
+	snprintf(cmd, sizeof(cmd) - 1, "%s selection", Tk_PathName(tkwin));
+	break;
+    default:
+	return;
     }
 
     if (Tcl_Eval(interp, cmd) == TCL_OK) {
@@ -1776,40 +1776,40 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
         if (elems && selection_count > 0) {
             if (role == ATK_ROLE_LIST || role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_TABLE ||
                 role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR)
-            {
-                for (Tcl_Size j = 0; j < selection_count; j++) {
-                    if (!elems[j]) continue;
-                    int sel_idx = -1;
-                    if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
-                        is_selected = TRUE;
-                        break;
-                    }
-                }
-            }
+		{
+		    for (Tcl_Size j = 0; j < selection_count; j++) {
+			if (!elems[j]) continue;
+			int sel_idx = -1;
+			if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK && sel_idx == i) {
+			    is_selected = TRUE;
+			    break;
+			}
+		    }
+		}
             else if (role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)
-            {
-                for (Tcl_Size j = 0; j < selection_count; j++) {
-                    if (!elems[j]) continue;
-                    const char *itemid = Tcl_GetString(elems[j]);
-                    if (itemid && *itemid) {
-                        snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
-                        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                            Tcl_Obj *result = Tcl_GetObjResult(interp);
-                            int sel_idx = -1;
-                            if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
-                                is_selected = TRUE;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+		{
+		    for (Tcl_Size j = 0; j < selection_count; j++) {
+			if (!elems[j]) continue;
+			const char *itemid = Tcl_GetString(elems[j]);
+			if (itemid && *itemid) {
+			    snprintf(cmd, sizeof(cmd) - 1, "%s index %s", Tk_PathName(tkwin), itemid);
+			    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+				Tcl_Obj *result = Tcl_GetObjResult(interp);
+				int sel_idx = -1;
+				if (result && Tcl_GetIntFromObj(interp, result, &sel_idx) == TCL_OK && sel_idx == i) {
+				    is_selected = TRUE;
+				    break;
+				}
+			    }
+			}
+		    }
+		}
         }
 
-        atk_object_notify_state_change(child, ATK_STATE_SELECTED, is_selected);
-        if (is_selected) {
+	atk_object_notify_state_change(child, ATK_STATE_SELECTED, is_selected);
+	if (is_selected) {
             g_signal_emit_by_name(child, "selection-changed");
-        }
+	}
 
         /* Update focus state for active child. */
         if (i == active_index) {
@@ -1871,7 +1871,7 @@ static void tk_atk_accessible_finalize(GObject *gobject)
             g_list_free(keys_to_remove);
         }
         
-		InvalidateVirtualChildren(self->tkwin);
+	InvalidateVirtualChildren(self->tkwin);
         cleanup_virtual_child_cache();
         
         /* Unregister from tracking structures. */
@@ -2409,7 +2409,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     const char *windowName = Tcl_GetString(objv[1]);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) return TCL_OK;  /* Window not found, nothing to do. */
-	InvalidateVirtualChildren(tkwin);
+    InvalidateVirtualChildren(tkwin);
 
     /* Ensure AtkObject exists for this window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
@@ -2550,7 +2550,7 @@ static int IsScreenReaderActive(void)
  
 int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-	(void) clientData; 
+    (void) clientData; 
 	
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");

@@ -118,18 +118,9 @@ namespace eval ::tk::accessible {
 
     # Get data from ttk::treeview.
     proc _gettreeviewdata {w} {
-	#tree
-	if {[::tk::accessible::_checktree $w] eq "Tree"} {
-	    set data [$w item [$w selection] -text]
-	} else {
-	    #table
-	    set values [$w item [$w selection] -values]
-	    set headers [::tk::accessible::_getcolumnnames $w]
-	    set data [join [lmap h $headers v $values {format "%s: %s" $h $v}] ", "]
-	}
-	return $data
+	set values [$w item [lindex [$w selection] 0] -values]
+	return $values
     }
-
 
     # Get treeview column names.
     proc _getcolumnnames {w} {
