@@ -54,7 +54,8 @@ TTKAPI void		Ttk_RegisterCleanup(Tcl_Interp *interp,
 				void *deleteData,
 				Ttk_CleanupProc *cleanupProc);
 /* 5 */
-TTKAPI int		Ttk_RegisterElementSpec(Ttk_Theme theme,
+TTK_DEPRECATED("Use Ttk_RegisterElement")
+int			Ttk_RegisterElementSpec(Ttk_Theme theme,
 				const char *elementName,
 				const Ttk_ElementSpec *elementSpec,
 				void *clientData);
@@ -153,7 +154,7 @@ typedef struct TtkStubs {
     Ttk_Theme (*ttk_GetCurrentTheme) (Tcl_Interp *interp); /* 2 */
     Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp *interp, const char *name, Ttk_Theme parent); /* 3 */
     void (*ttk_RegisterCleanup) (Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc); /* 4 */
-    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
+    TCL_DEPRECATED_API("Use Ttk_RegisterElement") int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
     Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp *interp, Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 6 */
     int (*ttk_RegisterElementFactory) (Tcl_Interp *interp, const char *name, Ttk_ElementFactory factoryProc, void *clientData); /* 7 */
     void (*ttk_RegisterLayout) (Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec); /* 8 */
@@ -279,5 +280,9 @@ extern const TtkStubs *ttkStubsPtr;
 #endif /* defined(USE_TTK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#ifdef TK_NO_DEPRECATED
+#   undef Ttk_RegisterElementSpec
+#endif
 
 #endif /* _TTKDECLS */
