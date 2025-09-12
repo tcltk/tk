@@ -1372,7 +1372,7 @@ Ttk_CreateVsapiElement(
     elementPtr->className = wname;
 
     elementData = NewElementData(themeData->procs, elementPtr);
-    Ttk_RegisterElementSpec(
+    Ttk_RegisterElement(NULL, 
 	theme, elementName, elementPtr->elementSpec, elementData);
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
@@ -1441,12 +1441,12 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
 	void *clientData = NewElementData(procs, infoPtr);
-	Ttk_RegisterElementSpec(
+	Ttk_RegisterElement(NULL, 
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
     }
 
-    Ttk_RegisterElementSpec(themePtr, "Scale.trough", &ttkNullElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Scale.trough", &ttkNullElementSpec, 0);
 
     /*
      * Layouts:

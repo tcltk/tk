@@ -961,23 +961,23 @@ TtkWinTheme_Init(
 	return TCL_ERROR;
     }
 
-    Ttk_RegisterElementSpec(themePtr, "border", &BorderElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "Button.border",
+    Ttk_RegisterElement(NULL, themePtr, "border", &BorderElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "Button.border",
 	&ButtonBorderElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "field", &FieldElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "focus", &FocusElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "Combobox.focus",
+    Ttk_RegisterElement(NULL, themePtr, "field", &FieldElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "focus", &FocusElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "Combobox.focus",
 	&ComboboxFocusElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "thumb", &ThumbElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "slider", &SliderElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "Scrollbar.trough", &TroughElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "thumb", &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "slider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "Scrollbar.trough", &TroughElementSpec,
 	TroughClientDataInit(interp));
 
-    Ttk_RegisterElementSpec(themePtr, "tab", &TabElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "client", &ClientElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "tab", &TabElementSpec, NULL);
+    Ttk_RegisterElement(NULL, themePtr, "client", &ClientElementSpec, NULL);
 
     for (fce = FrameControlElements; fce->name != 0; ++fce) {
-	Ttk_RegisterElementSpec(themePtr, fce->name,
+	Ttk_RegisterElement(NULL, themePtr, fce->name,
 		&FrameControlElementSpec, (void *)fce);
     }
 
