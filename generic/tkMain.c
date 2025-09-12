@@ -199,7 +199,7 @@ Tk_MainEx(
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtcl9tk9.?.dll, not this one. */
+	 * Tk_MainEx function of cygtcl9tk9.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
 	    TkCygwinMainEx(argc, argv, appInitProc, interp);
