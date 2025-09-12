@@ -922,6 +922,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
     return elementClass;
 }
 
+#ifndef TK_NO_DEPRECATED
 /* Ttk_RegisterElementSpec (deprecated) --
  *	Register a new element.
  */
@@ -931,6 +932,7 @@ int Ttk_RegisterElementSpec(Ttk_Theme theme,
     return Ttk_RegisterElement(NULL, theme, name, specPtr, clientData)
 	   ? TCL_OK : TCL_ERROR;
 }
+#endif /* TK_NO_DEPRECATED */
 
 /*------------------------------------------------------------------------
  * +++ Element record initialization.
