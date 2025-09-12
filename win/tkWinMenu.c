@@ -1925,18 +1925,16 @@ DrawMenuEntryAccelerator(
      * Draw disabled 3D text highlight only with the Win95/98 look.
      */
 
-    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
-	if ((mePtr->state == ENTRY_DISABLED)
-		&& (menuPtr->disabledFgPtr != NULL) && (accel != NULL)) {
-	    COLORREF oldFgColor = gc->foreground;
+    if ((mePtr->state == ENTRY_DISABLED)
+	    && (menuPtr->disabledFgPtr != NULL) && (accel != NULL)) {
+	COLORREF oldFgColor = gc->foreground;
 
-	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	    if (!(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
-		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
-			mePtr->accelLength, leftEdge + 1, baseline + 1);
-	    }
-	    gc->foreground = oldFgColor;
+	gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+	if (!(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
+	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
+		    mePtr->accelLength, leftEdge + 1, baseline + 1);
 	}
+	gc->foreground = oldFgColor;
     }
 
     if (accel != NULL) {
@@ -2469,22 +2467,20 @@ DrawMenuEntryLabel(
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
-	    if (TkWinGetPlatformTheme() != TK_THEME_WIN_XP) {
 		/*
 		 * Win 95/98 systems draw disabled menu text with a 3D
 		 * highlight, unless the menu item is highlighted,
 		 */
 
-		if ((mePtr->state == ENTRY_DISABLED) &&
-			!(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
-		    COLORREF oldFgColor = gc->foreground;
+	    if ((mePtr->state == ENTRY_DISABLED) &&
+		    !(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
+		COLORREF oldFgColor = gc->foreground;
 
-		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-		    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
-			    mePtr->labelLength, leftEdge + textXOffset + 1,
-			    baseline + textYOffset + 1);
-		    gc->foreground = oldFgColor;
-		}
+		gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+		Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
+			mePtr->labelLength, leftEdge + textXOffset + 1,
+			baseline + textYOffset + 1);
+		gc->foreground = oldFgColor;
 	    }
 	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
 		    mePtr->labelLength, leftEdge + textXOffset,
@@ -3382,10 +3378,6 @@ SetDefaults(
     Tcl_DStringInit(&menuFontDString);
 
     metrics.cbSize = sizeof(metrics);
-
-    if (TkWinGetPlatformTheme() != TK_THEME_WIN_VISTA) {
-	metrics.cbSize -= sizeof(int);
-    }
 
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, metrics.cbSize,
 	    &metrics, 0);
