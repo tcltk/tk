@@ -43,6 +43,11 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XPutImage
 #define TkUnusedStubEntry 0
 
+#ifdef TK_NO_DEPRECATED
+#   undef TkWinGetPlatformTheme
+#   define TkWinGetPlatformTheme 0
+#endif /* TK_NO_DEPRECATED */
+
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
@@ -188,6 +193,7 @@ TkPutImage(
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
 #	define TkWinSetHINSTANCE 0
+#	undef TkWinGetPlatformTheme
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
