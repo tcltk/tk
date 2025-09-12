@@ -188,9 +188,11 @@ MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
  * Values returned by TkWinGetPlatformTheme.
  */
 
-#define TK_THEME_WIN_CLASSIC    1
-#define TK_THEME_WIN_XP         2
-#define TK_THEME_WIN_VISTA      3
+#ifndef TK_NO_DEPRECATED
+#   define TK_THEME_WIN_CLASSIC    1
+#   define TK_THEME_WIN_XP         2
+#   define TK_THEME_WIN_VISTA      3
+#endif
 
 /*
  * The following is implemented in tkWinWm and used by tkWinEmbed.c

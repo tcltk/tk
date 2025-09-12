@@ -43,6 +43,10 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XPutImage
 #define TkUnusedStubEntry 0
 
+#ifdef TK_NO_DEPRECATED
+#	define TkWinGetPlatformTheme 0
+#endif /* TK_NO_DEPRECATED */
+
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
