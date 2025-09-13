@@ -984,33 +984,18 @@ static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_SPIN_BUTTON) {
-        /* Fallback for other roles. */
         if (value) *value = 0.0;
         if (text) *text = g_strdup("0");
         return;
     }
 
-    /* Query current value from widget. */
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(acc->tkwin));
-    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
-    Tcl_IncrRefCount(savedResult);
-    double cur_val = 0.0;
-    const char *text_str = NULL;
-    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        text_str = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-        if (Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &cur_val) != TCL_OK) {
-            cur_val = 0.0;
-        }
-    }
-    Tcl_SetObjResult(acc->interp, savedResult);
-    Tcl_DecrRefCount(savedResult);
+    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    double cur_val = val ? atof(val) : 0.0;
 
     if (value) *value = cur_val;
-    if (text) {
-        *text = g_strdup(text_str ? text_str : "0");  /* Fallback text. */
-    }
+    if (text) *text = g_strdup(val ? val : "0");
 }
+
 
 static AtkRange *tk_get_range(AtkValue *obj)
 {
