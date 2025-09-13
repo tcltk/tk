@@ -119,6 +119,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj);
 /* ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
+static void tk_get_minimum_value(AtkValue *obj, GValue *value);
+static void tk_get_maximum_value(AtkValue *obj, GValue *value);
 static void tk_atk_value_interface_init(AtkValueIface *iface);
 
 /* ATK action interface. */
@@ -969,25 +971,46 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
     return value ? g_utf8_make_valid(value, -1) : NULL;
 }
 
-
- 
-static void tk_get_current_value(AtkValue *obj, GValue *value)
+static void tk_get_current_value (AtkValue *obj, GValue *value)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin) {
         return;
     }
 
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
+    gchar *val_str = GetAtkValueForWidget(acc->tkwin);
+    gdouble val = 0.0;
 
-    g_value_init(value, G_TYPE_STRING);
-    g_value_set_string(value, val ? val : "");
+    if (val_str) {
+        val = g_ascii_strtod(val_str, NULL);
+        g_free(val_str); /* avoid leak */
+    }
+
+    g_value_init(value, G_TYPE_DOUBLE);
+    g_value_set_double(value, val);
 }
 
+static void tk_get_minimum_value(AtkValue *obj, GValue *value)
+{
+	(void) obj;
+    /* Stub: Return 0.0 to satisfy interface. */
+    g_value_init(value, G_TYPE_DOUBLE);
+    g_value_set_double(value, 0.0);
+}
+
+static void tk_get_maximum_value(AtkValue *obj, GValue *value)
+{
+	(void) obj;
+    /* Stub: Return 0.0 to satisfy interface. */
+    g_value_init(value, G_TYPE_DOUBLE);
+    g_value_set_double(value, 0.0);
+}
 
 static void tk_atk_value_interface_init(AtkValueIface *iface)
 {
     iface->get_current_value = tk_get_current_value;
+    iface->get_minimum_value = tk_get_minimum_value;
+    iface->get_maximum_value = tk_get_maximum_value;
 }
 
 /*
@@ -2502,12 +2525,13 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 	g_signal_emit_by_name(obj, "text-selection-changed");
     }
 
-    /* Handle value-changed for sliders, spin buttons, and progress bars. */
+    /* Handle value-changed for sliders, spin buttons, scrollbars, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
 	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
 	{
 	    GValue gval = G_VALUE_INIT;
 	    tk_get_current_value(ATK_VALUE(obj), &gval);
+
 	    gdouble new_val = 0.0;
 	    if (G_VALUE_HOLDS_DOUBLE(&gval)) {
 		new_val = g_value_get_double(&gval);
@@ -2515,9 +2539,17 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 		const char *s = g_value_get_string(&gval);
 		if (s) new_val = g_ascii_strtod(s, NULL);
 	    }
+
+	    /* Notify ATK clients. */
+	    g_signal_emit_by_name(obj, "value-changed");
+	    g_object_notify(G_OBJECT(obj), "accessible-value");
+
 	    g_value_unset(&gval);
-	    g_signal_emit_by_name(obj, "value-changed", new_val, 0.0);
 	}
+
+
+    /* Invalidate virtual children if needed (e.g., for spinbox-linked lists) */
+    InvalidateVirtualChildren(tkwin);
 
     return TCL_OK;
 }
