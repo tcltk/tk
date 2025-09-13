@@ -992,7 +992,7 @@ static void tk_get_current_value (AtkValue *obj, GValue *value)
 
 static void tk_get_minimum_value(AtkValue *obj, GValue *value)
 {
-	(void) obj;
+    (void) obj;
     /* Stub: Return 0.0 to satisfy interface. */
     g_value_init(value, G_TYPE_DOUBLE);
     g_value_set_double(value, 0.0);
@@ -1000,7 +1000,7 @@ static void tk_get_minimum_value(AtkValue *obj, GValue *value)
 
 static void tk_get_maximum_value(AtkValue *obj, GValue *value)
 {
-	(void) obj;
+    (void) obj;
     /* Stub: Return 0.0 to satisfy interface. */
     g_value_init(value, G_TYPE_DOUBLE);
     g_value_set_double(value, 0.0);
@@ -1025,6 +1025,33 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	return FALSE;
     }
 
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    AtkObject *obj = GetAtkObjectForTkWindow(acc->tkwin);
+    
+    if (role == ATK_ROLE_SPIN_BUTTON) {
+        if (i < 0 || i > 1) return FALSE;  /* Only support 0 and 1. */
+
+	/* Retrieve current value that was updated at script level. */
+	GValue gval = G_VALUE_INIT;
+	tk_get_current_value(ATK_VALUE(obj), &gval);
+
+	gdouble new_val = 0.0;
+	if (G_VALUE_HOLDS_DOUBLE(&gval)) {
+	    new_val = g_value_get_double(&gval);
+	} else if (G_VALUE_HOLDS_STRING(&gval)) {
+	    const char *s = g_value_get_string(&gval);
+	    if (s) new_val = g_ascii_strtod(s, NULL);
+	}
+
+	/* Notify ATK clients. */
+	g_signal_emit_by_name(obj, "value-changed");
+	g_object_notify(G_OBJECT(obj), "accessible-value");
+
+	g_value_unset(&gval);
+	return TRUE;
+    }
+
+   /* Fallback: Generic "click" action for other roles. */ 
     if (i == 0) {
 	/* Retrieve the command string.  */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
@@ -1048,19 +1075,31 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     return TRUE;
 }
 
+
 static gint tk_action_get_n_actions(AtkAction *action)
 {
-    (void) action;
+    TkAtkAccessible *acc = (TkAtkAccessible *)action;
+    if (!acc || !acc->tkwin) return 1;  /* Default to 1 for non-spin. */
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role == ATK_ROLE_SPIN_BUTTON) {
+        return 2;  /* increment + decrement */
+    }
     return 1;
 }
 
 static const gchar *tk_action_get_name(AtkAction *action, gint i)
 {
-    (void) action;
-    if (i == 0) {
-	return "click";
+    TkAtkAccessible *acc = (TkAtkAccessible *)action;
+    if (!acc || !acc->tkwin) return NULL;
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role == ATK_ROLE_SPIN_BUTTON) {
+        if (i == 0) return "increment";    /* Orca-friendly name for up action. */
+        if (i == 1) return "decrement";    /* Orca-friendly name for down action. */
     }
-    return NULL;
+    if (i == 0) return "click";  /* Fallback for generic actions. */
+    return NULL;  /* Invalid index. */
 }
 
 static void tk_atk_action_interface_init(AtkActionIface *iface)
