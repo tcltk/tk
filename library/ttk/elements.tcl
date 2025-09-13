@@ -1,13 +1,13 @@
 #==============================================================================
 # elements.tcl - Copyright © 2025 Csaba Nemethi <csaba.nemethi@t-online.de>
 #
-# Contains procedures that create the *Tglswitch*.trough and *Tglswitch*.slider
+# Contains procedures that create the Tglswitch*.trough and Tglswitch*.slider
 # elements for the Toggleswitch* styles.
 #
 # Structure of the module:
 #   - Private helper procedures and data
-#   - Private procedures creating the elements for the built-in themes
-#   - Private procedures creating the elements for a few third-party themes
+#   - Generic private procedures creating the elements for arbitrary themes
+#   - Private procedures creating the elements for a few built-in themes
 #   - Public procedures
 #==============================================================================
 
@@ -41,7 +41,9 @@ proc ttk::toggleswitch::Rgb2Hsv rgb {
     if {$d == 0} {
 	set h 0.0
     } elseif {$max == $r} {
-	set h [expr {60 * fmod(($g - $b) / $d, 6)}]
+	set frac [expr {fmod(($g - $b) / $d, 6)}]
+	if {$frac < 0} { set frac [expr {$frac + 6}] }
+	set h [expr {60 * $frac}]
     } elseif {$max == $g} {
 	set h [expr {60 * (($b - $r) / $d + 2)}]
     } else {
@@ -98,9 +100,8 @@ proc ttk::toggleswitch::NormalizeColor color {
 # Checks whether a given color can be classified as light.
 #------------------------------------------------------------------------------
 proc ttk::toggleswitch::IsColorLight color {
-    set rgb [NormalizeColor $color]
-    lassign [Rgb2Hsv $rgb] h s v
-    return [expr {$v > 50}]
+    lassign [winfo rgb . $color] r g b
+    return [expr {5 * ($g >> 8) + 2 * ($r >> 8) + ($b >> 8) > 8 * 192}]
 }
 
 interp alias {} ttk::toggleswitch::CreateImg \
@@ -134,65 +135,75 @@ namespace eval ttk::toggleswitch {
     variable madeElements 0
 }
 
-# Private procedures creating the elements for the built-in themes
-# ================================================================
+# Generic private procedures creating the elements for arbitrary themes
+# =====================================================================
 
 #------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_default
+# ttk::toggleswitch::CreateElements_genericLight
 #------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_default {} {
-    variable elemInfoArr
-    if {[info exists elemInfoArr(default)]} {
-	return ""
-    }
-
+proc ttk::toggleswitch::CreateElements_genericLight {} {
     variable troughData
     variable sliderData
     variable onAndroid
 
+    set bg [ttk::style lookup . -background {} #d9d9d9]
+    scan [NormalizeColor $bg] "#%02x%02x%02x" r g b
+    set hasDarkerBg [expr {$r <= 0xd9 && $g <= 0xd9 && $b <= 0xd9}]
+
+    set selBg [ttk::style lookup . -selectbackground {} #000000]
+    if {[IsColorLight $selBg]} { set selBg #4a6984 }
+    set selBg [NormalizeColor $selBg]
+
     foreach n {1 2 3} {
 	# troughOffImg
 	set imgData $troughData($n)
-	set fill "#c3c3c3"
+	set fill [expr {$hasDarkerBg ? "#c3c3c3" : "#d3d3d3"}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOffImg [CreateImg -data $imgData]
 
 	# troughOffActiveImg
 	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#b3b3b3"}]
+	set fill2 [expr {$hasDarkerBg ? "#b3b3b3" : "#c3c3c3"}]
+	set fill [expr {$onAndroid ? $fill : $fill2}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOffActiveImg [CreateImg -data $imgData]
 
 	# troughOffPressedImg
 	set imgData $troughData($n)
-	append imgData "fill='#a3a3a3'/>\n</svg>"
+	set fill [expr {$hasDarkerBg ? "#a3a3a3" : "#b3b3b3"}]
+	append imgData "fill='$fill'/>\n</svg>"
 	set troughOffPressedImg [CreateImg -data $imgData]
 
 	# troughOffDisabledImg
 	set imgData $troughData($n)
-	append imgData "fill='#cecece'/>\n</svg>"
+	set fill [expr {$hasDarkerBg ? "#d1d1d1" : "#e1e1e1"}]
+	append imgData "fill='$fill'/>\n</svg>"
 	set troughOffDisabledImg [CreateImg -data $imgData]
 
 	# troughOnImg
 	set imgData $troughData($n)
-	set fill [Hsv2Rgb 208 43.9 51.8]			;# #4a6984
+	set fill $selBg
+	lassign [Rgb2Hsv $fill] h s v
+	set dv [expr {$v < 80 ? 10 : -10}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOnImg [CreateImg -data $imgData]
 
 	# troughOnActiveImg
 	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 208 43.9 61.8]}]
+	set v [expr {$v + $dv}]
+	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb $h $s $v]}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOnActiveImg [CreateImg -data $imgData]
 
 	# troughOnPressedImg
 	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 208 43.9 71.8]'/>\n</svg>"
+	set v [expr {$v + $dv}]
+	append imgData "fill='[Hsv2Rgb $h $s $v]'/>\n</svg>"
 	set troughOnPressedImg [CreateImg -data $imgData]
 
 	# troughOnDisabledImg
 	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 208 33.9 100]'/>\n</svg>"
+	append imgData "fill='[Hsv2Rgb $h 33.3 100]'/>\n</svg>"
 	set troughOnDisabledImg [CreateImg -data $imgData]
 
 	CreateElem Tglswitch$n.trough image [list $troughOffImg \
@@ -211,33 +222,20 @@ proc ttk::toggleswitch::CreateElements_default {} {
         set sliderImg [CreateImg -data $imgData]
 
 	CreateElem Tglswitch$n.slider image $sliderImg
-
-	ttk::style layout Toggleswitch$n [list \
-	    Tglswitch.focus -sticky nswe -children [list \
-		Tglswitch.padding -sticky nswe -children [list \
-		    Tglswitch$n.trough -sticky {} -children [list \
-			Tglswitch$n.slider -side left -sticky {}
-		    ]
-		]
-	    ]
-	]
     }
-
-    set elemInfoArr(default) 1
 }
 
 #------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_defaultDark
+# ttk::toggleswitch::CreateElements_genericDark
 #------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_defaultDark {} {
-    variable elemInfoArr
-    if {[info exists elemInfoArr(defaultDark)]} {
-	return ""
-    }
-
+proc ttk::toggleswitch::CreateElements_genericDark {} {
     variable troughData
     variable sliderData
     variable onAndroid
+
+    set selBg [ttk::style lookup . -selectbackground {} #000000]
+    if {[IsColorLight $selBg]} { set selBg #4a6984 }
+    set selBg [NormalizeColor $selBg]
 
     foreach n {1 2 3} {
 	# troughOffImg
@@ -264,27 +262,34 @@ proc ttk::toggleswitch::CreateElements_defaultDark {} {
 
 	# troughOnImg
 	set imgData $troughData($n)
-	set fill [Hsv2Rgb 208 43.9 51.8]			;# #4a6984
+	set fill $selBg
+	lassign [Rgb2Hsv $fill] h s v
+	set vOrig $v
+	set dv [expr {$v < 80 ? 10 : -10}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOnImg [CreateImg -data $imgData]
 
 	# troughOnActiveImg
 	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 208 43.9 61.8]}]
+	set v [expr {$v + $dv}]
+	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb $h $s $v]}]
 	append imgData "fill='$fill'/>\n</svg>"
 	set troughOnActiveImg [CreateImg -data $imgData]
 
 	# troughOnPressedImg
 	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 208 43.9 71.8]'/>\n</svg>"
+	set v [expr {$v + $dv}]
+	append imgData "fill='[Hsv2Rgb $h $s $v]'/>\n</svg>"
 	set troughOnPressedImg [CreateImg -data $imgData]
 
 	# troughOnDisabledImg
 	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 208 43.9 41.8]'/>\n</svg>"
+	set v [expr {$vOrig - 10}]
+	if {$v < 0} { set v 0 }
+	append imgData "fill='[Hsv2Rgb $h $s $v]'/>\n</svg>"
 	set troughOnDisabledImg [CreateImg -data $imgData]
 
-	CreateElem DarkTglswitch$n.trough image [list $troughOffImg \
+	CreateElem Tglswitch$n.trough image [list $troughOffImg \
 	    {selected disabled}	$troughOnDisabledImg \
 	    {selected pressed}	$troughOnPressedImg \
 	    {selected active}	$troughOnActiveImg \
@@ -314,7 +319,7 @@ proc ttk::toggleswitch::CreateElements_defaultDark {} {
 	append imgData "fill='#ffffff'/>\n</svg>"
 	set sliderImg [CreateImg -data $imgData]
 
-	CreateElem DarkTglswitch$n.slider image [list $sliderOffImg \
+	CreateElem Tglswitch$n.slider image [list $sliderOffImg \
 	    {selected disabled}	$sliderOnDisabledImg \
 	    selected		$sliderImg \
 	    disabled		$sliderOffDisabledImg \
@@ -322,9 +327,10 @@ proc ttk::toggleswitch::CreateElements_defaultDark {} {
 	    active		$sliderImg \
 	]
     }
-
-    set elemInfoArr(defaultDark) 1
 }
+
+# Private procedures creating the elements for a few built-in themes
+# ==================================================================
 
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CreateElements_clam
@@ -945,547 +951,22 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
     }
 }
 
-# Private procedures creating the elements for a few third-party themes
-# =====================================================================
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_droid
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_droid {} {
-    variable troughData
-    variable sliderData
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	append imgData "fill='#c3c3c3'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#a3a3a3'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#cecece'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 36.1 62.0]'/>\n</svg>"    ;# #657a9e
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 36.1 82.0]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 26.1 100]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	]
-
-	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image $sliderImg
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_plastik
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_plastik {} {
-    variable troughData
-    variable sliderData
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	append imgData "fill='#d7d7d7'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#b7b7b7'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#e2e2e2'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 36.1 62.0]'/>\n</svg>"    ;# #657a9e
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 36.1 82.0]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 218 26.1 100]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	]
-
-	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image $sliderImg
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_awarc
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_awarc {} {
-    variable troughData
-    variable sliderData
-    variable onAndroid
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	set fill "#d7d7d7"
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#c7c7c7"}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffActiveImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#b7b7b7'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#e2e2e2'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	set fill [Hsv2Rgb 213 63.7 88.6]			;# #5294e2
-	append imgData "fill='#5294e2'/>\n</svg>"
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 213 63.7 78.6]}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnActiveImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 213 63.7 68.6]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 213 33.7 100]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    {selected active}	$troughOnActiveImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	    active		$troughOffActiveImg \
-	]
-
-	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image $sliderImg
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_awbreeze
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_awbreeze {} {
-    variable troughData
-    variable sliderData
-    variable onAndroid
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	set fill "#d7d7d7"
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#c7c7c7"}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffActiveImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#b7b7b7'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#e2e2e2'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	set fill [Hsv2Rgb 201 73.8 91.4]			;# #3daee9
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 201 73.8 81.4]}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnActiveImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 201 73.8 71.4]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 201 33.8 100]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    {selected active}	$troughOnActiveImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	    active		$troughOffActiveImg \
-	]
-
-	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image $sliderImg
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_awbreezedark
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_awbreezedark {} {
-    variable troughData
-    variable sliderData
-    variable onAndroid
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	set fill "#585858"
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#676767"}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffActiveImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#787878'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#4a4a4a'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	set fill [Hsv2Rgb 201 66.9 67.5]			;# #3984ac
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 201 66.9 77.5]}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnActiveImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 201 66.9 87.5]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 201 66.9 57.5]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    {selected active}	$troughOnActiveImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	    active		$troughOffActiveImg \
-	]
-
-	# sliderOffImg
-	set imgData $sliderData($n)
-	append imgData "fill='#d3d3d3'/>\n</svg>"
-	set sliderOffImg [CreateImg -data $imgData]
-
-	# sliderOffDisabledImg
-	set imgData $sliderData($n)
-	append imgData "fill='#888888'/>\n</svg>"
-	set sliderOffDisabledImg [CreateImg -data $imgData]
-
-	# sliderOnDisabledImg
-	set imgData $sliderData($n)
-	append imgData "fill='#9f9f9f'/>\n</svg>"
-	set sliderOnDisabledImg [CreateImg -data $imgData]
-
-	# sliderImg
-	set imgData $sliderData($n)
-	append imgData "fill='#ffffff'/>\n</svg>"
-	set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image [list $sliderOffImg \
-	    {selected disabled}	$sliderOnDisabledImg \
-	    selected		$sliderImg \
-	    disabled		$sliderOffDisabledImg \
-	    pressed		$sliderImg \
-	    active		$sliderImg \
-	]
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_awlight
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_awlight {} {
-    variable troughData
-    variable sliderData
-    variable onAndroid
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	set fill "#d7d7d7"
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#c7c7c7"}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffActiveImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#b7b7b7'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#e2e2e2'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	set fill [Hsv2Rgb 211 79.0 48.6]			;# #1a497c
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 211 79.0 58.6]}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnActiveImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 211 79.0 68.6]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 211 29.0 100]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    {selected active}	$troughOnActiveImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	    active		$troughOffActiveImg \
-	]
-
-	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image $sliderImg
-    }
-}
-
-#------------------------------------------------------------------------------
-# ttk::toggleswitch::CreateElements_awdark
-#------------------------------------------------------------------------------
-proc ttk::toggleswitch::CreateElements_awdark {} {
-    variable troughData
-    variable sliderData
-    variable onAndroid
-
-    foreach n {1 2 3} {
-	# troughOffImg
-	set imgData $troughData($n)
-	set fill "#585858"
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffImg [CreateImg -data $imgData]
-
-	# troughOffActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : "#676767"}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOffActiveImg [CreateImg -data $imgData]
-
-	# troughOffPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='#787878'/>\n</svg>"
-	set troughOffPressedImg [CreateImg -data $imgData]
-
-	# troughOffDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='#4a4a4a'/>\n</svg>"
-	set troughOffDisabledImg [CreateImg -data $imgData]
-
-	# troughOnImg
-	set imgData $troughData($n)
-	set fill [Hsv2Rgb 211 78.8 61.2]			;# #215d9c
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnImg [CreateImg -data $imgData]
-
-	# troughOnActiveImg
-	set imgData $troughData($n)
-	set fill [expr {$onAndroid ? $fill : [Hsv2Rgb 211 78.8 71.2]}]
-	append imgData "fill='$fill'/>\n</svg>"
-	set troughOnActiveImg [CreateImg -data $imgData]
-
-	# troughOnPressedImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 211 78.8 81.2]'/>\n</svg>"
-	set troughOnPressedImg [CreateImg -data $imgData]
-
-	# troughOnDisabledImg
-	set imgData $troughData($n)
-	append imgData "fill='[Hsv2Rgb 211 78.8 51.2]'/>\n</svg>"
-	set troughOnDisabledImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.trough image [list $troughOffImg \
-	    {selected disabled}	$troughOnDisabledImg \
-	    {selected pressed}	$troughOnPressedImg \
-	    {selected active}	$troughOnActiveImg \
-	    selected		$troughOnImg \
-	    disabled		$troughOffDisabledImg \
-	    pressed		$troughOffPressedImg \
-	    active		$troughOffActiveImg \
-	]
-
-	# sliderOffImg
-	set imgData $sliderData($n)
-	append imgData "fill='#d3d3d3'/>\n</svg>"
-	set sliderOffImg [CreateImg -data $imgData]
-
-	# sliderOffDisabledImg
-	set imgData $sliderData($n)
-	append imgData "fill='#888888'/>\n</svg>"
-	set sliderOffDisabledImg [CreateImg -data $imgData]
-
-	# sliderOnDisabledImg
-	set imgData $sliderData($n)
-	append imgData "fill='#9f9f9f'/>\n</svg>"
-	set sliderOnDisabledImg [CreateImg -data $imgData]
-
-	# sliderImg
-	set imgData $sliderData($n)
-	append imgData "fill='#ffffff'/>\n</svg>"
-	set sliderImg [CreateImg -data $imgData]
-
-	CreateElem Tglswitch$n.slider image [list $sliderOffImg \
-	    {selected disabled}	$sliderOnDisabledImg \
-	    selected		$sliderImg \
-	    disabled		$sliderOffDisabledImg \
-	    pressed		$sliderImg \
-	    active		$sliderImg \
-	]
-    }
-}
-
 # Public procedures
 # =================
 
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CreateElements
 #
-# Creates the *Tglswitch*.trough and *Tglswitch*.slider elements for the
+# Creates the Tglswitch*.trough and Tglswitch*.slider elements for the
 # Toggleswitch* styles if they don't yet exist.  Invoked by the procedures
 # ttk::toggleswitch::CondMakeElements and ttk::toggleswitch::CondUpdateElements
 # below.
 #------------------------------------------------------------------------------
 proc ttk::toggleswitch::CreateElements {} {
     set theme [ttk::style theme use]
-    set themeMod $theme
-    set mod ""
-
-    if {$theme eq "default"} {
-	set fg [ttk::style lookup . -foreground]
-	if {[IsColorLight $fg]} {
-	    set themeMod defaultDark
-	    set mod "Dark"
-	}
-    }
 
     variable elemInfoArr
-    if {[info exists elemInfoArr($themeMod)]} {
+    if {[info exists elemInfoArr($theme)]} {
 	if {$theme eq "aqua"} {
 	    UpdateElements_$theme
 	}
@@ -1493,9 +974,9 @@ proc ttk::toggleswitch::CreateElements {} {
 	return ""
     }
 
-    switch $themeMod {
-	default - defaultDark - clam - vista - aqua {
-	    CreateElements_$themeMod
+    switch $theme {
+	clam - vista - aqua {
+	    CreateElements_$theme
 	}
 	winnative - xpnative {
 	    ttk::style theme settings vista { CreateElements_vista }
@@ -1505,28 +986,22 @@ proc ttk::toggleswitch::CreateElements {} {
 	    }
 	}
 	default {
-	    if {[llength [info commands CreateElements_$themeMod]] == 1} {
-		# Currently for droid, plastik, awarc, awbreeze,
-		# awbreezedark, awlight, and awdark.  For any other
-		# theme $theme, the application can provide its own
+	    if {[llength [info commands CreateElements_$theme]] == 1} {
+		# The application can provide its own
 		# ttk::toggleswitch::CreateElements_$theme command.
 		#
-		CreateElements_$themeMod
-	    } else {	;# for alt, classic, and further third-party themes
-		set fg [ttk::style lookup . -foreground {} black]
+		CreateElements_$theme
+	    } else {
+		set fg [ttk::style lookup . -foreground {} #000000]
 		if {[IsColorLight $fg]} {
-		    set mod "Dark"
-		}
-
-		ttk::style theme settings default { CreateElements_default$mod }
-		foreach n {1 2 3} {
-		    CreateElem ${mod}Tglswitch$n.trough from default
-		    CreateElem ${mod}Tglswitch$n.slider from default
+		    CreateElements_genericDark
+		} else {
+		    CreateElements_genericLight
 		}
 	    }
 	}
     }
-    set elemInfoArr($themeMod) 1
+    set elemInfoArr($theme) 1
 
     if {$theme eq "aqua"} {
 	foreach n {1 2 3} {
@@ -1547,8 +1022,8 @@ proc ttk::toggleswitch::CreateElements {} {
 	    ttk::style layout Toggleswitch$n [list \
 		Tglswitch.focus -sticky nswe -children [list \
 		    Tglswitch.padding -sticky nswe -children [list \
-			${mod}Tglswitch$n.trough -sticky {} -children [list \
-			    ${mod}Tglswitch$n.slider -side left -sticky {}
+			Tglswitch$n.trough -sticky {} -children [list \
+			    Tglswitch$n.slider -side left -sticky {}
 			]
 		    ]
 		]
@@ -1568,7 +1043,7 @@ proc ttk::toggleswitch::CreateElements {} {
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CondMakeElements
 #
-# Creates the *Tglswitch*.trough and *Tglswitch*.slider elements for the
+# Creates the Tglswitch*.trough and Tglswitch*.slider elements for the
 # Toggleswitch* styles if necessary.  Invoked from within the C code, by the
 # widget initialization hook.
 #------------------------------------------------------------------------------
@@ -1583,7 +1058,7 @@ proc ttk::toggleswitch::CondMakeElements {} {
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CondUpdateElements
 #
-# Updates the *Tglswitch*.trough and *Tglswitch*.slider elements for the
+# Updates the Tglswitch*.trough and Tglswitch*.slider elements for the
 # Toggleswitch* styles if necessary.  Invoked from within the proc
 # ttk::ThemeChanged (see ttk.tcl) and the C code for macOSX, after sending the
 # virtual events <<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>>.
