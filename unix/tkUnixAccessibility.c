@@ -635,6 +635,7 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 	    break;
 	case ATK_ROLE_TREE:
 	case ATK_ROLE_TREE_TABLE:
+	    childRole = ATK_ROLE_TREE_ITEM;
 	    /* Tree: get the top-level children list and count its length. */
 	    char tcmd[256];
 	    snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
