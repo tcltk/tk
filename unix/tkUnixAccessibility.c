@@ -26,9 +26,11 @@
 #ifdef USE_ATK
 #include <atk/atk.h>
 #include <atk/atktext.h>
+#include <atk/atkvalue.h>
 #include <atk-bridge.h>
 #include <dbus/dbus.h>
 #include <glib.h>
+
 
 
 /* Structs for custom ATK objects bound to Tk. */
@@ -118,6 +120,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj);
 
 /* ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
+static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text);
+static AtkRange *tk_get_range(AtkValue *obj);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
 static void tk_get_minimum_value(AtkValue *obj, GValue *value);
 static void tk_get_maximum_value(AtkValue *obj, GValue *value);
@@ -759,7 +763,6 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
     return NULL;
 }
 
-
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
     if (!win) return ATK_ROLE_UNKNOWN;
@@ -815,7 +818,6 @@ static AtkRole tk_get_role(AtkObject *obj)
    
     return GetAtkRoleForWidget(acc->tkwin);
 }
-
 
 static gchar *GetAtkNameForWidget(Tk_Window win)
 {
@@ -877,7 +879,6 @@ static void tk_set_name(AtkObject *obj, const gchar *name)
     if (!acc) return; 
     atk_object_set_name(obj, name);
 }
-
 
 static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 {
@@ -971,46 +972,122 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
     return value ? g_utf8_make_valid(value, -1) : NULL;
 }
 
-static void tk_get_current_value (AtkValue *obj, GValue *value)
+/* Modern AtkValue methods (replace deprecated stubs). */
+static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    if (!acc || !acc->tkwin) {
+    if (!acc || !acc->tkwin || !acc->interp) {
+        if (value) *value = 0.0;
+        if (text) *text = g_strdup("0.0");
         return;
     }
 
-    gchar *val_str = GetAtkValueForWidget(acc->tkwin);
-    gdouble val = 0.0;
-
-    if (val_str) {
-        val = g_ascii_strtod(val_str, NULL);
-        g_free(val_str); /* avoid leak */
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_SPIN_BUTTON) {
+        /* Fallback for other roles. */
+        if (value) *value = 0.0;
+        if (text) *text = g_strdup("0");
+        return;
     }
 
+    /* Query current value from widget. */
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(acc->tkwin));
+    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+    Tcl_IncrRefCount(savedResult);
+    double cur_val = 0.0;
+    const char *text_str = NULL;
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        text_str = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+        if (Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &cur_val) != TCL_OK) {
+            cur_val = 0.0;
+        }
+    }
+    Tcl_SetObjResult(acc->interp, savedResult);
+    Tcl_DecrRefCount(savedResult);
+
+    if (value) *value = cur_val;
+    if (text) {
+        *text = g_strdup(text_str ? text_str : "0");  /* Fallback text. */
+    }
+}
+
+static AtkRange *tk_get_range(AtkValue *obj)
+{
+    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return NULL;
+    }
+
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+    if (role != ATK_ROLE_SPIN_BUTTON) {
+        return NULL;  /* Not applicable. */
+    }
+
+    /* Query -from and -to via Tcl. */
+    double min_val = 0.0, max_val = 0.0;
+    char cmd[256];
+
+    /* Min (-from). */
+    snprintf(cmd, sizeof(cmd), "%s cget -from", Tk_PathName(acc->tkwin));
+    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+    Tcl_IncrRefCount(savedResult);
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &min_val);
+    }
+    Tcl_SetObjResult(acc->interp, savedResult);
+    Tcl_DecrRefCount(savedResult);
+
+    /* Max (-to). */
+    snprintf(cmd, sizeof(cmd), "%s cget -to", Tk_PathName(acc->tkwin));
+    savedResult = Tcl_GetObjResult(acc->interp);
+    Tcl_IncrRefCount(savedResult);
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
+    }
+    Tcl_SetObjResult(acc->interp, savedResult);
+    Tcl_DecrRefCount(savedResult);
+
+    /* Create and return AtkRange (caller owns ref; no type arg needed). */
+    return atk_range_new(min_val, max_val, NULL);
+}
+
+/* Deprecated methods - updated to call modern ones (for compatibility). */
+static void tk_get_current_value(AtkValue *obj, GValue *value)
+{
+    gdouble val = 0.0;
+    gchar *text = NULL;
+    tk_get_value_and_text(obj, &val, &text);
     g_value_init(value, G_TYPE_DOUBLE);
     g_value_set_double(value, val);
+    g_free(text);
 }
 
 static void tk_get_minimum_value(AtkValue *obj, GValue *value)
 {
-    (void) obj;
-    /* Stub: Return 0.0 to satisfy interface. */
+    AtkRange *range = tk_get_range(obj);
+    gdouble min_val = range ? atk_range_get_lower_limit(range) : 0.0;
+    if (range) g_object_unref(range);
     g_value_init(value, G_TYPE_DOUBLE);
-    g_value_set_double(value, 0.0);
+    g_value_set_double(value, min_val);
 }
 
 static void tk_get_maximum_value(AtkValue *obj, GValue *value)
 {
-    (void) obj;
-    /* Stub: Return 0.0 to satisfy interface. */
+    AtkRange *range = tk_get_range(obj);
+    gdouble max_val = range ? atk_range_get_upper_limit(range) : 0.0;
+    if (range) g_object_unref(range);
     g_value_init(value, G_TYPE_DOUBLE);
-    g_value_set_double(value, 0.0);
+    g_value_set_double(value, max_val);
 }
 
 static void tk_atk_value_interface_init(AtkValueIface *iface)
 {
-    iface->get_current_value = tk_get_current_value;
-    iface->get_minimum_value = tk_get_minimum_value;
-    iface->get_maximum_value = tk_get_maximum_value;
+    iface->get_value_and_text = tk_get_value_and_text;  
+    iface->get_range = tk_get_range;  
+    iface->get_current_value = tk_get_current_value;  /* Deprecated fallback. */
+    iface->get_minimum_value = tk_get_minimum_value;  /* Deprecated fallback. */
+    iface->get_maximum_value = tk_get_maximum_value;  /* Deprecated fallback. */
 }
 
 /*
