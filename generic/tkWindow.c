@@ -2987,7 +2987,7 @@ DeleteWindowsExitProc(
 static HMODULE tkcygwindll = NULL;
 
 /*
- * Run Tk_MainEx from libtcl9tk9.?.dll
+ * Run Tk_MainEx from cygtcl9tk9.?.dll
  *
  * This function is only ever called from wish9.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
@@ -3008,12 +3008,12 @@ TkCygwinMainEx(
     size_t len;
     void (*tkmainex)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-    /* construct "<path>/libtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
+    /* construct "<path>/cygtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
     len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = '.';
-    name[len-1] = name[len-5];
-    wcscpy(name+len, L".dll");
-    memcpy(name+len-12, L"libtcl9tk9", 10 * sizeof(WCHAR));
+    name[len-2] = '.';   /* "<path>/tcl9tk9?.d.l" */
+    name[len-1] = name[len-5];   /* "<path>/tcl9tk9?.d.?" */
+    wcscpy(name+len, L".dll");   /* "<path>/tcl9tk9?.d.?.dll" */
+    memcpy(name+len-12, L"cygtcl9tk9", 10 * sizeof(WCHAR));   /* "<path>/cygtcl9tk9.?.dll" */
 
     tkcygwindll = LoadLibraryW(name);
     if (tkcygwindll) {
