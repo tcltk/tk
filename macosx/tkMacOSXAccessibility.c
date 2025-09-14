@@ -93,7 +93,8 @@ const struct MacRoleMap roleMap[] = {
  *----------------------------------------------------------------------
  */
 
-static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
+static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
+{
     
     /*Convert screen coordinates to window base coordinates.*/
     NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
@@ -122,7 +123,8 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window) {
  */
 
 
-void  PostAccessibilityAnnouncement( NSString *message) {
+void PostAccessibilityAnnouncement(NSString *message)
+{
     NSDictionary *userInfo = @{ NSAccessibilityAnnouncementKey: message,
 				NSAccessibilityPriorityKey : @(NSAccessibilityPriorityHigh),};
     NSAccessibilityPostNotificationWithUserInfo([NSApp mainWindow], 
@@ -144,13 +146,15 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 @implementation TkAccessibilityElement : NSAccessibilityElement
 
-- (id) init {
+- (id) init
+{
     self = [super init];
     return self;
 }
 
-/*Foundational method. All actions derive from the role returned here.*/
-- (NSAccessibilityRole)accessibilityRole {
+/* Foundational method. All actions derive from the role returned here.*/
+- (NSAccessibilityRole) accessibilityRole
+{
     Tk_Window win = self.tk_win;
     if (!win) {
         return nil;
@@ -183,7 +187,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 
 
-- (NSString *)accessibilityLabel {
+- (NSString *) accessibilityLabel
+{
 
       NSAccessibilityRole role = self.accessibilityRole;
  
@@ -214,7 +219,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return macdescription;
 }
   
--(id) accessibilityValue {
+-(id) accessibilityValue
+{
  
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -237,7 +243,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 
-- (NSString*)accessibilityTitle {
+- (NSString*) accessibilityTitle
+{
 
     NSAccessibilityRole role = self.accessibilityRole;
 
@@ -270,7 +277,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return mactitle;
 }
 
-- (NSString*)accessibilityHint {
+- (NSString*) accessibilityHint
+{
 
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -293,7 +301,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 } 
 
 
-- (NSRect)accessibilityFrame {
+- (NSRect) accessibilityFrame
+{
     
     Tk_Window path;
     path = self.tk_win;
@@ -351,7 +360,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return screenrect;
 }
 
-- (NSString*) accessibilityIdentifier {
+- (NSString*) accessibilityIdentifier
+{
 
     int x = arc4random_uniform(1000);
     NSNumber *id = [NSNumber numberWithInt: x];
@@ -360,7 +370,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 }
 
 
-- (id)accessibilityParent {
+- (id) accessibilityParent
+{
     
     Tk_Window win = self.tk_win;
     TkWindow *winPtr = (TkWindow *)win;
@@ -376,8 +387,10 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 	return nil;
     }
 
-    /* Tk window exists. Set the TKContentView as the accessibility
-       parent. */
+    /* 
+     * Tk window exists. Set the TKContentView as the 
+     * accessibility parent. 
+     */
     if (winPtr->window) {
 	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
 	if (!view || ![view isKindOfClass:[TKContentView class]]) {
@@ -389,20 +402,24 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return nil;
 }
 
-- (BOOL) accessibilityIsFocused {
+- (BOOL) accessibilityIsFocused
+{
     return [self.accessibilityParent window] == [NSApp keyWindow];
 }
 
-- (BOOL)becomeFirstResponder {
+- (BOOL)becomeFirstResponder
+{
     return TRUE;
 }
 
 
-- (BOOL)isAccessibilityElement {
+- (BOOL)isAccessibilityElement
+{
     return YES;
 }
 
-- (BOOL)accessibilityIsIgnored {
+- (BOOL)accessibilityIsIgnored
+{
 
     /* Check if Tk state is disabled. If so, ignore accessible atribute. */
     Tk_Window win = self.tk_win;
@@ -430,8 +447,9 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return NO;
 }
 
-/*Various actions for buttons. */
-- (void)accessibilityPerformAction:(NSAccessibilityActionName)action {
+/* Various actions for buttons. */
+- (void) accessibilityPerformAction: (NSAccessibilityActionName)action
+{
     if ([action isEqualToString:NSAccessibilityPressAction]) {
         [self accessibilityPerformPress];
     }  
@@ -439,7 +457,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
 
 
 /*Action for button roles.*/
-- (BOOL)accessibilityPerformPress {
+- (BOOL) accessibilityPerformPress
+{
  
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
@@ -465,7 +484,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     return YES;
 }
 
-- (void) forceFocus {
+- (void) forceFocus
+{
 
     TkMainInfo *info = TkGetMainInfoList();
     NSString *widgetName = [NSString stringWithUTF8String:Tk_PathName(self.tk_win)];
@@ -477,7 +497,8 @@ void  PostAccessibilityAnnouncement( NSString *message) {
     }
 }
 
-- (id)invalidateAndRelease {
+- (id)invalidateAndRelease
+{
 
     if (!self.tk_win) {
 	return nil;	
@@ -508,9 +529,7 @@ void  PostAccessibilityAnnouncement( NSString *message) {
  * Event proc which calls the ActionEventProc procedure.
  */
 
-static int
-ActionEventProc(TCL_UNUSED(Tcl_Event *),
-    TCL_UNUSED(int))
+static int ActionEventProc(TCL_UNUSED(Tcl_Event *), TCL_UNUSED(int))
 {
     TkMainInfo *info = TkGetMainInfoList();
     Tcl_GlobalEval(info->interp, callback_command);
@@ -534,11 +553,7 @@ ActionEventProc(TCL_UNUSED(Tcl_Event *),
  *----------------------------------------------------------------------
  */
 
-int IsVoiceOverRunning (
-		      TCL_UNUSED(void *),
-		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
-		      Tcl_Obj *const objv[])	/* Argument objects. */
+int IsVoiceOverRunning(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {
 
     (void) objc;
@@ -579,11 +594,7 @@ int IsVoiceOverRunning (
  */
 
 static int
-EmitSelectionChanged(
-		      TCL_UNUSED(void *),
-		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
-		      Tcl_Obj *const objv[])	/* Argument objects. */
+EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {	
     if (objc < 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
@@ -635,7 +646,8 @@ EmitSelectionChanged(
  *----------------------------------------------------------------------
  */
 
-void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement) {
+void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement)
+{
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, TkMacOSXAccessibility_DestroyHandler, accessibilityElement);
 }
 
@@ -655,7 +667,8 @@ void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibili
  *----------------------------------------------------------------------
  */
 
-static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr) {
+static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr)
+{
     if (eventPtr->type == DestroyNotify) {
         TkAccessibilityElement *element = (TkAccessibilityElement *)clientData;
         if (element) {
@@ -684,12 +697,7 @@ static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *
  *----------------------------------------------------------------------
  */
 
-static int
-TkMacOSXAccessibleObjCmd(
-		      TCL_UNUSED(void *),
-		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
-		      Tcl_Obj *const objv[])	/* Argument objects. */
+static int TkMacOSXAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {	
     if (objc < 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
@@ -732,7 +740,8 @@ TkMacOSXAccessibleObjCmd(
  *----------------------------------------------------------------------
  */
 
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp) {
+int TkMacOSXAccessibility_Init(Tcl_Interp * interp)
+{
 
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
