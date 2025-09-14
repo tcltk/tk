@@ -376,7 +376,7 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
      * the "value" field in that hash table with the string value
      * from the selection event. However, in virtual widget creation,
      * it makes sense to pull the data via direct inquiry of the
-     * virtual widget so there is no conlfict. The hash table will
+     * virtual widget so there is no conflict. The hash table will
      * automatically be updated by this selection event. 
      */
     switch (role) {
@@ -857,7 +857,7 @@ static const gchar *tk_get_name(AtkObject *obj)
 	 * This is written via selection events at the script levels.
 	 * Callbacks into the Tcl interpreter to get the directly selected
 	 * index in the Atk selection functions also retrieve this value.
-	 * However, those calls are ncessary for fine-grained index tracking in
+	 * However, those calls are necessary for fine-grained index tracking in
 	 * the accessible selection API. Here it's simpler to retrieve
 	 * the string from the value field in the hash table. 
 	 */
