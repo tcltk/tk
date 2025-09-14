@@ -1157,7 +1157,7 @@ static gint tk_action_get_n_actions(AtkAction *action)
     case ATK_ROLE_SLIDER:
     case ATK_ROLE_SCROLLBAR:
     case ATK_ROLE_PROGRESS_BAR:
-        return 0;  /* Value-only controls, no actions */
+        return 0;  /* Value-only controls, no actions. */
     default:
         return 0;
     }
