@@ -106,6 +106,13 @@ namespace eval ::tk::accessible {
 	return $data
     }
 
+    # Get text in entry widget.
+    proc _getentrytext {w} {
+	set data [$w get]
+	return $data
+    }
+    
+
     # Attempt to verify if treeview is tree or table. This works
     # for simple cases but may not be perfect. 
     proc _checktree {w} {
@@ -130,10 +137,56 @@ namespace eval ::tk::accessible {
 	    lappend headerlist $text
 	}
 	return $headerlist
-    }	
+    }
 
+    # Get selection status from radiobuttons.
+    proc _getradiodata {w} {
+	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
+	    set var [$w cget -variable]
+	    if {$var eq ""} {
+		return "not selected"
+	    }
+	    set varvalue [set $var]
+	    set val [$w cget -value]
+	    if {$varvalue eq $val} {
+		return "selected"
+	    } else {
+		return "not selected"
+	    }
+	}
+    }
+
+        # Get selection status from checkbuttons.
+       proc _getcheckdata {w} {
+	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
+	    set var [$w cget -variable]
+	    if {$var eq ""} {
+		return "0"
+	    }
+	    set varvalue [set $var]
+	    set val [$w cget -onvalue]
+	    if {$varvalue eq $val} {
+		return "1"
+	    } else {
+		return "0"
+	    }
+	}
+    }
+
+	    
     # Update data selection for various widgets. 
     proc _updateselection {w} {
+	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
+	    set data [::tk::accessible::_getradiodata $w]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
+	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
+	    set data [::tk::accessible::_getcheckdata $w]
+	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::emit_selection_change $w
+	}
+	    
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get [$w curselection]]
 	    ::tk::accessible::acc_value $w $data
@@ -145,7 +198,7 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
-	    set data [$w get]
+	    set data [::tk::accessible::_getentrytext $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
@@ -500,7 +553,7 @@ namespace eval ::tk::accessible {
 				 [%W cget -text] \
 				 [%W cget -variable] \
 				 [%W cget -state] \
-				 {% invoke}\
+				 {%W invoke}\
 			     }
 
     # Scale/TScale bindings.
@@ -756,6 +809,13 @@ namespace eval ::tk::accessible {
     bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
     bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
     bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
+
+    # Capture selection events for radio/checkbuttons.
+    bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+
 
     #Capture notebook selection
     bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
