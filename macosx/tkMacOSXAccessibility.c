@@ -41,9 +41,10 @@ static int ActionEventProc(Tcl_Event *ev, int flags);
 char *callback_command;
 
 /* 
- * Map script-level roles to AX role strings - NSAccessibilityRole constants will
- * not compile in C code. The equivalent NSStrings, e.g. NSAccessibilityListRole,
- * can be used for comparison in functions. 
+ * Map script-level roles to AX role strings, which are drawn from the macOS
+ * Accessibility API used by client-side apps. NSAccessibilityRole constants
+ * will not compile in C code, but these are equivalent. The NSStrings,
+ * e.g. NSAccessibilityListRole, can be used for comparison in methods. 
  */
 
 struct MacRoleMap {
@@ -92,10 +93,10 @@ const struct MacRoleMap roleMap[] = {
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
 {
     
-    /*Convert screen coordinates to window base coordinates.*/
+    /* Convert screen coordinates to window base coordinates. */
     NSPoint windowpoint= [window convertRectFromScreen:NSMakeRect(screenpoint.x, screenpoint.y, 0, 0)].origin;
     
-    /*Flip the y-axis to make it top-left origin.*/
+    /* Flip the y-axis to make it top-left origin. */
     CGFloat flipped = window.contentView.frame.size.height - windowpoint.y;
     
     return NSMakePoint(windowpoint.x, flipped);
@@ -148,7 +149,7 @@ void PostAccessibilityAnnouncement(NSString *message)
     return self;
 }
 
-/* Foundational method. All actions derive from the role returned here.*/
+/* Foundational method. All actions derive from the role returned here. */
 - (NSAccessibilityRole) accessibilityRole
 {
     Tk_Window win = self.tk_win;
