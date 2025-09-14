@@ -29,18 +29,14 @@
 extern Tcl_HashTable *TkAccessibilityObject;
 static NSPoint FlipY(NSPoint screenpoint, NSWindow *window);
 void PostAccessibilityAnnouncement(NSString *message);
-static int TkMacOSXAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+static int TkMacOSXAccessibleObjCmd(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr);
 void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
-int IsVoiceOverRunning(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+int IsVoiceOverRunning(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int ActionEventProc(TCL_UNUSED(Tcl_Event *),
-			   TCL_UNUSED(int));
+static int ActionEventProc(Tcl_Event *ev, int flags);
 
 char *callback_command;
 
@@ -529,8 +525,11 @@ void PostAccessibilityAnnouncement(NSString *message)
  * Event proc which calls the ActionEventProc procedure.
  */
 
-static int ActionEventProc(TCL_UNUSED(Tcl_Event *), TCL_UNUSED(int))
+static int ActionEventProc(Tcl_Event *ev, int flags)
 {
+    (void) ev;
+    (void) flags;
+    
     TkMainInfo *info = TkGetMainInfoList();
     Tcl_GlobalEval(info->interp, callback_command);
     return 1;
@@ -553,9 +552,10 @@ static int ActionEventProc(TCL_UNUSED(Tcl_Event *), TCL_UNUSED(int))
  *----------------------------------------------------------------------
  */
 
-int IsVoiceOverRunning(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+int IsVoiceOverRunning(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {
 
+    (void) clientData;
     (void) objc;
     (void) objv;
 
@@ -593,9 +593,10 @@ int IsVoiceOverRunning(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *con
  *----------------------------------------------------------------------
  */
 
-static int
-EmitSelectionChanged(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
-{	
+static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+{
+    (void) clientData;
+    
     if (objc < 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
 	return TCL_ERROR;
@@ -697,8 +698,10 @@ static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *
  *----------------------------------------------------------------------
  */
 
-static int TkMacOSXAccessibleObjCmd(TCL_UNUSED(void *),Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
-{	
+static int TkMacOSXAccessibleObjCmd(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+{
+    (void) clientData;
+    
     if (objc < 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "window?");
 	return TCL_ERROR;
