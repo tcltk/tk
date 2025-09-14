@@ -1005,35 +1005,35 @@ static AtkRange *tk_get_range(AtkValue *obj)
     }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_SPIN_BUTTON) {
-        return NULL;  /* Not applicable. */
-    }
-
-    /* Query -from and -to via Tcl. */
     double min_val = 0.0, max_val = 0.0;
     char cmd[256];
 
-    /* Min (-from). */
-    snprintf(cmd, sizeof(cmd), "%s cget -from", Tk_PathName(acc->tkwin));
-    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
-    Tcl_IncrRefCount(savedResult);
-    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &min_val);
-    }
-    Tcl_SetObjResult(acc->interp, savedResult);
-    Tcl_DecrRefCount(savedResult);
+    if (role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_SLIDER) {
+        /* Spinbox/Scale: -from .. -to. */
+        snprintf(cmd, sizeof(cmd), "%s cget -from", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &min_val);
+        }
 
-    /* Max (-to). */
-    snprintf(cmd, sizeof(cmd), "%s cget -to", Tk_PathName(acc->tkwin));
-    savedResult = Tcl_GetObjResult(acc->interp);
-    Tcl_IncrRefCount(savedResult);
-    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
+        snprintf(cmd, sizeof(cmd), "%s cget -to", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
+        }
     }
-    Tcl_SetObjResult(acc->interp, savedResult);
-    Tcl_DecrRefCount(savedResult);
+    else if (role == ATK_ROLE_PROGRESS_BAR || role == ATK_ROLE_SCROLLBAR) {
+        /* Progressbar/Scrollbar: 0 .. -maximum (default 100.) */
+        min_val = 0.0;
+        max_val = 100.0;
 
-    /* Create and return AtkRange (caller owns ref; no type arg needed). */
+        snprintf(cmd, sizeof(cmd), "%s cget -maximum", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
+        }
+    }
+    else {
+        return NULL; /* Not applicable. */
+    }
+
     return atk_range_new(min_val, max_val, NULL);
 }
 
@@ -1141,13 +1141,26 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 static gint tk_action_get_n_actions(AtkAction *action)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
-    if (!acc || !acc->tkwin) return 1;  /* Default to 1 for non-spin. */
+    if (!acc || !acc->tkwin) return 0;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role == ATK_ROLE_SPIN_BUTTON) {
+
+    switch (role) {
+    case ATK_ROLE_PUSH_BUTTON:
+    case ATK_ROLE_MENU_ITEM:
+        return 1;  /* Click/activate. */
+    case ATK_ROLE_SPIN_BUTTON:
         return 2;  /* Increment + decrement. */
+    case ATK_ROLE_CHECK_BOX:
+    case ATK_ROLE_RADIO_BUTTON:
+        return 1;  /* Toggle/select. */
+    case ATK_ROLE_SLIDER:
+    case ATK_ROLE_SCROLLBAR:
+    case ATK_ROLE_PROGRESS_BAR:
+        return 0;  /* Value-only controls, no actions */
+    default:
+        return 0;
     }
-    return 1;
 }
 
 static const gchar *tk_action_get_name(AtkAction *action, gint i)
@@ -1156,12 +1169,24 @@ static const gchar *tk_action_get_name(AtkAction *action, gint i)
     if (!acc || !acc->tkwin) return NULL;
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role == ATK_ROLE_SPIN_BUTTON) {
-        if (i == 0) return "increment";    /* AT-friendly name for up action. */
-        if (i == 1) return "decrement";    /* AT-friendly name for down action. */
+
+    switch (role) {
+    case ATK_ROLE_PUSH_BUTTON:
+    case ATK_ROLE_MENU_ITEM:
+        if (i == 0) return "click";
+        break;
+    case ATK_ROLE_SPIN_BUTTON:
+        if (i == 0) return "increment";
+        if (i == 1) return "decrement";
+        break;
+    case ATK_ROLE_CHECK_BOX:
+    case ATK_ROLE_RADIO_BUTTON:
+        if (i == 0) return "toggle";
+        break;
+    default:
+        break;
     }
-    if (i == 0) return "click";  /* Fallback for generic actions. */
-    return NULL;  /* Invalid index. */
+    return NULL;
 }
 
 static void tk_atk_action_interface_init(AtkActionIface *iface)
