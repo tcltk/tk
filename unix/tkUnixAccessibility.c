@@ -917,17 +917,17 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
         atk_state_set_add_state(set, ATK_STATE_SHOWING);
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-	/* Check selection and focus states */
+	/* Check selection and focus states. */
 	AtkObject *parent_obj = atk_object_get_parent(obj);
 	if (parent_obj && ATK_IS_SELECTION(parent_obj)) {
 	    gint index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(obj), "tk-index"));
         
-	    /* Check if selected */
+	    /* Check if selected. */
 	    if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
 		atk_state_set_add_state(set, ATK_STATE_SELECTED);
 	    }
         
-	    /* Check if focused (active item) */
+	    /* Check if focused (active item). */
 	    if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
 		atk_state_set_add_state(set, ATK_STATE_FOCUSED);
 	    }
@@ -1145,7 +1145,7 @@ static gint tk_action_get_n_actions(AtkAction *action)
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role == ATK_ROLE_SPIN_BUTTON) {
-        return 2;  /* increment + decrement */
+        return 2;  /* Increment + decrement. */
     }
     return 1;
 }
@@ -1157,8 +1157,8 @@ static const gchar *tk_action_get_name(AtkAction *action, gint i)
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role == ATK_ROLE_SPIN_BUTTON) {
-        if (i == 0) return "increment";    /* Orca-friendly name for up action. */
-        if (i == 1) return "decrement";    /* Orca-friendly name for down action. */
+        if (i == 0) return "increment";    /* AT-friendly name for up action. */
+        if (i == 1) return "decrement";    /* AT-friendly name for down action. */
     }
     if (i == 0) return "click";  /* Fallback for generic actions. */
     return NULL;  /* Invalid index. */
