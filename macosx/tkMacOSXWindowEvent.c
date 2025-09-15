@@ -1414,6 +1414,7 @@ NSMutableArray *_tkAccessibleElements;
     return [_tkAccessibleElements copy]; 
 }
 
+
 - (void)accessibilityChildrenChanged {
     NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
 }
@@ -1437,6 +1438,7 @@ NSMutableArray *_tkAccessibleElements;
 - (void)setAccessibilityParentView:(NSView *)parentView {
     [self setAccessibilityParent:self];
 }
+
 
 @end
 
