@@ -983,7 +983,7 @@ static int TkMacOSXAccessibleObjCmd(ClientData clientData,Tcl_Interp *ip, int ob
     TkAccessibilityElement *widget = [[TkAccessibilityElement alloc] init];
     widget.tk_win = path;
     
-    /* Create the bidirectional link */
+    /* Create the bidirectional link, */
     TkAccessibility_LinkWindowToElement(path, widget);
     
     [widget.accessibilityParent accessibilityAddChildElement:widget];
