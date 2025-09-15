@@ -1196,7 +1196,7 @@ retErr:
  */
 
 MODULE_SCOPE int
-TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
+TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     VistaThemeData *themeData;
     VistaThemeProcs *procs;
