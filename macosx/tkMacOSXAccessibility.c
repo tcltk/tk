@@ -424,7 +424,7 @@ void PostAccessibilityAnnouncement(NSString *message)
      *  is required.
      */
     
-    if ([role isEqualToString:NSAccessibilitySliderRole] || [role isEqualToString:NSAccessibilityIncrementorRole] || [role isEqualToString:NSAccessibilityGroupRole] || [role isEqualToString:NSAccessibilityProgressIndicatorRole]) {
+    if ([role isEqualToString:NSAccessibilitySliderRole] || [role isEqualToString:NSAccessibilityIncrementorRole] || [role isEqualToString:NSAccessibilityListRole] || [role isEqualToString:NSAccessibilityTableRole] || [role isEqualToString:NSAccessibilityProgressIndicatorRole]) {
 	[self forceFocus];
     }
  
