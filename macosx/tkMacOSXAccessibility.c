@@ -81,8 +81,6 @@ const struct MacRoleMap roleMap[] = {
     {NULL,            nil}
 };
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -201,7 +199,7 @@ void PostAccessibilityAnnouncement(NSString *message)
      * Special handling for listboxes, trees and tables. They are defined 
      * as NSAccessibilityGroupRole to suppress the "empty content" phrasing
      * that comes with tables/trees/listboxes without an array of child widgets.
-     * (We are using the accessibilityChildren array only for actual widgets 
+     * We are using the accessibilityChildren array only for actual widgets 
      * that are children of toplevels, not virtual elements such as listbox 
      * rows. We are using script-level bindings and a custom announcement
      * in VoiceOver to notfiy the user of the selected data. Here,
