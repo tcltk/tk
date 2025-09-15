@@ -736,6 +736,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 #ifndef TK_NO_DEPRECATED
 #   define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
+#   define TkWinGetPlatformTheme() 3
 #endif
 
 #undef TCL_STORAGE_CLASS
