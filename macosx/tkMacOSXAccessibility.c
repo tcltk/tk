@@ -196,7 +196,18 @@ void PostAccessibilityAnnouncement(NSString *message)
 {
 
     NSAccessibilityRole role = self.accessibilityRole;
- 
+
+    /* 
+     * Special handling for listboxes, trees and tables. They are defined 
+     * as NSAccessibilityGroupRole to suppress the "empty content" phrasing
+     * that comes with tables/trees/listboxes without an array of child widgets.
+     * (We are using the accessibilityChildren array only for actual widgets 
+     * that are children of toplevels, not virtual elements such as listbox 
+     * rows. We are using script-level bindings and a custom announcement
+     * in VoiceOver to notfiy the user of the selected data. Here,
+     * we include the number of elements in the row and a hint on navigation as 
+     * the accessibility label for these roles. 
+     */
     if ([role isEqualToString:NSAccessibilityGroupRole]) {
 	NSInteger rowCount = [self accessibilityRowCount];
 	NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
@@ -205,10 +216,10 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return groupLabel;				
     }
 
+    /* Retrieve the label for all other widget roles. */
     Tk_Window win = self.tk_win;
     Tcl_HashEntry *hPtr, *hPtr2;
     Tcl_HashTable *AccessibleAttributes;
-
   
     hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
@@ -244,7 +255,11 @@ void PostAccessibilityAnnouncement(NSString *message)
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
 
     
-    /* Special handling for checkbuttons and radio buttons. */
+    /* 
+     * Special handling for checkbuttons and radio buttons. 
+     * Synchronizing their state and value between the accessibility
+     * API and Tk is complicated. 
+     */
     if ([role isEqualToString:NSAccessibilityCheckBoxRole] ||
         [role isEqualToString:NSAccessibilityRadioButtonRole]) {
 
@@ -309,7 +324,7 @@ void PostAccessibilityAnnouncement(NSString *message)
     /*
      * Return the value data for labels and text widgets as the accessibility
      * title, because VoiceOver does not seem to pick up the accessibiility
-     * value for these widgets.
+     * value for these widgets otherwise.
     */ 
     if ([role isEqualToString:NSAccessibilityStaticTextRole] || [role isEqualToString:NSAccessibilityTextAreaRole]) {
 	return self.accessibilityValue;
@@ -535,7 +550,7 @@ void PostAccessibilityAnnouncement(NSString *message)
     Tcl_HashTable *AccessibleAttributes;
     Tcl_Event *event;
     
-    /*Standard button press. */
+    /* Standard button press. */
     hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
 	return FALSE;
@@ -646,8 +661,6 @@ void PostAccessibilityAnnouncement(NSString *message)
 - (void)dealloc {
     [super dealloc];
 }
-
-
 
 @end
 
