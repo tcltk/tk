@@ -21,16 +21,6 @@
 #include <vssym32.h>
 #include "ttk/ttkThemeInt.h"
 
-typedef struct
-{
-    HWND                                stubWindow;
-} VistaThemeProcs;
-
-typedef struct
-{
-    VistaThemeProcs *procs;
-} VistaThemeData;
-
 /*
  * VistaThemeDeleteProc --
  *
@@ -38,9 +28,9 @@ typedef struct
  */
 
 static void
-VistaThemeDeleteProc(void *clientData)
+VistaThemeDeleteProc(
+    TCL_UNUSED(void *))
 {
-    Tcl_Free(clientData);
 }
 
 static int
@@ -298,7 +288,7 @@ typedef struct
      * Static data, initialized when element is registered:
      */
     const ElementInfo	*info;
-    VistaThemeProcs *procs;	/* Pointer to theme procedure table */
+    HWND parentHwnd;
 
     /*
      * Dynamic data, allocated by InitElementData:
@@ -313,11 +303,11 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(VistaThemeProcs *procs, const ElementInfo *info)
+NewElementData(HWND hwnd, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)Tcl_Alloc(sizeof(ElementData));
 
-    elementData->procs = procs;
+    elementData->parentHwnd = hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
 
@@ -360,11 +350,11 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
     } else  {
-	elementData->hwnd = elementData->procs->stubWindow;
+	elementData->hwnd = elementData->parentHwnd;
     }
 
     elementData->hTheme = OpenThemeData(
-	elementData->hwnd, elementData->info->className);
+	    elementData->hwnd, elementData->info->className);
 
     if (!elementData->hTheme) {
 	return 0;
@@ -373,7 +363,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     elementData->drawable = d;
     if (d != 0) {
 	elementData->hDC = TkWinGetDrawableDC(Tk_Display(tkwin), d,
-	    &elementData->dcState);
+		&elementData->dcState);
     }
 
     return 1;
@@ -1026,7 +1016,7 @@ Ttk_CreateVsapiElement(
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    VistaThemeData *themeData = (VistaThemeData *)clientData;
+    HWND hwnd = (HWND)clientData;
     ElementInfo *elementPtr = NULL;
     void *elementData;
     LPCWSTR className;
@@ -1177,7 +1167,7 @@ Ttk_CreateVsapiElement(
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(themeData->procs, elementPtr);
+    elementData = NewElementData(hwnd, elementPtr);
     Ttk_RegisterElement(NULL,
 	theme, elementName, elementPtr->elementSpec, elementData);
 
@@ -1198,16 +1188,8 @@ retErr:
 MODULE_SCOPE int
 TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
-    VistaThemeData *themeData;
-    VistaThemeProcs *procs;
     Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
-
-    procs = (VistaThemeProcs *)Tcl_Alloc(sizeof(VistaThemeProcs));
-    if (!procs) {
-	return TCL_ERROR;
-    }
-    procs->stubWindow = hwnd;
 
     /*
      * Create the new style engine.
@@ -1223,18 +1205,15 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = (VistaThemeData *)Tcl_Alloc(sizeof(VistaThemeData));
-    themeData->procs = procs;
-
-    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, themeData);
-    Ttk_RegisterCleanup(interp, themeData, VistaThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
+    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, hwnd);
+    Ttk_RegisterCleanup(interp, hwnd, VistaThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
 
     /*
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	void *clientData = NewElementData(procs, infoPtr);
+	void *clientData = NewElementData(hwnd, infoPtr);
 	Ttk_RegisterElement(NULL,
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
