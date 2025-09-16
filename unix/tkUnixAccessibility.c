@@ -934,7 +934,64 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	}
 	return set;
     }
+    
     /* Real widget. */
+    if (acc->tkwin) {
+        AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+        /* Add checked state for checkboxes and radio buttons. */
+        if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
+            const char *widgetClass = Tk_Class(acc->tkwin);
+            
+            Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+            Tcl_IncrRefCount(savedResult);
+            
+            gboolean is_checked = FALSE;
+            char cmd[256];
+            /* Checkbuttons. */
+            if ((widgetClass && strcmp(widgetClass, "Checkbutton")== 0) || 
+		(widgetClass && strcmp(widgetClass, "TCheckbutton"))== 0)  {
+		    snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+		    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+			const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+			if (varName && *varName) {
+			    snprintf(cmd, sizeof(cmd), "set %s", varName);
+			    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+				const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+				is_checked = (varValue && (strcmp(varValue, "1") == 0 || 
+							   strcmp(varValue, "on") == 0));
+			    }
+			}
+		    }
+		} 
+            else if ((widgetClass && strcmp(widgetClass, "Radiobutton") == 0) || 
+		(widgetClass && strcmp(widgetClass, "TRadiobutton")) == 0) {
+		    /* Radiobuttons. */
+		    snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+		    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+			const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+			if (varName && *varName) {
+			    snprintf(cmd, sizeof(cmd), "set %s", varName);
+			    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+				const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+				snprintf(cmd, sizeof(cmd), "%s cget -value", Tk_PathName(acc->tkwin));
+				if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+				    const char *btnValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+				    is_checked = (varValue && btnValue && strcmp(varValue, btnValue) == 0);
+				}
+			    }
+			}
+		    }
+		}
+            
+            if (is_checked) {
+                atk_state_set_add_state(set, ATK_STATE_CHECKED);
+            }
+            
+            Tcl_SetObjResult(acc->interp, savedResult);
+            Tcl_DecrRefCount(savedResult);
+        }
+    }
+    /* Additional standard states. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
@@ -983,17 +1040,100 @@ static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
     }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role != ATK_ROLE_SPIN_BUTTON) {
-        if (value) *value = 0.0;
-        if (text) *text = g_strdup("0");
+    
+    /* Handle checkboxes and radio buttons. */
+    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
+        char cmd[256];
+        const char *widgetClass = Tk_Class(acc->tkwin);
+        
+        gboolean is_selected = FALSE;
+        Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+        Tcl_IncrRefCount(savedResult);
+        
+        if ((widgetClass && strcmp(widgetClass, "Checkbutton") == 0) || 
+	    (widgetClass && strcmp(widgetClass, "TCheckbutton")) == 0) {
+		/* Checkbutton: check the variable value */
+		snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+		if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+		    const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+		    if (varName && *varName) {
+			snprintf(cmd, sizeof(cmd), "set %s", varName);
+			if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+			    const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+			    is_selected = (varValue && (strcmp(varValue, "1") == 0 || 
+							strcmp(varValue, "on") == 0));
+			}
+		    }
+		}
+	    } 
+        else if ((widgetClass && strcmp(widgetClass, "Radiobutton") == 0) ||
+	    (widgetClass && strcmp(widgetClass, "TRadiobutton")) == 0){
+		/* Radiobutton: check if this is the selected one in the group. */
+		snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+		if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+		    const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+		    if (varName && *varName) {
+			snprintf(cmd, sizeof(cmd), "set %s", varName);
+			if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+			    const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+			    snprintf(cmd, sizeof(cmd), "%s cget -value", Tk_PathName(acc->tkwin));
+			    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+				const char *btnValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+				is_selected = (varValue && btnValue && strcmp(varValue, btnValue) == 0);
+			    }
+			}
+		    }
+		}
+	    }
+        
+        Tcl_SetObjResult(acc->interp, savedResult);
+        Tcl_DecrRefCount(savedResult);
+        
+        if (value) *value = is_selected ? 1.0 : 0.0;
+        if (text) *text = g_strdup(is_selected ? "selected" : "not selected");
+        return;
+    }
+    
+    if (role == ATK_ROLE_SLIDER) {
+        /* Get the current value of the scale. */
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "%s get", Tk_PathName(acc->tkwin));
+        
+        Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+        Tcl_IncrRefCount(savedResult);
+        
+        double scale_value = 0.0;
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            const char *result = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+            if (result) {
+                scale_value = g_ascii_strtod(result, NULL);
+            }
+        }
+        
+        Tcl_SetObjResult(acc->interp, savedResult);
+        Tcl_DecrRefCount(savedResult);
+        
+        if (value) *value = scale_value;
+        if (text) {
+            /* Format the value with appropriate precision.*/
+            gchar *val_str = g_strdup_printf("%.1f", scale_value);
+            *text = val_str;
+        }
+        return;
+    }
+    
+    /* Spin button handling. */
+    if (role == ATK_ROLE_SPIN_BUTTON) {
+        gchar *val = GetAtkValueForWidget(acc->tkwin);
+        double cur_val = val ? atof(val) : 0.0;
+        if (value) *value = cur_val;
+        if (text) *text = g_strdup(val ? val : "0");
         return;
     }
 
-    gchar *val = GetAtkValueForWidget(acc->tkwin);
-    double cur_val = val ? atof(val) : 0.0;
-
-    if (value) *value = cur_val;
-    if (text) *text = g_strdup(val ? val : "0");
+    /* Default fallback. */
+    if (value) *value = 0.0;
+    if (text) *text = g_strdup("0");
 }
 
 static AtkRange *tk_get_range(AtkValue *obj)
@@ -1112,7 +1252,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	return TRUE;
     }
 
-   /* Fallback: Generic "click" action for other roles. */ 
+    /* Fallback: Generic "click" action for other roles. */ 
     if (i == 0) {
 	/* Retrieve the command string.  */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
@@ -1991,9 +2131,9 @@ void TkAtkNotifySelectionChanged(Tk_Window tkwin)
 
                 for (Tcl_Size j = 0; j < selection_count; j++) {
 
-		      if (elems[j] == NULL) {
-			  continue; /* Skip NULL elements. */
-            }
+		    if (elems[j] == NULL) {
+			continue; /* Skip NULL elements. */
+		    }
                     int sel_idx = -1;
                     if (Tcl_GetIntFromObj(interp, elems[j], &sel_idx) == TCL_OK &&
                         sel_idx == i) {
@@ -2527,8 +2667,6 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
     }
 }
-
-
 
 /* Respond to <FocusIn/Out> events. */
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
