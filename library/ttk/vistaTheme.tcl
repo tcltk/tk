@@ -2,16 +2,6 @@
 # Settings for Microsoft Windows Vista and Server 2008
 #
 
-# The Vista theme can only be defined on Windows Vista and above. The theme
-# is created in C due to the need to assign a theme-enabled function for
-# detecting when themeing is disabled. On systems that cannot support the
-# Vista theme, there will be no such theme created and we must not
-# evaluate this script.
-
-if {"vista" ni [ttk::style theme names]} {
-    return
-}
-
 namespace eval ttk::theme::vista {
 
     ttk::style theme settings vista {
@@ -24,7 +14,7 @@ namespace eval ttk::theme::vista {
 	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont
 
-	ttk::style map "." -foreground {disabled SystemGrayText}
+	ttk::style map "." -foreground [list disabled SystemGrayText]
 
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
@@ -222,8 +212,6 @@ namespace eval ttk::theme::vista {
 	ttk::style configure Item -padding {3p 0 0 0}
 	ttk::style configure Treeview -indent 15p
 	ttk::setTreeviewRowHeight
-
-	package provide ttk::theme::vista 1.0
     }
 }
 

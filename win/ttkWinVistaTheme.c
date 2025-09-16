@@ -1200,7 +1200,7 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     VistaThemeData *themeData;
     VistaThemeProcs *procs;
-    Ttk_Theme themePtr, parentPtr, vistaPtr;
+    Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
 
     procs = (VistaThemeProcs *)Tcl_Alloc(sizeof(VistaThemeProcs));
@@ -1213,7 +1213,7 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Create the new style engine.
      */
     parentPtr = Ttk_GetTheme(interp, "winnative");
-    themePtr = Ttk_CreateTheme(interp, "xpnative", parentPtr);
+    themePtr = Ttk_CreateTheme(interp, "vista", parentPtr);
 
     if (!themePtr) {
 	return TCL_ERROR;
@@ -1229,16 +1229,6 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
     Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, themeData);
     Ttk_RegisterCleanup(interp, themeData, VistaThemeDeleteProc);
     Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
-
-    /*
-     * Create the vista theme on suitable platform versions and set the theme
-     * enable function. The theme itself is defined in script.
-     */
-
-    vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
-    if (vistaPtr) {
-	Ttk_SetThemeEnabledProc(vistaPtr, VistaThemeEnabled, themeData);
-    }
 
     /*
      * New elements:
@@ -1257,7 +1247,7 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
-    Tcl_PkgProvide(interp, "ttk::theme::xpnative", TTK_VERSION);
+    Tcl_PkgProvide(interp, "ttk::theme::vista", TTK_VERSION);
 
     return TCL_OK;
 }
