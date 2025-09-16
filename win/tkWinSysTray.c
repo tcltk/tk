@@ -233,7 +233,8 @@ TaskbarOperation(
 	Tcl_DString dst;
 	Tcl_DStringInit(&dst);
 	str = (WCHAR *)Tcl_UtfToWCharDString(Tcl_GetString(icoPtr->taskbar_txt), TCL_INDEX_NONE, &dst);
-	wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
+	wcsncpy(ni.szTip, str, sizeof(ni.szTip) / sizeof(WCHAR) - 1);
+	ni.szTip[sizeof(ni.szTip) / sizeof(WCHAR) - 1] = '\0';
 	Tcl_DStringFree(&dst);
     } else {
 	ni.szTip[0] = 0;
@@ -1067,11 +1068,7 @@ WinSysNotifyCmd(
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
-    Tcl_DString infodst;
-    Tcl_DString titledst;
     NOTIFYICONDATAW ni;
-    char *msgtitle;
-    char *msginfo;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "command ...");
@@ -1100,24 +1097,17 @@ WinSysNotifyCmd(
     ni.hIcon = icoPtr->hIcon;
     ni.dwInfoFlags = NIIF_INFO; /* Use a sane platform-specific icon here.*/
 
-    msgtitle = Tcl_GetString(objv[3]);
-    msginfo = Tcl_GetString(objv[4]);
-
     /* Balloon notification for system tray icon. */
-    if (msgtitle != NULL) {
-	WCHAR *title;
-	Tcl_DStringInit(&titledst);
-	title = Tcl_UtfToWCharDString(msgtitle, TCL_INDEX_NONE, &titledst);
-	wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
-	Tcl_DStringFree(&titledst);
-    }
-    if (msginfo != NULL) {
-	WCHAR *info;
-	Tcl_DStringInit(&infodst);
-	info = Tcl_UtfToWCharDString(msginfo, TCL_INDEX_NONE, &infodst);
-	wcsncpy(ni.szInfo, info, (Tcl_DStringLength(&infodst) + 2) / 2);
-	Tcl_DStringFree(&infodst);
-    }
+    Tcl_DString dst;
+    Tcl_DStringInit(&dst);
+    WCHAR *title = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]), TCL_INDEX_NONE, &dst);
+    wcsncpy(ni.szInfoTitle, title, sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1);
+    ni.szInfoTitle[sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1] = '\0';
+    Tcl_DStringSetLength(&dst, 0);
+    WCHAR *info = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]), TCL_INDEX_NONE, &dst);
+    wcsncpy(ni.szInfo, info, sizeof(ni.szInfo) / sizeof(WCHAR) - 1);
+    ni.szInfo[sizeof(ni.szInfo) / sizeof(WCHAR) - 1] = '\0';
+    Tcl_DStringFree(&dst);
 
     Shell_NotifyIconW(NIM_MODIFY, &ni);
     return TCL_OK;
