@@ -408,6 +408,7 @@ TK_OBJS = \
 TTK_OBJS = \
 	ttkWinMonitor.$(OBJEXT) \
 	ttkWinTheme.$(OBJEXT) \
+	ttkWinVistaTheme.$(OBJEXT) \
 	ttkBlink.$(OBJEXT) \
 	ttkButton.$(OBJEXT) \
 	ttkCache.$(OBJEXT) \

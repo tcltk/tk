@@ -274,6 +274,7 @@ TKOBJS = \
 TTK_OBJS = \
 	$(TMP_DIR)\ttkWinMonitor.obj \
 	$(TMP_DIR)\ttkWinTheme.obj \
+	$(TMP_DIR)\ttkWinVistaTheme.obj \
 	$(TMP_DIR)\ttkBlink.obj \
 	$(TMP_DIR)\ttkButton.obj \
 	$(TMP_DIR)\ttkCache.obj \
