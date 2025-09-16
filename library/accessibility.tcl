@@ -562,7 +562,8 @@ namespace eval ::tk::accessible {
 			  Scale \
 			  Scale \
 			  Scale \
-			  [%W get] [%W cget -state]\
+			  [%W get] \
+			  [%W cget -state]\
 			  {%W set}\
 		      }
     bind TScale <Map> {+::tk::accessible::_init \
