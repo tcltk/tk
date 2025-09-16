@@ -2467,10 +2467,10 @@ DrawMenuEntryLabel(
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
-		/*
-		 * Win 95/98 systems draw disabled menu text with a 3D
-		 * highlight, unless the menu item is highlighted,
-		 */
+	    /*
+	     * Win 95/98 systems draw disabled menu text with a 3D
+	     * highlight, unless the menu item is highlighted,
+	     */
 
 	    if ((mePtr->state == ENTRY_DISABLED) &&
 		    !(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {

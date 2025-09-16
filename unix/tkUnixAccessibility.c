@@ -996,7 +996,6 @@ static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
     if (text) *text = g_strdup(val ? val : "0");
 }
 
-
 static AtkRange *tk_get_range(AtkValue *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
@@ -1020,7 +1019,7 @@ static AtkRange *tk_get_range(AtkValue *obj)
             Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
         }
     }
-    else if (role == ATK_ROLE_PROGRESS_BAR || role == ATK_ROLE_SCROLLBAR) {
+    else if (role == ATK_ROLE_PROGRESS_BAR || role == ATK_ROLE_SCROLL_BAR) {
         /* Progressbar/Scrollbar: 0 .. -maximum (default 100.) */
         min_val = 0.0;
         max_val = 100.0;
@@ -1155,7 +1154,7 @@ static gint tk_action_get_n_actions(AtkAction *action)
     case ATK_ROLE_RADIO_BUTTON:
         return 1;  /* Toggle/select. */
     case ATK_ROLE_SLIDER:
-    case ATK_ROLE_SCROLLBAR:
+    case ATK_ROLE_SCROLL_BAR:
     case ATK_ROLE_PROGRESS_BAR:
         return 0;  /* Value-only controls, no actions. */
     default:
