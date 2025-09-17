@@ -341,10 +341,9 @@ namespace eval ::tk::accessible {
     # Get value of progress bar.
     proc _getpbvalue {w} {
 	variable ::ttk::progressbar::Timers
-	if {![info exists ::ttk::progressbar::Timers($w)]} {
-	    return [$w cget -value]
+	if {[info exists ::ttk::progressbar::Timers($w)]} {
+	    return "busy"
 	}
-	return "busy ([expr {int([$w cget -value])}]%)"
     }
 
     # Some widgets will not respond to keypress events unless
@@ -795,13 +794,28 @@ namespace eval ::tk::accessible {
     bind TScale <Right> {+::tk::accessible::_updatescale %W Right}
     bind TScale <Left> {+::tk::accessible::_updatescale %W Left}
 
-    # On macOS, the ttk::spinbox returns the wrong accessibility role
-    # because of how it is constructed. If VoiceOver is running,
-    # alias the ttk::spinbox to the core Tk spinbox.
-    if {[tk windowingsystem] eq "aqua"} {
+    # In some contexts, the accessibility API is confused about widget
+    # roles because of the way the widget is constructed. For instance,
+    # VoiceOver and Orca misread the ttk::spinbox as an entry because
+    # of how it is constructed. In such cases, let's re-use an old trick
+    # that we used with the Aqua scrollbar when the ttk widgets were first
+    # developed - map the ttk widget to its classic equivalent. There may
+    # be a visual conflict but it is more important that the AT be able
+    # to correclty identify teh widget and its value. 
+    
+    if {[tk windowingsystem] eq "aqua" || [tk windowingsystem] eq "x11"} {
 	set result [::tk::accessible::check_screenreader]
 	if {$result > 0} {
 	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
+	}
+    }
+    if {[tk windowingsystem] eq "x11"} {
+	set result [::tk::accessible::check_screenreader]
+	if {$result > 0} {
+	    interp alias {} ::ttk::radiobutton {} ::tk::radiobutton
+	    interp alias {} ::ttk::checkbutton {} ::tk::checkbutton
+	    interp alias {} ::ttk::scale {} ::tk::scale
+	    
 	}
     }
     
@@ -810,13 +824,6 @@ namespace eval ::tk::accessible {
     bind Spinbox <Down> {+::tk::accessible::_updatescale %W Down}
     bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
     bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
-
-    # Capture selection events for radio/checkbuttons.
-    bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-
 
     #Capture notebook selection
     bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
