@@ -233,7 +233,8 @@ void PostAccessibilityAnnouncement(NSString *message)
     NSString  *macdescription = [NSString stringWithUTF8String:result];
     return macdescription;
 }
-  
+
+#if 0
 - (id)accessibilityValue
 {
     NSAccessibilityRole role = self.accessibilityRole;
@@ -313,6 +314,99 @@ void PostAccessibilityAnnouncement(NSString *message)
     const char *result = Tcl_GetString(valObj);
     return [NSString stringWithUTF8String:result];
 }
+#endif
+- (id)accessibilityValue
+{
+    NSAccessibilityRole role = self.accessibilityRole;
+    Tk_Window win = self.tk_win;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashTable *AccessibleAttributes;
+
+    if (!win) {
+        return nil;
+    }
+
+    hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+        return nil;
+    }
+
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+
+    /* 
+     * Special handling for checkbuttons and radio buttons.
+     */
+    if ([role isEqualToString:NSAccessibilityCheckBoxRole] ||
+        [role isEqualToString:NSAccessibilityRadioButtonRole]) {
+
+        int stateValue = 0; /* Default off. */
+        Tcl_Interp *interp = Tk_Interp(win);
+
+        if (interp) {
+            const char *path = Tk_PathName(win);
+
+            /* Get the variable name bound to this widget. */
+            Tcl_Obj *varCmd = Tcl_ObjPrintf("%s cget -variable", path);
+            Tcl_IncrRefCount(varCmd);
+            const char *varName = NULL;
+
+            if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+                varName = Tcl_GetStringResult(interp);
+            }
+            Tcl_DecrRefCount(varCmd);
+
+            if (varName && *varName) {
+                const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
+
+                if ([role isEqualToString:NSAccessibilityCheckBoxRole]) {
+                    if (varVal && strcmp(varVal, "1") == 0) {
+                        stateValue = 1;
+                    }
+                } else {
+                    /* Radiobutton: need to compare with -value. */
+                    Tcl_Obj *valueCmd = Tcl_ObjPrintf("%s cget -value", path);
+                    Tcl_IncrRefCount(valueCmd);
+                    if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+                        const char *rbValue = Tcl_GetStringResult(interp);
+                        if (varVal && rbValue && strcmp(varVal, rbValue) == 0) {
+                            stateValue = 1;
+                        }
+                    }
+                    Tcl_DecrRefCount(valueCmd);
+                }
+            }
+        }
+
+        /* Update the Tcl hash table for caching. */
+        char buf[2];
+        snprintf(buf, sizeof(buf), "%d", stateValue);
+        int newEntry;
+        hPtr2 = Tcl_CreateHashEntry(AccessibleAttributes, "value", &newEntry);
+        Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
+        Tcl_IncrRefCount(valObj);
+        Tcl_SetHashValue(hPtr2, valObj);
+
+        /* Return NSNumber for VoiceOver. */
+        NSControlStateValue cocoaValue =
+            (stateValue == 1) ? NSControlStateValueOn : NSControlStateValueOff;
+
+        /* Notify VoiceOver that value changed. */
+        NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
+
+        return [NSNumber numberWithInteger:cocoaValue];
+    }
+
+    /* Fallback: return cached string value for other widget types */
+    hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
+    if (!hPtr2) {
+        return nil;
+    }
+
+    Tcl_Obj *valObj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
+    const char *result = Tcl_GetString(valObj);
+    return [NSString stringWithUTF8String:result];
+}
+
 
 - (NSString*) accessibilityTitle
 {
