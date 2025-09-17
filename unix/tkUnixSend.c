@@ -59,7 +59,7 @@ static char *appNameRegistryPath;
 
 typedef struct AppInfo {
     pid_t pid;
-    Window comm;
+    void *clientData;
 } AppInfo;
 
 /*
@@ -81,8 +81,8 @@ ObjToAppInfo(
 	if (objc != 2) {
 	    Tcl_Panic(failure, appNameRegistryPath);
 	}
-	Tcl_GetIntFromObj(NULL, objvPtr[0], &result.pid);
-	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.comm);
+	Tcl_GetIntFromObj(NULL, objvPtr[0], (int *) &result.pid);
+	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.clientData);
     }
     return result;
 }
@@ -96,7 +96,7 @@ AppInfoToObj(
     AppInfo info)
 {
     Tcl_Obj *objv[2] = {Tcl_NewIntObj(info.pid),
-			Tcl_NewLongObj(info.comm)};
+			Tcl_NewLongObj(info.clientData)};
     return Tcl_NewListObj(2, objv);
 }
 
@@ -112,7 +112,7 @@ typedef struct NameRegistry {
 				 * modified, so it needs to be written out
 				 * when the NameRegistry is closed. */
     Tcl_Obj *appNameDict;       /* Tcl dict mapping interpreter names to
-				 * a Tcl list {pid, commWindow}
+				 * a Tcl list {pid, clientData}
 				 */
 } NameRegistry;
 
@@ -132,13 +132,13 @@ typedef struct NameRegistry {
 typedef struct {
     RegisteredInterp *interpListPtr;  /* List of all interpreters process. */
     mqd_t qd;                         /* Descriptor for the mqueue. */
-    char qname[QNAME_MAX_SIZE];       /* Path name of mqueue. */
+    char qname[NAME_MAX];             /* Path name of mqueue. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
 
 #define SET_QNAME(qname, pid)					\
-    snprintf((qname), QNAME_MAX_SIZE, "/tksend_%d", (pid))
+    snprintf((qname), NAME_MAX, "/tksend_%d", (pid))
 
 /*
  * Other miscellaneous per-process (not per-thread) data:
@@ -149,24 +149,25 @@ static struct {
 				 * "send" command. */
     int sendDebug;		/* This can be set while debugging to 
 				 * add print statements, for example. */
-} localData = {0, 0};
+    int initialized;
+} localData = {0, 0, 0};
 
 
 /*
  * Declarations of some static functions defined later in this file:
  */
 
-static Tcl_CmdDeleteProc DeleteProc;
+static int		SendInit();
 static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr);
 static void		RegClose(NameRegistry *regPtr);
 static void		RegAddName(NameRegistry *regPtr, const char *name,
-				   Window commWindow);
-static int		SendInit(TkDisplay *dispPtr);
+                                   void *clientData);
 static Tcl_Obj*         loadAppNameRegistry(const char *path);
 static void             saveAppNameRegistry(Tcl_Obj *dict, const char *path);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
 static void             mqueueHandler(int sig, siginfo_t *info, void *ucontext);
+static Tcl_CmdDeleteProc DeleteProc;
 
 /*
  *--------------------------------------------------------------
@@ -194,8 +195,7 @@ static void             mqueueHandler(int sig, siginfo_t *info, void *ucontext);
 #define TK_MQ_MAXMSG 10
 
 static int
-SendInit(
-    TkDisplay *dispPtr)		/* Display to initialize. */
+SendInit()
 {
     /*
      * The commTkwin field in the display struct is now only being used
@@ -204,6 +204,7 @@ SendInit(
      * implemented.  But should the display struct be changed?
      */
 
+#if 0
     XSetWindowAttributes atts;
     dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
 	DefaultScreen(dispPtr->display), NULL);
@@ -215,7 +216,7 @@ SendInit(
     Tk_ChangeWindowAttributes(dispPtr->commTkwin,
 			     CWOverrideRedirect, &atts);
     Tk_MakeWindowExist(dispPtr->commTkwin);
-
+#endif
     /*
      * Intialize the path used for the appname registry.
      */
@@ -269,6 +270,7 @@ SendInit(
 	perror("mq_notify initial");
 	return TCL_ERROR;
     }
+    localData.initialized = 1;
     return TCL_OK;
 }
 
@@ -582,11 +584,10 @@ RegAddName(
     const char *name,		/* Name of an application. The caller must
 				 * ensure that this name isn't already
 				 * registered. */
-    Window commWindow)		/* X identifier for comm. window of
-				 * application. */
+    void *clientData)           /* pointer to arbitrary data */
 {
     Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
-    AppInfo valueTcl = {getpid(), commWindow};
+    AppInfo valueTcl = {getpid(), clientData};
     Tcl_Obj *valuePtr = AppInfoToObj(valueTcl);
     Tcl_DictObjPut(NULL, regPtr->appNameDict, keyPtr, valuePtr);
     regPtr->modified = 1;
@@ -629,14 +630,13 @@ Tk_SetAppName(
 {
     RegisteredInterp *riPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
-    TkDisplay *dispPtr = winPtr->dispPtr;
     NameRegistry *regPtr;
     Tcl_Interp *interp;
     const char *actualName;
     Tcl_DString dString;
     int offset, i;
     interp = winPtr->mainPtr->interp;
-    if (dispPtr->commTkwin == NULL) {
+    if (!localData.initialized) {
 	SendInit(winPtr->dispPtr);
     }
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -701,10 +701,11 @@ Tk_SetAppName(
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
-	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE,
+		     "%d", i);
 	}
 	AppInfo info = RegFindName(regPtr, actualName);
-	if (info.comm == None) {
+	if (info.pid == 0) {
 	    break;
 	}
     }
@@ -714,7 +715,7 @@ Tk_SetAppName(
      * local entry for this application.
      */
 
-    RegAddName(regPtr, actualName, Tk_WindowId(dispPtr->commTkwin));
+    RegAddName(regPtr, actualName, NULL);
     RegClose(regPtr);
     riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
     strcpy(riPtr->name, actualName);
@@ -926,8 +927,8 @@ sendRequest(
     unsigned int priority = 1; /* Do we need different priorities? */
     int async = (sender[0] == '\0');
     /* Open the recipient message queue. */
-    char qname[QNAME_MAX_SIZE];
-    char *qnameReply = NULL;
+    char qname[NAME_MAX];
+    char qnameReply[NAME_MAX];
     SET_QNAME(qname, pid);
     mqd_t qd = mq_open(qname, O_RDWR, 0, NULL), qdReply;
     if (qd == -1) {
@@ -935,9 +936,7 @@ sendRequest(
     }
     const char *strings[3] = {NULL, recipient, request};
     if (!async) {
-	size_t size = strlen(sender) + strlen("/tkreply_") + 1;
-	qnameReply = ckalloc(size);
-	snprintf(qnameReply, size, "/tkreply_%s", sender);
+	snprintf(qnameReply, NAME_MAX, "/tkreply_%s", sender);
 	strings[0] = qnameReply;
     } else {
 	strings[0] = sender;
@@ -991,12 +990,10 @@ sendRequest(
     if (mq_close(qdReply) == -1 || mq_unlink(qnameReply) == -1) {
 	goto error;
     }
-    ckfree(qnameReply);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(replyStrings[0],
 	TCL_INDEX_NONE));
     return TCL_OK;
 error:
-    ckfree(qnameReply);
     Tcl_SetErrno(errno);
     Tcl_PosixError(interp);
     return TCL_ERROR;
@@ -1168,7 +1165,6 @@ Tk_SendObjCmd(
     const char *stringRep, *destName;
     int code = TCL_OK;
     TkWindow *winPtr;
-    Window commWindow;
     RegisteredInterp *riPtr;
     int result, async, i, firstArg, index;
     TkDisplay *dispPtr;
@@ -1215,7 +1211,6 @@ Tk_SendObjCmd(
 	    break;
 	}
     }
-
     if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-option value ...? interpName arg ?arg ...?");
@@ -1295,9 +1290,8 @@ Tk_SendObjCmd(
     regPtr = RegOpen(interp, winPtr->dispPtr);
     AppInfo info = RegFindName(regPtr, destName);
     RegClose(regPtr);
-    commWindow = info.comm;
 
-    if (commWindow == None) {
+    if (info.pid == 0 && info.clientData == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"no application named \"%s\"", destName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION", destName,
@@ -1310,23 +1304,24 @@ Tk_SendObjCmd(
      */
 
     Tcl_DStringInit(&request2);
-    Tcl_DStringAppend(&request2, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
+    Tcl_DStringAppend(&request2, Tcl_GetString(objv[firstArg]),
+		      TCL_INDEX_NONE);
     if (firstArg < objc - 1) {
 	for (i = firstArg+1; i < objc; i++) {
 	    Tcl_DStringAppend(&request2, " ", 1);
-	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
+	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]),
+			      TCL_INDEX_NONE);
 	}
     }
 
      // When async is 0, the call below blocks until a reply is received.
      // Perhaps we should run a background thread to process timer events?
-
+    char *replyName = NULL;
     if (async) {	
 	code = sendRequest(interp, info.pid, "", (const char*) destName,
 			       Tcl_DStringValue(&request2));
     } else {
 	/* Find the appName of the sending interpreter */
-	char *replyName = NULL;
 	for (riPtr = tsdPtr->interpListPtr; riPtr != NULL;
 	     riPtr = riPtr->nextPtr) {
 	    if (riPtr->interp == winPtr->mainPtr->interp) {
@@ -1341,6 +1336,17 @@ Tk_SendObjCmd(
 	// Use Tcl_Posix ??
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("mq_send failed: %s",
 					       strerror(errno)));
+	if (replyName) {
+	    /*
+	     * If the send failed, make sure we don't leave the
+	     * reply queue hanging around.
+	     */
+	    char qname[NAME_MAX];
+	    snprintf(qname, NAME_MAX, "/tkreply_%s", replyName);
+	    if (mq_unlink(qname)) {
+		perror("mq_unlink");
+	    }
+	}
     }
     Tcl_DStringFree(&request2);
     localData.sendSerial++;
