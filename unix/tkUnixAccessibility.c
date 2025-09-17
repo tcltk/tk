@@ -910,93 +910,110 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     AtkStateSet *set = atk_state_set_new();
 
-    /* Virtual child: tkwin == NULL. */
+    /* Virtual child handling */
     if (!acc->tkwin) {
         atk_state_set_add_state(set, ATK_STATE_ENABLED);
         atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
         atk_state_set_add_state(set, ATK_STATE_SHOWING);
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-        /* Check selection and focus states. */
+        
         AtkObject *parent_obj = atk_object_get_parent(obj);
         if (parent_obj && ATK_IS_SELECTION(parent_obj)) {
             gint index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(obj), "tk-index"));
-        
-            /* Check if selected. */
             if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
                 atk_state_set_add_state(set, ATK_STATE_SELECTED);
-            }
-        
-            /* Check if focused (active item). */
-            if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
                 atk_state_set_add_state(set, ATK_STATE_FOCUSED);
             }
         }
         return set;
     }
     
-    /* Real widget. */
-    if (acc->tkwin) {
+    /* Real widget state detection. */
+    if (acc->tkwin && acc->interp) {
         AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-        /* Add checked state for checkboxes and radio buttons. */
+        
         if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
             const char *widgetClass = Tk_Class(acc->tkwin);
+            gboolean is_checked = FALSE;
             
+            /* Save interpreter state to avoid corruption. */
             Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
             Tcl_IncrRefCount(savedResult);
             
-            gboolean is_checked = FALSE;
-            char cmd[256];
-            /* Checkbuttons. */
-            if ((widgetClass && strcmp(widgetClass, "Checkbutton") == 0) || 
-                (widgetClass && strcmp(widgetClass, "TCheckbutton") == 0)) {
-                snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
-                if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-                    const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-                    if (varName && *varName) {
-                        snprintf(cmd, sizeof(cmd), "set %s", varName);
-                        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-                            const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-                            is_checked = (varValue && (strcmp(varValue, "1") == 0 || 
-                                                     strcmp(varValue, "on") == 0));
-                        }
-                    }
-                }
-            } 
-            else if ((widgetClass && strcmp(widgetClass, "Radiobutton") == 0) ||
-                     (widgetClass && strcmp(widgetClass, "TRadiobutton") == 0)) {
-                /* Radiobuttons. */
-                snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
-                if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-                    const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-                    if (varName && *varName) {
-                        snprintf(cmd, sizeof(cmd), "set %s", varName);
-                        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-                            const char *varValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-                            snprintf(cmd, sizeof(cmd), "%s cget -value", Tk_PathName(acc->tkwin));
-                            if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-                                const char *btnValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-                                is_checked = (varValue && btnValue && strcmp(varValue, btnValue) == 0);
+            if (widgetClass) {
+                if (strcmp(widgetClass, "Checkbutton") == 0 || 
+                    strcmp(widgetClass, "TCheckbutton") == 0) {
+                    
+                    /* For checkbuttons: get variable and check its value. */
+                    char cmd[512];
+                    snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+                    
+                    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+                        const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+                        if (varName && *varName && strcmp(varName, "") != 0) {
+                            /* Try to get the variable value. */
+                            Tcl_Obj *varObj = Tcl_GetVar2Ex(acc->interp, varName, NULL, TCL_GLOBAL_ONLY);
+                            if (varObj) {
+                                const char *varValue = Tcl_GetString(varObj);
+                                if (varValue) {
+                                    is_checked = (strcmp(varValue, "1") == 0 || 
+                                                strcmp(varValue, "on") == 0 ||
+                                                strcmp(varValue, "true") == 0);
+                                }
                             }
                         }
                     }
                 }
+                else if (strcmp(widgetClass, "Radiobutton") == 0 || 
+                         strcmp(widgetClass, "TRadiobutton") == 0) {
+                    
+                    /* For radiobuttons: compare variable value with button value. */
+                    char cmd[512];
+                    const char *varValue = NULL;
+                    const char *btnValue = NULL;
+                    
+                    /* Get the variable name.*/
+                    snprintf(cmd, sizeof(cmd), "%s cget -variable", Tk_PathName(acc->tkwin));
+                    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+                        const char *varName = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+                        if (varName && *varName && strcmp(varName, "") != 0) {
+                            /* Get the variable's current value. */
+                            Tcl_Obj *varObj = Tcl_GetVar2Ex(acc->interp, varName, NULL, TCL_GLOBAL_ONLY);
+                            if (varObj) {
+                                varValue = Tcl_GetString(varObj);
+                            }
+                        }
+                    }
+                    
+                    /* Get this button's value. */
+                    snprintf(cmd, sizeof(cmd), "%s cget -value", Tk_PathName(acc->tkwin));
+                    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+                        btnValue = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+                    }
+                    
+                    /* Button is selected if variable matches button value. */
+                    if (varValue && btnValue) {
+                        is_checked = (strcmp(varValue, btnValue) == 0);
+                    }
+                }
             }
             
+            /* Apply the checked state. */
             if (is_checked) {
                 atk_state_set_add_state(set, ATK_STATE_CHECKED);
-                atk_state_set_add_state(set, ATK_STATE_SELECTED);
             }
-            
+            /* Restore interpreter state. */
             Tcl_SetObjResult(acc->interp, savedResult);
             Tcl_DecrRefCount(savedResult);
         }
     }
-    /* Additional standard states. */
+    
+    /* Standard states. */
     atk_state_set_add_state(set, ATK_STATE_ENABLED);
     atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
 
-    if (Tk_IsMapped(acc->tkwin)) {
+    if (acc->tkwin && Tk_IsMapped(acc->tkwin)) {
         atk_state_set_add_state(set, ATK_STATE_VISIBLE);
         atk_state_set_add_state(set, ATK_STATE_SHOWING);
         atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
@@ -2759,9 +2776,8 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
 
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    (void)clientData; 
+    (void)clientData;
 
-    /* Validate arguments. */
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
         return TCL_ERROR;
@@ -2769,10 +2785,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 
     const char *windowName = Tcl_GetString(objv[1]);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_OK;  /* Window not found, nothing to do. */
+    if (!tkwin) return TCL_OK;
+    
     InvalidateVirtualChildren(tkwin);
 
-    /* Ensure AtkObject exists for this window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
         obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
@@ -2782,66 +2798,50 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 
     AtkRole role = tk_get_role(obj);
     
-    /* Handle checkbutton and radiobutton state changes */
+    /* Special handling for checkbuttons and radiobuttons. */
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
-        /* Get current state */
-        gdouble value = 0.0;
-        gchar *text = NULL;
-        tk_get_value_and_text(ATK_VALUE(obj), &value, &text);
+        /* Get the current state by calling our fixed state detection. */
+        AtkStateSet *current_state = tk_ref_state_set(obj);
+        gboolean is_checked = atk_state_set_contains_state(current_state, ATK_STATE_CHECKED);
         
-        gboolean is_checked = (value > 0.0);
-        
-        /* Emit state change notifications */
+        /* Emit the state change notification. */
         atk_object_notify_state_change(obj, ATK_STATE_CHECKED, is_checked);
+        atk_object_notify_state_change(obj, ATK_STATE_SELECTED, is_checked);
+        
+        /* Emit focus event to ensure screen reader attention. */
         if (is_checked) {
-            atk_object_notify_state_change(obj, ATK_STATE_SELECTED, TRUE);
-        } else {
-            atk_object_notify_state_change(obj, ATK_STATE_SELECTED, FALSE);
+            g_signal_emit_by_name(obj, "focus-event", TRUE);
         }
         
-        /* Emit value-changed signal for screen readers */
+        /* Emit value changed signal */
         g_signal_emit_by_name(obj, "value-changed");
-        g_object_notify(G_OBJECT(obj), "accessible-value");
         
-        /* Emit property change signal */
-        g_signal_emit_by_name(obj, "property-change::accessible-state");
+        /* For debugging: print state to see what's happening. */
+        const char *widget_name = Tk_PathName(tkwin);
+        const char *state_str = is_checked ? "checked" : "unchecked";
+        printf(stderr, "Accessibility: Widget %s is now %s\n", widget_name, state_str);
         
-        g_free(text);
+        g_object_unref(current_state);
         return TCL_OK;
     }
 
-    /* Call the robust selection-change notifier for other widgets */
+    /* Handle other widget types */
     TkAtkNotifySelectionChanged(tkwin);
 
-    /* Handle text/entry widgets separately. */
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
         g_signal_emit_by_name(obj, "text-selection-changed");
     }
 
-    /* Handle value-changed for sliders, spin buttons, scrollbars, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
         role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR) {
         GValue gval = G_VALUE_INIT;
         tk_get_current_value(ATK_VALUE(obj), &gval);
-
-        gdouble new_val = 0.0;
-        if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-            new_val = g_value_get_double(&gval);
-        } else if (G_VALUE_HOLDS_STRING(&gval)) {
-            const char *s = g_value_get_string(&gval);
-            if (s) new_val = g_ascii_strtod(s, NULL);
-        }
-
-        /* Notify ATK clients. */
         g_signal_emit_by_name(obj, "value-changed");
         g_object_notify(G_OBJECT(obj), "accessible-value");
-
         g_value_unset(&gval);
     }
 
-    /* Invalidate virtual children if needed (e.g., for spinbox-linked lists) */
     InvalidateVirtualChildren(tkwin);
-
     return TCL_OK;
 }
 

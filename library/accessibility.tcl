@@ -742,6 +742,10 @@ namespace eval ::tk::accessible {
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+    bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+	bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+	bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+	bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
     
     # Only need to track menu selection changes on X11.
     if {[tk windowingsystem] eq "x11"} {
