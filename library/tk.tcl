@@ -376,9 +376,9 @@ event add <<PasteSelection>>	<ButtonRelease-2>
 
 switch -exact -- [tk windowingsystem] {
     "x11" {
-	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
-	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
-	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
+	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X> <XF86Cut>
+	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C> <XF86Copy>
+	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V> <XF86Paste>
 	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-Z> <Control-Lock-z>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
