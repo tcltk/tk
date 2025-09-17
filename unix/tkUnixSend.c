@@ -1,5 +1,5 @@
 /*
- * tkMacOSXSend.c --
+ * tkUnixSend.c --
  *
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
@@ -15,6 +15,10 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
+#include <mqueue.h>
+
+/* The realtime signal that we use with mq_notify */
+#define TK_MQUEUE_SIGNAL (SIGRTMIN + 0)
 
 /*
  * The following structure is used to keep track of the interpreters
@@ -37,13 +41,13 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
- * A registry of all interpreters owned by the current user is maintained in
- * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
- * representatikon of a TclDictObj.  The dictionary keys are appname strings
- * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
- * items whose integer values are, respectively, the pid of the process which
- * registered the interpreter and the Tk Window ID of the comm window in that
- * interpreter.
+ * A registry of all Tk applications owned by the current user is maintained
+ * in the file ~/Library/Caches/com.tcltk.appnames. The file contains the
+ * string representatikon of a TclDictObj.  The dictionary keys are appname
+ * strings and the value assigned to a key is a Tcl list containing two
+ * Tcl_IntObj items whose integer values are, respectively, the pid of the
+ * process which registered the interpreter and the Tk Window ID of the comm
+ * window in that interpreter.
  */
 
 static char *appNameRegistryPath;
@@ -69,7 +73,8 @@ ObjToAppInfo(
     AppInfo result = {0};
     Tcl_Size objc, length;
     Tcl_Obj **objvPtr;
-    static const char *failure = "AppName registry is corrupted.  Try deleting %s";
+    static const char *failure = "AppName registry is corrupted. "
+	                         "Try deleting %s";
     if (Tcl_ListObjLength(NULL, value, &length) != TCL_OK) {
 	Tcl_Panic(failure, appNameRegistryPath);
     } else if (Tcl_ListObjGetElements(NULL, value, &objc, &objvPtr) == TCL_OK) {
@@ -106,20 +111,37 @@ typedef struct NameRegistry {
     int modified;		/* Non-zero means that the property has been
 				 * modified, so it needs to be written out
 				 * when the NameRegistry is closed. */
-    Tcl_Obj *appNameDict;     /* Tcl dict mapping interpreter names to
+    Tcl_Obj *appNameDict;       /* Tcl dict mapping interpreter names to
 				 * a Tcl list {pid, commWindow}
 				 */
 } NameRegistry;
 
+/*
+ * The global data in the struct below is stored as thread specific data.
+ * This means that the list of registered interpreters is per-thread (not
+ * per-process as indicated above).  It is not clear to me that it makes sense
+ * for a Tk application (i.e. a Tcl interpreter which has loaded the Tk
+ * package) to run in a thread other than the main thread, since such an
+ * application would not receive any X events.  However, the unix code has
+ * used thread-specific data for a long time.  So I am leaving it that way for
+ * the time being.
+ */
+
+#define QNAME_MAX_SIZE 32
+
 typedef struct {
-    RegisteredInterp *interpListPtr;
-				/* List of all interpreters registered in the
-				 * current process. */
+    RegisteredInterp *interpListPtr;  /* List of all interpreters process. */
+    mqd_t qd;                         /* Descriptor for the mqueue. */
+    char qname[QNAME_MAX_SIZE];       /* Path name of mqueue. */
 } ThreadSpecificData;
+
 static Tcl_ThreadDataKey dataKey;
 
+#define SET_QNAME(qname, pid)					\
+    snprintf((qname), QNAME_MAX_SIZE, "/tksend_%d", (pid))
+
 /*
- * Other miscellaneous per-process data:
+ * Other miscellaneous per-process (not per-thread) data:
  */
 
 static struct {
@@ -129,18 +151,215 @@ static struct {
 				 * add print statements, for example. */
 } localData = {0, 0};
 
+
 /*
- * Forward declarations for static functions defined later in this file:
+ * Declarations of some static functions defined later in this file:
  */
 
 static Tcl_CmdDeleteProc DeleteProc;
 static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr);
 static void		RegClose(NameRegistry *regPtr);
 static void		RegAddName(NameRegistry *regPtr, const char *name,
-				    Window commWindow);
+				   Window commWindow);
+static int		SendInit(TkDisplay *dispPtr);
+static Tcl_Obj*         loadAppNameRegistry(const char *path);
+static void             saveAppNameRegistry(Tcl_Obj *dict, const char *path);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
-static int		SendInit(TkDisplay *dispPtr);
+static void             mqueueHandler(int sig, siginfo_t *info, void *ucontext);
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SendInit --
+ *
+ *	This function is called to initialize the objects needed
+ *	for sending commands and receiving results.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up various data structures and windows.<
+ *
+ *--------------------------------------------------------------
+ */
+
+/*
+ * These are typical default values, but the actual defaults can be configured
+ * by the user. We set these values when opening the queue for consistency.
+ */
+
+#define TK_MQ_MSGSIZE 8192
+#define TK_MQ_MAXMSG 10
+
+static int
+SendInit(
+    TkDisplay *dispPtr)		/* Display to initialize. */
+{
+    /*
+     * The commTkwin field in the display struct is now only being used
+     * as a flag to indicate whether this initialization function
+     * has been called.  Another scheme for doing that should be
+     * implemented.  But should the display struct be changed?
+     */
+
+    XSetWindowAttributes atts;
+    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
+	DefaultScreen(dispPtr->display), NULL);
+    Tcl_Preserve(dispPtr->commTkwin);
+    ((TkWindow *) dispPtr->commTkwin)->flags |=
+	    TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
+    TkWmNewWindow((TkWindow *) dispPtr->commTkwin);
+    atts.override_redirect = True;
+    Tk_ChangeWindowAttributes(dispPtr->commTkwin,
+			     CWOverrideRedirect, &atts);
+    Tk_MakeWindowExist(dispPtr->commTkwin);
+
+    /*
+     * Intialize the path used for the appname registry.
+     */
+
+    const char *home = getenv("HOME");
+    const char *dir = "/.cache/tksend";
+    const char *file = "/appnames";
+    appNameRegistryPath = ckalloc(strlen(home) + strlen(dir)
+	+ strlen(file) + 1);
+    strcpy(appNameRegistryPath, home);
+    strcat(appNameRegistryPath, dir);
+    mkdir(appNameRegistryPath, S_IRWXU);
+    strcat(appNameRegistryPath, file);
+
+    /*
+     * Initialize the mqueue used by this process.
+     */
+
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    SET_QNAME(tsdPtr->qname, getpid());
+
+    struct mq_attr attr = {
+	.mq_maxmsg = TK_MQ_MAXMSG,
+	.mq_msgsize = TK_MQ_MSGSIZE,
+    };
+    tsdPtr->qd = mq_open(tsdPtr->qname, O_RDWR|O_CREAT, 0660, &attr);
+    // FIX ERROR HANDLING
+    if (tsdPtr->qd == -1) {
+        perror("mq_open");
+	return TCL_ERROR;
+    }
+    // install our handler
+    // should restore old action in the cleanup.  These could be
+    // global.
+    struct sigaction oldaction, action = {
+	.sa_sigaction = mqueueHandler,
+	.sa_flags = SA_SIGINFO
+    };
+    if (sigaction(TK_MQUEUE_SIGNAL, &action, &oldaction) != 0) {
+	perror("sigaction");
+    }
+    // set up the notification
+    struct sigevent se = {
+	.sigev_notify = SIGEV_SIGNAL,
+	.sigev_signo = TK_MQUEUE_SIGNAL,
+	.sigev_value.sival_ptr = (void *) &tsdPtr->qd,
+	.sigev_notify_attributes = NULL,
+    };
+    if (mq_notify(tsdPtr->qd, &se) == -1) {
+	perror("mq_notify initial");
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkSendCleanup --
+ *
+ *	This function is called to free resources used by the communication
+ *	channels for sending commands and receiving results.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees various data structures and windows.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkSendCleanup(
+    TkDisplay *dispPtr)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    if (dispPtr->commTkwin != NULL) {
+	Tk_DestroyWindow(dispPtr->commTkwin);
+	Tcl_Release(dispPtr->commTkwin);
+	dispPtr->commTkwin = NULL;
+    }
+    if (appNameRegistryPath) {
+        ckfree(appNameRegistryPath);
+    }
+    mq_close(tsdPtr->qd);
+    mq_unlink(tsdPtr->qname);
+}
+
+
+
+/*********************** AppName Registry ***********************/
+
+static Tcl_Obj*
+loadAppNameRegistry(
+    const char *path)
+{
+    size_t length, bytesRead;
+    char *bytes = NULL;
+    Tcl_Obj *result;
+    
+    FILE *appNameFile = fopen(path, "ab+");
+    if (appNameFile == NULL) {
+	Tcl_Panic("fopen failed on %s", path);
+    }
+    if (flock(fileno(appNameFile), LOCK_EX)) {
+	Tcl_Panic("flock failed on %s", path);
+    }
+    /*
+     * In macOS, "ab+" sets read and write position at the end.
+     * But this is not a posix requirement and does not happen
+     * on linux.  So we seek to the end.
+     */
+    fseek(appNameFile, 0, SEEK_END);
+    length = ftell(appNameFile);
+    if (length > 0) {
+	fseek(appNameFile, 0, SEEK_SET);
+	bytes = ckalloc(length);
+	bytesRead = fread(bytes, 1, length, appNameFile);
+    }
+    flock(fileno(appNameFile), LOCK_UN);
+    fclose(appNameFile);
+    if (length == 0) {
+	return Tcl_NewDictObj();
+    }
+    if (bytesRead != length) {
+	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
+		length, bytesRead);
+    }
+    result = Tcl_NewStringObj(bytes, length);
+    ckfree(bytes);
+    /*
+     * Convert the string object to a dict. If that fails the file
+     * must be corrupt, so all we can do is return an empty dict.
+     */
+    Tcl_Size size;
+    if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
+	result = Tcl_NewDictObj();
+    }
+    return result;
+}
 
 static void
 saveAppNameRegistry(
@@ -173,118 +392,6 @@ saveAppNameRegistry(
     }
 }
 
-static Tcl_Obj*
-loadAppNameRegistry(
-    const char *path)
-{
-    size_t length, bytesRead;
-    char *bytes = NULL;
-    Tcl_Obj *result;
-    
-    FILE *appNameFile = fopen(path, "ab+");
-    if (appNameFile == NULL) {
-	Tcl_Panic("fopen failed on %s", path);
-    }
-    if (flock(fileno(appNameFile), LOCK_EX)) {
-	Tcl_Panic("flock failed on %s", path);
-    }
-    /*
-     * In macOS, "ab+" sets read and write position at the end.
-     * But this is not a posix requirement and does not happen
-     * on linux.  So we seek to the end.
-     */
-    fseek(appNameFile, 0, SEEK_END);
-    length = ftell(appNameFile);
-    if (length > 0) {
-	bytes = ckalloc(length);
-	if (bytes) {
-	    fseek(appNameFile, 0, SEEK_SET);
-	    bytesRead = fread(bytes, 1, length, appNameFile);
-	} else {
-	    Tcl_Panic("Out of memory");
-	}
-    }
-    flock(fileno(appNameFile), LOCK_UN);
-    fclose(appNameFile);
-    if (length == 0) {
-	return Tcl_NewDictObj();
-    }
-    if (bytesRead != length) {
-	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
-		length, bytesRead);
-    }
-    result = Tcl_NewStringObj(bytes, length);
-    ckfree(bytes);
-    /*
-     * Convert the string object to a dict. If that fails the file
-     * must be corrupt, so all we can do is return an empty dict.
-     */
-    Tcl_Size size;
-    if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
-	result = Tcl_NewDictObj();
-    }
-    return result;
-}
-
-
-/*
- *--------------------------------------------------------------
- *
- * SendInit --
- *
- *	This function is called to initialize the objects needed
- *	for sending commands and receiving results.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets up various data structures and windows.
- *
- *--------------------------------------------------------------
- */
-
-static int
-SendInit(
-    TkDisplay *dispPtr)		/* Display to initialize. */
-{
-
-    XSetWindowAttributes atts;
-
-    /*
-     * Create the window used for communication, and set up an event handler
-     * for it. XXXX Currently we do not use the event handler.
-     */
-
-    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
-	DefaultScreen(dispPtr->display), NULL);
-    Tcl_Preserve(dispPtr->commTkwin);
-    ((TkWindow *) dispPtr->commTkwin)->flags |=
-	    TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
-    TkWmNewWindow((TkWindow *) dispPtr->commTkwin);
-    atts.override_redirect = True;
-    Tk_ChangeWindowAttributes(dispPtr->commTkwin,
-	    CWOverrideRedirect, &atts);
-    Tk_MakeWindowExist(dispPtr->commTkwin);
-
-    /*
-     * Intialize the path used for the appname registry.
-     */
-
-    /* Need to get the user home from the env and deal with
-       intermediate directories. */
-    const char *home = getenv("HOME");
-    const char *dir = "/.cache/tksend";
-    const char *file = "/appnames";
-    appNameRegistryPath = ckalloc(strlen(home) + strlen(dir)
-	+ strlen(file) + 1);
-    strcpy(appNameRegistryPath, home);
-    strcat(appNameRegistryPath, dir);
-    mkdir(appNameRegistryPath, S_IRWXU);
-    strcat(appNameRegistryPath, file);
-    return TCL_OK;
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -313,11 +420,6 @@ RegOpen(
 				 * opened. */
 {
     NameRegistry *regPtr;
-
-    if (dispPtr->commTkwin == NULL) {
-	SendInit(dispPtr);
-    }
-
     regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
     regPtr->dispPtr = dispPtr;
     regPtr->modified = 0;
@@ -533,13 +635,12 @@ Tk_SetAppName(
     const char *actualName;
     Tcl_DString dString;
     int offset, i;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     interp = winPtr->mainPtr->interp;
     if (dispPtr->commTkwin == NULL) {
 	SendInit(winPtr->dispPtr);
     }
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * See if the application is already registered; if so, remove its current
@@ -610,8 +711,7 @@ Tk_SetAppName(
 
     /*
      * We've now got a name to use. Store it in the name registry and in the
-     * local entry for this application, plus put it in a property on the
-     * commWindow.
+     * local entry for this application.
      */
 
     RegAddName(regPtr, actualName, Tk_WindowId(dispPtr->commTkwin));
@@ -622,6 +722,416 @@ Tk_SetAppName(
 	Tcl_DStringFree(&dString);
     }
     return riPtr->name;
+}
+
+/*************************** MQueue Interface ****************************/
+
+/*
+ * Our mqueue messages consist of a header followed by a payload, as described
+ * by the following struct.  The payload is a byte sequence containing a
+ * concatenation of null-terminated C strings, the number of strings being
+ * specified by the count field in the header.  The strings are preceded in
+ * the payload by an array of size_t values specifying the size of each
+ * string, including its null terminator.
+ */
+
+typedef struct message {
+    int serial;      /* serial number */
+    int code;        /* only used for replys */
+    int flags;       /* See below.    */
+    int count;       /* Number of strings in the payload. */
+    char payload[];
+} message;
+
+/*
+ * The payload byte sequence can have two different forms.
+ *
+ * Usually the payload consists of an array of longs, specifying the sizes of
+ * each of the strings, followed by the concatenation of the strings. The
+ * size_t integers are serialized in the endian order of the host system, so
+ * they may be deserialized by simply calling memcpy.
+ *
+ * A second format is intended to deal with the issue that mqueue messages
+ * have a limited size, typically 8192 bytes, which might not be large enough.
+ * To deal with the size limit, the payload strings need not be embedded in
+ * the message as in the typical case.  Instead the message payload can
+ * contain a single string which is the path to a temporary file containing
+ * the actual payload strings in the format described above.  Since the path
+ * is a null-terminated string, no size data is included in the message in
+ * this case.
+ */
+
+/*
+ * Flags:
+ *
+ * The flag bit PAYLOAD_IS_PATH indicates which of the two payload formats is
+ * being used.  The flag bit MESSAGE_IS_REQUEST indicates whether the message
+ * is a request, containing a command, or a reply, containing the result
+ * of evalutating a command.
+ */
+
+#define PAYLOAD_IS_PATH    1
+#define MESSAGE_IS_REQUEST 2
+
+/*
+ *----------------------------------------------------------------------
+ * packMessage --
+ *
+ *     Creates a message with a payload consisting of an array of strCount
+ *     null-terminated strings.  The message serial number is taken from
+ *     the localData.  If the message size would exceed the maximum, the payload
+ *     is stored in a temporary file, the PAYLOAD_IS_PATH flag is set, and the
+ *     payload is replaced by an absolute path to the temporary file.
+ *
+ *     Results:
+ *         Returns a pointer to a ckalloc'ed message with payload.
+ *
+ *     Side effects:
+ 
+ *         The size of the message is stored in the size_t referenced by
+ *         sizePtr.  A temporary file containing the payload may be created.
+ *----------------------------------------------------------------------
+ */
+
+static message *packMessage (
+    int code,
+    int strCount,
+    const char **strArray,
+    size_t *sizePtr)
+{
+    int i;
+    char *p;
+    message *result;
+    size_t sizesSize = strCount * sizeof(size_t);
+    size_t payloadSize = sizesSize;
+    size_t *sizes = (size_t *) ckalloc(sizesSize);
+    message header = {
+	.serial = localData.sendSerial,
+	.code = code,
+	.count = strCount
+    };
+    for(i = 0 ; i < strCount ; i++) {
+	payloadSize += (sizes[i] = strlen(strArray[i]) + 1);
+    }
+    if (payloadSize + sizeof(message) > TK_MQ_MSGSIZE) {
+	char tempName[] = "/tmp/tksend_XXXXXX";
+	int tempNameSize = strlen(tempName) + 1;
+	int fd = mkstemp(tempName);
+	FILE *tempFile = fdopen(fd, "w"); 
+	header.flags |= PAYLOAD_IS_PATH;
+	fwrite((char *) sizes, 1, sizesSize, tempFile);
+	for(i = 0 ; i < strCount ; i++) {
+	    fwrite(strArray[i], 1, sizes[i], tempFile);
+	}
+	fclose(tempFile);
+	p = ckalloc(sizeof(message) + tempNameSize);
+	*sizePtr = sizeof(message) + tempNameSize;
+	result = (message*) p;
+	p = (char *) memcpy(p, (char *) &header, sizeof(message)) +
+	            sizeof(message);
+	memcpy(p, tempName, tempNameSize);
+	ckfree(p);
+    } else {
+	p = ckalloc(sizeof(message) + payloadSize);
+	*sizePtr = sizeof(message) + payloadSize;
+	result = (message*) p;
+	p = (char *) memcpy(p, (char *)&header, sizeof(message));
+	p += sizeof(message);
+	p = (char *) memcpy(p, sizes, sizesSize);
+	p += sizesSize;
+	for(i = 0 ; i < strCount ; i++) {
+	    p = stpncpy(p, strArray[i], sizes[i]) + 1;
+	}
+    }
+    if (sizes) {
+	ckfree(sizes);
+    }
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * unpackMessage --
+ *
+ *     Extracts the header and the array of strings stored in the payload from
+ *     a message.  The number of strings and the message serial number can be
+ *     found in the header.
+ *
+ *     Results:
+ *         None 
+ *
+ *     Side effects:
+ *         Allocates memory for an array of char pointers and for the strings
+ *         whose pointers are in the array.  If the message payload was stored
+ *         in a temporary file, that file will be unlinked.
+ *         -------------------------------------------------------------------
+ */
+
+static void unpackMessage(
+    message *msgPtr,
+    message *header,
+    char ***strArrayPtr)
+{
+    message *msgPtr2 = NULL;
+    char *p;
+    size_t *sizes;
+    int strCount = msgPtr->count;
+    memcpy((char *) header, (char *) msgPtr, sizeof(message));
+    *strArrayPtr = (char **) ckalloc(strCount * sizeof(char *));
+    char **strArray = *strArrayPtr;
+    if (msgPtr->flags & PAYLOAD_IS_PATH) {
+	FILE *payloadFile = fopen(msgPtr->payload, "r");
+	fseek(payloadFile, 0, SEEK_END);
+	size_t payloadSize = ftell(payloadFile);
+	fseek(payloadFile, 0, SEEK_SET);
+	msgPtr2 = (message *) ckalloc(sizeof(message) + payloadSize);
+	memcpy((char *) msgPtr2, msgPtr, sizeof(message));
+	size_t bytes_read = fread(msgPtr2->payload, 1, payloadSize, payloadFile);
+	if (bytes_read != payloadSize) {
+	    fprintf(stderr, "Read failed: %ld bytes read\n", bytes_read);
+	    exit(-1);
+	}
+	unlink(msgPtr->payload);
+	sizes = (size_t *) msgPtr2->payload;
+	p = msgPtr2->payload + strCount * sizeof(size_t);
+    } else {
+	sizes = (size_t *) msgPtr->payload;
+	p = msgPtr->payload + strCount * sizeof(size_t);
+    }
+    for (int i = 0 ; i < strCount ; i++) {
+	strArray[i] = ckalloc(sizes[i]);
+	strncpy(strArray[i], p, sizes[i]);
+	p += sizes[i];
+    }
+    if (msgPtr2) {
+	ckfree(msgPtr2);
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * sendRequest --
+ *--------------------------------------------------------------
+ */
+
+static int
+sendRequest(
+    Tcl_Interp *interp,    /* interp running the send command */
+    int pid,               /* pid of recipient process */
+    const char *sender,    /* appName of sender; "" for async requests */
+    const char *recipient, /* appName of recipient; must not be NULL */
+    const char *request)   /* command to be evaluated by recipient */
+{
+    unsigned int priority = 1; /* Do we need different priorities? */
+    int async = (sender[0] == '\0');
+    /* Open the recipient message queue. */
+    char qname[QNAME_MAX_SIZE];
+    char *qnameReply = NULL;
+    SET_QNAME(qname, pid);
+    mqd_t qd = mq_open(qname, O_RDWR, 0, NULL), qdReply;
+    if (qd == -1) {
+	goto error;
+    }
+    const char *strings[3] = {NULL, recipient, request};
+    if (!async) {
+	size_t size = strlen(sender) + strlen("/tkreply_") + 1;
+	qnameReply = ckalloc(size);
+	snprintf(qnameReply, size, "/tkreply_%s", sender);
+	strings[0] = qnameReply;
+    } else {
+	strings[0] = sender;
+    }
+    size_t messageSize;
+    message *m = packMessage(0, 3, strings, &messageSize);
+    m->flags |= MESSAGE_IS_REQUEST;
+    if (mq_send(qd, (char *) m, messageSize, priority) == -1) {
+	ckfree(m);
+	goto error;
+    }
+    mq_close(qd);
+    if (async) {
+	return TCL_OK;
+    }
+    /* Open a new message queue for the reply. */
+    struct mq_attr attr = {
+	.mq_maxmsg = TK_MQ_MAXMSG,
+	.mq_msgsize = TK_MQ_MSGSIZE,
+    };
+    struct timespec abs_timeout;
+    if (clock_gettime(CLOCK_REALTIME, &abs_timeout) == -1) {
+	goto error;
+    }
+    abs_timeout.tv_sec += 1;
+    qdReply = mq_open(qnameReply, O_RDWR|O_CREAT, 0660, &attr);
+    if (qdReply == -1) {
+	goto error;
+    }
+    char msg[TK_MQ_MSGSIZE];
+    
+    // TODO
+    // This is incomplete.
+    // The code belose waits 1 second for a response to the request and gives
+    // up (after checking whether the recipient process is still running.  We
+    // need to deal with the possibility of sending a long-running command to
+    // another application.  How long should we wait?  How should we interrupt
+    // the other process if it is taking too long?
+    
+    int length = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
+				 &abs_timeout);
+    if (length == -1) {
+	if (kill(pid, 0)) {
+	    Tcl_AddErrorInfo(interp, "Target application died.");
+	}
+	goto error;
+    }
+    message header;
+    char **replyStrings;
+    unpackMessage((message *) msg, &header, &replyStrings);
+    if (mq_close(qdReply) == -1 || mq_unlink(qnameReply) == -1) {
+	goto error;
+    }
+    ckfree(qnameReply);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(replyStrings[0],
+	TCL_INDEX_NONE));
+    return TCL_OK;
+error:
+    ckfree(qnameReply);
+    Tcl_SetErrno(errno);
+    Tcl_PosixError(interp);
+    return TCL_ERROR;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * processMessage --
+ *
+ * Called by the MQueue handler to process one message.
+ * 
+ *--------------------------------------------------------------
+ */
+
+enum requestParts {
+    requestSender = 0,
+    requestRecipient,
+    requestCommand};
+
+static void processMessage(
+    message *msgPtr)
+{
+    message header;
+    char **strings;
+    RegisteredInterp *riPtr;
+    int async = 0, code;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    unpackMessage(msgPtr, &header, &strings);
+    if (strings[requestSender][0] == 0) {
+	async = 1;
+    }
+    if (header.flags & MESSAGE_IS_REQUEST) {
+
+	/*
+	 * Locate the application, then execute the script with its
+	 * interpreter.
+	 */
+
+	for (riPtr = tsdPtr->interpListPtr ; ; riPtr = riPtr->nextPtr) {
+	    if (riPtr == NULL) {
+		/* This should be unreachable. */
+		return;
+	    }
+	    if (strcmp(riPtr->name, strings[requestRecipient]) == 0) {
+		break;
+	    }
+	}
+	Tcl_Preserve(riPtr);
+	code = Tcl_EvalEx(riPtr->interp, strings[requestCommand],
+				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	if (!async) {
+	    /* Send a reply */
+	    Tcl_Size resultLength;
+	    const char *resultString = Tcl_GetStringFromObj(
+		Tcl_GetObjResult(riPtr->interp), &resultLength);
+	    size_t messageSize;
+	    message *m = packMessage(code, 1, &resultString, &messageSize);
+	    mqd_t qd = mq_open(strings[requestSender], O_RDWR);
+	    if (qd == -1) {
+		Tcl_SetErrno(errno);
+		Tcl_PosixError(riPtr->interp);
+	    }
+	    int status = mq_send(qd, (char *) m, messageSize, 1);
+	    mq_close(qd);
+	    ckfree(m);
+	    if (status == -1) {
+		Tcl_SetErrno(errno);
+		Tcl_PosixError(riPtr->interp);
+	    }
+	}
+    }
+    for (int i = 0 ; i < header.count ; i++) {
+	ckfree(strings[i]);
+    }
+    ckfree(strings);
+}
+			   
+/*
+ *--------------------------------------------------------------
+ *
+ * mqueueHandler --
+ *
+ * This is a signal handler for the real-time signal generated by
+ * the mqueue notification system.
+ *--------------------------------------------------------------
+ */
+
+static void mqueueHandler(
+    int sig,
+    siginfo_t *info,
+    void *ucontext)
+{
+    (void) sig;
+    (void) ucontext;
+    mqd_t *qdPtr = (mqd_t*) info->si_value.sival_ptr;
+    mqd_t qd = *qdPtr;
+    message *msgPtr = NULL;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * The current notification registration will be canceled when
+     * this function returns.  The man page recommends renewing 
+     * the registration before emptying the queue, as another process
+     * is allowed to register as soon as the queue becomes empty.
+     */
+    
+    struct sigevent se = {
+	.sigev_notify = SIGEV_SIGNAL,
+	.sigev_signo = TK_MQUEUE_SIGNAL,
+	.sigev_value.sival_ptr = (void *) &tsdPtr->qd,
+	.sigev_notify_attributes = NULL,
+    };
+    if (mq_notify(qd, &se) == -1) {
+	perror("mq_notify renew");
+    }
+    /* Process messages until the queue is empty. */
+    unsigned int priority;
+    struct mq_attr attr;
+    while(True) {
+	if (mq_getattr(qd, &attr) == -1) {
+	    perror("mq_getattr");
+	    break;
+	}
+	if (attr.mq_curmsgs == 0) {
+	    break;
+	}
+	msgPtr = (message *) ckalloc(attr.mq_msgsize);
+	mq_receive(qd, (char *)msgPtr, attr.mq_msgsize, &priority);
+	processMessage(msgPtr);
+    }
+    ckfree(msgPtr);
+    return;
 }
 
 
@@ -644,10 +1154,9 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    TCL_UNUSED(void *),	/* Information about sender (only dispPtr
-				 * field is used). */
+    TCL_UNUSED(void *),	        /* Information about sender */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     enum {
@@ -657,14 +1166,13 @@ Tk_SendObjCmd(
 	"-async",   "-displayof",   "--",  NULL
     };
     const char *stringRep, *destName;
+    int code = TCL_OK;
     TkWindow *winPtr;
     Window commWindow;
     RegisteredInterp *riPtr;
     int result, async, i, firstArg, index;
     TkDisplay *dispPtr;
     NameRegistry *regPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_DString request, request2;
     Tcl_Interp *localInterp;	/* Used when the interpreter to send the
 				 * command to is within the same process. */
@@ -693,7 +1201,8 @@ Tk_SendObjCmd(
 	    if (index == SEND_ASYNC) {
 		++async;
 	    } else if (index == SEND_DISPLAYOF) {
-		winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[++i]),
+		winPtr = (TkWindow *) Tk_NameToWindow(interp,
+			 Tcl_GetString(objv[++i]),
 			(Tk_Window) winPtr);
 		if (winPtr == NULL) {
 		    return TCL_ERROR;
@@ -716,21 +1225,17 @@ Tk_SendObjCmd(
     firstArg = i+1;
 
     dispPtr = winPtr->dispPtr;
-    if (dispPtr->commTkwin == NULL) {
-	SendInit(winPtr->dispPtr);
-    }
-
     /*
      * See if the target interpreter is local. If so, execute the command
-     * directly without going through the X server. The only tricky thing is
+     * directly without sending messages. The only tricky thing is
      * passing the result from the target interpreter to the invoking
      * interpreter. Watch out: they could be the same!
      */
-
-    for (riPtr = tsdPtr->interpListPtr; riPtr != NULL;
-	    riPtr = riPtr->nextPtr) {
-	if ((riPtr->dispPtr != dispPtr)
-		|| (strcmp(riPtr->name, destName) != 0)) {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    for (riPtr = tsdPtr->interpListPtr; riPtr != NULL; riPtr = riPtr->nextPtr) {
+	if ((riPtr->dispPtr != dispPtr) ||
+	    (strcmp(riPtr->name, destName) != 0)) {
 	    continue;
 	}
 	/* We have found our target interpreter */
@@ -742,10 +1247,12 @@ Tk_SendObjCmd(
 				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
 	    Tcl_DStringInit(&request);
-	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
+	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]),
+			      TCL_INDEX_NONE);
 	    for (i = firstArg+1; i < objc; i++) {
 		Tcl_DStringAppend(&request, " ", 1);
-		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
+		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]),
+				  TCL_INDEX_NONE);
 	    }
 	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request),
 				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -797,7 +1304,7 @@ Tk_SendObjCmd(
 		NULL);
 	return TCL_ERROR;
     }
-    
+
     /*
      * Send the command with args to the non-local target interpreter
      */
@@ -814,13 +1321,28 @@ Tk_SendObjCmd(
      // When async is 0, the call below blocks until a reply is received.
      // Perhaps we should run a background thread to process timer events?
 
-#if 0
-    int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
-			      async);
-#endif
-    int code = 0;
-    printf("send %s with async %d\n", Tcl_DStringValue(&request2), async);
-
+    if (async) {	
+	code = sendRequest(interp, info.pid, "", (const char*) destName,
+			       Tcl_DStringValue(&request2));
+    } else {
+	/* Find the appName of the sending interpreter */
+	char *replyName = NULL;
+	for (riPtr = tsdPtr->interpListPtr; riPtr != NULL;
+	     riPtr = riPtr->nextPtr) {
+	    if (riPtr->interp == winPtr->mainPtr->interp) {
+		replyName = riPtr->name;
+		break;
+	    }
+	}
+	code = sendRequest(interp, info.pid, replyName, destName,
+			       Tcl_DStringValue(&request2));
+    }
+    if (code != TCL_OK) {
+	// Use Tcl_Posix ??
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("mq_send failed: %s",
+					       strerror(errno)));
+    }
+    Tcl_DStringFree(&request2);
     localData.sendSerial++;
     return code;
 }
@@ -874,38 +1396,6 @@ TkGetInterpNames(
 /*
  *--------------------------------------------------------------
  *
- * TkSendCleanup --
- *
- *	This function is called to free resources used by the communication
- *	channels for sending commands and receiving results.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees various data structures and windows.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkSendCleanup(
-    TkDisplay *dispPtr)
-{
-    if (dispPtr->commTkwin != NULL) {
-	Tk_DestroyWindow(dispPtr->commTkwin);
-	Tcl_Release(dispPtr->commTkwin);
-	dispPtr->commTkwin = NULL;
-    }
-    if (appNameRegistryPath) {
-        ckfree(appNameRegistryPath);
-    }
-}
-
-
-/*
- *--------------------------------------------------------------
- *
  * DeleteProc --
  *
  *	This function is invoked by Tcl when the "send" command is deleted in
@@ -927,12 +1417,12 @@ DeleteProc(
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     RegisteredInterp *riPtr2;
     NameRegistry *regPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     regPtr = RegOpen(riPtr->interp, riPtr->dispPtr);
     RegDeleteName(regPtr, riPtr->name);
     RegClose(regPtr);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->interpListPtr == riPtr) {
 	tsdPtr->interpListPtr = riPtr->nextPtr;
@@ -1088,8 +1578,10 @@ TkpTestsendCmd(
 
 /*
  * Local Variables:
- * mode: objc
+ * mode: c
+ * c-file-style: "k&r"
  * c-basic-offset: 4
+ * c-file-offsets: ((arglist-cont . 0))
  * fill-column: 78
  * End:
  */
