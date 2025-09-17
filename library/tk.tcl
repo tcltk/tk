@@ -379,8 +379,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X> <XF86Cut>
 	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C> <XF86Copy>
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V> <XF86Paste>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z>
-	event add <<Redo>>		<Control-Z> <Control-Lock-z>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <XF86Undo>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> <XF86Redo>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
