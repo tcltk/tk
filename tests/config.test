@@ -165,8 +165,6 @@ test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
     killTables
 } -result {{3 4 -three 2 2 -one} {2 2 -one} {} {2 2 -one}}
 
-# No tests for DestroyOptionHashTable; couldn't figure out how to test.
-
 test config-3.1 {Tk_InitOptions - priority of chained tables} -constraints {
     testobjconfig
 } -body {

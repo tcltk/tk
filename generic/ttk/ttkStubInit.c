@@ -8,6 +8,11 @@
 
 MODULE_SCOPE const TtkStubs ttkStubs;
 
+
+#ifdef TK_NO_DEPRECATED
+#   define Ttk_RegisterElementSpec 0
+#endif /* TK_NO_DEPRECATED */
+
 #ifdef __GNUC__
 /*
  * The rest of this file shouldn't warn about deprecated functions; they're

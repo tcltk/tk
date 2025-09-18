@@ -272,7 +272,7 @@ TKOBJS = \
 TTK_OBJS = \
 	$(TMP_DIR)\ttkWinMonitor.obj \
 	$(TMP_DIR)\ttkWinTheme.obj \
-	$(TMP_DIR)\ttkWinXPTheme.obj \
+	$(TMP_DIR)\ttkWinVistaTheme.obj \
 	$(TMP_DIR)\ttkBlink.obj \
 	$(TMP_DIR)\ttkButton.obj \
 	$(TMP_DIR)\ttkCache.obj \
@@ -732,7 +732,7 @@ install-binaries:
 if {![package vsatisfies [package provide Tcl] 9.0]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin cygtcl9tk$(DOTVERSION).dll]]]
 } else {
     package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }

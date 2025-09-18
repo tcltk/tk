@@ -1702,11 +1702,9 @@ test textDisp-10.1 {TkTextRelayoutWindow} {
 #
 # COMMON TEST SETUP
 #
-
 .t configure -bg [lindex [.t configure -bg] 3]
-catch {destroy .top}
 
-test textDisp-10.2 {TkTextRelayoutWindow} {
+test textDisp-10.2 {TkTextRelayoutWindow} -body {
     toplevel .top -width 300 -height 200
     wm geometry .top +0+0
     text .top.t -font $fixedFont -width 20 -height 10 -relief raised -bd 2
@@ -1717,13 +1715,14 @@ test textDisp-10.2 {TkTextRelayoutWindow} {
     place .top.t -width 150 -height 100
     update
     .top.t index @0,0
-} {1.0}
+} -result {1.0} -cleanup {
+    destroy .top
+}
 
 #
 # COMMON TEST SETUP
 #
 
-catch {destroy .top}
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -3152,7 +3151,6 @@ test textDisp-19.11.12 {TextWidgetCmd procedure, "count -displaylines"} {
 #
 # COMMON TEST SETUP
 #
-
 .t tag configure elide -elide 1
 
 test textDisp-19.11.13 {TextWidgetCmd procedure, "count -displaylines"} {
@@ -3478,8 +3476,8 @@ test textDisp-20.5 {FindDLine} -setup {
 } -cleanup {
     .t config -wrap word
 } -result [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
+                [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+                [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 
 test textDisp-21.1 {TkTextPixelIndex} {
     .t yview 48.0
@@ -3672,11 +3670,11 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} -body {
 } -cleanup {
     .t tag delete spacing
 } -result [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
-	[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
-	[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
-	[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
-	[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
-	[list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
+                [list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
+                [list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
+                [list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
+                [list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
+                [list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
 test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3822,8 +3820,8 @@ test textDisp-23.7 {TkTextDLineInfo, centering} -body {
 } -cleanup {
     .t tag delete x y
 } -result [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
-	[list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
-	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
+                [list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
+                [list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
 
 test textDisp-24.1 {TkTextCharLayoutProc} {
     .t configure -wrap char

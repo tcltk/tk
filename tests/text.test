@@ -3515,12 +3515,12 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # COMMON TEST SETUP
 #
 
-# Tests text-14.19 and text-14.20 were failing Windows because the title bar on
-# .t was a certain minimum size and it was interfering with the size requested
+# Tests text-14.19 and text-14.20 were failing on Windows because the title bar
+# on .t was a certain minimum size and it was interfering with the size requested
 # by the -setgrid. The "overrideredirect" gets rid of the titlebar so the
 # toplevel can shrink to the appropriate size.
 # On macOS, however, there is no way to make the window overlap the
-# menubar.  Starting with macOS 15 (Sequoia) it became impossible for
+# menubar. Starting with macOS 15 (Sequoia) it became impossible for
 # the y coordinate of the top of a window to be less than 10 plus the
 # menubar height (as reported by [[NSApp mainMenu] menuBarHeight]).
 #
