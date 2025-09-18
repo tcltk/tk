@@ -1,19 +1,31 @@
 # This file is a Tcl script to test the visual- and colormap-handling
-# procedures in the file tkVisual.c.  It is organized in the standard
-# fashion for Tcl tests.
+# procedures in the file tkVisual.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import colors
+
+#
+# COMMON TEST SETUP
+#
 
 update
 
@@ -31,11 +43,18 @@ if {[llength $avail] > 1} {
 	}
     }
 }
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint haveOtherVisual [expr {$other ne ""}]
 testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test visual-1.1 {Tk_GetVisual, copying from other window} -body {
     toplevel .t -visual .foo.bar
@@ -520,13 +539,12 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
 testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

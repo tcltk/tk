@@ -1,24 +1,45 @@
-# This file is a Tcl script to test entry widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test entry widgets in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+# NOTE
+#
+# Gathered comments about lacks
+# Still need to write tests for EntryBlinkProc, EntryFocusProc,
+# EntryTextVarProc, EntryScanTo and EntrySelectTo, DisplayEntry, EventuallyRedraw.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import entry scroll
+
+#
+# COMMON TEST SETUP
+#
 
 foreach i {1 2 3} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 set cy [font metrics {Courier -12} -linespace]
 
+#
+# TESTS
+#
 
 test entry-1.1 {configuration option: "background" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2851,7 +2872,7 @@ test entry-13.26 {GetEntryIndex procedure} -constraints fonts -body {
     destroy .e
 } -result {0 1}
 
-# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
+# Still need to write tests for EntryScanTo and EntrySelectTo.
 
 
 test entry-14.1 {EntryFetchSelection procedure} -body {
@@ -3596,16 +3617,8 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
     destroy .e
 } -result {{} {}}
 
-
-# Gathered comments about lacks
-# XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
-# and EntryTextVarProc.
-# No tests for DisplayEntry.
-# XXX Still need to write tests for EntryScanTo and EntrySelectTo.
-# No tests for EventuallyRedraw
-
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 # option clear
@@ -3615,5 +3628,4 @@ foreach i {1 2 3} {
 unset i
 testutils forget entry scroll
 cleanupTests
-return
 
