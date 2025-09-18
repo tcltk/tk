@@ -177,11 +177,14 @@ namespace eval ::tk::accessible {
     # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
+		$w invoke
 	    set data [::tk::accessible::_getradiodata $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
+		$w invoke
+		puts "invoked"
 	    set data [::tk::accessible::_getcheckdata $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
@@ -576,64 +579,6 @@ namespace eval ::tk::accessible {
 		       }
 
 
-
-
-    # Menu accessibility bindings for X11 only. Menus are native
-    # on macOS/Windows, so we don’t expose them here.
-    if {[tk windowingsystem] eq "x11"} {
-
-	# Initialize the menu container itself when mapped.
-	bind Menu <Map> {+
-	    # Determine role based on whether this is a menubar
-	    if {[winfo manager %W] eq "menubar"} {
-		set role Menubar ;# ATK_ROLE_MENU_BAR
-	    } else {
-		set role Menu ;# ATK_ROLE_MENU
-	    }
-
-	    # Only fetch label if there is an active entry
-	    set label ""
-	    set idx [%W index active]
-	    if {$idx ne ""} {
-		set label [%W entrycget $idx -label]
-	    }
-
-	    ::tk::accessible::_init \
-		       %W \
-		       $role \
-		       [winfo name %W] \
-		       "" \
-		       $label \
-		       {} \
-		       {}
-	}
-
-	# Initialize/update the currently active entry
-	# whenever the selection changes.
-	bind Menu <<MenuSelect>> {+
-	    set idx [%W index active]
-	    if {$idx ne ""} {
-		set label [%W entrycget $idx -label]
-		# Construct a unique ID for this entry under %W
-		set entryId "%W:$idx"
-
-		::tk::accessible::_init \
-		    $entryId \
-		    menuitem \       ;# ATK_ROLE_MENU_ITEM
-                $label \
-		    $label \
-		    {} \
-		    {} \
-		    [list %W invoke $idx]
-
-		# Update value and fire events
-		::tk::accessible::acc_value $entryId $label
-		::tk::accessible::emit_selection_change $entryId
-		::tk::accessible::emit_focus_change $entryId
-	    }
-	}
-    }
-
     # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
 			      %W \
@@ -743,19 +688,69 @@ namespace eval ::tk::accessible {
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
     bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-	bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-	bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-	bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
+    bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
     
-    # Only need to track menu selection changes on X11.
+    # Only need to track menu bindings on X11 - menus are native on macOS
+    # and Windows.
+
+    #Keyboard navigation of menu items on X11.
     if {[tk windowingsystem] eq "x11"} {
-	bind Menu <Up> {+
+	
+	bind Menu <FocusIn> {+
+	    if {[winfo manager %W] ne "menubar"} return
+	    set firstIdx 0
+	    %W activate $firstIdx
+	    set entryId "%W:$firstIdx"
+	    ::tk::accessible::emit_focus_change $entryId
+	    ::tk::accessible::emit_selection_change $entryId
+	}
+
+	# Left/Right navigation across top-level menubar items
+	bind Menu <Left> {+
+	    if {[winfo manager %W] ne "menubar"} return
 	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx [%W index last]
-	    } else {
-		set idx [expr {$current - 1}]
+	    if {$current eq ""} { set current 0 }
+	    set last [%W index last]
+	    set idx [expr {($current - 1 + $last + 1) % ($last + 1)}]
+	    %W activate $idx
+	    set entryId "%W:$idx"
+	    ::tk::accessible::emit_focus_change $entryId
+	    ::tk::accessible::emit_selection_change $entryId
+	}
+	bind Menu <Right> {+
+	    if {[winfo manager %W] ne "menubar"} return
+	    set current [%W index active]
+	    if {$current eq ""} { set current 0 }
+	    set last [%W index last]
+	    set idx [expr {($current + 1) % ($last + 1)}]
+	    %W activate $idx
+	    set entryId "%W:$idx"
+	    ::tk::accessible::emit_focus_change $entryId
+	    ::tk::accessible::emit_selection_change $entryId
+	}
+
+	# Down/Return on menubar item: post submenu and announce the top-level item
+	foreach key {<Down> <Return>} {
+	    bind Menu $key {+
+		if {[winfo manager %W] eq "menubar"} {
+		    set idx [%W index active]
+		    if {$idx ne ""} {
+			%W postcascade $idx
+			set entryId "%W:$idx"
+			::tk::accessible::emit_focus_change $entryId
+			::tk::accessible::emit_selection_change $entryId
+		    }
+		}
 	    }
+	}
+	
+	# Up arrow inside submenu
+	bind Menu <Up> {+
+	    if {[winfo manager %W] eq "menubar"} return
+	    set current [%W index active]
+	    if {$current eq ""} { set idx [%W index last] } else { set idx [expr {$current - 1}] }
 	    set lastIndex [%W index last]
 	    while {$idx >= 0} {
 		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
@@ -766,13 +761,12 @@ namespace eval ::tk::accessible {
 		incr idx -1
 	    }
 	}
+
+	# Down arrow inside submenu
 	bind Menu <Down> {+
+	    if {[winfo manager %W] eq "menubar"} return
 	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx 0
-	    } else {
-		set idx [expr {$current + 1}]
-	    }
+	    if {$current eq ""} { set idx 0 } else { set idx [expr {$current + 1}] }
 	    set lastIndex [%W index last]
 	    while {$idx <= $lastIndex} {
 		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
@@ -783,15 +777,58 @@ namespace eval ::tk::accessible {
 		incr idx
 	    }
 	}
+
+	# Return inside submenu: invoke active item
 	bind Menu <Return> {+
+	    if {[winfo manager %W] eq "menubar"} return
 	    set idx [%W index active]
 	    if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
 		%W invoke $idx
 		::tk::accessible::_updateselection %W
 	    }
 	}
+
+	#  Initialize menubar entries and submenu items 
+	bind Menu <Map> {+
+	    # Determine role based on whether this is a menubar
+	    if {[winfo manager %W] eq "menubar"} { set role Menubar } else { set role Menu }
+
+	    # Init the container itself
+	    ::tk::accessible::_init %W $role [winfo name %W] "" "" {} {}
+
+	    # If it's a menubar, expose each top-level cascade as menuitem
+	    if {$role eq "Menubar"} {
+		set lastIndex [%W index last]
+		for {set i 0} {$i <= $lastIndex} {incr i} {
+		    if {[%W type $i] eq "cascade"} {
+			set label   [%W entrycget $i -label]
+			set submenu [%W entrycget $i -menu]
+			set entryId "%W:$i"
+
+			# Accessible object for top-level menu item
+			::tk::accessible::_init $entryId menuitem $label $label {} {} [list %W postcascade $i]
+
+			# If there is a submenu, initialize it and its entries
+			if {$submenu ne ""} {
+			    ::tk::accessible::_init $submenu menu $label $label {} {} {}
+
+			    set lastSubIndex [$submenu index last]
+			    for {set j 0} {$j <= $lastSubIndex} {incr j} {
+				if {[$submenu type $j] ne "separator"} {
+				    set subLabel [$submenu entrycget $j -label]
+				    set subId "$submenu:$j"
+
+				    ::tk::accessible::_init $subId menuitem $subLabel $subLabel {} {} [list $submenu invoke $j]
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
 
+    
     # Capture value changes from scale widgets.
     bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
     bind Scale <Left> {+::tk::accessible::_updatescale %W Left}

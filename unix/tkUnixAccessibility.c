@@ -1247,6 +1247,25 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     AtkObject *obj = GetAtkObjectForTkWindow(acc->tkwin);
     
+
+    /*
+     * Special handling for checkbuttons, radiobuttons, and
+     * spinbuttons.
+     */
+    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
+	/* Generate <<Invoke>> virtual event for script-level binding. */
+	XVirtualEvent event;
+	memset(&event, 0, sizeof(event));
+	event.type = VirtualEvent;        /* Tk-specific virtual event */
+	event.serial = NextRequest(Tk_Display(acc->tkwin));
+	event.send_event = True;
+	event.display = Tk_Display(acc->tkwin);
+	event.event = Tk_WindowId(acc->tkwin);
+	event.root = RootWindowOfScreen(Tk_Screen(acc->tkwin));
+	event.name = Tk_GetUid("Invoke");
+	Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+    }
+    
     if (role == ATK_ROLE_SPIN_BUTTON) {
         if (i < 0 || i > 1) return FALSE;  /* Only support 0 and 1. */
 
@@ -2819,7 +2838,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
         /* For debugging: print state to see what's happening. */
         const char *widget_name = Tk_PathName(tkwin);
         const char *state_str = is_checked ? "checked" : "unchecked";
-        printf(stderr, "Accessibility: Widget %s is now %s\n", widget_name, state_str);
+        fprintf(stderr, "Accessibility: Widget %s is now %s\n", widget_name, state_str);
         
         g_object_unref(current_state);
         return TCL_OK;
