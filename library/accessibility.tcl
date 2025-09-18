@@ -805,7 +805,7 @@ namespace eval ::tk::accessible {
     # that we used with the Aqua scrollbar when the ttk widgets were first
     # developed - map the ttk widget to its classic equivalent. There may
     # be a visual conflict but it is more important that the AT be able
-    # to correclty identify the widget and its value. 
+    # to correctly identify the widget and its value. 
     
     if {[tk windowingsystem] eq "aqua" || [tk windowingsystem] eq "x11"} {
 	set result [::tk::accessible::check_screenreader]
