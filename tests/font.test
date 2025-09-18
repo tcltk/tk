@@ -1,17 +1,40 @@
 # This file is a Tcl script to test out Tk's "font" command
-# plus the procedures in tkFont.c.  It is organized in the
-# standard white-box fashion for Tcl tests.
+# plus the procedures in tkFont.c.
 #
 # Copyright © 1996-1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
-set defaultfontlist [font names]
+#
+# LOCAL UTILITY PROCS
+#
+
+proc clearnondefaultfonts {} {
+    foreach afont [getnondefaultfonts] {
+	font delete $afont
+    }
+}
+
+proc csetup {{str ""}} {
+    focus -force .t.c
+    .t.c dchars text 0 end
+    .t.c insert text 0 $str
+    .t.c focus text
+}
 
 proc getnondefaultfonts {} {
     global defaultfontlist
@@ -24,10 +47,34 @@ proc getnondefaultfonts {} {
     set nondeffonts
 }
 
-proc clearnondefaultfonts {} {
-    foreach afont [getnondefaultfonts] {
-	font delete $afont
-    }
+proc psfontname {name} {
+	destroy .t.c
+	canvas .t.c -closeenough 0
+	.t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
+	pack .t.c
+	update
+    set a [.t.c itemcget text -font]
+    .t.c itemconfig text -text "We need text" -font $name
+    set post [.t.c postscript]
+    .t.c itemconfig text -font $a
+    set end [string first "findfont" $post]
+    incr end -2
+    set post [string range $post [expr $end-70] $end]
+    set start [string first "gsave" $post]
+	destroy .t.c
+    return [string range $post [expr $start+7] end]
+}
+
+#
+# COMMON TEST SETUP
+#
+
+set defaultfontlist [font names]
+
+switch [tk windowingsystem] {
+    x11		{set fixed "TkFixedFont"}
+    win32	{set fixed "courier 12"}
+    aqua	{set fixed "monaco 9"}
 }
 
 deleteWindows
@@ -36,21 +83,9 @@ toplevel .t
 wm geom .t +0+0
 update idletasks
 
-switch [tk windowingsystem] {
-    x11		{set fixed "TkFixedFont"}
-    win32	{set fixed "courier 12"}
-    aqua	{set fixed "monaco 9"}
-}
-
-
-# Procedure used in tests: 24.15, 26.*, 28.*, 30.*, 31.*, 32.1
-proc csetup {{str ""}} {
-    focus -force .t.c
-    .t.c dchars text 0 end
-    .t.c insert text 0 $str
-    .t.c focus text
-}
-
+#
+# TESTS
+#
 
 test font-1.1 {TkFontPkgInit} -setup {
     catch {interp delete foo}
@@ -876,25 +911,6 @@ test font-20.1 {Tk_GetFontMetrics procedure} -setup {
     destroy .t.w1 .t.w2
 } -result {}
 
-
-# Procedure used in 21.* tests
-proc psfontname {name} {
-	destroy .t.c
-	canvas .t.c -closeenough 0
-	.t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
-	pack .t.c
-	update
-    set a [.t.c itemcget text -font]
-    .t.c itemconfig text -text "We need text" -font $name
-    set post [.t.c postscript]
-    .t.c itemconfig text -font $a
-    set end [string first "findfont" $post]
-    incr end -2
-    set post [string range $post [expr $end-70] $end]
-    set start [string first "gsave" $post]
-	destroy .t.c
-    return [string range $post [expr $start+7] end]
-}
 test font-21.1 {Tk_PostscriptFontName procedure: native} -constraints {
 	unix
 } -body {
@@ -1481,8 +1497,12 @@ test font-23.1 {Tk_UnderlineChars procedure} -setup {
     destroy .t.t
 } -result {}
 
+#
+# COMMON TEST SETUP
+#
+# For tests font-24.*
+#
 
-# Data used in 24.* tests
 destroy .t.l
 label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
 	-text "0" -font "Courier -12"
@@ -1490,6 +1510,7 @@ pack .t.l
 update
 set ax [winfo reqwidth .t.l]
 set ay [winfo reqheight .t.l]
+
 test font-24.1 {Tk_ComputeTextLayout: empty string} -body {
     .t.l config -text ""
 } -result {}
@@ -1608,6 +1629,10 @@ test font-24.14 {Tk_ComputeTextLayout: text ended with \n} -body {
     lappend x [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
     set x
 } -result {1 1 1 1}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t.l
 
 test font-24.15 {Tk_ComputeTextLayout: justification} -setup {
@@ -1643,13 +1668,17 @@ test font-25.1 {Tk_FreeTextLayout procedure} -setup {
     destroy .t.f
 } -result {}
 
-
-# Canvas created for tests: 26.*
+#
+# COMMON TEST SETUP
+#
+# For tests font-26.*
+#
 destroy .t.c
 canvas .t.c -closeenough 0
 .t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .t.c
 update
+
 test font-26.1 {Tk_DrawTextLayout procedure: auto-detect last char} -setup {
     destroy .t.f
     pack [label .t.f]
@@ -1682,12 +1711,18 @@ test font-26.6 {Tk_DrawTextLayout: draw subset of chunk: lastChar < numChars} -b
     .t.c select from text 4
     .t.c select to text 4
 } -result {}
-destroy .t.c
 
-#  Label used in 27.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests font-27.*
+#
+
+destroy .t.c
 destroy .t.f
 pack [label .t.f]
 update
+
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
     .t.f config -text "foo" -underline {}
 } -result {}
@@ -1698,16 +1733,20 @@ test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
     .t.f config -wrap -1 -underline {}
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
+# For tests font-28.*
+#
+
 destroy .t.f
-
-
-
-# Canvas created for tests: 28.*
 destroy .t.c
 canvas .t.c -closeenough 0
 .t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .t.c
 update
+
 test font-28.1 {Tk_PointToChar procedure: above all lines} -body {
     csetup "000"
     .t.c index text @-1,0
@@ -1763,13 +1802,18 @@ test font-28.11 {Tk_PointToChar procedure: below all chunks} -body {
     csetup "000 0000000"
     .t.c index text @0,1000000
 } -result 11
+
+#
+# COMMON TEST SETUP
+#
+# For tests font-29.*
+#
+
 destroy .t.c
-
-
-#  Label used in 29.* tests
 destroy .t.f
 pack [label .t.f]
 update
+
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
     .t.f config -text "000" -underline {}
 } -result {}
@@ -1790,16 +1834,20 @@ test font-29.6 {Tk_CharBBox procedure: bbox pegged to right edge} -body {
     .t.f config -text "0    0000" -wrap [expr $ax*4] -under 3
     .t.f config -wrap 0
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
+# For tests font-30.*
+#
+
 destroy .t.f
-
-
-
-# Canvas created for tests: 30.*
 destroy .t.c
 canvas .t.c -closeenough 0
 .t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .t.c
 update
+
 test font-30.1 {Tk_DistanceToTextLayout procedure: loop once} -body {
     csetup "000\n000\n000"
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
@@ -1862,7 +1910,12 @@ test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -body {
 } -cleanup {
     bind all <Enter> {}
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
 .t.c itemconfig text -justify center
+
 test font-30.7 {Tk_DistanceToTextLayout procedure: on left side} -body {
     csetup "0\n000"
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
@@ -1923,7 +1976,12 @@ test font-30.12 {Tk_DistanceToTextLayout procedure: in line} -body {
 } -cleanup {
 	bind all <Enter> {}
 } -result 3
+
+#
+# COMMON TEST SETUP
+#
 .t.c itemconfig text -justify left
+
 test font-30.13 {Tk_DistanceToTextLayout procedure: exact hit} -body {
     csetup "000"
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
@@ -1934,15 +1992,18 @@ test font-30.13 {Tk_DistanceToTextLayout procedure: exact hit} -body {
 } -cleanup {
     bind all <Enter> {}
 } -result 1
-destroy .t.c
 
-
-# Canvas created for tests 31.*
+#
+# COMMON TEST SETUP
+#
+# For tests font-31.*
+#
 destroy .t.c
 canvas .t.c -closeenough 0
 .t.c create text 0 0 -tags text -anchor nw -just left -font "Courier -12"
 pack .t.c
 update
+
 test font-31.1 {Tk_IntersectTextLayout procedure: loop once} -body {
     csetup "000\n000\n000"
     .t.c find overlapping 0 0 0 0
@@ -1980,8 +2041,11 @@ test font-31.7 {TkIntersectAngledTextLayout procedure: bug [514ff64dd0]} -body {
     # so it's enough to check with a small rectangle with small negative y coords.
     .t.c find overlapping 5 -7 7 -5
 } -result 1
-destroy .t.c
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .t.c
 
 test font-32.1 {Tk_TextLayoutToPostscript: ensure buffer doesn't overflow} -setup {
     destroy .t.c
@@ -2564,10 +2628,8 @@ test font-47.3 {Bug 3049518 - Label} -body {
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return
-
-
-
-
