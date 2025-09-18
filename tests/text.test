@@ -1,15 +1,27 @@
 # This file is a Tcl script to test the code in the file tkText.c.
-# This file is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# COMMON TEST SETUP
+#
 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
@@ -19,6 +31,10 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
+#
+# TESTS
+#
+
 test text-1.1 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -1175,6 +1191,7 @@ Line 7"
 } -cleanup {
     destroy .t
 } -returnCodes error -result {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
+
 # "configure" option is already covered above
 
 test text-7.1 {TextWidgetCmd procedure, "debug" option} -setup {
@@ -3482,20 +3499,26 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 } -cleanup {
     destroy .top
 } -result {150x140+}
-# This test was failing Windows because the title bar on .t was a certain
-# minimum size and it was interfering with the size requested by the -setgrid.
-# The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
-# to the appropriate size.
+
+#
+# COMMON TEST SETUP
+#
+
+# Tests text-14.19 and text-14.20 were failing on Windows because the title bar
+# on .t was a certain minimum size and it was interfering with the size requested
+# by the -setgrid. The "overrideredirect" gets rid of the titlebar so the
+# toplevel can shrink to the appropriate size.
 # On macOS, however, there is no way to make the window overlap the
-# menubar.  Starting with macOS 15 (Sequoia) it became impossible for
+# menubar. Starting with macOS 15 (Sequoia) it became impossible for
 # the y coordinate of the top of a window to be less than 10 plus the
 # menubar height (as reported by [[NSApp mainMenu] menuBarHeight]).
-
+#
 if {[tk windowingsystem] eq "aqua"} {
     set minY [expr [testmenubarheight] + 11]
 } else {
     set minY 0
 }
+
 test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3509,11 +3532,6 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -cleanup {
     destroy .top
 } -result "20x10+0+$minY"
-# This test was failing on Windows because the title bar on .t was a certain
-# minimum size and it was interfering with the size requested by the -setgrid.
-# The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
-# to the appropriate size.
-# On macOS we again use minY as a workaround.
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -7823,10 +7841,11 @@ test text-38.1 {Extending selection with mouse going outside the widget - Bug a9
     destroy .t
 } -result {1.0}
 
-
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

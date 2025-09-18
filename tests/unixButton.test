@@ -1,22 +1,34 @@
 # This file is a Tcl script to test the Unix specific behavior of
 # labels, buttons, checkbuttons, and radiobuttons in Tk (i.e., all the
-# widgets defined in tkUnixButton.c).  It is organized in the standard
-# fashion for Tcl tests.
+# widgets defined in tkUnixButton.c).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import -force tcltest::test
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import button image
 
 imageInit
+
+#
+# COMMON TEST SETUP
+#
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -43,6 +55,11 @@ if {[tk windowingsystem] eq "aqua"} {
     set bigIndicator 40
     set defaultBorder 20
 }
+
+#
+# TESTS
+#
+
 test unixbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
     unix testImageType
 } -setup {
@@ -258,13 +275,12 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 testutils forget button image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

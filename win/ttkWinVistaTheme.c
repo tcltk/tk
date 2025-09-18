@@ -20,6 +20,9 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 #include "ttk/ttkThemeInt.h"
+#ifdef _MSC_VER
+#   pragma comment (lib, "uxtheme.lib")
+#endif
 
 /*
  * VistaThemeDeleteProc --
