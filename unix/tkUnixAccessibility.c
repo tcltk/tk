@@ -1239,80 +1239,78 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
 static gboolean tk_action_do_action(AtkAction *action, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
-
     if (!acc || !acc->tkwin || !acc->interp) {
-	return FALSE;
+        fprintf(stderr, "DEBUG: Invalid acc, tkwin, or interp\n");
+        return FALSE;
     }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     AtkObject *obj = GetAtkObjectForTkWindow(acc->tkwin);
-    
 
-    /*
-     * Special handling for checkbuttons, radiobuttons, and
-     * spinbuttons.
-     */
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
-	/* Generate <<Invoke>> virtual event for script-level binding. */
-	XVirtualEvent event;
-	memset(&event, 0, sizeof(event));
-	event.type = VirtualEvent;        /* Tk-specific virtual event */
-	event.serial = NextRequest(Tk_Display(acc->tkwin));
-	event.send_event = True;
-	event.display = Tk_Display(acc->tkwin);
-	event.event = Tk_WindowId(acc->tkwin);
-	event.root = RootWindowOfScreen(Tk_Screen(acc->tkwin));
-	event.name = Tk_GetUid("Invoke");
-	Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+        /* Try generating <<Invoke>> event */
+        XVirtualEvent event;
+        memset(&event, 0, sizeof(event));
+        event.type = VirtualEvent;
+        event.serial = NextRequest(Tk_Display(acc->tkwin));
+        event.send_event = True;
+        event.display = Tk_Display(acc->tkwin);
+        event.event = Tk_WindowId(acc->tkwin);
+        event.root = RootWindowOfScreen(Tk_Screen(acc->tkwin));
+        event.name = Tk_GetUid("Invoke");
+        fprintf(stderr, "DEBUG: Queuing <<Invoke>> for %s\n", Tk_PathName(acc->tkwin));
+        Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+
+        /* Force immediate event processing */
+        Tcl_DoOneEvent(TCL_DONT_WAIT);
+
+        /* Fallback: Call _updateselection directly if event didn't trigger */
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "::tk::accessible::_updateselection %s", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+            fprintf(stderr, "DEBUG: Failed to call _updateselection for %s: %s\n",
+                    Tk_PathName(acc->tkwin), Tcl_GetStringResult(acc->interp));
+            return FALSE;
+        }
+        fprintf(stderr, "DEBUG: Called _updateselection for %s\n", Tk_PathName(acc->tkwin));
+        return TRUE;
     }
-    
+
     if (role == ATK_ROLE_SPIN_BUTTON) {
-        if (i < 0 || i > 1) return FALSE;  /* Only support 0 and 1. */
-
-	/* Retrieve current value that was updated at script level. */
-	GValue gval = G_VALUE_INIT;
-	tk_get_current_value(ATK_VALUE(obj), &gval);
-
-	gdouble new_val = 0.0;
-	if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-	    new_val = g_value_get_double(&gval);
-	} else if (G_VALUE_HOLDS_STRING(&gval)) {
-	    const char *s = g_value_get_string(&gval);
-	    if (s) new_val = g_ascii_strtod(s, NULL);
-	}
-
-	/* Notify ATK clients. */
-	g_signal_emit_by_name(obj, "value-changed");
-	g_object_notify(G_OBJECT(obj), "accessible-value");
-
-	g_value_unset(&gval);
-	return TRUE;
+        if (i < 0 || i > 1) return FALSE;
+        GValue gval = G_VALUE_INIT;
+        tk_get_current_value(ATK_VALUE(obj), &gval);
+        gdouble new_val = 0.0;
+        if (G_VALUE_HOLDS_DOUBLE(&gval)) {
+            new_val = g_value_get_double(&gval);
+        } else if (G_VALUE_HOLDS_STRING(&gval)) {
+            const char *s = g_value_get_string(&gval);
+            if (s) new_val = g_ascii_strtod(s, NULL);
+        }
+        g_signal_emit_by_name(obj, "value-changed");
+        g_object_notify(G_OBJECT(obj), "accessible-value");
+        g_value_unset(&gval);
+        return TRUE;
     }
 
-    /* Fallback: Generic "click" action for other roles. */ 
     if (i == 0) {
-	/* Retrieve the command string.  */
-	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-	if (!hPtr) return FALSE;
-	
-	
-	Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-	if (!attrs) return FALSE;
-	
-	Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-	if (!actionEntry) return false;
-	
-	const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-	if (!actionString) return FALSE;
-	  	
-	/* Finally, execute command.  */
-	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	    return FALSE;
-	}
+        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+        if (!hPtr) return FALSE;
+        Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        if (!attrs) return FALSE;
+        Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
+        if (!actionEntry) return FALSE;
+        const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
+        if (!actionString) return FALSE;
+        fprintf(stderr, "DEBUG: Executing fallback action for %s: %s\n", Tk_PathName(acc->tkwin), actionString);
+        if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
+            return FALSE;
+        }
+        return TRUE;
     }
-    return TRUE;
-}
 
+    return FALSE;
+}
 
 static gint tk_action_get_n_actions(AtkAction *action)
 {
