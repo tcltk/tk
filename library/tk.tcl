@@ -377,8 +377,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Copy>>		<Control-Key-c> <Key-F16> <Control-Lock-Key-C>
 	event add <<Paste>>		<Control-Key-v> <Key-F18> <Control-Lock-Key-V>
 	event add <<PasteSelection>>	<ButtonRelease-2>
-	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
+	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z> <Redo>
 	event add <<ContextMenu>>	<Button-3>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
@@ -418,8 +418,6 @@ switch -exact -- [tk windowingsystem] {
     	    event add <<Cut>> <XF86Cut>
 	    event add <<Copy>> <XF86Copy>
 	    event add <<Paste>> <XF86Paste>
-	    event add <<Undo>> <XF86Undo>
-	    event add <<Redo>> <XF86Redo>	
 	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
