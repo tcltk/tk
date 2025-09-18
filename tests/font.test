@@ -1988,9 +1988,12 @@ test font-30.12 {Tk_DistanceToTextLayout procedure: in line} -body {
 	bind all <Enter> {}
 } -result 3
 
-test font-30.13 {Tk_DistanceToTextLayout procedure: exact hit} -setup {
-    .t.c itemconfig text -justify left
-} -body {
+#
+# COMMON TEST SETUP
+#
+.t.c itemconfig text -justify left
+
+test font-30.13 {Tk_DistanceToTextLayout procedure: exact hit} -body {
     csetup "000"
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
     set x {}
