@@ -2,10 +2,23 @@
 # ttk::combobox widget tests
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test combobox-1.0 "Combobox tests -- setup" -body {
     ttk::combobox .cb
@@ -117,5 +130,9 @@ test combobox-4.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TCombobox customStyle.TCombobox TCombobox}
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

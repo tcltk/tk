@@ -1,19 +1,41 @@
 # This file is a Tcl script to test out the "frame", "labelframe" and
-# "toplevel" commands of Tk.  It is organized in the standard fashion for Tcl
-# tests.
+# "toplevel" commands of Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import colors
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# optnames --
+#
+# Returns the option names out of a list of option details.
+#
+# Arguments:
+# options -		The option detail list.
+proc optnames {options} {
+    lsort [lmap desc $options {lindex $desc 0}]
+}
 
 # uniq --
 #
@@ -29,15 +51,9 @@ proc uniq {list} {
     return [dict keys $d]
 }
 
-# optnames --
 #
-# Returns the option names out of a list of option details.
+# TESTS
 #
-# Arguments:
-# options -		The option detail list.
-proc optnames {options} {
-    lsort [lmap desc $options {lindex $desc 0}]
-}
 
 test frame-1.1 {frame configuration options} -setup {
     deleteWindows
@@ -141,8 +157,12 @@ test frame-1.12 {frame configuration options} -setup {
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .f
 frame .f
+
 test frame-1.13 {frame configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -266,6 +286,10 @@ test frame-1.38 {frame configuration options} -body {
 test frame-1.39 {frame configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-2.1 {toplevel configuration options} -setup {
@@ -393,10 +417,6 @@ test frame-2.14 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {unknown or ambiguous visual name "who_knows?": class must be best, directcolor, grayscale, greyscale, pseudocolor, staticcolor, staticgray, staticgrey, truecolor, or default}
-set expectedScreen ""
-if {[tcltest::testConstraint haveDISPLAY]} {
-    set expectedScreen [list -screen screen Screen {} $env(DISPLAY)]
-}
 test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
@@ -405,7 +425,7 @@ test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup
     .t configure -screen
 } -cleanup {
     deleteWindows
-} -result $expectedScreen
+} -result [expr {[tcltest::testConstraint haveDISPLAY]?[list -screen screen Screen {} $env(DISPLAY)]:""}]
 test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
@@ -448,10 +468,14 @@ test frame-2.19 {toplevel configuration options} -setup {
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .t
 toplevel .t -width 300 -height 150
 wm geometry .t +0+0
 update
+
 test frame-2.20 {toplevel configuration options} -body {
     .t configure -background #ff0000
     lindex [.t configure -background] 4
@@ -536,6 +560,10 @@ test frame-2.42 {toplevel configuration options} -body {
 test frame-2.43 {toplevel configuration options} -body {
     .t configure -width badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 
 test frame-3.1 {TkCreateFrame procedure} -returnCodes error -body {
@@ -638,12 +666,18 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     destroy .t
     option clear
 } -result {0 0 140 300}
+
+#
+# COMMON TEST SETUP
+#
+
 # The tests below require specific display characteristics (i.e. that they are
 # run on a pseudocolor display of depth 8).  Even so, they are non-portable:
 # some machines don't seem to ever run out of colors.
 if {[testConstraint defaultPseudocolor8]} {
     eatColors .t1
 }
+
 test frame-3.11 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -790,9 +824,14 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
+
 test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {
     deleteWindows
 } -body {
@@ -833,7 +872,11 @@ test frame-4.2 {TkCreateFrame procedure} -setup {
     deleteWindows
 } -result {.f 1}
 
+#
+# COMMON TEST SETUP
+#
 frame .f -highlightcolor black
+
 test frame-5.1 {FrameWidgetCommand procedure} -body {
     .f
 } -returnCodes error -result {wrong # args: should be ".f option ?arg ...?"}
@@ -878,6 +921,10 @@ test frame-5.12 {FrameWidgetCommand procedure} -body {
 test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
     optnames [. configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-6.1 {ConfigureFrame procedure} -setup {
@@ -1176,8 +1223,14 @@ test frame-13.9 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -container option after widget is created}
+
+#
+# COMMON TEST SETUP
+#
+
 destroy .f
 labelframe .f
+
 test frame-13.10 {labelframe configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -1340,6 +1393,10 @@ test frame-13.43 {labelframe configuration options} -body {
 test frame-13.44 {labelframe configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-14.1 {labelframe labelwidget option} -setup {
@@ -1731,7 +1788,7 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
 } -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 10} {gorp display 0 0 20 15} {gorp display 0 0 20 10}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
@@ -1740,7 +1797,6 @@ apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
 }
 testutils forget colors
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl
