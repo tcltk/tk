@@ -779,9 +779,11 @@ declare 33 win {
 declare 34 win {
     void TkWinSetHINSTANCE(HINSTANCE hInstance)
 }
-declare 35 win {
-    int TkWinGetPlatformTheme(void)
-}
+
+# removed in Tk 9.1
+#declare 35 win {
+#    int TkWinGetPlatformTheme(void)
+#}
 
 # Exported through stub table since Tk 8.4.20/8.5.9
 

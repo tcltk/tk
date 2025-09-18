@@ -3568,67 +3568,67 @@ static int AquaTheme_Init(
      * Elements:
      */
 
-    Ttk_RegisterElementSpec(themePtr, "background", &BackgroundElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "background", &BackgroundElementSpec,
 	0);
-    Ttk_RegisterElementSpec(themePtr, "fill", &FillElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "field", &FieldElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Toolbar.background",
+    Ttk_RegisterElement(NULL, themePtr, "fill", &FillElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "field", &FieldElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Toolbar.background",
 	&ToolbarBackgroundElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Button.button",
+    Ttk_RegisterElement(NULL, themePtr, "Button.button",
 	&ButtonElementSpec, &PushButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "InlineButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "InlineButton.button",
 	&ButtonElementSpec, &InlineButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "RoundedRectButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "RoundedRectButton.button",
 	&ButtonElementSpec, &RoundedRectButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
+    Ttk_RegisterElement(NULL, themePtr, "Checkbutton.button",
 	&ButtonElementSpec, &CheckBoxParams);
-    Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
+    Ttk_RegisterElement(NULL, themePtr, "Radiobutton.button",
 	&ButtonElementSpec, &RadioButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "RecessedButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "RecessedButton.button",
 	&ButtonElementSpec, &RecessedButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "SidebarButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "SidebarButton.button",
 	&ButtonElementSpec, &SidebarButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
+    Ttk_RegisterElement(NULL, themePtr, "Toolbutton.border",
 	&ButtonElementSpec, &BevelButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
+    Ttk_RegisterElement(NULL, themePtr, "Menubutton.button",
 	&ButtonElementSpec, &PopupButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "DisclosureButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "DisclosureButton.button",
 	&ButtonElementSpec, &DisclosureButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "HelpButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "HelpButton.button",
 	&ButtonElementSpec, &HelpButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "GradientButton.button",
+    Ttk_RegisterElement(NULL, themePtr, "GradientButton.button",
 	&ButtonElementSpec, &GradientButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.uparrow",
+    Ttk_RegisterElement(NULL, themePtr, "Spinbox.uparrow",
 	&SpinButtonUpElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.downarrow",
+    Ttk_RegisterElement(NULL, themePtr, "Spinbox.downarrow",
 	&SpinButtonDownElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Combobox.button",
+    Ttk_RegisterElement(NULL, themePtr, "Combobox.button",
 	&ComboboxElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
+    Ttk_RegisterElement(NULL, themePtr, "Treeitem.indicator",
 	&DisclosureElementSpec, &DisclosureParams);
-    Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
+    Ttk_RegisterElement(NULL, themePtr, "Treeheading.cell",
 	&TreeHeaderElementSpec, &ListHeaderParams);
 
-    Ttk_RegisterElementSpec(themePtr, "Treeview.treearea",
+    Ttk_RegisterElement(NULL, themePtr, "Treeview.treearea",
 	&TreeAreaElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Notebook.tab", &TabElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Notebook.client", &PaneElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Labelframe.border", &GroupElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Labelframe.border", &GroupElementSpec,
 	0);
-    Ttk_RegisterElementSpec(themePtr, "Entry.field", &EntryElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Entry.field", &EntryElementSpec,
 			    &EntryFieldParams);
-    Ttk_RegisterElementSpec(themePtr, "Searchbox.field", &EntryElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Searchbox.field", &EntryElementSpec,
 			    &SearchboxFieldParams);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.field", &EntryElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Spinbox.field", &EntryElementSpec,
 			    &EntryFieldParams);
 
-    Ttk_RegisterElementSpec(themePtr, "separator", &SeparatorElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "hseparator", &SeparatorElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "vseparator", &SeparatorElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "separator", &SeparatorElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "hseparator", &SeparatorElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "vseparator", &SeparatorElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "sizegrip", &SizegripElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "sizegrip", &SizegripElementSpec, 0);
 
     /*
      * <<NOTE-TRACKS>>
@@ -3637,20 +3637,20 @@ static int AquaTheme_Init(
      * of the progress bar, so we just have a single element called ".track".
      */
 
-    Ttk_RegisterElementSpec(themePtr, "Progressbar.track", &PbarElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Progressbar.track", &PbarElementSpec,
 	0);
 
-    Ttk_RegisterElementSpec(themePtr, "Scale.trough", &TrackElementSpec,
+    Ttk_RegisterElement(NULL, themePtr, "Scale.trough", &TrackElementSpec,
 	&ScaleData);
-    Ttk_RegisterElementSpec(themePtr, "Scale.slider", &SliderElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Scale.slider", &SliderElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Vertical.Scrollbar.trough",
+    Ttk_RegisterElement(NULL, themePtr, "Vertical.Scrollbar.trough",
 	&TroughElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Vertical.Scrollbar.thumb",
+    Ttk_RegisterElement(NULL, themePtr, "Vertical.Scrollbar.thumb",
 	&ThumbElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Horizontal.Scrollbar.trough",
+    Ttk_RegisterElement(NULL, themePtr, "Horizontal.Scrollbar.trough",
 	&TroughElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Horizontal.Scrollbar.thumb",
+    Ttk_RegisterElement(NULL, themePtr, "Horizontal.Scrollbar.thumb",
 	&ThumbElementSpec, 0);
 
     /*
@@ -3658,13 +3658,13 @@ static int AquaTheme_Init(
      * displayed.
      */
 
-    Ttk_RegisterElementSpec(themePtr, "Vertical.Scrollbar.uparrow",
+    Ttk_RegisterElement(NULL, themePtr, "Vertical.Scrollbar.uparrow",
 	&ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Vertical.Scrollbar.downarrow",
+    Ttk_RegisterElement(NULL, themePtr, "Vertical.Scrollbar.downarrow",
 	&ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Horizontal.Scrollbar.leftarrow",
+    Ttk_RegisterElement(NULL, themePtr, "Horizontal.Scrollbar.leftarrow",
 	&ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr, "Horizontal.Scrollbar.rightarrow",
+    Ttk_RegisterElement(NULL, themePtr, "Horizontal.Scrollbar.rightarrow",
 	&ArrowElementSpec, 0);
 
     /*
