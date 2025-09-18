@@ -8303,4 +8303,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-08-15 (bug) [d93d96]: Pointer arithmetic with NULL in ImgGetPhoto() (chavez)
 
+2025-09-13 (bug) [6c4795]: leak in XCreateBitmapFromData() in ImgGetPhoto() (chavez)
+
+2025-09-18 (new) [04e173]: Add support for Copy/Cut/Paste keys in X11 (nijtmans)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details

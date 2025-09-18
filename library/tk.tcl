@@ -414,6 +414,13 @@ switch -exact -- [tk windowingsystem] {
 
 	# This is needed for XFree86 systems
 	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+    	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	    event add <<Undo>> <XF86Undo>
+	    event add <<Redo>> <XF86Redo>	
+	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
 
