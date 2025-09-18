@@ -1395,11 +1395,11 @@ Tk_DestroyWindow(
 
     if (winPtr->pathName != NULL) {
 	/*
-	 * Evaluate the script "::tk_cargo unset winPtr->pathName".
+	 * Evaluate the script "::tk::attrib::OnDestroy {winPtr->pathName}".
 	 */
 
 	Tcl_Interp *interp = Tk_Interp(tkwin);
-	const char *format = "::tk_cargo unset %s";
+	const char *format = "::tk::attrib::OnDestroy {%s}";
 	size_t scriptSize = strlen(format) + strlen(winPtr->pathName) - 1;
 	char *script = (char *)ckalloc(scriptSize);
 	int code;

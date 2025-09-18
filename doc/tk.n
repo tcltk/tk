@@ -45,6 +45,14 @@ be able to find some options for the application.
 If sends have been disabled by deleting the \fBsend\fR command,
 this command will reenable them and recreate the \fBsend\fR
 command.
+.\" METHOD: attribtable
+.TP
+\fBtk attribtable \fItableName\fR
+.
+This command creates an attribute table of the name \fItableName\fR as a
+procedure in the global namespace. An attribute table is used to query and
+modify arbitrary data attached to any widget. For more details see the
+\fBattribtable\fR manual page.
 .\" METHOD: busy
 .TP
 \fBtk busy \fIsubcommand\fR ...
@@ -158,9 +166,10 @@ Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (macOS Aqua).
 .SH "SEE ALSO"
-busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
+attribtable(n), busy(n), fontchooser(n), print(n), send(n), sysnotify(n),
+systray(n), winfo(n)
 .SH KEYWORDS
-application name, print, send, sysnotify, systray
+application name, attribute, print, send, sysnotify, systray
 '\" Local Variables:
 '\" mode: nroff
 '\" End:

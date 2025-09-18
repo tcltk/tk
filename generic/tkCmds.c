@@ -36,6 +36,8 @@ static void		WaitWindowProc(void *clientData,
 			    XEvent *eventPtr);
 static int		AppnameCmd(void *dummy, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const *objv);
+static int		AttribtableCmd(void *dummy, Tcl_Interp *interp,
+			    Tcl_Size objc, Tcl_Obj *const *objv);
 static int		CaretCmd(void *dummy, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const *objv);
 static int		InactiveCmd(void *dummy, Tcl_Interp *interp,
@@ -62,6 +64,7 @@ MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
 static const TkEnsemble tkCmdMap[] = {
     {"fontchooser",	NULL, tkFontchooserEnsemble},
     {"appname",		AppnameCmd, NULL },
+    {"attribtable",	AttribtableCmd, NULL },
     {"busy",		Tk_BusyObjCmd, NULL },
     {"caret",		CaretCmd, NULL },
     {"inactive",	InactiveCmd, NULL },
@@ -664,7 +667,7 @@ TkInitTkCmd(
 /*
  *----------------------------------------------------------------------
  *
- * AppnameCmd, CaretCmd, ScalingCmd, UseinputmethodsCmd,
+ * AppnameCmd, AttribtableCmd, CaretCmd, ScalingCmd, UseinputmethodsCmd,
  * WindowingsystemCmd, InactiveCmd --
  *
  *	These functions are invoked to process the "tk" ensemble subcommands.
@@ -707,6 +710,42 @@ AppnameCmd(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, TCL_INDEX_NONE));
+    return TCL_OK;
+}
+
+int
+AttribtableCmd(
+    TCL_UNUSED(void *),		/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    const char *format = "::tk::attrib::Table {%s}";
+    const char *tableName;
+    size_t scriptSize;
+    char *script;
+    int code;
+
+    if (objc == 2) {
+	tableName = Tcl_GetString(objv[1]);
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "tableName");
+	return TCL_ERROR;
+    }
+
+    /*
+     * Evaluate the script "::tk::attrib::Table {tableName}".
+     */
+
+    scriptSize = strlen(format) + strlen(tableName) - 1;
+    script = (char *)ckalloc(scriptSize);
+
+    snprintf(script, scriptSize, format, tableName);
+    code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    ckfree(script);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
     return TCL_OK;
 }
 
