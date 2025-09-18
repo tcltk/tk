@@ -1,24 +1,48 @@
-# This file is a Tcl script to test spinbox widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test spinbox widgets in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+# NOTE
+#
+# Collected comments about lacks from the test
+# - Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
+#   and SpinboxTextVarProc.
+# - No tests for DisplaySpinbox.
+# - Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
+# - No tests for EventuallyRedraw
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import entry scroll
+
+#
+# COMMON TEST SETUP
+#
 
 foreach i {1 2 3} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 set cy [font metrics {Courier -12} -linespace]
 
+#
+# TESTS
+#
 
 test spinbox-1.1 {configuration option: "activebackground"} -setup {
     spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -1043,9 +1067,9 @@ test spinbox-3.5 {SpinboxWidgetCmd procedure, "bbox" widget command} -setup {
     destroy .e
 } -result [list 5 5 0 $cy]
 
-# Oryginaly the result was count using measurements
-# and metrics. It was changed to less verbose solution - the result is the one
-# that passes fonts constraint (this concerns tests 3.6, 3.7, 3.8, 3.10)
+# Originally the result was counted using measurements and metrics. It was
+# changed to less verbose solution - the result is the one that passes fonts
+# constraint (this concerns tests 3.6, 3.7, 3.8, 3.10)
 test spinbox-3.6 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
 	fonts
 } -setup {
@@ -3123,8 +3147,6 @@ test spinbox-13.25 {GetSpinboxIndex procedure} -body {
     destroy .e
 } -result 21
 
-# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
-
 test spinbox-14.1 {SpinboxFetchSelection procedure} -body {
     spinbox .e
     .e insert end "This is a test string"
@@ -3259,6 +3281,7 @@ test spinbox-18.1 {Spinbox widget vs hiding} -setup {
 # 19.* test cases in previous version highly depended on the previous
 # test cases. This was replaced by inserting recently set configurations
 # that matters for the test case
+
 test spinbox-19.1 {spinbox widget validation} -setup {
     unset -nocomplain textVar validationData
 } -body {
@@ -3889,22 +3912,13 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
 } -result {{A sample } text}
 
-# Collected comments about lacks from the test
-# XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
-# and SpinboxTextVarProc.
-# No tests for DisplaySpinbox.
-# XXX Still need to write tests for SpinboxScanTo and SpinboxSelectTo.
-# No tests for EventuallyRedraw
-
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
-# option clear
 foreach i {1 2 3} {
     unset validateCmd$i
 }
 unset i
 testutils forget entry scroll
 cleanupTests
-return

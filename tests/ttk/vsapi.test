@@ -1,13 +1,32 @@
-# -*- tcl -*-
+#
+# Tests exercising Microsoft Visual Styles elements, defined through
+# the command "ttk::style element create XXX vsapi"
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 testConstraint xpnative \
     [expr {"xpnative" in [ttk::style theme names]}]
+
+#
+# TESTS
+#
 
 test vsapi-1.1 "WINDOW WP_SMALLCLOSEBUTTON" -constraints {xpnative} -body {
     ttk::style element create smallclose vsapi \
@@ -44,5 +63,9 @@ test vsapi-1.3 "EXPLORERBAR EBP_HEADERCLOSE" -constraints {xpnative} -body {
     pack .b -expand true -fill both
     list [winfo reqwidth .b] [winfo reqheight .b]
 } -cleanup { destroy .b } -result [list 16 16]
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

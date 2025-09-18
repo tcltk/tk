@@ -1,15 +1,27 @@
-# This file is a Tcl script to test entry widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test paned window widgets in Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# COMMON TEST SETUP
+#
 
 deleteWindows
 # Panedwindow for tests 1.*
@@ -17,6 +29,11 @@ panedwindow .p
 # Buttons for tests 1.33 - 1.52
 .p add [button .b]
 .p add [button .c]
+
+#
+# TESTS
+#
+
 test panedwindow-1.1 {configuration options: -background (good)} -body {
     .p configure -background #ff0000
     list [lindex [.p configure -background] 4] [.p cget -background]
@@ -289,7 +306,6 @@ test panedwindow-1.57 {configuration options: -width (good)} -body {
 test panedwindow-1.58 {configuration options: -width (bad)} -body {
     .p paneconfigure .b -width badValue
 } -returnCodes error -result {expected screen distance or "" but got "badValue"}
-deleteWindows
 
 
 test panedwindow-2.1 {panedwindow widget command} -setup {
@@ -5543,9 +5559,8 @@ test panedwindow-29.2 {display on depths other than the default one} -constraint
     deleteWindows
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return
-
-
