@@ -1240,7 +1240,6 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
     if (!acc || !acc->tkwin || !acc->interp) {
-        fprintf(stderr, "DEBUG: Invalid acc, tkwin, or interp\n");
         return FALSE;
     }
 
@@ -1258,7 +1257,6 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
         event.event = Tk_WindowId(acc->tkwin);
         event.root = RootWindowOfScreen(Tk_Screen(acc->tkwin));
         event.name = Tk_GetUid("Invoke");
-        fprintf(stderr, "DEBUG: Queuing <<Invoke>> for %s\n", Tk_PathName(acc->tkwin));
         Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
 
         /* Force immediate event processing */
@@ -1268,11 +1266,9 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "::tk::accessible::_updateselection %s", Tk_PathName(acc->tkwin));
         if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-            fprintf(stderr, "DEBUG: Failed to call _updateselection for %s: %s\n",
                     Tk_PathName(acc->tkwin), Tcl_GetStringResult(acc->interp));
             return FALSE;
         }
-        fprintf(stderr, "DEBUG: Called _updateselection for %s\n", Tk_PathName(acc->tkwin));
         return TRUE;
     }
 
@@ -1302,7 +1298,6 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
         if (!actionEntry) return FALSE;
         const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
         if (!actionString) return FALSE;
-        fprintf(stderr, "DEBUG: Executing fallback action for %s: %s\n", Tk_PathName(acc->tkwin), actionString);
         if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
             return FALSE;
         }
@@ -2832,12 +2827,6 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
         
         /* Emit value changed signal */
         g_signal_emit_by_name(obj, "value-changed");
-        
-        /* For debugging: print state to see what's happening. */
-        const char *widget_name = Tk_PathName(tkwin);
-        const char *state_str = is_checked ? "checked" : "unchecked";
-        fprintf(stderr, "Accessibility: Widget %s is now %s\n", widget_name, state_str);
-        
         g_object_unref(current_state);
         return TCL_OK;
     }
