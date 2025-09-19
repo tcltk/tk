@@ -139,37 +139,42 @@ namespace eval ::tk::accessible {
 	return $headerlist
     }
 
-    # Get selection status from radiobuttons.
-    proc _getradiodata {w} {
-	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
-	    set var [$w cget -variable]
-	    if {$var eq ""} {
-		return "not selected"
-	    }
-	    set varvalue [set $var]
-	    set val [$w cget -value]
-	    if {$varvalue eq $val} {
-		return "selected"
-	    } else {
-		return "not selected"
-	    }
+    proc _getcheckdata {w} {
+	# Works for Checkbutton / TCheckbutton
+	if {![winfo exists $w]} {
+	    return 0
+	}
+
+	set var [$w cget -variable]
+	if {$var eq ""} {
+	    return 0
+	}
+
+	set onval [$w cget -onvalue]
+	if {$onval eq ""} {
+	    set onval 1
+	}
+
+	if {[uplevel #0 [list info exists $var]]} {
+	    set val [uplevel #0 [list set $var]]
+	    expr {$val eq $onval ? 1 : 0}
+	} else {
+	    return 0
 	}
     }
 
-    # Get selection status from checkbuttons.
-    proc _getcheckdata {w} {
-	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
-	    set var [$w cget -variable]
-	    if {$var eq ""} {
-		return "0"
-	    }
-	    set varvalue [set $var]
-	    set val [$w cget -onvalue]
-	    if {$varvalue eq $val} {
-		return "1"
-	    } else {
-		return "0"
-	    }
+    proc _getradiodata {w} {
+	# Works for Radiobutton / TRadiobutton
+	set var [$w cget -variable]
+	if {$var eq ""} { return 0 }
+
+	set btnval [$w cget -value]
+
+	if {[uplevel #0 [list info exists $var]]} {
+	    set val [uplevel #0 [list set $var]]
+	    return [expr {$val eq $btnval ? 1 : 0}]
+	} else {
+	    return 0
 	}
     }
 
@@ -742,11 +747,18 @@ namespace eval ::tk::accessible {
     bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
-    bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
-    bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
     
+    # Check/radiobutton bindings. At present only the the <ButtonRelease-1>
+    # bindings work correctly on X11. 
+    bind Checkbutton <Button-1> {+::tk::accessible::_updateselection %W}
+    bind Checkbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+    bind TCheckbutton <Button-1> {+::tk::accessible::_updateselection %W}
+    bind TCheckbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+    bind Radiobutton  <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
+    bind Radiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+    bind TRadiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
+    bind TRadiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+
     # Only need to track menu selection changes on X11.
     if {[tk windowingsystem] eq "x11"} {
 	bind Menu <Up> {+
@@ -807,11 +819,11 @@ namespace eval ::tk::accessible {
     # be a visual conflict but it is more important that the AT be able
     # to correctly identify the widget and its value. 
     
-	set result [::tk::accessible::check_screenreader]
-	if {$result > 0} {
-	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
-	}
-  
+    set result [::tk::accessible::check_screenreader]
+    if {$result > 0} {
+	interp alias {} ::ttk::spinbox {} ::tk::spinbox
+    }
+    
     if {[tk windowingsystem] eq "x11"} {
 	set result [::tk::accessible::check_screenreader]
 	if {$result > 0} {
