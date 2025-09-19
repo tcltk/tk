@@ -1193,12 +1193,15 @@ TkpDrawAngledCharsInContext(
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
     if (rangeStart < 0 || rangeLength <= 0
-	    || rangeStart + rangeLength > numBytes
-	    || !TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
+	    || rangeStart + rangeLength > numBytes) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
+	return;
+    }
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
+	[string release];
 	return;
     }
 
