@@ -127,12 +127,11 @@ typedef struct NameRegistry {
  * the time being.
  */
 
-#define QNAME_MAX_SIZE 32
-
 typedef struct {
     RegisteredInterp *interpListPtr;  /* List of all interpreters process. */
     mqd_t qd;                         /* Descriptor for the mqueue. */
     char qname[NAME_MAX];             /* Path name of mqueue. */
+    Tcl_AsyncHandler asyncToken;      /* Token for AsyncHandler. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -157,7 +156,7 @@ static struct {
  * Declarations of some static functions defined later in this file:
  */
 
-static int		SendInit();
+static int		SendInit(Tcl_Interp *interp);
 static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr);
 static void		RegClose(NameRegistry *regPtr);
 static void		RegAddName(NameRegistry *regPtr, const char *name,
@@ -166,7 +165,10 @@ static Tcl_Obj*         loadAppNameRegistry(const char *path);
 static void             saveAppNameRegistry(Tcl_Obj *dict, const char *path);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
+static void             processMessage(void *clientData);
 static void             mqueueHandler(int sig, siginfo_t *info, void *ucontext);
+static int              mqueueAsyncProc(void *clientData, Tcl_Interp *interp,
+					int code);
 static Tcl_CmdDeleteProc DeleteProc;
 
 /*
@@ -195,28 +197,9 @@ static Tcl_CmdDeleteProc DeleteProc;
 #define TK_MQ_MAXMSG 10
 
 static int
-SendInit()
+SendInit(
+    Tcl_Interp *interp)
 {
-    /*
-     * The commTkwin field in the display struct is now only being used
-     * as a flag to indicate whether this initialization function
-     * has been called.  Another scheme for doing that should be
-     * implemented.  But should the display struct be changed?
-     */
-
-#if 0
-    XSetWindowAttributes atts;
-    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
-	DefaultScreen(dispPtr->display), NULL);
-    Tcl_Preserve(dispPtr->commTkwin);
-    ((TkWindow *) dispPtr->commTkwin)->flags |=
-	    TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
-    TkWmNewWindow((TkWindow *) dispPtr->commTkwin);
-    atts.override_redirect = True;
-    Tk_ChangeWindowAttributes(dispPtr->commTkwin,
-			     CWOverrideRedirect, &atts);
-    Tk_MakeWindowExist(dispPtr->commTkwin);
-#endif
     /*
      * Intialize the path used for the appname registry.
      */
@@ -232,34 +215,49 @@ SendInit()
     strcat(appNameRegistryPath, file);
 
     /*
-     * Initialize the mqueue used by this process.
+     * Initialize the mqueue used by this thread to receive requests.
      */
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr->asyncToken = Tcl_AsyncCreate(mqueueAsyncProc, NULL);
     SET_QNAME(tsdPtr->qname, getpid());
-
     struct mq_attr attr = {
 	.mq_maxmsg = TK_MQ_MAXMSG,
 	.mq_msgsize = TK_MQ_MSGSIZE,
     };
+
+    /*
+     * Open the mqueue. which will remain open until the thread exits.
+     */
+
     tsdPtr->qd = mq_open(tsdPtr->qname, O_RDWR|O_CREAT, 0660, &attr);
-    // FIX ERROR HANDLING
     if (tsdPtr->qd == -1) {
-        perror("mq_open");
-	return TCL_ERROR;
+	goto error;
     }
-    // install our handler
-    // should restore old action in the cleanup.  These could be
-    // global.
+
+    /*
+     * Install a signal handler which will use the asyncToken to set a flag
+     * that causes the mqueueAsyncProc to be called when it is safe to do so.
+     * The mqueueAsyncProc will unpack the message and execute the command
+     * in its payload.
+     */
+    
+    // Do we need to worry about the old action?
+    // Presumably it is the default action which kills the process.
     struct sigaction oldaction, action = {
 	.sa_sigaction = mqueueHandler,
 	.sa_flags = SA_SIGINFO
     };
     if (sigaction(TK_MQUEUE_SIGNAL, &action, &oldaction) != 0) {
-	perror("sigaction");
+	goto error;
     }
-    // set up the notification
+
+    /*
+     * Request that we be notified with TK_MQUEUE_SIGNAL when a message
+     * arrives in our queue.
+     */
+
     struct sigevent se = {
 	.sigev_notify = SIGEV_SIGNAL,
 	.sigev_signo = TK_MQUEUE_SIGNAL,
@@ -267,11 +265,16 @@ SendInit()
 	.sigev_notify_attributes = NULL,
     };
     if (mq_notify(tsdPtr->qd, &se) == -1) {
-	perror("mq_notify initial");
-	return TCL_ERROR;
+	goto error;
     }
+
     localData.initialized = 1;
     return TCL_OK;
+
+error:
+    Tcl_SetErrno(errno);
+    Tcl_PosixError(interp);
+    return TCL_ERROR;
 }
 
 
@@ -296,13 +299,9 @@ void
 TkSendCleanup(
     TkDisplay *dispPtr)
 {
+    (void) dispPtr;  /* Specified in stub table. */
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    if (dispPtr->commTkwin != NULL) {
-	Tk_DestroyWindow(dispPtr->commTkwin);
-	Tcl_Release(dispPtr->commTkwin);
-	dispPtr->commTkwin = NULL;
-    }
     if (appNameRegistryPath) {
         ckfree(appNameRegistryPath);
     }
@@ -311,7 +310,6 @@ TkSendCleanup(
 }
 
 
-
 /*********************** AppName Registry ***********************/
 
 static Tcl_Obj*
@@ -347,7 +345,7 @@ loadAppNameRegistry(
 	return Tcl_NewDictObj();
     }
     if (bytesRead != length) {
-	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
+	Tcl_Panic("read failed on %s: length %lu; read %lu", path,
 		length, bytesRead);
     }
     result = Tcl_NewStringObj(bytes, length);
@@ -521,7 +519,7 @@ RegFindName(
 {
     Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
-    // XXXX Maybe using pid 0 as the default is a bad idea?
+    // Maybe using pid 0 as the default is a bad idea?
     AppInfo resultTcl = {0};
     if (valuePtr) {
 	resultTcl = ObjToAppInfo(valuePtr);
@@ -637,7 +635,7 @@ Tk_SetAppName(
     int offset, i;
     interp = winPtr->mainPtr->interp;
     if (!localData.initialized) {
-	SendInit(winPtr->dispPtr);
+	SendInit(interp);
     }
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -662,7 +660,8 @@ Tk_SetAppName(
 	    riPtr->nextPtr = tsdPtr->interpListPtr;
 	    tsdPtr->interpListPtr = riPtr;
 	    riPtr->name = NULL;
-	    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, DeleteProc);
+	    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr,
+				  DeleteProc);
 	    if (Tcl_IsSafe(interp)) {
 		Tcl_HideCommand(interp, "send", "send");
 	    }
@@ -887,9 +886,10 @@ static void unpackMessage(
 	fseek(payloadFile, 0, SEEK_SET);
 	msgPtr2 = (message *) ckalloc(sizeof(message) + payloadSize);
 	memcpy((char *) msgPtr2, msgPtr, sizeof(message));
-	size_t bytes_read = fread(msgPtr2->payload, 1, payloadSize, payloadFile);
+	size_t bytes_read = fread(msgPtr2->payload, 1, payloadSize,
+				  payloadFile);
 	if (bytes_read != payloadSize) {
-	    Tcl_Panic("Read failed: %ld bytes of %ld read.\n",
+	    Tcl_Panic("Read failed: %ld bytes of %ld read.",
 		     bytes_read, payloadSize);
 	}
 	unlink(msgPtr->payload);
@@ -944,11 +944,19 @@ sendRequest(
     size_t messageSize;
     message *m = packMessage(0, 3, strings, &messageSize);
     m->flags |= MESSAGE_IS_REQUEST;
-    if (mq_send(qd, (char *) m, messageSize, priority) == -1) {
-	ckfree(m);
+    int status = mq_send(qd, (char *) m, messageSize, priority);
+    ckfree(m);
+    mq_close(qd);
+    if (status == -1) {
+	// This does not mean that the message was not sent.
+	// What should we do about this?  We want to report an
+	// error if the recipient dies.  But what about the
+	// "interruped system call"?  Google says to retry
+	// when EINTR is raised until it succeeds.  But it
+	// seems to succeed even though EINTR is set.  Maybe
+	// the issue is with some other mq call?
 	goto error;
     }
-    mq_close(qd);
     if (async) {
 	return TCL_OK;
     }
@@ -957,6 +965,7 @@ sendRequest(
 	.mq_maxmsg = TK_MQ_MAXMSG,
 	.mq_msgsize = TK_MQ_MSGSIZE,
     };
+
     struct timespec abs_timeout;
     if (clock_gettime(CLOCK_REALTIME, &abs_timeout) == -1) {
 	goto error;
@@ -975,10 +984,13 @@ sendRequest(
     // need to deal with the possibility of sending a long-running command to
     // another application.  How long should we wait?  How should we interrupt
     // the other process if it is taking too long?
-    
-    int length = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
+
+    status = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
 				 &abs_timeout);
-    if (length == -1) {
+    if (errno == ETIMEDOUT) {
+	goto error;
+    }
+    if (status == -1) {
 	if (kill(pid, 0)) {
 	    Tcl_AddErrorInfo(interp, "Target application died.");
 	}
@@ -1004,9 +1016,8 @@ error:
  *
  * processMessage --
  *
- * Idle task scheduled by mqueueHandler to process one message.
- * The message memory is allocated by mqueueHandler, and freed
- * by this task.
+ * Called by mqueueAsyncProc to process one message.  The message memory is
+ * allocated by mqueueHandler, and freed by this task.
  * 
  *--------------------------------------------------------------
  */
@@ -1066,6 +1077,7 @@ static void processMessage(
 	    mq_close(qd);
 	    ckfree(m);
 	    if (status == -1) {
+		// Does this have any effect here?
 		Tcl_SetErrno(errno);
 		Tcl_PosixError(riPtr->interp);
 	    }
@@ -1076,7 +1088,46 @@ static void processMessage(
     }
     ckfree(strings);
 }
-			   
+
+/*
+ * Tcl_AsyncProc to use with the mqueue realtime signal.
+ */
+
+static int mqueueAsyncProc(
+    void *clientData,
+    Tcl_Interp *interp,
+    int code)
+{
+    (void) clientData;
+    (void) interp;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    unsigned int priority;
+    struct mq_attr attr;
+    message *msgPtr = NULL;
+
+    /*
+     * Process messages until the queue is empty.
+     */
+
+    while(True) {
+	if (mq_getattr(tsdPtr->qd, &attr) == -1) {
+	    // Can we handle this error?  Can we find an interp?
+	    //Tcl_SetErrno(errno);
+	    //Tcl_PosixError(riPtr->interp);
+	    break;
+	}
+	if (attr.mq_curmsgs == 0) {
+	    break;
+	}
+	msgPtr = (message *) ckalloc(attr.mq_msgsize);
+	mq_receive(tsdPtr->qd, (char *) msgPtr, attr.mq_msgsize,
+		   &priority);
+	processMessage((void *) msgPtr);
+    }
+    return code;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -1105,11 +1156,13 @@ static void mqueueHandler(
 {
     (void) sig;
     (void) ucontext;
-    mqd_t *qdPtr = (mqd_t*) info->si_value.sival_ptr;
-    mqd_t qd = *qdPtr;
-    message *msgPtr = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    if (!Tcl_AsyncMarkFromSignal(tsdPtr->asyncToken, TK_MQUEUE_SIGNAL)) {
+	fprintf(stderr, "Tcl_GetThreadData returned false!!!");
+    }
+    mqd_t *qdPtr = (mqd_t*) info->si_value.sival_ptr;
+    mqd_t qd = *qdPtr;
 
     /*
      * The current notification registration will be canceled when
@@ -1125,25 +1178,8 @@ static void mqueueHandler(
 	.sigev_notify_attributes = NULL,
     };
     if (mq_notify(qd, &se) == -1) {
-	// Can we safely provide error data in a signal handler?
-	// perror("mq_notify");
+	// Can we handle this error?
 	return;
-    }
-    /* Process messages until the queue is empty. */
-    unsigned int priority;
-    struct mq_attr attr;
-    while(True) {
-	if (mq_getattr(qd, &attr) == -1) {
-	    // Can we do anything about this error?
-	    // perror("mq_getarrt");
-	    continue;
-	}
-	if (attr.mq_curmsgs == 0) {
-	    break;
-	}
-	msgPtr = (message *) ckalloc(attr.mq_msgsize);
-	mq_receive(qd, (char *) msgPtr, attr.mq_msgsize, &priority);
-	Tcl_DoWhenIdle(processMessage, msgPtr);
     }
 }
 
@@ -1348,9 +1384,12 @@ Tk_SendObjCmd(
 			       Tcl_DStringValue(&request2));
     }
     if (code != TCL_OK) {
-	// Use Tcl_Posix ??
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("mq_send failed: %s",
-					       strerror(errno)));
+	// XXXX
+	// With send wish9.1 {send {wish9.1 #2} puts hello}
+	// we will end up here because the mq_send raised EINTR
+	// meaning that an interrupt occurred while sending the
+	// message.  It does not seem to mean that the message
+	// was not sent, however.  The send command above works.
 	if (replyName) {
 	    /*
 	     * If the send failed, make sure we don't leave the
