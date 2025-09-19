@@ -872,7 +872,6 @@ XCopyArea(
 
     if (!dc.context) {
 	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
-	return BadDrawable;
     }
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
