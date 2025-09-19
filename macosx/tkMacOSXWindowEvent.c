@@ -1248,9 +1248,9 @@ static const char *const accentNames[] = {
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     static const char *defaultColor = NULL;
 
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
+    if ([effectiveAppearanceName isEqualToString:NSAppearanceNameAqua]) {
 	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+    } else if ([effectiveAppearanceName isEqualToString:NSAppearanceNameDarkAqua]) {
 	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
     if (!defaultColor) {

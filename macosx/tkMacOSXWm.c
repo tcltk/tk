@@ -6034,11 +6034,11 @@ WmWinAppearance(
 	appearance = win.appearance.name;
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
-	} else if (appearance == NSAppearanceNameAqua) {
+	} else if ([appearance isEqualToString:NSAppearanceNameAqua]) {
 	    resultString = appearanceStrings[APPEARANCE_AQUA];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (@available(macOS 10.14, *)) {
-	    if (appearance == NSAppearanceNameDarkAqua) {
+	    if ([appearance isEqualToString:NSAppearanceNameDarkAqua]) {
 		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400

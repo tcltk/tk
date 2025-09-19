@@ -475,7 +475,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	} else {
 	    name = [[NSApp effectiveAppearance] name];
 	}
-	return (name == NSAppearanceNameDarkAqua);
+	return [name isEqualToString:NSAppearanceNameDarkAqua];
     }
 #else
     (void) tkwin;
@@ -688,7 +688,7 @@ TkpGetColor(
 		    } else {
 			windowAppearance = [NSApp effectiveAppearance];
 		    }
-		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+		    if ([[windowAppearance name] isEqualToString:NSAppearanceNameDarkAqua]) {
 			colormap = darkColormap;
 		    } else {
 			colormap = lightColormap;
