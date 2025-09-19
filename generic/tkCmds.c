@@ -743,10 +743,7 @@ AttribtableCmd(
     snprintf(script, scriptSize, format, tableName);
     code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     ckfree(script);
-    if (code != TCL_OK) {
-	Tcl_BackgroundException(interp, code);
-    }
-    return TCL_OK;
+    return code;
 }
 
 int

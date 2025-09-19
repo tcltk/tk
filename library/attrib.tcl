@@ -77,127 +77,133 @@ proc ::tk::attrib::Table tableName {
     # Results:
     #	See the description above.
 
-    uplevel #0 [list proc $tableName {op w args} [format {
-	set table {%s}
-	set table2 [list $table]
-	set ns ::tk::attrib::$table2
+    if {[catch {
+	uplevel #0 [list proc $tableName {op w args} [format {
+	    set table {%s}
+	    set table2 [list $table]
+	    set ns ::tk::attrib::$table2
 
-	if {$op ni {set get names unset clear exists}} {
-	    return -code error "usage: $table2\
-		    set|get|names|unset|clear|exists pathName ..."
-	}
-	if {![winfo exists $w]} {
-	    return -code error "bad window path name [list $w]"
-	}
-
-	set argCount [llength $args]
-	switch $op {
-	    set {
-		if {$argCount == 0 || $argCount %% 2 != 0} {
-		    return -code error "usage: $table2 set [list $w]\
-			    name value ?name value ...?"
-		}
-
-		# Set the specified attributes to the given values
-		if {![array exists ${ns}::$w]} {
-		    namespace eval $ns [list variable $w]
-		}
-		upvar ${ns}::$w attribs
-		foreach {name val} $args {
-		    set attribs($name) $val
-		}
-
-		# Update or create the array element of
-		# the name $w in ::tk::attrib::Tables
-		upvar ::tk::attrib::Tables arr
-		if {[info exists arr($w)]} {
-		    set lst $arr($w)
-		    if {$table ni $lst} {
-			lappend lst $table
-		    }
-		} else {
-		    set lst [list $table]
-		}
-		set arr($w) $lst
-
-		return ""
+	    if {$op ni {set get names unset clear exists}} {
+		return -code error "usage: $table2\
+			set|get|names|unset|clear|exists pathName ..."
 	    }
-	    get {
-		if {$argCount == 1} {
-		    # Return the value of the specified attribute
+	    if {![winfo exists $w]} {
+		return -code error "bad window path name [list $w]"
+	    }
+
+	    set argCount [llength $args]
+	    switch $op {
+		set {
+		    if {$argCount == 0 || $argCount %% 2 != 0} {
+			return -code error "usage: $table2 set [list $w]\
+				name value ?name value ...?"
+		    }
+
+		    # Set the specified attributes to the given values
+		    if {![array exists ${ns}::$w]} {
+			namespace eval $ns [list variable $w]
+		    }
+		    upvar ${ns}::$w attribs
+		    foreach {name val} $args {
+			set attribs($name) $val
+		    }
+
+		    # Update or create the array element of
+		    # the name $w in ::tk::attrib::Tables
+		    upvar ::tk::attrib::Tables arr
+		    if {[info exists arr($w)]} {
+			set lst $arr($w)
+			if {$table ni $lst} {
+			    lappend lst $table
+			}
+		    } else {
+			set lst [list $table]
+		    }
+		    set arr($w) $lst
+
+		    return ""
+		}
+		get {
+		    if {$argCount == 1} {
+			# Return the value of the specified attribute
+			if {[array exists ${ns}::$w]} {
+			    upvar ${ns}::$w attribs
+			    set name [lindex $args 0]
+			    return [expr {[info exists attribs($name)] ?
+					  $attribs($name) : ""}]
+			} else {
+			    return ""
+			}
+		    } elseif {$argCount == 0} {
+			# Return the list of all attribute names and values
+			if {[array exists ${ns}::$w]} {
+			    upvar ${ns}::$w attribs
+			    set result {}
+			    foreach name [lsort [array names attribs]] {
+				lappend result $name $attribs($name)
+			    }
+			    return $result
+			} else {
+			    return [list]
+			}
+		    } else {
+			return -code error "usage: $table2 get [list $w]\
+				?name?"
+		    }
+		}
+		names {
+		    if {$argCount != 0} {
+			return -code error "usage: $table2 names [list $w]"
+		    }
+
+		    return [lsort [array names ${ns}::$w]]
+		}
+		unset {
+		    if {$argCount == 0} {
+			return -code error "usage: $table2 unset [list $w]\
+				name ?name ...?"
+		    }
+
+		    if {[array exists ${ns}::$w]} {
+			# Unset the specified attributes
+			upvar ${ns}::$w attribs
+			foreach name $args {
+			    if {[info exists attribs($name)]} {
+				unset attribs($name)
+			    }
+			}
+		    }
+		    return ""
+		}
+		clear {
+		    if {$argCount != 0} {
+			return -code error "usage: $table2 clear [list $w]"
+		    }
+
+		    # Unset the array ${ns}::$w if it exists
+		    array unset ${ns}::$w
+		    return ""
+		}
+		exists {
+		    if {$argCount != 1} {
+			return -code error "usage: $table2 exists [list $w]\
+				name"
+		    }
+
+		    # Return 1 if the given attribute exists and 0 otherwise
 		    if {[array exists ${ns}::$w]} {
 			upvar ${ns}::$w attribs
 			set name [lindex $args 0]
-			return [expr {[info exists attribs($name)] ?
-				      $attribs($name) : ""}]
+			return [info exists attribs($name)]
 		    } else {
-			return ""
-		    }
-		} elseif {$argCount == 0} {
-		    # Return the list of all attribute names and values
-		    if {[array exists ${ns}::$w]} {
-			upvar ${ns}::$w attribs
-			set result {}
-			foreach name [lsort [array names attribs]] {
-			    lappend result $name $attribs($name)
-			}
-			return $result
-		    } else {
-			return [list]
-		    }
-		} else {
-		    return -code error "usage: $table2 get [list $w] ?name?"
-		}
-	    }
-	    names {
-		if {$argCount != 0} {
-		    return -code error "usage: $table2 names [list $w]"
-		}
-
-		return [lsort [array names ${ns}::$w]]
-	    }
-	    unset {
-		if {$argCount == 0} {
-		    return -code error "usage: $table2 unset [list $w]\
-			    name ?name ...?"
-		}
-
-		if {[array exists ${ns}::$w]} {
-		    # Unset the specified attributes
-		    upvar ${ns}::$w attribs
-		    foreach name $args {
-			if {[info exists attribs($name)]} {
-			    unset attribs($name)
-			}
+			return 0
 		    }
 		}
-		return ""
 	    }
-	    clear {
-		if {$argCount != 0} {
-		    return -code error "usage: $table2 clear [list $w]"
-		}
-
-		# Unset the array ${ns}::$w if it exists
-		array unset ${ns}::$w
-		return ""
-	    }
-	    exists {
-		if {$argCount != 1} {
-		    return -code error "usage: $table2 exists [list $w] name"
-		}
-
-		# Return 1 if the specified attribute exists and 0 otherwise
-		if {[array exists ${ns}::$w]} {
-		    upvar ${ns}::$w attribs
-		    set name [lindex $args 0]
-		    return [info exists attribs($name)]
-		} else {
-		    return 0
-		}
-	    }
-	}
-    } $tableName]]
+	} $tableName]]
+    } result] != 0} {
+	return -code error $result
+    }
 }
 
 # ::tk::attrib::OnDestroy --
