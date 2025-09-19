@@ -1247,7 +1247,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     AtkObject *obj = GetAtkObjectForTkWindow(acc->tkwin);
 
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
-        /* Try generating <<Invoke>> event */
+        /* Try generating <<Invoke>> event. */
         XVirtualEvent event;
         memset(&event, 0, sizeof(event));
         event.type = VirtualEvent;
@@ -1259,10 +1259,10 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
         event.name = Tk_GetUid("Invoke");
         Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
 
-        /* Force immediate event processing */
+        /* Force immediate event processing. */
         Tcl_DoOneEvent(TCL_DONT_WAIT);
 
-        /* Fallback: Call _updateselection directly if event didn't trigger */
+        /* Fallback: Call _updateselection directly if event didn't trigger. */
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "::tk::accessible::_updateselection %s", Tk_PathName(acc->tkwin));
         if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
