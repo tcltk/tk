@@ -482,7 +482,7 @@ RegOpen(
  *	None.
  *
  * Side effects:
- *      The registry is written back if it has been modified, Memory for the
+ *      The registry is written back if it has been modified. Memory for the
  *	registry is freed, so the caller should never use regPtr again.
  *
  *----------------------------------------------------------------------
@@ -493,7 +493,9 @@ RegClose(
     NameRegistry *regPtr)	/* Pointer to a registry opened with a
 				 * previous call to RegOpen. */
 {
-    saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
+    if (regPtr->modified) {
+	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
+    }
     ckfree(regPtr);
 }
 
@@ -561,6 +563,7 @@ RegDeleteName(
 {
     Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
+    regPtr->modified = 1;
 }
 
 
