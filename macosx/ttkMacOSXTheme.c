@@ -2133,7 +2133,7 @@ static void EntryElementDraw(
 		DrawEntry(dc.context, bounds, &entryDesign, state, tkwin);
 		break;
 	    default:
-		return;
+		break;
 	    }
 	END_DRAWING
     } else {
