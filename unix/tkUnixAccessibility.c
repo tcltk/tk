@@ -1266,7 +1266,6 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "::tk::accessible::_updateselection %s", Tk_PathName(acc->tkwin));
         if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-                    Tk_PathName(acc->tkwin), Tcl_GetStringResult(acc->interp));
             return FALSE;
         }
         return TRUE;
