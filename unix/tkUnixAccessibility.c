@@ -2825,13 +2825,13 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
             g_signal_emit_by_name(obj, "focus-event", TRUE);
         }
         
-        /* Emit value changed signal */
+        /* Emit value changed signal. */
         g_signal_emit_by_name(obj, "value-changed");
         g_object_unref(current_state);
         return TCL_OK;
     }
 
-    /* Handle other widget types */
+    /* Handle other widget types. */
     TkAtkNotifySelectionChanged(tkwin);
 
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {

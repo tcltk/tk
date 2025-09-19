@@ -90,6 +90,7 @@ static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *hwndToTkWindowTable;
 static int hwndToTkWindowTableInitialized = 0;
 static Tcl_HashTable *toplevelChildTables = NULL;
+static volatile int mainThreadNumRows = 0;
 
 /* Data structures for managing execution on main thread. */
 typedef void (*MainThreadFunc)(int num_args, void** args);
@@ -209,6 +210,8 @@ static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static HRESULT TkDoDefaultAction(int num_args, void **args);
 static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp);
+static HRESULT TkAccNumberOfRows(Tk_Window win, LONG *pRowCount);
+static int GetNumberOfRowsFunc(int num_args, void **args);
 
 static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
@@ -530,11 +533,29 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
         *pcChildren = 0;
         return S_FALSE;
     }
+
+    /* Check if the window is a listbox or treeview. */
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, tkAccessible->toplevel);
+    if (hPtr) {
+        Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+        Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
+        if (hPtr2) {
+            const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+            if (strcmp(tkrole, "Listbox") == 0 || strcmp(tkrole, "Tree") == 0) {
+                HRESULT hr = TkAccNumberOfRows(tkAccessible->toplevel, pcChildren);
+                TkGlobalUnlock();
+                return hr;
+            }
+        }
+    }
+
+    /* Fall back to counting physical child widgets for other roles. */
     int count = TkAccChildCount(tkAccessible->toplevel);
     TkGlobalUnlock();
     *pcChildren = count < 0 ? 0 : count;
     return S_OK;
 }
+
 
 /* Function to get accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild)
@@ -980,6 +1001,86 @@ static int TkAccChildCount(Tk_Window win)
         if (Tk_IsMapped(child)) count++;
     }
     return count;
+}
+
+/* Functions to get number of child rows. */
+static HRESULT TkAccNumberOfRows(Tk_Window win, LONG *pRowCount)
+{
+    if (!win || !pRowCount) return E_INVALIDARG;
+    *pRowCount = 0;
+
+    TkGlobalLock();
+    Tcl_Interp *interp = Tk_Interp(win);
+    if (!interp) {
+        TkGlobalUnlock();
+        return E_INVALIDARG;
+    }
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
+    if (!hPtr) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
+    if (!hPtr2) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    if (strcmp(tkrole, "Listbox") != 0 && strcmp(tkrole, "Tree") != 0) {
+        TkGlobalUnlock();
+        return S_FALSE; /* Not a listbox or treeview. */
+    }
+
+    /* Prepare Tcl command to get the number of rows. */
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, Tk_PathName(win), -1);
+    Tcl_DStringAppend(&ds, strcmp(tkrole, "Listbox") == 0 ? " size" : " children {}", -1);
+
+    /* Execute on main thread for thread safety. */
+    mainThreadNumRows = 0;
+    MainThreadFunc func = (MainThreadFunc)GetNumberOfRowsFunc;
+    RunOnMainThreadSync(func, 2, (void*)interp, (void*)Tcl_DStringValue(&ds));
+    Tcl_DStringFree(&ds);
+
+    *pRowCount = mainThreadNumRows;
+    TkGlobalUnlock();
+    return mainThreadNumRows >= 0 ? S_OK : S_FALSE;
+}
+
+static int GetNumberOfRowsFunc(int num_args, void **args)
+{
+    if (num_args != 2) {
+        mainThreadNumRows = -1;
+        return E_INVALIDARG;
+    }
+
+    Tcl_Interp *interp = (Tcl_Interp *)args[0];
+    const char *command = (const char *)args[1];
+    if (!interp || !command) {
+        mainThreadNumRows = -1;
+        return E_INVALIDARG;
+    }
+
+    int code = Tcl_EvalEx(interp, command, -1, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+        mainThreadNumRows = -1;
+        return S_FALSE;
+    }
+
+    const char *result = Tcl_GetStringResult(interp);
+    int rows;
+    if (Tcl_GetInt(interp, result, &rows) != TCL_OK) {
+        mainThreadNumRows = -1;
+        return S_FALSE;
+    }
+
+    mainThreadNumRows = rows;
+    return S_OK;
 }
 
 /* Function to get child rect. */
