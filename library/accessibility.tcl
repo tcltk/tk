@@ -800,19 +800,18 @@ namespace eval ::tk::accessible {
 
     # In some contexts, the accessibility API is confused about widget
     # roles because of the way the widget is constructed. For instance,
-    # VoiceOver and Orca misread the ttk::spinbox as an entry because
+    # the screen reader misreads the ttk::spinbox as an entry because
     # of how it is constructed. In such cases, let's re-use an old trick
     # that we used with the Aqua scrollbar when the ttk widgets were first
     # developed - map the ttk widget to its classic equivalent. There may
     # be a visual conflict but it is more important that the AT be able
     # to correctly identify the widget and its value. 
     
-    if {[tk windowingsystem] eq "aqua" || [tk windowingsystem] eq "x11"} {
 	set result [::tk::accessible::check_screenreader]
 	if {$result > 0} {
 	    interp alias {} ::ttk::spinbox {} ::tk::spinbox
 	}
-    }
+  
     if {[tk windowingsystem] eq "x11"} {
 	set result [::tk::accessible::check_screenreader]
 	if {$result > 0} {
