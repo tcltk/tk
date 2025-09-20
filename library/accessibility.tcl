@@ -177,8 +177,7 @@ namespace eval ::tk::accessible {
 	    return 0
 	}
     }
-
-    
+  
     # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
@@ -374,25 +373,49 @@ namespace eval ::tk::accessible {
     # If the accessibility role is already set, return because
     # we only want these to fire once.
 
-    proc _init {w role name description value state action} {
+    proc ::tk::accessible::_init {w role name description value state action} {
+	# If already initialized with this role, bail early
 	if {[catch {::tk::accessible::get_acc_role $w} msg]} {
-	    if {$msg == $role} {
-		return
+	    if {$msg eq $role} { return }
+	}
+
+	set origW $w     ;# accessible ID (synthetic OK)
+	set realW $w     ;# actual Tk widget path
+	set isVirtual 0
+
+	if {[tk windowingsystem] eq "x11"} {
+	    # Detect virtual IDs like ".#menubar:0"
+	    if {[string first ":" $w] != -1} {
+		set colonIdx [string last ":" $w]
+		set candidateParent [string range $w 0 [expr {$colonIdx - 1}]]
+		if {[winfo exists $candidateParent]} {
+		    set realW $candidateParent
+		    set isVirtual 1
+		}
 	    }
+
+	    # Only real widgets can take focus
+	    if {!$isVirtual} {
+		$realW configure -takefocus 1
+	    }
+
+	    # Rewrite %W in action templates to the real widget path
+	    if {$isVirtual && $action ne {}} {
+		set action [string map [list %W $realW] $action]
+	    }
+	} elseif {[tk windowingsystem] eq "win32"} {
+	    $realW configure -takefocus 1
 	}
-	if {[tk windowingsystem] ne "aqua"} {
-	    # This is necessary to ensure correct accessible keyboard navigation
-	    $w configure -takefocus 1
-	}
-	
-	::tk::accessible::acc_role $w $role
-	::tk::accessible::acc_name $w $name
-	::tk::accessible::acc_description $w $description
-	::tk::accessible::acc_value $w $value  
-	::tk::accessible::acc_state $w $state
-	::tk::accessible::acc_action $w $action
-	
+
+	# Register attributes using the accessible ID (origW)
+	::tk::accessible::acc_role        $origW $role
+	::tk::accessible::acc_name        $origW $name
+	::tk::accessible::acc_description $origW $description
+	::tk::accessible::acc_value       $origW $value
+	::tk::accessible::acc_state       $origW $state
+	::tk::accessible::acc_action      $origW $action
     }
+
 
     # Toplevel bindings.
     bind Toplevel <Map> {+::tk::accessible::_init \
@@ -581,63 +604,49 @@ namespace eval ::tk::accessible {
 		       }
 
 
-
-
     # Menu accessibility bindings for X11 only. Menus are native
     # on macOS/Windows, so we don’t expose them here.
     if {[tk windowingsystem] eq "x11"} {
 
-	# Initialize the menu container itself when mapped.
-	bind Menu <Map> {+
-	    # Determine role based on whether this is a menubar
+	bind Menu <Map> {
 	    if {[winfo manager %W] eq "menubar"} {
-		set role Menubar ;# ATK_ROLE_MENU_BAR
+		set role Menubar
 	    } else {
-		set role Menu ;# ATK_ROLE_MENU
+		set role Menu
 	    }
 
-	    # Only fetch label if there is an active entry
 	    set label ""
 	    set idx [%W index active]
 	    if {$idx ne ""} {
 		set label [%W entrycget $idx -label]
 	    }
 
-	    ::tk::accessible::_init \
-			     %W \
-			     $role \
-			     [winfo name %W] \
-			     "" \
-			     $label \
-			     {} \
-			     {}
+	    ::tk::accessible::_init %W $role [winfo name %W] "" $label {} {}
 	}
 
-	# Initialize/update the currently active entry
-	# whenever the selection changes.
-	bind Menu <<MenuSelect>> {+
+	bind Menu <<MenuSelect>> {
 	    set idx [%W index active]
 	    if {$idx ne ""} {
-		set label [%W entrycget $idx -label]
-		# Construct a unique ID for this entry under %W
-		set entryId "%W:$idx"
+		set entryLabel [%W entrycget $idx -label]
 
-		::tk::accessible::_init \
-		    $entryId \
-		    menuitem \       ;# ATK_ROLE_MENU_ITEM
-                $label \
-		    $label \
-		    {} \
-		    {} \
-		    [list %W invoke $idx]
+		# Parent menu name (e.g. "File", "Edit")
+		set parentName [winfo name %W]
 
-		# Update value and fire events
-		::tk::accessible::acc_value $entryId $label
-		::tk::accessible::emit_selection_change $entryId
-		::tk::accessible::emit_focus_change $entryId
+		# Combine for accessible name: "File -> Open"
+		set fullLabel "$parentName → $entryLabel"
+
+		set realW %W
+
+		::tk::accessible::acc_name  $realW $fullLabel
+		::tk::accessible::acc_value $realW $entryLabel
+
+		::tk::accessible::emit_selection_change $realW
+		::tk::accessible::emit_focus_change     $realW
 	    }
 	}
     }
+
+
 
     # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
@@ -669,6 +678,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W cget -command}\
 			}
+			
     bind TSpinbox <Map> {+::tk::accessible::_init \
 			     %W \
 			     Spinbox \
@@ -759,51 +769,7 @@ namespace eval ::tk::accessible {
     bind TRadiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
     bind TRadiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
 
-    # Only need to track menu selection changes on X11.
-    if {[tk windowingsystem] eq "x11"} {
-	bind Menu <Up> {+
-	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx [%W index last]
-	    } else {
-		set idx [expr {$current - 1}]
-	    }
-	    set lastIndex [%W index last]
-	    while {$idx >= 0} {
-		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		    %W activate $idx
-		    ::tk::accessible::_updateselection %W
-		    break
-		}
-		incr idx -1
-	    }
-	}
-	bind Menu <Down> {+
-	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx 0
-	    } else {
-		set idx [expr {$current + 1}]
-	    }
-	    set lastIndex [%W index last]
-	    while {$idx <= $lastIndex} {
-		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		    %W activate $idx
-		    ::tk::accessible::_updateselection %W
-		    break
-		}
-		incr idx
-	    }
-	}
-	bind Menu <Return> {+
-	    set idx [%W index active]
-	    if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		%W invoke $idx
-		::tk::accessible::_updateselection %W
-	    }
-	}
-    }
-
+   
     # Capture value changes from scale widgets.
     bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
     bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
