@@ -186,6 +186,8 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr);
 static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
+static void TkMenu_UnmapHandler(ClientData clientData, XEvent *event);
+static void TkMenu_MapHandler(ClientData clientData, XEvent *event);
 
 /* Tcl command implementations. */
 static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -359,7 +361,11 @@ static void cleanup_virtual_child_cache(void)
         virtual_child_cache = NULL;
     }
 }
- 
+
+static void TkMenu_UnmapHandler(ClientData clientData, XEvent *event);
+static void TkMenu_MapHandler(ClientData clientData, XEvent *event);
+
+
 static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int index, AtkRole role)
 {
     if (!interp || !parent) return NULL;
@@ -381,72 +387,69 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
      */
     switch (role) {
     case ATK_ROLE_LIST_ITEM:
-        /* Listbox: use get index. */
-        snprintf(cmd, sizeof(cmd), "%s get %d", parent_path, index);
-        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-            label = Tcl_GetString(Tcl_GetObjResult(interp));
-        }
-        break;
+	snprintf(cmd, sizeof(cmd), "%s get %d", parent_path, index);
+	if (Tcl_Eval(interp, cmd) == TCL_OK) {
+	    label = Tcl_GetString(Tcl_GetObjResult(interp));
+	}
+	break;
 
     case ATK_ROLE_MENU_ITEM:
-	/* Menu: use entrycget -label. */
-        snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", parent_path, index);
-        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-            label = Tcl_GetString(Tcl_GetObjResult(interp));
-        }
-        break;
+	snprintf(cmd, sizeof(cmd), "%s entrycget %d -label", parent_path, index);
+	if (Tcl_Eval(interp, cmd) == TCL_OK) {
+	    label = Tcl_GetString(Tcl_GetObjResult(interp));
+	}
+	break;
 
     case ATK_ROLE_TREE_ITEM:
-	{
-	    /* Treeview: map index → item ID → cget -values. */
-	    snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
-	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-		Tcl_Obj *list = Tcl_GetObjResult(interp);
-		Tcl_Size count;
-		Tcl_Obj **elems;
-		if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
-		    const char *itemid = Tcl_GetString(elems[index]);
-		    snprintf(cmd, sizeof(cmd), "%s item [lindex %s 0] -values", parent_path, itemid);
-		    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-			label = Tcl_GetString(Tcl_GetObjResult(interp));
-		    } 
+	snprintf(cmd, sizeof(cmd), "%s children {}", parent_path);
+	if (Tcl_Eval(interp, cmd) == TCL_OK) {
+	    Tcl_Obj *list = Tcl_GetObjResult(interp);
+	    Tcl_Size count;
+	    Tcl_Obj **elems;
+	    if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
+		const char *itemid = Tcl_GetString(elems[index]);
+		snprintf(cmd, sizeof(cmd), "%s item %s -values", parent_path, itemid);
+		if (Tcl_Eval(interp, cmd) == TCL_OK) {
+		    label = Tcl_GetString(Tcl_GetObjResult(interp));
 		}
 	    }
-	    break;
 	}
+	break;
 
     default:
-        break;
+	break;
     }
 
+    /*. Fallback label. */
     if (!label || !*label) {
-        /* Fallback to generic name. */
         char buf[64];
-        snprintf(buf, sizeof(buf), "Item %d", index);
+        snprintf(buf, sizeof(buf), "%s %d",
+                 (role == ATK_ROLE_MENU_ITEM) ? "Menu item" :
+                 (role == ATK_ROLE_LIST_ITEM) ? "Item" :
+                 (role == ATK_ROLE_TREE_ITEM) ? "Tree item" : "Item",
+                 index);
         label_copy = g_strdup(buf);
     } else {
         label_copy = g_strdup(label);
     }
 
-    /* Create minimal virtual child. */ 
+    /* .Create virtual child ATK object. */
     TkAtkAccessible *child_acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     child_acc->interp = interp;
-    child_acc->tkwin = NULL; /* Virtual child - real widgets have a Tk_Window associated. */
+    child_acc->tkwin = NULL; /* Virtual child - no real Tk_Window */
     child_acc->path = g_strdup_printf("%s#%d", parent_path, index);
     child_acc->virtual_count = index;
 
     AtkObject *child = ATK_OBJECT(child_acc);
-
     atk_object_initialize(child, NULL);
     atk_object_set_role(child, role);
     atk_object_set_name(child, label_copy);
-
     g_free(label_copy);
 
     /* Store index for selection tracking. */
     g_object_set_data(G_OBJECT(child), "tk-index", GINT_TO_POINTER(index));
 
-    /* Set parent relationship. */
+    /* Attach to parent ATK object. */
     AtkObject *accParent = GetAtkObjectForTkWindow(parent);
     if (!accParent) {
         Tk_Window toplevel = GetToplevelOfWidget(parent);
@@ -458,9 +461,11 @@ static AtkObject *TkCreateVirtualChild(Tcl_Interp *interp, Tk_Window parent, int
         atk_object_set_parent(child, accParent);
     }
 
-    
     return child;
 }
+
+
+
 
 void InvalidateVirtualChildren(Tk_Window parent)
 {
@@ -498,69 +503,72 @@ static gint tk_get_n_children(AtkObject *obj)
 
     int virtual_count = 0;
     int native_count = 0;
-    
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    
-    /* Only query for virtual children if widget is mapped and ready. */
-    if (Tk_IsMapped(acc->tkwin) && 
-        (role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR || 
-         role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)) {
-        
-        const char *count_cmd = NULL;
-        
-        switch (role) {
-	case ATK_ROLE_LIST_BOX:
-	    count_cmd = "size";
-	    break;
-	case ATK_ROLE_MENU:
-	case ATK_ROLE_MENU_BAR:
-	    count_cmd = "index end";
-	    break;
-	case ATK_ROLE_TREE:
-	case ATK_ROLE_TREE_TABLE:
-	    /* Tree: get the top-level children list and count its length. */
-	    char tcmd[256];
-	    snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
-	    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
-	    Tcl_IncrRefCount(savedResult);
-	    if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
-		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-		Tcl_Size count;
-		Tcl_Obj **elems;
-		if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
-		    virtual_count = (int)count;
-		    if (virtual_count < 0) virtual_count = 0;
-		}
-	    }
-	    Tcl_SetObjResult(acc->interp, savedResult);
-	    Tcl_DecrRefCount(savedResult);
-	    /* We handled the tree case here — don't use the generic integer-path below. */
-	    break;
 
-	default:
-	    break;
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+
+    /* Only query for virtual children if widget is mapped and ready. */
+    if (Tk_IsMapped(acc->tkwin) &&
+        (role == ATK_ROLE_LIST_BOX || role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR ||
+         role == ATK_ROLE_TREE || role == ATK_ROLE_TREE_TABLE)) {
+
+        const char *count_cmd = NULL;
+
+        switch (role) {
+        case ATK_ROLE_LIST_BOX:
+            count_cmd = "size";
+            break;
+
+        case ATK_ROLE_MENU:
+        case ATK_ROLE_MENU_BAR:
+            count_cmd = "index end";
+            break;
+
+        case ATK_ROLE_TREE:
+        case ATK_ROLE_TREE_TABLE:
+            /* Tree: get the top-level children list and count its length. */
+            {
+                char tcmd[256];
+                snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
+                Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+                Tcl_IncrRefCount(savedResult);
+                if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
+                    Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
+                    Tcl_Size count;
+                    Tcl_Obj **elems;
+                    if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
+                        virtual_count = (int)count;
+                        if (virtual_count < 0) virtual_count = 0;
+                    }
+                }
+                Tcl_SetObjResult(acc->interp, savedResult);
+                Tcl_DecrRefCount(savedResult);
+            }
+            break;
+
+        default:
+            break;
         }
-        
+
         if (count_cmd) {
             char cmd[256];
             snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(acc->tkwin), count_cmd);
-            
+
             /* Try to prevent crashes. */
             Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
             Tcl_IncrRefCount(savedResult);
-            
+
             if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
                 int count;
                 if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &count) == TCL_OK) {
                     virtual_count = count;
-                    /* Handle menu special case. */
+                    /* Handle menu special case. For submenus, we need to include virtual submenu items. */
                     if ((role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR) && count >= 0) {
-                        virtual_count = count + 1;
+                        virtual_count = count + 1; /* include last index */
                     }
                     if (virtual_count < 0) virtual_count = 0;
                 }
             }
-            
+
             /* Restore interpreter state. */
             Tcl_SetObjResult(acc->interp, savedResult);
             Tcl_DecrRefCount(savedResult);
@@ -568,16 +576,37 @@ static gint tk_get_n_children(AtkObject *obj)
     }
 
     /* Count native children. */
-    for (TkWindow *childPtr = ((TkWindow*)acc->tkwin)->childList; 
+    for (TkWindow *childPtr = ((TkWindow*)acc->tkwin)->childList;
          childPtr != NULL; childPtr = childPtr->nextPtr) {
         native_count++;
     }
-    
+
+    /* Special handling for submenu ATK objects:
+     * If this object represents a submenu container, include the number
+     * of submenu items as virtual children. This ensures Orca can 
+     * enumerate them. 
+     */
+    if (role == ATK_ROLE_MENU) {
+        const char *submenu_path = Tk_PathName(acc->tkwin);
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "llength [%s index end]", submenu_path);
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            int count = atoi(Tcl_GetString(Tcl_GetObjResult(acc->interp)));
+            virtual_count = count + 1;
+        }
+    }
+
     return virtual_count + native_count;
 }
 
+
 static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 {
+    if (!virtual_child_cache) {
+        virtual_child_cache = g_hash_table_new_full(
+						    g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
+    }
+
     if (obj == tk_root_accessible) {
         if (i < 0 || i >= (gint)g_list_length(toplevel_accessible_objects)) return NULL;
         GList *child = g_list_nth(toplevel_accessible_objects, i);
@@ -590,86 +619,64 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
 
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
     if (!acc || !acc->tkwin || !acc->interp || i < 0) return NULL;
-    
-    /* Only handle virtual children for mapped widgets to avoid startup issues. */
-    if (!Tk_IsMapped(acc->tkwin)) {
-        /* During startup, only handle native children. */
-        TkWindow *childPtr;
-        gint index = 0;
-        for (childPtr = ((TkWindow*)acc->tkwin)->childList; childPtr != NULL; childPtr = childPtr->nextPtr, index++) {
-            if (index == i) {
-                Tk_Window child_tkwin = (Tk_Window)childPtr;
-                AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
-                if (!child_obj) {
-                    child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, Tk_PathName(child_tkwin));
-                    if (child_obj) {
-                        atk_object_set_parent(child_obj, obj);
-                        /* Don't register event handlers during startup. */
-                    }
-                }
-                if (child_obj) {
-                    g_object_ref(child_obj);
-                    return child_obj;
-                }
-                break;
-            }
-        }
-        return NULL;
-    }
-    
+
     AtkRole parentRole = GetAtkRoleForWidget(acc->tkwin);
     int virtual_count = 0;
 
-    /* Handle virtual children. */
-    if ((parentRole == ATK_ROLE_LIST_BOX) || (parentRole == ATK_ROLE_MENU) || 
-        (parentRole == ATK_ROLE_MENU_BAR) || (parentRole == ATK_ROLE_TREE) || 
-        (parentRole == ATK_ROLE_TREE_TABLE)) {
-        
-        /* Get virtual count safely. */
+    /* Handle virtual children for mapped widgets. */
+    if (Tk_IsMapped(acc->tkwin) &&
+        (parentRole == ATK_ROLE_LIST_BOX || parentRole == ATK_ROLE_MENU ||
+         parentRole == ATK_ROLE_MENU_BAR || parentRole == ATK_ROLE_TREE ||
+         parentRole == ATK_ROLE_TREE_TABLE)) {
+
         const char *count_cmd = NULL;
         AtkRole childRole = ATK_ROLE_UNKNOWN;
-        
+
         switch (parentRole) {
-	case ATK_ROLE_LIST_BOX:
-	    childRole = ATK_ROLE_LIST_ITEM;
-	    count_cmd = "size";
-	    break;
-	case ATK_ROLE_MENU:
-	case ATK_ROLE_MENU_BAR:
-	    childRole = ATK_ROLE_MENU_ITEM;
-	    count_cmd = "index end";
-	    break;
-	case ATK_ROLE_TREE:
-	case ATK_ROLE_TREE_TABLE:
-	    childRole = ATK_ROLE_TREE_ITEM;
-	    /* Tree: get the top-level children list and count its length. */
-	    char tcmd[256];
-	    snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
-	    Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
-	    Tcl_IncrRefCount(savedResult);
-	    if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
-		Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
-		Tcl_Size count;
-		Tcl_Obj **elems;
-		if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
-		    virtual_count = (int)count;
-		    if (virtual_count < 0) virtual_count = 0;
-		}
-	    }
-	    Tcl_SetObjResult(acc->interp, savedResult);
-	    Tcl_DecrRefCount(savedResult);
-	    break;
-	default:
-	    break;
+        case ATK_ROLE_LIST_BOX:
+            childRole = ATK_ROLE_LIST_ITEM;
+            count_cmd = "size";
+            break;
+
+        case ATK_ROLE_MENU:
+        case ATK_ROLE_MENU_BAR:
+            childRole = ATK_ROLE_MENU_ITEM;
+            count_cmd = "index end";
+            break;
+
+        case ATK_ROLE_TREE:
+        case ATK_ROLE_TREE_TABLE:
+            childRole = ATK_ROLE_TREE_ITEM;
+            {
+                char tcmd[256];
+                snprintf(tcmd, sizeof(tcmd), "%s children {}", Tk_PathName(acc->tkwin));
+                Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
+                Tcl_IncrRefCount(savedResult);
+                if (Tcl_Eval(acc->interp, tcmd) == TCL_OK) {
+                    Tcl_Obj *list = Tcl_GetObjResult(acc->interp);
+                    Tcl_Size count;
+                    Tcl_Obj **elems;
+                    if (Tcl_ListObjGetElements(acc->interp, list, &count, &elems) == TCL_OK) {
+                        virtual_count = (int)count;
+                        if (virtual_count < 0) virtual_count = 0;
+                    }
+                }
+                Tcl_SetObjResult(acc->interp, savedResult);
+                Tcl_DecrRefCount(savedResult);
+            }
+            break;
+
+        default:
+            break;
         }
-        
+
         if (count_cmd) {
             char cmd[256];
             snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(acc->tkwin), count_cmd);
-            
+
             Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
             Tcl_IncrRefCount(savedResult);
-            
+
             if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
                 int count;
                 if (Tcl_GetIntFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &count) == TCL_OK) {
@@ -680,62 +687,59 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
                     if (virtual_count < 0) virtual_count = 0;
                 }
             }
-            
+
             Tcl_SetObjResult(acc->interp, savedResult);
             Tcl_DecrRefCount(savedResult);
         }
-        
-        /* Check if requested index is in virtual range. */
-        if (i < virtual_count && childRole != ATK_ROLE_UNKNOWN) {
-            /* Initialize cache if needed. */
-            if (!virtual_child_cache) {
-                virtual_child_cache = g_hash_table_new_full(
-							    g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
-            }
 
-            /* Check cache first. */
-            const char *parent_path = Tk_PathName(acc->tkwin);
-            char *key = make_virtual_child_key(parent_path, i);
-
+        /* Submenu container entries. */
+        if (parentRole == ATK_ROLE_MENU && i < virtual_count) {
+            const char *submenu_path = Tk_PathName(acc->tkwin);
+            char *key = make_virtual_child_key(submenu_path, i);
             AtkObject *child = g_hash_table_lookup(virtual_child_cache, key);
+            g_free(key);
             if (child) {
                 g_object_ref(child);
-                g_free(key);
                 return child;
             }
-            
+
+            /* Create the submenu item if it doesn't exist. */
+            child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, ATK_ROLE_MENU_ITEM);
+            if (child) {
+                atk_object_set_parent(child, obj);
+                key = make_virtual_child_key(submenu_path, i);
+                g_hash_table_insert(virtual_child_cache, key, g_object_ref(child));
+                g_signal_emit_by_name(obj, "children-changed::add", i, child);
+                g_object_ref(child);
+                return child;
+            }
+        }
+
+        /* Normal virtual children (listbox, menu, menubar, tree). */
+        if (i < virtual_count && childRole != ATK_ROLE_UNKNOWN) {
+            const char *parent_path = Tk_PathName(acc->tkwin);
+            char *key = make_virtual_child_key(parent_path, i);
+            AtkObject *child = g_hash_table_lookup(virtual_child_cache, key);
+            g_free(key);
+            if (child) {
+                g_object_ref(child);
+                return child;
+            }
+
             /* Create new virtual child. */
-	    child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
-	    if (child) {
-		/* Ensure parent relationship points to this accessible
-		 * object (obj).
-		 */
-		atk_object_set_parent(child, obj);
-		
-
-		if (acc->tkwin) {  /* Only register handlers for real windows. */
-		    TkAtkAccessible_RegisterEventHandlers(acc->tkwin, acc);
-		}
-		/* Insert into cache: store a referenced child.
-		 * Use the allocated key as the hash key.
-		 * g_hash_table_insert takes ownership of key and
-		 * value pointers.
-		 */
-		g_hash_table_insert(virtual_child_cache, key, g_object_ref(child)); /* Cache holds one ref. */
-
-		/* Notify AT clients that a child was added at index i. */
-		g_signal_emit_by_name(obj, "children-changed::add", i, child);
-
-		/* Return a referenced child to the caller (callers expect a ref). */
-		g_object_ref(child);
-		return child;
-	    }
-	    /* If child creation failed, free the key we allocated. */
-	    g_free(key);
+            child = TkCreateVirtualChild(acc->interp, acc->tkwin, i, childRole);
+            if (child) {
+                atk_object_set_parent(child, obj);
+                key = make_virtual_child_key(parent_path, i);
+                g_hash_table_insert(virtual_child_cache, key, g_object_ref(child));
+                g_signal_emit_by_name(obj, "children-changed::add", i, child);
+                g_object_ref(child);
+                return child;
+            }
         }
     }
-    
-    /* Handle native children - adjust index for virtual children. */
+
+    /* Handle native children. */
     gint native_index = i - virtual_count;
     if (native_index >= 0) {
         TkWindow *childPtr;
@@ -759,9 +763,10 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
             }
         }
     }
-    
+
     return NULL;
 }
+
 
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
@@ -955,6 +960,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             if (is_checked) {
                 atk_state_set_add_state(set, ATK_STATE_CHECKED);
                 atk_state_set_add_state(set, ATK_STATE_SELECTED);
+                atk_state_set_add_state(set, ATK_STATE_FOCUSED);
             }
         }
         
@@ -2535,6 +2541,10 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_CreateHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, ConfigureNotify,
 			  TkAtkAccessible_ConfigureHandler, tkAccessible);	
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+			  TkMenu_MapHandler, (ClientData)tkwin);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask, 
+			  TkMenu_UnmapHandler, (ClientData)tkwin);
 
 }
 
@@ -2713,6 +2723,64 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
     }
 }
 
+/* Menus only: Respond to <Map> event. */
+static void TkMenu_MapHandler(ClientData clientData, XEvent *event)
+{
+    (void) event;
+	
+    Tk_Window tkwin = (Tk_Window)clientData;
+    AtkObject *menu_acc = GetAtkObjectForTkWindow(tkwin);
+    if (!menu_acc) return;
+
+    const char *menu_path = Tk_PathName(tkwin);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    /* Determine number of menu entries */
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s index end", menu_path);
+    if (Tcl_Eval(interp, cmd) != TCL_OK) return;
+    int n_entries = atoi(Tcl_GetString(Tcl_GetObjResult(interp)));
+    if (n_entries < 0) return;
+
+    for (int i = 0; i <= n_entries; i++) {
+        /* Create a virtual child for each menu item */
+        AtkObject *child = TkCreateVirtualChild(interp, tkwin, i, ATK_ROLE_MENU_ITEM);
+        if (child) {
+            /* Set parent to menu ATK object */
+            atk_object_set_parent(child, menu_acc);
+
+            /* Set ATK_STATE_VISIBLE and SHOWING so Orca sees it */
+            AtkStateSet *state_set = atk_object_ref_state_set(child);
+            atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+            atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+            g_object_unref(state_set);
+
+            /* Notify ATK clients that a child was added */
+            g_signal_emit_by_name(menu_acc, "children-changed::add", i, child);
+        }
+    }
+}
+
+/* Menus only: Respond to <Unmap> event. */
+static void TkMenu_UnmapHandler(ClientData clientData, XEvent *event)
+{
+    (void) event;
+    Tk_Window tkwin = (Tk_Window)clientData;
+    AtkObject *menu_acc = GetAtkObjectForTkWindow(tkwin);
+    if (!menu_acc) return;
+
+    /* Fire children-changed::remove for all virtual children */
+    int n_children = tk_get_n_children(menu_acc);
+    for (int i = n_children - 1; i >= 0; i--) {
+        AtkObject *child = tk_ref_child(menu_acc, i);
+        if (child) {
+            g_signal_emit_by_name(menu_acc, "children-changed::remove", i, child);
+            g_object_unref(child);
+        }
+    }
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2768,9 +2836,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     
     /* Special handling for checkbuttons and radiobuttons. */
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
-        /* Get the current state by calling our fixed state detection. */
-        gboolean is_checked = FALSE;
-	char cmd[512];
+	/* Get the current state by calling our fixed state detection. */
+	gboolean is_checked = FALSE;
+	char cmd[1024];
+	const char *label = Tk_PathName(acc->tkwin);  /* Default fallback label. */
 	if (role == ATK_ROLE_CHECK_BOX) {
 	    snprintf(cmd, sizeof(cmd),
 		     "::tk::accessible::_getcheckdata %s", Tk_PathName(acc->tkwin));
@@ -2778,6 +2847,11 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 		const char *result = Tcl_GetString(Tcl_GetObjResult(acc->interp));
 		is_checked = (result && strcmp(result, "1") == 0);
 	    }
+
+	    /* Try to get the actual label. */
+	    snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(acc->tkwin));
+	    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+		label = Tcl_GetString(Tcl_GetObjResult(acc->interp));
 	} else if (role == ATK_ROLE_RADIO_BUTTON) {
 	    snprintf(cmd, sizeof(cmd),
 		     "::tk::accessible::_getradiodata %s", Tk_PathName(acc->tkwin));
@@ -2785,20 +2859,45 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
 		const char *result = Tcl_GetString(Tcl_GetObjResult(acc->interp));
 		is_checked = (result && strcmp(result, "1") == 0);
 	    }
+
+	    /* Try to get the actual label */
+	    snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(acc->tkwin));
+	    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+		label = Tcl_GetString(Tcl_GetObjResult(acc->interp));
+	    }
 	}
 
-        /* Emit the state change notification. */
-        atk_object_notify_state_change(obj, ATK_STATE_CHECKED, is_checked);
-        atk_object_notify_state_change(obj, ATK_STATE_SELECTED, is_checked);
-        
-        /* Emit focus event to ensure screen reader attention. */
-        if (is_checked) {
-            g_signal_emit_by_name(obj, "focus-event", TRUE);
-        }
-        
-        /* Emit value changed signal. */
-        g_signal_emit_by_name(obj, "value-changed");
-        return TCL_OK;
+	/* Emit ATK state change notifications. */
+	atk_object_notify_state_change(obj, ATK_STATE_CHECKED, is_checked);
+	atk_object_notify_state_change(obj, ATK_STATE_SELECTED, is_checked);
+
+	/* Emit focus event to ensure screen reader attention. */
+	if (is_checked) {
+	    g_signal_emit_by_name(obj, "focus-event", TRUE);
+	}
+
+	/* Emit value changed signal. */
+	g_signal_emit_by_name(obj, "value-changed");
+	fprintf(stderr, "label is %s", label);
+
+	/* Because ATK does not consistently track checkbutton/radiobutton
+	 * label and state, feed the data to the command-line voice installed
+	 * with Orca.
+	 */
+	if (label && *label) {
+	    char speak_text[1024];
+	    snprintf(speak_text, sizeof(speak_text), "%s %s",
+		     label, is_checked ? "on" : "off");
+
+	    char tts_cmd[1024];
+	    snprintf(tts_cmd, sizeof(tts_cmd), "spd-say \"%s\"", speak_text);
+	    if (system(tts_cmd) != 0) {
+		snprintf(tts_cmd, sizeof(tts_cmd), "espeak \"%s\"", speak_text);
+		system(tts_cmd);
+	    }
+	}
+
+	return TCL_OK;
     }
 
     /* Handle other widget types. */
@@ -2818,14 +2917,49 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     }
 
     if (role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR) {
-        gchar *name = GetAtkNameForWidget(tkwin);
+	gchar *name = GetAtkNameForWidget(tkwin);
 	atk_object_set_name(obj, name);
-	atk_object_set_description(obj, "Menu item");
-        g_object_notify(G_OBJECT(obj), "accessible-name");
-	atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
-	atk_object_notify_state_change(obj, ATK_STATE_SELECTED, TRUE);
-    }
+	atk_object_set_description(obj, "Menu container");
+	g_object_notify(G_OBJECT(obj), "accessible-name");
+	 
+	/* Ask Tk which menu entry is active */
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd), "%s index active", Tk_PathName(tkwin));
+	if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+	    const char *result = Tcl_GetStringResult(acc->interp);
+	    if (result && *result) {
+		int idx = atoi(result);
 
+		/* Lookup the corresponding child AtkObject */
+		AtkObject *child = atk_object_ref_accessible_child(obj, idx);
+		if (child) {
+		    atk_object_notify_state_change(child, ATK_STATE_FOCUSED, TRUE);
+		    atk_object_notify_state_change(child, ATK_STATE_SELECTED, TRUE);
+
+		    /* This is the key event Orca listens for */
+		    g_signal_emit_by_name(obj, "active-descendant-changed", child);
+
+		    g_object_unref(child);
+		}
+	    }
+	}
+	/*
+	 * ATK does not recognize menu entries as true accessible objects, so 
+	 * here we feed the string to the command-line voice installed
+	 * with Orca.
+	 */
+	if (name && *name) {
+	    char cmd[512];
+	    snprintf(cmd, sizeof(cmd), "spd-say \"%s\"", name);
+	    int r = system(cmd);
+	    if (r != 0) {
+		/* Fallback to espeak if spd-say failed. */
+		snprintf(cmd, sizeof(cmd), "espeak \"%s\"", name);
+		system(cmd);
+	    }
+	}	
+    }
+    
     InvalidateVirtualChildren(tkwin);
     return TCL_OK;
 }
