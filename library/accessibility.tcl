@@ -177,7 +177,7 @@ namespace eval ::tk::accessible {
 	    return 0
 	}
     }
-  
+    
     # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
@@ -624,6 +624,7 @@ namespace eval ::tk::accessible {
 	    ::tk::accessible::_init %W $role [winfo name %W] "" $label {} {}
 	}
 
+
 	bind Menu <<MenuSelect>> {
 	    set idx [%W index active]
 	    if {$idx ne ""} {
@@ -645,7 +646,6 @@ namespace eval ::tk::accessible {
 	    }
 	}
     }
-
 
 
     # Scrollbar/TScrollbar bindings.
@@ -678,7 +678,7 @@ namespace eval ::tk::accessible {
 			    [%W cget -state] \
 			    {%W cget -command}\
 			}
-			
+    
     bind TSpinbox <Map> {+::tk::accessible::_init \
 			     %W \
 			     Spinbox \
@@ -758,18 +758,23 @@ namespace eval ::tk::accessible {
     bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
     bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
     
-    # Check/radiobutton bindings. At present only the the <ButtonRelease-1>
-    # bindings work correctly on X11. 
-    bind Checkbutton <Button-1> {+::tk::accessible::_updateselection %W}
-    bind Checkbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
-    bind TCheckbutton <Button-1> {+::tk::accessible::_updateselection %W}
-    bind TCheckbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
-    bind Radiobutton  <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
-    bind Radiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
-    bind TRadiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
-    bind TRadiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+    # Check/radiobutton bindings to address various quirks of X11 and Windows.
+    if {[tk windowingsystem] ne "aqua"} {
+	bind Checkbutton <Button-1> {+::tk::accessible::_updateselection %W}
+	bind Checkbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+	bind Checkbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	bind TCheckbutton <Button-1> {+::tk::accessible::_updateselection %W}
+	bind TCheckbutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+	bind TCheckbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	bind Radiobutton  <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
+	bind Radiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+	bind Radiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	bind TRadiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
+	bind TRadiobutton <space> {%W invoke;::tk::accessible::_updateselection %W}
+	bind TRadiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
+    }
 
-   
+    
     # Capture value changes from scale widgets.
     bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
     bind Scale <Left> {+::tk::accessible::_updatescale %W Left}
