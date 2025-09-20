@@ -1,51 +1,38 @@
 # This file is a Tcl script to test out the "focus" command and the
-# other procedures in the file tkFocus.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkFocus.c.
 #
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import child
 
-if {[tk windowingsystem] eq "aqua"} {
-    childTkInterp childInterp
-}
+#
+# LOCAL UTILITY PROCS
+#
 
-proc focusSetup {} {
-    destroy .t
-    toplevel .t
-    wm geom .t +0+0
-    foreach i {b1 b2 b3 b4} {
-	button .t.$i -text .t.$i -relief raised -bd 2
-	pack .t.$i
-    }
-    tkwait visibility .t.b4
-}
-proc focusSetupAlt {} {
-    global env
-    destroy .alt
-    toplevel .alt -screen $env(TK_ALT_DISPLAY)
-    foreach i {a b c d} {
-	button .alt.$i -text .alt.$i -relief raised -bd 2
-	pack .alt.$i
-    }
-    tkwait visibility .alt.d
-}
-
-
-# The following procedure ensures that there is no input focus
-# in this application.  It does it by arranging for another
-# application to grab the focus.  The "after" and "update" stuff
-# is needed to wait long enough for pending actions to get through
-# the X server and possibly also the window manager.
-
+# focusClear --
+#
+#    Ensures that there is no input focus in this application.  It does it by
+#    arranging for another application to grab the focus.  The "after" and
+#    "update" stuff is needed to wait long enough for pending actions to get
+#    through the X server and possibly also the window manager.
+#
 if {[tk windowingsystem] eq "aqua"} {
     proc focusClear {} {
 	childInterp eval {
@@ -68,17 +55,49 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+proc focusSetup {} {
+    destroy .t
+    toplevel .t
+    wm geom .t +0+0
+    foreach i {b1 b2 b3 b4} {
+	button .t.$i -text .t.$i -relief raised -bd 2
+	pack .t.$i
+    }
+    tkwait visibility .t.b4
+}
+
+proc focusSetupAlt {} {
+    global env
+    destroy .alt
+    toplevel .alt -screen $env(TK_ALT_DISPLAY)
+    foreach i {a b c d} {
+	button .alt.$i -text .alt.$i -relief raised -bd 2
+	pack .alt.$i
+    }
+    tkwait visibility .alt.d
+}
+
+#
+# COMMON TEST SETUP
+#
+
+# childTkProcess exit will be after 4.3 test
+childTkProcess create
+update
+
+if {[tk windowingsystem] eq "aqua"} {
+    childTkInterp childInterp
+}
+
+focusSetup
+if {[testConstraint altDisplay]} {
+    focusSetupAlt
+}
 
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
 
-# Make sure the window manager knows who has focus
-catch {fixfocus}
-
-# childTkProcess exit will be after 4.3 test
-childTkProcess create
-update
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
 }
@@ -88,11 +107,13 @@ bind all <FocusOut> {
 bind all <Key> {
     append focusInfo "press %W %K"
 }
-focusSetup
-if {[testConstraint altDisplay]} {
-    focusSetupAlt
-}
 
+# Make sure the window manager knows who has focus
+catch {fixfocus}
+
+#
+# TESTS
+#
 
 test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
     focusClear
@@ -244,8 +265,11 @@ test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
     focus -unknown
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
-
+#
+# COMMON TEST SETUP
+#
 focusSetup
+
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
     unix nonPortable testwrapper
 } -body {
@@ -615,6 +639,10 @@ test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
     destroy .t.b2
     focus
 } -result {.t}
+
+#
+# COMMON TEST CLEANUP
+#
 childTkProcess exit
 
 
@@ -638,13 +666,16 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
 } -cleanup {
     childTkProcess exit
 } -result {.t {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 bind all <FocusIn> {}
 bind all <FocusOut> {}
 bind all <Key> {}
-
-
 fixfocus
+
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     unix  testwrapper
 } -setup {
@@ -800,7 +831,7 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
 } -result {Reached}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
@@ -809,4 +840,3 @@ cleanupTests
 if {[tk windowingsystem] eq "aqua"} {
     interp delete childInterp
 }
-return

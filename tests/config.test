@@ -1,15 +1,27 @@
 # This file is a Tcl script to test the procedures in tkConfig.c,
-# which comprise the new new option configuration system.  It is
-# organized in the standard "white-box" fashion for Tcl tests.
+# which comprise the new new option configuration system.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc killTables {} {
     # Note: it's important to delete chain2 before chain1, because
@@ -24,7 +36,13 @@ proc killTables {} {
     }
 }
 
+#
+# TESTS
+#
 
+#
+# COMMON TEST SETUP
+#
 option clear
 deleteWindows
 if {[testConstraint testobjconfig]} {
@@ -135,8 +153,6 @@ test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
 } -cleanup {
     killTables
 } -result {{3 4 -three 2 2 -one} {2 2 -one} {} {2 2 -one}}
-
-# No tests for DestroyOptionHashTable; couldn't figure out how to test.
 
 test config-3.1 {Tk_InitOptions - priority of chained tables} -constraints {
     testobjconfig
@@ -1191,10 +1207,13 @@ test config-6.6 {GetOptionFromObj - synonym} -constraints testobjconfig -body {
     killTables
 } -result red
 
-
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-7.1 {Tk_SetOptions - basics} -constraints testobjconfig -body {
     .a configure -color green -rel sunken
      list [.a cget -color] [.a cget -relief]
@@ -1279,10 +1298,13 @@ test config-7.14 {Tk_SetOptions - error in DoObjConfig with custom option} -cons
     (processing "-custom" option)
     invoked from within
 ".a configure -custom bad"}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} -constraints {
     testobjconfig
@@ -1559,10 +1581,13 @@ test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} -co
     .foo configure -custom "foobar"
     destroy .foo
 } -result {}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-10.1 {Tk_GetOptionInfo - one item} -constraints testobjconfig -body {
     testobjconfig alltypes .foo
@@ -1594,14 +1619,15 @@ test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testo
 } -cleanup {
     destroy .foo
 } -result {{-three three Three three xyzzy} {-four four Four four four} {-two two Two {two and a half} {two and a half}} {-oneAgain oneAgain OneAgain {one again} {one again}} {-one one One one asdf} {-two two Two two {two and a half}}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-11.1 {GetConfigList - synonym} -constraints testobjconfig -body {
     lindex [.a configure] end
 } -result {-synonym -color}
@@ -1615,14 +1641,15 @@ test config-11.3 {GetConfigList - null default and current value} -constraints {
 } -body {
     .a configure -relief
 } -result {-relief relief Relief {} {}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig internal .a
 }
+
 test config-12.1 {GetObjectForOption - boolean} -constraints testobjconfig -body {
     .a configure -boolean 0
     .a cget -boolean
@@ -1704,10 +1731,13 @@ test config-12.17 {GetObjectForOption - null values} -constraints {
 	    [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
 	    [.a cget -window] [.a cget -custom]
 } -result {{} {} {} {} {} {} {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-13.1 {proper cleanup of options with widget destroy} -body {
     button .w -cursor crosshair
@@ -1917,19 +1947,12 @@ test config-14.14 {Tk_CreateOptionTable - use with namespace import} -setup {
     destroy .a .b
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 deleteWindows
 if {[testConstraint testobjconfig]} {
     killTables
 }
 cleanupTests
-return
-
-
-
-
-
-
-
-
