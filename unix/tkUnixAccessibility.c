@@ -903,100 +903,6 @@ static const gchar *tk_get_description(AtkObject *obj)
     return GetAtkDescriptionForWidget(acc->tkwin);
 }
 
-#if 0
-static AtkStateSet *tk_ref_state_set(AtkObject *obj)
-{
-
-  TkAtkAccessible *acc = (TkAtkAccessible *)obj;
- AtkStateSet *set = atk_state_set_new();
-
-    /* Virtual child handling */
-    if (!acc->tkwin) {
-        atk_state_set_add_state(set, ATK_STATE_ENABLED);
-        atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-        atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-        atk_state_set_add_state(set, ATK_STATE_SHOWING);
-        atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-        
-        AtkObject *parent_obj = atk_object_get_parent(obj);
-        if (parent_obj && ATK_IS_SELECTION(parent_obj)) {
-            gint index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(obj), "tk-index"));
-            if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
-                atk_state_set_add_state(set, ATK_STATE_SELECTED);
-                atk_state_set_add_state(set, ATK_STATE_FOCUSED);
-            }
-        }
-        return set;
-    }
-    
-    /* Real widget state detection. */
-    if (acc->tkwin && acc->interp) {
-        AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-        
-        if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
-            const char *widgetClass = Tk_Class(acc->tkwin);
-            gboolean is_checked = FALSE;
-	    char cmd[512];
-            
-            /* Save interpreter state to avoid corruption. */
-            Tcl_Obj *savedResult = Tcl_GetObjResult(acc->interp);
-            Tcl_IncrRefCount(savedResult);
-            
-            if (widgetClass) {
-                if (strcmp(widgetClass, "Checkbutton") == 0 || 
-                    strcmp(widgetClass, "TCheckbutton") == 0) {
-                    
-                    /* For checkbuttons: get variable and check its value. */
-		    snprintf(cmd, sizeof(cmd),
-			     "::tk::accessible::_getcheckdata %s",
-			     Tk_PathName(acc->tkwin));
-		    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-			const char *result = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-			is_checked = (result && strcmp(result, "1") == 0);
-		    }
-		    else if (strcmp(widgetClass, "Radiobutton") == 0 || 
-			     strcmp(widgetClass, "TRadiobutton") == 0) {
-			snprintf(cmd, sizeof(cmd),
-				 "::tk::accessible::_getradiodata %s",
-				 Tk_PathName(acc->tkwin));
-			if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-			    const char *result = Tcl_GetString(Tcl_GetObjResult(acc->interp));
-			    is_checked = (result && strcmp(result, "1") == 0);
-			}
-              
-			/* Apply the checked state. */
-			if (is_checked) {
-			    atk_state_set_add_state(set, ATK_STATE_CHECKED);
-			    atk_state_set_add_state(set, ATK_STATE_SELECTED);
-			}
-			/* Restore interpreter state. */
-			Tcl_SetObjResult(acc->interp, savedResult);
-			Tcl_DecrRefCount(savedResult);
-		    }
-		}
-   
-		return set;
-	    }
-    
-	    /* Standard states. */
-	    atk_state_set_add_state(set, ATK_STATE_ENABLED);
-	    atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-
-	    if (acc->tkwin && Tk_IsMapped(acc->tkwin)) {
-		atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-		atk_state_set_add_state(set, ATK_STATE_SHOWING);
-		atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-	    }
-
-	    if (acc->is_focused) {
-		atk_state_set_add_state(set, ATK_STATE_FOCUSED);
-	    }
-
-	    return set;
-	}
-    }
-}
-#endif
 static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
@@ -2909,6 +2815,15 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
         g_signal_emit_by_name(obj, "value-changed");
         g_object_notify(G_OBJECT(obj), "accessible-value");
         g_value_unset(&gval);
+    }
+
+    if (role == ATK_ROLE_MENU || role == ATK_ROLE_MENU_BAR) {
+        gchar *name = GetAtkNameForWidget(tkwin);
+	atk_object_set_name(obj, name);
+	atk_object_set_description(obj, "Menu item");
+        g_object_notify(G_OBJECT(obj), "accessible-name");
+	atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
+	atk_object_notify_state_change(obj, ATK_STATE_SELECTED, TRUE);
     }
 
     InvalidateVirtualChildren(tkwin);
