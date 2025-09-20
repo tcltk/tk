@@ -2962,6 +2962,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
     
     InvalidateVirtualChildren(tkwin);
     return TCL_OK;
+    }
 }
 
 

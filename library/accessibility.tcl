@@ -85,6 +85,22 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 }
 
 namespace eval ::tk::accessible {
+
+        if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq "1" } {
+	    # If Orca has trouble with some data, try shelling out
+	    # to the command-line voice that comes with Orca.
+
+	proc speak {text} {
+	    # Escape quotes in the text
+	    set safe_text [string map {"\"" "\\\""} $text]
+	    
+	    # Try spd-say first
+	    if {[catch {exec spd-say $safe_text} result]} {
+		# fallback to espeak if spd-say fails
+		catch {exec espeak $safe_text} result
+	    }
+	}
+    }
     
     # Check message text on dialog.
     proc _getdialogtext {w} {
@@ -181,9 +197,12 @@ namespace eval ::tk::accessible {
     # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
+	    set role [::tk::accessible::get_acc_role]
+	    set description [::tk::accessible::get_acc_description]
 	    set data [::tk::accessible::_getradiodata $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
+	    ::tk::accessible::speak $role $desription $data
 	}
 	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
 	    set data [::tk::accessible::_getcheckdata $w]
@@ -800,10 +819,10 @@ namespace eval ::tk::accessible {
 	if {$result > 0} {
 	    interp alias {} ::ttk::radiobutton {} ::tk::radiobutton
 	    interp alias {} ::ttk::checkbutton {} ::tk::checkbutton
-	    interp alias {} ::ttk::scale {} ::tk::scale
-	    
+	    interp alias {} ::ttk::scale {} ::tk::scale    
 	}
     }
+   
     
     # Capture value changes from spinbox widgets.
     bind Spinbox <Up> {+::tk::accessible::_updatescale %W Up}
