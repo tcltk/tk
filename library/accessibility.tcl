@@ -376,7 +376,9 @@ namespace eval ::tk::accessible {
 	}
 	if {[tk windowingsystem] ne "aqua"} {
 	    # This is necessary to ensure correct accessible keyboard navigation
+	    if [winfo exists $w] {
 	    $w configure -takefocus 1
+	}
 	}
 	
 	::tk::accessible::acc_role $w $role
@@ -387,8 +389,6 @@ namespace eval ::tk::accessible {
 	::tk::accessible::acc_action $w $action
 	
     }
-}
- 
 
     # Toplevel bindings.
     bind Toplevel <Map> {+::tk::accessible::_init \
@@ -576,13 +576,46 @@ namespace eval ::tk::accessible {
 			   {%W set} \
 		       }
 
-
-
     # Menu accessibility bindings for X11 only. Menus are native
     # on macOS/Windows, so we don’t expose them here.
     if {[tk windowingsystem] eq "x11"} {
 
-	# Initialize the menu container itself when mapped.
+	variable prevActiveIndex
+	set prevActiveIndex ""
+
+	# Update the currently active submenu entry
+	proc _update_active_entry {menuWidget} {
+	    # Get current active index
+	    set idx [$menuWidget index active]
+	    if {$idx eq ""} { return }
+
+	    # Get the label of the active entry safely
+	    if {[catch {set label [$menuWidget entrycget $idx -label]}]} {
+		set label ""  ;# fail-safe
+	    }
+
+	    # Update accessible object
+	    ::tk::accessible::acc_name $menuWidget $label
+	    ::tk::accessible::acc_action $menuWidget [list $menuWidget invoke $idx]
+	    ::tk::accessible::emit_selection_change $menuWidget
+	    ::tk::accessible::emit_focus_change $menuWidget
+	}
+
+	# Bind <<MenuSelect>> for keyboard/mouse navigation
+	bind Menu <<MenuSelect>> {
+	    ::tk::accessible::_update_active_entry %W
+	}
+
+	# Bind <Post> to vocalize the first submenu item immediately
+	bind Menu <Post> {
+	    set idx [%W index 0]
+	    if {$idx ne ""} {
+		%W activate $idx
+		::tk::accessible::_update_active_entry %W
+	    }
+	}
+
+	# Initialize the menu accessible object on Map
 	bind Menu <Map> {+
 	    # Determine role based on whether this is a menubar
 	    if {[winfo manager %W] eq "menubar"} {
@@ -591,52 +624,16 @@ namespace eval ::tk::accessible {
 		set role Menu ;# ATK_ROLE_MENU
 	    }
 
-	    # Only fetch label if there is an active entry
-	    set label ""
-	    set idx [%W index active]
-	    if {$idx ne ""} {
-		set label [%W entrycget $idx -label]
-	    }
-
 	    ::tk::accessible::_init \
 			     %W \
 			     $role \
-			     [winfo name %W] \
-			     "" \
-			     $label \
+			     $role  \
+			     {} \
+			     {} \
 			     {} \
 			     {}
 	}
-
-	# Initialize/update the currently active entry
-	# whenever the selection changes.
-	bind Menu <<MenuSelect>> {+
-	    set idx [%W index active]
-	    if {$idx ne ""} {
-		set label [%W entrycget $idx -label]
-		# Construct a unique ID for this entry under %W
-		set entryId "%W:$idx"
-
-		::tk::accessible::_init \
-		    $entryId \
-		    menuitem \       ;# ATK_ROLE_MENU_ITEM
-                $label \
-		    $label \
-		    {} \
-		    {} \
-		    [list %W invoke $idx]
-
-		# Update value and fire events
-		::tk::accessible::acc_value $entryId $label
-		::tk::accessible::emit_selection_change $entryId
-		::tk::accessible::emit_focus_change $entryId
-	    }
-	}
     }
-
-
- 
-
 
     # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
