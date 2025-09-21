@@ -583,41 +583,57 @@ namespace eval ::tk::accessible {
 	variable prevActiveIndex
 	set prevActiveIndex ""
 
-	# Update the currently active submenu entry
+	# Polling function for active submenu entries.
+        proc _poll_active {menuWidget} {
+	    variable prevActiveIndex
+
+	    # Get current active index.
+	    set idx [$menuWidget index active]
+
+	    # If no active index yet, keep polling.
+	    if {$idx eq ""} {
+		after 50 [list ::tk::accessible::_poll_active $menuWidget]
+		return
+	    }
+
+	    # Update if first time or index changed.
+	    if {($prevActiveIndex eq "") || ($idx ne $prevActiveIndex)} {
+		set prevActiveIndex $idx
+		::tk::accessible::_update_active_entry $menuWidget
+	    }
+
+	    # Keep polling.
+	    after 50 [list ::tk::accessible::_poll_active $menuWidget]
+	}
+
+
+	# Update the currently active submenu entry.
 	proc _update_active_entry {menuWidget} {
 	    # Get current active index
 	    set idx [$menuWidget index active]
 	    if {$idx eq ""} { return }
 
-	    # Get the label of the active entry safely
+	    # Get the label of the active entry safely.
 	    if {[catch {set label [$menuWidget entrycget $idx -label]}]} {
 		set label ""  ;# fail-safe
 	    }
 
-	    # Update accessible object
+	    # Update accessible object.
 	    ::tk::accessible::acc_name $menuWidget $label
 	    ::tk::accessible::acc_action $menuWidget [list $menuWidget invoke $idx]
 	    ::tk::accessible::emit_selection_change $menuWidget
 	    ::tk::accessible::emit_focus_change $menuWidget
 	}
 
-	# Bind <<MenuSelect>> for keyboard/mouse navigation
+	# Bind <<MenuSelect>> for keyboard/mouse navigation.
 	bind Menu <<MenuSelect>> {
 	    ::tk::accessible::_update_active_entry %W
 	}
 
-	# Bind <Post> to vocalize the first submenu item immediately
-	bind Menu <Post> {
-	    set idx [%W index 0]
-	    if {$idx ne ""} {
-		%W activate $idx
-		::tk::accessible::_update_active_entry %W
-	    }
-	}
 
-	# Initialize the menu accessible object on Map
+	# Initialize the menu accessible object on Map.
 	bind Menu <Map> {+
-	    # Determine role based on whether this is a menubar
+	    # Determine role based on whether this is a menubar.
 	    if {[winfo manager %W] eq "menubar"} {
 		set role Menubar ;# ATK_ROLE_MENU_BAR
 	    } else {
@@ -632,6 +648,9 @@ namespace eval ::tk::accessible {
 			     {} \
 			     {} \
 			     {}
+
+	    # Start polling after idle.
+	    after idle [list ::tk::accessible::_poll_active %W]
 	}
     }
 
