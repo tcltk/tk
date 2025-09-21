@@ -86,7 +86,7 @@ if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1
 
 namespace eval ::tk::accessible {
 	
-    if {[tk windowingsystem] eq "x11 } {
+    if {[tk windowingsystem] eq "x11" } {
 	# If Orca has trouble with some data, try shelling out
 	# to the command-line voice that comes with Orca.
 
