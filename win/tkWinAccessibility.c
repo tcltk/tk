@@ -203,6 +203,7 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
  */
 
 static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole);
+static void ComputeAndCacheCheckedState(Tk_Window win, Tcl_Interp *interp);
 static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState);
 static HRESULT TkAccFocus(int num_args, void **args);
 static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
@@ -770,6 +771,84 @@ static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole)
     return S_OK;
 }
 
+
+/*
+ * Helper function to get selected state on check/radiobuttons.
+ */
+static void ComputeAndCacheCheckedState(Tk_Window win, Tcl_Interp *interp)
+{
+    if (!win || !interp) return;
+
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
+    if (!hPtr) return;
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+
+    Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
+    const char *tkrole = NULL;
+    if (rolePtr) {
+        tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
+    }
+    if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && strcmp(tkrole, "Radiobutton") != 0)) {
+        return;
+    }
+
+    const char *path = Tk_PathName(win);
+    Tcl_Obj *varCmd = Tcl_ObjPrintf("%s cget -variable", path);
+    Tcl_IncrRefCount(varCmd);
+    const char *varName = NULL;
+    if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+        varName = Tcl_GetStringResult(interp);
+    }
+    Tcl_DecrRefCount(varCmd);
+
+    if (!varName || !*varName) return;
+
+    const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
+    if (!varVal) return;
+
+    const char *onValue = NULL;
+    Tcl_Obj *valueCmd = NULL;
+    if (strcmp(tkrole, "Checkbutton") == 0) {
+        valueCmd = Tcl_ObjPrintf("%s cget -onvalue", path);
+    } else if (strcmp(tkrole, "Radiobutton") == 0) {
+        valueCmd = Tcl_ObjPrintf("%s cget -value", path);
+    }
+    if (valueCmd) {
+        Tcl_IncrRefCount(valueCmd);
+        if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+            onValue = Tcl_GetStringResult(interp);
+        }
+        Tcl_DecrRefCount(valueCmd);
+    }
+
+    int isChecked = 0;
+    if (varVal && onValue && strcmp(varVal, onValue) == 0) {
+        isChecked = 1;
+    }
+
+    /* Cache the checked state */
+    TkGlobalLock();
+    Tcl_HashEntry *valuePtr;
+    int newEntry;
+    valuePtr = Tcl_CreateHashEntry(AccessibleAttributes, "value", &newEntry);
+    char buf[2];
+    snprintf(buf, sizeof(buf), "%d", isChecked);
+    Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
+    Tcl_IncrRefCount(valObj);
+    Tcl_SetHashValue(valuePtr, valObj);
+    TkGlobalUnlock();
+
+    /* Notify MSAA of the initial state */
+    Tk_Window toplevel = GetToplevelOfWidget(win);
+    if (toplevel) {
+        Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+        LONG childId = GetChildIdForTkWindow(win, childIdTable);
+        if (childId > 0) {
+            NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, Tk_GetHWND(Tk_WindowId(toplevel)), OBJID_CLIENT, childId);
+        }
+    }
+}
+
 /* Function to map accessible state to MSAA. */
 static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState)
 {
@@ -777,18 +856,37 @@ static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState)
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) return S_FALSE;
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "state");
+
     long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE; /* Reasonable default. */
+
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "state");
     if (hPtr2) {
         const char *stateresult = Tcl_GetString(Tcl_GetHashValue(hPtr2));
         if (strcmp(stateresult, "disabled") == 0) {
             state = STATE_SYSTEM_UNAVAILABLE;
         }
     }
+
+    /* Check for checked state using cached value */
+    Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
+    if (rolePtr) {
+        const char *tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
+        if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Radiobutton") == 0) {
+            Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
+            if (valuePtr) {
+                const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
+                if (value && strcmp(value, "1") == 0) {
+                    state |= STATE_SYSTEM_CHECKED;
+                }
+            }
+        }
+    }
+
     TkWindow *focusPtr = TkGetFocusWin((TkWindow *)win);
     if (focusPtr == (TkWindow *)win) {
         state |= STATE_SYSTEM_FOCUSED;
     }
+
     pvarState->vt = VT_I4;
     pvarState->lVal = state;
     return S_OK;
@@ -829,8 +927,8 @@ static int ActionEventProc(Tcl_Event *ev, int flags)
 static HRESULT TkDoDefaultAction(int num_args, void **args)
 {
     int childId = (int)args[0];
-    ActionEvent *event = NULL; 
-    HRESULT result = S_FALSE; 
+    ActionEvent *event = NULL;
+    HRESULT result = S_FALSE;
     if (!childId) {
         mainThreadResult = E_INVALIDARG;
         return mainThreadResult;
@@ -890,8 +988,12 @@ static HRESULT TkDoDefaultAction(int num_args, void **args)
     }
     event->header.proc = ActionEventProc;
     event->command = ckalloc(strlen(action) + 1);
-    strcpy(event->command, action); 
-    event->win = win; 
+    strcpy(event->command, action);
+    event->win = win;
+
+    /* Update checked state and notify MSAA */
+    ComputeAndCacheCheckedState(win, Tk_Interp(win));
+
     TkGlobalUnlock();
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     mainThreadResult = S_OK;
@@ -1209,11 +1311,16 @@ static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *inte
     if (!childIdTable) return;
     SetChildIdForTkWindow(win, *nextId, childIdTable);
     (*nextId)++;
+
+    /* Initialize checked state for checkbuttons and radiobuttons */
+    ComputeAndCacheCheckedState(win, interp);
+
     TkWindow *winPtr = (TkWindow *)win;
     for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
-	AssignChildIdsRecursive((Tk_Window)child, nextId, interp, toplevel);
+        AssignChildIdsRecursive((Tk_Window)child, nextId, interp, toplevel);
     }
 }
+
 
 /* Handle WM_GETOBJECT call on main thread. */
 void HandleWMGetObjectOnMainThread(int num_args, void **args)
@@ -1372,24 +1479,34 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
 {
     (void) clientData;
     if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(ip, 1, objv, "window?");
+        return TCL_ERROR;
     }
     Tk_Window path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (!path) {
-	Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
+        Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
+        return TCL_ERROR;
     }
     Tk_Window toplevel = GetToplevelOfWidget(path);
     if (!toplevel || !Tk_IsTopLevel(toplevel)) {
-	Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
+        Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
+        return TCL_ERROR;
     }
     Tk_MakeWindowExist(path);
+
+    /* Update checked state */
+    ComputeAndCacheCheckedState(path, ip);
+
+    /* Notify MSAA */
     HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
-    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+    if (childId > 0) {
+        NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+    }
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
