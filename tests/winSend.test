@@ -1,20 +1,38 @@
 # This file is a Tcl script to test out the "send" command and the
-# other procedures in the file tkSend.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkSend.c.
 #
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import child
 
+#
+# COMMON TEST SETUP
+#
+
 set currentInterps [winfo interps]
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 if {
     [testConstraint win] &&
     [llength [info commands send]] &&
@@ -42,6 +60,10 @@ if {
 } else {
     testConstraint winSend 0
 }
+
+#
+# TESTS
+#
 
 # setting up dde server is done when the first interp is created and
 # cannot be tested very easily.
@@ -370,6 +392,10 @@ test winSend-10.18 {Tk_DDEObjCmd - services} winSend {
     list [catch {dde services Tk {}} msg] [expr {[lsearch $msg $currentService] >= 0}]
 } {0 1}
 
+#
+# TESTFILE CLEANUP
+#
+
 # Get rid of the other app and all of its interps
 
 set newInterps [winfo interps]
@@ -383,10 +409,5 @@ while {[llength $newInterps] != [llength $currentInterps]} {
     }
 }
 
-#
-# CLEANUP
-#
-
 testutils forget child
 cleanupTests
-return

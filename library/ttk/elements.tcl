@@ -978,7 +978,7 @@ proc ttk::toggleswitch::CreateElements {} {
 	clam - vista - aqua {
 	    CreateElements_$theme
 	}
-	winnative - xpnative {
+	winnative {
 	    ttk::style theme settings vista { CreateElements_vista }
 	    foreach n {1 2 3} {
 		CreateElem Tglswitch$n.trough from vista

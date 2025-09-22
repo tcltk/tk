@@ -32,9 +32,9 @@ color, and are automatically adapted whenever one of these global system
 settings changes.
 .PP
 The implementation creates these elements when needed with the aid of generic
-procedures for arbitrary themes and theme-specific ones for a few built-in
-themes.  Applications can add \fIexplicit\fR support for any theme \fItheme\fR
-by providing an appropriate command of the name
+code for arbitrary themes and theme-specific one for a few built-in themes. 
+Applications can add \fIexplicit\fR support for any theme \fItheme\fR by
+providing an appropriate command of the name
 \fBttk::toggleswitch::CreateElements_\fR\fItheme\fR.
 .SO ttk_widget
 \-class	\-cursor	\-style

@@ -1,19 +1,31 @@
-# This file is a Tcl script to test drawing of menus in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test drawing of menus in Tk.
 #
 # Copyright © 1996-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# TESTS
+#
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
     deleteWindows
@@ -711,14 +723,13 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 deleteWindows
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

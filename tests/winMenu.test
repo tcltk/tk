@@ -1,16 +1,27 @@
-# This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests. This
-# file tests the Macintosh-specific features of the menu
-# system.
+# This file is a Tcl script to test menus in Tk. This # file tests the
+# features of the menu system that are specific for MS Windows.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test winMenu-1.1 {GetNewID} -constraints win -setup {
     destroy .m1
@@ -1374,12 +1385,13 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
     emptyTest win
 } -body {}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl
 # End:
-
