@@ -57,8 +57,8 @@ typedef struct RegisteredInterp {
  * file contains the string representatikon of a TclDictObj.  The dictionary
  * keys are appname strings and the value assigned to a key is a Tcl list
  * containing two Tcl_IntObj items whose integer values are, respectively, the
- * pid of the process and the tid of the thread which registered the
- * interpreter.
+ * pprocess id of the process and the thread id of the thread which registered
+ * the interpreter.
  * 
  */
 
@@ -67,11 +67,16 @@ static char *appNameRegistryPath;
 /*
  * Information that we record about an application.  RegFindName returns a
  * struct of this type.
+ *
+ * Warning: this implementation assumes that a Tcl_ThreadId can be cast as a
+ * pthread_t and that a pthread_t can be cast as a long.  This may not always
+ * be true.  Hopefully by the time this changes it will be possible to
+ * represent a Tcl_ThreadId as a Tcl_Obj.
  */
 
 typedef struct AppInfo {
     pid_t pid;
-    pthread_t tid;
+    Tcl_ThreadId tid;
 } AppInfo;
 
 /*
@@ -94,6 +99,7 @@ ObjToAppInfo(
 	    Tcl_Panic(failure, appNameRegistryPath);
 	}
 	Tcl_GetIntFromObj(NULL, objvPtr[0], (int *) &result.pid);
+	// Warning: this assumes that Tcl_ThreadId can be cast to long.
 	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.tid);
     }
     return result;
@@ -108,7 +114,8 @@ AppInfoToObj(
     AppInfo info)
 {
     Tcl_Obj *objv[2] = {Tcl_NewIntObj(info.pid),
-			Tcl_NewLongObj(info.tid)};
+    // Warning: this assumes that Tcl_ThreadId can be cast to long.
+	Tcl_NewLongObj((long) info.tid)};
     return Tcl_NewListObj(2, objv);
 }
 
@@ -170,14 +177,14 @@ static struct {
     Tcl_HashTable nameToTid;     /* Mapping from appnames to thread ids. */
 } dynamicData = {0};
 
-static pthread_t getTid(
+static Tcl_ThreadId getTid(
     char *name)
 {
     Tcl_MutexLock(&dynamicData.mutex);
     Tcl_HashEntry *entry = Tcl_FindHashEntry(&dynamicData.nameToTid, name);
     Tcl_MutexUnlock(&dynamicData.mutex);
     if (entry) {
-	return (pthread_t) Tcl_GetHashValue(entry);
+	return (Tcl_ThreadId) Tcl_GetHashValue(entry);
     } else {
 	return 0;
     }
@@ -693,7 +700,7 @@ RegAddName(
     // This is not guaranteed to be portable, since a pthread_t is
     // declared as a struct and could in principle be larger than
     // a long.  So one day this will need to be cleaned up.
-    AppInfo value = {getpid(), (long) pthread_self()};
+    AppInfo value = {getpid(), (Tcl_ThreadId) pthread_self()};
     Tcl_Obj *valueObj = AppInfoToObj(value);
     Tcl_DictObjPut(NULL, regPtr->appNameDict, keyPtr, valueObj);
     regPtr->modified = 1;
@@ -1003,7 +1010,7 @@ sendRequest(
     unsigned int priority = 1; /* Do we need different priorities? */
     int async = (sender[0] == '\0');
 
-    pthread_t tid = getTid((char *) recipient);
+    Tcl_ThreadId tid = getTid((char *) recipient);
     /* Open the recipient message queue. */
     char qname[NAME_MAX];
     char qnameReply[NAME_MAX];
@@ -1071,7 +1078,8 @@ sendRequest(
      */
     
     if (tid) {
-	pthread_kill(tid, TK_MQUEUE_SIGNAL);
+	// Warning: this assumes that Tcl_ThreadId can be cast to pthread_t.
+	pthread_kill((pthread_t) tid, TK_MQUEUE_SIGNAL);
     }
     status = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
 				 &abs_timeout);
@@ -1213,9 +1221,9 @@ int mqueueAsyncProc(
 		   &priority);
 	unpackMessage(msgPtr, &eventPtr->msg, &eventPtr->strings);
 	ckfree(msgPtr);
-	pthread_t tid = getTid(eventPtr->strings[requestRecipient]);
+	Tcl_ThreadId tid = getTid(eventPtr->strings[requestRecipient]);
 	/* Queue the sendEvent for the target thread. */
-	Tcl_ThreadQueueEvent((Tcl_ThreadId) tid, (Tcl_Event *) eventPtr,
+	Tcl_ThreadQueueEvent(tid, (Tcl_Event *) eventPtr,
 			     TCL_QUEUE_TAIL | TCL_QUEUE_ALERT_IF_EMPTY); 
     }
     return code;
