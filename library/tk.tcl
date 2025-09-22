@@ -413,9 +413,6 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
 	event add <<Undo>>		<Control-z> <Control-Lock-Z>
 	event add <<Redo>>		<Control-Z> <Control-Lock-z>
-	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
-	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
-
 	event add <<SelectAll>>		<Control-/>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
@@ -447,6 +444,13 @@ switch -exact -- [tk windowingsystem] {
 
 	# This is needed for XFree86 systems
 	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+    	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	    event add <<Undo>> <XF86Undo>
+	    event add <<Redo>> <XF86Redo>	
+	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
 

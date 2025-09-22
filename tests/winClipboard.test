@@ -1,24 +1,32 @@
 # This file is a Tcl script to test out Tk's Windows specific
-# clipboard code.  It is organized in the standard fashion for Tcl
-# tests.
-#
-# This file contains a collection of tests for one or more of the Tcl
-# built-in commands.  Sourcing this file into Tcl runs the tests and
-# generates output for errors.  No output means no errors were found.
+# clipboard code.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+# NOTE
+#
+# Some of these tests may fail if another application is grabbing the clipboard
+# (e.g. an X server, or a VNC viewer) #
 
-#################################################################
-# Note that some of these tests may fail if another application #
-# is grabbing the clipboard (e.g. an X server, or a VNC viewer) #
-#################################################################
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test winClipboard-1.1 {TkSelGetSelection} -constraints win -setup {
     clipboard clear
@@ -114,9 +122,11 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} -constraints {
     clipboard clear
 } -result {{more data in string} {new data}}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

@@ -1,15 +1,23 @@
 # This file is a Tcl script to test out the default image data format
 # ("list format") implementend in the file tkImgListFormat.c.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 2017 Simon Bachmann
 # All rights reserved.
 #
 # Author: Simon Bachmann (simonbachmann@bluewin.ch)
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
@@ -17,11 +25,16 @@ testutils import image
 
 imageInit
 
+#
+# TEST INITIALIZATION
+#
+
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
 
-# ---------------------------------------------------------------------
-
+#
+# TESTS
+#
 
 test imgListFormat-1.1 {ParseFormatOptions: default values} -setup {
     image create photo photo1
@@ -637,10 +650,9 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
 } -returnCodes error -result {invalid color name "#1111#1"}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 testutils forget image
 cleanupTests
-return
