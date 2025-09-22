@@ -675,7 +675,7 @@ namespace eval ::tk::accessible {
 		if {[winfo manager %W] eq "menubar"} {
 		    ::tk::accessible::_navigate_menubar %W right
 		} else {
-		    reeturn
+		    return
 		}
 	    }
 
