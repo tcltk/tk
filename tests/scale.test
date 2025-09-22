@@ -1,14 +1,23 @@
 # This file is a Tcl script to test out the "scale" command
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# of Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
 
 # Create entries in the option database to be sure that geometry options
@@ -18,10 +27,18 @@ option add *Scale.borderWidth 2
 option add *Scale.highlightThickness 2
 option add *Scale.font {Helvetica -12 bold}
 
-# Widget used in 1.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests 1.*
+#
 scale .s -from 100 -to 300
 pack .s
 update
+
+#
+# TESTS
+#
 
 test scale-1.1 {configuration options} -body {
     .s configure -activebackground #ff0000
@@ -317,8 +334,11 @@ test scale-1.69 {configuration options} -body {
 test scale-1.70 {configuration options} -body {
 	.s configure -width badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
-destroy .s
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-2.1 {Tk_ScaleCmd procedure} -body {
     scale
@@ -338,12 +358,16 @@ test scale-2.5 {Tk_ScaleCmd procedure} -body {
     winfo children .
 } -result {}
 
-
-# Widget used in 3.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests 3.*
+#
 destroy .s
 scale .s -from 100 -to 200
 pack .s
 update idletasks
+
 test scale-3.1 {ScaleWidgetCmd procedure} -body {
     .s
 } -returnCodes error -result {wrong # args: should be ".s option ?arg ...?"}
@@ -423,7 +447,14 @@ test scale-3.18 {ScaleWidgetCmd procedure, get option} -body {
     .s set 150
     .s get 37 34
 } -result {119.5}
+
+#
+# COMMON TEST SETUP
+#
+# For tests from scale-3.19
+#
 .s configure -resolution 1
+
 test scale-3.19 {ScaleWidgetCmd procedure, identify option} -body {
     .s identify
 } -returnCodes error -result {wrong # args: should be ".s identify x y"}
@@ -476,6 +507,10 @@ test scale-3.30 {ScaleWidgetCmd procedure} -body {
 test scale-3.31 {ScaleWidgetCmd procedure} -body {
     .s co
 } -returnCodes error -result {ambiguous option "co": must be cget, configure, coords, get, identify, or set}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
 
 test scale-3.32 {ScaleWidgetCmd procedure, Tk_Preserve} -setup {
@@ -579,11 +614,16 @@ test scale-5.7 {ConfigureScale procedure} -setup {
     deleteWindows
 } -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 
+#
+# COMMON TEST SETUP
+#
+# For tests scale-6.*
+#
 
-# Widget used in 6.* tests
 destroy .s
 scale .s -orient horizontal -length 200
 pack .s
+
 test scale-6.1 {ComputeFormat procedure} -body {
     .s configure -from 10 -to 100 -resolution 10
     .s set 49.3
@@ -693,8 +733,11 @@ test scale-6.21 {ComputeFormat procedure} -body {
     .s set 1001.23456789
     .s get
 } -result {1001.235}
-destroy .s
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-7.1 {ComputeScaleGeometry procedure} -constraints {
     nonPortable fonts
@@ -922,10 +965,15 @@ test scale-8.9 {ScaleElement procedure} -setup {
     deleteWindows
 } -result {trough1 slider slider trough2}
 
+#
+# COMMON TEST SETUP
+#
+# For tests scale-9.*
+#
 
-#widget used in 9.* tests
 destroy .s
 pack [scale .s]
+
 test scale-9.1 {PixelToValue procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
     update
@@ -972,8 +1020,11 @@ test scale-9.9 {PixelToValue procedure} -body {
     update
     .s get 76 152
 } -result 65
-destroy .s
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-10.1 {ValueToPixel procedure} -constraints {
     fonts
@@ -1050,11 +1101,15 @@ test scale-12.1 {ScaleCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 
-
-# Widget used in 13.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests scale-13.*
+#
 destroy .s
 pack [scale .s]
 update
+
 test scale-13.1 {SetScaleValue procedure} -body {
     .s configure -from 0 -to 100 -command {set x} -variable y
     update
@@ -1072,7 +1127,14 @@ test scale-13.3 {SetScaleValue procedure} -body {
     .s set 105
     .s get
 } -result 100
+
+#
+# COMMON TEST SETUP
+#
+# For tests scale-13.4 -
+#
 .s configure -from 100 -to 0
+
 test scale-13.4 {SetScaleValue procedure} -body {
     .s set -3
     .s get
@@ -1099,11 +1161,15 @@ test scale-13.6 {SetScaleValue procedure} -body {
     list $x $traceInfo
 } -result {untouched empty}
 
-
-# Widget used in 14.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests from scale-14.1
+#
 destroy .s
 pack [scale .s]
 update
+
 test scale-14.1 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
 	-orient horizontal -resolution 4.0
@@ -1181,6 +1247,10 @@ test scale-14.12 {RoundValueToResolution procedure} -body {
     update
     .s get 86 152
 } -result {168.75}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
 
 test scale-14.13 {RoundValueToResolution procedure, round-off errors} -setup {
@@ -1617,8 +1687,9 @@ test scale-22.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
-option clear
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
+option clear
 cleanupTests
-return

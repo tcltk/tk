@@ -50,8 +50,8 @@ command.
 \fBtk attribtable \fItableName\fR
 .
 This command creates an attribute table of the name \fItableName\fR as a
-procedure in the global namespace. An attribute table is used to query and
-modify arbitrary data attached to any widget. For more details see the
+procedure in the global namespace.  An attribute table is used to query and
+modify arbitrary data attached to any widget.  For more details see the
 \fBattribtable\fR manual page.
 .\" METHOD: busy
 .TP
@@ -59,7 +59,7 @@ modify arbitrary data attached to any widget. For more details see the
 .
 This command controls the marking of window hierarchies as
 .QW busy ,
-rendering them non-interactive while some other operation is proceeding. For
+rendering them non-interactive while some other operation is proceeding.  For
 more details see the \fBbusy\fR manual page.
 .\" METHOD: caret
 .TP
@@ -79,7 +79,7 @@ of the specified \fIwindow\fR if none is given.
 \fBtk inactive \fR?\fB\-displayof \fIwindow\fR? ?\fBreset\fR?
 .
 Returns a positive integer, the number of milliseconds since the last
-time the user interacted with the system. If the \fB\-displayof\fR
+time the user interacted with the system.  If the \fB\-displayof\fR
 option is given then the return value refers to the display of
 \fIwindow\fR; otherwise it refers to the display of the application's
 main window.
@@ -89,7 +89,7 @@ main window.
 is not supported by the system, and in safe interpreters.
 .PP
 If the literal string \fBreset\fR is given as an additional argument,
-the timer is reset and an empty string is returned. Resetting the
+the timer is reset and an empty string is returned.  Resetting the
 inactivity time is forbidden in safe interpreters and will throw an
 error if tried.
 .RE
@@ -97,15 +97,15 @@ error if tried.
 .TP
 \fBtk fontchooser \fIsubcommand\fR ...
 .
-Controls the Tk font selection dialog. For more details see the
+Controls the Tk font selection dialog.  For more details see the
 \fBfontchooser\fR manual page.
 .\" METHOD: print
 .TP
 \fBtk print \fIwindow\fR
 .
 The \fBtk print\fR command posts a dialog that allows users to print output
-from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
-platform-native APIs and dialogs where available. For more details see the
+from the \fBcanvas\fR and \fBtext\fR widgets.  The printing will be done using
+platform-native APIs and dialogs where available.  For more details see the
 \fBprint\fR manual page.
 .\" METHOD: scaling
 .TP
@@ -135,25 +135,25 @@ accommodate the new scaling factor.
 .RE
 .\" METHOD: sysnotify
 .TP
-\fBtk sysnotify \fP \fItitle\fP? \fImessage\fP?
+\fBtk sysnotify \fItitle message\fR
 .
 The \fBtk sysnotify\fP  command creates a platform-specific system
-notification alert. Its intent is to provide a brief, unobtrusive
+notification alert.  Its intent is to provide a brief, unobtrusive
 notification to the user by popping up a window that briefly appears in a
-corner of the screen. For more details see the \fBsysnotify\fR manual page.
+corner of the screen.  For more details see the \fBsysnotify\fR manual page.
 .\" METHOD: systray
 .TP
-\fBtk systray create\fP \fIsubcommand...\fP
+\fBtk systray \fIsubcommand\fR ...
 .
 The \fBtk systray\fP command creates an icon in the platform-specific
-tray. For more details see the \fBsystray\fR manual page.
+tray.  For more details see the \fBsystray\fR manual page.
 .\" METHOD: useinputmethods
 .TP
 \fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
 .
 Sets and queries the state of whether Tk should use XIM (X Input Methods)
 for filtering events.  The resulting state is returned.  XIM is used in
-some locales (i.e., Japanese, Korean), to handle special input devices. This
+some locales (i.e., Japanese, Korean), to handle special input devices.  This
 feature is only significant on X.  If XIM support is not available, this
 will always return 0.  If the \fIwindow\fR argument is omitted, it defaults
 to the main window.  If the \fIboolean\fR argument is omitted, the current
