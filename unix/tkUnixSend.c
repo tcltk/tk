@@ -2,7 +2,9 @@
  * tkUnixSend.c --
  *
  *	This file implements the "send" command, which allows commands to be
- *	passed from interpreter to interpreter.
+ *	passed from interpreter to interpreter.  This implementation uses
+ *      posix mqueue message queues in place of the XProperties in the original
+ *      implementation.
  *
  * Copyright © 1989-1994 The Regents of the University of California.
  * Copyright © 1994-1996 Sun Microsystems, Inc.
@@ -63,8 +65,8 @@ typedef struct RegisteredInterp {
 static char *appNameRegistryPath;
 
 /*
- * Information that we record about an application.
- * RegFindName returns a struct of this type.
+ * Information that we record about an application.  RegFindName returns a
+ * struct of this type.
  */
 
 typedef struct AppInfo {
@@ -129,13 +131,8 @@ typedef struct NameRegistry {
 /*
  * The data in the struct below is stored as thread specific data.
  * This means that the list of registered interpreters is per-thread (not
- * per-process as indicated above).  It is not clear to me that it makes sense
- * for a Tk application (i.e. a Tcl interpreter which has loaded the Tk
- * package) to run in a thread other than the main thread, since such an
- * application would not receive any X events.  However, the unix code has
- * used thread-specific data for a long time.  So I am leaving it that way for
- * the time being.
- */
+ * per-process as stated in the original implementation).
+  */
 
 typedef struct {
     RegisteredInterp *interpListPtr;  /* List of all interpreters in this
@@ -152,11 +149,8 @@ static Tcl_ThreadDataKey dataKey;
 /*
  * The following struct contains per-process (not per-thread) data.  An mqueue
  * is associated to a process, not to a thread.  So the descriptor and name of
- * the mqueue used for receiving [send] commands are per-process.  When an
- * mqueue notification via the TK_MQ_SIGNAL arrives the signal handler can be
- * run by any thread, so the handler must reroute the signal to the thread in
- * which the target interpreter is running.
- */
+ * the mqueue used for receiving "send" commands are per-process.
+  */
 
 static struct {
     int sendSerial;		 /* The serial number that was used in the last
@@ -226,6 +220,12 @@ typedef struct message {
 #define PAYLOAD_IS_PATH    1
 #define MESSAGE_IS_REQUEST 2
 
+enum requestParts {
+    requestSender = 0,
+    requestRecipient,
+    requestCommand
+};
+
 /*
  * Declarations of some static functions defined later in this file:
  */
@@ -238,7 +238,9 @@ static Tcl_Obj*         loadAppNameRegistry(const char *path);
 static void             saveAppNameRegistry(Tcl_Obj *dict, const char *path);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
-static void             processMessage(message *header, char **strings);
+static int              sendRequest(Tcl_Interp *interp, int pid,
+				    const char *sender, const char *recipient,
+				    const char *request);
 static void             mqueueHandler(int sig, siginfo_t *info, void *ucontext);
 static int              mqueueAsyncProc(void *clientData, Tcl_Interp *interp,
 					int code);
@@ -1080,28 +1082,14 @@ typedef struct sendEvent {
     char **strings;
 } sendEvent;
 
-/*
- *--------------------------------------------------------------
- *
- * processMessage --
- *
- * Called to process one message.  The message memory is
- * allocated by mqueueAsyncProc, and freed by processMessage.
- * 
- *--------------------------------------------------------------
- */
-
-enum requestParts {
-    requestSender = 0,
-    requestRecipient,
-    requestCommand};
-
-static void processMessage(
-    message *header,
-    char **strings)
-{
+static int sendEventProc(Tcl_Event *eventPtr, int flags) {
+    (void) flags;
     RegisteredInterp *riPtr;
     int async = 0, code;
+    sendEvent *sendEventPtr = (sendEvent *) eventPtr;
+    message *header = &sendEventPtr->msg;
+    char **strings = sendEventPtr->strings;
+
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     if (strings[requestSender][0] == 0) {
@@ -1112,20 +1100,18 @@ static void processMessage(
     }
 
     /*
-     * Locate the application, then execute the script with its
-     * interpreter.
+     * Find the target interpreter.
      */
 
     for (riPtr = tsdPtr->interpListPtr ; ; riPtr = riPtr->nextPtr) {
 	if (riPtr == NULL) {
-	    // should never happen
-	    fprintf(stderr, "Interpreter does not exist in this thread.\n");
-	    return;
+	    Tcl_Panic("Target Interpreter does not exist in this thread.");
 	}
 	if (strcmp(riPtr->name, strings[requestRecipient]) == 0) {
 	    break;
 	}
     }
+    
     Tcl_Preserve(riPtr);
     code = Tcl_EvalEx(riPtr->interp, strings[requestCommand],
 		      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -1154,13 +1140,7 @@ static void processMessage(
 	ckfree(strings[i]);
     }
     ckfree(strings);
-}
-
-static int sendEventProc(Tcl_Event *eventPtr, int flags) {
-    (void) flags;
-    sendEvent *sendEventPtr = (sendEvent *) eventPtr;
-    processMessage(&sendEventPtr->msg, sendEventPtr->strings);
-    return 1;
+    return 1;  /* The event was processed, not deferred. */
 }
 
 /*
