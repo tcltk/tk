@@ -1,14 +1,27 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkBorder.c.  It is organized in the standard fashion for Tcl tests.
+# tkBorder.c.
 #
 # Copyright © 1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test border-1.1 {Tk_AllocBorderFromObj - converting internal reps} -constraints {
     testborder
@@ -196,7 +209,8 @@ test border-4.7 {Tk_GetReliefFromObj - error} -body {
     destroy .b
 } -returnCodes error -result {bad relief "upanddown": must be flat, groove, raised, ridge, solid, or sunken}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return

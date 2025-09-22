@@ -177,7 +177,7 @@ proc ttk::LoadThemes {} {
 	alt		altTheme.tcl
 	clam		clamTheme.tcl
 	winnative	winTheme.tcl
-	xpnative	{xpTheme.tcl vistaTheme.tcl}
+	vista		vistaTheme.tcl
 	aqua		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
@@ -194,14 +194,14 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 # Notes:
 #	+ On OSX, aqua theme is the default
-#	+ On Windows, xpnative takes precedence over winnative if available.
+#	+ On Windows, vista takes precedence over winnative if available.
 #	+ On X11, users can use the X resource database to
 #	  specify a preferred theme (*TkTheme: themeName);
 #	  otherwise "default" is used.
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua vista xpnative winnative]
+    set preferred [list aqua vista winnative]
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {

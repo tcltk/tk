@@ -21,7 +21,7 @@ declare 4 {
 	Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc)
 }
 
-declare 5 {
+declare 5 {deprecated {Use Ttk_RegisterElement}} {
     int Ttk_RegisterElementSpec(
 	Ttk_Theme theme,
 	const char *elementName,
