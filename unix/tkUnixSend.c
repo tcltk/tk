@@ -135,37 +135,47 @@ typedef struct NameRegistry {
   */
 
 typedef struct {
-    RegisteredInterp *interpListPtr;  /* List of all interpreters in this
-				       * thread. */
-    Tcl_AsyncHandler asyncToken;      /* Token for AsyncHandler. */
-    int initialized;                  /* Set by SendInit */
+    RegisteredInterp *interpListPtr;  /* List of all interps in a thread. */
+    Tcl_AsyncHandler asyncToken;      /* Token for a thread's AsyncHandler. */
+    int initialized;                  /* Set when a thread calls SendInit */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
+
+/*
+ * The following static struct contains per-process data which does not change
+ * after initializaton.  An mqueue is associated to a process, not to a
+ * thread.  So the descriptor and name of the mqueue used for receiving "send"
+ * commands are per-process and static.
+  */
+
+static struct {
+    int sendDebug;		 /* This can be set while debugging to 
+				  * add print statements, for example. */
+    mqd_t qd;                    /* Descriptor for the mqueue. */
+    char qname[NAME_MAX];        /* Path name of mqueue. */
+} staticData = {0};
 
 #define SET_QNAME(qname, pid)					\
     snprintf((qname), NAME_MAX, "/tksend_%d", (pid))
 
 /*
- * The following struct contains per-process (not per-thread) data.  An mqueue
- * is associated to a process, not to a thread.  So the descriptor and name of
- * the mqueue used for receiving "send" commands are per-process.
-  */
-
+ * The following static struct contains data which is shared by all
+ * threads and can be changed by a thread.
+ */
 static struct {
+    Tcl_Mutex mutex;             /* Controls access to this struct. */
     int sendSerial;		 /* The serial number that was used in the last
 				  * "send" command. */
-    int sendDebug;		 /* This can be set while debugging to 
-				  * add print statements, for example. */
-    mqd_t qd;                    /* Descriptor for the mqueue. */
-    char qname[NAME_MAX];        /* Path name of mqueue. */
     Tcl_HashTable nameToTid;     /* Mapping from appnames to thread ids. */
-} globalData = {0};
+} dynamicData = {0};
 
 static pthread_t getTid(
     char *name)
 {
-    Tcl_HashEntry *entry = Tcl_FindHashEntry(&globalData.nameToTid, name);
+    Tcl_MutexLock(&dynamicData.mutex);
+    Tcl_HashEntry *entry = Tcl_FindHashEntry(&dynamicData.nameToTid, name);
+    Tcl_MutexUnlock(&dynamicData.mutex);
     if (entry) {
 	return (pthread_t) Tcl_GetHashValue(entry);
     } else {
@@ -173,6 +183,12 @@ static pthread_t getTid(
     }
 }
 
+static void incrementSerial()
+{
+    Tcl_MutexLock(&dynamicData.mutex);
+    dynamicData.sendSerial++;
+    Tcl_MutexUnlock(&dynamicData.mutex);
+}
 /*
  * Our mqueue messages consist of a header followed by a payload, as described
  * by the following struct.  The payload is a byte sequence containing a
@@ -278,29 +294,25 @@ static int
 SendInit(Tcl_Interp *interp)
 {
     /*
-     * Intialize the path used for the appname registry.
+     * Initialize the per-process data, including the mqueue used by this
+     * process to receive requests, as well as the dynamic data shared
+     * by all threads.
      */
-
-    const char *home = getenv("HOME");
-    const char *dir = "/.cache/tksend";
-    const char *file = "/appnames";
     static int firstCall = 1;
-    appNameRegistryPath = ckalloc(strlen(home) + strlen(dir)
-	+ strlen(file) + 1);
-    strcpy(appNameRegistryPath, home);
-    strcat(appNameRegistryPath, dir);
-    mkdir(appNameRegistryPath, S_IRWXU);
-    strcat(appNameRegistryPath, file);
-
     if (firstCall == 1) {
 	firstCall = 0;
 
-	/*
-	 * Initialize the per-process data, including the mqueue used by this
-	 * process to receive requests.
-	 */
-	Tcl_InitHashTable(&globalData.nameToTid, TCL_STRING_KEYS);
-	SET_QNAME(globalData.qname, getpid());
+	const char *home = getenv("HOME");
+	const char *dir = "/.cache/tksend";
+	const char *file = "/appnames";
+	appNameRegistryPath = ckalloc(strlen(home) + strlen(dir)
+				      + strlen(file) + 1);
+	strcpy(appNameRegistryPath, home);
+	strcat(appNameRegistryPath, dir);
+	mkdir(appNameRegistryPath, S_IRWXU);
+	strcat(appNameRegistryPath, file);
+	Tcl_InitHashTable(&dynamicData.nameToTid, TCL_STRING_KEYS);
+	SET_QNAME(staticData.qname, getpid());
 	struct mq_attr attr = {
 	    .mq_maxmsg = TK_MQ_MAXMSG,
 	    .mq_msgsize = TK_MQ_MSGSIZE,
@@ -310,11 +322,15 @@ SendInit(Tcl_Interp *interp)
 	 * Open an mqueue. which will remain open until the process exits.
 	 */
 
-	globalData.qd = mq_open(globalData.qname, O_RDWR|O_CREAT, 0660, &attr);
-	if (globalData.qd == -1) {
+	staticData.qd = mq_open(staticData.qname, O_RDWR|O_CREAT, 0660, &attr);
+	if (staticData.qd == -1) {
 	    goto error;
 	}
     }
+    /*
+     * Initialize per-thread data.
+     */
+    
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     tsdPtr->asyncToken = Tcl_AsyncCreate(mqueueAsyncProc, NULL);
@@ -341,10 +357,10 @@ SendInit(Tcl_Interp *interp)
     struct sigevent se = {
 	.sigev_notify = SIGEV_SIGNAL,
 	.sigev_signo = TK_MQUEUE_SIGNAL,
-	//.sigev_value.sival_ptr = (void *) &globalData.qd,
+	//.sigev_value.sival_ptr = (void *) &staticData.qd,
 	.sigev_notify_attributes = NULL,
     };
-    if (mq_notify(globalData.qd, &se) == -1) {
+    if (mq_notify(staticData.qd, &se) == -1) {
 	goto error;
     }
 
@@ -381,8 +397,8 @@ TkSendCleanup(
     if (appNameRegistryPath) {
         ckfree(appNameRegistryPath);
     }
-    mq_close(globalData.qd);
-    mq_unlink(globalData.qname);
+    mq_close(staticData.qd);
+    mq_unlink(staticData.qname);
 }
 
 
@@ -636,11 +652,13 @@ RegDeleteName(
 {
     Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
+    Tcl_MutexLock(&dynamicData.mutex);
     Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(
-	&globalData.nameToTid, name);
+	&dynamicData.nameToTid, name);
     if (nameEntry) {
 	Tcl_DeleteHashEntry(nameEntry);
     }
+    Tcl_MutexUnlock(&dynamicData.mutex);
     regPtr->modified = 1;
 }
 
@@ -681,9 +699,11 @@ RegAddName(
     regPtr->modified = 1;
     Tcl_HashEntry *hPtr;
     int newEntry;
-    hPtr = Tcl_CreateHashEntry(&globalData.nameToTid, name, &newEntry);
+    Tcl_MutexLock(&dynamicData.mutex);
+    hPtr = Tcl_CreateHashEntry(&dynamicData.nameToTid, name, &newEntry);
     //assert newEntry != 0 ???
     Tcl_SetHashValue(hPtr, value.tid);
+    Tcl_MutexUnlock(&dynamicData.mutex);
 }
 
 
@@ -745,7 +765,7 @@ Tk_SetAppName(
 	if (riPtr == NULL) {
 	    /*
 	     * This interpreter isn't currently registered; create the data
-	     * structure that will be used to register it locally, plus add
+	     * structure that will be used to register it, plus add
 	     * the "send" command to the interpreter.  The name gets added
 	     * to the structure later.
 	     */
@@ -833,7 +853,7 @@ Tk_SetAppName(
  *
  *     Creates a message with a payload consisting of an array of strCount
  *     null-terminated strings.  The message serial number is taken from
- *     the globalData.  If the message size would exceed the maximum, the payload
+ *     the dynamicData.  If the message size would exceed the maximum, the payload
  *     is stored in a temporary file, the PAYLOAD_IS_PATH flag is set, and the
  *     payload is replaced by an absolute path to the temporary file.
  *
@@ -859,11 +879,13 @@ static message *packMessage (
     size_t sizesSize = strCount * sizeof(size_t);
     size_t payloadSize = sizesSize;
     size_t *sizes = (size_t *) ckalloc(sizesSize);
+    Tcl_MutexLock(&dynamicData.mutex);
     message header = {
-	.serial = globalData.sendSerial,
+	.serial = dynamicData.sendSerial,
 	.code = code,
 	.count = strCount
     };
+    Tcl_MutexUnlock(&dynamicData.mutex);
     for(i = 0 ; i < strCount ; i++) {
 	payloadSize += (sizes[i] = strlen(strArray[i]) + 1);
     }
@@ -1082,6 +1104,11 @@ typedef struct sendEvent {
     char **strings;
 } sendEvent;
 
+/*
+ * A pointer to this function is stored in the proc field of a
+ * sendEvent.  It gets executed when the event is processed.
+ */
+
 static int sendEventProc(Tcl_Event *eventPtr, int flags) {
     (void) flags;
     RegisteredInterp *riPtr;
@@ -1136,6 +1163,7 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
 	    Tcl_PosixError(riPtr->interp);
 	}
     }
+    Tcl_Release(riPtr);
     for (int i = 0 ; i < header->count ; i++) {
 	ckfree(strings[i]);
     }
@@ -1144,9 +1172,10 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
 }
 
 /*
- * The Tcl_AsyncProc that we use with the realtime signal TK_MQUEUE_SIGNAL.
- * This proc unpacks the message into a sendEvent, determines which thread
- * should receive the event and queues it,
+ * This is the Tcl_AsyncProc that we use with the realtime signal
+ * TK_MQUEUE_SIGNAL.  It unpacks the message into a sendEvent, determines
+ * which thread should receive the event, and adds it to that thread's
+ * event queue.
  */
 
 int mqueueAsyncProc(
@@ -1166,9 +1195,8 @@ int mqueueAsyncProc(
      * for each message.
      */
 
-
     while(True) {
-	if (mq_getattr(globalData.qd, &attr) == -1) {
+	if (mq_getattr(staticData.qd, &attr) == -1) {
 	    // Can we handle this error?  Can we find an interp?
 	    fprintf(stderr, "mq_getattr failed\n");
 	    break;
@@ -1181,7 +1209,7 @@ int mqueueAsyncProc(
 	eventPtr->header.proc = sendEventProc;
 	/* Receive a message and unpack it into the sendEvent. */ 
 	msgPtr = (message *) ckalloc(attr.mq_msgsize);
-	mq_receive(globalData.qd, (char *) msgPtr, attr.mq_msgsize,
+	mq_receive(staticData.qd, (char *) msgPtr, attr.mq_msgsize,
 		   &priority);
 	unpackMessage(msgPtr, &eventPtr->msg, &eventPtr->strings);
 	ckfree(msgPtr);
@@ -1210,7 +1238,7 @@ int mqueueAsyncProc(
  * According to man 7 signal-safety, a signal handler can only
  * call async-signal-safe functions, which in particular must be
  * reentrant.  This handler calls:
- *     Tcl_GetThreadSpecificData
+ *     Tcl_GetThreadData
  *     Tcl_AsyncMarkFromSignal
  *     mq_notify
  *     mq_getattr
@@ -1232,10 +1260,9 @@ static void mqueueHandler(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));    
     if (!Tcl_AsyncMarkFromSignal(tsdPtr->asyncToken, TK_MQUEUE_SIGNAL)) {
-	// Is there a way to handle this error?
-	fprintf(stderr, "Tcl_ASyncMarkFromSignal returned false!!!");
+	Tcl_Panic("Tcl_ASyncMarkFromSignal returned false!!!");
     }
-    mqd_t qd = globalData.qd;
+    mqd_t qd = staticData.qd;
 
     /*
      * The current notification registration will be canceled when
@@ -1249,12 +1276,13 @@ static void mqueueHandler(
     struct sigevent se = {
 	.sigev_notify = SIGEV_SIGNAL,
 	.sigev_signo = TK_MQUEUE_SIGNAL,
-	.sigev_value.sival_ptr = (void *) &globalData.qd,
+	.sigev_value.sival_ptr = (void *) &staticData.qd,
 	.sigev_notify_attributes = NULL,
     };
     if (mq_notify(qd, &se) == -1) {
-	fprintf(stderr, "mq_notify failed in mqueueHandler.\n");
-	// Can we handle this error?
+        // Can we handle this error?  The fprintf is unsafe, but
+	// can be used when debugging.
+	// fprintf(stderr, "mq_notify failed in mqueueHandler.\n");
     }
 }
 
@@ -1440,8 +1468,8 @@ Tk_SendObjCmd(
 	}
     }
 
-     // When async is 0, the call below blocks until a reply is received.
-     // Perhaps we should run a background thread to process timer events?
+    // When async is 0, the call below blocks until a reply is received.
+    // Perhaps we should run a background thread to process timer events?
     char *replyName = NULL;
     if (async) {	
 	code = sendRequest(interp, info.pid, "", (const char*) destName,
@@ -1478,7 +1506,7 @@ Tk_SendObjCmd(
 	}
     }
     Tcl_DStringFree(&request2);
-    globalData.sendSerial++;
+    incrementSerial();
     return code;
 }
 
@@ -1691,7 +1719,7 @@ TkpTestsendCmd(
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (index == TESTSEND_SERIAL) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(globalData.sendSerial+1));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(dynamicData.sendSerial+1));
     }
     return TCL_OK;
 }
