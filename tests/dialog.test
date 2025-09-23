@@ -1,13 +1,25 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
-# It is organized in the standard fashion for Tcl tests.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # Import utility procs for specific functional areas
 testutils import dialog
+
+#
+# TESTS
+#
 
 test dialog-1.1 {tk_dialog command} -body {
     tk_dialog
@@ -61,9 +73,8 @@ test dialog-2.3 {tk_dialog operation} -body {
 } -result -1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget dialog
 cleanupTests
-return

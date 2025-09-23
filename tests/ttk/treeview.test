@@ -1,15 +1,48 @@
 #
-# [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
-# what it currently does)
+# ttk::treeview widget tests
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+# NOTES
+#
+# * [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
+#   what it currently does)
+#
+# * NEED: tests for focus item, selection
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import scroll
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# get list of column IDs from list of display column ids.
+#
+proc columnids {tv dcols} {
+    set result [list]
+    foreach dcol $dcols {
+	if {[catch {
+	    lappend result [$tv column $dcol -id]
+	}]} {
+	    lappend result ERROR
+	}
+    }
+    return $result
+}
 
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
@@ -28,6 +61,23 @@ proc consistencyCheck {tv {item {}}} {
     }
 }
 
+proc identify* {tv comps args} {
+    foreach {x y} $args {
+	foreach comp $comps {
+	    lappend result [$tv identify $comp $x $y]
+	}
+    }
+    return $result
+}
+
+proc nostretch {tv} {
+    foreach col [$tv cget -columns] {
+	$tv column $col -stretch 0
+    }
+    $tv column #0 -stretch 0
+    update idletasks ; # redisplay $tv
+}
+
 proc tvSetup {} {
     destroy .tv
     ttk::treeview .tv -columns {a b c}
@@ -42,6 +92,7 @@ proc tvSetup {} {
     after 10
     update
 }
+
 proc tvSetupWithItems {} {
     tvSetup
     .tv insert {} end -id nn -text "nn"
@@ -57,6 +108,10 @@ proc tvSetupWithItems {} {
 	}
     }
 }
+
+#
+# TESTS
+#
 
 test treeview-1.1 "columns" -body {
     tvSetup
@@ -238,6 +293,10 @@ test treeview-3.13 "Re-reattach" -body {
     consistencyCheck .tv
     list [.tv children {}] $before [.tv detached newnode]
 } -result {{newfirstone firstnode anotherone onemore lastnode newlastone newnode} 0 0}
+
+#
+# COMMON TEST SETUP
+#
 
 catch {
     .tv insert newfirstone end -id x1
@@ -921,31 +980,9 @@ test treeview-11.17 "<<TreeviewSelect>> when setting the selection" -body {
     bind .tv <<TreeviewSelect>> {}
 } -result {2 3 4 5}
 
-
-### identify tests:
 #
-proc identify* {tv comps args} {
-    foreach {x y} $args {
-	foreach comp $comps {
-	    lappend result [$tv identify $comp $x $y]
-	}
-    }
-    return $result
-}
-
-# get list of column IDs from list of display column ids.
+# identify tests
 #
-proc columnids {tv dcols} {
-    set result [list]
-    foreach dcol $dcols {
-	if {[catch {
-	    lappend result [$tv column $dcol -id]
-	}]} {
-	    lappend result ERROR
-	}
-    }
-    return $result
-}
 
 test treeview-identify-setup "identify series - setup" -body {
     destroy .tv
@@ -966,6 +1003,11 @@ test treeview-identify-setup "identify series - setup" -body {
 
     wm geometry . {} ; pack .tv ; update
 }
+
+#
+# COMMON TEST SETUP
+#
+
 # treeview-identify-setup sets heading row font to Arial with size 10 points,
 # so the heading line center y-coordinate is (in pixels):
 set yHLC [expr {([font metrics {Arial 10} -linespace] + 2) / 2.0}]
@@ -1016,7 +1058,6 @@ test treeview-identify-7 "vertical scan - headings, no tree" -body {
 } -result [list heading {} {} cell branch {branch #1} cell item1 {item1 #1} cell item2 {item2 #2} cell item3 {item3 #1}]
 
 # Disclosure element name is "Treeitem.indicator"
-set disclosure "*.indicator"
 test treeview-identify-8 "identify element" -body {
     .tv configure -show {tree}
     .tv insert branch  0 -id branch2 -open true
@@ -1026,7 +1067,7 @@ test treeview-identify-8 "identify element" -body {
     update idletasks
     identify* .tv {item element} 4m 5m  12m 15m  20m 25m
 } -match glob -result [list \
-	branch $disclosure branch2 $disclosure branch3 $disclosure]
+	branch "*.indicator" branch2 "*.indicator" branch3 "*.indicator"]
 
 test treeview-identify-8.1 "identify element" -body {
     .tv configure -show {tree headings}
@@ -1034,6 +1075,10 @@ test treeview-identify-8.1 "identify element" -body {
     identify* .tv element 1 1  40 ${yHLC}m  10m [expr {$yHLC+6}]m
     # Heading elements are currently not reported
 } -result [list {} {} text]
+
+#
+# COMMON TEST SETUP
+#
 
 ttk::style configure Treeview -rowheight 20
 
@@ -1227,11 +1272,14 @@ test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
     ttk::style configure Cell -padding {}
 } -result [expr {8-5 + 9-5}]
 
-### NEED: tests for focus item, selection
+#
+# COMMON TEST CLEANUP
+#
+
+destroy .tv
 
 ### Misc. tests:
 
-destroy .tv
 test treeview-1541739 "Root node properly initialized (#1541739)" -setup {
     ttk::treeview .tv
     .tv insert {} end -id a
@@ -1301,14 +1349,6 @@ test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview
 } -cleanup {
     destroy .tv
 } -result {200 1}
-
-proc nostretch {tv} {
-    foreach col [$tv cget -columns] {
-	$tv column $col -stretch 0
-    }
-    $tv column #0 -stretch 0
-    update idletasks ; # redisplay $tv
-}
 
 test treeview-ce470f20fd-2 "changing -stretch resizes columns" -setup {
     pack [ttk::treeview .tv -columns {bar colA colB colC foo}]
@@ -1501,7 +1541,7 @@ test treeview-23.1 "cell padding" -setup {
 } -result {2 4 6 8}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget scroll

@@ -1,38 +1,34 @@
 # This file is a Tcl script to test out Tk's "raise" and
 # "lower" commands, plus associated code to manage window
-# stacking order.  It is organized in the standard fashion
-# for Tcl tests.
+# stacking order.
 #
 # Copyright © 1993-1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
-# Procedure to create a bunch of overlapping windows, which should
-# make it easy to detect differences in order.
+#
+# LOCAL UTILITY PROCS
+#
 
-wm geometry . +400+400
-proc raise_setup {} {
-    destroy {*}[winfo children .raise]
-    update idletasks
-    foreach i {a b c d e} {
-	    label .raise.$i -text $i -relief raised -bd 2
-    }
-    place .raise.a -x 20 -y 60 -width 60 -height 80
-    place .raise.b -x 60 -y 60 -width 60 -height 80
-    place .raise.c -x 100 -y 60 -width 60 -height 80
-    place .raise.d -x 40 -y 20 -width 100 -height 60
-    place .raise.e -x 40 -y 120 -width 100 -height 60
-}
-
-# Procedure to return information about which windows are on top
-# of which other windows.
-
+# raise_getOrder --
+#
+# Return information about which windows are on top of which other windows.
+#
 proc raise_getOrder {} {
     set x [winfo rootx .raise]
     set y [winfo rooty .raise]
@@ -46,8 +42,10 @@ proc raise_getOrder {} {
 	    [winfo name [winfo containing [expr $x+130] [expr $y+130]]]
 }
 
-# Procedure to set up a collection of top-level windows
-
+# raise_makeToplevels --
+#
+# Set up a collection of top-level windows
+#
 proc raise_makeToplevels {} {
     deleteWindows
     foreach i {.raise1 .raise2 .raise3} {
@@ -57,9 +55,35 @@ proc raise_makeToplevels {} {
     }
 }
 
+# raise_setup --
+#
+# Create a bunch of overlapping windows, which should make it easy to detect
+# differences in order.
+#
+proc raise_setup {} {
+    destroy {*}[winfo children .raise]
+    update idletasks
+    foreach i {a b c d e} {
+	    label .raise.$i -text $i -relief raised -bd 2
+    }
+    place .raise.a -x 20 -y 60 -width 60 -height 80
+    place .raise.b -x 60 -y 60 -width 60 -height 80
+    place .raise.c -x 100 -y 60 -width 60 -height 80
+    place .raise.d -x 40 -y 20 -width 100 -height 60
+    place .raise.e -x 40 -y 120 -width 100 -height 60
+}
+
+#
+# COMMON TEST SETUP
+#
+
+wm geometry . +400+400
 toplevel .raise
 wm geom .raise 250x200+0+0
 
+#
+# TESTS
+#
 
 test raise-1.1 {preserve creation order} -body {
     raise_setup
@@ -312,9 +336,9 @@ test raise-7.8 {errors in raise/lower commands} -body {
     lower . badName4
 } -returnCodes error -result {bad window path name "badName4"}
 
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
-
-# cleanup
 cleanupTests
-return
-

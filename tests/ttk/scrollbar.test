@@ -1,8 +1,9 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::scrollbar widget tests
+#
 
+# NOTE
+#
 # Before 2019 the code in library/ttk/scrollbar.tcl would replace the
 # constructor of ttk::scrollbar with the constructor of tk::scrollbar
 # unless the -class or -style options were specified..
@@ -10,6 +11,24 @@ loadTestedCommands
 # tests are left in place, though, except that scrollbar-swapout-1
 # test was changed to expect the class to be TScrollbar instead of
 # Scrollbar.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+tcltest::loadTestedCommands
+
+#
+# TESTS
+#
 
 test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
  -constraints {
@@ -132,5 +151,8 @@ test scrollbar-11.2 "style command" -body {
     destroy .w
 } -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
 
-tcltest::cleanupTests
+#
+# TESTFILE CLEANUP
+#
 
+tcltest::cleanupTests
