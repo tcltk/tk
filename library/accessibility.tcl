@@ -176,23 +176,31 @@ namespace eval ::tk::accessible {
     
     # Get selection status from radiobuttons.
     proc _getradiodata {w} {
-
 	set var [$w cget -variable]
-	if {[info exists var]} {
-	    set value [set $var]
-
-	    # The radio is "on" if the variable matches its -value
-	    return [expr {$value eq [$w cget -value]}]
-
+	if {$var ne "" && [uplevel #0 info exists $var]} {
+	    set value [uplevel #0 set $var]
+	    set result [expr {$value eq [$w cget -value]}]
+	    if {$result eq 1} {
+		return "selected"
+	    } else {
+		return "not selected"
+	    }
+	    return 0
 	}
     }
+    
     # Get selection status from checkbuttons.
     proc _getcheckdata {w} {
 	set var [$w cget -variable]
-	if {[info exists var]} {
-	    set state [set $var]  
-
-	    return [expr {[set $var] eq [$w cget -onvalue]}]
+	if {$var ne "" && [uplevel #0 info exists $var]} {
+	    set value [uplevel #0 set $var]
+	    set result [expr {$value eq [$w cget -onvalue]}]
+	    if {$result eq 1} {
+		return "selected"
+	    } else {
+		return "not selected"
+	    }
+	    return 0
 	}
     }
 
@@ -200,15 +208,19 @@ namespace eval ::tk::accessible {
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 	    set data [::tk::accessible::_getradiodata $w]
+	    set role [::tk::accessible::get_acc_role $w]
+	    set description [::tk::accessible::get_acc_description $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
-	    ::tk::accessible::speak $data
+	    ::tk::accessible::speak "$role $description $data"
 	}
 	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
 	    set data [::tk::accessible::_getcheckdata $w]
+	    set role [::tk::accessible::get_acc_role $w]
+	    set description [::tk::accessible::get_acc_description $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
-	    ::tk::accessible::speak $data
+	    ::tk::accessible::speak "$role $description $data"
 	}
 	
 	if {[winfo class $w] eq "Listbox"} {
