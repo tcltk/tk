@@ -14,7 +14,6 @@
 if {[tk windowingsystem] eq "x11" && ([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq "")} {
     # On X11, do not load if screen reader is not running - macOS and Windows
     # handle this automatically.
-    
     return
 } 
 if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} { 
@@ -103,6 +102,24 @@ namespace eval ::tk::accessible {
 	    }
 	}
     }
+
+    # Attach a variable trace to run _updateselection when a button changes.
+    proc _attach_trace {w} {
+	# Radiobuttons/Checkbuttons always have a -variable
+	set var [$w cget -variable]
+	if {$var ne ""} {
+	    # Avoid multiple traces on the same variable
+	    catch {trace remove variable $var write [list ::tk::accessible::_vartrace $w]}
+	    trace add variable ::$var write [list ::tk::accessible::_vartrace $w]
+	}
+    }
+
+    # Trace handler.
+    proc _vartrace {w args} {
+	if {[winfo exists $w]} {
+	    ::tk::accessible::_updateselection $w
+	}
+    }
     
     # Check message text on dialog.
     proc _getdialogtext {w} {
@@ -156,53 +173,42 @@ namespace eval ::tk::accessible {
 	}
 	return $headerlist
     }
-
+    
     # Get selection status from radiobuttons.
     proc _getradiodata {w} {
-	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
-	    set var [$w cget -variable]
-	    if {$var eq ""} {
-		return "not selected"
-	    }
-	    set varvalue [set $var]
-	    set val [$w cget -value]
-	    if {$varvalue eq $val} {
-		return "selected"
-	    } else {
-		return "not selected"
-	    }
+
+	set var [$w cget -variable]
+	if {[info exists var]} {
+	    set value [set $var]
+
+	    # The radio is "on" if the variable matches its -value
+	    return [expr {$value eq [$w cget -value]}]
+
 	}
     }
-
     # Get selection status from checkbuttons.
     proc _getcheckdata {w} {
-	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
-	    set var [$w cget -variable]
-	    if {$var eq ""} {
-		return "0"
-	    }
-	    set varvalue [set $var]
-	    set val [$w cget -onvalue]
-	    if {$varvalue eq $val} {
-		return "1"
-	    } else {
-		return "0"
-	    }
+	set var [$w cget -variable]
+	if {[info exists var]} {
+	    set state [set $var]  
+
+	    return [expr {[set $var] eq [$w cget -onvalue]}]
 	}
     }
 
-    
     # Update data selection for various widgets. 
     proc _updateselection {w} {
 	if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 	    set data [::tk::accessible::_getradiodata $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
+	    ::tk::accessible::speak $data
 	}
 	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
 	    set data [::tk::accessible::_getcheckdata $w]
 	    ::tk::accessible::acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
+	    ::tk::accessible::speak $data
 	}
 	
 	if {[winfo class $w] eq "Listbox"} {
@@ -600,7 +606,6 @@ namespace eval ::tk::accessible {
 	variable prevActiveIndex
 	set prevActiveIndex ""
 
-
 	# Update the currently active menu or menubar entry.
 	proc _update_active_entry {menuWidget} {
 	    variable prevActiveIndex
@@ -826,17 +831,22 @@ namespace eval ::tk::accessible {
     # widgets that support returning a value. 
 
     # Selection changes.
-    if {[tk windowingsystem] ne "aqua"} {
-	bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
-	bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
-	bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
-	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
-	bind Radiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
-	bind TRadiobutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
-	bind Checkbutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
-	bind TCheckbutton <ButtonRelease-1> {+::tk::accessible::_updateselection %W}
+
+    bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W} 
+    bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
+    bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
+    bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+
+    if {[tk windowingsystem] eq "x11"} {
+	# Automatically hook up new checkbuttons/radiobuttons
+	# to notify the accessibility system when their selection
+	#state changes. 
+	bind Radiobutton   <Map> {+::tk::accessible::_attach_trace %W}
+	bind TRadiobutton  <Map> {+::tk::accessible::_attach_trace %W}
+	bind Checkbutton   <Map> {+::tk::accessible::_attach_trace %W}
+	bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
     }
-    
+
     # Only need to track menu selection changes on X11.
     if {[tk windowingsystem] eq "x11"} {
 	bind Menu <Up> {+
