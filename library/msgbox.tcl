@@ -422,13 +422,41 @@ proc ::tk::MessageBox {args} {
     # At <Destroy> the buttons have vanished, so must do this directly.
     bind $w.msg <Destroy> [list set tk::Priv.${disp}(button) $cancel]
 
-    # 7. Withdraw the window, then update all the geometry information
+    # 7. Limit window width by that of physical screen.
+    # On small screens the message widget's width may exceed the screen's
+    # width.  In this case, change the message label's wrap length so the
+    # window fits on the physical screen. Tk Ticket e19f1d89
+    set frameWidth [::tk::WMFrameWidth]
+    wm withdraw $w
+    update idletasks
+    if {[winfo reqwidth $w] + 2*$frameWidth > [winfo screenwidth $w]} {
+	# Calculate the wrap length as the screen width minus the
+	# width requested by the dialog without the message label and
+	# window decoration frame
+	set wraplength [expr {[winfo screenwidth $w] - 2*$frameWidth
+		- ([winfo reqwidth $w] - [winfo reqwidth $w.msg])}]
+	# Make sure that the wrap length is no less than the width
+	# of 20 average-size characters in the message label's font
+	set msgFont [$w.msg cget -font]
+	set str [string repeat "0" 20]
+	set minWraplength [font measure $msgFont -displayof $w $str]
+	if {$wraplength < $minWraplength} {	;# this is rather unprobable
+	    set wraplength $minWraplength
+	}
+	# Apply the wrap length
+	$w.msg configure -wraplength $wraplength
+	if {[winfo exists $w.dtl]} {
+	    $w.dtl configure -wraplength $wraplength
+	}
+    }
+
+    # 8. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow $w widget $data(-parent)
 
-    # 8. Set a grab and claim the focus too.
+    # 9. Set a grab and claim the focus too.
 
     if {$data(-default) ne ""} {
 	set focus $w.$data(-default)
@@ -437,7 +465,7 @@ proc ::tk::MessageBox {args} {
     }
     ::tk::SetFocusGrab $w $focus
 
-    # 9. Wait for the user to respond, then restore the focus and
+    # 10. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,

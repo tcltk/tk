@@ -201,7 +201,6 @@ TkPutImage(
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
 #	define TkWinSetHINSTANCE 0
-#	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
 #   endif
@@ -479,7 +478,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWinGetMenuSystemDefault, /* 32 */
     TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
-    TkWinGetPlatformTheme, /* 35 */
+    0, /* 35 */
     TkWinChildProc, /* 36 */
     0, /* 37 */
     TkpCmapStressed, /* 38 */

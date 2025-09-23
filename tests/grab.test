@@ -1,16 +1,21 @@
 # Tests for the grab command.
 #
-# This file contains a collection of tests for one or more of the Tk
-# built-in commands.  Sourcing this file runs the tests and
-# generates output for errors.  No output means no errors were found.
-#
 # Copyright © 1998-2000 Ajuba Solutions.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
 
 # The macOS test module includes the testpressbutton command to simulate a
 # mouse button press event by injecting events into the NSApplication
@@ -18,6 +23,10 @@ namespace import -force tcltest::test
 # the actual grab effect, per se, in an automated test.  Therefore,
 # this test suite only covers the interface to the grab command (ie,
 # error messages, etc.) on platforms other than macOS.
+
+#
+# TESTS
+#
 
 test grab-1.1 {Tk_GrabObjCmd} -body {
     grab
@@ -211,6 +220,8 @@ test grab-6.1 {local grab on child window} -constraints {
     grab release .f
 } -result {inside outside : outside : inside outside :}
 
-cleanupTests
-return
+#
+# TESTFILE CLEANUP
+#
 
+cleanupTests
