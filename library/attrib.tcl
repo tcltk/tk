@@ -12,7 +12,8 @@ namespace eval ::tk::attrib {
 
 # ::tk::attrib::Table --
 #   This procedure is invoked by the "tk attribtable" command.  It creates an
-#   attribute table of a given name as a procedure in the global namespace.
+#   attribute table of a given name as a procedure in the namespace of the
+#   calling context if not fully qualified.
 #
 # Arguments:
 #   name	The name of the table.
@@ -40,58 +41,70 @@ proc ::tk::attrib::Table tableName {
     }
     namespace eval $tableName2 {}
 
-    # Create the procedure $tableName in the global namespace
+    # Create the procedure $tableName in the namespace of the calling context
 
     # $tableName --
     #	This procedure queries or modifies arbitrary attributes of a given
     #	widget.  It supports the following forms:
     #
-    #	$tableName set $w name value ?name value ...?
+    #	$tableName set pathName name value ?name value ...?
     #	    Sets the specified attributes to the given values.  Returns an
     #	    empty string.
     #
-    #	$tableName get $w ?name?
+    #	$tableName get pathName ?name ?defaultValue??
     #	    If a name is specified then returns the corresponding attribute
-    #	    value, or an empty string if no corresponding value exists.
-    #	    Otherwise returns a list consisting of all attribute names and
-    #	    values, sorted by the names.
+    #	    value, or an empty string or $defaultValue (if given) if no
+    #	    corresponding value exists.  Otherwise returns a list consisting of
+    #	    all attributenames and values, sorted by the names.
     #
-    #	$tableName names $w
+    #	$tableName names pathName
     #	    Returns a sorted list consisting of all attribute names.
     #
-    #	$tableName unset $w name ?name ...?
+    #	$tableName unset pathName name ?name ...?
     #	    Unsets the specified attributes.  Returns an empty string.
     #
-    #	$tableName clear $w
-    #	    Unsets all attributes.  Returns an empty string.
+    #	$tableName clear pathName
+    #	    Unsets all attributes and removes $pathName from the list of those
+    #	    widgets that have attributes set via $tableName set.  Returns an
+    #	    empty string.
     #
-    #	$tableName exists $w name
+    #	$tableName exists pathName name
     #	    Returns 1 if the attribute of the given name exists and 0
     #	    otherwise.
     #
+    #	$tableName pathnames
+    #	    Returns a list consisting of the path names of all widgets that
+    #	    have attributes set via $tableName set.
+    #
     # Arguments:
-    #	op	One of set, get, names, unset, clear, or exists.
-    #	w	The widget whose attributes are queried or modified.
-    #	args	Attribute names or name-value pairs.
+    #	op	One of set, get, names, unset, clear, exists, or pathnames.
+    #	args	Additional arguments, mostly starting with a widget path name.
     #
     # Results:
     #	See the description above.
 
     if {[catch {
-	uplevel #0 [list proc $tableName {op w args} [format {
+	uplevel 1 [list proc $tableName {op args} [format {
 	    set table {%s}
 	    set table2 [list $table]
 	    set ns ::tk::attrib::$table2
 
-	    if {$op ni {set get names unset clear exists}} {
+	    if {$op ni {set get names unset clear exists pathnames}} {
 		return -code error "usage: $table2\
 			set|get|names|unset|clear|exists pathName ..."
 	    }
-	    if {![winfo exists $w]} {
-		return -code error "bad window path name [list $w]"
-	    }
 
 	    set argCount [llength $args]
+	    if {$argCount > 0} {
+		set w [lindex $args 0]
+		if {$op ne "exists" && ![winfo exists $w]} {
+		    return -code error "bad window path name [list $w]"
+		}
+
+		set args [lrange $args 1 end]
+		incr argCount -1
+	    }
+
 	    switch $op {
 		set {
 		    if {$argCount == 0 || $argCount %% 2 != 0} {
@@ -124,15 +137,17 @@ proc ::tk::attrib::Table tableName {
 		    return ""
 		}
 		get {
-		    if {$argCount == 1} {
+		    if {$argCount == 1 || $argCount == 2} {
 			# Return the value of the specified attribute
+			set defaultVal [expr {$argCount == 2 ?
+					      [lindex $args 1] : ""}]
 			if {[array exists ${ns}::$w]} {
 			    upvar ${ns}::$w attribs
 			    set name [lindex $args 0]
 			    return [expr {[info exists attribs($name)] ?
-					  $attribs($name) : ""}]
+					  $attribs($name) : $defaultVal}]
 			} else {
-			    return ""
+			    return $defaultVal
 			}
 		    } elseif {$argCount == 0} {
 			# Return the list of all attribute names and values
@@ -148,7 +163,7 @@ proc ::tk::attrib::Table tableName {
 			}
 		    } else {
 			return -code error "usage: $table2 get [list $w]\
-				?name?"
+				?name ?defaultValue??"
 		    }
 		}
 		names {
@@ -198,6 +213,15 @@ proc ::tk::attrib::Table tableName {
 		    } else {
 			return 0
 		    }
+		}
+		pathnames {
+		    set lst {}
+		    foreach arr [info vars ${ns}::*] {
+			if {[array size $arr] != 0} {
+			    lappend lst [namespace tail $arr]
+			}
+		    }
+		    return $lst
 		}
 	    }
 	} $tableName]]

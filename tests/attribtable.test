@@ -61,7 +61,7 @@ test tk_attribtable-2.3 "tableName set - wrong # args" -body {
 } -result {1 1}
 
 test tk_attribtable-2.4 "tableName get - wrong # args" -body {
-    catch {table get .btn prevText curText}
+    catch {table get .btn oldText prevText curText}
 } -result 1
 
 test tk_attribtable-2.5 "tableName exists - wrong # args" -body {
