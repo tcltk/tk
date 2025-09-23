@@ -26,7 +26,7 @@ tcltest::configure -singleproc 1
 if {[expr {[llength $argv] & 1}]} {
     return -code error "the number of command line parameters must be even (name - value pairs)"
 }
-set fixedOptions [list -testdir -loadfile]
+set fixedOptions [list -testdir]
 foreach {key value} $argv {
     if {$key in $fixedOptions} {
 	return -code error "option \"$key\" is not user-configurable for the Tk test suite"
@@ -37,20 +37,6 @@ tcltest::configure {*}$argv
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
-if {[tcltest::configure -singleproc]} {
-    #
-    # All test files are evaluated in the current interpreter. We need to load
-    # the file main.tcl only once.
-    #
-    source [file join [tcltest::testsDirectory] main.tcl]
-} else {
-    #
-    # Each test file is evaluated in a separate process/interpreter. Each testfile
-    # needs to load the file main.tcl into its interpreter.
-    #
-    tcltest::configure -loadfile \
-	[file join [tcltest::testsDirectory] main.tcl]
-}
 
 #
 # RUN ALL TESTS
