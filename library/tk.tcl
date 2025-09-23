@@ -377,8 +377,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Copy>>		<Control-Key-c> <Key-F16> <Control-Lock-Key-C>
 	event add <<Paste>>		<Control-Key-v> <Key-F18> <Control-Lock-Key-V>
 	event add <<PasteSelection>>	<ButtonRelease-2>
-	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
+	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z> <Redo>
 	event add <<ContextMenu>>	<Button-3>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
@@ -415,11 +415,9 @@ switch -exact -- [tk windowingsystem] {
 	# This is needed for XFree86 systems
 	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
 	catch {
-    	    event add <<Cut>> <XF86Cut>
+	    event add <<Cut>> <XF86Cut>
 	    event add <<Copy>> <XF86Copy>
 	    event add <<Paste>> <XF86Paste>
-	    event add <<Undo>> <XF86Undo>
-	    event add <<Redo>> <XF86Redo>	
 	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
@@ -431,12 +429,12 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
-	event add <<Cut>>		<Control-Key-x> <Shift-Key-Delete> <Control-Lock-Key-X>
-	event add <<Copy>>		<Control-Key-c> <Control-Key-Insert> <Control-Lock-Key-C>
-	event add <<Paste>>		<Control-Key-v> <Shift-Key-Insert> <Control-Lock-Key-V>
+	event add <<Cut>>		<Control-Key-x> <Shift-Key-Delete> <Control-Lock-Key-X> <XF86Cut>
+	event add <<Copy>>		<Control-Key-c> <Control-Key-Insert> <Control-Lock-Key-C> <XF86Copy>
+	event add <<Paste>>		<Control-Key-v> <Shift-Key-Insert> <Control-Lock-Key-V> <XF86Paste>
 	event add <<PasteSelection>>	<ButtonRelease-2>
-  	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Control-Key-y> <Control-Lock-Key-Y>
+	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Control-Key-y> <Control-Lock-Key-Y> <Redo>
 	event add <<ContextMenu>>	<Button-3>
 
 	event add <<SelectAll>>		<Control-Key-slash> <Control-Key-a> <Control-Lock-Key-A>
@@ -464,9 +462,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ToggleSelection>>	<Control-Button-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X>
-	event add <<Copy>>		<Command-Key-c> <Key-F3> <Command-Lock-Key-C>
-	event add <<Paste>>		<Command-Key-v> <Key-F4> <Command-Lock-Key-V>
+	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X> <XF86Cut>
+	event add <<Copy>>		<Command-Key-c> <Key-F3> <Command-Lock-Key-C> <XF86Copy>
+	event add <<Paste>>		<Command-Key-v> <Key-F4> <Command-Lock-Key-V> <XF86Paste>
 	event add <<PasteSelection>>	<ButtonRelease-3>
 	event add <<Clear>>		<Clear>
 	event add <<ContextMenu>>	<Button-2>
@@ -474,8 +472,8 @@ switch -exact -- [tk windowingsystem] {
 	# Official bindings
 	# See https://support.apple.com/en-us/HT201236
 	event add <<SelectAll>>		<Command-Key-a>
-	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
-	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z> <Redo>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
 	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
@@ -691,11 +689,11 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-    	source -encoding utf-8 $file
+	source -encoding utf-8 $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
-    	eval $script
+	eval $script
     }
 }
 
