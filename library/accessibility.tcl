@@ -675,15 +675,6 @@ namespace eval ::tk::accessible {
 	    }
 	}
 
-	# Bind keypress events for menubar navigation.
-	# Remove our custom Left/Right bindings entirely - let Tk
-	# handle navigation and rely on <<MenuSelect>>
-	# to catch the changes.
-
-	# Add a binding to detect when menu posting changes.
-	bind Menu <<MenuSelect>> {
-	    after idle [list ::tk::accessible::_update_active_entry %W]
-	}
 
 	# Add bindings to catch when menus are posted/unposted.
 	bind Menu <Map> {+
