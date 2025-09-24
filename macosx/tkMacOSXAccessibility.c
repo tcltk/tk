@@ -2,7 +2,7 @@
  * tkMacOSXAccessibility.c --
  *
  *	This file implements the platform-native NSAccessibility API 
- *      for Tk on macOS.  
+ *  for Tk on macOS.  
  *
  * Copyright © 2023 Apple Inc.
  * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.

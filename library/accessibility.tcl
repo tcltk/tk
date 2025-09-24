@@ -737,7 +737,49 @@ namespace eval ::tk::accessible {
 	    }
 	}
 
+	bind Menu <Up> {+
+	    set current [%W index active]
+	    if {$current eq ""} {
+		set idx [%W index last]
+	    } else {
+		set idx [expr {$current - 1}]
+	    }
+	    set lastIndex [%W index last]
+	    while {$idx >= 0} {
+		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		    %W activate $idx
+		    ::tk::accessible::_updateselection %W
+		    break
+		}
+		incr idx -1
+	    }
+	}
+	bind Menu <Down> {+
+	    set current [%W index active]
+	    if {$current eq ""} {
+		set idx 0
+	    } else {
+		set idx [expr {$current + 1}]
+	    }
+	    set lastIndex [%W index last]
+	    while {$idx <= $lastIndex} {
+		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		    %W activate $idx
+		    ::tk::accessible::_updateselection %W
+		    break
+		}
+		incr idx
+	    }
+	}
+	bind Menu <Return> {+
+	    set idx [%W index active]
+	    if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		%W invoke $idx
+		::tk::accessible::_updateselection %W
+	    }
+	}
     }
+
     
     # Scrollbar/TScrollbar bindings.
     bind Scrollbar <Map> {+::tk::accessible::_init \
@@ -859,50 +901,7 @@ namespace eval ::tk::accessible {
 	bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
     }
 
-    # Only need to track menu selection changes on X11.
-    if {[tk windowingsystem] eq "x11"} {
-	bind Menu <Up> {+
-	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx [%W index last]
-	    } else {
-		set idx [expr {$current - 1}]
-	    }
-	    set lastIndex [%W index last]
-	    while {$idx >= 0} {
-		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		    %W activate $idx
-		    ::tk::accessible::_updateselection %W
-		    break
-		}
-		incr idx -1
-	    }
-	}
-	bind Menu <Down> {+
-	    set current [%W index active]
-	    if {$current eq ""} {
-		set idx 0
-	    } else {
-		set idx [expr {$current + 1}]
-	    }
-	    set lastIndex [%W index last]
-	    while {$idx <= $lastIndex} {
-		if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		    %W activate $idx
-		    ::tk::accessible::_updateselection %W
-		    break
-		}
-		incr idx
-	    }
-	}
-	bind Menu <Return> {+
-	    set idx [%W index active]
-	    if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		%W invoke $idx
-		::tk::accessible::_updateselection %W
-	    }
-	}
-    }
+ 
 
     # Capture value changes from scale widgets.
     bind Scale <Right> {+::tk::accessible::_updatescale %W Right}
