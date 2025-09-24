@@ -1159,7 +1159,10 @@ static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect)
  *----------------------------------------------------------------------
  *
  * General/utility functions to help integrate the MSAA API
- * the Tcl script-level API. 
+ * the Tcl script-level API. We are using HWND's for toplevel windows
+ * and unique childIDs for all accessible child widgets. We are using
+ * several hash tables to maintain bidrectional mappings between widgets
+ * and childIDs. 
  *
  *----------------------------------------------------------------------
  */
