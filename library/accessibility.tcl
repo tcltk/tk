@@ -614,11 +614,15 @@ namespace eval ::tk::accessible {
 
     # Menu accessibility bindings for X11 only. Menus are native
     # on macOS/Windows, so we don’t expose them here.
+    # Two bindings are included: one set to correctly handle
+    # navigation and selection, and the other to handle accessibility
+    # notfications after idle.
+
     if {[tk windowingsystem] eq "x11"} {
 	variable prevActiveIndex
 	set prevActiveIndex ""
 
-	# Update the currently active menu or menubar entry.
+	# Update the accessible notifications after idle. 
 	proc _update_active_entry {menuWidget} {
 	    variable prevActiveIndex
 	    
@@ -728,6 +732,7 @@ namespace eval ::tk::accessible {
 	    }
 	}
 
+	# Second set of bindings to handle selection and navigation. 
 	bind Menu <Up> {+
 	    set current [%W index active]
 	    if {$current eq ""} {
