@@ -2,9 +2,9 @@
  * tkAccessibility.c --
  *
  *	This file implements an accessibility API for Tk that can be accessed 
- *	from the script level. We are tracking accessible traits per
- *      Tk_Window in hash tables that can be accessed on any platform.
- *      This core Tk API is backed by platform-specific implementations. 
+ *	from the script level. We are tracking accessible traits per Tk_Window
+ *      in hash tables that can be accessed on any platform. This core Tk API
+ *      is backed by platform-specific implementations. 
  *
  * Copyright (c) 2024-2025 Kevin Walzer/WordTech Communications LLC.
  * Copyright (c) 2024 Emiliano Gavilan.
