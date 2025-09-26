@@ -23,13 +23,15 @@ package require tcltest 2.2
 tcltest::configure -singleproc 1
 
 # Handle command line parameters
-if {[expr {[llength $argv] & 1}]} {
-    return -code error "the number of command line parameters must be even (name - value pairs)"
+if {[llength $argv] & 1} {
+    puts stderr "error: the number of command line parameters must be even (name - value pairs)."
+    exit 1
 }
 set fixedOptions [list -testdir]
 foreach {key value} $argv {
     if {$key in $fixedOptions} {
-	return -code error "option \"$key\" is not user-configurable for the Tk test suite"
+	puts stderr "error: the Tk test suite doesn't allow the option \"$key\" to be set on the command line."
+	exit 1
     }
 }
 unset fixedOptions
