@@ -50,7 +50,7 @@ command.
 \fBtk attribtable \fItableName\fR
 .
 This command creates an attribute table of the name \fItableName\fR as a
-procedure in the namespace of the calling context if not fully qualified.  An
+command in the namespace of the calling context if not fully qualified.  An
 attribute table is used to query and modify arbitrary data attached to any
 widget.  For more details see the \fBattribtable\fR manual page.
 .\" METHOD: busy

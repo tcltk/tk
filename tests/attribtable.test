@@ -65,12 +65,11 @@ test tk_attribtable-2.4 "tableName get - wrong # args" -body {
 } -result 1
 
 test tk_attribtable-2.5 "tableName exists - wrong # args" -body {
-    list [catch {table exists .btn}] \
-	 [catch {table exists .btn prevText curText}] \
+    list [catch {table exists .btn prevText curText}] \
 	 [catch {table exists .btn oldText prevText curText}]
 } -cleanup {
     destroy .btn
-} -result {1 1 1}
+} -result {1 1}
 
 #
 # TESTFILE CLEANUP

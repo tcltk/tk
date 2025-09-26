@@ -16,8 +16,8 @@ arbitrary data attached to any widget.
 .BE
 .SH DESCRIPTION
 .PP
-This command creates an attribute table of the name \fIpathName\fR as a
-procedure in the namespace of the calling context if not fully qualified.  An
+This command creates an attribute table of the name \fItableName\fR as a
+command in the namespace of the calling context if not fully qualified.  An
 attribute table is used to query and modify arbitrary data attached to any
 widget.  These data are commonly called \fIattributes\fR.
 .PP
@@ -25,13 +25,15 @@ If an attribute table of the given name already exists then it is replaced
 with the new one and all the attributes of all widgets set using the old table
 instance will be unset.
 .PP
-The procedure \fItableName\fR created by this command has the signature
+The command \fItableName\fR created by this command has the signature
 .PP
 .CS
-\fItableName\fR \fBset\fR|\fBget\fR|\fBnames\fR|\fBunset\fR|\fBclear\fR|\fBexists\fR|\fBpathnames\fR ...
+\fItableName\fR \fBset\fR|\fBget\fR|\fBunset\fR|\fBclear\fR|\fBexists\fR|\fBnames\fR|\fBpathnames\fR ...
 .CE
 .PP
-It supports the following forms:
+In the description of the supported forms below, \fIpathName\fR specifies a
+widget whose attributes are being queried or modified via the \fItableName\fR
+command.
 .\" METHOD: set
 .TP
 \fItableName\fR \fBset\fR \fIpathName name value\fR ?\fIname value\fR ...?
@@ -55,24 +57,12 @@ table \fBset\fR .btn prevText [.btn cget -text]
 If \fIname\fR is specified then returns the corresponding attribute value, or
 an empty string or \fIdefaultValue\fR (if given) if no corresponding value
 exists.  Otherwise returns a list consisting of all attribute names and values
-of the widget \fIpathName\fR, sorted by the names.  Example:
+of the widget \fIpathName\fR.  Example:
 .RS
 .PP
 .CS
 # Restore the button's previous text
 \&.btn configure -text [table \fBget\fR .btn prevText]
-.CE
-.RE
-.\" METHOD: names
-.TP
-\fItableName\fR \fBnames\fR \fIpathName\fR
-.
-Returns a sorted list consisting of all attribute names of the widget
-\fIpathName\fR.  Example:
-.RS
-.PP
-.CS
-puts "attribute names for .btn: [table \fBnames\fR .btn]"
 .CE
 .RE
 .\" METHOD: unset
@@ -103,10 +93,13 @@ table \fBclear\fR .btn
 .RE
 .\" METHOD: exists
 .TP
-\fItableName\fR \fBexists\fR \fIpathName name\fR
+\fItableName\fR \fBexists\fR \fIpathName\fR ?\fIname\fR?
 .
-Returns \fB1\fR if the attribute identified by \fIname\fR exists and \fB0\fR
-otherwise.  Example:
+If the optional argument is present then returns \fB1\fR if the attribute
+identified by \fIname\fR exists and \fB0\fR otherwise.  Without the optional
+argument the return value is \fB1\fR if the widget \fIpathName\fR has at
+least one attribute set via \fItableName\fR \fBset\fR and \fB0\fR otherwise. 
+Example:
 .RS
 .PP
 .CS
@@ -114,6 +107,18 @@ if [table \fBexists\fR .btn prevText] {
     # Restore the button's previous text
     \&.btn configure -text [table \fBget\fR .btn prevText]
 }
+.CE
+.RE
+.\" METHOD: names
+.TP
+\fItableName\fR \fBnames\fR \fIpathName\fR
+.
+Returns a list consisting of all attribute names of the widget
+\fIpathName\fR.  Example:
+.RS
+.PP
+.CS
+puts "attribute names for .btn: [table \fBnames\fR .btn]"
 .CE
 .RE
 .\" METHOD: pathnames
@@ -131,8 +136,8 @@ puts "widgets in table: [table \fBpathnames\fR]"
 .RE
 .PP
 \fBREMARK:\fR  When the widget \fIpathName\fR is destroyed, all of its
-attributes set by all attribute table procedures are automatically unset. 
-This will free all the memory used by the widget's attributes.
+attributes set by all attribute table commands are automatically unset.  This
+will free all the memory used by the widget's attributes.
 .SH KEYWORDS
 widget, attribute, attribute table
 .\" Local Variables:
