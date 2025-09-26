@@ -16,23 +16,17 @@
 # TESTFILE INITIALIZATION
 #
 
-if {[namespace exists ::tk::test]} {
-    # All test files, including this one, are evaluated in the current interpreter
-    # (-singleproc 1). The file "main.tcl" has already been sourced into this
-    # interpreter by all.tcl.
-} else {
-    # This test file is evaluated inside its own separate process/interpreter
-    # (-singleproc 0).
-    #
-    # Load the main script "main.tcl", which takes care of:
-    # - setup for the application and the root window
-    # - importing commands from the tcltest namespace
-    # - loading of the testutils mechanism along with its utility procs
-    # - loading of Tk specific test constraints (additionally to constraints
-    #   provided by the package tcltest)
-    package require tcltest 2.2
-    tcltest::loadTestedCommands
-}
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
 
 # Ensure a pristine initial window state
 resetWindows
