@@ -7,7 +7,6 @@
 # - loading of the testutils mechanism along with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
-
 source [file join [tcltest::configure -testdir] main.tcl]
 
 
