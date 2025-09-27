@@ -37,7 +37,7 @@ typedef struct RegisteredInterp {
 /*
  * A registry of all interpreters owned by the current user is maintained in
  * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
- * representatikon of a TclDictObj.  The dictionary keys are appname strings
+ * representation of a TclDictObj.  The dictionary keys are appname strings
  * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
  * items whose integer values are, respectively, the pid of the process which
  * registered the interpreter and a currently unused void *.
@@ -197,8 +197,16 @@ static const char *getError(OSStatus status) {
 @implementation AEReplyThread
 - (void) main
 {
+    /*
+     * The original unix implementation of the send command would wait
+     * arbitrarily long for the command to return, unless the target
+     * interpreter died.  So we request no timeout in our call to
+     * AESendMessage.  If the call returns a non-zero status we know that the
+     * target process has died.
+     */
+
     *_statusPtr = AESendMessage(_eventPtr, _replyPtr, kAEWaitReply,
-				kAEDefaultTimeout);
+				    kNoTimeOut);
     [NSThread exit];
 }
 @end
@@ -243,31 +251,26 @@ sendAEDoScript(
     } else {
 
 	/*
-	 * Otherwise block waiting for the reply.
+	 * Otherwise we call AESendMessage from an NSThread and run
+	 * an event loop until the status changes.  
 	 */
-
-	// XXXX This can deadlock, e.g with:
-	//   send Wish {send {Wish #2} puts hello} 
-	// Wish #2 cannot receive the command from Wish because it is blocking
-	// waiting for Wish to reply to the first send command.  We really need
-	// to be processing incoming Apple events while we wait for the reply
-	// for that to work correctly.
-
-	// kAEDefaultTimeout seems to be infinite.
-	// https://dev.os9.ca/techpubs/mac/IAC/IAC-201.html might help.
-	// status = AESendMessage(&event, &reply, kAEWaitReply, kAEDefaultTimeout);
      
-	int status = 1;
+	status = 1;  /* impossible OSStatus */
 	AEReplyThread *replyThread = [[AEReplyThread alloc] init];
 	replyThread.eventPtr = &event;
 	replyThread.replyPtr = &reply;
 	replyThread.statusPtr = &status;
 	[replyThread start];
 	while (status == 1) {
+	    // check if the target interpreter is alive. 
 	    Tcl_DoOneEvent(TCL_ALL_EVENTS);
 	}
-	//status = AESendMessage(&event, &reply, kAEWaitReply, 10);
-	CHECK("AESendMessage")
+	if (status) {
+	    const char *msg = "The target interpreter died.";
+	    Tcl_AddErrorInfo(interp, msg); 
+	    Tcl_AppendResult(interp, msg, (char *)NULL);
+	    return TCL_ERROR;
+	}
     }
     int result = TCL_OK;
     if (async == 0) {
@@ -318,7 +321,7 @@ sendAEDoScript(
 	    ckfree(errorBuffer);
 	}
 	AEDisposeDesc(&reply);
-     }
+    }
     AEDisposeDesc(&event);
     return result;
 }
