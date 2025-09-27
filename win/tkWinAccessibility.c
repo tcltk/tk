@@ -1562,10 +1562,10 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
     }
     Tk_MakeWindowExist(path);
 
-    /* Update checked state */
+    /* Update checked state. */
     ComputeAndCacheCheckedState(path, ip);
 
-    /* Notify MSAA with a delayed notification for robustness */
+    /* Notify MSAA with a delayed notification for robustness. */
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
     if (childId > 0) {
@@ -1574,7 +1574,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc,
         NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
         fprintf(stderr, "EmitSelectionChanged: Notified MSAA for %s (childId=%ld)\n", Tk_PathName(path), childId);
 
-        /* Schedule a delayed notification to handle screen reader caching */
+        /* Schedule a delayed notification to handle screen reader caching. */
         Tcl_Obj *cmd = Tcl_ObjPrintf("after 50 {::tk::accessible::emit_selection_change %s}", Tcl_GetString(objv[1]));
         Tcl_IncrRefCount(cmd);
         Tcl_EvalObjEx(ip, cmd, TCL_EVAL_GLOBAL);
