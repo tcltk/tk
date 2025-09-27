@@ -17,18 +17,24 @@ arbitrary data attached to any widget.
 .SH DESCRIPTION
 .PP
 This command creates an attribute table of the name \fItableName\fR as a
-command in the namespace of the calling context if not fully qualified.  An
-attribute table is used to query and modify arbitrary data attached to any
+command in the namespace of the calling context if not fully qualified, and
+returns the fully qualified name of the command just created.
+.PP
+An attribute table is used to query and modify arbitrary data attached to any
 widget.  These data are commonly called \fIattributes\fR.
 .PP
 If an attribute table of the given name already exists then it is replaced
 with the new one and all the attributes of all widgets set using the old table
 instance will be unset.
 .PP
+\fBREMARK:\fR  When a widget is destroyed, all of its attributes set by all
+attribute table commands are automatically unset.  This will free all the
+memory used by the widget's attributes.
+.PP
 The command \fItableName\fR created by this command has the signature
 .PP
 .CS
-\fItableName\fR \fBset\fR|\fBget\fR|\fBunset\fR|\fBclear\fR|\fBexists\fR|\fBnames\fR|\fBpathnames\fR ...
+\fItableName\fR \fBset\fR|\fBget\fR|\fBunset\fR|\fBclear\fR|\fBexists\fR|\fBnames\fR|\fBpathnames\fR \fIargs\fR
 .CE
 .PP
 In the description of the supported forms below, \fIpathName\fR specifies a
@@ -134,10 +140,6 @@ Example:
 puts "widgets in table: [table \fBpathnames\fR]"
 .CE
 .RE
-.PP
-\fBREMARK:\fR  When the widget \fIpathName\fR is destroyed, all of its
-attributes set by all attribute table commands are automatically unset.  This
-will free all the memory used by the widget's attributes.
 .SH KEYWORDS
 widget, attribute, attribute table
 .\" Local Variables:

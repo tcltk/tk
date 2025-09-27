@@ -794,13 +794,13 @@ AttribTableProc(
 	TABLE_EXISTS, TABLE_NAMES, TABLE_PATHNAMES
     };
     int index;
-    Tk_Window tkwin;		/* Used in all subcommands. */
+    Tk_Window tkwin;		/* Used in all subcommands except the last. */
     Tcl_HashEntry *entryPtr;	/* Used in all subcommands. */
     AttribTableValue *value;	/* Used in all subcommands. */
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv,
-		"set|get|unset|clear|exists|names|pathnames ...");
+		"set|get|unset|clear|exists|names|pathnames args");
 	return TCL_ERROR;
     }
 
