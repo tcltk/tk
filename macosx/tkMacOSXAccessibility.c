@@ -454,6 +454,15 @@ void PostAccessibilityAnnouncement(NSString *message)
     return identifier;
 }
 
+- (NSString *)accessibilityLanguage
+{
+    /* Use the first system-preferred language. */
+    NSArray<NSString *> *languages = [NSLocale preferredLanguages];
+    if (languages.count > 0) {
+        return languages[0];  /* Example: @"en-US", @"ja-JP" .*/
+    }
+    return nil;
+}
 
 - (id) accessibilityParent
 {
