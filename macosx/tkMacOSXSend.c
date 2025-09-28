@@ -1057,7 +1057,7 @@ TkGetInterpNames(
 
 void
 TkSendCleanup(
-    TkDisplay *dispPtr)
+    TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
 	ckfree((char *) appNameRegistryPath);
 }
