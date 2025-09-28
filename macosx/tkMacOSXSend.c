@@ -266,9 +266,9 @@ sendAEDoScript(
 	    Tcl_DoOneEvent(TCL_ALL_EVENTS);
 	}
 	if (status) {
-	    const char *msg = "The target interpreter died.";
+	    const char *msg = "target application died";
 	    Tcl_AddErrorInfo(interp, msg); 
-	    Tcl_AppendResult(interp, msg, (char *)NULL);
+	    Tcl_SetResult(interp, msg, (char *)NULL);
 	    return TCL_ERROR;
 	}
     }

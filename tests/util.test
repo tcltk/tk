@@ -1,20 +1,38 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkUtil.c.  It is organized in the standard fashion for Tcl tests.
+# tkUtil.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
 tcltest::loadTestedCommands
-namespace import -force tcltest::test
+
+#
+# COMMON TEST SETUP
+#
 
 listbox .l -width 20 -height 5 -relief sunken -bd 2
 pack .l
 .l insert 0 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
 update
+
+#
+# TESTS
+#
+
 test util-1.1 {Tk_GetScrollInfo procedure} -body {
     .l yview moveto a b
 } -returnCodes error -result {wrong # args: should be ".l yview moveto fraction"}
@@ -62,7 +80,8 @@ test util-1.12 {Tk_GetScrollInfo procedure} -body {
     .l yview dropdead 3 times
 } -returnCodes error -result {unknown option "dropdead": must be moveto or scroll}
 
-# cleanup
-cleanupTests
-return
+#
+# TESTFILE CLEANUP
+#
 
+cleanupTests
