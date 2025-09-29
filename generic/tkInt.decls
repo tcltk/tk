@@ -135,7 +135,7 @@ declare 31 {
 }
 declare 32 {
     TkCursor *TkGetCursorByName(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_Uid string)
+	    Tk_Window tkwin, const char *string)
 }
 declare 33 {
     const char *TkGetDefaultScreenName(Tcl_Interp *interp,
@@ -915,7 +915,7 @@ declare 38 aqua {
     int TkSetMacColor(unsigned long pixel, void *macColor)
 }
 declare 39 aqua {
-    void TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid)
+    void TkSetWMName(TkWindow *winPtr, const char *title)
 }
 declare 41 aqua {
     int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
