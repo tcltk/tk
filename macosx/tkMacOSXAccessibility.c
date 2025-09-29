@@ -454,7 +454,7 @@ void PostAccessibilityAnnouncement(NSString *message)
     return identifier;
 }
 
-- (NSString *)accessibilityLanguage
+- (NSString *) accessibilityLanguage
 {
     /* Use the first system-preferred language. */
     NSArray<NSString *> *languages = [NSLocale preferredLanguages];
