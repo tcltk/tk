@@ -15,7 +15,7 @@
 #ifdef HAVE_CUPS
 #include <cups/cups.h>
 
-typedef int (CupsSubCmdOp)(Tcl_Interp *, int, Tcl_Obj *const []);
+typedef int (CupsSubCmdOp)(Tcl_Interp *, Tcl_Size, Tcl_Obj *const []);
 
 static Tcl_ObjCmdProc2 Cups_Cmd;
 static CupsSubCmdOp DefaultPrinterOp;
@@ -85,7 +85,7 @@ Cups_Cmd(
 static int
 DefaultPrinterOp(
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     cups_dest_t *printer;
@@ -109,7 +109,7 @@ DefaultPrinterOp(
 static int
 GetPrintersOp(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     cups_dest_t *dests;
@@ -197,7 +197,7 @@ static const struct ParseData {
 static int
 PrintOp(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     cups_dest_t *printer;

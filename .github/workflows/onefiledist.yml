@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: tip-626
           path: tcl
       - name: Setup Environment
         run: |
@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: tip-626
           path: tcl
       - name: Checkout create-dmg
         uses: actions/checkout@v5
@@ -179,7 +179,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: tip-626
           path: tcl
       - name: Setup Environment
         run: |

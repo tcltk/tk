@@ -917,7 +917,7 @@ WinSystrayCmd(
     int cmd, opt;
 
     HICON hIcon;
-    int i;
+    Tcl_Size i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr = NULL;
 
