@@ -745,7 +745,7 @@ AttribtableCmd(
     }
 
     /*
-     * Get tableName and build dsCmdName from it
+     * Get tableName and build the fully qualified name cmdName from it
      */
 
     tableName = Tcl_GetStringFromObj(objv[1], &nameLen);
@@ -777,6 +777,10 @@ AttribtableCmd(
 
     return TCL_OK;
 }
+
+/*
+ * Called whenever the attribute table is invoked as command.
+ */
 
 int
 AttribTableProc(
@@ -959,8 +963,8 @@ AttribTableProc(
 	 */
 
 	Tcl_DecrRefCount(value->dictPtr);
-	ckfree(value);
 	Tcl_DeleteHashEntry(entryPtr);
+	ckfree(value);
 	break;
     }
 
@@ -1057,6 +1061,10 @@ AttribTableProc(
     return TCL_OK;
 }
 
+/*
+ * Called before the attribute table command is deleted from the interpreter.
+ */
+
 void
 AttribTableDeleteProc(
     void *clientData)		/* Pointer to an AttribTableData struct. */
@@ -1081,8 +1089,8 @@ AttribTableDeleteProc(
 	 */
 
 	Tcl_DecrRefCount(value->dictPtr);
-	ckfree(value);
 	Tcl_DeleteHashEntry(entryPtr);
+	ckfree(value);
     }
 
     /*
@@ -1093,6 +1101,10 @@ AttribTableDeleteProc(
     ckfree(tblData->tablePtr);
     ckfree(tblData);
 }
+
+/*
+ * Called when the window identified by the first argument gets destroyed.
+ */
 
 void
 AttribTableDestroyHandler(
@@ -1116,8 +1128,8 @@ AttribTableDestroyHandler(
      */
 
     Tcl_DecrRefCount(value->dictPtr);
-    ckfree(value);
     Tcl_DeleteHashEntry(entryPtr);
+    ckfree(value);
 }
 
 int
