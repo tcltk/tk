@@ -737,17 +737,17 @@ proc ::tk::WMFrameWidth {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set frameWidth 6
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set frameWidth 9
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set frameWidth 12
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set frameWidth 15
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set frameWidth 21
-    	} else {
+	} else {
 	    set frameWidth 27
-   	}
+	}
     }
     return $frameWidth
 }
@@ -763,17 +763,17 @@ proc ::tk::WMTitleHeight {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set titleHeight 20
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set titleHeight 30
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set titleHeight 38
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set titleHeight 46
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set titleHeight 60
-    	} else {
+	} else {
 	    set titleHeight 78
-   	}
+	}
     }
     return $titleHeight
 }
