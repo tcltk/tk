@@ -92,8 +92,8 @@ static GMainContext *acc_context = NULL;
 static GHashTable *virtual_child_cache = NULL;
 
 /* GLib-Tcl event loop integration. */
-static void Atk_Event_Setup (ClientData clientData, int flags);
-static void Atk_Event_Check(ClientData clientData, int flags);
+static void Atk_Event_Setup (void *clientData, int flags);
+static void Atk_Event_Check(void *clientData, int flags);
 static int Atk_Event_Run(Tcl_Event *event, int flags);
 static void ignore_atk_critical(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data);
 
@@ -182,17 +182,17 @@ AtkObject *atk_get_root(void);
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
-static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
-static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr);
-static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr);
-static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr);
+static void TkAtkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr);
+static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr);
+static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr);
+static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr);
 
 /* Tcl command implementations. */
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int EmitFocusChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderActive(void);
-int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /* Signal IDs for custom AT-SPI signals. */
@@ -220,7 +220,7 @@ G_DEFINE_TYPE_WITH_CODE(TkAtkAccessible, tk_atk_accessible, ATK_TYPE_OBJECT,
  */
 
 /* Configure event loop. */
-static void Atk_Event_Setup(ClientData clientData, int flags) 
+static void Atk_Event_Setup(void *clientData, int flags) 
 {
     (void)clientData;
     static Tcl_Time block_time = {0, 10000};
@@ -236,7 +236,7 @@ static void Atk_Event_Setup(ClientData clientData, int flags)
 }
 
 /* Check event queue. */
-static void Atk_Event_Check(ClientData clientData, int flags) 
+static void Atk_Event_Check(void *clientData, int flags) 
 {
     (void)clientData;
 
@@ -2415,7 +2415,7 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 }
 
 /* Respond to <CreateNotify> events. */
-static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 {
     if (!eventPtr || eventPtr->type != CreateNotify) {
 	return;
@@ -2474,7 +2474,7 @@ static void TkAtkAccessible_CreateHandler(ClientData clientData, XEvent *eventPt
 
 
 /* Respond to <DestroyNotify> events. */
-static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != DestroyNotify) return;
     
@@ -2488,7 +2488,7 @@ static void TkAtkAccessible_DestroyHandler(ClientData clientData, XEvent *eventP
 
 
 /* Respond to <Configure> events. */
-static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 {
     if (!eventPtr || eventPtr->type != ConfigureNotify) {
 	return;
@@ -2532,7 +2532,7 @@ static void TkAtkAccessible_ConfigureHandler(ClientData clientData, XEvent *even
 
 
 /* Respond to <FocusIn/Out> events. */
-static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr)
+static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
@@ -2619,7 +2619,7 @@ static void TkAtkAccessible_FocusHandler(ClientData clientData, XEvent *eventPtr
  *----------------------------------------------------------------------
  */
 
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+static int EmitSelectionChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData; 
 
@@ -2699,7 +2699,7 @@ static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *interp, int o
  *----------------------------------------------------------------------
  */
  
-static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+static int EmitFocusChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void)clientData;
     if (objc < 2) {
@@ -2731,7 +2731,7 @@ static int EmitFocusChanged(ClientData clientData, Tcl_Interp *interp, int objc,
  *----------------------------------------------------------------------
  */
 
-static int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+static int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {
     (void)clientData;
     (void)objc;
@@ -2780,7 +2780,7 @@ static int IsScreenReaderActive(void)
  *----------------------------------------------------------------------
  */
  
-int TkAtkAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void) clientData; 
 	

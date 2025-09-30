@@ -30,8 +30,8 @@
  *----------------------------------------------------------------------
  */
 
-/* Define the GUID for the MSAA interface. */
-DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0x0, 0x38, 0x9b, 0x71);
+/* Define the GUID for the MSAA interface. (already in <oleacc.h>) */
+// DEFINE_GUID(IID_IAccessible, 0x618736e0, 0x3c3d, 0x11cf, 0x81, 0xc, 0x0, 0xaa, 0x0, 0x38, 0x9b, 0x71);
 
 /* Define global lock constants. */
 static CRITICAL_SECTION TkGlobalLock;
@@ -239,14 +239,14 @@ static int GetChildIdForTkWindow(Tk_Window win, Tcl_HashTable *childIdTable);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 static Tcl_HashTable *GetChildIdTableForToplevel(Tk_Window toplevel);
 Tk_Window GetTkWindowForChildId(int id, Tk_Window toplevel);
-int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
-int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
-int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
+static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+static int EmitFocusChanged(void *cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
-static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+static void TkRootAccessible_DestroyHandler(void *clientData, XEvent *eventPtr);
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp, Tk_Window toplevel);
 void InitAccessibilityMainThread(void);
-int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkRootAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
 /*
@@ -1227,7 +1227,7 @@ static void SetChildIdForTkWindow(Tk_Window win, int id, Tcl_HashTable *childIdT
     Tcl_HashEntry *entry;
     int newEntry;
     TkGlobalLock();
-    entry = Tcl_CreateHashEntry(childIdTable, (ClientData)win, &newEntry);
+    entry = Tcl_CreateHashEntry(childIdTable, win, &newEntry);
     Tcl_SetHashValue(entry, INT2PTR(id));
     TkGlobalUnlock();
 }
@@ -1238,7 +1238,7 @@ static int GetChildIdForTkWindow(Tk_Window win, Tcl_HashTable *childIdTable)
     if (!win || !childIdTable) return -1;
     Tcl_HashEntry *entry;
     TkGlobalLock();
-    entry = Tcl_FindHashEntry(childIdTable, (ClientData)win);
+    entry = Tcl_FindHashEntry(childIdTable, win);
     if (!entry) {
         TkGlobalUnlock();
         return -1;
@@ -1355,7 +1355,7 @@ void ClearChildIdTableForToplevel(Tk_Window toplevel)
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win) 
 {
     if (!win || !tkAccessibleTableInitialized) return NULL;
-    Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, (ClientData)win);
+    Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, win);
     if (entry) return (TkRootAccessible *)Tcl_GetHashValue(entry);
     return NULL;
 }
@@ -1516,7 +1516,7 @@ void EnsureGlobalLockInitialized(void)
  *
  *----------------------------------------------------------------------
  */
-int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[])
+int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[])
 {
     (void) clientData;
     BOOL screenReader = FALSE;
@@ -1540,7 +1540,7 @@ int IsScreenReaderRunning(ClientData clientData, Tcl_Interp *interp, int argc, T
  *
  *----------------------------------------------------------------------
  */
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])
+static int EmitSelectionChanged(void *clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])
 {
     (void) clientData;
     if (objc < 2) {
@@ -1622,9 +1622,9 @@ void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible)
  *
  *----------------------------------------------------------------------
  */
-static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *eventPtr)
+static void TkRootAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
-    if (!clientData || eventPtr->type != DestroyNotify) return;
+    if (!clientData|| eventPtr->type != DestroyNotify) return;
     TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
     if (!tkAccessible || !tkAccessible->toplevel) return;
     TkGlobalLock();
@@ -1654,7 +1654,7 @@ static void TkRootAccessible_DestroyHandler(ClientData clientData, XEvent *event
  *
  *----------------------------------------------------------------------
  */
-static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
+static int EmitFocusChanged(void *cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) 
 {    
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -1709,7 +1709,7 @@ static int EmitFocusChanged(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj
  *
  *----------------------------------------------------------------------
  */
-int TkRootAccessibleObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+int TkRootAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     (void) clientData;
     if (objc != 2) {

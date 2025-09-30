@@ -35,12 +35,12 @@ TkAccessibilityElement *TkAccessibility_GetElementForWindow(Tk_Window tkwin);
 Tk_Window TkAccessibility_GetWindowForElement(TkAccessibilityElement *element);
 void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElement *element);
 void TkAccessibility_CleanupHashTables(void);
-static int TkMacOSXAccessibleObjCmd(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
-static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr);
+static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr);
 void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
-int IsVoiceOverRunning(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+int IsVoiceOverRunning(void *clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int EmitSelectionChanged(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 
@@ -841,7 +841,7 @@ void TkAccessibility_CleanupHashTables(void)
  *----------------------------------------------------------------------
  */
 
-int IsVoiceOverRunning(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+int IsVoiceOverRunning(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {
 
     (void) clientData;
@@ -882,7 +882,7 @@ int IsVoiceOverRunning(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *
  *----------------------------------------------------------------------
  */
 
-static int EmitSelectionChanged(ClientData clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+static int EmitSelectionChanged(void *clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {
     (void) clientData;
     
@@ -946,7 +946,7 @@ void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibili
  *----------------------------------------------------------------------
  */
 
-static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *eventPtr)
+static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
       if (eventPtr->type == DestroyNotify) {
         TkAccessibilityElement *element = (TkAccessibilityElement *)clientData;
@@ -981,7 +981,7 @@ static void TkMacOSXAccessibility_DestroyHandler(ClientData clientData, XEvent *
  *----------------------------------------------------------------------
  */
 
-static int TkMacOSXAccessibleObjCmd(ClientData clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
+static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[])	
 {
     (void) clientData;
     
