@@ -73,10 +73,11 @@ static void DrawCorner(
     points[1].x = x+width*corner;	points[1].y = y+height*corner;
     points[2].x = x+width;		points[2].y = y;
 
-    if (color == BRDR)
+    if (color == BRDR) {
 	gc = borderGC;
-    else
+    } else {
 	gc = Tk_3DBorderGC(tkwin, border, (int)color);
+    }
 
     XDrawLines(Tk_Display(tkwin), d, gc, points, 3, CoordModeOrigin);
 }
@@ -1091,8 +1092,9 @@ static void ThumbElementDraw(
     /*
      * Don't draw the thumb if we are disabled.
      * This makes it behave like Windows ... if that's what we want.
-    if (state & TTK_STATE_DISABLED)
+    if (state & TTK_STATE_DISABLED) {
 	return;
+    }
      */
 
     Tk_GetReliefFromObj(NULL, thumb->reliefObj, &relief);
