@@ -3221,9 +3221,9 @@ Initialize(
      */
 
     TkInitEmbeddedConfigurationInformation(interp);
-	
+
     /*
-     * Initalize accessibility module. 
+     * Initalize accessibility module.
      * Must do this early because it is bound to <Map> events,
      * and will return an error if the commands are not
      * available.

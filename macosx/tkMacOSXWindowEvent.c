@@ -1017,7 +1017,7 @@ ExposeRestrictProc(
 }
 
 @implementation TKContentView(TKWindowEvent)
-    
+
 - (id)initWithFrame:(NSRect)frame
 {
     self = [super initWithFrame:frame];
@@ -1408,7 +1408,7 @@ NSMutableArray *_tkAccessibleElements;
 }
 
 - (NSArray *)accessibilityChildren {
-    return [_tkAccessibleElements copy]; 
+    return [_tkAccessibleElements copy];
 }
 
 
@@ -1425,10 +1425,10 @@ NSMutableArray *_tkAccessibleElements;
     if (!_tkAccessibleElements) {
 	_tkAccessibleElements = [[NSMutableArray alloc ] init];
     }
-    
+
     if (element) {
 	[_tkAccessibleElements addObject:element];
-        [self accessibilityChildrenChanged];
+	[self accessibilityChildrenChanged];
     }
 }
 

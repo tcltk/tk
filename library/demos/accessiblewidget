@@ -1,6 +1,6 @@
 set widgetDemo 1
 
-wm withdraw . 
+wm withdraw .
 
 set _w  [toplevel .acc]
 wm title $_w "Accessible Widget Demo"
@@ -26,7 +26,7 @@ set data {
 {{A list of the 50 states} states.tcl}
 {{A table of countries} mclist.tcl}
 {{A directory browser tree} tree.tcl}
-{{Combo-boxes} combo.tcl} 
+{{Combo-boxes} combo.tcl}
 {{Entry} entry1.tcl}
 {{Editable text} text.tcl}
 {{Spin-box} ttkspin.tcl}
