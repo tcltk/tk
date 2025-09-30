@@ -323,7 +323,7 @@ TK_OBJS = \
 	tkWinX.$(OBJEXT) \
 	stubs.$(OBJEXT) \
 	tk3d.$(OBJEXT) \
-	tkAccessible.$(OBJEXT) \
+	tkAccessibility.$(OBJEXT) \
 	tkArgv.$(OBJEXT) \
 	tkAtom.$(OBJEXT) \
 	tkBind.$(OBJEXT) \
