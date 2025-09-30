@@ -645,7 +645,7 @@ TkpInit(
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
-	
+
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its
 	 * call to makeKeyAndOrderFront because the first call to XMapWindow

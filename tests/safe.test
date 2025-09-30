@@ -10,14 +10,14 @@
 # Any time tests fail here with an error like:
 #
 #     Can't find a usable tk.tcl in the following directories:
-# 	{$p(:26:)}
+#	{$p(:26:)}
 #
 #     $p(:26:)/tk.tcl: script error
 #     script error
-# 	invoked from within
+#	invoked from within
 #     "source {$p(:26:)/tk.tcl}"
-# 	("uplevel" body line 1)
-# 	invoked from within
+#	("uplevel" body line 1)
+#	invoked from within
 #     "uplevel #0 [list source $file]"
 #
 #

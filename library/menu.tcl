@@ -1374,4 +1374,3 @@ proc ::tk_popup {menu x y {entry {}}} {
 	tk_menuSetFocus $menu
     }
 }
-

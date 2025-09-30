@@ -287,13 +287,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), w);
 #endif
-  
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window)winPtr);
     }
-   
 
     /*
      * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
@@ -1017,7 +1015,6 @@ ExposeRestrictProc(
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
-
 
 @implementation TKContentView(TKWindowEvent)
     

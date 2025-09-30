@@ -192,7 +192,6 @@ Tk_MainEx(
     if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
 	Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
     }
-	
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
 
@@ -218,6 +217,7 @@ Tk_MainEx(
 #endif
 
     Tcl_InitMemory(interp);
+
     is.interp = interp;
     is.gotPartial = 0;
     Tcl_Preserve(interp);
@@ -362,7 +362,6 @@ Tk_MainEx(
     Tcl_DStringInit(&is.command);
     Tcl_DStringInit(&is.line);
     Tcl_ResetResult(interp);
-
 
     /*
      * Loop infinitely, waiting for commands to execute. When there are no

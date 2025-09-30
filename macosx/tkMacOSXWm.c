@@ -6062,15 +6062,15 @@ TkMacOSXGrowToplevel(
 void
 TkSetWMName(
     TkWindow *winPtr,
-    Tk_Uid titleUid)
+    const char *title)
 {
     if (Tk_IsEmbedded(winPtr)) {
 	return;
     }
 
-    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:TCL_INDEX_NONE];
-    [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
-    [title release];
+    NSString *nstitle = [[TKNSString alloc] initWithTclUtfBytes:title length:TCL_INDEX_NONE];
+    [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:nstitle];
+    [nstitle release];
 }
 
 /*
