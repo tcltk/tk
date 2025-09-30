@@ -1,10 +1,10 @@
 /*
  * tkAccessibility.c --
  *
- *	This file implements an accessibility API for Tk that can be accessed 
+ *	This file implements an accessibility API for Tk that can be accessed
  *	from the script level. We are tracking accessible traits per Tk_Window
  *      in hash tables that can be accessed on any platform. This core Tk API
- *      is backed by platform-specific implementations. 
+ *      is backed by platform-specific implementations.
  *
  * Copyright (c) 2024-2025 Kevin Walzer/WordTech Communications LLC.
  * Copyright (c) 2024 Emiliano Gavilan.
@@ -54,9 +54,9 @@ int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
  *
  * Tk_SetAccessibleRole --
  *
- *	This function assigns an accessibility role for a 
- *	specific widget. 
- *	
+ *	This function assigns an accessibility role for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Assigns an accessibility role.
@@ -73,15 +73,15 @@ Tk_SetAccessibleRole(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? role?");
     return TCL_ERROR;
   }
-	
+
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   int isNew;
@@ -90,8 +90,8 @@ Tk_SetAccessibleRole(
     return TCL_ERROR;
   }
 
-  /* 
-   * Create new hash table for widget attributes if none exists. 
+  /*
+   * Create new hash table for widget attributes if none exists.
    * Ensure it is unique to that widget.
    */
   hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
@@ -110,7 +110,7 @@ Tk_SetAccessibleRole(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -122,9 +122,9 @@ Tk_SetAccessibleRole(
  *
  * Tk_SetAccessibleName --
  *
- *	This function assigns an accessibility name for a 
- *	specific widget. 
- *	
+ *	This function assigns an accessibility name for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Assigns an accessibility name.
@@ -141,7 +141,7 @@ Tk_SetAccessibleName(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? name?");
     return TCL_ERROR;
@@ -151,7 +151,7 @@ Tk_SetAccessibleName(
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -172,7 +172,7 @@ Tk_SetAccessibleName(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -183,9 +183,9 @@ Tk_SetAccessibleName(
  *
  * Tk_SetAccessibleDescription --
  *
- *	This function assigns a platform-neutral accessibility descrption for a 
- *	specific widget. 
- *	
+ *	This function assigns a platform-neutral accessibility descrption for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Assigns an accessibility description.
@@ -202,17 +202,17 @@ Tk_SetAccessibleDescription(
 			    Tcl_Interp *ip,		/* Current interpreter. */
 			    int objc,			/* Number of arguments. */
 			    Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? description?");
     return TCL_ERROR;
   }
-	
+
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -232,7 +232,7 @@ Tk_SetAccessibleDescription(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -243,9 +243,9 @@ Tk_SetAccessibleDescription(
  *
  * Tk_SetAccessibleValue  --
  *
- *	This function sets the current value/data of the widget for  
+ *	This function sets the current value/data of the widget for
  *	the accessibility API.
- *	
+ *
  *
  * Results:
  *	Assigns  an accessibility value in string format.
@@ -263,8 +263,7 @@ Tk_SetAccessibleValue(
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? value?");
     return TCL_ERROR;
@@ -274,7 +273,7 @@ Tk_SetAccessibleValue(
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -294,7 +293,7 @@ Tk_SetAccessibleValue(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -304,13 +303,13 @@ Tk_SetAccessibleValue(
  *
  * Tk_SetAccessibleState  --
  *
- *	This function reads the current state of the widget for  
+ *	This function reads the current state of the widget for
  *	the accessibility API.
- *	
+ *
  *
  * Results:
  *	Returns an accessibility state.
- *      
+ *
  * Side effects:
  *	None.
  *
@@ -323,8 +322,7 @@ Tk_SetAccessibleState(
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? state?");
     return TCL_ERROR;
@@ -334,7 +332,7 @@ Tk_SetAccessibleState(
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -354,7 +352,7 @@ Tk_SetAccessibleState(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -365,8 +363,8 @@ Tk_SetAccessibleState(
  *
  * Tk_SetAccessibleAction  --
  *
- *	This function sets the current accessibility action for the widget. 
- *	
+ *	This function sets the current accessibility action for the widget.
+ *
  *
  * Results:
  *	Sets an accessibility action for the widget.
@@ -383,8 +381,8 @@ Tk_SetAccessibleAction(
 		       Tcl_Interp *ip,		/* Current interpreter. */
 		       int objc,			/* Number of arguments. */
 		       Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? action?");
     return TCL_ERROR;
@@ -394,7 +392,7 @@ Tk_SetAccessibleAction(
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -414,7 +412,7 @@ Tk_SetAccessibleAction(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -424,8 +422,8 @@ Tk_SetAccessibleAction(
  *
  * Tk_SetAccessibleHelp  --
  *
- *	This function sets the accessibility help text for the widget. 
- *	
+ *	This function sets the accessibility help text for the widget.
+ *
  *
  * Results:
  *	Sets help text for the widget.
@@ -442,8 +440,8 @@ Tk_SetAccessibleHelp(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "window? help?");
     return TCL_ERROR;
@@ -453,7 +451,7 @@ Tk_SetAccessibleHelp(
   Tcl_HashEntry *hPtr, *hPtr2;
   int isNew;
   Tcl_HashTable *AccessibleAttributes;
-	
+
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
   if (win == NULL) {
     return TCL_ERROR;
@@ -473,21 +471,21 @@ Tk_SetAccessibleHelp(
   }
   Tcl_IncrRefCount(objv[2]);
   Tcl_SetHashValue(hPtr2, objv[2]);
-    
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
-  
+
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_GetAccessibleRole --
  *
- *	This function reads an accessibility role for a 
- *	specific widget. 
- *	
+ *	This function reads an accessibility role for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Gets an accessibility role.
@@ -504,15 +502,15 @@ Tk_GetAccessibleRole(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
   }
-	
+
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -532,7 +530,7 @@ Tk_GetAccessibleRole(
     Tcl_AppendResult(ip, "No role found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -542,9 +540,9 @@ Tk_GetAccessibleRole(
  *
  * Tk_GetAccessibleName --
  *
- *	This function reads an accessibility name for a 
- *	specific widget. 
- *	
+ *	This function reads an accessibility name for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Gets an accessibility name.
@@ -561,7 +559,7 @@ Tk_GetAccessibleName(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -569,7 +567,7 @@ Tk_GetAccessibleName(
 
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -601,9 +599,9 @@ Tk_GetAccessibleName(
  *
  * Tk_GetAccessibleDescription --
  *
- *	This function reads a platform-neutral accessibility descrption for a 
- *	specific widget. 
- *	
+ *	This function reads a platform-neutral accessibility descrption for a
+ *	specific widget.
+ *
  *
  * Results:
  *	Gets an accessibility description.
@@ -620,15 +618,15 @@ Tk_GetAccessibleDescription(
 			    Tcl_Interp *ip,		/* Current interpreter. */
 			    int objc,			/* Number of arguments. */
 			    Tcl_Obj *const objv[])	/* Argument objects. */
-{	
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
   }
-	
+
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -648,7 +646,7 @@ Tk_GetAccessibleDescription(
     Tcl_AppendResult(ip, "No description found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -659,9 +657,9 @@ Tk_GetAccessibleDescription(
  *
  * Tk_GetAccessibleValue  --
  *
- *	This function reads the current value/data of the widget for  
+ *	This function reads the current value/data of the widget for
  *	the accessibility API.
- *	
+ *
  *
  * Results:
  *	Returns an accessibility value in string format.
@@ -679,8 +677,8 @@ Tk_GetAccessibleValue(
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -688,7 +686,7 @@ Tk_GetAccessibleValue(
 
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -708,7 +706,7 @@ Tk_GetAccessibleValue(
     Tcl_AppendResult(ip, "No value found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -718,13 +716,13 @@ Tk_GetAccessibleValue(
  *
  * Tk_GetAccessibleState  --
  *
- *	This function reads the current state of the widget for  
+ *	This function reads the current state of the widget for
  *	the accessibility API.
- *	
+ *
  *
  * Results:
  *	Returns an accessibility state.
- *      
+ *
  * Side effects:
  *	None.
  *
@@ -737,8 +735,8 @@ Tk_GetAccessibleState(
 		      Tcl_Interp *ip,		/* Current interpreter. */
 		      int objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -746,7 +744,7 @@ Tk_GetAccessibleState(
 
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -766,7 +764,7 @@ Tk_GetAccessibleState(
     Tcl_AppendResult(ip, "No state found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -778,8 +776,8 @@ Tk_GetAccessibleState(
  *
  * Tk_GetAccessibleAction  --
  *
- *	This function gets the current accessibility action for the widget. 
- *	
+ *	This function gets the current accessibility action for the widget.
+ *
  *
  * Results:
  *	Returns an accessibility action for the widget.
@@ -796,8 +794,8 @@ Tk_GetAccessibleAction(
 		       Tcl_Interp *ip,		/* Current interpreter. */
 		       int objc,			/* Number of arguments. */
 		       Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -805,7 +803,7 @@ Tk_GetAccessibleAction(
 
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -825,7 +823,7 @@ Tk_GetAccessibleAction(
     Tcl_AppendResult(ip, "No action found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
@@ -835,8 +833,8 @@ Tk_GetAccessibleAction(
  *
  * Tk_GetAccessibleHelp  --
  *
- *	This function gets the current accessibility help for the widget. 
- *	
+ *	This function gets the current accessibility help for the widget.
+ *
  *
  * Results:
  *	Returns an accessibility help text for the widget.
@@ -853,8 +851,8 @@ Tk_GetAccessibleHelp(
 		     Tcl_Interp *ip,		/* Current interpreter. */
 		     int objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
-	
-{	
+
+{
   if (objc < 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "window?");
     return TCL_ERROR;
@@ -862,7 +860,7 @@ Tk_GetAccessibleHelp(
 
   Tk_Window win;
   Tcl_HashEntry *hPtr, *hPtr2;
-  
+
   Tcl_HashTable *AccessibleAttributes;
 
   win = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
@@ -882,16 +880,16 @@ Tk_GetAccessibleHelp(
     Tcl_AppendResult(ip, "No help found", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   Tcl_SetObjResult(ip, Tcl_GetHashValue(hPtr2));
   return TCL_OK;
 }
 
 /*
- * Register script-level commands to set accessibility attributes. 
+ * Register script-level commands to set accessibility attributes.
  */
 
-int 
+int
 TkAccessibility_Init(
 		     Tcl_Interp *interp)
 {
