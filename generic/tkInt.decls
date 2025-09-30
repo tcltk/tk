@@ -1429,6 +1429,12 @@ declare 142 win {
 declare 143 win {
     void XSetICFocus(XIC xic)
 }
+declare 144 win {
+    int XXorRegion(Region sra, Region srb, Region dr_return)
+}
+declare 145 win {
+    Bool XEqualRegion(Region r1, Region r2)
+}
 declare 147 win {
     void XFreeFontSet(Display *display, XFontSet fontset)
 }
@@ -1934,6 +1940,12 @@ declare 142 macosx {
 }
 declare 143 macosx {
     void XSetICFocus(XIC xic)
+}
+declare 144 macosx {
+    int XXorRegion(Region sra, Region srb, Region dr_return)
+}
+declare 145 macosx {
+    Bool XEqualRegion(Region r1, Region r2)
 }
 declare 147 macosx {
     void XFreeFontSet(Display *display, XFontSet fontset)
