@@ -23,6 +23,7 @@ to the userbase.
  - [Undefined behavior while touchpad scrolling](https://core.tcl-lang.org/tk/tktview/92e408)
  - [leak in XCreateBitmapFromData() in ImgGetPhoto()](https://core.tcl-lang.org/tk/tktview/6c4795)
  - [Add support for Copy/Cut/Paste keys in X11](https://core.tcl-lang.org/tk/tktview/04e173)
+ - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
