@@ -714,7 +714,6 @@ proc tkAboutDialog {} {
 [mc "Copyright © %s" {2021 Kevin Walzer}]"
 }
 
-
 # Local Variables:
 # mode: tcl
 # End:
