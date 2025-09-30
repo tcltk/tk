@@ -102,8 +102,9 @@ Tcl_Obj *Ttk_StyleDefault(Ttk_Style style, const char *optionName)
     while (style) {
 	Tcl_HashEntry *entryPtr =
 	    Tcl_FindHashEntry(&style->defaultsTable, optionName);
-	if (entryPtr)
+	if (entryPtr) {
 	    return (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
+	}
 	style= style->parentStyle;
     }
     return 0;
@@ -137,8 +138,9 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 {
     const Tk_OptionSpec *optionSpec = TkGetOptionSpec(optionName, optionTable);
 
-    if (!optionSpec)
+    if (!optionSpec) {
 	return 0;
+    }
 
     /* Make sure widget option has a Tcl_Obj* entry:
      */
@@ -568,7 +570,7 @@ Ttk_CreateTheme(
     if (!newEntry) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Theme %s already exists", name));
-	Tcl_SetErrorCode(interp, "TTK", "THEME", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "THEME", "EXISTS", (char *)NULL);
 	return NULL;
     }
 
@@ -612,7 +614,7 @@ static Ttk_Theme LookupTheme(
     if (!entryPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"theme \"%s\" does not exist", name));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, (char *)NULL);
 	return NULL;
     }
 
@@ -910,7 +912,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Duplicate element %s", name));
-	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "DUPE", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "DUPE", (char *)NULL);
 	}
 	return 0;
     }
@@ -1123,8 +1125,9 @@ Ttk_DrawElement(
     Ttk_Box b,				/* Element area */
     Ttk_State state)			/* Widget or element state flags. */
 {
-    if (b.width <= 0 || b.height <= 0)
+    if (b.width <= 0 || b.height <= 0) {
 	return;
+    }
     if (!InitializeElementRecord(
 	    eclass, style, recordPtr, optionTable, tkwin,  state))
     {
@@ -1241,8 +1244,9 @@ usage:
 	 * (@@@ SHOULD: check for valid resource values as well,
 	 * but we don't know what types they should be at this level.)
 	 */
-	if (!Ttk_GetStateMapFromObj(interp, stateMap))
+	if (!Ttk_GetStateMapFromObj(interp, stateMap)) {
 	    return TCL_ERROR;
+	}
 
 	entryPtr = Tcl_CreateHashEntry(
 		&stylePtr->settingsTable,optionName,&newEntry);
@@ -1382,7 +1386,7 @@ static int StyleThemeCurrentCmd(
     if (name == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"error: failed to get theme name", -1));
-	Tcl_SetErrorCode(interp, "TTK", "THEME", "NAMELESS", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "THEME", "NAMELESS", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1423,8 +1427,9 @@ static int StyleThemeCreateCmd(
 	    case OP_PARENT:
 		parentTheme = LookupTheme(
 		    interp, pkgPtr, Tcl_GetString(objv[i+1]));
-		if (!parentTheme)
+		if (!parentTheme) {
 		    return TCL_ERROR;
+		}
 		break;
 	    case OP_SETTINGS:
 		settingsScript = objv[i+1];
@@ -1490,8 +1495,9 @@ StyleThemeSettingsCmd(
     }
 
     newTheme = LookupTheme(interp, pkgPtr, Tcl_GetString(objv[3]));
-    if (!newTheme)
+    if (!newTheme) {
 	return TCL_ERROR;
+    }
 
     pkgPtr->currentTheme = newTheme;
     status = Tcl_EvalObjEx(interp, objv[4], 0);
@@ -1585,7 +1591,7 @@ static int StyleElementOptionsCmd(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	"element %s not found", elementName));
-    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT", elementName, NULL);
+    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT", elementName, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -1649,8 +1655,9 @@ static int StyleThemeStylesCmd(
     } else {
 	themePtr = Ttk_GetTheme(interp, Tcl_GetString(objv[3]));
     }
-    if (!themePtr)
+    if (!themePtr) {
 	return TCL_ERROR;
+    }
 
     return TtkEnumerateHashTable(interp, &themePtr->styleTable);
 }

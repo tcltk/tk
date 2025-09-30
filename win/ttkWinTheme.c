@@ -638,8 +638,9 @@ static void ThumbElementDraw(
     HDC hdc;
 
     /* Windows doesn't show a thumb when the scrollbar is disabled */
-    if (state & TTK_STATE_DISABLED)
+    if (state & TTK_STATE_DISABLED) {
 	return;
+    }
 
     hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
     DrawEdge(hdc, &rc, EDGE_RAISED, BF_RECT | BF_MIDDLE);
