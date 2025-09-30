@@ -222,8 +222,9 @@ static void Ttk_Fill(
     int db = dst.y + dst.height;
     int x,y;
 
-    if (!(src.width && src.height && dst.width && dst.height))
+    if (!(src.width && src.height && dst.width && dst.height)) {
 	return;
+    }
 
     for (x = dst.x; x < dr; x += src.width) {
 	int cw = MIN(src.width, dr - x);

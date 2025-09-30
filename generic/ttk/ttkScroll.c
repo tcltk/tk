@@ -258,12 +258,15 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 	TtkUpdateScrollInfo(h);
     }
 
-    if (newFirst >= s->total)
+    if (newFirst >= s->total) {
 	newFirst = s->total - 1;
-    if (newFirst > s->first && s->last >= s->total) /* don't scroll past end */
+    }
+    if (newFirst > s->first && s->last >= s->total) {/* don't scroll past end */
 	newFirst = s->first;
-    if (newFirst < 0)
+    }
+    if (newFirst < 0) {
 	newFirst = 0;
+    }
 
     if (newFirst != s->first) {
 	s->first = newFirst;
