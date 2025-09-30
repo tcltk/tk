@@ -158,7 +158,7 @@ static int ConfigurePane(
     if (pane->weight < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"-weight must be non-negative", -1));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "WEIGHT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "WEIGHT", (char *)NULL);
 	goto error;
     }
 
@@ -192,12 +192,14 @@ static int ShoveUp(Paned *pw, int i, int pos)
     int sashThickness = pw->paned.sashThickness;
 
     if (i == 0) {
-	if (pos < 0)
+	if (pos < 0) {
 	    pos = 0;
+	}
     } else {
 	Pane *prevPane = (Pane *)Ttk_ContentData(pw->paned.mgr, i-1);
-	if (pos < prevPane->sashPos + sashThickness)
+	if (pos < prevPane->sashPos + sashThickness) {
 	    pos = ShoveUp(pw, i-1, pos - sashThickness) + sashThickness;
+	}
     }
     return pane->sashPos = pos;
 }
@@ -215,8 +217,9 @@ static int ShoveDown(Paned *pw, Tcl_Size i, int pos)
 	pos = pane->sashPos; /* Sentinel value == container window size */
     } else {
 	Pane *nextPane = (Pane *)Ttk_ContentData(pw->paned.mgr,i+1);
-	if (pos + sashThickness > nextPane->sashPos)
+	if (pos + sashThickness > nextPane->sashPos) {
 	    pos = ShoveDown(pw, i+1, pos + sashThickness) - sashThickness;
+	}
     }
     return pane->sashPos = pos;
 }
@@ -241,8 +244,9 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 	    Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
 	    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
 
-	    if (height < Tk_ReqHeight(window))
+	    if (height < Tk_ReqHeight(window)) {
 		height = Tk_ReqHeight(window);
+	    }
 	    width += pane->reqSize;
 	}
 	width += nSashes * sashThickness;
@@ -251,8 +255,9 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 	    Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
 	    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
 
-	    if (width < Tk_ReqWidth(window))
+	    if (width < Tk_ReqWidth(window)) {
 		width = Tk_ReqWidth(window);
+	    }
 	    height += pane->reqSize;
 	}
 	height += nSashes * sashThickness;
@@ -310,8 +315,9 @@ static void PlaceSashes(Paned *pw, int width, int height)
     int reqSize = 0, totalWeight = 0;
     int difference, delta, remainder, pos, i;
 
-    if (nPanes == 0)
+    if (nPanes == 0) {
 	return;
+    }
 
     /* Compute total required size and total available weight:
      */
@@ -344,13 +350,15 @@ static void PlaceSashes(Paned *pw, int width, int height)
 	int weight = pane->weight * (pane->reqSize != 0);
 	int size = pane->reqSize + delta * weight;
 
-	if (weight > remainder)
+	if (weight > remainder) {
 	    weight = remainder;
+	}
 	remainder -= weight;
 	size += weight;
 
-	if (size < 0)
+	if (size < 0) {
 	    size = 0;
+	}
 
 	pane->sashPos = (pos += size);
 	pos += sashThickness;
@@ -422,7 +430,7 @@ static int AddPane(
     if (Ttk_ContentIndex(pw->paned.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s already added", Tk_PathName(window)));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -512,8 +520,9 @@ static void PanedCleanup(void *recordPtr)
 {
     Paned *pw = (Paned *)recordPtr;
 
-    if (pw->paned.sashLayout)
+    if (pw->paned.sashLayout) {
 	Ttk_FreeLayout(pw->paned.sashLayout);
+    }
     Tk_DeleteEventHandler(pw->core.tkwin,
 	PanedEventMask, PanedEventProc, recordPtr);
     Ttk_DeleteManager(pw->paned.mgr);
@@ -563,8 +572,9 @@ static Ttk_Layout PanedGetLayout(
 	    Ttk_LayoutSize(sashLayout, 0, &sashWidth, &sashHeight);
 	    pw->paned.sashThickness = horizontal ? sashWidth : sashHeight;
 
-	    if (pw->paned.sashLayout)
+	    if (pw->paned.sashLayout) {
 		Ttk_FreeLayout(pw->paned.sashLayout);
+	    }
 	    pw->paned.sashLayout = sashLayout;
 	} else {
 	    Ttk_FreeLayout(panedLayout);
@@ -677,8 +687,9 @@ static int PanedInsertCommand(
 	return AddPane(interp, pw, destIndex, window, objc-4, objv+4);
     } /* else -- move existing content: */
 
-    if (destIndex >= nContent)
+    if (destIndex >= nContent) {
 	destIndex  = nContent - 1;
+    }
     Ttk_ReorderContent(pw->paned.mgr, srcIndex, destIndex);
 
     return objc == 4 ? TCL_OK :
@@ -852,7 +863,7 @@ static int PanedSashposCommand(
     if (sashIndex < 0 || sashIndex >= Ttk_NumberContent(pw->paned.mgr) - 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %" TCL_LL_MODIFIER "d out of range", sashIndex));
-	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
 
