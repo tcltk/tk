@@ -30,23 +30,44 @@ test tk_attribtable-1.1 "tableName set" -body {
 
 test tk_attribtable-1.2 "tableName get" -body {
     list [table get .btn prevText] [table get .btn curText]
-} -result {Button {}}
+} -result [list Button {}]
 
-test tk_attribtable-1.3 "tableName get" -body {
+test tk_attribtable-1.3 "tableName get - all" -body {
     table get .btn
 } -result [list prevText Button]
 
 test tk_attribtable-1.4 "tableName exists" -body {
     list [table exists .btn prevText] [table exists .btn curText]
-} -result {1 0}
+} -result [list 1 0]
 
-test tk_attribtable-1.5 "tableName unset" -body {
+test tk_attribtable-1.5 "tableName names" -body {
+    table names .btn
+} -result [list prevText]
+
+test tk_attribtable-1.6 "tableName pathnames" -body {
+    table pathnames
+} -result [list .btn]
+
+test tk_attribtable-1.7 "tableName unset" -body {
     table unset .btn prevText
 } -result {}
 
-test tk_attribtable-1.6 "tableName exists" -body {
+test tk_attribtable-1.8 "tableName get - after unset" -body {
+    table get .btn prevText "Default Text"
+} -result "Default Text"
+
+test tk_attribtable-1.9 "tableName exists - after unset" -body {
     table exists .btn prevText
 } -result 0
+
+test tk_attribtable-1.10 "tableName names - after unset" -body {
+    table names .btn
+} -result [list]
+
+test tk_attribtable-1.1 "tableName pathnames - after unset" -body {
+    table pathnames
+} -result [list]
+
 
 test tk_attribtable-2.1 "tableName bad op" -body {
     catch {table badOp .btn}
@@ -58,7 +79,7 @@ test tk_attribtable-2.2 "tableName bad window" -body {
 
 test tk_attribtable-2.3 "tableName set - wrong # args" -body {
     list [catch {table set .btn}] [catch {table set .btn prevText}]
-} -result {1 1}
+} -result [list 1 1]
 
 test tk_attribtable-2.4 "tableName get - wrong # args" -body {
     catch {table get .btn oldText prevText curText}
@@ -69,7 +90,7 @@ test tk_attribtable-2.5 "tableName exists - wrong # args" -body {
 	 [catch {table exists .btn oldText prevText curText}]
 } -cleanup {
     destroy .btn
-} -result {1 1}
+} -result [list 1 1]
 
 #
 # TESTFILE CLEANUP
