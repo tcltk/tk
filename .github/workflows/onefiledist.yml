@@ -75,7 +75,7 @@ jobs:
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
     defaults:
       run:
         shell: bash
