@@ -99,11 +99,15 @@ jobs:
           repository: create-dmg/create-dmg
           ref: v1.0.8
           path: create-dmg
-      - name: Setup Environment
+      - name: Prepare
         run: |
           mkdir -p install/contents
-          touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
-          touch tk/generic/tkStubInit.c
+          touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c || true
+          touch tk/generic/tkStubInit.c || true
+          wget https://github.com/culler/macher/releases/download/v1.8/macher
+          sudo cp macher /usr/local/bin
+          sudo chmod a+x /usr/local/bin/macher
+
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
