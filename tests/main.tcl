@@ -1,6 +1,6 @@
 # main.tcl --
 #
-# This file holds initialization code that is common to each testfile.
+# This file holds initialization code that is common to all testfiles.
 # It performs an initial Tk setup for the root window, imports commands from
 # the tcltest namespace, and loads definitions of global utility procs and
 # test constraints.
