@@ -411,8 +411,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z>
-	event add <<Redo>>		<Control-Z> <Control-Lock-z>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> <Redo>
 	event add <<SelectAll>>		<Control-/>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
@@ -444,6 +444,11 @@ switch -exact -- [tk windowingsystem] {
 
 	# This is needed for XFree86 systems
 	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
 
@@ -454,11 +459,11 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
-	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
-	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
-	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z>
-	event add <<Redo>>		<Control-y> <Control-Lock-Y>
+	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X> <XF86Cut>
+	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C> <XF86Copy>
+	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V> <XF86Paste>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
+	event add <<Redo>>		<Control-y> <Control-Lock-Y> <Redo>
 
 	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
 	event add <<SelectNone>>	<Control-backslash>
@@ -485,16 +490,16 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ToggleSelection>>	<Control-Button-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X>
-	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C>
-	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V>
+	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X> <XF86Cut>
+	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C> <XF86Copy>
+	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V> <XF86Paste>
 	event add <<Clear>>		<Clear>
 
 	# Official bindings
 	# See https://support.apple.com/en-us/HT201236
 	event add <<SelectAll>>		<Command-a>
-	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
-	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z> <Redo>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
 	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
@@ -732,17 +737,17 @@ proc ::tk::WMFrameWidth {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set frameWidth 6
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set frameWidth 9
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set frameWidth 12
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set frameWidth 15
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set frameWidth 21
-    	} else {
+	} else {
 	    set frameWidth 27
-   	}
+	}
     }
     return $frameWidth
 }
@@ -758,17 +763,17 @@ proc ::tk::WMTitleHeight {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set titleHeight 20
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set titleHeight 30
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set titleHeight 38
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set titleHeight 46
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set titleHeight 60
-    	} else {
+	} else {
 	    set titleHeight 78
-   	}
+	}
     }
     return $titleHeight
 }

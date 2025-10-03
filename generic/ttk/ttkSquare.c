@@ -114,8 +114,9 @@ SquareDoLayout(void *clientData)
 	Ttk_Box b;
 
 	b = Ttk_ElementParcel(squareNode);
-	if (squarePtr->square.anchorObj != NULL)
+	if (squarePtr->square.anchorObj != NULL) {
 	    Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
+	}
 	b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
 
 	Ttk_PlaceElement(corePtr->layout, squareNode, b);

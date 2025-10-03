@@ -548,8 +548,9 @@ static int RunValidationScript(
 		Tcl_DStringValue(&script), Tcl_DStringLength(&script),
 		TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&script);
-    if (WidgetDestroyed(&entryPtr->core))
+    if (WidgetDestroyed(&entryPtr->core)) {
 	return TCL_ERROR;
+    }
 
     if (code != TCL_OK && code != TCL_RETURN) {
 	Tcl_AddErrorInfo(interp, "\n\t(in ");
@@ -606,8 +607,7 @@ EntryValidateChange(
 
     if ((entryPtr->entry.validateCmdObj == NULL)
 	|| (entryPtr->core.flags & VALIDATING)
-	|| !EntryNeedsValidation(vmode, reason))
-    {
+	|| !EntryNeedsValidation(vmode, reason)) {
 	return TCL_OK;
     }
 
@@ -726,8 +726,9 @@ static void AdjustIndices(Entry *entryPtr, int index, int nChars)
     e->selectLast   = AdjustIndex(e->selectLast, index+g, nChars);
     e->xscroll.first= AdjustIndex(e->xscroll.first, index+g, nChars);
 
-    if (e->selectLast <= e->selectFirst)
+    if (e->selectLast <= e->selectFirst) {
 	e->selectFirst = e->selectLast = TCL_INDEX_NONE;
+    }
 }
 
 /* EntryStoreValue --
@@ -742,18 +743,21 @@ EntryStoreValue(Entry *entryPtr, const char *value)
     size_t numBytes = strlen(value);
     Tcl_Size numChars = Tcl_NumUtfChars(value, numBytes);
 
-    if (entryPtr->core.flags & VALIDATING)
+    if (entryPtr->core.flags & VALIDATING) {
 	entryPtr->core.flags |= VALIDATION_SET_VALUE;
+    }
 
     /* Make sure all indices remain in bounds:
      */
-    if (numChars < entryPtr->entry.numChars)
+    if (numChars < entryPtr->entry.numChars) {
 	AdjustIndices(entryPtr, numChars, numChars - entryPtr->entry.numChars);
+    }
 
     /* Free old value:
      */
-    if (entryPtr->entry.displayString != entryPtr->entry.string)
+    if (entryPtr->entry.displayString != entryPtr->entry.string) {
 	ckfree(entryPtr->entry.displayString);
+    }
     ckfree(entryPtr->entry.string);
 
     /* Store new value:
@@ -990,8 +994,9 @@ EntryCleanup(void *recordPtr)
 {
     Entry *entryPtr = (Entry *)recordPtr;
 
-    if (entryPtr->entry.textVariableTrace)
+    if (entryPtr->entry.textVariableTrace) {
 	Ttk_UntraceVariable(entryPtr->entry.textVariableTrace);
+    }
 
     TtkFreeScrollHandle(entryPtr->entry.xscrollHandle);
 
@@ -1000,8 +1005,9 @@ EntryCleanup(void *recordPtr)
     Tk_DeleteSelHandler(entryPtr->core.tkwin, XA_PRIMARY, XA_STRING);
 
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
-    if (entryPtr->entry.displayString != entryPtr->entry.string)
+    if (entryPtr->entry.displayString != entryPtr->entry.string) {
 	ckfree(entryPtr->entry.displayString);
+    }
     ckfree(entryPtr->entry.string);
 }
 
@@ -1030,8 +1036,9 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Update derived resources:
      */
     if (mask & TEXTVAR_CHANGED) {
-	if (entryPtr->entry.textVariableTrace)
+	if (entryPtr->entry.textVariableTrace) {
 	    Ttk_UntraceVariable(entryPtr->entry.textVariableTrace);
+	}
 	entryPtr->entry.textVariableTrace = vt;
     }
 
@@ -1056,8 +1063,9 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Recompute the displayString, in case showChar changed:
      */
-    if (entryPtr->entry.displayString != entryPtr->entry.string)
+    if (entryPtr->entry.displayString != entryPtr->entry.string) {
 	ckfree(entryPtr->entry.displayString);
+    }
 
     entryPtr->entry.displayString
 	= entryPtr->entry.showCharObj
@@ -1237,10 +1245,12 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Adjust selection range to keep in display bounds.
      */
     if (showSelection) {
-	if (selFirst < leftIndex)
+	if (selFirst < leftIndex) {
 	    selFirst = leftIndex;
-	if (selLast > rightIndex)
+	}
+	if (selLast > rightIndex) {
 	    selLast = rightIndex;
+	}
     }
 
     /* Draw widget background & border
@@ -1260,14 +1270,16 @@ static void EntryDisplay(void *clientData, Drawable d)
 	if (selBorder) {
 	    int selWidth;
 	    int textareaEnd = textarea.x + textarea.width;
-	    if (selEndX > textareaEnd)
+	    if (selEndX > textareaEnd) {
 		selEndX = textareaEnd;
+	    }
 	    selWidth = selEndX - selStartX + 2 * borderWidth;
-	    if (selWidth > 0)
+	    if (selWidth > 0) {
 		Tk_Fill3DRectangle(tkwin, d, selBorder,
 		selStartX - borderWidth, entryPtr->entry.layoutY - borderWidth,
 		selWidth, entryPtr->entry.layoutHeight + 2*borderWidth,
 		borderWidth, TK_RELIEF_RAISED);
+	    }
 	}
     }
 
@@ -1725,8 +1737,9 @@ static int EntryValidateCommand(
 
     code = EntryRevalidate(interp, entryPtr, VALIDATE_FORCED);
 
-    if (code == TCL_ERROR)
+    if (code == TCL_ERROR) {
 	return code;
+    }
 
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(code == TCL_OK));
     return TCL_OK;
@@ -1841,8 +1854,9 @@ ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Make sure -values is a valid list:
      */
-    if (Tcl_ListObjLength(interp,cbPtr->combobox.valuesObj,&unused) != TCL_OK)
+    if (Tcl_ListObjLength(interp,cbPtr->combobox.valuesObj,&unused) != TCL_OK) {
 	return TCL_ERROR;
+    }
 
     return EntryConfigure(interp, recordPtr, mask);
 }
@@ -2026,8 +2040,9 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Make sure -values is a valid list:
      */
-    if (Tcl_ListObjLength(interp,sb->spinbox.valuesObj,&unused) != TCL_OK)
+    if (Tcl_ListObjLength(interp,sb->spinbox.valuesObj,&unused) != TCL_OK) {
 	return TCL_ERROR;
+    }
 
     return EntryConfigure(interp, recordPtr, mask);
 }
@@ -2103,8 +2118,9 @@ static void TextareaElementSize(
 
     Tk_GetFontMetrics(font, &fm);
     Tcl_GetIntFromObj(NULL, textarea->widthObj, &prefWidth);
-    if (prefWidth <= 0)
+    if (prefWidth <= 0) {
 	prefWidth = 1;
+    }
 
     *heightPtr = fm.linespace;
     *widthPtr = prefWidth * avgWidth;

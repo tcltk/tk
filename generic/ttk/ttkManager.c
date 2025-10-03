@@ -429,8 +429,9 @@ Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
 {
     Tcl_Size index;
     for (index = 0; index < mgr->nContent; ++index)
-	if (mgr->content[index]->window == window)
+	if (mgr->content[index]->window == window) {
 	    return index;
+	}
     return -1;
 }
 
