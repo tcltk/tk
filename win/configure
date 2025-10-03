@@ -4453,8 +4453,6 @@ printf "%s\n" "$ac_cv_municode" >&6; }
 	CFLAGS=$hold_cflags
 	if test "$ac_cv_municode" = "yes" ; then
 	    extra_ldflags="$extra_ldflags -municode"
-	else
-	    extra_cflags="$extra_cflags -DTCL_BROKEN_MAINARGS"
 	fi
 	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working -fno-lto" >&5
@@ -5015,15 +5013,6 @@ printf "%s\n" "$tcl_cv_eh_disposition" >&6; }
 printf "%s\n" "#define EXCEPTION_DISPOSITION int" >>confdefs.h
 
 	fi
-
-	ac_fn_c_check_header_compile "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
-if test "x$ac_cv_header_stdbool_h" = xyes
-then :
-
-printf "%s\n" "#define HAVE_STDBOOL_H 1" >>confdefs.h
-
-fi
-
 
 	# See if the compiler supports casting to a union type.
 	# This is used to stop gcc from printing a compiler

@@ -33,6 +33,7 @@
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN

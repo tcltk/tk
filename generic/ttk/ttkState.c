@@ -79,8 +79,9 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
     unsigned int onbits = 0, offbits = 0;
 
     status = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return status;
+    }
 
     for (i = 0; i < objc; ++i) {
 	const char *stateName = Tcl_GetString(objv[i]);
@@ -94,8 +95,9 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	}
 
 	for (j = 0; stateNames[j].value; ++j) {
-	    if (strcmp(stateName, stateNames[j].name) == 0)
+	    if (strcmp(stateName, stateNames[j].name) == 0) {
 		break;
+	    }
 	}
 
 	if (stateNames[j].value == 0) {
@@ -185,8 +187,9 @@ int Ttk_GetStateSpecFromObj(
 {
     if (objPtr->typePtr != &StateSpecObjType.objType) {
 	int status = StateSpecSetFromAny(interp, objPtr);
-	if (status != TCL_OK)
+	if (status != TCL_OK) {
 	    return status;
+	}
     }
 
     spec->onbits = objPtr->internalRep.wideValue >> 32;
@@ -212,16 +215,19 @@ Tcl_Obj *Ttk_StateMapLookup(
     int status;
 
     status = Tcl_ListObjGetElements(interp, map, &nSpecs, &specs);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return NULL;
+    }
 
     for (j = 0; j < nSpecs; j += 2) {
 	Ttk_StateSpec spec;
 	status = Ttk_GetStateSpecFromObj(interp, specs[j], &spec);
-	if (status != TCL_OK)
+	if (status != TCL_OK) {
 	    return NULL;
-	if (Ttk_StateMatches(state, &spec))
+	}
+	if (Ttk_StateMatches(state, &spec)) {
 	    return specs[j+1];
+	}
     }
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("No match in state map", -1));
@@ -244,8 +250,9 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
     int status;
 
     status = Tcl_ListObjGetElements(interp, mapObj, &nSpecs, &specs);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return NULL;
+    }
 
     if (nSpecs % 2 != 0) {
 	if (interp) {
@@ -258,8 +265,9 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
 
     for (j = 0; j < nSpecs; j += 2) {
 	Ttk_StateSpec spec;
-	if (Ttk_GetStateSpecFromObj(interp, specs[j], &spec) != TCL_OK)
+	if (Ttk_GetStateSpecFromObj(interp, specs[j], &spec) != TCL_OK) {
 	    return NULL;
+	}
     }
 
     return mapObj;

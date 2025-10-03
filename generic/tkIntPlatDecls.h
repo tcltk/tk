@@ -219,7 +219,7 @@ EXTERN void		TkMacOSXWindowOffset(void *wRef, int *xOffset,
 /* 38 */
 EXTERN int		TkSetMacColor(unsigned long pixel, void *macColor);
 /* 39 */
-EXTERN void		TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid);
+EXTERN void		TkSetWMName(TkWindow *winPtr, const char *title);
 /* Slot 40 is reserved */
 /* 41 */
 EXTERN int		TkMacOSXZoomToplevel(void *whichWindow,
@@ -404,7 +404,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXWinBounds) (TkWindow *winPtr, void *geometry); /* 36 */
     void (*tkMacOSXWindowOffset) (void *wRef, int *xOffset, int *yOffset); /* 37 */
     int (*tkSetMacColor) (unsigned long pixel, void *macColor); /* 38 */
-    void (*tkSetWMName) (TkWindow *winPtr, Tk_Uid titleUid); /* 39 */
+    void (*tkSetWMName) (TkWindow *winPtr, const char *title); /* 39 */
     void (*reserved40)(void);
     int (*tkMacOSXZoomToplevel) (void *whichWindow, short zoomPart); /* 41 */
     Tk_Window (*tk_TopCoordsToWindow) (Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY); /* 42 */

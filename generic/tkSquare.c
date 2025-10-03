@@ -23,7 +23,6 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
-#include <stdbool.h>
 
 /*
  * A data structure of the following type is kept for each square widget

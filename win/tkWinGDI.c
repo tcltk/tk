@@ -83,8 +83,8 @@ static int		PalEntriesOnDevice(HDC hDC);
 static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
-static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
-			    const char *str[], int numargs);
+static void		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
+			    const char *str[], Tcl_Size numargs);
 static Tcl_ObjCmdProc2 PrintSelectPrinter;
 static Tcl_ObjCmdProc2 PrintOpenPrinter;
 static Tcl_ObjCmdProc2 PrintClosePrinter;
@@ -2431,14 +2431,14 @@ static int DIBNumColors(
  *----------------------------------------------------------------------
  */
 
-static int GdiParseFontWords(
+static void
+GdiParseFontWords(
     TCL_UNUSED(Tcl_Interp *),
     LOGFONTW *lf,
     const char *str[],
-    int numargs)
+    Tcl_Size numargs)
 {
-    int i;
-    int retval = 0; /* Number of words that could not be parsed. */
+    Tcl_Size i;
 
     for (i=0; i<numargs; i++) {
 	if (str[i]) {
@@ -2453,12 +2453,9 @@ static int GdiParseFontWords(
 		lf->lfUnderline = TRUE;
 	    } else if (strcmp(str[i], "overstrike") == 0) {
 		lf->lfStrikeOut = TRUE;
-	    } else {
-		retval++;
 	    }
 	}
     }
-    return retval;
 }
 
 /*
