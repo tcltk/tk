@@ -82,7 +82,6 @@ package require tcltest 2.2; # needed in mode -singleproc 0
 #   provided by the package tcltest)
 source [file join [tcltest::configure -testdir] main.tcl]
 
-
 # Ensure a pristine initial window state
 resetWindows
 
