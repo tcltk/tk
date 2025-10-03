@@ -7,7 +7,14 @@
 
 # NOTE
 #
-# Multiple display selection handling will only be tested package require tcltest 2.2; # needed in mode -singleproc 0
+# Multiple display selection handling will only be tested if the
+# environment variable TK_ALT_DISPLAY is set to an alternate display.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
 
 # Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window

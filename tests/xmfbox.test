@@ -1,5 +1,18 @@
 # This file is a Tcl script to test the file dialog that's used
-# when the tk_strictMotpackage require tcltest 2.2; # needed in mode -singleproc 0
+# when the tk_strictMotif flag is set. Because the file dialog
+# runs in a modal loop, the only way to test it sufficiently is
+# to call the internal Tcl procedures in xmfbox.tcl directly.
+#
+# Copyright © 1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
+# All rights reserved.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
 
 # Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window

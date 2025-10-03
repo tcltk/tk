@@ -7,7 +7,14 @@
 
 # NOTE
 #
-# Some of these tests may fail package require tcltest 2.2; # needed in mode -singleproc 0
+# Some of these tests may fail if another application is grabbing the clipboard
+# (e.g. an X server, or a VNC viewer) #
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
 
 # Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window
@@ -16,6 +23,7 @@
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
 source [file join [tcltest::configure -testdir] main.tcl]
+
 
 # Ensure a pristine initial window state
 resetWindows
