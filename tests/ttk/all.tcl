@@ -23,23 +23,25 @@ package require tcltest 2.2
 tcltest::configure -singleproc 1
 
 # Handle command line parameters
-set argc [llength $argv]
-if {$argc & 1} {
+if {[llength $argv] & 1} {
     puts stderr "error: the number of command line parameters must be even (name - value pairs)."
     exit 1
 }
 set ignoredOptions [list -testdir]
-set tcltestOptions $argv
-set index 0
-foreach {value key} [lreverse $argv] {
+set ignoredIndices [list ]
+foreach {key value} $argv {
     if {$key in $ignoredOptions} {
-	set tcltestOptions [lreplace $tcltestOptions [expr {$argc - $index - 2}] [expr {$argc - $index -1}]]
+	lappend ignoredIndices $index
 	puts stderr "warning: the Tk test suite ignores the option \"$key\" on the command line."
     }
     incr index 2
 }
+set tcltestOptions $argv
+foreach index [lreverse $ignoredIndices] {
+    set tcltestOptions [lreplace $tcltestOptions $index [expr {$index + 1}]]
+}
 tcltest::configure {*}$tcltestOptions
-unset argc ignoredOptions index tcltestOptions
+unset ignoredOptions index tcltestOptions
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
