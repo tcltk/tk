@@ -27,18 +27,18 @@ if {[llength $argv] & 1} {
     puts stderr "error: the number of command line parameters must be even (name - value pairs)."
     exit 1
 }
-set fixedOptions [list -testdir]
-set newArgv $argv
+set ignoredOptions [list -testdir]
+set tcltestOptions $argv
 foreach {key value} $argv {
-    if {$key in $fixedOptions} {
-	set newArgv [lreplace $newArgv $index [incr index]]
+    if {$key in $ignoredOptions} {
+	set tcltestOptions [lreplace $tcltestOptions $index [incr index]]
 	puts stderr "warning: the Tk test suite ignores the option \"$key\" on the command line."
     } else {
 	incr index 2
     }
 }
-tcltest::configure {*}$newArgv
-unset fixedOptions newArgv
+tcltest::configure {*}$tcltestOptions
+unset ignoredOptions tcltestOptions
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
