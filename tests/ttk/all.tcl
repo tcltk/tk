@@ -28,14 +28,17 @@ if {[llength $argv] & 1} {
     exit 1
 }
 set fixedOptions [list -testdir]
+set newArgv $argv
 foreach {key value} $argv {
     if {$key in $fixedOptions} {
-	puts stderr "error: the Tk test suite doesn't allow the option \"$key\" to be set on the command line."
-	exit 1
+	set newArgv [lreplace $newArgv $index [incr index]]
+	puts stderr "warning: the Tk test suite ignores the option \"$key\" on the command line."
+    } else {
+	incr index 2
     }
 }
-unset fixedOptions
-tcltest::configure {*}$argv
+tcltest::configure {*}$newArgv
+unset fixedOptions newArgv
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
