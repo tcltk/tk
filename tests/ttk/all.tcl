@@ -41,7 +41,7 @@ foreach index [lreverse $ignoredIndices] {
     set tcltestOptions [lreplace $tcltestOptions $index [expr {$index + 1}]]
 }
 tcltest::configure {*}$tcltestOptions
-unset ignoredOptions index tcltestOptions
+unset -nocomplain ignoredOptions index tcltestOptions
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
