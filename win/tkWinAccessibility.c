@@ -676,7 +676,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(
     return E_INVALIDARG;
 }
 
-/* Function to set accessible focus on Tk widget. For toplevel, just return. */
+/* Function to set accessible selection on Tk widget. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(
     TCL_UNUSED(IAccessible *), /* this */
     TCL_UNUSED(long), /* flags */
