@@ -533,10 +533,12 @@ CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     int status = TCL_OK;
 
-    if (checkPtr->checkbutton.variableTrace)
+    if (checkPtr->checkbutton.variableTrace) {
 	status = Ttk_FireTrace(checkPtr->checkbutton.variableTrace);
-    if (status == TCL_OK && !WidgetDestroyed(&checkPtr->core))
+    }
+    if (status == TCL_OK && !WidgetDestroyed(&checkPtr->core)) {
 	status = BasePostConfigure(interp, recordPtr, mask);
+    }
     return status;
 }
 
@@ -556,16 +558,17 @@ CheckbuttonInvokeCommand(
 	Tcl_WrongNumArgs(interp, 1, objv, "invoke");
 	return TCL_ERROR;
     }
-    if (corePtr->state & TTK_STATE_DISABLED)
+    if (corePtr->state & TTK_STATE_DISABLED) {
 	return TCL_OK;
-
+    }
     /*
      * Toggle the selected state.
      */
-    if (corePtr->state & TTK_STATE_SELECTED)
+    if (corePtr->state & TTK_STATE_SELECTED) {
 	newValue = checkPtr->checkbutton.offValueObj;
-    else
+    } else {
 	newValue = checkPtr->checkbutton.onValueObj;
+    }
 
     if (checkPtr->checkbutton.variableObj == NULL ||
 	*Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
@@ -576,8 +579,9 @@ CheckbuttonInvokeCommand(
 	    == NULL)
 	return TCL_ERROR;
 
-    if (WidgetDestroyed(corePtr))
+    if (WidgetDestroyed(corePtr)) {
 	return TCL_ERROR;
+    }
 
     return Tcl_EvalObjEx(interp,
 	checkPtr->checkbutton.commandObj, TCL_EVAL_GLOBAL);
@@ -721,10 +725,12 @@ RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     int status = TCL_OK;
 
-    if (radioPtr->radiobutton.variableTrace)
+    if (radioPtr->radiobutton.variableTrace) {
 	status = Ttk_FireTrace(radioPtr->radiobutton.variableTrace);
-    if (status == TCL_OK && !WidgetDestroyed(&radioPtr->core))
+    }
+    if (status == TCL_OK && !WidgetDestroyed(&radioPtr->core)) {
 	status = BasePostConfigure(interp, recordPtr, mask);
+    }
     return status;
 }
 
@@ -743,8 +749,9 @@ RadiobuttonInvokeCommand(
 	Tcl_WrongNumArgs(interp, 1, objv, "invoke");
 	return TCL_ERROR;
     }
-    if (corePtr->state & TTK_STATE_DISABLED)
+    if (corePtr->state & TTK_STATE_DISABLED) {
 	return TCL_OK;
+    }
 
     if (Tcl_ObjSetVar2(interp,
 	    radioPtr->radiobutton.variableObj, NULL,
@@ -753,8 +760,9 @@ RadiobuttonInvokeCommand(
 	== NULL)
 	return TCL_ERROR;
 
-    if (WidgetDestroyed(corePtr))
+    if (WidgetDestroyed(corePtr)) {
 	return TCL_ERROR;
+    }
 
     return Tcl_EvalObjEx(interp,
 	radioPtr->radiobutton.commandObj, TCL_EVAL_GLOBAL);

@@ -1874,6 +1874,11 @@ if {[tk windowingsystem] eq "aqua"} {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
 }
+
+if {[tk windowingsystem] eq "aqua"} {
+    after 1000; # Give Apple's _windowserver some time to catch up.
+}
+
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuartz} {
     update
     toplevel .t -width 300 -height 400 -bg green

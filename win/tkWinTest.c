@@ -453,24 +453,27 @@ TestfindwindowObjCmd(
 	Tcl_DStringInit(&classString);
 	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), TCL_INDEX_NONE, &classString);
     }
-    if (title[0] == 0)
+    if (title[0] == 0) {
 	title = NULL;
+    }
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
     while (1) {
 	DWORD pid, tid;
 	hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
-	if (hwnd == NULL)
+	if (hwnd == NULL) {
 	    break;
+	}
 	tid = GetWindowThreadProcessId(hwnd, &pid);
 	if (tid == 0) {
 	    /* Window has gone */
 	    hwnd = NULL;
 	    break;
 	}
-	if (pid == myPid)
+	if (pid == myPid) {
 	    break;              /* Found it */
+	}
     }
 
     if (hwnd == NULL) {
@@ -517,8 +520,9 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK)
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK) {
 	return TCL_ERROR;
+    }
 
     cch = GetClassNameW((HWND)INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
