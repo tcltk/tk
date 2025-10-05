@@ -18,6 +18,8 @@
 #include <oaidl.h>
 #include <oleauto.h>
 #include <initguid.h>
+#include <tlhelp32.h>
+#include <tchar.h>
 #include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -1655,8 +1657,30 @@ int IsScreenReaderRunning(
     TCL_UNUSED(int), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
+  
     BOOL screenReader = FALSE;
+    
+    /* First check the system-wide flag (covers NVDA, JAWS, etc.) */
     SystemParametersInfo(SPI_GETSCREENREADER, 0, &screenReader, 0);
+
+    if (!screenReader) {
+        /* Fallback: explicitly check for Narrator.exe */
+        HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (hSnapshot != INVALID_HANDLE_VALUE) {
+            PROCESSENTRY32 pe;
+            pe.dwSize = sizeof(PROCESSENTRY32);
+            if (Process32First(hSnapshot, &pe)) {
+                do {
+                    if (_tcsicmp(pe.szExeFile, TEXT("Narrator.exe")) == 0) {
+                        screenReader = TRUE;
+                        break;
+                    }
+                } while (Process32Next(hSnapshot, &pe));
+            }
+            CloseHandle(hSnapshot);
+        }
+    }
+
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(screenReader));
     return TCL_OK;
 }
