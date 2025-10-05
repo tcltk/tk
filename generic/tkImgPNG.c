@@ -1472,7 +1472,7 @@ ReadPLTE(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"PLTE chunk type forbidden for grayscale", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PLTE_UNEXPECTED",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
 
     default:

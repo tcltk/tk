@@ -1104,6 +1104,11 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     unset result
 } -result {|<Enter> NotifyInferior .one|}
 
+if {[tk windowingsystem] eq "aqua"} {
+    after 1000; # Give Apple's _windowserver some time to catch up.
+    update
+}
+
 test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
     # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().

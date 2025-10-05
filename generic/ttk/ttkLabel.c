@@ -104,8 +104,9 @@ static int TextReqWidth(TextElement *text)
 	int avgWidth = Tk_TextWidth(text->tkfont, "0", 1);
 	if (reqWidth <= 0) {
 	    int specWidth = avgWidth * -reqWidth;
-	    if (specWidth > text->width)
+	    if (specWidth > text->width) {
 		return specWidth;
+	    }
 	} else {
 	    return avgWidth * reqWidth;
 	}
@@ -209,8 +210,9 @@ static void TextElementSize(
 {
     TextElement *text = (TextElement *)elementRecord;
 
-    if (!TextSetup(text, tkwin))
+    if (!TextSetup(text, tkwin)) {
 	return;
+    }
 
     *heightPtr = text->height;
     *widthPtr = TextReqWidth(text);
@@ -270,8 +272,9 @@ static void cTextElementSize(
 {
     TextElement *text = (TextElement *)elementRecord;
 
-    if (!cTextSetup(text, tkwin))
+    if (!cTextSetup(text, tkwin)) {
 	return;
+    }
 
     *heightPtr = text->height;
     *widthPtr = TextReqWidth(text);
@@ -580,8 +583,9 @@ static void LabelSetup(
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     }
-    if (c->compound != TTK_COMPOUND_IMAGE)
+    if (c->compound != TTK_COMPOUND_IMAGE) {
 	TextSetup(&c->text, tkwin);
+    }
 
     /*
      * ASSERT:
@@ -623,10 +627,12 @@ static void LabelSetup(
 
 static void LabelCleanup(LabelElement *c)
 {
-    if (c->compound != TTK_COMPOUND_TEXT)
+    if (c->compound != TTK_COMPOUND_TEXT) {
 	ImageCleanup(&c->image);
-    if (c->compound != TTK_COMPOUND_IMAGE)
+    }
+    if (c->compound != TTK_COMPOUND_IMAGE) {
 	TextCleanup(&c->text);
+    }
 }
 
 static void LabelElementSize(
@@ -646,8 +652,9 @@ static void LabelElementSize(
 
     /* Requested width based on -width option, not actual text width:
      */
-    if (label->compound != TTK_COMPOUND_IMAGE)
+    if (label->compound != TTK_COMPOUND_IMAGE) {
 	textReqWidth = TextReqWidth(&label->text);
+    }
 
     switch (label->compound)
     {
