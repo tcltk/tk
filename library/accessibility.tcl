@@ -210,7 +210,7 @@ namespace eval ::tk::accessible {
 	    set data [::tk::accessible::_getradiodata $w]
 	    set role [::tk::accessible::get_acc_role $w]
 	    set description [::tk::accessible::get_acc_description $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	    ::tk::accessible::speak "$role $description $data"
 	}
@@ -218,51 +218,51 @@ namespace eval ::tk::accessible {
 	    set data [::tk::accessible::_getcheckdata $w]
 	    set role [::tk::accessible::get_acc_role $w]
 	    set description [::tk::accessible::get_acc_description $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	    ::tk::accessible::speak "$role $description $data"
 	}
 
 	if {[winfo class $w] eq "Listbox"} {
 	    set data [$w get [$w curselection]]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "Treeview"} {
 	    set data [::tk::accessible::_gettreeviewdata $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
 	    set data [::tk::accessible::_getentrytext $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "TCombobox"} {
 	    set data [$w get]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "TNotebook"}  {
 	    set data  [$w tab current -text]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "Text"}  {
 	    set data [::tk::accessible::_gettext $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	if {[winfo class $w] eq "TProgressbar"}  {
 	    set data [::tk::accessible::_getpbvalue $w]
-	    ::tk::accessible::acc_value $w $data
+	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
 	}
 	# Menu only needs to be tracked on X11 - native on Aqua and Windows
 	if {[tk windowingsystem] eq "x11"} {
 	    if {[winfo class $w] eq "Menu"} {
 		set data [$w entrycget active -label]
-		::tk::accessible::acc_value $w $data
+		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 		::tk::accessible::emit_focus_change $w
 	    }
@@ -276,13 +276,13 @@ namespace eval ::tk::accessible {
 		Right {
 		    tk::ScaleIncrement $w down little noRepeat
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 		Left {
 		    tk::ScaleIncrement $w up little noRepeat
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -292,13 +292,13 @@ namespace eval ::tk::accessible {
 		Right {
 		    ttk::scale::Increment $w 1
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 		Left {
 		    ttk::scale::Increment $w -1
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -309,13 +309,13 @@ namespace eval ::tk::accessible {
 		Up {
 		    $w invoke buttonup
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 		Down {
 		    $w invoke buttondown
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -325,13 +325,13 @@ namespace eval ::tk::accessible {
 		Up {
 		    ttk::spinbox::Spin $w +1
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 		Down {
 		    ttk::spinbox::Spin $w -1
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -351,7 +351,7 @@ namespace eval ::tk::accessible {
 			event generate <Control-a>
 		    }
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -361,13 +361,13 @@ namespace eval ::tk::accessible {
 		Right {
 		    { ttk::notebook::CycleTab %W  1; break }
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 		Left {
 		    ttk::scale::Increment $w -1
 		    set data [$w get]
-		    ::tk::accessible::acc_value $w $data
+		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		}
 	    }
@@ -417,12 +417,12 @@ namespace eval ::tk::accessible {
 	    }
 	}
 
-	::tk::accessible::acc_role $w $role
-	::tk::accessible::acc_name $w $name
-	::tk::accessible::acc_description $w $description
-	::tk::accessible::acc_value $w $value
-	::tk::accessible::acc_state $w $state
-	::tk::accessible::acc_action $w $action
+	::tk::accessible::set_acc_role $w $role
+	::tk::accessible::set_acc_name $w $name
+	::tk::accessible::set_acc_description $w $description
+	::tk::accessible::set_acc_value $w $value
+	::tk::accessible::set_acc_state $w $state
+	::tk::accessible::set_acc_action $w $action
 
     }
 
@@ -654,8 +654,8 @@ namespace eval ::tk::accessible {
 	    }
 
 	    # Update accessible object.
-	    ::tk::accessible::acc_name $menuWidget $label
-	    ::tk::accessible::acc_action $menuWidget [list $menuWidget invoke $idx]
+	    ::tk::accessible::set_acc_name $menuWidget $label
+	    ::tk::accessible::set_acc_action $menuWidget [list $menuWidget invoke $idx]
 	    ::tk::accessible::emit_selection_change $menuWidget
 	    ::tk::accessible::emit_focus_change $menuWidget
 	}
@@ -975,28 +975,28 @@ namespace eval ::tk::accessible {
     # screen reader for vocalization. The help text here assists the user
     # in switching to the standard keys for navigation as needed.
 
-    bind Listbox <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
-    bind Treeview <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
-    bind Entry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-    bind TEntry <Map> {+::tk::accessible::acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-    bind Scale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
-    bind TScale <Map> {+::tk::accessible::acc_help %W "Click the right or left arrows to move the scale."}
-    bind Spinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
-    bind TSpinbox <Map> {+::tk::accessible::acc_help %W "Click the up or down arrows to change the value."}
-    bind Canvas <Map> {+::tk::accessible::acc_help %W "The canvas widget is not accessible."}
-    bind Scrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
-    bind TScrollbar <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
-    bind Menubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
-    bind TMenubutton <Map> {+::tk::accessible::acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
-    bind TNotebook <Map> {+::tk::accessible::acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
-    bind Text <Map> {+::tk::accessible::acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
+    bind Listbox <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
+    bind Treeview <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
+    bind Entry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind TEntry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+    bind Scale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
+    bind TScale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
+    bind Spinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
+    bind TSpinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
+    bind Canvas <Map> {+::tk::accessible::set_acc_help %W "The canvas widget is not accessible."}
+    bind Scrollbar <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind TScrollbar <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+    bind Menubutton <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
+    bind TMenubutton <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
+    bind TNotebook <Map> {+::tk::accessible::set_acc_help %W "Use the Tab and Right/Left arrow keys to navigate between notebook tabs."}
+    bind Text <Map> {+::tk::accessible::set_acc_help %W "Use normal keyboard shortcuts to navigate the text widget."}
 
     if {[tk windowingsystem] eq "win32"} {
 	bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
     }
 
     # Finally, export the main commands.
-    namespace export acc_role acc_name acc_description acc_value acc_state acc_action acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
+    namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
     namespace ensemble create
 }
 
