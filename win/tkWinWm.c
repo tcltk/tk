@@ -1505,7 +1505,7 @@ ReadIconOrCursorFromFile(
     if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file: %s", Tcl_PosixError(interp)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", (char *)NULL);
 	Tcl_Close(NULL, channel);
 	ckfree(lpIDE);
 	ckfree(lpIR);
@@ -2574,8 +2574,9 @@ TkWmDeadWindow(
 	    }
 	}
     }
-    if (wmPtr->numTransients != 0)
+    if (wmPtr->numTransients != 0) {
 	Tcl_Panic("numTransients should be 0");
+    }
 
     if (wmPtr->title != NULL) {
 	ckfree(wmPtr->title);
