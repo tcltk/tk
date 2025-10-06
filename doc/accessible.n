@@ -11,13 +11,13 @@
 accessible \- Adds screenreader support for core Tk and ttk  widgets.
 .SH SYNOPSIS
 .nf
-\fBtk accessible acc_role \fIwindow value\fR
-\fBtk accessible acc_name \fIwindow value\fR
-\fBtk accessible acc_description \fIwindow value\fR
-\fBtk accessible acc_value \fIwindow value\fR
-\fBtk accessible acc_state \fIwindow value\fR
-\fBtk accessible acc_action \fIwindow value\fR
-\fBtk accessible acc_help \fIwindow value\fR
+\fBtk accessible set_acc_role \fIwindow value\fR
+\fBtk accessible set_acc_name \fIwindow value\fR
+\fBtk accessible set_acc_description \fIwindow value\fR
+\fBtk accessible set_acc_value \fIwindow value\fR
+\fBtk accessible set_acc_state \fIwindow value\fR
+\fBtk accessible set_acc_action \fIwindow value\fR
+\fBtk accessible set_acc_help \fIwindow value\fR
 \fBtk accessible get_acc_role \fIwindow \fR
 \fBtk accessible get_acc_name \fIwindow\fR
 \fBtk accessible get_acc_description \fIwindow\fR
@@ -64,7 +64,7 @@ action (if applicable).
 The following operations are available for the \fBtk accessible\fR
 command:
 .TP
-\fBtk accessible acc_role \fIwindow value\fR
+\fBtk accessible set_acc_role \fIwindow value\fR
 .
 Assigns one of the following accessibility roles to a Tk widget: Button,
 Canvas, Checkbutton, Combobox, Entry, Label, Listbox, Menu, Notebook,
@@ -73,34 +73,34 @@ Tk and ttk widgets having similar roles, such as a button and a
 ttk::button, will both be assigned the same accessibility role as these
 widgets are the same from an accessibility standpoint.
 .TP
-\fBtk accessible acc_name \fIwindow value\fR
+\fBtk accessible set_acc_name \fIwindow value\fR
 .
 Short label identifying the widget.
 Defaults to the accessibility role.
 .TP
-\fBtk accessible acc_description\fI window value\fR
+\fBtk accessible set_acc_description\fI window value\fR
 .
 Longer string providing additional detail about the widget.
 Depending on the widget, may default to returning the widget's -text
 option or some similar detail.
 .TP
-\fBtk accessible acc_value \fIwindow value\fR
+\fBtk accessible set_acc_value \fIwindow value\fR
 .
 Sets the widget's accessibility value.
 For instance, with a scale widget, will return the current numeric value
 of the scale.
 .TP
-\fBtk accessible acc_state \fIwindow value\fR
+\fBtk accessible set_acc_state \fIwindow value\fR
 .
 \fI \fRSets the widget's accessibility state, from one of the
 standard Tk widget states.
 .TP
-\fBtk accessible acc_action \fIwindow value\fR
+\fBtk accessible set_acc_action \fIwindow value\fR
 .
 \fI \fRSets the command associated with the widget, if any.\fI
 \fR
 .TP
-\fBtk accessible acc_help \fIwindow value\fR
+\fBtk accessible set_acc_help \fIwindow value\fR
 .
 String providing additional information on the widget and its purpose.
 For instance, can provide details on specific keyboard navigation for
