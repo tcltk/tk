@@ -137,7 +137,7 @@ static void tk_atk_action_interface_init(AtkActionIface *iface);
 static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset);
 static gint tk_text_get_caret_offset(AtkText *text);
 static gchar *tk_text_get_selection(AtkText *text,gint selection_num, gint *start_offset, gint *end_offset);
-static inline gchar *tk_set_acc_value_dup(Tk_Window win);
+static inline gchar *tk_acc_value_dup(Tk_Window win);
 static gint tk_text_get_character_count(AtkText *text);
 static gchar *tk_text_get_text_at_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
 static gchar *tk_text_get_text_after_offset(AtkText *text, gint offset, AtkTextBoundary boundary_type, gint *start_offset, gint *end_offset);
@@ -1210,7 +1210,7 @@ static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
 
-    gchar *val = tk_set_acc_value_dup(acc->tkwin);
+    gchar *val = tk_acc_value_dup(acc->tkwin);
     if (!val) return NULL;
 
     /* Normalize offsets to character indices. */
@@ -1299,7 +1299,7 @@ static gchar *tk_text_get_selection(
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return NULL;
 
-    gchar *val = tk_set_acc_value_dup(acc->tkwin);
+    gchar *val = tk_acc_value_dup(acc->tkwin);
     if (!val) return NULL;
 
     const gint total = g_utf8_strlen(val, -1);
@@ -1315,7 +1315,7 @@ static gchar *tk_text_get_selection(
     return val;  /* Caller will g_free(). */
 }
 
-static inline gchar *tk_set_acc_value_dup(Tk_Window win)
+static inline gchar *tk_acc_value_dup(Tk_Window win)
 {
     /*
      * Text data is written to the "value" field of the TkAccessibleObject
@@ -1335,7 +1335,7 @@ static gint tk_text_get_character_count(AtkText *text)
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY) return 0;
 
-    gchar *val = tk_set_acc_value_dup(acc->tkwin);
+    gchar *val = tk_acc_value_dup(acc->tkwin);
     if (!val) return 0;
 
     gint count = g_utf8_strlen(val, -1);
@@ -1580,7 +1580,7 @@ static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint st
     if (role != ATK_ROLE_TEXT && role != ATK_ROLE_ENTRY)
 	return FALSE;
 
-    gchar *full_text = tk_set_acc_value_dup(acc->tkwin);
+    gchar *full_text = tk_acc_value_dup(acc->tkwin);
     if (!full_text)
 	return FALSE;
 
