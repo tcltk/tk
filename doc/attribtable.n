@@ -16,9 +16,10 @@ arbitrary data attached to any widget.
 .BE
 .SH DESCRIPTION
 .PP
-This command creates an attribute table of the name \fItableName\fR as a
-command in the namespace of the calling context if not fully qualified, and
-returns the fully qualified name of the command just created.
+This command creates an attribute table of the name \fItableName\fR,
+implemented as a hash table and accessible as a command in the namespace of
+the calling context if not fully qualified, and returns the fully qualified
+name of the command just created.
 .PP
 An attribute table is used to query and modify arbitrary data attached to any
 widget.  These data are commonly called \fIattributes\fR.
@@ -27,7 +28,13 @@ If an attribute table of the given name already exists then it is replaced
 with the new one and all the attributes of all widgets set using the old table
 instance will be unset.
 .PP
-\fBREMARK:\fR  When a widget is destroyed, all of its attributes set by all
+\fBREMARK 1:\fR  When the \fItableName\fR command is deleted (via \fBrename\fR
+\fItableName\fR "" or by deleting the containing namespace), all the
+attributes of all widgets set using this command are automatically unset and
+the undelying hash table is deleted.  This will free all the memory used by
+the table.
+.PP
+\fBREMARK 2:\fR  When a widget is destroyed, all of its attributes set by all
 attribute table commands are automatically unset.  This will free all the
 memory used by the widget's attributes.
 .PP
