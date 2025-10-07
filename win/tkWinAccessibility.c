@@ -62,32 +62,34 @@ typedef struct TkUiaProvider {
 
 
 /*
- * Map script-level roles to C roles.
+ * Map script-level roles to C roles for both MSAA and UI Automation.
+ * UI Automation control type values are from UIAutomation.h.
  */
+ 
 struct WinRoleMap {
     const char *tkrole;
     LONG winrole;
-	PROPERTYID uiaControlType;
+    LONG uiaControlType;
 };
 
 const struct WinRoleMap roleMap[] = {
-    {"Button", ROLE_SYSTEM_PUSHBUTTON, UIA_ButtonControlTypeId},
-    {"Canvas", ROLE_SYSTEM_CLIENT, UIA_PaneControlTypeId},
-    {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON, UIA_CheckBoxControlTypeId},
-    {"Combobox", ROLE_SYSTEM_COMBOBOX, UIA_ComboBoxControlTypeId},
-    {"Entry", ROLE_SYSTEM_TEXT, UIA_EditControlTypeId},
-    {"Label", ROLE_SYSTEM_STATICTEXT, UIA_TextControlTypeId},
-    {"Listbox", ROLE_SYSTEM_LIST, UIA_ListControlTypeId},
-    {"Menu", ROLE_SYSTEM_MENUPOPUP, UIA_MenuControlTypeId},
-    {"Notebook", ROLE_SYSTEM_PAGETABLIST, UIA_TabControlTypeId},
-    {"Progressbar", ROLE_SYSTEM_PROGRESSBAR, UIA_ProgressBarControlTypeId},
-    {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON, UIA_RadioButtonControlTypeId},
-    {"Scale", ROLE_SYSTEM_SLIDER, UIA_SliderControlTypeId},
-    {"Scrollbar", ROLE_SYSTEM_SCROLLBAR, UIA_ScrollBarControlTypeId},
-    {"Spinbox", ROLE_SYSTEM_SPINBUTTON, UIA_SpinnerControlTypeId},
-    {"Table", ROLE_SYSTEM_TABLE, UIA_TableControlTypeId},
-    {"Text", ROLE_SYSTEM_TEXT, UIA_EditControlTypeId},
-    {"Tree", ROLE_SYSTEM_OUTLINE, UIA_TreeControlTypeId},
+    {"Button", ROLE_SYSTEM_PUSHBUTTON, 50000},       /* UIA_ButtonControlTypeId */
+    {"Canvas", ROLE_SYSTEM_CLIENT, 50033},           /* UIA_PaneControlTypeId */
+    {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON, 50002}, /* UIA_CheckBoxControlTypeId */
+    {"Combobox", ROLE_SYSTEM_COMBOBOX, 50003},       /* UIA_ComboBoxControlTypeId */
+    {"Entry", ROLE_SYSTEM_TEXT, 50004},              /* UIA_EditControlTypeId */
+    {"Label", ROLE_SYSTEM_STATICTEXT, 50020},        /* UIA_TextControlTypeId */
+    {"Listbox", ROLE_SYSTEM_LIST, 50008},            /* UIA_ListControlTypeId */
+    {"Menu", ROLE_SYSTEM_MENUPOPUP, 50009},          /* UIA_MenuControlTypeId */
+    {"Notebook", ROLE_SYSTEM_PAGETABLIST, 50018},    /* UIA_TabControlTypeId */
+    {"Progressbar", ROLE_SYSTEM_PROGRESSBAR, 50017}, /* UIA_ProgressBarControlTypeId */
+    {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON, 50012}, /* UIA_RadioButtonControlTypeId */
+    {"Scale", ROLE_SYSTEM_SLIDER, 50015},            /* UIA_SliderControlTypeId */
+    {"Scrollbar", ROLE_SYSTEM_SCROLLBAR, 50014},     /* UIA_ScrollBarControlTypeId */
+    {"Spinbox", ROLE_SYSTEM_SPINBUTTON, 50016},      /* UIA_SpinnerControlTypeId */
+    {"Table", ROLE_SYSTEM_TABLE, 50025},             /* UIA_TableControlTypeId */
+    {"Text", ROLE_SYSTEM_TEXT, 50004},               /* UIA_EditControlTypeId */
+    {"Tree", ROLE_SYSTEM_OUTLINE, 50023},            /* UIA_TreeControlTypeId */
     {NULL, 0, 0}
 };
 
@@ -499,24 +501,24 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
     selfVar.lVal = CHILDID_SELF;
 
     switch (dispIdMember) {
-    case DISPID_set_acc_name:
-	return TkRootAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
-    case DISPID_set_acc_value:
-	return TkRootAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
-    case DISPID_set_acc_role:
-	return TkRootAccessible_get_accRole(this, selfVar, pVarResult);
-    case DISPID_set_acc_state:
-	return TkRootAccessible_get_accState(this, selfVar, pVarResult);
-    case DISPID_set_acc_description:
-	return TkRootAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
-    case DISPID_set_acc_help:
-	return TkRootAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
+    case DISPID_ACC_NAME:
+        return TkRootAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
+    case DISPID_ACC_VALUE:
+        return TkRootAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
+    case DISPID_ACC_ROLE:
+        return TkRootAccessible_get_accRole(this, selfVar, pVarResult);
+    case DISPID_ACC_STATE:
+        return TkRootAccessible_get_accState(this, selfVar, pVarResult);
+    case DISPID_ACC_DESCRIPTION:
+        return TkRootAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
+    case DISPID_ACC_HELP:
+        return TkRootAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_DEFAULTACTION:
-	return TkRootAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
+        return TkRootAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_DODEFAULTACTION:
-	return TkRootAccessible_accDoDefaultAction(this, selfVar);
+        return TkRootAccessible_accDoDefaultAction(this, selfVar);
     case DISPID_ACC_FOCUS:
-	return TkRootAccessible_get_accFocus(this, pVarResult);
+        return TkRootAccessible_get_accFocus(this, pVarResult);
     }
     return S_OK;
 }
@@ -1632,20 +1634,20 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
 
 /* UI Automation Pattern Provider. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
-    TCL_UNUSED(IRawElementProviderSimple *), /* this. */
-    PATTERNID patternId,
+    TCL_UNUSED(IRawElementProviderSimple *), /* this */
+    PATTERNID patternId, 
     IUnknown **pRetVal)
 {
     if (!pRetVal) return E_INVALIDARG;
     *pRetVal = NULL;
     
-    /* Support basic patterns based on control type. */
+    /* Support basic patterns based on control type */
     switch (patternId) {
-        case UIA_InvokePatternId:
-        case UIA_SelectionPatternId:
-        case UIA_ValuePatternId:
-        case UIA_ScrollPatternId:
-            /* TO DO: These patterns could be implemented in the future. */
+        case 10000: /* UIA_InvokePatternId */
+        case 10001: /* UIA_SelectionPatternId */
+        case 10002: /* UIA_ValuePatternId */
+        case 10004: /* UIA_ScrollPatternId */
+            /* These patterns could be implemented in the future */
             break;
     }
     
@@ -1655,7 +1657,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
 /* UI Automation Property Provider. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     IRawElementProviderSimple *this,
-    PROPERTYID propertyId,
+    PROPERTYID propertyId, 
     VARIANT *pRetVal)
 {
     if (!pRetVal) return E_INVALIDARG;
@@ -1670,7 +1672,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     TkGlobalLock();
     
     switch (propertyId) {
-        case UIA_NamePropertyId: {
+        case 30005: /* UIA_NamePropertyId */
+        {
             BSTR name = NULL;
             VARIANT varChild;
             varChild.vt = VT_I4;
@@ -1684,7 +1687,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             break;
         }
         
-        case UIA_ControlTypePropertyId: {
+        case 30003: /* UIA_ControlTypePropertyId */
+        {
             VARIANT role;
             VariantInit(&role);
             VARIANT varChild;
@@ -1693,8 +1697,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             HRESULT hr = TkRootAccessible_get_accRole(
                 (IAccessible *)provider->msaaProvider, varChild, &role);
             if (SUCCEEDED(hr) && role.vt == VT_I4) {
-                /* Map MSAA role to UIA ControlType. */
-                PROPERTYID controlType = UIA_PaneControlTypeId; /* Default.*/
+                /* Map MSAA role to UIA ControlType */
+                LONG controlType = 50033; /* UIA_PaneControlTypeId - Default */
                 for (int i = 0; roleMap[i].tkrole != NULL; i++) {
                     if (roleMap[i].winrole == role.lVal) {
                         controlType = roleMap[i].uiaControlType;
@@ -1708,7 +1712,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             break;
         }
         
-        case UIA_IsEnabledPropertyId: {
+        case 30010: /* UIA_IsEnabledPropertyId */
+        {
             VARIANT state;
             VariantInit(&state);
             VARIANT varChild;
@@ -1724,12 +1729,13 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             break;
         }
         
-        case UIA_IsKeyboardFocusablePropertyId:
+        case 30014: /* UIA_IsKeyboardFocusablePropertyId */
             pRetVal->vt = VT_BOOL;
             pRetVal->boolVal = VARIANT_TRUE;
             break;
             
-        case UIA_HasKeyboardFocusPropertyId: {
+        case 30008: /* UIA_HasKeyboardFocusPropertyId */
+        {
             VARIANT focus;
             VariantInit(&focus);
             HRESULT hr = TkRootAccessible_get_accFocus(
@@ -1742,13 +1748,13 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             break;
         }
         
-        case UIA_IsControlElementPropertyId:
-        case UIA_IsContentElementPropertyId:
+        case 30016: /* UIA_IsControlElementPropertyId */
+        case 30017: /* UIA_IsContentElementPropertyId */
             pRetVal->vt = VT_BOOL;
             pRetVal->boolVal = VARIANT_TRUE;
             break;
             
-        case UIA_AutomationIdPropertyId:
+        case 30011: /* UIA_AutomationIdPropertyId */
             if (provider->msaaProvider->pathName) {
                 Tcl_DString ds;
                 Tcl_DStringInit(&ds);
@@ -1759,7 +1765,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             }
             break;
             
-        case UIA_ClassNamePropertyId:
+        case 30012: /* UIA_ClassNamePropertyId */
             if (provider->msaaProvider->win) {
                 const char *className = Tk_Class(provider->msaaProvider->win);
                 if (className) {
@@ -1773,7 +1779,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             }
             break;
             
-        case UIA_NativeWindowHandlePropertyId:
+        case 30020: /* UIA_NativeWindowHandlePropertyId */
             if (provider->msaaProvider->hwnd) {
                 pRetVal->vt = VT_I4;
                 pRetVal->lVal = (LONG)(LONG_PTR)provider->msaaProvider->hwnd;
@@ -1788,6 +1794,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     TkGlobalUnlock();
     return S_OK;
 }
+
 
 /* UI Automation Host Element Provider. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(
