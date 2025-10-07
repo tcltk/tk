@@ -31,7 +31,7 @@ instance will be unset.
 \fBREMARK 1:\fR  When the \fItableName\fR command is deleted (via \fBrename\fR
 \fItableName\fR "" or by deleting the containing namespace), all the
 attributes of all widgets set using this command are automatically unset and
-the undelying hash table is deleted.  This will free all the memory used by
+the underlying hash table is deleted.  This will free all the memory used by
 the table.
 .PP
 \fBREMARK 2:\fR  When a widget is destroyed, all of its attributes set by all
