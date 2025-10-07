@@ -212,7 +212,9 @@ namespace eval ::tk::accessible {
 	    set description [::tk::accessible::get_acc_description $w]
 	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
-	    ::tk::accessible::speak "$role $description $data"
+	    if {[tk windowingsystem] eq "x11"} {
+		::tk::accessible::speak "$role $description $data"
+	    }
 	}
 	if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
 	    set data [::tk::accessible::_getcheckdata $w]
@@ -220,7 +222,9 @@ namespace eval ::tk::accessible {
 	    set description [::tk::accessible::get_acc_description $w]
 	    ::tk::accessible::set_acc_value $w $data
 	    ::tk::accessible::emit_selection_change $w
-	    ::tk::accessible::speak "$role $description $data"
+	    if {[tk windowingsystem] eq "x11"} {
+		::tk::accessible::speak "$role $description $data"
+	    }
 	}
 
 	if {[winfo class $w] eq "Listbox"} {
