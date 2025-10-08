@@ -971,7 +971,11 @@ static void nsvg__fillActiveEdges(unsigned char* scanline, int len, NSVGactiveEd
 	}
 }
 
-static float nsvg__clampf(float a, float mn, float mx) { return a < mn ? mn : (a > mx ? mx : a); }
+static float nsvg__clampf(float a, float mn, float mx) {
+	if (isnan(a))
+		return mn;
+	return a < mn ? mn : (a > mx ? mx : a);
+}
 
 static unsigned int nsvg__RGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -1391,6 +1395,8 @@ void nsvgRasterize(NSVGrasterizer* r,
 	NSVGedge *e = NULL;
 	NSVGcachedPaint cache;
 	int i;
+	int j;
+	unsigned char paintOrder;
 
 	r->bitmap = dst;
 	r->width = w;
@@ -1409,58 +1415,61 @@ void nsvgRasterize(NSVGrasterizer* r,
 	for (shape = image->shapes; shape != NULL; shape = shape->next) {
 		if (!(shape->flags & NSVG_FLAGS_VISIBLE))
 			continue;
+		for (j = 0; j < 3; j++) {
+			paintOrder = (shape->paintOrder >> (2 * j)) & 0x03;
 
-		if (shape->fill.type != NSVG_PAINT_NONE) {
-			nsvg__resetPool(r);
-			r->freelist = NULL;
-			r->nedges = 0;
+			if (paintOrder == NSVG_PAINT_FILL && shape->fill.type != NSVG_PAINT_NONE) {
+				nsvg__resetPool(r);
+				r->freelist = NULL;
+				r->nedges = 0;
 
-			nsvg__flattenShape(r, shape, scale);
+				nsvg__flattenShape(r, shape, scale);
 
-			/* Scale and translate edges */
-			for (i = 0; i < r->nedges; i++) {
-				e = &r->edges[i];
-				e->x0 = tx + e->x0;
-				e->y0 = (ty + e->y0) * NSVG__SUBSAMPLES;
-				e->x1 = tx + e->x1;
-				e->y1 = (ty + e->y1) * NSVG__SUBSAMPLES;
+				/* Scale and translate edges */
+				for (i = 0; i < r->nedges; i++) {
+					e = &r->edges[i];
+					e->x0 = tx + e->x0;
+					e->y0 = (ty + e->y0) * NSVG__SUBSAMPLES;
+					e->x1 = tx + e->x1;
+					e->y1 = (ty + e->y1) * NSVG__SUBSAMPLES;
+				}
+
+				/* Rasterize edges */
+				if (r->nedges != 0)
+					qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
+
+				/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
+				nsvg__initPaint(&cache, &shape->fill, shape->opacity);
+
+				nsvg__rasterizeSortedEdges(r, tx,ty,scale, &cache, shape->fillRule);
 			}
+			if (paintOrder == NSVG_PAINT_STROKE && shape->stroke.type != NSVG_PAINT_NONE && (shape->strokeWidth * scale) > 0.01f) {
+				nsvg__resetPool(r);
+				r->freelist = NULL;
+				r->nedges = 0;
 
-			/* Rasterize edges */
-			if (r->nedges != 0)
-				qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
+				nsvg__flattenShapeStroke(r, shape, scale);
 
-			/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
-			nsvg__initPaint(&cache, &shape->fill, shape->opacity);
+/*				dumpEdges(r, "edge.svg"); */
 
-			nsvg__rasterizeSortedEdges(r, tx,ty,scale, &cache, shape->fillRule);
-		}
-		if (shape->stroke.type != NSVG_PAINT_NONE && (shape->strokeWidth * scale) > 0.01f) {
-			nsvg__resetPool(r);
-			r->freelist = NULL;
-			r->nedges = 0;
+				/* Scale and translate edges */
+				for (i = 0; i < r->nedges; i++) {
+					e = &r->edges[i];
+					e->x0 = tx + e->x0;
+					e->y0 = (ty + e->y0) * NSVG__SUBSAMPLES;
+					e->x1 = tx + e->x1;
+					e->y1 = (ty + e->y1) * NSVG__SUBSAMPLES;
+				}
 
-			nsvg__flattenShapeStroke(r, shape, scale);
+				/* Rasterize edges */
+				if (r->nedges != 0)
+					qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
 
-/*			dumpEdges(r, "edge.svg"); */
+				/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
+				nsvg__initPaint(&cache, &shape->stroke, shape->opacity);
 
-			/* Scale and translate edges */
-			for (i = 0; i < r->nedges; i++) {
-				e = &r->edges[i];
-				e->x0 = tx + e->x0;
-				e->y0 = (ty + e->y0) * NSVG__SUBSAMPLES;
-				e->x1 = tx + e->x1;
-				e->y1 = (ty + e->y1) * NSVG__SUBSAMPLES;
+				nsvg__rasterizeSortedEdges(r, tx,ty,scale, &cache, NSVG_FILLRULE_NONZERO);
 			}
-
-			/* Rasterize edges */
-			if (r->nedges != 0)
-				qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
-
-			/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
-			nsvg__initPaint(&cache, &shape->stroke, shape->opacity);
-
-			nsvg__rasterizeSortedEdges(r, tx,ty,scale, &cache, NSVG_FILLRULE_NONZERO);
 		}
 	}
 
