@@ -25,6 +25,7 @@ to the userbase.
  - [Add support for Copy/Cut/Paste keys in X11](https://core.tcl-lang.org/tk/tktview/04e173)
  - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
  - [tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP](https://core.tcl-lang.org/tk/tktview/95da0f)
+ - [image svg: support color order and fix possible nan race condition](https://core.tcl-lang.org/tk/tktview/b43dbc)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
