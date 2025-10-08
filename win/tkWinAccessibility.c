@@ -1687,20 +1687,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    if (SUCCEEDED(hr) && name) {
 		pRetVal->vt = VT_BSTR;
 		pRetVal->bstrVal = name;
-	    } else {
-		/* Fallback to window title or widget text */
-		if (provider->msaaProvider->win) {
-		    const char *title = Tk_GetUid(provider->msaaProvider->win);
-		    if (title) {
-			Tcl_DString ds;
-			Tcl_DStringInit(&ds);
-			pRetVal->vt = VT_BSTR;
-			pRetVal->bstrVal = SysAllocString(
-							  Tcl_UtfToWCharDString(title, -1, &ds));
-			Tcl_DStringFree(&ds);
-		    }
-		}
-	    }
+	    } 
 	    break;
 	}
  
@@ -2177,12 +2164,25 @@ static int EmitSelectionChanged(
         NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
         
         /* Force UIA property change notification. */
-        if (g_pUIAutomation) {
-            UiaRaiseAutomationPropertyChangedEvent(g_pUIAutomation, 
-                (IRawElementProviderSimple *)GetUiaProviderForWindow(toplevel),
-                30004, /* UIA_HelpTextPropertyId */
-                VARIANT{}, VARIANT{});
-        }
+	TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
+	if (tkProvider) {
+	    IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
+
+	    VARIANT oldVal, newVal;
+	    VariantInit(&oldVal);
+	    VariantInit(&newVal);
+
+	    /* Raise HelpText property change (UIA_HelpTextPropertyId = 30004) */
+	    UiaRaiseAutomationPropertyChangedEvent(
+						   provider,
+						   UIA_HelpTextPropertyId,
+						   oldVal,
+						   newVal
+						   );
+
+	    VariantClear(&oldVal);
+	    VariantClear(&newVal);
+	}
     }
     
     TkGlobalUnlock();
