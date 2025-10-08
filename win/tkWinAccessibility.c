@@ -1676,45 +1676,42 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     TkGlobalLock();
     
     switch (propertyId) {
+ 
     case 30005: /* UIA_NamePropertyId */
 	{
-	    BSTR name = NULL;
 	    VARIANT varChild;
 	    varChild.vt = VT_I4;
 	    varChild.lVal = CHILDID_SELF;
-	    HRESULT hr = TkRootAccessible_get_accName(
-						      (IAccessible *)provider->msaaProvider, varChild, &name);
-	    if (SUCCEEDED(hr) && name) {
+
+	    VARIANT role;
+	    VariantInit(&role);
+	    HRESULT hrRole = TkRootAccessible_get_accRole(
+							  (IAccessible *)provider->msaaProvider, varChild, &role);
+
+	    if (SUCCEEDED(hrRole) && role.vt == VT_I4 &&
+		(role.lVal == ROLE_SYSTEM_MENUPOPUP ||
+		 role.lVal == ROLE_SYSTEM_MENUITEM ||
+		 role.lVal == ROLE_SYSTEM_MENUBAR)) {
+		/* Let Windows' native accessibility handle menus */
+		pRetVal->vt = VT_EMPTY;
+		VariantClear(&role);
+		break;
+	    }
+
+	    VariantClear(&role);
+
+	    /* Use description for everything else */
+	    BSTR desc = NULL;
+	    HRESULT hrDesc = TkRootAccessible_get_accDescription(
+								 (IAccessible *)provider->msaaProvider, varChild, &desc);
+	    if (SUCCEEDED(hrDesc) && desc) {
 		pRetVal->vt = VT_BSTR;
-		pRetVal->bstrVal = name;
-	    } 
+		pRetVal->bstrVal = desc;
+	    } else {
+		pRetVal->vt = VT_EMPTY;
+	    }
 	    break;
 	}
- 
-    case 30003: /* UIA_ControlTypePropertyId */
-        {
-            VARIANT role;
-            VariantInit(&role);
-            VARIANT varChild;
-            varChild.vt = VT_I4;
-            varChild.lVal = CHILDID_SELF;
-            HRESULT hr = TkRootAccessible_get_accRole(
-						      (IAccessible *)provider->msaaProvider, varChild, &role);
-            if (SUCCEEDED(hr) && role.vt == VT_I4) {
-                /* Map MSAA role to UIA ControlType */
-                LONG controlType = 50033; /* UIA_PaneControlTypeId - Default */
-                for (int i = 0; roleMap[i].tkrole != NULL; i++) {
-                    if (roleMap[i].winrole == role.lVal) {
-                        controlType = roleMap[i].uiaControlType;
-                        break;
-                    }
-                }
-                pRetVal->vt = VT_I4;
-                pRetVal->lVal = controlType;
-            }
-            VariantClear(&role);
-            break;
-        }
 
     case 30004: /* UIA_HelpTextPropertyId - Maps to MSAA description */
 	{
