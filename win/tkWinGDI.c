@@ -384,7 +384,8 @@ static int GdiPhoto(
     int oldmode;		/* For saving the old stretch mode. */
     POINT pt;			/* For saving the brush org. */
     char *pbuf = NULL;
-    int i, j, k;
+    int i, k;
+    Tcl_Size j;
     int retval = TCL_OK;
 
     /*
@@ -1846,7 +1847,7 @@ static int GdiMap(
     SIZE vextent;	/* Viewport extent. */
     POINT worigin;	/* Device origin. */
     POINT vorigin;	/* Viewport origin. */
-    int argno;
+    Tcl_Size argno;
 
     /* Keep track of what parts of the function need to be executed. */
     int need_usage   = 0;
