@@ -40,6 +40,10 @@ static INIT_ONCE TkInitOnce = INIT_ONCE_STATIC_INIT;
 #define TkGlobalLock()   EnterCriticalSection(&TkGlobalLock)
 #define TkGlobalUnlock() LeaveCriticalSection(&TkGlobalLock)
 
+#ifndef DEBUG_ACCESSIBILITY
+#   define DEBUG_ACCESSIBILITY 0
+#endif
+
 /* TkRootAccessible structure. */
 typedef struct TkRootAccessible {
     IAccessibleVtbl *lpVtbl;
@@ -65,7 +69,7 @@ typedef struct TkUiaProvider {
  * Map script-level roles to C roles for both MSAA and UI Automation.
  * UI Automation control type values are from UIAutomation.h.
  */
- 
+
 struct WinRoleMap {
     const char *tkrole;
     LONG winrole;
@@ -213,10 +217,10 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
 /*
  *----------------------------------------------------------------------
  *
- * Prototypes for UI Automation Provider. UI Automation is being implemented 
+ * Prototypes for UI Automation Provider. UI Automation is being implemented
  * as a layer above the MSAA implementation, using MSAA as the data provider
  * for the UI Automation functionality. This is to better support screen readers
- * such as Microsoft Narrator that rely more on UIA than MSAA. 
+ * such as Microsoft Narrator that rely more on UIA than MSAA.
  *
  *----------------------------------------------------------------------
  */
@@ -502,23 +506,23 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
 
     switch (dispIdMember) {
     case DISPID_ACC_NAME:
-        return TkRootAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
+	return TkRootAccessible_get_accName(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_VALUE:
-        return TkRootAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
+	return TkRootAccessible_get_accValue(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_ROLE:
-        return TkRootAccessible_get_accRole(this, selfVar, pVarResult);
+	return TkRootAccessible_get_accRole(this, selfVar, pVarResult);
     case DISPID_ACC_STATE:
-        return TkRootAccessible_get_accState(this, selfVar, pVarResult);
+	return TkRootAccessible_get_accState(this, selfVar, pVarResult);
     case DISPID_ACC_DESCRIPTION:
-        return TkRootAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
+	return TkRootAccessible_get_accDescription(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_HELP:
-        return TkRootAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
+	return TkRootAccessible_get_accHelp(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_DEFAULTACTION:
-        return TkRootAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
+	return TkRootAccessible_get_accDefaultAction(this, selfVar, &pVarResult->bstrVal);
     case DISPID_ACC_DODEFAULTACTION:
-        return TkRootAccessible_accDoDefaultAction(this, selfVar);
+	return TkRootAccessible_accDoDefaultAction(this, selfVar);
     case DISPID_ACC_FOCUS:
-        return TkRootAccessible_get_accFocus(this, pVarResult);
+	return TkRootAccessible_get_accFocus(this, pVarResult);
     }
     return S_OK;
 }
@@ -918,14 +922,18 @@ static void ComputeAndCacheCheckedState(
     Tcl_Interp *interp)
 {
     if (!win || !interp) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "ComputeAndCacheCheckedState: Invalid win or interp\n");
+#endif
 	return;
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "ComputeAndCacheCheckedState: No accessibility object for %s\n", Tk_PathName(win));
-	return;
+#endif
+    return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 
@@ -935,8 +943,10 @@ static void ComputeAndCacheCheckedState(
 	tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
     }
     if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && strcmp(tkrole, "Radiobutton") != 0)) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "ComputeAndCacheCheckedState: Not a checkbutton or radiobutton: %s\n", tkrole ? tkrole : "null");
-	return;
+#endif
+    return;
     }
 
     const char *path = Tk_PathName(win);
@@ -946,7 +956,9 @@ static void ComputeAndCacheCheckedState(
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 	varName = Tcl_GetStringResult(interp);
     } else {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "ComputeAndCacheCheckedState: Failed to get -variable for %s\n", path);
+#endif
     }
     Tcl_DecrRefCount(varCmd);
 
@@ -954,7 +966,9 @@ static void ComputeAndCacheCheckedState(
     if (varName && *varName) {
 	const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 	if (!varVal) {
+#if DEBUG_ACCESSIBILITY
 	    fprintf(stderr, "ComputeAndCacheCheckedState: Variable %s not found for %s\n", varName, path);
+#endif
 	} else {
 	    const char *onValue = NULL;
 	    Tcl_Obj *valueCmd = NULL;
@@ -968,15 +982,19 @@ static void ComputeAndCacheCheckedState(
 		if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 		    onValue = Tcl_GetStringResult(interp);
 		} else {
+#if DEBUG_ACCESSIBILITY
 		    fprintf(stderr, "ComputeAndCacheCheckedState: Failed to get -onvalue/-value for %s\n", path);
+#endif
 		}
 		Tcl_DecrRefCount(valueCmd);
 	    }
 	    if (varVal && onValue && strcmp(varVal, onValue) == 0) {
 		isChecked = 1;
 	    }
+#if DEBUG_ACCESSIBILITY
 	    fprintf(stderr, "ComputeAndCacheCheckedState: %s is %s (var=%s, onValue=%s)\n",
 		    path, isChecked ? "checked" : "unchecked", varVal, onValue);
+#endif
 	}
     } else {
 	/* Fallback: Check widget's internal state for ttk widgets */
@@ -987,7 +1005,9 @@ static void ComputeAndCacheCheckedState(
 	    if (result && strcmp(result, "1") == 0) {
 		isChecked = 1;
 	    }
+#if DEBUG_ACCESSIBILITY
 	    fprintf(stderr, "ComputeAndCacheCheckedState: %s instate selected = %s\n", path, result);
+#endif
 	}
 	Tcl_DecrRefCount(stateCmd);
     }
@@ -1002,7 +1022,9 @@ static void ComputeAndCacheCheckedState(
     Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
     Tcl_IncrRefCount(valObj);
     Tcl_SetHashValue(valuePtr, valObj);
+#if DEBUG_ACCESSIBILITY
     fprintf(stderr, "ComputeAndCacheCheckedState: Cached value=%s for %s\n", buf, path);
+#endif
     TkGlobalUnlock();
 
     /* Notify MSAA with both events */
@@ -1014,12 +1036,18 @@ static void ComputeAndCacheCheckedState(
 	    HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 	    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
 	    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+#if DEBUG_ACCESSIBILITY
 	    fprintf(stderr, "ComputeAndCacheCheckedState: Notified MSAA for %s (childId=%ld)\n", path, childId);
+#endif
 	} else {
+#if DEBUG_ACCESSIBILITY
 	    fprintf(stderr, "ComputeAndCacheCheckedState: Invalid childId for %s\n", path);
+#endif
 	}
     } else {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "ComputeAndCacheCheckedState: No toplevel for %s\n", path);
+#endif
     }
 }
 
@@ -1029,12 +1057,16 @@ static HRESULT TkAccState(
     VARIANT *pvarState)
 {
     if (!win || !pvarState) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkAccState: Invalid win or pvarState\n");
+#endif
 	return E_INVALIDARG;
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkAccState: No accessibility object for %s\n", Tk_PathName(win));
+#endif
 	return S_FALSE;
     }
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
@@ -1057,12 +1089,16 @@ static HRESULT TkAccState(
 	    Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
 	    if (valuePtr) {
 		const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
+#if DEBUG_ACCESSIBILITY
 		fprintf(stderr, "TkAccState: %s value=%s\n", Tk_PathName(win), value);
+#endif
 		if (value && strcmp(value, "1") == 0) {
 		    state |= STATE_SYSTEM_CHECKED;
 		}
 	    } else {
+#if DEBUG_ACCESSIBILITY
 		fprintf(stderr, "TkAccState: No value cached for %s\n", Tk_PathName(win));
+#endif
 	    }
 	}
     }
@@ -1074,7 +1110,9 @@ static HRESULT TkAccState(
 
     pvarState->vt = VT_I4;
     pvarState->lVal = state;
+#if DEBUG_ACCESSIBILITY
     fprintf(stderr, "TkAccState: %s state=0x%lx\n", Tk_PathName(win), state);
+#endif
     return S_OK;
 }
 
@@ -1121,7 +1159,9 @@ static void TkDoDefaultAction(
     ActionEvent *event = NULL;
     if (!childId) {
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: Invalid childId\n");
+#endif
 	return;
     }
     TkGlobalLock();
@@ -1139,49 +1179,63 @@ static void TkDoDefaultAction(
     if (!toplevel) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: No toplevel for childId %d\n", childId);
+#endif
 	return;
     }
     Tk_Window win = GetTkWindowForChildId(childId, toplevel);
     if (!win) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: No window for childId %d\n", childId);
+#endif
 	return;
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: No accessibility object for %s\n", Tk_PathName(win));
+#endif
 	return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     if (!AccessibleAttributes) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: No attributes for %s\n", Tk_PathName(win));
+#endif
 	return;
     }
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
     if (!hPtr2) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: No action for %s\n", Tk_PathName(win));
+#endif
 	return;
     }
     const char *action = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (!action) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: Invalid action for %s\n", Tk_PathName(win));
+#endif
 	return;
     }
     event = (ActionEvent *)ckalloc(sizeof(ActionEvent));
     if (event == NULL) {
 	TkGlobalUnlock();
 	mainThreadResult = E_OUTOFMEMORY;
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkDoDefaultAction: Memory allocation failed\n");
+#endif
 	return;
     }
     event->header.proc = ActionEventProc;
@@ -1536,13 +1590,17 @@ static void AssignChildIdsRecursive(
     Tk_Window toplevel)
 {
     if (!win || !interp || !toplevel || !Tk_IsMapped(win)) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "AssignChildIdsRecursive: Skipping %s (invalid or unmapped)\n",
 		win ? Tk_PathName(win) : "null");
+#endif
 	return;
     }
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) {
+#if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "AssignChildIdsRecursive: No childIdTable for toplevel %s\n", Tk_PathName(toplevel));
+#endif
 	return;
     }
     SetChildIdForTkWindow(win, *nextId, childIdTable);
@@ -1562,7 +1620,7 @@ static void AssignChildIdsRecursive(
  *
  * UI Automation Provider implementation. This is driven by the MSAA accessible
  * object; the UIA functions query obtain properties and data via the MSAA
- * interface. 
+ * interface.
  *
  *----------------------------------------------------------------------
  */
@@ -1574,26 +1632,26 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
     void **ppvObject)
 {
     if (!ppvObject) return E_INVALIDARG;
-    
-    if (IsEqualIID(riid, &IID_IUnknown) || 
-        IsEqualIID(riid, &IID_IRawElementProviderSimple)) {
-        *ppvObject = this;
-        TkUiaProvider_AddRef(this);
-        return S_OK;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+	IsEqualIID(riid, &IID_IRawElementProviderSimple)) {
+	*ppvObject = this;
+	TkUiaProvider_AddRef(this);
+	return S_OK;
     }
-    
-    /* 
-     * CRITICAL: Forward ALL other interfaces to the MSAA provider. 
+
+    /*
+     * CRITICAL: Forward ALL other interfaces to the MSAA provider.
      * This includes IAccessible, IDispatch, and any other interfaces
      * that the native Win32 menus already implement.
      */
-    
+
     TkUiaProvider *provider = (TkUiaProvider *)this;
     if (provider->msaaProvider) {
-        return provider->msaaProvider->lpVtbl->QueryInterface(
-            (IAccessible *)provider->msaaProvider, riid, ppvObject);
+	return provider->msaaProvider->lpVtbl->QueryInterface(
+	    (IAccessible *)provider->msaaProvider, riid, ppvObject);
     }
-    
+
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
@@ -1616,12 +1674,12 @@ static ULONG STDMETHODCALLTYPE TkUiaProvider_Release(
     TkUiaProvider *provider = (TkUiaProvider *)this;
     ULONG count = InterlockedDecrement(&provider->refCount);
     if (count == 0) {
-        TkGlobalLock();
-        if (provider->msaaProvider) {
-            TkRootAccessible_Release((IAccessible *)provider->msaaProvider);
-        }
-        ckfree(provider);
-        TkGlobalUnlock();
+	TkGlobalLock();
+	if (provider->msaaProvider) {
+	    TkRootAccessible_Release((IAccessible *)provider->msaaProvider);
+	}
+	ckfree(provider);
+	TkGlobalUnlock();
     }
     return count;
 }
@@ -1639,44 +1697,44 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
 /* UI Automation Pattern Provider. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
     TCL_UNUSED(IRawElementProviderSimple *), /* this */
-    PATTERNID patternId, 
+    PATTERNID patternId,
     IUnknown **pRetVal)
 {
     if (!pRetVal) return E_INVALIDARG;
     *pRetVal = NULL;
-    
+
     /* Support basic patterns based on control type */
     switch (patternId) {
-        case 10000: /* UIA_InvokePatternId */
-        case 10001: /* UIA_SelectionPatternId */
-        case 10002: /* UIA_ValuePatternId */
-        case 10004: /* UIA_ScrollPatternId */
-            /* These patterns could be implemented in the future */
-            break;
+	case 10000: /* UIA_InvokePatternId */
+	case 10001: /* UIA_SelectionPatternId */
+	case 10002: /* UIA_ValuePatternId */
+	case 10004: /* UIA_ScrollPatternId */
+	    /* These patterns could be implemented in the future */
+	    break;
     }
-    
+
     return S_OK;
 }
 
 /* UI Automation Property Provider. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     IRawElementProviderSimple *this,
-    PROPERTYID propertyId, 
+    PROPERTYID propertyId,
     VARIANT *pRetVal)
 {
     if (!pRetVal) return E_INVALIDARG;
-    
+
     VariantInit(pRetVal);
     TkUiaProvider *provider = (TkUiaProvider *)this;
-    
+
     if (!provider->msaaProvider) {
-        return E_FAIL;
+	return E_FAIL;
     }
-     
+
     TkGlobalLock();
-    
+
     switch (propertyId) {
- 
+
     case 30005: /* UIA_NamePropertyId */
 	{
 	    VARIANT varChild;
@@ -1731,43 +1789,43 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    }
 	    break;
 	}
-        
-        case 30010: /* UIA_IsEnabledPropertyId */
-        {
-            VARIANT state;
-            VariantInit(&state);
-            VARIANT varChild;
-            varChild.vt = VT_I4;
-            varChild.lVal = CHILDID_SELF;
-            HRESULT hr = TkRootAccessible_get_accState(
-                (IAccessible *)provider->msaaProvider, varChild, &state);
-            if (SUCCEEDED(hr) && state.vt == VT_I4) {
-                pRetVal->vt = VT_BOOL;
-                pRetVal->boolVal = (state.lVal & STATE_SYSTEM_UNAVAILABLE) ? VARIANT_FALSE : VARIANT_TRUE;
-            }
-            VariantClear(&state);
-            break;
-        }
-        
-        case 30014: /* UIA_IsKeyboardFocusablePropertyId */
-            pRetVal->vt = VT_BOOL;
-            pRetVal->boolVal = VARIANT_TRUE;
-            break;
-            
-        case 30008: /* UIA_HasKeyboardFocusPropertyId */
-        {
-            VARIANT focus;
-            VariantInit(&focus);
-            HRESULT hr = TkRootAccessible_get_accFocus(
-                (IAccessible *)provider->msaaProvider, &focus);
-            if (SUCCEEDED(hr) && focus.vt == VT_I4) {
-                pRetVal->vt = VT_BOOL;
-                pRetVal->boolVal = (focus.lVal == CHILDID_SELF) ? VARIANT_TRUE : VARIANT_FALSE;
-            }
-            VariantClear(&focus);
-            break;
-        }
-        
+
+	case 30010: /* UIA_IsEnabledPropertyId */
+	{
+	    VARIANT state;
+	    VariantInit(&state);
+	    VARIANT varChild;
+	    varChild.vt = VT_I4;
+	    varChild.lVal = CHILDID_SELF;
+	    HRESULT hr = TkRootAccessible_get_accState(
+		(IAccessible *)provider->msaaProvider, varChild, &state);
+	    if (SUCCEEDED(hr) && state.vt == VT_I4) {
+		pRetVal->vt = VT_BOOL;
+		pRetVal->boolVal = (state.lVal & STATE_SYSTEM_UNAVAILABLE) ? VARIANT_FALSE : VARIANT_TRUE;
+	    }
+	    VariantClear(&state);
+	    break;
+	}
+
+	case 30014: /* UIA_IsKeyboardFocusablePropertyId */
+	    pRetVal->vt = VT_BOOL;
+	    pRetVal->boolVal = VARIANT_TRUE;
+	    break;
+
+	case 30008: /* UIA_HasKeyboardFocusPropertyId */
+	{
+	    VARIANT focus;
+	    VariantInit(&focus);
+	    HRESULT hr = TkRootAccessible_get_accFocus(
+		(IAccessible *)provider->msaaProvider, &focus);
+	    if (SUCCEEDED(hr) && focus.vt == VT_I4) {
+		pRetVal->vt = VT_BOOL;
+		pRetVal->boolVal = (focus.lVal == CHILDID_SELF) ? VARIANT_TRUE : VARIANT_FALSE;
+	    }
+	    VariantClear(&focus);
+	    break;
+	}
+
     case 30016: /* UIA_IsControlElementPropertyId */
     case 30017: /* UIA_IsContentElementPropertyId */
 	{
@@ -1794,44 +1852,43 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    break;
 	}
 
-            
-        case 30011: /* UIA_AutomationIdPropertyId */
-            if (provider->msaaProvider->pathName) {
-                Tcl_DString ds;
-                Tcl_DStringInit(&ds);
-                pRetVal->vt = VT_BSTR;
-                pRetVal->bstrVal = SysAllocString(
-                    Tcl_UtfToWCharDString(provider->msaaProvider->pathName, -1, &ds));
-                Tcl_DStringFree(&ds);
-            }
-            break;
-            
-        case 30012: /* UIA_ClassNamePropertyId */
-            if (provider->msaaProvider->win) {
-                const char *className = Tk_Class(provider->msaaProvider->win);
-                if (className) {
-                    Tcl_DString ds;
-                    Tcl_DStringInit(&ds);
-                    pRetVal->vt = VT_BSTR;
-                    pRetVal->bstrVal = SysAllocString(
-                        Tcl_UtfToWCharDString(className, -1, &ds));
-                    Tcl_DStringFree(&ds);
-                }
-            }
-            break;
-            
-        case 30020: /* UIA_NativeWindowHandlePropertyId */
-            if (provider->msaaProvider->hwnd) {
-                pRetVal->vt = VT_I4;
-                pRetVal->lVal = (LONG)(LONG_PTR)provider->msaaProvider->hwnd;
-            }
-            break;
-            
-        default:
-            pRetVal->vt = VT_EMPTY;
-            break;
+	case 30011: /* UIA_AutomationIdPropertyId */
+	    if (provider->msaaProvider->pathName) {
+		Tcl_DString ds;
+		Tcl_DStringInit(&ds);
+		pRetVal->vt = VT_BSTR;
+		pRetVal->bstrVal = SysAllocString(
+		    Tcl_UtfToWCharDString(provider->msaaProvider->pathName, -1, &ds));
+		Tcl_DStringFree(&ds);
+	    }
+	    break;
+
+	case 30012: /* UIA_ClassNamePropertyId */
+	    if (provider->msaaProvider->win) {
+		const char *className = Tk_Class(provider->msaaProvider->win);
+		if (className) {
+		    Tcl_DString ds;
+		    Tcl_DStringInit(&ds);
+		    pRetVal->vt = VT_BSTR;
+		    pRetVal->bstrVal = SysAllocString(
+			Tcl_UtfToWCharDString(className, -1, &ds));
+		    Tcl_DStringFree(&ds);
+		}
+	    }
+	    break;
+
+	case 30020: /* UIA_NativeWindowHandlePropertyId */
+	    if (provider->msaaProvider->hwnd) {
+		pRetVal->vt = VT_I4;
+		pRetVal->lVal = (LONG)(LONG_PTR)provider->msaaProvider->hwnd;
+	    }
+	    break;
+
+	default:
+	    pRetVal->vt = VT_EMPTY;
+	    break;
     }
-    
+
     TkGlobalUnlock();
     return S_OK;
 }
@@ -1853,16 +1910,16 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(
 static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider)
 {
     if (!msaaProvider) return NULL;
-    
+
     TkUiaProvider *provider = (TkUiaProvider *)ckalloc(sizeof(TkUiaProvider));
     if (!provider) return NULL;
-    
+
     provider->lpVtbl = &tkUiaProviderVtbl;
     provider->msaaProvider = msaaProvider;
     provider->refCount = 1;
-    
+
     TkRootAccessible_AddRef((IAccessible *)msaaProvider);
-    
+
     return provider;
 }
 
@@ -1872,16 +1929,16 @@ static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider)
 static BOOL InitializeUIAutomation(void)
 {
     if (g_UIAutomationInitialized) {
-        return TRUE;
+	return TRUE;
     }
-    
-    HRESULT hr = CoCreateInstance(&CLSID_CUIAutomation, NULL, CLSCTX_INPROC_SERVER, 
-                                 &IID_IUIAutomation, (void**)&g_pUIAutomation);
+
+    HRESULT hr = CoCreateInstance(&CLSID_CUIAutomation, NULL, CLSCTX_INPROC_SERVER,
+				 &IID_IUIAutomation, (void**)&g_pUIAutomation);
     if (SUCCEEDED(hr)) {
-        g_UIAutomationInitialized = TRUE;
-        return TRUE;
+	g_UIAutomationInitialized = TRUE;
+	return TRUE;
     }
-    
+
     return FALSE;
 }
 
@@ -1891,11 +1948,11 @@ static BOOL InitializeUIAutomation(void)
 void InitUiaProviderTable(void)
 {
     if (!tkUiaProviderTableInitialized) {
-        tkUiaProviderTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-        if (tkUiaProviderTable) {
-            Tcl_InitHashTable(tkUiaProviderTable, TCL_ONE_WORD_KEYS);
-            tkUiaProviderTableInitialized = 1;
-        }
+	tkUiaProviderTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	if (tkUiaProviderTable) {
+	    Tcl_InitHashTable(tkUiaProviderTable, TCL_ONE_WORD_KEYS);
+	    tkUiaProviderTableInitialized = 1;
+	}
     }
 }
 
@@ -1920,76 +1977,76 @@ void HandleWMGetObjectOnMainThread(
     LPARAM lParam = (LPARAM)args[2];
     LRESULT *outResult = (LRESULT *)args[3];
     if (outResult) *outResult = 0;
-    
+
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
     if (!tkwin) {
-        /*
+	/*
 	 * Even if it's not a Tk window we recognize, let Windows handle it.
 	 * This allows native menus to work through their built-in MSAA.
 	 */
-        return;
+	return;
     }
 
     /* For UIA requests, create our provider but ensure it delegates to MSAA. */
     if (lParam == (LPARAM)&IID_IRawElementProviderSimple) {
-        InitializeUIAutomation();
-        
-        TkUiaProvider *uiaProvider = GetUiaProviderForWindow(tkwin);
-        if (!uiaProvider) {
-            TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
-            if (!msaaProvider) {
-                /* Create MSAA provider for this window. */
-                Tcl_Interp *interp = Tk_Interp(tkwin);
-                if (!interp) return;
-                
-                /*
+	InitializeUIAutomation();
+
+	TkUiaProvider *uiaProvider = GetUiaProviderForWindow(tkwin);
+	if (!uiaProvider) {
+	    TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
+	    if (!msaaProvider) {
+		/* Create MSAA provider for this window. */
+		Tcl_Interp *interp = Tk_Interp(tkwin);
+		if (!interp) return;
+
+		/*
 		 * For menu windows, we still create an MSAA provider.
 		 * The native Win32 menu MSAA will handle the actual
 		 * implementation.
 		 */
-                msaaProvider = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
-                if (msaaProvider) {
-                    TkRootAccessible_RegisterForCleanup(tkwin, msaaProvider);
-                }
-            }
-            if (msaaProvider) {
-                uiaProvider = CreateUiaProvider(msaaProvider);
-                if (uiaProvider) {
-                    TkGlobalLock();
-                    if (!tkUiaProviderTableInitialized) {
-                        InitUiaProviderTable();
-                    }
-                    Tcl_HashEntry *entry;
-                    int newEntry;
-                    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
-                    Tcl_SetHashValue(entry, uiaProvider);
-                    TkGlobalUnlock();
-                }
-            }
-        }
-        if (uiaProvider && outResult) {
-            *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, (IRawElementProviderSimple *)uiaProvider);
-        }
-        return;
+		msaaProvider = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
+		if (msaaProvider) {
+		    TkRootAccessible_RegisterForCleanup(tkwin, msaaProvider);
+		}
+	    }
+	    if (msaaProvider) {
+		uiaProvider = CreateUiaProvider(msaaProvider);
+		if (uiaProvider) {
+		    TkGlobalLock();
+		    if (!tkUiaProviderTableInitialized) {
+			InitUiaProviderTable();
+		    }
+		    Tcl_HashEntry *entry;
+		    int newEntry;
+		    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
+		    Tcl_SetHashValue(entry, uiaProvider);
+		    TkGlobalUnlock();
+		}
+	    }
+	}
+	if (uiaProvider && outResult) {
+	    *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, (IRawElementProviderSimple *)uiaProvider);
+	}
+	return;
     }
-    
+
     /*
      * For MSAA requests, let the existing implementation handle it.
      * This includes native menu objects.
      */
     if ((LONG)lParam == OBJID_CLIENT) {
-        TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
-        if (!acc) {
-            Tcl_Interp *interp = Tk_Interp(tkwin);
-            if (!interp) return;
-            acc = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
-            if (acc) {
-                TkRootAccessible_RegisterForCleanup(tkwin, acc);
-            }
-        }
-        if (acc && outResult) {
-            *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-        }
+	TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
+	if (!acc) {
+	    Tcl_Interp *interp = Tk_Interp(tkwin);
+	    if (!interp) return;
+	    acc = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
+	    if (acc) {
+		TkRootAccessible_RegisterForCleanup(tkwin, acc);
+	    }
+	}
+	if (acc && outResult) {
+	    *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
+	}
     }
 }
 
@@ -2152,22 +2209,22 @@ static int EmitSelectionChanged(
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
-        Tcl_WrongNumArgs(ip, 1, objv, "window?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(ip, 1, objv, "window?");
+	return TCL_ERROR;
     }
-    
+
     Tk_Window path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (!path) {
-        Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
+	return TCL_ERROR;
     }
-    
+
     Tk_Window toplevel = GetToplevelOfWidget(path);
     if (!toplevel || !Tk_IsTopLevel(toplevel)) {
-        Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
+	return TCL_ERROR;
     }
-    
+
     Tk_MakeWindowExist(path);
 
     /* Update checked state. */
@@ -2176,16 +2233,16 @@ static int EmitSelectionChanged(
     TkGlobalLock();
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
-    
+
     if (childId > 0) {
-        HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-        
-        /* Send comprehensive notifications. */
-        NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
-        NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-        NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
-        
-        /* Force UIA property change notification. */
+	HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+
+	/* Send comprehensive notifications. */
+	NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+	NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+	NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
+
+	/* Force UIA property change notification. */
 	TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
 	if (tkProvider) {
 	    IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
@@ -2206,7 +2263,7 @@ static int EmitSelectionChanged(
 	    VariantClear(&newVal);
 	}
     }
-    
+
     TkGlobalUnlock();
     return TCL_OK;
 }
@@ -2250,7 +2307,7 @@ void TkRootAccessible_RegisterForCleanup(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void TkRootAccessible_DestroyHandler(
     void *clientData,
     XEvent *eventPtr)
@@ -2259,27 +2316,27 @@ static void TkRootAccessible_DestroyHandler(
     TkRootAccessible *tkAccessible = (TkRootAccessible *)clientData;
     if (!tkAccessible || !tkAccessible->toplevel) return;
     TkGlobalLock();
-    
+
     /* Clean up MSAA table */
     if (tkAccessibleTableInitialized) {
-        Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->toplevel);
-        if (entry) {
-            Tcl_DeleteHashEntry(entry);
-        }
+	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->toplevel);
+	if (entry) {
+	    Tcl_DeleteHashEntry(entry);
+	}
     }
-    
+
     /* Clean up UI Automation provider table */
     if (tkUiaProviderTableInitialized) {
-        Tcl_HashEntry *entry = Tcl_FindHashEntry(tkUiaProviderTable, tkAccessible->toplevel);
-        if (entry) {
-            TkUiaProvider *uiaProvider = (TkUiaProvider *)Tcl_GetHashValue(entry);
-            if (uiaProvider) {
-                TkUiaProvider_Release((IRawElementProviderSimple *)uiaProvider);
-            }
-            Tcl_DeleteHashEntry(entry);
-        }
+	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkUiaProviderTable, tkAccessible->toplevel);
+	if (entry) {
+	    TkUiaProvider *uiaProvider = (TkUiaProvider *)Tcl_GetHashValue(entry);
+	    if (uiaProvider) {
+		TkUiaProvider_Release((IRawElementProviderSimple *)uiaProvider);
+	    }
+	    Tcl_DeleteHashEntry(entry);
+	}
     }
-    
+
     ClearChildIdTableForToplevel(tkAccessible->toplevel);
     TkRootAccessible_Release((IAccessible *)tkAccessible);
     TkGlobalUnlock();
