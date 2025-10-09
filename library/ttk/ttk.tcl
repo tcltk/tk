@@ -15,6 +15,7 @@ namespace eval ::ttk {
 source -encoding utf-8 [file join $::ttk::library fonts.tcl]
 source -encoding utf-8 [file join $::ttk::library cursors.tcl]
 source -encoding utf-8 [file join $::ttk::library utils.tcl]
+source -encoding utf-8 [file join $::ttk::library elements.tcl]
 
 ## ttk::deprecated $old $new --
 #	Define $old command as a deprecated alias for $new command
@@ -57,6 +58,8 @@ package ifneeded tile 0.8.6 { package provide tile 0.8.6 }
 #	Sends a <<ThemeChanged>> virtual event to all widgets.
 #
 proc ::ttk::ThemeChanged {} {
+    toggleswitch::CondUpdateElements			;# see elements.tcl
+
     set Q .
     while {[llength $Q]} {
 	set QN [list]
@@ -142,6 +145,7 @@ proc ::ttk::setTreeviewRowHeight {} {
 #
 source -encoding utf-8 [file join $::ttk::library button.tcl]
 source -encoding utf-8 [file join $::ttk::library menubutton.tcl]
+source -encoding utf-8 [file join $::ttk::library toggleswitch.tcl]
 source -encoding utf-8 [file join $::ttk::library scrollbar.tcl]
 source -encoding utf-8 [file join $::ttk::library scale.tcl]
 source -encoding utf-8 [file join $::ttk::library progress.tcl]

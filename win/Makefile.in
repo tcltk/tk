@@ -437,6 +437,7 @@ TTK_OBJS = \
 	ttkState.$(OBJEXT) \
 	ttkTagSet.$(OBJEXT) \
 	ttkTheme.$(OBJEXT) \
+	ttkToggleswitch.$(OBJEXT) \
 	ttkTrace.$(OBJEXT) \
 	ttkTrack.$(OBJEXT) \
 	ttkTreeview.$(OBJEXT) \

@@ -385,8 +385,8 @@ TTK_OBJS = \
 	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNotebook.o \
 	ttkPanedwindow.o ttkProgress.o ttkScale.o ttkScrollbar.o ttkScroll.o \
 	ttkSeparator.o ttkSquare.o ttkState.o \
-	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
-	ttkWidget.o ttkStubInit.o
+	ttkTagSet.o ttkTheme.o ttkToggleswitch.o ttkTrace.o ttkTrack.o \
+	ttkTreeview.o ttkWidget.o ttkStubInit.o
 
 STUB_OBJS = tkStubInit.o
 
@@ -498,6 +498,7 @@ TTK_SRCS = \
 	$(TTK_DIR)/ttkState.c \
 	$(TTK_DIR)/ttkTagSet.c \
 	$(TTK_DIR)/ttkTheme.c \
+	$(TTK_DIR)/ttkToggleswitch.c \
 	$(TTK_DIR)/ttkTrace.c \
 	$(TTK_DIR)/ttkTrack.c \
 	$(TTK_DIR)/ttkTreeview.c \
@@ -1574,6 +1575,9 @@ ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 
 ttkTheme.o: $(TTK_DIR)/ttkTheme.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTheme.c
+
+ttkToggleswitch.o: $(TTK_DIR)/ttkToggleswitch.c
+	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkToggleswitch.c
 
 ttkTrace.o: $(TTK_DIR)/ttkTrace.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTrace.c
