@@ -14,7 +14,6 @@
  */
 
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1098,6 +1097,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	GValue gval = G_VALUE_INIT;
 	tk_get_current_value(ATK_VALUE(obj), &gval);
 
+#if 0 /* dead code */
 	gdouble new_val = 0.0;
 	if (G_VALUE_HOLDS_DOUBLE(&gval)) {
 	    new_val = g_value_get_double(&gval);
@@ -1105,6 +1105,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	    const char *s = g_value_get_string(&gval);
 	    if (s) new_val = g_ascii_strtod(s, NULL);
 	}
+#endif /* dead code */
 
 	/* Notify ATK clients. */
 	g_signal_emit_by_name(obj, "value-changed");
@@ -2679,6 +2680,7 @@ static int EmitSelectionChanged(
 	    GValue gval = G_VALUE_INIT;
 	    tk_get_current_value(ATK_VALUE(obj), &gval);
 
+#if 0 /* dead code */
 	    gdouble new_val = 0.0;
 	    if (G_VALUE_HOLDS_DOUBLE(&gval)) {
 		new_val = g_value_get_double(&gval);
@@ -2686,6 +2688,7 @@ static int EmitSelectionChanged(
 		const char *s = g_value_get_string(&gval);
 		if (s) new_val = g_ascii_strtod(s, NULL);
 	    }
+#endif /* dead code */
 
 	    /* Notify ATK clients. */
 	    g_signal_emit_by_name(obj, "value-changed");

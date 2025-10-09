@@ -14,8 +14,10 @@
 if {[tk windowingsystem] eq "x11" && ([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq "")} {
     # On X11, do not load if screen reader is not running - macOS and Windows
     # handle this automatically.
-    return
-}
+    proc ::tk::accessible args {
+	return 0
+    }
+} else {
 if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} {
 
     # Add border to all X11 widgets with accessible focus. A highlight rectangle
@@ -1004,7 +1006,7 @@ namespace eval ::tk::accessible {
     namespace ensemble create
 }
 
-
+}
 # Add these commands to the tk command ensemble: tk accessible.
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
