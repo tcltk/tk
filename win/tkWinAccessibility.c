@@ -1672,7 +1672,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     if (!provider->msaaProvider) {
         return E_FAIL;
     }
-    
+     
     TkGlobalLock();
     
     switch (propertyId) {
@@ -1683,24 +1683,28 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    varChild.vt = VT_I4;
 	    varChild.lVal = CHILDID_SELF;
 
+	    /* Determine role to filter menus. */
 	    VARIANT role;
 	    VariantInit(&role);
 	    HRESULT hrRole = TkRootAccessible_get_accRole(
 							  (IAccessible *)provider->msaaProvider, varChild, &role);
 
-	    if (SUCCEEDED(hrRole) && role.vt == VT_I4 &&
-		(role.lVal == ROLE_SYSTEM_MENUPOPUP ||
-		 role.lVal == ROLE_SYSTEM_MENUITEM ||
-		 role.lVal == ROLE_SYSTEM_MENUBAR)) {
-		/* Let Windows' native accessibility handle menus */
-		pRetVal->vt = VT_EMPTY;
-		VariantClear(&role);
-		break;
+	    if (SUCCEEDED(hrRole) && role.vt == VT_I4) {
+		LONG r = role.lVal;
+
+		/* Skip menus so native UIA takes over. */
+		if (r == ROLE_SYSTEM_MENUBAR ||
+		    r == ROLE_SYSTEM_MENUPOPUP ||
+		    r == ROLE_SYSTEM_MENUITEM) {
+		    pRetVal->vt = VT_EMPTY;
+		    VariantClear(&role);
+		    break;
+		}
 	    }
 
 	    VariantClear(&role);
 
-	    /* Use description for everything else */
+	    /* Use accDescription text as label. */
 	    BSTR desc = NULL;
 	    HRESULT hrDesc = TkRootAccessible_get_accDescription(
 								 (IAccessible *)provider->msaaProvider, varChild, &desc);
@@ -1764,11 +1768,32 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
             break;
         }
         
-        case 30016: /* UIA_IsControlElementPropertyId */
-        case 30017: /* UIA_IsContentElementPropertyId */
-            pRetVal->vt = VT_BOOL;
-            pRetVal->boolVal = VARIANT_TRUE;
-            break;
+    case 30016: /* UIA_IsControlElementPropertyId */
+    case 30017: /* UIA_IsContentElementPropertyId */
+	{
+	    VARIANT varChild;
+	    varChild.vt = VT_I4;
+	    varChild.lVal = CHILDID_SELF;
+	    VARIANT role;
+	    VariantInit(&role);
+	    HRESULT hrRole = TkRootAccessible_get_accRole(
+							  (IAccessible *)provider->msaaProvider, varChild, &role);
+
+	    if (SUCCEEDED(hrRole) && role.vt == VT_I4 &&
+		(role.lVal == ROLE_SYSTEM_MENUBAR ||
+		 role.lVal == ROLE_SYSTEM_MENUPOPUP ||
+		 role.lVal == ROLE_SYSTEM_MENUITEM)) {
+		/* Not a control/content element → let system proxy handle */
+		pRetVal->vt = VT_BOOL;
+		pRetVal->boolVal = VARIANT_FALSE;
+	    } else {
+		pRetVal->vt = VT_BOOL;
+		pRetVal->boolVal = VARIANT_TRUE;
+	    }
+	    VariantClear(&role);
+	    break;
+	}
+
             
         case 30011: /* UIA_AutomationIdPropertyId */
             if (provider->msaaProvider->pathName) {
