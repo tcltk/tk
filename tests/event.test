@@ -1072,6 +1072,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
+    update; # Ensure that crossing events get processed.
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1205,7 +1206,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    update idletasks; #finish destroying .two
+    update; # Ensure that crossing events get processed.
     set result
 } -cleanup {
     bind all <Leave> {}
