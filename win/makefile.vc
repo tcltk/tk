@@ -298,6 +298,7 @@ TTK_OBJS = \
 	$(TMP_DIR)\ttkState.obj \
 	$(TMP_DIR)\ttkTagSet.obj \
 	$(TMP_DIR)\ttkTheme.obj \
+	$(TMP_DIR)\ttkToggleswitch.obj \
 	$(TMP_DIR)\ttkTrace.obj \
 	$(TMP_DIR)\ttkTrack.obj \
 	$(TMP_DIR)\ttkTreeview.obj \

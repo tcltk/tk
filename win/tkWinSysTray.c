@@ -101,10 +101,12 @@ DrawXORMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Account for height*2 thing */
     lpIcon->lpbi->bmiHeader.biHeight /= 2;
@@ -152,10 +154,12 @@ DrawANDMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Need a bitmap header for the mono mask */
     lpbi = ckalloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
@@ -562,8 +566,9 @@ TaskbarExpandPercents(
 	    ptrdiff_t dist = dst - after;
 	    int alloclen = ALLOCLEN;
 	    newspace = (char *)ckalloc(alloclen);
-	    if (dist>0)
+	    if (dist>0) {
 		memcpy(newspace, after, dist);
+	    }
 	    if (after && *aftersize) {
 		ckfree(after);
 	    }
@@ -825,8 +830,9 @@ CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
     HINSTANCE hInstance = GETHINSTANCE;
     if (!registered) {
-	if (!RegisterHandlerClass(hInstance))
+	if (!RegisterHandlerClass(hInstance)) {
 	    return 0;
+	}
 	registered = 1;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
@@ -917,7 +923,7 @@ WinSystrayCmd(
     int cmd, opt;
 
     HICON hIcon;
-    int i;
+    Tcl_Size i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr = NULL;
 
