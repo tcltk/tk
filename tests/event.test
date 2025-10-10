@@ -1314,6 +1314,7 @@ test event-9.20.exp2 {Successive destructions (pointer window + ancestors includ
     bind all <Leave> $bindSav(Leave)
     bind all <Enter> $bindSav(Enter)
     unset result
+    wm deiconify .; update
 } -result {|}
 
 monitorWindowEvents off
