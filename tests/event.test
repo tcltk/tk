@@ -1309,6 +1309,7 @@ test event-9.20.exp2 {Successive destructions (pointer window + ancestors includ
     waitForWindowEvent . <Enter> 2000; # add ample time for any overloaded WindowServer to recover
     destroy .two
     update; # Ensure that crossing events get processed.
+    puts "--END_OF_UPDATE--"
     set result
 } -cleanup {
     bind all <Leave> $bindSav(Leave)
