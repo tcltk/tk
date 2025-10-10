@@ -14,7 +14,7 @@ ttk::toggleswitch \- Create and manipulate a toggleswitch widget
 .BE
 .SH DESCRIPTION
 .PP
-A \fBttk::toggleswitch\fR widget is used to show or change a binary setting. 
+A \fBttk::toggleswitch\fR widget is used to show or change a binary setting.
 It consists of a horizontal \fItrough\fR (a fully rounded filled rectangle)
 and a \fIslider\fR (a filled circle contained in the trough).  Their
 dimensions depend on the display's scaling level, the current theme, and the
@@ -32,7 +32,7 @@ color, and are automatically adapted whenever one of these global system
 settings changes.
 .PP
 The implementation creates these elements when needed with the aid of generic
-code for arbitrary themes and theme-specific one for a few built-in themes. 
+code for arbitrary themes and theme-specific one for a few built-in themes.
 Applications can add \fIexplicit\fR support for any theme \fItheme\fR by
 providing an appropriate command of the name
 \fBttk::toggleswitch::CreateElements_\fR\fItheme\fR.
@@ -68,7 +68,7 @@ option's value will automatically change to \fBToggleswitch\fR\fIsize\fR if
 its previous or requested value was \fBToggleswitch1\fR, \fBToggleswitch2\fR,
 or \fBToggleswitch3\fR, and to \fIprefix\fR.\fBToggleswitch\fR\fIsize\fR if
 its previous or requested value was \fIprefix\fR.\fBToggleswitch1\fR,
-\fIprefix\fR.\fBToggleswitch2\fR, or \fIprefix\fR.\fBToggleswitch3\fR. 
+\fIprefix\fR.\fBToggleswitch2\fR, or \fIprefix\fR.\fBToggleswitch3\fR.
 Conversely, by setting the \fB-style\fR option to a value of the form
 \fBToggleswitch\fR\fIsize\fR or \fIprefix\fR.\fBToggleswitch\fR\fIsize\fR
 (where \fIsize\fR is one of \fB1\fR, \fB2\fR, or \fB3\fR), the \fB-size\fR
