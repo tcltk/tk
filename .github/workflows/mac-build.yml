@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "bug-c494cc25c4"
     tags:
     - "core-**"
 permissions:
@@ -12,7 +13,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   framework:
-    runs-on: macos-26
+    runs-on: macos-24
     defaults:
       run:
         shell: bash
@@ -56,7 +57,7 @@ jobs:
           fi
         timeout-minutes: 30
   prefix:
-    runs-on: macos-26
+    runs-on: macos-24
     strategy:
       matrix:
         symbols:
