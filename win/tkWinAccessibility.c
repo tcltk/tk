@@ -1741,7 +1741,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    varChild.vt = VT_I4;
 	    varChild.lVal = CHILDID_SELF;
 
-	    /* Determine role to filter menus. */
+	    /* Determine role to filter menus - let Tk's native menu handle those. */
 	    VARIANT role;
 	    VariantInit(&role);
 	    HRESULT hrRole = TkRootAccessible_get_accRole(
@@ -1750,7 +1750,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    if (SUCCEEDED(hrRole) && role.vt == VT_I4) {
 		LONG r = role.lVal;
 
-		/* Skip menus so native UIA takes over. */
+		/* Skip menus so Tk's native menu accessibility takes over. */
 		if (r == ROLE_SYSTEM_MENUBAR ||
 		    r == ROLE_SYSTEM_MENUPOPUP ||
 		    r == ROLE_SYSTEM_MENUITEM) {
@@ -1762,14 +1762,15 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 
 	    VariantClear(&role);
 
-	    /* Use accDescription text as label. */
+	    /* For non-menu widgets, use accDescription as the UIA Name. */
 	    BSTR desc = NULL;
 	    HRESULT hrDesc = TkRootAccessible_get_accDescription(
 								 (IAccessible *)provider->msaaProvider, varChild, &desc);
-	    if (SUCCEEDED(hrDesc) && desc) {
+	    if (SUCCEEDED(hrDesc) && desc && SysStringLen(desc) > 0) {
 		pRetVal->vt = VT_BSTR;
 		pRetVal->bstrVal = desc;
 	    } else {
+		if (desc) SysFreeString(desc);
 		pRetVal->vt = VT_EMPTY;
 	    }
 	    break;
