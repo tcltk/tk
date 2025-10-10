@@ -527,16 +527,52 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
     return S_OK;
 }
 
-/* Function to map accessible name to MSAA. */
+/* 
+ * Function to map accessible name to MSAA. 
+ * We return the "description" value from the hash table
+ * becuase UIA requires the name property to be populated -
+ * but using the "name" value causes the same word to 
+ * be spoken twice, because the name usually matches 
+ * the role. 
+ */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-    TCL_UNUSED(IAccessible *), /* this */
-    TCL_UNUSED(VARIANT), /* varChild */
-    BSTR *pszName)
+							      IAccessible *this,
+							      VARIANT varChild,
+							      BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
-    *pszName = NULL; /* No name for toplevel to avoid double-reading. */
-    return S_OK;
+    *pszName = NULL;
+
+    TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    if (!tkAccessible->toplevel) {
+        TkGlobalUnlock();
+        return E_INVALIDARG;
+    }
+
+    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+        /* For the toplevel itself, no name to avoid double-reading */
+        TkGlobalUnlock();
+        return S_OK;
+    }
+
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (!child) {
+            TkGlobalUnlock();
+            return E_INVALIDARG;
+        }
+
+        /* Retrieve the accessible name for the child */
+        HRESULT hr = TkAccDescription(child, pszName);
+        TkGlobalUnlock();
+        return hr;
+    }
+
+    TkGlobalUnlock();
+    return E_INVALIDARG;
 }
+
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(
@@ -849,36 +885,20 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(
     return S_OK;
 }
 
-/* Function to get accessible description to MSAA. */
+/* 
+ * Function to get accessible description to MSAA. 
+ * This function returns NULL because we are populating
+ * the "name" property with the description data 
+ * to support both MSAA and UIA. 
+ */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
-    IAccessible *this,
-    VARIANT varChild,
-    BSTR *pszDescription)
+       IAccessible *this,
+       VARIANT varChild,
+       BSTR *pszDescription)
 {
     if (!pszDescription) return E_INVALIDARG;
-    TkGlobalLock();
-    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    if (!tkAccessible->toplevel) {
-	TkGlobalUnlock();
-	return E_INVALIDARG;
-    }
-    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-	*pszDescription = SysAllocString(L"Window");
-	TkGlobalUnlock();
-	return S_OK;
-    }
-    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-	if (!child) {
-	    TkGlobalUnlock();
-	    return E_INVALIDARG;
-	}
-	HRESULT hr = TkAccDescription(child, pszDescription);
-	TkGlobalUnlock();
-	return hr;
-    }
-    TkGlobalUnlock();
-    return E_INVALIDARG;
+    *pszDescription = NULL; /* No description to avoid double-reading. */
+    return S_OK;
 }
 
 /*
@@ -1728,7 +1748,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
     TkUiaProvider *provider = (TkUiaProvider *)this;
 
     if (!provider->msaaProvider) {
-	return E_FAIL;
+        return E_FAIL;
     }
 
     TkGlobalLock();
@@ -1749,8 +1769,6 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 
 	    if (SUCCEEDED(hrRole) && role.vt == VT_I4) {
 		LONG r = role.lVal;
-
-		/* Skip menus so Tk's native menu accessibility takes over. */
 		if (r == ROLE_SYSTEM_MENUBAR ||
 		    r == ROLE_SYSTEM_MENUPOPUP ||
 		    r == ROLE_SYSTEM_MENUITEM) {
@@ -1762,15 +1780,15 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 
 	    VariantClear(&role);
 
-	    /* For non-menu widgets, use accDescription as the UIA Name. */
-	    BSTR desc = NULL;
-	    HRESULT hrDesc = TkRootAccessible_get_accDescription(
-								 (IAccessible *)provider->msaaProvider, varChild, &desc);
-	    if (SUCCEEDED(hrDesc) && desc && SysStringLen(desc) > 0) {
+	    /* For non-menu widgets, use accName as the UIA Name. */
+	    BSTR name = NULL;
+	    HRESULT hrDesc = TkRootAccessible_get_accName(
+							  (IAccessible *)provider->msaaProvider, varChild, &name);
+	    if (SUCCEEDED(hrDesc) && name && SysStringLen(name) > 0) {
 		pRetVal->vt = VT_BSTR;
-		pRetVal->bstrVal = desc;
+		pRetVal->bstrVal = name;
 	    } else {
-		if (desc) SysFreeString(desc);
+		if (name) SysFreeString(name);
 		pRetVal->vt = VT_EMPTY;
 	    }
 	    break;
@@ -1791,7 +1809,26 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    break;
 	}
 
-	case 30010: /* UIA_IsEnabledPropertyId */
+    case 30045: /* UIA_ValueValuePropertyId - Maps to MSAA accValue */
+	{
+	    VARIANT varChild;
+	    varChild.vt = VT_I4;
+	    varChild.lVal = CHILDID_SELF;
+
+	    BSTR value = NULL;
+	    HRESULT hr = TkRootAccessible_get_accValue(
+						       (IAccessible *)provider->msaaProvider, varChild, &value);
+	    if (SUCCEEDED(hr) && value && SysStringLen(value) > 0) {
+		pRetVal->vt = VT_BSTR;
+		pRetVal->bstrVal = value;
+	    } else {
+		if (value) SysFreeString(value);
+		pRetVal->vt = VT_EMPTY;
+	    }
+	    break;
+	}
+
+    case 30010: /* UIA_IsEnabledPropertyId */
 	{
 	    VARIANT state;
 	    VariantInit(&state);
@@ -1799,29 +1836,31 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    varChild.vt = VT_I4;
 	    varChild.lVal = CHILDID_SELF;
 	    HRESULT hr = TkRootAccessible_get_accState(
-		(IAccessible *)provider->msaaProvider, varChild, &state);
+						       (IAccessible *)provider->msaaProvider, varChild, &state);
 	    if (SUCCEEDED(hr) && state.vt == VT_I4) {
 		pRetVal->vt = VT_BOOL;
-		pRetVal->boolVal = (state.lVal & STATE_SYSTEM_UNAVAILABLE) ? VARIANT_FALSE : VARIANT_TRUE;
+		pRetVal->boolVal = (state.lVal & STATE_SYSTEM_UNAVAILABLE)
+		    ? VARIANT_FALSE : VARIANT_TRUE;
 	    }
 	    VariantClear(&state);
 	    break;
 	}
 
-	case 30014: /* UIA_IsKeyboardFocusablePropertyId */
-	    pRetVal->vt = VT_BOOL;
-	    pRetVal->boolVal = VARIANT_TRUE;
-	    break;
+    case 30014: /* UIA_IsKeyboardFocusablePropertyId */
+        pRetVal->vt = VT_BOOL;
+        pRetVal->boolVal = VARIANT_TRUE;
+        break;
 
-	case 30008: /* UIA_HasKeyboardFocusPropertyId */
+    case 30008: /* UIA_HasKeyboardFocusPropertyId */
 	{
 	    VARIANT focus;
 	    VariantInit(&focus);
 	    HRESULT hr = TkRootAccessible_get_accFocus(
-		(IAccessible *)provider->msaaProvider, &focus);
+						       (IAccessible *)provider->msaaProvider, &focus);
 	    if (SUCCEEDED(hr) && focus.vt == VT_I4) {
 		pRetVal->vt = VT_BOOL;
-		pRetVal->boolVal = (focus.lVal == CHILDID_SELF) ? VARIANT_TRUE : VARIANT_FALSE;
+		pRetVal->boolVal = (focus.lVal == CHILDID_SELF)
+		    ? VARIANT_TRUE : VARIANT_FALSE;
 	    }
 	    VariantClear(&focus);
 	    break;
@@ -1842,7 +1881,6 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 		(role.lVal == ROLE_SYSTEM_MENUBAR ||
 		 role.lVal == ROLE_SYSTEM_MENUPOPUP ||
 		 role.lVal == ROLE_SYSTEM_MENUITEM)) {
-		/* Not a control/content element → let system proxy handle */
 		pRetVal->vt = VT_BOOL;
 		pRetVal->boolVal = VARIANT_FALSE;
 	    } else {
@@ -1853,41 +1891,41 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 	    break;
 	}
 
-	case 30011: /* UIA_AutomationIdPropertyId */
-	    if (provider->msaaProvider->pathName) {
-		Tcl_DString ds;
-		Tcl_DStringInit(&ds);
-		pRetVal->vt = VT_BSTR;
-		pRetVal->bstrVal = SysAllocString(
-		    Tcl_UtfToWCharDString(provider->msaaProvider->pathName, -1, &ds));
-		Tcl_DStringFree(&ds);
-	    }
-	    break;
+    case 30011: /* UIA_AutomationIdPropertyId */
+        if (provider->msaaProvider->pathName) {
+            Tcl_DString ds;
+            Tcl_DStringInit(&ds);
+            pRetVal->vt = VT_BSTR;
+            pRetVal->bstrVal = SysAllocString(
+					      Tcl_UtfToWCharDString(provider->msaaProvider->pathName, -1, &ds));
+            Tcl_DStringFree(&ds);
+        }
+        break;
 
-	case 30012: /* UIA_ClassNamePropertyId */
-	    if (provider->msaaProvider->win) {
-		const char *className = Tk_Class(provider->msaaProvider->win);
-		if (className) {
-		    Tcl_DString ds;
-		    Tcl_DStringInit(&ds);
-		    pRetVal->vt = VT_BSTR;
-		    pRetVal->bstrVal = SysAllocString(
-			Tcl_UtfToWCharDString(className, -1, &ds));
-		    Tcl_DStringFree(&ds);
-		}
-	    }
-	    break;
+    case 30012: /* UIA_ClassNamePropertyId */
+        if (provider->msaaProvider->win) {
+            const char *className = Tk_Class(provider->msaaProvider->win);
+            if (className) {
+                Tcl_DString ds;
+                Tcl_DStringInit(&ds);
+                pRetVal->vt = VT_BSTR;
+                pRetVal->bstrVal = SysAllocString(
+						  Tcl_UtfToWCharDString(className, -1, &ds));
+                Tcl_DStringFree(&ds);
+            }
+        }
+        break;
 
-	case 30020: /* UIA_NativeWindowHandlePropertyId */
-	    if (provider->msaaProvider->hwnd) {
-		pRetVal->vt = VT_I4;
-		pRetVal->lVal = (LONG)(LONG_PTR)provider->msaaProvider->hwnd;
-	    }
-	    break;
+    case 30020: /* UIA_NativeWindowHandlePropertyId */
+        if (provider->msaaProvider->hwnd) {
+            pRetVal->vt = VT_I4;
+            pRetVal->lVal = (LONG)(LONG_PTR)provider->msaaProvider->hwnd;
+        }
+        break;
 
-	default:
-	    pRetVal->vt = VT_EMPTY;
-	    break;
+    default:
+        pRetVal->vt = VT_EMPTY;
+        break;
     }
 
     TkGlobalUnlock();
