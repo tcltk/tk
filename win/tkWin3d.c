@@ -336,7 +336,7 @@ TkpGetShadows(
 {
     XColor lightColor, darkColor;
     int tmp1, tmp2;
-    int r, g, b;
+    unsigned short r, g, b;
     XGCValues gcValues;
 
     if (borderPtr->lightGC != NULL) {
@@ -404,18 +404,18 @@ TkpGetShadows(
 	 * Compute the dark shadow color
 	 */
 
-	r = (int) borderPtr->bgColorPtr->red;
-	g = (int) borderPtr->bgColorPtr->green;
-	b = (int) borderPtr->bgColorPtr->blue;
+	r = borderPtr->bgColorPtr->red;
+	g = borderPtr->bgColorPtr->green;
+	b = borderPtr->bgColorPtr->blue;
 
 	if (r*0.5*r + g*1.0*g + b*0.28*b < MAX_INTENSITY*0.05*MAX_INTENSITY) {
-	    darkColor.red = (MAX_INTENSITY + 3*r)/4;
-	    darkColor.green = (MAX_INTENSITY + 3*g)/4;
-	    darkColor.blue = (MAX_INTENSITY + 3*b)/4;
+	    darkColor.red = (unsigned short)((MAX_INTENSITY + 3*r)/4);
+	    darkColor.green = (unsigned short)((MAX_INTENSITY + 3*g)/4);
+	    darkColor.blue = (unsigned short)((MAX_INTENSITY + 3*b)/4);
 	} else {
-	    darkColor.red = (60 * r)/100;
-	    darkColor.green = (60 * g)/100;
-	    darkColor.blue = (60 * b)/100;
+	    darkColor.red = (unsigned short)((60 * r)/100);
+	    darkColor.green = (unsigned short)((60 * g)/100);
+	    darkColor.blue = (unsigned short)((60 * b)/100);
 	}
 
 	/*
@@ -431,28 +431,28 @@ TkpGetShadows(
 	 */
 
 	if (g > MAX_INTENSITY*0.95) {
-	    lightColor.red = (90 * r)/100;
-	    lightColor.green = (90 * g)/100;
-	    lightColor.blue = (90 * b)/100;
+	    lightColor.red = (unsigned short)((90 * r)/100);
+	    lightColor.green = (unsigned short)((90 * g)/100);
+	    lightColor.blue = (unsigned short)((90 * b)/100);
 	} else {
 	    tmp1 = (14 * r)/10;
 	    if (tmp1 > MAX_INTENSITY) {
 		tmp1 = MAX_INTENSITY;
 	    }
 	    tmp2 = (MAX_INTENSITY + r)/2;
-	    lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
+	    lightColor.red = (unsigned short)((tmp1 > tmp2) ? tmp1 : tmp2);
 	    tmp1 = (14 * g)/10;
 	    if (tmp1 > MAX_INTENSITY) {
 		tmp1 = MAX_INTENSITY;
 	    }
 	    tmp2 = (MAX_INTENSITY + g)/2;
-	    lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
+	    lightColor.green = (unsigned short)((tmp1 > tmp2) ? tmp1 : tmp2);
 	    tmp1 = (14 * b)/10;
 	    if (tmp1 > MAX_INTENSITY) {
 		tmp1 = MAX_INTENSITY;
 	    }
 	    tmp2 = (MAX_INTENSITY + b)/2;
-	    lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
+	    lightColor.blue = (unsigned short)((tmp1 > tmp2) ? tmp1 : tmp2);
 	}
 
 	/*
