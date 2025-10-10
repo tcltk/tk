@@ -13,7 +13,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   framework:
-    runs-on: macos-24
+    runs-on: macos-15
     defaults:
       run:
         shell: bash
@@ -57,7 +57,7 @@ jobs:
           fi
         timeout-minutes: 30
   prefix:
-    runs-on: macos-24
+    runs-on: macos-15
     strategy:
       matrix:
         symbols:
