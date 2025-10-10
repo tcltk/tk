@@ -1769,9 +1769,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 
 	    if (SUCCEEDED(hrRole) && role.vt == VT_I4) {
 		LONG r = role.lVal;
-		if (r == ROLE_SYSTEM_MENUBAR ||
-		    r == ROLE_SYSTEM_MENUPOPUP ||
-		    r == ROLE_SYSTEM_MENUITEM) {
+		if (r == ROLE_SYSTEM_MENUBAR || r == ROLE_SYSTEM_MENUPOPUP) {
+		    /* Let native menus handle menubars/popups, but expose items. */
 		    pRetVal->vt = VT_EMPTY;
 		    VariantClear(&role);
 		    break;
@@ -2285,22 +2284,19 @@ static int EmitSelectionChanged(
 	TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
 	if (tkProvider) {
 	    IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
-
 	    VARIANT oldVal, newVal;
 	    VariantInit(&oldVal);
 	    VariantInit(&newVal);
 
-	    /* Raise HelpText property change (UIA_HelpTextPropertyId = 30004) */
-	    UiaRaiseAutomationPropertyChangedEvent(
-						   provider,
-						   UIA_HelpTextPropertyId,
-						   oldVal,
-						   newVal
-						   );
+	    /* Raise selection and name property change events for Narrator */
+	    UiaRaiseAutomationEvent(provider, UIA_SelectionItem_ElementSelectedEventId);
+	    UiaRaiseAutomationPropertyChangedEvent(provider,
+						   UIA_NamePropertyId, oldVal, newVal);
 
 	    VariantClear(&oldVal);
 	    VariantClear(&newVal);
 	}
+
     }
 
     TkGlobalUnlock();
