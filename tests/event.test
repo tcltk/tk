@@ -1214,6 +1214,110 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|}
 
+# monitorWindowEvents --
+#
+#	Arranges for a notification being written to stdout each time that
+#	a certain window event is serviced.
+#
+proc monitorWindowEvents {toggle {events {<Destroy> <Configure> <Unmap> <Map> <Visibility> \
+	<Expose> <Leave> <Enter> <FocusOut> <FocusIn>}}} {
+    variable monitorWindowEvents
+
+    set changed 0
+    switch -- $toggle {
+	on {
+	    foreach event $events {
+		if {! [info exists monitorWindowEvents($event)]} {
+		    set monitorWindowEvents($event) [bind all $event]
+		    bind all $event [list +notifyWindowEvent %W $event]
+		    set changed 1
+		}
+	    }
+	    if {$changed} {
+		puts "    Start event notification for $events"
+	    }
+	}
+	off {
+	    foreach event $events {
+		if {[info exists monitorWindowEvents($event)]} {
+		    bind all $event $monitorWindowEvents($event)
+		    unset monitorWindowEvents($event)
+		    set changed 1
+		}
+	    }
+	    if {$changed} {
+		puts "    Stop event notification for $events"
+	    }
+	}
+	default {
+	    return -code error "invalid value \"$toggle\" for argument toggle"
+	}
+    }
+}
+
+proc notifyWindowEvent {w event args} {
+    puts "    |*|$w|$event|"
+}
+
+puts "|osVersion: $tcl_platform(osVersion)|"
+monitorWindowEvents on
+
+test event-9.20.exp1 {
+    Successive destructions (pointer window + ancestors including its toplevel), destination is screen root
+    Test slightly adapted to allow monitoring of window events
+} -setup {
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+    destroy .one
+    toplevel .two
+    pack propagate .two 0
+    wm geometry .two 300x300+100+100
+    create_and_pack_frames .two
+    wm deiconify .two
+    waitForWindowEvent .two.f1.f2 <Enter>
+    set result "|"
+} -body {
+    set bindSav(Leave) [bind all <Leave>]
+    set bindSav(Enter) [bind all <Enter>]
+    bind all <Leave> {+ append result "<Leave> %d %W|"}
+    bind all <Enter> {+ append result "<Enter> %d %W|"}
+    destroy .two
+    update; # Ensure that crossing events get processed.
+    set result
+} -cleanup {
+    bind all <Leave> $bindSav(Leave)
+    bind all <Enter> $bindSav(Enter)
+    unset result
+} -result {|}
+
+test event-9.20.exp2 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
+    wm withdraw .; update; # remove root window from the equation
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+    destroy .one
+    toplevel .two
+    pack propagate .two 0
+    wm geometry .two 300x300+100+100
+    create_and_pack_frames .two
+    wm deiconify .two
+    waitForWindowEvent .two.f1.f2 <Enter>
+    set result "|"
+} -body {
+    puts "|wm state .: [wm state .]|winfo ismapped .: [winfo ismapped .]|"
+    set bindSav(Leave) [bind all <Leave>]
+    set bindSav(Enter) [bind all <Enter>]
+    bind all <Leave> {+ append result "<Leave> %d %W|"}
+    bind all <Enter> {+ append result "<Enter> %d %W|"}
+    waitForWindowEvent . <Enter> 2000; # add ample time for any overloaded WindowServer to recover
+    destroy .two
+    update; # Ensure that crossing events get processed.
+    set result
+} -cleanup {
+    bind all <Leave> $bindSav(Leave)
+    bind all <Enter> $bindSav(Enter)
+    unset result
+} -result {|}
+
+monitorWindowEvents off
+
 #
 # TESTFILE CLEANUP
 #
