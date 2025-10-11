@@ -1764,15 +1764,15 @@ HookProc(
  * any of the options (which may be NULL in the structure)
  */
 
-enum FontchooserOption {
+typedef enum {
     FontchooserCmd, FontchooserFont, FontchooserParent, FontchooserTitle,
     FontchooserVisible
-};
+} FontchooserOption;
 
 static Tcl_Obj *
 FontchooserCget(
     HookData *hdPtr,
-    int optionIndex)
+    FontchooserOption optionIndex)
 {
     Tcl_Obj *resObj = NULL;
 
@@ -1858,7 +1858,7 @@ FontchooserConfigureCmd(
 
 	for (i = 0; r == TCL_OK && optionStrings[i] != NULL; ++i) {
 	    keyObj = Tcl_NewStringObj(optionStrings[i], TCL_INDEX_NONE);
-	    valueObj = FontchooserCget(hdPtr, i);
+	    valueObj = FontchooserCget(hdPtr, (FontchooserOption)i);
 	    r = Tcl_DictObjPut(interp, dictObj, keyObj, valueObj);
 	}
 	if (r == TCL_OK) {

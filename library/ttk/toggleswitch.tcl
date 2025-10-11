@@ -39,7 +39,7 @@ proc ttk::toggleswitch::Press {w x y} {
 
     variable State
     array set State [list  dragging 0  moveState idle  startX $x  prevX $x \
-	    	     prevElem [$w identify element $x $y]]
+	    prevElem [$w identify element $x $y]]
 }
 
 proc ttk::toggleswitch::Drag {w x y} {
