@@ -20,6 +20,7 @@ necessarily in Tk 8.
  - [Limit tk_messageBox to physical screen width](https://core.tcl-lang.org/tk/info/e19f1d891)
  - [Constrain own Dialogs to the physical screen size](https://core.tcl-lang.org/tk/info/7c28f835)
  - [Add a ttk::toggleswitch widget to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/727.md)
+ - [Add a tk attribtable command to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/729.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
