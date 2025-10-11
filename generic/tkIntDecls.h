@@ -193,7 +193,7 @@ EXTERN int		TkOvalToArea(double *ovalPtr, double *rectPtr);
 EXTERN double		TkOvalToPoint(double ovalPtr[], double width,
 				int filled, double pointPtr[]);
 /* 55 */
-EXTERN int		TkpChangeFocus(TkWindow *winPtr, int force);
+EXTERN size_t		TkpChangeFocus(TkWindow *winPtr, int force);
 /* 56 */
 EXTERN void		TkpCloseDisplay(TkDisplay *dispPtr);
 /* 57 */
@@ -605,7 +605,7 @@ typedef struct TkIntStubs {
     void (*tkOptionDeadWindow) (TkWindow *winPtr); /* 52 */
     int (*tkOvalToArea) (double *ovalPtr, double *rectPtr); /* 53 */
     double (*tkOvalToPoint) (double ovalPtr[], double width, int filled, double pointPtr[]); /* 54 */
-    int (*tkpChangeFocus) (TkWindow *winPtr, int force); /* 55 */
+    size_t (*tkpChangeFocus) (TkWindow *winPtr, int force); /* 55 */
     void (*tkpCloseDisplay) (TkDisplay *dispPtr); /* 56 */
     void (*tkpClaimFocus) (TkWindow *topLevelPtr, int force); /* 57 */
     void (*tkpDisplayWarning) (const char *msg, const char *title); /* 58 */
