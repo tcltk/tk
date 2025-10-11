@@ -60,9 +60,29 @@ typedef struct TkRootAccessible {
 /* UI Automation Provider structure. */
 typedef struct TkUiaProvider {
     IRawElementProviderSimpleVtbl *lpVtbl;
+    IRawElementProviderFragmentVtbl *fragmentVtbl;
     TkRootAccessible *msaaProvider;
+    Tk_Window tkwin;
+    int childId; 
     LONG refCount;
 } TkUiaProvider;
+
+/* Fragment navigation directions. */
+typedef enum FragmentNavigation {
+    FragmentNavigation_Parent = 0,
+    FragmentNavigation_NextSibling = 1,
+    FragmentNavigation_PreviousSibling = 2,
+    FragmentNavigation_FirstChild = 3,
+    FragmentNavigation_LastChild = 4
+} FragmentNavigation;
+
+/* Rectangle structure for bounding rectangles. */
+typedef struct UiaRect {
+    double x;
+    double y;
+    double width;
+    double height;
+} UiaRect;
 
 
 /*
@@ -243,6 +263,41 @@ static IRawElementProviderSimpleVtbl tkUiaProviderVtbl = {
     TkUiaProvider_GetPatternProvider,
     TkUiaProvider_GetPropertyValue,
     TkUiaProvider_get_HostRawElementProvider
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes forIRawElementProviderFragment - these are accessible 
+ * child widgets in the UI Automation API. They will be used primarily
+ * for such child elements as list/table rows and tree nodes.
+ * MSAA child elements can be tracked with child ID's and custom notfications
+ * on selection events, but UIA needs a more formal implementation. 
+ *
+ *----------------------------------------------------------------------
+ */
+
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_QueryInterface(IRawElementProviderFragment *this, REFIID riid, void **ppvObject);
+static ULONG STDMETHODCALLTYPE TkUiaFragment_AddRef(IRawElementProviderFragment *this);
+static ULONG STDMETHODCALLTYPE TkUiaFragment_Release(IRawElementProviderFragment *this);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_Navigate(IRawElementProviderFragment *this, enum FragmentNavigation direction, IRawElementProviderFragment **pRetVal);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetRuntimeId(IRawElementProviderFragment *this, SAFEARRAY **pRetVal);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_BoundingRectangle(IRawElementProviderFragment *this, struct UiaRect *pRetVal);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetEmbeddedFragmentRoots(IRawElementProviderFragment *this, SAFEARRAY **pRetVal);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_SetFocus(IRawElementProviderFragment *this);
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(IRawElementProviderFragment *this, IRawElementProviderFragmentRoot **pRetVal);
+
+/* Fragment VTable. */
+static IRawElementProviderFragmentVtbl tkUiaFragmentVtbl = {
+    TkUiaFragment_QueryInterface,
+    TkUiaFragment_AddRef,
+    TkUiaFragment_Release,
+    TkUiaFragment_Navigate,
+    TkUiaFragment_GetRuntimeId,
+    TkUiaFragment_get_BoundingRectangle,
+    TkUiaFragment_GetEmbeddedFragmentRoots,
+    TkUiaFragment_SetFocus,
+    TkUiaFragment_get_FragmentRoot
 };
 
 /*
@@ -1653,28 +1708,26 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
 {
     if (!ppvObject) return E_INVALIDARG;
 
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+
     if (IsEqualIID(riid, &IID_IUnknown) ||
-	IsEqualIID(riid, &IID_IRawElementProviderSimple)) {
-	*ppvObject = this;
-	TkUiaProvider_AddRef(this);
-	return S_OK;
+        IsEqualIID(riid, &IID_IRawElementProviderSimple) ||
+        IsEqualIID(riid, &IID_IRawElementProviderFragment)) {
+        *ppvObject = this;
+        TkUiaProvider_AddRef(this);
+        return S_OK;
     }
 
-    /*
-     * CRITICAL: Forward ALL other interfaces to the MSAA provider.
-     * This includes IAccessible, IDispatch, and any other interfaces
-     * that the native Win32 menus already implement.
-     */
-
-    TkUiaProvider *provider = (TkUiaProvider *)this;
+    /* Forward to MSAA provider for other interfaces */
     if (provider->msaaProvider) {
-	return provider->msaaProvider->lpVtbl->QueryInterface(
-	    (IAccessible *)provider->msaaProvider, riid, ppvObject);
+        return provider->msaaProvider->lpVtbl->QueryInterface(
+            (IAccessible *)provider->msaaProvider, riid, ppvObject);
     }
 
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
+
 
 
 /* UI Automation Provider AddRef. */
@@ -1704,7 +1757,7 @@ static ULONG STDMETHODCALLTYPE TkUiaProvider_Release(
     return count;
 }
 
-/* UI Automation Provider Options. */
+/* UI Automation Provider options. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
     TCL_UNUSED(IRawElementProviderSimple *), /* this */
     enum ProviderOptions *pRetVal)
@@ -1945,7 +1998,8 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(
 /*
  * Create UI Automation Provider.
  */
-static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider)
+
+static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider, Tk_Window tkwin, int childId)
 {
     if (!msaaProvider) return NULL;
 
@@ -1953,7 +2007,10 @@ static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider)
     if (!provider) return NULL;
 
     provider->lpVtbl = &tkUiaProviderVtbl;
+    provider->fragmentVtbl = &tkUiaFragmentVtbl;  
     provider->msaaProvider = msaaProvider;
+    provider->tkwin = tkwin;  
+    provider->childId = childId;
     provider->refCount = 1;
 
     TkRootAccessible_AddRef((IAccessible *)msaaProvider);
@@ -2005,6 +2062,389 @@ static TkUiaProvider *GetUiaProviderForWindow(Tk_Window win)
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * IRawElementProviderFragment implementation. This allows child elements
+ * like list/table rows to be visible to UIA.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Fragment query interface. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_QueryInterface(
+    IRawElementProviderFragment *this,
+    REFIID riid,
+    void **ppvObject)
+{
+    if (!ppvObject) return E_INVALIDARG;
+
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IRawElementProviderSimple) ||
+        IsEqualIID(riid, &IID_IRawElementProviderFragment)) {
+        *ppvObject = this;
+        TkUiaFragment_AddRef(this);
+        return S_OK;
+    }
+
+    /* Forward to MSAA provider for other interfaces. */
+    if (provider->msaaProvider) {
+        return provider->msaaProvider->lpVtbl->QueryInterface(
+            (IAccessible *)provider->msaaProvider, riid, ppvObject);
+    }
+
+    *ppvObject = NULL;
+    return E_NOINTERFACE;
+}
+
+/* Fragment add ref/release - reuse existing implementation. */
+static ULONG STDMETHODCALLTYPE TkUiaFragment_AddRef(IRawElementProviderFragment *this) {
+    return TkUiaProvider_AddRef((IRawElementProviderSimple *)this);
+}
+
+static ULONG STDMETHODCALLTYPE TkUiaFragment_Release(IRawElementProviderFragment *this) {
+    return TkUiaProvider_Release((IRawElementProviderSimple *)this);
+}
+
+/* Fragment navigation - critical for listbox, tree, table items. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_Navigate(
+    IRawElementProviderFragment *this,
+    enum FragmentNavigation direction,
+    IRawElementProviderFragment **pRetVal)
+{
+    if (!pRetVal) return E_INVALIDARG;
+    *pRetVal = NULL;
+
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+    if (!provider->msaaProvider || !provider->tkwin) return E_FAIL;
+
+    TkGlobalLock();
+
+    HRESULT hr = S_OK;
+    Tk_Window currentWin = provider->tkwin;
+    Tk_Window toplevel = GetToplevelOfWidget(currentWin);
+
+    /* Get role to determine navigation behavior. */
+    VARIANT varChild;
+    varChild.vt = VT_I4;
+    varChild.lVal = provider->childId > 0 ? provider->childId : CHILDID_SELF;
+    
+    VARIANT role;
+    VariantInit(&role);
+    HRESULT roleHr = TkRootAccessible_get_accRole(
+        (IAccessible *)provider->msaaProvider, varChild, &role);
+
+    if (FAILED(roleHr) || role.vt != VT_I4) {
+        TkGlobalUnlock();
+        return E_FAIL;
+    }
+
+    switch (direction) {
+    case FragmentNavigation_Parent: {
+        /* Navigate to parent. */
+        if (provider->childId > 0) {
+            /* Item -> Container. */
+            TkUiaProvider *parentProvider = GetUiaProviderForWindow(toplevel);
+            if (parentProvider) {
+                *pRetVal = (IRawElementProviderFragment *)parentProvider;
+                TkUiaFragment_AddRef(*pRetVal);
+            }
+        } else {
+            /* Container -> Toplevel. */
+            *pRetVal = NULL; /* Toplevel is root. */
+        }
+        break;
+    }
+
+    case FragmentNavigation_FirstChild: {
+        /* Only containers have children. */
+        if (provider->childId == 0 && 
+            (role.lVal == ROLE_SYSTEM_LIST || 
+             role.lVal == ROLE_SYSTEM_OUTLINE || 
+             role.lVal == ROLE_SYSTEM_TABLE)) {
+            
+            /* Get first child item. */
+            int firstChildId = GetFirstChildId(toplevel, currentWin);
+            if (firstChildId > 0) {
+                TkUiaProvider *childProvider = CreateUiaProviderForChild(
+                    provider->msaaProvider, currentWin, firstChildId);
+                if (childProvider) {
+                    *pRetVal = (IRawElementProviderFragment *)childProvider;
+                    TkUiaFragment_AddRef(*pRetVal);
+                }
+            }
+        }
+        break;
+    }
+
+    case FragmentNavigation_NextSibling: {
+        /* Only items have siblings. */
+        if (provider->childId > 0) {
+            int nextChildId = GetNextSiblingId(toplevel, currentWin, provider->childId);
+            if (nextChildId > 0) {
+                TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
+                    provider->msaaProvider, toplevel, nextChildId);
+                if (siblingProvider) {
+                    *pRetVal = (IRawElementProviderFragment *)siblingProvider;
+                    TkUiaFragment_AddRef(*pRetVal);
+                }
+            }
+        }
+        break;
+    }
+
+    case FragmentNavigation_PreviousSibling: {
+        if (provider->childId > 0) {
+            int prevChildId = GetPreviousSiblingId(toplevel, currentWin, provider->childId);
+            if (prevChildId > 0) {
+                TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
+                    provider->msaaProvider, toplevel, prevChildId);
+                if (siblingProvider) {
+                    *pRetVal = (IRawElementProviderFragment *)siblingProvider;
+                    TkUiaFragment_AddRef(*pRetVal);
+                }
+            }
+        }
+        break;
+    }
+
+    case FragmentNavigation_LastChild: {
+        if (provider->childId == 0 && 
+            (role.lVal == ROLE_SYSTEM_LIST || 
+             role.lVal == ROLE_SYSTEM_OUTLINE || 
+             role.lVal == ROLE_SYSTEM_TABLE)) {
+            
+            int lastChildId = GetLastChildId(toplevel, currentWin);
+            if (lastChildId > 0) {
+                TkUiaProvider *childProvider = CreateUiaProviderForChild(
+                    provider->msaaProvider, currentWin, lastChildId);
+                if (childProvider) {
+                    *pRetVal = (IRawElementProviderFragment *)childProvider;
+                    TkUiaFragment_AddRef(*pRetVal);
+                }
+            }
+        }
+        break;
+    }
+
+    default:
+        hr = E_INVALIDARG;
+        break;
+    }
+
+    VariantClear(&role);
+    TkGlobalUnlock();
+    return hr;
+}
+
+/* Get runtime ID. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetRuntimeId(
+    IRawElementProviderFragment *this,
+    SAFEARRAY **pRetVal)
+{
+    if (!pRetVal) return E_INVALIDARG;
+
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+    
+    /* Create runtime ID: [UiaAppendRuntimeId, hwnd, childId]. */
+    int runtimeId[] = { UiaAppendRuntimeId, 
+                       (int)(LONG_PTR)(provider->msaaProvider ? provider->msaaProvider->hwnd : NULL),
+                       provider->childId };
+
+    SAFEARRAY *psa = SafeArrayCreateVector(VT_I4, 0, 3);
+    if (!psa) return E_OUTOFMEMORY;
+
+    for (LONG i = 0; i < 3; i++) {
+        SafeArrayPutElement(psa, &i, &runtimeId[i]);
+    }
+
+    *pRetVal = psa;
+    return S_OK;
+}
+
+/* Get bounding rectangle. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_BoundingRectangle(
+    IRawElementProviderFragment *this,
+    struct UiaRect *pRetVal)
+{
+    if (!pRetVal) return E_INVALIDARG;
+
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+    if (!provider->msaaProvider) return E_FAIL;
+
+    memset(pRetVal, 0, sizeof(UiaRect));
+
+    TkGlobalLock();
+
+    VARIANT varChild;
+    varChild.vt = VT_I4;
+    varChild.lVal = provider->childId > 0 ? provider->childId : CHILDID_SELF;
+
+    LONG xLeft, yTop, cxWidth, cyHeight;
+    HRESULT hr = TkRootAccessible_accLocation(
+        (IAccessible *)provider->msaaProvider, &xLeft, &yTop, &cxWidth, &cyHeight, varChild);
+
+    if (SUCCEEDED(hr)) {
+        pRetVal->x = (double)xLeft;
+        pRetVal->y = (double)yTop;
+        pRetVal->width = (double)cxWidth;
+        pRetVal->height = (double)cyHeight;
+    }
+
+    TkGlobalUnlock();
+    return hr;
+}
+
+/* Get Embedded Fragment Roots - not used for Tk widgets. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetEmbeddedFragmentRoots(
+    TCL_UNUSED(IRawElementProviderFragment *), /* this */
+    SAFEARRAY **pRetVal)
+{
+    if (!pRetVal) return E_INVALIDARG;
+    *pRetVal = SafeArrayCreateVector(VT_UNKNOWN, 0, 0);
+    return S_OK;
+}
+
+/* Set UIA focus on fragment. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_SetFocus(
+    IRawElementProviderFragment *this)
+{
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+    if (!provider->msaaProvider || !provider->tkwin) return E_FAIL;
+
+    TkGlobalLock();
+
+    if (provider->childId > 0) {
+        /* Focus specific item. */
+        Tk_Window toplevel = GetToplevelOfWidget(provider->tkwin);
+        Tk_Window itemWin = GetTkWindowForChildId(provider->childId, toplevel);
+        if (itemWin) {
+            Tk_SetFocus(itemWin);
+        }
+    } else {
+        /* Focus container. */
+        Tk_SetFocus(provider->tkwin);
+    }
+
+    TkGlobalUnlock();
+    return S_OK;
+}
+
+/* Get fragment root. */
+static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(
+    IRawElementProviderFragment *this,
+    IRawElementProviderFragmentRoot **pRetVal)
+{
+    if (!pRetVal) return E_INVALIDARG;
+
+    TkUiaProvider *provider = (TkUiaProvider *)this;
+    if (!provider->msaaProvider) return E_FAIL;
+
+    /* The toplevel window is the fragment root. */
+    Tk_Window toplevel = GetToplevelOfWidget(provider->tkwin);
+    if (!toplevel) return E_FAIL;
+
+    TkUiaProvider *rootProvider = GetUiaProviderForWindow(toplevel);
+    if (!rootProvider) return E_FAIL;
+
+    /* We need to implement IRawElementProviderFragmentRoot for the toplevel. */
+    *pRetVal = (IRawElementProviderFragmentRoot *)rootProvider;
+    TkUiaFragment_AddRef((IRawElementProviderFragment *)*pRetVal);
+
+    return S_OK;
+}
+
+/* Get first child ID for a container. */
+static int GetFirstChildId(Tk_Window toplevel, Tk_Window container)
+{
+    if (!toplevel || !container) return -1;
+    
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+    if (!childIdTable) return -1;
+
+    TkGlobalLock();
+    
+    /* Find the smallest child ID for this container. */
+    int firstId = INT_MAX;
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entry;
+    
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
+        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+        int childId = PTR2INT(Tcl_GetHashValue(entry));
+        
+        /* Check if this window is a child of our container. */
+        if (IsChildOfContainer(win, container) && childId < firstId) {
+            firstId = childId;
+        }
+    }
+    
+    TkGlobalUnlock();
+    return (firstId != INT_MAX) ? firstId : -1;
+}
+
+/* Get next sibling ID. */
+static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId)
+{
+    if (!toplevel || !container) return -1;
+    
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+    if (!childIdTable) return -1;
+
+    TkGlobalLock();
+    
+    int nextId = INT_MAX;
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entry;
+    
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
+        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+        int childId = PTR2INT(Tcl_GetHashValue(entry));
+        
+        if (IsChildOfContainer(win, container) && childId > currentId && childId < nextId) {
+            nextId = childId;
+        }
+    }
+    
+    TkGlobalUnlock();
+    return (nextId != INT_MAX) ? nextId : -1;
+}
+
+/* Check if window is child of container. */
+static BOOL IsChildOfContainer(Tk_Window child, Tk_Window container)
+{
+    if (!child || !container) return FALSE;
+    
+    Tk_Window parent = Tk_Parent(child);
+    while (parent && parent != container) {
+        parent = Tk_Parent(parent);
+    }
+    return (parent == container);
+}
+
+/* Create UIA provider for child items. */
+static TkUiaProvider *CreateUiaProviderForChild(TkRootAccessible *msaaProvider, Tk_Window container, int childId)
+{
+    if (!msaaProvider || !container || childId <= 0) return NULL;
+
+    TkUiaProvider *provider = (TkUiaProvider *)ckalloc(sizeof(TkUiaProvider));
+    if (!provider) return NULL;
+
+    provider->lpVtbl = &tkUiaProviderVtbl;
+    provider->fragmentVtbl = &tkUiaFragmentVtbl;
+    provider->msaaProvider = msaaProvider;
+    provider->tkwin = container;
+    provider->childId = childId;
+    provider->refCount = 1;
+
+    TkRootAccessible_AddRef((IAccessible *)msaaProvider);
+
+    return provider;
+}
+
+
 /* Handle WM_GETOBJECT call on main thread. */
 void HandleWMGetObjectOnMainThread(
     TCL_UNUSED(int), /* num_args */
@@ -2017,6 +2457,7 @@ void HandleWMGetObjectOnMainThread(
     if (outResult) *outResult = 0;
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
+    
     /* 
      * If this HWND is a native menu (class "#32768"), let Windows 
      * return its own provider. 
@@ -2029,7 +2470,7 @@ void HandleWMGetObjectOnMainThread(
 	}
     }
 
-    /* For UIA requests, create our provider but ensure it delegates to MSAA. */
+    /* For UIA requests, create our provider with fragment support. */
     if (lParam == (LPARAM)&IID_IRawElementProviderSimple) {
 	InitializeUIAutomation();
 
@@ -2052,7 +2493,7 @@ void HandleWMGetObjectOnMainThread(
 		}
 	    }
 	    if (msaaProvider) {
-		uiaProvider = CreateUiaProvider(msaaProvider);
+		uiaProvider = CreateUiaProvider(msaaProvider, tkwin, 0); // 0 = container
 		if (uiaProvider) {
 		    TkGlobalLock();
 		    if (!tkUiaProviderTableInitialized) {
@@ -2067,7 +2508,47 @@ void HandleWMGetObjectOnMainThread(
 	    }
 	}
 	if (uiaProvider && outResult) {
+	    /* Return the provider that supports both Simple and Fragment interfaces. */
 	    *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, (IRawElementProviderSimple *)uiaProvider);
+	}
+	return;
+    }
+
+    /* For IRawElementProviderFragment requests. */
+    if (lParam == (LPARAM)&IID_IRawElementProviderFragment) {
+	InitializeUIAutomation();
+
+	TkUiaProvider *uiaProvider = GetUiaProviderForWindow(tkwin);
+	if (!uiaProvider) {
+	    TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
+	    if (!msaaProvider) {
+		Tcl_Interp *interp = Tk_Interp(tkwin);
+		if (!interp) return;
+
+		msaaProvider = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
+		if (msaaProvider) {
+		    TkRootAccessible_RegisterForCleanup(tkwin, msaaProvider);
+		}
+	    }
+	    if (msaaProvider) {
+		uiaProvider = CreateUiaProvider(msaaProvider, tkwin, 0); // 0 = container
+		if (uiaProvider) {
+		    TkGlobalLock();
+		    if (!tkUiaProviderTableInitialized) {
+			InitUiaProviderTable();
+		    }
+		    Tcl_HashEntry *entry;
+		    int newEntry;
+		    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
+		    Tcl_SetHashValue(entry, uiaProvider);
+		    TkGlobalUnlock();
+		}
+	    }
+	}
+	if (uiaProvider && outResult) {
+	    /* Return the fragment interface directly. */
+	    *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, 
+						     (IRawElementProviderSimple *)uiaProvider); /* UIA will QI for Fragment. */
 	}
 	return;
     }
@@ -2522,8 +3003,8 @@ int TkRootAccessibleObjCmd(
 int TkWinAccessiblity_Init(
     Tcl_Interp *interp)
 {
-    /*Initialize global lock, hash tables, and main thread. */
- EnsureGlobalLockInitialized();
+    /* Initialize global lock, hash tables, and main thread. */
+    EnsureGlobalLockInitialized();
     TkGlobalLock();
     InitAccessibilityMainThread();
     InitTkAccessibleTable();
