@@ -2017,12 +2017,16 @@ void HandleWMGetObjectOnMainThread(
     if (outResult) *outResult = 0;
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
-    if (!tkwin) {
-	/*
-	 * Even if it's not a Tk window we recognize, let Windows handle it.
-	 * This allows native menus to work through their built-in MSAA.
-	 */
-	return;
+    /* 
+     * If this HWND is a native menu (class "#32768"), let Windows 
+     * return its own provider. 
+     */
+    WCHAR className[64] = {0};
+    if (GetClassNameW(hwnd, className, ARRAYSIZE(className))) {
+	if (wcscmp(className, L"#32768") == 0) {
+	    /* Return 0 so DefWindowProc/... will provide the system menu provider. */
+	    return;
+	}
     }
 
     /* For UIA requests, create our provider but ensure it delegates to MSAA. */
