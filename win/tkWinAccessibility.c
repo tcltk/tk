@@ -112,6 +112,13 @@ const struct WinRoleMap roleMap[] = {
     {NULL, 0, 0}
 };
 
+/* Virtual ID's for child elements in UIA API. */
+typedef struct { 
+    int startId; 
+    int count; 
+} VirtualRange;
+ 
+
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
 
@@ -119,6 +126,8 @@ extern Tcl_HashTable *TkAccessibilityObject;
 static Tcl_HashTable *tkAccessibleTable;
 static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *toplevelChildTables = NULL;
+static Tcl_HashTable *toplevelVirtualTables = NULL;
+
 
 /* UI Automation provider tables and interfaces. */
 static Tcl_HashTable *tkUiaProviderTable;
@@ -281,10 +290,10 @@ static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_BoundingRectangle(IRawElement
 static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetEmbeddedFragmentRoots(IRawElementProviderFragment *this, SAFEARRAY **pRetVal);
 static HRESULT STDMETHODCALLTYPE TkUiaFragment_SetFocus(IRawElementProviderFragment *this);
 static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(IRawElementProviderFragment *this, IRawElementProviderFragmentRoot **pRetVal);
-static int GetFirstChildId(Tk_Window toplevel, Tk_Window container);
-static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId);
-static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId);
-static int GetLastChildId(Tk_Window toplevel, Tk_Window container);
+static int GetFirstChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction);
+static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction);
+static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction);
+static int GetLastChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction);
 static BOOL IsChildOfContainer(Tk_Window child, Tk_Window container);
 static TkUiaProvider *CreateUiaProviderForChild(TkRootAccessible *msaaProvider, Tk_Window container, int childId);
 static BOOL IsVirtualChildContainer(LONG role);
@@ -342,6 +351,7 @@ void EnsureGlobalLockInitialized(void);
 void InitTkAccessibleTable(void);
 void InitChildIdTable(void);
 void ClearChildIdTableForToplevel(Tk_Window toplevel);
+static Tcl_HashTable *GetVirtualTableForToplevel(Tk_Window toplevel);
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static void SetChildIdForTkWindow(Tk_Window win, int id, Tcl_HashTable *childIdTable);
@@ -743,6 +753,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(
     }
     int count = TkAccChildCount(tkAccessible->toplevel);
     TkGlobalUnlock();
+
     *pcChildren = count < 0 ? 0 : count;
     return S_OK;
 }
@@ -1154,6 +1165,8 @@ static HRESULT TkAccState(
     Tk_Window win,
     VARIANT *pvarState)
 {
+	Tcl_Interp *interp = Tk_Interp(win);
+	
     if (!win || !pvarState) {
 #if DEBUG_ACCESSIBILITY
 	fprintf(stderr, "TkAccState: Invalid win or pvarState\n");
@@ -1197,6 +1210,35 @@ static HRESULT TkAccState(
 #if DEBUG_ACCESSIBILITY
 		fprintf(stderr, "TkAccState: No value cached for %s\n", Tk_PathName(win));
 #endif
+	    }
+	}
+	/* Check virtual children. */
+	if (strcmp(tkrole, "Listbox") == 0 || strcmp(tkrole, "Tree") == 0 || strcmp(tkrole, "Table") == 0) {
+	    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(GetToplevelOfWidget(win));
+	    if (virtualTable) {
+		Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, win);
+		if (vEntry) {
+		    VirtualRange *range = Tcl_GetHashValue(vEntry);
+		    Tcl_Obj *selCmd = Tcl_NewStringObj(Tcl_GetString(Tcl_NewStringObj(Tk_PathName(win), -1)), -1);
+		    Tcl_IncrRefCount(selCmd);
+		    Tcl_AppendStringsToObj(selCmd, " curselection", NULL);
+		    if (Tcl_EvalObjEx(interp, selCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+			Tcl_Obj *selList = Tcl_GetObjResult(interp);
+			Tcl_Size selCount;
+			Tcl_ListObjLength(interp, selList, &selCount);
+			for (int i = 0; i < selCount; i++) {
+			    Tcl_Obj *selItem; 
+				Tcl_ListObjIndex(interp, selList, i, &selItem);
+			    int selIndex;
+			    Tcl_GetIntFromObj(interp, selItem, &selIndex);
+			    if (selIndex >= 0 && selIndex < range->count) {
+				int childId = range->startId + selIndex;
+				if (childId == pvarState->lVal) state |= STATE_SYSTEM_SELECTED;
+			    }
+			}
+		    }
+		    Tcl_DecrRefCount(selCmd);
+		}
 	    }
 	}
     }
@@ -1425,8 +1467,13 @@ static HRESULT TkAccHelp(
 }
 
 /* Function to get number of child window objects. */
-static int TkAccChildCount(
-    Tk_Window win)
+/*
+ * TkAccChildCount
+ * Returns the number of accessible children for a given window.
+ * Includes both mapped Tk_Window children and virtual children (e.g., listbox items, tree nodes).
+ * Returns -1 on error (e.g., invalid window or toplevel).
+ */
+static int TkAccChildCount(Tk_Window win)
 {
     if (!win) return -1;
     int count = 0;
@@ -1434,10 +1481,24 @@ static int TkAccChildCount(
     Tk_Window toplevel = GetToplevelOfWidget(win);
     if (!toplevel) return -1;
     TkWindow *winPtr = (TkWindow *)toplevel;
+
     /* Step through all child widgets of toplevel to get child count. */
     for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-	if (Tk_IsMapped(child)) count++;
+        if (Tk_IsMapped(child)) count++;
     }
+
+    /* Add virtual children (e.g., listbox items, tree nodes, table rows). */
+    int virtualCount = 0;
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (virtualTable) {
+        Tcl_HashSearch search;
+        Tcl_HashEntry *vEntry;
+        for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
+            virtualCount += ((VirtualRange *)Tcl_GetHashValue(vEntry))->count;
+        }
+    }
+    count += virtualCount; 
+
     return count;
 }
 
@@ -1649,11 +1710,35 @@ void InitChildIdTable(void)
 	    Tcl_InitHashTable(toplevelChildTables, TCL_ONE_WORD_KEYS);
 	}
     }
+    if (!toplevelVirtualTables) {
+	toplevelVirtualTables = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	if (toplevelVirtualTables) {
+	    Tcl_InitHashTable(toplevelVirtualTables, TCL_ONE_WORD_KEYS);
+	}
+    }
+}
+
+/* Function to get a table of virutal child Id's for a toplevel. */
+static Tcl_HashTable *GetVirtualTableForToplevel(Tk_Window toplevel) 
+{
+    if (!toplevel || !toplevelVirtualTables) return NULL;
+    Tcl_HashEntry *entry; int newEntry; Tcl_HashTable *virtualTable;
+    TkGlobalLock();
+    entry = Tcl_CreateHashEntry(toplevelVirtualTables, toplevel, &newEntry);
+    if (newEntry) {
+        virtualTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+        Tcl_InitHashTable(virtualTable, TCL_ONE_WORD_KEYS);
+        Tcl_SetHashValue(entry, virtualTable);
+    } else {
+        virtualTable = (Tcl_HashTable *)Tcl_GetHashValue(entry);
+    }
+    TkGlobalUnlock();
+    return virtualTable;
 }
 
 /* Function to clear childId hash table for a toplevel. */
 void ClearChildIdTableForToplevel(
-    Tk_Window toplevel)
+				  Tk_Window toplevel)
 {
     if (!toplevel || !toplevelChildTables) return;
     Tcl_HashEntry *entry = Tcl_FindHashEntry(toplevelChildTables, toplevel);
@@ -1667,6 +1752,17 @@ void ClearChildIdTableForToplevel(
     }
     Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
     ckfree(childIdTable);
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (virtualTable) {
+	Tcl_HashSearch search; Tcl_HashEntry *vEntry;
+	for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
+	    ckfree(Tcl_GetHashValue(vEntry));
+	}
+	Tcl_DeleteHashTable(virtualTable);
+	ckfree(virtualTable);
+	Tcl_HashEntry *tlEntry = Tcl_FindHashEntry(toplevelVirtualTables, toplevel);
+	if (tlEntry) Tcl_DeleteHashEntry(tlEntry);
+    }
     TkGlobalUnlock();
 }
 
@@ -1711,6 +1807,37 @@ static void AssignChildIdsRecursive(
     for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
 	AssignChildIdsRecursive((Tk_Window)child, nextId, interp, toplevel);
     }
+  /* Assign virtual iD's for non-window elements for UIA. */
+    VARIANT varRole; 
+    VariantInit(&varRole);
+    TkAccRole(win, &varRole, ACC_ROLE_UIA); 
+    if (varRole.vt == VT_I4 && (varRole.lVal == 50008 || varRole.lVal == 50023 || varRole.lVal == 50025)) { /* UIA_List, UIA_Tree, UIA_Table */
+	Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+	if (virtualTable) {
+	    Tcl_Size count = 0; 
+		char cmd[256];
+	    if (varRole.lVal == 50008) {
+		snprintf(cmd, sizeof(cmd), "%s size", Tk_PathName(win)); /* Listbox */
+	    } else if (varRole.lVal == 50023 || varRole.lVal == 50025) {
+		    snprintf(cmd, sizeof(cmd), "%s children {}", Tk_PathName(win)); /* Tree/Table */
+		}
+	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+		Tcl_ListObjLength(interp, Tcl_GetObjResult(interp), &count);
+		} else {
+		int countInt;
+		Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &countInt);
+		count = (Tcl_Size)countInt;
+	    }
+	    if (count > 0) {
+		int newEntry; Tcl_HashEntry *vEntry = Tcl_CreateHashEntry(virtualTable, win, &newEntry);
+		VirtualRange *range = ckalloc(sizeof(VirtualRange));
+		range->startId = *nextId; range->count = count;
+		Tcl_SetHashValue(vEntry, range);
+		*nextId += count;
+	    }
+	}
+    }
+    VariantClear(&varRole);
 }
 
 /*
@@ -1851,44 +1978,24 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 
     switch (propertyId) {
 
-    case 30003: /* UIA_ControlTypePropertyId */
-	{
-		HRESULT hr = S_OK;
-	    long role = 0;
-	    VARIANT varRole;
-	    VariantInit(&varRole);
-	    TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-	    if (varRole.vt == VT_I4) {
-		role = varRole.lVal;
-	    }
-	    VariantClear(&varRole);
-
-	    pRetVal->vt = VT_I4;
-
-	    if (provider->childId > 0) {
-		/* Set correct control type for virtual children. */
-		if (role == ROLE_SYSTEM_LIST || role == ROLE_SYSTEM_LISTITEM) {
-		    pRetVal->lVal = UIA_ListItemControlTypeId;
-		} else if (role == ROLE_SYSTEM_OUTLINE || role == ROLE_SYSTEM_OUTLINEITEM) {
-		    pRetVal->lVal = UIA_TreeItemControlTypeId;
-		} else {
-		    pRetVal->lVal = UIA_CustomControlTypeId;
-		}
-		hr = S_OK;
-	    } else {
-		/* Set correct control type for container windows (Fragment Root). */
-		if (role == ROLE_SYSTEM_LIST) {
-		    pRetVal->lVal = UIA_ListControlTypeId;
-		} else if (role == ROLE_SYSTEM_OUTLINE) {
-		    pRetVal->lVal = UIA_TreeControlTypeId;
-		}
-		if (hr != S_OK) {
-		    pRetVal->lVal = UIA_CustomControlTypeId;
-		    hr = S_OK;
-		}
-	    }
-	    break;
-	}
+case 30003: { /* UIA_ControlTypePropertyId */
+    HRESULT hr = S_OK;
+    VARIANT varRole; VariantInit(&varRole);
+    TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
+    long role = (varRole.vt == VT_I4) ? varRole.lVal : 0;
+    VariantClear(&varRole);
+    pRetVal->vt = VT_I4;
+    if (provider->childId > 0) {
+        /* Virtual children: map container role to item role. */
+        if (role == 50008) pRetVal->lVal = 50009; /* UIA_ListControlTypeId -> UIA_ListItemControlTypeId. */
+        else if (role == 50023) pRetVal->lVal = 50024; /* UIA_TreeControlTypeId -> UIA_TreeItemControlTypeId. */
+        else if (role == 50025) pRetVal->lVal = 50026; /* UIA_TableControlTypeId -> UIA_DataItemControlTypeId. */
+        else pRetVal->lVal = 50032; /* UIA_CustomControlTypeId. */
+    } else {
+        pRetVal->lVal = (role == 50008 || role == 50023 || role == 50025) ? role : 50032;
+    }
+    break;
+}
 
     case 30004: /* UIA_HelpTextPropertyId */
 	{
@@ -1912,8 +2019,67 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
 		if (name) SysFreeString(name);
 		pRetVal->vt = VT_EMPTY;
 	    }
+	    if (FAILED(hrName) || !name || SysStringLen(name) == 0) {
+		if (name) SysFreeString(name);
+		Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(msaa->toplevel);
+		if (virtualTable) {
+		    Tcl_HashSearch search; Tcl_HashEntry *vEntry;
+		    for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
+			VirtualRange *range = Tcl_GetHashValue(vEntry);
+			if (varChild.lVal >= range->startId && varChild.lVal < range->startId + range->count) {
+			    Tk_Window cont = (Tk_Window)Tcl_GetHashKey(virtualTable, vEntry);
+			    int index = varChild.lVal - range->startId;
+			    char cmd[256]; snprintf(cmd, sizeof(cmd), "%s get %d", Tk_PathName(cont), index);
+			    if (Tcl_Eval(msaa->interp, cmd) == TCL_OK) {
+				const char *text = Tcl_GetStringResult(msaa->interp);
+				Tcl_DString ds; Tcl_DStringInit(&ds);
+				pRetVal->vt = VT_BSTR;
+				pRetVal->bstrVal = SysAllocString(Tcl_UtfToWCharDString(text, -1, &ds));
+				Tcl_DStringFree(&ds);
+				TkGlobalUnlock();
+				return pRetVal->bstrVal ? S_OK : S_FALSE;
+			    }
+			}
+		    }
+		}
+		pRetVal->vt = VT_EMPTY;
+	    }
 	    break;
 	}
+	
+    case 30007: { /* UIA_ValuePropertyId. */
+	BSTR value = NULL;
+	HRESULT hrValue = TkRootAccessible_get_accValue((IAccessible *)msaa, varChild, &value);
+	if (SUCCEEDED(hrValue) && value && SysStringLen(value) > 0) {
+	    pRetVal->vt = VT_BSTR;
+	    pRetVal->bstrVal = value;
+	} else {
+	    if (value) SysFreeString(value);
+	    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(msaa->toplevel);
+	    if (virtualTable) {
+		Tcl_HashSearch search; Tcl_HashEntry *vEntry;
+		for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
+		    VirtualRange *range = Tcl_GetHashValue(vEntry);
+		    if (varChild.lVal >= range->startId && varChild.lVal < range->startId + range->count) {
+			Tk_Window cont = (Tk_Window)Tcl_GetHashKey(virtualTable, vEntry);
+			int index = varChild.lVal - range->startId;
+			char cmd[256]; snprintf(cmd, sizeof(cmd), "%s get %d", Tk_PathName(cont), index);
+			if (Tcl_Eval(msaa->interp, cmd) == TCL_OK) {
+			    const char *text = Tcl_GetStringResult(msaa->interp);
+			    Tcl_DString ds; Tcl_DStringInit(&ds);
+			    pRetVal->vt = VT_BSTR;
+			    pRetVal->bstrVal = SysAllocString(Tcl_UtfToWCharDString(text, -1, &ds));
+			    Tcl_DStringFree(&ds);
+			    TkGlobalUnlock();
+			    return pRetVal->bstrVal ? S_OK : S_FALSE;
+			}
+		    }
+		}
+	    }
+	    pRetVal->vt = VT_EMPTY;
+	}
+	break;
+    }
 
     case 30016: /* UIA_IsControlElementPropertyId */
     case 30017: /* UIA_IsContentElementPropertyId */
@@ -2087,107 +2253,63 @@ static HRESULT STDMETHODCALLTYPE TkUiaFragment_Navigate(
 
     switch (direction) {
     case FragmentNavigation_Parent: {
-        /*
-         * If this is a virtual child (childId > 0), its parent is the
-         * container Tk_Window.
-         */
-        if (provider->childId > 0) {
-            TkUiaProvider *parentProvider = GetUiaProviderForWindow(provider->tkwin);
-            if (parentProvider) {
-                *pRetVal = (IRawElementProviderFragment *)parentProvider;
-                TkUiaFragment_AddRef(*pRetVal);
-            }
-            break;
-        } else {
-            /* 
-	     * Container window (childId == 0), parent is handled by the OS (raw host provider).
-	     /* Fall through to S_FALSE for container window, as per UIA documentation.
-	    */
-        }
+	if (provider->childId > 0) {
+	    TkUiaProvider *parentProvider = GetUiaProviderForWindow(provider->tkwin);
+	    if (parentProvider) {
+		*pRetVal = (IRawElementProviderFragment *)parentProvider;
+		TkUiaFragment_AddRef(*pRetVal);
+	    }
+	}
+	break;
     }
     case FragmentNavigation_FirstChild: {
-        int firstId = 0;
-        if (provider->childId == 0) {
-            /* Container window (Listbox, Tree, etc.) -> Find first virtual child item. */
-            if (IsVirtualChildContainer(role)) {
-                firstId = GetFirstChildId(toplevel, provider->tkwin);
-            }
-        } else if (role == 50023) {
-	    /* 
-	     * Virtual child of a tree/outline widget ->
-	     * Check for virtual grand-children. 
-	     * Assuming GetFirstChildId has logic to handle finding
-	     * a child of a virtual element. 
-	     */
-            firstId = GetFirstChildId(toplevel, provider->tkwin);
-        }
-
-        if (firstId > 0) {
-            TkUiaProvider *childProvider = CreateUiaProviderForChild(
-								     provider->msaaProvider, provider->tkwin, firstId);
-            if (childProvider) {
-                *pRetVal = (IRawElementProviderFragment *)childProvider;
-                TkUiaFragment_AddRef(*pRetVal);
-            }
-        }
-        break;
+	int firstId = 0;
+	if (provider->childId == 0 && (role == 50008 || role == 50023 || role == 50025)) { /* UIA_List, UIA_Tree, UIA_Table */
+	    firstId = GetFirstChildId(toplevel, provider->tkwin, direction);
+	} else if (role == 50023 && provider->childId > 0) { // Tree item may have children
+	    firstId = GetFirstChildId(toplevel, provider->tkwin, direction);
+	}
+	if (firstId > 0) {
+	    TkUiaProvider *childProvider = CreateUiaProviderForChild(provider->msaaProvider, provider->tkwin, firstId);
+	    if (childProvider) {
+		*pRetVal = (IRawElementProviderFragment *)childProvider;
+		TkUiaFragment_AddRef(*pRetVal);
+	    }
+	}
+	break;
     }
     case FragmentNavigation_LastChild: {
-        int lastId = 0;
-        if (provider->childId == 0) {
-            /* Container window (Listbox, Tree, etc.) -> Find last virtual child item. */
-            if (IsVirtualChildContainer(role)) {
-                lastId = GetLastChildId(toplevel, provider->tkwin);
-            }
-        } else if (role == 50023) {
-	    /* 
-	     * Virtual child of a tree/outline widget ->
-	     * Check for virtual grand-children. 
-	     * Assuming GetFirstChildId has logic to handle finding
-	     * a child of a virtual element. 
-	     */
-            lastId = GetLastChildId(toplevel, provider->tkwin);
-        }
+	int lastId = 0;
+	if (provider->childId == 0 && (role == 50008 || role == 50023 || role == 50025)) {
+	    lastId = GetLastChildId(toplevel, provider->tkwin, direction);
+	} else if (role == 50023 && provider->childId > 0) {
+	    lastId = GetLastChildId(toplevel, provider->tkwin, direction);
+	}
+	if (lastId > 0) {
+	    TkUiaProvider *childProvider = CreateUiaProviderForChild(provider->msaaProvider, provider->tkwin, lastId);
+	    if (childProvider) {
+		*pRetVal = (IRawElementProviderFragment *)childProvider;
+		TkUiaFragment_AddRef(*pRetVal);
+	    }
+	}
+	break;
+    }
 
-        if (lastId > 0) {
-            TkUiaProvider *childProvider = CreateUiaProviderForChild(
-								     provider->msaaProvider, provider->tkwin, lastId);
-            if (childProvider) {
-                *pRetVal = (IRawElementProviderFragment *)childProvider;
-                TkUiaFragment_AddRef(*pRetVal);
-            }
-        }
-        break;
-    }
-    case FragmentNavigation_NextSibling: {
-        /* Virtual child (childId > 0) -> Find next sibling. */
-        if (provider->childId > 0) {
-            int nextId = GetNextSiblingId(toplevel, provider->tkwin, provider->childId);
-            if (nextId > 0) {
-                TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
-									   provider->msaaProvider, provider->tkwin, nextId);
-                if (siblingProvider) {
-                    *pRetVal = (IRawElementProviderFragment *)siblingProvider;
-                    TkUiaFragment_AddRef(*pRetVal);
-                }
-            }
-        }
-        break;
-    }
+    case FragmentNavigation_NextSibling:
     case FragmentNavigation_PreviousSibling: {
-        /* Virtual child (childId > 0) -> Find previous sibling. */
-        if (provider->childId > 0) {
-            int prevId = GetPreviousSiblingId(toplevel, provider->tkwin, provider->childId);
-            if (prevId > 0) {
-                TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
-									   provider->msaaProvider, provider->tkwin, prevId);
-                if (siblingProvider) {
-                    *pRetVal = (IRawElementProviderFragment *)siblingProvider;
-                    TkUiaFragment_AddRef(*pRetVal);
-                }
-            }
-        }
-        break;
+	if (provider->childId > 0) {
+	    int siblingId = (direction == FragmentNavigation_NextSibling) ?
+		GetNextSiblingId(toplevel, provider->tkwin, provider->childId, direction) :
+		GetPreviousSiblingId(toplevel, provider->tkwin, provider->childId, direction);
+	    if (siblingId > 0) {
+		TkUiaProvider *siblingProvider = CreateUiaProviderForChild(provider->msaaProvider, provider->tkwin, siblingId);
+		if (siblingProvider) {
+		    *pRetVal = (IRawElementProviderFragment *)siblingProvider;
+		    TkUiaFragment_AddRef(*pRetVal);
+		}
+	    }
+	}
+	break;
     }
     }
 
@@ -2313,15 +2435,27 @@ static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(
     return S_OK;
 }
 
-/* Get first child ID for a container. */
-static int GetFirstChildId(Tk_Window toplevel, Tk_Window container)
+/* Functions to manage child ID's in a container window from UIA. */
+static int GetFirstChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction) 
 {
-    if (!toplevel || !container) return -1;
+    if (!toplevel || !container || direction != FragmentNavigation_FirstChild) return -1;
     
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) return -1;
 
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (!virtualTable) return -1;
+
     TkGlobalLock();
+    
+    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
+    if (vEntry) {
+        VirtualRange *range = Tcl_GetHashValue(vEntry);
+        if (range->count > 0) {
+            TkGlobalUnlock();
+            return range->startId;
+        }
+    }
     
     /* Find the smallest child ID for this container. */
     int firstId = INT_MAX;
@@ -2332,7 +2466,6 @@ static int GetFirstChildId(Tk_Window toplevel, Tk_Window container)
         Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
         int childId = PTR2INT(Tcl_GetHashValue(entry));
         
-        /* Check if this window is a child of our container. */
         if (IsChildOfContainer(win, container) && childId < firstId) {
             firstId = childId;
         }
@@ -2342,15 +2475,69 @@ static int GetFirstChildId(Tk_Window toplevel, Tk_Window container)
     return (firstId != INT_MAX) ? firstId : -1;
 }
 
-/* Get next sibling ID. */
-static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId)
+
+static int GetLastChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction) 
 {
-    if (!toplevel || !container) return -1;
+    if (!toplevel || !container || direction != FragmentNavigation_LastChild) return -1;
     
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) return -1;
+    
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (!virtualTable) return -1;
 
     TkGlobalLock();
+    
+    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
+    if (vEntry) {
+        VirtualRange *range = Tcl_GetHashValue(vEntry);
+        if (range->count > 0) {
+            TkGlobalUnlock();
+            return range->startId + range->count - 1; // Last virtual child ID
+        }
+    }
+    
+    int lastId = -1;
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entry;
+    
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
+        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+        int childId = PTR2INT(Tcl_GetHashValue(entry));
+        
+        if (IsChildOfContainer(win, container) && childId > lastId) {
+            lastId = childId;
+        }
+    }
+    
+    TkGlobalUnlock();
+    return lastId;
+}
+
+
+static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction)
+{		
+    if (!toplevel || !container || direction != FragmentNavigation_NextSibling) return -1;
+    
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+    if (!childIdTable) return -1;
+    
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (!virtualTable) return -1;
+
+    TkGlobalLock();
+    
+    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
+    if (vEntry) {
+        VirtualRange *range = Tcl_GetHashValue(vEntry);
+        if (range->count > 0) {
+            int index = currentId - range->startId + 1;
+            if (index < range->count) {
+                TkGlobalUnlock();
+                return currentId + 1; // Next virtual child ID
+            }
+        }
+    }
     
     int nextId = INT_MAX;
     Tcl_HashSearch search;
@@ -2369,15 +2556,29 @@ static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int current
     return (nextId != INT_MAX) ? nextId : -1;
 }
 
-/* Get previous sibling ID. */
-static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId)
-{
-    if (!toplevel || !container) return -1;
+static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction)
+{	
+    if (!toplevel || !container || direction != FragmentNavigation_PreviousSibling) return -1;
     
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) return -1;
+    
+    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
+    if (!virtualTable) return -1;
 
     TkGlobalLock();
+    
+    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
+    if (vEntry) {
+        VirtualRange *range = Tcl_GetHashValue(vEntry);
+        if (range->count > 0) {
+            int index = currentId - range->startId + 1;
+            if (index > 0) {
+                TkGlobalUnlock();
+                return currentId - 1; // Previous virtual child ID
+            }
+        }
+    }
     
     int prevId = -1;
     Tcl_HashSearch search;
@@ -2394,33 +2595,6 @@ static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int cur
     
     TkGlobalUnlock();
     return prevId;
-}
-
-/* Get last child ID. */
-static int GetLastChildId(Tk_Window toplevel, Tk_Window container)
-{
-    if (!toplevel || !container) return -1;
-    
-    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-    if (!childIdTable) return -1;
-
-    TkGlobalLock();
-    
-    int lastId = -1;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entry;
-    
-    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
-        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
-        int childId = PTR2INT(Tcl_GetHashValue(entry));
-        
-        if (IsChildOfContainer(win, container) && childId > lastId) {
-            lastId = childId;
-        }
-    }
-    
-    TkGlobalUnlock();
-    return lastId;
 }
 
 /* Check if window is child of container. */
@@ -2527,19 +2701,6 @@ void HandleWMGetObjectOnMainThread(
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
     
-	#if 0
-    /* 
-     * If this HWND is a native menu (class "#32768"), let Windows 
-     * return its own provider. 
-     */
-    WCHAR className[64] = {0};
-    if (GetClassNameW(hwnd, className, ARRAYSIZE(className))) {
-	if (wcscmp(className, L"#32768") == 0) {
-	    /* Return 0 so DefWindowProc/... will provide the system menu provider. */
-	    return;
-	}
-    }
-	#endif
 
     /* For UIA requests (both Simple and Fragment interfaces) */
     if (lParam == (LPARAM)&IID_IRawElementProviderSimple || 
