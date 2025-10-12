@@ -1,5 +1,5 @@
 /*
- * tkWinAccessibility.c --
+ * tkWinAccessibility.c --get
  *
  *    This file implements the platform-native Microsoft Active
  *    Accessibility and the UI Automation APIs for Tk on Windows.
@@ -18,6 +18,7 @@
 #include <oaidl.h>
 #include <oleauto.h>
 #include <UIAutomation.h>
+
 #include <initguid.h>
 #include <tlhelp32.h>
 #include <tchar.h>
@@ -72,14 +73,9 @@ struct WinRoleMap {
     LONG uiaControlType;
 };
 
-/* Define constants for role lookup and UIA properties. */
+/* Define constants for the role lookup type. */
 #define ACC_ROLE_MSAA 0
 #define ACC_ROLE_UIA 1
-#define UIA_ControlTypePropertyId     30003
-#define UIA_NamePropertyId            30005
-#define UIA_IsControlElementPropertyId 30010
-#define UIA_IsContentElementPropertyId 30011
-#define UIA_IsEnabledPropertyId       30013
 
 const struct WinRoleMap roleMap[] = {
     {"Button", ROLE_SYSTEM_PUSHBUTTON, 50000},       /* UIA_ButtonControlTypeId */
@@ -1684,60 +1680,64 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
        through the MSAA bridge. We only need to handle a few critical ones. */
     
     switch (propertyId) {
-        case UIA_ControlTypePropertyId: {
-            /* Still need control type for basic element classification. */
-            VARIANT varRole;
-            VariantInit(&varRole);
-            TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-            pRetVal->vt = VT_I4;
-            pRetVal->lVal = (varRole.vt == VT_I4) ? varRole.lVal : 50032; /* Custom */
-            VariantClear(&varRole);
-            break;
-        }
+    case 30003: /* UIA_ControlTypePropertyId */
+	{
+	    /* Still need control type for basic element classification. */
+	    VARIANT varRole;
+	    VariantInit(&varRole);
+	    TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
+	    pRetVal->vt = VT_I4;
+	    pRetVal->lVal = (varRole.vt == VT_I4) ? varRole.lVal : 50032; /* UIA_CustomControlTypeId */
+	    VariantClear(&varRole);
+	    break;
+	}
+    
+    case 30016: /* UIA_IsControlElementPropertyId */
+    case 30017: /* UIA_IsContentElementPropertyId */
+	{
+	    /* These should generally be true for accessible elements. */
+	    pRetVal->vt = VT_BOOL;
+	    pRetVal->boolVal = VARIANT_TRUE;
+	    break;
+	}
+    
+    case 30010: /* UIA_IsEnabledPropertyId */
+	{
+	    /* Basic enabled state. */
+	    VARIANT varState;
+	    VariantInit(&varState);
+	    TkAccState(provider->tkwin, &varState);
+	    pRetVal->vt = VT_BOOL;
+	    pRetVal->boolVal = (varState.vt == VT_I4 && (varState.lVal & STATE_SYSTEM_UNAVAILABLE)) ? 
+		VARIANT_FALSE : VARIANT_TRUE;
+	    VariantClear(&varState);
+	    break;
+	}
+    
+    case 30005: /* UIA_NamePropertyId */
+	{
+	    /* Get name from MSAA. */
+	    BSTR name = NULL;
+	    VARIANT varChild;
+	    varChild.vt = VT_I4;
+	    varChild.lVal = CHILDID_SELF;
         
-        case UIA_IsControlElementPropertyId:
-        case UIA_IsContentElementPropertyId: {
-            /* These should generally be true for accessible elements. */
-            pRetVal->vt = VT_BOOL;
-            pRetVal->boolVal = VARIANT_TRUE;
-            break;
-        }
+	    HRESULT hr = TkRootAccessible_get_accName(
+						      (IAccessible *)provider->msaaProvider, varChild, &name);
         
-        case UIA_IsEnabledPropertyId: {
-            /* Basic enabled state. */
-            VARIANT varState;
-            VariantInit(&varState);
-            TkAccState(provider->tkwin, &varState);
-            pRetVal->vt = VT_BOOL;
-            pRetVal->boolVal = (varState.vt == VT_I4 && (varState.lVal & STATE_SYSTEM_UNAVAILABLE)) ? 
-                              VARIANT_FALSE : VARIANT_TRUE;
-            VariantClear(&varState);
-            break;
-        }
-        
-        case UIA_NamePropertyId: {
-            /* Get name from MSAA. */
-            BSTR name = NULL;
-            VARIANT varChild;
-            varChild.vt = VT_I4;
-            varChild.lVal = CHILDID_SELF;
-            
-            HRESULT hr = TkRootAccessible_get_accName(
-                (IAccessible *)provider->msaaProvider, varChild, &name);
-            
-            if (SUCCEEDED(hr) && name) {
-                pRetVal->vt = VT_BSTR;
-                pRetVal->bstrVal = name;
-            } else {
-                pRetVal->vt = VT_EMPTY;
-            }
-            break;
-        }
-        
-        default:
-            /* For all other properties, LegacyIAccessible will handle them. */
-            pRetVal->vt = VT_EMPTY;
-            break;
+	    if (SUCCEEDED(hr) && name) {
+		pRetVal->vt = VT_BSTR;
+		pRetVal->bstrVal = name;
+	    } else {
+		pRetVal->vt = VT_EMPTY;
+	    }
+	    break;
+	}
+    
+    default:
+        /* For all other properties, LegacyIAccessible will handle them. */
+        pRetVal->vt = VT_EMPTY;
+        break;
     }
 
     return S_OK;
@@ -2097,6 +2097,7 @@ static int EmitSelectionChanged(
     TkGlobalUnlock();
     return TCL_OK;
 }
+
 
 
 /*

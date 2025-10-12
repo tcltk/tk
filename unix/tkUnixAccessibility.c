@@ -2774,8 +2774,6 @@ static int IsScreenReaderRunning(
  * Helper function to determine if screen reader is running. Separate function
  * because it can be called internally as well as a Tcl command.
  */
-
-/* Helper function to check if screen reader is running. */
 static int IsScreenReaderActive(void)
 {
     FILE *fp = popen("pgrep -x orca", "r");

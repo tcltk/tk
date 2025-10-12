@@ -967,7 +967,6 @@ namespace eval ::tk::accessible {
     bind Dialog <Return> {+::tk::dialog::OK %W; ::tk::accessible::emit_selection_change %W}
     bind Dialog <Escape> {+::tk::dialog::Cancel %W; ::tk::accessible::emit_selection_change %W}
 
-
     # Help text for widgets that require additional direction
     # on keyboard navigation - these widgets will use standard keyboard
     # navigation when they obtain focus rather than the accessibility
