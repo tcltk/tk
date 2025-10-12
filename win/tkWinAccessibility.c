@@ -34,16 +34,11 @@
  *----------------------------------------------------------------------
  */
 
-
 /* Define global lock constants. */
 static CRITICAL_SECTION TkGlobalLock;
 static INIT_ONCE TkInitOnce = INIT_ONCE_STATIC_INIT;
 #define TkGlobalLock()   EnterCriticalSection(&TkGlobalLock)
 #define TkGlobalUnlock() LeaveCriticalSection(&TkGlobalLock)
-
-#ifndef DEBUG_ACCESSIBILITY
-#   define DEBUG_ACCESSIBILITY 0
-#endif
 
 /* TkRootAccessible structure. */
 typedef struct TkRootAccessible {
@@ -58,24 +53,13 @@ typedef struct TkRootAccessible {
     LONG refCount;
 } TkRootAccessible;
 
-/* UI Automation Provider structure. */
+/* UI Automation Provider structure - simplified */
 typedef struct TkUiaProvider {
     IRawElementProviderSimpleVtbl *lpVtbl;
-    IRawElementProviderFragmentVtbl *fragmentVtbl;
     TkRootAccessible *msaaProvider;
     Tk_Window tkwin;
-    int childId; 
     LONG refCount;
 } TkUiaProvider;
-
-/* Fragment navigation directions. */
-typedef enum FragmentNavigation {
-    FragmentNavigation_Parent = 0,
-    FragmentNavigation_NextSibling = 1,
-    FragmentNavigation_PreviousSibling = 2,
-    FragmentNavigation_FirstChild = 3,
-    FragmentNavigation_LastChild = 4
-} FragmentNavigation;
 
 /*
  * Map script-level roles to C roles for both MSAA and UI Automation.
@@ -88,9 +72,14 @@ struct WinRoleMap {
     LONG uiaControlType;
 };
 
-/* Define constants for the role lookup type. */
+/* Define constants for role lookup and UIA properties. */
 #define ACC_ROLE_MSAA 0
 #define ACC_ROLE_UIA 1
+#define UIA_ControlTypePropertyId     30003
+#define UIA_NamePropertyId            30005
+#define UIA_IsControlElementPropertyId 30010
+#define UIA_IsContentElementPropertyId 30011
+#define UIA_IsEnabledPropertyId       30013
 
 const struct WinRoleMap roleMap[] = {
     {"Button", ROLE_SYSTEM_PUSHBUTTON, 50000},       /* UIA_ButtonControlTypeId */
@@ -112,13 +101,6 @@ const struct WinRoleMap roleMap[] = {
     {NULL, 0, 0}
 };
 
-/* Virtual ID's for child elements in UIA API. */
-typedef struct { 
-    int startId; 
-    int count; 
-} VirtualRange;
- 
-
 /* Hash table for managing accessibility attributes. */
 extern Tcl_HashTable *TkAccessibilityObject;
 
@@ -126,8 +108,6 @@ extern Tcl_HashTable *TkAccessibilityObject;
 static Tcl_HashTable *tkAccessibleTable;
 static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *toplevelChildTables = NULL;
-static Tcl_HashTable *toplevelVirtualTables = NULL;
-
 
 /* UI Automation provider tables and interfaces. */
 static Tcl_HashTable *tkUiaProviderTable;
@@ -237,19 +217,15 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
     TkRootAccessible_put_accValue
 };
 
-
 /*
  *----------------------------------------------------------------------
  *
  * Prototypes for UI Automation Provider. UI Automation is being implemented
- * as a layer above the MSAA implementation, using MSAA as the data provider
- * for the UI Automation functionality. This is to better support screen readers
- * such as Microsoft Narrator that rely more on UIA than MSAA.
+ * as a layer above the MSAA implementation using LegacyIAccessible pattern.
  *
  *----------------------------------------------------------------------
  */
 
-/* Prototypes of UI Automation Provider functions */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(IRawElementProviderSimple *this, REFIID riid, void **ppvObject);
 static ULONG STDMETHODCALLTYPE TkUiaProvider_AddRef(IRawElementProviderSimple *this);
 static ULONG STDMETHODCALLTYPE TkUiaProvider_Release(IRawElementProviderSimple *this);
@@ -267,49 +243,6 @@ static IRawElementProviderSimpleVtbl tkUiaProviderVtbl = {
     TkUiaProvider_GetPatternProvider,
     TkUiaProvider_GetPropertyValue,
     TkUiaProvider_get_HostRawElementProvider
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * Prototypes forIRawElementProviderFragment - these are accessible 
- * child widgets in the UI Automation API. They will be used primarily
- * for such child elements as list/table rows and tree nodes.
- * MSAA child elements can be tracked with child ID's and custom notfications
- * on selection events, but UIA needs a more formal implementation. 
- *
- *----------------------------------------------------------------------
- */
-
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_QueryInterface(IRawElementProviderFragment *this, REFIID riid, void **ppvObject);
-static ULONG STDMETHODCALLTYPE TkUiaFragment_AddRef(IRawElementProviderFragment *this);
-static ULONG STDMETHODCALLTYPE TkUiaFragment_Release(IRawElementProviderFragment *this);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_Navigate(IRawElementProviderFragment *this, enum FragmentNavigation direction, IRawElementProviderFragment **pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetRuntimeId(IRawElementProviderFragment *this, SAFEARRAY **pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_BoundingRectangle(IRawElementProviderFragment *this, struct UiaRect *pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetEmbeddedFragmentRoots(IRawElementProviderFragment *this, SAFEARRAY **pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_SetFocus(IRawElementProviderFragment *this);
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(IRawElementProviderFragment *this, IRawElementProviderFragmentRoot **pRetVal);
-static int GetFirstChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction);
-static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction);
-static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction);
-static int GetLastChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction);
-static BOOL IsChildOfContainer(Tk_Window child, Tk_Window container);
-static TkUiaProvider *CreateUiaProviderForChild(TkRootAccessible *msaaProvider, Tk_Window container, int childId);
-static BOOL IsVirtualChildContainer(LONG role);
-static int GetVirtualChildIds(Tk_Window toplevel, Tk_Window container, int **childIds);
-
-/* Fragment VTable. */
-static IRawElementProviderFragmentVtbl tkUiaFragmentVtbl = {
-    TkUiaFragment_QueryInterface,
-    TkUiaFragment_AddRef,
-    TkUiaFragment_Release,
-    TkUiaFragment_Navigate,
-    TkUiaFragment_GetRuntimeId,
-    TkUiaFragment_get_BoundingRectangle,
-    TkUiaFragment_GetEmbeddedFragmentRoots,
-    TkUiaFragment_SetFocus,
-    TkUiaFragment_get_FragmentRoot
 };
 
 /*
@@ -351,7 +284,6 @@ void EnsureGlobalLockInitialized(void);
 void InitTkAccessibleTable(void);
 void InitChildIdTable(void);
 void ClearChildIdTableForToplevel(Tk_Window toplevel);
-static Tcl_HashTable *GetVirtualTableForToplevel(Tk_Window toplevel);
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
 static void SetChildIdForTkWindow(Tk_Window win, int id, Tcl_HashTable *childIdTable);
@@ -449,7 +381,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_QueryInterface(
     REFIID riid,
     void **ppvObject)
 {
-    if (!ppvObject) return E_INVALIDARG; /* Add null check for ppvObject. */
+    if (!ppvObject) return E_INVALIDARG;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch) || IsEqualIID(riid, &IID_IAccessible)) {
 	*ppvObject = this;
 	TkRootAccessible_AddRef(this);
@@ -463,7 +395,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_QueryInterface(
 static ULONG STDMETHODCALLTYPE TkRootAccessible_AddRef(
     IAccessible *this)
 {
-    if (!this) return E_INVALIDARG; /* Add null check. */
+    if (!this) return E_INVALIDARG;
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
     return InterlockedIncrement(&tkAccessible->refCount);
 }
@@ -472,18 +404,18 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_AddRef(
 static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(
     IAccessible *this)
 {
-    if (!this) return E_INVALIDARG; /* Add null check. */
+    if (!this) return E_INVALIDARG;
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
     ULONG count = InterlockedDecrement(&tkAccessible->refCount);
     if (count == 0) {
 	TkGlobalLock();
-	if (tkAccessible->win && tkAccessibleTableInitialized) { /* Check table initialization. */
+	if (tkAccessible->win && tkAccessibleTableInitialized) {
 	    Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->win);
 	    if (entry) {
 		Tcl_DeleteHashEntry(entry);
 	    }
 	}
-	if (tkAccessible->pathName) { /* Avoid double-free. */
+	if (tkAccessible->pathName) {
 	    ckfree(tkAccessible->pathName);
 	    tkAccessible->pathName = NULL;
 	}
@@ -498,8 +430,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfoCount(
     TCL_UNUSED(IAccessible *), /* this */
     UINT *pctinfo)
 {
-    if (!pctinfo) return E_INVALIDARG; /* Add null check. */
-    *pctinfo = 1; /* We provide one type information interface. */
+    if (!pctinfo) return E_INVALIDARG;
+    *pctinfo = 1;
     return S_OK;
 }
 
@@ -513,7 +445,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetTypeInfo(
     LCID lcid,
     ITypeInfo **ppTInfo)
 {
-    if (!ppTInfo) return E_INVALIDARG; /* Add null check. */
+    if (!ppTInfo) return E_INVALIDARG;
     *ppTInfo = NULL;
     if (iTInfo != 0) return DISP_E_BADINDEX;
 
@@ -543,7 +475,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_GetIDsOfNames(
     LCID lcid,
     DISPID *rgDispId)
 {
-    if (!rgszNames || !rgDispId) return E_INVALIDARG; /* Add null check. */
+    if (!rgszNames || !rgDispId) return E_INVALIDARG;
     ITypeInfo *pTypeInfo = NULL;
     HRESULT hr = TkRootAccessible_GetTypeInfo(this, 0, lcid, &pTypeInfo);
     if (FAILED(hr) || !pTypeInfo) return E_FAIL;
@@ -565,7 +497,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
     TCL_UNUSED(EXCEPINFO *), /* pExcepInfo */
     TCL_UNUSED(UINT *)) /* puArgErr */
 {
-    if (!pVarResult) return E_INVALIDARG; /* Add null check. */
+    if (!pVarResult) return E_INVALIDARG;
     VariantInit(pVarResult);
 
     VARIANT selfVar;
@@ -597,11 +529,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
 
 /* 
  * Function to map accessible name to MSAA. 
- * We return the "description" value from the hash table
- * becuase UIA requires the name property to be populated -
- * but using the "name" value causes the same word to 
- * be spoken twice, because the name usually matches 
- * the role. 
  */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
 							      IAccessible *this,
@@ -619,7 +546,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     }
 
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-        /* For the toplevel itself, no name to avoid double-reading */
+        /* For the toplevel itself, no name to avoid double-reading. */
         TkGlobalUnlock();
         return S_OK;
     }
@@ -631,7 +558,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
             return E_INVALIDARG;
         }
 
-        /* Retrieve the accessible name for the child */
+        /* Retrieve the accessible name for the child. */
         HRESULT hr = TkAccDescription(child, pszName);
         TkGlobalUnlock();
         return hr;
@@ -640,7 +567,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     TkGlobalUnlock();
     return E_INVALIDARG;
 }
-
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(
@@ -956,9 +882,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(
 
 /* 
  * Function to get accessible description to MSAA. 
- * This function returns NULL because we are populating
- * the "name" property with the description data 
- * to support both MSAA and UIA. 
  */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
        IAccessible *this,
@@ -979,7 +902,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
  */
 
 /* Function to map accessible role to MSAA or UIA. */
-
 static HRESULT TkAccRole(
     Tk_Window win,
     VARIANT *pvarRole,
@@ -1031,17 +953,11 @@ static void ComputeAndCacheCheckedState(
     Tcl_Interp *interp)
 {
     if (!win || !interp) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "ComputeAndCacheCheckedState: Invalid win or interp\n");
-#endif
 	return;
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "ComputeAndCacheCheckedState: No accessibility object for %s\n", Tk_PathName(win));
-#endif
     return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
@@ -1052,9 +968,6 @@ static void ComputeAndCacheCheckedState(
 	tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
     }
     if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && strcmp(tkrole, "Radiobutton") != 0)) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "ComputeAndCacheCheckedState: Not a checkbutton or radiobutton: %s\n", tkrole ? tkrole : "null");
-#endif
     return;
     }
 
@@ -1065,9 +978,7 @@ static void ComputeAndCacheCheckedState(
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 	varName = Tcl_GetStringResult(interp);
     } else {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "ComputeAndCacheCheckedState: Failed to get -variable for %s\n", path);
-#endif
+	return;
     }
     Tcl_DecrRefCount(varCmd);
 
@@ -1075,9 +986,7 @@ static void ComputeAndCacheCheckedState(
     if (varName && *varName) {
 	const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 	if (!varVal) {
-#if DEBUG_ACCESSIBILITY
-	    fprintf(stderr, "ComputeAndCacheCheckedState: Variable %s not found for %s\n", varName, path);
-#endif
+	    return;
 	} else {
 	    const char *onValue = NULL;
 	    Tcl_Obj *valueCmd = NULL;
@@ -1091,19 +1000,13 @@ static void ComputeAndCacheCheckedState(
 		if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 		    onValue = Tcl_GetStringResult(interp);
 		} else {
-#if DEBUG_ACCESSIBILITY
-		    fprintf(stderr, "ComputeAndCacheCheckedState: Failed to get -onvalue/-value for %s\n", path);
-#endif
+			return;
 		}
 		Tcl_DecrRefCount(valueCmd);
 	    }
 	    if (varVal && onValue && strcmp(varVal, onValue) == 0) {
 		isChecked = 1;
 	    }
-#if DEBUG_ACCESSIBILITY
-	    fprintf(stderr, "ComputeAndCacheCheckedState: %s is %s (var=%s, onValue=%s)\n",
-		    path, isChecked ? "checked" : "unchecked", varVal, onValue);
-#endif
 	}
     } else {
 	/* Fallback: Check widget's internal state for ttk widgets */
@@ -1114,9 +1017,6 @@ static void ComputeAndCacheCheckedState(
 	    if (result && strcmp(result, "1") == 0) {
 		isChecked = 1;
 	    }
-#if DEBUG_ACCESSIBILITY
-	    fprintf(stderr, "ComputeAndCacheCheckedState: %s instate selected = %s\n", path, result);
-#endif
 	}
 	Tcl_DecrRefCount(stateCmd);
     }
@@ -1131,9 +1031,6 @@ static void ComputeAndCacheCheckedState(
     Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
     Tcl_IncrRefCount(valObj);
     Tcl_SetHashValue(valuePtr, valObj);
-#if DEBUG_ACCESSIBILITY
-    fprintf(stderr, "ComputeAndCacheCheckedState: Cached value=%s for %s\n", buf, path);
-#endif
     TkGlobalUnlock();
 
     /* Notify MSAA with both events */
@@ -1145,18 +1042,11 @@ static void ComputeAndCacheCheckedState(
 	    HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 	    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
 	    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-#if DEBUG_ACCESSIBILITY
-	    fprintf(stderr, "ComputeAndCacheCheckedState: Notified MSAA for %s (childId=%ld)\n", path, childId);
-#endif
 	} else {
-#if DEBUG_ACCESSIBILITY
-	    fprintf(stderr, "ComputeAndCacheCheckedState: Invalid childId for %s\n", path);
-#endif
+	return;
 	}
     } else {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "ComputeAndCacheCheckedState: No toplevel for %s\n", path);
-#endif
+	return;
     }
 }
 
@@ -1168,16 +1058,10 @@ static HRESULT TkAccState(
 	Tcl_Interp *interp = Tk_Interp(win);
 	
     if (!win || !pvarState) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkAccState: Invalid win or pvarState\n");
-#endif
 	return E_INVALIDARG;
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkAccState: No accessibility object for %s\n", Tk_PathName(win));
-#endif
 	return S_FALSE;
     }
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
@@ -1200,45 +1084,10 @@ static HRESULT TkAccState(
 	    Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
 	    if (valuePtr) {
 		const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
-#if DEBUG_ACCESSIBILITY
-		fprintf(stderr, "TkAccState: %s value=%s\n", Tk_PathName(win), value);
-#endif
 		if (value && strcmp(value, "1") == 0) {
 		    state |= STATE_SYSTEM_CHECKED;
 		}
 	    } else {
-#if DEBUG_ACCESSIBILITY
-		fprintf(stderr, "TkAccState: No value cached for %s\n", Tk_PathName(win));
-#endif
-	    }
-	}
-	/* Check virtual children. */
-	if (strcmp(tkrole, "Listbox") == 0 || strcmp(tkrole, "Tree") == 0 || strcmp(tkrole, "Table") == 0) {
-	    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(GetToplevelOfWidget(win));
-	    if (virtualTable) {
-		Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, win);
-		if (vEntry) {
-		    VirtualRange *range = Tcl_GetHashValue(vEntry);
-		    Tcl_Obj *selCmd = Tcl_NewStringObj(Tcl_GetString(Tcl_NewStringObj(Tk_PathName(win), -1)), -1);
-		    Tcl_IncrRefCount(selCmd);
-		    Tcl_AppendStringsToObj(selCmd, " curselection", NULL);
-		    if (Tcl_EvalObjEx(interp, selCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
-			Tcl_Obj *selList = Tcl_GetObjResult(interp);
-			Tcl_Size selCount;
-			Tcl_ListObjLength(interp, selList, &selCount);
-			for (int i = 0; i < selCount; i++) {
-			    Tcl_Obj *selItem; 
-				Tcl_ListObjIndex(interp, selList, i, &selItem);
-			    int selIndex;
-			    Tcl_GetIntFromObj(interp, selItem, &selIndex);
-			    if (selIndex >= 0 && selIndex < range->count) {
-				int childId = range->startId + selIndex;
-				if (childId == pvarState->lVal) state |= STATE_SYSTEM_SELECTED;
-			    }
-			}
-		    }
-		    Tcl_DecrRefCount(selCmd);
-		}
 	    }
 	}
     }
@@ -1250,9 +1099,6 @@ static HRESULT TkAccState(
 
     pvarState->vt = VT_I4;
     pvarState->lVal = state;
-#if DEBUG_ACCESSIBILITY
-    fprintf(stderr, "TkAccState: %s state=0x%lx\n", Tk_PathName(win), state);
-#endif
     return S_OK;
 }
 
@@ -1299,9 +1145,6 @@ static void TkDoDefaultAction(
     ActionEvent *event = NULL;
     if (!childId) {
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: Invalid childId\n");
-#endif
 	return;
     }
     TkGlobalLock();
@@ -1319,63 +1162,42 @@ static void TkDoDefaultAction(
     if (!toplevel) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: No toplevel for childId %d\n", childId);
-#endif
 	return;
     }
     Tk_Window win = GetTkWindowForChildId(childId, toplevel);
     if (!win) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: No window for childId %d\n", childId);
-#endif
 	return;
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: No accessibility object for %s\n", Tk_PathName(win));
-#endif
 	return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     if (!AccessibleAttributes) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: No attributes for %s\n", Tk_PathName(win));
-#endif
 	return;
     }
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
     if (!hPtr2) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: No action for %s\n", Tk_PathName(win));
-#endif
 	return;
     }
     const char *action = Tcl_GetString(Tcl_GetHashValue(hPtr2));
     if (!action) {
 	TkGlobalUnlock();
 	mainThreadResult = E_INVALIDARG;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: Invalid action for %s\n", Tk_PathName(win));
-#endif
 	return;
     }
     event = (ActionEvent *)ckalloc(sizeof(ActionEvent));
     if (event == NULL) {
 	TkGlobalUnlock();
 	mainThreadResult = E_OUTOFMEMORY;
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "TkDoDefaultAction: Memory allocation failed\n");
-#endif
 	return;
     }
     event->header.proc = ActionEventProc;
@@ -1467,12 +1289,6 @@ static HRESULT TkAccHelp(
 }
 
 /* Function to get number of child window objects. */
-/*
- * TkAccChildCount
- * Returns the number of accessible children for a given window.
- * Includes both mapped Tk_Window children and virtual children (e.g., listbox items, tree nodes).
- * Returns -1 on error (e.g., invalid window or toplevel).
- */
 static int TkAccChildCount(Tk_Window win)
 {
     if (!win) return -1;
@@ -1486,18 +1302,6 @@ static int TkAccChildCount(Tk_Window win)
     for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
         if (Tk_IsMapped(child)) count++;
     }
-
-    /* Add virtual children (e.g., listbox items, tree nodes, table rows). */
-    int virtualCount = 0;
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (virtualTable) {
-        Tcl_HashSearch search;
-        Tcl_HashEntry *vEntry;
-        for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
-            virtualCount += ((VirtualRange *)Tcl_GetHashValue(vEntry))->count;
-        }
-    }
-    count += virtualCount; 
 
     return count;
 }
@@ -1710,30 +1514,6 @@ void InitChildIdTable(void)
 	    Tcl_InitHashTable(toplevelChildTables, TCL_ONE_WORD_KEYS);
 	}
     }
-    if (!toplevelVirtualTables) {
-	toplevelVirtualTables = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-	if (toplevelVirtualTables) {
-	    Tcl_InitHashTable(toplevelVirtualTables, TCL_ONE_WORD_KEYS);
-	}
-    }
-}
-
-/* Function to get a table of virutal child Id's for a toplevel. */
-static Tcl_HashTable *GetVirtualTableForToplevel(Tk_Window toplevel) 
-{
-    if (!toplevel || !toplevelVirtualTables) return NULL;
-    Tcl_HashEntry *entry; int newEntry; Tcl_HashTable *virtualTable;
-    TkGlobalLock();
-    entry = Tcl_CreateHashEntry(toplevelVirtualTables, toplevel, &newEntry);
-    if (newEntry) {
-        virtualTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-        Tcl_InitHashTable(virtualTable, TCL_ONE_WORD_KEYS);
-        Tcl_SetHashValue(entry, virtualTable);
-    } else {
-        virtualTable = (Tcl_HashTable *)Tcl_GetHashValue(entry);
-    }
-    TkGlobalUnlock();
-    return virtualTable;
 }
 
 /* Function to clear childId hash table for a toplevel. */
@@ -1752,17 +1532,6 @@ void ClearChildIdTableForToplevel(
     }
     Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
     ckfree(childIdTable);
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (virtualTable) {
-	Tcl_HashSearch search; Tcl_HashEntry *vEntry;
-	for (vEntry = Tcl_FirstHashEntry(virtualTable, &search); vEntry; vEntry = Tcl_NextHashEntry(&search)) {
-	    ckfree(Tcl_GetHashValue(vEntry));
-	}
-	Tcl_DeleteHashTable(virtualTable);
-	ckfree(virtualTable);
-	Tcl_HashEntry *tlEntry = Tcl_FindHashEntry(toplevelVirtualTables, toplevel);
-	if (tlEntry) Tcl_DeleteHashEntry(tlEntry);
-    }
     TkGlobalUnlock();
 }
 
@@ -1784,17 +1553,10 @@ static void AssignChildIdsRecursive(
     Tk_Window toplevel)
 {
     if (!win || !interp || !toplevel || !Tk_IsMapped(win)) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "AssignChildIdsRecursive: Skipping %s (invalid or unmapped)\n",
-		win ? Tk_PathName(win) : "null");
-#endif
 	return;
     }
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) {
-#if DEBUG_ACCESSIBILITY
-	fprintf(stderr, "AssignChildIdsRecursive: No childIdTable for toplevel %s\n", Tk_PathName(toplevel));
-#endif
 	return;
     }
     SetChildIdForTkWindow(win, *nextId, childIdTable);
@@ -1807,49 +1569,16 @@ static void AssignChildIdsRecursive(
     for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
 	AssignChildIdsRecursive((Tk_Window)child, nextId, interp, toplevel);
     }
-  /* Assign virtual iD's for non-window elements for UIA. */
-    VARIANT varRole; 
-    VariantInit(&varRole);
-    TkAccRole(win, &varRole, ACC_ROLE_UIA); 
-    if (varRole.vt == VT_I4 && (varRole.lVal == 50008 || varRole.lVal == 50023 || varRole.lVal == 50025)) { /* UIA_List, UIA_Tree, UIA_Table */
-	Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-	if (virtualTable) {
-	    Tcl_Size count = 0; 
-		char cmd[256];
-	    if (varRole.lVal == 50008) {
-		snprintf(cmd, sizeof(cmd), "%s size", Tk_PathName(win)); /* Listbox */
-	    } else if (varRole.lVal == 50023 || varRole.lVal == 50025) {
-		    snprintf(cmd, sizeof(cmd), "%s children {}", Tk_PathName(win)); /* Tree/Table */
-		}
-	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-		Tcl_ListObjLength(interp, Tcl_GetObjResult(interp), &count);
-		} else {
-		int countInt;
-		Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &countInt);
-		count = (Tcl_Size)countInt;
-	    }
-	    if (count > 0) {
-		int newEntry; Tcl_HashEntry *vEntry = Tcl_CreateHashEntry(virtualTable, win, &newEntry);
-		VirtualRange *range = ckalloc(sizeof(VirtualRange));
-		range->startId = *nextId; range->count = count;
-		Tcl_SetHashValue(vEntry, range);
-		*nextId += count;
-	    }
-	}
-    }
-    VariantClear(&varRole);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * UI Automation Provider implementation. This is driven by the MSAA accessible
- * object; the UIA functions query obtain properties and data via the MSAA
- * interface.
+ * UI Automation Provider implementation using LegacyIAccessible pattern.
+ * This lets UIA automatically bridge to our existing MSAA implementation.
  *
  *----------------------------------------------------------------------
  */
-
 
 /* UI Automation Provider QueryInterface. */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
@@ -1863,9 +1592,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
 
     /* Common provider IIDs. */
     if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IRawElementProviderSimple) ||
-        IsEqualIID(riid, &IID_IRawElementProviderFragment) ||
-        IsEqualIID(riid, &IID_IRawElementProviderFragmentRoot)) {
+        IsEqualIID(riid, &IID_IRawElementProviderSimple)) {
         *ppvObject = this;
         TkUiaProvider_AddRef(this);
         return S_OK;
@@ -1880,8 +1607,6 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
-
-
 
 /* UI Automation Provider AddRef. */
 static ULONG STDMETHODCALLTYPE TkUiaProvider_AddRef(
@@ -1920,7 +1645,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
     return S_OK;
 }
 
-/* UI Automation Pattern Provider. */
+/* UI Automation Pattern Provider - KEY CHANGE: Support LegacyIAccessible */
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
     IRawElementProviderSimple *this,
     PATTERNID patternId,
@@ -1929,23 +1654,14 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
     if (!pRetVal) return E_INVALIDARG;
     *pRetVal = NULL;
 
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-
-    /*
-     * For now, we return the provider itself for common patterns so that
-     * UIA clients that call GetPatternProvider receive a valid object.
-     *
-     */
-    if (patternId == UIA_InvokePatternId ||
-        patternId == UIA_SelectionPatternId ||
-        patternId == UIA_ValuePatternId ||
-        patternId == UIA_ScrollPatternId) {
+    /* Support LegacyIAccessible pattern - this bridges UIA to MSAA. */
+    if (patternId == UIA_LegacyIAccessiblePatternId) {
+        /* Return the provider itself as the LegacyIAccessible pattern. */
         *pRetVal = (IUnknown *)this;
         TkUiaProvider_AddRef(this);
         return S_OK;
     }
 
-    /* Otherwise no pattern support provided here. */
     return S_OK;
 }
 
@@ -1964,123 +1680,66 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
         return E_FAIL;
     }
 
-    TkGlobalLock();
-
-    /* Check if this is a virtual child */
-    BOOL isVirtualChild = (provider->childId > 0);
+    /* For most properties, let the LegacyIAccessible pattern handle them
+       through the MSAA bridge. We only need to handle a few critical ones. */
     
     switch (propertyId) {
-        case 30003: { /* UIA_ControlTypePropertyId */
-            if (isVirtualChild) {
-                /* Virtual children should be list items, tree items, or data items */
-                VARIANT varRole;
-                VariantInit(&varRole);
-                TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-                long containerRole = (varRole.vt == VT_I4) ? varRole.lVal : 0;
-                VariantClear(&varRole);
-                
-                pRetVal->vt = VT_I4;
-                if (containerRole == 50008) { /* Listbox */
-                    pRetVal->lVal = 50009; /* ListItem */
-                } else if (containerRole == 50023) { /* Tree */
-                    pRetVal->lVal = 50024; /* TreeItem */
-                } else if (containerRole == 50025) { /* Table */
-                    pRetVal->lVal = 50026; /* DataItem */
-                } else {
-                    pRetVal->lVal = 50032; /* Custom */
-                }
-            } else {
-                /* Regular widget - get its normal role */
-                VARIANT varRole;
-                VariantInit(&varRole);
-                TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-                pRetVal->vt = VT_I4;
-                pRetVal->lVal = (varRole.vt == VT_I4) ? varRole.lVal : 50032; /* Custom */
-                VariantClear(&varRole);
-            }
+        case UIA_ControlTypePropertyId: {
+            /* Still need control type for basic element classification. */
+            VARIANT varRole;
+            VariantInit(&varRole);
+            TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
+            pRetVal->vt = VT_I4;
+            pRetVal->lVal = (varRole.vt == VT_I4) ? varRole.lVal : 50032; /* Custom */
+            VariantClear(&varRole);
             break;
         }
         
-        case 30005: { /* UIA_NamePropertyId */
-            if (isVirtualChild) {
-                /* Get the text content for virtual children */
-                TkRootAccessible *msaa = provider->msaaProvider;
-                Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(msaa->toplevel);
-                if (virtualTable) {
-                    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, provider->tkwin);
-                    if (vEntry) {
-                        VirtualRange *range = Tcl_GetHashValue(vEntry);
-                        if (provider->childId >= range->startId && 
-                            provider->childId < range->startId + range->count) {
-                            int index = provider->childId - range->startId;
-                            
-                            /* Try to get the item text from the container */
-                            char cmd[256];
-                            const char *widgetType = NULL;
-                            
-                            /* Determine widget type to use appropriate command */
-                            VARIANT varRole;
-                            VariantInit(&varRole);
-                            TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-                            long role = (varRole.vt == VT_I4) ? varRole.lVal : 0;
-                            VariantClear(&varRole);
-                            
-                            if (role == 50008) { /* Listbox */
-                                snprintf(cmd, sizeof(cmd), "%s get %d", 
-                                         Tk_PathName(provider->tkwin), index);
-                            } else if (role == 50023 || role == 50025) { /* Tree or Table */
-                                /* For tree/table, we need to get the item identifier first */
-                                snprintf(cmd, sizeof(cmd), "%s children {}", 
-                                         Tk_PathName(provider->tkwin));
-                                if (Tcl_Eval(msaa->interp, cmd) == TCL_OK) {
-                                    Tcl_Obj *childrenList = Tcl_GetObjResult(msaa->interp);
-                                    Tcl_Size childCount;
-                                    Tcl_ListObjLength(msaa->interp, childrenList, &childCount);
-                                    if (index < childCount) {
-                                        Tcl_Obj *itemObj;
-                                        Tcl_ListObjIndex(msaa->interp, childrenList, index, &itemObj);
-                                        const char *item = Tcl_GetString(itemObj);
-                                        snprintf(cmd, sizeof(cmd), "%s item %s -text", 
-                                                 Tk_PathName(provider->tkwin), item);
-                                    } else {
-                                        cmd[0] = '\0';
-                                    }
-                                } else {
-                                    cmd[0] = '\0';
-                                }
-                            }
-                            
-                            if (cmd[0] && Tcl_Eval(msaa->interp, cmd) == TCL_OK) {
-                                const char *text = Tcl_GetStringResult(msaa->interp);
-                                if (text && *text) {
-                                    Tcl_DString ds;
-                                    Tcl_DStringInit(&ds);
-                                    pRetVal->vt = VT_BSTR;
-                                    pRetVal->bstrVal = SysAllocString(
-                                        Tcl_UtfToWCharDString(text, -1, &ds));
-                                    Tcl_DStringFree(&ds);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        
-        case 30016: /* UIA_IsControlElementPropertyId */
-        case 30017: { /* UIA_IsContentElementPropertyId */
-            /* Virtual children should always be exposed as control and content elements */
+        case UIA_IsControlElementPropertyId:
+        case UIA_IsContentElementPropertyId: {
+            /* These should generally be true for accessible elements. */
             pRetVal->vt = VT_BOOL;
-            pRetVal->boolVal = isVirtualChild ? VARIANT_TRUE : VARIANT_TRUE;
+            pRetVal->boolVal = VARIANT_TRUE;
+            break;
+        }
+        
+        case UIA_IsEnabledPropertyId: {
+            /* Basic enabled state. */
+            VARIANT varState;
+            VariantInit(&varState);
+            TkAccState(provider->tkwin, &varState);
+            pRetVal->vt = VT_BOOL;
+            pRetVal->boolVal = (varState.vt == VT_I4 && (varState.lVal & STATE_SYSTEM_UNAVAILABLE)) ? 
+                              VARIANT_FALSE : VARIANT_TRUE;
+            VariantClear(&varState);
+            break;
+        }
+        
+        case UIA_NamePropertyId: {
+            /* Get name from MSAA. */
+            BSTR name = NULL;
+            VARIANT varChild;
+            varChild.vt = VT_I4;
+            varChild.lVal = CHILDID_SELF;
+            
+            HRESULT hr = TkRootAccessible_get_accName(
+                (IAccessible *)provider->msaaProvider, varChild, &name);
+            
+            if (SUCCEEDED(hr) && name) {
+                pRetVal->vt = VT_BSTR;
+                pRetVal->bstrVal = name;
+            } else {
+                pRetVal->vt = VT_EMPTY;
+            }
             break;
         }
         
         default:
+            /* For all other properties, LegacyIAccessible will handle them. */
+            pRetVal->vt = VT_EMPTY;
             break;
     }
 
-    TkGlobalUnlock();
     return S_OK;
 }
 
@@ -2097,8 +1756,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(
 /*
  * Create UI Automation Provider.
  */
-
-static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider, Tk_Window tkwin, int childId)
+static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider, Tk_Window tkwin)
 {
     if (!msaaProvider) return NULL;
 
@@ -2106,10 +1764,8 @@ static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider, Tk_Windo
     if (!provider) return NULL;
 
     provider->lpVtbl = &tkUiaProviderVtbl;
-    provider->fragmentVtbl = &tkUiaFragmentVtbl; 
     provider->msaaProvider = msaaProvider;
     provider->tkwin = tkwin;
-    provider->childId = childId;
     provider->refCount = 1;
 
     TkRootAccessible_AddRef((IAccessible *)msaaProvider);
@@ -2161,525 +1817,6 @@ static TkUiaProvider *GetUiaProviderForWindow(Tk_Window win)
     return NULL;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * IRawElementProviderFragment implementation. This allows child elements
- * like list/table rows to be visible to UIA.
- *
- *----------------------------------------------------------------------
- */
-
-/* Fragment query interface. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_QueryInterface(
-    IRawElementProviderFragment *this,
-    REFIID riid,
-    void **ppvObject)
-{
-    /* Just delegate to the main provider's QueryInterface. */
-    return TkUiaProvider_QueryInterface((IRawElementProviderSimple *)this, riid, ppvObject);
-}
-
-/* Fragment add ref/release - reuse existing implementation. */
-static ULONG STDMETHODCALLTYPE TkUiaFragment_AddRef(IRawElementProviderFragment *this) {
-    return TkUiaProvider_AddRef((IRawElementProviderSimple *)this);
-}
-
-static ULONG STDMETHODCALLTYPE TkUiaFragment_Release(IRawElementProviderFragment *this) {
-    return TkUiaProvider_Release((IRawElementProviderSimple *)this);
-}
-
-/* Fragment navigation - critical for listbox, tree, table items. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_Navigate(
-    IRawElementProviderFragment *this,
-    enum FragmentNavigation direction,
-    IRawElementProviderFragment **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-    *pRetVal = NULL;
-    
-    TkGlobalLock();
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    Tk_Window toplevel = GetToplevelOfWidget(provider->tkwin);
-
-    if (!toplevel) {
-        TkGlobalUnlock();
-        return E_FAIL;
-    }
-
-    /* Get the container's role to determine if it has virtual children */
-    VARIANT varRole;
-    VariantInit(&varRole);
-    HRESULT hrRole = TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-    LONG role = (SUCCEEDED(hrRole) && varRole.vt == VT_I4) ? varRole.lVal : 0;
-    VariantClear(&varRole);
-
-    BOOL isVirtualContainer = IsVirtualChildContainer(role);
-    BOOL isVirtualChild = (provider->childId > 0);
-
-    switch (direction) {
-        case FragmentNavigation_Parent: {
-            if (isVirtualChild) {
-                /* Virtual child's parent is the container */
-                TkUiaProvider *parentProvider = GetUiaProviderForWindow(provider->tkwin);
-                if (parentProvider) {
-                    *pRetVal = (IRawElementProviderFragment *)parentProvider;
-                    TkUiaFragment_AddRef(*pRetVal);
-                }
-            }
-            break;
-        }
-        
-        case FragmentNavigation_FirstChild: {
-            if (!isVirtualChild && isVirtualContainer) {
-                /* Container with virtual children - return first virtual child */
-                Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-                if (virtualTable) {
-                    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, provider->tkwin);
-                    if (vEntry) {
-                        VirtualRange *range = Tcl_GetHashValue(vEntry);
-                        if (range && range->count > 0) {
-                            TkUiaProvider *childProvider = CreateUiaProviderForChild(
-                                provider->msaaProvider, provider->tkwin, range->startId);
-                            if (childProvider) {
-                                *pRetVal = (IRawElementProviderFragment *)childProvider;
-                                TkUiaFragment_AddRef(*pRetVal);
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        
-        case FragmentNavigation_LastChild: {
-            if (!isVirtualChild && isVirtualContainer) {
-                /* Container with virtual children - return last virtual child */
-                Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-                if (virtualTable) {
-                    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, provider->tkwin);
-                    if (vEntry) {
-                        VirtualRange *range = Tcl_GetHashValue(vEntry);
-                        if (range && range->count > 0) {
-                            int lastId = range->startId + range->count - 1;
-                            TkUiaProvider *childProvider = CreateUiaProviderForChild(
-                                provider->msaaProvider, provider->tkwin, lastId);
-                            if (childProvider) {
-                                *pRetVal = (IRawElementProviderFragment *)childProvider;
-                                TkUiaFragment_AddRef(*pRetVal);
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        
-        case FragmentNavigation_NextSibling: {
-            if (isVirtualChild) {
-                Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-                if (virtualTable) {
-                    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, provider->tkwin);
-                    if (vEntry) {
-                        VirtualRange *range = Tcl_GetHashValue(vEntry);
-                        if (range && provider->childId < (range->startId + range->count - 1)) {
-                            int nextId = provider->childId + 1;
-                            TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
-                                provider->msaaProvider, provider->tkwin, nextId);
-                            if (siblingProvider) {
-                                *pRetVal = (IRawElementProviderFragment *)siblingProvider;
-                                TkUiaFragment_AddRef(*pRetVal);
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-        
-        case FragmentNavigation_PreviousSibling: {
-            if (isVirtualChild) {
-                Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-                if (virtualTable) {
-                    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, provider->tkwin);
-                    if (vEntry) {
-                        VirtualRange *range = Tcl_GetHashValue(vEntry);
-                        if (range && provider->childId > range->startId) {
-                            int prevId = provider->childId - 1;
-                            TkUiaProvider *siblingProvider = CreateUiaProviderForChild(
-                                provider->msaaProvider, provider->tkwin, prevId);
-                            if (siblingProvider) {
-                                *pRetVal = (IRawElementProviderFragment *)siblingProvider;
-                                TkUiaFragment_AddRef(*pRetVal);
-                            }
-                        }
-                    }
-                }
-            }
-            break;
-        }
-    }
-
-    TkGlobalUnlock();
-    return *pRetVal ? S_OK : S_FALSE;
-}
-
-
-/* Get runtime ID. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetRuntimeId(
-    IRawElementProviderFragment *this,
-    SAFEARRAY **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    
-    /* Create runtime ID: [UiaAppendRuntimeId, hwnd, childId]. */
-    int runtimeId[] = { UiaAppendRuntimeId, 
-                       (int)(LONG_PTR)(provider->msaaProvider ? provider->msaaProvider->hwnd : NULL),
-                       provider->childId };
-
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_I4, 0, 3);
-    if (!psa) return E_OUTOFMEMORY;
-
-    for (LONG i = 0; i < 3; i++) {
-        SafeArrayPutElement(psa, &i, &runtimeId[i]);
-    }
-
-    *pRetVal = psa;
-    return S_OK;
-}
-
-/* Get bounding rectangle. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_BoundingRectangle(
-    IRawElementProviderFragment *this,
-    struct UiaRect *pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    if (!provider->msaaProvider) return E_FAIL;
-
-    memset(pRetVal, 0, sizeof(pRetVal));
-    TkGlobalLock();
-
-    VARIANT varChild;
-    varChild.vt = VT_I4;
-    varChild.lVal = provider->childId > 0 ? provider->childId : CHILDID_SELF;
-
-    LONG xLeft, yTop, cxWidth, cyHeight;
-    HRESULT hr = TkRootAccessible_accLocation(
-        (IAccessible *)provider->msaaProvider, &xLeft, &yTop, &cxWidth, &cyHeight, varChild);
-
-    if (SUCCEEDED(hr)) {
-        /* Use left, top, width, height instead of x, y, width, height */
-        pRetVal->left = (double)xLeft;
-        pRetVal->top = (double)yTop;
-        pRetVal->width = (double)cxWidth;
-        pRetVal->height = (double)cyHeight;
-    }
-
-    TkGlobalUnlock();
-    return hr;
-}
-
-/* Get Embedded Fragment Roots - not used for Tk widgets. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_GetEmbeddedFragmentRoots(
-    TCL_UNUSED(IRawElementProviderFragment *), /* this */
-    SAFEARRAY **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-    *pRetVal = SafeArrayCreateVector(VT_UNKNOWN, 0, 0);
-    return S_OK;
-}
-
-/* Set UIA focus on fragment. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_SetFocus(
-    IRawElementProviderFragment *this)
-{
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    if (!provider->msaaProvider || !provider->tkwin) return E_FAIL;
-
-    TkGlobalLock();
-
-    if (provider->childId > 0) {
-        /* Focus specific item. */
-        Tk_Window toplevel = GetToplevelOfWidget(provider->tkwin);
-        Tk_Window itemWin = GetTkWindowForChildId(provider->childId, toplevel);
-        if (itemWin) {
-            TkSetFocusWin((TkWindow *)itemWin, 1);  /* Use TkSetFocusWin. */
-        }
-    } else {
-        /* Focus container. */
-        TkSetFocusWin((TkWindow *)provider->tkwin, 1);  /* Use TkSetFocusWin. */
-    }
-
-    TkGlobalUnlock();
-    return S_OK;
-}
-
-/* Get fragment root. */
-static HRESULT STDMETHODCALLTYPE TkUiaFragment_get_FragmentRoot(
-    IRawElementProviderFragment *this,
-    IRawElementProviderFragmentRoot **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    if (!provider->msaaProvider) return E_FAIL;
-
-    /* The toplevel window is the fragment root. */
-    Tk_Window toplevel = GetToplevelOfWidget(provider->tkwin);
-    if (!toplevel) return E_FAIL;
-
-    TkUiaProvider *rootProvider = GetUiaProviderForWindow(toplevel);
-    if (!rootProvider) return E_FAIL;
-
-    /* We need to implement IRawElementProviderFragmentRoot for the toplevel. */
-    *pRetVal = (IRawElementProviderFragmentRoot *)rootProvider;
-    TkUiaFragment_AddRef((IRawElementProviderFragment *)*pRetVal);
-
-    return S_OK;
-}
-
-/* Functions to manage child ID's in a container window from UIA. */
-static int GetFirstChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction) 
-{
-    if (!toplevel || !container || direction != FragmentNavigation_FirstChild) return -1;
-    
-    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-    if (!childIdTable) return -1;
-
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (!virtualTable) return -1;
-
-    TkGlobalLock();
-    
-    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
-    if (vEntry) {
-        VirtualRange *range = Tcl_GetHashValue(vEntry);
-        if (range->count > 0) {
-            TkGlobalUnlock();
-            return range->startId;
-        }
-    }
-    
-    /* Find the smallest child ID for this container. */
-    int firstId = INT_MAX;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entry;
-    
-    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
-        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
-        int childId = PTR2INT(Tcl_GetHashValue(entry));
-        
-        if (IsChildOfContainer(win, container) && childId < firstId) {
-            firstId = childId;
-        }
-    }
-    
-    TkGlobalUnlock();
-    return (firstId != INT_MAX) ? firstId : -1;
-}
-
-
-static int GetLastChildId(Tk_Window toplevel, Tk_Window container, enum FragmentNavigation direction) 
-{
-    if (!toplevel || !container || direction != FragmentNavigation_LastChild) return -1;
-    
-    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-    if (!childIdTable) return -1;
-    
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (!virtualTable) return -1;
-
-    TkGlobalLock();
-    
-    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
-    if (vEntry) {
-        VirtualRange *range = Tcl_GetHashValue(vEntry);
-        if (range->count > 0) {
-            TkGlobalUnlock();
-            return range->startId + range->count - 1; // Last virtual child ID
-        }
-    }
-    
-    int lastId = -1;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entry;
-    
-    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
-        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
-        int childId = PTR2INT(Tcl_GetHashValue(entry));
-        
-        if (IsChildOfContainer(win, container) && childId > lastId) {
-            lastId = childId;
-        }
-    }
-    
-    TkGlobalUnlock();
-    return lastId;
-}
-
-
-static int GetNextSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction)
-{		
-    if (!toplevel || !container || direction != FragmentNavigation_NextSibling) return -1;
-    
-    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-    if (!childIdTable) return -1;
-    
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (!virtualTable) return -1;
-
-    TkGlobalLock();
-    
-    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
-    if (vEntry) {
-        VirtualRange *range = Tcl_GetHashValue(vEntry);
-        if (range->count > 0) {
-            int index = currentId - range->startId + 1;
-            if (index < range->count) {
-                TkGlobalUnlock();
-                return currentId + 1; // Next virtual child ID
-            }
-        }
-    }
-    
-    int nextId = INT_MAX;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entry;
-    
-    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
-        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
-        int childId = PTR2INT(Tcl_GetHashValue(entry));
-        
-        if (IsChildOfContainer(win, container) && childId > currentId && childId < nextId) {
-            nextId = childId;
-        }
-    }
-    
-    TkGlobalUnlock();
-    return (nextId != INT_MAX) ? nextId : -1;
-}
-
-static int GetPreviousSiblingId(Tk_Window toplevel, Tk_Window container, int currentId, enum FragmentNavigation direction)
-{	
-    if (!toplevel || !container || direction != FragmentNavigation_PreviousSibling) return -1;
-    
-    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-    if (!childIdTable) return -1;
-    
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (!virtualTable) return -1;
-
-    TkGlobalLock();
-    
-    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
-    if (vEntry) {
-        VirtualRange *range = Tcl_GetHashValue(vEntry);
-        if (range->count > 0) {
-            int index = currentId - range->startId + 1;
-            if (index > 0) {
-                TkGlobalUnlock();
-                return currentId - 1; // Previous virtual child ID
-            }
-        }
-    }
-    
-    int prevId = -1;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entry;
-    
-    for (entry = Tcl_FirstHashEntry(childIdTable, &search); entry != NULL; entry = Tcl_NextHashEntry(&search)) {
-        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
-        int childId = PTR2INT(Tcl_GetHashValue(entry));
-        
-        if (IsChildOfContainer(win, container) && childId < currentId && childId > prevId) {
-            prevId = childId;
-        }
-    }
-    
-    TkGlobalUnlock();
-    return prevId;
-}
-
-/* Check if window is child of container. */
-static BOOL IsChildOfContainer(Tk_Window child, Tk_Window container)
-{
-    if (!child || !container) return FALSE;
-    
-    Tk_Window parent = Tk_Parent(child);
-    while (parent && parent != container) {
-        parent = Tk_Parent(parent);
-    }
-    return (parent == container);
-}
-
-/* Create UIA provider for child items. */
-static TkUiaProvider *CreateUiaProviderForChild(TkRootAccessible *msaaProvider, Tk_Window container, int childId)
-{
-    if (!msaaProvider || !container || childId <= 0) return NULL;
-
-    TkUiaProvider *provider = (TkUiaProvider *)ckalloc(sizeof(TkUiaProvider));
-    if (!provider) return NULL;
-
-    provider->lpVtbl = &tkUiaProviderVtbl;
-    provider->fragmentVtbl = &tkUiaFragmentVtbl;
-    provider->msaaProvider = msaaProvider;
-    provider->tkwin = container;
-    provider->childId = childId;
-    provider->refCount = 1;
-
-    TkRootAccessible_AddRef((IAccessible *)msaaProvider);
-
-    return provider;
-}
-
-/*
- * Check if a role represents a container with virtual children.
- */
-static BOOL IsVirtualChildContainer(LONG role)
-{
-    return (role == 50008 ||           /* Listbox */
-            role == 50023 ||        /* Tree */
-            role == 50025);          /* Table */
-}
-
-/*
- * Get all virtual child IDs for a container window.
- */
-static int GetVirtualChildIds(Tk_Window toplevel, Tk_Window container, int **childIds)
-{
-    if (!toplevel || !container || !childIds) return 0;
-    
-    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-    if (!virtualTable) return 0;
-    
-    TkGlobalLock();
-    
-    Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, container);
-    if (!vEntry) {
-        TkGlobalUnlock();
-        return 0;
-    }
-    
-    VirtualRange *range = Tcl_GetHashValue(vEntry);
-    if (!range || range->count <= 0) {
-        TkGlobalUnlock();
-        return 0;
-    }
-    
-    /* Allocate and fill array with virtual child IDs. */
-    *childIds = (int *)ckalloc(range->count * sizeof(int));
-    for (int i = 0; i < range->count; i++) {
-        (*childIds)[i] = range->startId + i;
-    }
-    
-    TkGlobalUnlock();
-    return range->count;
-}
-
 /* Handle WM_GETOBJECT call on main thread. */
 void HandleWMGetObjectOnMainThread(
     TCL_UNUSED(int), /* num_args */
@@ -2692,74 +1829,48 @@ void HandleWMGetObjectOnMainThread(
     if (outResult) *outResult = 0;
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
-    
 
-    /* For UIA requests (both Simple and Fragment interfaces) */
-    if (lParam == (LPARAM)&IID_IRawElementProviderSimple || 
-        lParam == (LPARAM)&IID_IRawElementProviderFragment) {
-	InitializeUIAutomation();
+    /* For both MSAA and UIA requests, create the MSAA provider first. */
+    if ((LONG)lParam == OBJID_CLIENT || 
+        lParam == (LPARAM)&IID_IRawElementProviderSimple) {
+        
+        TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
+        if (!msaaProvider) {
+            Tcl_Interp *interp = Tk_Interp(tkwin);
+            if (!interp) return;
 
-	TkUiaProvider *uiaProvider = GetUiaProviderForWindow(tkwin);
-	if (!uiaProvider) {
-	    TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
-	    if (!msaaProvider) {
-		/* Create MSAA provider for this window. */
-		Tcl_Interp *interp = Tk_Interp(tkwin);
-		if (!interp) return;
-
-		msaaProvider = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
-		if (msaaProvider) {
-		    TkRootAccessible_RegisterForCleanup(tkwin, msaaProvider);
-		}
-	    }
-	    if (msaaProvider) {
-		uiaProvider = CreateUiaProvider(msaaProvider, tkwin, 0);
-		if (uiaProvider) {
-		    TkGlobalLock();
-		    if (!tkUiaProviderTableInitialized) {
-			InitUiaProviderTable();
-		    }
-		    Tcl_HashEntry *entry;
-		    int newEntry;
-		    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
-		    Tcl_SetHashValue(entry, uiaProvider);
-		    TkGlobalUnlock();
-		}
-	    }
-	}
-	if (uiaProvider && outResult) {
-	  if (wParam > 0 && uiaProvider) {
-            /* This is a request for a specific child element. */
-            TkUiaProvider *childProvider = CreateUiaProviderForChild(
-                uiaProvider->msaaProvider, tkwin, (int)wParam);
-            if (childProvider) {
-                *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, 
-                    (IRawElementProviderSimple *)childProvider);
-                TkGlobalUnlock();
-                return;
+            msaaProvider = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
+            if (msaaProvider) {
+                TkRootAccessible_RegisterForCleanup(tkwin, msaaProvider);
             }
         }
-	}
-	return;
-    }
 
-    /*
-     * For MSAA requests, let the existing implementation handle it.
-     * This includes native menu objects.
-     */
-    if ((LONG)lParam == OBJID_CLIENT) {
-	TkRootAccessible *acc = GetTkAccessibleForWindow(tkwin);
-	if (!acc) {
-	    Tcl_Interp *interp = Tk_Interp(tkwin);
-	    if (!interp) return;
-	    acc = CreateRootAccessible(interp, hwnd, Tk_PathName(tkwin));
-	    if (acc) {
-		TkRootAccessible_RegisterForCleanup(tkwin, acc);
-	    }
-	}
-	if (acc && outResult) {
-	    *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)acc);
-	}
+        if (msaaProvider) {
+            if ((LONG)lParam == OBJID_CLIENT) {
+                /* MSAA request. */
+                if (outResult) {
+                    *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)msaaProvider);
+                }
+            } else {
+                /* UIA request - create a simple UIA provider that bridges to MSAA. */
+                TkUiaProvider *uiaProvider = CreateUiaProvider(msaaProvider, tkwin);
+                if (uiaProvider && outResult) {
+                    *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam, 
+                        (IRawElementProviderSimple *)uiaProvider);
+                    
+                    /* Cache the UIA provider. */
+                    TkGlobalLock();
+                    if (!tkUiaProviderTableInitialized) {
+                        InitUiaProviderTable();
+                    }
+                    Tcl_HashEntry *entry;
+                    int newEntry;
+                    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
+                    Tcl_SetHashValue(entry, uiaProvider);
+                    TkGlobalUnlock();
+                }
+            }
+        }
     }
 }
 
@@ -2915,6 +2026,7 @@ int IsScreenReaderRunning(
  *
  *----------------------------------------------------------------------
  */
+
 static int EmitSelectionChanged(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
@@ -2922,20 +2034,20 @@ static int EmitSelectionChanged(
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(ip, 1, objv, "window?");
+        return TCL_ERROR;
     }
 
     Tk_Window path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (!path) {
-	Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     Tk_Window toplevel = GetToplevelOfWidget(path);
     if (!toplevel || !Tk_IsTopLevel(toplevel)) {
-	Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     Tk_MakeWindowExist(path);
@@ -2948,32 +2060,38 @@ static int EmitSelectionChanged(
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
 
     if (childId > 0) {
-	HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+        HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
-	/* Send comprehensive notifications. */
-	NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
-	NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-	NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
+        /* Send comprehensive notifications. */
+        NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+        NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+        NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
 
-	/* Force UIA property change notification for virtual children. */
-	TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
-	if (tkProvider) {
-	    IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
-        
-	    /* Notify UIA about selection changes. */
-	    UiaRaiseAutomationEvent(provider, UIA_SelectionItem_ElementSelectedEventId);
-        
-	    /* Also raise events for any virtual children that are selected. */
-	    Tcl_HashTable *virtualTable = GetVirtualTableForToplevel(toplevel);
-	    if (virtualTable) {
-		Tcl_HashEntry *vEntry = Tcl_FindHashEntry(virtualTable, path);
-		if (vEntry) {
-		    VirtualRange *range = Tcl_GetHashValue(vEntry);
-		    /* Notify that the container's children have changed. */
-		    UiaRaiseStructureChangedEvent(provider, StructureChangeType_ChildrenInvalidated, NULL, 0);
-		}
-	    }
-	}
+        /* UIA will automatically pick up these changes through LegacyIAccessible. */
+        TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
+        if (tkProvider) {
+            IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
+
+            VARIANT oldVal, newVal;
+            VariantInit(&oldVal);
+            VariantInit(&newVal);
+
+            oldVal.vt = VT_BOOL;
+            oldVal.boolVal = VARIANT_FALSE;
+            newVal.vt = VT_BOOL;
+            newVal.boolVal = VARIANT_TRUE;
+
+            /* LegacyIAccessible pattern will handle the property change notifications. */
+            UiaRaiseAutomationPropertyChangedEvent(
+                provider,
+                UIA_LegacyIAccessibleStatePropertyId,
+                oldVal,
+                newVal
+            );
+
+            VariantClear(&oldVal);
+            VariantClear(&newVal);
+        }
     }
 
     TkGlobalUnlock();
@@ -3019,7 +2137,6 @@ void TkRootAccessible_RegisterForCleanup(
  *
  *----------------------------------------------------------------------
  */
-
 static void TkRootAccessible_DestroyHandler(
     void *clientData,
     XEvent *eventPtr)
@@ -3029,7 +2146,7 @@ static void TkRootAccessible_DestroyHandler(
     if (!tkAccessible || !tkAccessible->toplevel) return;
     TkGlobalLock();
 
-    /* Clean up MSAA table */
+    /* Clean up MSAA table. */
     if (tkAccessibleTableInitialized) {
 	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->toplevel);
 	if (entry) {
@@ -3037,7 +2154,7 @@ static void TkRootAccessible_DestroyHandler(
 	}
     }
 
-    /* Clean up UI Automation provider table */
+    /* Clean up UI Automation provider table. */
     if (tkUiaProviderTableInitialized) {
 	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkUiaProviderTable, tkAccessible->toplevel);
 	if (entry) {
@@ -3118,7 +2235,8 @@ static int EmitFocusChanged(
  * TkRootAccessibleObjCmd --
  *
  *    Main command for adding and managing accessibility objects to Tk
- *      widgets on Windows using the Microsoft Active Accessibility API.
+ *    widgets on Windows using the Microsoft Active Accessibility and
+ *    UI Automation APIs.
  *
  * Results:
  *      A standard Tcl result.
