@@ -1,5 +1,5 @@
 /*
- * tkWinAccessibility.c --get
+ * tkWinAccessibility.c
  *
  *    This file implements the platform-native Microsoft Active
  *    Accessibility and the UI Automation APIs for Tk on Windows.
