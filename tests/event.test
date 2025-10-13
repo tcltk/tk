@@ -1057,7 +1057,9 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
-test event-9.15 {pointer window is a toplevel, destination is screen root} -constraints notMacosSequoiaOrOlder -setup {
+test event-9.15 {pointer window is a toplevel, destination is screen root.
+    To be skipped for macOS Sequoia and older because of bug #c494cc25c4
+} -constraints notMacosSequoiaOrOlder -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
 #    destroy .one
     toplevel .two
@@ -1192,7 +1194,9 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
-test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -constraints notMacosSequoiaOrOlder -setup {
+test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
+    To be skipped for macOS Sequoia and older because of bug #c494cc25c4
+} -constraints notMacosSequoiaOrOlder -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
