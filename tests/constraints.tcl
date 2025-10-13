@@ -14,7 +14,7 @@ namespace import -force tcltest::testConstraint
 #
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 if {$tcl_platform(os) eq "Darwin"} {
-    regexp -- {^\d+} $tcl_platform(osVersion) macosVersion
+    scan $tcl_platform(osVersion) "%d" macosVersion
 }
 testConstraint notMacosSequoiaOrOlder [expr {($tcl_platform(os) ne "Darwin") || ($macosVersion > 24)}]
 unset -nocomplain macosVersion
