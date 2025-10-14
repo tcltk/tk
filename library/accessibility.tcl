@@ -445,14 +445,25 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	}
 
 	# Get value of progress bar.
-	proc _getpbvalue {w} {
-	    variable ::ttk::progressbar::Timers
-	    if {[info exists ::ttk::progressbar::Timers($w)]} {
+	proc _getpbvalue  {pb} {
+	    # Make sure widget exists
+	    if {![winfo exists $pb]} { return "" }
+
+	    set mode [$pb cget -mode]
+
+	    if {$mode eq "indeterminate"} {
+		# Any indeterminate bar is considered busy
 		return "busy"
 	    } else {
-		return ""
+		# Determinate: busy if value < maximum
+		if {[$pb cget -value] < [$pb cget -maximum]} {
+		    return "busy"
+		} else {
+		    return ""
+		}
 	    }
 	}
+
 
 	# Some widgets will not respond to keypress events unless
 	# they have focus. Force Tk focus on the widget that currently has
