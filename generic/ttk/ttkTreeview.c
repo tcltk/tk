@@ -4705,6 +4705,11 @@ static int TreeviewCellSelectionCommand(
  * +++ Widget commands -- search and sort
  */
 
+typedef enum {
+    TYPE_ASCII, TYPE_ASCII_NC, TYPE_DICTIONARY,
+    TYPE_INTEGER, TYPE_REAL, TYPE_COMMAND
+} sortModes_t;
+
 /* + $tv search item ?-option value...? pattern
  */
 static int TreeviewSearchCommand(
@@ -4714,26 +4719,27 @@ static int TreeviewSearchCommand(
     TreeColumn *column = NULL;
     const char *pattern = NULL;
     Tcl_Size i, plen, len, columnNumber = -1;
-    Tcl_Size columnFirst = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
+    Tcl_Size columnFirst = FirstColumn(tv);
     Tcl_Obj *patObj, *resultObj;
     Tcl_WideInt intVal;
     double doubleVal;
+    int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0, match;
 
     enum {
 	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMN,
 	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
 	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
-	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START
+	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START, SEARCH_UNICODE
     };
     static const char *const searchStrings[] = {
 	"-all", "-ascii", "-backwards", "-column", "-dictionary", "-exact",
-	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not",
-	"-real", "-recurse", "-recursive", "-regexp", "-start", NULL
+	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not", "-real",
+	"-recurse", "-recursive", "-regexp", "-start", "-unicode", NULL
     };
-    int index, all = 0, mode = SEARCH_ASCII, forwards = 1, hidden = 0;
-    int type = SEARCH_EXACT, nocase = 0, not = 0, recurse = 0;
+    int matchType = SEARCH_EXACT;
+    sortModes_t dataType = TYPE_ASCII;
 
-    if (objc < 4 || objc > 30) {
+    if (objc < 4 || objc > 25) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
 	return TCL_ERROR;
     }
@@ -4743,8 +4749,8 @@ static int TreeviewSearchCommand(
     }
 
     for (i = 3; i < objc - 1; ++i) {
-	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], searchStrings,
-		sizeof(char *), "option", 0, &index)) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], searchStrings, sizeof(char *),
+		"option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -4753,7 +4759,8 @@ static int TreeviewSearchCommand(
 		all = 1;
 		break;
 	    case SEARCH_ASCII:
-		mode = SEARCH_ASCII;
+	    case SEARCH_UNICODE:
+		dataType = TYPE_ASCII;
 		break;
 	    case SEARCH_BACKWARDS:
 		forwards = 0;
@@ -4764,33 +4771,33 @@ static int TreeviewSearchCommand(
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
-		if ((column = FindColumn(interp, tv, objv[++i])) == NULL) {
+		if (!(column = FindColumn(interp, tv, objv[++i]))) {
 		    return TCL_ERROR;
 		}
 		if (column == &tv->tree.column0) {
 		    columnNumber = 0;
 		} else if (tv->tree.columns) {
-		    columnNumber = column - tv->tree.columns + 1;
+		    columnNumber = (column - tv->tree.columns) + 1;
 		}
 		break;
 	    case SEARCH_DICTIONARY:
-		mode = SEARCH_DICTIONARY;
+		dataType = TYPE_DICTIONARY;
 		nocase = 1;
 		break;
 	    case SEARCH_EXACT:
-		type = SEARCH_EXACT;
+		matchType = SEARCH_EXACT;
 		break;
 	    case SEARCH_FORWARDS:
 		forwards = 1;
 		break;
 	    case SEARCH_GLOB:
-		type = SEARCH_GLOB;
+		matchType = SEARCH_GLOB;
 		break;
 	    case SEARCH_HIDDEN:
 		hidden = 1;
 		break;
 	    case SEARCH_INTEGER:
-		mode = SEARCH_INTEGER;
+		dataType = TYPE_INTEGER;
 		break;
 	    case SEARCH_NOCASE:
 		nocase = 1;
@@ -4799,14 +4806,14 @@ static int TreeviewSearchCommand(
 		not = 1;
 		break;
 	    case SEARCH_REAL:
-		mode = SEARCH_REAL;
+		dataType = TYPE_REAL;
 		break;
 	    case SEARCH_RECURSE:
 	    case SEARCH_RECURSIVE:
 		recurse = 1;
 		break;
 	    case SEARCH_REGEXP:
-		type = SEARCH_REGEXP;
+		matchType = SEARCH_REGEXP;
 		break;
 	    case SEARCH_START:
 		if (i == objc - 2) {
@@ -4824,6 +4831,11 @@ static int TreeviewSearchCommand(
 	}
     }
 
+    /* Abort if no items to search */
+    if (parent->children == NULL) {
+	return TCL_OK;
+    }
+
     /* If no start item, use first/last child for forwards/backwards search */
     if (!item) {
 	if (forwards) {
@@ -4835,15 +4847,15 @@ static int TreeviewSearchCommand(
 
     /* Get native form of pattern */
     patObj = objv[objc-1];
-    if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
+    if (dataType == TYPE_ASCII || dataType == TYPE_DICTIONARY) {
 	if (!(pattern = Tcl_GetStringFromObj(patObj, &plen))) {
 	    return TCL_ERROR;
 	}
-    } else if (mode == SEARCH_INTEGER) {
+    } else if (dataType == TYPE_INTEGER) {
 	if (Tcl_GetWideIntFromObj(interp, patObj, &intVal) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-    } else if (mode == SEARCH_REAL) {
+    } else if (dataType == TYPE_REAL) {
 	if (Tcl_GetDoubleFromObj(interp, patObj, &doubleVal) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -4855,23 +4867,22 @@ static int TreeviewSearchCommand(
 
     /* Loop over items, compare values to pattern, and add matches to result */
     while (item) {
-	int match = 0;
+	match = 0;
 
 	/* Skip hidden items unless allowed */
 	if (!(item->hidden) || (item->hidden && hidden)) {
 	    Tcl_Obj *valObj;
-	    Tcl_Size count = 0, start, end;
+	    Tcl_Size start, end;
 
 	    /* Get cell values */
 	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj,
-		    &count) != TCL_OK) {
-		Tcl_BounceRefCount(resultObj);
-		return TCL_ERROR;
+		    &len) != TCL_OK) {
+		goto abort;
 	    }
 
 	    /* If searching within a column or all cells */
 	    if (columnNumber > -1) {
-		if (columnNumber <= count) {
+		if (columnNumber <= len) {
 		    start = columnNumber;
 		    end = columnNumber;
 		} else {
@@ -4880,23 +4891,24 @@ static int TreeviewSearchCommand(
 		}
 	    } else {
 		start = columnFirst;
-		end = count;
+		end = len;
 	    }
 
 	    /* Loop over text & cell values and compare to pattern */
 	    for (i = start; i <= end; ++i) {
 		if (i == 0) {
 		    valObj = item->textObj;
+		} else if (item->valuesObj == NULL) {
+		    break;
 		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i-1, &valObj)
 			!= TCL_OK) {
-		    Tcl_BounceRefCount(resultObj);
-		    return TCL_ERROR;
+		    goto abort;
 		}
 		if (!valObj) continue;
 
 		/* Do ASCII/Unicode compare */
-		if (mode == SEARCH_ASCII || mode == SEARCH_DICTIONARY) {
-		    if (type == SEARCH_EXACT) {
+		if (dataType == TYPE_ASCII || dataType == TYPE_DICTIONARY) {
+		    if (matchType == SEARCH_EXACT) {
 			const char *string = Tcl_GetStringFromObj(valObj, &len);
 			Tcl_Size numChars = (len <= plen ? len : plen);
 
@@ -4906,34 +4918,35 @@ static int TreeviewSearchCommand(
 			    match = !Tcl_UtfNcasecmp(string, pattern, numChars);
 			}
 
-		    } else if (type == SEARCH_GLOB) {
+		    } else if (matchType == SEARCH_GLOB) {
 			match = Tcl_StringCaseMatch(Tcl_GetString(valObj),
-			    pattern, nocase ? TCL_MATCH_NOCASE : 0);
+				pattern, nocase ? TCL_MATCH_NOCASE : 0);
 
-		    } else if (type == SEARCH_REGEXP) {
+		    } else if (matchType == SEARCH_REGEXP) {
 			match = Tcl_RegExpMatchObj(interp, valObj, patObj);
+			if (match == -1) {
+			    goto abort;
+			}
 		    }
 
 		/* Do wide integer compare */
-		} else if (mode == SEARCH_INTEGER) {
+		} else if (dataType == TYPE_INTEGER) {
 		    Tcl_WideInt val;
 
 		    if (Tcl_GetWideIntFromObj(interp, valObj, &val) == TCL_OK) {
 			match = (intVal == val);
 		    } else if (Tcl_GetStringFromObj(valObj, &len) && len > 0) {
-			Tcl_BounceRefCount(resultObj);
-			return TCL_ERROR;
+			goto abort;
 		    } /* Ignore empty values */
 
 		/* Do double value compare */
-		} else if (mode == SEARCH_REAL) {
+		} else if (dataType == TYPE_REAL) {
 		    double val;
 
 		    if (Tcl_GetDoubleFromObj(interp, valObj, &val) == TCL_OK) {
 			match = (doubleVal == val);
 		    } else if (Tcl_GetStringFromObj(valObj, &len) && len > 0) {
-			Tcl_BounceRefCount(resultObj);
-			return TCL_ERROR;
+			goto abort;
 		    } /* Ignore empty values */
 		}
 
@@ -4942,14 +4955,16 @@ static int TreeviewSearchCommand(
 		    match = 1;
 		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj)
 			    != TCL_OK) {
-			Tcl_BounceRefCount(resultObj);
-			return TCL_ERROR;
+			goto abort;
 		    }
 		    break;
+		} else {
+		    match = 0;
 		}
 	    }
 	}
 
+	/* Exit loop if match found */
 	if (match && !all) {
 	   break;
 	}
@@ -4961,9 +4976,25 @@ static int TreeviewSearchCommand(
 	    item = GetPrevItem(parent, item, hidden, recurse);
 	}
     }
-    Tcl_SetObjResult(interp, resultObj);
+
+    /* Return list for all or single value */
+    if (all) {
+	Tcl_SetObjResult(interp, resultObj);
+    } else {
+	Tcl_Obj *valObj = NULL;
+
+	if (Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj != NULL) {
+	    Tcl_SetObjResult(interp, valObj);
+	    Tcl_BounceRefCount(resultObj);
+	}
+    }
     return TCL_OK;
+
+abort:
+    Tcl_BounceRefCount(resultObj);
+    return TCL_ERROR;
 }
+
 
 /* + $tv sort parent ?-option value...?
  */
