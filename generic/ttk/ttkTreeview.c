@@ -3522,28 +3522,36 @@ static int TreeviewSetCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    TreeColumn *column;
+    TreeColumn *column = NULL;
     Tcl_Size columnNumber;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item ?column ?value??");
 	return TCL_ERROR;
     }
-    if (!(item = FindItem(interp, tv, objv[2])))
-	return TCL_ERROR;
 
-    /* Make sure -values exists:
-     */
-    if (!item->valuesObj) {
+    /* Get item */
+    if (!(item = FindItem(interp, tv, objv[2]))) {
+	return TCL_ERROR;
+    }
+
+    /* Get column */
+    if (objc > 3) {
+	if (!(column = FindColumn(interp, tv, objv[3]))) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /* Make sure -values exists */
+    if (column != &tv->tree.column0 && !item->valuesObj) {
 	item->valuesObj = Tcl_NewListObj(0,0);
 	Tcl_IncrRefCount(item->valuesObj);
     }
 
+    /* Return dictionary */
     if (objc == 3) {
-	/* Return dictionary:
-	 */
-	Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
-	Tcl_Obj *value;
+	Tcl_Obj *value, *resultObj = Tcl_NewListObj(0,0);
+
 	for (columnNumber = 0; columnNumber < tv->tree.nColumns; ++columnNumber) {
 	    Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &value);
 	    if (value) {
@@ -3556,39 +3564,45 @@ static int TreeviewSetCommand(
 	return TCL_OK;
     }
 
-    /* else -- get or set column
-     */
-    if (!(column = FindColumn(interp, tv, objv[3])))
-	return TCL_ERROR;
-
+    /* Get or set column 0 */
     if (column == &tv->tree.column0) {
-	/* @@@ Maybe set -text here instead? */
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"Display column #0 cannot be set", -1));
-	Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN_0", NULL);
-	return TCL_ERROR;
+	if (objc == 4) {
+	    if (item->textObj != NULL) {
+		Tcl_SetObjResult(interp, item->textObj);
+	    } else {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("",0));
+	    }
+	} else {
+	    if (item->textObj != NULL) {
+		Tcl_DecrRefCount(item->textObj);
+	    }
+	    item->textObj = objv[4];
+	    Tcl_IncrRefCount(item->textObj);
+	    TtkRedisplayWidget(&tv->core);
+	}
+	return TCL_OK;
     }
 
     /* Note: we don't do any error checking in the list operations,
-     * since item->valuesObj is guaranteed to be a list.
-     */
+     * since item->valuesObj is guaranteed to be a list. */
     columnNumber = column - tv->tree.columns;
 
-    if (objc == 4) {	/* get column */
+    /* Get or set column */
+    if (objc == 4) {
 	Tcl_Obj *resultObj = NULL;
+
 	Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &resultObj);
 	if (!resultObj) {
 	    resultObj = Tcl_NewStringObj("",0);
 	}
 	Tcl_SetObjResult(interp, resultObj);
-	return TCL_OK;
-    } else {		/* set column */
+
+    } else {
 	Tcl_Size length;
 
 	item->valuesObj = unshareObj(item->valuesObj);
 
-	/* Make sure -values is fully populated:
-	 */
+	/* Make sure -values is fully populated */
 	Tcl_ListObjLength(interp, item->valuesObj, &length);
 	while (length < tv->tree.nColumns) {
 	    Tcl_Obj *empty = Tcl_NewStringObj("",0);
@@ -3596,12 +3610,11 @@ static int TreeviewSetCommand(
 	    ++length;
 	}
 
-	/* Set value:
-	 */
+	/* Set value */
 	Tcl_ListObjReplace(interp,item->valuesObj,columnNumber,1,1,objv+4);
 	TtkRedisplayWidget(&tv->core);
-	return TCL_OK;
     }
+    return TCL_OK;
 }
 
 /*
