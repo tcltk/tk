@@ -94,6 +94,7 @@ const struct WinRoleMap roleMap[] = {
     {"Table", ROLE_SYSTEM_TABLE, 50025},             /* UIA_TableControlTypeId */
     {"Text", ROLE_SYSTEM_TEXT, 50004},               /* UIA_EditControlTypeId */
     {"Tree", ROLE_SYSTEM_OUTLINE, 50023},            /* UIA_TreeControlTypeId */
+    {"Toggleswitch", ROLE_SYSTEM_CHECKBUTTON, 50002}, /* UIA_CheckBoxControlTypeId - closest match */
     {NULL, 0, 0}
 };
 
@@ -813,6 +814,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(
     return S_FALSE;
 }
 
+
 /* Function to get button press to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(
     TCL_UNUSED(IAccessible *), /* this */
@@ -945,8 +947,8 @@ static HRESULT TkAccRole(
  * Helper function to get selected state on check/radiobuttons.
  */
 static void ComputeAndCacheCheckedState(
-    Tk_Window win,
-    Tcl_Interp *interp)
+					Tk_Window win,
+					Tcl_Interp *interp)
 {
     if (!win || !interp) {
 	return;
@@ -954,7 +956,7 @@ static void ComputeAndCacheCheckedState(
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
-    return;
+	return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 
@@ -963,8 +965,10 @@ static void ComputeAndCacheCheckedState(
     if (rolePtr) {
 	tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
     }
-    if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && strcmp(tkrole, "Radiobutton") != 0)) {
-    return;
+    if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && 
+                    strcmp(tkrole, "Radiobutton") != 0 &&
+                    strcmp(tkrole, "Toggleswitch") != 0)) {
+	return;
     }
 
     const char *path = Tk_PathName(win);
@@ -986,7 +990,7 @@ static void ComputeAndCacheCheckedState(
 	} else {
 	    const char *onValue = NULL;
 	    Tcl_Obj *valueCmd = NULL;
-	    if (strcmp(tkrole, "Checkbutton") == 0) {
+	    if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Toggleswitch") == 0) {
 		valueCmd = Tcl_ObjPrintf("%s cget -onvalue", path);
 	    } else if (strcmp(tkrole, "Radiobutton") == 0) {
 		valueCmd = Tcl_ObjPrintf("%s cget -value", path);
@@ -996,7 +1000,7 @@ static void ComputeAndCacheCheckedState(
 		if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 		    onValue = Tcl_GetStringResult(interp);
 		} else {
-			return;
+		    return;
 		}
 		Tcl_DecrRefCount(valueCmd);
 	    }
@@ -1039,12 +1043,13 @@ static void ComputeAndCacheCheckedState(
 	    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
 	    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 	} else {
-	return;
+	    return;
 	}
     } else {
 	return;
     }
 }
+
 
 /* Function to map accessible state to MSAA. */
 static HRESULT TkAccState(
@@ -1076,7 +1081,9 @@ static HRESULT TkAccState(
     Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (rolePtr) {
 	const char *tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
-	if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Radiobutton") == 0) {
+	if (strcmp(tkrole, "Checkbutton") == 0 || 
+	    strcmp(tkrole, "Radiobutton") == 0 ||
+	    strcmp(tkrole, "Toggleswitch") == 0) {
 	    Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
 	    if (valuePtr) {
 		const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));

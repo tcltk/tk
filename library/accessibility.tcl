@@ -187,8 +187,8 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	
 
 	# Get typed text for screen reader. 
-	proc ::tk::accessible::_getkeytext {w key} {
-	    # Ignore modifier keys or non-printables
+	proc _getkeytext {w key} {
+	    # Ignore modifier keys or non-printables.
 	    if {$key in {"Shift_L" "Shift_R" "Control_L" "Control_R" "Alt_L" "Alt_R"}} {
 		return
 	    }
@@ -282,7 +282,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    ::tk::accessible::speak "$role $description $data"
 		}
 	    }
-	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton"} {
+	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton" || [winfo class $w] eq "Toggleswitch"} {
 		set data [::tk::accessible::_getcheckdata $w]
 		set role [::tk::accessible::get_acc_role $w]
 		set description [::tk::accessible::get_acc_description $w]
@@ -535,7 +535,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				Button \
 				Button \
 				[%W cget -text] \
-				{} \
+				{%W switchstate}\
 				[%W cget -state] \
 				{%W invoke}\
 			    }
@@ -586,6 +586,15 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				     Checkbutton \
 				     Checkbutton \
 				     [%W cget -text] \
+				     [set [%W cget -variable]] \
+				     [%W cget -state] \
+				     {%W invoke}\
+				 }
+	bind Toggleswitch <Map> {+::tk::accessible::_init \
+				     %W \
+				     Toggleswitch \
+				     Toggleswitch \
+				     {} \
 				     [set [%W cget -variable]] \
 				     [%W cget -state] \
 				     {%W invoke}\

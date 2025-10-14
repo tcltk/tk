@@ -77,8 +77,10 @@ struct AtkRoleMap roleMap[] = {
     {"Canvas", ATK_ROLE_CANVAS},
     {"Scrollbar", ATK_ROLE_SCROLL_BAR},
     {"Menubar", ATK_ROLE_MENU_BAR},
+    {"Toggleswitch", ATK_ROLE_TOGGLE_BUTTON},
     {NULL, 0}
 };
+
 
 #define ATK_CONTEXT g_main_context_default()
 
@@ -1097,16 +1099,6 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	GValue gval = G_VALUE_INIT;
 	tk_get_current_value(ATK_VALUE(obj), &gval);
 
-#if 0 /* dead code */
-	gdouble new_val = 0.0;
-	if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-	    new_val = g_value_get_double(&gval);
-	} else if (G_VALUE_HOLDS_STRING(&gval)) {
-	    const char *s = g_value_get_string(&gval);
-	    if (s) new_val = g_ascii_strtod(s, NULL);
-	}
-#endif /* dead code */
-
 	/* Notify ATK clients. */
 	g_signal_emit_by_name(obj, "value-changed");
 	g_object_notify(G_OBJECT(obj), "accessible-value");
@@ -1115,12 +1107,37 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	return TRUE;
     }
 
-   /* Fallback: Generic "click" action for other roles. */
+    /* Handle toggle action for toggle buttons, checkboxes, and radio buttons */
+    if ((role == ATK_ROLE_TOGGLE_BUTTON || role == ATK_ROLE_CHECK_BOX || 
+         role == ATK_ROLE_RADIO_BUTTON) && i == 0) {
+	/* Toggle the state */
+	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+	if (!hPtr) return FALSE;
+
+	Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+	if (!attrs) return FALSE;
+
+	Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
+	if (valueEntry) {
+	    Tcl_Obj *valObj = Tcl_GetHashValue(valueEntry);
+	    const char *currentVal = Tcl_GetString(valObj);
+	    
+	    /* Toggle between "0" and "1" */
+	    const char *newVal = (currentVal && strcmp(currentVal, "1") == 0) ? "0" : "1";
+	    
+	    Tcl_SetStringObj(valObj, newVal, -1);
+	    
+	    /* Notify value change */
+	    g_signal_emit_by_name(obj, "value-changed");
+	    g_object_notify(G_OBJECT(obj), "accessible-value");
+	}
+    }
+
+    /* Fallback: Generic "click" action for other roles. */
     if (i == 0) {
 	/* Retrieve the command string.  */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
 	if (!hPtr) return FALSE;
-
 
 	Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 	if (!attrs) return FALSE;
@@ -1140,6 +1157,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 }
 
 
+
 static gint tk_action_get_n_actions(AtkAction *action)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)action;
@@ -1150,7 +1168,8 @@ static gint tk_action_get_n_actions(AtkAction *action)
     switch (role) {
     case ATK_ROLE_PUSH_BUTTON:
     case ATK_ROLE_MENU_ITEM:
-	return 1;  /* Click/activate. */
+    case ATK_ROLE_TOGGLE_BUTTON:
+	return 1;  /* Click/activate/toggle. */
     case ATK_ROLE_SPIN_BUTTON:
 	return 2;  /* Increment + decrement. */
     case ATK_ROLE_CHECK_BOX:
@@ -1159,11 +1178,12 @@ static gint tk_action_get_n_actions(AtkAction *action)
     case ATK_ROLE_SLIDER:
     case ATK_ROLE_SCROLL_BAR:
     case ATK_ROLE_PROGRESS_BAR:
-	return 0;  /* Value-only controls, no actions */
+	return 0;  /* Value-only controls, no actions. */
     default:
 	return 0;
     }
 }
+
 
 static const gchar *tk_action_get_name(AtkAction *action, gint i)
 {
@@ -1183,6 +1203,7 @@ static const gchar *tk_action_get_name(AtkAction *action, gint i)
 	break;
     case ATK_ROLE_CHECK_BOX:
     case ATK_ROLE_RADIO_BUTTON:
+    case ATK_ROLE_TOGGLE_BUTTON:
 	if (i == 0) return "toggle";
 	break;
     default:
@@ -2355,10 +2376,11 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 
     /* Check if widget has focus using TkGetFocusWin. */
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_CHECK_BOX ||
-	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_ENTRY ||
-	role == ATK_ROLE_TEXT || role == ATK_ROLE_LIST_ITEM ||
-	role == ATK_ROLE_MENU_ITEM || role == ATK_ROLE_TREE_ITEM ||
-	role == ATK_ROLE_COMBO_BOX || role == ATK_ROLE_SPIN_BUTTON) {
+	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON ||
+	role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT || 
+	role == ATK_ROLE_LIST_ITEM || role == ATK_ROLE_MENU_ITEM || 
+	role == ATK_ROLE_TREE_ITEM || role == ATK_ROLE_COMBO_BOX || 
+	role == ATK_ROLE_SPIN_BUTTON) {
 	TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
 	acc->is_focused = (focusPtr == (TkWindow*)tkwin) ? 1 : 0;
     }
