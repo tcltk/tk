@@ -18,7 +18,6 @@
 #include <oaidl.h>
 #include <oleauto.h>
 #include <UIAutomation.h>
-
 #include <initguid.h>
 #include <tlhelp32.h>
 #include <tchar.h>
@@ -159,7 +158,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISP
 /* Prototypes of empty stub functions required by MSAA-toplevels. */
 HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
-HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_put_accName(IAccessible *this, VARIANT varChild, BSTR szName);
@@ -175,6 +173,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
@@ -229,6 +228,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(IRawElementPr
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(IRawElementProviderSimple *this, PATTERNID patternId, IUnknown **pRetVal);
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(IRawElementProviderSimple *this, PROPERTYID propertyId, VARIANT *pRetVal);
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(IRawElementProviderSimple *this, IRawElementProviderSimple **pRetVal);
+static TkUiaProvider *GetUiaProviderForWindow(Tk_Window win);
 
 /* UI Automation Provider VTable. */
 static IRawElementProviderSimpleVtbl tkUiaProviderVtbl = {
@@ -258,10 +258,22 @@ static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static void TkDoDefaultAction(int num_args, void **args);
 static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp);
-
 static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
+static void NotifySelectionChanged(Tk_Window win, LONG childId);
+static BOOL IsNarratorRunning(void);
+static BOOL WalkMenuForChildId(HMENU hMenu, int *currentId, int targetId, HMENU *foundMenu, int *foundIndex);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes for threading functions. These manage the integration
+ * between MSAA and Tk on the main thread.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
 void HandleWMGetObjectOnMainThread(int num_args, void **args);
@@ -319,13 +331,6 @@ HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accKeyboardShortcut(
     TCL_UNUSED(IAccessible *), /* this */
     TCL_UNUSED(VARIANT), /* varChild */
     TCL_UNUSED(BSTR *)) /* pszKeyboardShortcut */
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(
-    TCL_UNUSED(IAccessible *), /* this */
-    TCL_UNUSED(VARIANT *)) /*pvarChildren */
 {
     return E_NOTIMPL;
 }
@@ -527,12 +532,14 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
  * Function to map accessible name to MSAA. 
  */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-							      IAccessible *this,
-							      VARIANT varChild,
-							      BSTR *pszName)
+    IAccessible *this,
+    VARIANT varChild,
+    BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
     *pszName = NULL;
+
+    if (varChild.vt != VT_I4 || varChild.lVal < 0) return E_INVALIDARG;
 
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
@@ -541,20 +548,58 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
         return E_INVALIDARG;
     }
 
-    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-        /* For the toplevel itself, no name to avoid double-reading. */
+    /* Toplevel itself */
+    if (varChild.lVal == CHILDID_SELF) {
         TkGlobalUnlock();
-        return S_OK;
+        return S_OK; 
     }
 
-    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-        if (!child) {
-            TkGlobalUnlock();
-            return E_INVALIDARG;
-        }
+    /* Narrator/UIA do not access the labels of menu entries
+     * by default. If Narrator is running, walk the menu hierarchy
+     * to get this data.
+     */
+    BOOL narrator = IsNarratorRunning();
+    if (narrator) {
+	/* Get the root menu handle. */
+	HWND hwnd = Tk_GetHWND(Tk_WindowId((tkAccessible->toplevel)));
+	HMENU rootMenu = GetMenu(hwnd);
+	if (rootMenu) {
+	    int currentId = 0;
+	    HMENU foundMenu = NULL;
+	    int foundIndex = -1;
 
-        /* Retrieve the accessible name for the child. */
+	    if (WalkMenuForChildId(rootMenu, &currentId, varChild.lVal, &foundMenu, &foundIndex)) {
+		/* Retrieve the menu item's text. */
+		MENUITEMINFOW mii;
+		memset(&mii, 0, sizeof(MENUITEMINFOW));
+		mii.cbSize = sizeof(MENUITEMINFOW);
+		mii.fMask = MIIM_TYPE | MIIM_STRING;
+
+		WCHAR buffer[512];
+		mii.dwTypeData = buffer;
+		mii.cch = sizeof(buffer)/sizeof(WCHAR);
+
+		if (GetMenuItemInfoW(foundMenu, foundIndex, TRUE, &mii)) {
+		    if (!(mii.fType & MFT_SEPARATOR)) {
+			*pszName = SysAllocString(mii.dwTypeData);
+			TkGlobalUnlock();
+			return (*pszName) ? S_OK : E_OUTOFMEMORY;
+		    } else {
+			/* Separator: no name. */
+			TkGlobalUnlock();
+			return S_OK;
+		    }
+		}
+
+		TkGlobalUnlock();
+		return E_FAIL;
+	    }
+	}
+    }
+
+    /* Fallback for non-menu items */
+    Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+    if (child) {
         HRESULT hr = TkAccDescription(child, pszName);
         TkGlobalUnlock();
         return hr;
@@ -764,6 +809,258 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(
     TCL_UNUSED(VARIANT)) /* varChild */
 {
     return E_NOTIMPL;
+}
+/* Function to get accessible selection on Tk widget. */
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(
+    IAccessible *this,
+    VARIANT *pvarChildren)
+{
+    if (!pvarChildren)
+        return E_INVALIDARG;
+    VariantInit(pvarChildren);
+
+    TkGlobalLock();
+
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    if (!tkAccessible->toplevel || !tkAccessible->interp) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    Tcl_Interp *interp = tkAccessible->interp;
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(tkAccessible->toplevel);
+    if (!childIdTable) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entry;
+    int selectedCount = 0;
+
+    /* Count children with selection. */
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search);
+         entry != NULL;
+         entry = Tcl_NextHashEntry(&search)) {
+
+        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+        if (!win)
+            continue;
+
+        /* Determine MSAA role dynamically. */
+        VARIANT varChild, varRole;
+        VariantInit(&varChild);
+        VariantInit(&varRole);
+        varChild.vt = VT_I4;
+        varChild.lVal = PTR2INT(Tcl_GetHashValue(entry));
+
+        if (TkRootAccessible_get_accRole(this, varChild, &varRole) != S_OK)
+            continue;
+
+        LONG role = (varRole.vt == VT_I4) ? varRole.lVal : 0;
+        const char *selection_cmd = NULL;
+
+        switch (role) {
+        case ROLE_SYSTEM_LIST:
+        case ROLE_SYSTEM_TABLE:
+            selection_cmd = "curselection";
+            break;
+        case ROLE_SYSTEM_OUTLINE:
+            selection_cmd = "selection";
+            break;
+        default:
+            continue;
+        }
+
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(win), selection_cmd);
+        if (Tcl_Eval(interp, cmd) != TCL_OK)
+            continue;
+
+        Tcl_Obj *result = Tcl_GetObjResult(interp);
+        Tcl_Size list_size = 0;
+        Tcl_Obj **objv = NULL;
+
+        if (Tcl_ListObjGetElements(interp, result, &list_size, &objv) == TCL_OK) {
+            if (list_size > 0)
+                selectedCount++;
+        } else {
+            int index;
+            if (Tcl_GetIntFromObj(interp, result, &index) == TCL_OK && index >= 0)
+                selectedCount++;
+        }
+    }
+
+    if (selectedCount == 0) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    /* Create SAFEARRAY for selected children.*/
+    SAFEARRAYBOUND sabound;
+    sabound.lLbound = 0;
+    sabound.cElements = selectedCount;
+    SAFEARRAY *psa = SafeArrayCreate(VT_I4, 1, &sabound);
+    if (!psa) {
+        TkGlobalUnlock();
+        return E_OUTOFMEMORY;
+    }
+
+    /* Fill SAFEARRAY with selected child IDs. */
+    LONG saIndex = 0;
+    for (entry = Tcl_FirstHashEntry(childIdTable, &search);
+         entry != NULL;
+         entry = Tcl_NextHashEntry(&search)) {
+
+        Tk_Window win = (Tk_Window)Tcl_GetHashKey(childIdTable, entry);
+        if (!win)
+            continue;
+
+        VARIANT varChild, varRole;
+        VariantInit(&varChild);
+        VariantInit(&varRole);
+        varChild.vt = VT_I4;
+        varChild.lVal = PTR2INT(Tcl_GetHashValue(entry));
+
+        if (TkRootAccessible_get_accRole(this, varChild, &varRole) != S_OK)
+            continue;
+
+        LONG role = (varRole.vt == VT_I4) ? varRole.lVal : 0;
+        const char *selection_cmd = NULL;
+
+        switch (role) {
+        case ROLE_SYSTEM_LIST:
+        case ROLE_SYSTEM_TABLE:
+            selection_cmd = "curselection";
+            break;
+        case ROLE_SYSTEM_OUTLINE:
+            selection_cmd = "selection";
+            break;
+        default:
+            continue;
+        }
+
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "%s %s", Tk_PathName(win), selection_cmd);
+        if (Tcl_Eval(interp, cmd) != TCL_OK)
+            continue;
+
+        Tcl_Obj *result = Tcl_GetObjResult(interp);
+        Tcl_Size list_size = 0;
+        Tcl_Obj **objv = NULL;
+        int hasSelection = 0;
+
+        if (Tcl_ListObjGetElements(interp, result, &list_size, &objv) == TCL_OK) {
+            hasSelection = (list_size > 0);
+        } else {
+            int index;
+            if (Tcl_GetIntFromObj(interp, result, &index) == TCL_OK && index >= 0)
+                hasSelection = 1;
+        }
+
+        if (hasSelection) {
+            LONG childId = PTR2INT(Tcl_GetHashValue(entry));
+            SafeArrayPutElement(psa, &saIndex, &childId);
+            saIndex++;
+        }
+    }
+
+    pvarChildren->vt = VT_ARRAY | VT_I4;
+    pvarChildren->parray = psa;
+
+    TkGlobalUnlock();
+    return S_OK;
+}
+
+/* Helper function to update selection events.*/
+static void NotifySelectionChanged(Tk_Window win, LONG childId)
+{
+    if (!win) return;
+   
+    Tk_Window toplevel = GetToplevelOfWidget(win);
+    if (!toplevel) return;
+   
+    HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+    if (!hwnd) return;
+   
+    /* Notify about the selection change */
+    NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, childId);
+    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+    NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
+   
+    /* For UIA support through LegacyIAccessible */
+    TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
+    if (tkProvider) {
+        IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
+       
+        VARIANT oldVal, newVal;
+        VariantInit(&oldVal);
+        VariantInit(&newVal);
+       
+        oldVal.vt = VT_I4;
+        oldVal.lVal = 0;
+        newVal.vt = VT_I4;
+        newVal.lVal = STATE_SYSTEM_SELECTED;
+       
+        UiaRaiseAutomationPropertyChangedEvent(
+            provider,
+            UIA_LegacyIAccessibleStatePropertyId,
+            oldVal,
+            newVal
+        );
+       
+        VariantClear(&oldVal);
+        VariantClear(&newVal);
+    }
+}
+
+/* Helper function to explicitly check if Narrator.exe is running */
+static BOOL IsNarratorRunning(void) {
+    BOOL running = FALSE;
+
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe;
+        pe.dwSize = sizeof(PROCESSENTRY32);
+        if (Process32First(hSnapshot, &pe)) {
+            do {
+                if (_tcsicmp(pe.szExeFile, TEXT("Narrator.exe")) == 0) {
+                    running = TRUE;
+                    break;
+                }
+            } while (Process32Next(hSnapshot, &pe));
+        }
+        CloseHandle(hSnapshot);
+    }
+
+    return running;
+}
+
+/* Helper function to get menu entry labels under UIA/Narrator. */
+static BOOL WalkMenuForChildId(HMENU hMenu, int *currentId, int targetId,
+                               HMENU *foundMenu, int *foundIndex)
+{
+    int count = GetMenuItemCount(hMenu);
+    for (int i = 0; i < count; i++) {
+        (*currentId)++;
+        if (*currentId == targetId) {
+            *foundMenu = hMenu;
+            *foundIndex = i;
+            return TRUE;
+        }
+
+        /* Check for submenu */
+        MENUITEMINFOW mii;
+        memset(&mii, 0, sizeof(MENUITEMINFOW));
+        mii.cbSize = sizeof(MENUITEMINFOW);
+        mii.fMask = MIIM_SUBMENU;
+
+        if (GetMenuItemInfoW(hMenu, i, TRUE, &mii) && mii.hSubMenu) {
+            if (WalkMenuForChildId(mii.hSubMenu, currentId, targetId, foundMenu, foundIndex))
+                return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 /* Function to return default action for role. */
@@ -1051,46 +1348,84 @@ static HRESULT TkAccState(
     Tk_Window win,
     VARIANT *pvarState)
 {
-	Tcl_Interp *interp = Tk_Interp(win);
-	
     if (!win || !pvarState) {
-	return E_INVALIDARG;
+        return E_INVALIDARG;
     }
+
+    Tcl_Interp *interp = Tk_Interp(win);
+    if (!interp) {
+        return E_FAIL;
+    }
+
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	return S_FALSE;
+        return S_FALSE;
     }
+
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE; /* Default base state. */
 
-    long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE; /* Reasonable default. */
-
+    /* Check for disabled state. */
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "state");
     if (hPtr2) {
-	const char *stateresult = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-	if (strcmp(stateresult, "disabled") == 0) {
-	    state = STATE_SYSTEM_UNAVAILABLE;
-	}
+        const char *stateresult = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+        if (strcmp(stateresult, "disabled") == 0) {
+            state = STATE_SYSTEM_UNAVAILABLE;
+        }
     }
 
-    /* Check for checked state using cached value */
+    /* Check for checked state (checkbuttons, radiobuttons). */
     Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
+    const char *tkrole = NULL;
     if (rolePtr) {
-	const char *tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
-	if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Radiobutton") == 0) {
-	    Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
-	    if (valuePtr) {
-		const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
-		if (value && strcmp(value, "1") == 0) {
-		    state |= STATE_SYSTEM_CHECKED;
-		}
-	    } else {
-	    }
-	}
+        tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
+        if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Radiobutton") == 0) {
+            Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
+            if (valuePtr) {
+                const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
+                if (value && strcmp(value, "1") == 0) {
+                    state |= STATE_SYSTEM_CHECKED;
+                }
+            }
+        }
+    }
+
+    /* Query live selected state for listbox or treeview. */
+    if (tkrole) {
+        const char *path = Tk_PathName(win);
+        Tcl_Obj *cmdObjv[2];
+        Tcl_Obj *resultObj = NULL;
+        Tcl_Size objc = 0;
+
+        if (strcmp(tkrole, "Listbox") == 0) {
+            /* Listbox curselection. */
+            cmdObjv[0] = Tcl_NewStringObj(path, -1);
+            cmdObjv[1] = Tcl_NewStringObj("curselection", -1);
+            objc = 2;
+        } else if (strcmp(tkrole, "Treeview") == 0) {
+            /* ttk::treeview selection. */
+            cmdObjv[0] = Tcl_NewStringObj(path, -1);
+            cmdObjv[1] = Tcl_NewStringObj("selection", -1);
+            objc = 2;
+        }
+
+        if (objc > 0) {
+            Tcl_IncrRefCount(cmdObjv[0]);
+            Tcl_IncrRefCount(cmdObjv[1]);
+            if (Tcl_EvalObjv(interp, objc, cmdObjv, TCL_EVAL_GLOBAL) == TCL_OK) {
+                resultObj = Tcl_GetObjResult(interp);
+                if (Tcl_ListObjLength(interp, resultObj, &objc) == TCL_OK && objc > 0) {
+                    state |= STATE_SYSTEM_SELECTED;
+                }
+            }
+            Tcl_DecrRefCount(cmdObjv[0]);
+            Tcl_DecrRefCount(cmdObjv[1]);
+        }
     }
 
     TkWindow *focusPtr = TkGetFocusWin((TkWindow *)win);
     if (focusPtr == (TkWindow *)win) {
-	state |= STATE_SYSTEM_FOCUSED;
+        state |= STATE_SYSTEM_FOCUSED;
     }
 
     pvarState->vt = VT_I4;
@@ -1989,27 +2324,15 @@ int IsScreenReaderRunning(
     /* First check the system-wide flag (covers NVDA, JAWS, etc.) */
     SystemParametersInfo(SPI_GETSCREENREADER, 0, &screenReader, 0);
 
+    /* Fallback: explicitly check for Narrator.exe */
     if (!screenReader) {
-	/* Fallback: explicitly check for Narrator.exe */
-	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hSnapshot != INVALID_HANDLE_VALUE) {
-	    PROCESSENTRY32 pe;
-	    pe.dwSize = sizeof(PROCESSENTRY32);
-	    if (Process32First(hSnapshot, &pe)) {
-		do {
-		    if (_tcsicmp(pe.szExeFile, TEXT("Narrator.exe")) == 0) {
-			screenReader = TRUE;
-			break;
-		    }
-		} while (Process32Next(hSnapshot, &pe));
-	    }
-	    CloseHandle(hSnapshot);
-	}
+        screenReader = IsNarratorRunning();
     }
 
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(screenReader));
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2028,7 +2351,7 @@ int IsScreenReaderRunning(
  */
 
 static int EmitSelectionChanged(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *ip,
     int objc,
     Tcl_Obj *const objv[])
@@ -2051,8 +2374,6 @@ static int EmitSelectionChanged(
     }
 
     Tk_MakeWindowExist(path);
-
-    /* Update checked state. */
     ComputeAndCacheCheckedState(path, ip);
 
     TkGlobalLock();
@@ -2060,44 +2381,14 @@ static int EmitSelectionChanged(
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
 
     if (childId > 0) {
-        HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-
-        /* Send comprehensive notifications. */
-        NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
-        NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-        NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
-
-        /* UIA will automatically pick up these changes through LegacyIAccessible. */
-        TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
-        if (tkProvider) {
-            IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
-
-            VARIANT oldVal, newVal;
-            VariantInit(&oldVal);
-            VariantInit(&newVal);
-
-            oldVal.vt = VT_BOOL;
-            oldVal.boolVal = VARIANT_FALSE;
-            newVal.vt = VT_BOOL;
-            newVal.boolVal = VARIANT_TRUE;
-
-            /* LegacyIAccessible pattern will handle the property change notifications. */
-            UiaRaiseAutomationPropertyChangedEvent(
-                provider,
-                UIA_LegacyIAccessibleStatePropertyId,
-                oldVal,
-                newVal
-            );
-
-            VariantClear(&oldVal);
-            VariantClear(&newVal);
-        }
+        TkGlobalUnlock();
+        NotifySelectionChanged(path, childId);
+        TkGlobalLock();
     }
 
     TkGlobalUnlock();
     return TCL_OK;
 }
-
 
 
 /*
