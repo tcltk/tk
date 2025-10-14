@@ -212,7 +212,7 @@ declare 54 {
 	    double width, int filled, double pointPtr[])
 }
 declare 55 {
-    int TkpChangeFocus(TkWindow *winPtr, int force)
+    size_t TkpChangeFocus(TkWindow *winPtr, int force)
 }
 declare 56 {
     void TkpCloseDisplay(TkDisplay *dispPtr)
@@ -718,7 +718,7 @@ declare 16 win {
     HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
 }
 declare 17 win {
-    int TkWinGetModifierState(void)
+    unsigned int TkWinGetModifierState(void)
 }
 declare 18 win {
     HPALETTE TkWinGetSystemPalette(void)

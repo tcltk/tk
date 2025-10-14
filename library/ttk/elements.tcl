@@ -217,9 +217,9 @@ proc ttk::toggleswitch::CreateElements_genericLight {} {
 	]
 
 	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
+	set imgData $sliderData($n)
+	append imgData "fill='#ffffff'/>\n</svg>"
+	set sliderImg [CreateImg -data $imgData]
 
 	CreateElem Tglswitch$n.slider image $sliderImg
     }
@@ -396,9 +396,9 @@ proc ttk::toggleswitch::CreateElements_clam {} {
 	]
 
 	# sliderImg
-        set imgData $sliderData($n)
-        append imgData "fill='#ffffff'/>\n</svg>"
-        set sliderImg [CreateImg -data $imgData]
+	set imgData $sliderData($n)
+	append imgData "fill='#ffffff'/>\n</svg>"
+	set sliderImg [CreateImg -data $imgData]
 
 	CreateElem Tglswitch$n.slider image $sliderImg
     }

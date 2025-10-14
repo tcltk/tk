@@ -401,15 +401,15 @@ notfound:
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 GetInt(
-    long theint,
+    Tcl_Size theint,
     char *buffer,
     size_t len)
 {
-    snprintf(buffer, len, "0x%lx", theint);
+    snprintf(buffer, len, "0x%" TCL_SIZE_MODIFIER "x", theint);
     buffer[len - 1] = 0;
-    return (int) strlen(buffer);
+    return strlen(buffer);
 }
 
 /*
@@ -463,7 +463,7 @@ TaskbarExpandPercents(
     LPARAM lParam,
     char *before,
     char *after,
-    int *aftersize)
+    size_t *aftersize)
 {
 #define SPACELEFT (*aftersize-(dst-after)-1)
 #define AFTERLEN ((*aftersize>0)?(*aftersize*2):1024)
@@ -473,7 +473,7 @@ TaskbarExpandPercents(
     dst = after;
     while (*before) {
 	const char *ptr = before;
-	int len = 1;
+	size_t len = 1;
 	if(*before == '%') {
 	    switch(before[1]){
 		case 'M':
@@ -485,7 +485,7 @@ TaskbarExpandPercents(
 		}
 		/* case 'W': {
 		   before++;
-		   len = (int)strlen(winstring);
+		   len = strlen(winstring);
 		   ptr = winstring;
 		   break;
 		   }
@@ -564,7 +564,7 @@ TaskbarExpandPercents(
 	if (SPACELEFT < len) {
 	    char *newspace;
 	    ptrdiff_t dist = dst - after;
-	    int alloclen = ALLOCLEN;
+	    size_t alloclen = ALLOCLEN;
 	    newspace = (char *)ckalloc(alloclen);
 	    if (dist>0) {
 		memcpy(newspace, after, dist);
@@ -572,7 +572,7 @@ TaskbarExpandPercents(
 	    if (after && *aftersize) {
 		ckfree(after);
 	    }
-	    *aftersize =alloclen;
+	    *aftersize = alloclen;
 	    after = newspace;
 	    dst = after + dist;
 	}
@@ -580,7 +580,7 @@ TaskbarExpandPercents(
 	    memcpy(dst, ptr, len);
 	}
 	dst += len;
-	if ((dst-after)>(*aftersize-1)) {
+	if ((dst-after)>((Tcl_Size)*aftersize-1)) {
 	    printf("oops\n");
 	}
 	before++;
@@ -613,7 +613,7 @@ TaskbarEval(
 {
     const char *msgstring = "none";
     char evalspace[200];
-    int evalsize = 200;
+    size_t evalsize = 200;
     char *expanded;
     int fixup = 0;
 
@@ -923,7 +923,7 @@ WinSystrayCmd(
     int cmd, opt;
 
     HICON hIcon;
-    int i;
+    Tcl_Size i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr = NULL;
 
