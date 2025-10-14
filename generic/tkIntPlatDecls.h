@@ -75,7 +75,7 @@ EXTERN COLORREF		TkWinGetBorderPixels(Tk_Window tkwin,
 EXTERN HDC		TkWinGetDrawableDC(Display *display, Drawable d,
 				TkWinDCState *state);
 /* 17 */
-EXTERN int		TkWinGetModifierState(void);
+EXTERN unsigned int	TkWinGetModifierState(void);
 /* 18 */
 EXTERN HPALETTE		TkWinGetSystemPalette(void);
 /* 19 */
@@ -332,7 +332,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinFillRect) (HDC dc, int x, int y, int width, int height, int pixel); /* 14 */
     COLORREF (*tkWinGetBorderPixels) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 15 */
     HDC (*tkWinGetDrawableDC) (Display *display, Drawable d, TkWinDCState *state); /* 16 */
-    int (*tkWinGetModifierState) (void); /* 17 */
+    unsigned int (*tkWinGetModifierState) (void); /* 17 */
     HPALETTE (*tkWinGetSystemPalette) (void); /* 18 */
     HWND (*tkWinGetWrapperWindow) (Tk_Window tkwin); /* 19 */
     int (*tkWinHandleMenuEvent) (HWND *phwnd, UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, LRESULT *plResult); /* 20 */

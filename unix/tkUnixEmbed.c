@@ -1129,7 +1129,7 @@ TkpMakeTransparentWindowExist(
     Window parent)		/* Parent window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    long int mask = CWDontPropagate | CWEventMask;
+    unsigned long mask = CWDontPropagate | CWEventMask;
 
     /*
      * Ignore the important events while the window is mapped.
