@@ -56,6 +56,10 @@ static int accessibilityTablesInitialized = 0;
  * e.g. NSAccessibilityListRole, can be used for comparison in methods.
  */
 
+#ifndef NSAccessibilitySwitchRole
+#define NSAccessibilitySwitchRole @"AXSwitch"
+#endif
+
 struct MacRoleMap {
     const char *tkrole;           /* Tk role string */
     NSAccessibilityRole macrole;  /* AX role constant (NSString *) */
@@ -78,8 +82,10 @@ const struct MacRoleMap roleMap[] = {
     {"Table",         @"AXGroup"},
     {"Text",          @"AXTextArea"},
     {"Tree",          @"AXGroup"},
+    {"Toggleswitch",  @"AXSwitch"},
     {NULL,            nil}
 };
+
 
 /*
  *----------------------------------------------------------------------
@@ -254,10 +260,11 @@ void PostAccessibilityAnnouncement(NSString *message)
     AccessibleAttributes = Tcl_GetHashValue(hPtr);
 
     /*
-     * Special handling for checkbuttons and radio buttons.
+     * Special handling for checkbuttons, radio buttons and toggle switches.
      */
     if ([role isEqualToString:NSAccessibilityCheckBoxRole] ||
-	[role isEqualToString:NSAccessibilityRadioButtonRole]) {
+	[role isEqualToString:NSAccessibilityRadioButtonRole] ||
+	[role isEqualToString:NSAccessibilitySwitchRole]) {
 
 	int stateValue = 0; /* Default off. */
 	Tcl_Interp *interp = Tk_Interp(win);
@@ -278,7 +285,8 @@ void PostAccessibilityAnnouncement(NSString *message)
 	    if (varName && *varName) {
 		const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 
-		if ([role isEqualToString:NSAccessibilityCheckBoxRole]) {
+		if ([role isEqualToString:NSAccessibilityCheckBoxRole] || 
+		    [role isEqualToString:NSAccessibilitySwitchRole]) {
 		    if (varVal && strcmp(varVal, "1") == 0) {
 			stateValue = 1;
 		    }
@@ -315,6 +323,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 	return [NSNumber numberWithInteger:cocoaValue];
     }
+
 
     /* Fallback: return cached string value for other widget types */
     hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
@@ -551,12 +560,12 @@ void PostAccessibilityAnnouncement(NSString *message)
 	    /* Post notification AFTER the action completes */
 	    NSAccessibilityRole role = self.accessibilityRole;
 	    if ([role isEqualToString:NSAccessibilityCheckBoxRole] ||
-		[role isEqualToString:NSAccessibilityRadioButtonRole]) {
-
+		[role isEqualToString:NSAccessibilityRadioButtonRole] ||
+		[role isEqualToString:NSAccessibilitySwitchRole]) {
 		/* Delay the notification to ensure the value has actually changed. */
 		dispatch_async(dispatch_get_main_queue(), ^{
-		    NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
-		});
+			NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
+		    });
 	    }
 	}
     }
