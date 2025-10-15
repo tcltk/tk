@@ -596,7 +596,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				     Toggleswitch \
 				     {Toggleswitch} \
 				     {%W switchstate} \
-				     [%W cget -state] \
+				     {} \
 				     {%W invoke}\
 				 }
 
