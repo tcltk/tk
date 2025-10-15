@@ -135,13 +135,25 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
 
 void PostAccessibilityAnnouncement(NSString *message)
 {
-    NSDictionary *userInfo = @{ NSAccessibilityAnnouncementKey: message,
-				NSAccessibilityPriorityKey : @(NSAccessibilityPriorityHigh),};
-    NSAccessibilityPostNotificationWithUserInfo([NSApp mainWindow],
-						NSAccessibilityAnnouncementRequestedNotification,
-						userInfo);
-}
+    if (!message || [message length] == 0) {
+        return; /* Avoid posting empty announcements. */
+    }
 
+    NSDictionary *userInfo = @{
+        NSAccessibilityAnnouncementKey: message,
+        NSAccessibilityPriorityKey: @(NSAccessibilityPriorityHigh)
+    };
+
+    /* Post to the main window or the focused accessibility element. */
+    id target = [NSApp mainWindow] ?: [NSApp keyWindow];
+    if (target) {
+        NSAccessibilityPostNotificationWithUserInfo(
+            target,
+            NSAccessibilityAnnouncementRequestedNotification,
+            userInfo
+        );
+    }
+}
 
 
 /*
@@ -448,14 +460,16 @@ void PostAccessibilityAnnouncement(NSString *message)
      *  is required.
      */
 
-    if ((role && CFStringCompare(role, kAXSliderRole, 0) == kCFCompareEqualTo) || 
-        (role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) || 
-        (role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) || 
-        (role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) || 
-        (role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo)) {
-	[self forceFocus];
+    if ((role && CFStringCompare(role, kAXSliderRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+        [self forceFocus];
     }
-
+   
     return screenrect;
 }
 
@@ -901,28 +915,42 @@ static int EmitSelectionChanged(
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(ip, 1, objv, "window?");
+        return TCL_ERROR;
     }
     Tk_Window path;
 
     path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (path == NULL) {
-	Tk_MakeWindowExist(path);
+        Tk_MakeWindowExist(path);
     }
 
     TkAccessibilityElement *widget = TkAccessibility_GetElementForWindow(path);
+    if (!widget) {
+        Tcl_SetResult(ip, "no accessibility element for window", TCL_STATIC);
+        return TCL_ERROR;
+    }
 
     widget.tk_win = path;
 
-    NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
-    NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
+    CFStringRef role = (__bridge CFStringRef) widget.accessibilityRole;
 
-    PostAccessibilityAnnouncement(widget.accessibilityValue);
+    /* For Text, Entry, and TEntry, prioritize announcement. */
+    if ((role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
+        (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+        NSString *announcement = widget.accessibilityValue;
+        if (announcement && [announcement length] > 0) {
+            PostAccessibilityAnnouncement(announcement);
+        }
+    } else {
+        /* Existing behavior for other widgets. */
+        NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
+        NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
+        PostAccessibilityAnnouncement(widget.accessibilityValue);
+    }
 
     return TCL_OK;
 }
-
 /*
  *----------------------------------------------------------------------
  *
