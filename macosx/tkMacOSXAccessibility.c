@@ -56,6 +56,8 @@ static int accessibilityTablesInitialized = 0;
  * e.g. NSAccessibilityListRole, can be used for comparison in methods.
  */
 
+
+/* This definition is needed to prevent errors in string comparison. */
 #ifndef NSAccessibilitySwitchRole
 #define NSAccessibilitySwitchRole @"AXSwitch"
 #endif
