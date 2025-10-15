@@ -535,7 +535,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				Button \
 				Button \
 				[%W cget -text] \
-				{%W switchstate}\
+				{}\
 				[%W cget -state] \
 				{%W invoke}\
 			    }
@@ -594,7 +594,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				     %W \
 				     Toggleswitch \
 				     Toggleswitch \
-				     {} \
+				     {%W switchstate} \
 				     [set [%W cget -variable]] \
 				     [%W cget -state] \
 				     {%W invoke}\
