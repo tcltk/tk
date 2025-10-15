@@ -624,7 +624,11 @@ Comparisons are to be performed in a case-insensitive manner. Only used with
 .
 The values are to be compared to \fIpattern\fR as floating-point values.
 Empty values will be ignored, but non-integer values will generate an error.
-
+.\" OPTION: -unicode
+.TP
+\fB\-unicode\fR
+.
+Alias for \fB-ascii\fR.
 .\" OPTION: -backwards
 .TP
 \fB\-backwards\fR
@@ -756,6 +760,91 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 Returns the number of children belonging to \fIitem\fR. With \fI\-hidden\fR
 option, will include hidden items. With \fI\-recurse\fR option, will include
 all descendants.
+.\" METHOD: sort
+.TP
+\fIpathname \fBsort \fIparent\fR ?\fI\-option ...\fR?
+.
+Sort the children of \fIparent\fR. Valid options are:
+.RS
+.\" OPTION: -ascii
+.TP
+\fB\-ascii\fR
+.
+The values are to be sorted using Unicode code point order (the
+name is for backward-compatibility reasons.) This is the default.
+.\" OPTION: -dictionary
+.TP
+\fB\-dictionary\fR
+.
+The values are to be sorted using dictionary-style comparisons. This is the
+same as \fB-ascii\fR except (a) case is ignored except as a tie-breaker and
+(b) if two strings contain embedded numbers, the numbers compare as integers,
+not characters. For example, in \fB-dictionary\fR mode, "bigBoy" sorts between
+"bigbang" and "bigboy", and "x10y" sorts between "x9y" and "x11y". Overrides
+the -nocase option.
+.\" OPTION: -integer
+.TP
+\fB\-integer\fR
+.
+The values are to be sorted as integers. Non-integer values will generate an
+error.
+.\" OPTION: -nocase
+.TP
+\fB\-nocase\fR
+.
+Comparisons are to be performed in a case-insensitive manner. Only used with
+\fB\-ascii\fR option.
+.\" OPTION: -real
+.TP
+\fB\-real\fR
+.
+The values are to be sorted as floating-point values. Non-numeric values will
+generate an error.
+.\" OPTION: -unicode
+.TP
+\fB\-unicode\fR
+.
+Alias for \fB-ascii\fR.
+.\" OPTION: -command
+.TP
+\fB\-command \fIcommand\fR
+.
+Use \fIcommand\fR as a comparison command. To compare two elements, evaluate a Tcl
+script consisting of command with the two elements appended as additional
+arguments. The script should return an integer less than, equal to, or greater
+than zero if the first element is to be considered less than, equal to, or
+greater than the second, respectively.
+.TP
+.\" OPTION: -increasing
+.TP
+\fB\-increasing\fR
+.
+Sort the list in increasing order (“smallest” items first). This is the default.
+.\" OPTION: -decreasing
+.TP
+\fB\-decreasing\fR
+.
+Sort the list in decreasing order (“largest” items first).
+.\" OPTION: -column
+.TP
+\fB\-column \fIcolumn\fR
+.
+Sort based on values in column \fIcolumn\fR. See also \fBCOLUMN IDENTIFIERS\fR.
+The default is the first column (#0 if tree in -show or 0 if not).
+.\" OPTION: -ignoreempty
+.TP
+\fB\-ignoreempty\fR
+.
+Used with \fB-integer\fR or \fB-real\fR to ignore empty entries. Normally
+these would trigger an error and abort the sort. Empty entries will be sorted
+first for \fB-increasing\fR and last for \fB-decreasing\fR.
+.\" OPTION: -recurse
+.TP
+\fB\-recurse\fR
+.
+Sort all descendants of \fIparent\fR. The default is to only sort the children
+of \fIparent\fR.
+.RE
 .\" METHOD: tag
 .TP
 \fIpathName \fBtag \fIargs...\fR

@@ -719,7 +719,7 @@ static TreeItem *FindItem(
 
 enum {index_end, index_first, index_last};
 static const char *const indexStrings[] = {"end", "first", "last", NULL};
-int TreeviewCountRecursive(TreeItem *, int, int);
+Tcl_Size TreeviewCountRecursive(TreeItem *, int, int);
 
 /* + FindIndex --
  *	Returns the index for value or error if invalid.
@@ -2793,8 +2793,8 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-int TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
-    int count = 0;
+Tcl_Size TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
+    Tcl_Size count = 0;
     TreeItem *item;
 
     for (item = parent->children; item; item = item->next) {
@@ -2820,8 +2820,8 @@ static int TreeviewSizeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int count, option = -1, hidden = 0, recurse = 0;
-    Tcl_Size i;
+    int option = -1, hidden = 0, recurse = 0;
+    Tcl_Size i, count;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-recurse? item");
@@ -4995,47 +4995,423 @@ abort:
     return TCL_ERROR;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DictionaryCompare
+ *
+ *	This function compares two strings as if they were being used in an
+ *	index or card catalog. The case of alphabetic characters is ignored,
+ *	except to break ties. Thus "B" comes before "b" but after "a". Also,
+ *	integers embedded in the strings compare in numerical order. In other
+ *	words, "x10y" comes after "x9y", not * before it as it would when
+ *	using strcmp().
+ *
+ * Results:
+ *	A negative result means that the first element comes before the
+ *	second, and a positive result means that the second element should
+ *	come first. A result of zero means the two elements are equal and it
+ *	doesn't matter which comes first.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DictionaryCompare(
+    const char *left, const char *right)	/* The strings to compare. */
+{
+    int uniLeft = 0, uniRight = 0, uniLeftLower, uniRightLower;
+    int diff, zeros;
+    int secondaryDiff = 0;
+
+    while (1) {
+	if (isdigit(UCHAR(*right))		/* INTL: digit */
+		&& isdigit(UCHAR(*left))) {	/* INTL: digit */
+	    /*
+	     * There are decimal numbers embedded in the two strings. Compare
+	     * them as numbers, rather than strings. If one number has more
+	     * leading zeros than the other, the number with more leading
+	     * zeros sorts later, but only as a secondary choice.
+	     */
+
+	    zeros = 0;
+	    while ((*right == '0') && isdigit(UCHAR(right[1]))) {
+		right++;
+		zeros--;
+	    }
+	    while ((*left == '0') && isdigit(UCHAR(left[1]))) {
+		left++;
+		zeros++;
+	    }
+	    if (secondaryDiff == 0) {
+		secondaryDiff = zeros;
+	    }
+
+	    /*
+	     * The code below compares the numbers in the two strings without
+	     * ever converting them to integers. It does this by first
+	     * comparing the lengths of the numbers and then comparing the
+	     * digit values.
+	     */
+
+	    diff = 0;
+	    while (1) {
+		if (diff == 0) {
+		    diff = UCHAR(*left) - UCHAR(*right);
+		}
+		right++;
+		left++;
+		if (!isdigit(UCHAR(*right))) {		/* INTL: digit */
+		    if (isdigit(UCHAR(*left))) {	/* INTL: digit */
+			return 1;
+		    } else {
+			/*
+			 * The two numbers have the same length. See if their
+			 * values are different.
+			 */
+
+			if (diff != 0) {
+			    return diff;
+			}
+			break;
+		    }
+		} else if (!isdigit(UCHAR(*left))) {	/* INTL: digit */
+		    return -1;
+		}
+	    }
+	    continue;
+	}
+
+	/*
+	 * Convert character to Unicode for comparison purposes. If either
+	 * string is at the terminating null, do a byte-wise comparison and
+	 * bail out immediately.
+	 */
+
+	if ((*left != '\0') && (*right != '\0')) {
+	    left += Tcl_UtfToUniChar(left, &uniLeft);
+	    right += Tcl_UtfToUniChar(right, &uniRight);
+
+	    /*
+	     * Convert both chars to lower for the comparison, because
+	     * dictionary sorts are case-insensitive. Covert to lower, not
+	     * upper, so chars between Z and a will sort before A (where most
+	     * other interesting punctuations occur).
+	     */
+
+	    uniLeftLower = Tcl_UniCharToLower(uniLeft);
+	    uniRightLower = Tcl_UniCharToLower(uniRight);
+	} else {
+	    diff = UCHAR(*left) - UCHAR(*right);
+	    break;
+	}
+
+	diff = uniLeftLower - uniRightLower;
+	if (diff) {
+	    return diff;
+	}
+	if (secondaryDiff == 0) {
+	    if (Tcl_UniCharIsUpper(uniLeft) && Tcl_UniCharIsLower(uniRight)) {
+		secondaryDiff = -1;
+	    } else if (Tcl_UniCharIsUpper(uniRight)
+		    && Tcl_UniCharIsLower(uniLeft)) {
+		secondaryDiff = 1;
+	    }
+	}
+    }
+    if (diff == 0) {
+	diff = secondaryDiff;
+    }
+    return diff;
+}
+
+/*
+ * This structure stores the data value used by the sort function to
+ * arrange the items being sorted into a collection of linked lists.
+ */
+
+typedef struct SortElement {
+    union {			/* The value that we sorting by. */
+	const char *strValuePtr;
+	Tcl_WideInt wideValue;
+	double doubleValue;
+	Tcl_Obj *objValuePtr;
+    } collationKey;
+    TreeItem *item;		/* Tree item */
+    Tcl_Size len;		/* Length of string value or 0 for no value. */
+    struct SortElement *nextPtr;/* Next element in the list, or NULL for end. */
+} SortElement;
+
+/*
+ * This structure defines the sort config info needed by the compare functions
+ * and the sort success or failure status.
+ */
+
+typedef struct {
+    int isIncreasing;		/* Order: 0=decreasing, 1=increasing */
+    sortModes_t sortMode;	/* The sort mode. See sortMode enums. */
+    Tcl_Size colNum;		/* Widget column number */
+    Tcl_Obj *compareCmdPtr;	/* TCL compare command for TYPE_COMMAND.
+				 * Preinitialized to hold base command. */
+    int resultCode;		/* Completion code for the sort operation. If
+				 * an error occurs during the sort this is
+				 * changed from TCL_OK to TCL_ERROR. */
+} SortInfo;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SortCompare --
+ *
+ *	This procedure is invoked by MergeLists to determine the proper
+ *	ordering between two elements.
+ *
+ * Results:
+ *	-1 means the first element comes before the second, 0 means the
+ *	two elements are equal, and +1 means that the second element should
+ *	come first. Empty values are sorted before non-empty values.
+ *
+ * Side effects:
+ *	None, unless a user-defined comparison command does something weird.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SortCompare(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    SortElement *elemPtr1, SortElement *elemPtr2,
+				/* Values to be compared. */
+    SortInfo *infoPtr)		/* Sort operation config info. */
+{
+    int order = 0, len;
+
+    if (elemPtr1->len == 0 || elemPtr2->len == 0) {
+	/* Empty value compare */
+	if (elemPtr1->len == 0 && elemPtr2->len > 0) {
+	    order = -1;
+	} else if (elemPtr1->len > 0 && elemPtr2->len == 0) {
+	    order = 1;
+	} else {
+	    order = 0;
+	}
+
+    } else if (infoPtr->sortMode == TYPE_ASCII) {
+	/* String compare using Unicode order */
+	len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
+	order = Tcl_UtfNcmp(elemPtr1->collationKey.strValuePtr,
+		elemPtr2->collationKey.strValuePtr, len);
+
+    } else if (infoPtr->sortMode == TYPE_ASCII_NC) {
+	/* String compare using Unicode no-case order */
+	len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
+	order = Tcl_UtfNcasecmp(elemPtr1->collationKey.strValuePtr,
+		elemPtr2->collationKey.strValuePtr, len);
+
+    } else if (infoPtr->sortMode == TYPE_DICTIONARY) {
+	/* String compare using dictionary order */
+	order = DictionaryCompare(elemPtr1->collationKey.strValuePtr,
+		elemPtr2->collationKey.strValuePtr);
+
+    } else if (infoPtr->sortMode == TYPE_INTEGER) {
+	/* Integer compare */
+	Tcl_WideInt a, b;
+
+	a = elemPtr1->collationKey.wideValue;
+	b = elemPtr2->collationKey.wideValue;
+	order = ((a >= b) - (a <= b));
+
+    } else if (infoPtr->sortMode == TYPE_REAL) {
+	/* Double compare */
+	double a, b;
+
+	a = elemPtr1->collationKey.doubleValue;
+	b = elemPtr2->collationKey.doubleValue;
+	order = ((a >= b) - (a <= b));
+
+    } else {
+	/* Command compare */
+	Tcl_Obj **objv, *paramObjv[2];
+	Tcl_Size objc;
+	Tcl_Obj *objPtr1, *objPtr2;
+
+	/* Abort if an error has previously occurred. */
+	if (infoPtr->resultCode != TCL_OK) {
+	    return 0;
+	}
+
+	objPtr1 = elemPtr1->collationKey.objValuePtr;
+	objPtr2 = elemPtr2->collationKey.objValuePtr;
+
+	paramObjv[0] = objPtr1;
+	paramObjv[1] = objPtr2;
+
+	/* We made space in the command list for the two things to compare.
+	 * Replace them and evaluate the result. */
+	Tcl_ListObjLength(interp, infoPtr->compareCmdPtr, &objc);
+	Tcl_ListObjReplace(interp, infoPtr->compareCmdPtr, objc - 2,
+		2, 2, paramObjv);
+	Tcl_ListObjGetElements(interp, infoPtr->compareCmdPtr,
+		&objc, &objv);
+
+	/* Call command to do compare */
+	infoPtr->resultCode = Tcl_EvalObjv(interp, objc, objv, 0);
+	if (infoPtr->resultCode != TCL_OK) {
+	    Tcl_AddErrorInfo(interp, "\n    (-compare command)");
+	    return 0;
+	}
+
+	/* Parse the result of the command. */
+	if (Tcl_GetIntFromObj(interp,
+		Tcl_GetObjResult(interp), &order) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"-compare command returned non-integer result", -1));
+	    Tcl_SetErrorCode(interp, "TCL", "OPERATION", "LSORT",
+		"COMPARISONFAILED", (char *)NULL);
+	    infoPtr->resultCode = TCL_ERROR;
+	    return 0;
+	}
+    }
+    if (!infoPtr->isIncreasing) {
+	order = -order;
+    }
+    return order;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MergeLists -
+ *
+ *	This procedure combines two sorted lists of SortElement structures
+ *	into a single sorted list.
+ *
+ * Results:
+ *	The unified list of SortElement structures.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static SortElement *
+MergeLists(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    SortElement *leftPtr,	/* First list to be merged; may be NULL. */
+    SortElement *rightPtr,	/* Second list to be merged; may be NULL. */
+    SortInfo *infoPtr)		/* Sort operation config info. */
+{
+    SortElement *headPtr, *tailPtr;
+    int cmp;
+
+    if (leftPtr == NULL) {
+	return rightPtr;
+    }
+    if (rightPtr == NULL) {
+	return leftPtr;
+    }
+    cmp = SortCompare(interp, leftPtr, rightPtr, infoPtr);
+    if (cmp > 0) {
+	tailPtr = rightPtr;
+	rightPtr = rightPtr->nextPtr;
+    } else {
+	tailPtr = leftPtr;
+	leftPtr = leftPtr->nextPtr;
+    }
+    headPtr = tailPtr;
+    while ((leftPtr != NULL) && (rightPtr != NULL)) {
+	cmp = SortCompare(interp, leftPtr, rightPtr, infoPtr);
+	if (cmp > 0) {
+	    tailPtr->nextPtr = rightPtr;
+	    tailPtr = rightPtr;
+	    rightPtr = rightPtr->nextPtr;
+	} else {
+	    tailPtr->nextPtr = leftPtr;
+	    tailPtr = leftPtr;
+	    leftPtr = leftPtr->nextPtr;
+	}
+    }
+    if (leftPtr != NULL) {
+	tailPtr->nextPtr = leftPtr;
+    } else {
+	tailPtr->nextPtr = rightPtr;
+    }
+    return headPtr;
+}
 
 /* + $tv sort parent ?-option value...?
  */
 static int TreeviewSortCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,		/* Current interpreter */
+    Tcl_Size objc,		/* Number of arguments */
+    Tcl_Obj *const objv[]) {	/* Argument values */
+
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *parent;
-    TreeColumn *column = NULL;
+    TreeItem *parent, *item = NULL;
+    int index, nocase = 0, recurse = 0, ignoreEmpty = 0;
+    Tcl_Obj *cmdPtr;
+    Tcl_Size i, j, length, elmArrSize;
+
+    SortElement *elementArray = NULL, *elementPtr;
+    SortInfo sortInfo;		/* Sort operation config info */
+#   define MAXCALLOC 1024000
+#   define NUM_LISTS 30
+    /* This array holds pointers to temporary lists built during the merge
+     * sort. Element i of the array holds a list of length 2**i. */
+    SortElement *subList[NUM_LISTS+1];
 
     enum {
-	SORT_ASCII, SORT_COLUMN, SORT_DECREASING, SORT_DICTIONARY,
-	SORT_INCREASING, SORT_INTEGER, SORT_NOCASE, SORT_REAL, SORT_RECURSE,
-	SORT_RECURSIVE
+	SORT_ASCII, SORT_COLUMN, SORT_COMMAND, SORT_DECREASING,
+	SORT_DICTIONARY, SORT_IGNORE_EMPTY, SORT_INCREASING, SORT_INTEGER,
+	SORT_NOCASE, SORT_REAL, SORT_RECURSE, SORT_RECURSIVE, SORT_UNICODE
     };
     static const char *const sortStrings[] = {
-	"-ascii", "-column", "-decreasing", "-dictionary", "-increasing",
-	"-integer", "-nocase", "-real", "-recurse", "-recursive", NULL
+	"-ascii", "-column", "-command", "-decreasing", "-dictionary",
+	"-ignoreempty", "-increasing", "-integer", "-nocase", "-real", "-recurse",
+	"-recursive", "-unicode", NULL
     };
-    int index, mode = SORT_ASCII, increasing = 1, nocase = 0, recurse = 0;
 
-    if (objc < 3 || objc > 15) {
+
+    if (objc < 3 || objc > 20) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...?");
 	return TCL_ERROR;
     }
 
+    /* Get items to sort */
     if (!(parent = FindItem(interp, tv, objv[2]))) {
 	return TCL_ERROR;
     }
+    if (parent->children != NULL) {
+	item = parent->children;
+	length = TreeviewCountRecursive(parent, 1, 0);
+    } else {
+	return TCL_OK;
+    }
 
-    for (Tcl_Size i = 3; i < objc; ++i) {
-	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], sortStrings,
-		sizeof(char *), "option", 0, &index)) {
+    sortInfo.isIncreasing = 1;
+    sortInfo.sortMode = TYPE_ASCII;
+    sortInfo.compareCmdPtr = NULL;
+    sortInfo.colNum = FirstColumn(tv)-1;
+    sortInfo.resultCode = TCL_OK;
+
+    /* Pasre args */
+    for (i = 3; i < objc; ++i) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sortStrings, sizeof(char *),
+		"option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
 	switch (index) {
 	    case SORT_ASCII:
-		mode = SORT_ASCII;
+	    case SORT_UNICODE:
+		sortInfo.sortMode = TYPE_ASCII;
 		break;
-	    case SORT_COLUMN:
-		if (i == objc - 2) {
+	    case SORT_COLUMN: {
+		TreeColumn *column = NULL;
+
+		if (i == objc - 1) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no column specified"));
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
 		    return TCL_ERROR;
@@ -5043,24 +5419,45 @@ static int TreeviewSortCommand(
 		if (!(column = FindColumn(interp, tv, objv[++i]))) {
 		    return TCL_ERROR;
 		}
+		if (column == &tv->tree.column0) {
+		    sortInfo.colNum = -1;
+		} else if (tv->tree.columns) {
+		    sortInfo.colNum = (column - tv->tree.columns);
+		}
+		break;
+	    }
+	    case SORT_COMMAND:
+		if (i < objc - 1) {
+		    sortInfo.sortMode = TYPE_COMMAND;
+		    cmdPtr = objv[++i];
+		} else {
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"\"-command\" option must be followed by comparison command", -1));
+		    Tcl_SetErrorCode(interp, "TCL", "ARGUMENT", "MISSING", (char *)NULL);
+		    sortInfo.resultCode = TCL_ERROR;
+		    goto done;
+		}
 		break;
 	    case SORT_DECREASING:
-		increasing = 0;
+		sortInfo.isIncreasing = 0;
 		break;
 	    case SORT_DICTIONARY:
-		mode = SORT_DICTIONARY;
+		sortInfo.sortMode = TYPE_DICTIONARY;
+		break;
+	    case SORT_IGNORE_EMPTY:
+		ignoreEmpty = 1;
 		break;
 	    case SORT_INCREASING:
-		increasing = 1;
+		sortInfo.isIncreasing = 1;
 		break;
 	    case SORT_INTEGER:
-		mode = SORT_INTEGER;
+		sortInfo.sortMode = TYPE_INTEGER;
 		break;
 	    case SORT_NOCASE:
 		nocase = 1;
 		break;
 	    case SORT_REAL:
-		mode = SORT_REAL;
+		sortInfo.sortMode = TYPE_REAL;
 		break;
 	    case SORT_RECURSE:
 	    case SORT_RECURSIVE:
@@ -5069,10 +5466,161 @@ static int TreeviewSortCommand(
 	}
     }
 
+    if (nocase && (sortInfo.sortMode == TYPE_ASCII)) {
+	sortInfo.sortMode = TYPE_ASCII_NC;
+    }
 
-    return TCL_OK;
+    /* For command sorts, duplicate command in case it's deleted while sort is
+     * in progress. Also flattens it and adds placeholders to end. */
+    if (sortInfo.sortMode == TYPE_COMMAND) {
+	Tcl_Obj *newCommandPtr, *newObjPtr;
+
+	newCommandPtr = Tcl_DuplicateObj(cmdPtr);
+	newObjPtr = Tcl_NewObj();
+	Tcl_IncrRefCount(newCommandPtr);
+	if (Tcl_ListObjAppendElement(interp, newCommandPtr, newObjPtr) != TCL_OK) {
+	    Tcl_DecrRefCount(newCommandPtr);
+	    Tcl_DecrRefCount(newObjPtr);
+	    sortInfo.resultCode = TCL_ERROR;
+	    goto done;
+	}
+	Tcl_ListObjAppendElement(interp, newCommandPtr, Tcl_NewObj());
+	sortInfo.compareCmdPtr = newCommandPtr;
+    }
+
+    /* Initialize the sublists. After the following loop, subList[i] will
+     * contain a sorted sublist of length 2**i. Use one extra subList at the
+     * end, always at NULL, to indicate the end of the lists. */
+    for (j=0; j<=NUM_LISTS; j++) {
+	subList[j] = NULL;
+    }
+
+    /* Allocate storage for sort elements. */
+    elmArrSize = length * sizeof(SortElement);
+    if (elmArrSize <= MAXCALLOC) {
+	elementArray = (SortElement *)Tcl_Alloc(elmArrSize);
+    } else {
+	elementArray = (SortElement *)malloc(elmArrSize);
+    }
+    if (!elementArray) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"no enough memory to process sort of %" TCL_Z_MODIFIER "u items", length));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	sortInfo.resultCode = TCL_ERROR;
+	goto done;
+    }
+
+    /* The following loop creates a SortElement for each item and
+     * begins to sort elements into the sublists as they appear. */
+    for (i = 0; i < length && item; i++) {
+	Tcl_Obj *valPtr;
+	Tcl_Size len;
+
+	/* Get cell value to sort on from item. */
+	if (sortInfo.colNum == -1) {
+	    valPtr = item->textObj;
+	} else if (item->valuesObj != NULL) {
+	    Tcl_ListObjIndex(interp, item->valuesObj, sortInfo.colNum, &valPtr);
+	} else {
+	    valPtr = NULL;
+	}
+	elementArray[i].len = (valPtr == NULL ? 0 : 1);
+	elementArray[i].item = item;
+	elementArray[i].nextPtr = NULL;
+
+	/* Get value from valPtr and put into sortable format. */
+	if (valPtr) {
+	    if (sortInfo.sortMode <= TYPE_DICTIONARY) {
+		elementArray[i].collationKey.strValuePtr = Tcl_GetStringFromObj(valPtr, &len);
+		elementArray[i].len = len;
+
+	    } else if (sortInfo.sortMode == TYPE_INTEGER) {
+		Tcl_WideInt a;
+
+		if (Tcl_GetWideIntFromObj(interp, valPtr, &a) == TCL_OK) {
+		    elementArray[i].collationKey.wideValue = a;
+		} else {
+		    Tcl_GetStringFromObj(valPtr, &len);
+		    if (len == 0 && ignoreEmpty) {
+			elementArray[i].len = len;
+		    } else {
+			sortInfo.resultCode = TCL_ERROR;
+			goto done;
+		    }
+		}
+
+	    } else if (sortInfo.sortMode == TYPE_REAL) {
+		double a;
+
+		if (Tcl_GetDoubleFromObj(interp, valPtr, &a) == TCL_OK) {
+		    elementArray[i].collationKey.doubleValue = a;
+		} else {
+		    Tcl_GetStringFromObj(valPtr, &len);
+		    if (len == 0 && ignoreEmpty) {
+			elementArray[i].len = len;
+		    } else {
+			sortInfo.resultCode = TCL_ERROR;
+			goto done;
+		    }
+		}
+
+	    } else {
+		elementArray[i].collationKey.objValuePtr = valPtr;
+	    }
+	}
+
+	/* Merge this element into the preexisting sublists (and merge together
+	 * sublists when we have two of the same size). */
+	elementPtr = &elementArray[i];
+	for (j=0; subList[j]; j++) {
+	    elementPtr = MergeLists(interp, subList[j], elementPtr, &sortInfo);
+	    subList[j] = NULL;
+	}
+
+	if (j >= NUM_LISTS) {
+	    j = NUM_LISTS-1;
+	}
+	subList[j] = elementPtr;
+	item = item->next;
+    }
+
+    /* Merge all sublists */
+    elementPtr = subList[0];
+    for (j=1; j<NUM_LISTS; j++) {
+	elementPtr = MergeLists(interp, subList[j], elementPtr, &sortInfo);
+    }
+
+    /* Update widget */
+    if (sortInfo.resultCode == TCL_OK) {
+	TreeItem *prev = NULL;
+
+	parent->children = NULL;
+	parent->lastChild = NULL;
+	for (i=0; elementPtr != NULL; elementPtr = elementPtr->nextPtr) {
+	    item = elementPtr->item;
+	    item->next = NULL;
+	    InsertItem(parent, prev, item);
+	    prev = item;
+	}
+	tv->tree.rowPosNeedsUpdate = 1;
+	TtkRedisplayWidget(&tv->core);
+    }
+
+    /* Clean-up */
+done:
+    if (sortInfo.sortMode == TYPE_COMMAND) {
+	Tcl_DecrRefCount(sortInfo.compareCmdPtr);
+	sortInfo.compareCmdPtr = NULL;
+    }
+    if (elementArray) {
+	if (elmArrSize <= MAXCALLOC) {
+	    Tcl_Free(elementArray);
+	} else {
+	    free((char *)elementArray);
+	}
+    }
+    return sortInfo.resultCode;
 }
-
 
 /*------------------------------------------------------------------------
  * +++ Widget commands -- tags and bindings.
