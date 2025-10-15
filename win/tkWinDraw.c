@@ -1264,7 +1264,9 @@ DrawOrFillArc(
 
     pen = SetUpGraphicsPort(gc);
     oldPen = (HPEN)SelectObject(dc, pen);
-    if (!fill) {
+    if ((xstart == xend) && (ystart == yend)) {
+	/* Do nothing. See bug [6051a9fc] */
+    } else if (!fill) {
 	/*
 	 * Note that this call will leave a gap of one pixel at the end of the
 	 * arc for thin arcs. We can't use ArcTo because it's only supported
