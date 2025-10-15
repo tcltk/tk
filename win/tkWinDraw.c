@@ -1213,6 +1213,13 @@ DrawOrFillArc(
     int clockwise = (extent < 0); /* non-zero if clockwise */
     int xstart, ystart, xend, yend;
     double radian_start, radian_end, xr, yr;
+    int extent_less_than_180_deg;
+
+    extent = extent % (64*360);
+    if (extent < 0) {
+	extent += (64*360);
+    }
+    extent_less_than_180_deg = (extent < (64*180));
 
     if (d == None) {
 	return BadDrawable;
@@ -1264,7 +1271,7 @@ DrawOrFillArc(
 
     pen = SetUpGraphicsPort(gc);
     oldPen = (HPEN)SelectObject(dc, pen);
-    if ((xstart == xend) && (ystart == yend)) {
+    if (extent_less_than_180_deg && (xstart == xend) && (ystart == yend)) {
 	/* Do nothing. See bug [6051a9fc] */
     } else if (!fill) {
 	/*
