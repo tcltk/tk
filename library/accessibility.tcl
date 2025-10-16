@@ -148,65 +148,63 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    return $data
 	}
 	
-	# Get previous word in text / entry widgets. 
-	proc _getprevword {w} {
-	    if {[$w cget -state] eq "disabled"} {
-		return ""
+	# Create the bindings once for all supported widgets
+	proc install_keycapture {w} {
+	    # Ensure we don’t double-bind
+	    if {[lsearch -exact [bindtags $w] KeyCaptureTag] == -1} {
+		bindtags $w [linsert [bindtags $w] 1 KeyCaptureTag]
 	    }
-
-	    set insert [$w index insert]
-	    set word ""
-
-	    if {![catch {
-		# Try text widget logic
-		set start [$w index "insert wordstart -1c wordstart"]
-		set end   [$w index "insert wordstart"]
-		set word  [$w get $start $end]
-	    }]} {
-		return $word
-	    }
-
-	    # Fallback for entry/ttk::entry widgets
-	    if {![catch {
-		set start [$w index "insert -1 wordstart"]
-		set end   [$w index insert]
-		set word  [$w get $start $end]
-	    }]} {
-		return $word
-	    }
-
-	    return ""
 	}
 
+	# Core binding tag (shared by text, entry, ttk::entry)
+	bind KeyCaptureTag <KeyPress> {+::tk::accessible::_handle_keypress %W %K}
+	bind KeyCaptureTag <KeyRelease-space> {+ after 10 [list ::tk::accessible::_get_prev_word %W]}
 
-	# Get typed letter in text/entry widgets.
-	proc _keyecho {w key} {
-	    if {$key eq ""} return
-	    return $key
-	}
-	
-
-	# Get typed text for screen reader. 
-	proc _getkeytext {w key} {
-	    # On macOS, key might be empty for some events
-	    if {$key eq ""} return
-	    
-	    # Ignore modifier keys or non-printables.
-	    set modifiers {Shift_L Shift_R Control_L Control_R Alt_L Alt_R Meta_L Meta_R Command_L Command_R}
-	    if {$key in $modifiers} {
+	# Handle each keypress event
+	proc _handle_keypress {w key} {
+	    # Ignore modifier keys and non-printables
+	    if {$key eq "" || [string length $key] > 1} {
 		return
 	    }
-	    
-	    # Handle special keys
+
+	    # If user pressed space, do nothing here — handled on KeyRelease
 	    if {$key eq "space"} {
-		set data [::tk::accessible::_getprevword $w]
-	    } else {
-		set data [::tk::accessible::_keyecho $w $key]
+		return
 	    }
-	    
-	    # Only process if we have meaningful data
-	    if {$data ne ""} {
-		::tk::accessible::set_acc_value $w $data
+
+	    # Otherwise emit single-character updates
+	    ::tk::accessible::set_acc_value $w $key
+	    ::tk::accessible::emit_selection_change $w
+	}
+
+	# Retrieve the previous word before the cursor (called after space release)
+	proc _get_prev_word {w} {
+	    update idletasks   ;# ensure buffer is current
+	    set class [winfo class $w]
+	    set before ""
+
+	    if {$class eq "Text"} {
+		# For text widgets
+		set start [$w index "insert linestart"]
+		if {[$w compare insert == $start]} {
+		    # nothing before cursor at start of line
+		    return
+		}
+		set before [$w get $start "insert -1c"]
+	    } elseif {$class eq "Entry" || $class eq "TEntry"} {
+		# For entry/ttk::entry widgets
+		set full [$w get]
+		set pos [$w index insert]
+		if {$pos > 0} {
+		    set before [string range $full 0 [expr {$pos - 2}]]
+		}
+	    } else {
+		return
+	    }
+
+	    # Extract last word before the space
+	    if {[regexp -nocase -- {\S+$} $before match]} {
+		::tk::accessible::set_acc_value $w $match
 		::tk::accessible::emit_selection_change $w
 	    }
 	}
@@ -628,7 +626,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			      [%W get] \
 			      [%W cget -state] \
 			      {} \
-			      ; bindtags %W [list Entry %W . all]}
+			      ; ::tk::accessible::install_keycapture %W}
 
 	
 	bind TEntry <Map> {+::tk::accessible::_init \
@@ -639,7 +637,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			       [%W get] \
 			       [%W state]\
 			       {} \
-			       ; bindtags %W [list TEntry %W . all]} 
+			       ; ::tk::accessible::install_keycapture %W} 
 
 
 	# Listbox bindings.
@@ -930,7 +928,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			     [::tk::accessible::_gettext %W] \
 			     [%W cget -state] \
 			     {}\
-			     ; bindtags %W [list Text %W . all]}
+			     ; ::tk::accessible::install_keycapture %W}
 
 	# Label/TLabel bindings.
 	bind Label <Map>  {+::tk::accessible::_init \

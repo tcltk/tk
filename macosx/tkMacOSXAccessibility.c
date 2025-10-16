@@ -59,6 +59,9 @@ static int accessibilityTablesInitialized = 0;
 #ifndef kAXSwitchRole
 #define kAXSwitchRole CFSTR("AXSwitch")
 #endif
+#ifndef kAXUnknownRole
+#define kAXUnknownRole CFSTR("AXUnknown")
+#endif
 
 struct MacRoleMap {
     const char *tkrole;           /* Tk role string */
@@ -179,79 +182,83 @@ void PostAccessibilityAnnouncement(NSString *message)
 {
     Tk_Window win = self.tk_win;
     if (!win) {
-	return NULL;
+        return kAXUnknownRole; // Never return NULL
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	return NULL;
+        return kAXUnknownRole;
     }
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-	return NULL;
+        return kAXUnknownRole;
     }
 
-    const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    Tcl_Obj *roleObj = Tcl_GetHashValue(hPtr2);
+    if (!roleObj) {
+        return kAXUnknownRole;
+    }
+
+    const char *result = Tcl_GetString(roleObj);
     if (!result) {
-	return NULL;
+        return kAXUnknownRole;
     }
 
     for (NSUInteger i = 0; roleMap[i].tkrole != NULL; i++) {
-	if (strcmp(roleMap[i].tkrole, result) == 0) {
-	    return roleMap[i].macrole;
-	}
+        if (strcmp(roleMap[i].tkrole, result) == 0) {
+            return (__bridge NSString *)roleMap[i].macrole;
+        }
     }
 
-    return NULL;
+    return kAXUnknownRole; /* Default fallback. */
 }
 
 
 - (NSString *) accessibilityLabel
 {
-
-    CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
-
-    /*
-     * Special handling for listboxes, trees and tables. They are defined
-     * as kAXGroupRole to suppress the "empty content" phrasing
-     * that comes with tables/trees/listboxes without an array of child widgets.
-     * We are using the accessibilityChildren array only for actual widgets
-     * that are children of toplevels, not virtual elements such as listbox
-     * rows. We are using script-level bindings and a custom announcement
-     * in VoiceOver to notfiy the user of the selected data. Here,
-     * we include the number of elements in the row and a hint on navigation as
-     * the accessibility label for these roles.
-     */
-    if (role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) {
-	NSInteger rowCount = [self accessibilityRowCount];
-	NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
-	NSString *interact = self.accessibilityHint;
-	NSString *groupLabel = [NSString stringWithFormat:@"%@%@", count, interact];
-	return groupLabel;
-    }
-
-    /* Retrieve the label for all other widget roles. */
     Tk_Window win = self.tk_win;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_HashTable *AccessibleAttributes;
+    if (!win) {
+        return @"";
+    }
 
-    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	return nil;
+        return @"";
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "description");
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    
+    /* Special handling for group roles (tables, listboxes, trees). */
+    CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
+    if (role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) {
+        NSInteger rowCount = [self accessibilityRowCount];
+        NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
+        NSString *interact = self.accessibilityHint ?: @"";
+        NSString *groupLabel = [NSString stringWithFormat:@"%@%@", count, interact];
+        return groupLabel;
+    }
+
+    /* Get the description for all other widget roles. */
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
     if (!hPtr2) {
-	return nil;
+        return @"";
     }
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    NSString  *macdescription = [NSString stringWithUTF8String:result];
-    return macdescription;
+    
+    Tcl_Obj *descObj = Tcl_GetHashValue(hPtr2);
+    if (!descObj) {
+        return @"";
+    }
+    
+    const char *result = Tcl_GetString(descObj);
+    if (!result) {
+        return @"";
+    }
+    
+    NSString *macdescription = [NSString stringWithUTF8String:result];
+    return macdescription ?: @"";
 }
-
 
 - (id)accessibilityValue
 {
@@ -351,38 +358,46 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 - (NSString*) accessibilityTitle
 {
-
+    return nil; 
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
 
-    /*
-     * Return the value data for labels and text widgets as the accessibility
-     * title, because VoiceOver does not seem to pick up the accessibiility
-     * value for these widgets otherwise.
-    */
+    /* Return value for labels and text widgets. */
     if ((role && CFStringCompare(role, kAXStaticTextRole, 0) == kCFCompareEqualTo) || 
         (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
-	return self.accessibilityValue;
+        NSString *value = self.accessibilityValue;
+        return value;
     }
 
     Tk_Window win = self.tk_win;
-    Tcl_HashEntry *hPtr, *hPtr2;
-    Tcl_HashTable *AccessibleAttributes;
+    if (!win) {
+        return @"";
+    }
 
-    hPtr=Tcl_FindHashEntry(TkAccessibilityObject, win);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-	return nil;
+        return @"";
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "name");
+    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
     if (!hPtr2) {
-	return nil;
+        return @"";
     }
 
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    Tcl_Obj *nameObj = Tcl_GetHashValue(hPtr2);
+    if (!nameObj) {
+        return @"";
+    }
+
+    const char *result = Tcl_GetString(nameObj);
+    if (!result) {
+        return @"";
+    }
+
     NSString *mactitle = [NSString stringWithUTF8String:result];
-    return mactitle;
+    return mactitle ?: @"";
 }
+
 
 - (NSString*) accessibilityHint
 {
