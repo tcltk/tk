@@ -984,11 +984,6 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    bind Text <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
 	    bind Entry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
 	    bind TEntry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
-	    
-	    # Additional focus handling for macOS
-	    bind Text <FocusIn> {+::tk::accessible::_forceTkFocus %W}
-	    bind Entry <FocusIn> {+::tk::accessible::_forceTkFocus %W}
-	    bind TEntry <FocusIn> {+::tk::accessible::_forceTkFocus %W}
 	} else {
 	    # Original bindings for other platforms
 	    bind Text <KeyPress> {+::tk::accessible::_getkeytext %W %K}
