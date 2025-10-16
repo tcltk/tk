@@ -59,9 +59,6 @@ static int accessibilityTablesInitialized = 0;
 #ifndef kAXSwitchRole
 #define kAXSwitchRole CFSTR("AXSwitch")
 #endif
-#ifndef kAXUnknownRole
-#define kAXUnknownRole CFSTR("AXUnknown")
-#endif
 
 struct MacRoleMap {
     const char *tkrole;           /* Tk role string */
@@ -182,28 +179,28 @@ void PostAccessibilityAnnouncement(NSString *message)
 {
     Tk_Window win = self.tk_win;
     if (!win) {
-        return kAXUnknownRole; // Never return NULL
+        return nil;
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-        return kAXUnknownRole;
+        return nil;
     }
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-        return kAXUnknownRole;
+        return nil;
     }
 
     Tcl_Obj *roleObj = Tcl_GetHashValue(hPtr2);
     if (!roleObj) {
-        return kAXUnknownRole;
+        return nil;
     }
 
     const char *result = Tcl_GetString(roleObj);
     if (!result) {
-        return kAXUnknownRole;
+        return nil;
     }
 
     for (NSUInteger i = 0; roleMap[i].tkrole != NULL; i++) {
@@ -212,7 +209,7 @@ void PostAccessibilityAnnouncement(NSString *message)
         }
     }
 
-    return kAXUnknownRole; /* Default fallback. */
+    return nil;
 }
 
 
@@ -339,12 +336,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 	/* Notify VoiceOver that value changed. */
 	NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
+NSLog(@"Posted NSAccessibilityValueChangedNotification for switch with value: %ld", (long)cocoaValue);
 
 	return [NSNumber numberWithInteger:cocoaValue];
     }
 
 
-    /* Fallback: return cached string value for other widget types */
+    /* Fallback: return cached string value for other widget types. */
     hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "value");
     if (!hPtr2) {
 	return nil;
