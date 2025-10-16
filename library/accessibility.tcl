@@ -589,10 +589,10 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				     %W \
 				     Toggleswitch \
 				     Toggleswitch \
-				     {Toggleswitch} \
-				     {%W switchstate} \
+				     Toggleswitch \
+				     [%W switchstate] \
 				     {} \
-				     {%W invoke}\
+				     {%W toggle}\
 				 }
 
 	# Combobox bindings.
