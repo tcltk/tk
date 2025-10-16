@@ -188,31 +188,28 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 	# Get typed text for screen reader. 
 	proc _getkeytext {w key} {
+	    # On macOS, key might be empty for some events
+	    if {$key eq ""} return
+	    
 	    # Ignore modifier keys or non-printables.
-	    if {$key in {"Shift_L" "Shift_R" "Control_L" "Control_R" "Alt_L" "Alt_R"}} {
+	    set modifiers {Shift_L Shift_R Control_L Control_R Alt_L Alt_R Meta_L Meta_R Command_L Command_R}
+	    if {$key in $modifiers} {
 		return
 	    }
-
+	    
+	    # Handle special keys
 	    if {$key eq "space"} {
 		set data [::tk::accessible::_getprevword $w]
 	    } else {
 		set data [::tk::accessible::_keyecho $w $key]
 	    }
-
-	    ::tk::accessible::set_acc_value $w $data
-	    ::tk::accessible::emit_selection_change $w
-	}
-
-	# Adjust text bindings to accommodate accessibility
-	if {[catch {info command ::orig_text}]} {
-	    rename ::text ::orig_text
-	    proc ::text {args} {
-		set w [eval orig_text $args]
-		::bindtags $w [list Text $w all]
-		return $w
+	    
+	    # Only process if we have meaningful data
+	    if {$data ne ""} {
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
 	    }
 	}
-
 
 	# Attempt to verify if treeview is tree or table. This works
 	# for simple cases but may not be perfect.
@@ -631,7 +628,9 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			      [%W get] \
 			      [%W cget -state] \
 			      {} \
-			  }
+			      ; bindtags %W [list Entry %W . all]}
+
+	
 	bind TEntry <Map> {+::tk::accessible::_init \
 			       %W \
 			       Entry \
@@ -640,7 +639,8 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			       [%W get] \
 			       [%W state]\
 			       {} \
-			   }
+			       ; bindtags %W [list TEntry %W . all]} 
+
 
 	# Listbox bindings.
 	bind Listbox <Map> {+::tk::accessible::_init \
@@ -930,7 +930,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			     [::tk::accessible::_gettext %W] \
 			     [%W cget -state] \
 			     {}\
-			 }
+			     ; bindtags %W [list Text %W . all]}
 
 	# Label/TLabel bindings.
 	bind Label <Map>  {+::tk::accessible::_init \
@@ -973,11 +973,28 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	# widgets that support returning a value.
 
 	# Selection changes.
-
 	bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
 	bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 	bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
 	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
+	
+	# Capture keypress events in text and entry widgets. 
+	if {[tk windowingsystem] eq "aqua"} {
+	    # macOS-specific bindings - need to handle focus and event propagation differently
+	    bind Text <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
+	    bind Entry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
+	    bind TEntry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
+	    
+	    # Additional focus handling for macOS
+	    bind Text <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	    bind Entry <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	    bind TEntry <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	} else {
+	    # Original bindings for other platforms
+	    bind Text <KeyPress> {+::tk::accessible::_getkeytext %W %K}
+	    bind Entry <KeyPress> {+::tk::accessible::_getkeytext %W %K}
+	    bind TEntry <KeyPress> {+::tk::accessible::_getkeytext %W %K}
+	}
 	
 
 	if {[tk windowingsystem] eq "x11"} {
@@ -1040,11 +1057,6 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	bind TEntry <Right> {+::tk::accessible::_updateselection %W}
 	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
 	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
-
-	# Capture keypress events in text and entry widgets. 
-	foreach w {Text Entry TEntry} {
-	    bind $w <KeyPress> {+::tk::accessible::_getkeytext %W %K}
-	}
 
 	# Progressbar updates.
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}

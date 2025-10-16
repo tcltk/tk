@@ -935,22 +935,32 @@ static int EmitSelectionChanged(
 
     CFStringRef role = (__bridge CFStringRef) widget.accessibilityRole;
 
-    /* For Text, Entry, and TEntry, prioritize announcement. */
     if ((role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
         (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+        
         NSString *announcement = widget.accessibilityValue;
         if (announcement && [announcement length] > 0) {
-            PostAccessibilityAnnouncement(announcement);
+            /* Delay slightly to ensure the value is fully updated. */
+            dispatch_async(dispatch_get_main_queue(), ^{
+		    PostAccessibilityAnnouncement(announcement);
+		});
         }
     } else {
-        /* Existing behavior for other widgets. */
+        /* Existing behavior for other widgets */
         NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
         NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
-        PostAccessibilityAnnouncement(widget.accessibilityValue);
+        
+        NSString *announcement = widget.accessibilityValue;
+        if (announcement && [announcement length] > 0) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+		    PostAccessibilityAnnouncement(announcement);
+		});
+        }
     }
 
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
