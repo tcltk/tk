@@ -97,7 +97,7 @@ CursorBlinkProc(void *clientData)
     int blinkTime;
 
     if (cm->owner->flags & CURSOR_ON) {
-	cm->owner->flags &= ~CURSOR_ON;
+	cm->owner->flags &= ~(unsigned)CURSOR_ON;
 	blinkTime = cm->offTime;
     } else {
 	cm->owner->flags |= CURSOR_ON;
@@ -113,7 +113,7 @@ CursorBlinkProc(void *clientData)
 static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 {
     if (corePtr->flags & CURSOR_ON) {
-	corePtr->flags &= ~CURSOR_ON;
+	corePtr->flags &= ~(unsigned)CURSOR_ON;
 	TtkRedisplayWidget(corePtr);
     }
     if (cm->owner == corePtr) {
