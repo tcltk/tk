@@ -148,7 +148,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    return $data
 	}
 	
-	# Create the bindings once for all supported widgets
+	# Create keypress/word bindings once for all supported widgets
 	proc install_keycapture {w} {
 	    # Ensure we don’t double-bind
 	    if {[lsearch -exact [bindtags $w] KeyCaptureTag] == -1} {
