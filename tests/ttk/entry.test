@@ -6,15 +6,17 @@
 # TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2; # needed for "-singleproc 0"
+package require tcltest 2.2; # needed in mode -singleproc 0
 
 # Load the main script "main.tcl", which takes care of:
 # - setup for the application and the root window
-# - loading and configuration of the tcltest test harness
-# - loading of the testutils mechanism together with its utility procs
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
-tcltest::loadTestedCommands
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import entry scroll
