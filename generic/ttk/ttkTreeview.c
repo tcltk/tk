@@ -5156,6 +5156,8 @@ typedef struct {
     Tcl_Size colNum;		/* Widget column number */
     Tcl_Obj *compareCmdPtr;	/* TCL compare command for TYPE_COMMAND.
 				 * Preinitialized to hold base command. */
+    int recurse;		/* Sort all descendants flag. */
+    int ignoreEmpty;		/* Ignore empty values for integer/real sorts. */
     int resultCode;		/* Completion code for the sort operation. If
 				 * an error occurs during the sort this is
 				 * changed from TCL_OK to TCL_ERROR. */
@@ -5340,6 +5342,178 @@ MergeLists(
     return headPtr;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * SortItems --
+ *
+ *	This procedure is invoked to sort all child items of parent.
+ *
+ * Results:
+ *	Tcl result code.
+ *
+ * Side effects:
+ *	Sorts child items.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int SortItems(
+    Treeview *tv,		/* Widget info */
+    Tcl_Interp *interp,		/* Current interpreter */
+    TreeItem *parent,		/* Parent of child items to sort */
+    SortInfo *infoPtr) {	/* Sort operation config info. */
+
+    TreeItem *item = NULL;
+    Tcl_Size i, j, length, elmArrSize;
+    SortElement *elementArray = NULL, *elementPtr;
+#   define MAXCALLOC 1024000
+#   define NUM_LISTS 30
+    /* This array holds pointers to temporary lists built during the merge
+     * sort. Element i of the array holds a list of length 2**i. */
+    SortElement *subList[NUM_LISTS+1];
+
+    /* Initialize the sublists. After the following loop, subList[i] will
+     * contain a sorted sublist of length 2**i. Use one extra subList at the
+     * end, always at NULL, to indicate the end of the lists. */
+    for (j=0; j<=NUM_LISTS; j++) {
+	subList[j] = NULL;
+    }
+
+    item = parent->children;
+    length = TreeviewCountRecursive(parent, 1, 0);
+
+    /* Allocate storage for sort elements. */
+    elmArrSize = length * sizeof(SortElement);
+    if (elmArrSize <= MAXCALLOC) {
+	elementArray = (SortElement *)Tcl_Alloc(elmArrSize);
+    } else {
+	elementArray = (SortElement *)malloc(elmArrSize);
+    }
+    if (!elementArray) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"no enough memory to process sort of %" TCL_Z_MODIFIER "u items", length));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	return TCL_ERROR;
+    }
+
+    /* The following loop creates a SortElement for each item and
+     * begins to sort elements into the sublists as they appear. */
+    for (i = 0; i < length && item; i++) {
+	Tcl_Obj *valPtr;
+	Tcl_Size len;
+
+	/* Get cell value to sort on from item. */
+	if (infoPtr->colNum == -1) {
+	    valPtr = item->textObj;
+	} else if (item->valuesObj != NULL) {
+	    Tcl_ListObjIndex(interp, item->valuesObj, infoPtr->colNum, &valPtr);
+	} else {
+	    valPtr = NULL;
+	}
+	elementArray[i].len = (valPtr == NULL ? 0 : 1);
+	elementArray[i].item = item;
+	elementArray[i].nextPtr = NULL;
+
+	/* Get value from valPtr and put into sortable format. */
+	if (valPtr) {
+	    if (infoPtr->sortMode <= TYPE_DICTIONARY) {
+		elementArray[i].collationKey.strValuePtr = Tcl_GetStringFromObj(valPtr, &len);
+		elementArray[i].len = len;
+
+	    } else if (infoPtr->sortMode == TYPE_INTEGER) {
+		Tcl_WideInt a;
+
+		if (Tcl_GetWideIntFromObj(interp, valPtr, &a) == TCL_OK) {
+		    elementArray[i].collationKey.wideValue = a;
+		} else {
+		    Tcl_GetStringFromObj(valPtr, &len);
+		    if (len == 0 && infoPtr->ignoreEmpty) {
+			elementArray[i].len = len;
+		    } else {
+			infoPtr->resultCode = TCL_ERROR;
+			goto done;
+		    }
+		}
+
+	    } else if (infoPtr->sortMode == TYPE_REAL) {
+		double a;
+
+		if (Tcl_GetDoubleFromObj(interp, valPtr, &a) == TCL_OK) {
+		    elementArray[i].collationKey.doubleValue = a;
+		} else {
+		    Tcl_GetStringFromObj(valPtr, &len);
+		    if (len == 0 && infoPtr->ignoreEmpty) {
+			elementArray[i].len = len;
+		    } else {
+			infoPtr->resultCode = TCL_ERROR;
+			goto done;
+		    }
+		}
+
+	    } else {
+		elementArray[i].collationKey.objValuePtr = valPtr;
+	    }
+	}
+
+	/* Merge this element into the preexisting sublists (and merge together
+	 * sublists when we have two of the same size). */
+	elementPtr = &elementArray[i];
+	for (j=0; subList[j]; j++) {
+	    elementPtr = MergeLists(interp, subList[j], elementPtr, infoPtr);
+	    subList[j] = NULL;
+	}
+
+	if (j >= NUM_LISTS) {
+	    j = NUM_LISTS-1;
+	}
+	subList[j] = elementPtr;
+	item = item->next;
+    }
+
+    /* Merge all sublists */
+    elementPtr = subList[0];
+    for (j=1; j<NUM_LISTS; j++) {
+	elementPtr = MergeLists(interp, subList[j], elementPtr, infoPtr);
+    }
+
+    /* Update widget */
+    if (infoPtr->resultCode == TCL_OK) {
+	TreeItem *prev = NULL;
+
+	parent->children = NULL;
+	parent->lastChild = NULL;
+	for (i=0; elementPtr != NULL; elementPtr = elementPtr->nextPtr) {
+	    item = elementPtr->item;
+	    item->next = NULL;
+	    InsertItem(parent, prev, item);
+	    prev = item;
+	}
+    }
+
+    /* Clean-up */
+done:
+    if (elementArray) {
+	if (elmArrSize <= MAXCALLOC) {
+	    Tcl_Free(elementArray);
+	} else {
+	    free((char *)elementArray);
+	}
+    }
+
+    /* Sort children */
+    if (infoPtr->resultCode == TCL_OK && infoPtr->recurse) {
+	item = parent->children;
+	while (item != NULL && infoPtr->resultCode == TCL_OK) {
+	    if (item->children) {
+		infoPtr->resultCode = SortItems(tv, interp, item, infoPtr);
+	    }
+	    item = item->next;
+	}
+    }
+    return infoPtr->resultCode;
+}
+
 /* + $tv sort parent ?-option value...?
  */
 static int TreeviewSortCommand(
@@ -5350,17 +5524,10 @@ static int TreeviewSortCommand(
 
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *item = NULL;
-    int index, nocase = 0, recurse = 0, ignoreEmpty = 0;
+    int index, nocase = 0, result = TCL_OK;
     Tcl_Obj *cmdPtr;
-    Tcl_Size i, j, length, elmArrSize;
-
-    SortElement *elementArray = NULL, *elementPtr;
-    SortInfo sortInfo;		/* Sort operation config info */
-#   define MAXCALLOC 1024000
-#   define NUM_LISTS 30
-    /* This array holds pointers to temporary lists built during the merge
-     * sort. Element i of the array holds a list of length 2**i. */
-    SortElement *subList[NUM_LISTS+1];
+    Tcl_Size i;
+    SortInfo sortInfo;
 
     enum {
 	SORT_ASCII, SORT_COLUMN, SORT_COMMAND, SORT_DECREASING,
@@ -5373,7 +5540,6 @@ static int TreeviewSortCommand(
 	"-recursive", "-unicode", NULL
     };
 
-
     if (objc < 3 || objc > 20) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...?");
 	return TCL_ERROR;
@@ -5383,17 +5549,13 @@ static int TreeviewSortCommand(
     if (!(parent = FindItem(interp, tv, objv[2]))) {
 	return TCL_ERROR;
     }
-    if (parent->children != NULL) {
-	item = parent->children;
-	length = TreeviewCountRecursive(parent, 1, 0);
-    } else {
-	return TCL_OK;
-    }
 
     sortInfo.isIncreasing = 1;
     sortInfo.sortMode = TYPE_ASCII;
     sortInfo.compareCmdPtr = NULL;
     sortInfo.colNum = FirstColumn(tv)-1;
+    sortInfo.recurse = 0;
+    sortInfo.ignoreEmpty = 0;
     sortInfo.resultCode = TCL_OK;
 
     /* Pasre args */
@@ -5434,8 +5596,7 @@ static int TreeviewSortCommand(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"\"-command\" option must be followed by comparison command", -1));
 		    Tcl_SetErrorCode(interp, "TCL", "ARGUMENT", "MISSING", (char *)NULL);
-		    sortInfo.resultCode = TCL_ERROR;
-		    goto done;
+		    return TCL_ERROR;
 		}
 		break;
 	    case SORT_DECREASING:
@@ -5445,7 +5606,7 @@ static int TreeviewSortCommand(
 		sortInfo.sortMode = TYPE_DICTIONARY;
 		break;
 	    case SORT_IGNORE_EMPTY:
-		ignoreEmpty = 1;
+		sortInfo.ignoreEmpty = 1;
 		break;
 	    case SORT_INCREASING:
 		sortInfo.isIncreasing = 1;
@@ -5461,13 +5622,18 @@ static int TreeviewSortCommand(
 		break;
 	    case SORT_RECURSE:
 	    case SORT_RECURSIVE:
-		recurse = 1;
+		sortInfo.recurse = 1;
 		break;
 	}
     }
 
     if (nocase && (sortInfo.sortMode == TYPE_ASCII)) {
 	sortInfo.sortMode = TYPE_ASCII_NC;
+    }
+
+    /* Abort if no items to sort */
+    if (parent->children == NULL) {
+	return TCL_OK;
     }
 
     /* For command sorts, duplicate command in case it's deleted while sort is
@@ -5481,145 +5647,27 @@ static int TreeviewSortCommand(
 	if (Tcl_ListObjAppendElement(interp, newCommandPtr, newObjPtr) != TCL_OK) {
 	    Tcl_DecrRefCount(newCommandPtr);
 	    Tcl_DecrRefCount(newObjPtr);
-	    sortInfo.resultCode = TCL_ERROR;
-	    goto done;
+	    return TCL_ERROR;
 	}
 	Tcl_ListObjAppendElement(interp, newCommandPtr, Tcl_NewObj());
 	sortInfo.compareCmdPtr = newCommandPtr;
     }
 
-    /* Initialize the sublists. After the following loop, subList[i] will
-     * contain a sorted sublist of length 2**i. Use one extra subList at the
-     * end, always at NULL, to indicate the end of the lists. */
-    for (j=0; j<=NUM_LISTS; j++) {
-	subList[j] = NULL;
-    }
-
-    /* Allocate storage for sort elements. */
-    elmArrSize = length * sizeof(SortElement);
-    if (elmArrSize <= MAXCALLOC) {
-	elementArray = (SortElement *)Tcl_Alloc(elmArrSize);
-    } else {
-	elementArray = (SortElement *)malloc(elmArrSize);
-    }
-    if (!elementArray) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"no enough memory to process sort of %" TCL_Z_MODIFIER "u items", length));
-	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
-	sortInfo.resultCode = TCL_ERROR;
-	goto done;
-    }
-
-    /* The following loop creates a SortElement for each item and
-     * begins to sort elements into the sublists as they appear. */
-    for (i = 0; i < length && item; i++) {
-	Tcl_Obj *valPtr;
-	Tcl_Size len;
-
-	/* Get cell value to sort on from item. */
-	if (sortInfo.colNum == -1) {
-	    valPtr = item->textObj;
-	} else if (item->valuesObj != NULL) {
-	    Tcl_ListObjIndex(interp, item->valuesObj, sortInfo.colNum, &valPtr);
-	} else {
-	    valPtr = NULL;
-	}
-	elementArray[i].len = (valPtr == NULL ? 0 : 1);
-	elementArray[i].item = item;
-	elementArray[i].nextPtr = NULL;
-
-	/* Get value from valPtr and put into sortable format. */
-	if (valPtr) {
-	    if (sortInfo.sortMode <= TYPE_DICTIONARY) {
-		elementArray[i].collationKey.strValuePtr = Tcl_GetStringFromObj(valPtr, &len);
-		elementArray[i].len = len;
-
-	    } else if (sortInfo.sortMode == TYPE_INTEGER) {
-		Tcl_WideInt a;
-
-		if (Tcl_GetWideIntFromObj(interp, valPtr, &a) == TCL_OK) {
-		    elementArray[i].collationKey.wideValue = a;
-		} else {
-		    Tcl_GetStringFromObj(valPtr, &len);
-		    if (len == 0 && ignoreEmpty) {
-			elementArray[i].len = len;
-		    } else {
-			sortInfo.resultCode = TCL_ERROR;
-			goto done;
-		    }
-		}
-
-	    } else if (sortInfo.sortMode == TYPE_REAL) {
-		double a;
-
-		if (Tcl_GetDoubleFromObj(interp, valPtr, &a) == TCL_OK) {
-		    elementArray[i].collationKey.doubleValue = a;
-		} else {
-		    Tcl_GetStringFromObj(valPtr, &len);
-		    if (len == 0 && ignoreEmpty) {
-			elementArray[i].len = len;
-		    } else {
-			sortInfo.resultCode = TCL_ERROR;
-			goto done;
-		    }
-		}
-
-	    } else {
-		elementArray[i].collationKey.objValuePtr = valPtr;
-	    }
-	}
-
-	/* Merge this element into the preexisting sublists (and merge together
-	 * sublists when we have two of the same size). */
-	elementPtr = &elementArray[i];
-	for (j=0; subList[j]; j++) {
-	    elementPtr = MergeLists(interp, subList[j], elementPtr, &sortInfo);
-	    subList[j] = NULL;
-	}
-
-	if (j >= NUM_LISTS) {
-	    j = NUM_LISTS-1;
-	}
-	subList[j] = elementPtr;
-	item = item->next;
-    }
-
-    /* Merge all sublists */
-    elementPtr = subList[0];
-    for (j=1; j<NUM_LISTS; j++) {
-	elementPtr = MergeLists(interp, subList[j], elementPtr, &sortInfo);
-    }
+    /* Do sort */
+    result = SortItems(tv, interp, parent, &sortInfo);
 
     /* Update widget */
-    if (sortInfo.resultCode == TCL_OK) {
-	TreeItem *prev = NULL;
-
-	parent->children = NULL;
-	parent->lastChild = NULL;
-	for (i=0; elementPtr != NULL; elementPtr = elementPtr->nextPtr) {
-	    item = elementPtr->item;
-	    item->next = NULL;
-	    InsertItem(parent, prev, item);
-	    prev = item;
-	}
+    if (result == TCL_OK) {
 	tv->tree.rowPosNeedsUpdate = 1;
 	TtkRedisplayWidget(&tv->core);
     }
 
     /* Clean-up */
-done:
     if (sortInfo.sortMode == TYPE_COMMAND) {
 	Tcl_DecrRefCount(sortInfo.compareCmdPtr);
 	sortInfo.compareCmdPtr = NULL;
     }
-    if (elementArray) {
-	if (elmArrSize <= MAXCALLOC) {
-	    Tcl_Free(elementArray);
-	} else {
-	    free((char *)elementArray);
-	}
-    }
-    return sortInfo.resultCode;
+    return result;
 }
 
 /*------------------------------------------------------------------------

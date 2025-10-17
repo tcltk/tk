@@ -770,7 +770,7 @@ Sort the children of \fIparent\fR. Valid options are:
 .TP
 \fB\-ascii\fR
 .
-The values are to be sorted using Unicode code point order (the
+The values are to be sorted using Unicode character code order (the
 name is for backward-compatibility reasons.) This is the default.
 .\" OPTION: -dictionary
 .TP
