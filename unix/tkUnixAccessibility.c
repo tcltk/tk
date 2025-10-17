@@ -2663,14 +2663,16 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
  *----------------------------------------------------------------------
  */
 
-
 static int EmitSelectionChanged(
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
-    /* Validate arguments: only window */
+    /* Validate arguments. */
     if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
+	return TCL_ERROR;
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
@@ -2681,124 +2683,53 @@ static int EmitSelectionChanged(
     /* Ensure AtkObject exists for this window. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
-        obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
-        if (!obj) return TCL_OK;
-        TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
+	obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
+	if (!obj) return TCL_OK;
+	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
     AtkRole role = tk_get_role(obj);
-
-    /* Handle text/entry widgets. */
+    
+    /* Handatle text/entry widgets separately. */
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-        const char *className = Tk_Class(tkwin);
-        int pos = 0, count = 0;
-        gboolean is_word = FALSE;
+	/* Emit a proper "insert" text change and caret-move for typing. */
+	g_signal_emit_by_name(obj, "text-changed::insert", 0, 0, NULL);
 
-        /* Get insert index via Tcl. */
-        Tcl_Obj *savedResult = Tcl_GetObjResult(interp);
-        Tcl_IncrRefCount(savedResult);
-        char cmd[256];
-        snprintf(cmd, sizeof(cmd), "%s index insert", windowName);
-        if (Tcl_Eval(interp, cmd) == TCL_OK) {
-            Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &pos);
-        }
-        Tcl_SetObjResult(interp, savedResult);
-        Tcl_DecrRefCount(savedResult);
+	/* Compute or estimate caret position */
+	int caret_offset = 0;
+	if (ATK_IS_TEXT(obj)) {
+	    caret_offset = atk_text_get_caret_offset(ATK_TEXT(obj));
+	}
 
-        if (pos < 0) pos = 0;
-
-        /* Check last char to detect space for word narration. */
-        char last_char = '\0';
-        if (pos > 0) {
-            if (strcmp(className, "Text") == 0) {
-                snprintf(cmd, sizeof(cmd), "%s get {insert -1c} insert", windowName);
-                if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                    const char *text = Tcl_GetString(Tcl_GetObjResult(interp));
-                    if (text && text[0]) last_char = text[0];
-                }
-                Tcl_SetObjResult(interp, savedResult);
-                Tcl_IncrRefCount(savedResult);
-            } else if (strcmp(className, "Entry") == 0 || strcmp(className, "TEntry") == 0) {
-                snprintf(cmd, sizeof(cmd), "%s get", windowName);
-                if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                    const char *text = Tcl_GetString(Tcl_GetObjResult(interp));
-                    if (text && pos > 0 && text[pos - 1]) last_char = text[pos - 1];
-                }
-                Tcl_SetObjResult(interp, savedResult);
-                Tcl_IncrRefCount(savedResult);
-            }
-            Tcl_SetObjResult(interp, savedResult);
-            Tcl_DecrRefCount(savedResult);
-        }
-
-        if (last_char == ' ') {
-            is_word = TRUE;
-            /* Get text before insert to find last word. */
-            if (strcmp(className, "Text") == 0) {
-                snprintf(cmd, sizeof(cmd), "%s get {insert linestart} {insert -1c}", windowName);
-            } else {
-                snprintf(cmd, sizeof(cmd), "%s get", windowName);
-            }
-            if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                const char *text = Tcl_GetString(Tcl_GetObjResult(interp));
-                if (text) {
-                    int len = strlen(text);
-                    int word_end = len;
-                    int word_start = word_end;
-                    while (word_start > 0 && text[word_start - 1] != ' ' && text[word_start - 1] != '\n') {
-                        word_start--;
-                    }
-                    count = word_end - word_start;
-                    if (strcmp(className, "Text") == 0) {
-                        /* Adjust pos for text widget (relative to insert linestart). */
-                        pos = pos - len + word_start;
-                    } else {
-                        pos = word_start;
-                    }
-                }
-            }
-            Tcl_SetObjResult(interp, savedResult);
-            Tcl_IncrRefCount(savedResult);
-            Tcl_DecrRefCount(savedResult);
-        } else {
-            pos = pos > 0 ? pos - 1 : 0;
-            count = 1;  /* Assume single char for keypress */
-        }
-
-        /* Emit text-changed signal if there's a change. */
-        if (count > 0) {
-            g_signal_emit_by_name(obj, "text-changed::insert", pos, count, NULL);
-        } else {
-            /* Fallback: generic text change. */
-            g_signal_emit_by_name(obj, "text-changed::insert", 0, 0, NULL);
-        }
-
-        /* Update caret position. */
-        int caret_offset = atk_text_get_caret_offset(ATK_TEXT(obj));
-        g_signal_emit_by_name(obj, "text-caret-moved", caret_offset);
-
-        return TCL_OK;
+	g_signal_emit_by_name(obj, "text-caret-moved", caret_offset);
+	return TCL_OK;
     }
+
+    
+    /* Call the robust selection-change notifier. */
+    TkAtkNotifySelectionChanged(tkwin);
 
     /* Handle value-changed for sliders, spin buttons, scrollbars, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
-        role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
-    {
-        GValue gval = G_VALUE_INIT;
-        tk_get_current_value(ATK_VALUE(obj), &gval);
-        g_signal_emit_by_name(obj, "value-changed");
-        g_object_notify(G_OBJECT(obj), "accessible-value");
-        g_value_unset(&gval);
-    }
+	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
+	{
+	    GValue gval = G_VALUE_INIT;
+	    tk_get_current_value(ATK_VALUE(obj), &gval);
 
-    /* Call the robust selection-change notifier for other roles. */
-    TkAtkNotifySelectionChanged(tkwin);
+	    /* Notify ATK clients. */
+	    g_signal_emit_by_name(obj, "value-changed");
+	    g_object_notify(G_OBJECT(obj), "accessible-value");
 
-    /* Invalidate virtual children if needed. */
+	    g_value_unset(&gval);
+	}
+
+
+    /* Invalidate virtual children if needed (e.g., for spinbox-linked lists) */
     InvalidateVirtualChildren(tkwin);
 
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
