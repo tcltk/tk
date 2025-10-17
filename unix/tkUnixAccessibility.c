@@ -1585,8 +1585,10 @@ static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
     int ok = (Tcl_EvalObjv(acc->interp, 4, args, TCL_EVAL_GLOBAL) == TCL_OK);
 
     for (int i=0;i<4;i++) Tcl_DecrRefCount(args[i]);
-
+    
+    g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
     return ok ? TRUE : FALSE;
+    
 }
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
@@ -2686,14 +2688,26 @@ static int EmitSelectionChanged(
 	TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
+    AtkRole role = tk_get_role(obj);
+    
+    /* Handatle text/entry widgets separately. */
+    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
+	/* Emit a proper "insert" text change and caret-move for typing. */
+	g_signal_emit_by_name(obj, "text-changed::insert", 0, 0, NULL);
+
+	/* Compute or estimate caret position */
+	int caret_offset = 0;
+	if (ATK_IS_TEXT(obj)) {
+	    caret_offset = atk_text_get_caret_offset(ATK_TEXT(obj));
+	}
+
+	g_signal_emit_by_name(obj, "text-caret-moved", caret_offset);
+	return TCL_OK;
+    }
+
+    
     /* Call the robust selection-change notifier. */
     TkAtkNotifySelectionChanged(tkwin);
-
-    /* Handle text/entry widgets separately. */
-    AtkRole role = tk_get_role(obj);
-    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-	g_signal_emit_by_name(obj, "text-selection-changed");
-    }
 
     /* Handle value-changed for sliders, spin buttons, scrollbars, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
@@ -2701,16 +2715,6 @@ static int EmitSelectionChanged(
 	{
 	    GValue gval = G_VALUE_INIT;
 	    tk_get_current_value(ATK_VALUE(obj), &gval);
-
-#if 0 /* dead code */
-	    gdouble new_val = 0.0;
-	    if (G_VALUE_HOLDS_DOUBLE(&gval)) {
-		new_val = g_value_get_double(&gval);
-	    } else if (G_VALUE_HOLDS_STRING(&gval)) {
-		const char *s = g_value_get_string(&gval);
-		if (s) new_val = g_ascii_strtod(s, NULL);
-	    }
-#endif /* dead code */
 
 	    /* Notify ATK clients. */
 	    g_signal_emit_by_name(obj, "value-changed");
