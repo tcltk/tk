@@ -87,9 +87,10 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
     namespace eval ::tk::accessible {
 
 	if {[tk windowingsystem] eq "x11" } {
-	    # If Orca has trouble with some data, try shelling out
-	    # to the command-line voice that comes with Orca.
-
+	    # ATK/Orca has trouble with some data, especially with fine-grained
+	    # text operations. In those cases when Orca is not picking up on
+	    # text/selection updates from Tk, try shelling out to the
+	    # command-line voice that comes with Orca.
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
 		    # Escape quotes in the text
@@ -174,7 +175,11 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 	    # Otherwise emit single-character updates
 	    ::tk::accessible::set_acc_value $w $key
-	    ::tk::accessible::emit_selection_change $w
+	    if {[tk windowingsystem] eq "x11"} {
+		::tk::accessible::speak $key
+	    } else {
+		::tk::accessible::emit_selection_change $w
+	    }
 	}
 
 	# Retrieve the previous word before the cursor (called after space release)
@@ -205,7 +210,11 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    # Extract last word before the space
 	    if {[regexp -nocase -- {\S+$} $before match]} {
 		::tk::accessible::set_acc_value $w $match
-		::tk::accessible::emit_selection_change $w
+	    	if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $match
+		} else {
+		    ::tk::accessible::emit_selection_change $w
+		}
 	    }
 	}
 
@@ -301,7 +310,11 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
 		set data [::tk::accessible::_getentrytext $w]
 		::tk::accessible::set_acc_value $w $data
-		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		} else {
+		    ::tk::accessible::emit_selection_change $w
+		}
 	    }
 	    if {[winfo class $w] eq "TCombobox"} {
 		set data [$w get]
