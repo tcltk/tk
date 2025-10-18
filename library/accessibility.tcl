@@ -768,7 +768,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		after idle [list ::tk::accessible::_update_active_entry %W]
 	    }
 
-	    # CONSOLIDATED key bindings - handle navigation AND announcement together
+	    # Key bindings - handle navigation AND announcement together
 	    bind Menu <Up> {+
 		# Only process if this is a submenu (not menubar)
 		if {[winfo manager %W] ne "menubar"} {
@@ -858,12 +858,38 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    set idx [%W index active]
 		    if {$idx eq "none" || $idx eq ""} {
 			%W activate 0
-			after idle [list ::tk::accessible::_update_active_entry %W]
+			set label [%W entrycget 0 -label]
+			::tk::accessible:;speak $label
+		#	after idle [list ::tk::accessible::_update_active_entry %W]
+		    }
+		}
+	    }
+	        bind Menu <Right> {+
+		if {[winfo manager %W] eq "menubar"} {
+		    set idx [%W index active]
+		    if {$idx eq "none" || $idx eq ""} {
+			%W activate 0
+			set label [%W entrycget 0 -label]
+			::tk::accessible:;speak $label
+		#	after idle [list ::tk::accessible::_update_active_entry %W]
+		    }
+		}
+		}
+	        bind Menu <Left> {+
+		if {[winfo manager %W] eq "menubar"} {
+		    set idx [%W index active]
+		    if {$idx eq "none" || $idx eq ""} {
+			%W activate 0
+			set label [%W entrycget 0 -label]
+			::tk::accessible:;speak $label
+		#	after idle [list ::tk::accessible::_update_active_entry %W]
 		    }
 		}
 	    }
 	}
 
+			{set label [$menuWidget entrycget $idx -label]}
+		::tk::accessible::speak $label
 
 	# Scrollbar/TScrollbar bindings.
 	bind Scrollbar <Map> {+::tk::accessible::_init \
@@ -972,21 +998,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
 	bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 	bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
-	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
-	
-	# Capture keypress events in text and entry widgets. 
-	if {[tk windowingsystem] eq "aqua"} {
-	    # macOS-specific bindings - need to handle focus and event propagation differently
-	    bind Text <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
-	    bind Entry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
-	    bind TEntry <KeyPress> {+after idle [list ::tk::accessible::_getkeytext %W %A]}
-	} else {
-	    # Original bindings for other platforms
-	    bind Text <KeyPress> {+::tk::accessible::_getkeytext %W %K}
-	    bind Entry <KeyPress> {+::tk::accessible::_getkeytext %W %K}
-	    bind TEntry <KeyPress> {+::tk::accessible::_getkeytext %W %K}
-	}
-	
+	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
 
 	if {[tk windowingsystem] eq "x11"} {
 	    # Automatically hook up new checkbuttons/radiobuttons
@@ -996,6 +1008,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    bind TRadiobutton  <Map> {+::tk::accessible::_attach_trace %W}
 	    bind Checkbutton   <Map> {+::tk::accessible::_attach_trace %W}
 	    bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
+	    bind Toggleswitch  <Map> {+::tk::accessible::_attach_trace %W}
 	}
 
 	# Capture value changes from scale widgets.
