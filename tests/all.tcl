@@ -47,6 +47,36 @@ unset ignoredIndices ignoredOptions index tcltestOptions
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
 
+# Determine test files to skip
+set skipFiles [tcltest::configure -notfile]
+foreach {constraint definition fileList} {
+    nt			TCLTEST_BUILT_IN				winDialog.test
+    testutils		{}		         			testutils.test
+    testwinevent	{[llength [info commands testwinevent]]}	winDialog.test
+    unix		TCLTEST_BUILT_IN               			{unixButton.test unixEmbed.test unixMenu.test unixWm.test}
+    win			TCLTEST_BUILT_IN               			{winButton.test winClipboard.test winFont.test winMenu.test \
+										winMsgbox.test winSend.test winWm.test}
+    x11			{[tk windowingsystem] eq "x11"}			{unixFont.test unixSelect.test}
+} {
+    set toSkip 0
+    if {$definition eq "TCLTEST_BUILT_IN"} {
+	if {! [tcltest::testConstraint $constraint]} {
+	    set toSkip 1
+	}
+    } elseif {$definition eq ""} {
+	if {$constraint ni [tcltest::configure -constraints]} {
+	    set toSkip 1
+	}
+    } elseif {! [expr $definition]} {
+	set toSkip 1
+    }
+    if {$toSkip} {
+	set skipFiles [concat $skipFiles $fileList]
+    }
+}
+tcltest::configure -notfile [lsort -unique $skipFiles]
+unset skipFiles toSkip
+
 #
 # RUN ALL TESTS
 #
