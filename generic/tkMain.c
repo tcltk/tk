@@ -73,10 +73,10 @@ NewNativeObj(
 
 #if defined(_WIN32) && defined(UNICODE)
     Tcl_DStringInit(&ds);
-    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
+    Tcl_WCharToUtfDString(string, -1, &ds);
     str = Tcl_DStringValue(&ds);
 #else
-    str = Tcl_ExternalToUtfDString(NULL, (char *)string, strlen(string), &ds);
+    str = Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
 #endif
     obj = Tcl_NewStringObj(str, Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
@@ -109,7 +109,7 @@ static int WinIsTty(int fd) {
 	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
 #endif
-    handle = GetStdHandle(STD_INPUT_HANDLE + fd);
+    handle = GetStdHandle(STD_INPUT_HANDLE + (DWORD)fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish
 	 * console window. A character file handle is a tty by definition.
