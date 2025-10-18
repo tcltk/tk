@@ -369,11 +369,12 @@ Set all of the items in \fIitemList\fR to open state. Same as
 will also open all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: focus
 .TP
-\fIpathname \fBfocus \fR?\fIitem\fR?
+\fIpathname \fBfocus \fR?\fIitem\fR|\fIcell\fR?
 .
-If \fIitem\fR is specified, sets the focus item to \fIitem\fR. Use \fB{}\fR to
-clear focus item. Without \fIitem\fR, returns the current focus item, or
-\fB{}\fR if there is none.
+If \fIitem\fR is specified, sets the focus item to \fIitem\fR. 
+If \fIcell\fR is specified, sets the focus to cell \fIcell\fR.
+Use \fB{}\fR to clear focus item. Without \fIitem\fR, returns the current
+focus item id, cell id, or \fB{}\fR if there is none.
 .\" METHOD: haschildren
 .TP
 \fIpathname \fBhaschildren \fIitem\fR
@@ -605,7 +606,7 @@ name is for backward-compatibility reasons.) This is the default.
 \fB\-dictionary\fR
 .
 The values are to be compared to \fIpattern\fR using dictionary-style
-comparisons (see \fBlsort\fR for a full description).
+comparisons. For search, this is the same as \fB-ascii\fR.
 .\" OPTION: -integer
 .TP
 \fB\-integer\fR
@@ -770,7 +771,7 @@ Sort the children of \fIparent\fR. Valid options are:
 .TP
 \fB\-ascii\fR
 .
-The values are to be sorted using Unicode character code order (the
+The values are to be sorted in Unicode character code order (the
 name is for backward-compatibility reasons.) This is the default.
 .\" OPTION: -dictionary
 .TP

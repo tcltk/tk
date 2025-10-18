@@ -465,6 +465,7 @@ typedef struct {
     TreeColumn *columns;	/* Array of column options for data columns */
 
     TreeItem *focus;		/* Current focus item */
+    TreeColumn *focusCol;	/* Current focus column */
     TreeItem *selAnchor;	/* Selection anchor item */
     Tcl_Obj *selAnchorColObj;	/* Selection anchor column */
 
@@ -1437,6 +1438,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr) {
     tv->tree.serial = 0;
 
     tv->tree.focus = NULL;
+    tv->tree.focusCol = NULL;
     tv->tree.selAnchor = NULL;
     tv->tree.selAnchorColObj = NULL;
 
@@ -4030,8 +4032,10 @@ static int TreeviewDeleteCommand(
      */
     while (delq) {
 	TreeItem *next = delq->next;
-	if (tv->tree.focus == delq)
+	if (tv->tree.focus == delq) {
 	    tv->tree.focus = NULL;
+	    tv->tree.focusCol = NULL;
+	}
 	FreeItem(delq);
 	delq = next;
     }
@@ -4246,30 +4250,73 @@ static int TreeviewDropCommand(
  * +++ Widget commands -- focus and selection
  */
 
-/* + $tree focus ?item?
+/* + $tree focus ?item|cell?
  */
 static int TreeviewFocusCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc == 2) {
-	if (tv->tree.focus) {
+	if (tv->tree.focus && !tv->tree.focusCol) {
 	    Tcl_SetObjResult(interp, (tv->tree.focus)->idObj);
+	} else if (tv->tree.focus && tv->tree.focusCol) {
+	    Tcl_Obj* listPtr;
+
+	    if (!(listPtr = Tcl_NewListObj(0, NULL)) ||
+		Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.focus)->idObj) != TCL_OK ||
+		Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.focusCol)->idObj) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    Tcl_SetObjResult(interp, listPtr);
 	}
 	return TCL_OK;
+
     } else if (objc == 3) {
-	TreeItem *newFocus = FindItem(interp, tv, objv[2]);
-	if (!newFocus) {
+	Tcl_Size len;
+
+	if (Tcl_ListObjLength(interp, objv[2], &len) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (newFocus == tv->tree.root) {
-	    newFocus = NULL;
+
+	if (len < 2) {
+	    TreeItem *newFocus = FindItem(interp, tv, objv[2]);
+	    if (!newFocus) {
+		return TCL_ERROR;
+	    }
+	    /* Clear focus if set to {} */
+	    if (newFocus == tv->tree.root) {
+		newFocus = NULL;
+	    } else if (newFocus->parent == NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
+		Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
+		return TCL_ERROR;
+	    }
+	    tv->tree.focus = newFocus;
+	    tv->tree.focusCol = NULL;
+
+	} else {
+	    TreeCell cell;
+
+	    if (GetCellFromObj(interp, tv, objv[2], 0, NULL, &cell) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    /* Clear focus if set to {} */
+	    if (cell.item == tv->tree.root) {
+		cell.item = NULL;
+		cell.column = NULL;
+	    } else if ((cell.item)->parent == NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
+		Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
+		return TCL_ERROR;
+	    }
+	    tv->tree.focus = cell.item;
+	    tv->tree.focusCol = cell.column;
 	}
-	tv->tree.focus = newFocus;
 	TtkRedisplayWidget(&tv->core);
 	return TCL_OK;
     } else {
-	Tcl_WrongNumArgs(interp, 2, objv, "?newFocus?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?item|cell?");
 	return TCL_ERROR;
     }
 }
