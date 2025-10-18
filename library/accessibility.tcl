@@ -762,7 +762,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		if $isMenubar {
 		    ::tk::accessible::speak $label
 
-		    # CRUCIAL: clear dedupe cache so submenu index 1 is NOT skipped
+		    # Clear dedupe cache so submenu index 1 is NOT skipped
 		    unset -nocomplain prevActiveIndex
 		} else {
 		    # Submenu - add gentle pause before announcing

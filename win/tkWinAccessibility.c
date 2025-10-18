@@ -1,5 +1,5 @@
 /*
- * tkWinAccessibility.c --get
+ * tkWinAccessibility.c
  *
  *    This file implements the platform-native Microsoft Active
  *    Accessibility and the UI Automation APIs for Tk on Windows.
@@ -54,7 +54,7 @@ typedef struct TkRootAccessible {
     LONG refCount;
 } TkRootAccessible;
 
-/* UI Automation Provider structure - simplified */
+/* UI Automation Provider structure */
 typedef struct TkUiaProvider {
     IRawElementProviderSimpleVtbl *lpVtbl;
     TkRootAccessible *msaaProvider;
@@ -219,6 +219,8 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
  *
  * Prototypes for UI Automation Provider. UI Automation is being implemented
  * as a layer above the MSAA implementation using LegacyIAccessible pattern.
+ * The current implementation is not very robust and screen readers that rely
+ * primarily on UIA, particularly Narrator, will not be well-supported. 
  *
  *----------------------------------------------------------------------
  */
@@ -527,42 +529,16 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
 /* 
  * Function to map accessible name to MSAA. 
  */
+ 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-							      IAccessible *this,
-							      VARIANT varChild,
-							      BSTR *pszName)
+	IAccessible *this, 
+	VARIANT varChild, 
+	BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
-    *pszName = NULL;
-
-    TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    if (!tkAccessible->toplevel) {
-        TkGlobalUnlock();
-        return E_INVALIDARG;
-    }
-
-    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-        /* For the toplevel itself, no name to avoid double-reading. */
-        TkGlobalUnlock();
-        return S_OK;
-    }
-
-    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-        if (!child) {
-            TkGlobalUnlock();
-            return E_INVALIDARG;
-        }
-
-        /* Retrieve the accessible name for the child. */
-        HRESULT hr = TkAccDescription(child, pszName);
-        TkGlobalUnlock();
-        return hr;
-    }
-
-    TkGlobalUnlock();
-    return E_INVALIDARG;
+    *pszName = NULL; /* No name for toplevel to avoid double-reading. */
+    return S_OK;
 }
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW. */
@@ -882,13 +858,34 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accFocus(
  * Function to get accessible description to MSAA. 
  */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
-       IAccessible *this,
-       VARIANT varChild,
-       BSTR *pszDescription)
+	IAccessible *this, 
+	VARIANT varChild, 
+	BSTR *pszDescription)
 {
     if (!pszDescription) return E_INVALIDARG;
-    *pszDescription = NULL; /* No description to avoid double-reading. */
-    return S_OK;
+    TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    if (!tkAccessible->toplevel) {
+        TkGlobalUnlock();
+        return E_INVALIDARG;
+    }
+    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+        *pszDescription = SysAllocString(L"Window");
+        TkGlobalUnlock();
+        return S_OK;
+    }
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {  
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (!child) {
+            TkGlobalUnlock();    
+            return E_INVALIDARG;
+        }
+        HRESULT hr = TkAccDescription(child, pszDescription);
+        TkGlobalUnlock();
+        return hr;
+    }
+    TkGlobalUnlock();
+    return E_INVALIDARG;
 }
 
 /*
