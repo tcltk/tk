@@ -752,8 +752,8 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 		# Skip empty labels and separators.
 		if {$label ne "" && [$menuWidget type $idx] ne "separator"} {
-		    # Use after idle to ensure vocalization happens after selection is stable
-		    after idle [list ::tk::accessible::speak $label]
+		    # Announce the label
+		    ::tk::accessible::speak $label
 		}
 
 		# Update accessible object.
@@ -765,23 +765,58 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 	    # Bind <<MenuSelect>> for mouse/keyboard navigation.
 	    bind Menu <<MenuSelect>> {
-		# Use after idle to prevent race conditions
 		after idle [list ::tk::accessible::_update_active_entry %W]
 	    }
 
-	    # Bind keypress events for submenus.
-	    bind Menu <Up> {
+	    # CONSOLIDATED key bindings - handle navigation AND announcement together
+	    bind Menu <Up> {+
+		# Only process if this is a submenu (not menubar)
 		if {[winfo manager %W] ne "menubar"} {
-		    after idle [list ::tk::accessible::_update_active_entry %W]
+		    set current [%W index active]
+		    if {$current eq ""} {
+			set idx [%W index last]
+		    } else {
+			set idx [expr {$current - 1}]
+		    }
+		    set lastIndex [%W index last]
+		    while {$idx >= 0} {
+			if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+			    %W activate $idx
+			    after idle [list ::tk::accessible::_update_active_entry %W]
+			    break
+			}
+			incr idx -1
+		    }
 		}
 	    }
 
-	    bind Menu <Down> {
+	    bind Menu <Down> {+
+		# Only process if this is a submenu (not menubar)
 		if {[winfo manager %W] ne "menubar"} {
-		    after idle [list ::tk::accessible::_update_active_entry %W]
+		    set current [%W index active]
+		    if {$current eq ""} {
+			set idx 0
+		    } else {
+			set idx [expr {$current + 1}]
+		    }
+		    set lastIndex [%W index last]
+		    while {$idx <= $lastIndex} {
+			if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+			    %W activate $idx
+			    after idle [list ::tk::accessible::_update_active_entry %W]
+			    break
+			}
+			incr idx
+		    }
 		}
 	    }
 
+	    bind Menu <Return> {+
+		set idx [%W index active]
+		if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
+		    %W invoke $idx
+		}
+	    }
 
 	    # Add bindings to catch when menus are posted/unposted.
 	    bind Menu <Map> {+
@@ -801,80 +836,30 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				 {} \
 				 {}
 
-		# Ensure focus and initial vocalization for menubar.
+		# Handle initial vocalization based on menu type
 		if {$role eq "Menubar"} {
 		    focus %W
-		    # Announce the first menu item when menubar is mapped.
 		    after idle {
 			set idx [%W index active]
 			if {$idx eq "none" || $idx eq ""} {
 			    %W activate 0
-			    set idx 0
 			}
-			if {[catch {set label [%W entrycget $idx -label]} err]} {
-			    set label ""
-			}
-			if {$label ne ""} {
-			    ::tk::accessible::speak $label
-			}
+			::tk::accessible::_update_active_entry %W
 		    }
 		} else {
-		    # This is a submenu being posted.
+		    # For submenus, announce the active entry when mapped
 		    after idle [list ::tk::accessible::_update_active_entry %W]
 		}
 	    }
 
-	    # Additional binding to handle initial menubar focus.
-	    bind Menu <FocusIn> {
+	    # Handle initial menubar focus.
+	    bind Menu <FocusIn> {+
 		if {[winfo manager %W] eq "menubar"} {
 		    set idx [%W index active]
 		    if {$idx eq "none" || $idx eq ""} {
 			%W activate 0
 			after idle [list ::tk::accessible::_update_active_entry %W]
 		    }
-		}
-	    }
-
-	    # Second set of bindings to handle selection and navigation.
-	    bind Menu <Up> {+
-		set current [%W index active]
-		if {$current eq ""} {
-		    set idx [%W index last]
-		} else {
-		    set idx [expr {$current - 1}]
-		}
-		set lastIndex [%W index last]
-		while {$idx >= 0} {
-		    if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-			%W activate $idx
-			::tk::accessible::_updateselection %W
-			break
-		    }
-		    incr idx -1
-		}
-	    }
-	    bind Menu <Down> {+
-		set current [%W index active]
-		if {$current eq ""} {
-		    set idx 0
-		} else {
-		    set idx [expr {$current + 1}]
-		}
-		set lastIndex [%W index last]
-		while {$idx <= $lastIndex} {
-		    if {[%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-			%W activate $idx
-			::tk::accessible::_updateselection %W
-			break
-		    }
-		    incr idx
-		}
-	    }
-	    bind Menu <Return> {+
-		set idx [%W index active]
-		if {$idx ne "" && [%W type $idx] ne "separator" && [%W entrycget $idx -state] ne "disabled"} {
-		    %W invoke $idx
-		    ::tk::accessible::_updateselection %W
 		}
 	    }
 	}
