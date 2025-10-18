@@ -744,8 +744,10 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    return
 		}
 
+		# Build a safer unique key (include parent to avoid collisions).
+		set currentKey "[winfo parent $menuWidget]-$menuWidget-$idx"
+
 		# Prevent duplicate processing of the same index.
-		set currentKey "${menuWidget}-${idx}"
 		if {[info exists prevActiveIndex] && $prevActiveIndex eq $currentKey} {
 		    return
 		}
@@ -756,18 +758,26 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    set label ""
 		}
 
-		# Skip empty labels and separators.
-		if {$label ne "" && [$menuWidget type $idx] ne "separator"} {
-		    # Announce the label
+		# Announce menubar immediately
+		if $isMenubar {
 		    ::tk::accessible::speak $label
+
+		    # CRUCIAL: clear dedupe cache so submenu index 1 is NOT skipped
+		    unset -nocomplain prevActiveIndex
+		} else {
+		    # Submenu - add gentle pause before announcing
+		    if {$label ne "" && [$menuWidget type $idx] ne "separator"} {
+			after 100 [list ::tk::accessible::speak $label]
+		    }
 		}
 
 		# Update accessible object.
-		::tk::accessible::set_acc_name $menuWidget $label
+		::tk::accessible::set_acc_name   $menuWidget $label
 		::tk::accessible::set_acc_action $menuWidget [list $menuWidget invoke $idx]
 		::tk::accessible::emit_selection_change $menuWidget
-		::tk::accessible::emit_focus_change $menuWidget
+		::tk::accessible::emit_focus_change     $menuWidget
 	    }
+
 
 	    # Bind <<MenuSelect>> for mouse/keyboard navigation.
 	    bind Menu <<MenuSelect>> {
@@ -864,8 +874,8 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    set idx [%W index active]
 		    if {$idx eq "none" || $idx eq ""} {
 			%W activate 0
-			after idle [list ::tk::accessible::_update_active_entry %W]
 		    }
+		    after idle [list ::tk::accessible::_update_active_entry %W]
 		}
 	    }
 	}
