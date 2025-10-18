@@ -123,6 +123,12 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    }
 	}
 
+	# Get button text
+	proc _getbuttontext {w} {
+	    set txt [$w cget -text]
+	    ::tk::accessible::speak $txt
+	}
+	
 	# Check message text on dialog.
 	proc _getdialogtext {w} {
 	    if {[winfo exists $w.msg]} {
@@ -858,38 +864,11 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    set idx [%W index active]
 		    if {$idx eq "none" || $idx eq ""} {
 			%W activate 0
-			set label [%W entrycget 0 -label]
-			::tk::accessible:;speak $label
-		#	after idle [list ::tk::accessible::_update_active_entry %W]
-		    }
-		}
-	    }
-	        bind Menu <Right> {+
-		if {[winfo manager %W] eq "menubar"} {
-		    set idx [%W index active]
-		    if {$idx eq "none" || $idx eq ""} {
-			%W activate 0
-			set label [%W entrycget 0 -label]
-			::tk::accessible:;speak $label
-		#	after idle [list ::tk::accessible::_update_active_entry %W]
-		    }
-		}
-		}
-	        bind Menu <Left> {+
-		if {[winfo manager %W] eq "menubar"} {
-		    set idx [%W index active]
-		    if {$idx eq "none" || $idx eq ""} {
-			%W activate 0
-			set label [%W entrycget 0 -label]
-			::tk::accessible:;speak $label
-		#	after idle [list ::tk::accessible::_update_active_entry %W]
+			after idle [list ::tk::accessible::_update_active_entry %W]
 		    }
 		}
 	    }
 	}
-
-			{set label [$menuWidget entrycget $idx -label]}
-		::tk::accessible::speak $label
 
 	# Scrollbar/TScrollbar bindings.
 	bind Scrollbar <Map> {+::tk::accessible::_init \
@@ -1104,6 +1083,11 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 	if {[tk windowingsystem] eq "win32"} {
 	    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
+	}
+
+	if {[tk windowingsystem] eq "x11"} {
+	    bind Button <FocusIn> {+::tk::accessible::_getbuttontext %W}
+	    bind TButton <FocusIn> {+::tk::accessible::_getbuttontext %W}
 	}
 
 	# Finally, export the main commands.
