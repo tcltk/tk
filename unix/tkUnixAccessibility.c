@@ -1109,7 +1109,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 
     /* Handle toggle action for toggle buttons, checkboxes, and radio buttons */
     if ((role == ATK_ROLE_TOGGLE_BUTTON || role == ATK_ROLE_CHECK_BOX || 
-         role == ATK_ROLE_RADIO_BUTTON) && i == 0) {
+         role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) && i == 0) {
 	/* Toggle the state */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
 	if (!hPtr) return FALSE;
@@ -2382,7 +2382,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 	role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT || 
 	role == ATK_ROLE_LIST_ITEM || role == ATK_ROLE_MENU_ITEM || 
 	role == ATK_ROLE_TREE_ITEM || role == ATK_ROLE_COMBO_BOX || 
-	role == ATK_ROLE_SPIN_BUTTON) {
+	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
 	TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
 	acc->is_focused = (focusPtr == (TkWindow*)tkwin) ? 1 : 0;
     }
