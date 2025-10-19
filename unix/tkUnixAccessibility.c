@@ -7,7 +7,7 @@
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  * Copyright (c) 2006, Marcus von Appen
- * Copyright (c) 2019-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2019-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -86,9 +86,9 @@ struct AtkRoleMap roleMap[] = {
 
 /* Variables for managing ATK objects. */
 static AtkObject *tk_root_accessible = NULL;
-static GList *toplevel_accessible_objects = NULL; /* This list will hold refs to toplevels. */
-static GHashTable *tk_to_atk_map = NULL; /* Maps Tk_Window to AtkObject. */
-extern Tcl_HashTable *TkAccessibilityObject; /* Hash table for managing accessibility attributes. */
+static GList *toplevel_accessible_objects = NULL;
+static GHashTable *tk_to_atk_map = NULL; 
+extern Tcl_HashTable *TkAccessibilityObject; 
 static GMainContext *acc_context = NULL;
 static GHashTable *virtual_child_cache = NULL;
 
@@ -2690,7 +2690,7 @@ static int EmitSelectionChanged(
 
     AtkRole role = tk_get_role(obj);
     
-    /* Handatle text/entry widgets separately. */
+    /* Handle text/entry widgets separately. */
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
 	/* Emit a proper "insert" text change and caret-move for typing. */
 	g_signal_emit_by_name(obj, "text-changed::insert", 0, 0, NULL);

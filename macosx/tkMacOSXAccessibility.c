@@ -5,7 +5,7 @@
  *  for Tk on macOS.
  *
  * Copyright © 2023 Apple Inc.
- * Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2024-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -336,8 +336,6 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 	/* Notify VoiceOver that value changed. */
 	NSAccessibilityPostNotification(self, NSAccessibilityValueChangedNotification);
-NSLog(@"Posted NSAccessibilityValueChangedNotification for switch with value: %ld", (long)cocoaValue);
-
 	return [NSNumber numberWithInteger:cocoaValue];
     }
 
