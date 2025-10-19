@@ -5,7 +5,7 @@
 # presents a consistent API across the three platforms.
 
 # Copyright © 2009 Allen B. Taylor.
-# Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2024-2025 Kevin Walzer.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -93,10 +93,10 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    # command-line voice that comes with Orca.
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
-		    # Escape quotes in the text
+		    # Escape quotes in the text.
 		    set safe_text [string map {"\"" "\\\""} $text]
 
-		    # Try spd-say first
+		    # Try spd-say first.
 		    if {[catch {exec spd-say $safe_text} result]} {
 			# fallback to espeak if spd-say fails
 			catch {exec espeak $safe_text} result
@@ -107,10 +107,10 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 
 	# Attach a variable trace to run _updateselection when a button changes.
 	proc _attach_trace {w} {
-	    # Radiobuttons/Checkbuttons always have a -variable
+	    # Radiobuttons/Checkbuttons always have a -variable.
 	    set var [$w cget -variable]
 	    if {$var ne ""} {
-		# Avoid multiple traces on the same variable
+		# Avoid multiple traces on the same variable.
 		catch {trace remove variable $var write [list ::tk::accessible::_vartrace $w]}
 		trace add variable ::$var write [list ::tk::accessible::_vartrace $w]
 	    }
@@ -155,7 +155,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    return $data
 	}
 	
-	# Create keypress/word bindings once for all supported widgets
+	# Create keypress/word bindings once for all supported widgets.
 	proc install_keycapture {w} {
 	    # Ensure we don’t double-bind
 	    if {[lsearch -exact [bindtags $w] KeyCaptureTag] == -1} {
@@ -163,23 +163,23 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    }
 	}
 
-	# Core binding tag (shared by text, entry, ttk::entry)
+	# Core binding tag (shared by text, entry, ttk::entry).
 	bind KeyCaptureTag <KeyPress> {+::tk::accessible::_handle_keypress %W %K}
 	bind KeyCaptureTag <KeyRelease-space> {+ after 10 [list ::tk::accessible::_get_prev_word %W]}
 
-	# Handle each keypress event
+	# Handle each keypress event.
 	proc _handle_keypress {w key} {
 	    # Ignore modifier keys and non-printables
 	    if {$key eq "" || [string length $key] > 1} {
 		return
 	    }
 
-	    # If user pressed space, do nothing here — handled on KeyRelease
+	    # If user pressed space, do nothing here — handled on KeyRelease.
 	    if {$key eq "space"} {
 		return
 	    }
 
-	    # Otherwise emit single-character updates
+	    # Otherwise emit single-character updates.
 	    ::tk::accessible::set_acc_value $w $key
 	    if {[tk windowingsystem] eq "x11"} {
 		::tk::accessible::speak $key
@@ -188,22 +188,22 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	    }
 	}
 
-	# Retrieve the previous word before the cursor (called after space release)
+	# Retrieve the previous word before the cursor (called after space release).
 	proc _get_prev_word {w} {
 	    update idletasks   ;# ensure buffer is current
 	    set class [winfo class $w]
 	    set before ""
 
 	    if {$class eq "Text"} {
-		# For text widgets
+		# For text widgets.
 		set start [$w index "insert linestart"]
 		if {[$w compare insert == $start]} {
-		    # nothing before cursor at start of line
+		    # nothing before cursor at start of line.
 		    return
 		}
 		set before [$w get $start "insert -1c"]
 	    } elseif {$class eq "Entry" || $class eq "TEntry"} {
-		# For entry/ttk::entry widgets
+		# For entry/ttk::entry widgets.
 		set full [$w get]
 		set pos [$w index insert]
 		if {$pos > 0} {
@@ -213,7 +213,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		return
 	    }
 
-	    # Extract last word before the space
+	    # Extract last word before the space.
 	    if {[regexp -nocase -- {\S+$} $before match]} {
 		::tk::accessible::set_acc_value $w $match
 	    	if {[tk windowingsystem] eq "x11"} {
@@ -342,7 +342,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 	    }
-	    # Menu only needs to be tracked on X11 - native on Aqua and Windows
+	    # Menu only needs to be tracked on X11 - native on Aqua and Windows.
 	    if {[tk windowingsystem] eq "x11"} {
 		if {[winfo class $w] eq "Menu"} {
 		    set data [$w entrycget active -label]
@@ -585,7 +585,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			       {}\
 			   }
 
-	# Checkbutton/TCheckbutton bindings.
+	# Checkbutton/TCheckbutton/Toggleswitch bindings.
 	bind Checkbutton <Map> {+::tk::accessible::_init \
 				    %W \
 				    Checkbutton \
@@ -758,14 +758,14 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 		    set label ""
 		}
 
-		# Announce menubar immediately
+		# Announce menubar immediately.
 		if $isMenubar {
 		    ::tk::accessible::speak $label
 
-		    # Clear dedupe cache so submenu index 1 is NOT skipped
+		    # Clear dedupe cache so submenu index 1 is NOT skipped.
 		    unset -nocomplain prevActiveIndex
 		} else {
-		    # Submenu - add gentle pause before announcing
+		    # Submenu - add gentle pause before announcing.
 		    if {$label ne "" && [$menuWidget type $idx] ne "separator"} {
 			after 100 [list ::tk::accessible::speak $label]
 		    }
@@ -852,7 +852,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 				 {} \
 				 {}
 
-		# Handle initial vocalization based on menu type
+		# Handle initial vocalization based on menu type.
 		if {$role eq "Menubar"} {
 		    focus %W
 		    after idle {
@@ -863,7 +863,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 			::tk::accessible::_update_active_entry %W
 		    }
 		} else {
-		    # For submenus, announce the active entry when mapped
+		    # For submenus, announce the active entry when mapped.
 		    after idle [list ::tk::accessible::_update_active_entry %W]
 		}
 	    }
@@ -1013,7 +1013,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	# that we used with the Aqua scrollbar when the ttk widgets were first
 	# developed - map the ttk widget to its classic equivalent. There may
 	# be a visual conflict but it is more important that the AT be able
-	# to correclty identify teh widget and its value.
+	# to correctly identify widget and its value.
 
 	if {[tk windowingsystem] eq "aqua" || [tk windowingsystem] eq "x11"} {
 	    set result [::tk::accessible::check_screenreader]
@@ -1037,7 +1037,7 @@ if {([::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_scr
 	bind TSpinbox <Up> {+::tk::accessible::_updatescale %W Up}
 	bind TSpinbox <Down> {+::tk::accessible::_updatescale %W Down}
 
-	#Capture notebook selection
+	# Capture notebook selection.
 	bind TNotebook <Map> {+::ttk::notebook::enableTraversal %W}
 	bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
 

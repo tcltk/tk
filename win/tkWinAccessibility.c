@@ -4,7 +4,7 @@
  *    This file implements the platform-native Microsoft Active
  *    Accessibility and the UI Automation APIs for Tk on Windows.
  *
- * Copyright (c) 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2024-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -261,10 +261,18 @@ static HRESULT TkAccDescription(Tk_Window win, BSTR *pDesc);
 static HRESULT TkAccValue(Tk_Window win, BSTR *pValue);
 static void TkDoDefaultAction(int num_args, void **args);
 static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp);
-
 static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes for functions to manage threading activities.
+ *
+ *----------------------------------------------------------------------
+ */
 int ExecuteOnMainThreadSync(Tcl_Event *ev, int flags);
 void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
 void HandleWMGetObjectOnMainThread(int num_args, void **args);
@@ -1006,7 +1014,7 @@ static void ComputeAndCacheCheckedState(
 	    }
 	}
     } else {
-	/* Fallback: Check widget's internal state for ttk widgets */
+	/* Fallback: Check widget's internal state for ttk widgets. */
 	Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
 	Tcl_IncrRefCount(stateCmd);
 	if (Tcl_EvalObjEx(interp, stateCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
@@ -1030,7 +1038,7 @@ static void ComputeAndCacheCheckedState(
     Tcl_SetHashValue(valuePtr, valObj);
     TkGlobalUnlock();
 
-    /* Notify MSAA with both events */
+    /* Notify MSAA with both events. */
     Tk_Window toplevel = GetToplevelOfWidget(win);
     if (toplevel) {
 	Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
@@ -1074,7 +1082,7 @@ static HRESULT TkAccState(
 	}
     }
 
-    /* Check for checked state using cached value */
+    /* Check for checked state using cached value. */
     Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (rolePtr) {
 	const char *tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
@@ -1205,7 +1213,7 @@ static void TkDoDefaultAction(
     strcpy(event->command, action);
     event->win = win;
 
-    /* Update checked state and notify MSAA */
+    /* Update checked state and notify MSAA. */
     ComputeAndCacheCheckedState(win, Tk_Interp(win));
 
     TkGlobalUnlock();
@@ -1329,7 +1337,7 @@ static HRESULT TkAccChild_GetRect(
 /*
  *----------------------------------------------------------------------
  *
- * General/utility functions to help integrate the MSAA API
+ * General/utility functions to help integrate the MSAA API to
  * the Tcl script-level API. We are using HWND's for toplevel windows
  * and unique childIDs for all accessible child widgets. We are using
  * several hash tables to maintain bidrectional mappings between widgets
@@ -1645,7 +1653,7 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
     return S_OK;
 }
 
-/* UI Automation Pattern Provider - KEY CHANGE: Support LegacyIAccessible */
+/* UI Automation Pattern Provider.*/
 static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
     IRawElementProviderSimple *this,
     PATTERNID patternId,
@@ -1680,8 +1688,10 @@ static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
         return E_FAIL;
     }
 
-    /* For most properties, let the LegacyIAccessible pattern handle them
-       through the MSAA bridge. We only need to handle a few critical ones. */
+    /* 
+     * For most properties, let the LegacyIAccessible pattern handle them
+     * through the MSAA bridge. We only need to handle a few critical ones.
+     */
     
     switch (propertyId) {
     case 30003: /* UIA_ControlTypePropertyId */
@@ -1820,6 +1830,15 @@ static TkUiaProvider *GetUiaProviderForWindow(Tk_Window win)
     if (entry) return (TkUiaProvider *)Tcl_GetHashValue(entry);
     return NULL;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Threading functions. These manage the integration of accessibility operations
+ * on background threads and Tk execution on the main thread.
+ *
+ *----------------------------------------------------------------------
+ */
 
 /* Handle WM_GETOBJECT call on main thread. */
 void HandleWMGetObjectOnMainThread(
