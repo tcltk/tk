@@ -4339,6 +4339,7 @@ static int TreeviewSelectionCommand(
     TreeItem *item, **items = NULL, *from, *to;
     Tcl_Obj *listObj = NULL;
 
+    /* Get selection */
     if (objc == 2) {
 	Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
 	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
@@ -4359,7 +4360,8 @@ static int TreeviewSelectionCommand(
 	return TCL_ERROR;
     }
 
-    if (objc == 3 && selop != SELECTION_ANCHOR && selop != SELECTION_SIZE) {
+    if ((objc == 3 && selop != SELECTION_ANCHOR && selop != SELECTION_SIZE) ||
+	    (objc > 3 && selop == SELECTION_SIZE) || (objc > 4 && selop == SELECTION_ANCHOR)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|remove|set|size|toggle? ?items|from? ?to?");
 	return TCL_ERROR;
     } else if (objc == 4) {
@@ -4615,6 +4617,7 @@ static int TreeviewCellSelectionCommand(
     TreeCell *cells;
     TreeItem *item;
 
+    /* Get selected cells */
     if (objc == 2) {
 	Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
 	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
@@ -4650,7 +4653,7 @@ static int TreeviewCellSelectionCommand(
     if (objc == 3 && selop != SELECTION_ANCHOR) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|remove|set|toggle? ?cells|from? ?to?");
 	return TCL_ERROR;
-    } else if (objc == 4) {
+    } else if (objc == 4 && selop != SELECTION_ANCHOR) {
 	cells = GetCellListFromObj(interp, tv, objv[3], &nCells);
 	if (cells == NULL) {
 	    return TCL_ERROR;
@@ -4697,18 +4700,32 @@ static int TreeviewCellSelectionCommand(
 		    elem[1] = tv->tree.selAnchorColObj;
 		    Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 		}
+		return TCL_OK;
 	    } else {
+		TreeCell cell;
+
+		if (GetCellFromObj(interp, tv, objv[3], 0, NULL, &cell) != TCL_OK) {
+		    Tcl_Size len;
+
+		    Tcl_GetStringFromObj(objv[3], &len);
+		    if (len == 0) {
+			cell.item = tv->tree.root;
+		    } else {
+			return TCL_ERROR;
+		    }
+		}
 		if (tv->tree.selAnchorColObj != NULL) {
 		    Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		}
-		if (nCells > 0) {
-		    tv->tree.selAnchor = cells[0].item;
-		    tv->tree.selAnchorColObj = cells[0].colObj;
-		    Tcl_IncrRefCount(tv->tree.selAnchorColObj);
-		} else {
+		if (cell.item == tv->tree.root) {
 		    tv->tree.selAnchor = NULL;
 		    tv->tree.selAnchorColObj = NULL;
+		} else {
+		    tv->tree.selAnchor = cell.item;
+		    tv->tree.selAnchorColObj = cell.colObj;
+		    Tcl_IncrRefCount(tv->tree.selAnchorColObj);
 		}
+		return TCL_OK;
 	    }
 	    break;
 	case SELECTION_REMOVE:
@@ -4738,7 +4755,7 @@ static int TreeviewCellSelectionCommand(
 	    break;
     }
 
-    if (objc >= 4) {
+    if (objc >= 4 && selop != SELECTION_ANCHOR) {
 	ckfree(cells);
     }
     if (anyChange) {
