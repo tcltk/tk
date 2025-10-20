@@ -2983,8 +2983,12 @@ static int TreeviewBeforeCommand(
     }
 
     item = FindItem(interp, tv, objv[objc-1]);
+    /* Abort if invalid, root, or detached item */
     if (!item) {
 	return TCL_ERROR;
+    }
+    if (item == tv->tree.root || item->parent == NULL) {
+	return TCL_OK;
     }
 
     before = GetPrevItem(tv->tree.root, item, hidden, recurse);
@@ -3027,8 +3031,12 @@ static int TreeviewAfterCommand(
     }
 
     item = FindItem(interp, tv, objv[objc-1]);
+    /* Abort if invalid, root, or detached item */
     if (!item) {
 	return TCL_ERROR;
+    }
+    if (item == tv->tree.root || item->parent == NULL) {
+	return TCL_OK;
     }
 
     after = GetNextItem(tv->tree.root, item, hidden, recurse);
@@ -3105,8 +3113,12 @@ static int TreeviewBetweenCommand(
 	}
     }
 
+    /* Abort if invalid, root, or detached item */
     if (!(from = FindItem(interp, tv, objv[objc-2])) || !(to = FindItem(interp, tv, objv[objc-1]))) {
 	return TCL_ERROR;
+    }
+    if (from == tv->tree.root || to == tv->tree.root || from->parent == NULL || to->parent == NULL) {
+	return TCL_OK;
     }
 
     resultObj = GetBetweenList(interp, tv, from, to, hidden, recurse);
@@ -4068,6 +4080,12 @@ static int TreeviewMoveCommand(
 	return TCL_ERROR;
     }
 
+    if (item == tv->tree.root) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot move root item"));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+	return TCL_ERROR;
+    }
+
     /* Locate previous sibling based on $index:
      */
     sibling = FindItemByIndex(interp, tv, parent, objv[4], &error, 1);
@@ -4373,6 +4391,11 @@ static int TreeviewSelectionCommand(
 	int hidden = 0;
 	int recurse = 1;
 	if (!(from = FindItem(interp, tv, objv[3])) || !(to = FindItem(interp, tv, objv[4]))) {
+	    return TCL_ERROR;
+	}
+	if (from == tv->tree.root || to == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot select root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -4886,6 +4909,11 @@ static int TreeviewSearchCommand(
 		    return TCL_ERROR;
 		}
 		if (!(item = FindItem(interp, tv, objv[++i]))) {
+		    return TCL_ERROR;
+		}
+		if (item == tv->tree.root) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot start with root item"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
 		    return TCL_ERROR;
 		}
 		if (!AncestryCheck(interp, tv, item, parent)) {
@@ -5926,6 +5954,11 @@ static int TreeviewCtagHasCommand(
 	if (GetCellFromObj(interp, tv, objv[5], 0, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	if (cell.item == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot tag root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+	    return TCL_ERROR;
+	}
 	if (cell.column == &tv->tree.column0) {
 	    columnNumber = 0;
 	} else {
@@ -5994,6 +6027,11 @@ static int TreeviewTagAddCommand(
     }
 
     for (i = 0; items[i]; ++i) {
+	if (items[i] == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot tag root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+	    return TCL_ERROR;
+	}
 	AddTag(items[i], tag);
     }
     ckfree(items);
@@ -6052,6 +6090,12 @@ static int TreeviewCtagAddCommand(
     tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
 
     for (i = 0; i < nCells; i++) {
+	if (cells[i].item == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot tag root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+	    return TCL_ERROR;
+	}
+
 	if (cells[i].column == &tv->tree.column0) {
 	    columnNumber = 0;
 	} else {
@@ -6112,6 +6156,11 @@ static int TreeviewTagRemoveCommand(
 	    return TCL_ERROR;
 	}
 	for (i = 0; items[i]; ++i) {
+	    if (items[i] == tv->tree.root) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot tag root item"));
+		Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+		return TCL_ERROR;
+	    }
 	    RemoveTag(items[i], tag);
 	}
 	ckfree(items);
@@ -6152,6 +6201,11 @@ static int TreeviewCtagRemoveCommand(
 	}
 
 	for (i = 0; i < nCells; i++) {
+	    if (cells[i].item == tv->tree.root) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot tag root item"));
+		Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
+		return TCL_ERROR;
+	    }
 	    if (cells[i].column == &tv->tree.column0) {
 		columnNumber = 0;
 	    } else {
