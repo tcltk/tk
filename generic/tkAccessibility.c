@@ -18,7 +18,7 @@
 
 /* Data declarations and protoypes of functions used in this file. */
 
-Tcl_HashTable *TkAccessibilityObject;
+Tcl_HashTable *TkAccessibilityObject = NULL;
 
 int     Tk_SetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
@@ -48,6 +48,7 @@ int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       int objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
+void    TkAccessibility_Cleanup(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -886,6 +887,89 @@ Tk_GetAccessibleHelp(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkAccessibility_Cleanup --
+ *
+ *	This function cleans up the global accessibility hash table and
+ *	all associated data structures. It should be called during Tk
+ *	finalization to prevent memory leaks.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees all memory allocated for accessibility attributes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkAccessibility_Cleanup --
+ *
+ *	This function cleans up the global accessibility hash table and
+ *	all associated data structures. It should be called during Tk
+ *	finalization to prevent memory leaks.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees all memory allocated for accessibility attributes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkAccessibility_Cleanup(
+    ClientData clientData)	/* Not used. */
+{
+    Tcl_HashEntry *hPtr;
+    Tcl_HashSearch search;
+    Tcl_HashTable *AccessibleAttributes;
+
+    if (TkAccessibilityObject == NULL) {
+        return;
+    }
+
+    /* Iterate through all window entries in the main hash table */
+    hPtr = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+    while (hPtr != NULL) {
+        /* Get the per-window attributes hash table */
+        AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+        
+        if (AccessibleAttributes != NULL) {
+            Tcl_HashEntry *hPtr2;
+            Tcl_HashSearch search2;
+            
+            /* Iterate through all attribute entries in the per-window table */
+            hPtr2 = Tcl_FirstHashEntry(AccessibleAttributes, &search2);
+            while (hPtr2 != NULL) {
+                Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
+                if (obj != NULL) {
+                    Tcl_DecrRefCount(obj);
+                }
+                hPtr2 = Tcl_NextHashEntry(&search2);
+            }
+            
+            /* Delete the per-window hash table */
+            Tcl_DeleteHashTable(AccessibleAttributes);
+            ckfree((char *)AccessibleAttributes);
+        }
+        
+        hPtr = Tcl_NextHashEntry(&search);
+    }
+    
+    /* Delete the main hash table */
+    Tcl_DeleteHashTable(TkAccessibilityObject);
+    ckfree((char *)TkAccessibilityObject);
+    TkAccessibilityObject = NULL;
+}
+
+
+/*
  * Register script-level commands to set accessibility attributes.
  */
 
@@ -907,8 +991,15 @@ TkAccessibility_Init(
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_help", Tk_GetAccessibleHelp, NULL, NULL);
-  TkAccessibilityObject =   (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-  Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
+  
+  if (!TkAccessibilityObject) {
+      TkAccessibilityObject = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+      Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
+  }
+
+  /* Register cleanup function. */
+  Tcl_CreateExitHandler(TkAccessibility_Cleanup, NULL);
+  
   return TCL_OK;
 }
 
