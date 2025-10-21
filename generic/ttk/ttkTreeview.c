@@ -817,6 +817,7 @@ TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int allow_hidden, int recu
 	return NULL;
     }
 
+
     /* Loop over prev items until we find a visible one */
     while (current != NULL) {
 	if (current->prev != NULL) {
@@ -4454,7 +4455,7 @@ static int TreeviewSelectionCommand(
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(i > 0 ? result : 0));
 	    break;
 	case SELECTION_PRESENT:
-	    /* Return if there is a selection boolean */
+	    /* Get whether there area selected items or not */
 	    int present = 0;
 	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 		if (item->state & TTK_STATE_SELECTED) {
@@ -4642,14 +4643,15 @@ static int CellSelectionRange(
 static int TreeviewCellSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     enum {
-	SELECTION_SET, SELECTION_ADD, SELECTION_ANCHOR, SELECTION_REMOVE, SELECTION_TOGGLE
+	SELECTION_SET, SELECTION_ADD, SELECTION_ANCHOR, SELECTION_PRESENT,
+	SELECTION_REMOVE, SELECTION_SIZE, SELECTION_TOGGLE
     };
     static const char *const selopStrings[] = {
-	"set", "add", "anchor", "remove", "toggle", NULL
+	"set", "add", "anchor", "present", "remove", "size", "toggle", NULL
     };
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, anyChange = 0;
+    int selop, anyChange = 0, nosel = 0;
     Tcl_Size i, nCells;
     TreeCell *cells;
     TreeItem *item;
@@ -4678,7 +4680,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|remove|set|toggle? ?cells|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells|from? ?to?");
 	return TCL_ERROR;
     }
 
@@ -4687,8 +4689,10 @@ static int TreeviewCellSelectionCommand(
 	return TCL_ERROR;
     }
 
-    if (objc == 3 && selop != SELECTION_ANCHOR) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|remove|set|toggle? ?cells|from? ?to?");
+    nosel = (selop == SELECTION_ANCHOR || selop == SELECTION_PRESENT || selop == SELECTION_SIZE);
+    if ((objc == 3 && !nosel) || (objc == 4 && (selop == SELECTION_PRESENT ||
+	    selop == SELECTION_SIZE)) || (objc == 5 && nosel)) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells|from? ?to?");
 	return TCL_ERROR;
     } else if (objc == 4 && selop != SELECTION_ANCHOR) {
 	cells = GetCellListFromObj(interp, tv, objv[3], &nCells);
@@ -4701,8 +4705,6 @@ static int TreeviewCellSelectionCommand(
 		return CellSelectionRange(interp, tv, objv[3], objv[4], 0, 0, 0);
 	    case SELECTION_ADD:
 		return CellSelectionRange(interp, tv, objv[3], objv[4], 1, 0, 0);
-	    case SELECTION_ANCHOR:
-		return TCL_ERROR;
 	    case SELECTION_REMOVE:
 		return CellSelectionRange(interp, tv, objv[3], objv[4], 0, 1, 0);
 	    case SELECTION_TOGGLE:
@@ -4765,6 +4767,22 @@ static int TreeviewCellSelectionCommand(
 		return TCL_OK;
 	    }
 	    break;
+	case SELECTION_PRESENT:
+	    /* Get whether there are selected cells or not */
+	    int present = 0;
+	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+		if (item->selObj != NULL) {
+		    Tcl_Size n;
+		    
+		    Tcl_ListObjLength(interp, item->selObj, &n);
+		    if (n > 0) {
+			present = 1;
+			break;
+		    }
+		}
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(present));
+	    break;
 	case SELECTION_REMOVE:
 	    /* Remove cells from selection */
 	    for (i = 0; i < nCells; i++) {
@@ -4776,6 +4794,19 @@ static int TreeviewCellSelectionCommand(
 		anyChange |= SelObjChangeElement(tv, item->selObj,
 			cells[i].colObj, 0, 1, 0);
 	    }
+	    break;
+	case SELECTION_SIZE:
+	    /* Get number of selected cells */
+	    Tcl_Size count = 0;
+	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+		if (item->selObj != NULL) {
+		    Tcl_Size n;
+		    
+		    Tcl_ListObjLength(interp, item->selObj, &n);
+		    count += n;
+		}
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
 	    break;
 	case SELECTION_TOGGLE:
 	    /* Toggle selection state for cells */

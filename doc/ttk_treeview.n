@@ -214,6 +214,10 @@ firstCell for the selection extend bindings. Without \fIcell\fR, the
 current cell selection anchor is returned. Set \fIcell\fR to the empty
 string {} to unset the anchor.
 .TP
+\fIpathname \fBcellselection present\fR
+.
+Returns whether there are selected cells or not.
+.TP
 \fIpathname \fBcellselection remove \fIcellList\fR
 .
 Remove \fIcellList\fR from the cell selection.
@@ -231,6 +235,10 @@ Remove the cells within the rectangle defined by \fIfirstCell\fR and
 .
 Set the selection to the cells within the rectangle defined by
 \fIfirstCell\fR and \fIlastCell\fR. Other cells are unselected.
+.TP
+\fIpathname \fBcellselection size\fR
+.
+Returns the number of selected cells.
 .TP
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
