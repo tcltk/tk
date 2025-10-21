@@ -714,6 +714,10 @@ not included in the selection.
 Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\fR
 (inclusive), or 0 if any are not.
 .TP
+\fIpathname \fBselection present\fR
+.
+Returns whether there are selected items or not.
+.TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
 Remove all of the items in \fIitemList\fR from the selection.
@@ -733,7 +737,7 @@ Sets selection to the items between \fIfromItem\fR and \fItoItem\fR (inclusive).
 .TP
 \fIpathname \fBselection size\fR
 .
-Return the number of selected items.
+Returns the number of selected items.
 .TP
 \fIpathname \fBselection toggle \fIitemList\fR
 .

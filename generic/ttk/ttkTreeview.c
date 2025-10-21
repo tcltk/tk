@@ -4345,11 +4345,12 @@ static int TreeviewSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     enum {
 	SELECTION_ADD, SELECTION_ANCHOR, SELECTION_HAS, SELECTION_INCLUDES,
-	SELECTION_REMOVE, SELECTION_SET, SELECTION_SIZE, SELECTION_TOGGLE
-
+	SELECTION_PRESENT, SELECTION_REMOVE, SELECTION_SET, SELECTION_SIZE,
+	SELECTION_TOGGLE
     };
     static const char *const selopStrings[] = {
-	"add", "anchor", "has", "includes", "remove", "set", "size", "toggle", NULL
+	"add", "anchor", "has", "includes", "present", "remove", "set", "size",
+	"toggle", NULL
     };
 
     Treeview *tv = (Treeview *)recordPtr;
@@ -4369,7 +4370,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|remove|set|size|toggle? ?items|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items|from? ?to?");
 	return TCL_ERROR;
     }
 
@@ -4378,9 +4379,11 @@ static int TreeviewSelectionCommand(
 	return TCL_ERROR;
     }
 
-    if ((objc == 3 && selop != SELECTION_ANCHOR && selop != SELECTION_SIZE) ||
-	    (objc > 3 && selop == SELECTION_SIZE) || (objc > 4 && selop == SELECTION_ANCHOR)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|remove|set|size|toggle? ?items|from? ?to?");
+    if ((objc == 3 && selop != SELECTION_ANCHOR && selop != SELECTION_PRESENT &&
+	    selop != SELECTION_SIZE) ||
+	    (objc > 3 && (selop == SELECTION_SIZE || selop == SELECTION_PRESENT)) ||
+	    (objc > 4 && selop == SELECTION_ANCHOR)) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items|from? ?to?");
 	return TCL_ERROR;
     } else if (objc == 4) {
 	items = GetItemListFromObj(interp, tv, objv[3]);
@@ -4449,6 +4452,17 @@ static int TreeviewSelectionCommand(
 		}
 	    }
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(i > 0 ? result : 0));
+	    break;
+	case SELECTION_PRESENT:
+	    /* Return if there is a selection boolean */
+	    int present = 0;
+	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+		if (item->state & TTK_STATE_SELECTED) {
+		    present = 1;
+		    break;
+		}
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(present));
 	    break;
 	case SELECTION_REMOVE:
 	    /* Remove from selection */
