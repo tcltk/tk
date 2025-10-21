@@ -479,7 +479,6 @@ if test "$tk_aqua" = no; then
 
   if pkg-config --exists atk \
      && pkg-config --exists atk-bridge-2.0 \
-     && pkg-config --exists gtk+-3.0 \
      && pkg-config --exists dbus-1 \
      && pkg-config --exists glib-2.0; then
 
