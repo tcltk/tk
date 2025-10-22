@@ -49,6 +49,8 @@ int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     int objc, Tcl_Obj *const objv[]);
 void    TkAccessibility_Cleanup(ClientData clientData);
+/* Cleanup proc when the window is destroyed. */
+static  Tk_EventProc WindowDestroyHandler;
 
 /*
  *----------------------------------------------------------------------
@@ -100,6 +102,7 @@ Tk_SetAccessibleRole(
     AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
     Tcl_SetHashValue(hPtr, AccessibleAttributes);
+    Tk_CreateEventHandler(win, StructureNotifyMask, WindowDestroyHandler, win);
   } else {
     AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
   }
@@ -886,23 +889,37 @@ Tk_GetAccessibleHelp(
   return TCL_OK;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkAccessibility_Cleanup --
- *
- *	This function cleans up the global accessibility hash table and
- *	all associated data structures. It should be called during Tk
- *	finalization to prevent memory leaks.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees all memory allocated for accessibility attributes.
- *
- *----------------------------------------------------------------------
- */
+static void WindowDestroyHandler(
+    void *clientData,
+    XEvent *eventPtr)
+{
+    Tk_Window tkwin = (Tk_Window)clientData;
+    Tcl_HashTable *AccessibleAttributes;
+    Tcl_HashEntry *hPtr, *hPtr2;
+    Tcl_HashSearch search;
+
+    if (eventPtr->type != DestroyNotify) {
+	return;
+    }
+
+    hPtr = Tcl_FindHashEntry(TkAccessibilityObject, tkwin);
+    if (!hPtr) {
+	/* shouldn't happen*/
+	return;
+    }
+    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    for (hPtr2 = Tcl_FirstHashEntry(AccessibleAttributes, &search);
+	    hPtr2 != NULL; hPtr2 = Tcl_NextHashEntry(&search)) {
+	Tcl_Obj *objPtr = Tcl_GetHashValue(hPtr2);
+	Tcl_DecrRefCount(objPtr);
+	Tcl_DeleteHashEntry(hPtr2);
+    }
+    Tcl_DeleteHashTable(AccessibleAttributes);
+    ckfree(AccessibleAttributes);
+    Tcl_DeleteHashEntry(hPtr);
+    return;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -924,7 +941,7 @@ Tk_GetAccessibleHelp(
 
 void
 TkAccessibility_Cleanup(
-    ClientData clientData)	/* Not used. */
+    TCL_UNUSED(void *))	/* Not used. */
 {
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -934,17 +951,17 @@ TkAccessibility_Cleanup(
         return;
     }
 
-    /* Iterate through all window entries in the main hash table */
+    /* Iterate through all window entries in the main hash table. */
     hPtr = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
     while (hPtr != NULL) {
-        /* Get the per-window attributes hash table */
+        /* Get the per-window attributes hash table. */
         AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
         
         if (AccessibleAttributes != NULL) {
             Tcl_HashEntry *hPtr2;
             Tcl_HashSearch search2;
             
-            /* Iterate through all attribute entries in the per-window table */
+            /* Iterate through all attribute entries in the per-window table. */
             hPtr2 = Tcl_FirstHashEntry(AccessibleAttributes, &search2);
             while (hPtr2 != NULL) {
                 Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
@@ -954,7 +971,7 @@ TkAccessibility_Cleanup(
                 hPtr2 = Tcl_NextHashEntry(&search2);
             }
             
-            /* Delete the per-window hash table */
+            /* Delete the per-window hash table. */
             Tcl_DeleteHashTable(AccessibleAttributes);
             ckfree((char *)AccessibleAttributes);
         }
@@ -962,7 +979,7 @@ TkAccessibility_Cleanup(
         hPtr = Tcl_NextHashEntry(&search);
     }
     
-    /* Delete the main hash table */
+    /* Delete the main hash table. */
     Tcl_DeleteHashTable(TkAccessibilityObject);
     ckfree((char *)TkAccessibilityObject);
     TkAccessibilityObject = NULL;
