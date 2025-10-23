@@ -1199,7 +1199,7 @@ test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -constraints {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test winMenu-32.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints {
-    unix nonUnixUserInteraction
+    win nonUnixUserInteraction
 } -setup {
     destroy .mb
 } -body {
@@ -1302,7 +1302,7 @@ test winMenu-32.14 {TkpComputeStandardMenuGeometry - second indicator less or eq
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
 test winMenu-32.15 {TkpComputeStandardMenuGeometry - second indicator larger} -constraints {
-    testImageType unix
+    testImageType win
 } -setup {
     destroy .m1
     catch {image delete image1}
