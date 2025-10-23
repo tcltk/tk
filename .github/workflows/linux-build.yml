@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "skip_entire_test_files"
     tags:
     - "core-**"
 permissions:
