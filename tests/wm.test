@@ -1,12 +1,18 @@
-# This file is a Tcl script to test out Tk's interactions with the window
-# manager, including the "wm" command. It tests window manager interactions
-# that work across platforms. Window manager tests that only work on a specific
-# platform should be placed in unixWm.test or winWm.test.
+# This file is a Tcl script to test out platform-indifferent interactions
+# with the window manager, including the "wm" command.
+
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding the window manager that
+# are specific to the unix platform (this includes macOS), or to the windows
+# platform go into the testfiles unixWm.test or winWm.test respectively.
+#
 
 #
 # TESTFILE INITIALIZATION

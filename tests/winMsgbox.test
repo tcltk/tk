@@ -2,6 +2,13 @@
 #
 # Copyright © 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
 
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests that are
+#   platform-indifferent go into the testfile msgbox.test.
+# * This testfile is skipped entirely on non-windows platforms.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
