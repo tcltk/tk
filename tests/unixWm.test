@@ -2619,7 +2619,7 @@ test unixWm-59.3 {exit processing} unix {
 #
 # wm attributes tests:
 #
-# NOTE since [wm attributes] is not guaranteed to have any effect,
+# NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
 test unixWm-60.1.1 {wm attributes - test} -constraints {unix notAqua} -body {
