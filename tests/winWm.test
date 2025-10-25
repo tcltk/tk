@@ -1,9 +1,21 @@
-# This file tests  is a Tcl script to test the procedures in the file
-# tkWinWm.c.
+# This file is a Tcl script to test out interactions with the window manager
+# that are specific for the windows platform, including the "wm" command
+# (these are implemented in the file tkWinWm.c).
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests regarding
+#   the window manager that are specific to the unix platform (this includes
+#   macOS) go into the testfile unixWm.test. Tests that are platform-indifferent
+#   go into testfile wm.test. Or they may exists as each other's counterparts
+#   in both unixWm.test and winWm.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This testfile is skipped entirely on non-windows platforms.
+#
 
 #
 # TESTFILE INITIALIZATION
