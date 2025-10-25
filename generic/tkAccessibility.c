@@ -889,6 +889,23 @@ Tk_GetAccessibleHelp(
   return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WindowDestroyHandler --
+ *
+ *	This function cleans up accessibility hash tables on window 
+ *      destruction.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Cleans up hash table structures.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void WindowDestroyHandler(
     void *clientData,
     XEvent *eventPtr)
