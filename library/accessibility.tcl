@@ -723,9 +723,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	# Menu accessibility bindings for X11 only. Menus are native
 	# on macOS/Windows, so we don’t expose them here.
-	# Two bindings are included: one set to correctly handle
-	# navigation and selection, and the other to handle accessibility
-	# notfications after idle.
 
 	if {[tk windowingsystem] eq "x11"} {
 	    variable prevActiveIndex
