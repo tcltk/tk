@@ -7,11 +7,11 @@
 
 # NOTES
 #
-# * This testfile is skipped entirely on non-unix platforms.
 # * This test file is specific for the unix platform. Tests that are platform-
 #   indifferent go into the testfile select.test.
 # * All tests in this test file are currently specific for the x11 windowing
 #   system. The file doesn't contain any tests (yet) that can be run on macOS/aqua.
+# * This testfile is skipped entirely on non-unix platforms.
 #
 
 #
