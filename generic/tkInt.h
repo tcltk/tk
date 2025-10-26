@@ -1087,7 +1087,7 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  * Exported internals.
  */
 
-#include "tkIntDecls.h"
+#include "tkIntDecls.h"  /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {

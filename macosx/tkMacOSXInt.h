@@ -184,7 +184,7 @@ MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
  * Include the stubbed internal platform-specific API.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKMACINT */
 
