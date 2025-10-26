@@ -956,44 +956,60 @@ static void WindowDestroyHandler(
  *----------------------------------------------------------------------
  */
 
-void TkAccessibility_Cleanup(void *unused)
+void
+TkAccessibility_Cleanup(void *unused)
 {
-    if (TkAccessibilityObject == NULL) return;
+    /* If nothing to do, return. */
+    if (TkAccessibilityObject == NULL) {
+        return;
+    }
 
+    /* Steal the pointer and immediately clear the global so other code can bail out. */
     Tcl_HashTable *table = TkAccessibilityObject;
+    TkAccessibilityObject = NULL;
 
-    /* Iterate and unregister callbacks for each window (but don't free memory used by Tk). */
+    /* Iterate windows in the captured table. Use `table` (not the global). */
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
 
     hPtr = Tcl_FirstHashEntry(table, &search);
     while (hPtr != NULL) {
-	 Tk_Window tkwin = (Tk_Window) Tcl_GetHashKey(TkAccessibilityObject, hPtr);
-        Tcl_HashTable *perWin = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-	    if (tkwin) {
-        /* Unregister destroy handler. */
-        Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
-                              WindowDestroyHandler, tkwin);
-    }
+        /* GET THE KEY FROM 'table' (not the global). */
+        Tk_Window tkwin = (Tk_Window) Tcl_GetHashKey(table, hPtr);
+        Tcl_HashTable *perWin = (Tcl_HashTable *) Tcl_GetHashValue(hPtr);
+
+        if (tkwin) {
+            /* Unregister the destroy handler so it cannot run later and touch freed data. */
+            Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
+                                  WindowDestroyHandler, tkwin);
+        }
+
         if (perWin) {
+            /* Decref any stored Tcl_Objs. */
             Tcl_HashEntry *h2;
             Tcl_HashSearch s2;
             h2 = Tcl_FirstHashEntry(perWin, &s2);
             while (h2) {
-                Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(h2);
-                if (obj) Tcl_DecrRefCount(obj);
+                Tcl_Obj *obj = (Tcl_Obj *) Tcl_GetHashValue(h2);
+                if (obj) {
+                    Tcl_DecrRefCount(obj);
+                }
                 h2 = Tcl_NextHashEntry(&s2);
             }
+
+            /* Delete the per-window hash table and free its memory. */
             Tcl_DeleteHashTable(perWin);
-            ckfree((char *)perWin);
+            ckfree((char *) perWin);
         }
+
         hPtr = Tcl_NextHashEntry(&search);
     }
 
-    /* Now free the main table. */
+    /* Now free the main table safely. */
     Tcl_DeleteHashTable(table);
-    ckfree((char *)table);
+    ckfree((char *) table);
 }
+
 
 
 /*

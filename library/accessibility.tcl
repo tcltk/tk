@@ -183,7 +183,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    ::tk::accessible::set_acc_value $w $key
 	    if {[tk windowingsystem] eq "x11"} {
 		::tk::accessible::speak $key
-	    } else {
+		# Windows speaks the individual keypress by default
+	    } elseif {[tk windowingsystem] eq "aqua"}  {
 		::tk::accessible::emit_selection_change $w
 	    }
 	}
