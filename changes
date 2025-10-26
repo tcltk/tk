@@ -8309,6 +8309,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-10-01 (bug) [95da0f]: tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP (chavez)
 
-2025-10-21 (bug) [6051a9]: MS-Win canvas arcs with to small extend are drawn as 360 degrees (chavez,vogel)
-
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
