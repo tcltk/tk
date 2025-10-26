@@ -1535,7 +1535,7 @@ typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
  *----------------------------------------------------------------------
  */
 
-#include "tkDecls.h"
+#include "tkDecls.h"  /* IWYU pragma: export */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
