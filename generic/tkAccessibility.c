@@ -956,50 +956,43 @@ static void WindowDestroyHandler(
  *----------------------------------------------------------------------
  */
 
-void
-TkAccessibility_Cleanup(
-    TCL_UNUSED(void *))	/* Not used. */
+void TkAccessibility_Cleanup(void *unused)
 {
+    if (TkAccessibilityObject == NULL) return;
+
+    Tcl_HashTable *table = TkAccessibilityObject;
+
+    /* Iterate and unregister callbacks for each window (but don't free memory used by Tk). */
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
-    Tcl_HashTable *AccessibleAttributes;
 
-    if (TkAccessibilityObject == NULL) {
-        return;
-    }
-
-    /* Iterate through all window entries in the main hash table. */
-    hPtr = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+    hPtr = Tcl_FirstHashEntry(table, &search);
     while (hPtr != NULL) {
-        /* Get the per-window attributes hash table. */
-        AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-        
-        if (AccessibleAttributes != NULL) {
-            Tcl_HashEntry *hPtr2;
-            Tcl_HashSearch search2;
-            
-            /* Iterate through all attribute entries in the per-window table. */
-            hPtr2 = Tcl_FirstHashEntry(AccessibleAttributes, &search2);
-            while (hPtr2 != NULL) {
-                Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
-                if (obj != NULL) {
-                    Tcl_DecrRefCount(obj);
-                }
-                hPtr2 = Tcl_NextHashEntry(&search2);
+	 Tk_Window tkwin = (Tk_Window) Tcl_GetHashKey(TkAccessibilityObject, hPtr);
+        Tcl_HashTable *perWin = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+	    if (tkwin) {
+        /* Unregister destroy handler. */
+        Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
+                              WindowDestroyHandler, tkwin);
+    }
+        if (perWin) {
+            Tcl_HashEntry *h2;
+            Tcl_HashSearch s2;
+            h2 = Tcl_FirstHashEntry(perWin, &s2);
+            while (h2) {
+                Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(h2);
+                if (obj) Tcl_DecrRefCount(obj);
+                h2 = Tcl_NextHashEntry(&s2);
             }
-            
-            /* Delete the per-window hash table. */
-            Tcl_DeleteHashTable(AccessibleAttributes);
-            ckfree((char *)AccessibleAttributes);
+            Tcl_DeleteHashTable(perWin);
+            ckfree((char *)perWin);
         }
-        
         hPtr = Tcl_NextHashEntry(&search);
     }
-    
-    /* Delete the main hash table. */
-    Tcl_DeleteHashTable(TkAccessibilityObject);
-    ckfree((char *)TkAccessibilityObject);
-    TkAccessibilityObject = NULL;
+
+    /* Now free the main table. */
+    Tcl_DeleteHashTable(table);
+    ckfree((char *)table);
 }
 
 
@@ -1031,8 +1024,9 @@ TkAccessibility_Init(
       Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
   }
 
+
   /* Register cleanup function. */
-  Tcl_CreateExitHandler(TkAccessibility_Cleanup, NULL);
+  TkCreateExitHandler(TkAccessibility_Cleanup, NULL);
   
   return TCL_OK;
 }
