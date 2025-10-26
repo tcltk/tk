@@ -12,7 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && (!defined(__MINGW64_VERSION_MAJOR) || (__MINGW64_VERSION_MAJOR < 3))
 
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by
@@ -101,7 +101,7 @@ DllMain(
     DWORD reason,
     LPVOID reserved)
 {
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && (!defined(__MINGW64_VERSION_MAJOR) || (__MINGW64_VERSION_MAJOR < 3))
     TCLEXCEPTION_REGISTRATION registration;
 #endif
 
