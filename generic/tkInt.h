@@ -33,7 +33,9 @@
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#if defined(_MSC_VER) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ < 202311L))
 #include <stdbool.h>
+#endif
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
