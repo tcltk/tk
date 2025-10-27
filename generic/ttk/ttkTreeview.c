@@ -88,6 +88,9 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-hidden", "hidden", "Hidden",
 	"0", TCL_INDEX_NONE, offsetof(TreeItem,hidden),
 	0,0,0 },
+    {TK_OPTION_STRING, "-id", "id", "ID",
+	NULL, offsetof(TreeItem,idObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,READONLY_OPTION },
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(TreeItem,imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_IMAGE_CHANGED },
@@ -740,7 +743,7 @@ static Tcl_Size FindIndex(
 	    index = TreeviewCountRecursive(item, 1, 0);
 	}
 
-    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK) {
+    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK && index >= 0) {
 
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -2649,11 +2652,11 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
  * +++ Utilities for widget commands
  */
 
-/* + AncestryCheck --
+/* + NotAncestryCheck --
  *	Verify that specified item is not an ancestor of the specified parent;
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
-static int AncestryCheck(
+static int NotAncestryCheck(
     Tcl_Interp *interp, Treeview *tv, TreeItem *item, TreeItem *parent) {
     TreeItem *p = parent;
     while (p) {
@@ -2667,6 +2670,25 @@ static int AncestryCheck(
 	p = p->parent;
     }
     return 1;
+}
+
+/* + AncestryCheck --
+ *	Verify that specified item is an ancestor of the specified parent;
+ *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
+ */
+static int AncestryCheck(
+    Tcl_Interp *interp, Treeview *tv, TreeItem *item, TreeItem *parent) {
+    TreeItem *p = item;
+    while (p) {
+	if (p == parent) {
+	    return 1;
+	}
+	p = p->parent;
+    }
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Item %s is not a descendant of %s",
+	    ItemName(tv, item), ItemName(tv, parent)));
+    Tcl_SetErrorCode(interp, "TTK", "TREE", "ANCESTRY", NULL);
+    return 0;
 }
 
 /* + DeleteItems --
@@ -2727,7 +2749,7 @@ static int TreeviewChildrenCommand(
 	/* Sanity-check:
 	 */
 	for (i = 0; newChildren[i]; ++i) {
-	    if (!AncestryCheck(interp, tv, newChildren[i], item)) {
+	    if (!NotAncestryCheck(interp, tv, newChildren[i], item)) {
 		ckfree(newChildren);
 		return TCL_ERROR;
 	    }
@@ -4096,7 +4118,7 @@ static int TreeviewMoveCommand(
 
     /* Check ancestry:
      */
-    if (!AncestryCheck(interp, tv, item, parent)) {
+    if (!NotAncestryCheck(interp, tv, item, parent)) {
 	return TCL_ERROR;
     }
 
