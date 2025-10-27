@@ -951,110 +951,171 @@ static HRESULT TkAccRole(
 /*
  * Helper function to get selected state on check/radiobuttons.
  */
-static void ComputeAndCacheCheckedState(
-					Tk_Window win,
-					Tcl_Interp *interp)
+ 
+static void
+ComputeAndCacheCheckedState(
+    Tk_Window win,
+    Tcl_Interp *interp)
 {
     if (!win || !interp) {
-	return;
+        return;
     }
 
+    /* Look up accessibility attributes table for this window. */
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
     if (!hPtr) {
-	return;
+        return;
     }
     Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 
+    /* Find role */
     Tcl_HashEntry *rolePtr = Tcl_FindHashEntry(AccessibleAttributes, "role");
     const char *tkrole = NULL;
     if (rolePtr) {
-	tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
+        tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
     }
-    if (!tkrole || (strcmp(tkrole, "Checkbutton") != 0 && 
-                    strcmp(tkrole, "Radiobutton") != 0 &&
-                    strcmp(tkrole, "Toggleswitch") != 0)) {
-	return;
+    if (!tkrole) {
+        return;
     }
 
+    /* Only handle check-like widgets */
+    if (strcmp(tkrole, "Checkbutton") != 0 &&
+        strcmp(tkrole, "Radiobutton") != 0 &&
+        strcmp(tkrole, "Toggleswitch") != 0) {
+        return;
+    }
+
+    int isChecked = 0;
     const char *path = Tk_PathName(win);
+
+    /* Special-case: ttk::toggleswitch — ALWAYS use instate selected. */
+    if (strcmp(tkrole, "Toggleswitch") == 0) {
+        Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
+        if (!stateCmd) return;
+        Tcl_IncrRefCount(stateCmd);
+        if (Tcl_EvalObjEx(interp, stateCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+            const char *result = Tcl_GetStringResult(interp);
+            if (result && strcmp(result, "1") == 0) {
+                isChecked = 1;
+            }
+        }
+        Tcl_DecrRefCount(stateCmd);
+
+        /* Proceed to cache/notify below. */
+        goto cache_and_notify;
+    }
+
+    /* 
+	 * For Checkbutton and Radiobutton: prefer -variable based detection if present.
+     * Note: ttk widgets sometimes auto-create variables — but toggleswitch was handled above.
+     */
+
     Tcl_Obj *varCmd = Tcl_ObjPrintf("%s cget -variable", path);
+    if (!varCmd) return;
     Tcl_IncrRefCount(varCmd);
+
     const char *varName = NULL;
+    int haveVarName = 0;
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
-	varName = Tcl_GetStringResult(interp);
+        varName = Tcl_GetStringResult(interp);
+        if (varName && *varName) {
+            haveVarName = 1;
+        }
     } else {
-	return;
+        /* evaluation failed; clean up and return */
+        Tcl_DecrRefCount(varCmd);
+        return;
     }
     Tcl_DecrRefCount(varCmd);
 
-    int isChecked = 0;
-    if (varName && *varName) {
-	const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
-	if (!varVal) {
-	    return;
-	} else {
-	    const char *onValue = NULL;
-	    Tcl_Obj *valueCmd = NULL;
-	    if (strcmp(tkrole, "Checkbutton") == 0 || strcmp(tkrole, "Toggleswitch") == 0) {
-		valueCmd = Tcl_ObjPrintf("%s cget -onvalue", path);
-	    } else if (strcmp(tkrole, "Radiobutton") == 0) {
-		valueCmd = Tcl_ObjPrintf("%s cget -value", path);
-	    }
-	    if (valueCmd) {
-		Tcl_IncrRefCount(valueCmd);
-		if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
-		    onValue = Tcl_GetStringResult(interp);
-		} else {
-		    return;
-		}
-		Tcl_DecrRefCount(valueCmd);
-	    }
-	    if (varVal && onValue && strcmp(varVal, onValue) == 0) {
-		isChecked = 1;
-	    }
-	}
+    if (haveVarName) {
+        /* Grab the variable value (global). */
+        const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
+        if (varVal) {
+            /* Determine which cget to use: -onvalue for checkbutton, -value for radiobutton. */
+            Tcl_Obj *valueCmd = NULL;
+            if (strcmp(tkrole, "Checkbutton") == 0) {
+                valueCmd = Tcl_ObjPrintf("%s cget -onvalue", path);
+            } else if (strcmp(tkrole, "Radiobutton") == 0) {
+                valueCmd = Tcl_ObjPrintf("%s cget -value", path);
+            }
+
+            if (valueCmd) {
+                Tcl_IncrRefCount(valueCmd);
+                const char *onValue = NULL;
+                if (Tcl_EvalObjEx(interp, valueCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+                    onValue = Tcl_GetStringResult(interp);
+                }
+                Tcl_DecrRefCount(valueCmd);
+
+                if (onValue && varVal && strcmp(varVal, onValue) == 0) {
+                    isChecked = 1;
+                }
+            }
+        } else {
+            /* variable exists but has no value — fall back to instate selected. */
+            Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
+            if (!stateCmd) return;
+            Tcl_IncrRefCount(stateCmd);
+            if (Tcl_EvalObjEx(interp, stateCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+                const char *result = Tcl_GetStringResult(interp);
+                if (result && strcmp(result, "1") == 0) {
+                    isChecked = 1;
+                }
+            }
+            Tcl_DecrRefCount(stateCmd);
+        }
     } else {
-	/* Fallback: Check widget's internal state for ttk widgets. */
-	Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
-	Tcl_IncrRefCount(stateCmd);
-	if (Tcl_EvalObjEx(interp, stateCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
-	    const char *result = Tcl_GetStringResult(interp);
-	    if (result && strcmp(result, "1") == 0) {
-		isChecked = 1;
-	    }
-	}
-	Tcl_DecrRefCount(stateCmd);
+        /* No variable: fall back to widget state (works for ttk and classic when variable not used). */
+        Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
+        if (!stateCmd) return;
+        Tcl_IncrRefCount(stateCmd);
+        if (Tcl_EvalObjEx(interp, stateCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+            const char *result = Tcl_GetStringResult(interp);
+            if (result && strcmp(result, "1") == 0) {
+                isChecked = 1;
+            }
+        }
+        Tcl_DecrRefCount(stateCmd);
     }
 
-    /* Cache the checked state */
+cache_and_notify:
+    /* Cache the checked state as a Tcl_Obj string "0" or "1" in AccessibleAttributes->"value". */
     TkGlobalLock();
     Tcl_HashEntry *valuePtr;
     int newEntry;
     valuePtr = Tcl_CreateHashEntry(AccessibleAttributes, "value", &newEntry);
+
     char buf[2];
     snprintf(buf, sizeof(buf), "%d", isChecked);
     Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
     Tcl_IncrRefCount(valObj);
+
+    if (!newEntry) {
+        /* Replace existing value: free previous Tcl_Obj if present. */
+        Tcl_Obj *old = (Tcl_Obj *)Tcl_GetHashValue(valuePtr);
+        if (old) {
+            Tcl_DecrRefCount(old);
+        }
+    }
     Tcl_SetHashValue(valuePtr, valObj);
     TkGlobalUnlock();
 
-    /* Notify MSAA with both events. */
-    Tk_Window toplevel = GetToplevelOfWidget(win);
-    if (toplevel) {
-	Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
-	LONG childId = GetChildIdForTkWindow(win, childIdTable);
-	if (childId > 0) {
-	    HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
-	    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
-	    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-	} else {
-	    return;
-	}
-    } else {
-	return;
+    /* Notify MSAA about both value and state changes. */
+    {
+        Tk_Window toplevel = GetToplevelOfWidget(win);
+        if (!toplevel) {
+            return;
+        }
+        Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+        LONG childId = GetChildIdForTkWindow(win, childIdTable);
+        if (childId > 0) {
+            HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+            NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+            NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+        }
     }
 }
-
 
 /* Function to map accessible state to MSAA. */
 static HRESULT TkAccState(

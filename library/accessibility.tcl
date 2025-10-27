@@ -1028,6 +1028,15 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    }
 	}
+	
+	if {[tk windowingsystem] eq "win32"} {
+	    set result [::tk::accessible::check_screenreader]
+	    if {$result > 0} {
+		interp alias {} ::ttk::radiobutton {} ::tk::radiobutton
+		interp alias {} ::ttk::checkbutton {} ::tk::checkbutton
+		interp alias {} ::ttk::spinbox {} ::tk::spinbox
+	    }
+	}
 
 	# Capture value changes from spinbox widgets.
 	bind Spinbox <Up> {+::tk::accessible::_updatescale %W Up}
