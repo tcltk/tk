@@ -26,7 +26,6 @@ to the userbase.
  - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
  - [tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP](https://core.tcl-lang.org/tk/tktview/95da0f)
  - [image svg: support paint order and fix possible nan race condition](https://core.tcl-lang.org/tk/tktview/b43dbc)
- - [MS-Win canvas arcs with small extent are drawn 360 dregrees](https://core.tcl-lang.org/tk/info/6051a9fc)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
