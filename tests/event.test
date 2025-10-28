@@ -15,15 +15,18 @@
 # TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2; # needed for "-singleproc 0"
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-# Load the main script "main.tcl", which takes care of:
+# Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window
-# - loading and configuration of the tcltest test harness
-# - loading of the testutils mechanism together with its utility procs
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
-tcltest::loadTestedCommands
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 #
 # LOCAL UTILITY PROCS
@@ -1057,7 +1060,9 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
-test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
+test event-9.15 {pointer window is a toplevel, destination is screen root.
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
+} -constraints notMacosSequoiaOrOlder -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
 #    destroy .one
     toplevel .two
@@ -1072,6 +1077,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
+    update; # Ensure that crossing events get processed.
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1191,7 +1197,9 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
-test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
+test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
+} -constraints notMacosSequoiaOrOlder -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
@@ -1205,7 +1213,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    update idletasks; #finish destroying .two
+    update; # Ensure that crossing events get processed.
     set result
 } -cleanup {
     bind all <Leave> {}

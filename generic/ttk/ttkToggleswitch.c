@@ -174,7 +174,7 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	lastDot = strrchr(styleName, '.');
 	nameTail = lastDot ? lastDot + 1 : styleName;
 
-	if (!strcmp(nameTail, "Toggleswitch1") 
+	if (!strcmp(nameTail, "Toggleswitch1")
 		|| !strcmp(nameTail, "Toggleswitch2")
 		|| !strcmp(nameTail, "Toggleswitch3")) {
 	    size_t length = strlen(styleName);

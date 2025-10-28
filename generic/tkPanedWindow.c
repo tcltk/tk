@@ -2490,7 +2490,7 @@ SetSticky(
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 
-    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	/*

@@ -272,14 +272,18 @@ else
 	rm -rf Frameworks/Tcl.framework/{,/Versions/${TCL_VERSION}}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
 	rm -rf Frameworks/Tk.framework/{,/Versions/${VERSION}}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
 	fix_install_id ( ) { \
-	    chmod -RH a+w "$$1"; \
-	    install_name_tool -id $$(otool -L "$$1" | awk "/$$2\.framework.*[^:]\$$/ {sub(\"^.*/Frameworks\",\"@executable_path/../Frameworks\",\$$1); print \$$1}") "$$1"; \
-	    chmod -RH a-w "$$1"; \
+		chmod -RH a+w "$$1"; \
+		OLD=$$(otool -L "$$1" | awk "/$$2\\.framework.*[^:]\$$/ {print \$$1}"); \
+		NEW=$$(echo "$$OLD" | sed "s|^.*/Frameworks|@executable_path/../Frameworks|"); \
+		install_name_tool -id "$$NEW" "$$1"; \
+		chmod -RH a-w "$$1"; \
 	} && \
 	fix_install_name ( ) { \
-	    chmod -RH a+w "$$1"; \
-	    install_name_tool -change $$(otool -L "$$1" | awk "/$$2\.framework.*[^:]\$$/ {print \$$1; sub(\"^.*/Frameworks\",\"@executable_path/../Frameworks\",\$$1); print \$$1}") "$$1"; \
-	    chmod -RH a-w "$$1"; \
+		chmod -RH a+w "$$1"; \
+		OLD=$$(otool -L "$$1" | awk "/$$2\\.framework.*[^:]\$$/ {print \$$1}"); \
+		NEW=$$(echo "$$OLD" | sed "s|^.*/Frameworks|@executable_path/../Frameworks|"); \
+		install_name_tool -change "$$OLD" "$$NEW" "$$1"; \
+		chmod -RH a-w "$$1"; \
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk

@@ -1867,7 +1867,7 @@ typedef void (*TkTextWatchGetIndexProc)(TkText *textPtr, TkTextIndex *indexPtr, 
  * shouldn't be used anywhere else in Tk (or by Tk clients):
  */
 
-MODULE_SCOPE int	TkObjIsEmpty(Tcl_Obj *objPtr);
+MODULE_SCOPE bool	TkTextObjIsEmpty(Tcl_Obj *objPtr);
 inline TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
 inline int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
 MODULE_SCOPE void	TkBTreeAdjustPixelHeight(const TkText *textPtr,

@@ -61,8 +61,8 @@ static void DrawCorner(
     Drawable d,
     Tk_3DBorder border,			/* get most GCs from here... */
     GC borderGC,			/* "window border" color GC */
-    int x,int y, int width,int height,	/* where to draw */
-    int corner,				/* 0 => top left; 1 => bottom right */
+    int x, int y, int width, int height,	/* where to draw */
+    bool corner,				/* false => top left; true => bottom right */
     enum BorderColor color)
 {
     XPoint points[3];
@@ -70,8 +70,14 @@ static void DrawCorner(
 
     --width; --height;
     points[0].x = x;			points[0].y = y+height;
-    points[1].x = x+width*corner;	points[1].y = y+height*corner;
+    points[1].x = corner ? x + width : x;	points[1].y = corner ? y + height : y;
     points[2].x = x+width;		points[2].y = y;
+
+    if (corner) {
+	points[2].y -= WIN32_XDRAWLINE_HACK;
+    } else {
+	points[2].x += WIN32_XDRAWLINE_HACK;
+    }
 
     if (color == BRDR) {
 	gc = borderGC;
@@ -91,19 +97,19 @@ static void DrawBorder(
     switch (borderWidth) {
 	case 2: /* "thick" border */
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 0,shadowColors[relief][0]);
+		b.x, b.y, b.width, b.height, false, shadowColors[relief][0]);
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x+1, b.y+1, b.width-2, b.height-2, 0,shadowColors[relief][1]);
+		b.x+1, b.y+1, b.width-2, b.height-2, false, shadowColors[relief][1]);
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x+1, b.y+1, b.width-2, b.height-2, 1,shadowColors[relief][2]);
+		b.x+1, b.y+1, b.width-2, b.height-2, true, shadowColors[relief][2]);
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 1,shadowColors[relief][3]);
+		b.x, b.y, b.width, b.height, true, shadowColors[relief][3]);
 	    break;
 	case 1: /* "thin" border */
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 0, thinShadowColors[relief][0]);
+		b.x, b.y, b.width, b.height, false, thinShadowColors[relief][0]);
 	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 1, thinShadowColors[relief][1]);
+		b.x, b.y, b.width, b.height, true, thinShadowColors[relief][1]);
 	    break;
 	case 0:	/* no border -- do nothing */
 	    break;
@@ -123,13 +129,13 @@ static void DrawFieldBorder(
 {
     GC borderGC = Tk_GCForColor(borderColor, d);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x, b.y, b.width, b.height, 0, DARK);
+	b.x, b.y, b.width, b.height, false, DARK);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x+1, b.y+1, b.width-2, b.height-2, 0, BRDR);
+	b.x+1, b.y+1, b.width-2, b.height-2, false, BRDR);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x+1, b.y+1, b.width-2, b.height-2, 1, LITE);
+	b.x+1, b.y+1, b.width-2, b.height-2, true, LITE);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x, b.y, b.width, b.height, 1, FLAT);
+	b.x, b.y, b.width, b.height, true, FLAT);
     return;
 }
 

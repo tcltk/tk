@@ -9,15 +9,18 @@
 # TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2; # needed for "-singleproc 0"
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-# Load the main script "main.tcl", which takes care of:
+# Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window
-# - loading and configuration of the tcltest test harness
-# - loading of the testutils mechanism together with its utility procs
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
-tcltest::loadTestedCommands
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import scroll text
@@ -3485,8 +3488,8 @@ test textDisp-20.5 {FindDLine} -setup {
 } -cleanup {
     .t config -wrap word
 } -result [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-                [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-                [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
+		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 
 test textDisp-21.1 {TkTextPixelIndex} {
     .t yview 48.0
@@ -3679,11 +3682,11 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} -body {
 } -cleanup {
     .t tag delete spacing
 } -result [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
-                [list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
-                [list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
-                [list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
-                [list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
-                [list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
+		[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
+		[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
+		[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
+		[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
+		[list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
 test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3829,8 +3832,8 @@ test textDisp-23.7 {TkTextDLineInfo, centering} -body {
 } -cleanup {
     .t tag delete x y
 } -result [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
-                [list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
-                [list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
+	[list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
+	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
 
 test textDisp-24.1 {TkTextCharLayoutProc} {
     .t configure -wrap char
