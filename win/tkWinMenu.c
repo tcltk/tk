@@ -576,7 +576,8 @@ ReconfigureWindowsMenu(
     LPCWSTR lpNewItem;
     UINT flags;
     UINT itemID;
-    int i, count, systemMenu = 0, base;
+    Tcl_Size i, count;
+	int systemMenu = 0, base;
     Tcl_DString translatedText;
 
     if (NULL == winMenuHdl) {
@@ -652,7 +653,7 @@ ReconfigureWindowsMenu(
 	    flags |= MF_MENUBREAK;
 	}
 
-	itemID = PTR2INT(mePtr->platformEntryData);
+	itemID = (UINT)PTR2INT(mePtr->platformEntryData);
 	if ((mePtr->type == CASCADE_ENTRY)
 		&& (mePtr->childMenuRefPtr != NULL)
 		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
@@ -672,7 +673,7 @@ ReconfigureWindowsMenu(
 		     * If the MF_POPUP flag is set, then the id is interpreted
 		     * as the handle of a submenu.
 		     */
-		    itemID = PTR2INT(childMenuHdl);
+		    itemID = (UINT)PTR2INT(childMenuHdl);
 		}
 	    }
 	    if ((menuPtr->menuType == MENUBAR)
@@ -2061,9 +2062,9 @@ DrawMenuSeparator(
     XPoint points[2];
     Tk_3DBorder border;
 
-    points[0].x = x;
-    points[0].y = y + height / 2;
-    points[1].x = x + width - 1;
+    points[0].x = (short)x;
+    points[0].y = (short)(y + height / 2);
+    points[1].x = (short)(x + width - 1);
     points[1].y = points[0].y;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
     Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 2, 1,
@@ -2100,7 +2101,7 @@ DrawMenuUnderline(
     int height)			/* Height of entry */
 {
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
-	int len;
+	Tcl_Size len;
 
 	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
@@ -2566,21 +2567,21 @@ DrawTearoffEntry(
 	return;
     }
 
-    points[0].x = x;
-    points[0].y = y + height/2;
+    points[0].x = (short)x;
+    points[0].y = (short)(y + height/2);
     points[1].y = points[0].y;
     segmentWidth = 6;
     maxX = x + width - 1;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
     while (points[0].x < maxX) {
-	points[1].x = points[0].x + segmentWidth;
+	points[1].x = points[0].x + (short)segmentWidth;
 	if (points[1].x > maxX) {
-	    points[1].x = maxX;
+	    points[1].x = (short)maxX;
 	}
 	Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 2, 1,
 		TK_RELIEF_RAISED);
-	points[0].x += 2*segmentWidth;
+	points[0].x += (short)(2*segmentWidth);
     }
 }
 

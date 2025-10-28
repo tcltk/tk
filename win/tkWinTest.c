@@ -129,7 +129,7 @@ AppendSystemError(
     Tcl_Interp *interp,		/* Current interpreter. */
     DWORD error)		/* Result code from error. */
 {
-    int length;
+    Tcl_Size length;
     WCHAR *wMsgPtr, **wMsgPtrPtr = &wMsgPtr;
     const char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
@@ -154,8 +154,8 @@ AppendSystemError(
 		0, NULL);
 	if (length > 0) {
 	    wMsgPtr = (WCHAR *) LocalAlloc(LPTR, (length + 1) * sizeof(WCHAR));
-	    MultiByteToWideChar(CP_ACP, 0, msgPtr, length + 1, wMsgPtr,
-		    length + 1);
+	    MultiByteToWideChar(CP_ACP, 0, msgPtr, (int)length + 1, wMsgPtr,
+		    (int)length + 1);
 	    LocalFree(msgPtr);
 	}
     }

@@ -80,6 +80,6 @@
  *--------------------------------------------------------------
  */
 
-#include "tkPlatDecls.h"
+#include "tkPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKWIN */

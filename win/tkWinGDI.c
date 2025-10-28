@@ -230,8 +230,8 @@ static int GdiArc(
 	objc -= 2;
 	objv += 2;
     }
-    xr0 = xr1 = (x1 + x2) / 2;
-    yr0 = yr1 = (y1 + y2) / 2;
+    xr0 = xr1 = (int)((x1 + x2) / 2.0);
+    yr0 = yr1 = (int)((y1 + y2) / 2.0);
 
     /*
      * The angle used by the arc must be "warped" by the eccentricity of the
@@ -271,7 +271,7 @@ static int GdiArc(
 		0, 0, 0, 0, linecolor, hDC, (HGDIOBJ *)&hPen);
     }
 
-    (*drawfunc)(hDC, x1, y1, x2, y2, xr0, yr0, xr1, yr1);
+    (*drawfunc)(hDC, (int)x1, (int)y1, (int)x2, (int)y2, xr0, yr0, xr1, yr1);
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -384,7 +384,8 @@ static int GdiPhoto(
     int oldmode;		/* For saving the old stretch mode. */
     POINT pt;			/* For saving the brush org. */
     char *pbuf = NULL;
-    int i, j, k;
+    int i, k;
+    Tcl_Size j;
     int retval = TCL_OK;
 
     /*
@@ -683,10 +684,10 @@ static int GdiLine(
     ) {
 	return TCL_ERROR;
     }
-    polypoints[0].x = floor(p1x+0.5);
-    polypoints[0].y = floor(p1y+0.5);
-    polypoints[1].x = floor(p2x+0.5);
-    polypoints[1].y = floor(p2y+0.5);
+    polypoints[0].x = (LONG)floor(p1x + 0.5);
+    polypoints[0].y = (LONG)floor(p1y + 0.5);
+    polypoints[1].x = (LONG)floor(p2x + 0.5);
+    polypoints[1].y = (LONG)floor(p2y + 0.5);
     objc -= 6;
     objv += 6;
     npoly = 2;
@@ -1021,7 +1022,7 @@ static int GdiOval(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to right
      * and lower bounds to get appropriate behavior.
      */
-    Ellipse(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
+    Ellipse(hDC, (int)floor(x1+0.5), (int)floor(y1+0.5), (int)floor(x2+1.5), (int)floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1098,10 +1099,10 @@ static int GdiPolygon(
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    polypoints[0].x = floor(p1x + 0.5);
-    polypoints[0].y = floor(p1y + 0.5);
-    polypoints[1].x = floor(p2x + 0.5);
-    polypoints[1].y = floor(p2y + 0.5);
+    polypoints[0].x = (LONG)floor(p1x + 0.5);
+    polypoints[0].y = (LONG)floor(p1y + 0.5);
+    polypoints[1].x = (LONG)floor(p2x + 0.5);
+    polypoints[1].y = (LONG)floor(p2y + 0.5);
     objc -= 6;
     objv += 6;
     npoly = 2;
@@ -1331,7 +1332,7 @@ static int GdiRectangle(
      * earlier documentation, canvas rectangle does not. Thus, add 1 to
      * right and lower bounds to get appropriate behavior.
      */
-    Rectangle(hDC, floor(x1+0.5), floor(y1+0.5), floor(x2+1.5), floor(y2+1.5));
+    Rectangle(hDC, (int)floor(x1+0.5), (int)floor(y1+0.5), (int)floor(x2+1.5), (int)floor(y2+1.5));
 
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
@@ -1446,7 +1447,7 @@ static int GdiCharWidths(
 
 	for (i = 0; i < 255; i++) {
 	    /* TODO: use a bytearray for the index name so NUL works */
-	    ind[0] = i;
+	    ind[0] = (char)i;
 	    Tcl_SetVar2Ex(interp, aryvarname, ind, Tcl_NewIntObj(widths[i]),
 		    TCL_GLOBAL_ONLY);
 	}
@@ -1523,8 +1524,8 @@ int GdiText(
     objc -= 4;
     objv += 4;
 
-    sizerect.left = sizerect.right = floor(x+0.5);
-    sizerect.top = sizerect.bottom = floor(y+0.5);
+    sizerect.left = sizerect.right = (LONG)floor(x+0.5);
+    sizerect.top = sizerect.bottom = (LONG)floor(y+0.5);
 
     while (objc > 0) {
 	if (strcmp(Tcl_GetString(objv[0]), "-anchor") == 0) {
@@ -1609,7 +1610,7 @@ int GdiText(
     Tcl_DStringInit(&tds);
     /* Just for fun, let's try translating string to Unicode. */
     wstring = Tcl_UtfToWCharDString(string, TCL_INDEX_NONE, &tds);
-    DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
+    DrawTextW(hDC, wstring, (int)(Tcl_DStringLength(&tds)/2), &sizerect,
 	    format_flags | DT_CALCRECT);
 
     /* Adjust the rectangle according to the anchor. */
@@ -1646,10 +1647,10 @@ int GdiText(
 	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
     }
-    sizerect.right  -= x;
-    sizerect.left   -= x;
-    sizerect.top    -= y;
-    sizerect.bottom -= y;
+    sizerect.right  -= (LONG)x;
+    sizerect.left   -= (LONG)x;
+    sizerect.top    -= (LONG)y;
+    sizerect.bottom -= (LONG)y;
 
     /* Get the color right. */
     if (dotextcolor) {
@@ -1664,7 +1665,7 @@ int GdiText(
 
     /* Print the text. */
     retval = DrawTextW(hDC, wstring,
-	    Tcl_DStringLength(&tds)/2, &sizerect, format_flags);
+	    (int)(Tcl_DStringLength(&tds)/2), &sizerect, format_flags);
     Tcl_DStringFree(&tds);
 
     /* Get the color set back. */
@@ -1846,7 +1847,7 @@ static int GdiMap(
     SIZE vextent;	/* Viewport extent. */
     POINT worigin;	/* Device origin. */
     POINT vorigin;	/* Viewport origin. */
-    int argno;
+    Tcl_Size argno;
 
     /* Keep track of what parts of the function need to be executed. */
     int need_usage   = 0;
@@ -2686,7 +2687,7 @@ static int GdiMakePen(
      * after first failure) may suffice for working around this. The
      * ExtCreatePen is not supported at all under Win32.
      */
-    int width = floor(dwidth + 0.5);
+    int width = (int)floor(dwidth + 0.5);
     HPEN hPen;
     LOGBRUSH lBrush;
     DWORD pStyle = PS_SOLID;           /* -dash should override*/
@@ -3275,7 +3276,7 @@ static HANDLE BitmapToDIB(
 
     /* Calculate size of memory block required to store BITMAPINFO. */
 
-    dwLen = bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD);
+    dwLen = (DWORD)(bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD));
 
     /* Get a DC. */
 
@@ -3329,7 +3330,7 @@ static HANDLE BitmapToDIB(
 
     /* Realloc the buffer big enough to hold all the bits. */
 
-    dwLen = bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD) + bi.biSizeImage;
+    dwLen = (DWORD)(bi.biSize + (DIBNumColors(&bi) * sizeof(RGBQUAD)) + bi.biSizeImage);
 
     if ((h = GlobalReAlloc(hDIB, dwLen, 0)) != 0) {
 	hDIB = h;
@@ -3444,7 +3445,7 @@ static HPALETTE GetSystemPalette(void)
     static HPALETTE hPal = NULL;   /* Handle to a palette. */
     HANDLE hLogPal;         /* Handle to a logical palette. */
     LPLOGPALETTE lpLogPal;  /* Pointer to a logical palette. */
-    int nColors;            /* Number of colors. */
+    WORD nColors;           /* Number of colors. */
 
     /* Find out how many palette entries we want.. */
 
@@ -3453,7 +3454,7 @@ static HPALETTE GetSystemPalette(void)
 	return NULL;
     }
 
-    nColors = PalEntriesOnDevice(hDC);   /* Number of palette entries. */
+    nColors = (WORD)PalEntriesOnDevice(hDC);   /* Number of palette entries. */
 
     /* Allocate room for the palette and lock it.. */
 
@@ -3634,8 +3635,8 @@ static int PrintSelectPrinter(
 	    dpi_y = localDevmode->dmYResolution;
 	    dpi_x = localDevmode->dmPrintQuality;
 	    /* Convert height and width to logical points. */
-	    paper_height = (int) localDevmode->dmPaperLength / 0.254;
-	    paper_width = (int) localDevmode->dmPaperWidth / 0.254;
+	    paper_height = (int)(localDevmode->dmPaperLength / 0.254);
+	    paper_width = (int)(localDevmode->dmPaperWidth / 0.254);
 	    copies = pd.nCopies;
 	    /* Set device context here for all GDI printing operations. */
 	    printDC = CreateDCW(L"WINSPOOL", printerName, NULL, localDevmode);

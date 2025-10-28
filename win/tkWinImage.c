@@ -170,7 +170,7 @@ PutPixel(
 	 * Pixel is bit in MSBFirst order.
 	 */
 
-	int mask = (0x80 >> (x%8));
+	unsigned char mask = (0x80 >> (x%8));
 
 	if (pixel) {
 	    (*destPtr) |= mask;
@@ -295,7 +295,7 @@ XGetImageZPixmap(
     HBITMAP hbmp, hbmpPrev;
     BITMAPINFO *bmInfo = NULL;
     HPALETTE hPal, hPalPrev1 = 0, hPalPrev2 = 0;
-    int size;
+    size_t size;
     unsigned int n;
     unsigned int depth;
     unsigned char *data;
@@ -357,7 +357,7 @@ XGetImageZPixmap(
     bmInfo->bmiHeader.biWidth		= width;
     bmInfo->bmiHeader.biHeight		= -(int) height;
     bmInfo->bmiHeader.biPlanes		= 1;
-    bmInfo->bmiHeader.biBitCount	= depth;
+    bmInfo->bmiHeader.biBitCount	= (WORD)depth;
     bmInfo->bmiHeader.biCompression	= BI_RGB;
     bmInfo->bmiHeader.biSizeImage	= 0;
     bmInfo->bmiHeader.biXPelsPerMeter	= 0;
