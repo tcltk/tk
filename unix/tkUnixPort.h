@@ -97,7 +97,7 @@
 #   define NBBY 8
 #endif
 
-#include "tkIntXlibDecls.h"
+#include "tkIntXlibDecls.h"  /* IWYU pragma: export */
 #define UINT unsigned int
 #define HWND void *
 #define HDC void *

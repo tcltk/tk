@@ -6799,7 +6799,7 @@ SetLineStartEnd(
 	internalPtr = NULL;
     }
 
-    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	int line;
