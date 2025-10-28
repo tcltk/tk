@@ -184,6 +184,12 @@ include child items.
 Returns a list of all of the items between \fIfrom\fR and \fIto\fR, inclusive.
 With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
 include child items.
+.\" METHOD: cellfocus
+.TP
+\fIpathname \fBcellfocus\fR ?\fIcell\fR?
+.
+Sets the focus to cell \fIcell\fR. Without \fIitem\fR, returns the current
+focus cell id or \fB{}\fR if there is none.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
@@ -377,12 +383,10 @@ Set all of the items in \fIitemList\fR to open state. Same as
 will also open all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: focus
 .TP
-\fIpathname \fBfocus \fR?\fIitem\fR|\fIcell\fR?
+\fIpathname \fBfocus \fR?\fIitem\fR?
 .
-If \fIitem\fR is specified, sets the focus item to \fIitem\fR. 
-If \fIcell\fR is specified, sets the focus to cell \fIcell\fR.
-Use \fB{}\fR to clear focus item. Without \fIitem\fR, returns the current
-focus item id, cell id, or \fB{}\fR if there is none.
+Sets the focus item to \fIitem\fR. Use \fB{}\fR to clear focus item. Without
+\fIitem\fR, returns the current focus item id or \fB{}\fR if there is none.
 .\" METHOD: haschildren
 .TP
 \fIpathname \fBhaschildren \fIitem\fR

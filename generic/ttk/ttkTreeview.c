@@ -2161,7 +2161,7 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     Ttk_State state = tv->core.state | item->state;
     if (!item->children)
 	state |= TTK_STATE_LEAF;
-    if (item != tv->tree.focus)
+    if (item != tv->tree.focus || tv->tree.focusCol != NULL)
 	state &= ~TTK_STATE_FOCUS;
     return state;
 }
@@ -4291,17 +4291,61 @@ static int TreeviewDropCommand(
  * +++ Widget commands -- focus and selection
  */
 
-/* + $tree focus ?item|cell?
+/* + $tree focus ?item?
  */
 static int TreeviewFocusCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
 
+    if (objc < 2 || objc > 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?item?");
+	return TCL_ERROR;
+    }
+
     if (objc == 2) {
-	if (tv->tree.focus && !tv->tree.focusCol) {
+	if (tv->tree.focus && tv->tree.focusCol == NULL) {
 	    Tcl_SetObjResult(interp, (tv->tree.focus)->idObj);
-	} else if (tv->tree.focus && tv->tree.focusCol) {
-	    Tcl_Obj* listPtr;
+	}
+
+    } else {
+	TreeItem *newFocus;
+
+	if (!(newFocus = FindItem(interp, tv, objv[2]))) {
+	    return TCL_ERROR;
+	}
+
+	if (newFocus == tv->tree.root) {
+	    newFocus = NULL;
+	}
+
+	/* Abort if item or ancestor is detached */
+	if (newFocus && IsItemOrAncestorDetached(tv, newFocus)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
+	    return TCL_ERROR;
+	}
+
+	tv->tree.focus = newFocus;
+	tv->tree.focusCol = NULL;
+	TtkRedisplayWidget(&tv->core);
+    }
+    return TCL_OK;
+}
+
+/* + $tree cellfocus ?cell?
+ */
+static int TreeviewCellFocusCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv = (Treeview *)recordPtr;
+
+    if (objc < 2 || objc > 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?cell?");
+	return TCL_ERROR;
+    }
+
+    if (objc == 2) {
+	if (tv->tree.focus && tv->tree.focusCol) {
+	    Tcl_Obj *listPtr;
 
 	    if (!(listPtr = Tcl_NewListObj(0, NULL)) ||
 		Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.focus)->idObj) != TCL_OK ||
@@ -4310,56 +4354,31 @@ static int TreeviewFocusCommand(
 	    }
 	    Tcl_SetObjResult(interp, listPtr);
 	}
-	return TCL_OK;
 
-    } else if (objc == 3) {
-	Tcl_Size len;
+    } else {
+	TreeCell cell;
 
-	if (Tcl_ListObjLength(interp, objv[2], &len) != TCL_OK) {
+	if (GetCellFromObj(interp, tv, objv[2], 0, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
-	if (len < 2) {
-	    TreeItem *newFocus = FindItem(interp, tv, objv[2]);
-	    if (!newFocus) {
-		return TCL_ERROR;
-	    }
-	    /* Clear focus if set to {} */
-	    if (newFocus == tv->tree.root) {
-		newFocus = NULL;
-	    } else if (newFocus->parent == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
-		Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
-		return TCL_ERROR;
-	    }
-	    tv->tree.focus = newFocus;
-	    tv->tree.focusCol = NULL;
-
-	} else {
-	    TreeCell cell;
-
-	    if (GetCellFromObj(interp, tv, objv[2], 0, NULL, &cell) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-
-	    /* Clear focus if set to {} */
-	    if (cell.item == tv->tree.root) {
-		cell.item = NULL;
-		cell.column = NULL;
-	    } else if ((cell.item)->parent == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
-		Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
-		return TCL_ERROR;
-	    }
-	    tv->tree.focus = cell.item;
-	    tv->tree.focusCol = cell.column;
+	if (cell.item == tv->tree.root) {
+	    cell.item = NULL;
+	    cell.column = NULL;
 	}
+
+	/* Abort if item or ancestor is detached */
+	if (cell.item && IsItemOrAncestorDetached(tv, cell.item)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", NULL);
+	    return TCL_ERROR;
+	}
+
+	tv->tree.focus = cell.item;
+	tv->tree.focusCol = cell.column;
 	TtkRedisplayWidget(&tv->core);
-	return TCL_OK;
-    } else {
-	Tcl_WrongNumArgs(interp, 2, objv, "?item|cell?");
-	return TCL_ERROR;
     }
+    return TCL_OK;
 }
 
 /* + $tree selection ?add|remove|set|toggle $items|$from $to?
@@ -6323,6 +6342,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "bbox",		TreeviewBBoxCommand,0 },
     { "before",		TreeviewBeforeCommand,0 },
     { "between",	TreeviewBetweenCommand,0 },
+    { "cellfocus",	TreeviewCellFocusCommand,0 },
     { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
