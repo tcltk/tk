@@ -641,6 +641,8 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+XFT_LIBS
+XLIBSW
 RES
 RC_DEFINES
 RC_DEFINE
@@ -6052,6 +6054,10 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
 
+
+ac_config_files="$ac_config_files tk.pc:../unix/tk.pc.in"
+
+
 ac_config_files="$ac_config_files Makefile tkConfig.sh wish.exe.manifest"
 
 cat >confcache <<\_ACEOF
@@ -6755,6 +6761,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
+    "tk.pc") CONFIG_FILES="$CONFIG_FILES tk.pc:../unix/tk.pc.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "tkConfig.sh") CONFIG_FILES="$CONFIG_FILES tkConfig.sh" ;;
     "wish.exe.manifest") CONFIG_FILES="$CONFIG_FILES wish.exe.manifest" ;;
