@@ -26,6 +26,7 @@ to the userbase.
  - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
  - [tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP](https://core.tcl-lang.org/tk/tktview/95da0f)
  - [image svg: support paint order and fix possible nan race condition](https://core.tcl-lang.org/tk/tktview/b43dbc)
+ - [Missing border pixels in alt theme on Windows](https://core.tcl-lang.org/tk/tktview/8b725d)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
