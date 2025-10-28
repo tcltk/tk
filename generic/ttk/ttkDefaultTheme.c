@@ -73,6 +73,12 @@ static void DrawCorner(
     points[1].x = x+width*corner;	points[1].y = y+height*corner;
     points[2].x = x+width;		points[2].y = y;
 
+    if (corner == 0) {
+	points[2].x += WIN32_XDRAWLINE_HACK;
+    } else {
+	points[2].y -= WIN32_XDRAWLINE_HACK;
+    }
+
     if (color == BRDR)
 	gc = borderGC;
     else
