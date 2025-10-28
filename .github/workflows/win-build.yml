@@ -159,7 +159,7 @@ jobs:
           CFGOPT: --enable-64bit ${{ matrix.config }}
       - name: Build Tk
         run: |
-          make all tktest || {
+          make all install tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
