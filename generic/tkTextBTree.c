@@ -3507,7 +3507,7 @@ TkBTreeGetTags(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIsElided(
     const TkText *textPtr,	/* Overall information about text widget. */
     const TkTextIndex *indexPtr,/* The character in the text for which display
@@ -3523,7 +3523,8 @@ TkTextIsElided(
     Tcl_Size i;
     TkTextElideInfo *infoPtr;
     TkTextLine *linePtr;
-    int elide, index;
+    bool elide;
+    int index;
 
     if (elideInfo == NULL) {
 	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));
@@ -3653,7 +3654,7 @@ TkTextIsElided(
 	}
     }
 
-    elide = infoPtr->elide;
+    elide = (infoPtr->elide != 0);
 
     if (elideInfo == NULL) {
 	if (LOTSA_TAGS < infoPtr->numTags) {

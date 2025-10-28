@@ -1113,15 +1113,15 @@ DoObjConfig(
 #if defined(USE_TCL_STUBS)
 # undef Tcl_IsEmpty
 # define Tcl_IsEmpty \
-    ((int (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
+    ((bool (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
 #endif
 
-int
+bool
 TkObjIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
     if (objPtr == NULL) {
-	return 1;
+	return true;
     }
     if (objPtr->bytes == NULL) {
 #if defined(USE_TCL_STUBS)
