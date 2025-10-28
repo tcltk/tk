@@ -87,8 +87,8 @@ struct AtkRoleMap roleMap[] = {
 /* Variables for managing ATK objects. */
 static AtkObject *tk_root_accessible = NULL;
 static GList *toplevel_accessible_objects = NULL;
-static GHashTable *tk_to_atk_map = NULL; 
-extern Tcl_HashTable *TkAccessibilityObject; 
+static GHashTable *tk_to_atk_map = NULL;
+extern Tcl_HashTable *TkAccessibilityObject;
 static GMainContext *acc_context = NULL;
 static GHashTable *virtual_child_cache = NULL;
 
@@ -1108,8 +1108,8 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     }
 
     /* Handle toggle action for toggle buttons, checkboxes, and radio buttons */
-    if ((role == ATK_ROLE_TOGGLE_BUTTON || role == ATK_ROLE_CHECK_BOX || 
-         role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) && i == 0) {
+    if ((role == ATK_ROLE_TOGGLE_BUTTON || role == ATK_ROLE_CHECK_BOX ||
+	    role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) && i == 0) {
 	/* Toggle the state */
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
 	if (!hPtr) return FALSE;
@@ -1121,12 +1121,12 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	if (valueEntry) {
 	    Tcl_Obj *valObj = Tcl_GetHashValue(valueEntry);
 	    const char *currentVal = Tcl_GetString(valObj);
-	    
+
 	    /* Toggle between "0" and "1" */
 	    const char *newVal = (currentVal && strcmp(currentVal, "1") == 0) ? "0" : "1";
-	    
+
 	    Tcl_SetStringObj(valObj, newVal, -1);
-	    
+
 	    /* Notify value change */
 	    g_signal_emit_by_name(obj, "value-changed");
 	    g_object_notify(G_OBJECT(obj), "accessible-value");
@@ -1585,10 +1585,10 @@ static gboolean tk_text_set_caret_offset(AtkText *text, gint offset)
     int ok = (Tcl_EvalObjv(acc->interp, 4, args, TCL_EVAL_GLOBAL) == TCL_OK);
 
     for (int i=0;i<4;i++) Tcl_DecrRefCount(args[i]);
-    
+
     g_signal_emit_by_name(ATK_OBJECT(acc), "text-caret-moved", offset);
     return ok ? TRUE : FALSE;
-    
+
 }
 
 static gboolean tk_text_set_selection(AtkText *text, gint selection_num, gint start_offset, gint end_offset)
@@ -2379,9 +2379,9 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     /* Check if widget has focus using TkGetFocusWin. */
     if (role == ATK_ROLE_PUSH_BUTTON || role == ATK_ROLE_CHECK_BOX ||
 	role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON ||
-	role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT || 
-	role == ATK_ROLE_LIST_ITEM || role == ATK_ROLE_MENU_ITEM || 
-	role == ATK_ROLE_TREE_ITEM || role == ATK_ROLE_COMBO_BOX || 
+	role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT ||
+	role == ATK_ROLE_LIST_ITEM || role == ATK_ROLE_MENU_ITEM ||
+	role == ATK_ROLE_TREE_ITEM || role == ATK_ROLE_COMBO_BOX ||
 	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
 	TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
 	acc->is_focused = (focusPtr == (TkWindow*)tkwin) ? 1 : 0;
@@ -2689,7 +2689,7 @@ static int EmitSelectionChanged(
     }
 
     AtkRole role = tk_get_role(obj);
-    
+
     /* Handle text/entry widgets separately. */
     if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
 	/* Emit a proper "insert" text change and caret-move for typing. */
@@ -2705,7 +2705,7 @@ static int EmitSelectionChanged(
 	return TCL_OK;
     }
 
-    
+
     /* Call the robust selection-change notifier. */
     TkAtkNotifySelectionChanged(tkwin);
 

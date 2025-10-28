@@ -14,7 +14,7 @@
 if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq ""} {
     # Do not load if screen reader is not running or command is unavailable
     proc ::tk::accessible args {
-        return 0
+	return 0
     }
 } else {
     if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} {
@@ -128,7 +128,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    set txt [$w cget -text]
 	    ::tk::accessible::speak $txt
 	}
-	
+
 	# Check message text on dialog.
 	proc _getdialogtext {w} {
 	    if {[winfo exists $w.msg]} {
@@ -154,7 +154,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    set data [$w get]
 	    return $data
 	}
-	
+
 	# Create keypress/word bindings once for all supported widgets.
 	proc install_keycapture {w} {
 	    # Ensure we don’t double-bind
@@ -217,7 +217,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # Extract last word before the space.
 	    if {[regexp -nocase -- {\S+$} $before match]} {
 		::tk::accessible::set_acc_value $w $match
-	    	if {[tk windowingsystem] eq "x11"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $match
 		} else {
 		    ::tk::accessible::emit_selection_change $w
@@ -648,7 +648,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			      {} \
 			      ; ::tk::accessible::install_keycapture %W}
 
-	
+
 	bind TEntry <Map> {+::tk::accessible::_init \
 			       %W \
 			       Entry \
@@ -657,7 +657,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       [%W get] \
 			       [%W state]\
 			       {} \
-			       ; ::tk::accessible::install_keycapture %W} 
+			       ; ::tk::accessible::install_keycapture %W}
 
 
 	# Listbox bindings.
@@ -985,7 +985,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Listbox <<ListboxSelect>> {+::tk::accessible::_updateselection %W}
 	bind Treeview <<TreeviewSelect>> {+::tk::accessible::_updateselection %W}
 	bind TCombobox <<ComboboxSelected>> {+::tk::accessible::_updateselection %W}
-	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}	
+	bind Text <<Selection>> {+::tk::accessible::_updateselection %W}
 
 	if {[tk windowingsystem] eq "x11"} {
 	    # Automatically hook up new checkbuttons/radiobuttons
@@ -1028,7 +1028,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    }
 	}
-	
+
 	if {[tk windowingsystem] eq "win32"} {
 	    set result [::tk::accessible::check_screenreader]
 	    if {$result > 0} {
