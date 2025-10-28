@@ -8313,4 +8313,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-10-28 (bug) [816739]: Install man pages (oscarfv)
 
+2025-10-28 (bug) [8b725d]: Missing border pixels in alt theme on Windows (nemethi)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
