@@ -894,7 +894,7 @@ Tk_GetAccessibleHelp(
  *
  * WindowDestroyHandler --
  *
- *	This function cleans up accessibility hash tables on window 
+ *	This function cleans up accessibility hash tables on window
  *      destruction.
  *
  * Results:
@@ -957,11 +957,12 @@ static void WindowDestroyHandler(
  */
 
 void
-TkAccessibility_Cleanup(void *unused)
+TkAccessibility_Cleanup(
+    TCL_UNUSED(void *))
 {
     /* If nothing to do, return. */
     if (TkAccessibilityObject == NULL) {
-        return;
+	return;
     }
 
     /* Steal the pointer and immediately clear the global so other code can bail out. */
@@ -974,35 +975,35 @@ TkAccessibility_Cleanup(void *unused)
 
     hPtr = Tcl_FirstHashEntry(table, &search);
     while (hPtr != NULL) {
-        /* GET THE KEY FROM 'table' (not the global). */
-        Tk_Window tkwin = (Tk_Window) Tcl_GetHashKey(table, hPtr);
-        Tcl_HashTable *perWin = (Tcl_HashTable *) Tcl_GetHashValue(hPtr);
+	/* GET THE KEY FROM 'table' (not the global). */
+	Tk_Window tkwin = (Tk_Window) Tcl_GetHashKey(table, hPtr);
+	Tcl_HashTable *perWin = (Tcl_HashTable *) Tcl_GetHashValue(hPtr);
 
-        if (tkwin) {
-            /* Unregister the destroy handler so it cannot run later and touch freed data. */
-            Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
-                                  WindowDestroyHandler, tkwin);
-        }
+	if (tkwin) {
+	    /* Unregister the destroy handler so it cannot run later and touch freed data. */
+	    Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
+				  WindowDestroyHandler, tkwin);
+	}
 
-        if (perWin) {
-            /* Decref any stored Tcl_Objs. */
-            Tcl_HashEntry *h2;
-            Tcl_HashSearch s2;
-            h2 = Tcl_FirstHashEntry(perWin, &s2);
-            while (h2) {
-                Tcl_Obj *obj = (Tcl_Obj *) Tcl_GetHashValue(h2);
-                if (obj) {
-                    Tcl_DecrRefCount(obj);
-                }
-                h2 = Tcl_NextHashEntry(&s2);
-            }
+	if (perWin) {
+	    /* Decref any stored Tcl_Objs. */
+	    Tcl_HashEntry *h2;
+	    Tcl_HashSearch s2;
+	    h2 = Tcl_FirstHashEntry(perWin, &s2);
+	    while (h2) {
+		Tcl_Obj *obj = (Tcl_Obj *) Tcl_GetHashValue(h2);
+		if (obj) {
+		    Tcl_DecrRefCount(obj);
+		}
+		h2 = Tcl_NextHashEntry(&s2);
+	    }
 
-            /* Delete the per-window hash table and free its memory. */
-            Tcl_DeleteHashTable(perWin);
-            ckfree((char *) perWin);
-        }
+	    /* Delete the per-window hash table and free its memory. */
+	    Tcl_DeleteHashTable(perWin);
+	    ckfree((char *) perWin);
+	}
 
-        hPtr = Tcl_NextHashEntry(&search);
+	hPtr = Tcl_NextHashEntry(&search);
     }
 
     /* Now free the main table safely. */
@@ -1034,7 +1035,7 @@ TkAccessibility_Init(
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_help", Tk_GetAccessibleHelp, NULL, NULL);
-  
+
   if (!TkAccessibilityObject) {
       TkAccessibilityObject = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
       Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
@@ -1043,7 +1044,7 @@ TkAccessibility_Init(
 
   /* Register cleanup function. */
   TkCreateExitHandler(TkAccessibility_Cleanup, NULL);
-  
+
   return TCL_OK;
 }
 

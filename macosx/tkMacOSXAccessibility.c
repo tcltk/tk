@@ -50,7 +50,7 @@ static Tcl_HashTable *ElementToTkWindowTable = NULL;
 static int accessibilityTablesInitialized = 0;
 
 /*
- * Map script-level roles to CoreFoundation role constants, which are bridged 
+ * Map script-level roles to CoreFoundation role constants, which are bridged
  * to the NSAccessibilityRole constants. Using these offers better compatibility
  * in C code.
  */
@@ -136,22 +136,22 @@ static NSPoint FlipY(NSPoint screenpoint, NSWindow *window)
 void PostAccessibilityAnnouncement(NSString *message)
 {
     if (!message || [message length] == 0) {
-        return; /* Avoid posting empty announcements. */
+	return; /* Avoid posting empty announcements. */
     }
 
     NSDictionary *userInfo = @{
-        NSAccessibilityAnnouncementKey: message,
-        NSAccessibilityPriorityKey: @(NSAccessibilityPriorityHigh)
+	NSAccessibilityAnnouncementKey: message,
+	NSAccessibilityPriorityKey: @(NSAccessibilityPriorityHigh)
     };
 
     /* Post to the main window or the focused accessibility element. */
     id target = [NSApp mainWindow] ?: [NSApp keyWindow];
     if (target) {
-        NSAccessibilityPostNotificationWithUserInfo(
-            target,
-            NSAccessibilityAnnouncementRequestedNotification,
-            userInfo
-        );
+	NSAccessibilityPostNotificationWithUserInfo(
+	    target,
+	    NSAccessibilityAnnouncementRequestedNotification,
+	    userInfo
+	);
     }
 }
 
@@ -179,34 +179,34 @@ void PostAccessibilityAnnouncement(NSString *message)
 {
     Tk_Window win = self.tk_win;
     if (!win) {
-        return nil;
+	return nil;
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-        return nil;
+	return nil;
     }
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
-        return nil;
+	return nil;
     }
 
     Tcl_Obj *roleObj = Tcl_GetHashValue(hPtr2);
     if (!roleObj) {
-        return nil;
+	return nil;
     }
 
     const char *result = Tcl_GetString(roleObj);
     if (!result) {
-        return nil;
+	return nil;
     }
 
     for (NSUInteger i = 0; roleMap[i].tkrole != NULL; i++) {
-        if (strcmp(roleMap[i].tkrole, result) == 0) {
-            return (__bridge NSString *)roleMap[i].macrole;
-        }
+	if (strcmp(roleMap[i].tkrole, result) == 0) {
+	    return (__bridge NSString *)roleMap[i].macrole;
+	}
     }
 
     return nil;
@@ -217,42 +217,42 @@ void PostAccessibilityAnnouncement(NSString *message)
 {
     Tk_Window win = self.tk_win;
     if (!win) {
-        return @"";
+	return @"";
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-        return @"";
+	return @"";
     }
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
-    
+
     /* Special handling for group roles (tables, listboxes, trees). */
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
     if (role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) {
-        NSInteger rowCount = [self accessibilityRowCount];
-        NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
-        NSString *interact = self.accessibilityHint ?: @"";
-        NSString *groupLabel = [NSString stringWithFormat:@"%@%@", count, interact];
-        return groupLabel;
+	NSInteger rowCount = [self accessibilityRowCount];
+	NSString *count = [NSString stringWithFormat:@"Table with %ld items. ", (long)rowCount];
+	NSString *interact = self.accessibilityHint ?: @"";
+	NSString *groupLabel = [NSString stringWithFormat:@"%@%@", count, interact];
+	return groupLabel;
     }
 
     /* Get the description for all other widget roles. */
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "description");
     if (!hPtr2) {
-        return @"";
+	return @"";
     }
-    
+
     Tcl_Obj *descObj = Tcl_GetHashValue(hPtr2);
     if (!descObj) {
-        return @"";
+	return @"";
     }
-    
+
     const char *result = Tcl_GetString(descObj);
     if (!result) {
-        return @"";
+	return @"";
     }
-    
+
     NSString *macdescription = [NSString stringWithUTF8String:result];
     return macdescription ?: @"";
 }
@@ -301,7 +301,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	    if (varName && *varName) {
 		const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 
-		if ((role && CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo) || 
+		if ((role && CFStringCompare(role, kAXCheckBoxRole, 0) == kCFCompareEqualTo) ||
 		    (role && CFStringCompare(role, kAXSwitchRole, 0) == kCFCompareEqualTo)) {
 		    if (varVal && strcmp(varVal, "1") == 0) {
 			stateValue = 1;
@@ -354,40 +354,40 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 - (NSString*) accessibilityTitle
 {
-    return nil; 
+    return nil;
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
 
     /* Return value for labels and text widgets. */
-    if ((role && CFStringCompare(role, kAXStaticTextRole, 0) == kCFCompareEqualTo) || 
-        (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
-        NSString *value = self.accessibilityValue;
-        return value;
+    if ((role && CFStringCompare(role, kAXStaticTextRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+	NSString *value = self.accessibilityValue;
+	return value;
     }
 
     Tk_Window win = self.tk_win;
     if (!win) {
-        return @"";
+	return @"";
     }
 
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
-        return @"";
+	return @"";
     }
 
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
     if (!hPtr2) {
-        return @"";
+	return @"";
     }
 
     Tcl_Obj *nameObj = Tcl_GetHashValue(hPtr2);
     if (!nameObj) {
-        return @"";
+	return @"";
     }
 
     const char *result = Tcl_GetString(nameObj);
     if (!result) {
-        return @"";
+	return @"";
     }
 
     NSString *mactitle = [NSString stringWithUTF8String:result];
@@ -472,15 +472,15 @@ void PostAccessibilityAnnouncement(NSString *message)
      */
 
     if ((role && CFStringCompare(role, kAXSliderRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
-        [self forceFocus];
+	(role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+	[self forceFocus];
     }
-   
+
     return screenrect;
 }
 
@@ -926,20 +926,20 @@ static int EmitSelectionChanged(
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
-        Tcl_WrongNumArgs(ip, 1, objv, "window?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(ip, 1, objv, "window?");
+	return TCL_ERROR;
     }
     Tk_Window path;
 
     path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (path == NULL) {
-        Tk_MakeWindowExist(path);
+	Tk_MakeWindowExist(path);
     }
 
     TkAccessibilityElement *widget = TkAccessibility_GetElementForWindow(path);
     if (!widget) {
-        Tcl_SetResult(ip, "no accessibility element for window", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(ip, "no accessibility element for window", TCL_STATIC);
+	return TCL_ERROR;
     }
 
     widget.tk_win = path;
@@ -947,26 +947,26 @@ static int EmitSelectionChanged(
     CFStringRef role = (__bridge CFStringRef) widget.accessibilityRole;
 
     if ((role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
-        (role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
-        
-        NSString *announcement = widget.accessibilityValue;
-        if (announcement && [announcement length] > 0) {
-            /* Delay slightly to ensure the value is fully updated. */
-            dispatch_async(dispatch_get_main_queue(), ^{
+	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
+
+	NSString *announcement = widget.accessibilityValue;
+	if (announcement && [announcement length] > 0) {
+	    /* Delay slightly to ensure the value is fully updated. */
+	    dispatch_async(dispatch_get_main_queue(), ^{
 		    PostAccessibilityAnnouncement(announcement);
 		});
-        }
+	}
     } else {
-        /* Existing behavior for other widgets */
-        NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
-        NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
-        
-        NSString *announcement = widget.accessibilityValue;
-        if (announcement && [announcement length] > 0) {
-            dispatch_async(dispatch_get_main_queue(), ^{
+	/* Existing behavior for other widgets */
+	NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
+	NSAccessibilityPostNotification(widget, NSAccessibilitySelectedChildrenChangedNotification);
+
+	NSString *announcement = widget.accessibilityValue;
+	if (announcement && [announcement length] > 0) {
+	    dispatch_async(dispatch_get_main_queue(), ^{
 		    PostAccessibilityAnnouncement(announcement);
 		});
-        }
+	}
     }
 
     return TCL_OK;
