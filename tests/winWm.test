@@ -10,11 +10,11 @@
 #
 # * This test file is specific for the MS Windows platform. Tests regarding
 #   the window manager that are specific to the unix platform (this includes
-#   macOS) go into the testfile unixWm.test. Tests that are platform-indifferent
-#   go into testfile wm.test. Or they may exists as each other's counterparts
+#   macOS) go into the test file unixWm.test. Tests that are platform-indifferent
+#   go into test file wm.test. Or they may exists as each other's counterparts
 #   in both unixWm.test and winWm.test, but only if they are an integral part
 #   of a contiguous sequence of tests.
-# * This testfile is skipped entirely on non-windows platforms.
+# * This test file is skipped entirely on non-windows platforms.
 #
 
 #

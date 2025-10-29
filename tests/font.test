@@ -9,7 +9,7 @@
 #
 # This test file is platform-indifferent. Tests regarding the font system that
 # are specific to the unix platform (this includes macOS), or to the windows
-# platform go into the testfiles unixFont.test or winFont.test respectively.
+# platform go into the test files unixFont.test or winFont.test respectively.
 #
 
 #

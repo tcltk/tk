@@ -9,7 +9,7 @@
 #
 # * This test file is platform-indifferent. Tests regarding the selection
 #   that are specific to the unix platform (this includes macOS) go into the
-#   testfile unixSelect.test.
+#   test file unixSelect.test.
 # * Multiple display selection handling will only be tested if the environment
 #   variable TK_ALT_DISPLAY is set to an alternate display.
 #
