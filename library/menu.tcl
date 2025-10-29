@@ -891,7 +891,7 @@ proc ::tk::MenuNextEntry {menu count} {
 
 proc ::tk::MenuFind {w char} {
     set char [string tolower $char]
-    set windowlist [winfo child $w]
+    set windowlist [winfo children $w]
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
