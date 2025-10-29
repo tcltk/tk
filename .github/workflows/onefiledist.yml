@@ -64,7 +64,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
@@ -155,7 +155,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
@@ -218,7 +218,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
           path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe
