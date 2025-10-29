@@ -7,7 +7,7 @@
 # NOTE
 #
 # This test file is platform-indifferent. Tests regarding embedded windows that
-# are specific to the unix platform (this includes macOS) go into the testfile
+# are specific to the unix platform (this includes macOS) go into the test file
 # unixEmbed.test.
 #
 

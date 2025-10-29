@@ -11,7 +11,7 @@
 #
 # This test file is platform-indifferent. Tests regarding the window manager that
 # are specific to the unix platform (this includes macOS), or to the windows
-# platform go into the testfiles unixWm.test or winWm.test respectively.
+# platform go into the test files unixWm.test or winWm.test respectively.
 #
 
 #

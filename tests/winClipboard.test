@@ -8,8 +8,8 @@
 # NOTES
 #
 # * This test file is specific for the MS Windows platform. Tests that are
-#   platform-indifferent go into the testfile clipboard.test.
-# * This testfile is skipped entirely on non-windows platforms.
+#   platform-indifferent go into the test file clipboard.test.
+# * This test file is skipped entirely on non-windows platforms.
 # * Some of these tests may fail if another application is grabbing the clipboard
 #   (e.g. an X server, or a VNC viewer) #
 #

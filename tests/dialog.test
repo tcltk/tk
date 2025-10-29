@@ -3,7 +3,7 @@
 # NOTE
 #
 # This test file is platform-indifferent. Tests regarding the dialogs that
-# are specific to the windows platform go into the testfile winDialog.test.
+# are specific to the windows platform go into the test file winDialog.test.
 #
 
 #

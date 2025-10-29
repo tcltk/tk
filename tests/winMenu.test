@@ -9,11 +9,11 @@
 #
 # * This test file is specific for the MS Windows platform. Tests regarding
 #   the menu system that are specific to the unix platform (this includes macOS)
-#   go into the testfile unixMenu.test. Tests that are platform-indifferent go
-#   into testfile menu.test. Or they may exists as each other's counterparts in
+#   go into the test file unixMenu.test. Tests that are platform-indifferent go
+#   into test file menu.test. Or they may exists as each other's counterparts in
 #   both unixMenu.test and winMenu.test, but only if they are an integral part
 #   of a contiguous sequence of tests.
-# * This testfile is skipped entirely on non-windows platforms.
+# * This test file is skipped entirely on non-windows platforms.
 #
 
 #

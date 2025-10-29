@@ -9,8 +9,8 @@
 # NOTES
 #
 # * This test file is specific for the MS Windows platform. Tests that are
-#   platform-indifferent go into the testfile send.test.
-# * This testfile is skipped entirely on non-windows platforms.
+#   platform-indifferent go into the test file send.test.
+# * This test file is skipped entirely on non-windows platforms.
 #
 
 #
