@@ -1213,13 +1213,9 @@ DrawOrFillArc(
     int clockwise = (extent < 0); /* non-zero if clockwise */
     int xstart, ystart, xend, yend;
     double radian_start, radian_end, xr, yr;
-    int extent_less_than_180_deg;
+    int extent_is_360_deg;
 
-    extent = extent % (64*360);
-    if (extent < 0) {
-	extent += (64*360);
-    }
-    extent_less_than_180_deg = (extent < (64*180));
+    extent_is_360_deg = (extent >= (64*360) || extent <= -(64*360));
 
     if (d == None) {
 	return BadDrawable;
@@ -1263,7 +1259,7 @@ DrawOrFillArc(
     xend = (int)((xr + cos(radian_end)*width/2.0) + 0.5);
     yend = (int)((yr + sin(-radian_end)*height/2.0) + 0.5);
 
-    if ((xstart == xend) && (ystart == yend) && extent_less_than_180_deg) {
+    if ((xstart == xend) && (ystart == yend) && !extent_is_360_deg) {
         /*
          * The extent is so small that the arc size is less than one pixel.
          * If the Arc, Chord, or Pie GDI function later received this, then
