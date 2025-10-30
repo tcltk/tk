@@ -4956,7 +4956,7 @@ static int TreeviewSearchCommand(
 
     /* Get native form of pattern */
     patObj = objv[objc-1];
-    if (dataType == TYPE_ASCII || dataType == TYPE_DICTIONARY) {
+    if (dataType <= TYPE_DICTIONARY) {
 	if (!(pattern = Tcl_GetStringFromObj(patObj, &plen))) {
 	    return TCL_ERROR;
 	}
@@ -5016,7 +5016,7 @@ static int TreeviewSearchCommand(
 		if (!valObj) continue;
 
 		/* Do ASCII/Unicode compare */
-		if (dataType == TYPE_ASCII || dataType == TYPE_DICTIONARY) {
+		if (dataType <= TYPE_DICTIONARY) {
 		    if (matchType == SEARCH_EXACT) {
 			const char *string = Tcl_GetStringFromObj(valObj, &len);
 			Tcl_Size numChars = (len <= plen ? len : plen);
@@ -5136,8 +5136,7 @@ DictionaryCompare(
     int secondaryDiff = 0;
 
     while (1) {
-	if (isdigit(UCHAR(*right))		/* INTL: digit */
-		&& isdigit(UCHAR(*left))) {	/* INTL: digit */
+	if (isdigit(UCHAR(*right)) && isdigit(UCHAR(*left))) {	/* INTL: digit */
 	    /*
 	     * There are decimal numbers embedded in the two strings. Compare
 	     * them as numbers, rather than strings. If one number has more
@@ -5259,9 +5258,10 @@ typedef struct SortElement {
  */
 
 typedef struct {
+    Tcl_Interp *interp;		/* Current interpreter. */
     int isIncreasing;		/* Order: 0=decreasing, 1=increasing */
     sortModes_t sortMode;	/* The sort mode. See sortMode enums. */
-    Tcl_Size colNum;		/* Widget column number */
+    Tcl_Size columnNumber;	/* Widget data column number */
     Tcl_Obj *compareCmdPtr;	/* TCL compare command for TYPE_COMMAND.
 				 * Preinitialized to hold base command. */
     int recurse;		/* Sort all descendants flag. */
@@ -5292,13 +5292,89 @@ typedef struct {
 
 static int
 SortCompare(
-    Tcl_Interp *interp,		/* Current interpreter. */
-    SortElement *elemPtr1, SortElement *elemPtr2,
-				/* Values to be compared. */
-    SortInfo *infoPtr) {	/* Sort operation config info. */
+    SortElement *elemPtr1, SortElement *elemPtr2, /* Values to be compared. */
+    SortInfo *infoPtr) {	/* Sort operation configure info. */
     int order = 0, len;
 
-    if (elemPtr1->len == 0 || elemPtr2->len == 0) {
+    if (elemPtr1->len > 0 && elemPtr2->len > 0) {
+	if (infoPtr->sortMode <= TYPE_DICTIONARY) {
+	    /* String compares */
+	    if (infoPtr->sortMode == TYPE_ASCII) {
+		/* String compare using Unicode order */
+		len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
+		order = Tcl_UtfNcmp(elemPtr1->collationKey.strValuePtr,
+		    elemPtr2->collationKey.strValuePtr, len);
+
+	    } else if (infoPtr->sortMode == TYPE_ASCII_NC) {
+		/* String compare using Unicode no-case order */
+		len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
+		order = Tcl_UtfNcasecmp(elemPtr1->collationKey.strValuePtr,
+		    elemPtr2->collationKey.strValuePtr, len);
+
+	    } else if (infoPtr->sortMode == TYPE_DICTIONARY) {
+		/* String compare using dictionary order */
+		order = DictionaryCompare(elemPtr1->collationKey.strValuePtr,
+		    elemPtr2->collationKey.strValuePtr);
+	    }
+
+	} else if (infoPtr->sortMode == TYPE_INTEGER) {
+	    /* Integer compare */
+	    Tcl_WideInt a, b;
+
+	    a = elemPtr1->collationKey.wideValue;
+	    b = elemPtr2->collationKey.wideValue;
+	    order = ((a >= b) - (a <= b));
+
+	} else if (infoPtr->sortMode == TYPE_REAL) {
+	    /* Double compare */
+	    double a, b;
+
+	    a = elemPtr1->collationKey.doubleValue;
+	    b = elemPtr2->collationKey.doubleValue;
+	    order = ((a >= b) - (a <= b));
+
+	} else {
+	    /* Command compare */
+	    Tcl_Obj **objv, *paramObjv[2];
+	    Tcl_Obj *objPtr1, *objPtr2;
+	    Tcl_Size objc;
+
+	    /* Abort if an error has previously occurred. */
+	    if (infoPtr->resultCode != TCL_OK) {
+		return 0;
+	    }
+
+	    objPtr1 = elemPtr1->collationKey.objValuePtr;
+	    objPtr2 = elemPtr2->collationKey.objValuePtr;
+
+	    paramObjv[0] = objPtr1;
+	    paramObjv[1] = objPtr2;
+
+	    /* We made space in the command list for the two things to compare.
+	    * Replace them and evaluate the result. */
+	    Tcl_ListObjLength(infoPtr->interp, infoPtr->compareCmdPtr, &objc);
+	    Tcl_ListObjReplace(infoPtr->interp, infoPtr->compareCmdPtr, objc - 2, 2, 2,
+		paramObjv);
+	    Tcl_ListObjGetElements(infoPtr->interp, infoPtr->compareCmdPtr, &objc, &objv);
+
+	    /* Call command to do compare */
+	    infoPtr->resultCode = Tcl_EvalObjv(infoPtr->interp, objc, objv, 0);
+	    if (infoPtr->resultCode != TCL_OK) {
+		Tcl_AddErrorInfo(infoPtr->interp, "\n    (-compare command)");
+		return 0;
+	    }
+
+	    /* Parse the result of the command. */
+	    if (Tcl_GetIntFromObj(infoPtr->interp, Tcl_GetObjResult(infoPtr->interp), &order) != TCL_OK) {
+		Tcl_SetObjResult(infoPtr->interp, Tcl_NewStringObj(
+		    "-compare command returned non-integer result", -1));
+		Tcl_SetErrorCode(infoPtr->interp, "TCL", "OPERATION", "LSORT",
+		    "COMPARISONFAILED", (char *)NULL);
+		infoPtr->resultCode = TCL_ERROR;
+		return 0;
+	    }
+	}
+    } else {
 	/* Empty value compare */
 	if (elemPtr1->len == 0 && elemPtr2->len > 0) {
 	    order = -1;
@@ -5307,83 +5383,8 @@ SortCompare(
 	} else {
 	    order = 0;
 	}
-
-    } else if (infoPtr->sortMode == TYPE_ASCII) {
-	/* String compare using Unicode order */
-	len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
-	order = Tcl_UtfNcmp(elemPtr1->collationKey.strValuePtr,
-		elemPtr2->collationKey.strValuePtr, len);
-
-    } else if (infoPtr->sortMode == TYPE_ASCII_NC) {
-	/* String compare using Unicode no-case order */
-	len = elemPtr1->len < elemPtr2->len ? elemPtr1->len : elemPtr2->len;
-	order = Tcl_UtfNcasecmp(elemPtr1->collationKey.strValuePtr,
-		elemPtr2->collationKey.strValuePtr, len);
-
-    } else if (infoPtr->sortMode == TYPE_DICTIONARY) {
-	/* String compare using dictionary order */
-	order = DictionaryCompare(elemPtr1->collationKey.strValuePtr,
-		elemPtr2->collationKey.strValuePtr);
-
-    } else if (infoPtr->sortMode == TYPE_INTEGER) {
-	/* Integer compare */
-	Tcl_WideInt a, b;
-
-	a = elemPtr1->collationKey.wideValue;
-	b = elemPtr2->collationKey.wideValue;
-	order = ((a >= b) - (a <= b));
-
-    } else if (infoPtr->sortMode == TYPE_REAL) {
-	/* Double compare */
-	double a, b;
-
-	a = elemPtr1->collationKey.doubleValue;
-	b = elemPtr2->collationKey.doubleValue;
-	order = ((a >= b) - (a <= b));
-
-    } else {
-	/* Command compare */
-	Tcl_Obj **objv, *paramObjv[2];
-	Tcl_Size objc;
-	Tcl_Obj *objPtr1, *objPtr2;
-
-	/* Abort if an error has previously occurred. */
-	if (infoPtr->resultCode != TCL_OK) {
-	    return 0;
-	}
-
-	objPtr1 = elemPtr1->collationKey.objValuePtr;
-	objPtr2 = elemPtr2->collationKey.objValuePtr;
-
-	paramObjv[0] = objPtr1;
-	paramObjv[1] = objPtr2;
-
-	/* We made space in the command list for the two things to compare.
-	 * Replace them and evaluate the result. */
-	Tcl_ListObjLength(interp, infoPtr->compareCmdPtr, &objc);
-	Tcl_ListObjReplace(interp, infoPtr->compareCmdPtr, objc - 2,
-		2, 2, paramObjv);
-	Tcl_ListObjGetElements(interp, infoPtr->compareCmdPtr,
-		&objc, &objv);
-
-	/* Call command to do compare */
-	infoPtr->resultCode = Tcl_EvalObjv(interp, objc, objv, 0);
-	if (infoPtr->resultCode != TCL_OK) {
-	    Tcl_AddErrorInfo(interp, "\n    (-compare command)");
-	    return 0;
-	}
-
-	/* Parse the result of the command. */
-	if (Tcl_GetIntFromObj(interp,
-		Tcl_GetObjResult(interp), &order) != TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"-compare command returned non-integer result", -1));
-	    Tcl_SetErrorCode(interp, "TCL", "OPERATION", "LSORT",
-		"COMPARISONFAILED", (char *)NULL);
-	    infoPtr->resultCode = TCL_ERROR;
-	    return 0;
-	}
     }
+
     if (!infoPtr->isIncreasing) {
 	order = -order;
     }
@@ -5406,7 +5407,6 @@ SortCompare(
 
 static SortElement *
 MergeLists(
-    Tcl_Interp *interp,		/* Current interpreter. */
     SortElement *leftPtr,	/* First list to be merged; may be NULL. */
     SortElement *rightPtr,	/* Second list to be merged; may be NULL. */
     SortInfo *infoPtr) {	/* Sort operation config info. */
@@ -5420,7 +5420,7 @@ MergeLists(
     if (rightPtr == NULL) {
 	return leftPtr;
     }
-    cmp = SortCompare(interp, leftPtr, rightPtr, infoPtr);
+    cmp = SortCompare(leftPtr, rightPtr, infoPtr);
     if (cmp > 0) {
 	tailPtr = rightPtr;
 	rightPtr = rightPtr->nextPtr;
@@ -5430,7 +5430,7 @@ MergeLists(
     }
     headPtr = tailPtr;
     while ((leftPtr != NULL) && (rightPtr != NULL)) {
-	cmp = SortCompare(interp, leftPtr, rightPtr, infoPtr);
+	cmp = SortCompare(leftPtr, rightPtr, infoPtr);
 	if (cmp > 0) {
 	    tailPtr->nextPtr = rightPtr;
 	    tailPtr = rightPtr;
@@ -5466,14 +5466,12 @@ MergeLists(
  */
 
 static int SortItems(
-    Treeview *tv,		/* Widget info */
-    Tcl_Interp *interp,		/* Current interpreter */
     TreeItem *parent,		/* Parent of child items to sort */
     SortInfo *infoPtr) {	/* Sort operation config info. */
 
-    TreeItem *item = NULL;
+    TreeItem *item;
     Tcl_Size i, j, length, elmArrSize;
-    SortElement *elementArray = NULL, *elementPtr;
+    SortElement *elementArray, *elementPtr;
 #   define MAXCALLOC 1024000
 #   define NUM_LISTS 30
     /* This array holds pointers to temporary lists built during the merge
@@ -5498,9 +5496,9 @@ static int SortItems(
 	elementArray = (SortElement *)malloc(elmArrSize);
     }
     if (!elementArray) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"no enough memory to process sort of %" TCL_Z_MODIFIER "u items", length));
-	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	Tcl_SetObjResult(infoPtr->interp, Tcl_ObjPrintf("no enough memory to sort %"
+		TCL_Z_MODIFIER "u items", length));
+	Tcl_SetErrorCode(infoPtr->interp, "TCL", "MEMORY", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -5510,11 +5508,11 @@ static int SortItems(
 	Tcl_Obj *valPtr;
 	Tcl_Size len;
 
-	/* Get cell value to sort on from item. */
-	if (infoPtr->colNum == -1) {
+	/* Get cell value to sort by from item. */
+	if (infoPtr->columnNumber == -1) {
 	    valPtr = item->textObj;
 	} else if (item->valuesObj != NULL) {
-	    Tcl_ListObjIndex(interp, item->valuesObj, infoPtr->colNum, &valPtr);
+	    Tcl_ListObjIndex(infoPtr->interp, item->valuesObj, infoPtr->columnNumber, &valPtr);
 	} else {
 	    valPtr = NULL;
 	}
@@ -5531,7 +5529,7 @@ static int SortItems(
 	    } else if (infoPtr->sortMode == TYPE_INTEGER) {
 		Tcl_WideInt a;
 
-		if (Tcl_GetWideIntFromObj(interp, valPtr, &a) == TCL_OK) {
+		if (Tcl_GetWideIntFromObj(infoPtr->interp, valPtr, &a) == TCL_OK) {
 		    elementArray[i].collationKey.wideValue = a;
 		} else {
 		    Tcl_GetStringFromObj(valPtr, &len);
@@ -5546,7 +5544,7 @@ static int SortItems(
 	    } else if (infoPtr->sortMode == TYPE_REAL) {
 		double a;
 
-		if (Tcl_GetDoubleFromObj(interp, valPtr, &a) == TCL_OK) {
+		if (Tcl_GetDoubleFromObj(infoPtr->interp, valPtr, &a) == TCL_OK) {
 		    elementArray[i].collationKey.doubleValue = a;
 		} else {
 		    Tcl_GetStringFromObj(valPtr, &len);
@@ -5567,7 +5565,7 @@ static int SortItems(
 	 * sublists when we have two of the same size). */
 	elementPtr = &elementArray[i];
 	for (j=0; subList[j]; j++) {
-	    elementPtr = MergeLists(interp, subList[j], elementPtr, infoPtr);
+	    elementPtr = MergeLists(subList[j], elementPtr, infoPtr);
 	    subList[j] = NULL;
 	}
 
@@ -5581,15 +5579,15 @@ static int SortItems(
     /* Merge all sublists */
     elementPtr = subList[0];
     for (j=1; j<NUM_LISTS; j++) {
-	elementPtr = MergeLists(interp, subList[j], elementPtr, infoPtr);
+	elementPtr = MergeLists(subList[j], elementPtr, infoPtr);
     }
 
     /* Update widget */
     if (infoPtr->resultCode == TCL_OK) {
 	TreeItem *prev = NULL;
-
 	parent->children = NULL;
 	parent->lastChild = NULL;
+
 	for (i=0; elementPtr != NULL; elementPtr = elementPtr->nextPtr) {
 	    item = elementPtr->item;
 	    item->next = NULL;
@@ -5613,7 +5611,7 @@ done:
 	item = parent->children;
 	while (item != NULL && infoPtr->resultCode == TCL_OK) {
 	    if (item->children) {
-		infoPtr->resultCode = SortItems(tv, interp, item, infoPtr);
+		infoPtr->resultCode = SortItems(item, infoPtr);
 	    }
 	    item = item->next;
 	}
@@ -5657,10 +5655,11 @@ static int TreeviewSortCommand(
 	return TCL_ERROR;
     }
 
+    sortInfo.interp = interp;
     sortInfo.isIncreasing = 1;
     sortInfo.sortMode = TYPE_ASCII;
     sortInfo.compareCmdPtr = NULL;
-    sortInfo.colNum = FirstColumn(tv)-1;
+    sortInfo.columnNumber = FirstColumn(tv)-1;
     sortInfo.recurse = 0;
     sortInfo.ignoreEmpty = 0;
     sortInfo.resultCode = TCL_OK;
@@ -5689,9 +5688,9 @@ static int TreeviewSortCommand(
 		    return TCL_ERROR;
 		}
 		if (column == &tv->tree.column0) {
-		    sortInfo.colNum = -1;
+		    sortInfo.columnNumber = -1;
 		} else if (tv->tree.columns) {
-		    sortInfo.colNum = (column - tv->tree.columns);
+		    sortInfo.columnNumber = (column - tv->tree.columns);
 		}
 		break;
 	    }
@@ -5761,18 +5760,18 @@ static int TreeviewSortCommand(
     }
 
     /* Do sort */
-    result = SortItems(tv, interp, parent, &sortInfo);
-
-    /* Update widget */
-    if (result == TCL_OK) {
-	tv->tree.rowPosNeedsUpdate = 1;
-	TtkRedisplayWidget(&tv->core);
-    }
+    result = SortItems(parent, &sortInfo);
 
     /* Clean-up */
     if (sortInfo.sortMode == TYPE_COMMAND) {
 	Tcl_DecrRefCount(sortInfo.compareCmdPtr);
 	sortInfo.compareCmdPtr = NULL;
+    }
+
+    /* Update widget */
+    if (result == TCL_OK) {
+	tv->tree.rowPosNeedsUpdate = 1;
+	TtkRedisplayWidget(&tv->core);
     }
     return result;
 }
