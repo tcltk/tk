@@ -3508,8 +3508,8 @@ static int TreeviewSetCommand(
     TreeColumn *column = NULL;
     Tcl_Size columnNumber;
 
-    if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?column ?value??");
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?column? ?value? ?column value ...?");
 	return TCL_ERROR;
     }
 
@@ -3518,83 +3518,100 @@ static int TreeviewSetCommand(
 	return TCL_ERROR;
     }
 
-    /* Get column */
-    if (objc > 3) {
-	if (!(column = FindColumn(interp, tv, objv[3]))) {
-	    return TCL_ERROR;
-	}
-    }
-
-    /* Make sure -values exists */
-    if (column != &tv->tree.column0 && !item->valuesObj) {
-	item->valuesObj = Tcl_NewListObj(0,0);
-	Tcl_IncrRefCount(item->valuesObj);
-    }
-
-    /* Return dictionary */
     if (objc == 3) {
-	Tcl_Obj *value, *resultObj = Tcl_NewListObj(0,0);
+	/* Return dictionary */
+	Tcl_Obj *valObj, *resultObj = Tcl_NewListObj(0,0);
 
+	/* Column #0 */
+	if (item->textObj != NULL) {
+	    Tcl_ListObjAppendElement(NULL, resultObj, tv->tree.column0.idObj);
+	    Tcl_ListObjAppendElement(NULL, resultObj, item->textObj);
+	}
+
+	/* Other columns */
 	for (columnNumber = 0; columnNumber < tv->tree.nColumns; ++columnNumber) {
-	    Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &value);
-	    if (value) {
-		Tcl_ListObjAppendElement(NULL, resultObj,
-			tv->tree.columns[columnNumber].idObj);
-		Tcl_ListObjAppendElement(NULL, resultObj, value);
+	    valObj = NULL;
+
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		tv->tree.columns[columnNumber].idObj);
+	    if (item->valuesObj != NULL) {
+		Tcl_ListObjIndex(interp,item->valuesObj,columnNumber,&valObj);
 	    }
+	    if (valObj == NULL) {
+		valObj = Tcl_NewStringObj("", 0);
+	    }
+	    Tcl_ListObjAppendElement(NULL, resultObj, valObj);
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
-    }
 
-    /* Get or set column 0 */
-    if (column == &tv->tree.column0) {
-	if (objc == 4) {
-	    if (item->textObj != NULL) {
-		Tcl_SetObjResult(interp, item->textObj);
-	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("",0));
-	    }
-	} else {
-	    if (item->textObj != NULL) {
-		Tcl_DecrRefCount(item->textObj);
-	    }
-	    item->textObj = objv[4];
-	    Tcl_IncrRefCount(item->textObj);
-	    TtkRedisplayWidget(&tv->core);
-	}
-	return TCL_OK;
-    }
-
-    /* Note: we don't do any error checking in the list operations,
-     * since item->valuesObj is guaranteed to be a list. */
-    columnNumber = column - tv->tree.columns;
-
-    /* Get or set column */
-    if (objc == 4) {
+    } else if (objc == 4) {
+	/* Get value */
 	Tcl_Obj *resultObj = NULL;
 
-	Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &resultObj);
+	if (!(column = FindColumn(interp, tv, objv[3]))) {
+	    return TCL_ERROR;
+	}
+
+	/* Get value for column #0 or other column */
+	if (column == &tv->tree.column0) {
+	    if (item->textObj != NULL) {
+		resultObj = item->textObj;
+	    }
+	} else {
+	    if (item->valuesObj != NULL) {
+		columnNumber = column - tv->tree.columns;
+		Tcl_ListObjIndex(interp,item->valuesObj,columnNumber,&resultObj);
+	    }
+	}
+
+	/* Use empty string for no value */
 	if (!resultObj) {
-	    resultObj = Tcl_NewStringObj("",0);
+	    resultObj = Tcl_NewStringObj("", 0);
 	}
 	Tcl_SetObjResult(interp, resultObj);
 
     } else {
-	Tcl_Size length;
+	/* Set 1 or more values */
+	if (tv->tree.nColumns > 0) {
+	    Tcl_Size length;
 
-	item->valuesObj = unshareObj(item->valuesObj);
+	    /* Make sure -values exists ... */
+	    if (!item->valuesObj) {
+		item->valuesObj = Tcl_NewListObj(0,0);
+		Tcl_IncrRefCount(item->valuesObj);
+	    }
 
-	/* Make sure -values is fully populated */
-	Tcl_ListObjLength(interp, item->valuesObj, &length);
-	while (length < tv->tree.nColumns) {
-	    Tcl_Obj *empty = Tcl_NewStringObj("",0);
-	    Tcl_ListObjAppendElement(interp, item->valuesObj, empty);
-	    ++length;
+	    /* .. and isn't shared */
+	    item->valuesObj = unshareObj(item->valuesObj);
+
+	    /* .. and is the right size. */
+	    Tcl_ListObjLength(interp, item->valuesObj, &length);
+	    while (length < tv->tree.nColumns) {
+		Tcl_Obj *empty = Tcl_NewStringObj("",0);
+		Tcl_ListObjAppendElement(interp, item->valuesObj, empty);
+		++length;
+	    }
 	}
 
-	/* Set value */
-	Tcl_ListObjReplace(interp,item->valuesObj,columnNumber,1,1,objv+4);
+	/* Set column to value */
+	for (int i = 3; i < objc-1; i+=2) {
+	    if (!(column = FindColumn(interp, tv, objv[i]))) {
+		return TCL_ERROR;
+	    }
+
+	    /* Set column #0 or other column to value */
+	    if (column == &tv->tree.column0) {
+		if (item->textObj != NULL) {
+		    Tcl_DecrRefCount(item->textObj);
+		}
+		item->textObj = objv[i+1];
+		Tcl_IncrRefCount(item->textObj);
+	    } else if (tv->tree.nColumns > 0 && item->valuesObj) {
+		columnNumber = column - tv->tree.columns;
+		Tcl_ListObjReplace(interp, item->valuesObj, columnNumber, 1, 1, &objv[i+1]);
+	    }
+	}
 	TtkRedisplayWidget(&tv->core);
     }
     return TCL_OK;

@@ -762,13 +762,13 @@ Toggle the selection state of each item between \fIfromItem\fR and \fItoItem\fR
 .RE
 .\" METHOD: set
 .TP
-\fIpathname \fBset \fIitem\fR ?\fIcolumn\fR? ?\fIvalue\fR?
+\fIpathname \fBset \fIitem\fR ?\fIcolumn\fR? ?\fIvalue\fR? ?\fIcolumn value ...\fR?
 .
-With one argument, returns a dictionary of column/value pairs
-for the specified \fIitem\fR.
-With two arguments, returns the current value of the specified \fIcolumn\fR.
-With three arguments, sets the value of column \fIcolumn\fR
-in item \fIitem\fR to the specified \fIvalue\fR.
+Set or get item \fIitem\fR column values.
+With one argument, returns a dictionary of all column/value pairs.
+With two arguments, returns the current value for column \fIcolumn\fR.
+With three or more arguments, sets the value of each column \fIcolumn\fR
+to the associated \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .\" METHOD: size
 .TP
