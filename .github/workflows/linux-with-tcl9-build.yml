@@ -16,7 +16,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
@@ -105,7 +105,7 @@ jobs:
             exit 1
           }
   test:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:

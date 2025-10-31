@@ -891,7 +891,7 @@ proc ::tk::MenuNextEntry {menu count} {
 
 proc ::tk::MenuFind {w char} {
     set char [string tolower $char]
-    set windowlist [winfo child $w]
+    set windowlist [winfo children $w]
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
@@ -925,8 +925,12 @@ proc ::tk::MenuFind {w char} {
 	}
 	switch -- [winfo class $child] {
 	    Menubutton {
-		set char2 [string index [$child cget -text] \
-			[$child cget -underline]]
+		if {[$child cget -underline] < 0} {
+		    set char2 ""
+		} else {
+		    set char2 [string index [$child cget -text] \
+			    [$child cget -underline]]
+		}
 		if {$char eq [string tolower $char2] || $char eq ""} {
 		    if {[$child cget -state] ne "disabled"} {
 			return $child

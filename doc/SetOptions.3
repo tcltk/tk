@@ -546,7 +546,7 @@ typedef int \fBTk_CustomOptionSetProc\fR(
     Tk_Window \fItkwin\fR,
     Tcl_Obj **\fIvaluePtr\fR,
     char *\fIrecordPtr\fR,
-    int \fIinternalOffset\fR,
+    Tcl_Size \fIinternalOffset\fR,
     char *\fIsaveInternalPtr\fR,
     int \fIflags\fR);
 
@@ -554,7 +554,7 @@ typedef Tcl_Obj *\fBTk_CustomOptionGetProc\fR(
     void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIrecordPtr\fR,
-    int \fIinternalOffset\fR);
+    Tcl_Size \fIinternalOffset\fR);
 
 typedef void \fBTk_CustomOptionRestoreProc\fR(
     void *\fIclientData\fR,

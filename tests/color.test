@@ -1,23 +1,65 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkColor.c.  It is organized in the standard fashion for Tcl tests.
+# tkColor.c.
 #
 # Copyright © 1995-1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import colors
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# c255  -
+# Given a list of red, green, and blue intensities, scale them
+# down to a 0-255 range.
+#
+# Arguments:
+# vals -	List of intensities.
+
+proc c255 {vals} {
+    list [expr {[lindex $vals 0]/256}] [expr {[lindex $vals 1]/256}] \
+	    [expr {[lindex $vals 2]/256}]
+}
+
+# closest -
+# Given intensities between 0 and 255, return the closest intensities
+# that the server can provide.
+#
+# Arguments:
+# w -		Window in which to lookup color
+# r, g, b -	Desired intensities, between 0 and 255.
+
+proc closest {w r g b} {
+    set vals [winfo rgb $w [cname $r $g $b]]
+    list [expr [lindex $vals 0]/256] [expr [lindex $vals 1]/256] \
+	    [expr [lindex $vals 2]/256]
+}
 
 # cname --
 # Returns a proper name for a color, given its intensities.
 #
 # Arguments:
 # r, g, b -	Intensities on a 0-255 scale.
-
 proc cname {r g b} {
     format #%02x%02x%02x $r $g $b
 }
@@ -51,31 +93,9 @@ proc mkColors {c width height r g b rx gx bx ry gy by} {
     }
 }
 
-# closest -
-# Given intensities between 0 and 255, return the closest intensities
-# that the server can provide.
 #
-# Arguments:
-# w -		Window in which to lookup color
-# r, g, b -	Desired intensities, between 0 and 255.
-
-proc closest {w r g b} {
-    set vals [winfo rgb $w [cname $r $g $b]]
-    list [expr [lindex $vals 0]/256] [expr [lindex $vals 1]/256] \
-	    [expr [lindex $vals 2]/256]
-}
-
-# c255  -
-# Given a list of red, green, and blue intensities, scale them
-# down to a 0-255 range.
+# LOCAL TEST CONSTRAINTS
 #
-# Arguments:
-# vals -	List of intensities.
-
-proc c255 {vals} {
-    list [expr {[lindex $vals 0]/256}] [expr {[lindex $vals 1]/256}] \
-	    [expr {[lindex $vals 2]/256}]
-}
 
 # -- WARNING (SB, 6.4.2017) --
 #
@@ -86,7 +106,7 @@ proc c255 {vals} {
 # The problem is, on machines with a fancy 24 truecolor display, the
 # 'colorsFree' constraint doesn't get set, turning off pretty much every test
 # in this file.
-
+#
 if {[testConstraint pseudocolor8]} {
     toplevel .t -visual {pseudocolor 8} -colormap new
     wm geom .t +0+0
@@ -103,6 +123,10 @@ if {[testConstraint pseudocolor8]} {
     }
     destroy .t.c .t.c2
 }
+
+#
+# TESTS
+#
 
 test color-1.1 {Tk_AllocColorFromObj - converting internal reps} colorsFree {
     set x green
@@ -290,12 +314,10 @@ test color-4.1 {FreeColorObjProc} -constraints {
     rename copy {}
 } -result {{{1 3}} {{1 2}} {{1 1}} {}}
 
+#
+# TESTFILE CLEANUP
+#
+
 destroy .t
-
-#
-# CLEANUP
-#
-
 testutils forget colors
 cleanupTests
-return

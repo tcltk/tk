@@ -301,8 +301,9 @@ TrayIconObjectCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 4) {
-	    if (Tcl_GetLongFromObj(interp,objv[3],&timeout) != TCL_OK)
+	    if (Tcl_GetLongFromObj(interp,objv[3],&timeout) != TCL_OK) {
 		return TCL_ERROR;
+	    }
 	}
 	msgid = PostBalloon(icon,Tcl_GetString(objv[2]), timeout);
 	Tcl_SetObjResult(interp,Tcl_NewIntObj(msgid));
@@ -316,8 +317,9 @@ TrayIconObjectCmd(
 	if (Tcl_GetIntFromObj(interp,objv[2],&msgid) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (msgid)
+	if (msgid) {
 	    CancelBalloon(icon,msgid);
+	}
 	return TCL_OK;
 
     case XWC_BBOX:
@@ -1016,8 +1018,9 @@ RetargetEvent(
 {
     int send = 0;
     Window* saveWin1 = NULL, *saveWin2 = NULL;
-    if (!icon->visible)
+    if (!icon->visible) {
 	return;
+    }
     switch (ev->type) {
     case MotionNotify:
 	send = 1;
@@ -1092,8 +1095,9 @@ TrayIconWrapperEvent(
 		if (icon->drawingWin) {
 		    /* we were sent away to root */
 		    TKU_WmWithdraw(icon->drawingWin,icon->interp);
-		    if (icon->myManager)
+		    if (icon->myManager) {
 			Tk_SendVirtualEvent(icon->tkwin,Tk_GetUid("IconDestroy"), NULL);
+		    }
 		    icon->myManager = None;
 		}
 	    } /* Reparenting into some other embedder is theoretically possible,
@@ -1129,8 +1133,9 @@ TrayIconEvent(
 
     switch (ev->type) {
     case Expose:
-	if (!ev->xexpose.count)
+	if (!ev->xexpose.count) {
 	    EventuallyRedrawIcon(icon);
+	}
 	break;
 
     case DestroyNotify:
@@ -1261,12 +1266,14 @@ PostBalloon(
     int length = strlen(utf8msg);
     XEvent ev;
 
-    if (!(icon->drawingWin) || (icon->myManager == None))
+    if (!(icon->drawingWin) || (icon->myManager == None)) {
 	return 0;
+    }
 
     /* overflow protection */
-    if (icon->msgid < 0)
+    if (icon->msgid < 0) {
 	icon->msgid = 0;
+    }
 
     memset(&ev, 0, sizeof(ev));
     ev.xclient.type = ClientMessage;
@@ -1324,11 +1331,13 @@ CancelBalloon(
     Display* dpy = Tk_Display(tkwin);
     XEvent ev;
 
-    if (!(icon->drawingWin) || (icon->myManager == None))
+    if (!(icon->drawingWin) || (icon->myManager == None)) {
 	return;
+    }
     /* overflow protection */
-    if (icon->msgid < 0)
+    if (icon->msgid < 0) {
 	icon->msgid = 0;
+    }
 
     memset(&ev, 0, sizeof(ev));
     ev.type = ClientMessage;
@@ -1372,8 +1381,9 @@ IconGenericHandler(
 	    ((Atom)ev->xclient.data.l[1] == icon->a_NET_SYSTEM_TRAY_Sn)) {
 	icon->trayManager = (Window)ev->xclient.data.l[2];
 	XSelectInput(ev->xclient.display,icon->trayManager,StructureNotifyMask);
-	if (icon->myManager == None)
+	if (icon->myManager == None) {
 	    TrayIconUpdate(icon, ICON_CONF_XEMBED);
+	}
 	return 1;
     }
     if (ev->type == DestroyNotify) {
@@ -1417,8 +1427,9 @@ TrayIconUpdate(
      * anyway, let's handle it if we provide it.
      */
     if (mask & ICON_CONF_CLASS) {
-	if (icon->drawingWin)
+	if (icon->drawingWin) {
 	    Tk_SetClass(icon->drawingWin,Tk_GetUid(Tcl_GetString(icon->classObj)));
+	}
     }
     /*
      * First, ensure right icon visibility.

@@ -1,20 +1,34 @@
-# This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test menus in Tk.
 #
 # Copyright © 1995-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
 
+#
+# TESTS
+#
 
 test menu-1.1 {Tk_MenuCmd procedure} -body {
     menu
@@ -149,9 +163,14 @@ test menu-1.14 {Tk_MenuCmd procedure} -setup {
     deleteWindows
 } -result {.m1}
 
-# Used for 2.1 - 2.30 tests
+#
+# COMMON TEST SETUP
+#
+# For tests 2.1 - 2.30
+#
 destroy .m1
 menu .m1
+
 test menu-2.1 {configuration options -activebackground #012345} -body {
     .m1 configure -activebackground #012345
     .m1 cget -activebackground
@@ -280,7 +299,12 @@ test menu-2.30 {configuration options -tearoffcommand {any old string}} -body {
     .m1 configure -tearoffcommand {any old string}
     .m1 cget -tearoffcommand
 } -result {any old string}
-destroy .m1
+
+#
+# COMMON TEST SETUP
+#
+# For tests 2.31 - 2.228
+#
 
 # We need to test all of the options with all of the different types of
 # menu entries. The following code sets up .m1 with 6 items. It then
@@ -1193,9 +1217,11 @@ test menu-2.228 {entry configuration options 5 -underline 3p radiobutton} -body 
     .m1 entryconfigure 5 -underline 3p
 } -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 image delete image1
-
 
 test menu-3.1 {MenuWidgetCmd procedure} -setup {
     destroy .m1
@@ -2372,7 +2398,6 @@ test menu-8.7 {DestroyMenuEntry} -setup {
     list [.m2 delete 1] [destroy .m1]
 } -result {{} {}}
 
-
 # test menu-9 - Can only change when fonts change on system, which cannot
 # be done from tcl.
 test menu-9.1 {ConfigureMenu} -setup {
@@ -2704,8 +2729,6 @@ test menu-11.21 {ConfigureMenuEntry} -constraints {
     deleteWindows
     imageCleanup
 } -result {}
-
-unset earthPhotoFile
 
 
 test menu-12.1 {ConfigureMenuCloneEntries} -setup {
@@ -4287,14 +4310,14 @@ test menu-41.14 {identifiers - reserved word} -setup {
 } -result {2}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
+unset earthPhotoFile
 imageFinish
 deleteWindows
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

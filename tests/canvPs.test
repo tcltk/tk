@@ -6,17 +6,37 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
 
-# canvas used in 1.* and 2.* test cases
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.* and canvas-2.*
+#
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 .c create rectangle 20 20 80 80 -fill red
 pack .c
@@ -134,8 +154,11 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
     removeFile foo.ps
     removeFile bar.ps
 } -result ok
-destroy .c
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .c
 
 test canvPs-3.1 {test ps generation with an embedded window} -setup {
     set bar [makeFile {} bar.ps]
@@ -204,7 +227,7 @@ test canvPs-5.2 {test ps generation with image} -body {
 } -returnCodes ok -match glob -result *
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 unset -nocomplain foo bar
@@ -212,7 +235,6 @@ imageFinish
 testutils forget image
 deleteWindows
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

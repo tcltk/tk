@@ -90,6 +90,11 @@ they use some other form of authorization
 such as that provide by \fBxauth\fR.
 Under Windows, \fBsend\fR is currently disabled.  Most of the
 functionality is provided by the \fBdde\fR command instead.
+.SH LIMITATIONS
+.PP
+Under macOS/aqua, the send command works only with interpreters that exist in
+the same process (these are returned by "winfo interps"). Invocations that
+target an interpreter that exists in another process don't accomplish anything.
 .SH EXAMPLE
 .PP
 This script fragment can be used to make an application that only runs

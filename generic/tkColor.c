@@ -232,11 +232,11 @@ Tk_GetColor(
 	    if (*name == '#') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"invalid color name \"%s\"", name));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", (char *)NULL);
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"unknown color name \"%s\"", name));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, (char *)NULL);
 	    }
 	}
 	if (isNew) {

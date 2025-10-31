@@ -129,7 +129,7 @@ AppendSystemError(
     Tcl_Interp *interp,		/* Current interpreter. */
     DWORD error)		/* Result code from error. */
 {
-    int length;
+    Tcl_Size length;
     WCHAR *wMsgPtr, **wMsgPtrPtr = &wMsgPtr;
     const char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
@@ -154,8 +154,8 @@ AppendSystemError(
 		0, NULL);
 	if (length > 0) {
 	    wMsgPtr = (WCHAR *) LocalAlloc(LPTR, (length + 1) * sizeof(WCHAR));
-	    MultiByteToWideChar(CP_ACP, 0, msgPtr, length + 1, wMsgPtr,
-		    length + 1);
+	    MultiByteToWideChar(CP_ACP, 0, msgPtr, (int)length + 1, wMsgPtr,
+		    (int)length + 1);
 	    LocalFree(msgPtr);
 	}
     }
@@ -191,7 +191,7 @@ AppendSystemError(
     }
 
     snprintf(id, sizeof(id), "%ld", error);
-    Tcl_SetErrorCode(interp, "WINDOWS", id, msg, NULL);
+    Tcl_SetErrorCode(interp, "WINDOWS", id, msg, (char *)NULL);
     Tcl_AppendToObj(resultPtr, msg, length);
     Tcl_SetObjResult(interp, resultPtr);
 
@@ -453,24 +453,27 @@ TestfindwindowObjCmd(
 	Tcl_DStringInit(&classString);
 	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), TCL_INDEX_NONE, &classString);
     }
-    if (title[0] == 0)
+    if (title[0] == 0) {
 	title = NULL;
+    }
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
     while (1) {
 	DWORD pid, tid;
 	hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
-	if (hwnd == NULL)
+	if (hwnd == NULL) {
 	    break;
+	}
 	tid = GetWindowThreadProcessId(hwnd, &pid);
 	if (tid == 0) {
 	    /* Window has gone */
 	    hwnd = NULL;
 	    break;
 	}
-	if (pid == myPid)
+	if (pid == myPid) {
 	    break;              /* Found it */
+	}
     }
 
     if (hwnd == NULL) {
@@ -517,8 +520,9 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK)
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK) {
 	return TCL_ERROR;
+    }
 
     cch = GetClassNameW((HWND)INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {

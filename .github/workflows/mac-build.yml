@@ -12,18 +12,18 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   framework:
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         shell: bash
         working-directory: tk/macosx
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: tk
       - name: Check out Tcl 9.1
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
           ref: main
@@ -56,7 +56,7 @@ jobs:
           fi
         timeout-minutes: 30
   prefix:
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       matrix:
         symbols:
@@ -71,11 +71,11 @@ jobs:
         working-directory: tk/unix
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: tk
       - name: Check out Tcl 9.1
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
           ref: main

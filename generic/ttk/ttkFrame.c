@@ -211,7 +211,7 @@ error:
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Bad label anchor specification %s", Tcl_GetString(objPtr)));
-	Tcl_SetErrorCode(interp, "TTK", "LABEL", "ANCHOR", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LABEL", "ANCHOR", (char *)NULL);
     }
     return TCL_ERROR;
 }
@@ -303,10 +303,10 @@ static void LabelframeStyleOptions(Labelframe *lf, LabelframeStyle *style)
     } else {
 	if (style->labelAnchor & (TTK_PACK_TOP|TTK_PACK_BOTTOM)) {
 	    style->labelMargins =
-		Ttk_MakePadding(DEFAULT_LABELINSET,0,DEFAULT_LABELINSET,0);
+		Ttk_MakePadding(DEFAULT_LABELINSET, 0, DEFAULT_LABELINSET, 0);
 	} else {
 	    style->labelMargins =
-		Ttk_MakePadding(0,DEFAULT_LABELINSET,0,DEFAULT_LABELINSET);
+		Ttk_MakePadding(0, DEFAULT_LABELINSET, 0, DEFAULT_LABELINSET);
 	}
     }
     if ((objPtr = Ttk_QueryOption(layout,"-labeloutside", 0)) != NULL) {
@@ -366,10 +366,10 @@ static int LabelframeSize(
     labelHeight += Ttk_PaddingHeight(style.labelMargins);
 
     switch (LabelAnchorSide(style.labelAnchor)) {
-	case TTK_SIDE_LEFT:	margins.left   += labelWidth;	break;
-	case TTK_SIDE_RIGHT:	margins.right  += labelWidth;	break;
-	case TTK_SIDE_TOP:	margins.top    += labelHeight;	break;
-	case TTK_SIDE_BOTTOM:	margins.bottom += labelHeight;	break;
+	case TTK_SIDE_LEFT:	margins.left   += (short)labelWidth;	break;
+	case TTK_SIDE_RIGHT:	margins.right  += (short)labelWidth;	break;
+	case TTK_SIDE_TOP:	margins.top    += (short)labelHeight;	break;
+	case TTK_SIDE_BOTTOM:	margins.bottom += (short)labelHeight;	break;
     }
 
     Ttk_SetMargins(corePtr->tkwin,margins);

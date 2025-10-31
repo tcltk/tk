@@ -2605,7 +2605,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -6366,15 +6366,6 @@ printf "%s\n" "$tcl_cv_cc_input_charset" >&6; }
 	CFLAGS="$CFLAGS -finput-charset=UTF-8"
     fi
 
-    ac_fn_c_check_header_compile "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
-if test "x$ac_cv_header_stdbool_h" = xyes
-then :
-
-printf "%s\n" "#define HAVE_STDBOOL_H 1" >>confdefs.h
-
-fi
-
-
     # Check for vfork, posix_spawnp() and friends unconditionally
     ac_fn_c_check_func "$LINENO" "vfork" "ac_cv_func_vfork"
 if test "x$ac_cv_func_vfork" = xyes
@@ -7763,9 +7754,6 @@ if test $tk_aqua = yes; then
 printf "%s\n" "#define MAC_OSX_TK 1" >>confdefs.h
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
-    if test -d /System/Library/Frameworks/UserNotifications.framework; then
-	LIBS="$LIBS -framework UserNotifications"
-    fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
 	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
@@ -9046,8 +9034,9 @@ fi
 	MACHER_PROG="$ac_cv_path_macher"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $MACHER_PROG" >&5
 printf "%s\n" "$MACHER_PROG" >&6; }
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found macher in environment" >&5
-printf "%s\n" "Found macher in environment" >&6; }
+    else
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Macher not found" >&5
+printf "%s\n" "Macher not found" >&6; }
     fi
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for zip" >&5
 printf %s "checking for zip... " >&6; }
@@ -9078,8 +9067,6 @@ fi
 printf "%s\n" "$ZIP_PROG" >&6; }
 	ZIP_PROG_OPTIONS="-rq"
 	ZIP_PROG_VFSSEARCH="*"
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found INFO Zip in environment" >&5
-printf "%s\n" "Found INFO Zip in environment" >&6; }
 	# Use standard arguments for zip
     else
 	# It is not an error if an installed version of Zip can't be located.

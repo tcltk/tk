@@ -1,15 +1,37 @@
-# -*- tcl -*-
+#
+# Tests exercising Microsoft Visual Styles elements, defined through
+# the command "ttk::style element create XXX vsapi"
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-testConstraint xpnative \
-    [expr {"xpnative" in [ttk::style theme names]}]
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-test vsapi-1.1 "WINDOW WP_SMALLCLOSEBUTTON" -constraints {xpnative} -body {
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+testConstraint vista \
+    [expr {"vista" in [ttk::style theme names]}]
+
+#
+# TESTS
+#
+
+test vsapi-1.1 "WINDOW WP_SMALLCLOSEBUTTON" -constraints vista -body {
     ttk::style element create smallclose vsapi \
 	WINDOW 19 {disabled 4 pressed 3 active 2 {} 1}
     ttk::style layout CloseButton {CloseButton.smallclose -sticky news}
@@ -18,7 +40,7 @@ test vsapi-1.1 "WINDOW WP_SMALLCLOSEBUTTON" -constraints {xpnative} -body {
     list [winfo reqwidth .b] [winfo reqheight .b]
 } -cleanup { destroy .b } -result [list 13 13]
 
-test vsapi-1.2 "EXPLORERBAR EBP_HEADERPIN" -constraints {xpnative} -body {
+test vsapi-1.2 "EXPLORERBAR EBP_HEADERPIN" -constraints vista -body {
     ttk::style element create pin vsapi \
 	EXPLORERBAR 3 {
 	    {pressed !selected} 3
@@ -34,7 +56,7 @@ test vsapi-1.2 "EXPLORERBAR EBP_HEADERPIN" -constraints {xpnative} -body {
     list [winfo reqwidth .pin] [winfo reqheight .pin]
 } -cleanup { destroy .pin } -result [list 16 16]
 
-test vsapi-1.3 "EXPLORERBAR EBP_HEADERCLOSE" -constraints {xpnative} -body {
+test vsapi-1.3 "EXPLORERBAR EBP_HEADERCLOSE" -constraints vista -body {
     ttk::style element create headerclose vsapi \
 	EXPLORERBAR 2 {pressed 3 active 2 {} 1}
     ttk::style layout Explorer.CloseButton {
@@ -44,5 +66,9 @@ test vsapi-1.3 "EXPLORERBAR EBP_HEADERCLOSE" -constraints {xpnative} -body {
     pack .b -expand true -fill both
     list [winfo reqwidth .b] [winfo reqheight .b]
 } -cleanup { destroy .b } -result [list 16 16]
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

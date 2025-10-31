@@ -1,25 +1,76 @@
 # This file is a Tcl script to test out the procedures in tkCanvas.c, which
-# implements generic code for canvases. It is organized in the standard
-# fashion for Tcl tests.
+# implements generic code for canvases.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-2000 Ajuba Solutions.
 # Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTE
+#
+# This test file is woefully incomplete. At present, only a few of the
+# features are tested.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
 
-# XXX - This test file is woefully incomplete. At present, only a few of the
-# features are tested.
+#
+# LOCAL UTILITY PROCS
+#
 
-# Canvas used in 1.* test cases
+proc kill_canvas {w} {
+    destroy $w
+    pack [canvas $w -height 200 -width 200] -fill both -expand yes
+    update idle
+    $w create rectangle 80 80 120 120 -fill blue -tags blue
+    # bind a button press to re-build the canvas
+    $w bind blue <ButtonRelease-1> [subst {
+	[lindex [info level 0] 0] $w
+	append ::x ok
+    }]
+}
+
+proc matchPixels {pixels expected} {
+    set matched 1
+    foreach pline $pixels eline $expected {
+	foreach ppixel $pline epixel $eline {
+	    if {$ppixel != $epixel} {
+		set matched 0
+		break
+	    }
+	}
+    }
+    return $matched
+}
+
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.*
+#
 canvas .c
 pack .c
 update
@@ -191,9 +242,13 @@ test canvas-1.47 {configure throws error on bad option} -body {
     .c create rect 10 10 100 100
     .c configure -gorp foo
 } -returnCodes error -match glob -result {*}
-catch {destroy .c}
 
-# Canvas used in 2.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-2.*
+#
+catch {destroy .c}
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
@@ -239,9 +294,13 @@ test canvas-2.5 {CanvasWidgetCmd, raise/lower option, no error on non-existing t
 } -cleanup {
     .c delete aline
 } -result {}
-catch {destroy .c}
 
-# Canvas used in 3.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-3.*
+#
+catch {destroy .c}
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 80} \
 	-borderwidth 0 -highlightthickness 0
 pack .c
@@ -265,6 +324,10 @@ test canvas-3.2 {CanvasWidgetCmd, yview option} -body {
     update
     lappend x [.c yview]
 } -result {{0.0 0.5} {0.1 0.6}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .c
 
 test canvas-4.1 {ButtonEventProc procedure} -setup {
@@ -287,7 +350,11 @@ test canvas-5.1 {ButtonCmdDeletedProc procedure} -body {
     destroy .c1
 } -result {{} {}}
 
-# Canvas used in 6.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-6.*
+#
 canvas .c -width 100 -height 50 -scrollregion {-200 -100 305 102} \
 	-borderwidth 2 -highlightthickness 3
 pack .c
@@ -330,6 +397,10 @@ test canvas-6.5 {CanvasSetOrigin procedure} -body {
     .c yview moveto 1.0
     .c canvasy 0
 } -result {55.0}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test canvas-7.1 {canvas widget vs hidden commands} -setup {
@@ -592,18 +663,6 @@ test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
     incr val
 } -result 12
 
-# procedure used in 13.1 test case
-proc kill_canvas {w} {
-    destroy $w
-    pack [canvas $w -height 200 -width 200] -fill both -expand yes
-    update idle
-    $w create rectangle 80 80 120 120 -fill blue -tags blue
-    # bind a button press to re-build the canvas
-    $w bind blue <ButtonRelease-1> [subst {
-	[lindex [info level 0] 0] $w
-	append ::x ok
-    }]
-}
 test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     kill_canvas .c
     set ::x {}
@@ -783,6 +842,10 @@ test canvas-15.21 {bug [237971ce]} -setup {
     .c insert $id end {200 200}
     .c coords $id
 } -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .c
 
 test canvas-16.1 {arc coords check} -setup {
@@ -1045,7 +1108,11 @@ test canvas-20.3 {tag deletion - all tags match} -setup {
     destroy .c
 } -result {{tagA tagA tagA tagA tagA tagA} {}}
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .c
+
 test canvas-21.1 {canvas rotate} -setup {
     pack [canvas .c]
 } -body {
@@ -1228,20 +1295,6 @@ test canvas-22.9 {canvas rotate: window item rotation behaviour} -setup {
     destroy .c
 } -result {{50.00 150.00} {} {25 125 50 150}}
 
-# Procedure used in test cases 23.1 23.2 23.3
-proc matchPixels {pixels expected} {
-    set matched 1
-    foreach pline $pixels eline $expected {
-	foreach ppixel $pline epixel $eline {
-	    if {$ppixel != $epixel} {
-		set matched 0
-		break
-	    }
-	}
-    }
-    return $matched
-}
-
 test canvas-23.1 {canvas image} -setup {
     canvas .c
     image create photo testimage
@@ -1317,13 +1370,12 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
 } -result 1
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageCleanup
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

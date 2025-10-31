@@ -227,21 +227,18 @@ static int ConfigureTab(
     int mask = 0;
 
     if (Tk_SetOptions(interp, tab, nb->notebook.paneOptionTable,
-	    objc, objv, window, &savedOptions, &mask) != TCL_OK)
-    {
+	    objc, objv, window, &savedOptions, &mask) != TCL_OK) {
 	return TCL_ERROR;
     }
 
     /* Check options:
      * @@@ TODO: validate -image option.
      */
-    if (Ttk_GetStickyFromObj(interp, tab->stickyObj, &sticky) != TCL_OK)
-    {
+    if (Ttk_GetStickyFromObj(interp, tab->stickyObj, &sticky) != TCL_OK) {
 	goto error;
     }
     if (Ttk_GetPaddingFromObj(interp, window, tab->paddingObj, &padding)
-	    != TCL_OK)
-    {
+	    != TCL_OK) {
 	goto error;
     }
 
@@ -268,9 +265,8 @@ static Tcl_Size IdentifyTab(Notebook *nb, int x, int y)
     Tcl_Size index;
     for (index = 0; index < Ttk_NumberContent(nb->notebook.mgr); ++index) {
 	Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr,index);
-	if (	tab->state != TAB_STATE_HIDDEN
-	     && Ttk_BoxContains(tab->parcel, x,y))
-	{
+	if (tab->state != TAB_STATE_HIDDEN
+		&& Ttk_BoxContains(tab->parcel, x,y)) {
 	    return index;
 	}
     }
@@ -423,10 +419,12 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
      */
     Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.widthObj, &reqWidth);
     Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.heightObj, &reqHeight);
-    if (reqWidth > 0)
+    if (reqWidth > 0) {
 	clientWidth = reqWidth;
-    if (reqHeight > 0)
+    }
+    if (reqHeight > 0) {
 	clientHeight = reqHeight;
+    }
 
     /* Tab row:
      */
@@ -754,7 +752,7 @@ static int AddTab(
     if (Ttk_ContentIndex(nb->notebook.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
 	    Tk_PathName(window)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", (char *)NULL);
 	return TCL_ERROR;
     }
 #endif
@@ -870,7 +868,7 @@ static int FindTabIndex(
     if (*index_rtn == Ttk_NumberContent(nb->notebook.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Invalid tab specification %s", string));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "SPEC", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "SPEC", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -891,14 +889,14 @@ static int GetTabIndex(
 	if (status == TCL_OK && *index_rtn  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Tab index \"%s\" out of bounds", Tcl_GetString(objPtr)));
-	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "Tab '%s' not found", Tcl_GetString(objPtr)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", (char *)NULL);
 	status = TCL_ERROR;
     }
     return status;
@@ -1309,8 +1307,9 @@ static void NotebookCleanup(void *recordPtr)
     Notebook *nb = (Notebook *)recordPtr;
 
     Ttk_DeleteManager(nb->notebook.mgr);
-    if (nb->notebook.tabLayout)
+    if (nb->notebook.tabLayout) {
 	Ttk_FreeLayout(nb->notebook.tabLayout);
+    }
 }
 
 static int NotebookConfigure(Tcl_Interp *interp, void *clientData, int mask)

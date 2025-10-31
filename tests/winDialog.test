@@ -1,16 +1,26 @@
-# -*- tcl -*-
 # This file is a Tcl script to test the Windows specific behavior of
-# the common dialog boxes.  It is organized in the standard
-# fashion for Tcl tests.
+# the common dialog boxes.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 1998-1999 ActiveState Corporation.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import dialog
@@ -20,13 +30,9 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
 
-# Locale identifier LANG_ENGLISH is 0x09
-testConstraint english [expr {
-    [llength [info commands testwinlocale]]
-    && (([testwinlocale] & 0xff) == 9)
-}]
-
-set initialDir [tcltest::temporaryDirectory]
+#
+# LOCAL UTILITY PROCS
+#
 
 proc GetText {id} {
     variable testDialog
@@ -42,7 +48,25 @@ proc SetText {id text} {
     return [testwinevent $testDialog $id WM_SETTEXT $text]
 }
 
-# ----------------------------------------------------------------------
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+# Locale identifier LANG_ENGLISH is 0x09
+testConstraint english [expr {
+    [llength [info commands testwinlocale]]
+    && (([testwinlocale] & 0xff) == 9)
+}]
+
+#
+# COMMON TEST SETUP
+#
+
+set initialDir [tcltest::temporaryDirectory]
+
+#
+# TESTS
+#
 
 test winDialog-1.1 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
@@ -852,18 +876,17 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
     set a(text)
 } -result "Привет"
 
+#
+# TESTFILE CLEANUP
+#
+
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}
 }
 
-#
-# CLEANUP
-#
-
 unset applyFontCmd initialDir
 testutils forget dialog
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl
