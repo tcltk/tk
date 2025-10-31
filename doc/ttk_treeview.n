@@ -90,11 +90,9 @@ More items can be selected by extending the selection using the Shift and
 Control/Command keys in combination with the mouse and keyboard traversal.
 In this mode, the selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
-.
 .PP
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
-
 .RE
 .OP \-selecttype selectType SelectType
 Controls how the built-in class bindings manage the selection.
@@ -141,9 +139,35 @@ it refers to the item just after the last one.
 Indicates the first child in the list of children.
 .IP \fBlast\fR 12
 Indicates the last child in the list of children.
+.SH "COLUMN IDENTIFIERS"
+Column identifiers take any of the following forms:
+.IP \(bu
+A symbolic name from the list of \fB\-columns\fR.
+.IP \(bu
+An integer \fIn\fR, specifying the \fIn\fRth data column.
+.IP \(bu
+A string of the form \fB#\fIn\fR, where \fIn\fR is an integer, specifying
+the \fIn\fRth display column.
+.IP \(bu
+In the form of \fBend-\fIn\fR, specifying the \fIn\fRth display column
+from the end, where \fBend-1\fR is the last displayed column.
+.IP \(bu
+In the form of \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR for the \fIn\fRth data
+column relative to column \fIm\fR. See \fBstring index\fR for valid forms.
+.PP
+\fBNOTE:\fR
+.IP \(bu
+The data column number is the index in the \fB\-columns\fR list and
+corresponds to the same index in the item's \fB\-values\fR list.
+.IP \(bu
+The display column number is the index-1 in the \fB\-displaycolumns\fR list and
+corresponds to the order the columns are displayed except for column \fB#0\fR
+which always refers to the tree column, even if \fB\-show tree\fR is not specified.
+The display columns may be in a different order or exclude columns in the
+\fB\-columns\fR list. If \fB\-displaycolumns\fR is not set, then data column
+\fIn\fR is displayed in display column \fB#\fIn+1\fR.
 .PP
 .SH "WIDGET COMMAND"
-.PP
 In addition to the standard
 \fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
 \fBstate\fR, \fBstyle\fR, \fBxview\fR and \fByview\fR
@@ -335,7 +359,7 @@ column width may be changed by Tk in order to honor \fB\-stretch\fR
 and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
 heading column separator.
 .PP
-Use \fIpathname fBcolumn #0\fR to configure the tree column.
+Use \fIpathname \fBcolumn #0\fR to configure the tree column.
 .RE
 .\" METHOD: delete
 .TP
@@ -502,23 +526,17 @@ or if \fIindex\fR is specified, the index of the item at \fIindex\fR in
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
-Creates a new item, where \fIparent\fR is the identifier of the parent item,
-or the empty string \fB{}\fR to create a new top-level item and
-\fIindex\fR specifies where in the list of \fIparent\fR's children to insert
-the new item. See \fBINDICES\fR for valid forms of \fIindex\fR.
-If \fIindex\fR is negative or zero,
-the new node is inserted at the beginning;
+Creates a new item and returns its identifier, where \fIparent\fR is the
+identifier of the parent item, or the empty string \fB{}\fR to create a new
+top-level item and \fIindex\fR specifies where in the list of \fIparent\fR's
+children to insert the new item. See \fBINDICES\fR for valid forms of \fIindex\fR.
+If \fIindex\fR is negative or zero, the new node is inserted at the beginning;
 if \fIindex\fR is greater than or equal to the current number of children,
 it is inserted at the end.
 If \fB\-id\fR is specified, it is used as the identifier of the item;
 \fIid\fR must not already exist in the tree.
 Otherwise, a new unique identifier is generated.
-.RS
-.PP
-\fIpathname \fBinsert\fR returns the identifier of the
-newly created item.
 See \fBITEM OPTIONS\fR for the list of available options.
-.RE
 .\" METHOD: item
 .TP
 \fIpathname \fBitem \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
@@ -536,13 +554,9 @@ See \fBITEM OPTIONS\fR for the list of available options.
 .
 Moves \fIitem\fR to position \fIindex\fR in \fIparent\fR's list of children.
 See \fBINDICES\fR for valid forms of \fIindex\fR. It is illegal to move an item under one
-of its descendants.
-.RS
-.PP
-If \fIindex\fR is negative or zero, \fIitem\fR is moved
+of its descendants. If \fIindex\fR is negative or zero, \fIitem\fR is moved
 to the beginning; if greater than or equal to the number of children,
 it is moved to the end.
-.RE
 .\" METHOD: next
 .TP
 \fIpathname \fBnext \fIitem\fR
@@ -768,7 +782,7 @@ Set or get item \fIitem\fR column values.
 With one argument, returns a dictionary of all column/value pairs.
 With two arguments, returns the current value for column \fIcolumn\fR.
 With three or more arguments, sets the value of each column \fIcolumn\fR
-to the associated \fIvalue\fR.
+to the associated \fIvalue\fR. Use column \fB#0\fR for the tree column.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .\" METHOD: size
 .TP
@@ -831,7 +845,6 @@ script consisting of command with the two elements appended as additional
 arguments. The script should return an integer less than, equal to, or greater
 than zero if the first element is to be considered less than, equal to, or
 greater than the second, respectively.
-.TP
 .\" OPTION: -increasing
 .TP
 \fB\-increasing\fR
@@ -1034,35 +1047,6 @@ over tags.
 The -image option on an item, and on an item tag, controls the image next to
 the label in the tree column.
 Other cells can have images through the cell tag -image option.
-.SH "COLUMN IDENTIFIERS"
-.PP
-Column identifiers take any of the following forms:
-.IP \(bu
-A symbolic name from the list of \fB\-columns\fR.
-.IP \(bu
-An integer \fIn\fR, specifying the \fIn\fRth data column.
-.IP \(bu
-A string of the form \fB#\fIn\fR, where \fIn\fR is an integer,
-specifying the \fIn\fRth display column.
-.PP
-Column identifiers support the same simple interpretation as
-for the command \fBstring index\fR, with simple integer index
-arithmetic and indexing relative to \fBend\fR.
-.PP
-\fBNOTE:\fR
-Item \fB\-values\fR may be displayed in a different order than
-the order in which they are stored.
-.PP
-\fBNOTE:\fR Column #0 always refers to the tree column,
-even if \fB\-show tree\fR is not specified.
-.PP
-A \fIdata column number\fR is an index into an item's \fB\-values\fR list;
-a \fIdisplay column number\fR is the column number in the tree
-where the values are displayed.
-Tree labels are displayed in column #0.
-If \fB\-displaycolumns\fR is not set,
-then data column \fIn\fR is displayed in display column \fB#\fIn+1\fR.
-Again, \fBcolumn #0 always refers to the tree column\fR.
 .SH "VIRTUAL EVENTS"
 .PP
 The treeview widget generates the following virtual events.
