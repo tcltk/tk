@@ -25,5 +25,5 @@ necessarily in Tk 8.
  
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- - [MS-Win: The XP dialog variants for tk_chooseDirectory/tk_getOpenFile and the "xpnative" ttk style is gone, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c526c0d)
+ - [MS-Win: The "xpnative" ttk style is gone too, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
  
