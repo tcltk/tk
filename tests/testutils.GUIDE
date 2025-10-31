@@ -124,9 +124,8 @@ mechanism, whether debugging or improving it otherwise.
 B1. Files and file loading
 --------------------------
 The entire testutils mechanism is implemented in a single file "testutils.tcl".
-This file is sourced on behalf of each test file by a command in the file
-"main.tcl", which in turn is loaded through the tcltest option "-loadfile" in
-the file "all.tcl".
+This file is sourced by the file "main.tcl", which in turn is sourced by
+each testfile.
 
 B2. Importing procs and associated namespace variables
 ------------------------------------------------------
@@ -167,8 +166,8 @@ Note that the namespace variables "doneNess" and "seasonings" are initialized
 with a value, while the namespace variable "tasteVerdict" is not. Both variants
 of declaring/defining a namespace variable are supported.
 
-B3. Tricky aspects of repeated initialization
----------------------------------------------
+B3. Tricky aspects of repeated initialization (in mode "-singleproc 1")
+-----------------------------------------------------------------------
 While the entire Tk test suite is running, many test files are loaded, each of
 which may import and subsequently forget utility domains. When tracking a single
 utility domain across test files that come and go, associated namespace variables

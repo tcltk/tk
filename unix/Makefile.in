@@ -723,10 +723,10 @@ tktest-real: ${TK_STUB_LIB_FILE}
 test: test-classic test-ttk
 
 test-classic: $(TKTEST_EXE)
-	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl $(TESTFLAGS)
 
 test-ttk: $(TKTEST_EXE)
-	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl \
 	$(TESTFLAGS)
 
 # Tests with different languages
@@ -735,7 +735,7 @@ testlang: $(TKTEST_EXE)
 	for lang in $(LOCALES) ;  \
 	do \
 	LANG=$(lang); export LANG; \
-	./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 \
+	./$(TKTEST_EXE) $(TEST_DIR)/all.tcl \
 	$(TESTFLAGS); \
 	done
 
@@ -762,7 +762,7 @@ gdb: ${WISH_EXE}
 VALGRINDARGS=--tool=memcheck --num-callers=8 --leak-resolution=high --leak-check=yes --show-reachable=yes -v
 
 valgrind: $(TKTEST_EXE)
-	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -singleproc 1 $(TESTFLAGS)
 
 valgrindshell: $(TKTEST_EXE)
 	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)

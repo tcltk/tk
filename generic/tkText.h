@@ -1093,7 +1093,7 @@ MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 MODULE_SCOPE int	TkTextMeasureDown(TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance);
 MODULE_SCOPE void	TkTextFreeElideInfo(TkTextElideInfo *infoPtr);
-MODULE_SCOPE int	TkTextIsElided(const TkText *textPtr,
+MODULE_SCOPE bool	TkTextIsElided(const TkText *textPtr,
 			    const TkTextIndex *indexPtr,
 			    TkTextElideInfo *infoPtr);
 MODULE_SCOPE int	TkTextMakePixelIndex(TkText *textPtr,
