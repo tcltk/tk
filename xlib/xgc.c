@@ -664,24 +664,6 @@ XCreateWindow(
 	return 0;
 }
 
-int
-XPointInRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-	return 0;
-}
-
-int
-XUnionRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
-{
-	return 0;
-}
-
 Region
 XPolygonRegion(
     TCL_UNUSED(XPoint *),
