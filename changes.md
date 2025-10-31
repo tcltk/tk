@@ -21,6 +21,9 @@ necessarily in Tk 8.
  - [Constrain own Dialogs to the physical screen size](https://core.tcl-lang.org/tk/info/7c28f835)
  - [Add a ttk::toggleswitch widget to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/727.md)
  - [Add a tk attribtable command to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/729.md)
-
+ - [Implement more X11 region functions on Windows and Aqua](https://core.tcl-lang.org/tk/info/50fdbc36ad)
+ 
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: The XP dialog variants for tk_chooseDirectory/tk_getOpenFile and the "xpnative" ttk style is gone, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c526c0d)
+ 
