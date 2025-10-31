@@ -29,7 +29,7 @@ const int tkpWinRopModes[] = {
     R2_MASKPENNOT,		/* GXandReverse */
     R2_COPYPEN,			/* GXcopy */
     R2_MASKNOTPEN,		/* GXandInverted */
-    R2_NOT,			/* GXnoop */
+    R2_NOP,			/* GXnoop */
     R2_XORPEN,			/* GXxor */
     R2_MERGEPEN,		/* GXor */
     R2_NOTMERGEPEN,		/* GXnor */

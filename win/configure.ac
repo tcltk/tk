@@ -15,7 +15,7 @@ SHELL=/bin/sh
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -356,6 +356,11 @@ AC_SUBST(RC_INCLUDE)
 AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
+AC_SUBST(XLIBSW)
+AC_SUBST(XFT_LIBS)
+AC_CONFIG_FILES([
+    tk.pc:../unix/tk.pc.in
+])
 
 AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
 AC_OUTPUT

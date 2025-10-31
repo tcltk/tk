@@ -1,27 +1,32 @@
-# This file is a Tcl script to test out Tk's "tk_chooseDir" and
-# It is organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out Tk's "tk_chooseDir".
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import dialog
 
-#----------------------------------------------------------------------
 #
-# Procedures needed by this test file
+# LOCAL UTILITY PROCS
 #
-#----------------------------------------------------------------------
-
-proc ToEnterDirsByKey {parent dirs} {
-    after 100 [list EnterDirsByKey $parent $dirs]
-}
 
 proc EnterDirsByKey {parent dirs} {
     if {$parent == "."} {
@@ -40,17 +45,22 @@ proc EnterDirsByKey {parent dirs} {
     }
 }
 
-#----------------------------------------------------------------------
+proc ToEnterDirsByKey {parent dirs} {
+    after 100 [list EnterDirsByKey $parent $dirs]
+}
+
 #
-# The test suite proper
+# COMMON TEST SETUP
 #
-#----------------------------------------------------------------------
+set parent .
+
 # Make a dir for us to rely on for tests
 set real [makeDirectory choosedirTest]
-set dir [file dirname $real]
-set fake [file join $dir non-existant]
+set fake [file join [file dirname $real] non-existant]
 
-set parent .
+#
+# TESTS
+#
 
 test choosedir-1.1 {tk_chooseDirectory command} -body {
     tk_chooseDirectory -initialdir
@@ -136,10 +146,10 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 } -result $real
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
+unset fake parent real
 removeDirectory choosedirTest
 testutils forget dialog
 cleanupTests
-return

@@ -1,9 +1,57 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::panedwindow widget tests
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# checkorder --
+#	Ensure that Y coordinates windows in $winlist are strictly increasing.
+#
+proc checkorder {winlist} {
+    set pos -1
+    set positions [list]
+    foreach win $winlist {
+	lappend positions [set nextpos [winfo y $win]]
+	if {$nextpos <= $pos} {
+	    error "window $win out of order ($positions)"
+	}
+	set pos $nextpos
+    }
+}
 
 proc propagate-geometry {} { update idletasks }
+
+proc sashpositions {pw} {
+    set positions [list]
+    set npanes [llength [winfo children $pw]]
+    for {set i 0} {$i < $npanes - 1} {incr i} {
+	lappend positions [$pw sashpos $i]
+    }
+    return $positions
+}
+
+#
+# TESTS
+#
 
 # Basic sanity checks:
 #
@@ -122,9 +170,6 @@ test panedwindow-2.3 "..., cont'd" -body {
 
 test panedwindow-2.end "Cleanup" -body { destroy .pw }
 
-#
-# ...
-#
 test panedwindow-3.0 "configure pane" -body {
     ttk::panedwindow .pw
     .pw add [listbox .pw.lb1]
@@ -165,21 +210,6 @@ test panedwindow-4.2 "forget forgotten" -body {
     .pw forget .pw.l1
 } -returnCodes error -result ".pw.l1 is not managed by .pw"
 
-# checkorder $winlist --
-#	Ensure that Y coordinates windows in $winlist are strictly increasing.
-#
-proc checkorder {winlist} {
-    set pos -1
-    set positions [list]
-    foreach win $winlist {
-	lappend positions [set nextpos [winfo y $win]]
-	if {$nextpos <= $pos} {
-	    error "window $win out of order ($positions)"
-	}
-	set pos $nextpos
-    }
-}
-
 test panedwindow-4.3 "insert command" -body {
     .pw insert end .pw.l1
     .pw insert end .pw.l3
@@ -215,14 +245,6 @@ test panedwindow-5.1 "Propagate Map/Unmap state to children" -body {
 
 ### sashpos tests.
 #
-proc sashpositions {pw} {
-    set positions [list]
-    set npanes [llength [winfo children $pw]]
-    for {set i 0} {$i < $npanes - 1} {incr i} {
-	lappend positions [$pw sashpos $i]
-    }
-    return $positions
-}
 
 test paned-sashpos-setup "Setup for sash position test" -body {
     ttk::style theme use default
@@ -322,5 +344,9 @@ test panedwindow-6.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

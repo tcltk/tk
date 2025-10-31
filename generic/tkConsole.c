@@ -759,7 +759,7 @@ ConsoleObjCmd(
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"no active console interp", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NONE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NONE", (char *)NULL);
 	result = TCL_ERROR;
     }
     Tcl_DecrRefCount(cmd);
@@ -810,7 +810,7 @@ InterpreterObjCmd(
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"no active parent interp", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", (char *)NULL);
 	return TCL_ERROR;
     }
 

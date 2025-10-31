@@ -101,10 +101,12 @@ DrawXORMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Account for height*2 thing */
     lpIcon->lpbi->bmiHeader.biHeight /= 2;
@@ -152,10 +154,12 @@ DrawANDMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Need a bitmap header for the mono mask */
     lpbi = ckalloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
@@ -233,7 +237,8 @@ TaskbarOperation(
 	Tcl_DString dst;
 	Tcl_DStringInit(&dst);
 	str = (WCHAR *)Tcl_UtfToWCharDString(Tcl_GetString(icoPtr->taskbar_txt), TCL_INDEX_NONE, &dst);
-	wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
+	wcsncpy(ni.szTip, str, sizeof(ni.szTip) / sizeof(WCHAR) - 1);
+	ni.szTip[sizeof(ni.szTip) / sizeof(WCHAR) - 1] = '\0';
 	Tcl_DStringFree(&dst);
     } else {
 	ni.szTip[0] = 0;
@@ -352,10 +357,11 @@ static IcoInfo *
 GetIcoPtr(
     Tcl_Interp *interp,
     IcoInterpInfo *icoInterpPtr,
-    const char *string)
+    Tcl_Obj *obj)
 {
     IcoInfo *icoPtr;
     unsigned id;
+    const char *string = Tcl_GetString(obj);
     const char *start;
     char *end;
 
@@ -395,15 +401,15 @@ notfound:
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 GetInt(
-    long theint,
+    Tcl_Size theint,
     char *buffer,
     size_t len)
 {
-    snprintf(buffer, len, "0x%lx", theint);
+    snprintf(buffer, len, "0x%" TCL_SIZE_MODIFIER "x", theint);
     buffer[len - 1] = 0;
-    return (int) strlen(buffer);
+    return strlen(buffer);
 }
 
 /*
@@ -457,7 +463,7 @@ TaskbarExpandPercents(
     LPARAM lParam,
     char *before,
     char *after,
-    int *aftersize)
+    size_t *aftersize)
 {
 #define SPACELEFT (*aftersize-(dst-after)-1)
 #define AFTERLEN ((*aftersize>0)?(*aftersize*2):1024)
@@ -467,7 +473,7 @@ TaskbarExpandPercents(
     dst = after;
     while (*before) {
 	const char *ptr = before;
-	int len = 1;
+	size_t len = 1;
 	if(*before == '%') {
 	    switch(before[1]){
 		case 'M':
@@ -479,7 +485,7 @@ TaskbarExpandPercents(
 		}
 		/* case 'W': {
 		   before++;
-		   len = (int)strlen(winstring);
+		   len = strlen(winstring);
 		   ptr = winstring;
 		   break;
 		   }
@@ -558,14 +564,15 @@ TaskbarExpandPercents(
 	if (SPACELEFT < len) {
 	    char *newspace;
 	    ptrdiff_t dist = dst - after;
-	    int alloclen = ALLOCLEN;
+	    size_t alloclen = ALLOCLEN;
 	    newspace = (char *)ckalloc(alloclen);
-	    if (dist>0)
+	    if (dist>0) {
 		memcpy(newspace, after, dist);
+	    }
 	    if (after && *aftersize) {
 		ckfree(after);
 	    }
-	    *aftersize =alloclen;
+	    *aftersize = alloclen;
 	    after = newspace;
 	    dst = after + dist;
 	}
@@ -573,7 +580,7 @@ TaskbarExpandPercents(
 	    memcpy(dst, ptr, len);
 	}
 	dst += len;
-	if ((dst-after)>(*aftersize-1)) {
+	if ((dst-after)>((Tcl_Size)*aftersize-1)) {
 	    printf("oops\n");
 	}
 	before++;
@@ -606,7 +613,7 @@ TaskbarEval(
 {
     const char *msgstring = "none";
     char evalspace[200];
-    int evalsize = 200;
+    size_t evalsize = 200;
     char *expanded;
     int fixup = 0;
 
@@ -823,8 +830,9 @@ CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
     HINSTANCE hInstance = GETHINSTANCE;
     if (!registered) {
-	if (!RegisterHandlerClass(hInstance))
+	if (!RegisterHandlerClass(hInstance)) {
 	    return 0;
+	}
 	registered = 1;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
@@ -915,7 +923,7 @@ WinSystrayCmd(
     int cmd, opt;
 
     HICON hIcon;
-    int i;
+    Tcl_Size i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr = NULL;
 
@@ -943,7 +951,7 @@ WinSystrayCmd(
 		    Tcl_WrongNumArgs(interp, 2, objv, "id option value");
 		    return TCL_ERROR;
 		}
-		icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+		icoPtr = GetIcoPtr(interp, icoInterpPtr, objv[2]);
 		if (icoPtr == NULL) {
 		    return TCL_ERROR;
 		}
@@ -1032,7 +1040,7 @@ WinSystrayCmd(
 		Tcl_WrongNumArgs(interp, 2, objv, "id");
 		return TCL_ERROR;
 	    }
-	    icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+	    icoPtr = GetIcoPtr(interp, icoInterpPtr, objv[2]);
 	    if (icoPtr == NULL) {
 		return TCL_ERROR;
 	    }
@@ -1067,11 +1075,7 @@ WinSysNotifyCmd(
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
-    Tcl_DString infodst;
-    Tcl_DString titledst;
     NOTIFYICONDATAW ni;
-    char *msgtitle;
-    char *msginfo;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "command ...");
@@ -1087,7 +1091,7 @@ WinSysNotifyCmd(
 	return TCL_ERROR;
     }
 
-    icoPtr = GetIcoPtr(interp, icoInterpPtr, Tcl_GetString(objv[2]));
+    icoPtr = GetIcoPtr(interp, icoInterpPtr, objv[2]);
     if (icoPtr == NULL) {
 	return TCL_ERROR;
     }
@@ -1100,24 +1104,17 @@ WinSysNotifyCmd(
     ni.hIcon = icoPtr->hIcon;
     ni.dwInfoFlags = NIIF_INFO; /* Use a sane platform-specific icon here.*/
 
-    msgtitle = Tcl_GetString(objv[3]);
-    msginfo = Tcl_GetString(objv[4]);
-
     /* Balloon notification for system tray icon. */
-    if (msgtitle != NULL) {
-	WCHAR *title;
-	Tcl_DStringInit(&titledst);
-	title = Tcl_UtfToWCharDString(msgtitle, TCL_INDEX_NONE, &titledst);
-	wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
-	Tcl_DStringFree(&titledst);
-    }
-    if (msginfo != NULL) {
-	WCHAR *info;
-	Tcl_DStringInit(&infodst);
-	info = Tcl_UtfToWCharDString(msginfo, TCL_INDEX_NONE, &infodst);
-	wcsncpy(ni.szInfo, info, (Tcl_DStringLength(&infodst) + 2) / 2);
-	Tcl_DStringFree(&infodst);
-    }
+    Tcl_DString dst;
+    Tcl_DStringInit(&dst);
+    WCHAR *title = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]), TCL_INDEX_NONE, &dst);
+    wcsncpy(ni.szInfoTitle, title, sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1);
+    ni.szInfoTitle[sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1] = '\0';
+    Tcl_DStringSetLength(&dst, 0);
+    WCHAR *info = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]), TCL_INDEX_NONE, &dst);
+    wcsncpy(ni.szInfo, info, sizeof(ni.szInfo) / sizeof(WCHAR) - 1);
+    ni.szInfo[sizeof(ni.szInfo) / sizeof(WCHAR) - 1] = '\0';
+    Tcl_DStringFree(&dst);
 
     Shell_NotifyIconW(NIM_MODIFY, &ni);
     return TCL_OK;

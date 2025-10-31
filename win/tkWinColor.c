@@ -156,7 +156,7 @@ FindSystemColor(
 TkColor *
 TkpGetColor(
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to allocated (in form
+    const char *name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     WinColor *winColPtr;
@@ -494,7 +494,7 @@ XCreateColormap(
     logPalettePtr = (LOGPALETTE *) logPalBuf;
     logPalettePtr->palVersion = 0x300;
     sysPal = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
-    logPalettePtr->palNumEntries = GetPaletteEntries(sysPal, 0, 256,
+    logPalettePtr->palNumEntries = (WORD)GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
     cmap = (TkWinColormap *)ckalloc(sizeof(TkWinColormap));

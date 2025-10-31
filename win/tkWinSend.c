@@ -147,7 +147,7 @@ Tk_SetAppName(
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "failed to initialize the COM library", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", (char *)NULL);
 	    return "";
 	}
 	tsdPtr->initialized = 1;
@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep;
     int result = TCL_OK;
-    int i, async = 0, index;
+    int async = 0, index;
+    Tcl_Size i;
 
     /*
      * Process the command options.

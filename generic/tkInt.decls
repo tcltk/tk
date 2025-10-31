@@ -212,7 +212,7 @@ declare 54 {
 	    double width, int filled, double pointPtr[])
 }
 declare 55 {
-    int TkpChangeFocus(TkWindow *winPtr, int force)
+    size_t TkpChangeFocus(TkWindow *winPtr, int force)
 }
 declare 56 {
     void TkpCloseDisplay(TkDisplay *dispPtr)
@@ -718,7 +718,7 @@ declare 16 win {
     HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
 }
 declare 17 win {
-    int TkWinGetModifierState(void)
+    unsigned int TkWinGetModifierState(void)
 }
 declare 18 win {
     HPALETTE TkWinGetSystemPalette(void)
@@ -779,9 +779,11 @@ declare 33 win {
 declare 34 win {
     void TkWinSetHINSTANCE(HINSTANCE hInstance)
 }
-declare 35 win {
-    int TkWinGetPlatformTheme(void)
-}
+
+# removed in Tk 9.1
+#declare 35 win {
+#    int TkWinGetPlatformTheme(void)
+#}
 
 # Exported through stub table since Tk 8.4.20/8.5.9
 
@@ -915,7 +917,7 @@ declare 38 aqua {
     int TkSetMacColor(unsigned long pixel, void *macColor)
 }
 declare 39 aqua {
-    void TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid)
+    void TkSetWMName(TkWindow *winPtr, const char *title)
 }
 declare 41 aqua {
     int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
@@ -1427,6 +1429,12 @@ declare 142 win {
 declare 143 win {
     void XSetICFocus(XIC xic)
 }
+declare 144 win {
+    int XXorRegion(Region sra, Region srb, Region dr_return)
+}
+declare 145 win {
+    Bool XEqualRegion(Region r1, Region r2)
+}
 declare 147 win {
     void XFreeFontSet(Display *display, XFontSet fontset)
 }
@@ -1932,6 +1940,12 @@ declare 142 macosx {
 }
 declare 143 macosx {
     void XSetICFocus(XIC xic)
+}
+declare 144 macosx {
+    int XXorRegion(Region sra, Region srb, Region dr_return)
+}
+declare 145 macosx {
+    Bool XEqualRegion(Region r1, Region r2)
 }
 declare 147 macosx {
     void XFreeFontSet(Display *display, XFontSet fontset)

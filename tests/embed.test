@@ -4,11 +4,26 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test embed-1.1 {Tk_UseWindow procedure, bad window identifier} -setup {
     deleteWindows
@@ -81,8 +96,8 @@ test embed-1.5.nonwin {Tk_UseWindow procedure, -container must be set} -constrai
     deleteWindows
 } -returnCodes error -result {window ".container" doesn't have -container option set}
 
+#
+# TESTFILE CLEANUP
+#
 
 cleanupTests
-return
-
-

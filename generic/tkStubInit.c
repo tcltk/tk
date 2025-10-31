@@ -188,7 +188,6 @@ TkPutImage(
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
 #	define TkWinSetHINSTANCE 0
-#	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
 #   endif
@@ -466,7 +465,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWinGetMenuSystemDefault, /* 32 */
     TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
-    TkWinGetPlatformTheme, /* 35 */
+    0, /* 35 */
     TkWinChildProc, /* 36 */
     0, /* 37 */
     TkpCmapStressed, /* 38 */
@@ -732,8 +731,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
+    XXorRegion, /* 144 */
+    XEqualRegion, /* 145 */
     0, /* 146 */
     XFreeFontSet, /* 147 */
     XCloseIM, /* 148 */
@@ -893,8 +892,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
+    XXorRegion, /* 144 */
+    XEqualRegion, /* 145 */
     0, /* 146 */
     XFreeFontSet, /* 147 */
     XCloseIM, /* 148 */

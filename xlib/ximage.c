@@ -47,10 +47,11 @@ XCreateBitmapFromData(
     pix = Tk_GetPixmap(display, d, (int) width, (int) height, 1);
     gc = XCreateGC(display, pix, 0, NULL);
     if (gc == NULL) {
+	Tk_FreePixmap(display, pix);
 	return None;
     }
     ximage = XCreateImage(display, NULL, 1, XYBitmap, 0, (char*) data, width,
-	    height, 8, (width + 7) / 8);
+	    height, 8, ((int)width + 7) / 8);
     if (ximage) {
 	ximage->bitmap_bit_order = LSBFirst;
 	_XInitImageFuncPtrs(ximage);

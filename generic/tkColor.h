@@ -69,7 +69,7 @@ typedef struct TkColor {
 #ifndef TkpFreeColor
 MODULE_SCOPE void	TkpFreeColor(TkColor *tkColPtr);
 #endif
-MODULE_SCOPE TkColor *	TkpGetColor(Tk_Window tkwin, Tk_Uid name);
+MODULE_SCOPE TkColor *	TkpGetColor(Tk_Window tkwin, const char *name);
 MODULE_SCOPE TkColor *	TkpGetColorByValue(Tk_Window tkwin, XColor *colorPtr);
 
 #endif /* _TKCOLOR */

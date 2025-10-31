@@ -391,7 +391,7 @@ MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
  * +++ Stub table declarations.
  */
 
-#include "ttkDecls.h"
+#include "ttkDecls.h"  /* IWYU pragma: export */
 
 /*
  * Drawing utilities for theme code:

@@ -641,6 +641,8 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+XFT_LIBS
+XLIBSW
 RES
 RC_DEFINES
 RC_DEFINE
@@ -2408,7 +2410,7 @@ SHELL=/bin/sh
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -4363,7 +4365,7 @@ printf "%s\n" "$ac_cv_win32" >&6; }
 	if test "$ac_cv_win32" != "yes"; then
 	    as_fn_error $? "${CC} cannot produce win32 executables." "$LINENO" 5
 	fi
-	if test "$do64bit" != "arm64"; then
+	if test "$do64bit" != "arm64" -a "$do64bit" != "aarch64"; then
 	    extra_cflags="$extra_cflags -DHAVE_CPUID=1"
 	fi
 
@@ -4453,8 +4455,6 @@ printf "%s\n" "$ac_cv_municode" >&6; }
 	CFLAGS=$hold_cflags
 	if test "$ac_cv_municode" = "yes" ; then
 	    extra_ldflags="$extra_ldflags -municode"
-	else
-	    extra_cflags="$extra_cflags -DTCL_BROKEN_MAINARGS"
 	fi
 	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for working -fno-lto" >&5
@@ -4493,6 +4493,44 @@ printf "%s\n" "$ac_cv_nolto" >&6; }
 	else
 	    CFLAGS_NOLTO=""
 	fi
+
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if the linker understands --disable-high-entropy-va" >&5
+printf %s "checking if the linker understands --disable-high-entropy-va... " >&6; }
+if test ${tcl_cv_ld_high_entropy+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e)
+	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS  -Wl,--disable-high-entropy-va"
+	    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  tcl_cv_ld_high_entropy=yes
+else case e in #(
+  e) tcl_cv_ld_high_entropy=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+	    CFLAGS=$hold_cflags ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_ld_high_entropy" >&5
+printf "%s\n" "$tcl_cv_ld_high_entropy" >&6; }
+	if test $tcl_cv_ld_high_entropy = yes; then
+	    extra_ldflags="$extra_ldflags -Wl,--disable-high-entropy-va"
+	fi
+
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if the compiler understands -finput-charset" >&5
 printf %s "checking if the compiler understands -finput-charset... " >&6; }
 if test ${tcl_cv_cc_input_charset+y}
@@ -4548,14 +4586,15 @@ main (void)
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"
+if ac_fn_c_try_link "$LINENO"
 then :
   ac_cv_enable_auto_image_base=yes
 else case e in #(
   e) ac_cv_enable_auto_image_base=no ;;
 esac
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
      ;;
 esac
 fi
@@ -4573,7 +4612,7 @@ printf %s "checking compiler flags... " >&6; }
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
 	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -loleacc -lole32 -loleaut32 -lwinspool -luxtheme -luiautomationcore"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -4728,7 +4767,7 @@ printf "%s\n" "using shared flags" >&6; }
 	    EXESUFFIX=".exe"
 	    case "x`echo \${VisualStudioVersion}`" in
 		x1[4-9]*)
-		    lflags="${lflags} -nodefaultlib:libucrt.lib"
+		    lflags="${lflags} -nodefaultlib:ucrt.lib"
 		    ;;
 		*)
 		    ;;
@@ -4787,7 +4826,7 @@ printf "%s\n" "   Using 64-bit $MACHINE mode" >&6; }
 	    LINKBIN="link"
 	fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib uxtheme.lib oleacc.lib ole32.lib uiautomationcore.lib"
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
 	SHLIB_LD_LIBS='${LIBS}'
@@ -4976,15 +5015,6 @@ printf "%s\n" "$tcl_cv_eh_disposition" >&6; }
 printf "%s\n" "#define EXCEPTION_DISPOSITION int" >>confdefs.h
 
 	fi
-
-	ac_fn_c_check_header_compile "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
-if test "x$ac_cv_header_stdbool_h" = xyes
-then :
-
-printf "%s\n" "#define HAVE_STDBOOL_H 1" >>confdefs.h
-
-fi
-
 
 	# See if the compiler supports casting to a union type.
 	# This is used to stop gcc from printing a compiler
@@ -5998,6 +6028,10 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
 
+
+ac_config_files="$ac_config_files tk.pc:../unix/tk.pc.in"
+
+
 ac_config_files="$ac_config_files Makefile tkConfig.sh wish.exe.manifest"
 
 cat >confcache <<\_ACEOF
@@ -6701,6 +6735,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
+    "tk.pc") CONFIG_FILES="$CONFIG_FILES tk.pc:../unix/tk.pc.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "tkConfig.sh") CONFIG_FILES="$CONFIG_FILES tkConfig.sh" ;;
     "wish.exe.manifest") CONFIG_FILES="$CONFIG_FILES wish.exe.manifest" ;;

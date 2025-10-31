@@ -193,12 +193,12 @@ static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
 static int              ParseOFNOptions(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 			    enum OFNOper oper);
 static int		GetFileName(void *clientData,
-				    Tcl_Interp *interp, int objc,
+				    Tcl_Interp *interp, Tcl_Size objc,
 				    Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	       DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
@@ -314,7 +314,8 @@ Tk_ChooseColorObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
     HWND hWnd;
-    int i, oldMode, winCode, result;
+    Tcl_Size i;
+    int oldMode, winCode, result;
     CHOOSECOLORW chooseColor;
     static int inited = 0;
     static COLORREF dwCustColors[16];
@@ -368,7 +369,7 @@ Tk_ChooseColorObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -591,12 +592,12 @@ static int
 ParseOFNOptions(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum OFNOper oper,			/* 1 for Open, 0 for Save */
     OFNOpts *optsPtr)           /* Output, uninitialized on entry */
 {
-    int i;
+    Tcl_Size i;
     Tcl_DString ds;
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
@@ -662,7 +663,7 @@ ParseOFNOptions(
 	} else if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 				 "value for \"%s\" missing", options[index].name));
-	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", (char *)NULL);
 	    goto error_return;
 	}
 
@@ -1054,7 +1055,7 @@ static int
 GetFileName(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum OFNOper oper)	/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
@@ -1333,8 +1334,8 @@ Tk_MessageBoxObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData, parent;
     HWND hWnd;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
-    int defaultBtn, icon, type;
-    int i, oldMode, winCode;
+    int defaultBtn, icon, type, oldMode, winCode;
+    Tcl_Size i;
     UINT flags;
     static const char *const optionStrings[] = {
 	"-default",	"-detail",	"-icon",	"-message",
@@ -1372,7 +1373,7 @@ Tk_MessageBoxObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1444,7 +1445,7 @@ Tk_MessageBoxObjCmd(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "invalid default button \"%s\"",
 			    TkFindStateString(buttonMap, defaultBtn)));
-		    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		break;
@@ -1763,15 +1764,15 @@ HookProc(
  * any of the options (which may be NULL in the structure)
  */
 
-enum FontchooserOption {
+typedef enum {
     FontchooserCmd, FontchooserFont, FontchooserParent, FontchooserTitle,
     FontchooserVisible
-};
+} FontchooserOption;
 
 static Tcl_Obj *
 FontchooserCget(
     HookData *hdPtr,
-    int optionIndex)
+    FontchooserOption optionIndex)
 {
     Tcl_Obj *resObj = NULL;
 
@@ -1857,7 +1858,7 @@ FontchooserConfigureCmd(
 
 	for (i = 0; r == TCL_OK && optionStrings[i] != NULL; ++i) {
 	    keyObj = Tcl_NewStringObj(optionStrings[i], TCL_INDEX_NONE);
-	    valueObj = FontchooserCget(hdPtr, i);
+	    valueObj = FontchooserCget(hdPtr, (FontchooserOption)i);
 	    r = Tcl_DictObjPut(interp, dictObj, keyObj, valueObj);
 	}
 	if (r == TCL_OK) {
@@ -1884,7 +1885,7 @@ FontchooserConfigureCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
@@ -1893,7 +1894,7 @@ FontchooserConfigureCmd(
 		    "\"-visible\": use the show or hide command";
 
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	case FontchooserParent: {

@@ -1,23 +1,47 @@
-##
-## Entry widget validation tests
-## Derived from core test suite entry-19.1 through entry-19.20
-##
+#
+# Entry widget validation tests
+# Derived from core test suite entry-19.1 through entry-19.20
+#
 
-package require tk
-package require tcltest 2.2
-eval tcltest::configure $argv
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import entry
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+testConstraint ttkEntry 1
+testConstraint coreEntry [expr {![testConstraint ttkEntry]}]
+testConstraint NA 0
+
+#
+# COMMON TEST SETUP
+#
+
 foreach i {1 2 3 4} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 
-testConstraint ttkEntry 1
-testConstraint coreEntry [expr {![testConstraint ttkEntry]}]
-
+#
+# TESTS
+#
 
 test validate-0.0 "Setup" -constraints ttkEntry -body {
     rename entry {}
@@ -96,7 +120,12 @@ test validate-1.9 {entry widget validation - vmode focus} -body {
     set validationData
 } -result {.e -1 -1 abcd abcd {} focus focusout}
 
+#
+# COMMON TEST SETUP
+#
+
 .e configure -validate all
+
 test validate-1.10 {entry widget validation - vmode all} -body {
     set validationData {}
     set timer [after 300 validationData lappend timeout]
@@ -114,6 +143,11 @@ test validate-1.11 {entry widget validation} -body {
     after cancel $timer
     set validationData
 } -result {.e -1 -1 abcd abcd {} all focusout}
+
+#
+# COMMON TEST SETUP
+#
+
 .e configure -validate focusin
 
 test validate-1.12 {entry widget validation} -body {
@@ -131,6 +165,11 @@ test validate-1.13 {entry widget validation} -body {
     update
     set validationData
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
+
 .e configure -validate focuso
 
 test validate-1.14 {entry widget validation} -body {
@@ -198,6 +237,10 @@ test validate-2.1 "Validation script changes value" -body {
 } -result {dovaldata dovaldata {.e -1 -1 testdata testdata {} all forced}}
 # DIFFERENCE: core entry disables validation, ttk entry does not.
 
+#
+# COMMON TEST CLEANUP
+#
+
 destroy .e
 catch {unset textVar}
 
@@ -245,7 +288,6 @@ test validate-3.4 "revalidate" -body {
     return [list [.e validate] [.e get] [.e state]]
 } -result [list 0 1234XY {invalid}]
 
-testConstraint NA 0
 # the next two tests (used to) exercise validation lockout protection --
 # if the widget is currently invalid, all edits are allowed.
 # This behavior is currently disabled.
@@ -263,7 +305,7 @@ test validate-3.6 "...until the value becomes valid" -constraints NA -body {
 test validate-3.last "Cleanup" -body { destroy .e }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 foreach i {1 2 3 4} {

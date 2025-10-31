@@ -1,17 +1,32 @@
 # This file is a Tcl script to test the procedures in the file
-# tkGeometry.c (generic support for geometry managers).  It is
-# organized in the standard fashion for Tcl tests.
+# tkGeometry.c (generic support for geometry managers).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+
+#
+# COMMON TEST SETUP
+#
 
 wm geometry . 300x300
 raise .
@@ -24,6 +39,10 @@ button .b1 -text .b1
 button .b2 -text .b2
 button .b3 -text .b3
 button .f.f.b4 -text .b4
+
+#
+# TESTS
+#
 
 test geometry-1.1 {Tk_ManageGeometry procedure} -setup {
 	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
@@ -279,8 +298,8 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     destroy .t
 } -result 1
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return
-

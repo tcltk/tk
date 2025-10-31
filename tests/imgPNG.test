@@ -1,6 +1,5 @@
 # This file is a Tcl script to test out the code in tkImgFmtPNG.c, which reads
-# and write PNG-format image files for photo widgets. The files is organized
-# in the standard fashion for Tcl tests.
+# and write PNG-format image files for photo widgets.
 #
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
@@ -8,15 +7,31 @@
 # Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# COMMON TEST SETUP
+#
 
 namespace eval png {
     variable encoded
@@ -1066,6 +1081,11 @@ FklEQVR4nGP4+vXrP11lJgYGhj9xSQAzOwXsETZ69QAAAABJRU5ErkJggg=="
 	}
 
 # $encoded(basn0g08), $encoded(basn2c08), $encoded(basn3p08), $encoded(basn6a08)
+
+#
+# TESTS
+#
+
 test imgPNG-1.1 {reading basic images; grayscale} -setup {
     catch {rename foo ""}
 } -body {
@@ -1130,7 +1150,7 @@ test imgPNG-4.1 {data image with metadata} -body {
 } -result {DPI 99.9998 aspect 2.0}
 
 test imgPNG-4.2 {file image with metadata} -setup {
-    set path [file join [configure -tmpdir] test.png]
+    set path [file join [tcltest::configure -tmpdir] test.png]
     set h [open $path "WRONLY BINARY CREAT"]
     puts -nonewline $h [binary decode base64 $encoded(dpi100aspect2)]
     close $h
@@ -1155,7 +1175,7 @@ test imgPNG-4.3 {data output with metadata} -setup {
 
 test imgPNG-4.4 {file output with metadata} -setup {
     image create photo i1 -data $encoded(dpi100aspect2)
-    set path [file join [configure -tmpdir] test.png]
+    set path [file join [tcltest::configure -tmpdir] test.png]
 } -body {
     i1 write $path -format png
     image delete i1
@@ -1169,14 +1189,13 @@ test imgPNG-4.4 {file output with metadata} -setup {
 }
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete png
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

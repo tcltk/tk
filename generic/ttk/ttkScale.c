@@ -271,8 +271,9 @@ ScaleGetCommand(
 	Tcl_SetObjResult(interp, scalePtr->scale.valueObj);
     } else if (objc == 4) {
 	r = Tcl_GetIntFromObj(interp, objv[2], &x);
-	if (r == TCL_OK)
+	if (r == TCL_OK) {
 	    r = Tcl_GetIntFromObj(interp, objv[3], &y);
+	}
 	if (r == TCL_OK) {
 	    value = PointToValue(scalePtr, x, y);
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(value));
@@ -440,14 +441,27 @@ static double
 PointToValue(Scale *scalePtr, int x, int y)
 {
     Ttk_Box troughBox = TroughRange(scalePtr);
-    double from = 0, to = 1, fraction;
+    double value = 0, from = 0, to = 1, fraction;
 
+    Tcl_GetDoubleFromObj(NULL, scalePtr->scale.valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.toObj, &to);
 
     if (scalePtr->scale.orient == TTK_ORIENT_HORIZONTAL) {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.width <= 0) {
+	    return value;
+	}
 	fraction = (double)(x - troughBox.x) / (double)troughBox.width;
     } else {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.height <= 0) {
+	    return value;
+	}
 	fraction = (double)(y - troughBox.y) / (double)troughBox.height;
     }
 

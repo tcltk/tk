@@ -1,7 +1,27 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# Tests for images in various ttk widgets
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test image-1.1 "Bad image element" -body {
     ttk::style element create BadImage image badimage
@@ -48,4 +68,7 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
 } -result {}
 
 #
+# TESTFILE CLEANUP
+#
+
 tcltest::cleanupTests

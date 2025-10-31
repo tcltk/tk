@@ -1,36 +1,43 @@
 # This file is a Tcl script to test the code in the file tkTextDisp.c.
-# This file is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import scroll text
 
-# The delay procedure needs to wait long enough for the asynchronous updates
-# performed by the text widget to run.
-proc delay {} {
-    update
-    after 100
-    update
+#
+# LOCAL UTILITY PROCS
+#
+
+proc bizarre_scroll args {
+    .t2.t delete 5.0 end
 }
 
-# The procedure below is used to generate errors during scrolling commands.
-
-proc scrollError args {
-    error "scrolling error"
-}
-
+# lequal --
+#
 # Return 1 if the two given lists are the same, otherwise return the two lists.
 # This is used to compare a test actual result with a test expected result.
-
+#
 proc lequal {res expected} {
     if {[llength $res] != [llength $expected]} {
 	return [list "Lengths differ"  result: $res - expected: $expected]
@@ -42,6 +49,45 @@ proc lequal {res expected} {
     }
     return 1
 }
+
+# delay --
+#
+# Wait long enough for the asynchronous updates performed by the text widget to run.
+#
+proc delay {} {
+    update
+    after 100
+    update
+}
+
+# scrollError --
+#
+# Generate errors during scrolling commands
+#
+proc scrollError args {
+    error "scrolling error"
+}
+
+# xcharr --
+#
+# Return x-coordinate in widget $w of the first pixel of $n-th char
+# counted from the right, right justified
+#
+proc xcharr {n {w .t}} {
+    return [expr {[winfo width $w] - [bo $w] - [xw $n]}]
+}
+
+# xe --
+#
+# Return x-pixels of empty space in widget $w on a line containing $n chars
+#
+proc xe {n {w .t}} {
+    return [expr {[winfo width $w] - (2 * [bo $w]) - [xw $n]}]
+}
+
+#
+# COMMON TEST SETUP
+#
 
 # Create entries in the option database to be sure that geometry options
 # like border width have selected values.
@@ -94,15 +140,6 @@ pack .t -expand 1 -fill both
 
 wm geometry . {}
 
-# x-coordinate in widget $w of the first pixel of $n-th char counted from the right, right justified
-proc xcharr {n {w .t}} {
-    return [expr {[winfo width $w] - [bo $w] - [xw $n]}]
-}
-# x-pixels of empty space in widget $w on a line containing $n chars
-proc xe {n {w .t}} {
-    return [expr {[winfo width $w] - (2 * [bo $w]) - [xw $n]}]
-}
-
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 
@@ -122,6 +159,10 @@ update
 if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
     wm geom . +50+50
 }
+
+#
+# TESTS
+#
 
 test textDisp-0.1 {double tag elide transition} {
     # Example from tkchat crash.  For some reason can only
@@ -241,7 +282,12 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     update idletasks
     lappend x [lindex [.t bbox 1.2] 0]
 } [list [expr {[bo]+70}] [expr {[bo]+50}] [expr {[bo]+50}]]
+
+#
+# COMMON TEST CLEANUP
+#
 .t tag delete x y z
+
 test textDisp-1.2 {GetStyle procedure, wrapmode} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -258,6 +304,10 @@ test textDisp-1.2 {GetStyle procedure, wrapmode} {
 } [list [list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
 	[list [xchar 5] [yline 3] $fixedWidth $fixedHeight] \
 	    {}]
+
+#
+# COMMON TEST CLEANUP
+#
 .t tag delete x y
 
 test textDisp-2.1 {LayoutDLine, basics} {
@@ -314,9 +364,14 @@ test textDisp-2.7 {LayoutDLine, marks and tags} {
 } [list [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
 	    [list [xchar 11] [yline 1] $fixedWidth $fixedHeight]]
+
+#
+# COMMON TEST CLEANUP
+#
 foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
+
 test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
     scan [wm geom .] %dx%d width height
 } -body {
@@ -447,8 +502,14 @@ test textDisp-2.18 {LayoutDLine, justification} {
     list [.t bbox 2.0] [.t bbox 3.0]
 } [list [list [expr {[bo]+[xe 4]/2-[xw 5]}] [yline 2] $fixedWidth $fixedHeight] \
 	[list [expr {[xcharr 10]-[xw 5]}] [yline 3] $fixedWidth $fixedHeight]]
+
+#
+# COMMON TEST CLEANUP
+#
+
 .t tag delete x
 .t tag delete y
+
 test textDisp-2.19 {LayoutDLine, margins} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -489,8 +550,14 @@ test textDisp-2.21 {LayoutDLine, margins} {
 } [list [list [expr {[bo]+80}] [yline 1] [expr {[xe 0]-80}] $fixedHeight] \
 	[list [expr {[bo]+80}] [yline 2] [expr {[xe 0]-80}] $fixedHeight] \
 	[list [expr {[bo]+80}] [yline 3] [expr {[xe 0]-80}] $fixedHeight]]
+
+#
+# COMMON TEST CLEANUP
+#
+
 .t tag delete x
 .t tag delete y
+
 test textDisp-2.22 {LayoutDLine, spacing options} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -517,7 +584,13 @@ test textDisp-2.22 {LayoutDLine, spacing options} {
     set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
 } [list 2 7 10 15]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
+
 test textDisp-2.23 {LayoutDLine, spacing options} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -549,7 +622,13 @@ test textDisp-2.23 {LayoutDLine, spacing options} {
     set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
 } [list 1 5 13 16]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
+
 test textDisp-2.24 {LayoutDLine, tabs, saving from first chunk} {
     .t delete 1.0 end
     .t tag delete x y
@@ -626,6 +705,11 @@ test textDisp-3.1 {different character sizes} haveBigFontTwiceLargerThanTextFont
 	[list [expr {[xchar 5]+[font measure $bigFont s]}] [yline 1] [font measure $bigFont a] $bigHeight] \
 	[list [bo] [yline 1] [expr {[xw 5]+[font measure $bigFont sampl]+[xw 2]}] $bigHeight $bigAscent] \
 	[list [bo] [expr {[bo]+2*$bigHeight+2*$fixedHeight}] [xw 5] $fixedHeight $fixedAscent]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char
 
 test textDisp-4.1 {UpdateDisplayInfo, basic} {
@@ -671,7 +755,12 @@ test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight] \
 	[list [xchar 0] [yline 4] $fixedWidth $fixedHeight] \
 	{2.0 2.20}]
+
+#
+# COMMON TEST CLEANUP
+#
 .t mark unset x
+
 test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -697,9 +786,15 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
 	{} \
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
+
+#
+# COMMON TEST SETUP
+#
+
 if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
+
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
@@ -725,10 +820,16 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     set expected [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
     lequal $x $expected
 } {1}
+
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .f2}
 .t configure -borderwidth 0 -wrap char
 wm geom . {}
 update
+
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
@@ -800,6 +901,11 @@ test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     winfo ismapped .b
 } 0
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap word
 .t delete 1.0 end
 .t insert end "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\n"
@@ -807,6 +913,7 @@ test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
 .t insert end "Line 14\nLine 15\nLine 16"
 .t tag delete x
 .t tag configure x -relief raised -borderwidth 2 -background white
+
 test textDisp-4.13 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t tag add x 1.0 end
     .t yview 1.0
@@ -923,7 +1030,7 @@ test textDisp-4.23 {UpdateDisplayInfo, no horizontal scrolling except for -wrap 
 } [list [list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 16] [yline 2] $fixedWidth $fixedHeight]]
 
-test textDisp-5.1 {DisplayDLine, handling of spacing} {
+test textDisp-5.1 {DisplayDLine, handling of spacing} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
@@ -940,11 +1047,12 @@ test textDisp-5.1 {DisplayDLine, handling of spacing} {
     update
     list [winfo geometry .t.f1] [winfo geometry .t.f2] \
 	    [winfo geometry .t.f3] [winfo geometry .t.f4]
-} [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
+} -cleanup {
+    .t tag delete spacing
+} -result [list 10x4+[xchar 3]+[expr {[yline 1]+8}] \
 	10x4+[expr {[xchar 6]+10}]+[expr {[yline 1]+8+($fixedHeight-4)/2}] \
 	10x4+[xchar 1]+[expr {[yline 2]+8+2+8+($fixedHeight-4)}] \
 	10x4+[expr {[xchar 9]+10}]+[expr {[yline 2]+8+2+8+($fixedAscent-4)}]]
-.t tag delete spacing
 
 # Although the following test produces a useful result, its main
 # effect is to produce a core dump if Tk doesn't handle display
@@ -958,7 +1066,12 @@ test textDisp-5.2 {DisplayDLine, line resizes during display} {
     list [winfo width .t.f] [winfo height .t.f]
 } [list 30 30]
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char
+
 test textDisp-6.1 {scrolling in DisplayText, scroll up} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1"
@@ -1042,7 +1155,13 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {aquaKn
     update
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -bd 0
+
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1064,7 +1183,13 @@ test textDisp-6.8 {DisplayText, vertical scrollbar updates} {
     .t count -update -ypixels 1.0 end ; update
     set scrollInfo
 } [list 0.0 [expr {10.0/13}]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -yscrollcommand {} -xscrollcommand setScrollInfo
+
 test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -1104,6 +1229,9 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
     list $tk_textEmbWinDisplay
 } {{4.0 6.0}}
 
+#
+# COMMON TEST SETUP
+#
 
 .t configure -bd 2 -relief raised -wrap char
 .t delete 1.0 end
@@ -1111,6 +1239,7 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
 foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
     .t insert end "\nLine $i"
 }
+
 test textDisp-7.1 {TkTextRedrawRegion} {aquaKnownBug} {
 # constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
@@ -1190,6 +1319,11 @@ test textDisp-7.8 {TkTextRedrawRegion} {aquaKnownBug} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 4.0 5.0 6.0 7.0 eof}}
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -bd 0
 
 test textDisp-8.1 {TkTextChanged: redisplay whole lines} {
@@ -1204,7 +1338,13 @@ test textDisp-8.1 {TkTextChanged: redisplay whole lines} {
     update
     list $tk_textRelayout $tk_textRedraw [.t bbox 2.32]
 } [list {2.0 2.18 2.38} {2.0 2.18 2.38} [list [xchar 14] [yline 3] $fixedWidth $fixedHeight]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char
+
 test textDisp-8.2 {TkTextChanged, redisplay whole lines} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, two times"
@@ -1550,9 +1690,13 @@ test textDisp-10.1 {TkTextRelayoutWindow} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 2.0 2.20 3.0 3.20 4.0} {borders 1.0 2.0 2.20 3.0 3.20 4.0 eof}}
+
+#
+# COMMON TEST SETUP
+#
 .t configure -bg [lindex [.t configure -bg] 3]
-catch {destroy .top}
-test textDisp-10.2 {TkTextRelayoutWindow} {
+
+test textDisp-10.2 {TkTextRelayoutWindow} -body {
     toplevel .top -width 300 -height 200
     wm geometry .top +0+0
     text .top.t -font $fixedFont -width 20 -height 10 -relief raised -bd 2
@@ -1563,8 +1707,13 @@ test textDisp-10.2 {TkTextRelayoutWindow} {
     place .top.t -width 150 -height 100
     update
     .top.t index @0,0
-} {1.0}
-catch {destroy .top}
+} -result {1.0} -cleanup {
+    destroy .top
+}
+
+#
+# COMMON TEST SETUP
+#
 
 .t delete 1.0 end
 .t insert end "Line 1"
@@ -1572,6 +1721,7 @@ for {set i 2} {$i <= 200} {incr i} {
     .t insert end "\nLine $i"
 }
 update
+
 test textDisp-11.1 {TkTextSetYView} {
     .t yview 30.0
     update
@@ -1663,7 +1813,12 @@ test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
     update
     list [.t index @0,0] $tk_textRedraw
 } {2.0 10.20}
+
+#
+# COMMON TEST CLEANUP
+#
 .t delete 10.0 11.0
+
 test textDisp-11.13 {TkTestSetYView, partially visible last line} {
     catch {destroy .top}
     toplevel .top
@@ -1687,6 +1842,11 @@ test textDisp-11.13 {TkTestSetYView, partially visible last line} {
     # have changed, and the old '2.0 {5.0 6.0}' is quite wrong.
     list [.top.t index @0,0] $tk_textRedraw
 } {1.0 5.0}
+
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .top}
 toplevel .top
 wm geometry .top +0+0
@@ -1697,6 +1857,7 @@ for {set i 2} {$i <= 20} {incr i} {
     .top.t insert end "\nLine $i"
 }
 update
+
 test textDisp-11.14 {TkTextSetYView, only a few lines visible} {
     .top.t yview 5.0
     update
@@ -1808,9 +1969,14 @@ test textDisp-11.22 {TkTextSetYView, peer has -startline} {
     set res
 } {Line 5}
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap word
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
+
 test textDisp-12.1 {MeasureUp} {
     .t yview 100.0
     update
@@ -1832,7 +1998,13 @@ test textDisp-12.3 {MeasureUp} {
     update
     .t index @0,0
 } {45.0}
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap none
+
 test textDisp-12.4 {MeasureUp} {
     .t yview 100.0
     update
@@ -1848,6 +2020,10 @@ test textDisp-12.5 {MeasureUp} {
     .t index @0,0
 } {45.0}
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap none
 .t delete 1.0 end
 for {set i 1} {$i < 99} {incr i} {
@@ -1855,6 +2031,7 @@ for {set i 1} {$i < 99} {incr i} {
 }
 .t insert end "Line 100"
 .t insert 30.end { is quite long, so that it flows way off the end of the window and we can use it to test out the horizontal positioning features of the "see" command.}
+
 test textDisp-13.1 {TkTextSeeCmd procedure} {
     list [catch {.t see} msg] $msg
 } {1 {wrong # args: should be ".t see index"}}
@@ -1989,9 +2166,14 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     destroy .top2
     set res
 } 0
-wm geom . {}
 
+#
+# COMMON TEST SETUP
+#
+
+wm geom . {}
 .t configure -wrap none
+
 test textDisp-14.1 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     update
@@ -2001,16 +2183,20 @@ test textDisp-14.1 {TkTextXviewCmd procedure} {
     .t xview moveto .5
     .t xview
 } [list 0.5 [expr {6./7.}]]
-.t configure -wrap char
-test textDisp-14.2 {TkTextXviewCmd procedure} {
+
+test textDisp-14.2 {TkTextXviewCmd procedure} -setup {
+    .t configure -wrap char
+} -body {
     .t delete 1.0 end
     update
     .t insert end xxxxxxxxx\n
     .t insert end "xxxxx\n"
     .t insert end "xxxx"
     .t xview
-} {0.0 1.0}
-.t configure -wrap none
+} -cleanup {
+    .t configure -wrap none
+} -result {0.0 1.0}
+
 test textDisp-14.3 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     update
@@ -2096,6 +2282,10 @@ test textDisp-14.16 {TkTextXviewCmd procedure} {
     list [catch {.t xview flounder} msg] $msg
 } {1 {bad option "flounder": must be moveto or scroll}}
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char
 .t delete 1.0 end
 for {set i 1} {$i < 99} {incr i} {
@@ -2104,6 +2294,7 @@ for {set i 1} {$i < 99} {incr i} {
 .t insert end "Line 100"
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
+
 test textDisp-15.1 {ScrollByLines procedure, scrolling backwards} {
     .t yview 45.0
     update
@@ -2179,6 +2370,10 @@ test textDisp-15.8 {Scrolling near end of window} {
     set res
 } 1
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char
 .t delete 1.0 end
 .t insert insert "Line 1"
@@ -2196,6 +2391,7 @@ if {double(($totpix-5*$heightDiff)/$fixedHeight) != 206.0} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual [.t cget -font]]\",\
 is too different from the requested \"[.t cget -font]\". Some of the upcoming tests will probably fail."
 }
+
 test textDisp-16.1 {TkTextYviewCmd procedure} {
     .t yview 21.0
     set x [.t yview]
@@ -2538,12 +2734,17 @@ test textDisp-16.44 {TkTextYviewCmd procedure, scroll down, with elided lines} {
     .t index @0,0
 } {2.0}
 
+#
+# COMMON TEST SETUP
+#
+
 .t delete 1.0 end
 foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
     .t insert end "\nLine $i 11111 $i 22222 $i 33333 $i 44444 $i 55555"
     .t insert end " $i 66666 $i 77777 $i 88888 $i"
 }
 .t configure -wrap none
+
 test textDisp-17.1 {TkTextScanCmd procedure} {
     list [catch {.t scan a b} msg] $msg
 } {1 {wrong # args: should be ".t scan mark x y" or ".t scan dragto x y ?gain?"}}
@@ -2626,7 +2827,13 @@ test textDisp-17.9 {TkTextScanCmd procedure} {
     update
     lequal [.t index @0,0] $expected
 } {1}
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap word
+
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     .t yview 10.0
     update
@@ -2641,6 +2848,11 @@ test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {
     update
     lequal [list $x [.t index @0,0]] $expected
 } {1}
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -xscrollcommand setScrollInfo -yscrollcommand {}
 
 test textDisp-18.1 {GetXView procedure} {
@@ -2740,10 +2952,15 @@ test textDisp-18.8 {GetXView procedure} {
     invoked from within
 "scrollError 0.0 1.0"
     (horizontal scrolling command executed by text)}}
+
+#
+# COMMON TEST SETUP
+#
+
 catch {rename bgerror {}}
 catch {rename bogus {}}
-
 .t configure -xscrollcommand {} -yscrollcommand setScrollInfo
+
 test textDisp-19.1 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -2922,7 +3139,12 @@ test textDisp-19.11.11 {TextWidgetCmd procedure, "count -displaylines"} {
 test textDisp-19.11.12 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines "16.0 +1displayline" "16.0 +2displaylines -1c"
 } 0
+
+#
+# COMMON TEST SETUP
+#
 .t tag configure elide -elide 1
+
 test textDisp-19.11.13 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +1displaylines +6c"
@@ -3001,7 +3223,12 @@ test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
       [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
       [.t index "13.0 +4d lines"]
 } {16.23 16.44 16.39 16.57 16.39 16.60 16.77 16.79}
+
+#
+# COMMON TEST CLEANUP
+#
 .t tag remove elide 1.0 end
+
 test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
     list [.t index "11.5 + -1 display lines"] \
       [.t index "11.5 + +1 disp lines"] \
@@ -3011,7 +3238,7 @@ test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
       [.t index "11.5 +1 disp lines"] \
       [.t index "11.5 +0 disp lines"]
 } {10.5 12.5 12.5 10.5 10.5 12.5 11.5}
-.t tag remove elide 1.0 end
+
 test textDisp-19.12 {GetYView procedure, partially visible last line} {
     catch {destroy .top}
     toplevel .top
@@ -3040,7 +3267,12 @@ test textDisp-19.13 {GetYView procedure, partially visible last line} {
     update
     .top.t yview
 } [list 0.0 [expr {(5.0 * $fixedHeight - 3.0)/ (5.0 * $fixedHeight)}]]
+
+#
+# COMMON TEST CLEANUP
+#
 catch {destroy .top}
+
 test textDisp-19.14 {GetYView procedure} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -3182,6 +3414,11 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     update
     set res [list [.t count -ypixels 5.0 11.0] [.t count -ypixels 5.0 11.20]]
 } [list [expr {1 * $fixedHeight}] [expr {2 * $fixedHeight}]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -3190,6 +3427,7 @@ for {set i 2} {$i <= 200} {incr i} {
 .t configure -wrap word
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
+
 test textDisp-20.1 {FindDLine} {
     .t yview 48.0
     list [.t dlineinfo 46.0] [.t dlineinfo 47.0] [.t dlineinfo 49.0] \
@@ -3220,23 +3458,32 @@ test textDisp-20.4 {FindDLine} {
 } [list [list [bo] [yline 9] [xw 20] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 10] [xw 19] $fixedHeight $fixedAscent] \
 	{}]
-.t config -wrap none
-test textDisp-20.5 {FindDLine} {
+
+test textDisp-20.5 {FindDLine} -setup {
+    .t config -wrap none
+} -body {
     .t yview 100.0
     .t yview 48.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]
-} [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
-	[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
+} -cleanup {
+    .t config -wrap word
+} -result [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
+		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 
-.t config -wrap word
 test textDisp-21.1 {TkTextPixelIndex} {
     .t yview 48.0
     set off [expr {[bo]+3}]
     list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
 	    [.t index @[expr {[xchar 14]+1}],$off] [.t index @[xchar 5],[yline 5]]
 } {48.0 48.0 48.2 48.7 50.45}
+
+#
+# COMMON TEST SETUP
+#
+
 .t insert end \n
+
 test textDisp-21.2 {TkTextPixelIndex} {
     .t yview 195.0
     set off [expr {[xchar 1]+1}]
@@ -3280,6 +3527,10 @@ unset message
 set res
 } -1
 
+#
+# COMMON TEST SETUP
+#
+
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -3290,6 +3541,7 @@ for {set i 2} {$i <= 200} {incr i} {
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
 update
 .t tag add x 50.1
+
 test textDisp-22.1 {TkTextCharBbox} {
     .t config -wrap word
     .t yview 48.0
@@ -3354,8 +3606,14 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} haveBigFontTwiceL
 		       [list [xchar 2] [yline 11] [font measure $bigFont "n"] [expr {($height+3)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1] [.t bbox 20.2]] $expected
 } {1}
+
+#
+# COMMON TEST SETUP
+#
+
 wm geom . {}
 update
+
 test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceLargerThanTextFont {
     .t config -wrap char
     .t yview 10.0
@@ -3364,7 +3622,12 @@ test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceL
     list [.t bbox 12.1] [.t bbox 12.2]
 } [list [list [xchar 1] [expr {[yline 3]+$ascentDiff}] $fixedWidth $fixedHeight] \
 	[list [xchar 2] [yline 3] [font measure $bigFont "n"] $bigHeight]]
+
+#
+# COMMON TEST CLEANUP
+#
 .t tag remove big 1.0 end
+
 test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -3379,7 +3642,7 @@ test textDisp-22.8 {TkTextCharBbox, horizontal scrolling} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [xchar 19] [yline 2] $fixedWidth $fixedHeight] \
 	{}]
-test textDisp-22.9 {TkTextCharBbox, handling of spacing} {
+test textDisp-22.9 {TkTextCharBbox, handling of spacing} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijkl\nmnopqrstuvwzyz"
@@ -3396,13 +3659,14 @@ test textDisp-22.9 {TkTextCharBbox, handling of spacing} {
     update
     list [.t bbox .t.f1] [.t bbox .t.f2] [.t bbox .t.f3] [.t bbox .t.f4] \
 	    [.t bbox 1.1] [.t bbox 2.9]
-} [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
-	[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
-	[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
-	[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
-	[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
-	[list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
-.t tag delete spacing
+} -cleanup {
+    .t tag delete spacing
+} -result [list [list [xchar 3] [expr {[yline 1]+8}] 10 4] \
+		[list [expr {[xchar 3]+10+[xw 3]}] [expr {[yline 1]+8+($fixedHeight-4)/2}] 10 4] \
+		[list [xchar 1] [expr {[yline 2]+8+2+8+($fixedHeight-4)}] 10 4] \
+		[list [expr {[xchar 1]+10+[xw 8]}] [expr {[yline 2]+8+2+8+($fixedAscent-4)}] 10 4] \
+		[list [xchar 1] [expr {[yline 1]+8}] $fixedWidth $fixedHeight] \
+		[list [expr {[xchar 1]+10+[xw 7]}] [expr {[yline 2]+8+2+8}] $fixedWidth $fixedHeight]]
 test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3440,6 +3704,10 @@ test textDisp-22.11 {TkTextCharBbox, handling of wrapped elided lines} {
 	[expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.5]  0]}]
 } [list 0 0]
 
+#
+# COMMON TEST SETUP
+#
+
 .t delete 1.0 end
 .t insert end "Line 1"
 for {set i 2} {$i <= 200} {incr i} {
@@ -3449,6 +3717,7 @@ for {set i 2} {$i <= 200} {incr i} {
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
 update
+
 test textDisp-23.1 {TkTextDLineInfo} {
     .t config -wrap word
     .t yview 48.0
@@ -3458,14 +3727,19 @@ test textDisp-23.1 {TkTextDLineInfo} {
 	[list [bo] [yline 1] [xw 7] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent] \
 	{}]
+
 .t config -bd 4
-test textDisp-23.2 {TkTextDLineInfo} {
+
+test textDisp-23.2 {TkTextDLineInfo} -setup {
+    .t config -bd 4
+} -body {
     .t config -wrap word
     update
     .t yview 48.0
     .t dlineinfo 50.40
-} [list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent]
-.t config -bd 0
+} -cleanup {
+    .t config -bd 0
+} -result [list [bo] [yline 5] [xw 13] $fixedHeight $fixedAscent]
 test textDisp-23.3 {TkTextDLineInfo} {
     .t config -wrap none
     update
@@ -3497,8 +3771,14 @@ test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {
 		       [list [bo] [yline 11] [xw 7] [expr {($height+1)-$oriHeight}] $fixedAscent]]
     lequal [list [.t dlineinfo 19.0] [.t dlineinfo 20.0]] $expected
 } {1}
+
+#
+# COMMON TEST SETUP
+#
+
 wm geom . {}
 update
+
 test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {
     .t config -wrap none
     .t delete 1.0 end
@@ -3511,8 +3791,14 @@ test textDisp-23.6 {TkTextDLineInfo, horizontal scrolling} {
 } [list [list [expr {[xw -6]+[bo]}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
 	[list [expr {[xw -6]+[bo]}] [yline 2] [xw 52] $fixedHeight $fixedAscent] \
 	[list [expr {[xw -6]+[bo]}] [yline 3] [xw 5] $fixedHeight $fixedAscent]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t xview moveto 0
-test textDisp-23.7 {TkTextDLineInfo, centering} {
+
+test textDisp-23.7 {TkTextDLineInfo, centering} -body {
     .t config -wrap word
     .t delete 1.0 end
     .t insert end "First line\n"
@@ -3523,10 +3809,11 @@ test textDisp-23.7 {TkTextDLineInfo, centering} {
     .t tag add x 1.0
     .t tag add y 3.0
     list [.t dlineinfo 1.0] [.t dlineinfo 2.0] [.t dlineinfo 3.0]
-} [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
+} -cleanup {
+    .t tag delete x y
+} -result [list [list [expr {[bo]+[xe 10]/2}] [yline 1] [xw 10] $fixedHeight $fixedAscent] \
 	[list [bo] [yline 2] [xw 17] $fixedHeight $fixedAscent] \
 	[list [xcharr 5] [yline 5] [xw 5] $fixedHeight $fixedAscent]]
-.t tag delete x y
 
 test textDisp-24.1 {TkTextCharLayoutProc} {
     .t configure -wrap char
@@ -3670,8 +3957,14 @@ test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't qui
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	[list [expr {[xchar 20]+2}] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
+
+#
+# COMMON TEST SETUP
+#
+
 wm geom . {}
 update
+
 test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3731,9 +4024,15 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
 	[list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
+
+#
+# COMMON TEST SETUP
+#
+
 if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
+
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -3783,8 +4082,14 @@ test textDisp-24.20 {TkTextCharLayoutProc, vertical offset} {
 	[list [bo] [yline 2] [xw 6] [expr {$fixedHeight+6}] [expr {$fixedAscent+6}]] \
 	[list [xchar 1] [expr {[yline 2]+2}] $fixedWidth $fixedHeight] \
 	[list [bo] [yline 2] [xw 6] [expr {$fixedHeight+2}] $fixedAscent]]
+
+#
+# COMMON TEST SETUP
+#
+
 .t configure -width 30
 update
+
 test textDisp-24.21 {TkTextCharLayoutProc, word breaks} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -3812,9 +4117,15 @@ test textDisp-24.23 {TkTextCharLayoutProc, word breaks} {
     .t insert end "u vvvvv"
     .t bbox .t.f
 } [list [xchar 0] [yline 3] 50 20]
+
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .t.f}
 .t configure -width 20
 update
+
 # Next test is currently constrained to not run on mac (aqua) because on
 # aqua it fails due to wrong implementation of tabs with right justification
 # (the text is not rendered at all). This is a bug.
@@ -3840,9 +4151,14 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     destroy .tt
 } -result {1}
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 \
     -tabs 100
 update
+
 test textDisp-25.1 {CharBboxProc procedure, check tab width} {
     .t delete 1.0 end
     .t insert 1.0 abc\td\tfgh
@@ -3851,9 +4167,14 @@ test textDisp-25.1 {CharBboxProc procedure, check tab width} {
 	[list [expr {[bo]+100+$fixedWidth}] [yline 1] [expr {200-(100+$fixedWidth)}] $fixedHeight] \
 	[list [expr {[bo]+200}] [yline 1] $fixedWidth $fixedHeight]]
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 -pady 0 \
 	-tabs {}
 update
+
 test textDisp-26.1 {AdjustForTab procedure, no tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
@@ -4036,9 +4357,14 @@ test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {
     set res
 } [list [xchar 16] [xchar 8] [xchar 16] [xchar 8]]
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -width 20 -bd 2 -highlightthickness 2 -relief sunken -tabs {} \
 	-wrap char
 update
+
 test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
@@ -4176,8 +4502,13 @@ test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem}
     expr {[lindex $res 0] - [lindex [.t bbox 1.20] 0]}
 } 0
 
+#
+# COMMON TEST SETUP
+#
+
 .t configure -wrap char -tabs {} -width 20
 update
+
 test textDisp-27.8 {SizeOfTab procedure, right alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t\txyzzyabc
@@ -4215,9 +4546,6 @@ test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a spac
 } [list [list [expr {round([bo]+17.14*$fixedWidth+$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth+$fixedWidth)-[bo]}] $fixedHeight] \
 	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 
-proc bizarre_scroll args {
-    .t2.t delete 5.0 end
-}
 test textDisp-28.1 {"yview" option with bizarre scroll command} -setup {
     catch {destroy .t2}
 } -body {
@@ -4452,8 +4780,12 @@ test textDisp-30.2 {elided text joining multiple logical lines} -setup {
 } -cleanup {
     destroy .t2
 } -result {2}
-catch {destroy .t2}
 
+#
+# COMMON TEST SETUP
+#
+
+catch {destroy .t2}
 .t configure -height 1
 update
 
@@ -4803,7 +5135,6 @@ test textDisp-33.4 {one line longer than fits in the widget} {
     set idx [.tt index "1.0 + 1 displaylines"]
     set result
 } {ok}
-destroy .tt
 test textDisp-33.5 {bold or italic fonts} win {
     destroy .tt
     pack [text .tt -wrap char -font {{MS Sans Serif} 15}]
@@ -4826,6 +5157,10 @@ test textDisp-33.5 {bold or italic fonts} win {
 	set result "italic font measurement ok"
     }
 } {italic font measurement ok}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .tt
 
 test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
@@ -4895,11 +5230,10 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 } -result {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget scroll text
 deleteWindows
 option clear
 cleanupTests
-return

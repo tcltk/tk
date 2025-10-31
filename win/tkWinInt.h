@@ -142,7 +142,7 @@ MODULE_SCOPE const int tkpWinBltModes[];
  * Internal functions used by more than one source file.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {
@@ -185,12 +185,14 @@ MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 
 /*
- * Values returned by TkWinGetPlatformTheme.
+ * Values used to be returned by TkWinGetPlatformTheme.
  */
 
-#define TK_THEME_WIN_CLASSIC    1
-#define TK_THEME_WIN_XP         2
-#define TK_THEME_WIN_VISTA      3
+#ifndef TK_NO_DEPRECATED
+#   define TK_THEME_WIN_CLASSIC    1
+#   define TK_THEME_WIN_XP         2
+#   define TK_THEME_WIN_VISTA      3
+#endif
 
 /*
  * The following is implemented in tkWinWm and used by tkWinEmbed.c

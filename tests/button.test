@@ -1,21 +1,36 @@
 # This file is a Tcl script to test labels, buttons, checkbuttons, and
-# radiobuttons in Tk (i.e., all the widgets defined in tkButton.c).  It is
-# organized in the standard fashion for Tcl tests.
+# radiobuttons in Tk (i.e., all the widgets defined in tkButton.c).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import button image
 
 imageInit
+
+#
+# TESTS
+#
 
 test button-1.1 {configuration option: "activebackground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2679,7 +2694,6 @@ test button-1.271 {configuration options: fallback to default} -setup {
     destroy .c
 } -result {0 0 0 0 0}
 
-# ex-tests 3.*
 test button-2.1 {ButtonCreate - not enough arguments} -body {
     button
 } -returnCodes error -result {wrong # args: should be "button pathName ?-option value ...?"}
@@ -2722,7 +2736,7 @@ test button-2.7 {ButtonCreate - bad window name} -body {
 } -cleanup {
     destroy foo
 } -returnCodes error -result {bad window path name "foo"}
-######### test ex 3.8
+
 test button-2.8 {ButtonCreate procedure - error in default option value} -body {
     option add *funny.background bogus
     button .funny
@@ -2753,7 +2767,6 @@ test button-2.11 {ButtonCreate procedure - option error} -body {
 }  -cleanup {
     destroy .x
 } -result 0
-######### ex 3.10
 test button-2.12 {ButtonCreate procedure - return value} -body {
     set x [button .abcd]
     return $x
@@ -2761,7 +2774,6 @@ test button-2.12 {ButtonCreate procedure - return value} -body {
     destroy .abcd
 } -result {.abcd}
 
-######### ex 4.*
 test button-3.1 {ButtonWidgetCmd - too few arguments} -body {
     button .b
     .b
@@ -2839,7 +2851,6 @@ test button-3.12 {ButtonWidgetCmd procedure, "cget" option} -body {
     destroy .r
 } -returnCodes error -result {unknown option "-onvalue"}
 
-# ex 4.6
 test button-3.13 {ButtonWidgetCmd procedure, "configure" option} -body {
     button .b -highlightthickness 3
     lindex [.b configure -highlightthickness] 4
@@ -3101,7 +3112,6 @@ test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
 *
 ".r select"} red}
 
-# ex 4.43
 test button-3.46 {ButtonWidgetCmd procedure, "toggle" option} -body {
     label .l
     .l toggle
@@ -3250,7 +3260,7 @@ test button-5.3 {ConfigureButton - textvariable trace} -body {
 } -cleanup {
     destroy .b
 } -result {From-y}
-test button-5.4 {ConfigureButton - variable trace} -body {  ;# ex 6.2a
+test button-5.4 {ConfigureButton - variable trace} -body {
     checkbutton .c -variable x
     set x 1
     set y 1
@@ -4008,13 +4018,12 @@ test button-15.3 {Bug [5d991b822e]} {
 } {}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 testutils forget button image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

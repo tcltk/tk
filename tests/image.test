@@ -1,27 +1,45 @@
 # This file is a Tcl script to test out the "image" command and the
-# other procedures in the file tkImage.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkImage.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
 
+#
+# COMMON TEST SETUP
+#
+
 # Canvas used in some tests in the whole file
 canvas .c -highlightthickness 2
 pack .c
 update
 
+#
+# TESTS
+#
 
 test image-1.1 {Tk_ImageCmd procedure, "create" option} -body {
     image
@@ -589,14 +607,13 @@ test image-15.1 {deleting image does not make widgets forget about it} -setup {
 } -result {10 10 20 20 foo {} {10 10 30 30} foo}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 destroy .c
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

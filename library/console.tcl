@@ -158,8 +158,13 @@ proc ::tk::ConsoleInit {} {
 
     ConsoleBind $con
 
+    if {[tk windowingsystem] eq "aqua"} {
+	$con tag configure stdin -foreground systemLinkColor
+    } else {
+	$con tag configure stdin -foreground blue
+    }
+
     $con tag configure stderr	-foreground red
-    $con tag configure stdin	-foreground blue
     $con tag configure prompt	-foreground \#8F4433
     $con tag configure proc	-foreground \#008800
     $con tag configure var	-background \#FFC0D0

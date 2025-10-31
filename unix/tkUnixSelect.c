@@ -583,7 +583,7 @@ TkSelEventProc(
 	if (bytesAfter != 0) {
 	    Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
 		    "selection property too large", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE",NULL);
+	    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE", (char *)NULL);
 	    retrPtr->result = TCL_ERROR;
 	    XFree(propInfo);
 	    return;
@@ -762,7 +762,7 @@ SelTimeoutProc(
 
 	Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
 		"selection owner didn't respond", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "IGNORED", NULL);
+	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "IGNORED", (char *)NULL);
 	retrPtr->result = TCL_ERROR;
     } else {
 	retrPtr->timeout = Tcl_CreateTimerHandler(1000, SelTimeoutProc,
@@ -1150,7 +1150,7 @@ SelRcvIncrProc(
     if (bytesAfter != 0) {
 	Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
 		"selection property too large", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE", NULL);
+	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE", (char *)NULL);
 	retrPtr->result = TCL_ERROR;
 	goto done;
     }

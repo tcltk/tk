@@ -1,19 +1,27 @@
-# Tests for the tk busy command.
-#
-# This file contains a collection of tests for one or more of the Tk built-in
-# commands. Sourcing this file runs the tests and generates output for errors.
-# No output means no errors were found.
+# This file is a Tcl script to test out the tk busy command.
 #
 # Copyright © 1998-2000 Jos Decoster. All rights reserved.
 
-package require tcltest 2.2
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
-# There's currently no way to test the actual grab effect, per se, in an
-# automated test. Therefore, this test suite only covers the interface to the
-# grab command (ie, error messages, etc.)
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test busy-1.1 {Tk_BusyObjCmd} -returnCodes error -body {
     tk busy
@@ -504,6 +512,8 @@ test busy-8.3 {tk busy busywindow with a nonexisting widget} -body {
     tk busy forget .
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
 ::tcltest::cleanupTests
-return

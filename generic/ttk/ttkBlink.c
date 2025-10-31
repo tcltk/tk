@@ -97,7 +97,7 @@ CursorBlinkProc(void *clientData)
     int blinkTime;
 
     if (cm->owner->flags & CURSOR_ON) {
-	cm->owner->flags &= ~CURSOR_ON;
+	cm->owner->flags &= ~(unsigned)CURSOR_ON;
 	blinkTime = cm->offTime;
     } else {
 	cm->owner->flags |= CURSOR_ON;
@@ -113,7 +113,7 @@ CursorBlinkProc(void *clientData)
 static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 {
     if (corePtr->flags & CURSOR_ON) {
-	corePtr->flags &= ~CURSOR_ON;
+	corePtr->flags &= ~(unsigned)CURSOR_ON;
 	TtkRedisplayWidget(corePtr);
     }
     if (cm->owner == corePtr) {
@@ -130,10 +130,12 @@ static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
  */
 static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
 {
-    if (cm->owner == corePtr)
+    if (cm->owner == corePtr) {
 	return;
-    if (cm->owner)
+    }
+    if (cm->owner) {
 	LoseCursor(cm, cm->owner);
+    }
 
     corePtr->flags |= CURSOR_ON;
     TtkRedisplayWidget(corePtr);
@@ -161,18 +163,21 @@ CursorEventProc(void *clientData, XEvent *eventPtr)
 
     switch (eventPtr->type) {
 	case DestroyNotify:
-	    if (cm->owner == corePtr)
+	    if (cm->owner == corePtr) {
 		LoseCursor(cm, corePtr);
+	    }
 	    Tk_DeleteEventHandler(
 		corePtr->tkwin, CursorEventMask, CursorEventProc, clientData);
 	    break;
 	case FocusIn:
-	    if (RealFocusEvent(eventPtr->xfocus.detail))
+	    if (RealFocusEvent(eventPtr->xfocus.detail)) {
 		ClaimCursor(cm, corePtr);
+	    }
 	    break;
 	case FocusOut:
-	    if (RealFocusEvent(eventPtr->xfocus.detail))
+	    if (RealFocusEvent(eventPtr->xfocus.detail)) {
 		LoseCursor(cm, corePtr);
+	    }
 	    break;
     }
 }
@@ -181,16 +186,18 @@ void TtkSetBlinkCursorOnTime(Tcl_Interp* interp, int onTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    if (onTime >= 0)
+    if (onTime >= 0) {
 	cm->onTime = onTime;
+    }
 }
 
 void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    if (offTime >= 0)
+    if (offTime >= 0) {
 	cm->offTime = offTime;
+    }
 }
 
 /*
