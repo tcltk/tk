@@ -61,7 +61,7 @@ static void DrawCorner(
     Drawable d,
     Tk_3DBorder border,				/* get most GCs from here... */
     GC borderGC,				/* "window border" color GC */
-    int x,int y, int width,int height,		/* where to draw */
+    int x, int y, int width, int height,	/* where to draw */
     int corner,				/* 0 => top left; 1 => bottom right */
     enum BorderColor color)
 {
