@@ -1213,9 +1213,6 @@ DrawOrFillArc(
     int clockwise = (extent < 0); /* non-zero if clockwise */
     int xstart, ystart, xend, yend;
     double radian_start, radian_end, xr, yr;
-    int extent_is_360_deg;
-
-    extent_is_360_deg = (extent >= (64*360) || extent <= -(64*360));
 
     if (d == None) {
 	return BadDrawable;
@@ -1230,6 +1227,7 @@ DrawOrFillArc(
      * Swap the start and end if drawing clockwise.
      */
 
+    bool extent_is_360_deg = (extent >= (64*360) || extent <= -(64*360));
     start = start % (64*360);
     if (start < 0) {
 	start += (64*360);
