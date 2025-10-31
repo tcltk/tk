@@ -22,7 +22,7 @@
  * they're defined in.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKUNIXINT */
 

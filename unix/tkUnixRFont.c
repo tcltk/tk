@@ -1107,7 +1107,7 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-	DEBUG(("Switch to drawable 0x%x\n", drawable));
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		fontPtr->visual, fontPtr->colormap);
     } else {

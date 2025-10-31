@@ -1393,7 +1393,7 @@ typedef void (*XConnectionWatchProc)(
     XPointer*			/* watch_data */ /* open sets, close uses */
 );
 
-#include "tkIntXlibDecls.h"
+#include "tkIntXlibDecls.h"  /* IWYU pragma: export */
 
 #ifdef __clang__
 #pragma clang diagnostic pop
