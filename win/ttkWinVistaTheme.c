@@ -557,7 +557,7 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
 
     /*
@@ -1026,7 +1026,7 @@ Ttk_CreateVsapiElement(
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
-    int flags = 0;
+    unsigned flags = 0;
     Tcl_Size length = 0;
     char *name;
     LPWSTR wname;
@@ -1085,14 +1085,14 @@ Ttk_CreateVsapiElement(
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.left = pad.right = tmp;
+		pad.left = pad.right = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_HEIGHT:
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.top = pad.bottom = tmp;
+		pad.top = pad.bottom = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_SYSSIZE:
@@ -1131,8 +1131,8 @@ Ttk_CreateVsapiElement(
 	    goto retErr;
 	}
 	/* we over-allocate to ensure there is a terminating entry */
-	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable) * (count + 1));
-	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
+	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable) * ((size_t)count + 1));
+	memset(stateTable, 0, sizeof(Ttk_StateTable) * ((size_t)count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
 	    status = Ttk_GetStateSpecFromObj(interp, specs[n], &spec);
@@ -1158,7 +1158,7 @@ Ttk_CreateVsapiElement(
     elementPtr->partId = partId;
     elementPtr->statemap = stateTable;
     elementPtr->padding = pad;
-    elementPtr->flags = HEAP_ELEMENT | flags;
+    elementPtr->flags = HEAP_ELEMENT | (unsigned)flags;
 
     /* set the element name to an allocated copy */
     name = (char *)Tcl_Alloc(strlen(elementName) + 1);
@@ -1166,7 +1166,7 @@ Ttk_CreateVsapiElement(
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = (LPWSTR)Tcl_Alloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
+    wname = (LPWSTR)Tcl_Alloc((size_t)Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
     wcscpy(wname, className);
     elementPtr->className = wname;
 

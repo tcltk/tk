@@ -381,7 +381,7 @@ XSetLineAttributes(
     int cap_style,
     int join_style)
 {
-    gc->line_width = line_width;
+    gc->line_width = (int)line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;
     gc->join_style = join_style;
@@ -473,8 +473,8 @@ XSetClipRectangles(
     while (n--) {
 	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
+	rect.x += (short)clip_x_origin;
+	rect.y += (short)clip_y_origin;
 	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
@@ -660,24 +660,6 @@ XCreateWindow(
     TCL_UNUSED(Visual *),
     TCL_UNUSED(unsigned long),
     TCL_UNUSED(XSetWindowAttributes *))
-{
-	return 0;
-}
-
-int
-XPointInRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-	return 0;
-}
-
-int
-XUnionRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
 {
 	return 0;
 }
