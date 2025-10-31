@@ -12,7 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#ifdef HAVE_NO_SEH
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
 
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by

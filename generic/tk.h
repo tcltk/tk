@@ -1559,7 +1559,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  *----------------------------------------------------------------------
  */
 
-#include "tkDecls.h"
+#include "tkDecls.h"  /* IWYU pragma: export */
 
 #ifdef USE_OLD_IMAGE
 #undef Tk_CreateImageType

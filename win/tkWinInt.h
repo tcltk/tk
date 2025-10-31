@@ -140,7 +140,7 @@ MODULE_SCOPE const int tkpWinBltModes[];
  * Internal functions used by more than one source file.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 /*
  * Special proc needed as tsd accessor function between
