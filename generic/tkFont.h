@@ -132,6 +132,10 @@ typedef struct TkFont {
 				 * (but different displays) are chained
 				 * together off a single entry in a hash
 				 * table. */
+#ifdef HAVE_XFT
+    Colormap colormap;
+    Visual* visual;
+#endif
 } TkFont;
 
 /*

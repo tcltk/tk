@@ -48,6 +48,8 @@ typedef struct {
 
     Display *display;
     int screen;
+    Colormap colormap;
+    Visual *visual;
     XftDraw *ftDraw;
     int ncolors;
     int firstColor;
@@ -357,6 +359,8 @@ InitFont(
 
     fontPtr->display = Tk_Display(tkwin);
     fontPtr->screen = Tk_ScreenNumber(tkwin);
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
     fontPtr->ftDraw = 0;
     fontPtr->ncolors = 0;
     fontPtr->firstColor = -1;
@@ -913,7 +917,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
      * Translate the pixel value to a color.  Needs a server round-trip.
      */
     xcolor.pixel = pixel;
-    XQueryColor(display, DefaultColormap(display, fontPtr->screen), &xcolor);
+    XQueryColor(display, fontPtr->colormap, &xcolor);
 
     fontPtr->colors[last].color.color.red = xcolor.red;
     fontPtr->colors[last].color.color.green = xcolor.green;
@@ -967,9 +971,8 @@ Tk_DrawChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
-    } else {
+		fontPtr->visual, fontPtr->colormap);
+} else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
@@ -1106,8 +1109,7 @@ TkDrawAngledChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
@@ -1223,8 +1225,7 @@ TkDrawAngledChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
