@@ -102,7 +102,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     set i 0
     foreach but $args {
-	button $w.button$i -text $but -command [list set ::tk::Priv(button) $i]
+	button $w.button$i -text $but -command [list set ::tk::PrivMsgBox(button) $i]
 	if {$i == $default} {
 	    $w.button$i configure -default active
 	} else {
@@ -137,7 +137,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # button variable to -1;  this is needed in case something happens
     # that destroys the window, such as its parent window being destroyed.
 
-    bind $w <Destroy> {set ::tk::Priv(button) -1}
+    bind $w <Destroy> {set ::tk::PrivMsgBox(button) -1}
 
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -161,15 +161,17 @@ proc ::tk_dialog {w title text bitmap default args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(button)
+    set ::tk::PrivMsgBox(button) -1
+    vwait ::tk::PrivMsgBox(button)
 
     catch {
 	# It's possible that the window has already been destroyed,
 	# hence this "catch".  Delete the Destroy handler so that
-	# Priv(button) doesn't get reset by it.
+	# ::tk::PrivMsgBox(button) doesn't get reset by it.
 
 	bind $w <Destroy> {}
     }
     tk::RestoreFocusGrab $w $focus
+    set Priv(button) $::tk::PrivMsgBox(button)
     return $Priv(button)
 }

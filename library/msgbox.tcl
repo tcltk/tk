@@ -336,7 +336,7 @@ proc ::tk::MessageBox {args} {
 	}
 
 	eval [list tk::AmpWidget ttk::button $w.$name] $opts \
-		[list -command [list set tk::Priv(button) $name]]
+		[list -command [list set ::tk::PrivMsgBox(button) $name]]
 
 	if {$name eq $data(-default)} {
 	    $w.$name configure -default active
@@ -393,7 +393,7 @@ proc ::tk::MessageBox {args} {
     bind $w <Escape> [list $w.$cancel invoke]
 
     # At <Destroy> the buttons have vanished, so must do this directly.
-    bind $w.msg <Destroy> [list set tk::Priv(button) $cancel]
+    bind $w.msg <Destroy> [list set ::tk::PrivMsgBox(button) $cancel]
 
     # 7. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -416,9 +416,10 @@ proc ::tk::MessageBox {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(button)
+    vwait ::tk::PrivMsgBox(button)
     # Copy the result now so any <Destroy> that happens won't cause
     # trouble
+    set Priv(button) $::tk::PrivMsgBox(button)
     set result $Priv(button)
 
     ::tk::RestoreFocusGrab $w $focus

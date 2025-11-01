@@ -90,9 +90,12 @@ proc ::tk::dialog::color:: {args} {
     # 5. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
     # display (Motif style) and de-iconify it.
+    # At <Destroy> the buttons have vanished, so must do this directly.
+    bind $w <Destroy> [list set ::tk::PrivMsgBox(selectColor) ""]
 
-    ::tk::PlaceWindow $w widget $data(-parent)
     wm title $w $data(-title)
+    ::tk::PlaceWindow $w widget $data(-parent)
+    tkwait visibility $w
 
     # 6. Set a grab and claim the focus too.
 
@@ -104,7 +107,9 @@ proc ::tk::dialog::color:: {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(selectColor)
+    set ::tk::PrivMsgBox(selectColor) ""
+    vwait ::tk::PrivMsgBox(selectColor)
+    set Priv(selectColor) $::tk::PrivMsgBox(selectColor)
     set result $Priv(selectColor)
     ::tk::RestoreFocusGrab $w $data(okBtn)
     unset data
@@ -680,15 +685,17 @@ proc ::tk::dialog::color::LeaveColorBar {w color} {
 # user hits OK button
 #
 proc ::tk::dialog::color::OkCmd {w} {
-    variable ::tk::Priv
     upvar ::tk::dialog::color::[winfo name $w] data
 
-    set Priv(selectColor) $data(finalColor)
+    bind $w <Destroy> {}
+    set ::tk::PrivMsgBox(selectColor) $data(finalColor)
 }
 
 # user hits Cancel button or destroys window
 #
 proc ::tk::dialog::color::CancelCmd {w} {
-    variable ::tk::Priv
-    set Priv(selectColor) ""
+    upvar ::tk::dialog::color::[winfo name $w] data
+
+    bind $w <Destroy> {}
+    set ::tk::PrivMsgBox(selectColor) ""
 }
