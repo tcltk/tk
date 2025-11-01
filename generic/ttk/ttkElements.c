@@ -24,7 +24,7 @@
  *
  * Helper routine for drawing a few style elements:
  *
- * The following function is needed when drawing the trough element 
+ * The following function is needed when drawing the trough element
  * (which is used in scrollbars, scales, and progressbars) and the
  * arrow and thumb elements of a scrollbar.  It draws the light or dark
  * border color along the entire bottom and right edges, contrary to
