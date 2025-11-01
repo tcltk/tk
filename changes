@@ -8317,6 +8317,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-10-31 (bug) [265ff2]: Artifacts in a few themed widgets on x11 and aqua (nemethi)
 
-2025-11-01 (bug) [a80e5f]: Core dump Tk_GetFontFromObj (chavez)
+2025-11-01 (bug) [a80e5f]: Core dump Tk_GetFontFromObj (werner)
 
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
