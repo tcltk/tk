@@ -248,6 +248,9 @@ static Tcl_ObjCmdProc TkMacOSXGetAppPathObjCmd;
      */
     _eventInterp = interp;
 
+    // See bug [1ab7a5f2]
+    Tcl_Preserve(interp);
+
     /*
      * Install the global autoreleasePool.
      */
