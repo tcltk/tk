@@ -31,6 +31,7 @@ to the userbase.
  - [Windows: Missing border pixels in alt theme](https://core.tcl-lang.org/tk/tktview/8b725d)
  - [nanosvg upstream changes: #273, #275: add paint order parsing](https://core.tcl-lang.org/tk/tktview/b43dbc0061)
  - [Artifacts in a few themed widgets on x11 and aqua](https://core.tcl-lang.org/tk/tktview/265ff2)
+ - [Core dump Tk_GetFontFromObj](https://core.tcl-lang.org/tk/tktview/a80e5f)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
