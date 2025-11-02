@@ -6910,15 +6910,15 @@ ApplyWindowAttributeFlagChanges(
 		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		    /*
-		     * The default max size has height less than the screen
-		     * height. This causes the window manager to refuse to
-		     * allow the window to be resized when it is a split
-		     * window. To work around this we make the max size equal
-		     * to the screen size.  (For 10.11 and up, only)
+		     * On macOS 10.11+ maxFullScreenContentSize must be set
+		     * to properly allow entering and resizing Split View;
+		     * specify a very large size to avoid leaving an empty
+		     * region if the display resolution width and/or height
+		     * increase (bug 1410560bc7a3).
 		     */
 
 		    if ([NSApp macOSVersion] >= 101100) {
-			NSSize screenSize = [[macWindow screen] frame].size;
+			NSSize screenSize = NSMakeSize(FLT_MAX , FLT_MAX);
 			[macWindow setMaxFullScreenContentSize:screenSize];
 		    }
 		}
