@@ -2768,7 +2768,7 @@ Tcl_Size TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
     TreeItem *item;
 
     for (item = parent->children; item; item = item->next) {
-	if (hidden || !item->hidden) {
+	if (!item->hidden || hidden) {
 	    count++;
 	    if (recurse && item->children) {
 		count += TreeviewCountRecursive(item, hidden, recurse);
@@ -4262,10 +4262,12 @@ static int TreeviewFocusCommand(
     } else {
 	TreeItem *newFocus;
 
+	/* Get item */
 	if (!(newFocus = FindItem(interp, tv, objv[2]))) {
 	    return TCL_ERROR;
 	}
 
+	/* Clear focus */
 	if (newFocus == tv->tree.root) {
 	    newFocus = NULL;
 	}
@@ -4309,11 +4311,18 @@ static int TreeviewCellFocusCommand(
 
     } else {
 	TreeCell cell;
+	Tcl_Size len;
 
-	if (GetCellFromObj(interp, tv, objv[2], 0, NULL, &cell) != TCL_OK) {
+	/* Clear focus or get cell */
+	Tcl_ListObjLength(interp, objv[2], &len);
+	if (len == 0) {
+	    cell.item = NULL;
+	    cell.column = NULL;
+	} else if (GetCellFromObj(interp, tv, objv[2], 0, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
+	/* Clear focus */
 	if (cell.item == tv->tree.root) {
 	    cell.item = NULL;
 	    cell.column = NULL;
@@ -5647,7 +5656,7 @@ static int TreeviewSortCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *item = NULL;
     int index, nocase = 0, result = TCL_OK;
-    Tcl_Obj *cmdPtr;
+    Tcl_Obj *cmdPtr = NULL;
     Tcl_Size i;
     SortInfo sortInfo;
 
@@ -5750,6 +5759,7 @@ static int TreeviewSortCommand(
 	}
     }
 
+    /* Use ASCII case insensitive matching */
     if (nocase && (sortInfo.sortMode == TYPE_ASCII)) {
 	sortInfo.sortMode = TYPE_ASCII_NC;
     }
@@ -5761,7 +5771,7 @@ static int TreeviewSortCommand(
 
     /* For command sorts, duplicate command in case it's deleted while sort is
      * in progress. Also flattens it and adds placeholders to end. */
-    if (sortInfo.sortMode == TYPE_COMMAND) {
+    if (sortInfo.sortMode == TYPE_COMMAND && cmdPtr) {
 	Tcl_Obj *newCommandPtr, *newObjPtr;
 
 	newCommandPtr = Tcl_DuplicateObj(cmdPtr);

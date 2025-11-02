@@ -180,7 +180,7 @@ treeview widgets support the following additional commands:
 Returns the identifier of item after \fIitem\fR in the current view. Can be
 the first child, next sibling, next sibling of an ancestor, or {} for none.
 With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child items.
+include child or parent items.
 .\" METHOD: bbox
 .TP
 \fIpathname \fBbbox\fR \fIitem\fR ?\fIcolumn\fR?
@@ -200,20 +200,20 @@ option), returns the bounding box of that cell within \fIitem\fR
 Returns the identifier of item before \fIitem\fR in the current view.
 Can be the previous sibling, parent of \fIitem\fR, or {} for none.
 With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child items.
+include child or parent items.
 .\" METHOD: between
 .TP
 \fIpathname \fBbetween\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfrom to\fR
 .
 Returns a list of all of the items between \fIfrom\fR and \fIto\fR, inclusive.
 With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child items.
+include child or parent items.
 .\" METHOD: cellfocus
 .TP
 \fIpathname \fBcellfocus\fR ?\fIcell\fR?
 .
-Sets the focus to cell \fIcell\fR. Without \fIitem\fR, returns the current
-focus cell id or \fB{}\fR if there is none.
+Sets the focus to cell \fIcell\fR. Use \fB{}\fR to clear the focus cell. Without
+\fIcell\fR, returns the current focus cell id or \fB{}\fR if there is none.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
