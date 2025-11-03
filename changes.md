@@ -34,6 +34,7 @@ to the userbase.
  - [Core dump Tk_GetFontFromObj](https://core.tcl-lang.org/tk/tktview/a80e5f)
  - [MS-Win canvas arcs with small extent are drawn 360 dregrees](https://core.tcl-lang.org/tk/info/6051a9)
  - [pixel values can report false list lengths](https://core.tcl-lang.org/tk/info/2a0a83)
+ - [Xft text is unusable for 32-bit visual when default visual is 24-bit](https://core.tcl-lang.org/tk/info/c23f79)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
