@@ -8319,4 +8319,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-11-01 (bug) [a80e5f]: Core dump Tk_GetFontFromObj (werner)
 
+2025-11-03 (bug) [6051a9]: MS-Win canvas arcs with to small extend are drawn as 360 degrees (chavez,vogel)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
