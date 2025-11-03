@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-8-6-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 defaults:
