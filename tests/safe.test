@@ -1,56 +1,69 @@
-# This file is a Tcl script to test the Safe Tk facility. It is organized in
-# the standard fashion for Tk tests.
+# This file is a Tcl script to test the Safe Tk facility.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
-
-## NOTE: Any time tests fail here with an error like:
-
-# Can't find a usable tk.tcl in the following directories:
-#     {$p(:26:)}
+# NOTE
 #
-# $p(:26:)/tk.tcl: script error
-# script error
-#     invoked from within
-# "source {$p(:26:)/tk.tcl}"
-#     ("uplevel" body line 1)
-#     invoked from within
-# "uplevel #0 [list source $file]"
+# Any time tests fail here with an error like:
+#
+#     Can't find a usable tk.tcl in the following directories:
+#	{$p(:26:)}
+#
+#     $p(:26:)/tk.tcl: script error
+#     script error
+#	invoked from within
+#     "source {$p(:26:)/tk.tcl}"
+#	("uplevel" body line 1)
+#	invoked from within
+#     "uplevel #0 [list source $file]"
 #
 #
-# This probably means that tk wasn't installed properly.
+#     This probably means that tk wasn't installed properly.
+#
+# it indicates that something went wrong sourcing tk.tcl.
+# Ensure that any changes that occurred to tk.tcl will work or are properly
+# prevented in a safe interpreter.  -- hobbs
 
-## it indicates that something went wrong sourcing tk.tcl.
-## Ensure that any changes that occurred to tk.tcl will work or are properly
-## prevented in a safe interpreter.  -- hobbs
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
 
 # The set of hidden commands is platform dependent:
 
 set hidden_cmds [list bell cd clipboard encoding exec exit \
 	fconfigure glob grab load menu open pwd selection \
 	socket source toplevel unload wm]
-if {[package vsatisfies [package provide Tcl] 8.6.7-]} {
-    lappend hidden_cmds tcl:encoding:dirs
-}
-if {[package vsatisfies [package provide Tcl] 8.7-]} {
-    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir
-    foreach cmd {
-	cmdtype nameofexecutable
-    } {lappend hidden_cmds tcl:info:$cmd}
-    foreach cmd {
-	autopurge list purge status
-    } {lappend hidden_cmds tcl:process:$cmd}
-    foreach cmd {
-	lmkimg lmkzip mkimg mkkey mkzip mount  mount_data unmount
-    } {lappend hidden_cmds tcl:zipfs:$cmd}
-}
+lappend hidden_cmds file tcl:encoding:dirs tcl:encoding:system
+lappend hidden_cmds tcl:file:tempdir tcl:file:home tcl:file:tildeexpand zipfs
+foreach cmd {
+    cmdtype nameofexecutable
+} {lappend hidden_cmds tcl:info:$cmd}
+foreach cmd {
+    autopurge list purge status
+} {lappend hidden_cmds tcl:process:$cmd}
+foreach cmd {
+    canonical exists info list lmkimg lmkzip mkimg mkkey mkzip mount mountdata root unmount
+} {lappend hidden_cmds tcl:zipfs:$cmd}
 foreach cmd {
     atime attributes copy delete dirname executable exists extension
     isdirectory isfile link lstat mkdir mtime nativename normalize
@@ -68,7 +81,11 @@ if {[llength [info commands send]]} {
 set saveAutoPath $::auto_path
 set auto_path [list [info library] $::tk_library]
 set hidden_cmds [lsort $hidden_cmds]
-
+
+#
+# TESTS
+#
+
 test safe-1.1 {Safe Tk loading into an interpreter} -setup {
     catch {safe::interpDelete a}
 } -body {
@@ -141,13 +158,13 @@ test safe-2.4 {Unsafe subcommands not available} -setup {
     safe::interpCreate a
     safe::loadTk a
     set status broken
-    if {[catch {interp eval a {tk scaling}} msg]} {
+    if {[catch {interp eval a {tk scaling 1}} msg]} {
 	set status ok
     }
     list $status $msg
 } -cleanup {
     safe::interpDelete a
-} -result {ok {scaling not accessible in a safe interpreter}}
+} -result {ok {setting the scaling not accessible in a safe interpreter}}
 
 test safe-3.1 {Unsafe commands are available hidden} -setup {
     catch {safe::interpDelete a}
@@ -250,12 +267,14 @@ test safe-7.1 {canvas printing} -body {
 } -cleanup {
     safe::interpDelete $i
 } -returnCodes ok -match glob -result *
-
-# cleanup
+
+#
+# TESTFILE CLEANUP
+#
+
 set ::auto_path $saveAutoPath
 unset hidden_cmds
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

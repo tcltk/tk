@@ -8,9 +8,10 @@
 
 MODULE_SCOPE const TtkStubs ttkStubs;
 
-#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
-#define Ttk_GetOrientFromObj 0
-#endif
+
+#ifdef TK_NO_DEPRECATED
+#   define Ttk_RegisterElementSpec 0
+#endif /* TK_NO_DEPRECATED */
 
 #ifdef __GNUC__
 /*

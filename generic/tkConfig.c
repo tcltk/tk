@@ -26,14 +26,18 @@
 #include "tkInt.h"
 #include "tkFont.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
- * The following encoding is used in TYPE_FLAGS:
+ * The following encoding is used in TK_OPTION_VAR:
  *
- * if sizeof(type) == sizeof(int)     =>    TYPE_FLAGS(type) = 0
- * if sizeof(type) == 1               =>    TYPE_FLAGS(type) = 64
- * if sizeof(type) == 2               =>    TYPE_FLAGS(type) = 128
+ * if sizeof(type) == sizeof(int)        =>    TK_OPTION_VAR(type) = 0
+ * if sizeof(type) == 1                  =>    TK_OPTION_VAR(type) = 64
+ * if sizeof(type) == 2                  =>    TK_OPTION_VAR(type) = 128
+ * if sizeof(type) == sizeof(long long)  =>    TK_OPTION_VAR(type) = 192
  */
-#define TYPE_FLAGS(type) (((int)(sizeof(type)&(sizeof(int)-1))<<6))
 #define TYPE_MASK        (((((int)sizeof(int)-1))|3)<<6)
 
 /*
@@ -66,7 +70,7 @@ typedef struct TkOption {
     const Tk_OptionSpec *specPtr;
 				/* The original spec from the template passed
 				 * to Tk_CreateOptionTable.*/
-    Tk_Uid dbNameUID;	 	/* The Uid form of the option database
+    Tk_Uid dbNameUID;		/* The Uid form of the option database
 				 * name. */
     Tk_Uid dbClassUID;		/* The Uid form of the option database class
 				 * name. */
@@ -137,7 +141,6 @@ static Tcl_Obj *	GetObjectForOption(void *recordPtr,
 static Option *		GetOption(const char *name, OptionTable *tablePtr);
 static Option *		GetOptionFromObj(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr);
-static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
 static void		DupOptionInternalRep(Tcl_Obj *, Tcl_Obj *);
 
@@ -148,12 +151,14 @@ static void		DupOptionInternalRep(Tcl_Obj *, Tcl_Obj *);
  * the internalPtr2 field points to the entry that matched.
  */
 
-static const Tcl_ObjType optionObjType = {
-    "option",			/* name */
+static const TkObjType optionObjType = {
+    {"option",			/* name */
     FreeOptionInternalRep,	/* freeIntRepProc */
     DupOptionInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -209,7 +214,7 @@ Tk_CreateOptionTable(
      * reuse the existing table.
      */
 
-    hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->hashTable, (char *) templatePtr,
+    hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->hashTable, (char *)templatePtr,
 	    &newEntry);
     if (!newEntry) {
 	tablePtr = (OptionTable *)Tcl_GetHashValue(hashEntryPtr);
@@ -256,7 +261,7 @@ Tk_CreateOptionTable(
 		    Tcl_Panic("Tk_CreateOptionTable couldn't find synonym");
 		}
 		if (strcmp(specPtr2->optionName,
-			(char *) specPtr->clientData) == 0) {
+			(char *)specPtr->clientData) == 0) {
 		    optionPtr->extra.synonymPtr = tablePtr->options + i;
 		    break;
 		}
@@ -269,14 +274,14 @@ Tk_CreateOptionTable(
 		optionPtr->dbClassUID = Tk_GetUid(specPtr->dbClass);
 	    }
 	    if (specPtr->defValue != NULL) {
-		optionPtr->defaultPtr = Tcl_NewStringObj(specPtr->defValue,-1);
+		optionPtr->defaultPtr = Tcl_NewStringObj(specPtr->defValue, TCL_INDEX_NONE);
 		Tcl_IncrRefCount(optionPtr->defaultPtr);
 	    }
 	    if (((specPtr->type == TK_OPTION_COLOR)
 		    || (specPtr->type == TK_OPTION_BORDER))
 		    && (specPtr->clientData != NULL)) {
 		optionPtr->extra.monoColorPtr =
-			Tcl_NewStringObj((const char *)specPtr->clientData, -1);
+			Tcl_NewStringObj((const char *)specPtr->clientData, TCL_INDEX_NONE);
 		Tcl_IncrRefCount(optionPtr->extra.monoColorPtr);
 	    }
 
@@ -406,7 +411,7 @@ Tk_InitOptions(
 {
     OptionTable *tablePtr = (OptionTable *) optionTable;
     Option *optionPtr;
-    int count;
+    size_t count;
     Tk_Uid value;
     Tcl_Obj *valuePtr;
     enum {
@@ -454,7 +459,7 @@ Tk_InitOptions(
 	    value = Tk_GetOption(tkwin, optionPtr->dbNameUID,
 		    optionPtr->dbClassUID);
 	    if (value != NULL) {
-		valuePtr = Tcl_NewStringObj(value, -1);
+		valuePtr = Tcl_NewStringObj(value, TCL_INDEX_NONE);
 		source = OPTION_DATABASE;
 	    }
 	}
@@ -509,19 +514,19 @@ Tk_InitOptions(
 
 		switch (source) {
 		case OPTION_DATABASE:
-		    sprintf(msg, "\n    (database entry for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (database entry for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case SYSTEM_DEFAULT:
-		    sprintf(msg, "\n    (system default for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (system default for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case TABLE_DEFAULT:
-		    sprintf(msg, "\n    (default value for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (default value for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		}
 		if (tkwin != NULL) {
-		    sprintf(msg + strlen(msg) - 1, " in widget \"%.50s\")",
+		    snprintf(msg + strlen(msg) - 1, 200 - (strlen(msg) - 1), " in widget \"%.50s\")",
 			    Tk_PathName(tkwin));
 		}
 		Tcl_AddErrorInfo(interp, msg);
@@ -615,16 +620,16 @@ DoObjConfig(
     if (savedOptionPtr != NULL) {
 	savedOptionPtr->optionPtr = optionPtr;
 	savedOptionPtr->valuePtr = oldPtr;
-	oldInternalPtr = (char *) &savedOptionPtr->internalForm;
+	oldInternalPtr = (char *)&savedOptionPtr->internalForm;
     } else {
-	oldInternalPtr = (char *) &internal.internalForm;
+	oldInternalPtr = (char *)&internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK));
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBool = -1;
 	} else if (Tcl_GetBooleanFromObj(nullOK ? NULL : interp, valuePtr, &newBool) != TCL_OK) {
@@ -635,59 +640,90 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newBool;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *)oldInternalPtr) = *((char *)internalPtr);
+		    *((char *)internalPtr) = (char)newBool;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *)oldInternalPtr) = *((short *)internalPtr);
+		    *((short *)internalPtr) = (short)newBool;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		}
+	    } else {
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newBool;
+	    }
 	}
 	break;
     }
     case TK_OPTION_INT: {
 	int newInt;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
-	    valuePtr = NULL;
-	    newInt = INT_MIN;
-	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
+	if ((optionPtr->specPtr->flags & TYPE_MASK) == 0) {
+	    if (nullOK && TkObjIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		newInt = INT_MIN;
+	    } else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
+	    invalidIntValue:
 		if (nullOK && interp) {
-		    Tcl_Obj *msg = Tcl_NewStringObj("expected integer or \"\" but got \"", -1);
-
-		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), -1, 50, "");
-		    Tcl_AppendToObj(msg, "\"", -1);
-		    Tcl_SetObjResult(interp, msg);
-		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "expected integer or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
+		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", (char *)NULL);
 		}
-	    return TCL_ERROR;
-	}
-	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newInt;
+		return TCL_ERROR;
+	    }
+	    if (internalPtr != NULL) {
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newInt;
+	    }
+	} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+	    Tcl_WideInt newWideInt;
+	    if (nullOK && TkObjIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		newWideInt = (sizeof(long) > sizeof(int)) ? LONG_MIN : LLONG_MIN;
+	    } else if (Tcl_GetWideIntFromObj(nullOK ? NULL : interp, valuePtr, &newWideInt) != TCL_OK) {
+		goto invalidIntValue;
+	    }
+		if (internalPtr != NULL) {
+			if (sizeof(long) > sizeof(int)) {
+			    *((long *)oldInternalPtr) = *((long *)internalPtr);
+			    *((long *)internalPtr) = (long)newWideInt;
+			} else {
+			    *((long long *)oldInternalPtr) = *((long long *)internalPtr);
+			    *((long long *)internalPtr) = (long long)newWideInt;
+			}
+		}
+	} else {
+	    Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
 	}
 	break;
     }
     case TK_OPTION_INDEX: {
-	TkSizeT newIndex;
+	Tcl_Size newIndex;
 
-	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
+	if (TkGetIntForIndex(valuePtr, TCL_INDEX_NONE, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
 			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
 	    }
 	    return TCL_ERROR;
 	}
-    if (newIndex == TCL_INDEX_NONE) {
-	newIndex = (TkSizeT)INT_MIN;
-    } else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
-	newIndex++;
-    }
+	if (newIndex < INT_MIN) {
+	    newIndex = INT_MIN;
+	} else if (newIndex > INT_MAX) {
+	    newIndex = INT_MAX;
+	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = (int)newIndex;
+	    *((int *)oldInternalPtr) = *((int *)internalPtr);
+	    *((int *)internalPtr) = (int)newIndex;
 	}
 	break;
     }
     case TK_OPTION_DOUBLE: {
 	double newDbl;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 #if defined(NAN)
 	    newDbl = NAN;
@@ -697,29 +733,29 @@ DoObjConfig(
 	} else {
 	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
 		if (nullOK && interp) {
-		    Tcl_Obj *msg = Tcl_NewStringObj("expected floating-point number or \"\" but got \"", -1);
+		    Tcl_Obj *msg = Tcl_NewStringObj("expected floating-point number or \"\" but got \"", TCL_INDEX_NONE);
 
-		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), -1, 50, "");
-		    Tcl_AppendToObj(msg, "\"", -1);
+		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), TCL_INDEX_NONE, 50, "");
+		    Tcl_AppendToObj(msg, "\"", TCL_INDEX_NONE);
 		    Tcl_SetObjResult(interp, msg);
-		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
+		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", (char *)NULL);
 		}
 		return TCL_ERROR;
 	    }
 	}
 
 	if (internalPtr != NULL) {
-	    *((double *) oldInternalPtr) = *((double *) internalPtr);
-	    *((double *) internalPtr) = newDbl;
+	    *((double *)oldInternalPtr) = *((double *)internalPtr);
+	    *((double *)internalPtr) = newDbl;
 	}
 	break;
     }
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	TkSizeT length;
+	Tcl_Size length;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	}
 	if (internalPtr != NULL) {
@@ -730,15 +766,15 @@ DoObjConfig(
 	    } else {
 		newStr = NULL;
 	    }
-	    *((char **) oldInternalPtr) = *((char **) internalPtr);
-	    *((char **) internalPtr) = newStr;
+	    *((char **)oldInternalPtr) = *((char **)internalPtr);
+	    *((char **)internalPtr) = newStr;
 	}
 	break;
     }
     case TK_OPTION_STRING_TABLE: {
 	int newValue;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newValue = -1;
 	} else {
@@ -747,21 +783,25 @@ DoObjConfig(
 		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_NULL_OK : 0), &newValue) != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    if (slotPtrPtr != NULL && valuePtr != NULL) {
+		valuePtr = Tcl_DuplicateObj(valuePtr);
+		Tcl_InvalidateStringRep(valuePtr);
+	    }
 	}
 	if (internalPtr != NULL) {
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
-		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
-		    *((char *) oldInternalPtr) = *((char *) internalPtr);
-		    *((char *) internalPtr) = newValue;
-		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
-		    *((short *) oldInternalPtr) = *((short *) internalPtr);
-		    *((short *) internalPtr) = newValue;
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *)oldInternalPtr) = *((char *)internalPtr);
+		    *((char *)internalPtr) = (char)newValue;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *)oldInternalPtr) = *((short *)internalPtr);
+		    *((short *)internalPtr) = (short)newValue;
 		} else {
 		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
 		}
 	    } else {
-		*((int *) oldInternalPtr) = *((int *) internalPtr);
-		*((int *) internalPtr) = newValue;
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newValue;
 	    }
 	}
 	break;
@@ -769,7 +809,7 @@ DoObjConfig(
     case TK_OPTION_COLOR: {
 	XColor *newPtr;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPtr = NULL;
 	} else {
@@ -779,15 +819,15 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((XColor **) oldInternalPtr) = *((XColor **) internalPtr);
-	    *((XColor **) internalPtr) = newPtr;
+	    *((XColor **)oldInternalPtr) = *((XColor **)internalPtr);
+	    *((XColor **)internalPtr) = newPtr;
 	}
 	break;
     }
     case TK_OPTION_FONT: {
 	Tk_Font newFont;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newFont = NULL;
 	} else {
@@ -797,15 +837,15 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_Font *) oldInternalPtr) = *((Tk_Font *) internalPtr);
-	    *((Tk_Font *) internalPtr) = newFont;
+	    *((Tk_Font *)oldInternalPtr) = *((Tk_Font *)internalPtr);
+	    *((Tk_Font *)internalPtr) = newFont;
 	}
 	break;
     }
     case TK_OPTION_STYLE: {
 	Tk_Style newStyle;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newStyle = NULL;
 	} else {
@@ -815,15 +855,15 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_Style *) oldInternalPtr) = *((Tk_Style *) internalPtr);
-	    *((Tk_Style *) internalPtr) = newStyle;
+	    *((Tk_Style *)oldInternalPtr) = *((Tk_Style *)internalPtr);
+	    *((Tk_Style *)internalPtr) = newStyle;
 	}
 	break;
     }
     case TK_OPTION_BITMAP: {
 	Pixmap newBitmap;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBitmap = None;
 	} else {
@@ -833,15 +873,15 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((Pixmap *) oldInternalPtr) = *((Pixmap *) internalPtr);
-	    *((Pixmap *) internalPtr) = newBitmap;
+	    *((Pixmap *)oldInternalPtr) = *((Pixmap *)internalPtr);
+	    *((Pixmap *)internalPtr) = newBitmap;
 	}
 	break;
     }
     case TK_OPTION_BORDER: {
 	Tk_3DBorder newBorder;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBorder = NULL;
 	} else {
@@ -851,15 +891,15 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_3DBorder *) oldInternalPtr) = *((Tk_3DBorder *) internalPtr);
-	    *((Tk_3DBorder *) internalPtr) = newBorder;
+	    *((Tk_3DBorder *)oldInternalPtr) = *((Tk_3DBorder *)internalPtr);
+	    *((Tk_3DBorder *)internalPtr) = newBorder;
 	}
 	break;
     }
     case TK_OPTION_RELIEF: {
 	int newRelief;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
@@ -867,15 +907,31 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newRelief;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *)oldInternalPtr) = *((char *)internalPtr);
+		    *((char *)internalPtr) = (char)newRelief;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *)oldInternalPtr) = *((short *)internalPtr);
+		    *((short *)internalPtr) = (short)newRelief;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_RELIEF");
+		}
+	    } else {
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newRelief;
+	    }
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
     case TK_OPTION_CURSOR: {
 	Tk_Cursor newCursor;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    newCursor = NULL;
 	    valuePtr = NULL;
 	} else {
@@ -894,7 +950,7 @@ DoObjConfig(
     case TK_OPTION_JUSTIFY: {
 	int newJustify;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newJustify = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
@@ -902,15 +958,31 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
-	    *((Tk_Justify *) internalPtr) = (Tk_Justify)newJustify;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *)oldInternalPtr) = *((char *)internalPtr);
+		    *((char *)internalPtr) = (char)newJustify;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *)oldInternalPtr) = *((short *)internalPtr);
+		    *((short *)internalPtr) = (short)newJustify;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_JUSTIFY");
+		}
+	    } else {
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newJustify;
+	    }
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
     case TK_OPTION_ANCHOR: {
 	int newAnchor;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newAnchor = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
@@ -918,31 +990,56 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
-	    *((Tk_Anchor *) internalPtr) = (Tk_Anchor)newAnchor;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *)oldInternalPtr) = *((char *)internalPtr);
+		    *((char *)internalPtr) = (char)newAnchor;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *)oldInternalPtr) = *((short *)internalPtr);
+		    *((short *)internalPtr) = (short)newAnchor;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_JUSTIFY");
+		}
+	    } else {
+		*((int *)oldInternalPtr) = *((int *)internalPtr);
+		*((int *)internalPtr) = newAnchor;
+	    }
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
     case TK_OPTION_PIXELS: {
 	int newPixels;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPixels = INT_MIN;
-	} else if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
+	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
+	    if (nullOK) {
+	    wrongPixel:
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected screen distance%s but got \"%.50s\"",
+			(nullOK ? " or \"\"": ""), Tcl_GetString(valuePtr)));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
+	    }
 	    return TCL_ERROR;
+	} else if (!(optionPtr->specPtr->flags & TK_OPTION_NEG_OK) && (newPixels < 0)) {
+	    goto wrongPixel;
 	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newPixels;
+	    *((int *)oldInternalPtr) = *((int *)internalPtr);
+	    *((int *)internalPtr) = newPixels;
 	}
 	break;
     }
     case TK_OPTION_WINDOW: {
 	Tk_Window newWin;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	if (nullOK && TkObjIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newWin = NULL;
 	} else if (TkGetWindowFromObj(interp, tkwin, valuePtr,
@@ -950,8 +1047,8 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((Tk_Window *) oldInternalPtr) = *((Tk_Window *) internalPtr);
-	    *((Tk_Window *) internalPtr) = newWin;
+	    *((Tk_Window *)oldInternalPtr) = *((Tk_Window *)internalPtr);
+	    *((Tk_Window *)internalPtr) = newWin;
 	}
 	break;
     }
@@ -970,7 +1067,7 @@ DoObjConfig(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad config table: unknown type %d",
 		optionPtr->specPtr->type));
-	Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
+	Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -999,7 +1096,7 @@ DoObjConfig(
 /*
  *----------------------------------------------------------------------
  *
- * ObjectIsEmpty --
+ * TkObjIsEmpty --
  *
  *	This function tests whether the string value of an object is empty.
  *
@@ -1013,14 +1110,25 @@ DoObjConfig(
  *----------------------------------------------------------------------
  */
 
-static int
-ObjectIsEmpty(
+#if defined(USE_TCL_STUBS)
+# undef Tcl_IsEmpty
+# define Tcl_IsEmpty \
+    ((bool (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
+#endif
+
+bool
+TkObjIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
     if (objPtr == NULL) {
-	return 1;
+	return true;
     }
     if (objPtr->bytes == NULL) {
+#if defined(USE_TCL_STUBS)
+	if (Tcl_IsEmpty) {
+	    return Tcl_IsEmpty(objPtr);
+	}
+#endif
 	Tcl_GetString(objPtr);
     }
     return (objPtr->length == 0);
@@ -1147,7 +1255,7 @@ GetOptionFromObj(
      * First, check to see if the object already has the answer cached.
      */
 
-    if (objPtr->typePtr == &optionObjType) {
+    if (objPtr->typePtr == &optionObjType.objType) {
 	if (objPtr->internalRep.twoPtrValue.ptr1 == (void *) tablePtr) {
 	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
 	}
@@ -1169,7 +1277,7 @@ GetOptionFromObj(
     }
     objPtr->internalRep.twoPtrValue.ptr1 = (void *) tablePtr;
     objPtr->internalRep.twoPtrValue.ptr2 = (void *) bestPtr;
-    objPtr->typePtr = &optionObjType;
+    objPtr->typePtr = &optionObjType.objType;
     tablePtr->refCount++;
     return bestPtr;
 
@@ -1177,7 +1285,7 @@ GetOptionFromObj(
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unknown option \"%s\"", name));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, (char *)NULL);
     }
     return NULL;
 }
@@ -1303,9 +1411,9 @@ int
 Tk_SetOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is returned.*/
-    void *recordPtr,	    	/* The record to configure. */
+    void *recordPtr,		/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
-    int objc,			/* The number of elements in objv. */
+    Tcl_Size objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
     Tk_Window tkwin,		/* Window associated with the thing being
 				 * configured; needed for some options (such
@@ -1353,7 +1461,7 @@ Tk_SetOptions(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing",
 			Tcl_GetString(*objv)));
-		Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -1421,7 +1529,7 @@ Tk_RestoreSavedOptions(
     Tk_SavedOptions *savePtr)	/* Holds saved option information; must have
 				 * been passed to Tk_SetOptions. */
 {
-    size_t i;
+    Tcl_Size i;
     Option *optionPtr;
     Tcl_Obj *newPtr;		/* New object value of option, which we
 				 * replace with old value and free. Taken from
@@ -1441,7 +1549,7 @@ Tk_RestoreSavedOptions(
 	ckfree(savePtr->nextPtr);
 	savePtr->nextPtr = NULL;
     }
-    for (i = savePtr->numItems - 1; i != (size_t)-1; i--) {
+    for (i = savePtr->numItems - 1; i >= 0; i--) {
 	optionPtr = savePtr->items[i].optionPtr;
 	specPtr = optionPtr->specPtr;
 
@@ -1450,12 +1558,12 @@ Tk_RestoreSavedOptions(
 	 * record.
 	 */
 
-	if (specPtr->objOffset != TCL_INDEX_NONE) {
+	if (specPtr->objOffset >= 0) {
 	    newPtr = *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset));
 	} else {
 	    newPtr = NULL;
 	}
-	if (specPtr->internalOffset != TCL_INDEX_NONE) {
+	if (specPtr->internalOffset >= 0) {
 	    internalPtr = (char *)savePtr->recordPtr + specPtr->internalOffset;
 	} else {
 	    internalPtr = NULL;
@@ -1476,67 +1584,123 @@ Tk_RestoreSavedOptions(
 		    = savePtr->items[i].valuePtr;
 	}
 	if (specPtr->internalOffset != TCL_INDEX_NONE) {
-	    char *ptr = (char *) &savePtr->items[i].internalForm;
+	    char *ptr = (char *)&savePtr->items[i].internalForm;
 
 	    CLANG_ASSERT(internalPtr);
 	    switch (specPtr->type) {
 	    case TK_OPTION_BOOLEAN:
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *)internalPtr) = *((char *)ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *)internalPtr) = *((short *)ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		    }
+		} else {
+		    *((int *)internalPtr) = *((int *)ptr);
+		}
+		break;
 	    case TK_OPTION_INT:
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+			if (sizeof(long) > sizeof(int)) {
+			    *((long *)internalPtr) = *((long *)ptr);
+			} else {
+			    *((long long *)internalPtr) = *((long long *)ptr);
+			}
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
+		    }
+		} else {
+		    *((int *)internalPtr) = *((int *)ptr);
+		}
+		break;
 	    case TK_OPTION_INDEX:
-		*((int *) internalPtr) = *((int *) ptr);
+		*((int *)internalPtr) = *((int *)ptr);
 		break;
 	    case TK_OPTION_DOUBLE:
-		*((double *) internalPtr) = *((double *) ptr);
+		*((double *)internalPtr) = *((double *)ptr);
 		break;
 	    case TK_OPTION_STRING:
-		*((char **) internalPtr) = *((char **) ptr);
+		*((char **)internalPtr) = *((char **)ptr);
 		break;
 	    case TK_OPTION_STRING_TABLE:
 		if (optionPtr->specPtr->flags & TYPE_MASK) {
-		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
-			*((char *) internalPtr) = *((char *) ptr);
-		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
-			*((short *) internalPtr) = *((short *) ptr);
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *)internalPtr) = *((char *)ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *)internalPtr) = *((short *)ptr);
 		    } else {
 			Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
 		    }
 		} else {
-		    *((int *) internalPtr) = *((int *) ptr);
+		    *((int *)internalPtr) = *((int *)ptr);
 		}
 		break;
 	    case TK_OPTION_COLOR:
-		*((XColor **) internalPtr) = *((XColor **) ptr);
+		*((XColor **)internalPtr) = *((XColor **)ptr);
 		break;
 	    case TK_OPTION_FONT:
-		*((Tk_Font *) internalPtr) = *((Tk_Font *) ptr);
+		*((Tk_Font *)internalPtr) = *((Tk_Font *)ptr);
 		break;
 	    case TK_OPTION_STYLE:
-		*((Tk_Style *) internalPtr) = *((Tk_Style *) ptr);
+		*((Tk_Style *)internalPtr) = *((Tk_Style *)ptr);
 		break;
 	    case TK_OPTION_BITMAP:
-		*((Pixmap *) internalPtr) = *((Pixmap *) ptr);
+		*((Pixmap *)internalPtr) = *((Pixmap *)ptr);
 		break;
 	    case TK_OPTION_BORDER:
-		*((Tk_3DBorder *) internalPtr) = *((Tk_3DBorder *) ptr);
+		*((Tk_3DBorder *)internalPtr) = *((Tk_3DBorder *)ptr);
 		break;
 	    case TK_OPTION_RELIEF:
-		*((int *) internalPtr) = *((int *) ptr);
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *)internalPtr) = *((char *)ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *)internalPtr) = *((short *)ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_RELIEF");
+		    }
+		} else {
+		    *((int *)internalPtr) = *((int *)ptr);
+		}
 		break;
 	    case TK_OPTION_CURSOR:
 		*((Tk_Cursor *) internalPtr) = *((Tk_Cursor *) ptr);
 		Tk_DefineCursor(savePtr->tkwin, *((Tk_Cursor *) internalPtr));
 		break;
 	    case TK_OPTION_JUSTIFY:
-		*((Tk_Justify *) internalPtr) = *((Tk_Justify *) ptr);
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *)internalPtr) = *((char *)ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *)internalPtr) = *((short *)ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_JUSTIFY");
+		    }
+		} else {
+		    *((int *)internalPtr) = *((int *)ptr);
+		}
 		break;
 	    case TK_OPTION_ANCHOR:
-		*((Tk_Anchor *) internalPtr) = *((Tk_Anchor *) ptr);
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *)internalPtr) = *((char *)ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *)internalPtr) = *((short *)ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_ANCHOR");
+		    }
+		} else {
+		    *((int *)internalPtr) = *((int *)ptr);
+		}
 		break;
 	    case TK_OPTION_PIXELS:
-		*((int *) internalPtr) = *((int *) ptr);
+		*((int *)internalPtr) = *((int *)ptr);
 		break;
 	    case TK_OPTION_WINDOW:
-		*((Tk_Window *) internalPtr) = *((Tk_Window *) ptr);
+		*((Tk_Window *)internalPtr) = *((Tk_Window *)ptr);
 		break;
 	    case TK_OPTION_CUSTOM: {
 		const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
@@ -1588,7 +1752,7 @@ Tk_FreeSavedOptions(
 	savedOptionPtr = &savePtr->items[count-1];
 	if (savedOptionPtr->optionPtr->flags & OPTION_NEEDS_FREEING) {
 	    FreeResources(savedOptionPtr->optionPtr, savedOptionPtr->valuePtr,
-		    (char *) &savedOptionPtr->internalForm, savePtr->tkwin);
+		    (char *)&savedOptionPtr->internalForm, savePtr->tkwin);
 	}
 	if (savedOptionPtr->valuePtr != NULL) {
 	    Tcl_DecrRefCount(savedOptionPtr->valuePtr);
@@ -1699,17 +1863,17 @@ FreeResources(
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_STRING:
 	if (internalFormExists) {
-	    if (*((char **) internalPtr) != NULL) {
-		ckfree(*((char **) internalPtr));
-		*((char **) internalPtr) = NULL;
+	    if (*((char **)internalPtr) != NULL) {
+		ckfree(*((char **)internalPtr));
+		*((char **)internalPtr) = NULL;
 	    }
 	}
 	break;
     case TK_OPTION_COLOR:
 	if (internalFormExists) {
-	    if (*((XColor **) internalPtr) != NULL) {
-		Tk_FreeColor(*((XColor **) internalPtr));
-		*((XColor **) internalPtr) = NULL;
+	    if (*((XColor **)internalPtr) != NULL) {
+		Tk_FreeColor(*((XColor **)internalPtr));
+		*((XColor **)internalPtr) = NULL;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeColorFromObj(tkwin, objPtr);
@@ -1717,23 +1881,23 @@ FreeResources(
 	break;
     case TK_OPTION_FONT:
 	if (internalFormExists) {
-	    Tk_FreeFont(*((Tk_Font *) internalPtr));
-	    *((Tk_Font *) internalPtr) = NULL;
+	    Tk_FreeFont(*((Tk_Font *)internalPtr));
+	    *((Tk_Font *)internalPtr) = NULL;
 	} else if (objPtr != NULL) {
 	    Tk_FreeFontFromObj(tkwin, objPtr);
 	}
 	break;
     case TK_OPTION_STYLE:
 	if (internalFormExists) {
-	    Tk_FreeStyle(*((Tk_Style *) internalPtr));
-	    *((Tk_Style *) internalPtr) = NULL;
+	    Tk_FreeStyle(*((Tk_Style *)internalPtr));
+	    *((Tk_Style *)internalPtr) = NULL;
 	}
 	break;
     case TK_OPTION_BITMAP:
 	if (internalFormExists) {
-	    if (*((Pixmap *) internalPtr) != None) {
-		Tk_FreeBitmap(Tk_Display(tkwin), *((Pixmap *) internalPtr));
-		*((Pixmap *) internalPtr) = None;
+	    if (*((Pixmap *)internalPtr) != None) {
+		Tk_FreeBitmap(Tk_Display(tkwin), *((Pixmap *)internalPtr));
+		*((Pixmap *)internalPtr) = None;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeBitmapFromObj(tkwin, objPtr);
@@ -1741,9 +1905,9 @@ FreeResources(
 	break;
     case TK_OPTION_BORDER:
 	if (internalFormExists) {
-	    if (*((Tk_3DBorder *) internalPtr) != NULL) {
-		Tk_Free3DBorder(*((Tk_3DBorder *) internalPtr));
-		*((Tk_3DBorder *) internalPtr) = NULL;
+	    if (*((Tk_3DBorder *)internalPtr) != NULL) {
+		Tk_Free3DBorder(*((Tk_3DBorder *)internalPtr));
+		*((Tk_3DBorder *)internalPtr) = NULL;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_Free3DBorderFromObj(tkwin, objPtr);
@@ -1879,24 +2043,24 @@ GetConfigList(
 
     listPtr = Tcl_NewListObj(0, NULL);
     Tcl_ListObjAppendElement(NULL, listPtr,
-	    Tcl_NewStringObj(optionPtr->specPtr->optionName, -1));
+	    Tcl_NewStringObj(optionPtr->specPtr->optionName, TCL_INDEX_NONE));
 
     if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
 	elementPtr = Tcl_NewStringObj(
-		optionPtr->extra.synonymPtr->specPtr->optionName, -1);
+		optionPtr->extra.synonymPtr->specPtr->optionName, TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
     } else {
 	if (optionPtr->dbNameUID == NULL) {
 	    elementPtr = Tcl_NewObj();
 	} else {
-	    elementPtr = Tcl_NewStringObj(optionPtr->dbNameUID, -1);
+	    elementPtr = Tcl_NewStringObj(optionPtr->dbNameUID, TCL_INDEX_NONE);
 	}
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
 	if (optionPtr->dbClassUID == NULL) {
 	    elementPtr = Tcl_NewObj();
 	} else {
-	    elementPtr = Tcl_NewStringObj(optionPtr->dbClassUID, -1);
+	    elementPtr = Tcl_NewStringObj(optionPtr->dbClassUID, TCL_INDEX_NONE);
 	}
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
@@ -1960,45 +2124,77 @@ GetObjectForOption(
     if (optionPtr->specPtr->internalOffset != TCL_INDEX_NONE) {
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
-	case TK_OPTION_BOOLEAN:
-	    if (*((int *) internalPtr) != -1) {
-		objPtr = Tcl_NewBooleanObj(*((int *)internalPtr));
-	    }
-	    break;
-	case TK_OPTION_INT:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
-		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
-	    }
-	    break;
-	case TK_OPTION_INDEX:
-	    if (*((int *) internalPtr) == INT_MIN) {
-		objPtr = TkNewIndexObj(TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) == INT_MAX) {
-		objPtr = Tcl_NewStringObj("end+1", -1);
-	    } else if (*((int *) internalPtr) == -1) {
-		objPtr = Tcl_NewStringObj("end", -1);
-	    } else if (*((int *) internalPtr) < 0) {
-		char buf[32];
-		sprintf(buf, "end%d", *((int *) internalPtr));
-		objPtr = Tcl_NewStringObj(buf, -1);
+	case TK_OPTION_BOOLEAN: {
+	    int value = -1;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    value = *((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    value = *((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		}
 	    } else {
-		objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+		value = *((int *)internalPtr);
+	    }
+	    if (value != -1) {
+		objPtr = Tcl_NewBooleanObj(value);
+	    }
+	    break;
+	}
+	case TK_OPTION_INT: {
+	    Tcl_WideInt value = LLONG_MIN;
+	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+		    if (sizeof(long) > sizeof(int)) {
+			value = *((long *)internalPtr);
+			if (nullOK && (value == LONG_MIN)) {break;}
+		    } else {
+			value = *((long long *)internalPtr);
+			if (nullOK && (value == LLONG_MIN)) {break;}
+		    }
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
+		}
+	    } else {
+		value = *((int *)internalPtr);
+		if (nullOK && (value == INT_MIN)) {break;}
+	    }
+		objPtr = Tcl_NewWideIntObj(value);
+	    break;
+	}
+	case TK_OPTION_INDEX:
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || *((int *)internalPtr) != INT_MIN) {
+		if (*((int *)internalPtr) == INT_MIN) {
+		    objPtr = TkNewIndexObj(TCL_INDEX_NONE);
+		} else if (*((int *)internalPtr) == INT_MAX) {
+		    objPtr = Tcl_NewStringObj("end+1", TCL_INDEX_NONE);
+		} else if (*((int *)internalPtr) == -1) {
+		    objPtr = Tcl_NewStringObj("end", TCL_INDEX_NONE);
+		} else if (*((int *)internalPtr) < 0) {
+		    char buf[32];
+		    snprintf(buf, 32, "end%d", 1 + *((int *)internalPtr));
+		    objPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
+		} else {
+		    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+		}
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || !isnan(*((double *) internalPtr))) {
-		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || !isnan(*((double *)internalPtr))) {
+		objPtr = Tcl_NewDoubleObj(*((double *)internalPtr));
 	    }
 	    break;
 	case TK_OPTION_STRING:
-	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), -1);
+	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), TCL_INDEX_NONE);
 	    break;
 	case TK_OPTION_STRING_TABLE: {
-	    int value;
+	    int value = 0;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
-		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
-		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
 		    value = *((short *)internalPtr);
 		} else {
 		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
@@ -2007,8 +2203,8 @@ GetObjectForOption(
 		value = *((int *)internalPtr);
 	    }
 	    if (value >= 0) {
-		objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
-			value], -1);
+		objPtr = Tcl_NewStringObj(((char **)optionPtr->specPtr->clientData)[
+			value], TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2016,7 +2212,7 @@ GetObjectForOption(
 	    XColor *colorPtr = *((XColor **)internalPtr);
 
 	    if (colorPtr != NULL) {
-		objPtr = Tcl_NewStringObj(Tk_NameOfColor(colorPtr), -1);
+		objPtr = Tcl_NewStringObj(Tk_NameOfColor(colorPtr), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2024,7 +2220,7 @@ GetObjectForOption(
 	    Tk_Font tkfont = *((Tk_Font *)internalPtr);
 
 	    if (tkfont != NULL) {
-		objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), -1);
+		objPtr = Tcl_NewStringObj(Tk_NameOfFont(tkfont), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2032,7 +2228,7 @@ GetObjectForOption(
 	    Tk_Style style = *((Tk_Style *)internalPtr);
 
 	    if (style != NULL) {
-		objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), -1);
+		objPtr = Tcl_NewStringObj(Tk_NameOfStyle(style), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2041,7 +2237,7 @@ GetObjectForOption(
 
 	    if (pixmap != None) {
 		objPtr = Tcl_NewStringObj(
-		    Tk_NameOfBitmap(Tk_Display(tkwin), pixmap), -1);
+		    Tk_NameOfBitmap(Tk_Display(tkwin), pixmap), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2049,40 +2245,83 @@ GetObjectForOption(
 	    Tk_3DBorder border = *((Tk_3DBorder *)internalPtr);
 
 	    if (border != NULL) {
-		objPtr = Tcl_NewStringObj(Tk_NameOf3DBorder(border), -1);
+		objPtr = Tcl_NewStringObj(Tk_NameOf3DBorder(border), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
-	case TK_OPTION_RELIEF:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), -1);
+	case TK_OPTION_RELIEF: {
+	    int value = TK_RELIEF_NULL;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    value = *((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    value = *((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_RELIEF");
+		}
+	    } else {
+		value = *((int *)internalPtr);
+	    }
+	    if (value != TK_RELIEF_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfRelief(value), TCL_INDEX_NONE);
+	    }
 	    break;
+	}
 	case TK_OPTION_CURSOR: {
 	    Tk_Cursor cursor = *((Tk_Cursor *)internalPtr);
 
 	    if (cursor != NULL) {
 		objPtr = Tcl_NewStringObj(
-		Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
+		Tk_NameOfCursor(Tk_Display(tkwin), cursor), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
-	case TK_OPTION_JUSTIFY:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
-		    *((Tk_Justify *)internalPtr)), -1);
+	case TK_OPTION_JUSTIFY: {
+	    Tk_Justify value = TK_JUSTIFY_NULL;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    value = (Tk_Justify)*((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    value = (Tk_Justify)*((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_JUSTIFY");
+		}
+	    } else {
+		value = (Tk_Justify)*((int *)internalPtr);
+	    }
+	    if (value != TK_JUSTIFY_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfJustify(value), TCL_INDEX_NONE);
+	    }
 	    break;
-	case TK_OPTION_ANCHOR:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
-		    *((Tk_Anchor *)internalPtr)), -1);
+	}
+	case TK_OPTION_ANCHOR: {
+	    Tk_Anchor value = TK_ANCHOR_NULL;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    value = (Tk_Anchor)*((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    value = (Tk_Anchor)*((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_ANCHOR");
+		}
+	    } else {
+		value = (Tk_Anchor)*((int *)internalPtr);
+	    }
+	    if (value != TK_ANCHOR_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(value), TCL_INDEX_NONE);
+	    }
 	    break;
+	}
 	case TK_OPTION_PIXELS:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || *((int *)internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
 	case TK_OPTION_WINDOW: {
-	    tkwin = *((Tk_Window *) internalPtr);
+	    tkwin = *((Tk_Window *)internalPtr);
 
 	    if (tkwin != NULL) {
-		objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+		objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), TCL_INDEX_NONE);
 	    }
 	    break;
 	}
@@ -2092,8 +2331,8 @@ GetObjectForOption(
 	    objPtr = custom->getProc(custom->clientData, tkwin, (char *)recordPtr,
 		    optionPtr->specPtr->internalOffset);
 	    break;
-        }
-        default:
+	}
+	default:
 	    Tcl_Panic("bad option type in GetObjectForOption");
 	}
     }
@@ -2216,11 +2455,11 @@ TkDebugConfig(
 	if (tablePtr == (OptionTable *) Tcl_GetHashValue(hashEntryPtr)) {
 	    for ( ; tablePtr != NULL; tablePtr = tablePtr->nextPtr) {
 		Tcl_ListObjAppendElement(NULL, objPtr,
-			Tcl_NewWideIntObj(tablePtr->refCount));
+			Tcl_NewWideIntObj((Tcl_WideInt)tablePtr->refCount));
 		Tcl_ListObjAppendElement(NULL, objPtr,
-			Tcl_NewWideIntObj(tablePtr->numOptions));
+			Tcl_NewWideIntObj((Tcl_WideInt)tablePtr->numOptions));
 		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(
-			tablePtr->options[0].specPtr->optionName, -1));
+			tablePtr->options[0].specPtr->optionName, TCL_INDEX_NONE));
 	    }
 	    break;
 	}

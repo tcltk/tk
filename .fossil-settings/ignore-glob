@@ -36,3 +36,4 @@ win/nmakehlp.out
 unix/tk.pc
 unix/Tk-Info.plist
 unix/Wish-Info.plist
+unix/Credits.html

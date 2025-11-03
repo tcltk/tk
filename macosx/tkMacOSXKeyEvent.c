@@ -4,7 +4,7 @@
  *	This file implements functions that decode & handle keyboard events on
  *	MacOS X.
  *
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2012 Adrian Robert.
  * Copyright © 2015-2020 Marc Culler.
@@ -47,7 +47,7 @@ static NSUInteger textInputModifiers;
 - (NSEvent *) tkProcessKeyEvent: (NSEvent *) theEvent
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
@@ -64,8 +64,8 @@ static NSUInteger textInputModifiers;
     static NSMutableArray *nsEvArray = nil;
 
     if (nsEvArray == nil) {
-        nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
-        processingCompose = NO;
+	nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
+	processingCompose = NO;
     }
     if (!winPtr) {
 	return theEvent;
@@ -80,7 +80,7 @@ static NSUInteger textInputModifiers;
     if ([theEvent type] ==  NSKeyDown &&
 	[theEvent isARepeat] &&
 	[NSEvent keyRepeatDelay] < 0) {
-            return theEvent;
+	    return theEvent;
 	}
 
     /*
@@ -146,7 +146,7 @@ static NSUInteger textInputModifiers;
 
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
-	      [self class], self, _cmd,
+	      [self class], self, sel_getName(_cmd),
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
 	      virt, w, type);
 #endif
@@ -288,8 +288,6 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-@synthesize tkDirtyRect = _tkDirtyRect;
-@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -311,7 +309,7 @@ static NSUInteger textInputModifiers;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        [aString string] : aString;
+	[aString string] : aString;
     len = [str length];
 
     if (NS_KEYLOG) {
@@ -324,7 +322,7 @@ static NSUInteger textInputModifiers;
 
     if (privateWorkingText != nil) {
 	sendingIMEText = YES;
-    	[self deleteWorkingText];
+	[self deleteWorkingText];
     }
 
     /*
@@ -387,8 +385,8 @@ static NSUInteger textInputModifiers;
 	    macKC.v.o_s |= INDEX_OPTION;
 	}
 	xEvent.xkey.keycode = macKC.uint;
-    	xEvent.xany.type = KeyPress;
-    	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	xEvent.xany.type = KeyPress;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xkey.state = state;
     }
 }
@@ -417,13 +415,16 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    if (!winPtr) {
+	return;
+    }
     Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
     (void)selRange;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        [aString string] : aString;
+	[aString string] : aString;
     if (focusWin) {
 
 	/*
@@ -633,12 +634,12 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     display = Tk_Display(tkwin);
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
-	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
-	        (modifiers & NSControlKeyMask    ? ControlMask : 0) |
-	        (modifiers & NSCommandKeyMask    ? Mod1Mask    : 0) |
-	        (modifiers & NSAlternateKeyMask  ? Mod2Mask    : 0) |
-	        (modifiers & NSNumericPadKeyMask ? Mod3Mask    : 0) |
-	        (modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
+		(modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
+		(modifiers & NSControlKeyMask    ? ControlMask : 0) |
+		(modifiers & NSCommandKeyMask    ? Mod1Mask    : 0) |
+		(modifiers & NSAlternateKeyMask  ? Mod2Mask    : 0) |
+		(modifiers & NSNumericPadKeyMask ? Mod3Mask    : 0) |
+		(modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
     }
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(display);
@@ -670,9 +671,12 @@ setXEventPoint(
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow *topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     } else if (winPtr->wmInfoPtr != NULL) {
 	local.x -= winPtr->wmInfoPtr->xInParent;
@@ -710,17 +714,13 @@ int
 XGrabKeyboard(
     Display* display,
     Window grab_window,
-    Bool owner_events,
-    int pointer_mode,
-    int keyboard_mode,
-    Time time)
+    TCL_UNUSED(Bool),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
-    (void)owner_events;
-    (void)pointer_mode;
-    (void)keyboard_mode;
-    (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
@@ -760,12 +760,9 @@ XGrabKeyboard(
 
 int
 XUngrabKeyboard(
-    Display* display,
-    Time time)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Time))
 {
-    (void)display;
-    (void)time;
-
     if (modalSession) {
 	[NSApp endModalSession:modalSession];
 	modalSession = nil;

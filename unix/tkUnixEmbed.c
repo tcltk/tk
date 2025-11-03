@@ -53,18 +53,18 @@ static Tcl_ThreadDataKey dataKey;
  * Prototypes for static functions defined in this file:
  */
 
-static void		ContainerEventProc(ClientData clientData,
+static void		ContainerEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		EmbeddedEventProc(ClientData clientData,
+static void		EmbeddedEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int		EmbedErrorProc(ClientData clientData,
+static int		EmbedErrorProc(void *clientData,
 			    XErrorEvent *errEventPtr);
-static void		EmbedFocusProc(ClientData clientData,
+static void		EmbedFocusProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbedGeometryRequest(Container *containerPtr,
 			    int width, int height);
 static void		EmbedSendConfigure(Container *containerPtr);
-static void		EmbedStructureProc(ClientData clientData,
+static void		EmbedStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbedWindowDeleted(TkWindow *winPtr);
 
@@ -107,12 +107,12 @@ Tk_UseWindow(
     Container *containerPtr;
     XWindowAttributes parentAtts;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", -1));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
+		"can't modify container after widget is created", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", (char *)NULL);
 	return TCL_ERROR;
     }
     if (TkpScanWindowId(interp, string, &parent) != TCL_OK) {
@@ -124,7 +124,7 @@ Tk_UseWindow(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" doesn't have -container option set",
 		usePtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -139,7 +139,7 @@ Tk_UseWindow(
     handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
 	    EmbedErrorProc, &anyError);
     if (!XGetWindowAttributes(winPtr->display, parent, &parentAtts)) {
-        anyError = 1;
+	anyError = 1;
     }
     XSync(winPtr->display, False);
     Tk_DeleteErrorHandler(handler);
@@ -147,7 +147,7 @@ Tk_UseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "couldn't create child of window \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -218,7 +218,7 @@ Tk_MakeWindow(
     Container *containerPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_EMBEDDED) {
 	/*
@@ -274,7 +274,7 @@ Tk_MakeContainer(
     TkWindow *winPtr = (TkWindow *) tkwin;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Register the window as a container so that, for example, we can find
@@ -329,7 +329,7 @@ Tk_MakeContainer(
 
 static int
 EmbedErrorProc(
-    ClientData clientData,	/* Points to integer to set. */
+    void *clientData,	/* Points to integer to set. */
     XErrorEvent *errEventPtr)	/* Points to information about error (not
 				 * used). */
 {
@@ -361,7 +361,7 @@ EmbedErrorProc(
 
 static void
 EmbeddedEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -393,14 +393,14 @@ EmbeddedEventProc(
 
 static void
 ContainerEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     Container *containerPtr;
     Tk_ErrorHandler errHandler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Ignore any X protocol errors that happen in this function (almost any
@@ -498,20 +498,20 @@ ContainerEventProc(
 
 static void
 EmbedStructureProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
     Tk_ErrorHandler errHandler;
 
     if (eventPtr->type == ConfigureNotify) {
-        /*
-         * Send a ConfigureNotify  to the embedded application.
-         */
+	/*
+	 * Send a ConfigureNotify  to the embedded application.
+	 */
 
-        if (containerPtr->embeddedPtr != NULL) {
-            TkDoConfigureNotify(containerPtr->embeddedPtr);
-        }
+	if (containerPtr->embeddedPtr != NULL) {
+	    TkDoConfigureNotify(containerPtr->embeddedPtr);
+	}
 	if (containerPtr->wrapper != None) {
 
 	    /*
@@ -553,7 +553,7 @@ EmbedStructureProc(
 
 static void
 EmbedFocusProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
@@ -715,10 +715,10 @@ Tk_GetOtherWindow(
 {
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (containerPtr = tsdPtr->firstContainerPtr;
-            containerPtr != NULL;
+	    containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
 	if ((Tk_Window)containerPtr->embeddedPtr == tkwin) {
 	    return (Tk_Window)containerPtr->parentPtr;
@@ -761,7 +761,7 @@ TkpRedirectKeyEvent(
     Container *containerPtr;
     Window saved;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * First, find the top-level window corresponding to winPtr.
@@ -833,7 +833,7 @@ TkpClaimFocus(
     XEvent event;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!(topLevelPtr->flags & TK_EMBEDDED)) {
 	return;
@@ -874,9 +874,9 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    ClientData dummy,	/* Main window for application. */
+    void *dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     int all;
@@ -885,7 +885,7 @@ TkpTestembedCmd(
     char buffer[50];
     Tcl_Interp *embeddedInterp = NULL, *parentInterp = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     (void)dummy;
 
     if ((objc > 1) && (strcmp(Tcl_GetString(objv[1]), "all") == 0)) {
@@ -910,7 +910,7 @@ TkpTestembedCmd(
 	if (containerPtr->parent == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
+	    snprintf(buffer, sizeof(buffer), "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
@@ -923,11 +923,11 @@ TkpTestembedCmd(
 	    Tcl_DStringAppendElement(&dString,
 		    containerPtr->parentPtr->pathName);
 	}
-        /* Wrapper */
+	/* Wrapper */
 	if (containerPtr->wrapper == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->wrapper);
+	    snprintf(buffer, sizeof(buffer), "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->wrapper);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
@@ -971,7 +971,7 @@ EmbedWindowDeleted(
 {
     Container *containerPtr, *prevPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the Container structure for this window work. Delete the
@@ -1030,10 +1030,10 @@ TkUnixContainerId(
 {
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (containerPtr = tsdPtr->firstContainerPtr;
-            containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
+	    containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->embeddedPtr == winPtr) {
 	    return containerPtr->parent;
 	}
@@ -1129,7 +1129,7 @@ TkpMakeTransparentWindowExist(
     Window parent)		/* Parent window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    long int mask = CWDontPropagate | CWEventMask;
+    unsigned long mask = CWDontPropagate | CWEventMask;
 
     /*
      * Ignore the important events while the window is mapped.

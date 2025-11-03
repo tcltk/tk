@@ -1,7 +1,7 @@
 /*
  * Theme engine: private definitions.
  *
- * Copyright (c) 2004 Joe English.  Freely redistributable.
+ * Copyright © 2004 Joe English.  Freely redistributable.
  */
 
 #ifndef _TTKTHEMEINT
@@ -38,5 +38,11 @@ MODULE_SCOPE Ttk_LayoutTemplate Ttk_FindLayoutTemplate(
     Ttk_Theme themePtr, const char *layoutName);
 
 MODULE_SCOPE const char *Ttk_StyleName(Ttk_Style);
+
+MODULE_SCOPE void TtkSetBlinkCursorTimes(Tcl_Interp* interp);
+
+MODULE_SCOPE int TtkBoxEqual(Ttk_Box, Ttk_Box);
+
+#define TTK_OPTION_UNDERLINE_DEF(type, field) NULL, offsetof(type, field), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL
 
 #endif /* _TTKTHEMEINT */

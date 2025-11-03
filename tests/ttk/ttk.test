@@ -1,11 +1,66 @@
+#
+# Diverse tests for ttk
+#
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-proc skip args {}
-proc ok {} { return }
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc bgerror {error} {
+    variable bgerror $error
+    variable bgerrorInfo $::errorInfo
+    variable bgerrorCode $::errorCode
+}
+
+# Tests using this will fail if the top-level window contains the cursor
+proc checkstate {w} {
+    foreach statespec {
+	{!active !disabled}
+	{!active disabled}
+	{active !disabled}
+	{active disabled}
+	active
+	disabled
+    } {
+	lappend result [$w instate $statespec]
+    }
+    set result
+}
+
+proc selfdestruct {w args} {
+    destroy $w
+}
+
+proc wrong#args {args} {
+    return "wrong # args: should be \"$args\""
+}
+
+proc wrong#varargs {varpart args} {
+    set usage $args
+    append usage " ?$varpart ...?"
+    return "wrong # args: should be \"$usage\""
+}
+
+#
+# COMMON TEST SETUP
+#
 
 variable widgetClasses {
     button checkbutton radiobutton menubutton label entry
@@ -15,21 +70,18 @@ variable widgetClasses {
     scale
 }
 
-proc bgerror {error} {
-    variable bgerror $error
-    variable bgerrorInfo $::errorInfo
-    variable bgerrorCode $::errorCode
-}
+#
+# TESTS
+#
 
+#
 # Self-destruct tests.
 # Do these early, so any memory corruption has a longer time to cause a crash.
 #
-proc selfdestruct {w args} {
-    destroy $w
-}
+
 test ttk-6.1 "Self-destructing checkbutton" -body {
     pack [ttk::checkbutton .sd -text "Self-destruction" -variable ::sd]
-    trace variable sd w [list selfdestruct .sd]
+    trace add variable sd write [list selfdestruct .sd]
     update
     .sd invoke
 } -returnCodes error
@@ -41,7 +93,7 @@ test ttk-6.2 "Checkbutton self-destructed" -body {
 
 test ttk-6.4 "Destroy widget in configure" -setup {
     set OUCH ouch
-    trace variable OUCH r { kill.b }
+    trace add variable OUCH read { kill.b }
     proc kill.b {args} { destroy .b }
 } -cleanup {
     unset OUCH
@@ -111,7 +163,7 @@ test ttk-construction-failure-1 "Excercise construction failure path" -setup {
 
 test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
     set OUCH ouch
-    trace variable OUCH r { kill.b }
+    trace add variable OUCH read { kill.b }
     proc kill.b {args} { destroy .b }
 } -cleanup {
     unset OUCH
@@ -136,6 +188,8 @@ test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
 # Basic tests.
 #
 test ttk-1.1 "Create multiline button showing justified text" -body {
+    wm geometry . +100+100
+    event generate . <Motion> -warp 1 -x 600 -y 600
     pack [ttk::button .t -text "Hello\nWorld!!" -justify center] -expand true -fill both
     update
 }
@@ -152,21 +206,6 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
-proc checkstate {w} {
-    foreach statespec {
-	{!active !disabled}
-	{!active disabled}
-	{active !disabled}
-	{active disabled}
-	active
-	disabled
-    } {
-	lappend result [$w instate $statespec]
-    }
-    set result
-}
-
-# NB: this will fail if the top-level window pops up underneath the cursor
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]
@@ -203,7 +242,7 @@ test ttk-2.7 "instate scripts, true" -body {
     set x
 } -result 1
 
-test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
+test ttk-2.8 {Bug [3223850]: Button remains stuck when disabled as depressed on XP} -setup {
     destroy .b
     set ttk28 {}
     pack [ttk::button .b -command {set ::ttk28 failed}]
@@ -220,6 +259,16 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     destroy .b
     unset -nocomplain ttk28 aid
 } -result 1
+
+test ttk-2.9 {Bug [7231bf99]: Setting ttk state may change the variable passed by value} -body {
+    pack [ttk::button .b1 -text Hi!]
+    set state [list invalid disabled]
+    .b1 state $state
+    set state
+} -cleanup {
+    unset state
+    destroy .b1
+} -result [list invalid disabled]
 
 foreach wc $widgetClasses {
     test ttk-coreoptions-$wc "$wc has all core options" -body {
@@ -254,7 +303,7 @@ test ttk-3.3 "Constructor failure with cursor" -body {
     ttk::button .b -cursor bottom_right_corner -style BadStyle
 } -returnCodes error -result "Layout BadStyle not found"
 
-test ttk-3.4 "SF#2009213" -body {
+test ttk-3.4 {Bug [2009213]: Segfault after setting bad -sliderrelief and packing scale} -body {
     ttk::style configure TScale -sliderrelief {}
     pack [ttk::scale .s]
     update
@@ -272,7 +321,7 @@ test ttk-4.0 "Setup" -body {
     catch { destroy .t }
     pack [ttk::label .t -text "Button 1"]
     testConstraint fontOption [expr {![catch { set prevFont [.t cget -font] }]}]
-    ok
+    return -code ok
 }
 
 test ttk-4.1 "Change font" -constraints fontOption -body {
@@ -304,6 +353,12 @@ test ttk-4.4 "Bad resource specifications" -body {
 }
 
 #
+# COMMON TEST SETUP
+#
+# For tests ttk-8.*
+#
+
+#
 # -compound tests:
 #
 variable iconData \
@@ -318,82 +373,64 @@ zCDoBooud2PMDIKuRqDocgtGzMwg6O4Eii5z4Kgi6DIMhqLoagQGjiqCLvPgYOgqji6CLrfi
 
 variable compoundStrings {text image center top bottom left right none}
 
-if {0} {
-    proc now {} { set ::now [clock clicks -milliseconds] }
-    proc tick {} { puts -nonewline stderr "+" ; flush stderr }
-    proc tock {} {
-	set then $::now; set ::now [clock clicks -milliseconds]
-	puts stderr " [expr {$::now - $then}] ms"
-    }
-} else {
-    proc now {} {} ; proc tick {} {} ; proc tock {} {}
-}
-
-now ; tick
 test ttk-8.0 "Setup for 8.X" -body {
     ttk::button .ctb
     image create photo icon -data $::iconData;
     pack .ctb
 }
-tock
 
-now
 test ttk-8.1 "Test -compound options" -body {
     # Exhaustively test each combination.
     # Main goal is to make sure no code paths crash.
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.2 "Test -compound options with regular button" -body {
     button .rtb
     pack .rtb
 
     foreach image {"" icon} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound [lrange $::compoundStrings 2 end] {
 		.rtb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
-        foreach text {"Hi!" ""} {
+	foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
 	    }
 	}
     }
 }
-tock
 
 test ttk-8.4 "ImageChanged" -body {
     ttk::button .b -image icon
     icon blank
 } -cleanup { destroy .b }
 
-#------------------------------------------------------------------------
 
 test ttk-9.1 "Traces on nonexistant namespaces" -body {
     ttk::checkbutton .tcb -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result {can't trace "foo::bar": parent namespace doesn't exist}
 
 test ttk-9.2 "Traces on nonexistant namespaces II" -body {
     ttk::checkbutton .tcb -variable X
     .tcb configure -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result {can't trace "foo::bar": parent namespace doesn't exist}
 
 test ttk-9.3 "Restore saved options on configure error" -body {
     .tcb cget -variable
@@ -595,18 +632,18 @@ test ttk-14.3 "-textvariable in nonexistant namespace" -body {
 } -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
-test ttk-15.1 {Bug 3062331} -setup {
+test ttk-15.1 {Tcl bug [3062331]: segfault in variable traces with ttk::* widgets} -setup {
     destroy .b
 } -body {
     set Y {}
     ttk::button .b -textvariable Y
-    trace variable Y u "destroy .b; #"
+    trace add variable Y unset "destroy .b; #"
     unset Y
 } -cleanup {
     destroy .b
 } -result {}
 
-test ttk-15.2 {Bug 3341056} -setup {
+test ttk-15.2 {Bug [3341056]: Usage of recreated ttk::checkbutton causes crash} -setup {
     proc foo {} {
 	destroy .lf
 	ttk::labelframe .lf
@@ -627,14 +664,6 @@ test ttk-15.2 {Bug 3341056} -setup {
 #
 # (See also: SF#2021443)
 #
-proc wrong#args {args} {
-    return "wrong # args: should be \"$args\""
-}
-proc wrong#varargs {varpart args} {
-    set usage $args
-    append usage " ?$varpart ...?"
-    return "wrong # args: should be \"$usage\""
-}
 
 test ttk-ensemble-0 "style element create: insufficient args" -body {
      ttk::style
@@ -666,7 +695,7 @@ test ttk-ensemble-5 "style element create: valid" -body {
 
 test ttk-16.1 {ttk::style theme styles - no such theme} -body {
     ttk::style theme styles noSuchTheme
-} -returnCodes 1 -result {theme "noSuchTheme" doesn't exist}
+} -returnCodes 1 -result {theme "noSuchTheme" does not exist}
 test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     # simply check this produces a list with some style names,
     # without checking exact content (not needed, and may vary
@@ -674,9 +703,9 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     expr {[llength [ttk::style theme styles alt]] > 0}
 } -result 1
 
+#
+# TESTFILE CLEANUP
+#
 
-eval destroy [winfo children .]
-
+destroy {*}[winfo children .]
 tcltest::cleanupTests
-
-#*EOF*

@@ -55,10 +55,46 @@ SOFTWARE.
 
 /* Resources */
 
-#ifdef _WIN64
-typedef unsigned __int64 XID;
-#else
+/*
+ * _XSERVER64 must ONLY be defined when compiling X server sources on
+ * systems where unsigned long is not 32 bits, must NOT be used in
+ * client or library code.
+ */
+#ifndef _XSERVER64
+#  ifndef _XTYPEDEF_XID
+#    define _XTYPEDEF_XID
+#    ifdef _WIN64
+typedef unsigned long long XID;
+#    else
 typedef unsigned long XID;
+#    endif
+#  endif
+#  ifndef _XTYPEDEF_MASK
+#    define _XTYPEDEF_MASK
+typedef unsigned long Mask;
+#  endif
+#  ifndef _XTYPEDEF_ATOM
+#    define _XTYPEDEF_ATOM
+typedef unsigned long Atom;		/* Also in Xdefs.h */
+#  endif
+typedef unsigned long VisualID;
+typedef unsigned long Time;
+#else
+#  include <X11/Xmd.h>
+#  ifndef _XTYPEDEF_XID
+#    define _XTYPEDEF_XID
+typedef CARD32 XID;
+#  endif
+#  ifndef _XTYPEDEF_MASK
+#    define _XTYPEDEF_MASK
+typedef CARD32 Mask;
+#  endif
+#  ifndef _XTYPEDEF_ATOM
+#    define _XTYPEDEF_ATOM
+typedef CARD32 Atom;
+#  endif
+typedef CARD32 VisualID;
+typedef CARD32 Time;
 #endif
 
 typedef XID Window;
@@ -73,25 +109,20 @@ typedef XID Colormap;
 typedef XID GContext;
 typedef XID KeySym;
 
-typedef unsigned long Mask;
-
-typedef unsigned long Atom;
-
-typedef unsigned long VisualID;
-
-typedef unsigned long Time;
-
 typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in
 				 * the XEvent.  In the real X.h, a KeyCode is
-				 * defined as a short, which wouldn't be big
-				 * enough. */
+				 * defined as an unsigned char, which wouldn't
+				 * be big enough. */
 
 /*****************************************************************
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  *****************************************************************/
 
-/* #define None              0L      See bug [9e31fd9449] and below */
+#ifndef None
+/* Perl-Tk expects None to be a macro. See ticket [593eb0227c] */
+#define None                 None /* See bug [9e31fd9449] and below */
+#endif
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
 				    and ChangeWindowAttributes */
@@ -198,7 +229,8 @@ are reserved in the protocol for errors and replies. */
 
 #define ShiftMask		(1<<0)
 #define LockMask		(1<<1)
-/* #define ControlMask		(1<<2) See bug [9e31fd9449] and below */
+/* Perl-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
+#define ControlMask		ControlMask /* See bug [9e31fd9449] and below */
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)
 #define Mod3Mask		(1<<5)
@@ -206,7 +238,7 @@ are reserved in the protocol for errors and replies. */
 #define Mod5Mask		(1<<7)
 
 /* See bug [9e31fd9449], this way prevents conflicts with Win32 headers */
-enum _Bug9e31fd9449 { None = 0, ControlMask = (1<<2) };
+enum { None = 0, ControlMask = (1<<2) };
 
 /* modifier names.  Used to build a SetModifierMapping request or
    to read a GetModifierMapping request.  These correspond to the

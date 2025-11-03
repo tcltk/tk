@@ -1,15 +1,34 @@
-# This file is a Tcl script to test drawing of menus in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test drawing of menus in Tk.
 #
 # Copyright © 1996-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
+
+#
+# TESTS
+#
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
     deleteWindows
@@ -27,7 +46,7 @@ test menuDraw-2.1 {TkInitializeMenuEntryDrawingFields} -setup {
     .m1 add command
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 
 
 test menuDraw-3.1 {TkMenuFreeDrawOptions} -setup {
@@ -50,7 +69,7 @@ test menuDraw-4.2 {TkMenuEntryFreeDrawOptions} -setup {
 } -body {
     menu .m1
     .m1 add checkbutton -label "This is a test." -font "Courier 12" \
-        -activeforeground red -background green -selectcolor purple
+	-activeforeground red -background green -selectcolor purple
     destroy .m1
 } -result {}
 
@@ -86,7 +105,7 @@ test menuDraw-6.1 {TkMenuConfigureEntryDrawOptions - no tkfont specified} -setup
     .m1 add command -label "foo"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     deleteWindows
 } -body {
@@ -94,7 +113,7 @@ test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.3 {TkMenuConfigureEntryDrawOptions - active state - wrong entry} -setup {
     deleteWindows
 } -body {
@@ -140,7 +159,7 @@ test menuDraw-6.7 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     deleteWindows
 } -body {
@@ -148,7 +167,7 @@ test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     .m1 add command -label "foo" -background "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setup {
     deleteWindows
 } -body {
@@ -156,7 +175,7 @@ test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setu
     .m1 add command -label "foo" -foreground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -setup {
     deleteWindows
 } -body {
@@ -164,7 +183,7 @@ test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -s
     .m1 add command -label "foo" -activebackground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified} -setup {
     deleteWindows
 } -body {
@@ -172,7 +191,7 @@ test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified
     .m1 add command -label "foo" -activeforeground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -setup {
     deleteWindows
 } -body {
@@ -180,7 +199,7 @@ test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -se
     .m1 add radiobutton -label "foo" -selectcolor "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.13 {TkMenuConfigureEntryDrawOptions - textGC disposal} -setup {
     deleteWindows
 } -body {
@@ -683,9 +702,9 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     .m2 add command -label foo
     . configure -menu .m1
     foreach w [winfo children .] {
-        if {[$w cget -type] == "menubar"} {
-            break
-        }
+	if {[$w cget -type] == "menubar"} {
+	    break
+	}
     }
     list [$w postcascade 0] [. configure -menu ""]
 } -cleanup {
@@ -706,11 +725,14 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
     deleteWindows
 } -result {}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 imageFinish
 deleteWindows
+testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

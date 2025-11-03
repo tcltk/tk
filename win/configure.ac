@@ -3,19 +3,19 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[9.1])
 AC_CONFIG_SRCDIR([../generic/tk.h])
-AC_PREREQ([2.69])
+AC_PREREQ([2.72])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.1
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL="a1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -77,16 +77,9 @@ SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
-fi
-if test "${TCL_MINOR_VERSION}" -lt 6; then
-    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
-fi
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better.])
 fi
 
 #--------------------------------------------------------------------
@@ -150,17 +143,6 @@ AC_CHECK_TYPE([uintptr_t], [
 	   type wide enough to hold a pointer.])
     fi
 ])
-
-#--------------------------------------------------------------------
-# Windows XP theme engine header for Ttk
-#--------------------------------------------------------------------
-
-AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
-	[AC_MSG_NOTICE([xpnative theme will be unavailable])],
-	[#include <windows.h>])
-AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
-	[#include <windows.h>
-#include <uxtheme.h>])
 
 #--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
@@ -237,41 +219,26 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
-TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
-eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
-eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
-else
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
-fi
-else
 eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
 fi
-fi
 
-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
+eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
-TK_LIB_FLAG="-l"
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-fi
-eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
+TK_LIB_FLAG="-ltcl9"
+eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}tk${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_STUB_LIB_FLAG}\""
 
 TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"
@@ -285,14 +252,13 @@ eval "EXESUFFIX=${EXESUFFIX}"
 
 CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
 CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
-CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 
 #--------------------------------------------------------------------
 # Adjust the defines for how the resources are built depending
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0; then
     RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
@@ -319,8 +285,6 @@ AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
-AC_SUBST(TK_DLL_FILE_TCL8)
-AC_SUBST(TK_DLL_FILE_TCL9)
 AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
@@ -336,7 +300,6 @@ AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
-AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
 
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(EXTRA_CFLAGS)
@@ -393,6 +356,11 @@ AC_SUBST(RC_INCLUDE)
 AC_SUBST(RC_DEFINE)
 AC_SUBST(RC_DEFINES)
 AC_SUBST(RES)
+AC_SUBST(XLIBSW)
+AC_SUBST(XFT_LIBS)
+AC_CONFIG_FILES([
+    tk.pc:../unix/tk.pc.in
+])
 
 AC_CONFIG_FILES([Makefile tkConfig.sh wish.exe.manifest])
 AC_OUTPUT

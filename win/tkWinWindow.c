@@ -170,7 +170,7 @@ TkpPrintWindowId(
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
+    snprintf(buf, TCL_INTEGER_SPACE, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
 }
 
 /*
@@ -232,7 +232,7 @@ TkpScanWindowId(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Creates a Windows window object based on the current attributes of the
  *	specified TkWindow.
@@ -306,7 +306,7 @@ XDestroyWindow(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     /*
      * Remove references to the window in the pointer module then release the
@@ -341,7 +341,7 @@ XDestroyWindow(
  *	Cause the given window to become visible.
  *
  * Results:
- *	None
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	Causes the window state to change, and generates a MapNotify event.
@@ -356,9 +356,13 @@ XMapWindow(
 {
     XEvent event;
     TkWindow *parentPtr;
-    TkWindow *winPtr = TkWinGetWinPtr(w);
+    TkWindow *winPtr;
 
-    display->request++;
+    if (!w) {
+	return BadWindow;
+    }
+    winPtr = TkWinGetWinPtr(w);
+    LastKnownRequestProcessed(display)++;
 
     ShowWindow(Tk_GetHWND(w), SW_SHOWNORMAL);
     winPtr->flags |= TK_MAPPED;
@@ -381,7 +385,7 @@ XMapWindow(
 	}
     } else {
 	event.type = MapNotify;
-	event.xmap.serial = display->request;
+	event.xmap.serial = LastKnownRequestProcessed(display);
 	event.xmap.send_event = False;
 	event.xmap.display = display;
 	event.xmap.event = winPtr->window;
@@ -396,7 +400,7 @@ XMapWindow(
      */
 
     event.type = VisibilityNotify;
-    event.xvisibility.serial = display->request;
+    event.xvisibility.serial = LastKnownRequestProcessed(display);
     event.xvisibility.send_event = False;
     event.xvisibility.display = display;
     event.xvisibility.window = winPtr->window;
@@ -450,7 +454,7 @@ NotifyVisibility(
  *	Cause the given window to become invisible.
  *
  * Results:
- *	None
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	Causes the window state to change, and generates an UnmapNotify event.
@@ -464,9 +468,13 @@ XUnmapWindow(
     Window w)
 {
     XEvent event;
-    TkWindow *winPtr = TkWinGetWinPtr(w);
+    TkWindow *winPtr;
 
-    display->request++;
+    if (!w) {
+	return BadWindow;
+    }
+    winPtr = TkWinGetWinPtr(w);
+    LastKnownRequestProcessed(display)++;
 
     /*
      * Bug fix: Don't short circuit this routine based on TK_MAPPED because it
@@ -478,7 +486,7 @@ XUnmapWindow(
 
     if (winPtr->flags & TK_WIN_MANAGED) {
 	event.type = UnmapNotify;
-	event.xunmap.serial = display->request;
+	event.xunmap.serial = LastKnownRequestProcessed(display);
 	event.xunmap.send_event = False;
 	event.xunmap.display = display;
 	event.xunmap.event = winPtr->window;
@@ -512,7 +520,7 @@ XMoveResizeWindow(
     int x, int y,		/* Position relative to parent. */
     unsigned int width, unsigned int height)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     MoveWindow(Tk_GetHWND(w), x, y, (int) width, (int) height, TRUE);
     return Success;
 }
@@ -541,7 +549,7 @@ XMoveWindow(
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     MoveWindow(Tk_GetHWND(w), x, y, winPtr->changes.width,
 	    winPtr->changes.height, TRUE);
@@ -572,7 +580,7 @@ XResizeWindow(
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     MoveWindow(Tk_GetHWND(w), winPtr->changes.x, winPtr->changes.y, (int)width,
 	    (int)height, TRUE);
@@ -602,7 +610,7 @@ XRaiseWindow(
 {
     HWND window = Tk_GetHWND(w);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     return Success;
 }
@@ -614,7 +622,7 @@ XLowerWindow(
 {
     HWND window = Tk_GetHWND(w);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     return Success;
 }
@@ -648,7 +656,7 @@ XConfigureWindow(
     TkWindow *winPtr = TkWinGetWinPtr(w);
     HWND hwnd = Tk_GetHWND(w);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     /*
      * Change the shape and/or position of the window.
@@ -704,10 +712,10 @@ XClearWindow(
     HWND hwnd = Tk_GetHWND(w);
     HDC dc = GetDC(hwnd);
 
-    palette = TkWinGetPalette(display->screens[0].cmap);
+    palette = TkWinGetPalette(DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
     oldPalette = SelectPalette(dc, palette, FALSE);
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     winPtr = TkWinGetWinPtr(w);
     brush = CreateSolidBrush(winPtr->atts.background_pixel);
@@ -832,7 +840,7 @@ TkpShowBusyWindow(
 	window = Tk_WindowId(busyPtr->tkBusy);
 	display = Tk_Display(busyPtr->tkBusy);
 	hWnd = Tk_GetHWND(window);
-	display->request++;
+	LastKnownRequestProcessed(display)++;
 	SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 

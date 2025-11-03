@@ -1,56 +1,43 @@
 # This file is a Tcl script to test out the "frame", "labelframe" and
-# "toplevel" commands of Tk.  It is organized in the standard fashion for Tcl
-# tests.
+# "toplevel" commands of Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-tcltest::testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-# eatColors --
-# Creates a toplevel window and allocates enough colors in it to use up all
-# the slots in an 8-bit colormap.
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import colors
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# optnames --
+#
+# Returns the option names out of a list of option details.
 #
 # Arguments:
-# w -		Name of toplevel window to create.
-
-proc eatColors {w} {
-    catch {destroy $w}
-    toplevel $w
-    wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
-    pack $w.c
-    for {set y 0} {$y < 8} {incr y} {
-	for {set x 0} {$x < 40} {incr x} {
-	    set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
-	    $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
-		[expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
-		-fill $color
-	}
-    }
-    update
-}
-
-# colorsFree --
-#
-# Returns 1 if there appear to be free colormap entries in a window, 0
-# otherwise.
-#
-# Arguments:
-# w -			Name of window in which to check.
-# red, green, blue -	Intensities to use in a trial color allocation
-#			to see if there are colormap entries free.
-
-proc colorsFree {w {red 31} {green 245} {blue 192}} {
-    lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
-    expr {($r/256 == $red) && ($g/256 == $green) && ($b/256 == $blue)}
+# options -		The option detail list.
+proc optnames {options} {
+    lsort [lmap desc $options {lindex $desc 0}]
 }
 
 # uniq --
@@ -67,16 +54,10 @@ proc uniq {list} {
     return [dict keys $d]
 }
 
-# optnames --
 #
-# Returns the option names out of a list of option details.
+# TESTS
 #
-# Arguments:
-# options -		The option detail list.
-proc optnames {options} {
-    lsort [lmap desc $options {lindex $desc 0}]
-}
-
+
 test frame-1.1 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -169,9 +150,9 @@ test frame-1.12 {frame configuration options} -setup {
     frame .f
     set opts {}
     foreach opt [.f configure] {
-        if {[llength $opt] == 5} {
-            lappend opts [lindex $opt 0] [lindex $opt 4]
-        }
+	if {[llength $opt] == 5} {
+	    lappend opts [lindex $opt 0] [lindex $opt 4]
+	}
     }
     frame .g {*}$opts
 } -cleanup {
@@ -179,8 +160,12 @@ test frame-1.12 {frame configuration options} -setup {
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .f
 frame .f
+
 test frame-1.13 {frame configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -198,7 +183,7 @@ test frame-1.15 {frame configuration options} -body {
 } -result 4
 test frame-1.16 {frame configuration options} -body {
     .f configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-1.17 {frame configuration options} -body {
     .f configure -bg #00ff00
     lindex [.f configure -bg] 4
@@ -213,10 +198,10 @@ test frame-1.19 {frame configuration options} -body {
     lindex [.f configure -borderwidth] 4
 } -cleanup {
     .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
-} -result 1
+} -result 1.3
 test frame-1.20 {frame configuration options} -body {
     .f configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-1.21 {frame configuration options} -body {
     .f configure -cursor arrow
     lindex [.f configure -cursor] 4
@@ -234,7 +219,7 @@ test frame-1.23 {frame configuration options} -body {
 } -result 100
 test frame-1.24 {frame configuration options} -body {
     .f configure -height not_a_number
-} -returnCodes error -result {bad screen distance "not_a_number"}
+} -returnCodes error -result {expected screen distance but got "not_a_number"}
 test frame-1.25 {frame configuration options} -body {
     .f configure -highlightbackground #112233
     lindex [.f configure -highlightbackground] 4
@@ -261,7 +246,7 @@ test frame-1.29 {frame configuration options} -body {
 } -result 6
 test frame-1.30 {frame configuration options} -body {
     .f configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-1.31 {frame configuration options} -body {
     .f configure -padx 3
     lindex [.f configure -padx] 4
@@ -270,7 +255,7 @@ test frame-1.31 {frame configuration options} -body {
 } -result 3
 test frame-1.32 {frame configuration options} -body {
     .f configure -padx badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-1.33 {frame configuration options} -body {
     .f configure -pady 4
     lindex [.f configure -pady] 4
@@ -279,7 +264,7 @@ test frame-1.33 {frame configuration options} -body {
 } -result 4
 test frame-1.34 {frame configuration options} -body {
     .f configure -pady badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-1.35 {frame configuration options} -body {
     .f configure -relief ridge
     lindex [.f configure -relief] 4
@@ -303,7 +288,11 @@ test frame-1.38 {frame configuration options} -body {
 } -result 32
 test frame-1.39 {frame configuration options} -body {
     .f configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-2.1 {toplevel configuration options} -setup {
@@ -376,7 +365,7 @@ test frame-2.8 {toplevel configuration options} -constraints win -setup {
     .t configure -use 0x44022
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {window "0x44022" doesn't exist}
+} -returnCodes error -result {window "0x44022" does not exist}
 test frame-2.9 {toplevel configuration options} -constraints win -setup {
     deleteWindows
 } -body {
@@ -431,11 +420,7 @@ test frame-2.14 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {unknown or ambiguous visual name "who_knows?": class must be best, directcolor, grayscale, greyscale, pseudocolor, staticcolor, staticgray, staticgrey, truecolor, or default}
-set expectedScreen ""
-if {[tcltest::testConstraint haveDISPLAY]} {
-    set expectedScreen [list -screen screen Screen {} $env(DISPLAY)]
-}
-test frame-2.15 {toplevel configuration options} -constraints {x11 haveDISPLAY} -setup {
+test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -443,8 +428,8 @@ test frame-2.15 {toplevel configuration options} -constraints {x11 haveDISPLAY} 
     .t configure -screen
 } -cleanup {
     deleteWindows
-} -result $expectedScreen
-test frame-2.16 {toplevel configuration options} -constraints {x11 haveDISPLAY} -setup {
+} -result [expr {[tcltest::testConstraint haveDISPLAY]?[list -screen screen Screen {} $env(DISPLAY)]:""}]
+test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -476,9 +461,9 @@ test frame-2.19 {toplevel configuration options} -setup {
     # Make sure all options can be set to the default value
     toplevel .f
     foreach opt [.f configure] {
-        if {[llength $opt] == 5} {
-            lappend opts [lindex $opt 0] [lindex $opt 4]
-        }
+	if {[llength $opt] == 5} {
+	    lappend opts [lindex $opt 0] [lindex $opt 4]
+	}
     }
     toplevel .g {*}$opts
 } -cleanup {
@@ -486,10 +471,14 @@ test frame-2.19 {toplevel configuration options} -setup {
     deleteWindows
 } -result .g
 
+#
+# COMMON TEST SETUP
+#
 destroy .t
 toplevel .t -width 300 -height 150
 wm geometry .t +0+0
 update
+
 test frame-2.20 {toplevel configuration options} -body {
     .t configure -background #ff0000
     lindex [.t configure -background] 4
@@ -503,7 +492,7 @@ test frame-2.22 {toplevel configuration options} -body {
 } -result 4
 test frame-2.23 {toplevel configuration options} -body {
     .t configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-2.24 {toplevel configuration options} -body {
     .t configure -bg #00ff00
     lindex [.t configure -bg] 4
@@ -514,10 +503,10 @@ test frame-2.25 {toplevel configuration options} -body {
 test frame-2.26 {toplevel configuration options} -body {
     .t configure -borderwidth 1.3
     lindex [.t configure -borderwidth] 4
-} -result 1
+} -result 1.3
 test frame-2.27 {toplevel configuration options} -body {
     .t configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-2.28 {toplevel configuration options} -body {
     .t configure -cursor arrow
     lindex [.t configure -cursor] 4
@@ -531,7 +520,7 @@ test frame-2.30 {toplevel configuration options} -body {
 } -result 100
 test frame-2.31 {toplevel configuration options} -body {
     .t configure -height not_a_number
-} -returnCodes error -result {bad screen distance "not_a_number"}
+} -returnCodes error -result {expected screen distance but got "not_a_number"}
 test frame-2.32 {toplevel configuration options} -body {
     .t configure -highlightcolor #123456
     lindex [.t configure -highlightcolor] 4
@@ -545,21 +534,21 @@ test frame-2.34 {toplevel configuration options} -body {
 } -result 3
 test frame-2.35 {toplevel configuration options} -body {
     .t configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-2.36 {toplevel configuration options} -body {
     .t configure -padx 3
     lindex [.t configure -padx] 4
 } -result 3
 test frame-2.37 {toplevel configuration options} -body {
     .t configure -padx badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-2.38 {toplevel configuration options} -body {
     .t configure -pady 4
     lindex [.t configure -pady] 4
 } -result 4
 test frame-2.39 {toplevel configuration options} -body {
     .t configure -pady badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-2.40 {toplevel configuration options} -body {
     .t configure -relief ridge
     lindex [.t configure -relief] 4
@@ -573,7 +562,11 @@ test frame-2.42 {toplevel configuration options} -body {
 } -result 32
 test frame-2.43 {toplevel configuration options} -body {
     .t configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 
 test frame-3.1 {TkCreateFrame procedure} -returnCodes error -body {
@@ -664,19 +657,11 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
-    if {[tk windowingsystem] eq "aqua"} {
-	update idletasks
-    } else {
-	update
-    }
+    update
     option add *x.use [winfo id .t]
     toplevel .x -width 140 -height 300 -bg green
-    if {[tk windowingsystem] eq "aqua"} {
-	update idletasks
-    } else {
-	tkwait visibility .x
-	update
-    }
+    tkwait visibility .x
+    update
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
@@ -684,12 +669,18 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     destroy .t
     option clear
 } -result {0 0 140 300}
+
+#
+# COMMON TEST SETUP
+#
+
 # The tests below require specific display characteristics (i.e. that they are
 # run on a pseudocolor display of depth 8).  Even so, they are non-portable:
 # some machines don't seem to ever run out of colors.
 if {[testConstraint defaultPseudocolor8]} {
     eatColors .t1
 }
+
 test frame-3.11 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -836,9 +827,14 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
+
 test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {
     deleteWindows
 } -body {
@@ -879,7 +875,11 @@ test frame-4.2 {TkCreateFrame procedure} -setup {
     deleteWindows
 } -result {.f 1}
 
+#
+# COMMON TEST SETUP
+#
 frame .f -highlightcolor black
+
 test frame-5.1 {FrameWidgetCommand procedure} -body {
     .f
 } -returnCodes error -result {wrong # args: should be ".f option ?arg ...?"}
@@ -924,6 +924,10 @@ test frame-5.12 {FrameWidgetCommand procedure} -body {
 test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
     optnames [. configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-6.1 {ConfigureFrame procedure} -setup {
@@ -1105,26 +1109,26 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     # Test all -labelanchor positions
     set font {helvetica 12}
     labelframe .f -highlightthickness 1 -bd 3 -padx 1 -pady 2 -font $font \
-            -text "Mupp"
+	    -text "Mupp"
     set fh [expr {max([font metrics $font -linespace] + 2 - 3, 0)}]
     set fw [expr {max([font measure $font "Mupp"] + 2 - 3, 0)}]
     place .f -x 0 -y 0 -width 100 -height 100
     pack [frame .f.f] -fill both -expand 1
     set result {}
     foreach lp {nw n ne en e es se s sw ws w wn} {
-        .f configure -labelanchor $lp
-        update
-        set expx 5
-        set expy 6
-        set expw 90
-        set exph 88
-        switch -glob $lp {
-            n* {incr expy $fh ; incr exph -$fh}
-            s* {incr exph -$fh}
-            w* {incr expx $fw ; incr expw -$fw}
-            e* {incr expw -$fw}
-        }
-        lappend result [expr {
+	.f configure -labelanchor $lp
+	update
+	set expx 5
+	set expy 6
+	set expw 90
+	set exph 88
+	switch -glob $lp {
+	    n* {incr expy $fh ; incr exph -$fh}
+	    s* {incr exph -$fh}
+	    w* {incr expx $fw ; incr expw -$fw}
+	    e* {incr expw -$fw}
+	}
+	lappend result [expr {
 	    [winfo x .f.f] == $expx && [winfo y .f.f] == $expy &&
 	    [winfo width .f.f] == $expw && [winfo height .f.f] == $exph
 	}]
@@ -1222,8 +1226,14 @@ test frame-13.9 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -container option after widget is created}
+
+#
+# COMMON TEST SETUP
+#
+
 destroy .f
 labelframe .f
+
 test frame-13.10 {labelframe configuration options} -body {
     .f configure -background #ff0000
     lindex [.f configure -background] 4
@@ -1241,7 +1251,7 @@ test frame-13.12 {labelframe configuration options} -body {
 } -result 4
 test frame-13.13 {labelframe configuration options} -body {
     .f configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-13.14 {labelframe configuration options} -body {
     .f configure -bg #00ff00
     lindex [.f configure -bg] 4
@@ -1256,10 +1266,10 @@ test frame-13.16 {labelframe configuration options} -body {
     lindex [.f configure -borderwidth] 4
 } -cleanup {
     .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
-} -result 1
+} -result 1.3
 test frame-13.17 {labelframe configuration options} -body {
     .f configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-13.18 {labelframe configuration options} -body {
     .f configure -cursor arrow
     lindex [.f configure -cursor] 4
@@ -1301,7 +1311,7 @@ test frame-13.25 {labelframe configuration options} -body {
 } -result 100
 test frame-13.26 {labelframe configuration options} -body {
     .f configure -height not_a_number
-} -returnCodes error -result {bad screen distance "not_a_number"}
+} -returnCodes error -result {expected screen distance but got "not_a_number"}
 test frame-13.27 {labelframe configuration options} -body {
     .f configure -highlightbackground #112233
     lindex [.f configure -highlightbackground] 4
@@ -1328,7 +1338,7 @@ test frame-13.31 {labelframe configuration options} -body {
 } -result 6
 test frame-13.32 {labelframe configuration options} -body {
     .f configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-13.33 {labelframe configuration options} -body {
     .f configure -labelanchor se
     lindex [.f configure -labelanchor] 4
@@ -1346,7 +1356,7 @@ test frame-13.35 {labelframe configuration options} -body {
 } -result 3
 test frame-13.36 {labelframe configuration options} -body {
     .f configure -padx badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-13.37 {labelframe configuration options} -body {
     .f configure -pady 4
     lindex [.f configure -pady] 4
@@ -1355,7 +1365,7 @@ test frame-13.37 {labelframe configuration options} -body {
 } -result 4
 test frame-13.38 {labelframe configuration options} -body {
     .f configure -pady badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test frame-13.39 {labelframe configuration options} -body {
     .f configure -relief ridge
     lindex [.f configure -relief] 4
@@ -1385,7 +1395,11 @@ test frame-13.43 {labelframe configuration options} -body {
 } -result 32
 test frame-13.44 {labelframe configuration options} -body {
     .f configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
 
 test frame-14.1 {labelframe labelwidget option} -setup {
@@ -1399,7 +1413,7 @@ test frame-14.1 {labelframe labelwidget option} -setup {
     pack .f.f
     update
     list [winfo children .] [winfo width .f] \
-        [expr {[winfo height .f] - [winfo height .l]}]
+	[expr {[winfo height .f] - [winfo height .l]}]
 } -cleanup {
     deleteWindows
 } -result {{.f .l} 54 52}
@@ -1517,7 +1531,7 @@ test frame-15.2 {TIP 262: frame background images} -setup {
     .f configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.3 {TIP 262: frame background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10
@@ -1697,7 +1711,7 @@ test frame-15.9 {TIP 262: toplevel background images} -setup {
     .t configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.10 {TIP 262: toplevel background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10
@@ -1775,15 +1789,17 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
     deleteWindows
     catch {image delete gorp}
 } -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 10} {gorp display 0 0 20 15} {gorp display 0 0 20 10}}
-
-# cleanup
+
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
 apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
-    eatColors colorsFree uniq optnames
+    uniq optnames
 }
-
+testutils forget colors
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

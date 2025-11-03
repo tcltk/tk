@@ -114,8 +114,9 @@ SquareDoLayout(void *clientData)
 	Ttk_Box b;
 
 	b = Ttk_ElementParcel(squareNode);
-	if (squarePtr->square.anchorObj != NULL)
+	if (squarePtr->square.anchorObj != NULL) {
 	    Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
+	}
 	b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
 
 	Ttk_PlaceElement(corePtr->layout, squareNode, b);
@@ -133,7 +134,7 @@ static const Ttk_Ensemble SquareCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
@@ -155,7 +156,7 @@ static const WidgetSpec SquareWidgetSpec =
     TtkCoreConfigure,		/* configureProc */
     TtkNullPostConfigure,		/* postConfigureProc */
     TtkWidgetGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetSize,		/* sizeProc */
     SquareDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -180,13 +181,13 @@ typedef struct
 static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-foreground", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, offsetof(SquareElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+	DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, offsetof(SquareElement,reliefObj),
-    	"raised" },
+	"raised" },
     { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -199,7 +200,7 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     int *widthPtr,
@@ -209,7 +210,7 @@ static void SquareElementSize(
     SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
 
-    Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, square->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, square->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, square->heightObj, heightPtr);
@@ -220,19 +221,19 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
-    Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, square->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, square->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, foreground,

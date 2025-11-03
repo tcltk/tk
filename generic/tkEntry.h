@@ -45,18 +45,18 @@ typedef struct {
 
     const char *string;		/* Pointer to storage for string;
 				 * NULL-terminated; malloc-ed. */
-    TkSizeT insertPos;		/* Character index before which next typed
+    Tcl_Size insertPos;		/* Character index before which next typed
 				 * character will be inserted. */
 
     /*
      * Information about what's selected, if any.
      */
 
-    TkSizeT selectFirst;		/* Character index of first selected character
+    Tcl_Size selectFirst;		/* Character index of first selected character
 				 * (-1 means nothing selected. */
-    TkSizeT selectLast;		/* Character index just after last selected
+    Tcl_Size selectLast;		/* Character index just after last selected
 				 * character (-1 means nothing selected. */
-    TkSizeT selectAnchor;		/* Fixed end of selection (i.e. "select to"
+    Tcl_Size selectAnchor;		/* Fixed end of selection (i.e. "select to"
 				 * operation will use this as one end of the
 				 * selection). */
 
@@ -81,7 +81,7 @@ typedef struct {
     Tk_3DBorder readonlyBorder;	/* Used for drawing border around whole window
 				 * in readonly state, plus used for
 				 * background. */
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     int exportSelection;	/* Non-zero means tie internal entry selection
 				 * to X selection. */
@@ -91,55 +91,41 @@ typedef struct {
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor. */
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor. */
     int insertOffTime;		/* Number of milliseconds cursor should spend
 				 * in "off" state for each blink. */
     int insertOnTime;		/* Number of milliseconds cursor should spend
 				 * in "on" state for each blink. */
-    int insertWidth;		/* Total width of insert cursor. */
+    Tcl_Obj *insertWidthObj;	/* Total width of insert cursor. */
     Tk_Justify justify;		/* Justification to use for text within
 				 * window. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
     Tk_3DBorder selBorder;	/* Border and background for selected
 				 * characters. */
-    int selBorderWidth;		/* Width of border around selection. */
+    Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected text. */
     int state;			/* Normal or disabled. Entry is read-only when
 				 * disabled. */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
+    Tcl_Obj *textVarNameObj;		/* Name of variable (malloc'ed) or NULL. If
 				 * non-NULL, entry's string tracks the
 				 * contents of this variable and vice
 				 * versa. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int prefWidth;		/* Desired width of window, measured in
 				 * average characters. */
-    char *scrollCmd;		/* Command prefix for communicating with
-				 * scrollbar(s). Malloc'ed. NULL means no
-				 * command to issue. */
-    char *showChar;		/* Value of -show option. If non-NULL, first
+    Tcl_Obj *scrollCmdObj;	/* Command prefix for communicating with
+				 * scrollbar(s). NULL means no command to issue. */
+    Tcl_Obj *showCharObj;	/* Value of -show option. If non-NULL, first
 				 * character is used for displaying all
-				 * characters in entry. Malloc'ed. This is
+				 * characters in entry. This is
 				 * only used by the Entry widget. */
-
-    /*
-     * Fields used in displaying help text if entry value is empty
-     */
-
-    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
-    char *placeholderString;	/* String value of placeholder. */
-    TkSizeT placeholderChars;	/* Number of chars in placeholder. */
-    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
-    GC placeholderGC;		/* For drawing placeholder text. */
-    int placeholderX;		/* Origin for layout. */
-    int placeholderLeftIndex;	/* Character index of left-most character
-				 * visible in window. */
 
     /*
      * Fields whose values are derived from the current values of the
@@ -151,13 +137,13 @@ typedef struct {
 				 * malloced memory with the same character
 				 * length as string but whose characters are
 				 * all equal to showChar. */
-    TkSizeT numBytes;		/* Length of string in bytes. */
-    TkSizeT numChars;		/* Length of string in characters. Both string
+    Tcl_Size numBytes;		/* Length of string in bytes. */
+    Tcl_Size numChars;		/* Length of string in characters. Both string
 				 * and displayString have the same character
 				 * length, but may have different byte lengths
 				 * due to being made from different UTF-8
 				 * characters. */
-    TkSizeT numDisplayBytes;	/* Length of displayString in bytes. */
+    Tcl_Size numDisplayBytes;	/* Length of displayString in bytes. */
     int inset;			/* Number of pixels on the left and right
 				 * sides that are taken up by XPAD,
 				 * borderWidth (if any), and highlightWidth
@@ -166,7 +152,7 @@ typedef struct {
     int layoutX, layoutY;	/* Origin for layout. */
     int leftX;			/* X position at which character at leftIndex
 				 * is drawn (varies depending on justify). */
-    TkSizeT leftIndex;		/* Character index of left-most character
+    Tcl_Size leftIndex;		/* Character index of left-most character
 				 * visible in window. */
     Tcl_TimerToken insertBlinkHandler;
 				/* Timer handler used to blink cursor on and
@@ -181,11 +167,22 @@ typedef struct {
 				 * definitions. */
 
     int validate;		/* Non-zero means try to validate */
-    char *validateCmd;		/* Command prefix to use when invoking
-				 * validate command. NULL means don't invoke
-				 * commands. Malloc'ed. */
-    char *invalidCmd;		/* Command called when a validation returns 0
+    Tcl_Obj *validateCmdObj;		/* Command prefix to use when invoking
+				 * validate command. NULL means don't invoke commands. */
+    Tcl_Obj *invalidCmdObj;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
+    /*
+     * Fields used in displaying help text if entry value is empty
+     */
+
+    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
+    Tcl_Obj *placeholderObj;	/* String value of placeholder. */
+    Tcl_Size placeholderChars;	/* Number of chars in placeholder. */
+    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
+    GC placeholderGC;		/* For drawing placeholder text. */
+    int placeholderX;		/* Origin for layout. */
+    int placeholderLeftIndex;	/* Character index of left-most character
+				 * visible in window. */
 } Entry;
 
 /*
@@ -208,7 +205,7 @@ typedef struct {
     Tk_Cursor bCursor;		/* cursor for buttons, or NULL. */
     int bdRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
     int buRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    char *command;		/* Command to invoke for spin buttons. NULL
+    Tcl_Obj *commandObj;	/* Command to invoke for spin buttons. NULL
 				 * means no command to issue. */
 
     /*
@@ -230,15 +227,15 @@ typedef struct {
 				 * multiple of this value. */
     char *formatBuf;		/* string into which to format value.
 				 * Malloc'ed. */
-    char *reqFormat;		/* Sprintf conversion specifier used for the
+    Tcl_Obj *reqFormatObj;	/* Snprintf conversion specifier used for the
 				 * value that the users requests. Malloc'ed */
-    char *valueFormat;		/* Sprintf conversion specifier used for the
+    char *valueFormat;		/* Snprintf conversion specifier used for the
 				 * value. */
-    char digitFormat[16];	/* Sprintf conversion specifier computed from
+    char digitFormat[16];	/* Snprintf conversion specifier computed from
 				 * digits and other information; used for the
 				 * value. */
 
-    char *valueStr;		/* Values List. Malloc'ed. */
+    Tcl_Obj *valueObj;		/* Values List. */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
     int eIndex;			/* Holds the current index into elements */
     int nElements;		/* Holds the current count of elements */

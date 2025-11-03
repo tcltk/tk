@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .filebox
 catch {destroy $w}
@@ -25,16 +25,17 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
+set f [ttk::frame $w.f]
 foreach i {open save} {
-    set f [ttk::frame $w.$i]
-    ttk::label $f.lab -text "Select a file to $i: " -anchor e
-    ttk::entry $f.ent -width 20
-    ttk::button $f.but -text "Browse ..." -command "fileDialog $w $f.ent $i"
-    pack $f.lab -side left
-    pack $f.ent -side left -expand yes -fill x
-    pack $f.but -side left
-    pack $f -fill x -padx 1c -pady 3
+    ttk::label $f.lab_$i -text "Select a file to $i:"
+    ttk::entry $f.ent_$i -width 20
+    ttk::button $f.but_$i -text "Browse ..." -command \
+	    "fileDialog $w $f.ent_$i $i"
+    grid $f.lab_$i $f.ent_$i $f.but_$i -pady 3p -sticky w
+    grid configure $f.ent_$i -padx 3p -sticky ew
 }
+grid columnconfigure $f 1 -weight 1
+pack $f -fill x -padx 1c
 
 if {[tk windowingsystem] eq "x11"} {
     ttk::checkbutton $w.strict -text "Use Motif Style Dialog" \

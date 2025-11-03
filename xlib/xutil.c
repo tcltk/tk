@@ -3,7 +3,7 @@
  *
  *	This function contains generic X emulation routines.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -32,14 +32,12 @@
 Atom
 XInternAtom(
     Display *display,
-    _Xconst char *atom_name,
-    Bool only_if_exists)
+    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(Bool))
 {
     static Atom atom = XA_LAST_PREDEFINED;
-    (void)atom_name;
-    (void)only_if_exists;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ++atom;
 }
 

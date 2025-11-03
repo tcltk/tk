@@ -17,6 +17,7 @@ Tk_CreateSelHandler, Tk_DeleteSelHandler \- arrange to handle requests for a sel
 \fBTk_CreateSelHandler\fR(\fItkwin, selection, target, proc, clientData, format\fR)
 .sp
 \fBTk_DeleteSelHandler\fR(\fItkwin, selection, target\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_SelectionProc clientData
 .AP Tk_Window tkwin in
@@ -32,7 +33,7 @@ commands.
 Procedure to invoke whenever the selection is owned by \fItkwin\fR
 and the selection contents are requested in the format given by
 \fItarget\fR.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .AP Atom format in
 If the selection requestor is not in this process, \fIformat\fR determines
@@ -54,11 +55,11 @@ the selection.  The most common form is STRING.
 \fIProc\fR should have arguments and result that match the
 type \fBTk_SelectionProc\fR:
 .CS
-typedef int \fBTk_SelectionProc\fR(
-        ClientData \fIclientData\fR,
-        int \fIoffset\fR,
+typedef Tcl_Size \fBTk_SelectionProc\fR(
+        void *\fIclientData\fR,
+        Tcl_Size \fIoffset\fR,
         char *\fIbuffer\fR,
-        int \fImaxBytes\fR);
+        Tcl_Size \fImaxBytes\fR);
 .CE
 The \fIclientData\fR parameter to \fIproc\fR is a copy of the
 \fIclientData\fR argument given to \fBTk_CreateSelHandler\fR.

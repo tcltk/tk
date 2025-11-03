@@ -155,14 +155,14 @@ CreateIcoFromPhoto(
      * converts them as required. Initialise icon info structure.
      */
 
-    ZeroMemory(&iconInfo, sizeof(iconInfo));
+    memset(&iconInfo, 0, sizeof(iconInfo));
     iconInfo.fIcon = TRUE;
 
     /*
      * Create device-independent color bitmap.
      */
 
-    ZeroMemory(&bmInfo, sizeof bmInfo);
+    memset(&bmInfo, 0, sizeof bmInfo);
     bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmInfo.bmiHeader.biWidth = width;
     bmInfo.bmiHeader.biHeight = -height;
@@ -171,9 +171,9 @@ CreateIcoFromPhoto(
     bmInfo.bmiHeader.biCompression = BI_RGB;
 
     iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraPixel.voidPtr, NULL, 0);
+	    &bgraPixel.voidPtr, NULL, 0);
     if (!iconInfo.hbmColor) {
-        return NULL;
+	return NULL;
     }
 
     /*
@@ -182,10 +182,10 @@ CreateIcoFromPhoto(
 
     bufferSize = height * width * 4;
     for (idx = 0 ; idx < bufferSize ; idx += 4) {
-        bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-        bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-        bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-        bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
+	bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+	bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+	bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+	bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
     }
 
     /*
@@ -197,13 +197,13 @@ CreateIcoFromPhoto(
     bmInfo.bmiHeader.biBitCount = 1;
 
     iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraMask.voidPtr, NULL, 0);
+	    &bgraMask.voidPtr, NULL, 0);
     if (!iconInfo.hbmMask) {
-        DeleteObject(iconInfo.hbmColor);
-        return NULL;
+	DeleteObject(iconInfo.hbmColor);
+	return NULL;
     }
 
-    ZeroMemory(bgraMask.ptr, width*height/8);
+    memset(bgraMask.ptr, 0, width*height/8);
 
     /*
      * Create an icon from the bitmaps.
@@ -213,7 +213,7 @@ CreateIcoFromPhoto(
     DeleteObject(iconInfo.hbmColor);
     DeleteObject(iconInfo.hbmMask);
     if (hIcon == NULL) {
-        return NULL;
+	return NULL;
     }
 
     return hIcon;

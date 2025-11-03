@@ -156,7 +156,7 @@ FindSystemColor(
 TkColor *
 TkpGetColor(
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to allocated (in form
+    const char *name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     WinColor *winColPtr;
@@ -180,9 +180,9 @@ TkpGetColor(
 
 	XAllocColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 		&winColPtr->info.color);
- 	return (TkColor *) winColPtr;
+	return (TkColor *)winColPtr;
     }
-    return (TkColor *) NULL;
+    return (TkColor *)NULL;
 }
 
 /*
@@ -309,13 +309,13 @@ XAllocColor(
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
 
-    entry.peRed = (color->red) >> 8;
-    entry.peGreen = (color->green) >> 8;
-    entry.peBlue = (color->blue) >> 8;
+    entry.peRed = (BYTE)((color->red) >> 8);
+    entry.peGreen = (BYTE)((color->green) >> 8);
+    entry.peBlue = (BYTE)((color->blue) >> 8);
     entry.peFlags = 0;
 
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	unsigned long sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
+	unsigned long sizePalette = (unsigned long)GetDeviceCaps(dc, SIZEPALETTE);
 	UINT newPixel, closePixel;
 	int isNew;
 	size_t refCount;
@@ -494,7 +494,7 @@ XCreateColormap(
     logPalettePtr = (LOGPALETTE *) logPalBuf;
     logPalettePtr->palVersion = 0x300;
     sysPal = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
-    logPalettePtr->palNumEntries = GetPaletteEntries(sysPal, 0, 256,
+    logPalettePtr->palNumEntries = (WORD)GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
     cmap = (TkWinColormap *)ckalloc(sizeof(TkWinColormap));

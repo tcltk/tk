@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .bind
 catch {destroy $w}
@@ -20,7 +20,7 @@ positionWindow $w
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
+text $w.text -yscrollcommand "$w.scroll set" -setgrid 1 \
 	-width 60 -height 24 -font $font -wrap word
 ttk::scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y

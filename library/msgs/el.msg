@@ -21,17 +21,17 @@ namespace eval ::tk {
     ::msgcat::mcset el "Delete"             "Διαγραφή"
     ::msgcat::mcset el "Details >>"         "Λεπτομέρειες >>"
     ::msgcat::mcset el "Directory \"%1\$s\" does not exist." \
-                                        "Ο κατάλογος \"%1\$s\" δεν υπάρχει."
+					"Ο κατάλογος \"%1\$s\" δεν υπάρχει."
     ::msgcat::mcset el "&Directory:"         "&Κατάλογος:"
     ::msgcat::mcset el "Error: %1\$s"       "Λάθος: %1\$s"
     ::msgcat::mcset el "Exit"               "Έξοδος"
     ::msgcat::mcset el \
-               "File \"%1\$s\" already exists.\nDo you want to overwrite it?" \
-               "Το αρχείο \"%1\$s\" ήδη υπάρχει.\nΘέλετε να επικαλυφθεί;"
+	       "File \"%1\$s\" already exists.\nDo you want to overwrite it?" \
+	       "Το αρχείο \"%1\$s\" ήδη υπάρχει.\nΘέλετε να επικαλυφθεί;"
     ::msgcat::mcset el "File \"%1\$s\" already exists.\n\n" \
-                   "Το αρχείο \"%1\$s\" ήδη υπάρχει.\n\n"
+		   "Το αρχείο \"%1\$s\" ήδη υπάρχει.\n\n"
     ::msgcat::mcset el "File \"%1\$s\" does not exist." \
-                   "Το αρχείο \"%1\$s\" δεν υπάρχει."
+		   "Το αρχείο \"%1\$s\" δεν υπάρχει."
     ::msgcat::mcset el "File &name:"         "Ό&νομα αρχείου:"
     ::msgcat::mcset el "File &names:"        "Ό&νομα αρχείων:"
     ::msgcat::mcset el "Files of &type:"     "Αρχεία του &τύπου:"
@@ -43,7 +43,7 @@ namespace eval ::tk {
     ::msgcat::mcset el "Hide Console"       "Απόκρυψη κονσόλας"
     ::msgcat::mcset el "&Ignore"             "Αγνόηση"
     ::msgcat::mcset el "Invalid file name \"%1\$s\"." \
-                   "Άκυρο όνομα αρχείου \"%1\$s\"."
+		   "Άκυρο όνομα αρχείου \"%1\$s\"."
     ::msgcat::mcset el "Log Files"          "Αρχεία Καταγραφής"
     ::msgcat::mcset el "&No"                 "Όχι"
     ::msgcat::mcset el "&OK"                 "Εντάξει"
@@ -52,19 +52,19 @@ namespace eval ::tk {
     ::msgcat::mcset el "Open"               "Άνοιγμα"
     ::msgcat::mcset el "&Open"               "Άνοιγμα"
     ::msgcat::mcset el "Open Multiple Files" \
-                                        "Άνοιγμα πολλαπλών αρχείων"
+					"Άνοιγμα πολλαπλών αρχείων"
     ::msgcat::mcset el "P&aste"              "Επικόλληση"
     ::msgcat::mcset el "Quit"               "Έξοδος"
     ::msgcat::mcset el "&Red"                "Κόκκινο"
     ::msgcat::mcset el "Replace existing file?" \
-                                        "Επικάλυψη υπάρχοντος αρχείου;"
+					"Επικάλυψη υπάρχοντος αρχείου;"
     ::msgcat::mcset el "&Retry"              "Προσπάθησε ξανά"
     ::msgcat::mcset el "&Save"               "Αποθήκευση"
     ::msgcat::mcset el "Save As"            "Αποθήκευση σαν"
     ::msgcat::mcset el "Save To Log"        "Αποθήκευση στο αρχείο καταγραφής"
     ::msgcat::mcset el "Select Log File"    "Επιλογή αρχείου καταγραφής"
     ::msgcat::mcset el "Select a file to source" \
-                                        "Επιλέξτε αρχείο για εκτέλεση"
+					"Επιλέξτε αρχείο για εκτέλεση"
     ::msgcat::mcset el "&Selection:"         "Επιλογή:"
     ::msgcat::mcset el "Skip Messages"      "Αποφυγήμηνυμάτων"
     ::msgcat::mcset el "&Source..."          "Εκτέλεση..."

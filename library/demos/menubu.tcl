@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .menubu
 catch {destroy $w}
@@ -47,12 +47,12 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 set body $w.body.center
-label $body.label -wraplength 300 -font "Helvetica 14" -justify left -text "This is a demonstration of menubuttons. The \"Below\" menubutton pops its menu below the button; the \"Right\" button pops to the right, etc. There are two option menus directly below this text; one is just a standard menu and the other is a 16-color palette."
-pack $body.label -side top -padx 25 -pady 25
+label $body.label -wraplength 225p -font "Helvetica 14" -justify left -text "This is a demonstration of menubuttons. The \"Below\" menubutton pops its menu below the button; the \"Right\" button pops to the right, etc. There are two option menus directly below this text; one is just a standard menu and the other is a 16-color palette."
+pack $body.label -side top -padx 18p -pady 18p
 frame $body.buttons
-pack $body.buttons -padx 25 -pady 25
+pack $body.buttons -padx 18p -pady 18p
 tk_optionMenu $body.buttons.options menubuttonoptions one two three
-pack $body.buttons.options -side left -padx 25 -pady 25
+pack $body.buttons.options -side left -padx 18p -pady 18p
 set m [tk_optionMenu $body.buttons.colors paletteColor Black red4 DarkGreen NavyBlue gray75 Red Green Blue gray50 Yellow Cyan Magenta White Brown DarkSeaGreen DarkViolet]
 if {[tk windowingsystem] eq "aqua"} {
     set topBorderColor Black
@@ -61,21 +61,24 @@ if {[tk windowingsystem] eq "aqua"} {
     set topBorderColor gray50
     set bottomBorderColor gray75
 }
+set dim  [expr {round(16 * $tk::scalingPct / 100.0)}]
+set dim1 [expr {$dim - 1}]
+set dim2 [expr {$dim - 2}]
 for {set i 0} {$i <= [$m index last]} {incr i} {
     set name [$m entrycget $i -label]
-    image create photo image_$name -height 16 -width 16
-    image_$name put $topBorderColor -to 0 0 16 1
-    image_$name put $topBorderColor -to 0 1 1 16
-    image_$name put $bottomBorderColor -to 0 15 16 16
-    image_$name put $bottomBorderColor -to 15 1 16 16
-    image_$name put $name -to 1 1 15 15
+    image create photo image_$name -height $dim -width $dim
+    image_$name put $topBorderColor -to 0 0 $dim 1
+    image_$name put $topBorderColor -to 0 1 1 $dim
+    image_$name put $bottomBorderColor -to 0 $dim1 $dim $dim
+    image_$name put $bottomBorderColor -to $dim1 1 $dim $dim
+    image_$name put $name -to 1 1 $dim1 $dim1
 
-    image create photo image_${name}_s -height 16 -width 16
-    image_${name}_s put Black -to 0 0 16 2
-    image_${name}_s put Black -to 0 2 2 16
-    image_${name}_s put Black -to 2 14 16 16
-    image_${name}_s put Black -to 14 2 16 14
-    image_${name}_s put $name -to 2 2 14 14
+    image create photo image_${name}_s -height $dim -width $dim
+    image_${name}_s put Black -to 0 0 $dim 2
+    image_${name}_s put Black -to 0 2 2 $dim
+    image_${name}_s put Black -to 2 $dim2 $dim $dim
+    image_${name}_s put Black -to $dim2 2 $dim $dim2
+    image_${name}_s put $name -to 2 2 $dim2 $dim2
 
     $m entryconfigure $i -image image_$name -selectimage image_${name}_s -hidemargin 1
 }
@@ -84,4 +87,4 @@ foreach i {Black gray75 gray50 White} {
 	$m entryconfigure $i -columnbreak 1
 }
 
-pack $body.buttons.colors -side left -padx 25 -pady 25
+pack $body.buttons.colors -side left -padx 18p -pady 18p

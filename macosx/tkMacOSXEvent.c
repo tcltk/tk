@@ -4,7 +4,7 @@
  *	This file contains the basic Mac OS X Event handling routines.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -27,7 +27,7 @@ enum {
 - (NSEvent *) tkProcessEvent: (NSEvent *) theEvent
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
     NSEvent	    *processedEvent = theEvent;
     NSEventType	    type = [theEvent type];
@@ -35,7 +35,7 @@ enum {
 
     switch ((NSInteger)type) {
     case NSAppKitDefined:
-        subtype = [theEvent subtype];
+	subtype = [theEvent subtype];
 
 	switch (subtype) {
 	    /* Ignored at the moment. */
@@ -49,11 +49,11 @@ enum {
 	    break;
 	case NSWindowMovedEventType:
 	    break;
-        case NSWindowWillMoveEventType:
-            break;
+	case NSWindowWillMoveEventType:
+	    break;
 
-        default:
-            break;
+	default:
+	    break;
 	}
 	break; /* AppkitEvent. Return theEvent */
     case NSKeyUp:
@@ -80,7 +80,7 @@ enum {
 	break; /* Mouse event.  Return the processed event. */
 #if 0
     case NSSystemDefined:
-        subtype = [theEvent subtype];
+	subtype = [theEvent subtype];
 	break;
     case NSApplicationDefined: {
 	id win;
@@ -88,14 +88,14 @@ enum {
 	break;
 	}
     case NSCursorUpdate:
-        break;
+	break;
     case NSEventTypeGesture:
     case NSEventTypeMagnify:
     case NSEventTypeRotate:
     case NSEventTypeSwipe:
     case NSEventTypeBeginGesture:
     case NSEventTypeEndGesture:
-        break;
+	break;
 #endif
 
     default:
@@ -125,7 +125,7 @@ XSync(
      *  [da5f2266df].)
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 

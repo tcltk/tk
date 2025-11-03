@@ -12,7 +12,7 @@
 .SH NAME
 panedwindow \- Create and manipulate 'panedwindow' split container widgets
 .SH SYNOPSIS
-\fBpanedwindow\fR \fIpathName \fR?\fIoptions\fR?
+\fBpanedwindow\fI pathName \fR?\fIoptions\fR?
 .SO
 \-background	\-borderwidth	\-cursor
 \-orient	\-relief
@@ -38,17 +38,17 @@ version of the sash is displayed during the resizing to show where the
 panes will be resized to when releasing the mouse button. This
 .QW ghost
 version of the sash is the proxy. It's rendering can be configured
-using the \fB-proxybackground\fR, \fB-proxyborderwidth\fR and
-\fB-proxyrelief\fR options.
+using the \fB\-proxybackground\fR, \fB\-proxyborderwidth\fR and
+\fB\-proxyrelief\fR options.
 .OP \-proxybackground proxyBackground ProxyBackground
 Background color to use when drawing the proxy. If an empty string, the
-value of the \fB-background\fR option will be used.
+value of the \fB\-background\fR option will be used.
 .OP \-proxyborderwidth proxyBorderWidth ProxyBorderWidth
 Specifies the borderwidth of the proxy. May be any value accepted by
 \fBTk_GetPixels\fR.
 .OP \-proxyrelief proxyRelief ProxyRelief
 Relief to use when drawing the proxy. May be any of the standard Tk
-relief values. If an empty string, the value of the \fB-sashrelief\fR
+relief values. If an empty string, the value of the \fB\-sashrelief\fR
 option will be used.
 .OP \-sashcursor sashCursor SashCursor
 Mouse cursor to use when over a sash.  If null,
@@ -98,6 +98,7 @@ following general form:
 the panedwindow widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for panedwindow widgets:
+.\" METHOD: add
 .TP
 \fIpathName \fBadd \fIwindow \fR?\fIwindow ...\fR? ?\fIoption value ...\fR?
 .
@@ -106,12 +107,14 @@ The arguments consist of the names of one or more windows
 followed by pairs of arguments that specify how to manage the windows.
 \fIOption\fR may have any of the values accepted by the
 \fBconfigure\fR subcommand.
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
 Returns the current value of the configuration option given by
 \fIoption\fR.  \fIOption\fR may have any of the values accepted by the
 \fBpanedwindow\fR command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -126,11 +129,13 @@ one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string. \fIOption\fR may have
 any of the values accepted by the \fBpanedwindow\fR command.
+.\" METHOD: forget
 .TP
 \fIpathName \fBforget \fIwindow \fR?\fIwindow ...\fR?
 .
 Remove the pane containing \fIwindow\fR from the panedwindow.  All
 geometry management options for \fIwindow\fR will be forgotten.
+.\" METHOD: identify
 .TP
 \fIpathName \fBidentify \fIx y\fR
 .
@@ -140,11 +145,13 @@ sash or a sash handle, the result is a two element list containing the
 index of the sash or handle, and a word indicating whether it is over
 a sash or a handle, such as {0 sash} or {2 handle}.  If the point is
 over any other part of the panedwindow, the result is an empty list.
+.\" METHOD: panecget
 .TP
 \fIpathName \fBpanecget \fIwindow option\fR
 .
 Query a management option for \fIwindow\fR.  \fIOption\fR may be any
 value allowed by the \fBpaneconfigure\fR subcommand.
+.\" METHOD: paneconfigure
 .TP
 \fIpathName \fBpaneconfigure \fIwindow \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -160,16 +167,19 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.  The following options
 are supported:
 .RS
+.\" OPTION: -after
 .TP
 \fB\-after \fIwindow\fR
 .
 Insert the window after the window specified.  \fIwindow\fR should be the
 name of a window already managed by \fIpathName\fR.
+.\" OPTION: -before
 .TP
 \fB\-before \fIwindow\fR
 .
 Insert the window before the window specified.  \fIwindow\fR should be
 the name of a window already managed by \fIpathName\fR.
+.\" OPTION: -height
 .TP
 \fB\-height \fIsize\fR
 .
@@ -179,12 +189,14 @@ is an empty string, or if \fB\-height\fR is not specified, then the
 height requested internally by the window will be used initially; the
 height may later be adjusted by the movement of sashes in the
 panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
+.\" OPTION: -hide
 .TP
 \fB\-hide \fIboolean\fR
 .
 Controls the visibility of a pane.  When the \fIboolean\fR is true
 (according to \fBTcl_GetBoolean\fR) the pane will not be visible, but
 it will still be maintained in the list of panes.
+.\" OPTION: -minsize
 .TP
 \fB\-minsize \fIn\fR
 .
@@ -193,18 +205,21 @@ Specifies that the size of the window cannot be made less than
 paned dimension \(em the x dimension for horizontal panedwindows, the y
 dimension for vertical panedwindows.  May be any value accepted by
 \fBTk_GetPixels\fR.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIn\fR
 .
 Specifies a non-negative value indicating how much extra space to
 leave on each side of the window in the X-direction.  The value may
 have any of the forms accepted by \fBTk_GetPixels\fR.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIn\fR
 .
 Specifies a non-negative value indicating how much extra space to
 leave on each side of the window in the Y-direction.  The value may
 have any of the forms accepted by \fBTk_GetPixels\fR.
+.\" OPTION: -sticky
 .TP
 \fB\-sticky \fIstyle\fR
 .
@@ -219,6 +234,7 @@ will
 to.  If both \fBn\fR and \fBs\fR (or \fBe\fR and \fBw\fR)
 are specified, the window will be stretched to fill the entire height
 (or width) of its cavity.
+.\" OPTION: -stretch
 .TP
 \fB\-stretch \fIwhen\fR
 .
@@ -231,29 +247,20 @@ for stretching. The space will be distributed based on each panes
 current ratio of the whole.  The \fIwhen\fR values have the following
 definition:
 .RS
-.TP
-\fBalways\fR
-.
+.IP \fBalways\fR
 This pane will always stretch.
-.TP
-\fBfirst\fR
-.
+.IP \fBfirst\fR
 Only if this pane is the first pane (left-most or top-most) will it
 stretch.
-.TP
-\fBlast\fR
-.
+.IP \fBlast\fR
 Only if this pane is the last pane (right-most or bottom-most) will it
 stretch.  This is the default value.
-.TP
-\fBmiddle\fR
-.
+.IP \fBmiddle\fR
 Only if this pane is not the first or last pane will it stretch.
-.TP
-\fBnever\fR
-.
+.IP \fBnever\fR
 This pane will never stretch.
 .RE
+.\" OPTION: -width
 .TP
 \fB\-width \fIsize\fR
 .
@@ -264,10 +271,12 @@ width requested internally by the window will be used initially; the
 width may later be adjusted by the movement of sashes in the
 panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .RE
+.\" METHOD: panes
 .TP
 \fIpathName \fBpanes\fR
 .
 Returns an ordered list of the widgets managed by \fIpathName\fR.
+.\" METHOD: proxy
 .TP
 \fIpathName \fBproxy \fR?\fIargs\fR?
 .
@@ -289,8 +298,10 @@ Remove the proxy from the display.
 .
 Place the proxy at the given \fIx\fR and \fIy\fR coordinates.
 .RE
+.\" METHOD: sash
 .TP
 \fIpathName \fBsash \fR?\fIargs\fR?
+.
 This command is used to query and change the position of sashes in the
 panedwindow.  It can take any of the following forms:
 .RS

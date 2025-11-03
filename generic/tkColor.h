@@ -38,7 +38,7 @@ typedef struct TkColor {
     Colormap colormap;		/* Colormap from which this entry was
 				 * allocated. */
     Visual *visual;		/* Visual associated with colormap. */
-    TkSizeT resourceRefCount;	/* Number of active uses of this color (each
+    Tcl_Size resourceRefCount;	/* Number of active uses of this color (each
 				 * active use corresponds to a call to
 				 * Tk_AllocColorFromObj or Tk_GetColor). If
 				 * this count is 0, then this TkColor
@@ -48,7 +48,7 @@ typedef struct TkColor {
 				 * referring to it. The structure is freed
 				 * when resourceRefCount and objRefCount are
 				 * both 0. */
-    TkSizeT objRefCount;		/* The number of Tcl objects that reference
+    Tcl_Size objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     int type;			/* TK_COLOR_BY_NAME or TK_COLOR_BY_VALUE. */
     Tcl_HashEntry *hashPtr;	/* Pointer to hash table entry for this
@@ -69,7 +69,7 @@ typedef struct TkColor {
 #ifndef TkpFreeColor
 MODULE_SCOPE void	TkpFreeColor(TkColor *tkColPtr);
 #endif
-MODULE_SCOPE TkColor *	TkpGetColor(Tk_Window tkwin, Tk_Uid name);
+MODULE_SCOPE TkColor *	TkpGetColor(Tk_Window tkwin, const char *name);
 MODULE_SCOPE TkColor *	TkpGetColorByValue(Tk_Window tkwin, XColor *colorPtr);
 
 #endif /* _TKCOLOR */

@@ -138,7 +138,7 @@ bind Text <<SelectPrevWord>> {
     tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<SelectNextWord>> {
-    tk::TextKeySelect %W [tk::TextNextWord %W insert]
+    tk::TextKeySelect %W [tk::TextSelectNextWord %W insert]
 }
 bind Text <<SelectPrevPara>> {
     tk::TextKeySelect %W [tk::TextPrevPara %W insert]
@@ -423,7 +423,7 @@ proc ::tk::TextEndIMEMarkedText {w} {
 	return
     }
     $w tag add IMEmarkedtext $mark insert
-    $w tag configure IMEmarkedtext -underline on
+    $w tag configure IMEmarkedtext -underline 1
 }
 
 # Macintosh only bindings:
@@ -457,16 +457,25 @@ bind Text <B2-Motion> {
 set ::tk::Priv(prevPos) {}
 
 bind Text <MouseWheel> {
-    tk::MouseWheel %W y %D -4.0 pixels
+    tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
 }
 bind Text <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -1.2 pixels
+    tk::MouseWheel %W y [tk::ScaleNum %D] -1.2 pixels
 }
 bind Text <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -4.0 pixels
+    tk::MouseWheel %W x [tk::ScaleNum %D] -4.0 pixels
 }
 bind Text <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -1.2 pixels
+    tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 pixels
+}
+bind Text <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+    if {$tk::Priv(deltaX) != 0} {
+	%W xview scroll [tk::ScaleNum [expr {-$tk::Priv(deltaX)}]] pixels
+    }
+    if {$tk::Priv(deltaY) != 0} {
+	%W yview scroll [tk::ScaleNum [expr {-$tk::Priv(deltaY)}]] pixels
+    }
 }
 
 # ::tk::TextClosestGap --
@@ -485,7 +494,11 @@ proc ::tk::TextClosestGap {w x y} {
     if {$bbox eq ""} {
 	return $pos
     }
-    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
+    # The check on y coord of the line bbox with dlineinfo is to fix
+    # [a9cf210a42] to properly handle selecting and moving the mouse
+    # out of the widget.
+    if {$y < [lindex [$w dlineinfo $pos] 1] ||
+	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
 	return $pos
     }
     $w index "$pos + 1 char"
@@ -539,14 +552,14 @@ proc ::tk::TextButton1 {w x y} {
 # Arguments:
 # w -		The text window in which the button was pressed.
 # x -		Mouse x position.
-# y - 		Mouse y position.
+# y -		Mouse y position.
 
 set ::tk::Priv(textanchoruid) 0
 
 proc ::tk::TextAnchor {w} {
     variable Priv
     if {![info exists Priv(textanchor,$w)]} {
-        set Priv(textanchor,$w) tk::anchor[incr Priv(textanchoruid)]
+	set Priv(textanchor,$w) tk::anchor[incr Priv(textanchoruid)]
     }
     return $Priv(textanchor,$w)
 }
@@ -652,7 +665,7 @@ proc ::tk::TextKeyExtend {w index} {
 #
 # Arguments:
 # w -		The text window.
-# x, y - 	Position of the mouse.
+# x, y -	Position of the mouse.
 
 proc ::tk::TextPasteSelection {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
@@ -746,9 +759,9 @@ proc ::tk::TextKeySelect {w new} {
 	}
 	$w mark set $anchorname insert
     } else {
-        if {[catch {$w index $anchorname}]} {
-            $w mark set $anchorname insert
-        }
+	if {[catch {$w index $anchorname}]} {
+	    $w mark set $anchorname insert
+	}
 	if {[$w compare $new < $anchorname]} {
 	    set first $new
 	    set last $anchorname
@@ -891,8 +904,8 @@ proc ::tk::TextUpDownLine {w n} {
 	    "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
     set Priv(prevPos) $new
     if {[$w compare $new == "end display lineend"] \
-            || [$w compare $new == "insert display linestart"]} {
-        set Priv(textPosOrig) $new
+	    || [$w compare $new == "insert display linestart"]} {
+	set Priv(textPosOrig) $new
     }
     return $new
 }
@@ -1032,8 +1045,8 @@ proc ::tk_textCopy w {
 
 proc ::tk_textCut w {
     if {![catch {set data [$w get sel.first sel.last]}]} {
-        # make <<Cut>> an atomic operation on the Undo stack,
-        # i.e. separate it from other delete operations on either side
+	# make <<Cut>> an atomic operation on the Undo stack,
+	# i.e. separate it from other delete operations on either side
 	set oldSeparator [$w cget -autoseparators]
 	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
@@ -1073,25 +1086,30 @@ proc ::tk_textPaste w {
 }
 
 # ::tk::TextNextWord --
-# Returns the index of the next word position after a given position in the
-# text.  The next word is platform dependent and may be either the next
-# end-of-word position or the next start-of-word position after the next
-# end-of-word position.
+# Returns the index of the next start-of-word position after the next
+# end-of-word position after a given position in the text.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {[tk windowingsystem] eq "win32"}  {
-    proc ::tk::TextNextWord {w start} {
-	TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
-		tk::startOfNextWord
-    }
-} else {
-    proc ::tk::TextNextWord {w start} {
-	TextNextPos $w $start tk::endOfWord
-    }
+proc ::tk::TextNextWord {w start} {
+    TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
+	    tk::startOfNextWord
 }
+
+# ::tk::TextSelectNextWord --
+# Returns the index of the next end-of-word position after a given
+# position in the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextSelectNextWord {w start} {
+    TextNextPos $w $start tk::endOfWord
+}
+
 
 # ::tk::TextNextPos --
 # Returns the index of the next position after the given starting
@@ -1199,9 +1217,9 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
 
     # only consider the temporary marks set by an undo/redo action
     foreach mark [$w mark names] {
-        if {[string range $mark 0 11] eq "tk::undoMark"} {
-            lappend undoMarks $mark
-        }
+	if {[string range $mark 0 11] eq "tk::undoMark"} {
+	    lappend undoMarks $mark
+	}
     }
 
     # transform marks into indices
@@ -1230,8 +1248,8 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     }
     set Rmarks [lrange $undoMarks $n [llength $undoMarks]]
     foreach Lmark $Lmarks Rmark $Rmarks {
-        lappend indices [$w index $Lmark] [$w index $Rmark]
-        $w mark unset $Lmark $Rmark
+	lappend indices [$w index $Lmark] [$w index $Rmark]
+	$w mark unset $Lmark $Rmark
     }
 
     # process ranges to:
@@ -1241,36 +1259,36 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     set indices {}
 
     for {set i 0} {$i < $nUndoMarks} {incr i 2} {
-        set il1 [lindex $ind $i]
-        set ir1 [lindex $ind [expr {$i + 1}]]
-        lappend indices $il1 $ir1
+	set il1 [lindex $ind $i]
+	set ir1 [lindex $ind [expr {$i + 1}]]
+	lappend indices $il1 $ir1
 
-        for {set j [expr {$i + 2}]} {$j < $nUndoMarks} {incr j 2} {
-            set il2 [lindex $ind $j]
-            set ir2 [lindex $ind [expr {$j + 1}]]
+	for {set j [expr {$i + 2}]} {$j < $nUndoMarks} {incr j 2} {
+	    set il2 [lindex $ind $j]
+	    set ir2 [lindex $ind [expr {$j + 1}]]
 
-            if {[$w compare $il2 > $ir1]} {
-                # second range starts after the end of first range
-                # -> further second ranges do not need to be considered
-                #    because ranges were sorted by increasing first index
-                set j $nUndoMarks
-            } else {
-                if {[$w compare $ir2 > $ir1]} {
-                    # second range overlaps first range
-                    # -> merge them into a single range
-                    set indices [lreplace $indices end-1 end]
-                    lappend indices $il1 $ir2
-                } else {
-                    # second range is fully included in first range
-                    # -> ignore it
-                }
-                # in both cases above, the second range shall be
-                # trimmed out from the list of ranges
-                set ind [lreplace $ind $j [expr {$j + 1}]]
-                incr j -2
-                incr nUndoMarks -2
-            }
-        }
+	    if {[$w compare $il2 > $ir1]} {
+		# second range starts after the end of first range
+		# -> further second ranges do not need to be considered
+		#    because ranges were sorted by increasing first index
+		set j $nUndoMarks
+	    } else {
+		if {[$w compare $ir2 > $ir1]} {
+		    # second range overlaps first range
+		    # -> merge them into a single range
+		    set indices [lreplace $indices end-1 end]
+		    lappend indices $il1 $ir2
+		} else {
+		    # second range is fully included in first range
+		    # -> ignore it
+		}
+		# in both cases above, the second range shall be
+		# trimmed out from the list of ranges
+		set ind [lreplace $ind $j [expr {$j + 1}]]
+		incr j -2
+		incr nUndoMarks -2
+	    }
+	}
     }
 
     return $indices

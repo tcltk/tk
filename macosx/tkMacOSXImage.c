@@ -4,10 +4,10 @@
  *	The code in this file provides an interface for XImages, and
  *      implements the nsimage image type.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017-2021 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017-2021 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -15,12 +15,15 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXImage.h"
 #include "tkColor.h"
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-	   int x, int y, unsigned int width, unsigned int height);
+static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
+     int x, int y, unsigned int width, unsigned int height, CGFloat *scale);
+static inline CGRect ClipCopyRects(CGRect srcBounds, CGRect dstBounds,
+     int src_x, int src_y, unsigned int width,  unsigned int height);
 
 /* Pixel formats
  *
@@ -121,16 +124,15 @@ static void ReleaseData(
     ckfree(info);
 }
 
-CGImageRef
+static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32_t alphaInfo)
+    uint32_t bitmapInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
     size_t len = image->bytes_per_line * image->height;
     const CGFloat *decode = NULL;
-    CGBitmapInfo bitmapInfo;
     CGDataProviderRef provider = NULL;
     char *data = NULL;
     CGDataProviderReleaseDataCallback releaseData = ReleaseData;
@@ -186,7 +188,6 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
 	data = (char *)ckalloc(len);
 	if (data) {
 	    memcpy(data, image->data + image->xoffset, len);
@@ -402,7 +403,7 @@ XCreateImage(
 {
     XImage *ximage;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
@@ -424,7 +425,7 @@ XCreateImage(
 	ximage->bitmap_pad = bitmap_pad;
     } else {
 	/*
-	 * Use 16 byte alignment for best Quartz perfomance.
+	 * Use 16 byte alignment for best Quartz performance.
 	 */
 
 	ximage->bitmap_pad = 128;
@@ -486,8 +487,8 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-#define USE_ALPHA kCGImageAlphaLast
-#define IGNORE_ALPHA kCGImageAlphaNoneSkipLast
+#define USE_ALPHA (kCGImageAlphaLast | kCGBitmapByteOrder32Big)
+#define IGNORE_ALPHA (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little)
 
 static int
 TkMacOSXPutImage(
@@ -507,13 +508,24 @@ TkMacOSXPutImage(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
 
-    display->request++;
+    if (width <= 0 || height <= 0) {
+	return Success; /* Is OK. Nothing to see here, literally. */
+    }
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
-	CGRect bounds, srcRect, dstRect;
+	CGRect dstRect, srcRect = CGRectMake(src_x, src_y, width, height);
+	/*
+	 * Whole image is copied before cropping. For performance,
+	 * consider revising TkMacOSXCreateCGImageWithXImage() to accept
+	 * source x/y/w/h and copy only the needed portion instead.
+	 */
 	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image, pixelFormat);
+	CGImageRef cropped = CGImageCreateWithImageInRect(img, srcRect);
+	CGImageRelease(img);
+	img = cropped;
 
 	/*
 	 * The CGContext for a pixmap is RGB only, with A = 0.
@@ -523,12 +535,9 @@ TkMacOSXPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-	    bounds = CGRectMake(0, 0, image->width, image->height);
-	    srcRect = CGRectMake(src_x, src_y, width, height);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);
-	    TkMacOSXDrawCGImage(drawable, gc, dc.context,
-				img, gc->foreground, gc->background,
-				bounds, srcRect, dstRect);
+	    TkMacOSXDrawCGImage(drawable, gc, dc.context, img,
+				gc->foreground, gc->background, dstRect);
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
@@ -622,6 +631,11 @@ int TkpPutRGBAImage(
  *      with origin at the top left, as used by XImage and CGImage, not bottom
  *      left as used by NSView.
  *
+ *      If force_1x_scale is true, then the returned CGImage will be downscaled
+ *      if necessary to have the requested width and height. Othewise, for
+ *      windows on Retina displays, the width and height of the returned CGImage
+ *      will be twice the requested width and height.
+ *
  * Side effects:
  *     None
  *
@@ -631,14 +645,17 @@ int TkpPutRGBAImage(
 static CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
+    int force_1x_scale,
     int x,
     int y,
     unsigned int width,
-    unsigned int height)
+    unsigned int height,
+    CGFloat *scalePtr)
 {
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
+    CGFloat scaleFactor = 1.0;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	CGContextRetain(cg_context);
@@ -648,18 +665,12 @@ CreateCGImageFromDrawableRect(
 	    TkMacOSXDbgMsg("Invalid source drawable");
 	    return NULL;
 	}
-	NSSize size = view.frame.size;
-	NSUInteger view_width = size.width, view_height = size.height;
-        NSUInteger bytesPerPixel = 4,
-	    bytesPerRow = bytesPerPixel * view_width,
-	    bitsPerComponent = 8;
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(NULL, view_width, view_height,
-			 bitsPerComponent, bytesPerRow, colorSpace,
-			 kCGImageAlphaPremultipliedLast |
-			 kCGBitmapByteOrder32Big);
-	CFRelease(colorSpace);
-	[view.layer renderInContext:cg_context];
+	scaleFactor = view.layer.contentsScale;
+	cg_context = ((TKContentView *)view).tkLayerBitmapContext;
+	CGContextRetain(cg_context);
+    }
+    if (scalePtr != nil) {
+	*scalePtr = scaleFactor;
     }
     if (cg_context) {
 	cg_image = CGBitmapContextCreateImage(cg_context);
@@ -668,11 +679,88 @@ CreateCGImageFromDrawableRect(
     if (cg_image) {
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
-	result = CGImageCreateWithImageInRect(cg_image, rect);
+	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
+	if (force_1x_scale && (scaleFactor != 1.0)) {
+	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
+	    // create context, keeping original image properties
+	    CGColorSpaceRef colorspace = CGImageGetColorSpace(cg_image);
+	    cg_context = CGBitmapContextCreate(NULL, width, height,
+		    CGImageGetBitsPerComponent(cg_image),
+		    //CGImageGetBytesPerRow(cg_image), // wastes space?
+		    CGImageGetBitsPerPixel(cg_image) * width / 8,
+		    colorspace,
+		    CGImageGetBitmapInfo(cg_image));
+	    CGColorSpaceRelease(colorspace);
+	    if (cg_context) {
+		// Extract the subimage in the specified rectangle.
+		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
+		// Draw the subimage in our context (resizing it to fit).
+		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
+			subimage);
+		// We will return the image we just drew.
+		result = CGBitmapContextCreateImage(cg_context);
+		CGContextRelease(cg_context);
+		CGImageRelease(subimage);
+	    }
+	} else {
+	    // No resizing is needed.  Just return the subimage
+	    result = CGImageCreateWithImageInRect(cg_image, rect);
+	}
 	CGImageRelease(cg_image);
     }
     return result;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreatePDFFromDrawableRect
+ *
+ *	Extract PDF data from a MacOSX drawable.
+ *
+ * Results:
+ *	Returns a CFDataRef that can be written to a file.
+ *
+ *      NOTE: The x,y coordinates should be relative to a coordinate system
+ *      with origin at the bottom left as used by NSView,  not top left
+ *      as used by XImage and CGImage.
+ *
+ * Side effects:
+ *     None
+ *
+ *----------------------------------------------------------------------
+ */
+
+CFDataRef
+CreatePDFFromDrawableRect(
+			  Drawable drawable,
+			  int x,
+			  int y,
+			  unsigned int width,
+			  unsigned int height)
+{
+    MacDrawable *mac_drawable = (MacDrawable *)drawable;
+    NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+    if (view == nil) {
+	TkMacOSXDbgMsg("Invalid source drawable");
+	return NULL;
+    }
+    NSRect bounds, viewSrcRect;
+
+    /*
+     * Get the child window area in NSView coordinates
+     * (origin at bottom left).
+     */
+
+    bounds = [view bounds];
+    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
+			     bounds.size.height - height - (mac_drawable->yOff + y),
+			     width, height);
+    NSData *viewData = [view dataWithPDFInsideRect:viewSrcRect];
+    CFDataRef result = (CFDataRef)viewData;
+    return result;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -737,12 +825,13 @@ XGetImage(
     TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
-    NSBitmapImageRep* bitmapRep = nil;
-    NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
+    NSBitmapImageRep* bitmapRep = nil;
+    NSBitmapFormat bitmap_fmt = 0;
     char *bitmap = NULL;
     int depth = 32, offset = 0, bitmap_pad = 0;
-    unsigned int bytes_per_row, size, row, n, m;
+    NSInteger bytes_per_row, samples_per_pixel, size;
+    unsigned int row, n, m;
 
     if (format == ZPixmap) {
 	CGImageRef cgImage;
@@ -750,7 +839,8 @@ XGetImage(
 	    return NULL;
 	}
 
-	cgImage = CreateCGImageFromDrawableRect(drawable, x, y, width, height);
+	// Request 1x-scale image for compatibility
+	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height, nil);
 	if (cgImage) {
 	    bitmapRep = [NSBitmapImageRep alloc];
 	    [bitmapRep initWithCGImage:cgImage];
@@ -762,16 +852,33 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = (char *)ckalloc(size);
+	samples_per_pixel = [bitmapRep samplesPerPixel];
+#if 0
+	fprintf(stderr, "XGetImage:\n"
+		"  bitmsp_fmt = %ld\n"
+		"  samples_per_pixel = %ld\n"
+		"  width = %u\n"
+		"  height = %u\n"
+		"  bytes_per_row = %ld\n"
+		"  size = %ld\n",
+		bitmap_fmt, samples_per_pixel, width, height, bytes_per_row, size);
+#endif
+	/*
+	 * Image data with all pixels having alpha value 255 may be reported
+	 * as 3 samples per pixel, even though each row has 4*width pixels and
+	 * the pixels are stored in the default ARGB32 format.
+	 */
+
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
-	    || [bitmapRep samplesPerPixel] != 4
+	    || samples_per_pixel < 3
+	    || samples_per_pixel > 4
 	    || [bitmapRep isPlanar] != 0
-	    || bytes_per_row < 4 * width
 	    || size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    [bitmapRep release];
 	    return NULL;
 	}
+	bitmap = (char *)ckalloc(size);
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 
@@ -795,6 +902,7 @@ XGetImage(
 		}
 	    }
 	}
+
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
 		(char*) bitmap, width, height,
 		bitmap_pad, bytes_per_row);
@@ -809,6 +917,112 @@ XGetImage(
 	TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
     }
     return imagePtr;
+}
+
+static inline CGRect
+ClipCopyRects(
+    CGRect srcBounds,
+    CGRect dstBounds,
+    int src_x,
+    int src_y,
+    unsigned int width,
+    unsigned int height)
+{
+    CGRect srcRect = CGRectMake(src_x, src_y, width, height);
+    CGRect bounds1 = CGRectIntersection(srcRect, srcBounds);
+    return CGRectIntersection(bounds1, dstBounds);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkScrollWindow --
+ *
+ *	Scroll a rectangle of the specified window and accumulate a damage
+ *	region.
+ *
+ * Results:
+ *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
+ *	the region that needs to be repainted after scrolling and returns 1.
+ *      When drawRect was in use, this function used the now deprecated
+ *      scrollRect method of NSView.  With the current updateLayer
+ *      implementation, using a CGImage as the view's backing layer, we are
+ *      able to use XCopyArea.  But both implementations are incomplete.
+ *      They return a damage area which is just the source rectangle minus
+ *      destination rectangle.  Other platforms, e.g. Windows, where
+ *      this function is essentially provided by the windowing system,
+ *      are able to add to the damage region the bounding rectangles of
+ *      all subwindows which meet the source rectangle, even if they are
+ *      contained in the destination rectangle.  The information needed
+ *      to do that is not available in this module, as far as I know.
+ *
+ *      In fact, the Text widget is the only one which calls this
+ *      function, and  textDisp.c compensates for this defect by using
+ *      macOS-specific code.  This is possible because access to the
+ *      list of all embedded windows in a Text widget is available in
+ *      that module.
+ *
+ * Side effects:
+ *	Scrolls the bits in the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkScrollWindow(
+    Tk_Window tkwin,		/* The window to be scrolled. */
+    GC gc,			/* GC for window to be scrolled. */
+    int x, int y,		/* Position rectangle to be scrolled. */
+    int width, int height,
+    int dx, int dy,		/* Distance rectangle should be moved. */
+    Region damageRgn)		/* Region to accumulate damage in. */
+{
+    Drawable drawable = Tk_WindowId(tkwin);
+    HIShapeRef srcRgn, dstRgn;
+    HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
+    NSRect srcRect, dstRect;
+    int result = 0;
+    NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
+    CGRect viewBounds = [view bounds];
+
+    /*
+     * To compute the damage region correctly we need to clip the source and
+     * destination rectangles to the NSView bounds in the same way that
+     * XCopyArea does.
+     */
+
+    CGRect bounds = ClipCopyRects(viewBounds, viewBounds, x, y, width, height);
+    unsigned int w = bounds.size.width;
+    unsigned int h = bounds.size.height;
+
+    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
+	     w, h, x + dx, y + dy) == Success) {
+
+	/*
+	 * Compute the damage region, using Tk coordinates (origin at top left).
+	 */
+
+	srcRect = CGRectMake(x, y, width, height);
+	dstRect = CGRectOffset(bounds, dx, dy);
+	//dstRect = CGRectOffset(srcRect, dx, dy);
+	srcRgn = HIShapeCreateWithRect(&srcRect);
+	dstRgn = HIShapeCreateWithRect(&dstRect);
+	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
+	CFRelease(dstRgn);
+	CFRelease(srcRgn);
+	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
+
+    }
+
+    /*
+     * Convert the HIShape dmgRgn into a TkRegion and store it.
+     */
+
+    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+
+    CFRelease(dmgRgn);
+    return result;
 }
 
 /*
@@ -837,15 +1051,34 @@ XCopyArea(
     int src_y,			/* define the source rectangle */
     unsigned int width,		/* that will be copied. */
     unsigned int height,
-    int dest_x,			/* Dest X & Y on dest rect. */
-    int dest_y)
+    int dst_x,			/* Dest X & Y on dest rect. */
+    int dst_y)
 {
     TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *)src;
     CGImageRef img = NULL;
-    CGRect bounds, srcRect, dstRect;
+    CGRect dstRect;
 
-    display->request++;
+    // XXXX Need to deal with pixmaps!
+
+    NSView *srcView = TkMacOSXGetNSViewForDrawable(src);
+    NSView *dstView = TkMacOSXGetNSViewForDrawable(dst);
+    CGRect srcBounds = [srcView bounds];
+    CGRect dstBounds = [dstView bounds];
+
+    // To avoid distorting the image when it is drawn we must ensure that
+    // the source and destination rectangles have the same size.  This is
+    // tricky because each of those rectangles will be clipped to the
+    // bounds of its containing NSView.  If the source gets clipped and
+    // the destination does not, for example, then the shapes will differ.
+    // We deal with this by reducing their common size  enough so that both
+    // rectangles are  contained in their respective views.
+
+    CGRect bounds = ClipCopyRects(srcBounds, dstBounds, src_x, src_y, width, height);
+    width = (int) bounds.size.width;
+    height = (int) bounds.size.height;
+    CGFloat scaleFactor;
+
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	return BadDrawable;
     }
@@ -860,20 +1093,14 @@ XCopyArea(
 	return BadDrawable;
     }
 
-    if (srcDraw->flags & TK_IS_PIXMAP) {
-	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
-	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
-    } else {
-	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
-    }
+    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height, &scaleFactor);
 
     if (img) {
-	bounds = CGRectMake(0, 0, srcDraw->size.width, srcDraw->size.height);
-	srcRect = CGRectMake(src_x, src_y, width, height);
-	dstRect = CGRectMake(dest_x, dest_y, width, height);
+	unsigned int w = (unsigned int) (CGImageGetWidth(img) / scaleFactor);
+	unsigned int h = (unsigned int) (CGImageGetHeight(img) / scaleFactor);
+	dstRect = CGRectMake(dst_x, dst_y, w, h);
 	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-		gc->foreground, gc->background, bounds, srcRect, dstRect);
+		gc->foreground, gc->background, dstRect);
 	CFRelease(img);
     } else {
 	TkMacOSXDbgMsg("Failed to construct CGImage.");
@@ -918,8 +1145,8 @@ XCopyPlane(
     TkMacOSXDrawingContext dc;
     MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
-    CGRect bounds, srcRect, dstRect;
-    display->request++;
+    CGRect srcRect, dstRect;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
 	return BadDrawable;
@@ -941,7 +1168,7 @@ XCopyPlane(
 		TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 		unsigned long imageBackground  = gc->background;
 
-                if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP) {
+		if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP) {
 		    srcRect = CGRectMake(src_x, src_y, width, height);
 		    CGImageRef mask = CreateCGImageFromPixmap(
 			    clipPtr->value.pixmap);
@@ -984,13 +1211,9 @@ XCopyPlane(
 		    CGImageRelease(submask);
 		    CGImageRelease(subimage);
 		} else {
-		    bounds = CGRectMake(0, 0,
-			    srcDraw->size.width, srcDraw->size.height);
-		    srcRect = CGRectMake(src_x, src_y, width, height);
 		    dstRect = CGRectMake(dest_x, dest_y, width, height);
 		    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-			    gc->foreground, imageBackground, bounds,
-			    srcRect, dstRect);
+			    gc->foreground, imageBackground, dstRect);
 		    CGImageRelease(img);
 		}
 	    } else {
@@ -1050,12 +1273,12 @@ struct TkMacOSXNSImageModel {
     int radius;                       /* Radius for rounded corners. */
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
+    char *imageName;                  /* Malloc'ed image name. */
+    Tcl_Obj *sourceObj;               /* Describing the image. */
+    Tcl_Obj *asObj;                   /* Interpretation of source */
+    int	flags;	                      /* Sundry flags, defined below. */
     bool pressed;                     /* Image is for use in a pressed button.*/
-    bool template;                    /* Image is for use as a template.*/
-    char *imageName ;                 /* Malloc'ed image name. */
-    char *source;       	      /* Malloc'ed string describing the image. */
-    char *as;                         /* Malloc'ed interpretation of source */
-    int	flags;			      /* Sundry flags, defined below. */
+    bool templ;                       /* Image is for use as a template.*/
     TkMacOSXNSImageInstance *instancePtr;   /* Start of list of instances associated
 				       * with this model. */
     NSImage *image;                   /* The underlying NSImage object. */
@@ -1075,17 +1298,17 @@ struct TkMacOSXNSImageModel {
  */
 
 static int		TkMacOSXNSImageCreate(Tcl_Interp *interp,
-			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
-			    ClientData *clientDataPtr);
-static ClientData	TkMacOSXNSImageGet(Tk_Window tkwin, ClientData clientData);
-static void		TkMacOSXNSImageDisplay(ClientData clientData,
+			    void **clientDataPtr);
+static void *TkMacOSXNSImageGet(Tk_Window tkwin, void *clientData);
+static void		TkMacOSXNSImageDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width,
 			    int height, int drawableX,
 			    int drawableY);
-static void		TkMacOSXNSImageFree(ClientData clientData, Display *display);
-static void		TkMacOSXNSImageDelete(ClientData clientData);
+static void		TkMacOSXNSImageFree(void *clientData, Display *display);
+static void		TkMacOSXNSImageDelete(void *clientData);
 
 static Tk_ImageType TkMacOSXNSImageType = {
     "nsimage",			/* name of image type */
@@ -1114,24 +1337,24 @@ static Tk_ImageType TkMacOSXNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, source), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, sourceObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, as), 0, NULL, 0},
+     offsetof(TkMacOSXNSImageModel, asObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
-     -1, Tk_Offset(TkMacOSXNSImageModel, width), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, Tk_Offset(TkMacOSXNSImageModel, height), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, height), 0, NULL, 0},
     {TK_OPTION_INT, "-radius", NULL, NULL, DEF_RADIUS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, radius), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, radius), 0, NULL, 0},
     {TK_OPTION_INT, "-ring", NULL, NULL, DEF_RING,
-     -1, Tk_Offset(TkMacOSXNSImageModel, ring), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, ring), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
-     -1, Tk_Offset(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
+     TCL_INDEX_NONE, offsetof(TkMacOSXNSImageModel, templ), TK_OPTION_VAR(bool), NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, 0, NULL, 0}
 };
 
 /*
@@ -1220,7 +1443,7 @@ TkMacOSXNSImageConfigureModel(
     Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
     TkMacOSXNSImageModel *modelPtr,    /* Pointer to data structure describing
 				    * overall photo image to (re)configure. */
-    int objc,			   /* Number of entries in objv. */
+    Tcl_Size objc,			   /* Number of entries in objv. */
     Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
 {
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
@@ -1232,13 +1455,13 @@ TkMacOSXNSImageConfigureModel(
     int oldWidth = modelPtr->width, oldHeight = modelPtr->height;
 
     if (asOption == NULL) {
-	asOption = Tcl_NewStringObj("-as", -1);
+	asOption = Tcl_NewStringObj("-as", TCL_INDEX_NONE);
 	Tcl_IncrRefCount(asOption);
     }
 
     modelPtr->width = 0;
     modelPtr->height = 0;
-    if (Tk_SetOptions(interp, (char *) modelPtr, optionTable, objc, objv,
+    if (Tk_SetOptions(interp, modelPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
     }
@@ -1247,9 +1470,9 @@ TkMacOSXNSImageConfigureModel(
 	modelPtr->height = oldHeight;
     }
 
-    if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+    if (modelPtr->sourceObj == NULL) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	goto errorExit;
     }
 
@@ -1259,12 +1482,12 @@ TkMacOSXNSImageConfigureModel(
 			    0, &sourceInterpretation) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "Unknown interpretation for source in -as option.  "
-	    "Should be name, file, path, or filetype.", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    "Should be name, file, path, or filetype.", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	goto errorExit;
     }
 
-    source = [[NSString alloc] initWithUTF8String: modelPtr->source];
+    source = [[NSString alloc] initWithUTF8String: Tcl_GetString(modelPtr->sourceObj)];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
 	newImage = [[NSImage imageNamed:source] copy];
@@ -1290,7 +1513,7 @@ TkMacOSXNSImageConfigureModel(
 	[modelPtr->darkModeImage release];
 	newImage.size = size;
 	modelPtr->image = [newImage retain];
-	if (modelPtr->template) {
+	if (modelPtr->templ) {
 	    newImage.template = YES;
 	}
 	modelPtr->darkModeImage = [[newImage copy] retain];
@@ -1320,19 +1543,19 @@ TkMacOSXNSImageConfigureModel(
 	case NAME_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
 		"Try omitting ImageName, "
-	        "e.g. use NSCaution for NSImageNameCaution.", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+		"e.g. use NSCaution for NSImageNameCaution.", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	case FILE_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"Failed to load image file.\n", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+		"Failed to load image file.\n", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	default:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Unrecognized file type.\n"
-		"If using a filename extension, do not include the dot.\n", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+		"If using a filename extension, do not include the dot.\n", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", (char *)NULL);
 	    goto errorExit;
 	}
     }
@@ -1394,9 +1617,9 @@ TkMacOSXNSImageConfigureModel(
 
 int
 TkMacOSXNSImageObjCmd(
-    ClientData clientData,	/* Information about the image model. */
+    void *clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *)clientData;
@@ -1424,9 +1647,9 @@ TkMacOSXNSImageObjCmd(
 	objPtr = Tk_GetOptionValue(interp, (char *)modelPtr, optionTable,
 		objv[2], NULL);
 	if (objPtr == NULL) {
-            goto error;
-        }
-        Tcl_SetObjResult(interp, objPtr);
+	    goto error;
+	}
+	Tcl_SetObjResult(interp, objPtr);
 	break;
     case CONFIGURE:
 	if (objc == 2) {
@@ -1481,12 +1704,12 @@ static int
 TkMacOSXNSImageCreate(
     Tcl_Interp *interp,		 /* Interpreter for application using image. */
     const char *name,		 /* Name to use for image. */
-    int objc,			 /* Number of arguments. */
+    Tcl_Size objc,			 /* Number of arguments. */
     Tcl_Obj *const objv[],	 /* Argument strings for options (not
 				  * including image name or type). */
     TCL_UNUSED(const Tk_ImageType *), /* typePtr */
     Tk_ImageModel model,	 /* Token for image, to be used in callbacks. */
-    ClientData *clientDataPtr)	 /* Store manager's token for image here; it
+    void **clientDataPtr)	 /* Store manager's token for image here; it
 				  * will be returned in later callbacks. */
 {
     TkMacOSXNSImageModel *modelPtr;
@@ -1501,8 +1724,8 @@ TkMacOSXNSImageCreate(
     modelPtr->instancePtr = NULL;
     modelPtr->image = NULL;
     modelPtr->darkModeImage = NULL;
-    modelPtr->source = NULL;
-    modelPtr->as = NULL;
+    modelPtr->sourceObj = NULL;
+    modelPtr->asObj = NULL;
 
     /*
      * Process configuration options given in the image create command.
@@ -1513,7 +1736,7 @@ TkMacOSXNSImageCreate(
 	TkMacOSXNSImageDelete(modelPtr);
 	return TCL_ERROR;
     }
-    Tcl_CreateObjCommand(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
+    Tcl_CreateObjCommand2(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
     *clientDataPtr = modelPtr;
     return TCL_OK;
 }
@@ -1535,10 +1758,10 @@ TkMacOSXNSImageCreate(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 TkMacOSXNSImageGet(
     TCL_UNUSED(Tk_Window),      /* tkwin */
-    ClientData clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
+    void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *) clientData;
     TkMacOSXNSImageInstance *instPtr;
@@ -1566,7 +1789,7 @@ TkMacOSXNSImageGet(
 
 static void
 TkMacOSXNSImageDisplay(
-    ClientData clientData,	/* Pointer to TkMacOSXNSImageInstance for image. */
+    void *clientData,	/* Pointer to TkMacOSXNSImageInstance for image. */
     TCL_UNUSED(Display *),      /* display */
     Drawable drawable,		/* Where to draw or redraw image. */
     int imageX, int imageY,	/* Origin of area to redraw, relative to
@@ -1654,7 +1877,7 @@ TkMacOSXNSImageDisplay(
 
 static void
 TkMacOSXNSImageFree(
-    ClientData clientData,	/* Pointer to TkMacOSXNSImageInstance for instance. */
+    void *clientData,	/* Pointer to TkMacOSXNSImageInstance for instance. */
     TCL_UNUSED(Display *))	/* display */
 {
     TkMacOSXNSImageInstance *instPtr = (TkMacOSXNSImageInstance *) clientData;
@@ -1679,7 +1902,7 @@ TkMacOSXNSImageFree(
 
 static void
 TkMacOSXNSImageDelete(
-    ClientData clientData)	/* Pointer to TkMacOSXNSImageModel for image. When
+    void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. When
 				 * this function is called, no more instances
 				 * exist. */
 {
@@ -1687,8 +1910,8 @@ TkMacOSXNSImageDelete(
 
     Tcl_DeleteCommand(modelPtr->interp, modelPtr->imageName);
     ckfree(modelPtr->imageName);
-    ckfree(modelPtr->source);
-    ckfree(modelPtr->as);
+    Tcl_DecrRefCount(modelPtr->sourceObj);
+    Tcl_DecrRefCount(modelPtr->asObj);
     [modelPtr->image release];
     [modelPtr->darkModeImage release];
     ckfree(modelPtr);

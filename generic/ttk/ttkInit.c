@@ -55,22 +55,12 @@ const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 int Ttk_GetOrientFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
-{
-    *resultPtr = TTK_ORIENT_HORIZONTAL;
-    return Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
-	    "orientation", 0, resultPtr);
-}
-#endif
-
-int TtkGetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {
     int orient = (int)TTK_ORIENT_HORIZONTAL;
     int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
-    	    "orientation", 0, &orient);
+	    "orientation", 0, &orient);
 
     *resultPtr = (Ttk_Orient)orient;
     return result;
@@ -91,7 +81,7 @@ enum {
 };
 
 /* TtkCheckStateOption --
- * 	Handle -state compatibility option.
+ *	Handle -state compatibility option.
  *
  *	NOTE: setting -state disabled / -state enabled affects the
  *	widget state, but the internal widget state does *not* affect
@@ -187,9 +177,9 @@ const Tk_OptionSpec ttkCoreOptionSpecs[] =
  * +++ Initialization: elements and element factories.
  */
 
-extern void TtkElements_Init(Tcl_Interp *);
-extern void TtkLabel_Init(Tcl_Interp *);
-extern void TtkImage_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkElements_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkLabel_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkImage_Init(Tcl_Interp *);
 
 static void RegisterElements(Tcl_Interp *interp)
 {
@@ -202,19 +192,20 @@ static void RegisterElements(Tcl_Interp *interp)
  * +++ Initialization: Widget definitions.
  */
 
-extern void TtkButton_Init(Tcl_Interp *);
-extern void TtkEntry_Init(Tcl_Interp *);
-extern void TtkFrame_Init(Tcl_Interp *);
-extern void TtkNotebook_Init(Tcl_Interp *);
-extern void TtkPanedwindow_Init(Tcl_Interp *);
-extern void TtkProgressbar_Init(Tcl_Interp *);
-extern void TtkScale_Init(Tcl_Interp *);
-extern void TtkScrollbar_Init(Tcl_Interp *);
-extern void TtkSeparator_Init(Tcl_Interp *);
-extern void TtkTreeview_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkButton_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkEntry_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkFrame_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkNotebook_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkPanedwindow_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkToggleswitch_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkTreeview_Init(Tcl_Interp *);
 
 #ifdef TTK_SQUARE_WIDGET
-extern int TtkSquareWidget_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkSquareWidget_Init(Tcl_Interp *);
 #endif
 
 static void RegisterWidgets(Tcl_Interp *interp)
@@ -228,6 +219,7 @@ static void RegisterWidgets(Tcl_Interp *interp)
     TtkScale_Init(interp);
     TtkScrollbar_Init(interp);
     TtkSeparator_Init(interp);
+    TtkToggleswitch_Init(interp);
     TtkTreeview_Init(interp);
 #ifdef TTK_SQUARE_WIDGET
     TtkSquareWidget_Init(interp);
@@ -238,9 +230,9 @@ static void RegisterWidgets(Tcl_Interp *interp)
  * +++ Initialization: Built-in themes.
  */
 
-extern int TtkAltTheme_Init(Tcl_Interp *);
-extern int TtkClassicTheme_Init(Tcl_Interp *);
-extern int TtkClamTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClamTheme_Init(Tcl_Interp *);
 
 static void RegisterThemes(Tcl_Interp *interp)
 {

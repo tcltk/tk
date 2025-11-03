@@ -7,58 +7,75 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTE
+#
+# Note: this test file is woefully incomplete.  Right now there are
+# only bits and pieces of tests.  Please make this file more complete
+# as you fix bugs and add features.
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+#
+# TESTFILE INITIALIZATION
+#
 
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
-}
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
-        # Only Windows has [testmetrics]
+	# Only Windows has [testmetrics]
 	if [string match v* [$w cget -orient]] {
 	    return [expr {[winfo height $w] - 2*[testmetrics cyvscroll $w]}]
 	} else {
 	    return [expr {[winfo width $w] - 2*[testmetrics cxhscroll $w]}]
 	}
     } else {
-        if {[tk windowingsystem] eq "x11"} {
-            # Calculations here assume that the arrow area is a square.
+	if {[tk windowingsystem] eq "x11"} {
+	    # Calculations here assume that the arrow area is a square.
 	    if [string match v* [$w cget -orient]] {
-	        return [expr {[winfo height $w] \
-		        - ([winfo width $w] \
+		return [expr {[winfo height $w] \
+			- ([winfo width $w] \
 			    - [$w cget -highlightthickness] \
 			    - [$w cget -bd] + 1)*2}]
 	    } else {
-	        return [expr {[winfo width $w] \
-		        - ([winfo height $w] \
+		return [expr {[winfo width $w] \
+			- ([winfo height $w] \
 			    - [$w cget -highlightthickness] \
 			    - [$w cget -bd] + 1)*2}]
 	    }
-        } else {
-            # macOS aqua
+	} else {
+	    # macOS aqua
 	    if [string match v* [$w cget -orient]] {
-	        return [expr {[winfo height $w] \
+		return [expr {[winfo height $w] \
 			- ([$w cget -highlightthickness] \
 			  +[$w cget -bd])*2}]
 	    } else {
-	        return [expr {[winfo width $w] \
+		return [expr {[winfo width $w] \
 			- ([$w cget -highlightthickness] \
 			  +[$w cget -bd])*2}]
 	    }
-        }
+	}
     }
 }
 
-# XXX Note: this test file is woefully incomplete.  Right now there are
-# only bits and pieces of tests.  Please make this file more complete
-# as you fix bugs and add features.
+#
+# COMMON TEST SETUP
+#
+# For tests scrollbar-1.*
+#
 
 foreach {width height} [wm minsize .] {
     set height [expr {($height < 200) ? 200 : $height}]
@@ -70,6 +87,11 @@ pack .f -side left
 scrollbar .s
 pack .s -side right -fill y
 update
+
+#
+# TESTS
+#
+
 set i 1
 foreach test {
     {-activebackground #ff0000 #ff0000 non-existent
@@ -78,17 +100,16 @@ foreach test {
 	    {bad relief "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
-    {-bd 4 4 badValue {bad screen distance "badValue"}}
+    {-bd 4 4 badValue {expected screen distance but got "badValue"}}
     {-bg #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
-    {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
+    {-borderwidth 1.3 1.3 badValue {expected screen distance but got "badValue"}}
     {-command "set x" {set x} {} {}}
-    {-elementborderwidth 4 4 badValue {bad screen distance "badValue"}}
+    {-elementborderwidth 4 4 badValue {expected screen distance or "" but got "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-highlightbackground #112233 #112233 ugly {unknown color name "ugly"}}
     {-highlightcolor #123456 #123456 bogus {unknown color name "bogus"}}
-    {-highlightthickness 6 6 bogus {bad screen distance "bogus"}}
-    {-highlightthickness -2 0 {} {}}
+    {-highlightthickness 6 6 -2 {expected screen distance but got "-2"}}
     {-jump true 1 silly {expected boolean value but got "silly"}}
     {-orient horizontal horizontal badValue
 	    {bad orientation "badValue": must be vertical or horizontal}}
@@ -98,7 +119,7 @@ foreach test {
     {-repeatinterval 140 140 129.3 {expected integer but got "129.3"}}
     {-takefocus "any string" "any string" {} {}}
     {-troughcolor #432 #432 lousy {unknown color name "lousy"}}
-    {-width 32 32 badValue {bad screen distance "badValue"}}
+    {-width 32 32 badValue {expected screen distance but got "badValue"}}
 } {
     lassign $test name value okResult badValue badResult
     # Assume $name is plain; true of all our in-use options!
@@ -114,7 +135,11 @@ foreach test {
     .s configure $name [lindex [.s configure $name] 3]
 }
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
+
 test scrollbar-2.1 {Tk_ScrollbarCmd procedure} -returnCodes error -body {
     scrollbar
 } -result {wrong # args: should be "scrollbar pathName ?-option value ...?"}
@@ -140,9 +165,14 @@ test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
     destroy .s
 } -result .s
 
-scrollbar .s -orient vertical -command scroll -highlightthickness 2 -bd 2
+
+#
+# COMMON TEST SETUP
+#
+scrollbar .s -orient vertical -highlightthickness 2 -bd 2
 pack .s -side right -fill y
 update
+
 test scrollbar-3.1 {ScrollbarWidgetCmd procedure} {
     list [catch {.s} msg] $msg
 } {1 {wrong # args: should be ".s option ?arg ...?"}}
@@ -178,7 +208,12 @@ test scrollbar-3.9 {ScrollbarWidgetCmd procedure, "activate" option} {
 test scrollbar-3.10 {ScrollbarWidgetCmd procedure, "cget" option} {
     list [catch {.s cget -orient} msg] $msg
 } {0 vertical}
+
+#
+# COMMON TEST SETUP
+#
 scrollbar .s2
+
 test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {
     expr {[.s2 cget -bd] == [lindex [.s2 configure -bd] 3]}
 } 1
@@ -197,7 +232,12 @@ test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
 test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
     # empty test; duplicated scrollbar-3.13
 } {}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s2
+
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]
 } 20
@@ -273,21 +313,27 @@ test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
        /([getTroughSize .s] - 1)}]]
-test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
+test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 179]
-} 1
+} [format %.6g [expr {(179.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
+       /([getTroughSize .s] - 1)}]]
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
 } 1
-test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
+test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 178]
-} {0.993711}
+} [format %.6g [expr {(178.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
+       /([getTroughSize .s] - 1)}]]
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
     expr {
     [format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s] - 2}]]]
 	== [format %g [expr {(200.0 - [testmetrics cyvscroll .s]*2 - 2)
 			   / ($height - 1 - [testmetrics cyvscroll .s]*2)}]]}
 } 1
+
+#
+# COMMON TEST SETUP
+#
 
 toplevel .t -width 250 -height 100
 wm geom .t +0+0
@@ -298,29 +344,32 @@ update
 test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.t.s fraction 100 0]
 } {0.5}
-if {[testConstraint testmetrics]} {
-    # Only Windows has [testmetrics]
-    place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
-} else {
-    if {[tk windowingsystem] eq "x11"} {
-        place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
+
+test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} -setup {
+    if {[testConstraint testmetrics]} {
+	# Only Windows has [testmetrics]
+	place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
     } else {
-        # macOS aqua
-        place configure .t.s -width [expr {2*([.t.s cget -highlightthickness] + [.t.s cget -bd])}]
+	if {[tk windowingsystem] eq "x11"} {
+	    place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
+	} else {
+	    # macOS aqua
+	    place configure .t.s -width [expr {2*([.t.s cget -highlightthickness] + [.t.s cget -bd])}]
+	}
     }
-}
-update
-test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} {
+    update
+} -body {
     format {%.6g} [.t.s fraction 100 0]
-} 0
+} -result 0
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
+
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg
 } {1 {wrong # args: should be ".s get"}}
-test scrollbar-3.44 {ScrollbarWidgetCmd procedure, "get" option} deprecated {
-    .s set 100 10 13 14
-    .s get
-} {100 10 13 14}
 test scrollbar-3.45 {ScrollbarWidgetCmd procedure, "get" option} {
     .s set 0.6 0.8
     set result {}
@@ -345,7 +394,7 @@ test scrollbar-3.50.1 {ScrollbarWidgetCmd procedure, "identify" option} notAqua 
     .s identify 5 5
 } {arrow1}
 test scrollbar-3.50.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .s identify 5 5
 } {trough1}
 test scrollbar-3.51 {ScrollbarWidgetCmd procedure, "identify" option} {
@@ -362,7 +411,7 @@ test scrollbar-3.54.1 {ScrollbarWidgetCmd procedure, "identify" option} notAqua 
     .s identify 5 195
 } {arrow2}
 test scrollbar-3.54.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .s identify 5 195
 } {trough2}
 test scrollbar-3.56 {ScrollbarWidgetCmd procedure, "identify" option} unix {
@@ -402,30 +451,6 @@ test scrollbar-3.63 {ScrollbarWidgetCmd procedure, "set" option} {
     }
     set result
 } {0.4 0.4}
-test scrollbar-3.64 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    list [catch {.s set abc def ghi jkl} msg] $msg
-} {1 {expected integer but got "abc"}}
-test scrollbar-3.65 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    list [catch {.s set 1 def ghi jkl} msg] $msg
-} {1 {expected integer but got "def"}}
-test scrollbar-3.66 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    list [catch {.s set 1 2 ghi jkl} msg] $msg
-} {1 {expected integer but got "ghi"}}
-test scrollbar-3.67 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    list [catch {.s set 1 2 3 jkl} msg] $msg
-} {1 {expected integer but got "jkl"}}
-test scrollbar-3.68 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    .s set -10 50 20 30
-    .s get
-} {0 50 0 0}
-test scrollbar-3.69 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    .s set 100 -10 20 30
-    .s get
-} {100 0 20 30}
-test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} deprecated {
-    .s set 100 50 30 20
-    .s get
-} {100 50 30 30}
 test scrollbar-3.71 {ScrollbarWidgetCmd procedure, "set" option} {
     list [catch {.s set 1 2 3} msg] $msg
 } {1 {wrong # args: should be ".s set firstFraction lastFraction"}}
@@ -456,6 +481,10 @@ test scrollbar-5.1 {ScrollbarCmdDeletedProc procedure} {
     rename .s1 {}
     list [info command .s?] [winfo exists .s1]
 } {{} 0}
+
+#
+# COMMON TEST SETUP
+#
 
 catch {destroy .s}
 scrollbar .s -orient vertical -relief sunken -bd 2 -highlightthickness 2
@@ -491,15 +520,17 @@ test scrollbar-6.11.1 {ScrollbarPosition procedure} x11 {
     .s identify 8 4
 } {arrow1}
 test scrollbar-6.11.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .s identify 8 4
 } {trough1}
-test scrollbar-6.12.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
-    .s identify 8 19
+test scrollbar-6.12.1 {ScrollbarPosition procedure} x11 {
+    # x11 scrollbars have arrows 19 pixels height,
+    # but on XQuartz they are 15 pixels height
+    .s identify 8 15
 } {arrow1}
 test scrollbar-6.12.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
-    .s identify 8 19
+    # macOS aqua scrollbars have no arrows nowadays
+    .s identify 8 15
 } {trough1}
 test scrollbar-6.14 {ScrollbarPosition procedure} win {
     .s identify [expr {[winfo width .s] / 2}] 0
@@ -552,18 +583,20 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s]
 						 - [testmetrics cyvscroll .s] - 1}]
 } {trough2}
-test scrollbar-6.29.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
-    .s identify 8 180
+test scrollbar-6.29.1 {ScrollbarPosition procedure} x11 {
+    # x11 scrollbars have arrows at least 19 pixels height
+    # but on XQuartz they are 15 pixels height
+    .s identify 8 184
 } {arrow2}
 test scrollbar-6.29.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
-    .s identify 8 180
+    # macOS aqua scrollbars have no arrows nowadays
+    .s identify 8 184
 } {trough2}
 test scrollbar-6.30.1 {ScrollbarPosition procedure} x11 {
     .s identify 8 195
 } {arrow2}
 test scrollbar-6.30.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .s identify 8 195
 } {trough2}
 test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics win} {
@@ -576,8 +609,11 @@ test scrollbar-6.33 {ScrollbarPosition procedure} win {
 test scrollbar-6.34 {ScrollbarPosition procedure} unix {
     .s identify 4 100
 } {trough2}
-test scrollbar-6.35 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnXQuarz} {
-    .s identify 18 100
+test scrollbar-6.35 {ScrollbarPosition procedure} unix {
+    # Linux x11 scrollbars have arrows 18 pixels width
+    # macOS XQuartz scrollbars have arrows 14 pixels width
+    # macOS aqua scrollbars have no arrows nowadays
+    .s identify 14 100
 } {trough2}
 test scrollbar-6.37 {ScrollbarPosition procedure} win {
     .s identify 0 100
@@ -585,6 +621,10 @@ test scrollbar-6.37 {ScrollbarPosition procedure} win {
 test scrollbar-6.38 {ScrollbarPosition procedure} win {
     .s identify [expr {[winfo width .s] - 1}] 100
 } {trough2}
+
+#
+# COMMON TEST SETUP
+#
 
 catch {destroy .t}
 toplevel .t -width 250 -height 150
@@ -598,7 +638,7 @@ test scrollbar-6.39.1 {ScrollbarPosition procedure} x11 {
     .t.s identify 4 8
 } {arrow1}
 test scrollbar-6.39.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .t.s identify 4 8
 } {trough1}
 test scrollbar-6.40 {ScrollbarPosition procedure} win {
@@ -608,15 +648,18 @@ test scrollbar-6.41.1 {ScrollbarPosition procedure} x11 {
     .t.s identify 82 8
 } {slider}
 test scrollbar-6.41.2 {ScrollbarPosition procedure} aqua {
-    # macOS scrollbars have no arrows nowadays
+    # macOS aqua scrollbars have no arrows nowadays
     .t.s identify 82 8
 } {trough2}
 test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
     .t.s identify [expr {int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s]
 		       - 1}] [expr {[winfo height .t.s] / 2}]
 } {slider}
-test scrollbar-6.44 {ScrollbarPosition procedure} {unix failsOnUbuntu failsOnXQuarz} {
-    .t.s identify 100 18
+test scrollbar-6.44 {ScrollbarPosition procedure} unix {
+    # Linux x11 scrollbars have arrows 18 pixels height
+    # macOS XQuartz scrollbars have arrows 14 pixels height
+    # macOS aqua scrollbars have no arrows nowadays
+    .t.s identify 100 14
 } {trough2}
 test scrollbar-6.46 {ScrollbarPosition procedure} win {
     .t.s identify 100 [expr {[winfo height .t.s] - 1}]
@@ -631,9 +674,14 @@ test scrollbar-7.1 {EventuallyRedraw} {
     lappend result [.s cget -orient]
 } {horizontal vertical}
 
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .t}
 toplevel .t
 wm geometry .t +0+0
+
 test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} notAqua {
     # constrained by notAqua because this test clicks on an arrow of the
     # scrollbar - but macOS has no such arrows in modern scrollbars
@@ -677,7 +725,9 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
     set result
 } {1 0 1}
 
-set l [interp hidden]
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test scrollbar-9.1 {scrollbar widget vs hidden commands} {
@@ -686,7 +736,7 @@ test scrollbar-9.1 {scrollbar widget vs hidden commands} {
     interp hide {} .s
     destroy .s
     list [winfo children .] [interp hidden]
-} [list {} $l]
+} [list {} [interp hidden]]
 
 test scrollbar-10.1 {<MouseWheel> event on scrollbar} -setup {
     destroy .t .s
@@ -696,6 +746,7 @@ test scrollbar-10.1 {<MouseWheel> event on scrollbar} -setup {
     pack [scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -711,6 +762,7 @@ test scrollbar-10.2 {<MouseWheel> event on scrollbar} -setup {
     pack [scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <Shift-MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -725,6 +777,7 @@ test scrollbar-10.3 {<MouseWheel> event on horizontal scrollbar} -setup {
     pack [scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -734,9 +787,9 @@ test scrollbar-10.3 {<MouseWheel> event on horizontal scrollbar} -setup {
 
 test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
     proc destroy_scrollbar {} {
-        if {[winfo exists .top.s]} {
-            destroy .top.s
-        }
+	if {[winfo exists .top.s]} {
+	    destroy .top.s
+	}
     }
     toplevel .top
     scrollbar .top.s
@@ -751,9 +804,9 @@ test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
 } -result {}
 test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
     proc destroy_scrollbar {{y 0}} {
-        if {[winfo exists .top.s]} {
-            destroy .top.s
-        }
+	if {[winfo exists .top.s]} {
+	    destroy .top.s
+	}
     }
     toplevel .top
     wm minsize .top 50 400
@@ -769,9 +822,10 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     destroy .top.s .top
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
+
 catch {destroy .s}
 catch {destroy .t}
-
-# cleanup
 cleanupTests
-return

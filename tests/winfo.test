@@ -1,48 +1,38 @@
-# This file is a Tcl script to test out the "winfo" command.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "winfo" command.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
-
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
-# eatColors --
-# Creates a toplevel window and allocates enough colors in it to
-# use up all the slots in the colormap.
+# NOTE
 #
-# Arguments:
-# w -        Name of toplevel window to create.
-# options -    Options for w, such as "-colormap new".
-
-proc eatColors {w {options ""}} {
-    destroy $w
-    eval toplevel $w $options
-    wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
-    pack $w.c
-    for {set y 0} {$y < 8} {incr y} {
-        for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
-            $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
-                [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
-                -fill $color
-        }
-    }
-    update
-}
-
-# XXX - This test file is woefully incomplete.  At present, only a
+# This test file is woefully incomplete.  At present, only a
 # few of the winfo options are tested.
 
-# ----------------------------------------------------------------------
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import colors
+
+#
+# TESTS
+#
 
 test winfo-1.1 {"winfo atom" command} -body {
     winfo atom
@@ -173,7 +163,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
     update
 
     set x [winfo containing -display .t.f [expr {[winfo rootx .t]+600}] \
-        [expr {[winfo rooty .t.f]+450}]]
+	[expr {[winfo rooty .t.f]+450}]]
     expr {($x == ".") || ($x == "")}
 } -cleanup {
     destroy .t
@@ -239,7 +229,7 @@ test winfo-7.5 {"winfo pathname" command} -body {
 } -returnCodes error -result {expected integer but got "xyz"}
 test winfo-7.6 {"winfo pathname" command} -body {
     winfo pathname 224
-} -returnCodes error -result {window id "224" doesn't exist in this application}
+} -returnCodes error -result {window id "224" does not exist in this application}
 test winfo-7.7 {"winfo pathname" command} -setup {
     destroy .b
     button .b -text "Help"
@@ -294,7 +284,7 @@ test winfo-9.2 {"winfo viewable" command} -body {
 test winfo-9.3 {"winfo viewable" command} -body {
     winfo viewable .
 } -result 1
-test winfo-9.4 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuarz} -body {
+test winfo-9.4 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuartz} -body {
     wm iconify .
     winfo viewable .
 } -cleanup {
@@ -323,7 +313,7 @@ test winfo-9.6 {"winfo viewable" command} -setup {
 } -cleanup {
     deleteWindows
 } -result {0 0}
-test winfo-9.7 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test winfo-9.7 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
     deleteWindows
 } -body {
     frame .f1 -width 100 -height 100 -relief raised -bd 2
@@ -392,18 +382,13 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
     update
 
     list rootx [expr {[winfo rootx .emb] == [winfo rootx .con]}] \
-        rooty [expr {[winfo rooty .emb] == [winfo rooty .con]}]
+	rooty [expr {[winfo rooty .emb] == [winfo rooty .con]}]
 } -cleanup {
     deleteWindows
 } -result {rootx 1 rooty 1}
 
 # Windows does not destroy the container when an embedded window is
 # destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
-if {[tk windowingsystem] == "win32"} {
-   set result_13_2 {embedded 0 container 1}
-} else {
-   set result_13_2 {embedded 0 container 0}
-}
 test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -body {
@@ -419,7 +404,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
     list embedded [winfo exists .emb.b] container [winfo exists .con]
 } -cleanup {
     deleteWindows
-} -result $result_13_2
+} -result [expr {[tk windowingsystem] eq "win32"?{embedded 0 container 1}:{embedded 0 container 0}}]
 
 test winfo-13.3 {destroying container window} -setup {
     deleteWindows
@@ -441,8 +426,10 @@ test winfo-13.3 {destroying container window} -setup {
 test winfo-13.4 {[winfo containing] with embedded windows} -setup {
     deleteWindows
 } -body {
+    wm geometry . +100+100
     frame .con -container 1
     pack .con -expand yes -fill both
+    update
     toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
@@ -452,7 +439,7 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
     pack .b -expand yes -fill both
     update
     string compare .emb.b \
-        [winfo containing [winfo rootx .emb.b] [winfo rooty .emb.b]]
+	[winfo containing [winfo rootx .emb.b] [winfo rooty .emb.b]]
 } -cleanup {
     deleteWindows
 } -result 0
@@ -485,10 +472,13 @@ test winfo-14.4 {mapped at idle time} -setup {
     destroy .t
 } -result 1
 
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
-# cleanup
+testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

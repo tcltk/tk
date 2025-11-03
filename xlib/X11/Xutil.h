@@ -418,11 +418,11 @@ EXTERN int XDestroyRegion(
     Region		/* r */
 );
 
-EXTERN int XEmptyRegion(
+EXTERN Bool XEmptyRegion(
     Region		/* r */
 );
 
-EXTERN int XEqualRegion(
+EXTERN Bool XEqualRegion(
     Region		/* r1 */,
     Region		/* r2 */
 );

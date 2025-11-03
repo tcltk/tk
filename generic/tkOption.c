@@ -219,7 +219,7 @@ static void		ExtendStacks(ElArray *arrayPtr, int leaf);
 static int		GetDefaultOptions(Tcl_Interp *interp,
 			    TkWindow *winPtr);
 static ElArray *	NewArray(int numEls);
-static void		OptionThreadExitProc(ClientData clientData);
+static void		OptionThreadExitProc(void *clientData);
 static void		OptionInit(TkMainInfo *mainPtr);
 static int		ParsePriority(Tcl_Interp *interp, const char *string);
 static int		ReadOptionFile(Tcl_Interp *interp, Tk_Window tkwin,
@@ -521,7 +521,7 @@ Tk_GetOption(
     if (masqName != NULL) {
 	char *masqClass;
 	Tk_Uid nodeId, winClassId, winNameId;
-	TkSizeT classNameLength;
+	Tcl_Size classNameLength;
 	Element *nodePtr, *leafPtr;
 	static const int searchOrder[] = {
 	    EXACT_NODE_NAME, WILDCARD_NODE_NAME, EXACT_NODE_CLASS,
@@ -610,7 +610,7 @@ Tk_GetOption(
 
 int
 Tk_OptionObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of Tcl_Obj arguments. */
     Tcl_Obj *const objv[])	/* Tcl_Obj arguments. */
@@ -690,7 +690,7 @@ Tk_OptionObjCmd(
 	value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, TCL_INDEX_NONE));
 	}
 	break;
     }
@@ -799,7 +799,7 @@ TkOptionClassChanged(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (winPtr->optionLevel == TCL_INDEX_NONE) {
+    if (winPtr->optionLevel < 0) {
 	return;
     }
 
@@ -881,7 +881,7 @@ ParsePriority(
 		    "bad priority level \"%s\": must be "
 		    "widgetDefault, startupFile, userDefault, "
 		    "interactive, or a number between 0 and 100", string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", (char *)NULL);
 	    return -1;
 	}
     }
@@ -965,7 +965,7 @@ AddFromString(
 	    if ((*src == '\0') || (*src == '\n')) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"missing colon on line %d", lineNum));
-		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "COLON", NULL);
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "COLON", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -1002,7 +1002,7 @@ AddFromString(
 	if (*src == '\0') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "missing value on line %d", lineNum));
-	    Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1016,7 +1016,7 @@ AddFromString(
 	    if (*src == '\0') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"missing newline on line %d", lineNum));
-		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "NEWLINE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "NEWLINE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (*src == '\\'){
@@ -1085,7 +1085,7 @@ ReadOptionFile(
     const char *realName;
     Tcl_Obj *buffer;
     int result;
-    TkSizeT bufferSize;
+    Tcl_Size bufferSize;
     Tcl_Channel chan;
     Tcl_DString newName;
 
@@ -1095,8 +1095,8 @@ ReadOptionFile(
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't read options from a file in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", NULL);
+		"can't read options from a file in a safe interpreter", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1115,7 +1115,7 @@ ReadOptionFile(
     buffer = Tcl_NewObj();
     Tcl_IncrRefCount(buffer);
     Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
-    bufferSize = Tcl_ReadChars(chan, buffer, -1, 0);
+    bufferSize = Tcl_ReadChars(chan, buffer, TCL_INDEX_NONE, 0);
     if (bufferSize == TCL_IO_FAILURE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file \"%s\": %s",
@@ -1560,7 +1560,7 @@ GetDefaultOptions(
 				 * associated with this. */
 {
     char *regProp, **regPropPtr = &regProp;
-    int result, actualFormat;
+    int result = TCL_OK, actualFormat;
     unsigned long numItems, bytesAfter;
     Atom actualType;
 
@@ -1589,8 +1589,15 @@ GetDefaultOptions(
     if (regProp != NULL) {
 	XFree(regProp);
     }
-    result = ReadOptionFile(interp, (Tk_Window) winPtr, "~/.Xdefaults",
-	    TK_USER_DEFAULT_PRIO);
+    if (Tcl_EvalEx(interp, "file tildeexpand ~/.Xdefaults",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *xdefaults = Tcl_GetObjResult(interp);
+	Tcl_IncrRefCount(xdefaults);
+	Tcl_ResetResult(interp);
+	result = ReadOptionFile(interp, (Tk_Window)winPtr, Tcl_GetString(xdefaults),
+		TK_USER_DEFAULT_PRIO);
+	Tcl_DecrRefCount(xdefaults);
+    }
     return result;
 }
 

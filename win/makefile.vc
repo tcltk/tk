@@ -17,14 +17,12 @@
 # General usage:
 #   nmake [-nologo] -f makefile.vc [TARGET|MACRODEF [TARGET|MACRODEF] [...]]
 #
-# For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/trunk/tip/477.md)
-# or examine Sections 6-8 in rules.vc. This makefile has the following
+# For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/main/tip/477.md)
+# or examine Sections 7-9 in rules.vc. This makefile has the following
 # values for the OPTS macro in addition to the ones described there.
 #       noembed  = Embeds Tcl scripts into the wish executable. Currently only
 #                  applicable for static builds. Non-static builds currently
 #                  never embed.
-#	noxp     = If you do not have the uxtheme.h header then you
-#                  cannot include support for XP themeing.
 #	square   = Include the demo square widget.
 #
 # Possible values for TARGET are:
@@ -34,7 +32,7 @@
 #	core     -- Only builds the core [tkXX.(dll|lib)].
 #	all      -- Builds everything.
 #	test     -- Builds and runs the test suite.
-#	tktest   -- Just builds the binaries for the test suite.
+#	tktest   -- Just builds the test shell.
 #	install  -- Installs the built binaries and libraries to $(INSTALLDIR)
 #		    as the root of the install tree.
 #	cwish    -- Builds a console version of wish.
@@ -87,17 +85,9 @@ DEFAULT_BUILD_TARGET = release
 # We have a custom resource file
 RCFILE = tk.rc
 
-USE_WIDECHAR_API  = 0
-
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
-
-!if ($(TCL_MAJOR_VERSION) > 8) || ($(TCL_MAJOR_VERSION) == 8 && $(TCL_MINOR_VERSION) > 6)
-USING_PRE87_TCL = 0
-!else
-USING_PRE87_TCL = 1
-!endif
 
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
@@ -109,16 +99,9 @@ USING_PRE87_TCL = 1
 
 # Extra makefile options processing for non-standard OPTS values ...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
-HAVE_UXTHEME_H    = 1
 TTK_SQUARE_WIDGET = 0
-TK_EMBED_SCRIPTS  = $(STATIC_BUILD)
+TK_EMBED_SCRIPTS  = 1
 !else
-!if [nmakehlp -f $(OPTS) "noxp"]
-!message *** Exclude support for XP theme
-HAVE_UXTHEME_H  = 0
-!else
-HAVE_UXTHEME_H  = 1
-!endif
 !if [nmakehlp -f "$(OPTS)" "square"]
 !message *** Include ttk square demo widget
 TTK_SQUARE_WIDGET   = 1
@@ -130,12 +113,8 @@ TTK_SQUARE_WIDGET   = 0
 TK_EMBED_SCRIPTS = 0
 !else
 !message *** Tk script library will be appended to the binary.
-TK_EMBED_SCRIPTS = $(STATIC_BUILD)
+TK_EMBED_SCRIPTS = 1
 !endif
-!endif
-
-!if $(USING_PRE87_TCL)
-TK_EMBED_SCRIPTS = 0
 !endif
 
 TK_NO_DEPRECATED = 0
@@ -145,9 +124,9 @@ TK_NO_DEPRECATED = 1
 !endif
 !endif
 
-WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
+WISHC		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
-TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
+TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
@@ -162,8 +141,8 @@ TKTESTOBJS = \
 	$(TMP_DIR)\testMain.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\tkTest.obj \
-	$(TMP_DIR)\tkOldTest.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\tkWinTest.obj \
+	$(TMP_DIR)\tktest.res
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -291,39 +270,40 @@ TKOBJS = \
 !endif
 
 TTK_OBJS = \
-        $(TMP_DIR)\ttkWinMonitor.obj \
-        $(TMP_DIR)\ttkWinTheme.obj \
-        $(TMP_DIR)\ttkWinXPTheme.obj \
-        $(TMP_DIR)\ttkBlink.obj \
-        $(TMP_DIR)\ttkButton.obj \
-        $(TMP_DIR)\ttkCache.obj \
-        $(TMP_DIR)\ttkClamTheme.obj \
-        $(TMP_DIR)\ttkClassicTheme.obj \
-        $(TMP_DIR)\ttkDefaultTheme.obj \
-        $(TMP_DIR)\ttkElements.obj \
-        $(TMP_DIR)\ttkEntry.obj \
-        $(TMP_DIR)\ttkFrame.obj \
-        $(TMP_DIR)\ttkImage.obj \
-        $(TMP_DIR)\ttkInit.obj \
-        $(TMP_DIR)\ttkLabel.obj \
-        $(TMP_DIR)\ttkLayout.obj \
-        $(TMP_DIR)\ttkManager.obj \
-        $(TMP_DIR)\ttkNotebook.obj \
-        $(TMP_DIR)\ttkPanedwindow.obj \
-        $(TMP_DIR)\ttkProgress.obj \
-        $(TMP_DIR)\ttkScale.obj \
-        $(TMP_DIR)\ttkScrollbar.obj \
-        $(TMP_DIR)\ttkScroll.obj \
-        $(TMP_DIR)\ttkSeparator.obj \
-        $(TMP_DIR)\ttkSquare.obj \
-        $(TMP_DIR)\ttkState.obj \
-        $(TMP_DIR)\ttkTagSet.obj \
-        $(TMP_DIR)\ttkTheme.obj \
-        $(TMP_DIR)\ttkTrace.obj \
-        $(TMP_DIR)\ttkTrack.obj \
-        $(TMP_DIR)\ttkTreeview.obj \
-        $(TMP_DIR)\ttkWidget.obj \
-        $(TMP_DIR)\ttkStubInit.obj
+	$(TMP_DIR)\ttkWinMonitor.obj \
+	$(TMP_DIR)\ttkWinTheme.obj \
+	$(TMP_DIR)\ttkWinVistaTheme.obj \
+	$(TMP_DIR)\ttkBlink.obj \
+	$(TMP_DIR)\ttkButton.obj \
+	$(TMP_DIR)\ttkCache.obj \
+	$(TMP_DIR)\ttkClamTheme.obj \
+	$(TMP_DIR)\ttkClassicTheme.obj \
+	$(TMP_DIR)\ttkDefaultTheme.obj \
+	$(TMP_DIR)\ttkElements.obj \
+	$(TMP_DIR)\ttkEntry.obj \
+	$(TMP_DIR)\ttkFrame.obj \
+	$(TMP_DIR)\ttkImage.obj \
+	$(TMP_DIR)\ttkInit.obj \
+	$(TMP_DIR)\ttkLabel.obj \
+	$(TMP_DIR)\ttkLayout.obj \
+	$(TMP_DIR)\ttkManager.obj \
+	$(TMP_DIR)\ttkNotebook.obj \
+	$(TMP_DIR)\ttkPanedwindow.obj \
+	$(TMP_DIR)\ttkProgress.obj \
+	$(TMP_DIR)\ttkScale.obj \
+	$(TMP_DIR)\ttkScrollbar.obj \
+	$(TMP_DIR)\ttkScroll.obj \
+	$(TMP_DIR)\ttkSeparator.obj \
+	$(TMP_DIR)\ttkSquare.obj \
+	$(TMP_DIR)\ttkState.obj \
+	$(TMP_DIR)\ttkTagSet.obj \
+	$(TMP_DIR)\ttkTheme.obj \
+	$(TMP_DIR)\ttkToggleswitch.obj \
+	$(TMP_DIR)\ttkTrace.obj \
+	$(TMP_DIR)\ttkTrack.obj \
+	$(TMP_DIR)\ttkTreeview.obj \
+	$(TMP_DIR)\ttkWidget.obj \
+	$(TMP_DIR)\ttkStubInit.obj
 
 TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \
@@ -347,10 +327,7 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
 CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
-		 /DHAVE_STRINGS_H=1 /DTCL_UTF_MAX=3 \
-!if $(HAVE_UXTHEME_H)
-		 /DHAVE_UXTHEME_H=1 \
-!endif
+		 /DHAVE_STRINGS_H=1 \
 !if $(TTK_SQUARE_WIDGET)
 		 /DTTK_SQUARE_WIDGET=1 \
 !endif
@@ -375,10 +352,7 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 # Project specific targets
 #---------------------------------------------------------------------
 
-release:  setup $(TKSTUBLIB) $(WISH)
-!if !$(USING_PRE87_TCL)
-release:  libtkzip embed
-!endif
+release:  setup $(TKSTUBLIB) $(WISH) libtkzip embed
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
 cwish:	  $(WISHC)
@@ -388,9 +362,6 @@ libtkzip: setup $(TKSCRIPTZIP)
 embed:    setup $(WISH) $(WISHSCRIPTZIP)
 	@copy /y /b "$(WISH)"+"$(WISHSCRIPTZIP)" "$(WISH)"
 !else
-# Note this is currently dead code as TK_EMBED_SCRIPTS is always 0
-# for non-static builds as the C code does not currently setup up
-# a VFS for a non-static wish.
 embed:    setup $(TKLIB) $(TKSCRIPTZIP)
 	@copy /y /b "$(TKLIB)"+"$(TKSCRIPTZIP)" "$(TKLIB)"
 !endif
@@ -522,7 +493,8 @@ $(TKSCRIPTZIP): .PHONY
 	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
 	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
 	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
-	@cd "$(OUT_DIR)" && $(TCLSH) <<
+	@$(TCLSH) <<
+cd {$(OUT_DIR)}
 file delete -force {$@}
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<
@@ -531,9 +503,10 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@echo Building Wish Tcl+Tk library zip file
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
-	@cd "$(OUT_DIR)" && $(TCLSH) <<
+	@$(TCLSH) <<
+cd {$(OUT_DIR)}
 file delete -force {$@}
-zipfs mount mnt "$(TCLSCRIPTZIP:\=/)"
+zipfs mount "$(TCLSCRIPTZIP:\=/)" mnt
 file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<
@@ -569,33 +542,37 @@ HHC="%ProgramFiles(x86)%\HTML Help Workshop\hhc.exe"
 !else
 HHC="%ProgramFiles%\HTML Help Workshop\hhc.exe"
 !endif
-HTMLDIR=$(ROOT)\html
+HTMLDIR=$(OUT_DIR)\html
 HTMLBASE=TclTk$(TCL_VERSION)
 HHPFILE=$(HTMLDIR)\$(HTMLBASE).hhp
 CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 
-htmlhelp: chmsetup $(CHMFILE)
+htmlhelp: $(CHMFILE)
 
-$(CHMFILE): $(DOCDIR)\*
-	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
+htmldocs: $(DOCDIR)\*
+	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl "--htmldir=$(HTMLDIR)"
+
+$(CHMFILE): htmldocs chmsetup
 	@echo Compiling HTML help project
-	@"$(HHC)" <<$(HHPFILE) >NUL
+	-"$(HHC)" <<$(HHPFILE) >NUL
 [OPTIONS]
 Compatibility=1.1 or later
 Compiled file=$(HTMLBASE).chm
+Default topic=index.html
 Display compile progress=no
 Error log file=$(HTMLBASE).log
+Full-text search=Yes
 Language=0x409 English (United States)
 Title=Tcl/Tk $(TCL_DOTVERSION) Help
 [FILES]
-contents.htm
+index.html
 docs.css
-Keywords
-TclCmd
-TclLib
-TkCmd
-TkLib
-UserCmd
+Keywords\*.html
+TclCmd\*.html
+TclLib\*.html
+TkCmd\*.html
+TkLib\*.html
+UserCmd\*.html
 <<
 
 chmsetup:
@@ -633,9 +610,6 @@ $(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
-$(TMP_DIR)\tkOldTest.obj: $(GENERICDIR)\tkOldTest.c
-	$(cc32) $(appcflags_nostubs) -Fo$@ $?
-
 $(TMP_DIR)\tkWinTest.obj: $(WIN_DIR)\tkWinTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
@@ -652,7 +626,7 @@ $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) /DUNICODE /D_UNICODE -Fo$@ $?
 
 $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
-	$(cc32) $(pkgcflags) 		\
+	$(cc32) $(pkgcflags)		\
 		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
 		-Fo$@ $?
 
@@ -701,7 +675,6 @@ $(TKOBJS)
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\tk.res: \
-    $(RCDIR)\buttons.bmp \
     $(RCDIR)\cursor*.cur \
     $(RCDIR)\tk.ico
 
@@ -736,6 +709,7 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
@@ -756,20 +730,12 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {![package vsatisfies [package provide Tcl] 8.6-]} return
+if {![package vsatisfies [package provide Tcl] 9.0]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin cygtcl9tk$(DOTVERSION).dll]]]
 } else {
-    if {[package vsatisfies [package provide Tcl] 9.0]} {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME9)]]]
-    } else {
-	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME8)]]]
-    }
+    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
 package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
@@ -785,9 +751,7 @@ install-libraries:
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-!if !$(USING_PRE87_TCL)
 	@$(CPY) "$(TKSCRIPTZIP)" "$(LIB_INSTALL_DIR)"
-!endif
 !if !$(TK_EMBED_SCRIPTS)
 	@echo installing script library
 	@$(CPY) "$(LIBDIR)\*" "$(SCRIPT_INSTALL_DIR)\"

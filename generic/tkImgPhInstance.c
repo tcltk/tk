@@ -21,6 +21,10 @@
 #include "tkImgPhoto.h"
 #include "tkPort.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Declaration for internal Xlib function used here:
  */
@@ -48,7 +52,7 @@ static int		CountBits(unsigned mask);
 static void		GetColorTable(PhotoInstance *instancePtr);
 static void		FreeColorTable(ColorTable *colorPtr, int force);
 static void		AllocateColors(ColorTable *colorPtr);
-static void		DisposeColorTable(ClientData clientData);
+static void		DisposeColorTable(void *clientData);
 static int		ReclaimColors(ColorTableId *id, int numColors);
 
 /*
@@ -210,11 +214,11 @@ TkImgPhotoConfigureInstance(
  *----------------------------------------------------------------------
  */
 
-ClientData
+void *
 TkImgPhotoGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData modelData)	/* Pointer to our model structure for the
+    void *modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
     PhotoModel *modelPtr = (PhotoModel *)modelData;
@@ -225,6 +229,9 @@ TkImgPhotoGet(
     char buf[TCL_INTEGER_SPACE * 3];
     XColor *white, *black;
     XGCValues gcValues;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+    int gcmask;
+#endif
 
     /*
      * Table of "best" choices for palette for PseudoColor displays with
@@ -257,7 +264,11 @@ TkImgPhotoGet(
     for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	if ((colormap == instancePtr->colormap)
-		&& (Tk_Display(tkwin) == instancePtr->display)) {
+	    && (Tk_Display(tkwin) == instancePtr->display)
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+	    && (Tk_Visual(tkwin) == instancePtr->visualInfo.visual)
+#endif
+	    ) {
 	    /*
 	     * Re-use this instance.
 	     */
@@ -314,6 +325,10 @@ TkImgPhotoGet(
     nGreen = nBlue = 0;
     mono = 1;
     instancePtr->visualInfo = *visInfoPtr;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+    gcmask = 0;
+    instancePtr->visualInfo.visual = Tk_Visual(tkwin);
+#endif
     switch (visInfoPtr->c_class) {
     case DirectColor:
     case TrueColor:
@@ -321,6 +336,14 @@ TkImgPhotoGet(
 	nGreen = 1 << CountBits(visInfoPtr->green_mask);
 	nBlue = 1 << CountBits(visInfoPtr->blue_mask);
 	mono = 0;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+	if (visInfoPtr->depth > 24) {
+	    gcValues.plane_mask = visInfoPtr->red_mask
+		    | visInfoPtr->green_mask
+		    | visInfoPtr->blue_mask;
+	    gcmask = GCPlaneMask;
+	}
+#endif
 	break;
     case PseudoColor:
     case StaticColor:
@@ -343,12 +366,12 @@ TkImgPhotoGet(
 	nRed = 1 << visInfoPtr->depth;
 	break;
     }
-    XFree((char *) visInfoPtr);
+    XFree(visInfoPtr);
 
     if (mono) {
-	sprintf(buf, "%d", nRed);
+	snprintf(buf, sizeof(buf), "%d", nRed);
     } else {
-	sprintf(buf, "%d/%d/%d", nRed, nGreen, nBlue);
+	snprintf(buf, sizeof(buf), "%d/%d/%d", nRed, nGreen, nBlue);
     }
     instancePtr->defaultPalette = Tk_GetUid(buf);
 
@@ -365,8 +388,13 @@ TkImgPhotoGet(
     Tk_FreeColor(white);
     Tk_FreeColor(black);
     gcValues.graphics_exposures = False;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
     instancePtr->gc = Tk_GetGC(tkwin,
-	    GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+	gcmask|GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+#else
+    instancePtr->gc = Tk_GetGC(tkwin,
+	GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+#endif
 
     /*
      * Set configuration options and finish the initialization of the
@@ -602,7 +630,7 @@ BlendComplexAlpha(
 
 void
 TkImgPhotoDisplay(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
@@ -688,7 +716,7 @@ TkImgPhotoDisplay(
 	Tk_DeleteErrorHandler(handler);
     } else {
 	/*
-	 * modelPtr->region describes which parts of the image contain valid
+	 * modelPtr->validRegion describes which parts of the image contain valid
 	 * data. We set this region as the clip mask for the gc, setting its
 	 * origin appropriately, and use it when drawing the image.
 	 */
@@ -728,14 +756,13 @@ TkImgPhotoDisplay(
 
 void
 TkImgPhotoFree(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
-    Display *display)		/* Display containing window that used
+    TCL_UNUSED(Display *))	/* Display containing window that used
 				 * image. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     ColorTable *colorPtr;
-    (void)display;
 
     if (instancePtr->refCount-- > 1) {
 	return;
@@ -1451,7 +1478,7 @@ AllocateColors(
 
 static void
 DisposeColorTable(
-    ClientData clientData)	/* Pointer to the ColorTable whose
+    void *clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
     ColorTable *colorPtr = (ColorTable *)clientData;
@@ -1585,7 +1612,7 @@ ReclaimColors(
 
 void
 TkImgDisposeInstance(
-    ClientData clientData)	/* Pointer to the instance whose resources are
+    void *clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;

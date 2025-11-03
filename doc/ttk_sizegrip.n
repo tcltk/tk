@@ -10,7 +10,7 @@
 .SH NAME
 ttk::sizegrip \- Bottom-right corner resize widget
 .SH SYNOPSIS
-\fBttk::sizegrip\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::sizegrip\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -29,7 +29,7 @@ Sizegrip widgets support the standard commands
 (see \fBttk::widget\fR).
 .SH "PLATFORM-SPECIFIC NOTES"
 .PP
-On Mac OSX, toplevel windows automatically include a built-in
+On macOS, toplevel windows automatically include a built-in
 size grip by default.
 Adding a \fBttk::sizegrip\fR there is harmless, since
 the built-in grip will just mask the widget.
@@ -37,14 +37,14 @@ the built-in grip will just mask the widget.
 .PP
 Using pack:
 .CS
-pack [ttk::frame $top.statusbar] \-side bottom \-fill x
-pack [\fBttk::sizegrip\fR $top.statusbar.grip] \-side right \-anchor se
+pack [ttk::frame $top.statusbar] -side bottom -fill x
+pack [\fBttk::sizegrip\fR $top.statusbar.grip] -side right -anchor se
 .CE
 .PP
 Using grid:
 .CS
 grid [\fBttk::sizegrip\fR $top.statusbar.grip] \e
-    \-row $lastRow \-column $lastColumn \-sticky se
+    -row $lastRow -column $lastColumn -sticky se
 # ... optional: add vertical scrollbar in $lastColumn,
 # ... optional: add horizontal scrollbar in $lastRow
 .CE

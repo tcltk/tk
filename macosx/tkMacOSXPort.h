@@ -5,9 +5,9 @@
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,7 +25,6 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -39,9 +38,7 @@
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#ifdef HAVE_INTTYPES_H
-#    include <inttypes.h>
-#endif
+#include <inttypes.h>
 #include <unistd.h>
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
@@ -131,7 +128,7 @@
  */
 
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
+	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.

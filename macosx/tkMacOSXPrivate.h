@@ -135,6 +135,12 @@
     }
 
 /*
+ *  This is set to 1 if tests are being run. Defined in tkMacOSXInit.c.
+ */
+
+extern int testsAreRunning;
+
+/*
  *  The structure of a 32-bit XEvent keycode on macOS. It may be viewed as
  *  an unsigned int or as having either two or three bitfields.
  */
@@ -166,7 +172,7 @@ typedef union MacKeycode_t {
 
 #define ON_KEYPAD(virt) ((virt >= 0x41) && (virt <= 0x5C))
 #define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) && \
-                               ((keychar < 0xF700) || keychar >= 0xF8FF))
+			       ((keychar < 0xF700) || keychar >= 0xF8FF))
 
 /*
  * An "index" is 2-bit bitfield showing the state of the Option and Shift
@@ -219,18 +225,8 @@ typedef struct TkMacOSXDrawingContext {
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
 			    HIShapeRef rgn);
-MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
-MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
-			    HIMutableShapeRef inDestShape,
-			    HIShapeRef inSrcShape);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
-			    HIShapeRef inShape2, HIMutableShapeRef outResult);
 MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
 MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*
@@ -250,14 +246,15 @@ MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
-			    unsigned long imageBackground, CGRect imageBounds,
-			    CGRect srcBounds, CGRect dstBounds);
+			    unsigned long imageBackground, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
+MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
+MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
@@ -277,15 +274,15 @@ MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
 MODULE_SCOPE void	TkMacOSXSelDeadWindow(TkWindow *winPtr);
 MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
 			    NSWindow *macWindow);
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXStandardAboutPanelObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXIconBitmapObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXNSImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXStandardAboutPanelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXIconBitmapObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
-MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXRegisterServiceWidgetObjCmd;
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
-MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
@@ -297,6 +294,8 @@ MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
+					     NSWindow *ignore);
 
 #pragma mark Private Objective-C Classes
 
@@ -327,14 +326,11 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
-    NSThread *_backgoundLoop;
 }
 @property int poolLock;
 @property int macOSVersion;
-@property Bool isDrawing;
-@property Bool needsToDraw;
-@property Bool isSigned;
 @property Bool tkLiveResizeEnded;
+@property Bool tkWillExit;
 
 /*
  * Persistent state variables used by processMouseEvent.
@@ -403,7 +399,7 @@ VISIBILITY_HIDDEN
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void)handleURLEvent:                (NSAppleEventDescriptor*)event
-	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
+		   withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -416,12 +412,9 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    Bool _tkNeedsDisplay;
-    NSRect _tkDirtyRect;
     NSTrackingArea *trackingArea;
 }
-@property Bool tkNeedsDisplay;
-@property NSRect tkDirtyRect;
+@property CGContextRef tkLayerBitmapContext;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -430,10 +423,9 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) addTkDirtyRect: (NSRect) rect;
-- (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
+- (void) resetTkLayerBitmapContext;
 @end
 
 @interface NSWindow(TKWm)
@@ -465,6 +457,9 @@ VISIBILITY_HIDDEN
 @property Window tkWindow;
 @end
 
+@interface TKPanel(TKWm)
+- (void)    tkLayoutChanged;
+@end
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @interface NSMenu(TKUtils)
@@ -473,6 +468,14 @@ VISIBILITY_HIDDEN
 + (id)menuWithTitle:(NSString *)title submenus:(NSArray *)submenus;
 - (NSMenuItem *)itemWithSubmenu:(NSMenu *)submenu;
 - (NSMenuItem *)itemInSupermenu;
+@end
+
+// Need undocumented appearance: argument
+@interface NSMenu(TKMenu)
+- (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
+		      atLocation:(NSPoint)location
+			  inView:(NSView *)view
+		      appearance:(NSAppearance *)appearance;
 @end
 
 @interface NSMenuItem(TKUtils)
@@ -530,18 +533,11 @@ VISIBILITY_HIDDEN
  *
  * TKNSString --
  *
- * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
- * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes. Instead, when using these versions of Tcl, Tk
- * uses the CESU-8 encoding internally.  This encoding is similar to UTF-8
- * except that it allows encoding surrogate characters as 3-byte sequences
- * using the same algorithm which UTF-8 uses for non-surrogates.  This means
- * that a non-BMP character is encoded as a string of length 6.  Apple's
- * NSString class does not provide a constructor which accepts a CESU-8 encoded
+ * Tcl uses modified UTF-8 as internal encoding.  Apple's NSString class
+ * does not provide a constructor which accepts a modified UTF-8 encoded
  * byte sequence as initial data.  So we add a new class which does provide
  * such a constructor.  It also has a DString property which is a DString whose
- * string pointer is a byte sequence encoding the NSString with the current Tk
- * encoding, namely UTF-8 if TCL_UTF_MAX >= 4 or CESU-8 if TCL_UTF_MAX = 3.
+ * string pointer is a byte sequence encoding the NSString with modified UTF-8.
  *
  *---------------------------------------------------------------------------
  */

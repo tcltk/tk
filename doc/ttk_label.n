@@ -10,7 +10,7 @@
 .SH NAME
 ttk::label \- Display a text string and/or image
 .SH SYNOPSIS
-\fBttk::label\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::label\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -18,9 +18,10 @@ A \fBttk::label\fR widget displays a textual label and/or image.
 The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
-\-anchor	\-class	\-compound	\-cursor
-\-font	\-foreground
-\-image	\-justify	\-padding	\-state	\-style	\-takefocus
+\-anchor	\-class	\-compound
+\-cursor	\-font	\-foreground
+\-image	\-justify	\-padding
+\-state	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
 .SE
@@ -36,7 +37,7 @@ Valid values are
 and \fBsunken\fR.
 .OP \-wraplength wrapLength WrapLength
 Specifies the maximum line length (in pixels).
-If this option is less than or equal to zero,
+If this option is negative or zero,
 then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.

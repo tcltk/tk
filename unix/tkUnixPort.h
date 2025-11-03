@@ -5,8 +5,8 @@
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
- * Copyright (c) 1991-1993 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1991-1993 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,7 +26,6 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -40,9 +39,7 @@
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#ifdef HAVE_INTTYPES_H
-#    include <inttypes.h>
-#endif
+#include <inttypes.h>
 #include <unistd.h>
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
@@ -100,7 +97,7 @@
 #   define NBBY 8
 #endif
 
-#include "tkIntXlibDecls.h"
+#include "tkIntXlibDecls.h"  /* IWYU pragma: export */
 #define UINT unsigned int
 #define HWND void *
 #define HDC void *
@@ -149,22 +146,13 @@
 #endif
 
 /*
- * These calls implement native bitmaps which are not supported under
- * UNIX.  The macros eliminate the calls.
- */
-
-#define TkpDefineNativeBitmaps()
-#define TkpCreateNativeBitmap(display, source) None
-#define TkpGetNativeAppBitmap(display, name, w, h) None
-
-/*
  * This macro stores a representation of the window handle in a string.
  * This should perhaps use the real size of an XID.
  */
 
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
+	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 #endif
 
 #endif /* _UNIXPORT */

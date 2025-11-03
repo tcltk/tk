@@ -278,6 +278,77 @@ TkSubtractRegion(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    CombineRgn((HRGN)dst, (HRGN)src, NULL, RGN_COPY);
+}
+
+int
+XUnionRegion(
+    Region srca,
+    Region srcb,
+    Region dr_return)
+{
+    CombineRgn((HRGN)dr_return, (HRGN)srca, (HRGN)srcb, RGN_OR);
+    return 1;
+}
+
+int
+XOffsetRegion(
+    Region r,
+    int dx,
+    int dy)
+{
+    OffsetRgn((HRGN)r, dx, dy);
+    return 1;
+}
+
+Bool
+XPointInRegion(
+    Region r,
+    int x,
+    int y)
+{
+    return PtInRegion((HRGN)r, x, y);
+}
+
+Bool
+XEqualRegion(
+    Region r1,
+    Region r2)
+{
+    return EqualRgn((HRGN)r1, (HRGN)r2);
+}
+
+int
+XXorRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
+{
+    CombineRgn((HRGN)dr_return, (HRGN)sra, (HRGN)srb, RGN_XOR);
+    return 0;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

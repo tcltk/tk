@@ -1,15 +1,30 @@
 # This file is a Tcl script to test the procedures in tkConfig.c,
-# which comprise the new new option configuration system.  It is
-# organized in the standard "white-box" fashion for Tcl tests.
+# which comprise the new new option configuration system.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc killTables {} {
     # Note: it's important to delete chain2 before chain1, because
@@ -19,12 +34,18 @@ proc killTables {} {
     foreach t {alltypes chain3 chain2 chain1 configerror internal
 	    new notenoughparams twowindows} {
 	    while {[testobjconfig info $t] != ""} {
-	        testobjconfig delete $t
+		testobjconfig delete $t
 	    }
     }
 }
 
+#
+# TESTS
+#
 
+#
+# COMMON TEST SETUP
+#
 option clear
 deleteWindows
 if {[testConstraint testobjconfig]} {
@@ -135,8 +156,6 @@ test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
 } -cleanup {
     killTables
 } -result {{3 4 -three 2 2 -one} {2 2 -one} {} {2 2 -one}}
-
-# No tests for DestroyOptionHashTable; couldn't figure out how to test.
 
 test config-3.1 {Tk_InitOptions - priority of chained tables} -constraints {
     testobjconfig
@@ -458,20 +477,19 @@ test config-4.28 {DoObjConfig - string table} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok
 test config-4.29 {DoObjConfig - invalid string table} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -stringtable foo
 } -cleanup {
     killTables
 } -returnCodes error -result {bad stringtable "foo": must be one, two, three, four, or ""}
 test config-4.29a {DoObjConfig - invalid string table} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -stringtable2 foo
 } -cleanup {
     killTables
 } -returnCodes error -result {bad stringtable2 "foo": must be one, two, or ""}
-
 test config-4.30 {DoObjConfig - new string table} -constraints {
     testobjconfig
 } -body {
@@ -781,7 +799,7 @@ test config-4.70 {DoObjConfig - relief} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok -result flat
 test config-4.71 {DoObjConfig - invalid relief} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -relief foo
 } -cleanup {
@@ -875,7 +893,7 @@ test config-4.84 {DoObjConfig - justify} -constraints testobjconfig -body {
 } -cleanup {
     killTables
 } -returnCodes ok -result center
-test config-4.85 {DoObjConfig - invalid justify} -constraints {testobjconfig needsTcl87} -body {
+test config-4.85 {DoObjConfig - invalid justify} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -justify foo
 } -cleanup {
     killTables
@@ -917,7 +935,7 @@ test config-4.90 {DoObjConfig - anchor} -constraints testobjconfig -body {
 } -returnCodes ok -result center
 test config-4.91 {DoObjConfig - invalid anchor} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -anchor foo
-} -constraints needsTcl87 -cleanup {
+} -cleanup {
     killTables
 } -returnCodes error -result {bad anchor "foo": must be n, ne, e, se, s, sw, w, nw, center, or ""}
 test config-4.92 {DoObjConfig - new anchor} -constraints testobjconfig -body {
@@ -958,7 +976,7 @@ test config-4.97 {DoObjConfig - invalid pixel} -constraints testobjconfig -body 
     testobjconfig alltypes .foo -pixel foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad screen distance "foo"}
+} -returnCodes error -result {expected screen distance or "" but got "foo"}
 test config-4.98 {DoObjConfig - new pixel} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -pixel 42m
     .foo configure -pixel 3c
@@ -1118,7 +1136,7 @@ test config-4.115 {DoObjConfig - custom internal value} -constraints {
 }  -result {THIS IS A TEST}
 
 
-test config-5.1 {ObjectIsEmpty - object is already string} -constraints {
+test config-5.1 {TkObjIsEmpty - object is already string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [format ""]
@@ -1126,14 +1144,14 @@ test config-5.1 {ObjectIsEmpty - object is already string} -constraints {
 } -cleanup {
     killTables
 }  -result {}
-test config-5.2 {ObjectIsEmpty - object is already string} -constraints {
+test config-5.2 {TkObjIsEmpty - object is already string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [format " "]
 } -cleanup {
     killTables
 } -returnCodes error -result {unknown color name " "}
-test config-5.3 {ObjectIsEmpty - must convert back to string} -constraints {
+test config-5.3 {TkObjIsEmpty - must convert back to string} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .foo -color [list]
@@ -1192,10 +1210,13 @@ test config-6.6 {GetOptionFromObj - synonym} -constraints testobjconfig -body {
     killTables
 } -result red
 
-
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-7.1 {Tk_SetOptions - basics} -constraints testobjconfig -body {
     .a configure -color green -rel sunken
      list [.a cget -color] [.a cget -relief]
@@ -1280,17 +1301,20 @@ test config-7.14 {Tk_SetOptions - error in DoObjConfig with custom option} -cons
     (processing "-custom" option)
     invoked from within
 ".a configure -custom bad"}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} -constraints {
     testobjconfig
 } -body {
     testobjconfig alltypes .a
     .a csave -color green -color black -color blue \
-        -color #ffff00 -color #ff00ff -color bogus \
+	-color #ffff00 -color #ff00ff -color bogus \
 } -cleanup {
     killTables
 } -returnCodes error -result {unknown color name "bogus"}
@@ -1560,10 +1584,13 @@ test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} -co
     .foo configure -custom "foobar"
     destroy .foo
 } -result {}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-10.1 {Tk_GetOptionInfo - one item} -constraints testobjconfig -body {
     testobjconfig alltypes .foo
@@ -1595,14 +1622,15 @@ test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testo
 } -cleanup {
     destroy .foo
 } -result {{-three three Three three xyzzy} {-four four Four four four} {-two two Two {two and a half} {two and a half}} {-oneAgain oneAgain OneAgain {one again} {one again}} {-one one One one asdf} {-two two Two two {two and a half}}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
+
 test config-11.1 {GetConfigList - synonym} -constraints testobjconfig -body {
     lindex [.a configure] end
 } -result {-synonym -color}
@@ -1616,14 +1644,15 @@ test config-11.3 {GetConfigList - null default and current value} -constraints {
 } -body {
     .a configure -relief
 } -result {-relief relief Relief {} {}}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
-}
-
-
-if {[testConstraint testobjconfig]} {
     testobjconfig internal .a
 }
+
 test config-12.1 {GetObjectForOption - boolean} -constraints testobjconfig -body {
     .a configure -boolean 0
     .a cget -boolean
@@ -1705,10 +1734,13 @@ test config-12.17 {GetObjectForOption - null values} -constraints {
 	    [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
 	    [.a cget -window] [.a cget -custom]
 } -result {{} {} {} {} {} {} {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-13.1 {proper cleanup of options with widget destroy} -body {
     button .w -cursor crosshair
@@ -1767,10 +1799,10 @@ test config-14.1 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::button
-        ::foo::button .a
-        ::foo::button .b
-        }
+	namespace import -force ::button
+	::foo::button .a
+	::foo::button .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1778,10 +1810,10 @@ test config-14.2 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::canvas
-        ::foo::canvas .a
-        ::foo::canvas .b
-        }
+	namespace import -force ::canvas
+	::foo::canvas .a
+	::foo::canvas .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1789,10 +1821,10 @@ test config-14.3 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::entry
-        ::foo::entry .a
-        ::foo::entry .b
-        }
+	namespace import -force ::entry
+	::foo::entry .a
+	::foo::entry .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1800,10 +1832,10 @@ test config-14.4 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::frame
-        ::foo::frame .a
-        ::foo::frame .b
-        }
+	namespace import -force ::frame
+	::foo::frame .a
+	::foo::frame .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1811,10 +1843,10 @@ test config-14.5 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::listbox
-        ::foo::listbox .a
-        ::foo::listbox .b
-        }
+	namespace import -force ::listbox
+	::foo::listbox .a
+	::foo::listbox .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1822,10 +1854,10 @@ test config-14.6 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::menu
-        ::foo::menu .a
-        ::foo::menu .b
-        }
+	namespace import -force ::menu
+	::foo::menu .a
+	::foo::menu .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1833,10 +1865,10 @@ test config-14.7 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::menubutton
-        ::foo::menubutton .a
-        ::foo::menubutton .b
-        }
+	namespace import -force ::menubutton
+	::foo::menubutton .a
+	::foo::menubutton .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1844,10 +1876,10 @@ test config-14.8 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::message
-        ::foo::message .a
-        ::foo::message .b
-        }
+	namespace import -force ::message
+	::foo::message .a
+	::foo::message .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1855,10 +1887,10 @@ test config-14.9 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::scale
-        ::foo::scale .a
-        ::foo::scale .b
-        }
+	namespace import -force ::scale
+	::foo::scale .a
+	::foo::scale .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1866,10 +1898,10 @@ test config-14.10 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::scrollbar
-        ::foo::scrollbar .a
-        ::foo::scrollbar .b
-        }
+	namespace import -force ::scrollbar
+	::foo::scrollbar .a
+	::foo::scrollbar .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1877,10 +1909,10 @@ test config-14.11 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::spinbox
-        ::foo::spinbox .a
-        ::foo::spinbox .b
-        }
+	namespace import -force ::spinbox
+	::foo::spinbox .a
+	::foo::spinbox .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1888,10 +1920,10 @@ test config-14.12 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::text
-        ::foo::text .a
-        ::foo::text .b
-        }
+	namespace import -force ::text
+	::foo::text .a
+	::foo::text .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1899,10 +1931,10 @@ test config-14.13 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::radiobutton
-        ::foo::radiobutton .a
-        ::foo::radiobutton .b
-        }
+	namespace import -force ::radiobutton
+	::foo::radiobutton .a
+	::foo::radiobutton .b
+	}
     ]
     destroy .a .b
 } -result {}
@@ -1910,27 +1942,20 @@ test config-14.14 {Tk_CreateOptionTable - use with namespace import} -setup {
     namespace export -clear *
 } -body {
     namespace eval ::foo [subst {
-        namespace import -force ::checkbutton
-        ::foo::checkbutton .a
-        ::foo::checkbutton .b
-        }
+	namespace import -force ::checkbutton
+	::foo::checkbutton .a
+	::foo::checkbutton .b
+	}
     ]
     destroy .a .b
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 deleteWindows
 if {[testConstraint testobjconfig]} {
     killTables
 }
 cleanupTests
-return
-
-
-
-
-
-
-
-

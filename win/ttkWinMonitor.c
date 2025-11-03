@@ -122,12 +122,12 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_THEMECHANGED:
 	/*
-         * Reset the application theme.
-         * On windows, it is possible to sign in as a second user, change
-         * the theme to 'winnative' (by setting the ui to 'best performance'),
-         * which is a machine-wide change, and then sign back on to the original user.
-         * Ttk_UseTheme needs to be executed again in order to process the fallback
-         * from vista/xpnative to winnative.
+	 * Reset the application theme.
+	 * On windows, it is possible to sign in as a second user, change
+	 * the theme to 'winnative' (by setting the ui to 'best performance'),
+	 * which is a machine-wide change, and then sign back on to the original user.
+	 * Ttk_UseTheme needs to be executed again in order to process the fallback
+	 * from vista to winnative.
 	 */
 
 	theme = Ttk_GetCurrentTheme(interp);
@@ -145,7 +145,8 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
  */
 
 MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
-MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int TtkWinVistaTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp);
 
 MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 {
@@ -155,7 +156,7 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
     Ttk_RegisterCleanup(interp, hwnd, DestroyThemeMonitorWindow);
 
     TtkWinTheme_Init(interp, hwnd);
-    TtkXPTheme_Init(interp, hwnd);
+    TtkWinVistaTheme_Init(interp, hwnd);
 
     return TCL_OK;
 }

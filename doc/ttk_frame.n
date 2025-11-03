@@ -10,15 +10,15 @@
 .SH NAME
 ttk::frame \- Simple container widget
 .SH SYNOPSIS
-\fBttk::frame\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::frame\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
 A \fBttk::frame\fR widget is a container, used to group other widgets
 together.
 .SO ttk_widget
-\-class	\-cursor	\-padding	\-style
-\-takefocus
+\-class	\-cursor	\-padding
+\-style	\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-borderwidth borderWidth BorderWidth

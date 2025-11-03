@@ -20,7 +20,7 @@
 #
 # Windows:
 #	The default system font changed from "MS Sans Serif" to "Tahoma"
-# 	in Windows XP/Windows 2000.
+#	in Windows XP/Windows 2000.
 #
 #	MS documentation says to use "Tahoma 8" in Windows 2000/XP,
 #	although many MS programs still use "MS Sans Serif 8"
@@ -45,9 +45,6 @@
 #	There does not appear to be any recommendations for fixed-width fonts.
 #
 # X11:
-#	Need a way to tell if Xft is enabled or not.
-#	For now, assume patch #971980 applied.
-#
 #	"Classic" look used Helvetica bold for everything except
 #	for entry widgets, which use Helvetica medium.
 #	Most other toolkits use medium weight for all UI elements,
@@ -70,20 +67,20 @@ if {!$tip145} {apply {{} {
 global tcl_platform
 switch -- [tk windowingsystem] {
     win32 {
-        # In safe interps there is no osVersion element.
+	# In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
-            if {$tcl_platform(osVersion) >= 5.0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        } else {
-            if {[lsearch -exact [font families] Tahoma] >= 0} {
-                set family "Tahoma"
-            } else {
-                set family "MS Sans Serif"
-            }
-        }
+	    if {$tcl_platform(osVersion) >= 5.0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	} else {
+	    if {[lsearch -exact [font families] Tahoma] >= 0} {
+		set family "Tahoma"
+	    } else {
+		set family "MS Sans Serif"
+	    }
+	}
 	set size 8
 
 	font configure TkDefaultFont -family $family -size $size
@@ -125,10 +122,17 @@ switch -- [tk windowingsystem] {
 	    set family "Helvetica"
 	    set fixed  "courier"
 	}
-	set size 10
-	set ttsize 9
-	set capsize 12
-	set fixedsize 10
+	if {[::tk::FontScalingFactor] == 1} {
+	    set size 10
+	    set ttsize 9
+	    set capsize 12
+	    set fixedsize 10
+	} else {
+	    set size 20
+	    set ttsize 18
+	    set capsize 24
+	    set fixedsize 20
+	}
 
 	font configure TkDefaultFont -family $family -size $size
 	font configure TkTextFont    -family $family -size $size

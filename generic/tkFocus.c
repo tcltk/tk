@@ -73,7 +73,7 @@ typedef struct TkDisplayFocusInfo {
 
 #define DEBUG(dispPtr, arguments) \
     if ((dispPtr)->focusDebug) { \
-	printf arguments; \
+	printf arguments; fflush(stdout); \
     }
 
 /*
@@ -82,7 +82,7 @@ typedef struct TkDisplayFocusInfo {
 
 static DisplayFocusInfo*FindDisplayFocusInfo(TkMainInfo *mainPtr,
 			    TkDisplay *dispPtr);
-static void		FocusMapProc(ClientData clientData, XEvent *eventPtr);
+static void		FocusMapProc(void *clientData, XEvent *eventPtr);
 static void		GenerateFocusEvents(TkWindow *sourcePtr,
 			    TkWindow *destPtr);
 
@@ -105,7 +105,7 @@ static void		GenerateFocusEvents(TkWindow *sourcePtr,
 
 int
 Tk_FocusObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -164,7 +164,7 @@ Tk_FocusObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], focusOptions,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -501,12 +501,13 @@ TkFocusFilterEvent(
 
 	if ((dispPtr->implicitWinPtr != NULL)
 		&& !(winPtr->flags & TK_EMBEDDED)) {
-	    DEBUG(dispPtr, ("Defocussed implicit Async\n"));
+	    DEBUG(dispPtr, ("Defocussed implicit Async from %s\n", displayFocusPtr->focusWinPtr->pathName));
 	    GenerateFocusEvents(displayFocusPtr->focusWinPtr, NULL);
 	    XSetInputFocus(dispPtr->display, PointerRoot, RevertToPointerRoot,
 		    CurrentTime);
 	    displayFocusPtr->focusWinPtr = NULL;
 	    dispPtr->implicitWinPtr = NULL;
+	    dispPtr->focusPtr = NULL;
 	}
     }
     return retValue;
@@ -629,8 +630,8 @@ TkSetFocusWin(
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    if (topLevelPtr->flags & TK_EMBEDDED &&
-        (displayFocusPtr->focusWinPtr == NULL)) {
+    if ((topLevelPtr->flags & TK_EMBEDDED) &&
+	    (displayFocusPtr->focusWinPtr == NULL)) {
 
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform
@@ -648,14 +649,14 @@ TkSetFocusWin(
 	 * application.
 	 */
 
-    	if (force) {
+	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
 		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
 		    focusPtr->mainPtr, focusPtr->dispPtr);
 		displayFocusPtr2->focusWinPtr = NULL;
 	    }
-    	}
+	}
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the
@@ -970,7 +971,7 @@ GenerateFocusEvents(
 
 static void
 FocusMapProc(
-    ClientData clientData,	/* Toplevel window. */
+    void *clientData,	/* Toplevel window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -1049,7 +1050,7 @@ FindDisplayFocusInfo(
  *	None.
  *
  * Side effects:
- *	This mainPtr should no long access focus information.
+ *	This mainPtr should no longer access focus information.
  *
  *----------------------------------------------------------------------
  */

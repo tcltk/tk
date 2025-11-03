@@ -7,7 +7,7 @@ exec wish "$0" ${1+"$@"}
 # Tk applications.  It allows you to select an application and
 # then type commands to that application.
 
-package require Tk
+package require tk
 
 wm title . "Tk Remote Controller"
 wm iconname . "Tk Remote"
@@ -42,7 +42,7 @@ menu .menu.file.apps  -postcommand fillAppsMenu
 
 # Create text window and scrollbar.
 
-text .t -yscrollcommand ".s set" -setgrid true
+text .t -yscrollcommand ".s set" -setgrid 1
 scrollbar .s -command ".t yview"
 grid .t .s -sticky nsew
 grid rowconfigure . 0 -weight 1

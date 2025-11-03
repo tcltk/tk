@@ -1,29 +1,74 @@
 # This file is a Tcl script to test out the "focus" command and the
-# other procedures in the file tkFocus.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkFocus.c.
 #
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import child
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# focusClear --
+#
+#    Ensures that there is no input focus in this application.  It does it by
+#    arranging for another application to grab the focus.  The "after" and
+#    "update" stuff is needed to wait long enough for pending actions to get
+#    through the X server and possibly also the window manager.
+#
+if {[tk windowingsystem] eq "aqua"} {
+    proc focusClear {} {
+	childInterp eval {
+	    focus -force .
+	    set i 0
+	    while {[focus] != "."} {
+		after 100
+		incr i
+		if {$i > 10} {
+		    break
+		}
+	    }
+	}
+    }
+} else {
+    proc focusClear {} {
+	childTkProcess eval {after 200; focus -force .; update}
+	after 400
+	update
+    }
+}
 
 proc focusSetup {} {
     destroy .t
     toplevel .t
     wm geom .t +0+0
     foreach i {b1 b2 b3 b4} {
-	    button .t.$i -text .t.$i -relief raised -bd 2
-	    pack .t.$i
+	button .t.$i -text .t.$i -relief raised -bd 2
+	pack .t.$i
     }
     tkwait visibility .t.b4
 }
+
 proc focusSetupAlt {} {
     global env
     destroy .alt
@@ -35,32 +80,27 @@ proc focusSetupAlt {} {
     tkwait visibility .alt.d
 }
 
+#
+# COMMON TEST SETUP
+#
 
-# The following procedure ensures that there is no input focus
-# in this application.  It does it by arranging for another
-# application to grab the focus.  The "after" and "update" stuff
-# is needed to wait long enough for pending actions to get through
-# the X server and possibly also the window manager.
+# childTkProcess exit will be after 4.3 test
+childTkProcess create
+update
 
-proc focusClear {} {
-    global x;
-    after 200 {set x 1}
-    tkwait variable x
-    dobg {focus -force .; update}
-    update
+if {[tk windowingsystem] eq "aqua"} {
+    childTkInterp childInterp
 }
 
+focusSetup
+if {[testConstraint altDisplay]} {
+    focusSetupAlt
+}
 
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
 
-# Make sure the window manager knows who has focus
-catch {fixfocus}
-
-# cleanupbg will be after 4.3 test
-setupbg
-update
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
 }
@@ -70,18 +110,21 @@ bind all <FocusOut> {
 bind all <Key> {
     append focusInfo "press %W %K"
 }
-focusSetup
-if {[testConstraint altDisplay]} {
-    focusSetupAlt
-}
 
+# Make sure the window manager knows who has focus
+catch {fixfocus}
+
+#
+# TESTS
+#
 
 test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
     focusClear
+    after 100
     focus
 } -result {}
 test focus-1.2 {Tk_FocusCmd procedure} -constraints {
-	unix altDisplay
+    unix altDisplay
 } -body {
     focus .alt.b
     focus
@@ -107,7 +150,7 @@ test focus-1.7 {Tk_FocusCmd procedure} -constraints unix -body {
     focus .gorp a
 } -returnCodes error -result {bad option ".gorp": must be -displayof, -force, or -lastfor}
 test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
-	unix
+    unix
 } -setup {
     destroy .t2
 } -body {
@@ -133,36 +176,38 @@ test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
     destroy .t2
 } -result {.t2.f2 .t2 .t2}
 test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix
+    unix
 } -body {
     focus -displayof
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
 test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix
+    unix
 } -body {
     focus -displayof a b
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
 test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix
+    unix
 } -body {
     focus -displayof .lousy
 } -returnCodes error -result {bad window path name ".lousy"}
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix
+    unix
 } -body {
+    # Move focus to the root window in the child process/interpreter.
     focusClear
+    # The main application does not have focus, so this has no effect now.
     focus .t
     focus -displayof .t.b3
 }  -result {}
 test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix
+    unix
 } -body {
     focusClear
     focus -force .t
     focus -displayof .t.b3
 } -result {.t}
 test focus-1.14 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix altDisplay
+    unix altDisplay
 } -body {
     focusClear
     focus -force .alt.c
@@ -223,10 +268,13 @@ test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
     focus -unknown
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
-
+#
+# COMMON TEST SETUP
+#
 focusSetup
+
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
-	unix nonPortable testwrapper
+    unix nonPortable testwrapper
 } -body {
     focusClear
     focus -force .b
@@ -238,7 +286,7 @@ test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
-	unix nonPortable testwrapper
+    unix nonPortable testwrapper
 } -body {
     focusClear
     focus -force .b
@@ -250,7 +298,7 @@ test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
 } -result {{in .t NotifyAncestor
 } .b}
 test focus-2.3 {TkFocusFilterEvent procedure} -constraints {
-	unix nonPortable testwrapper
+    unix nonPortable testwrapper
 } -body {
     focusClear
     focus -force .b
@@ -311,7 +359,7 @@ in .t.b1 NotifyNonlinear
 } .t.b1}
 
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix  testwrapper failsOnUbuntu failsOnXQuartz
 } -body {
     focus .t.b1
     focus .
@@ -323,16 +371,16 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix  testwrapper failsOnUbuntu failsOnXQuartz
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyPointer NotifyPointerRoot
 	    NotifyVirtual} {
-	    focus -force .t.b1
-	    event gen [testwrapper .t] <FocusOut> -detail $detail
-	    update
-	    lappend result [focus]
+	focus -force .t.b1
+	event gen [testwrapper .t] <FocusOut> -detail $detail
+	update
+	lappend result [focus]
     }
     return $result
 } -result {{} .t.b1 {} {} .t.b1 .t.b1 {}}
@@ -344,7 +392,7 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix  testwrapper failsOnUbuntu failsOnXQuartz
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
@@ -357,12 +405,12 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
     focus .t.b1
     focusClear
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
-	        NotifyNonlinearVirtual NotifyVirtual} {
-	    event gen [testwrapper .t] <Enter> -detail $detail -focus 1
-	    update
-	    lappend result [focus]
-	    event gen [testwrapper .t] <Leave> -detail NotifyAncestor
-	    update
+	    NotifyNonlinearVirtual NotifyVirtual} {
+	event gen [testwrapper .t] <Enter> -detail $detail -focus 1
+	update
+	lappend result [focus]
+	event gen [testwrapper .t] <Leave> -detail NotifyAncestor
+	update
     }
     return $result
 } -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
@@ -398,7 +446,7 @@ test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
 in .t.b1 NotifyAncestor
 }
 test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when setting focus due to implicit focus} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -setup {
     destroy .t2
     set focusInfo {}
@@ -419,12 +467,12 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
     focus .t.b1
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyVirtual} {
-	    focusClear
-	    event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
-	    update
-	    event gen [testwrapper .t] <Leave> -detail $detail
-	    update
-	    lappend result [focus]
+	focusClear
+	event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
+	update
+	event gen [testwrapper .t] <Leave> -detail $detail
+	update
+	lappend result [focus]
     }
     return $result
 } -result {{} .t.b1 {} {} {}}
@@ -475,7 +523,7 @@ test focus-3.1 {SetFocus procedure, create record on focus} -constraints {
 # error if Tk forgets to make the window exist before focussing
 # on it.
 test focus-3.2 {SetFocus procedure, making window exist} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     update
     button .b2 -text "Another button"
@@ -511,7 +559,7 @@ test focus-3.4 {SetFocus procedure, delaying claim of X focus} -constraints {
     destroy .t2
 } -result {}
 test focus-3.5 {SetFocus procedure, generating events} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     focusSetup
     focusClear
@@ -523,7 +571,7 @@ test focus-3.5 {SetFocus procedure, generating events} -constraints {
 in .t.b2 NotifyAncestor
 }
 test focus-3.6 {SetFocus procedure, generating events} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     focusSetup
     focus -force .b
@@ -551,7 +599,7 @@ unix nonPortable testwrapper
 
 
 test focus-4.1 {TkFocusDeadWindow procedure} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     focusSetup
     update
@@ -561,7 +609,7 @@ test focus-4.1 {TkFocusDeadWindow procedure} -constraints {
     focus
 } -result {.b}
 test focus-4.2 {TkFocusDeadWindow procedure} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     focusSetup
     update
@@ -575,7 +623,7 @@ test focus-4.2 {TkFocusDeadWindow procedure} -constraints {
 # Non-portable due to wm-specific redirection of input focus when
 # windows are deleted:
 test focus-4.3 {TkFocusDeadWindow procedure} -constraints {
-	unix nonPortable testwrapper
+    unix nonPortable testwrapper
 } -body {
     focusSetup
     update
@@ -586,7 +634,7 @@ test focus-4.3 {TkFocusDeadWindow procedure} -constraints {
     focus
 } -result {}
 test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
-	unix testwrapper
+    unix testwrapper
 } -body {
     focusSetup
     focus -force .t.b2
@@ -594,7 +642,11 @@ test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
     destroy .t.b2
     focus
 } -result {.t}
-cleanupbg
+
+#
+# COMMON TEST CLEANUP
+#
+childTkProcess exit
 
 
 # I don't know how to test most of the remaining procedures of this file
@@ -602,28 +654,31 @@ cleanupbg
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver failsOnUbuntu failsOnXQuarz
+    unix testwrapper secureserver failsOnUbuntu failsOnXQuartz
 } -body {
-    setupbg
+    childTkProcess create
     focusSetup
     focus -force .t
     update
     set result [focus]
-    send [dobg {tk appname}] {focus -force .; update}
+    send [childTkProcess eval {tk appname}] {focus -force .; update}
     lappend result [focus]
     focus .t.b2
     update
     lappend result [focus]
 } -cleanup {
-    cleanupbg
+    childTkProcess exit
 } -result {.t {} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
 bind all <FocusIn> {}
 bind all <FocusOut> {}
 bind all <Key> {}
-
-
 fixfocus
+
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     unix  testwrapper
 } -setup {
@@ -642,11 +697,11 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
     child eval "set argv {-use [winfo id .t.f1]}"
     load {} Tk child
     child eval {
-	    entry .e1 -bg lightBlue
-	    pack .e1
-	    bind all <FocusIn> {lappend x "focus in %W %d"}
-	    bind all <FocusOut> {lappend x "focus out %W %d"}
-	    set x {}
+	entry .e1 -bg lightBlue
+	pack .e1
+	bind all <FocusIn> {lappend x "focus in %W %d"}
+	bind all <FocusOut> {lappend x "focus out %W %d"}
+	set x {}
     }
 
     # Claim the focus and wait long enough for it to really arrive.
@@ -683,7 +738,7 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
 test focus-6.2 {miscellaneous - embedded application in different process} -constraints {
     unix  testwrapper
 } -body {
-    setupbg
+    childTkProcess create
     toplevel .t
     wm geometry .t +0+0
     frame .t.f1 -container 1
@@ -693,13 +748,13 @@ test focus-6.2 {miscellaneous - embedded application in different process} -cons
     pack .t.f2.e1
     bind all <FocusIn> {lappend x "focus in %W %d"}
     bind all <FocusOut> {lappend x "focus out %W %d"}
-    setupbg -use [winfo id .t.f1]
-    dobg {
-	    entry .e1 -bg lightBlue
-	    pack .e1
-	    bind all <FocusIn> {lappend x "focus in %W %d"}
-	    bind all <FocusOut> {lappend x "focus out %W %d"}
-	    set x {}
+    childTkProcess create -use [winfo id .t.f1]
+    childTkProcess eval {
+	entry .e1 -bg lightBlue
+	pack .e1
+	bind all <FocusIn> {lappend x "focus in %W %d"}
+	bind all <FocusOut> {lappend x "focus out %W %d"}
+	set x {}
     }
 
     # Claim the focus and wait long enough for it to really arrive.
@@ -708,27 +763,27 @@ test focus-6.2 {miscellaneous - embedded application in different process} -cons
     after 300 {set timer 1}
     vwait timer
     set x {}
-    lappend x [focus] [dobg focus]
+    lappend x [focus] [childTkProcess eval focus]
 
     # See if a "focus" command will move the focus to the embedded
     # application.
 
-    dobg {focus .e1}
+    childTkProcess eval {focus .e1}
     after 300 {set timer 1}
     vwait timer
     lappend x |
-    dobg {lappend x |}
+    childTkProcess eval {lappend x |}
 
     # Bring the focus back to the main application.
 
     focus .t.f2.e1
     after 300 {set timer 1}
     vwait timer
-    set result [list $x [dobg {set x}]]
+    set result [list $x [childTkProcess eval {set x}]]
     return $result
 } -cleanup {
     destroy .t
-    cleanupbg
+    childTkProcess exit
     bind all <FocusIn> {}
     bind all <FocusOut> {}
 } -result {{.t.f2.e1 {} {focus out .t.f2.e1 NotifyNonlinear} {focus out .t.f2 NotifyNonlinearVirtual} {focus in .t.f1 NotifyNonlinear} | {focus out .t.f1 NotifyNonlinear} {focus in .t.f2 NotifyNonlinearVirtual} {focus in .t.f2.e1 NotifyNonlinear}} {{focus in . NotifyVirtual} {focus in .e1 NotifyAncestor} | {focus out .e1 NotifyAncestor} {focus out . NotifyVirtual}}}
@@ -754,9 +809,37 @@ test focus-7.1 {TkSetFocusWin procedure, unmapped windows} -setup {
     destroy .top
 } -result {.top.s3}
 
+test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
+    pack [button .b0]
+    toplevel .one
+    update
+    event generate .one <Motion> -warp 1 -x 175 -y 175
+    update idletasks
+    destroy {*}[winfo children .]
+    toplevel .t
+    pack [canvas .t.c]
+    update
+    destroy .t.c
+    pack [label .t.l]
+    update
+    destroy .t.l
+    destroy {*}[winfo children .]
+    proc crashit {} {
+	pack [listbox .l]
+	update
+	focus -force .l;  # This line segfaulted *with xvfb*
+	set res Reached
+    }
+    crashit
+} -result {Reached}
+
+#
+# TESTFILE CLEANUP
+#
 
 deleteWindows
-
-# cleanup
+testutils forget child
 cleanupTests
-return
+if {[tk windowingsystem] eq "aqua"} {
+    interp delete childInterp
+}

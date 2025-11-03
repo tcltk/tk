@@ -24,13 +24,17 @@
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
 #endif
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
 
 static int		DoConfig(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_ConfigSpec *specPtr, Tk_Uid value,
-			    int valueIsUid, void *widgRec);
+			    Tk_ConfigSpec *specPtr, Tcl_Obj *value,
+			    void *widgRec);
 static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
 			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
@@ -41,7 +45,7 @@ static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
-static void		DeleteSpecCacheTable(ClientData clientData,
+static void		DeleteSpecCacheTable(void *clientData,
 			    Tcl_Interp *interp);
 
 /*
@@ -57,7 +61,7 @@ static void		DeleteSpecCacheTable(ClientData clientData,
  *	will hold an error message.
  *
  * Side effects:
- *	The fields of widgRec get filled in with information from argc/argv
+ *	The fields of widgRec get filled in with information from objc/objv
  *	and the option database. Old information in widgRec's fields gets
  *	recycled. A copy of the spec-table is taken with (some of) the char*
  *	fields converted into Tk_Uid fields; this copy will be released when
@@ -72,9 +76,9 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    int argc,			/* Number of elements in argv. */
-    const char **argv,		/* Command-line options. */
-    char *widgRec,		/* Record whose fields are to be modified.
+    Tcl_Size objc,			/* Number of elements in objv. */
+    Tcl_Obj *const *objv,		/* Command-line options. */
+    void *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
     int flags)			/* Used to specify additional flags that must
 				 * be present in config specs for them to be
@@ -94,8 +98,8 @@ Tk_ConfigureWidget(
 	 * we're on our way out of the application
 	 */
 
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", -1));
-	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -121,14 +125,10 @@ Tk_ConfigureWidget(
      * match entries in the specs.
      */
 
-    for ( ; argc > 0; argc -= 2, argv += 2) {
+    for ( ; objc > 0; objc -= 2, objv += 2) {
 	const char *arg;
 
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) *argv);
-	} else {
-	    arg = *argv;
-	}
+	arg = Tcl_GetString(*objv);
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
@@ -138,18 +138,13 @@ Tk_ConfigureWidget(
 	 * Process the entry.
 	 */
 
-	if (argc < 2) {
+	if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", arg));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
-	} else {
-	    arg = argv[1];
-	}
-	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
+	if (DoConfig(interp, tkwin, specPtr, objv[1], widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (processing \"%.40s\" option)",specPtr->argvName));
 	    return TCL_ERROR;
@@ -181,30 +176,33 @@ Tk_ConfigureWidget(
 		value = Tk_GetOption(tkwin, specPtr->dbName, specPtr->dbClass);
 	    }
 	    if (value != NULL) {
-		if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
+		Tcl_Obj *arg = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+		Tcl_IncrRefCount(arg);
+		if (DoConfig(interp, tkwin, specPtr, arg, widgRec) !=
 			TCL_OK) {
 		    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 			    "\n    (%s \"%.50s\" in widget \"%.50s\")",
 			    "database entry for", specPtr->dbName,
 			    Tk_PathName(tkwin)));
+		    Tcl_DecrRefCount(arg);
 		    return TCL_ERROR;
 		}
+		Tcl_DecrRefCount(arg);
 	    } else {
-		if (specPtr->defValue != NULL) {
-		    value = Tk_GetUid(specPtr->defValue);
-		} else {
-		    value = NULL;
-		}
-		if ((value != NULL) && !(specPtr->specFlags
+		if ((specPtr->defValue != NULL) && !(specPtr->specFlags
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
-		    if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
+		    Tcl_Obj *arg = Tcl_NewStringObj(specPtr->defValue, TCL_INDEX_NONE);
+		    Tcl_IncrRefCount(arg);
+		    if (DoConfig(interp, tkwin, specPtr, arg, widgRec) !=
 			    TCL_OK) {
 			Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 				"\n    (%s \"%.50s\" in widget \"%.50s\")",
 				"default value for", specPtr->dbName,
 				Tk_PathName(tkwin)));
+			Tcl_DecrRefCount(arg);
 			return TCL_ERROR;
 		    }
+		    Tcl_DecrRefCount(arg);
 		}
 	    }
 	}
@@ -271,7 +269,7 @@ FindConfigSpec(
 	if (matchPtr != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "ambiguous option \"%s\"", argvName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	    return NULL;
 	}
 	matchPtr = specPtr;
@@ -280,7 +278,7 @@ FindConfigSpec(
     if (matchPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unknown option \"%s\"", argvName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	return NULL;
     }
 
@@ -298,7 +296,7 @@ FindConfigSpec(
 			"couldn't find synonym for option \"%s\"",
 			argvName));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,
-			NULL);
+			(char *)NULL);
 		return NULL;
 	    }
 	    if ((specPtr->dbName == matchPtr->dbName)
@@ -336,36 +334,42 @@ DoConfig(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     Tk_ConfigSpec *specPtr,	/* Specifier to apply. */
-    Tk_Uid value,		/* Value to use to fill in widgRec. */
-    int valueIsUid,		/* Non-zero means value is a Tk_Uid; zero
-				 * means it's an ordinary string. */
+    Tcl_Obj *arg,		/* Value to use to fill in widgRec. */
     void *widgRec)		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
 {
     void *ptr;
-    Tk_Uid uid;
-    int nullValue;
+    int nullValue = 0;
+    const char *value = Tcl_GetString(arg);
 
-    nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK))) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
 	nullValue = 1;
     }
 
+    if ((specPtr->specFlags & TK_CONFIG_OBJS) && (specPtr->type != TK_CONFIG_STRING)
+	    && (specPtr->type != TK_CONFIG_PIXELS)) {
+	/* Prevent surprises for other options than TK_CONFIG_(STRING|PIXELS) */
+	Tcl_AppendResult(interp, "TK_CONFIG_OBJS not supported", (char *)NULL);
+	return TCL_ERROR;
+    }
     do {
+	if (specPtr->offset < 0) {
+	    break;
+	}
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
-	    if (Tcl_GetBoolean(interp, value, (int *) ptr) != TCL_OK) {
+	    if (Tcl_GetBooleanFromObj(interp, arg, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_INT:
-	    if (Tcl_GetInt(interp, value, (int *) ptr) != TCL_OK) {
+	    if (Tcl_GetIntFromObj(interp, arg, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_DOUBLE:
-	    if (Tcl_GetDouble(interp, value, (double *) ptr) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(interp, arg, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -374,23 +378,29 @@ DoConfig(
 
 	    if (nullValue) {
 		newStr = NULL;
+	    } else if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		Tcl_IncrRefCount(arg);
+		newStr = (char *)arg;
 	    } else {
 		newStr = (char *)ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
-	    oldStr = *((char **) ptr);
+	    oldStr = *((char **)ptr);
 	    if (oldStr != NULL) {
-		ckfree(oldStr);
+		if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		    Tcl_DecrRefCount((Tcl_Obj *)oldStr);
+		} else {
+		    ckfree(oldStr);
+		}
 	    }
-	    *((char **) ptr) = newStr;
+	    *((char **)ptr) = newStr;
 	    break;
 	}
 	case TK_CONFIG_UID:
 	    if (nullValue) {
-		*((Tk_Uid *) ptr) = NULL;
+		*((Tk_Uid *)ptr) = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		*((Tk_Uid *) ptr) = uid;
+		*((Tk_Uid *)ptr) = Tk_GetUid(value);
 	    }
 	    break;
 	case TK_CONFIG_COLOR: {
@@ -399,17 +409,16 @@ DoConfig(
 	    if (nullValue) {
 		newPtr = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newPtr = Tk_GetColor(interp, tkwin, uid);
+		newPtr = Tk_AllocColorFromObj(interp, tkwin, arg);
 		if (newPtr == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
-	    oldPtr = *((XColor **) ptr);
+	    oldPtr = *((XColor **)ptr);
 	    if (oldPtr != NULL) {
 		Tk_FreeColor(oldPtr);
 	    }
-	    *((XColor **) ptr) = newPtr;
+	    *((XColor **)ptr) = newPtr;
 	    break;
 	}
 	case TK_CONFIG_FONT: {
@@ -418,13 +427,13 @@ DoConfig(
 	    if (nullValue) {
 		newFont = NULL;
 	    } else {
-		newFont = Tk_GetFont(interp, tkwin, value);
+		newFont = Tk_AllocFontFromObj(interp, tkwin, arg);
 		if (newFont == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
-	    Tk_FreeFont(*((Tk_Font *) ptr));
-	    *((Tk_Font *) ptr) = newFont;
+	    Tk_FreeFont(*((Tk_Font *)ptr));
+	    *((Tk_Font *)ptr) = newFont;
 	    break;
 	}
 	case TK_CONFIG_BITMAP: {
@@ -433,17 +442,16 @@ DoConfig(
 	    if (nullValue) {
 		newBmp = None;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newBmp = Tk_GetBitmap(interp, tkwin, uid);
+		newBmp = Tk_AllocBitmapFromObj(interp, tkwin, arg);
 		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
 	    }
-	    oldBmp = *((Pixmap *) ptr);
+	    oldBmp = *((Pixmap *)ptr);
 	    if (oldBmp != None) {
 		Tk_FreeBitmap(Tk_Display(tkwin), oldBmp);
 	    }
-	    *((Pixmap *) ptr) = newBmp;
+	    *((Pixmap *)ptr) = newBmp;
 	    break;
 	}
 	case TK_CONFIG_BORDER: {
@@ -452,22 +460,20 @@ DoConfig(
 	    if (nullValue) {
 		newBorder = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newBorder = Tk_Get3DBorder(interp, tkwin, uid);
+		newBorder = Tk_Alloc3DBorderFromObj(interp, tkwin, arg);
 		if (newBorder == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
-	    oldBorder = *((Tk_3DBorder *) ptr);
+	    oldBorder = *((Tk_3DBorder *)ptr);
 	    if (oldBorder != NULL) {
 		Tk_Free3DBorder(oldBorder);
 	    }
-	    *((Tk_3DBorder *) ptr) = newBorder;
+	    *((Tk_3DBorder *)ptr) = newBorder;
 	    break;
 	}
 	case TK_CONFIG_RELIEF:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetRelief(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetReliefFromObj(interp, arg, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -478,54 +484,82 @@ DoConfig(
 	    if (nullValue) {
 		newCursor = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newCursor = Tk_GetCursor(interp, tkwin, uid);
+		newCursor = Tk_AllocCursorFromObj(interp, tkwin, arg);
 		if (newCursor == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
-	    oldCursor = *((Tk_Cursor *) ptr);
+	    oldCursor = *((Tk_Cursor *)ptr);
 	    if (oldCursor != NULL) {
 		Tk_FreeCursor(Tk_Display(tkwin), oldCursor);
 	    }
-	    *((Tk_Cursor *) ptr) = newCursor;
+	    *((Tk_Cursor *)ptr) = newCursor;
 	    if (specPtr->type == TK_CONFIG_ACTIVE_CURSOR) {
 		Tk_DefineCursor(tkwin, newCursor);
 	    }
 	    break;
 	}
 	case TK_CONFIG_JUSTIFY:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetJustify(interp, uid, (Tk_Justify *) ptr) != TCL_OK) {
+	    if (Tk_GetJustifyFromObj(interp, arg, (Tk_Justify *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_ANCHOR:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetAnchor(interp, uid, (Tk_Anchor *) ptr) != TCL_OK) {
+	    if (Tk_GetAnchorFromObj(interp, arg, (Tk_Anchor *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_CAP_STYLE:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetCapStyle(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetCapStyle(interp, value, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_JOIN_STYLE:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetJoinStyle(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetJoinStyle(interp, value, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_PIXELS:
-	    if (Tk_GetPixels(interp, tkwin, value, (int *) ptr)
+	case TK_CONFIG_PIXELS: {
+	    int nullOK = specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1);
+	    if (specPtr->specFlags & TK_CONFIG_OBJS) {
+		int dummy;
+		if (nullValue) {
+		    if (*(Tcl_Obj **)ptr != NULL) {
+			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+			*(Tcl_Obj **)ptr = NULL;
+		    }
+		} else if (Tk_GetPixelsFromObj((nullOK ? NULL : interp), tkwin, arg, &dummy)
+			!= TCL_OK) {
+		wrongPixel:
+		    if (interp && nullOK) {
+			Tcl_AppendResult(interp, "expected screen distance or \"\" but got \"",
+				Tcl_GetString(arg), "\"", (char *)NULL);
+		    }
+		    return TCL_ERROR;
+		} else if (!(specPtr->specFlags & TK_OPTION_NEG_OK) && (dummy < 0)) {
+			if (interp) {
+			    Tcl_AppendResult(interp, "expected screen distance ",
+				    nullOK ? " or \"\"" : "",
+				    "but got \"", Tcl_GetString(arg), "\"", (char *)NULL);
+			}
+			return TCL_ERROR;
+		} else {
+		    Tcl_IncrRefCount(arg);
+		    if (*(Tcl_Obj **)ptr != NULL) {
+			Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+		    }
+		    *(Tcl_Obj **)ptr = arg;
+		}
+	    } else if (nullValue) {
+		*(int *)ptr = INT_MIN;
+	    } else if (Tk_GetPixelsFromObj((nullOK ? NULL : interp), tkwin, arg, (int *)ptr)
 		!= TCL_OK) {
-		return TCL_ERROR;
+		goto wrongPixel;
 	    }
 	    break;
+	}
 	case TK_CONFIG_MM:
-	    if (Tk_GetScreenMM(interp, tkwin, value, (double*)ptr) != TCL_OK) {
+	    if (Tk_GetScreenMM(interp, tkwin, value, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -540,7 +574,7 @@ DoConfig(
 		    return TCL_ERROR;
 		}
 	    }
-	    *((Tk_Window *) ptr) = tkwin2;
+	    *((Tk_Window *)ptr) = tkwin2;
 	    break;
 	}
 	case TK_CONFIG_CUSTOM:
@@ -552,7 +586,7 @@ DoConfig(
 	default:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad config table: unknown type %d", specPtr->type));
-	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	specPtr++;
@@ -593,7 +627,7 @@ Tk_ConfigureInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* If non-NULL, indicates a single option
 				 * whose info is to be returned. Otherwise
@@ -633,7 +667,7 @@ Tk_ConfigureInfo(
 	    return TCL_ERROR;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
 	ckfree(list);
 	return TCL_OK;
     }
@@ -651,11 +685,11 @@ Tk_ConfigureInfo(
 		|| (specPtr->specFlags & hateFlags)) {
 	    continue;
 	}
-	if (specPtr->argvName == NULL) {
+	if ((specPtr->argvName == NULL) || (specPtr->offset < 0)) {
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_AppendResult(interp, leader, list, "}", NULL);
+	Tcl_AppendResult(interp, leader, list, "}", (char *)NULL);
 	ckfree(list);
 	leader = " {";
     }
@@ -719,10 +753,10 @@ FormatConfigInfo(
     }
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
-	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *) argv[4]);
+	if (freeProc == TCL_DYNAMIC) {
+	    ckfree((void *)argv[4]);
 	} else {
-	    freeProc((char *) argv[4]);
+	    freeProc((void *)argv[4]);
 	}
     }
     return result;
@@ -766,8 +800,17 @@ FormatConfigValue(
     const char *result;
 
     *freeProcPtr = NULL;
+    if (specPtr->offset < 0) {
+	return NULL;
+    }
     ptr = (char *)widgRec + specPtr->offset;
     result = "";
+    if (specPtr->specFlags & TK_CONFIG_OBJS) {
+	if (*(Tcl_Obj **)ptr != NULL) {
+	    result = Tcl_GetString(*(Tcl_Obj **)ptr);
+	}
+	return result;
+    }
     switch (specPtr->type) {
     case TK_CONFIG_BOOLEAN:
 	if (*((int *)ptr) == 0) {
@@ -777,7 +820,7 @@ FormatConfigValue(
 	}
 	break;
     case TK_CONFIG_INT:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, 200, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_DOUBLE:
@@ -785,7 +828,7 @@ FormatConfigValue(
 	result = buffer;
 	break;
     case TK_CONFIG_STRING:
-	result = (*(char **)ptr);
+	result = *(char **)ptr;
 	if (result == NULL) {
 	    result = "";
 	}
@@ -855,8 +898,10 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	sprintf(buffer, "%d", *((int *)ptr));
-	result = buffer;
+	if ((*(int *)ptr != INT_MIN) || !(specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
+	    snprintf(buffer, 200, "%d", *((int *)ptr));
+	    result = buffer;
+	}
 	break;
     case TK_CONFIG_MM:
 	Tcl_PrintDouble(interp, *((double *)ptr), buffer);
@@ -904,7 +949,7 @@ Tk_ConfigureValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* Gives the command-line name for the option
 				 * whose value is to be returned. */
@@ -937,12 +982,12 @@ Tk_ConfigureValue(
     }
     result = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer,
 	    &freeProc);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
-	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *) result);
+	if (freeProc == TCL_DYNAMIC) {
+	    ckfree((void *)result);
 	} else {
-	    freeProc((char *) result);
+	    freeProc((void *)result);
 	}
     }
     return TCL_OK;
@@ -972,7 +1017,7 @@ Tk_ConfigureValue(
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     Display *display,		/* X display; needed for freeing some
 				 * resources. */
@@ -987,41 +1032,49 @@ Tk_FreeOptions(
 	if ((specPtr->specFlags & needFlags) != needFlags) {
 	    continue;
 	}
-	ptr = widgRec + specPtr->offset;
+	if (specPtr->offset < 0) {
+	    continue;
+	}
+	ptr = (char *)widgRec + specPtr->offset;
+	if ((specPtr->specFlags & TK_CONFIG_OBJS) && (*(Tcl_Obj **)ptr != NULL)) {
+	    Tcl_DecrRefCount(*(Tcl_Obj **)ptr);
+	    *(Tcl_Obj **)ptr = NULL;
+	    continue;
+	}
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
-	    if (*((char **) ptr) != NULL) {
-		ckfree(*((char **) ptr));
-		*((char **) ptr) = NULL;
+	    if (*((char **)ptr) != NULL) {
+		ckfree(*((char **)ptr));
+		*((char **)ptr) = NULL;
 	    }
 	    break;
 	case TK_CONFIG_COLOR:
-	    if (*((XColor **) ptr) != NULL) {
-		Tk_FreeColor(*((XColor **) ptr));
-		*((XColor **) ptr) = NULL;
+	    if (*((XColor **)ptr) != NULL) {
+		Tk_FreeColor(*((XColor **)ptr));
+		*((XColor **)ptr) = NULL;
 	    }
 	    break;
 	case TK_CONFIG_FONT:
-	    Tk_FreeFont(*((Tk_Font *) ptr));
-	    *((Tk_Font *) ptr) = NULL;
+	    Tk_FreeFont(*((Tk_Font *)ptr));
+	    *((Tk_Font *)ptr) = NULL;
 	    break;
 	case TK_CONFIG_BITMAP:
-	    if (*((Pixmap *) ptr) != None) {
-		Tk_FreeBitmap(display, *((Pixmap *) ptr));
-		*((Pixmap *) ptr) = None;
+	    if (*((Pixmap *)ptr) != None) {
+		Tk_FreeBitmap(display, *((Pixmap *)ptr));
+		*((Pixmap *)ptr) = None;
 	    }
 	    break;
 	case TK_CONFIG_BORDER:
-	    if (*((Tk_3DBorder *) ptr) != NULL) {
-		Tk_Free3DBorder(*((Tk_3DBorder *) ptr));
-		*((Tk_3DBorder *) ptr) = NULL;
+	    if (*((Tk_3DBorder *)ptr) != NULL) {
+		Tk_Free3DBorder(*((Tk_3DBorder *)ptr));
+		*((Tk_3DBorder *)ptr) = NULL;
 	    }
 	    break;
 	case TK_CONFIG_CURSOR:
 	case TK_CONFIG_ACTIVE_CURSOR:
-	    if (*((Tk_Cursor *) ptr) != NULL) {
-		Tk_FreeCursor(display, *((Tk_Cursor *) ptr));
-		*((Tk_Cursor *) ptr) = NULL;
+	    if (*((Tk_Cursor *)ptr) != NULL) {
+		Tk_FreeCursor(display, *((Tk_Cursor *)ptr));
+		*((Tk_Cursor *)ptr) = NULL;
 	    }
 	}
     }
@@ -1153,7 +1206,7 @@ GetCachedSpecs(
 
 static void
 DeleteSpecCacheTable(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;

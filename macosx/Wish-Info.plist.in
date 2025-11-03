@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-	Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
-	Copyright 2008-2009, Apple Inc.
+	Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+	Copyright © 2008-2009 Apple Inc.
 
 	See the file "license.terms" for information on usage and redistribution of
 	this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -40,13 +40,13 @@
     <array>
       <dict>
 	<key>CFBundleTypeRole</key>
-        <string>Viewer</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-          <string>foo</string>
-        </array>
-        <key>CFBundleURLName</key>
-        <string>Get Foo</string>
+	<string>Viewer</string>
+	<key>CFBundleURLSchemes</key>
+	<array>
+	  <string>foo</string>
+	</array>
+	<key>CFBundleURLName</key>
+	<string>Get Foo</string>
       </dict>
     </array>
     <key>CFBundleExecutable</key>
@@ -89,7 +89,7 @@
     <key>OSAScriptingDefinition</key>
     <string>Wish.sdef</string>
     <key>NSHighResolutionCapable</key>
-    <string>True</string>
+    <true/>
     <key>NSServices</key>
     <array>
       <dict>
@@ -99,8 +99,8 @@
 	<string>Wish</string>
 	<key>NSSendTypes</key>
 	<array>
-          <string>NSStringPboardType</string>
-          <string>NSPasteboardTypeString</string>
+	  <string>NSStringPboardType</string>
+	  <string>NSPasteboardTypeString</string>
 	</array>
       </dict>
     </array>

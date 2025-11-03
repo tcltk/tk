@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .states
 catch {destroy $w}
@@ -23,10 +23,10 @@ labelframe $w.justif -text Justification
 foreach c {Left Center Right} {
     set lower [string tolower $c]
     radiobutton $w.justif.$lower -text $c -variable just \
-        -relief flat -value $lower -anchor w \
-        -command "$w.frame.list configure -justify \$just" \
-        -tristatevalue "multi"
-    pack $w.justif.$lower -side left -pady 2 -fill x
+	-relief flat -value $lower -anchor w \
+	-command "$w.frame.list configure -justify \$just" \
+	-tristatevalue "multi"
+    pack $w.justif.$lower -side left -pady 1.5p -fill x
 }
 pack $w.justif
 

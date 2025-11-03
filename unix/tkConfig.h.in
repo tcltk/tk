@@ -4,9 +4,6 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
-/* Define if building universal (internal helper macro) */
-#undef AC_APPLE_UNIVERSAL_BUILD
-
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
@@ -22,26 +19,32 @@
 /* Compiler support for module scope symbols */
 #undef HAVE_HIDDEN
 
-/* Define to 1 if the system has the type `intptr_t'. */
+/* Define to 1 if the system has the type 'intptr_t'. */
 #undef HAVE_INTPTR_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `Xft' library (-lXft). */
+/* Define to 1 if you have the 'Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
-/* Define to 1 if you have the `lseek64' function. */
+/* Define to 1 if you have the 'lseek64' function. */
 #undef HAVE_LSEEK64
 
-/* Define to 1 if you have the `open64' function. */
+/* Define to 1 if you have the 'open64' function. */
 #undef HAVE_OPEN64
+
+/* Define to 1 if you have the 'posix_spawnattr_setflags' function. */
+#undef HAVE_POSIX_SPAWNATTR_SETFLAGS
+
+/* Define to 1 if you have the 'posix_spawnp' function. */
+#undef HAVE_POSIX_SPAWNP
+
+/* Define to 1 if you have the 'posix_spawn_file_actions_adddup2' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
 
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
-
-/* Do we have <stdbool.h>? */
-#undef HAVE_STDBOOL_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -61,9 +64,6 @@
 /* Is 'struct dirent64' in <sys/types.h>? */
 #undef HAVE_STRUCT_DIRENT64
 
-/* Is 'struct stat64' in <sys/stat.h>? */
-#undef HAVE_STRUCT_STAT64
-
 /* Should we include <sys/select.h>? */
 #undef HAVE_SYS_SELECT_H
 
@@ -79,14 +79,14 @@
 /* Is off64_t in <sys/types.h>? */
 #undef HAVE_TYPE_OFF64_T
 
-/* Define to 1 if the system has the type `uintptr_t'. */
+/* Define to 1 if the system has the type 'uintptr_t'. */
 #undef HAVE_UINTPTR_T
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Is weak import available? */
-#undef HAVE_WEAK_IMPORT
+/* Define to 1 if you have the 'vfork' function. */
+#undef HAVE_VFORK
 
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
@@ -133,7 +133,7 @@
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
@@ -183,17 +183,14 @@
 /* Are we building with zipfs enabled? */
 #undef ZIPFS_BUILD
 
-/* Are Darwin SUSv3 extensions available? */
-#undef _DARWIN_C_SOURCE
+/* Add the _FILE_OFFSET_BITS flag when building */
+#undef _FILE_OFFSET_BITS
 
 /* Add the _ISOC99_SOURCE flag when building */
 #undef _ISOC99_SOURCE
 
 /* Add the _LARGEFILE64_SOURCE flag when building */
 #undef _LARGEFILE64_SOURCE
-
-/* Add the _LARGEFILE_SOURCE64 flag when building */
-#undef _LARGEFILE_SOURCE64
 
 /* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
 #undef _OE_SOCKETS
@@ -204,31 +201,34 @@
 /* Do we want the reentrant OS API? */
 #undef _REENTRANT
 
+/* _TIME_BITS=64 enables 64-bit time_t. */
+#undef _TIME_BITS
+
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE
 
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type `char' is unsigned and your compiler does not
+/* Define to 1 if type 'char' is unsigned and your compiler does not
    predefine this macro.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
+/* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #undef inline
 #endif
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define to 'int' if <sys/types.h> does not define. */
 #undef mode_t
 
 /* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
+/* Define as 'unsigned int' if <stddef.h> doesn't define. */
 #undef size_t
 
 

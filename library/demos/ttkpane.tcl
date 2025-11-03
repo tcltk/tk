@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ttkpane
 catch {destroy $w}
@@ -42,7 +42,7 @@ ttk::button $w.outer.inLeft.top.b -text "Press Me" -command {
     tk_messageBox -type ok -icon info -message "Ouch!" -detail "That hurt..." \
 	    -parent .ttkpane -title "Button Pressed"
 }
-pack $w.outer.inLeft.top.b -padx 2 -pady 5
+pack $w.outer.inLeft.top.b -padx 1.5p -pady 3p
 
 # Fill the clocks pane
 set i 0
@@ -67,7 +67,7 @@ set testzones {
 set zones {}
 foreach zone $testzones {
     if {![catch {clock format 0 -timezone $zone}]} {
-        lappend zones $zone
+	lappend zones $zone
     }
 }
 if {[llength $zones] < 2} { lappend zones -0200 :GMT :UTC +0200 }
@@ -97,7 +97,7 @@ if {[tk windowingsystem] ne "aqua"} {
     # the surrounding border to show through (2 pixels seems to be enough).
     ttk::frame $w.outer.inRight.bot.f				-style TEntry
     text $w.txt -wrap word -yscroll "$w.sb set" -width 30	-borderwidth 0
-    pack $w.txt -fill both -expand 1 -in $w.outer.inRight.bot.f	-pady 2 -padx 2
+    pack $w.txt -fill both -expand 1 -in $w.outer.inRight.bot.f	-pady 1.5p -padx 1.5p
     ttk::scrollbar $w.sb -orient vertical -command "$w.txt yview"
     pack $w.sb -side right -fill y -in $w.outer.inRight.bot
     pack $w.outer.inRight.bot.f -fill both -expand 1

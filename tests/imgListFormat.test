@@ -1,29 +1,44 @@
 # This file is a Tcl script to test out the default image data format
 # ("list format") implementend in the file tkImgListFormat.c.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 2017 Simon Bachmann
 # All rights reserved.
 #
 # Author: Simon Bachmann (simonbachmann@bluewin.ch)
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import image
 
 imageInit
 
-# find the teapot.ppm file for use in these tests
+#
+# TEST INITIALIZATION
+#
+
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
-testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
-# let's see if we have the semi-transparent one as well
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
-testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
 
-# ---------------------------------------------------------------------
+#
+# TESTS
+#
 
-
 test imgListFormat-1.1 {ParseFormatOptions: default values} -setup {
     image create photo photo1
 } -body {
@@ -107,21 +122,21 @@ test imgListFormat-1.11 {valid colorformats} -setup {
     imageCleanup
     unset result
 } -result {{{#ffffff}} {{#ffffff78}} {{{255 255 255 120}}}}
-
+
 # GetBadOptMsg: only use case already tested with imgListFormat-1.4
-
+
 test imgListFormat-3.1 {StringMatchDef: data is not a list} -body {
     testphotostringmatch {not a " proper list}
     # " (this comment is here only for editor highlighting)
 } -returnCodes error -result {unmatched open quote in list}
 # empty data case tested with imgPhoto-4.95 (imgPhoto.test)
 test imgListFormat-3.2 {StringMatchDef: \
-        list element not a proper list} -body {
+	list element not a proper list} -body {
     testphotostringmatch {{red white} {not "} {blue green}}
     # "
 } -returnCodes error -result {unmatched open quote in list}
 test imgListFormat-3.3 {StringMatchDef: \
-        sublists with differen lengths} -body {
+	sublists with differen lengths} -body {
     testphotostringmatch {{#001122 #334455 #667788}
 		{#99AABB #CCDDEE}
 		{#FF0011 #223344 #556677}}
@@ -145,13 +160,13 @@ test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
 } -body {
     photo1 put {{blue green}
 		{yellow magenta}
-	        {#000000 #FFFFFFFF}}
+		{#000000 #FFFFFFFF}}
     list [image width photo1] [image height photo1] \
 	[photo1 get 0 2 -withalpha]
 } -cleanup {
     imageCleanup
 } -result {2 3 {0 0 0 255}}
-
+
 # ImgStringRead: most of the error cases cannot be tested with current code,
 # as the errors are detected by StringMatchDef
 test imgListFormat-4.1 {StringReadDef: use with -format opt} -setup {
@@ -175,9 +190,7 @@ test imgListFormat-4.3 {StringReadDef: erroneous non-option argument} -setup {
 } -body {
     photo1 put orange -format {default bogus}
 } -returnCodes error -result {bad format option "bogus": no options allowed}
-test imgListFormat-4.4 {StringReadDef: normal use case} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-4.4 {StringReadDef: normal use case} -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
 } -body {
@@ -188,9 +201,7 @@ test imgListFormat-4.4 {StringReadDef: normal use case} -constraints {
     imageCleanup
     unset imgData
 } -result 1
-test imgListFormat-4.5 {StringReadDef: correct compositing rule} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-4.5 {StringReadDef: correct compositing rule} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
     image create photo photo2
 } -body {
@@ -201,7 +212,7 @@ test imgListFormat-4.5 {StringReadDef: correct compositing rule} -constraints {
 } -cleanup {
     imageCleanup
 } -result {{255 0 0 255} {0 78 185 225} {255 0 0 255}}
-
+
 test imgListFormat-5.1 {StringWriteDef: format options not a list} -setup {
     image create photo photo1
 } -body {
@@ -241,9 +252,7 @@ test imgListFormat-5.5 {StirngWriteDef: size of data} -setup {
     unset imgData
     imageCleanup
 } -result {35 64}
-test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -setup {
     set result {}
     image create photo photo1 -file $teapotPhotoFile
 } -body {
@@ -260,9 +269,7 @@ test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -constraints {
     unset imgData
     imageCleanup
 } -result {{#135cc0} #135cc0 #a06d52 #e1c8ba #135cc0}
-test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -setup {
     set result {}
     image create photo photo1 -file $teapotPhotoFile
 } -body {
@@ -279,9 +286,7 @@ test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
     unset imgData
     imageCleanup
 } -result {{#135cc0ff} #135cc0ff #a06d52ff #e1c8baff #135cc0ff}
-test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat rgb}]
@@ -295,9 +300,7 @@ test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -constraints {
     unset imgData
     imageCleanup
 } -result {{#004eb9} #a14100 #ffca9f}
-test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat rgba}]
@@ -310,9 +313,7 @@ test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
     unset imgData
     imageCleanup
 } -result {{#004eb9e1} #a14100aa #ffca9faf}
-test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat list}]
@@ -326,7 +327,7 @@ test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -constraints {
     unset result
     imageCleanup
 } -result {{0 78 185 225} {161 65 0 170} {255 202 159 175}}
-
+
 test imgListFormat-6.1 {ParseColor: empty string} -setup {
     image create photo photo1
     set result {}
@@ -352,7 +353,7 @@ test imgListFormat-6.3 {ParseColor: color name too long} -setup {
     image create photo photo1
     set longstr {}
     for {set i 1} {$i <= 100} {incr i} {
-        append longstr "z"
+	append longstr "z"
     }
 } -body {
     photo1 put [list [list blue] [list $longstr]]
@@ -415,7 +416,7 @@ test imgListFormat-6.8 {ParseColor: overall test} -setup {
 {255 250 250 128} {255 238 238 136} {255 238 238 128} {255 238 238 128}\
 {255 250 250 128} {255 250 250 136} {255 250 250 128} {255 250 250 128}\
 {255 250 250 255} {255 238 238 136} {255 250 250 128} {255 250 250 255}}
-
+
 # Note: these tests were written for an earlier implementation of
 # ParseColorAsList. For this reason, their order and layout do not follow the
 # current code very well. Test coverage is pretty good, nevertheless.
@@ -494,7 +495,7 @@ test imgListFormat-7.10 {ParseColorAsList: list format, string rep} -setup {
 } -cleanup {
 	imageCleanup
 } -result {111 222 33 44}
-
+
 test imgListFormat-8.1 {ParseColorAsHex: RGB format} -setup {
     image create photo photo1
 } -body {
@@ -526,9 +527,9 @@ test imgListFormat-8.4 {ParseColor: valid #RGBA color} -setup {
 } -cleanup {
     imageCleanup
 } -result {{155 213 2 13} {119 170 204 255}}
-
+
 test imgListFormat-9.1 {ParseColorAsStandard:
-        Tk color, valid suffixes} -setup {
+	Tk color, valid suffixes} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -543,7 +544,7 @@ test imgListFormat-9.1 {ParseColorAsStandard:
     imageCleanup
 } -result {{0 0 255 181} {17 68 51 204} {136 221 68 26} {255 0 255 255}}
 test imgListFormat-9.2 {ParseColorAsStandard:
-        Tk color with and w/o suffixes} -setup {
+	Tk color with and w/o suffixes} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -605,7 +606,7 @@ test imgListFormat-9.8 {ParseColorAsStandard: # suffix, no hex digits} -setup {
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#"}
 test imgListFormat-9.9 {ParseColorAsStandard:
-        '#' suffix, too many digits} -setup {
+	'#' suffix, too many digits} -setup {
     image create photo photo1
 } -body {
     photo1 put {{#ABC#12 #ABC#123}}
@@ -613,7 +614,7 @@ test imgListFormat-9.9 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#123"}
 test imgListFormat-9.10 {ParseColorAsStandard:
-        invalid digit in #X suffix} -setup {
+	invalid digit in #X suffix} -setup {
     image create photo photo1
 } -body {
     photo1 put {#000#a #000#g}
@@ -621,7 +622,7 @@ test imgListFormat-9.10 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#g": expected hex digit}
 test imgListFormat-9.11 {ParseColorAsStandard:
-        invalid digit in #XX suffix} -setup {
+	invalid digit in #XX suffix} -setup {
     image create photo photo1
 } -body {
     photo1 put {green#2 green#2W}
@@ -629,7 +630,7 @@ test imgListFormat-9.11 {ParseColorAsStandard:
     imageCleanup
 } -returnCodes error -result {invalid alpha suffix "#2W": expected hex digit}
 test imgListFormat-9.12 {ParseColorAsStandard:
-        invalid color: not a hex digit} -setup {
+	invalid color: not a hex digit} -setup {
     image create photo photo1
 } -body {
     photo1 put {#ABCDEF@.99 #ABCDEG@.99}
@@ -651,11 +652,10 @@ test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
     imageCleanup
 } -returnCodes error -result {invalid color name "#1111#1"}
 
-
-# ---------------------------------------------------------------------
+#
+# TESTFILE CLEANUP
+#
 
 imageFinish
-
-# cleanup
+testutils forget image
 cleanupTests
-return

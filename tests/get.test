@@ -1,15 +1,30 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkGet.c.  It is organized in the standard fashion for Tcl
-# white-box tests.
+# tkGet.c.
 #
 # Copyright © 1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test get-1.1 {Tk_GetAnchorFromObj} -setup {
     button .b
@@ -97,7 +112,7 @@ test get-1.11 {Tk_GetAnchorFromObj - error} -setup {
     .b configure -anchor unknown
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad anchor "unknown": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "unknown": must be n, ne, e, se, s, sw, w, nw, or center}
 
 
 test get-2.1 {Tk_GetJustifyFromObj} -setup {
@@ -130,9 +145,11 @@ test get-2.4 {Tk_GetJustifyFromObj - error} -setup {
     .b configure -justify stupid
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad justification "stupid": must be left, right, or center}
+} -returnCodes error -result {bad justification "stupid": must be left, right, or center}
+
+#
+# TESTFILE CLEANUP
+#
 
 # cleanup
 cleanupTests
-return
-

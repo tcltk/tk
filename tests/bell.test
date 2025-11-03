@@ -1,34 +1,49 @@
 # This file is a Tcl script to test out Tk's "bell" command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test bell-1.1 {bell command} -body {
     bell a
-} -returnCodes {error} -result {bad option "a": must be -displayof or -nice}
+} -returnCodes error -result {bad option "a": must be -displayof or -nice}
 
 test bell-1.2 {bell command} -body {
     bell a b
-} -returnCodes {error} -result {bad option "a": must be -displayof or -nice}
+} -returnCodes error -result {bad option "a": must be -displayof or -nice}
 
 test bell-1.3 {bell command} -body {
     bell -displayof gorp
-} -returnCodes {error} -result {bad window path name "gorp"}
+} -returnCodes error -result {bad window path name "gorp"}
 
 test bell-1.4 {bell command} -body {
     bell -nice -displayof
-} -returnCodes {error} -result {wrong # args: should be "bell ?-displayof window? ?-nice?"}
+} -returnCodes error -result {wrong # args: should be "bell ?-displayof window? ?-nice?"}
 
 test bell-1.5 {bell command} -body {
     bell -nice -nice -nice
-} -returnCodes {ok} -result {}  ;#keep -result {} and -retutnCodes {ok} for clarity?
+} -returnCodes {ok} -result {}  ;#keep -result {} and -returnCodes {ok} for clarity?
 
 test bell-1.6 {bell command} -body {
     bell -displayof . -nice
@@ -36,7 +51,7 @@ test bell-1.6 {bell command} -body {
 
 test bell-1.7 {bell command} -body {
     bell -nice -displayof . -nice
-} -returnCodes {error} -result {wrong # args: should be "bell ?-displayof window? ?-nice?"}
+} -returnCodes error -result {wrong # args: should be "bell ?-displayof window? ?-nice?"}
 
 test bell-1.8 {bell command} -body {
     puts "Bell should ring now ..."
@@ -49,5 +64,8 @@ test bell-1.8 {bell command} -body {
     bell
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return

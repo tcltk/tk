@@ -1,39 +1,41 @@
 # This file is a Tcl script to test out the "send" command and the
-# other procedures in the file tkSend.c.  It is organized in the
-# standard fashion for Tcl tests.
+# other procedures in the file tkSend.c.
 #
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-# Compute a script that will load Tk into a child interpreter.
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
-    }
-}
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
 
-# Procedure to create a new application with a given name and class.
+# Ensure a pristine initial window state
+resetWindows
 
-proc newApp {name {safe {}}} {
-    global loadTk
-    if {[string compare $safe "-safe"] == 0} {
-	interp create -safe $name
-    } else {
-	interp create $name
-    }
-    $name eval [list set argv [list -name $name]]
-    catch {eval $loadTk $name}
-}
+# Import utility procs for specific functional areas
+testutils import child
+
+#
+# COMMON TEST SETUP
+#
 
 set currentInterps [winfo interps]
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 if {
     [testConstraint win] &&
     [llength [info commands send]] &&
@@ -62,35 +64,39 @@ if {
     testConstraint winSend 0
 }
 
+#
+# TESTS
+#
+
 # setting up dde server is done when the first interp is created and
 # cannot be tested very easily.
 test winSend-1.1 {Tk_SetAppName - changing name of interp} winSend {
-    newApp testApp
+    childTkInterp testApp
     list [testApp eval tk appname testApp2] [interp delete testApp]
 } {testApp2 {}}
 test winSend-1.2 {Tk_SetAppName - changing name - not front of linked list} winSend {
-    newApp testApp
-    newApp testApp2
+    childTkInterp testApp
+    childTkInterp testApp2
     list [testApp eval tk appname testApp3] [interp delete testApp] [interp delete testApp2]
 } {testApp3 {} {}}
 test winSend-1.3 {Tk_SetAppName - unique name - no conflicts} winSend {
-    newApp testApp
+    childTkInterp testApp
     list [testApp eval tk appname testApp] [interp delete testApp]
 } {testApp {}}
 test winSend-1.4 {Tk_SetAppName - unique name - one conflict} winSend {
-    newApp testApp
-    newApp foobar
+    childTkInterp testApp
+    childTkInterp foobar
     list [foobar eval tk appname testApp] [interp delete foobar] [interp delete testApp]
 } {{testApp #2} {} {}}
 test winSend-1.5 {Tk_SetAppName - unique name - one conflict} winSend {
-    newApp testApp
-    newApp foobar
-    newApp blaz
+    childTkInterp testApp
+    childTkInterp foobar
+    childTkInterp blaz
     foobar eval tk appname testApp
     list [blaz eval tk appname testApp] [interp delete foobar] [interp delete testApp] [interp delete blaz]
 } {{testApp #3} {} {} {}}
 test winSend-1.6 {Tk_SetAppName - safe interps} winSend {
-    newApp testApp -safe
+    childTkInterp testApp -safe
     list [catch {testApp eval send testApp {set foo a}} msg] $msg [interp delete testApp]
 } {1 {invalid command name "send"} {}}
 
@@ -113,11 +119,11 @@ test winSend-2.2 {Tk_SendObjCmd - sending to ourselves} winSend {
     list [send [tk appname] {set foo a}]
 } {a}
 test winSend-2.3 {Tk_SendObjCmd - sending to ourselves in a different interpreter} winSend {
-    newApp testApp
+    childTkInterp testApp
     list [catch {send testApp {set foo b}} msg] $msg [interp delete testApp]
 } {0 b {}}
 test winSend-2.4 {Tk_SendObjCmd - sending to ourselves in a different interp with errors} winSend {
-    newApp testApp
+    childTkInterp testApp
     list [catch {send testApp {expr {2 / 0}}} msg] $msg $errorCode $errorInfo [interp delete testApp]
 } "1 {divide by zero} {ARITH DIVZERO {divide by zero}} {divide by zero\n    while executing\n\"expr {2 / 0}\"\n    invoked from within\n\"send testApp {expr {2 / 0}}\"} {}"
 test winSend-2.5 {Tk_SendObjCmd - sending to another app async} winSend {
@@ -155,11 +161,11 @@ test winSend-3.1 {TkGetInterpNames} winSend {
 } 1
 
 test winSend-4.1 {DeleteProc - changing name of app} winSend {
-    newApp a
+    childTkInterp a
     list [a eval tk appname foo] [interp delete a]
 } {foo {}}
 test winSend-4.2 {DeleteProc - normal} winSend {
-    newApp a
+    childTkInterp a
     list [interp delete a]
 } {{}}
 
@@ -271,7 +277,7 @@ test winSend-6.8 {SendDDEServer - XTYP_WILDCONNECT} winSend {
 } 0
 
 test winSend-7.1 {DDEExitProc} winSend {
-    newApp testApp
+    childTkInterp testApp
     list [interp delete testApp]
 } {{}}
 
@@ -389,6 +395,10 @@ test winSend-10.18 {Tk_DDEObjCmd - services} winSend {
     list [catch {dde services Tk {}} msg] [expr {[lsearch $msg $currentService] >= 0}]
 } {0 1}
 
+#
+# TESTFILE CLEANUP
+#
+
 # Get rid of the other app and all of its interps
 
 set newInterps [winfo interps]
@@ -402,6 +412,5 @@ while {[llength $newInterps] != [llength $currentInterps]} {
     }
 }
 
-# cleanup
+testutils forget child
 cleanupTests
-return

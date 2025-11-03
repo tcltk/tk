@@ -13,17 +13,23 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The structure below defines the implementation of the "statekey" Tcl
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-const Tcl_ObjType tkStateKeyObjType = {
-    "statekey",			/* name */
+const TkObjType tkStateKeyObjType = {
+    {"statekey",		/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -46,12 +52,12 @@ const Tcl_ObjType tkStateKeyObjType = {
 
 int
 TkStateParseProc(
-    ClientData clientData,	/* some flags.*/
+    void *clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     int c;
     int flags = PTR2INT(clientData);
@@ -87,17 +93,17 @@ TkStateParseProc(
     msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be normal",
 	    ((flags & 4) ? "-default" : "state"), value);
     if (flags & 1) {
-	Tcl_AppendToObj(msgObj, ", active", -1);
+	Tcl_AppendToObj(msgObj, ", active", TCL_INDEX_NONE);
     }
     if (flags & 2) {
-	Tcl_AppendToObj(msgObj, ", hidden", -1);
+	Tcl_AppendToObj(msgObj, ", hidden", TCL_INDEX_NONE);
     }
     if (flags & 3) {
-	Tcl_AppendToObj(msgObj, ",", -1);
+	Tcl_AppendToObj(msgObj, ",", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, " or disabled", -1);
+    Tcl_AppendToObj(msgObj, " or disabled", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", (char *)NULL);
     *statePtr = TK_STATE_NORMAL;
     return TCL_ERROR;
 }
@@ -128,7 +134,7 @@ TkStatePrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -174,7 +180,7 @@ TkOrientParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -199,7 +205,7 @@ TkOrientParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad orientation \"%s\": must be vertical or horizontal",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", (char *)NULL);
     *orientPtr = 0;
     return TCL_ERROR;
 }
@@ -230,7 +236,7 @@ TkOrientPrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -257,12 +263,12 @@ TkOrientPrintProc(
 
 int
 TkOffsetParseProc(
-    ClientData clientData,	/* not used */
+    void *clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset)			/* Offset of tile in record */
+    Tcl_Size offset)			/* Offset of tile in record */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
     Tk_TSOffset tsoffset;
@@ -383,14 +389,14 @@ TkOffsetParseProc(
   badTSOffset:
     msgObj = Tcl_ObjPrintf("bad offset \"%s\": expected \"x,y\"", value);
     if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
-	Tcl_AppendToObj(msgObj, ", \"#x,y\"", -1);
+	Tcl_AppendToObj(msgObj, ", \"#x,y\"", TCL_INDEX_NONE);
     }
     if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
-	Tcl_AppendToObj(msgObj, ", <index>", -1);
+	Tcl_AppendToObj(msgObj, ", <index>", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
+    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -412,7 +418,7 @@ TkOffsetPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset,			/* Offset of tile in record */
+    Tcl_Size offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
@@ -423,7 +429,7 @@ TkOffsetPrintProc(
 	    return "end";
 	}
 	p = (char *)ckalloc(32);
-	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
+	snprintf(p, 32, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
     }
@@ -456,7 +462,7 @@ TkOffsetPrintProc(
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
-    sprintf(q, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
+    snprintf(q, 32, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
     *freeProcPtr = TCL_DYNAMIC;
     return p;
 }
@@ -473,13 +479,13 @@ TkOffsetPrintProc(
 
 int
 TkPixelParseProc(
-    ClientData clientData,	/* If non-NULL, negative values are allowed as
+    void *clientData,	/* If non-NULL, negative values are allowed as
 				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset)			/* Offset of tile in record */
+    Tcl_Size offset)			/* Offset of tile in record */
 {
     double *doublePtr = (double *) (widgRec + offset);
     int result;
@@ -488,8 +494,8 @@ TkPixelParseProc(
 
     if ((result == TCL_OK) && (clientData == NULL) && (*doublePtr < 0.0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad screen distance \"%s\"", value));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+		"expected screen distance but got \"%.50s\"", value));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	return TCL_ERROR;
     }
     return result;
@@ -513,7 +519,7 @@ TkPixelPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset,			/* Offset of tile in record */
+    Tcl_Size offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
@@ -616,6 +622,70 @@ Tk_DrawFocusHighlight(
 /*
  *----------------------------------------------------------------------
  *
+ * TkDrawDottedRect --
+ *
+ *	This function draws a dotted rectangle, used as focus ring of Ttk
+ *	widgets and for rendering the active element of a listbox.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A dotted rectangle is drawn in the specified Drawable.  On the
+ *	windowing systems x11 and aqua the GC components line_style,
+ *	line_width, dashes, and dash_offset are modified as needed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkDrawDottedRect(
+    Display *disp,		/* Display containing the dotted rectangle. */
+    Drawable d,			/* Where to draw the rectangle (typically a
+				 * pixmap for double buffering). */
+    GC gc,			/* Graphics context to use for drawing the
+				 * rectangle. */
+    int x, int y,		/* Coordinates of the top-left corner. */
+    int width, int height)	/* Width & height, _including the border_. */
+{
+#ifdef _WIN32
+    TkWinDrawDottedRect(disp, d, gc->foreground, x, y, width, height);
+
+#else
+    XGCValues gcValues;
+    int widthMod2 = width % 2, heightMod2 = height % 2;
+    int x2 = x + width - 1, y2 = y + height - 1;
+
+    gcValues.line_style = LineOnOffDash;
+    gcValues.line_width = 1;
+    gcValues.dashes = 1;
+#ifdef MAC_OSX_TK
+    gcValues.dash_offset = 1;
+#else
+    gcValues.dash_offset = 0;
+#endif
+    XChangeGC(disp, gc, GCLineStyle | GCLineWidth | GCDashList | GCDashOffset,
+	    &gcValues);
+
+    if (widthMod2 == 0 && heightMod2 == 0) {
+	XDrawLine(disp, d, gc, x+1, y,  x2-1, y);	/* N */
+	XDrawLine(disp, d, gc, x+2, y2, x2,   y2);	/* S */
+	XDrawLine(disp, d, gc, x,  y+2, x,  y2);	/* W */
+	XDrawLine(disp, d, gc, x2, y+1, x2, y2-1);	/* E */
+    } else {
+	int dx = 1 - widthMod2, dy = 1 - heightMod2;
+
+	XDrawLine(disp, d, gc, x+1, y,  x2-dx, y);	/* N */
+	XDrawLine(disp, d, gc, x+1, y2, x2-dx, y2);	/* S */
+	XDrawLine(disp, d, gc, x,  y+1, x,  y2-dy);	/* W */
+	XDrawLine(disp, d, gc, x2, y+1, x2, y2-dy);	/* E */
+    }
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_GetScrollInfo --
  *
  *	This function is invoked to parse "xview" and "yview" scrolling
@@ -640,7 +710,7 @@ Tk_DrawFocusHighlight(
 int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int argc,			/* # arguments for command. */
+    Tcl_Size argc,			/* # arguments for command. */
     const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -655,7 +725,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "moveto fraction"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], dblPtr) != TCL_OK) {
@@ -669,7 +739,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "scroll number pages|units"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], &d) != TCL_OK) {
@@ -686,13 +756,13 @@ Tk_GetScrollInfo(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be pages or units", argv[4]));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", argv[2]));
     Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", argv[2],
-	    NULL);
+	    (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -723,16 +793,21 @@ Tk_GetScrollInfo(
 int
 Tk_GetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int objc,			/* # arguments for command. */
+    Tcl_Size objc,			/* # arguments for command. */
     Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
     int *intPtr)		/* Filled in with number of pages or lines to
 				 * scroll, if any. */
 {
-    TkSizeT length;
-    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+    Tcl_Size length;
+    const char *arg;
 
+    if (objc + 1 < 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "moveto|scroll args");
+	return TK_SCROLL_ERROR;
+    }
+    arg = Tcl_GetStringFromObj(objv[2], &length);
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
 
@@ -768,12 +843,12 @@ Tk_GetScrollInfoObj(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be pages or units", arg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", arg));
-    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, NULL);
+    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -947,7 +1022,7 @@ TkFindStateNum(
 		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
 	Tcl_SetObjResult(interp, msgObj);
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, (char *)NULL);
     }
     return mPtr->numKey;
 }
@@ -967,7 +1042,7 @@ TkFindStateNumObj(
      * See if the value is in the object cache.
      */
 
-    if ((keyPtr->typePtr == &tkStateKeyObjType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType.objType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == mapPtr)) {
 	return PTR2INT(keyPtr->internalRep.twoPtrValue.ptr2);
     }
@@ -985,7 +1060,7 @@ TkFindStateNumObj(
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
-	    keyPtr->typePtr = &tkStateKeyObjType;
+	    keyPtr->typePtr = &tkStateKeyObjType.objType;
 	    return mPtr->numKey;
 	}
     }
@@ -1008,7 +1083,7 @@ TkFindStateNumObj(
 	}
 	Tcl_SetObjResult(interp, msgObj);
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", Tcl_GetString(optionPtr),
-		key, NULL);
+		key, (char *)NULL);
     }
     return mPtr->numKey;
 }
@@ -1035,12 +1110,13 @@ TkFindStateNumObj(
 int
 TkBackgroundEvalObjv(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     int flags)
 {
     Tcl_InterpState state;
-    int n, r = TCL_OK;
+    int r = TCL_OK;
+    Tcl_Size n;
 
     /*
      * Record the state of the interpreter.
@@ -1094,7 +1170,7 @@ TkMakeEnsemble(
     Tcl_Interp *interp,
     const char *namesp,
     const char *name,
-    ClientData clientData,
+    void *clientData,
     const TkEnsemble map[])
 {
     Tcl_Namespace *namespacePtr = NULL;
@@ -1117,7 +1193,7 @@ TkMakeEnsemble(
 	}
     }
 
-    nameObj = Tcl_NewStringObj(name, -1);
+    nameObj = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     ensemble = Tcl_FindEnsemble(interp, nameObj, 0);
     Tcl_DecrRefCount(nameObj);
     if (ensemble == NULL) {
@@ -1129,23 +1205,23 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namesp, -1);
+    Tcl_DStringAppend(&ds, namesp, TCL_INDEX_NONE);
     if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
-	Tcl_DStringAppend(&ds, "::", -1);
+	Tcl_DStringAppend(&ds, "::", TCL_INDEX_NONE);
     }
-    Tcl_DStringAppend(&ds, name, -1);
+    Tcl_DStringAppend(&ds, name, TCL_INDEX_NONE);
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
 	Tcl_Obj *fqdnObj;
 
-	nameObj = Tcl_NewStringObj(map[i].name, -1);
+	nameObj = Tcl_NewStringObj(map[i].name, TCL_INDEX_NONE);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
-	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
+	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, (char *)NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
-	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
+	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
@@ -1164,14 +1240,46 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
+ * TkScalingLevel --
+ *
+ *	Returns the display's DPI scaling level as 1.0, 1.25, 1.5, ....
+ *
+ * Results:
+ *      The scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkScalingLevel(
+    Tk_Window tkwin)
+{
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
+	    TCL_GLOBAL_ONLY);
+    if (scalingPctPtr == NULL) {
+	return 1.0;
+    } else {
+	int scalingPct;
+	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
+	return scalingPct / 100.0;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SendVirtualEvent --
  *
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to:
- * 	    "event generate $target <<$eventName>> -data $detail"
+ *	Send a virtual event notification to the specified target window.
+ *	Equivalent to:
+ *	    "event generate $target <<$eventName>> -data $detail"
  *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
- * 	routine does not reenter the interpreter.
+ *	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
+ *	routine does not reenter the interpreter.
  *
  *----------------------------------------------------------------------
  */
@@ -1197,80 +1305,6 @@ Tk_SendVirtualEvent(
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-/*
- *---------------------------------------------------------------------------
- *
- * TkUtfToUniChar --
- *
- *	Almost the same as Tcl_UtfToUniChar but using int instead of Tcl_UniChar.
- *	This function is capable of collapsing a upper/lower surrogate pair to a
- *	single unicode character. So, up to 6 bytes might be consumed.
- *
- * Results:
- *	*chPtr is filled with the Tcl_UniChar, and the return value is the
- *	number of bytes from the UTF-8 string that were consumed.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-size_t
-TkUtfToUniChar(
-    const char *src,	/* The UTF-8 string. */
-    int *chPtr)		/* Filled with the Unicode value represented by
-			 * the UTF-8 string. */
-{
-    Tcl_UniChar uniChar = 0;
-
-    size_t len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((uniChar & 0xFC00) == 0xD800) {
-	Tcl_UniChar low = uniChar;
-	/* This can only happen if sizeof(Tcl_UniChar)== 2 and src points
-	 * to a character > U+FFFF  */
-	size_t len2 = Tcl_UtfToUniChar(src+len, &low);
-	if ((low & 0xFC00) == 0xDC00) {
-	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
-	    return len + len2;
-	}
-    }
-    *chPtr = uniChar;
-    return len;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkUniCharToUtf --
- *
- *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
- *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
- *	So, up to 6 bytes might be produced.
- *
- * Results:
- *	*buf is filled with the UTF-8 string, and the return value is the
- *	number of bytes produced.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-size_t TkUniCharToUtf(int ch, char *buf)
-{
-    if ((unsigned)(ch - 0x10000) <= 0xFFFFF) {
-	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
-	 * version and/or TCL_UTF_MAX build value */
-	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
-	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
-    }
-    return Tcl_UniCharToUtf(ch, buf);
-}
-#endif
 /*
  * Local Variables:
  * mode: c

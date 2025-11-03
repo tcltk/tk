@@ -21,6 +21,7 @@ Tk_CreateEventHandler, Tk_DeleteEventHandler, Tk_GetButtonMask, Tk_SendVirtualEv
 \fBTk_GetButtonMask\fR(\fIbutton\fR)
 .sp
 \fBTk_SendVirtualEvent\fR(\fItkwin, eventName, detail\fR)
+.fi
 .SH ARGUMENTS
 .AS "unsigned long" clientData
 .AP unsigned button in
@@ -28,7 +29,7 @@ Button number.
 .AP "const char" *eventName in
 The name of the virtual event.
 .AP Tcl_Obj *detail in
-Detail information for the virtual event.
+Detail information for the virtual event. May be NULL.
 .AP Tk_Window tkwin in
 Token for window in which events may occur.
 .AP "unsigned long" mask in
@@ -37,7 +38,7 @@ for which \fIproc\fR should be called.
 .AP Tk_EventProc *proc in
 Procedure to invoke whenever an event in \fImask\fR occurs
 in the window given by \fItkwin\fR.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .BE
 .SH DESCRIPTION
@@ -55,7 +56,7 @@ call \fBTk_HandleEvent\fR, such as \fBTcl_DoOneEvent\fR or
 type \fBTk_EventProc\fR:
 .CS
 typedef void \fBTk_EventProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         XEvent *\fIeventPtr\fR);
 .CE
 The \fIclientData\fR parameter to \fIproc\fR is a copy of the \fIclientData\fR

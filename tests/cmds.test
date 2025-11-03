@@ -1,26 +1,45 @@
 # This file is a Tcl script to test the procedures in the file
-# tkCmds.c.  It is organized in the standard fashion for Tcl tests.
+# tkCmds.c.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
 update
+
+#
+# TESTS
+#
 
 test cmds-1.1 {tkwait visibility, argument errors} -body {
     tkwait visibility
-} -returnCodes {error} -result {wrong # args: should be "tkwait variable|visibility|window name"}
+} -returnCodes error -result {wrong # args: should be "tkwait variable|visibility|window name"}
 test cmds-1.2 {tkwait visibility, argument errors} -body {
     tkwait visibility foo bar
-} -returnCodes {error} -result {wrong # args: should be "tkwait variable|visibility|window name"}
+} -returnCodes error -result {wrong # args: should be "tkwait variable|visibility|window name"}
 test cmds-1.3 {tkwait visibility, argument errors} -body {
     tkwait visibility bad_window
-} -returnCodes {error} -result {bad window path name "bad_window"}
+} -returnCodes error -result {bad window path name "bad_window"}
 test cmds-1.4 {tkwait visibility, waiting for window to be mapped} -setup {
     button .b -text "Test"
     set x init
@@ -39,7 +58,7 @@ test cmds-1.5 {tkwait visibility, window gets deleted} -setup {
 } -body {
     after 100 {set x deleted; destroy .f}
     tkwait visibility .f.b
-} -returnCodes {error} -result {window ".f.b" was deleted before its visibility changed}
+} -returnCodes error -result {window ".f.b" was deleted before its visibility changed}
 test cmds-1.6 {tkwait visibility, window gets deleted} -setup {
     frame .f
     button .f.b -text "Test"
@@ -53,8 +72,8 @@ test cmds-1.6 {tkwait visibility, window gets deleted} -setup {
     destroy .f
 } -result {deleted}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return
-

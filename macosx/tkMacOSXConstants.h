@@ -15,24 +15,11 @@
 #ifndef _TKMACCONSTANTS
 #define _TKMACCONSTANTS
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
-#define NSFullScreenWindowMask (1 << 14)
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
-typedef NSInteger NSModalResponse;
-#endif
-
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
  * of constants.
  */
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-#define kCTFontDefaultOrientation kCTFontOrientationDefault
-#define kCTFontVerticalOrientation kCTFontOrientationVertical
-#endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define NSOKButton NSModalResponseOK

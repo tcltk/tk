@@ -86,11 +86,11 @@ typedef struct ArcItem {
  * Information used for parsing configuration specs:
  */
 
-static int	StyleParseProc(ClientData clientData, Tcl_Interp *interp,
+static int	StyleParseProc(void *clientData, Tcl_Interp *interp,
 		    Tk_Window tkwin, const char *value,
-		    char *widgRec, TkSizeT offset);
-static const char * StylePrintProc(ClientData clientData, Tk_Window tkwin,
-		    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+		    char *widgRec, Tcl_Size offset);
+static const char * StylePrintProc(void *clientData, Tk_Window tkwin,
+		    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr);
 
 static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
@@ -99,7 +99,7 @@ static const Tk_CustomOption styleOption = {
     StyleParseProc, StylePrintProc, NULL
 };
 static const Tk_CustomOption tagsOption = {
-    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -130,7 +130,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(ArcItem, outline.offsetObj), TK_CONFIG_OBJS|TK_OPTION_NEG_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -184,19 +184,19 @@ static const Tk_ConfigSpec configSpecs[] = {
 
 static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
 static int		ConfigureArc(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static void		ComputeArcParametersFromHeight(ArcItem *arcPtr);
 static int		CreateArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteArc(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayArc(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
 static int		ArcCoords(Tcl_Interp *interp, Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
+			    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ArcToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		ArcToPoint(Tk_Canvas canvas,
@@ -234,7 +234,7 @@ Tk_ItemType tkArcType = {
     ArcCoords,			/* coordProc */
     DeleteArc,			/* deleteProc */
     DisplayArc,			/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     ArcToPoint,			/* pointProc */
     ArcToArea,			/* areaProc */
     ArcToPostscript,		/* postscriptProc */
@@ -275,11 +275,11 @@ CreateArc(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing arc. */
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -354,7 +354,7 @@ ArcCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
@@ -374,14 +374,14 @@ ArcCoords(
 		return TCL_ERROR;
 	    } else if (objc != 4) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 4, got %d", objc));
+			"wrong # coordinates: expected 4, got %" TCL_SIZE_MODIFIER "d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
- 		    &arcPtr->bbox[0]) != TCL_OK)
+		    &arcPtr->bbox[0]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
 		    &arcPtr->bbox[1]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2],
@@ -404,8 +404,8 @@ ArcCoords(
 	ComputeArcBbox(canvas, arcPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 4, got %d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC", NULL);
+		"wrong # coordinates: expected 0 or 4, got %" TCL_SIZE_MODIFIER "d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -435,7 +435,7 @@ ConfigureArc(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Arc item to reconfigure. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
@@ -452,7 +452,7 @@ ConfigureArc(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) arcPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, arcPtr, flags)) {
 	return TCL_ERROR;
     }
 
@@ -507,7 +507,7 @@ ConfigureArc(
 	tsoffset->yoffset = (int) (arcPtr->bbox[2] + 0.5);
     }
 
-    mask = Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr, &(arcPtr->outline));
+    mask = (unsigned long)Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr, &(arcPtr->outline));
     if (mask) {
 	gcValues.cap_style = CapButt;
 	mask |= GCCapStyle;
@@ -619,7 +619,7 @@ ComputeArcParametersFromHeight(
      */
 
     if (arcPtr->height == 0)
-        return;
+	return;
 
     /*
      * Calculate the chord length, return early if it is too small.
@@ -629,8 +629,8 @@ ComputeArcParametersFromHeight(
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
 
     if (chordLen < DBL_EPSILON) {
-        arcPtr->start = arcPtr->extent = arcPtr->height = 0;
-        return;
+	arcPtr->start = arcPtr->extent = arcPtr->height = 0;
+	return;
     }
 
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;
@@ -2076,7 +2076,7 @@ ArcToPostscript(
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
 
 	if (arcPtr->style != CHORD_STYLE) {
-	    Tcl_AppendToObj(psObj, "0 0 moveto ", -1);
+	    Tcl_AppendToObj(psObj, "0 0 moveto ", TCL_INDEX_NONE);
 	}
 	Tcl_AppendPrintfToObj(psObj,
 		"0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
@@ -2087,17 +2087,17 @@ ArcToPostscript(
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
-	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
 	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (arcPtr->outline.gc != NULL) {
-		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	    }
 	} else {
-	    Tcl_AppendToObj(psObj, "fill\n", -1);
+	    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	}
     }
 
@@ -2120,7 +2120,7 @@ ArcToPostscript(
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (arcPtr->style != ARC_STYLE) {
-	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
 	    if (arcPtr->style == CHORD_STYLE) {
@@ -2133,15 +2133,15 @@ ArcToPostscript(
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 		if (stipple != None) {
-		    Tcl_AppendToObj(psObj, "clip ", -1);
+		    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 		    Tcl_ResetResult(interp);
 		    Tk_CanvasPsStipple(interp, canvas, stipple);
 		    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 		} else {
-		    Tcl_AppendToObj(psObj, "fill\n", -1);
+		    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 		}
-		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 
 		Tcl_ResetResult(interp);
 		Tk_CanvasPsPath(interp, canvas,
@@ -2152,13 +2152,13 @@ ArcToPostscript(
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (stipple != None) {
-		Tcl_AppendToObj(psObj, "clip ", -1);
+		Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 		Tcl_ResetResult(interp);
 		Tk_CanvasPsStipple(interp, canvas, stipple);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    } else {
-		Tcl_AppendToObj(psObj, "fill\n", -1);
+		Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	    }
 	}
     }
@@ -2198,7 +2198,7 @@ StyleParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -2228,7 +2228,7 @@ StyleParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad -style option \"%s\": must be arc, chord, or pieslice",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARC_STYLE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARC_STYLE", (char *)NULL);
     *stylePtr = PIESLICE_STYLE;
     return TCL_ERROR;
 }
@@ -2259,7 +2259,7 @@ StylePrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */

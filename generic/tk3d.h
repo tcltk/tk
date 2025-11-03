@@ -28,7 +28,7 @@ typedef struct TkBorder {
 				 * the border will be used. */
     Colormap colormap;		/* Colormap out of which pixels are
 				 * allocated. */
-    TkSizeT resourceRefCount;	/* Number of active uses of this color (each
+    Tcl_Size resourceRefCount;	/* Number of active uses of this color (each
 				 * active use corresponds to a call to
 				 * Tk_Alloc3DBorderFromObj or Tk_Get3DBorder).
 				 * If this count is 0, then this structure is
@@ -37,7 +37,7 @@ typedef struct TkBorder {
 				 * because there are objects referring to it.
 				 * The structure is freed when objRefCount and
 				 * resourceRefCount are both 0. */
-    TkSizeT objRefCount;		/* The number of Tcl objects that reference
+    Tcl_Size objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     XColor *bgColorPtr;		/* Background color (intensity between
 				 * lightColorPtr and darkColorPtr). */

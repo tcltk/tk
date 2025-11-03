@@ -1,27 +1,40 @@
 # This file is a Tcl script to test out Tk's clipboard management code,
-# especially the "clipboard" command.  It is organized in the standard
-# fashion for Tcl tests.
+# especially the "clipboard" command.
 #
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTES
 #
-# Note: Multiple display clipboard handling will only be tested if the
-# environment variable TK_ALT_DISPLAY is set to an alternate display.
+# * Multiple display clipboard handling will only be tested if the environment
+#   variable TK_ALT_DISPLAY is set to an alternate display.
+# * Some of these tests may fail if another application is grabbing the
+#   clipboard (e.g. an X server, or a VNC viewer)
+
+#
+# TESTFILE INITIALIZATION
 #
 
-#################################################################
-# Note that some of these tests may fail if another application #
-# is grabbing the clipboard (e.g. an X server, or a VNC viewer) #
-#################################################################
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
 
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import child
+
+#
+# COMMON TEST SETUP
+#
 
 # set up a very large buffer to test INCR retrievals
 set longValue ""
@@ -30,8 +43,10 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
     append longValue A$j B$j C$j D$j E$j F$j G$j H$j I$j K$j L$j M$j N$j
 }
 
-# Now we start the main body of the test code
-
+#
+# TESTS
+#
+
 test clipboard-1.1 {ClipboardHandler procedure} -setup {
     clipboard clear
 } -body {
@@ -235,16 +250,16 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} -setup {
 } -cleanup {
     clipboard clear
 }  -returnCodes ok -result {first chunk second chunk}
-test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints {x11 failsOnXQuarz} -setup {
+test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints x11 -setup {
     clipboard clear
 } -body {
-    setupbg
+    childTkProcess create
     clipboard append -f INTEGER -t TEST "16"
-    set result [dobg {clipboard get TEST}]
+    set result [childTkProcess eval {clipboard get TEST}]
     return $result
 } -cleanup {
     clipboard clear
-    cleanupbg
+    childTkProcess exit
 }  -result {0x10 }
 test clipboard-6.3 {Tk_ClipboardAppend procedure} -setup {
     clipboard clear
@@ -356,10 +371,13 @@ test clipboard-7.20 {Tk_ClipboardCmd procedure} -setup {
 } -cleanup {
     clipboard clear
 } -result {-type}
-
-# cleanup
+
+#
+# TESTFILE CLEANUP
+#
+
+testutils forget child
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

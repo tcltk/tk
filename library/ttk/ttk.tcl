@@ -15,6 +15,7 @@ namespace eval ::ttk {
 source -encoding utf-8 [file join $::ttk::library fonts.tcl]
 source -encoding utf-8 [file join $::ttk::library cursors.tcl]
 source -encoding utf-8 [file join $::ttk::library utils.tcl]
+source -encoding utf-8 [file join $::ttk::library elements.tcl]
 
 ## ttk::deprecated $old $new --
 #	Define $old command as a deprecated alias for $new command
@@ -57,6 +58,8 @@ package ifneeded tile 0.8.6 { package provide tile 0.8.6 }
 #	Sends a <<ThemeChanged>> virtual event to all widgets.
 #
 proc ::ttk::ThemeChanged {} {
+    toggleswitch::CondUpdateElements			;# see elements.tcl
+
     set Q .
     while {[llength $Q]} {
 	set QN [list]
@@ -95,10 +98,54 @@ proc ::ttk::setTheme {theme} {
     set currentTheme $theme
 }
 
+## ttk::configureNotebookStyle $style --
+#	Sets theme-specific option values for the ttk::notebook style $style
+#	and/or the style $style.Tab.  To be invoked if the -tabposition option
+#	of $style has a non-default value (like "sw", "wn", or "en").
+#
+proc ::ttk::configureNotebookStyle {style} {
+    set theme [ttk::style theme use]
+    if {[llength [info procs theme::${theme}::configureNotebookStyle]] > 0} {
+	theme::${theme}::configureNotebookStyle $style
+	return 1
+    } else {
+	return 0
+    }
+}
+
+## ttk::setTreeviewRowHeight --
+#	Sets the default height of the ttk::treeview rows for the current theme.
+#	To be invoked from within the library files for the built-in themes.
+#
+proc ::ttk::setTreeviewRowHeight {} {
+    set font [::ttk::style lookup Treeview -font]
+    if {$font eq {}} {
+	set font TkDefaultFont
+    }
+
+    ::ttk::style configure Treeview -rowheight \
+	    [expr {[font metrics $font -linespace] + 2}]
+}
+
+# Applications should make sure that the ttk::setTreeviewRowHeight
+# procedure will be invoked whenever the virtual event <<ThemeChanged>>
+# is received (e.g., because the value of the Treeview style's -font
+# option has changed), or the virtual event <<TkWorldChanged>> with
+# the user_data field (%d) set to "FontChanged" is received.  Example:
+#
+# bindtags . [linsert [bindtags .] 1 MyMainWin]
+# bind MyMainWin <<ThemeChanged>> ttk::setTreeviewRowHeight
+# bind MyMainWin <<TkWorldChanged>> {
+#     if {"%d" eq "FontChanged"} {
+#         ttk::setTreeviewRowHeight
+#     }
+# }
+
 ### Load widget bindings.
 #
 source -encoding utf-8 [file join $::ttk::library button.tcl]
 source -encoding utf-8 [file join $::ttk::library menubutton.tcl]
+source -encoding utf-8 [file join $::ttk::library toggleswitch.tcl]
 source -encoding utf-8 [file join $::ttk::library scrollbar.tcl]
 source -encoding utf-8 [file join $::ttk::library scale.tcl]
 source -encoding utf-8 [file join $::ttk::library progress.tcl]
@@ -126,17 +173,17 @@ proc ttk::LoadThemes {} {
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
-	classic 	classicTheme.tcl
-	alt 		altTheme.tcl
-	clam 		clamTheme.tcl
+	classic		classicTheme.tcl
+	alt		altTheme.tcl
+	clam		clamTheme.tcl
 	winnative	winTheme.tcl
-	xpnative	{xpTheme.tcl vistaTheme.tcl}
-	aqua 		aquaTheme.tcl
+	vista		vistaTheme.tcl
+	aqua		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
-            foreach script $scripts {
-                uplevel #0 [list source -encoding utf-8 [file join $library $script]]
-            }
+	    foreach script $scripts {
+		uplevel #0 [list source -encoding utf-8 [file join $library $script]]
+	    }
 	}
     }
 }
@@ -147,14 +194,14 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 # Notes:
 #	+ On OSX, aqua theme is the default
-#	+ On Windows, xpnative takes precedence over winnative if available.
+#	+ On Windows, vista takes precedence over winnative if available.
 #	+ On X11, users can use the X resource database to
 #	  specify a preferred theme (*TkTheme: themeName);
 #	  otherwise "default" is used.
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua vista xpnative winnative]
+    set preferred [list aqua vista winnative]
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {
@@ -172,5 +219,9 @@ proc ttk::DefaultTheme {} {
 }
 
 ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
+
+# Scale the default ttk::scale and ttk::progressbar length
+option add *TScale.length	75p widgetDefault
+option add *TProgressbar.length	75p widgetDefault
 
 #*EOF*

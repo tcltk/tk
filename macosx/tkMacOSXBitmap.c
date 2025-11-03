@@ -24,7 +24,7 @@ typedef struct {
 } BuiltInIcon;
 
 /*
- * This array mapps a string name to the supported builtin icons
+ * This array maps a string name to the supported builtin icons
  * on the Macintosh.
  */
 
@@ -49,9 +49,6 @@ static BuiltInIcon builtInIcons[] = {
 };
 
 #define builtInIconSize 32
-
-#define OSTYPE_TO_UTI(x) ((NSString *)UTTypeCreatePreferredIdentifierForTag( \
-     kUTTagClassOSType, UTCreateStringForOSType(x), nil))
 
 static Tcl_HashTable iconBitmapTable = {};
 typedef struct {
@@ -136,7 +133,7 @@ PixmapFromImage(
     TkMacOSXDrawingContext dc;
     Pixmap pixmap;
 
-    pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
+    pixmap = Tk_GetPixmap(display, None, (int)size.width, (int)size.height, 0);
     if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
@@ -175,7 +172,7 @@ TkpCreateNativeBitmap(
     Display *display,
     const void *source)		/* Info about the icon to build. */
 {
-    NSString *filetype = [NSString stringWithUTF8String:(char *)source];
+    NSString *filetype = TkMacOSXOSTypeToUTI(PTR2UINT(source));
     NSImage *iconImage = TkMacOSXIconForFileType(filetype);
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
     Pixmap pixmap = PixmapFromImage(display, iconImage, size);
@@ -205,7 +202,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_DString ds;
     Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-    (void)Tcl_UtfToExternalDStringEx(encoding, s, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+    (void)Tcl_UtfToExternalDString(encoding, s, TCL_INDEX_NONE, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
 	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
@@ -307,8 +304,6 @@ TkpGetNativeAppBitmap(
 	}
     }
     if (image) {
-	*width = size.width;
-	*height = size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
 	/*
@@ -323,6 +318,8 @@ TkpGetNativeAppBitmap(
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
 	}
     }
+    *width = (int)size.width;
+    *height = (int)size.height;
     return pixmap;
 }
 
@@ -346,11 +343,12 @@ int
 TkMacOSXIconBitmapObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tcl_HashEntry *hPtr;
-    int i = 1, len, isNew, result = TCL_ERROR;
+    int isNew, result = TCL_ERROR;
+    Tcl_Size i = 1, len;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
 
@@ -362,8 +360,8 @@ TkMacOSXIconBitmapObjCmd(
     }
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", -1));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", (char *)NULL);
 	goto end;
     }
     if (Tcl_GetIntFromObj(interp, objv[i++], &ib.width) != TCL_OK) {
@@ -378,23 +376,23 @@ TkMacOSXIconBitmapObjCmd(
     }
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", -1));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", (char *)NULL);
 	goto end;
     }
 #if 0
     if ((kind == ICON_TYPE || kind == ICON_SYSTEM)) {
 	Tcl_DString ds;
- 	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
+	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-	(void)Tcl_UtfToExternalDStringEx(encoding, value, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDString(encoding, value, TCL_INDEX_NONE, &ds);
 	len = Tcl_DStringLength(&ds);
 	Tcl_DStringFree(&ds);
 	Tcl_FreeEncoding(encoding);
 	if (len > 4) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid bitmap value", -1));
-	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
+		    "invalid bitmap value", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", (char *)NULL);
 	    goto end;
 	}
     }

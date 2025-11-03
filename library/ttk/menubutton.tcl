@@ -47,12 +47,12 @@ namespace eval ttk {
 bind TMenubutton <Enter>	{ %W instate !disabled {%W state active } }
 bind TMenubutton <Leave>	{ %W state !active }
 bind TMenubutton <space>	{ ttk::menubutton::Popdown %W }
-bind TMenubutton <<Invoke>> 	{ ttk::menubutton::Popdown %W }
+bind TMenubutton <<Invoke>>	{ ttk::menubutton::Popdown %W }
 
 if {[tk windowingsystem] eq "x11"} {
-    bind TMenubutton <Button-1>  	{ ttk::menubutton::Pulldown %W }
+    bind TMenubutton <Button-1>		{ ttk::menubutton::Pulldown %W }
     bind TMenubutton <ButtonRelease-1>	{ ttk::menubutton::TransferGrab %W }
-    bind TMenubutton <B1-Leave> 	{ ttk::menubutton::TransferGrab %W }
+    bind TMenubutton <B1-Leave>		{ ttk::menubutton::TransferGrab %W }
 } else {
     bind TMenubutton <Button-1>  \
 	{ %W state pressed ; ttk::menubutton::Popdown %W }
@@ -138,7 +138,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $mb]} {
 		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb]\
-                           + [winfo reqheight $mb]}]
+			   + [winfo reqheight $mb]}]
 		}
 	    }
 	    below {
@@ -146,8 +146,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr y $bh
 		# if we go offscreen to the bottom, show as 'above'
 		if {($y + $mh) > ([winfo vrooty $mb] + [winfo vrootheight $mb])} {
-		    set y [expr {[winfo vrooty $mb] + [winfo vrootheight $mb] \
-			   + [winfo rooty $mb] - $mh}]
+		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb] - $mh}]
 		}
 	    }
 	    left {

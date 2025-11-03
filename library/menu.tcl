@@ -408,7 +408,7 @@ proc ::tk::MenuUnpost menu {
 #
 # Arguments:
 # w -			The name of the menubutton widget.
-# upDown - 		"down" means button 1 is pressed, "up" means
+# upDown -		"down" means button 1 is pressed, "up" means
 #			it isn't.
 # rootx, rooty -	Coordinates of mouse, in (virtual?) root window.
 
@@ -632,8 +632,8 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	MenuUnpost $w
     } elseif {[$w cget -type] eq "menubar"} {
 	$w postcascade {}
-	set active [$w index active]
-	set isCascade [string equal [$w type $active] "cascade"]
+	set activeindex [$w index active]
+	set isCascade [string equal [$w type $activeindex] "cascade"]
 
 	# Only de-activate the active item if it's a cascade; this prevents
 	# the annoying "activation flicker" you otherwise get with
@@ -651,11 +651,10 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	# but not recommended)
 
 	if { !$isCascade } {
-	    uplevel #0 [list $w invoke $active]
+	    uplevel #0 [list $w invoke $activeindex]
 	}
     } else {
-	set active [$w index active]
-	if {$Priv(popup) eq "" || $active >= 0} {
+	if {$Priv(popup) eq "" || [$w index active] >= 0} {
 	    MenuUnpost $w
 	}
 	uplevel #0 [list $w invoke active]
@@ -825,13 +824,13 @@ proc ::tk::MenuNextEntry {menu count} {
     if {$last < 0} {
 	return
     }
-    set length [expr {[$menu index last]+1}]
+    set length [expr {$last+1}]
     set quitAfter $length
-    set active [$menu index active]
-    if {$active < 0} {
+    set activeindex [$menu index active]
+    if {$activeindex < 0} {
 	set i 0
     } else {
-	set i [expr {$active + $count}]
+	set i [expr {$activeindex + $count}]
     }
     while {1} {
 	if {$quitAfter <= 0} {
@@ -853,7 +852,7 @@ proc ::tk::MenuNextEntry {menu count} {
 		break
 	    }
 	}
-	if {$i == $active} {
+	if {$i == $activeindex} {
 	    return
 	}
 	incr i $count
@@ -892,7 +891,7 @@ proc ::tk::MenuNextEntry {menu count} {
 
 proc ::tk::MenuFind {w char} {
     set char [string tolower $char]
-    set windowlist [winfo child $w]
+    set windowlist [winfo children $w]
 
     foreach child $windowlist {
 	# Don't descend into other toplevels.
@@ -906,13 +905,12 @@ proc ::tk::MenuFind {w char} {
 	    }
 	    set last [$child index last]
 	    for {set i [$child cget -tearoff]} {$i <= $last} {incr i} {
-		if {[$child type $i] eq "separator"} {
+		if {([$child type $i] eq "separator") || ([$child entrycget $i -state] eq "disabled")} {
 		    continue
 		}
-		set char2 [string index [$child entrycget $i -label] \
-			[$child entrycget $i -underline]]
-		if {$char eq [string tolower $char2] || $char eq ""} {
-		    if {[$child entrycget $i -state] ne "disabled"} {
+		set underline [$child entrycget $i -underline]
+		if {$underline >= 0} {
+		    if {$char eq [string tolower [string index [$child entrycget $i -label] $underline]]} {
 			return $child
 		    }
 		}
@@ -927,8 +925,12 @@ proc ::tk::MenuFind {w char} {
 	}
 	switch -- [winfo class $child] {
 	    Menubutton {
-		set char2 [string index [$child cget -text] \
-			[$child cget -underline]]
+		if {[$child cget -underline] < 0} {
+		    set char2 ""
+		} else {
+		    set char2 [string index [$child cget -text] \
+			    [$child cget -underline]]
+		}
 		if {$char eq [string tolower $char2] || $char eq ""} {
 		    if {[$child cget -state] ne "disabled"} {
 			return $child
@@ -1201,18 +1203,18 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr x [expr {[winfo width $button]}]
 	    }
 	    default {  # flush
-                if {[$button cget -indicatoron]} {
-                    if {$cx ne ""} {
-                        set x [expr {$cx - [winfo reqwidth $menu] / 2}]
-                        set l [font metrics [$menu cget -font] -linespace]
-                        set y [expr {$cy - $l/2 - 2}]
-                    } else {
-                        incr x [expr {([winfo width $button] - \
+		if {[$button cget -indicatoron]} {
+		    if {$cx ne ""} {
+			set x [expr {$cx - [winfo reqwidth $menu] / 2}]
+			set l [font metrics [$menu cget -font] -linespace]
+			set y [expr {$cy - $l/2 - 2}]
+		    } else {
+			incr x [expr {([winfo width $button] - \
 				[winfo reqwidth $menu])/ 2}]
-                    }
-                } else {
-                    incr y [winfo height $button]
-                }
+		    }
+		} else {
+		    incr y [winfo height $button]
+		}
 	    }
 	}
 	PostOverPoint $menu $x $y $entry
@@ -1337,14 +1339,12 @@ proc ::tk_menuSetFocus {menu} {
 proc ::tk::GenerateMenuSelect {menu} {
     variable ::tk::Priv
 
-    if {$Priv(activeMenu) eq $menu \
-	    && $Priv(activeItem) eq [$menu index active]} {
-	return
+    if {$Priv(activeMenu) ne $menu \
+	    || $Priv(activeItem) ne [$menu index active]} {
+	set Priv(activeMenu) $menu
+	set Priv(activeItem) [$menu index active]
+	event generate $menu <<MenuSelect>>
     }
-
-    set Priv(activeMenu) $menu
-    set Priv(activeItem) [$menu index active]
-    event generate $menu <<MenuSelect>>
 }
 
 # ::tk_popup --

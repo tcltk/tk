@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .style
 catch {destroy $w}
@@ -24,7 +24,7 @@ pack $btns -side bottom -fill x
 
 set family Courier
 
-text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
+text $w.text -yscrollcommand "$w.scroll set" -setgrid 1 \
 	-width 70 -height 32 -wrap word -font "$family 12"
 ttk::scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y
@@ -52,8 +52,8 @@ if {[winfo depth $w] > 1} {
 $w.text tag configure bgstipple -background black -borderwidth 0 \
 	-bgstipple gray12
 $w.text tag configure fgstipple -fgstipple gray50
-$w.text tag configure underline -underline on
-$w.text tag configure overstrike -overstrike on
+$w.text tag configure underline -underline 1
+$w.text tag configure overstrike -overstrike 1
 $w.text tag configure right -justify right
 $w.text tag configure center -justify center
 $w.text tag configure super -offset 4p -font "$family 10"

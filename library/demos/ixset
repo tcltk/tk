@@ -9,7 +9,7 @@ exec wish "$0" ${1+"$@"}
 #   91/11/23 : pda@masi.ibp.fr, jt@ratp.fr : design
 #   92/08/01 : pda@masi.ibp.fr : cleaning
 
-package require Tk
+package require tk
 
 #
 # Button actions
@@ -193,7 +193,7 @@ proc createwindows {} {
     button .buttons.quit   -default normal -command quit   -text "Quit"
 
     pack .buttons.ok .buttons.apply .buttons.cancel .buttons.quit \
-	    -side left -expand yes -pady 5
+	    -side left -expand yes -pady 3p
 
     bind . <Return> {.buttons.ok   flash; .buttons.ok   invoke}
     bind . <Escape> {.buttons.quit flash; .buttons.quit invoke}
@@ -221,14 +221,14 @@ proc createwindows {} {
 
     labelframe .bell -text "Bell Settings" -padx 1.5m -pady 1.5m
     scale .bell.vol \
-	    -from 0 -to 100 -length 200 -tickinterval 20 \
+	    -from 0 -to 100 -length 150p -tickinterval 20 \
 	    -label "Volume (%)" -orient horizontal
 
     frame .bell.val
     labelentry .bell.val.pit "Pitch (Hz)"    6 {25 20000}
     labelentry .bell.val.dur "Duration (ms)" 6 {1 10000}
-    pack .bell.val.pit -side left -padx 5
-    pack .bell.val.dur -side right -padx 5
+    pack .bell.val.pit -side left -padx 3p
+    pack .bell.val.dur -side right -padx 3p
     pack .bell.vol .bell.val -side top -expand yes
 
     #
@@ -243,12 +243,12 @@ proc createwindows {} {
 	    -onvalue "on" -offvalue "off" -variable kbdrep \
 	    -relief flat
     scale .kbd.val.cli \
-	    -from 0 -to 100 -length 200 -tickinterval 20 \
+	    -from 0 -to 100 -length 150p -tickinterval 20 \
 	    -label "Click Volume (%)" -orient horizontal
     pack .kbd.val.onoff -side left -fill x -expand yes -padx {0 1m}
     pack .kbd.val.cli -side left -expand yes -fill x -padx {1m 0}
 
-    pack .kbd.val -side top -expand yes -pady 2 -fill x
+    pack .kbd.val -side top -expand yes -pady 1.5p -fill x
 
     #
     # Mouse settings

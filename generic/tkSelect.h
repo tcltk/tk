@@ -25,14 +25,10 @@
 typedef struct TkSelectionInfo {
     Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Tk_Window owner;		/* Current owner of this selection. */
-#if TCL_MAJOR_VERSION > 8
     unsigned long serial;	/* Serial number of last XSelectionSetOwner
 				 * request made to server for this selection
 				 * (used to filter out redundant
 				 * SelectionClear events). */
-#else
-    int serial;
-#endif
     Time time;			/* Timestamp used to acquire selection. */
     Tk_LostSelProc *clearProc;	/* Procedure to call when owner loses
 				 * selection. */
@@ -57,7 +53,7 @@ typedef struct TkSelHandler {
     Tk_SelectionProc *proc;	/* Procedure to generate selection in this
 				 * format. */
     void *clientData;	/* Argument to pass to proc. */
-    TkSizeT size;			/* Size of units returned by proc (8 for
+    Tcl_Size size;			/* Size of units returned by proc (8 for
 				 * STRING, 32 for almost anything else). */
     struct TkSelHandler *nextPtr;
 				/* Next selection handler associated with same
@@ -81,7 +77,7 @@ typedef struct TkSelRetrievalInfo {
     Atom target;		/* Desired form for selection. */
     Tk_GetSelProc *proc;	/* Procedure to call to handle pieces of
 				 * selection. */
-    ClientData clientData;	/* Argument for proc. */
+    void *clientData;	/* Argument for proc. */
     int result;			/* Initially -1. Set to a Tcl return value
 				 * once the selection has been retrieved. */
     Tcl_TimerToken timeout;	/* Token for current timeout procedure. */
@@ -107,7 +103,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    TkSizeT length;		/* Length of string in buffer. */
+    Tcl_Size length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */
@@ -125,6 +121,16 @@ typedef struct TkClipboardTarget {
 				/* Next in list of targets on clipboard. NULL
 				 * means end of list. */
 } TkClipboardTarget;
+
+/*
+ * Options enum for the TkClipboardObjCmd.  These are defined here
+ * so they can be used as an argument to TkSelUpdateClipboard.
+ */
+
+typedef enum {
+    CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET
+} clipboardOption;
+
 
 /*
  * It is possible for a Tk_SelectionProc to delete the handler that it
@@ -160,12 +166,11 @@ typedef struct TkSelInProgress {
 MODULE_SCOPE TkSelInProgress *TkSelGetInProgress(void);
 MODULE_SCOPE void	TkSelSetInProgress(TkSelInProgress *pendingPtr);
 MODULE_SCOPE void	TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
-MODULE_SCOPE int	TkSelDefaultSelection(TkSelectionInfo *infoPtr,
-			    Atom target, char *buffer, int maxBytes,
+MODULE_SCOPE Tcl_Size TkSelDefaultSelection(TkSelectionInfo *infoPtr,
+			    Atom target, char *buffer, Tcl_Size maxBytes,
 			    Atom *typePtr);
 #ifndef TkSelUpdateClipboard
-MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,
-			    TkClipboardTarget *targetPtr);
+MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option);
 #endif
 
 #endif /* _TKSELECT */

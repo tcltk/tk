@@ -1,33 +1,52 @@
 # This file is a Tcl script to test out the code in tkImgSVGnano.c, which reads
-# and write SVG-format image files for photo widgets. The files is organized
-# in the standard fashion for Tcl tests.
+# and write SVG-format image files for photo widgets.
 #
 # Copyright © 2018 Rene Zaumseil
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import image
+
 imageInit
 
 namespace eval svgnano {
 
+    #
+    # COMMON TEST SETUP
+    #
+
     variable data
 
     set data(plus) {\
-            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-                <path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
-                <path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
-                <circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
-                <ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
-                <line x1="10" y1="90" x2="50" y2="99"/>
-                <rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
-                <polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
-                <polygon fill ="yellow" points="80,80 70,85 90,90"/>
-                </svg>}
-                set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w">
-            </svg>\
+	    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+		<path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
+		<path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
+		<circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
+		<ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
+		<line x1="10" y1="90" x2="50" y2="99"/>
+		<rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
+		<polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
+		<polygon fill ="yellow" points="80,80 70,85 90,90"/>
+		</svg>}
+		set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w">
+	    </svg>\
     }
 
     tcltest::makeFile $data(plus) plus.svg
@@ -36,6 +55,9 @@ namespace eval svgnano {
     tcltest::makeFile $data(bad) bad.svg
     set data(badFilePath) [file join [tcltest::configure -tmpdir] bad.svg]
 
+#
+# TESTS
+#
 
 test imgSVGnano-1.1 {reading simple image} -setup {
     catch {rename foo ""}
@@ -208,7 +230,6 @@ test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -s
     foo configure -format "svg -scale 2"
 } -cleanup {
     rename foo ""
-    tcltest::removeFile tmpplus.svg
 } -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
 
 # Special images
@@ -249,12 +270,22 @@ test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
 			</g></svg>}
 } -returnCodes error -result {couldn't recognize image data}
 
+    #
+    # COMMON TEST CLEANUP
+    #
+    tcltest::removeFile plus.svg
+    tcltest::removeFile bad.svg
+
 };# end of namespace svgnano
+
+#
+# TESTFILE CLEANUP
+#
 
 namespace delete svgnano
 imageFinish
+testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

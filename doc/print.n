@@ -34,8 +34,7 @@ dialog that provides parallel functionality on X11.
 .
 The Mac implementation uses native print dialogs and relies on the underlying
 Common Unix Printing System (CUPS) to render text output from the text widget
-and PostScript output from the canvas widget to the printer, to a PDF file, or
-a PostScript file.
+and PDF conversion of the canvas data to the printer or to a PDF file.
 .TP
 \fBWindows\fR
 .

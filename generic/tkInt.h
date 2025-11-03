@@ -4,9 +4,9 @@
  *	Declarations for things used internally by the Tk functions but not
  *	exported outside the module.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -19,8 +19,6 @@
 #include "tkPort.h"
 #endif
 
-#define TK_OPTION_ENUM_VAR		((int)(sizeof(Tk_OptionType)&(sizeof(int)-1))<<6)
-
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
@@ -32,6 +30,11 @@
 #endif
 #ifdef HAVE_SYS_PARAM_H
 #    include <sys/param.h>
+#endif
+#include <stdint.h>
+#include <stdlib.h>
+#if defined(_MSC_VER) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ < 202311L))
+#include <stdbool.h>
 #endif
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
@@ -75,38 +78,12 @@
 #   endif
 #endif
 
-#ifndef TkSizeT
-#   if TCL_MAJOR_VERSION > 8
-#	define TkSizeT size_t
-#   else
-#	define TkSizeT int
-#   endif
-#endif
-
-#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
-# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
-# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
-# define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
-# define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
-#endif
-
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
-#endif
-
-#if TCL_MAJOR_VERSION < 9
-#   undef Tcl_ExternalToUtfDStringEx
-#   undef Tcl_UtfToExternalDStringEx
-    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
-#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
-#	define Tcl_GetParent Tcl_GetMaster
-#   endif
 #endif
 
 /*
@@ -156,10 +133,8 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
-#else
-#   define TKSIZET_MODIFIER ""
+#if !defined(TCL_SIZE_MODIFIER)
+#   define TCL_SIZE_MODIFIER ""
 #endif
 
 /*
@@ -185,7 +160,7 @@ typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
     Display *display;		/* Display containing cursor. Needed for
 				 * disposal and retrieval of cursors. */
-    TkSizeT resourceRefCount;	/* Number of active uses of this cursor (each
+    Tcl_Size resourceRefCount;	/* Number of active uses of this cursor (each
 				 * active use corresponds to a call to
 				 * Tk_AllocPreserveFromObj or Tk_Preserve). If
 				 * this count is 0, then this structure is no
@@ -194,7 +169,7 @@ typedef struct TkCursor {
 				 * there are objects referring to it. The
 				 * structure is freed when resourceRefCount
 				 * and objRefCount are both 0. */
-    TkSizeT objRefCount;		/* Number of Tcl objects that reference this
+    Tcl_Size objRefCount;		/* Number of Tcl objects that reference this
 				 * structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used to
 				 * index this entry. */
@@ -275,7 +250,7 @@ typedef struct TkDisplay {
     TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
-    int numModKeyCodes;		/* Number of entries in modKeyCodes array
+    Tcl_Size numModKeyCodes;		/* Number of entries in modKeyCodes array
 				 * below. */
     KeyCode *modKeyCodes;	/* Pointer to an array giving keycodes for all
 				 * of the keys that have modifiers associated
@@ -346,7 +321,7 @@ typedef struct TkDisplay {
 				/* First in list of error handlers for this
 				 * display. NULL means no handlers exist at
 				 * present. */
-    TkSizeT deleteCount;		/* Counts # of handlers deleted since last
+    Tcl_Size deleteCount;		/* Counts # of handlers deleted since last
 				 * time inactive handlers were garbage-
 				 * collected. When this number gets big,
 				 * handlers get cleaned up. */
@@ -561,33 +536,16 @@ typedef struct TkDisplay {
      * Miscellaneous information:
      */
 
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
-#endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    TkSizeT refCount;		/* Reference count of how many Tk applications
+    Tcl_Size refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
 
-    /*
-     * The following field were all added for Tk8.3
-     */
-
-#if TCL_MAJOR_VERSION < 9
-#if !defined(TK_NO_DEPRECATED)
-    int mouseButtonState;	/* Current mouse button state for this
-				 * display. NOT USED as of 8.6.10 */
-    Window mouseButtonWindow;	/* Window the button state was set in, added
-				 * in Tk 8.4. */
-#else
-    int notused1;
-    XID notused2;
-#endif /* !TK_NO_DEPRECATED */
-#endif
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
 				 * purposes. */
@@ -606,11 +564,6 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
-#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
-    XIM inputMethod;		/* Input method for this display. */
-    XIMStyle inputStyle;	/* Input style selected for this display. */
-    XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
-#endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
 /*
@@ -650,7 +603,7 @@ typedef struct TkErrorHandler {
 				 * codes). */
     Tk_ErrorProc *errorProc;	/* Function to invoke when a matching error
 				 * occurs. NULL means just ignore errors. */
-    ClientData clientData;	/* Arbitrary value to pass to errorProc. */
+    void *clientData;	/* Arbitrary value to pass to errorProc. */
     struct TkErrorHandler *nextPtr;
 				/* Pointer to next older handler for this
 				 * display, or NULL for end of list. */
@@ -665,7 +618,7 @@ typedef struct TkEventHandler {
     unsigned long mask;		/* Events for which to invoke proc. */
     Tk_EventProc *proc;		/* Function to invoke when an event in mask
 				 * occurs. */
-    ClientData clientData;	/* Argument to pass to proc. */
+    void *clientData;	/* Argument to pass to proc. */
     struct TkEventHandler *nextPtr;
 				/* Next in list of handlers associated with
 				 * window (NULL means end of list). */
@@ -678,7 +631,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
+    Tcl_Size refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -689,11 +642,7 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window. Managed by tkWindow.c. */
-#if TCL_MAJOR_VERSION > 8
     size_t deletionEpoch;		/* Incremented by window deletions. */
-#else
-    long deletionEpoch;
-#endif
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command to
 				 * bind events to Tcl commands. */
@@ -734,13 +683,14 @@ typedef struct TkMainInfo {
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
-#if TCL_MAJOR_VERSION > 8
     Tcl_ObjCmdProc2 *tclUpdateObjProc2;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down, in case it's a Tcl_ObjCmdProc2 */
-#endif
-
+    unsigned int ttkNbTabsStickBit;
+				/* Information used by ttk::notebook. */
+    int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
+				/* Information used by ttk::scale. */
 } TkMainInfo;
 
 /*
@@ -753,7 +703,7 @@ typedef struct {
     const void *source;		/* Bits for bitmap. */
     int width, height;		/* Dimensions of bitmap. */
     int native;			/* 0 means generic (X style) bitmap, 1 means
-    				 * native style bitmap. */
+				 * native style bitmap. */
 } TkPredefBitmap;
 
 /*
@@ -841,25 +791,23 @@ typedef struct TkWindow {
 
     TkEventHandler *handlerList;/* First in list of event handlers declared
 				 * for this window, or NULL if none. */
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC inputContext;		/* XIM input context. */
-#endif /* TK_USE_INPUT_METHODS */
 
     /*
      * Information used for event bindings (see "bind" and "bindtags" commands
      * in tkCmds.c):
      */
 
-    ClientData *tagPtr;		/* Points to array of tags used for bindings
+    void **tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
-    TkSizeT numTags;		/* Number of tags at *tagPtr. */
+    Tcl_Size numTags;		/* Number of tags at *tagPtr. */
 
     /*
      * Information used by tkOption.c to manage options for the window.
      */
 
-    TkSizeT optionLevel;		/* TCL_INDEX_NONE means no option information is currently
+    Tcl_Size optionLevel;		/* TCL_INDEX_NONE means no option information is currently
 				 * cached for this window. Otherwise this
 				 * gives the level in the option stack at
 				 * which info is cached. */
@@ -878,7 +826,7 @@ typedef struct TkWindow {
     const Tk_GeomMgr *geomMgrPtr;
 				/* Information about geometry manager for this
 				 * window. */
-    ClientData geomData;	/* Argument for geometry manager functions. */
+    void *geomData;	/* Argument for geometry manager functions. */
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been called. */
@@ -903,7 +851,7 @@ typedef struct TkWindow {
      */
 
     const Tk_ClassProcs *classProcsPtr;
-    ClientData instanceData;
+    void *instanceData;
 
     /*
      * Platform specific information private to each port.
@@ -922,18 +870,12 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int ximGeneration;          /* Used to invalidate XIC */
-#endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
     struct TkWindow *maintainerPtr;
 				/* The geometry container for this window. The
 				 * value is NULL if the window has no container or
 				 * if its container is its parent. */
-#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
-    XIC inputContext;		/* XIM input context. */
-    int ximGeneration;          /* Used to invalidate XIC */
-#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -957,8 +899,7 @@ typedef struct {
 #   ifndef XMaxTransChars
 #	define XMaxTransChars 7
 #   endif
-    char trans_chars[XMaxTransChars];
-                            /* translated characters */
+    char trans_chars[XMaxTransChars]; /* translated characters */
     unsigned char nbytes;
 #elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
@@ -966,7 +907,7 @@ typedef struct {
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    TkSizeT charValueLen;	/* Length of string in charValuePtr when that
+    Tcl_Size charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -981,18 +922,6 @@ typedef struct {
 #define TK_MAKE_MENU_POPUP	1
 #define TK_MAKE_MENU_DROPDOWN	2
 
-/* See TIP #494 */
-#ifndef TCL_IO_FAILURE
-#   define TCL_IO_FAILURE (-1)
-#endif
-/* See TIP #537 */
-#ifndef TCL_INDEX_NONE
-#   define TCL_INDEX_NONE (-1)
-#endif
-#ifndef TCL_INDEX_END
-#   define TCL_INDEX_END ((TkSizeT)-2)
-#endif
-
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
  * commands and optionally to create sub-ensembles.
@@ -1000,7 +929,7 @@ typedef struct {
 
 typedef struct TkEnsemble {
     const char *name;
-    Tcl_ObjCmdProc *proc;
+    Tcl_ObjCmdProc2 *proc;
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
@@ -1041,14 +970,6 @@ typedef struct TkpClipMask {
 #define TK_GRAB_EXCLUDED	3
 
 /*
- * Additional flag for TkpMeasureCharsInContext. Coordinate with other flags
- * for this routine, but don't make public until TkpMeasureCharsInContext is
- * made public, too.
- */
-
-#define TK_ISOLATE_END		32
-
-/*
  * The macro below is used to modify a "char" value (e.g. by casting it to an
  * unsigned character) so that it can be used safely with macros such as
  * isspace().
@@ -1085,17 +1006,25 @@ typedef struct TkpClipMask {
 # define Button9 9
 #endif
 
+/*
+ * The Button<B>Mask modifiers for <B> in {6 7 8 9}
+ * are internally used by Tk. They must be above the
+ * AnyModifier bit since anything below is reserved
+ * for the X protocol. If a future X11 version
+ * defines these, we adhere.
+ */
+
 #ifndef Button6Mask
-# define Button6Mask (1<<13)
+# define Button6Mask (AnyModifier<<6)
 #endif
 #ifndef Button7Mask
-# define Button7Mask (1<<14)
+# define Button7Mask (AnyModifier<<7)
 #endif
 #ifndef Button8Mask
-# define Button8Mask (AnyModifier<<4)
+# define Button8Mask (AnyModifier<<8)
 #endif
 #ifndef Button9Mask
-# define Button9Mask (AnyModifier<<5)
+# define Button9Mask (AnyModifier<<9)
 #endif
 
 /*
@@ -1113,13 +1042,18 @@ typedef struct TkpClipMask {
  * be properly registered with Tcl:
  */
 
-MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
-MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
-MODULE_SCOPE const Tcl_ObjType tkColorObjType;
-MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
-MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
+typedef struct {
+    Tcl_ObjType objType;
+    size_t version;
+} TkObjType;
+
+MODULE_SCOPE const TkObjType tkBorderObjType;
+MODULE_SCOPE const TkObjType tkBitmapObjType;
+MODULE_SCOPE const TkObjType tkColorObjType;
+MODULE_SCOPE const TkObjType tkCursorObjType;
+MODULE_SCOPE const TkObjType tkFontObjType;
+MODULE_SCOPE const TkObjType tkStateKeyObjType;
+MODULE_SCOPE const TkObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the
@@ -1181,170 +1115,78 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  * Exported internals.
  */
 
-#include "tkIntDecls.h"
+#include "tkIntDecls.h"  /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*
- * Themed widget set init function:
+ * Themed widget set init function, and handler called when Tk is destroyed.
  */
 
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
+MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 
 /*
  * Internal functions shared among Tk modules but not exported to the outside
  * world:
  */
 
-MODULE_SCOPE int	Tk_BellObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindtagsObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BusyObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ButtonObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CanvasObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CheckbuttonObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ClipboardObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseColorObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseDirectoryObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_DestroyObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EntryObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EventObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FrameObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FocusObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FontObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetOpenFileObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetSaveFileObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GrabObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GridObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ImageObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelframeObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ListboxObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LowerObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenuObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenubuttonObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageBoxObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PanedWindowObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_OptionObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PackObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PlaceObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RadiobuttonObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RaiseObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScaleObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScrollbarObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
-			    Tcl_Interp *interp,int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SpinboxObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TextObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TkwaitObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ToplevelObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_UpdateObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BellObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BindObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BindtagsObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ButtonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_CanvasObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_CheckbuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ClipboardObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseColorObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseDirectoryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_DestroyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_EntryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_EventObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FrameObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FocusObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FontObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GetOpenFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GetSaveFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GrabObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GridObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelframeObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ListboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LowerObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MenuObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MenubuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageBoxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PanedWindowObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_OptionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PackObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PlaceObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_RadiobuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_RaiseObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ScaleObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ScrollbarObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_SelectionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SendObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_SpinboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_TextObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_TkwaitObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ToplevelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_UpdateObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_WinfoObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_WmObjCmd;
 
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
 MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
-MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1353,21 +1195,12 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
-#if TCL_MAJOR_VERSION > 8
-MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
-    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
-MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
-    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
-#else
-#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
-#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
-#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
 MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,
@@ -1381,22 +1214,10 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
-MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, double x, double y, double angle);
-MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, int maxLength, int flags,
-			    int *lengthPtr);
-MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
-			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *string, int numBytes, int x, int y,
-			    int firstByte, int lastByte);
+			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, double x, double y, double angle);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
@@ -1404,39 +1225,36 @@ MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
 			    int borderWidth, int relief);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
+MODULE_SCOPE Tcl_Size	TkLengthOne(Tcl_Obj *);
 MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const *objv, int flags);
+			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
+MODULE_SCOPE void	TkDrawDottedRect(Display *disp, Drawable d, GC gc,
+			    int x, int y, int width, int height);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
-			    ClientData clientData, const TkEnsemble *map);
+			    void *clientData, const TkEnsemble *map);
+MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
+MODULE_SCOPE bool	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
-			    Tcl_Interp *interp, Tcl_Obj *listObj,
-			    int toplevel, Tcl_Obj *nameObj);
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
-MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
+MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-#   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
-#   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
-#else
-#   define TkNewIndexObj(value) (((TkSizeT)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
-#   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
-#endif
+#define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
+#define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 
 
 #ifdef _WIN32
@@ -1472,21 +1290,10 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
+
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
-#endif
-
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
-#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#else
-    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
-#endif
-
-#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
-#   define tcl_CreateFileHandler reserved9
 #endif
 
 MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
@@ -1495,17 +1302,12 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
  * Unsupported commands.
  */
 
-MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkUnsupported1ObjCmd;
 
 /*
  * For Tktest.
  */
-MODULE_SCOPE int SquareObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
+MODULE_SCOPE Tcl_ObjCmdProc2 SquareObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else
