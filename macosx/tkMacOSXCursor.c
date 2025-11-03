@@ -231,7 +231,7 @@ FindCursorByName(
 	macCursorPtr->type = IMAGEPATH;
 	path = [NSString stringWithUTF8String:&name[1]];
     } else {
-	Tcl_Obj *strPtr = Tcl_NewStringObj(name, -1);
+	Tcl_Obj *strPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
 	int idx;
 
 	result = Tcl_GetIndexFromObjStruct(NULL, strPtr, cursorNames,
@@ -367,12 +367,12 @@ TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry
+    const char *string)		/* Description of cursor. See manual entry
 				 * for details on legal syntax. */
 {
     TkMacOSXCursor *macCursorPtr = NULL;
     const char **argv = NULL;
-    TkSizeT argc;
+    Tcl_Size argc;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -393,7 +393,7 @@ TkGetCursorByName(
 	    macCursorPtr->type != NONE)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad cursor spec \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
 	if (macCursorPtr) {
 	    ckfree(macCursorPtr);
 	    macCursorPtr = NULL;

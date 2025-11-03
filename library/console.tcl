@@ -38,7 +38,7 @@ interp alias {} EvalAttached {} consoleinterp eval
 # This procedure constructs and configures the console windows.
 #
 # Arguments:
-# 	None.
+#	None.
 
 proc ::tk::ConsoleInit {} {
     if {![consoleinterp eval {set tcl_interactive}]} {
@@ -145,7 +145,7 @@ proc ::tk::ConsoleInit {} {
     }
     ::ttk::frame .consoleframe -style ConsoleFrame
 
-    set con [text .console -yscrollcommand [list .sb set] -setgrid true \
+    set con [text .console -yscrollcommand [list .sb set] -setgrid 1 \
 		 -borderwidth 0 -highlightthickness 0 -font TkConsoleFont]
     if {[tk windowingsystem] eq "aqua"} {
 	scrollbar .sb -command [list $con yview]
@@ -158,8 +158,13 @@ proc ::tk::ConsoleInit {} {
 
     ConsoleBind $con
 
+    if {[tk windowingsystem] eq "aqua"} {
+	$con tag configure stdin -foreground systemLinkColor
+    } else {
+	$con tag configure stdin -foreground blue
+    }
+
     $con tag configure stderr	-foreground red
-    $con tag configure stdin	-foreground blue
     $con tag configure prompt	-foreground \#8F4433
     $con tag configure proc	-foreground \#008800
     $con tag configure var	-background \#FFC0D0
@@ -586,7 +591,7 @@ proc ::tk::ConsoleBind {w} {
 	tk::ConsoleInsert %W %A
     }
     bind Console <F9> {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	source -encoding utf-8 [file join $tk_library console.tcl]
     }
     bind Console <Command-q> {
@@ -622,7 +627,7 @@ proc ::tk::ConsoleBind {w} {
     ##
     ## Bindings for doing special things based on certain keys
     ##
-    bind PostConsole <parenright> {
+    bind PostConsole <)> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \( \) promptEnd
 	}
@@ -722,7 +727,7 @@ Tk $::tk_patchLevel"
 }
 
 # ::tk::console::Fontchooser* --
-# 	Let the user select the console font (TIP 324).
+#	Let the user select the console font (TIP 324).
 
 proc ::tk::console::FontchooserToggle {} {
     if {[tk fontchooser configure -visible]} {
@@ -795,8 +800,8 @@ proc ::tk::console::TagProc w {
 #
 # Arguments:
 #	w	- console text widget
-# 	c1	- first char of pair
-# 	c2	- second char of pair
+#	c1	- first char of pair
+#	c2	- second char of pair
 #
 # Calls:	::tk::console::Blink
 
@@ -887,9 +892,9 @@ proc ::tk::console::MatchQuote {w {lim 1.0}} {
 #
 # Arguments:
 #	w	- console text widget
-# 	i1	- start index to blink region
-# 	i2	- end index of blink region
-# 	dur	- duration in usecs to blink for
+#	i1	- start index to blink region
+#	i2	- end index of blink region
+#	dur	- duration in usecs to blink for
 #
 # Outputs:
 #	blinks selected characters in $w
@@ -921,7 +926,7 @@ proc ::tk::console::ConstrainBuffer {w size} {
 #
 # Arguments:
 # ARGS:	w	- text widget in which to expand str
-# 	type	- type of expansion (path / proc / variable)
+#	type	- type of expansion (path / proc / variable)
 #
 # Calls:	::tk::console::Expand(Pathname|Procname|Variable)
 #
@@ -1121,7 +1126,7 @@ proc ::tk::console::ExpandVariable str {
 #
 # Arguments:
 #	l	- list to find best unique match in
-# 	e	- currently best known unique match
+#	e	- currently best known unique match
 #
 # Returns:	longest unique match in the list
 

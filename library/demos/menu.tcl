@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .menu
 catch {destroy $w}
@@ -55,7 +55,7 @@ menu $m -tearoff 0
 $m add command -label "Long entry that does nothing"
 if {[tk windowingsystem] eq "aqua"} {
     set modifier Command
-} elseif {[tk windowingsystem] == "win32"} {
+} elseif {[tk windowingsystem] eq "win32"} {
     set modifier Control
 } else {
     set modifier Meta

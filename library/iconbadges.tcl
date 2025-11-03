@@ -219,9 +219,8 @@ if {[tk windowingsystem] eq "x11"} {
 	    return -code error "can't use \"$::tk::icons::base_icon($win)\" as iconphoto: not a photo image"
 	}
 
-	if {!([string is integer $badgenumber] && $badgenumber > 0)
-	        && [string match $badgenumber "!"] == 0
-	        && $badgenumber ne ""} {
+	if {!([string is integer -strict $badgenumber] && $badgenumber > 0)
+		&& $badgenumber ne "!" && $badgenumber ne ""} {
 	    return -code error "can't use \"$badgenumber\" as icon badge"
 	}
 
@@ -244,7 +243,7 @@ if {[tk windowingsystem] eq "x11"} {
 		set badge ::tk::icons::9plus-badge
 	    }
 
-        }
+	}
 
 	overlay copy $::tk::icons::base_icon($win)
 	overlay copy $badge -from 0 0 18 18 -to 18 0

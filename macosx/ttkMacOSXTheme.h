@@ -38,8 +38,6 @@
  * Meanings of Ttk states represented by User1 and User2.
  */
 
-#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
-#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
 #define TTK_STATE_IS_ACCENTED   TTK_STATE_USER2
 #define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
 
@@ -158,7 +156,7 @@ static const ButtonDesign pushbuttonDesign = {
 };
 
 static const ButtonDesign helpDesign = {
-  .radius = 11,
+  .radius = 11.0,
   .palettes = {
     {
       .light = {.face = 241.0, .top = 218.0, .side = 217.0, .bottom = 206.0},
@@ -293,6 +291,27 @@ static const ButtonDesign recessedDesign = {
       .light = {.face = 145.0, .top = 145.0, .side = 145.0, .bottom = 145.0},
       .dark =  {.face = 166.0, .top = 166.0, .side = 166.0, .bottom = 166.0},
       .onBits = TTK_STATE_SELECTED, .offBits = 0
+    },
+    {
+      .light = {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
+      .dark =  {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
+      .onBits = 0, .offBits = 0
+    }
+  }
+};
+
+static const ButtonDesign sidebarDesign = {
+  .radius = 8.0,
+  .palettes = {
+    {
+      .light = {.face = 210.0, .top = 210.0, .side = 210.0, .bottom = 210.0},
+      .dark =  {.face = 129.0, .top = 129.0, .side = 129.0, .bottom = 129.0},
+      .onBits = TTK_STATE_SELECTED, .offBits = 0
+    },
+    {
+      .light = {.face = 210.0, .top = 210.0, .side = 210.0, .bottom = 210.0},
+      .dark =  {.face = 129.0, .top = 129.0, .side = 129.0, .bottom = 129.0},
+      .onBits = TTK_STATE_PRESSED, .offBits = 0
     },
     {
       .light = {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
@@ -474,6 +493,7 @@ static const Ttk_StateTable ButtonAdornmentTable[] = {
 #define TkRoundedRectButton 0x8002
 #define TkRecessedButton    0x8003
 #define TkInlineButton      0x8004
+#define TkSidebarButton     0x8005
 /*
  * The struct passed as clientData when drawing Ttk buttons.
  */
@@ -508,9 +528,9 @@ static ThemeButtonParams
     RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
 			       NoThemeMetric},
     RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
- 			    NoThemeMetric},
-    InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight,
-  			  NoThemeMetric};
+			    NoThemeMetric},
+    SidebarButtonParams = {TkSidebarButton, NoThemeMetric, NoThemeMetric},
+    InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight, NoThemeMetric};
 
     /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,
@@ -534,14 +554,17 @@ static ThemeFrameParams
 /*
  * If we try to draw a rounded rectangle with too large of a radius, the Core
  * Graphics library will sometimes raise a fatal exception.  This macro
- * protects against this by returning if the width or height is less than
- * twice the radius.  Presumably this only happens when a widget has not yet
- * been configured and has size 1x1, so there is nothing to draw anyway.
+ * protects against this by setting the radius to 0 if the width or height is
+ * less than twice the radius.  Presumably this mainly happens when a widget
+ * has not yet been configured and hence has size 1x1, so there is nothing
+ * to draw anyway.
  */
 
-#define CHECK_RADIUS(radius, bounds)                                                 \
-    if ((radius) > (bounds).size.width / 2 || (radius) > (bounds).size.height / 2) { \
-        return;                                                                      \
+#define CHECK_RADIUS(radius, bounds)            \
+    if (radius < 0.0                            \
+	|| 2 * radius > bounds.size.width       \
+	|| 2 * radius > bounds.size.height) {   \
+	radius = 0.0;                           \
     }
 
 /*

@@ -46,12 +46,14 @@ static void		ShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-const Tcl_ObjType tkBorderObjType = {
-    "border",			/* name */
+const TkObjType tkBorderObjType = {
+    {"border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -87,7 +89,7 @@ Tk_Alloc3DBorderFromObj(
 {
     TkBorder *borderPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType.objType) {
 	InitBorderObj(objPtr);
     }
     borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -182,7 +184,7 @@ Tk_Get3DBorder(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
-    Tk_Uid colorName)		/* String giving name of color for window
+    const char *colorName)	/* String giving name of color for window
 				 * background. */
 {
     Tcl_HashEntry *hashPtr;
@@ -426,9 +428,7 @@ Tk_Free3DBorder(
 
     prevPtr = (TkBorder *)Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
-    if (borderPtr->bgColorPtr != NULL) {
-	Tk_FreeColor(borderPtr->bgColorPtr);
-    }
+    Tk_FreeColor(borderPtr->bgColorPtr);
     if (borderPtr->darkColorPtr != NULL) {
 	Tk_FreeColor(borderPtr->darkColorPtr);
     }
@@ -637,8 +637,7 @@ Tk_GetReliefFromObj(
  *
  * Results:
  *	A standard Tcl return value. If all goes well then *reliefPtr is
- *	filled in with one of the values TK_RELIEF_RAISED, TK_RELIEF_FLAT, or
- *	TK_RELIEF_SUNKEN.
+ *	filled in with one of the values TK_RELIEF_*
  *
  * Side effects:
  *	None.
@@ -654,29 +653,38 @@ Tk_GetRelief(
 {
     char c;
     size_t length;
+    int relief;
 
     c = name[0];
     length = strlen(name);
     if ((c == 'f') && (strncmp(name, "flat", length) == 0)) {
-	*reliefPtr = TK_RELIEF_FLAT;
-    } else if ((c == 'g') && (strncmp(name, "groove", length) == 0)
-	    && (length >= 2)) {
-	*reliefPtr = TK_RELIEF_GROOVE;
+	relief = TK_RELIEF_FLAT;
+    } else if ((c == 'g') && (strncmp(name, "groove", length) == 0)) {
+	relief = TK_RELIEF_GROOVE;
     } else if ((c == 'r') && (strncmp(name, "raised", length) == 0)
 	    && (length >= 2)) {
-	*reliefPtr = TK_RELIEF_RAISED;
-    } else if ((c == 'r') && (strncmp(name, "ridge", length) == 0)) {
-	*reliefPtr = TK_RELIEF_RIDGE;
-    } else if ((c == 's') && (strncmp(name, "solid", length) == 0)) {
-	*reliefPtr = TK_RELIEF_SOLID;
-    } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)) {
-	*reliefPtr = TK_RELIEF_SUNKEN;
+	relief = TK_RELIEF_RAISED;
+    } else if ((c == 'r') && (strncmp(name, "ridge", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_RIDGE;
+    } else if ((c == 's') && (strncmp(name, "solid", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_SOLID;
+    } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_SUNKEN;
     } else {
-	Tcl_SetObjResult(interp,
-		Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
-		name, "flat, groove, raised, ridge, solid, or sunken"));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", NULL);
+	if (interp) {
+	    int ambigeous = (c == 'r' || c == 's') && (name[1] == '\0');
+	    Tcl_SetObjResult(interp,
+		    Tcl_ObjPrintf("%s relief \"%.50s\": must be %s",
+		    ambigeous ? "ambigeous" : "bad", name, "flat, groove, raised, ridge, solid, or sunken"));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", (char *)NULL);
+	}
 	return TCL_ERROR;
+    }
+    if (reliefPtr) {
+	*reliefPtr = relief;
     }
     return TCL_OK;
 }
@@ -748,7 +756,7 @@ Tk_Draw3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -761,7 +769,8 @@ Tk_Draw3DPolygon(
     XPoint *p1Ptr, *p2Ptr;
     TkBorder *borderPtr = (TkBorder *) border;
     GC gc;
-    int i, lightOnLeft, dx, dy, parallel, pointsSeen;
+    Tcl_Size i;
+    int lightOnLeft, dx, dy, parallel, pointsSeen;
     Display *display = Tk_Display(tkwin);
 
     if (borderPtr->lightGC == NULL) {
@@ -834,9 +843,9 @@ Tk_Draw3DPolygon(
      */
 
     pointsSeen = 0;
-    for (i = -2, p1Ptr = &pointPtr[numPoints-2], p2Ptr = p1Ptr+1;
-	    i < numPoints; i++, p1Ptr = p2Ptr, p2Ptr++) {
-	if ((i == -1) || (i == numPoints-1)) {
+    for (i = 0, p1Ptr = &pointPtr[numPoints-2], p2Ptr = p1Ptr+1;
+	    i < numPoints + 2; i++, p1Ptr = p2Ptr, p2Ptr++) {
+	if ((i == 1) || (i == numPoints + 1)) {
 	    p2Ptr = pointPtr;
 	}
 	if ((p2Ptr->x == p1Ptr->x) && (p2Ptr->y == p1Ptr->y)) {
@@ -1017,7 +1026,7 @@ Tk_Fill3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -1029,7 +1038,7 @@ Tk_Fill3DPolygon(
     TkBorder *borderPtr = (TkBorder *) border;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
-	    pointPtr, numPoints, Complex, CoordModeOrigin);
+	    pointPtr, (int)numPoints, Complex, CoordModeOrigin);
     if (leftRelief != TK_RELIEF_FLAT) {
 	Tk_Draw3DPolygon(tkwin, drawable, border, pointPtr, numPoints,
 		borderWidth, leftRelief);
@@ -1242,7 +1251,7 @@ Tk_Get3DBorderFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType.objType) {
 	InitBorderObj(objPtr);
     }
 
@@ -1334,7 +1343,7 @@ InitBorderObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBorderObjType;
+    objPtr->typePtr = &tkBorderObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1411,14 +1420,17 @@ Tk_Get3DBorderColors(
     XColor *darkColorPtr,
     XColor *lightColorPtr)
 {
+    TkBorder *borderPtr = (TkBorder *)border;
+    const XColor *colorPtr = borderPtr->bgColorPtr ;
+
     if (bgColorPtr) {
-	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+	*bgColorPtr = *colorPtr;
     }
     if (darkColorPtr) {
-	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+	*darkColorPtr = borderPtr->darkColorPtr ? *borderPtr->darkColorPtr : *colorPtr;
     }
     if (lightColorPtr) {
-	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+	*lightColorPtr = borderPtr->lightColorPtr ? *borderPtr->lightColorPtr : *colorPtr;
     }
 }
 

@@ -10,7 +10,7 @@
 .SH NAME
 ttk::progressbar \- Provide progress feedback
 .SH SYNOPSIS
-\fBttk::progressbar\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::progressbar\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -20,10 +20,10 @@ amount completed relative to the total amount of work to be done, and
 \fIindeterminate\fR mode provides an animated display to let the user know
 that something is happening.
 .PP
-If the value of \fB-orient\fR is \fBhorizontal\fR a text string can be
+If the value of \fB\-orient\fR is \fBhorizontal\fR a text string can be
 displayed inside the progressbar. This string can be configured using
-the \fB-anchor\fR, \fB-font\fR, \fB-foreground\fR, \fB-justify\fR,
-\fB-text\fR and \fB-wraplength\fR options. If the value of \fB-orient\fR
+the \fB\-anchor\fR, \fB\-font\fR, \fB\-foreground\fR, \fB\-justify\fR,
+\fB\-text\fR and \fB\-wraplength\fR options. If the value of \fB\-orient\fR
 is \fBvertical\fR then these options are ignored.
 .SO ttk_widget
 \-anchor	\-class	\-cursor
@@ -71,18 +71,24 @@ In addition to the standard
 \fBstate\fR and \fBstyle\fR
 commands (see \fBttk::widget\fR),
 progressbar widgets support the following additional commands:
+.\" METHOD: start
 .TP
 \fIpathName \fBstart\fR ?\fIinterval\fR?
+.
 Begin autoincrement mode:
 schedules a recurring timer event that calls \fBstep\fR
 every \fIinterval\fR milliseconds.
 If omitted, \fIinterval\fR defaults to 50 milliseconds (20 steps/second).
+.\" METHOD: step
 .TP
 \fIpathName \fBstep\fR ?\fIamount\fR?
+.
 Increments the \fB\-value\fR by \fIamount\fR.
 \fIamount\fR defaults to 1.0 if omitted.
+.\" METHOD: stop
 .TP
 \fIpathName \fBstop\fR
+.
 Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
 .SH "STYLING OPTIONS"

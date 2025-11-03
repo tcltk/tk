@@ -38,30 +38,27 @@ typedef struct {
      * Information used when displaying widget:
      */
 
-    char *string;		/* String displayed in message. */
-    int numChars;		/* Number of characters in string, not
-				 * including terminating NULL. */
-    char *textVarName;		/* Name of variable (malloc'ed) or NULL.
+    Tcl_Obj *stringObj;		/* String displayed in message. */
+    Tcl_Obj *textVarNameObj;	/* Name of variable or NULL.
 				 * If non-NULL, message displays the contents
 				 * of this variable. */
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * background. NULL means a border hasn't been
 				 * created yet. */
-    int borderWidth;		/* Width of border. */
+    Tcl_Obj *borderWidthObj;	/* Width of border. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw
 				 * around widget when it has the focus.
-				 * <= 0 means don't draw a highlight. */
+				 * 0 means don't draw a highlight. */
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight
 				 * area when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Foreground color in normal mode. */
-    Tcl_Obj *padXPtr, *padYPtr;	/* Tcl_Obj rep's of padX, padY values. */
-    int padX, padY;		/* User-requested extra space around text. */
-    int width;			/* User-requested width, in pixels. 0 means
-				 * compute width using aspect ratio below. */
+    Tcl_Obj *padXObj, *padYObj;	/* Tcl_Obj rep's of padX, padY values. */
+    Tcl_Obj *widthObj;			/* User-requested width, in pixels. 0 means
+				 * compute width using aspect ratio. */
     int aspect;			/* Desired aspect ratio for window
 				 * (100*width/height). */
     int msgWidth;		/* Width in pixels needed to display
@@ -81,9 +78,9 @@ typedef struct {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    char *takeFocus;		/* Value of -takefocus option; not used in the
+    Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
 } Message;
@@ -109,57 +106,57 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
-	 TCL_INDEX_NONE, offsetof(Message, anchor), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(Message, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,
-	 TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 DEF_MESSAGE_BG_COLOR, TCL_INDEX_NONE, offsetof(Message, border), 0,
-	 DEF_MESSAGE_BG_MONO, 0},
+	DEF_MESSAGE_BG_COLOR, TCL_INDEX_NONE, offsetof(Message, border), 0,
+	DEF_MESSAGE_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
+	0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-background", 0},
+	0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_MESSAGE_BORDER_WIDTH, TCL_INDEX_NONE,
-	 offsetof(Message, borderWidth), 0, 0, 0},
+	DEF_MESSAGE_BORDER_WIDTH, offsetof(Message, borderWidthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	 DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
-	 TK_OPTION_NULL_OK, 0, 0},
+	DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-foreground", 0},
+	0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MESSAGE_FONT, TCL_INDEX_NONE, offsetof(Message, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_MESSAGE_FG, TCL_INDEX_NONE, offsetof(Message, fgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
-	 "HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, TCL_INDEX_NONE,
-	 offsetof(Message, highlightBgColorPtr), 0, 0, 0},
+	"HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, TCL_INDEX_NONE,
+	offsetof(Message, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	 DEF_MESSAGE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Message, highlightColorPtr),
-	 0, 0, 0},
+	DEF_MESSAGE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Message, highlightColorPtr),
+	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
-	 offsetof(Message, highlightWidth), 0, 0, 0},
+	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, offsetof(Message, highlightWidthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), 0, 0, 0},
+	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
-	 offsetof(Message, padX), 0, 0, 0},
+	DEF_MESSAGE_PADX, offsetof(Message, padXObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	 DEF_MESSAGE_PADY, offsetof(Message, padYPtr),
-	 offsetof(Message, padY), 0, 0, 0},
+	DEF_MESSAGE_PADY, offsetof(Message, padYObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MESSAGE_RELIEF, TCL_INDEX_NONE, offsetof(Message, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_MESSAGE_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Message, takeFocus),
+	DEF_MESSAGE_TAKE_FOCUS, offsetof(Message, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
-	DEF_MESSAGE_TEXT, TCL_INDEX_NONE, offsetof(Message, string), 0, 0, 0},
+	DEF_MESSAGE_TEXT, offsetof(Message, stringObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_MESSAGE_TEXT_VARIABLE, TCL_INDEX_NONE, offsetof(Message, textVarName),
+	DEF_MESSAGE_TEXT_VARIABLE, offsetof(Message, textVarNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_MESSAGE_WIDTH, TCL_INDEX_NONE, offsetof(Message, width), 0, 0 ,0},
+	DEF_MESSAGE_WIDTH, offsetof(Message, widthObj), TCL_INDEX_NONE, 0, 0 ,0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -167,21 +164,19 @@ static const Tk_OptionSpec optionSpecs[] = {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		MessageCmdDeletedProc(ClientData clientData);
-static void		MessageEventProc(ClientData clientData,
+static void		MessageCmdDeletedProc(void *clientData);
+static void		MessageEventProc(void *clientData,
 			    XEvent *eventPtr);
-static char *		MessageTextVarProc(ClientData clientData,
+static char *		MessageTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MessageWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static void		MessageWorldChanged(ClientData instanceData);
+static Tcl_ObjCmdProc2 MessageWidgetObjCmd;
+static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
 			    int objc, Tcl_Obj *const objv[], int flags);
 static void		DestroyMessage(void *memPtr);
-static void		DisplayMessage(ClientData clientData);
+static void		DisplayMessage(void *clientData);
 
 /*
  * The structure below defines message class behavior by means of functions
@@ -214,7 +209,7 @@ static const Tk_ClassProcs messageClass = {
 
 int
 Tk_MessageObjCmd(
-    ClientData dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -222,7 +217,6 @@ Tk_MessageObjCmd(
     Message *msgPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -252,7 +246,7 @@ Tk_MessageObjCmd(
     msgPtr->tkwin = tkwin;
     msgPtr->display = Tk_Display(tkwin);
     msgPtr->interp = interp;
-    msgPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    msgPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(msgPtr->tkwin), MessageWidgetObjCmd, msgPtr,
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
@@ -302,9 +296,9 @@ Tk_MessageObjCmd(
 
 static int
 MessageWidgetObjCmd(
-    ClientData clientData,	/* Information about message widget. */
+    void *clientData,	/* Information about message widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr = (Message *)clientData;
@@ -405,12 +399,12 @@ DestroyMessage(
     if (msgPtr->textLayout != NULL) {
 	Tk_FreeTextLayout(msgPtr->textLayout);
     }
-    if (msgPtr->textVarName != NULL) {
-	Tcl_UntraceVar2(msgPtr->interp, msgPtr->textVarName, NULL,
+    if (msgPtr->textVarNameObj != NULL) {
+	Tcl_UntraceVar2(msgPtr->interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
     }
-    Tk_FreeConfigOptions((char *) msgPtr, msgPtr->optionTable, msgPtr->tkwin);
+    Tk_FreeConfigOptions(msgPtr, msgPtr->optionTable, msgPtr->tkwin);
     msgPtr->tkwin = NULL;
     ckfree(msgPtr);
 }
@@ -420,7 +414,7 @@ DestroyMessage(
  *
  * ConfigureMessage --
  *
- *	This function is called to process an argv/argc list, plus the Tk
+ *	This function is called to process an objv/objc list, plus the Tk
  *	option database, in order to configure (or reconfigure) a message
  *	widget.
  *
@@ -442,17 +436,16 @@ ConfigureMessage(
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
-    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
+    TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    (void)flags;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
      */
 
-    if (msgPtr->textVarName != NULL) {
-	Tcl_UntraceVar2(interp, msgPtr->textVarName, NULL,
+    if (msgPtr->textVarNameObj != NULL) {
+	Tcl_UntraceVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
     }
@@ -469,34 +462,23 @@ ConfigureMessage(
      * and fetch its current value.
      */
 
-    if (msgPtr->textVarName != NULL) {
+    if (msgPtr->textVarNameObj != NULL) {
 	const char *value;
 
-	value = Tcl_GetVar2(interp, msgPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
-	    Tcl_SetVar2(interp, msgPtr->textVarName, NULL, msgPtr->string,
+	    Tcl_SetVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL, Tcl_GetString(msgPtr->stringObj),
 		    TCL_GLOBAL_ONLY);
 	} else {
-	    if (msgPtr->string != NULL) {
-		ckfree(msgPtr->string);
+	    if (msgPtr->stringObj != NULL) {
+		Tcl_DecrRefCount(msgPtr->stringObj);
 	    }
-	    msgPtr->string = strcpy((char *)ckalloc(strlen(value) + 1), value);
+	    msgPtr->stringObj = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+	    Tcl_IncrRefCount(msgPtr->stringObj);
 	}
-	Tcl_TraceVar2(interp, msgPtr->textVarName, NULL,
+	Tcl_TraceVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
-    }
-
-    /*
-     * A few other options need special processing, such as setting the
-     * background from a 3-D border or handling special defaults that couldn't
-     * be specified to Tk_ConfigureWidget.
-     */
-
-    msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, -1);
-
-    if (msgPtr->highlightWidth < 0) {
-	msgPtr->highlightWidth = 0;
     }
 
     Tk_FreeSavedOptions(&savedOptions);
@@ -524,11 +506,10 @@ ConfigureMessage(
 
 static void
 MessageWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc = NULL;
-    Tk_FontMetrics fm;
     Message *msgPtr = (Message *)instanceData;
 
     if (msgPtr->border != NULL) {
@@ -542,14 +523,6 @@ MessageWorldChanged(
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     msgPtr->textGC = gc;
-
-    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
-    if (msgPtr->padX < 0) {
-	msgPtr->padX = fm.ascent / 2;
-    }
-    if (msgPtr->padY == -1) {
-	msgPtr->padY = fm.ascent / 4;
-    }
 
     /*
      * Recompute the desired geometry for the window, and arrange for the
@@ -589,10 +562,27 @@ ComputeMessageGeometry(
     int width, inc, height;
     int thisWidth, thisHeight, maxWidth;
     int aspect, lowerBound, upperBound, inset;
+    int borderWidth, highlightWidth, padX, padY;
+    Tk_FontMetrics fm;
+    Tcl_Size numChars;
 
     Tk_FreeTextLayout(msgPtr->textLayout);
 
-    inset = msgPtr->borderWidth + msgPtr->highlightWidth;
+    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    if (msgPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    } else {
+	padX = fm.ascent / 2;
+    }
+    if (msgPtr->padYObj) {
+	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    } else {
+	padY = fm.ascent / 4;
+    }
+
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+    inset = borderWidth + highlightWidth;
 
     /*
      * Compute acceptable bounds for the final aspect ratio.
@@ -613,20 +603,21 @@ ComputeMessageGeometry(
      * explicit width then just use that.
      */
 
-    if (msgPtr->width > 0) {
-	width = msgPtr->width;
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
+    if (width > 0) {
 	inc = 0;
     } else {
 	width = WidthOfScreen(Tk_Screen(msgPtr->tkwin))/2;
 	inc = width/2;
     }
 
+    numChars = Tcl_GetCharLength(msgPtr->stringObj);
     for ( ; ; inc /= 2) {
 	msgPtr->textLayout = Tk_ComputeTextLayout(msgPtr->tkfont,
-		msgPtr->string, msgPtr->numChars, width, msgPtr->justify,
+		Tcl_GetString(msgPtr->stringObj), numChars, width, msgPtr->justify,
 		0, &thisWidth, &thisHeight);
-	maxWidth = thisWidth + 2 * (inset + msgPtr->padX);
-	height = thisHeight + 2 * (inset + msgPtr->padY);
+	maxWidth = thisWidth + 2 * (inset + padX);
+	height = thisHeight + 2 * (inset + padY);
 
 	if (inc <= 2) {
 	    break;
@@ -666,27 +657,43 @@ ComputeMessageGeometry(
 
 static void
 DisplayMessage(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     Message *msgPtr = (Message *)clientData;
     Tk_Window tkwin = msgPtr->tkwin;
     int x, y;
-    int borderWidth = msgPtr->highlightWidth;
+    int width, borderWidth, highlightWidth, padX, padY;
+    Tk_FontMetrics fm;
 
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    if (msgPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    } else {
+	padX = fm.ascent / 2;
+    }
+    if (msgPtr->padYObj) {
+	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    } else {
+	padY = fm.ascent / 4;
+    }
+
+    width = highlightWidth;
     msgPtr->flags &= ~REDRAW_PENDING;
     if ((msgPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
     if (msgPtr->border != NULL) {
-	borderWidth += msgPtr->borderWidth;
+	width += borderWidth;
     }
     if (msgPtr->relief == TK_RELIEF_FLAT) {
-	borderWidth = msgPtr->highlightWidth;
+	width = highlightWidth;
     }
     Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), msgPtr->border,
-	    borderWidth, borderWidth,
-	    Tk_Width(tkwin) - 2 * borderWidth,
-	    Tk_Height(tkwin) - 2 * borderWidth,
+	    width, width,
+	    Tk_Width(tkwin) - 2 * width,
+	    Tk_Height(tkwin) - 2 * width,
 	    0, TK_RELIEF_FLAT);
 
     /*
@@ -694,28 +701,28 @@ DisplayMessage(
      * anchor option.
      */
 
-    TkComputeAnchor(msgPtr->anchor, tkwin, msgPtr->padX, msgPtr->padY,
+    TkComputeAnchor(msgPtr->anchor, tkwin, padX, padY,
 	    msgPtr->msgWidth, msgPtr->msgHeight, &x, &y);
     Tk_DrawTextLayout(Tk_Display(tkwin), Tk_WindowId(tkwin), msgPtr->textGC,
 	    msgPtr->textLayout, x, y, 0, -1);
 
-    if (borderWidth > msgPtr->highlightWidth) {
+    if (width > highlightWidth) {
 	Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin), msgPtr->border,
-		msgPtr->highlightWidth, msgPtr->highlightWidth,
-		Tk_Width(tkwin) - 2*msgPtr->highlightWidth,
-		Tk_Height(tkwin) - 2*msgPtr->highlightWidth,
-		msgPtr->borderWidth, msgPtr->relief);
+		highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		borderWidth, msgPtr->relief);
     }
-    if (msgPtr->highlightWidth != 0) {
+    if (highlightWidth > 0) {
 	GC fgGC, bgGC;
 
 	bgGC = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (msgPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr,Tk_WindowId(tkwin));
-	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, highlightWidth,
 		    Tk_WindowId(tkwin));
 	}
     }
@@ -741,10 +748,11 @@ DisplayMessage(
 
 static void
 MessageEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     Message *msgPtr = (Message *)clientData;
+    int highlightWidth;
 
     if (((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0))
 	    || (eventPtr->type == ConfigureNotify)) {
@@ -754,14 +762,16 @@ MessageEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags |= GOT_FOCUS;
-	    if (msgPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags &= ~GOT_FOCUS;
-	    if (msgPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
@@ -795,7 +805,7 @@ MessageEventProc(
 
 static void
 MessageCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     Message *msgPtr = (Message *)clientData;
 
@@ -830,16 +840,14 @@ MessageCmdDeletedProc(
 
 static char *
 MessageTextVarProc(
-    ClientData clientData,	/* Information about message. */
+    void *clientData,	/* Information about message. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),	/* Name of variable. */
+    TCL_UNUSED(const char *),	/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Message *msgPtr = (Message *)clientData;
     const char *value;
-    (void)name1;
-    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -847,46 +855,45 @@ MessageTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        if (!Tcl_InterpDeleted(interp) && msgPtr->textVarName) {
-            void *probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && msgPtr->textVarNameObj) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        msgPtr->textVarName,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        MessageTextVarProc, probe);
-                if (probe == (void *)msgPtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * textVarName, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
-	    Tcl_SetVar2(interp, msgPtr->textVarName, NULL, msgPtr->string,
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(msgPtr->textVarNameObj),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			MessageTextVarProc, probe);
+		if (probe == (void *)msgPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarName, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
+	    Tcl_SetVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL, Tcl_GetString(msgPtr->stringObj),
 		    TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar2(interp, msgPtr->textVarName, NULL,
+	    Tcl_TraceVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MessageTextVarProc, clientData);
 	}
 	return NULL;
     }
 
-    value = Tcl_GetVar2(interp, msgPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }
-    if (msgPtr->string != NULL) {
-	ckfree(msgPtr->string);
+    if (msgPtr->stringObj != NULL) {
+	Tcl_DecrRefCount(msgPtr->stringObj);
     }
-    msgPtr->numChars = Tcl_NumUtfChars(value, -1);
-    msgPtr->string = (char *)ckalloc(strlen(value) + 1);
-    strcpy(msgPtr->string, value);
+    msgPtr->stringObj = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+    Tcl_IncrRefCount(msgPtr->stringObj);
     ComputeMessageGeometry(msgPtr);
 
     if ((msgPtr->tkwin != NULL) && Tk_IsMapped(msgPtr->tkwin)

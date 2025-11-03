@@ -119,7 +119,7 @@ TkpFreeColor(
 TkColor *
 TkpGetColor(
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to allocated (in form
+    const char *name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     Display *display = Tk_Display(tkwin);
@@ -289,9 +289,9 @@ FindClosestColor(
 	    }
 
 	    stressPtr->numColors = visInfoPtr->colormap_size;
-	    XFree((char *) visInfoPtr);
+	    XFree(visInfoPtr);
 	    stressPtr->colorPtr = (XColor *)
-		    ckalloc(stressPtr->numColors * sizeof(XColor));
+		    ckalloc((size_t)stressPtr->numColors * sizeof(XColor));
 	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
 	    }

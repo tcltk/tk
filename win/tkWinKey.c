@@ -97,15 +97,15 @@ TkpGetString(
 				 * result. */
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
-    int len;
+    Tcl_Size len;
     char buf[6];
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
 	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
 	if (ev->nbytes > 0) {
-	    (void)Tcl_ExternalToUtfDStringEx(TkWinGetKeyInputEncoding(),
-		    ev->trans_chars, ev->nbytes, TCL_ENCODING_NOCOMPLAIN, dsPtr);
+	    (void)Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
+		    ev->trans_chars, ev->nbytes, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
@@ -113,7 +113,7 @@ TkpGetString(
 	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
-	len = TkUniCharToUtf(keyEv->keycode, buf);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else {
 	/*
@@ -125,7 +125,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = TkUniCharToUtf(keysym & 255, buf);
+	    len = Tcl_UniCharToUtf(keysym & 255, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
@@ -165,14 +165,12 @@ XKeycodeToKeysym(
 
 KeySym
 XkbKeycodeToKeysym(
-    Display *display,
+    TCL_UNUSED(Display *),
     unsigned int keycode,
-    int group,
+    TCL_UNUSED(int),
     int index)
 {
     int state = 0;
-    (void)display;
-    (void)group;
 
     if (index & 0x01) {
 	state |= ShiftMask;
@@ -360,9 +358,9 @@ KeycodeToKeysym(
 	 */
 
     case VK_CONTROL:
-        if (state & EXTENDED_MASK) {
-            return XK_Control_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Control_R;
+	}
 	break;
     case VK_SHIFT:
 	if (GetKeyState(VK_RSHIFT) & 0x80) {
@@ -370,9 +368,9 @@ KeycodeToKeysym(
 	}
 	break;
     case VK_MENU:
-        if (state & EXTENDED_MASK) {
-            return XK_Alt_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Alt_R;
+	}
 	break;
     }
     return keymap[keycode];
@@ -457,7 +455,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;

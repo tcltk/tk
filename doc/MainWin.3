@@ -17,14 +17,13 @@ Tk_MainWindow, Tk_GetNumMainWindows \- functions for querying main window inform
 Tk_Window
 \fBTk_MainWindow\fR(\fIinterp\fR)
 .sp
-void
 \fBTk_SetMainMenubar\fR(\fIinterp, tkwin, menuName\fR)
 .sp
-void
 \fBTk_SetWindowMenubar\fR(\fIinterp, tkwin, oldMenuName, menuName\fR)
 .sp
 int
 \fBTk_GetNumMainWindows\fR()
+.fi
 .SH ARGUMENTS
 .AS Tcl_Interp *pathName
 .AP Tcl_Interp *interp in/out
@@ -52,7 +51,7 @@ leaves an error message in interpreter \fIinterp\fR's result.
 windows currently open in the current thread.
 \fBTk_SetMainMenubar\fR
 Called when a toplevel widget is brought to front. On the Macintosh,
-sets up the menubar that goes accross the top of the main monitor. On
+sets up the menubar that goes across the top of the main monitor. On
 other platforms, nothing is necessary.
 \fBTk_SetWindowMenubar\fR associates a menu with a window.
 The old menu clones for the menubar are thrown away, and a handler is

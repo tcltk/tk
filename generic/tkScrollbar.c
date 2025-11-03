@@ -49,15 +49,15 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_SCROLLBAR_BORDER_WIDTH, offsetof(TkScrollbar, borderWidth), 0, NULL},
+	DEF_SCROLLBAR_BORDER_WIDTH, offsetof(TkScrollbar, borderWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-command", "command", "Command",
-	DEF_SCROLLBAR_COMMAND, offsetof(TkScrollbar, command),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_SCROLLBAR_COMMAND, offsetof(TkScrollbar, commandObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_SCROLLBAR_CURSOR, offsetof(TkScrollbar, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-elementborderwidth", "elementBorderWidth",
 	"BorderWidth", DEF_SCROLLBAR_EL_BORDER_WIDTH,
-	offsetof(TkScrollbar, elementBorderWidth), 0, NULL},
+	offsetof(TkScrollbar, elementBorderWidthObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_SCROLLBAR_HIGHLIGHT_BG,
 	offsetof(TkScrollbar, highlightBgColorPtr), 0, NULL},
@@ -66,7 +66,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	offsetof(TkScrollbar, highlightColorPtr), 0, NULL},
     {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness",
-	DEF_SCROLLBAR_HIGHLIGHT_WIDTH, offsetof(TkScrollbar, highlightWidth), 0, NULL},
+	DEF_SCROLLBAR_HIGHLIGHT_WIDTH, offsetof(TkScrollbar, highlightWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_BOOLEAN, "-jump", "jump", "Jump",
 	DEF_SCROLLBAR_JUMP, offsetof(TkScrollbar, jump), 0, NULL},
     {TK_CONFIG_CUSTOM, "-orient", "orient", "Orient",
@@ -79,8 +79,8 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
 	DEF_SCROLLBAR_REPEAT_INTERVAL, offsetof(TkScrollbar, repeatInterval), 0, NULL},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_SCROLLBAR_TAKE_FOCUS, offsetof(TkScrollbar, takeFocus),
-	TK_CONFIG_NULL_OK, NULL},
+	DEF_SCROLLBAR_TAKE_FOCUS, offsetof(TkScrollbar, takeFocusObj),
+	TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-troughcolor", "troughColor", "Background",
 	DEF_SCROLLBAR_TROUGH_COLOR, offsetof(TkScrollbar, troughColorPtr),
 	TK_CONFIG_COLOR_ONLY, NULL},
@@ -88,7 +88,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_SCROLLBAR_TROUGH_MONO, offsetof(TkScrollbar, troughColorPtr),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
-	tkDefScrollbarWidth, offsetof(TkScrollbar, width), 0, NULL},
+	tkDefScrollbarWidth, offsetof(TkScrollbar, widthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -97,11 +97,10 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		ConfigureScrollbar(Tcl_Interp *interp,
-			    TkScrollbar *scrollPtr, int objc,
+			    TkScrollbar *scrollPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
-static void		ScrollbarCmdDeletedProc(ClientData clientData);
-static int		ScrollbarWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj *const objv[]);
+static void		ScrollbarCmdDeletedProc(void *clientData);
+static Tcl_ObjCmdProc2 ScrollbarWidgetObjCmd;
 
 /*
  *--------------------------------------------------------------
@@ -122,7 +121,7 @@ static int		ScrollbarWidgetObjCmd(ClientData clientData,
 
 int
 Tk_ScrollbarObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -155,40 +154,33 @@ Tk_ScrollbarObjCmd(
     scrollPtr->tkwin = newWin;
     scrollPtr->display = Tk_Display(newWin);
     scrollPtr->interp = interp;
-    scrollPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    scrollPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(scrollPtr->tkwin), ScrollbarWidgetObjCmd,
 	    scrollPtr, ScrollbarCmdDeletedProc);
     scrollPtr->vertical = 0;
-    scrollPtr->width = 0;
-    scrollPtr->command = NULL;
-    scrollPtr->commandSize = 0;
+    scrollPtr->widthObj = 0;
+    scrollPtr->commandObj = NULL;
     scrollPtr->repeatDelay = 0;
     scrollPtr->repeatInterval = 0;
-    scrollPtr->borderWidth = 0;
+    scrollPtr->borderWidthObj = NULL;
     scrollPtr->bgBorder = NULL;
     scrollPtr->activeBorder = NULL;
     scrollPtr->troughColorPtr = NULL;
     scrollPtr->relief = TK_RELIEF_FLAT;
-    scrollPtr->highlightWidth = 0;
+    scrollPtr->highlightWidthObj = NULL;
     scrollPtr->highlightBgColorPtr = NULL;
     scrollPtr->highlightColorPtr = NULL;
     scrollPtr->inset = 0;
-    scrollPtr->elementBorderWidth = -1;
+    scrollPtr->elementBorderWidthObj = NULL;
     scrollPtr->arrowLength = 0;
     scrollPtr->sliderFirst = 0;
     scrollPtr->sliderLast = 0;
     scrollPtr->activeField = 0;
     scrollPtr->activeRelief = TK_RELIEF_RAISED;
-#ifndef TK_NO_DEPRECATED
-    scrollPtr->totalUnits = 0;
-    scrollPtr->windowUnits = 0;
-    scrollPtr->firstUnit = 0;
-    scrollPtr->lastUnit = 0;
-#endif /* TK_NO_DEPRECATED */
     scrollPtr->firstFraction = 0.0;
     scrollPtr->lastFraction = 0.0;
     scrollPtr->cursor = NULL;
-    scrollPtr->takeFocus = NULL;
+    scrollPtr->takeFocusObj = NULL;
     scrollPtr->flags = 0;
 
     if (ConfigureScrollbar(interp, scrollPtr, objc-2, objv+2, 0) != TCL_OK) {
@@ -220,21 +212,21 @@ Tk_ScrollbarObjCmd(
 
 static int
 ScrollbarWidgetObjCmd(
-    ClientData clientData,	/* Information about scrollbar widget. */
+    void *clientData,	/* Information about scrollbar widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     int result = TCL_OK, cmdIndex, length;
-    TkSizeT len;
+    Tcl_Size len;
     static const char *const commandNames[] = {
-        "activate", "cget", "configure", "delta", "fraction",
-        "get", "identify", "set", NULL
+	"activate", "cget", "configure", "delta", "fraction",
+	"get", "identify", "set", NULL
     };
     enum command {
-        COMMAND_ACTIVATE, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELTA,
-        COMMAND_FRACTION, COMMAND_GET, COMMAND_IDENTIFY, COMMAND_SET
+	COMMAND_ACTIVATE, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELTA,
+	COMMAND_FRACTION, COMMAND_GET, COMMAND_IDENTIFY, COMMAND_SET
     };
 
     if (objc < 2) {
@@ -264,7 +256,7 @@ ScrollbarWidgetObjCmd(
 	    case SLIDER:	zone = "slider"; break;
 	    case BOTTOM_ARROW:	zone = "arrow2"; break;
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, TCL_INDEX_NONE));
 	    goto done;
 	}
 	if (objc != 3) {
@@ -293,16 +285,16 @@ ScrollbarWidgetObjCmd(
 	    goto error;
 	}
 	result = Tk_ConfigureValue(interp, scrollPtr->tkwin,
-		configSpecs, (char *) scrollPtr, Tcl_GetString(objv[2]), 0);
+		configSpecs, scrollPtr, Tcl_GetString(objv[2]), 0);
 	break;
     }
     case COMMAND_CONFIGURE: {
 	if (objc == 2) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
-		    configSpecs, (char *) scrollPtr, NULL, 0);
+		    configSpecs, scrollPtr, NULL, 0);
 	} else if (objc == 3) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
-		    configSpecs, (char *) scrollPtr, Tcl_GetString(objv[2]), 0);
+		    configSpecs, scrollPtr, Tcl_GetString(objv[2]), 0);
 	} else {
 	    result = ConfigureScrollbar(interp, scrollPtr, objc-2,
 		    objv+2, TK_CONFIG_ARGV_ONLY);
@@ -324,11 +316,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pixels = yDelta;
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pixels = xDelta;
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -353,11 +345,11 @@ ScrollbarWidgetObjCmd(
 	if (scrollPtr->vertical) {
 	    pos = y - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Height(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	} else {
 	    pos = x - (scrollPtr->arrowLength + scrollPtr->inset);
 	    length = Tk_Width(scrollPtr->tkwin) - 1
-		    - 2*(scrollPtr->arrowLength + scrollPtr->inset);
+		    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
 	}
 	if (length == 0) {
 	    fraction = 0.0;
@@ -379,16 +371,6 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "get");
 	    goto error;
 	}
-#ifndef TK_NO_DEPRECATED
-	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
-	    resObjs[0] = Tcl_NewWideIntObj(scrollPtr->totalUnits);
-	    resObjs[1] = Tcl_NewWideIntObj(scrollPtr->windowUnits);
-	    resObjs[2] = Tcl_NewWideIntObj(scrollPtr->firstUnit);
-	    resObjs[3] = Tcl_NewWideIntObj(scrollPtr->lastUnit);
-	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
-	    break;
-	}
-#endif /* TK_NO_DEPRECATED */
 	resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
 	resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
@@ -413,7 +395,7 @@ ScrollbarWidgetObjCmd(
 	case BOTTOM_GAP:	zone = "trough2"; break;
 	case BOTTOM_ARROW:	zone = "arrow2";  break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, TCL_INDEX_NONE));
 	break;
     }
     case COMMAND_SET: {
@@ -440,48 +422,6 @@ ScrollbarWidgetObjCmd(
 	    } else {
 		scrollPtr->lastFraction = last;
 	    }
-#ifndef TK_NO_DEPRECATED
-	    scrollPtr->flags &= ~OLD_STYLE_COMMANDS;
-	} else if (objc == 6) {
-	    int totalUnits, windowUnits, firstUnit, lastUnit;
-	    if (Tcl_GetIntFromObj(interp, objv[2], &totalUnits) != TCL_OK) {
-		goto error;
-	    }
-	    if (totalUnits < 0) {
-		totalUnits = 0;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[3], &windowUnits) != TCL_OK) {
-		goto error;
-	    }
-	    if (windowUnits < 0) {
-		windowUnits = 0;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[4], &firstUnit) != TCL_OK) {
-		goto error;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[5], &lastUnit) != TCL_OK) {
-		goto error;
-	    }
-	    if (totalUnits > 0) {
-		if (lastUnit < firstUnit) {
-		    lastUnit = firstUnit;
-		}
-	    } else {
-		firstUnit = lastUnit = 0;
-	    }
-	    scrollPtr->totalUnits = totalUnits;
-	    scrollPtr->windowUnits = windowUnits;
-	    scrollPtr->firstUnit = firstUnit;
-	    scrollPtr->lastUnit = lastUnit;
-	    if (scrollPtr->totalUnits == 0) {
-		scrollPtr->firstFraction = 0.0;
-		scrollPtr->lastFraction = 1.0;
-	    } else {
-		scrollPtr->firstFraction = ((double) firstUnit)/totalUnits;
-		scrollPtr->lastFraction = ((double) (lastUnit+1))/totalUnits;
-	    }
-	    scrollPtr->flags |= OLD_STYLE_COMMANDS;
-#endif /* !TK_NO_DEPRECATED */
 	} else {
 		Tcl_WrongNumArgs(interp, 1, objv, "set firstFraction lastFraction");
 	    goto error;
@@ -506,7 +446,7 @@ ScrollbarWidgetObjCmd(
  *
  * ConfigureScrollbar --
  *
- *	This function is called to process an argv/argc list, plus the Tk
+ *	This function is called to process an objv/objc list, plus the Tk
  *	option database, in order to configure (or reconfigure) a scrollbar
  *	widget.
  *
@@ -527,24 +467,13 @@ ConfigureScrollbar(
     TkScrollbar *scrollPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs, objc,
-	    (const char **)objv, (char *) scrollPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objv, scrollPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
-    }
-
-    /*
-     * A few options need special processing, such as setting the background
-     * from a 3-D border.
-     */
-
-    if (scrollPtr->command != NULL) {
-        scrollPtr->commandSize = (int) strlen(scrollPtr->command);
-    } else {
-	scrollPtr->commandSize = 0;
     }
 
     /*
@@ -584,10 +513,11 @@ ConfigureScrollbar(
 
 void
 TkScrollbarEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
+    int highlightWidth;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkScrollbarEventuallyRedraw(scrollPtr);
@@ -606,7 +536,7 @@ TkScrollbarEventProc(
 	 * Tk_FreeOptions handle all the standard option-related stuff.
 	 */
 
-	Tk_FreeOptions(configSpecs, (char*) scrollPtr, scrollPtr->display, 0);
+	Tk_FreeOptions(configSpecs, scrollPtr, scrollPtr->display, 0);
 	Tcl_EventuallyFree(scrollPtr, TCL_DYNAMIC);
     } else if (eventPtr->type == ConfigureNotify) {
 	TkpComputeScrollbarGeometry(scrollPtr);
@@ -614,14 +544,16 @@ TkScrollbarEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    scrollPtr->flags |= GOT_FOCUS;
-	    if (scrollPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		TkScrollbarEventuallyRedraw(scrollPtr);
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    scrollPtr->flags &= ~GOT_FOCUS;
-	    if (scrollPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		TkScrollbarEventuallyRedraw(scrollPtr);
 	    }
 	}
@@ -650,7 +582,7 @@ TkScrollbarEventProc(
 
 static void
 ScrollbarCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->tkwin;

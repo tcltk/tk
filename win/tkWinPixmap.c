@@ -37,10 +37,10 @@ Tk_GetPixmap(
     int depth)
 {
     TkWinDrawable *newTwdPtr, *twdPtr;
-    int planes;
+    DWORD planes;
     Screen *screen;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     newTwdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
@@ -56,14 +56,14 @@ Tk_GetPixmap(
     } else {
 	newTwdPtr->bitmap.colormap = twdPtr->bitmap.colormap;
     }
-    screen = &display->screens[0];
+    screen = ScreenOfDisplay(display, 0);
     planes = 1;
-    if (depth == screen->root_depth) {
-	planes = PTR2INT(screen->ext_data);
+    if (depth == DefaultDepthOfScreen(screen)) {
+	planes = (DWORD)PTR2INT(screen->ext_data);
 	depth /= planes;
     }
     newTwdPtr->bitmap.handle =
-	    CreateBitmap(width, height, (DWORD) planes, (DWORD) depth, NULL);
+	    CreateBitmap(width, height, planes, (DWORD) depth, NULL);
 
     /*
      * CreateBitmap tries to use memory on the graphics card. If it fails,
@@ -81,8 +81,8 @@ Tk_GetPixmap(
 	bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
 	bitmapInfo.bmiHeader.biWidth = width;
 	bitmapInfo.bmiHeader.biHeight = height;
-	bitmapInfo.bmiHeader.biPlanes = planes;
-	bitmapInfo.bmiHeader.biBitCount = depth;
+	bitmapInfo.bmiHeader.biPlanes = (WORD)planes;
+	bitmapInfo.bmiHeader.biBitCount = (WORD)depth;
 	bitmapInfo.bmiHeader.biCompression = BI_RGB;
 	bitmapInfo.bmiHeader.biSizeImage = 0;
 	dc = GetDC(NULL);
@@ -144,7 +144,7 @@ Tk_FreePixmap(
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *) pixmap;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (twdPtr != NULL) {
 	DeleteObject(twdPtr->bitmap.handle);
 	ckfree(twdPtr);
@@ -197,23 +197,17 @@ TkSetPixmapColormap(
 
 int
 XGetGeometry(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
-    Window *root_return,
-    int *x_return,
-    int *y_return,
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     unsigned int *width_return,
     unsigned int *height_return,
-    unsigned int *border_width_return,
-    unsigned int *depth_return)
+    TCL_UNUSED(unsigned int *),
+    TCL_UNUSED(unsigned int *))
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-    (void)display;
-    (void)root_return;
-    (void)x_return;
-    (void)y_return;
-    (void)border_width_return;
-    (void)depth_return;
 
     if (twdPtr->type == TWD_BITMAP) {
 	HDC dc;

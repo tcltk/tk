@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ctext
 catch {destroy $w}
@@ -31,16 +31,16 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-canvas $c -relief flat -borderwidth 0 -width 500 -height 350
+canvas $c -relief flat -borderwidth 0 -width 375p -height 262.5p
 pack $w.c -side top -expand yes -fill both
 
 set textFont {Helvetica 24}
 
-$c create rectangle 245 195 255 205 -outline black -fill red
+$c create rectangle 183.75p 122.25p 191.25p 129.75p -outline black -fill red
 
 # First, create the text item and give it bindings so it can be edited.
 
-$c addtag text withtag [$c create text 250 200 -text "This is just a string of text to demonstrate the text facilities of canvas widgets. Bindings have been defined to support editing (see above)." -width 440 -anchor n -font $textFont -justify left]
+$c addtag text withtag [$c create text 187.5p 126p -text "This is just a string of text to demonstrate the text facilities of canvas widgets. Bindings have been defined to support editing (see above)." -width 330p -anchor n -font $textFont -justify left]
 $c bind text <Button-1> "textB1Press $c %x %y"
 $c bind text <B1-Motion> "textB1Move $c %x %y"
 $c bind text <Shift-Button-1> "$c select adjust current @%x,%y"
@@ -50,52 +50,48 @@ $c bind text <Return> "textInsert $c \\n"
 $c bind text <Control-h> "textBs $c"
 $c bind text <BackSpace> "textBs $c"
 $c bind text <Delete> "textDel $c"
-if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
-    $c bind text <Button-3> "textPaste $c @%x,%y"
-} else {
-    $c bind text <Button-2> "textPaste $c @%x,%y"
-}
+$c bind text <Button-2> "textPaste $c @%x,%y"
 
 # Next, create some items that allow the text's anchor position
 # to be edited.
 
-proc mkTextConfigBox {w x y option value color} {
-    set item [$w create rect $x $y [expr {$x+30}] [expr {$y+30}] \
-	    -outline black -fill $color -width 1]
+proc mkTextConfigBox {w x y option value color} {	;# x, y are in points
+    set item [$w create rect ${x}p ${y}p [expr {$x+22.5}]p [expr {$y+22.5}]p \
+	    -outline black -fill $color -width 0.75p]
     $w bind $item <Button-1> "$w itemconf text $option $value"
     $w addtag config withtag $item
 }
-proc mkTextConfigPie {w x y a option value color} {
-    set item [$w create arc $x $y [expr {$x+90}] [expr {$y+90}] \
+proc mkTextConfigPie {w x y a option value color} {	;# x, y are in points
+    set item [$w create arc ${x}p ${y}p [expr {$x+67.5}]p [expr {$y+67.5}]p \
 	    -start [expr {$a-15}] -extent 30 -outline black -fill $color \
-	    -width 1]
+	    -width 0.75p]
     $w bind $item <Button-1> "$w itemconf text $option $value"
     $w addtag config withtag $item
 }
 
-set x 50
-set y 50
+set x 37.5	;# in points
+set y 37.5	;# in points
 set color LightSkyBlue1
 mkTextConfigBox $c $x $y -anchor se $color
-mkTextConfigBox $c [expr {$x+30}] [expr {$y   }] -anchor s      $color
-mkTextConfigBox $c [expr {$x+60}] [expr {$y   }] -anchor sw     $color
-mkTextConfigBox $c [expr {$x   }] [expr {$y+30}] -anchor e      $color
-mkTextConfigBox $c [expr {$x+30}] [expr {$y+30}] -anchor center $color
-mkTextConfigBox $c [expr {$x+60}] [expr {$y+30}] -anchor w      $color
-mkTextConfigBox $c [expr {$x   }] [expr {$y+60}] -anchor ne     $color
-mkTextConfigBox $c [expr {$x+30}] [expr {$y+60}] -anchor n      $color
-mkTextConfigBox $c [expr {$x+60}] [expr {$y+60}] -anchor nw     $color
+mkTextConfigBox $c [expr {$x+22.5}] [expr {$y     }] -anchor s      $color
+mkTextConfigBox $c [expr {$x+45  }] [expr {$y     }] -anchor sw     $color
+mkTextConfigBox $c [expr {$x     }] [expr {$y+22.5}] -anchor e      $color
+mkTextConfigBox $c [expr {$x+22.5}] [expr {$y+22.5}] -anchor center $color
+mkTextConfigBox $c [expr {$x+45  }] [expr {$y+22.5}] -anchor w      $color
+mkTextConfigBox $c [expr {$x     }] [expr {$y+45  }] -anchor ne     $color
+mkTextConfigBox $c [expr {$x+22.5}] [expr {$y+45  }] -anchor n      $color
+mkTextConfigBox $c [expr {$x+45  }] [expr {$y+45  }] -anchor nw     $color
 set item [$c create rect \
-	[expr {$x+40}] [expr {$y+40}] [expr {$x+50}] [expr {$y+50}] \
+	[expr {$x+30}]p [expr {$y+30}]p [expr {$x+37.5}]p [expr {$y+37.5}]p \
 	-outline black -fill red]
 $c bind $item <Button-1> "$c itemconf text -anchor center"
-$c create text [expr {$x+45}] [expr {$y-5}] \
+$c create text [expr {$x+33.75}]p [expr {$y-3.75}]p \
 	-text {Text Position}  -anchor s  -font {Times 20}  -fill brown
 
 # Now create some items that allow the text's angle to be changed.
 
-set x 205
-set y 50
+set x 153.75	;# in points
+set y 37.5	;# in points
 set color Yellow
 mkTextConfigPie $c $x $y   0 -angle  90 $color
 mkTextConfigPie $c $x $y  30 -angle 120 $color
@@ -109,19 +105,19 @@ mkTextConfigPie $c $x $y 240 -angle 330 $color
 mkTextConfigPie $c $x $y 270 -angle   0 $color
 mkTextConfigPie $c $x $y 300 -angle  30 $color
 mkTextConfigPie $c $x $y 330 -angle  60 $color
-$c create text [expr {$x+45}] [expr {$y-5}] \
-	-text {Text Angle}  -anchor s  -font {Times 20}  -fill brown
+$c create text [expr {$x+33.75}]p [expr {$y-3.75}]p \
+	-text {Text Angle}     -anchor s  -font {Times 20}  -fill brown
 
 # Lastly, create some items that allow the text's justification to be
 # changed.
 
-set x 350
-set y 50
+set x 262.5	;# in points
+set y 37.5	;# in points
 set color SeaGreen2
 mkTextConfigBox $c $x $y -justify left $color
-mkTextConfigBox $c [expr {$x+30}] $y -justify center $color
-mkTextConfigBox $c [expr {$x+60}] $y -justify right $color
-$c create text [expr {$x+45}] [expr {$y-5}] \
+mkTextConfigBox $c [expr {$x+22.5}] $y -justify center $color
+mkTextConfigBox $c [expr {$x+45}] $y -justify right $color
+$c create text [expr {$x+33.75}]p [expr {$y-3.75}]p \
 	-text {Justification}  -anchor s  -font {Times 20}  -fill brown
 
 $c bind config <Enter> "textEnter $c"

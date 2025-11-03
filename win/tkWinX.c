@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
 #include <commctrl.h>
@@ -18,6 +19,7 @@
 #   pragma comment (lib, "comctl32.lib")
 #   pragma comment (lib, "advapi32.lib")
 #endif
+
 
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
@@ -33,6 +35,31 @@
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL 0x020E
 #endif
+
+/* A WM_MOUSEWHEEL message sent by a trackpad contains the number of pixels as
+ * the delta value, while low precision scrollwheels always send an integer
+ * multiple of WHEELDELTA (= 120) as the delta value.
+ */
+
+#define WHEELDELTA 120
+
+/*
+ * Our heuristic for deciding whether a WM_MOUSEWHEEL message
+ * comes from a high resolution scrolling device is that we
+ * assume it is high resolution unless there are two consecutive
+ * delta values that are both multiples of 120.  This is static,
+ * rather than thread-specific, since input devices are shared
+ * by all threads.
+ */
+
+static int lastMod = 0;
+
+/*
+ * The serial field of TouchpadScroll events is a counter for
+ * events of this type only.
+ */
+
+static unsigned long scrollCounter = 0;
 
 /*
  * imm.h is needed by HandleIMEComposition
@@ -60,7 +87,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
-static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
 					 * keyboard input */
@@ -80,9 +106,6 @@ typedef struct {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD wheelTickPrev;	/* For high resolution wheels. */
-    int vWheelAcc;		/* For high resolution wheels (vertical). */
-    int hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -93,7 +116,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
+static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -119,17 +142,16 @@ void
 TkGetServerInfo(
     Tcl_Interp *interp,		/* The server information is returned in this
 				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
+    TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
     static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
-    (void)tkwin;
 
     if (!buffer[0]) {
 	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
-	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
 		"Win64"
@@ -282,7 +304,7 @@ TkWinXInit(
 
 void
 TkWinXCleanup(
-    ClientData clientData)
+    void *clientData)
 {
     HINSTANCE hInstance = (HINSTANCE)clientData;
 
@@ -311,69 +333,6 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *	    TK_THEME_WIN_VISTA	Vista or higher
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkWinTheme == 0) {
-	OSVERSIONINFOW os;
-
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	GetVersionExW(&os);
-
-	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-	    Tcl_Panic("Windows NT is the only supported platform");
-	}
-
-	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
-	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
-	 * windows classic theme was selected.
-	 */
-	if (os.dwMajorVersion == 5 && os.dwMinorVersion >= 1) {
-	    HKEY hKey;
-	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
-	    LPCWSTR szCurrent = L"Current";
-	    DWORD dwSize = 200;
-	    WCHAR pBuffer[200];
-
-	    memset(pBuffer, 0, dwSize);
-	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
-		    KEY_READ, &hKey) != ERROR_SUCCESS) {
-		tkWinTheme = TK_THEME_WIN_XP;
-	    } else {
-		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
-		RegCloseKey(hKey);
-		if (wcscmp(pBuffer, L"Windows Standard") == 0) {
-		    tkWinTheme = TK_THEME_WIN_CLASSIC;
-		} else {
-		    tkWinTheme = TK_THEME_WIN_XP;
-		}
-	    }
-	} else if (os.dwMajorVersion > 5) {
-	    tkWinTheme = TK_THEME_WIN_VISTA;
-	} else {
-	    tkWinTheme = TK_THEME_WIN_CLASSIC;
-	}
-    }
-    return tkWinTheme;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkGetDefaultScreenName --
  *
  *	Returns the name of the screen that Tk should use during
@@ -390,11 +349,9 @@ TkWinGetPlatformTheme(void)
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *dummy,		/* Not used. */
+    TCL_UNUSED(Tcl_Interp *),
     const char *screenName)	/* If NULL, use default string. */
 {
-    (void)dummy;
-
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
     }
@@ -425,17 +382,17 @@ TkWinDisplayChanged(
     HDC dc;
     Screen *screen;
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
-    screen->width = GetDeviceCaps(dc, HORZRES);
-    screen->height = GetDeviceCaps(dc, VERTRES);
-    screen->mwidth = MulDiv(screen->width, 254,
+    WidthOfScreen(screen) = GetDeviceCaps(dc, HORZRES);
+    HeightOfScreen(screen) = GetDeviceCaps(dc, VERTRES);
+    WidthMMOfScreen(screen) = MulDiv(WidthOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
-    screen->mheight = MulDiv(screen->height, 254,
+    HeightMMOfScreen(screen) = MulDiv(HeightOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
 
     /*
@@ -456,43 +413,43 @@ TkWinDisplayChanged(
     screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->c_class = PseudoColor;
-	screen->root_visual->red_mask = 0x0;
-	screen->root_visual->green_mask = 0x0;
-	screen->root_visual->blue_mask = 0x0;
-    } else if (screen->root_depth == 4) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 16;
-    } else if (screen->root_depth == 8) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 256;
-    } else if (screen->root_depth == 12) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 32;
-	screen->root_visual->red_mask = 0xf0;
-	screen->root_visual->green_mask = 0xf000;
-	screen->root_visual->blue_mask = 0xf00000;
-    } else if (screen->root_depth == 16) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 64;
-	screen->root_visual->red_mask = 0xf8;
-	screen->root_visual->green_mask = 0xfc00;
-	screen->root_visual->blue_mask = 0xf80000;
-    } else if (screen->root_depth >= 24) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 256;
-	screen->root_visual->red_mask = 0xff;
-	screen->root_visual->green_mask = 0xff00;
-	screen->root_visual->blue_mask = 0xff0000;
+	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
+	DefaultVisualOfScreen(screen)->c_class = PseudoColor;
+	DefaultVisualOfScreen(screen)->red_mask = 0x0;
+	DefaultVisualOfScreen(screen)->green_mask = 0x0;
+	DefaultVisualOfScreen(screen)->blue_mask = 0x0;
+    } else if (DefaultDepthOfScreen(screen) == 4) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 16;
+    } else if (DefaultDepthOfScreen(screen) == 8) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+    } else if (DefaultDepthOfScreen(screen) == 12) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 32;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf0;
+	DefaultVisualOfScreen(screen)->green_mask = 0xf000;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf00000;
+    } else if (DefaultDepthOfScreen(screen) == 16) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 64;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf8;
+	DefaultVisualOfScreen(screen)->green_mask = 0xfc00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf80000;
+    } else if (DefaultDepthOfScreen(screen) >= 24) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+	DefaultVisualOfScreen(screen)->red_mask = 0xff;
+	DefaultVisualOfScreen(screen)->green_mask = 0xff00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xff0000;
     }
-    screen->root_visual->bits_per_rgb = screen->root_depth;
+    DefaultVisualOfScreen(screen)->bits_per_rgb = DefaultDepthOfScreen(screen);
     ReleaseDC(NULL, dc);
 
-    if (screen->cmap != None) {
-	XFreeColormap(display, screen->cmap);
+    if (DefaultColormapOfScreen(screen) != None) {
+	XFreeColormap(display, DefaultColormapOfScreen(screen));
     }
-    screen->cmap = XCreateColormap(display, None, screen->root_visual,
+    DefaultColormapOfScreen(screen) = XCreateColormap(display, None, DefaultVisualOfScreen(screen),
 	    AllocNone);
 }
 
@@ -522,23 +479,20 @@ TkpOpenDisplay(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->winDisplay != NULL) {
-	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
+	if (!strcmp(DisplayString(tsdPtr->winDisplay->display), display_name)) {
 	    return tsdPtr->winDisplay;
 	} else {
 	    return NULL;
 	}
     }
 
-    display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
+    display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
-    ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
+    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
-    tsdPtr->wheelTickPrev = GetTickCount();
-    tsdPtr->vWheelAcc = 0;
-    tsdPtr->hWheelAcc = 0;
 
     /*
      * Key map info must be available immediately, because of "send event".
@@ -562,20 +516,20 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = (Display *)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 
-    ZeroMemory(screen, sizeof(Screen));
-    ZeroMemory(display, sizeof(Display));
+    memset(screen, 0, sizeof(Screen));
+    memset(display, 0, sizeof(Display));
 
     /*
      * Note that these pixel values are not palette relative.
      */
 
-    screen->white_pixel = RGB(255, 255, 255);
-    screen->black_pixel = RGB(0, 0, 0);
-    screen->cmap = None;
+    WhitePixelOfScreen(screen) = RGB(255, 255, 255);
+    BlackPixelOfScreen(screen) = RGB(0, 0, 0);
+    DefaultColormapOfScreen(screen) = None;
 
     display->screens		= screen;
     display->nscreens		= 1;
@@ -585,12 +539,11 @@ XkbOpenDisplay(
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
-    screen->display = display;
+    screen->display = (Display *)display;
 
     display->display_name = (char  *)ckalloc(strlen(name) + 1);
     strcpy(display->display_name, name);
 
-    display->cursor_font = 1;
     display->nscreens = 1;
     display->request = 1;
     display->qlen = 0;
@@ -601,7 +554,7 @@ XkbOpenDisplay(
     if (minor_rtrn) *minor_rtrn = 0;
     if (reason) *reason = 0;
 
-    return display;
+    return (Display *)display;
 }
 
 /*
@@ -625,7 +578,7 @@ void
 TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
-    Display *display = dispPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -639,17 +592,17 @@ TkpCloseDisplay(
     if (display->display_name != NULL) {
 	ckfree(display->display_name);
     }
-    if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+    if (ScreenOfDisplay(display, 0) != NULL) {
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (display->screens->root != None) {
-	    ckfree((char *)display->screens->root);
+	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    ckfree((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (display->screens->cmap != None) {
-	    XFreeColormap(display, display->screens->cmap);
+	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	ckfree(display->screens);
+	ckfree(ScreenOfDisplay(display, 0));
     }
     ckfree(display);
 }
@@ -707,12 +660,9 @@ TkClipCleanup(
 
 int
 XBell(
-    Display *display,
-    int percent)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)percent;
-
     MessageBeep(MB_OK);
     return Success;
 }
@@ -792,16 +742,16 @@ TkWinChildProc(
 	break;
 
     case WM_UNICHAR:
-        if (wParam == UNICODE_NOCHAR) {
+	if (wParam == UNICODE_NOCHAR) {
 	    /* If wParam is UNICODE_NOCHAR and the application processes
 	     * this message, then return TRUE. */
 	    result = 1;
 	} else {
 	    /* If the event was translated, we must return 0 */
-            if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-                result = 0;
+	    if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+		result = 0;
 	    } else {
-	        result = 1;
+		result = 1;
 	    }
 	}
 	break;
@@ -858,20 +808,20 @@ TkTranslateWinEvent(
     }
 
     case WM_RENDERALLFORMATS: {
-        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
-        if (winPtr && OpenClipboard(hwnd)) {
-            /*
-             * Make sure that nobody had taken ownership of the clipboard
-             * before we opened it.
-             */
+	if (winPtr && OpenClipboard(hwnd)) {
+	    /*
+	     * Make sure that nobody had taken ownership of the clipboard
+	     * before we opened it.
+	     */
 
-            if (GetClipboardOwner() == hwnd) {
-                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
-            }
-            CloseClipboard();
-        }
-        return 1;
+	    if (GetClipboardOwner() == hwnd) {
+		TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+	    }
+	    CloseClipboard();
+	}
+	return 1;
     }
 
     case WM_COMMAND:
@@ -998,7 +948,7 @@ GenerateXEvent(
     }
 
     memset(&event.x, 0, sizeof(XEvent));
-    event.x.xany.serial = winPtr->display->request++;
+    event.x.xany.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.x.xany.send_event = False;
     event.x.xany.display = winPtr->display;
     event.x.xany.window = winPtr->window;
@@ -1132,82 +1082,65 @@ GenerateXEvent(
 
 	switch (message) {
 	case WM_MOUSEWHEEL: {
-	    /*
-	     * Support for high resolution wheels (vertical).
-	     */
-
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->vWheelAcc += (short) HIWORD(wParam);
-	    if (!tsdPtr->vWheelAcc || (!timeout && abs(tsdPtr->vWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
 
 	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events. The Y delta
+	     * is stored in the low order 16 bits of the keycode field.  Set
+	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta = (abs(tsdPtr->vWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->vWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->vWheelAcc < 0) {
-		intDelta = -intDelta;
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = (unsigned int) (delta & 0xffff);
+	    } else {
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.keycode = (unsigned int) delta;
 	    }
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->vWheelAcc -= intDelta;
+	    lastMod = mod;
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
-	    /*
-	     * Support for high resolution wheels (horizontal).
-	     */
-
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
-	    if (!tsdPtr->hWheelAcc || (!timeout && abs(tsdPtr->hWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
 
 	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events.  For low
+	     * resolution scrolls the X delta is stored in the keycode field
+	     * and For high resolution scrolls the X delta is in the high word
+	     * of the keycode.  Set nbytes to 0 to prevent conversion of the
+	     * keycode to a keysym in TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta =  (abs(tsdPtr->hWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->hWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->hWheelAcc < 0) {
-		intDelta = -intDelta;
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = -((unsigned int)delta << 16);
+	    } else {
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state |= ShiftMask;
+		event.x.xkey.keycode = delta;
 	    }
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->hWheelAcc -= intDelta;
+	    lastMod = mod;
 	    break;
 	}
 	case WM_SYSKEYDOWN:
@@ -1224,7 +1157,7 @@ GenerateXEvent(
 	    event.x.xany.send_event = -1;
 	    event.x.xkey.keycode = wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
-	            WM_SYSCHAR);
+		    WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1297,7 +1230,7 @@ GenerateXEvent(
 		    MSG msg;
 
 		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
-		            PM_NOREMOVE) != 0)
+			    PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
 			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.key.nbytes = 2;
@@ -1523,7 +1456,7 @@ UpdateInputLanguage(
     if (charsetInfo.ciACP == CP_UTF8) {
 	strcpy(codepage, "utf-8");
     } else {
-	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+	snprintf(codepage, sizeof(codepage), "cp%d", charsetInfo.ciACP);
     }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
@@ -1667,7 +1600,7 @@ HandleIMEComposition(
 	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	memset(&event, 0, sizeof(XEvent));
-	event.xkey.serial = winPtr->display->request++;
+	event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
 	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
@@ -1957,10 +1890,9 @@ Tk_SetCaretPos(
 
 long
 Tk_GetUserInactiveTime(
-     Display *dpy)		/* Ignored on Windows */
+     TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
-    (void)dpy;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1993,10 +1925,9 @@ Tk_GetUserInactiveTime(
 
 void
 Tk_ResetUserInactiveTime(
-    Display *dpy)
+    TCL_UNUSED(Display *))
 {
     INPUT inp;
-    (void)dpy;
 
     inp.type = INPUT_MOUSE;
     inp.mi.dx = 0;

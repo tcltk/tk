@@ -1,22 +1,33 @@
-# xmfbox.test --
-#
-#	This file is a Tcl script to test the file dialog that's used
-#	when the tk_strictMotif flag is set. Because the file dialog
-#	runs in a modal loop, the only way to test it sufficiently is
-#	to call the internal Tcl procedures in xmfbox.tcl directly.
+# This file is a Tcl script to test the file dialog that's used
+# when the tk_strictMotif flag is set. Because the file dialog
+# runs in a modal loop, the only way to test it sufficiently is
+# to call the internal Tcl procedures in xmfbox.tcl directly.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-set testPWD [pwd]
-catch {unset data foo}
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc cleanup {} {
     global testPWD
@@ -27,25 +38,25 @@ proc cleanup {} {
 
     set err1 [catch {
 	    if [file exists ./~nosuchuser1] {
-	        file delete ./~nosuchuser1
+		file delete ./~nosuchuser1
 	    }
     } msg1]
 
     set err2 [catch {
 	    if [file exists ./~nosuchuser2] {
-	        file delete ./~nosuchuser2
+		file delete ./~nosuchuser2
 	    }
     } msg2]
 
     set err3 [catch {
 	    if [file exists ./~nosuchuser3] {
-	        file delete ./~nosuchuser3
+		file delete ./~nosuchuser3
 	    }
     } msg3]
 
     set err4 [catch {
 	    if [file exists ./~nosuchuser4] {
-	        file delete ./~nosuchuser4
+		file delete ./~nosuchuser4
 	    }
     } msg4]
 
@@ -54,9 +65,19 @@ proc cleanup {} {
     }
     catch {unset foo}
     destroy .foo
+    update
 }
 
-# ----------------------------------------------------------------------
+#
+# COMMON TEST SETUP
+#
+
+set testPWD [pwd]
+catch {unset data foo}
+
+#
+# TESTS
+#
 
 test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
     unix
@@ -76,6 +97,7 @@ test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
 } -body {
     toplevel .bar
     wm geometry .bar +0+0
+    update
     set x [tk::MotifFDialog_Create foo open {-parent .bar}]
 } -cleanup {
     destroy $x
@@ -89,6 +111,7 @@ test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
     cleanup
     file mkdir ./~nosuchuser1
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
@@ -100,6 +123,7 @@ test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
@@ -111,6 +135,7 @@ test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     tk::MotifFDialog_InterpFilter $x
@@ -124,6 +149,7 @@ test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     expr {$i >= 0}
 } -result 1
@@ -134,6 +160,7 @@ test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     $::tk::dialog::file::foo(fList) selection clear 0 end
     $::tk::dialog::file::foo(fList) selection set $i
@@ -156,10 +183,12 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
 	    $::tk::dialog::file::foo(selectFile) [file normalize $tk::Priv(selectFilePath)]
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanup
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

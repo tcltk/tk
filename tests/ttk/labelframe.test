@@ -1,7 +1,27 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::labelframe widget tests
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test labelframe-1.0 "Setup" -body {
     pack [ttk::labelframe .lf] -expand true -fill both
@@ -11,13 +31,13 @@ test labelframe-2.1 "Can't use indirect descendant as labelwidget" -body {
     ttk::frame .lf.t
     ttk::checkbutton .lf.t.cb
     .lf configure -labelwidget .lf.t.cb
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t.cb" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.2 "Can't use toplevel as labelwidget" -body {
     toplevel .lf.t
     .lf configure -labelwidget .lf.t
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.3 "Can't use non-windows as -labelwidget" -body {
@@ -141,5 +161,9 @@ test labelframe-7.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TLabelframe customStyle.TLabelframe TLabelframe}
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

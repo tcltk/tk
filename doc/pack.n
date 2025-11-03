@@ -23,12 +23,15 @@ The \fBpack\fR command can have any of several forms, depending
 on the \fIoption\fR argument:
 .TP
 \fBpack \fIwindow \fR?\fIwindow ...\fR? ?\fIoptions\fR?
+.
 If the first argument to \fBpack\fR is a window name (any value
 starting with
 .QW . ),
 then the command is processed in the same way as \fBpack configure\fR.
+.\" METHOD: configure
 .TP
 \fBpack configure \fIwindow \fR?\fIwindow ...\fR? ?\fIoptions\fR?
+.
 The arguments consist of the names of one or more content windows
 followed by pairs of arguments that specify how
 to manage the content.
@@ -36,80 +39,98 @@ See \fBTHE PACKER ALGORITHM\fR below for details on how the options
 are used by the packer.
 The following options are supported:
 .RS
+.\" OPTION: -after
 .TP
 \fB\-after \fIother\fR
+.
 \fIOther\fR must the name of another window.
 Use its container as the container for the content, and insert
 the content just after \fIother\fR in the packing order.
+.\" OPTION: -anchor
 .TP
 \fB\-anchor \fIanchor\fR
+.
 \fIAnchor\fR must be a valid anchor position such as \fBn\fR
 or \fBsw\fR; it specifies where to position each content in its
 parcel.
 Defaults to \fBcenter\fR.
+.\" OPTION: -before
 .TP
 \fB\-before \fIother\fR
+.
 \fIOther\fR must the name of another window.
 Use its container as the container for the content, and insert
 the content just before \fIother\fR in the packing order.
+.\" OPTION: -expand
 .TP
 \fB\-expand \fIboolean\fR
+.
 Specifies whether the content should be expanded to consume
 extra space in their container.
 \fIBoolean\fR may have any proper boolean value, such as \fB1\fR
 or \fBno\fR.
 Defaults to 0.
+.\" OPTION: -fill
 .TP
 \fB\-fill \fIstyle\fR
+.
 If a content's parcel is larger than its requested dimensions, this
 option may be used to stretch the content.
 \fIStyle\fR must have one of the following values:
 .RS
-.TP
-\fBnone\fR
+.IP \fBnone\fR
 Give the content its requested dimensions plus any internal padding
 requested with \fB\-ipadx\fR or \fB\-ipady\fR.  This is the default.
-.TP
-\fBx\fR
+.IP \fBx\fR
 Stretch the content horizontally to fill the entire width of its
 parcel (except leave external padding as specified by \fB\-padx\fR).
-.TP
-\fBy\fR
+.IP \fBy\fR
 Stretch the content vertically to fill the entire height of its
 parcel (except leave external padding as specified by \fB\-pady\fR).
-.TP
-\fBboth\fR
+.IP \fBboth\fR
 Stretch the content both horizontally and vertically.
 .RE
+.\" OPTION: -in
 .TP
 \fB\-in \fIcontainer\fR
+.
 Insert the window at the end of the packing order for the container
 window given by \fIcontainer\fR.
+.\" OPTION: -ipadx
 .TP
 \fB\-ipadx \fIamount\fR
+.
 \fIAmount\fR specifies how much horizontal internal padding to
 leave on each side of the content.
 \fIAmount\fR must be a valid screen distance, such as \fB2\fR or \fB.5c\fR.
 It defaults to 0.
+.\" OPTION: -ipady
 .TP
 \fB\-ipady \fIamount\fR
+.
 \fIAmount\fR specifies how much vertical internal padding to
 leave on each side of the content.
 \fIAmount\fR  defaults to 0.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIamount\fR
+.
 \fIAmount\fR specifies how much horizontal external padding to
 leave on each side of the content.  \fIAmount\fR may be a list
 of two values to specify padding for left and right separately.
 \fIAmount\fR defaults to 0.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIamount\fR
+.
 \fIAmount\fR specifies how much vertical external padding to
 leave on each side of the content.  \fIAmount\fR may be a list
 of two values to specify padding for top and bottom separately.
 \fIAmount\fR defaults to 0.
+.\" OPTION: -side
 .TP
 \fB\-side \fIside\fR
+.
 Specifies which side of the container the content will be packed against.
 Must be \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 Defaults to \fBtop\fR.
@@ -124,29 +145,43 @@ If any of the content are already managed by the geometry manager
 then any unspecified options for them retain their previous values rather
 than receiving default values.
 .RE
+.\" METHOD: content
+.TP
+\fBpack content \fIwindow\fR
+.
+Returns a list of all of the content windows in the packing order for
+\fIwindow\fR. The order of the content windows in the list is the same as
+their order in the packing order.
+If \fIwindow\fR has no content then an empty string is returned.
+.\" METHOD: forget
 .TP
 \fBpack forget \fIwindow \fR?\fIwindow ...\fR?
+.
 Removes each of the \fIwindow\fRs from the packing order for its
 container and unmaps their windows.
 The content will no longer be managed by the packer.
 .RS
 .PP
 .VS "TIP 518"
-If the last content window of the container becomes unmanaged, this will also send
-the virtual event \fB<<NoManagedChild>>\fR to the container; the container
-may choose to resize itself (or otherwise respond) to such a change.
+If the last content window of the container becomes unmanaged, this will
+also send the virtual event \fB<<NoManagedChild>>\fR to the container; the
+container may choose to resize itself (or otherwise respond) to such a change.
 .VE "TIP 518"
 .RE
+.\" METHOD: info
 .TP
 \fBpack info \fIwindow\fR
+.
 Returns a list whose elements are the current configuration state of
 the window given by \fIwindow\fR in the same option-value form that
 might be specified to \fBpack configure\fR.
 The first two elements of the list are
 .QW "\fB\-in \fIcontainer\fR"
 where \fIcontainer\fR is the window's container.
+.\" METHOD: propagate
 .TP
 \fBpack propagate \fIcontainer\fR ?\fIboolean\fR?
+.
 If \fIboolean\fR has a true boolean value such as \fB1\fR or \fBon\fR
 then propagation is enabled for \fIcontainer\fR, which must be a window
 name (see \fBGEOMETRY PROPAGATION\fR below).
@@ -157,12 +192,7 @@ If \fIboolean\fR is omitted then the command returns \fB0\fR or
 \fB1\fR to indicate whether propagation is currently enabled
 for \fIcontainer\fR.
 Propagation is enabled by default.
-.TP
-\fBpack content \fIwindow\fR
-Returns a list of all of the content windows in the packing order for \fIwindow\fR.
-The order of the content windows in the list is the same as their order in
-the packing order.
-If \fIwindow\fR has no content then an empty string is returned.
+.\" METHOD: slaves
 .TP
 \fBpack slaves \fIwindow\fR
 .
@@ -273,18 +303,18 @@ the stacking order of either the container or the content.
 .PP
 .CS
 # Make the widgets
-label .t \-text "This widget is at the top"    \-bg red
-label .b \-text "This widget is at the bottom" \-bg green
-label .l \-text "Left\enHand\enSide"
-label .r \-text "Right\enHand\enSide"
+label .t -text "This widget is at the top"    -bg red
+label .b -text "This widget is at the bottom" -bg green
+label .l -text "Left\enHand\enSide"
+label .r -text "Right\enHand\enSide"
 text .mid
 \&.mid insert end "This layout is like Java's BorderLayout"
 # Lay them out
-\fBpack\fR .t   \-side top    \-fill x
-\fBpack\fR .b   \-side bottom \-fill x
-\fBpack\fR .l   \-side left   \-fill y
-\fBpack\fR .r   \-side right  \-fill y
-\fBpack\fR .mid \-expand 1    \-fill both
+\fBpack\fR .t   -side top    -fill x
+\fBpack\fR .b   -side bottom -fill x
+\fBpack\fR .l   -side left   -fill y
+\fBpack\fR .r   -side right  -fill y
+\fBpack\fR .mid -expand 1    -fill both
 .CE
 .SH "SEE ALSO"
 grid(n), place(n)

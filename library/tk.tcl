@@ -11,35 +11,35 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  8.7a6
+package require -exact tk  9.1a1
 
 # Create a ::tk namespace
 namespace eval ::tk {
     # Set up the msgcat commands
     namespace eval msgcat {
 	namespace export mc mcmax
-        if {[interp issafe] || [catch {package require msgcat}]} {
-            # The msgcat package is not available.  Supply our own
-            # minimal replacement.
-            proc mc {src args} {
-                return [format $src {*}$args]
-            }
-            proc mcmax {args} {
-                set max 0
-                foreach string $args {
-                    set len [string length $string]
-                    if {$len>$max} {
-                        set max $len
-                    }
-                }
-                return $max
-            }
-        } else {
-            # Get the commands from the msgcat package that Tk uses.
-            namespace import ::msgcat::mc
-            namespace import ::msgcat::mcmax
-            ::msgcat::mcload [file join $::tk_library msgs]
-        }
+	if {[interp issafe] || [catch {package require msgcat}]} {
+	    # The msgcat package is not available.  Supply our own
+	    # minimal replacement.
+	    proc mc {src args} {
+		return [format $src {*}$args]
+	    }
+	    proc mcmax {args} {
+		set max 0
+		foreach string $args {
+		    set len [string length $string]
+		    if {$len>$max} {
+			set max $len
+		    }
+		}
+		return $max
+	    }
+	} else {
+	    # Get the commands from the msgcat package that Tk uses.
+	    namespace import ::msgcat::mc
+	    namespace import ::msgcat::mcmax
+	    ::msgcat::mcload [file join $::tk_library msgs]
+	}
     }
     namespace import ::tk::msgcat::*
 }
@@ -83,16 +83,35 @@ catch {tk useinputmethods 1}
 proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm withdraw $w
     update idletasks
+
+    set screenWidth [winfo screenwidth $w]
+    set screenHeight [winfo screenheight $w]
+    set width [winfo reqwidth $w]
+    set height [winfo reqheight $w]
+    ## "wm geometry" operates in window manager coordinates and thus includes
+    ## a possible decoration frame and the title bar.
+    set frameWidth [WMFrameWidth]
+    set titleHeight [WMTitleHeight]
+    set constrain 0
+    if {$width + 2*$frameWidth > $screenWidth} {
+	set width [expr {$screenWidth - 2*$frameWidth}]
+	set constrain 1
+    }
+    if {$height + $titleHeight + $frameWidth > $screenHeight} {
+	set height [expr {$screenHeight - $titleHeight - $frameWidth}]
+	set constrain 1
+    }
+
     set checkBounds 1
     if {$place eq ""} {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {($screenWidth - $width)/2}]
+	set y [expr {($screenHeight - $height)/2}]
 	set checkBounds 0
     } elseif {[string equal -length [string length $place] $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
 	if {[string equal -length [string length $anchor] $anchor "center"]} {
-	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
-	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
+	    set x [expr {[winfo pointerx $w] - $width/2}]
+	    set y [expr {[winfo pointery $w] - $height/2}]
 	} else {
 	    set x [winfo pointerx $w]
 	    set y [winfo pointery $w]
@@ -100,35 +119,48 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     } elseif {[string equal -length [string length $place] $place "widget"] && \
 	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
 	## center about WIDGET $anchor, widget must be mapped
-	set x [expr {[winfo rootx $anchor] + \
-		([winfo width $anchor]-[winfo reqwidth $w])/2}]
-	set y [expr {[winfo rooty $anchor] + \
-		([winfo height $anchor]-[winfo reqheight $w])/2}]
+	set x [expr {[winfo rootx $anchor] +
+		([winfo width $anchor] - $width)/2}]
+	set y [expr {[winfo rooty $anchor] +
+		([winfo height $anchor] - $height)/2}]
     } else {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {($screenWidth - $width)/2}]
+	set y [expr {($screenHeight - $height)/2}]
 	set checkBounds 0
     }
+
     if {$checkBounds} {
-	if {$x < [winfo vrootx $w]} {
-	    set x [winfo vrootx $w]
-	} elseif {$x > ([winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w])} {
-	    set x [expr {[winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w]}]
+	set vrootX [winfo vrootx $w]; set vrootWidth [winfo vrootwidth $w]
+	if {$x + $width + $frameWidth > $vrootX + $vrootWidth} {
+	    set x [expr {$vrootX + $vrootWidth - $width - $frameWidth}]
 	}
-	if {$y < [winfo vrooty $w]} {
-	    set y [winfo vrooty $w]
-	} elseif {$y > ([winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w])} {
-	    set y [expr {[winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w]}]
+	if {$x < $vrootX + $frameWidth} {
+	    set x [expr {$vrootX + $frameWidth}]
 	}
+
+	set vrootY [winfo vrooty $w]; set vrootHeight [winfo vrootheight $w]
+	if {$y + $height + $frameWidth > $vrootY + $vrootHeight} {
+	    set y [expr {$vrootY + $vrootHeight - $height - $frameWidth}]
+	}
+	if {$y < $vrootY + $titleHeight} {
+	    set y [expr {$vrootY + $titleHeight}]
+	}
+
 	if {[tk windowingsystem] eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 22} {
-		set y 22
+	    if {$y < 22 + $titleHeight} {
+		set y [expr {22 + $titleHeight}]
 	    }
 	}
     }
+
     wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
-    wm geometry $w +$x+$y
+    ## Set geometry and show window
+    set geom [expr {$constrain ? "${width}x${height}" : ""}]
+    incr x -$frameWidth
+    incr y -$titleHeight
+    append geom +$x+$y
+    wm geometry $w $geom
     wm deiconify $w
 }
 
@@ -178,16 +210,21 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {$destroy eq "withdraw"} {
-	wm withdraw $grab
-    } else {
-	destroy $grab
+    if {[winfo exists $grab]} {
+	if {$destroy eq "withdraw"} {
+	    wm withdraw $grab
+	} else {
+	    destroy $grab
+	}
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
+	# The "grab" command will fail if another application
+	# already holds the grab on a window with the same name.
+	# So catch it. See [7447ed20ec] for an example.
 	if {$oldStatus eq "global"} {
-	    grab -global $oldGrab
+	    catch {grab -global $oldGrab}
 	} else {
-	    grab $oldGrab
+	    catch {grab $oldGrab}
 	}
     }
 }
@@ -374,11 +411,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
 	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
 	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z>
-	event add <<Redo>>		<Control-Z> <Control-Lock-z>
-	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
-	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
-
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> <Redo>
 	event add <<SelectAll>>		<Control-/>
 	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
@@ -410,6 +444,11 @@ switch -exact -- [tk windowingsystem] {
 
 	# This is needed for XFree86 systems
 	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	}
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
 
@@ -420,11 +459,11 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
-	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
-	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
-	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
-  	event add <<Undo>>		<Control-z> <Control-Lock-Z>
-	event add <<Redo>>		<Control-y> <Control-Lock-Y>
+	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X> <XF86Cut>
+	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C> <XF86Copy>
+	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V> <XF86Paste>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
+	event add <<Redo>>		<Control-y> <Control-Lock-Y> <Redo>
 
 	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
 	event add <<SelectNone>>	<Control-backslash>
@@ -451,16 +490,16 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ToggleSelection>>	<Control-Button-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X>
-	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C>
-	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V>
+	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X> <XF86Cut>
+	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C> <XF86Copy>
+	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V> <XF86Paste>
 	event add <<Clear>>		<Clear>
 
 	# Official bindings
 	# See https://support.apple.com/en-us/HT201236
 	event add <<SelectAll>>		<Command-a>
-	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
-	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z> <Undo>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z> <Redo>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
 	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
@@ -493,7 +532,7 @@ switch -exact -- [tk windowingsystem] {
 
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
-        namespace eval :: [list source -encoding utf-8 [file join $::tk_library $file.tcl]]
+	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
 	SourceLibFile icons
@@ -544,6 +583,26 @@ proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
     $w ${dir}view scroll [expr {$amount/$factor}] $units
 }
 
+## ::tk::PreciseScrollDeltas $dxdy
+
+proc ::tk::PreciseScrollDeltas {dxdy} {
+    set deltaX [expr {$dxdy >> 16}]
+    set low [expr {$dxdy & 0xffff}]
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}]
+    return [list $deltaX $deltaY]
+}
+
+## Helper for smooth scrolling of widgets that support xview moveto and
+## yview moveto.
+
+proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set fracX [lindex [$w xview] 0]
+    set fracY [lindex [$w yview] 0]
+    set width [expr {1.0 * [winfo width $w]}]
+    set height [expr {1.0 * [winfo height $w]}]
+    $w xview moveto [expr {$fracX - $deltaX / $width}]
+    $w yview moveto [expr {$fracY - $deltaY / $height}]
+}
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
@@ -632,7 +691,7 @@ proc ::tk::FindAltKeyTarget {path char} {
     if {$class in {
 	Button Checkbutton Label Radiobutton
 	TButton TCheckbutton TLabel TRadiobutton
-    } && [string equal -nocase $char \
+    } && ([$path cget -underline] >= 0) && [string equal -nocase $char \
 	    [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
@@ -667,10 +726,61 @@ proc ::tk::AltKeyInDialog {path key} {
     }
 }
 
+# ::tk::WMFrameWidth --
+#	Return window manager frame width if known, else 0.
+#
+proc ::tk::WMFrameWidth {} {
+    set frameWidth 0
+    # In SDL2 Tk, the frame width is a number between 6 and 27, depending on
+    # the screen's DPI value.
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set frameWidth 6
+	} elseif {$dpi < 190} {
+	    set frameWidth 9
+	} elseif {$dpi < 240} {
+	    set frameWidth 12
+	} elseif {$dpi < 320} {
+	    set frameWidth 15
+	} elseif {$dpi < 420} {
+	    set frameWidth 21
+	} else {
+	    set frameWidth 27
+	}
+    }
+    return $frameWidth
+}
+
+# ::tk::WMTitleHeight --
+#	Return window manager height of window title bar if known, else 0.
+#
+proc ::tk::WMTitleHeight {} {
+    set titleHeight 0
+    # In SDL2 Tk, the title height is a number between 20 and 78, depending on
+    # the screen's DPI value.
+    if {[info exists ::tk::sdltk] && $::tk::sdltk} {
+	variable dpi
+	if {$dpi < 140} {
+	    set titleHeight 20
+	} elseif {$dpi < 190} {
+	    set titleHeight 30
+	} elseif {$dpi < 240} {
+	    set titleHeight 38
+	} elseif {$dpi < 320} {
+	    set titleHeight 46
+	} elseif {$dpi < 420} {
+	    set titleHeight 60
+	} else {
+	    set titleHeight 78
+	}
+    }
+    return $titleHeight
+}
+
 # ::tk::mcmaxamp --
 #	Replacement for mcmax, used for texts with "magic ampersand" in it.
 #
-
 proc ::tk::mcmaxamp {args} {
     set maxlen 0
     foreach arg $args {
@@ -688,7 +798,7 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-	source -encoding utf-8 $file
+	source $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
@@ -697,8 +807,8 @@ if {[tk windowingsystem] eq "aqua"} {
     #This procedure is required to silence warnings generated
     #by inline AppleScript execution.
     proc ::tk::mac::GetDynamicSdef {} {
-         puts ""
-     }
+	puts ""
+    }
 }
 
 if {[info commands ::tk::endOfWord] eq ""} {
@@ -717,8 +827,6 @@ if {[info commands ::tk::startOfNextWord] eq ""} {
     proc ::tk::startOfNextWord {str start {locale {}}} {
 	if {$start < 0} {
 	    set start -1
-	} elseif {[string match end-* $start]} {
-	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	}
 	set start [tcl_startOfNextWord $str $start]
 	if {$start < 0} {
@@ -731,8 +839,6 @@ if {[info commands ::tk::startOfPreviousWord] eq ""} {
     proc ::tk::startOfPreviousWord {str start {locale {}}} {
 	if {$start < 0} {
 	    set start -1
-	} elseif {[string match end-* $start]} {
-	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	}
 	set start [tcl_startOfPreviousWord $str $start]
 	if {$start < 0} {
@@ -745,8 +851,6 @@ if {[info commands ::tk::wordBreakBefore] eq ""} {
     proc ::tk::wordBreakBefore {str start {locale {}}} {
 	if {$start < 0} {
 	    set start -1
-	} elseif {[string match end-* $start]} {
-	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	}
 	set start [tcl_wordBreakBefore $str $start]
 	if {$start < 0} {
@@ -759,8 +863,6 @@ if {[info commands ::tk::wordBreakAfter] eq ""} {
     proc ::tk::wordBreakAfter {str start {locale {}}} {
 	if {$start < 0} {
 	    set start -1
-	} elseif {[string match end-* $start]} {
-	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
 	}
 	set start [tcl_wordBreakAfter $str $start]
 	if {$start < 0} {
@@ -780,9 +882,6 @@ if {[info commands ::tk::endOfCluster] eq ""} {
 	} elseif {$start >= [string length $str]} {
 	    return ""
 	}
-	if {[string length [string index $str $start]] > 1} {
-	    incr start
-	}
 	incr start
 	return $start
     }
@@ -798,9 +897,6 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 	} elseif {$start >= [string length $str]} {
 	    return [string length $str]
 	}
-	if {[string length [string index $str $start]] < 1} {
-	    incr start -1
-	}
 	if {$start < 0} {
 	    return ""
 	}
@@ -813,10 +909,26 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 
 set ::tk::Priv(IMETextMark) [dict create]
 
+# Scale the default parameters of the panedwindow sash
+option add *Panedwindow.handlePad	6p widgetDefault
+option add *Panedwindow.handleSize	6p widgetDefault
+option add *Panedwindow.sashWidth	2.25p widgetDefault
+
+# Scale the default size of the scale widget and its slider
+option add *Scale.length		75p widgetDefault
+option add *Scale.sliderLength		22.5p widgetDefault
+option add *Scale.width			11.25p widgetDefault
+
+# Scale the default scrollbar width on X11
+if {[tk windowingsystem] eq "x11"} {
+    option add *Scrollbar.width		8.25p widgetDefault
+}
+
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
-    uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
+    uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
+
 
 # Local Variables:
 # mode: tcl

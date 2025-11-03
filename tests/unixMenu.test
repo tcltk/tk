@@ -1,5 +1,4 @@
-# This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests. This
+# This file is a Tcl script to test menus in Tk. This
 # file tests the Macintosh-specific features of the menu
 # system.
 #
@@ -7,11 +6,26 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test unixMenu-1.1 {TkpNewMenu - normal menu} -constraints unix -setup {
     destroy .m1
@@ -75,7 +89,7 @@ test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -constraints unix -setup {
 } -returnCodes ok -result {{} {} {}}
 
 
-test unixMenu-7.1 {TkpSetMainMenubar - nothing to do} -constraints unix -body {}
+test unixMenu-7.1 {Tk_SetMainMenubar - nothing to do} -constraints unix -body {}
 
 
 test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -constraints {
@@ -1267,9 +1281,9 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -constraints 
 
 test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
 
+#
+# TESTFILE CLEANUP
+#
 
-
-# cleanup
 deleteWindows
 cleanupTests
-return

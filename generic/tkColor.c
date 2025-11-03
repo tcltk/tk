@@ -15,6 +15,10 @@
 #include "tkInt.h"
 #include "tkColor.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Structures of the following following type are used as keys for
  * colorValueTable (in TkDisplay).
@@ -52,12 +56,14 @@ static void		InitColorObj(Tcl_Obj *objPtr);
  * of the Tcl_Obj points to a TkColor object.
  */
 
-const Tcl_ObjType tkColorObjType = {
-    "color",			/* name */
+const TkObjType tkColorObjType = {
+    {"color",			/* name */
     FreeColorObjProc,		/* freeIntRepProc */
     DupColorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V1(TkLengthOne)},
+    0
 };
 
 /*
@@ -95,7 +101,7 @@ Tk_AllocColorFromObj(
 {
     TkColor *tkColPtr;
 
-    if (objPtr->typePtr != &tkColorObjType) {
+    if (objPtr->typePtr != &tkColorObjType.objType) {
 	InitColorObj(objPtr);
     }
     tkColPtr = (TkColor *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -111,7 +117,6 @@ Tk_AllocColorFromObj(
 	     * This is a stale reference: it refers to a TkColor that's no
 	     * longer in use. Clear the reference.
 	     */
-
 	    FreeColorObj(objPtr);
 	    tkColPtr = NULL;
 	} else if ((Tk_Screen(tkwin) == tkColPtr->screen)
@@ -123,7 +128,7 @@ Tk_AllocColorFromObj(
 
     /*
      * The object didn't point to the TkColor that we wanted. Search the list
-     * of TkColors with the same name to see if one of the other TkColors is
+     * of TkColors with the same name to see if one of the saved TkColors is
      * the right one.
      */
 
@@ -150,6 +155,7 @@ Tk_AllocColorFromObj(
     tkColPtr = (TkColor *) Tk_GetColor(interp, tkwin, Tcl_GetString(objPtr));
     objPtr->internalRep.twoPtrValue.ptr1 = tkColPtr;
     if (tkColPtr != NULL) {
+	/* The resourceRefCount is incremented by Tk_GetColor. */
 	tkColPtr->objRefCount++;
     }
     return (XColor *) tkColPtr;
@@ -184,7 +190,7 @@ Tk_GetColor(
     Tcl_Interp *interp,		/* Place to leave error message if color can't
 				 * be found. */
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to be allocated (in form
+    const char *name)		/* Name of color to be allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     Tcl_HashEntry *nameHashPtr;
@@ -226,11 +232,11 @@ Tk_GetColor(
 	    if (*name == '#') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"invalid color name \"%s\"", name));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", (char *)NULL);
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"unknown color name \"%s\"", name));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, (char *)NULL);
 	    }
 	}
 	if (isNew) {
@@ -371,7 +377,7 @@ Tk_NameOfColor(
 	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
+	snprintf(tsdPtr->rgbString, sizeof(tsdPtr->rgbString), "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
 
 	/*
@@ -657,7 +663,7 @@ Tk_GetColorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkColorObjType) {
+    if (objPtr->typePtr != &tkColorObjType.objType) {
 	InitColorObj(objPtr);
     }
 
@@ -745,7 +751,7 @@ InitColorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkColorObjType;
+    objPtr->typePtr = &tkColorObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -818,9 +824,9 @@ TkDebugColor(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->resourceRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->objRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

@@ -48,7 +48,7 @@ static const KeyInfo keyArray[] = {
     {57,	XK_Caps_Lock,   MOD_KEYCHAR},
     {58,	XK_Alt_L,	MOD_KEYCHAR},
     {59,	XK_Control_L,	MOD_KEYCHAR},
-    {60,	XK_Shift_R, 	MOD_KEYCHAR},
+    {60,	XK_Shift_R,	MOD_KEYCHAR},
     {61,	XK_Alt_R,	MOD_KEYCHAR},
     {62,	XK_Control_R,	MOD_KEYCHAR},
     {63,	XK_Super_L,	MOD_KEYCHAR},
@@ -85,17 +85,17 @@ static const KeyInfo keyArray[] = {
     {106,	XK_F16,		NSF16FunctionKey},
     {107,	XK_F14,		NSF14FunctionKey},
     {109,	XK_F10,		NSF10FunctionKey},
-    {110,       XK_Menu,	UNKNOWN_KEYCHAR},
+    {110,	XK_Menu,	UNKNOWN_KEYCHAR},
     {111,	XK_F12,		NSF12FunctionKey},
     {113,	XK_F15,		NSF15FunctionKey},
     {114,	XK_Help,	NSHelpFunctionKey},
     {115,	XK_Home,	NSHomeFunctionKey},     /* Fn Left */
-    {116,	XK_Page_Up,	NSPageUpFunctionKey},   /* Fn Up */
+    {116,	XK_Prior,	NSPageUpFunctionKey},   /* Fn Up */
     {117,	XK_Delete,	NSDeleteFunctionKey},   /* Fn Delete */
     {118,	XK_F4,		NSF4FunctionKey},
     {119,	XK_End,		NSEndFunctionKey},      /* Fn Right */
     {120,	XK_F2,		NSF2FunctionKey},
-    {121,	XK_Page_Down,	NSPageDownFunctionKey}, /* Fn Down */
+    {121,	XK_Next,	NSPageDownFunctionKey}, /* Fn Down */
     {122,	XK_F1,		NSF1FunctionKey},
     {123,	XK_Left,	NSLeftArrowFunctionKey},
     {124,	XK_Right,	NSRightArrowFunctionKey},
@@ -141,7 +141,7 @@ typedef struct KeysymInfo {
     KeyCode keycode;
 } KeysymInfo;
 
-const KeysymInfo keysymTable[] = {
+static const KeysymInfo keysymTable[] = {
     {0x0020, 0x0020}, /* space */
     {0x0021, 0x0021}, /* exclam */
     {0x0022, 0x0022}, /* quotedbl */
@@ -684,7 +684,7 @@ const KeysymInfo keysymTable[] = {
     {0x07c8, 0x0398}, /* Greek_THETA */
     {0x07c9, 0x0399}, /* Greek_IOTA */
     {0x07ca, 0x039a}, /* Greek_KAPPA */
-    {0x07cb, 0x039b}, /* Greek_LAMDA */
+    {0x07cb, 0x039b}, /* Greek_LAMBDA */
     {0x07cc, 0x039c}, /* Greek_MU */
     {0x07cd, 0x039d}, /* Greek_NU */
     {0x07ce, 0x039e}, /* Greek_XI */

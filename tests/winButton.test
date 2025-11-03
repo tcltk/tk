@@ -1,25 +1,39 @@
 # This file is a Tcl script to test the Windows specific behavior of
 # labels, buttons, checkbuttons, and radiobuttons in Tk (i.e., all the
-# widgets defined in tkWinButton.c).  It is organized in the standard
-# fashion for Tcl tests.
+# widgets defined in tkWinButton.c).
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import button image
+
 imageInit
 
-proc bogusTrace args {
-    error "trace aborted"
-}
 option clear
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test winbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
     testImageType win nonPortable
@@ -33,17 +47,17 @@ test winbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
     label .b1 -image image1 -bd 4 -padx 0 -pady 2
     button .b2 -image image1 -bd 4 -padx 0 -pady 2
     checkbutton .b3 -image image1 -bd 4 -padx 1 -pady 1 \
-        -font {{MS Sans Serif} 8}
+	-font {{MS Sans Serif} 8}
     radiobutton .b4 -image image1 -bd 4 -padx 2 -pady 0 \
-        -font {{MS Sans Serif} 8}
+	-font {{MS Sans Serif} 8}
     pack .b1 .b2 .b3 .b4
     update
     # with patch 463234 with native L&F enabled, this returns:
     # {68 48 70 50 88 50 88 50}
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
     image delete image1
@@ -59,17 +73,17 @@ test winbutton-1.2 {TkpComputeButtonGeometry procedure} -constraints {
     label .b1 -bitmap question -bd 3 -padx 0 -pady 2
     button .b2 -bitmap question -bd 3 -padx 0 -pady 2
     checkbutton .b3 -bitmap question -bd 3 -padx 1 -pady 1 \
-        -font {{MS Sans Serif} 8}
+	-font {{MS Sans Serif} 8}
     radiobutton .b4 -bitmap question -bd 3 -padx 2 -pady 0 \
-        -font {{MS Sans Serif} 8}
+	-font {{MS Sans Serif} 8}
     pack .b1 .b2 .b3 .b4
     update
     # with patch 463234 with native L&F enabled, this returns:
     # {23 33 25 35 43 35 43 35}
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
 } -result {23 33 25 35 45 37 45 37}
@@ -80,16 +94,16 @@ test winbutton-1.3 {TkpComputeButtonGeometry procedure} -constraints win -setup 
     label .b1 -bitmap question -bd 3 -highlightthickness 4
     button .b2 -bitmap question -bd 3 -highlightthickness 0
     checkbutton .b3 -bitmap question -bd 3 -highlightthickness 1 \
-        -indicatoron 0
+	-indicatoron 0
     radiobutton .b4 -bitmap question -bd 3 -indicatoron false
     pack .b1 .b2 .b3 .b4
     update
     # with patch 463234 with native L&F enabled, this returns:
     # {31 41 23 33 25 35 25 35}
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
 } -result {31 41 23 33 27 37 27 37}
@@ -106,9 +120,9 @@ test winbutton-1.4 {TkpComputeButtonGeometry procedure} -constraints {
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
 } -result {58 24 67 33 88 30 90 28}
@@ -119,7 +133,7 @@ test winbutton-1.5 {TkpComputeButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     label .l1 -wraplength 1.5i -padx 0 -pady 0 \
-        -text "This is a long string that will wrap around on several lines.\n\nIt also has a blank line (above)."
+	-text "This is a long string that will wrap around on several lines.\n\nIt also has a blank line (above)."
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
@@ -133,7 +147,7 @@ test winbutton-1.6 {TkpComputeButtonGeometry procedure} -constraints {
     deleteWindows
 } -body {
     label .l1 -padx 0 -pady 0 \
-        -text "This is a long string without wrapping.\n\nIt also has a blank line (above)."
+	-text "This is a long string without wrapping.\n\nIt also has a blank line (above)."
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
@@ -153,9 +167,9 @@ test winbutton-1.7 {TkpComputeButtonGeometry procedure} -constraints {
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
 } -result {74 24 67 97 174 46 64 28}
@@ -175,9 +189,9 @@ test winbutton-1.8 {TkpComputeButtonGeometry procedure} -constraints {
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
-        [winfo reqwidth .b2] [winfo reqheight .b2] \
-        [winfo reqwidth .b3] [winfo reqheight .b3] \
-        [winfo reqwidth .b4] [winfo reqheight .b4]
+	[winfo reqwidth .b2] [winfo reqheight .b2] \
+	[winfo reqwidth .b3] [winfo reqheight .b3] \
+	[winfo reqwidth .b4] [winfo reqheight .b4]
 } -cleanup {
     deleteWindows
 } -result {66 32 65 31 69 31 71 29}
@@ -191,11 +205,14 @@ test winbutton-1.9 {TkpComputeButtonGeometry procedure} -constraints win -setup 
     deleteWindows
 } -result {23 33}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 imageFinish
 deleteWindows
+testutils forget button image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

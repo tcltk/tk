@@ -19,31 +19,25 @@ tk_dialog \- Create modal dialog and wait for response
 This procedure is part of the Tk script library.
 It is largely \fIdeprecated\fR by the \fBtk_messageBox\fR.
 Its arguments describe a dialog box:
-.TP
-\fIwindow\fR
+.IP \fIwindow\fR
 Name of top-level window to use for dialog.  Any existing window
 by this name is destroyed.
-.TP
-\fItitle\fR
+.IP \fItitle\fR
 Text to appear in the window manager's title bar for the dialog.
-.TP
-\fItext\fR
+.IP \fItext\fR
 Message to appear in the top portion of the dialog box.
-.TP
-\fIbitmap\fR
+.IP \fIbitmap\fR
 If non-empty, specifies a bitmap (in a form suitable for Tk_GetBitmap)
 to display in the top portion of
 the dialog, to the left of the text.
 If this is an empty string then no bitmap is displayed in the dialog.
-.TP
-\fIdefault\fR
+.IP \fIdefault\fR
 If this is an integer greater than or equal to zero, then it gives
 the index of the button that is to be the default button for the dialog
 (0 for the leftmost button, and so on).
-If less than zero or an empty string then there will not be any default
+If negative or an empty string then there will not be any default
 button.
-.TP
-\fIstring\fR
+.IP \fIstring\fR
 There will be one button for each of these arguments.
 Each \fIstring\fR specifies text to display in a button,
 in order from left to right.

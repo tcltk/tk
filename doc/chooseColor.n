@@ -18,17 +18,23 @@ tk_chooseColor \- pops up a dialog box for the user to select a color.
 The procedure \fBtk_chooseColor\fR pops up a dialog box for the
 user to select a color. The following \fIoption\-value\fR pairs are
 possible as command line arguments:
+.\" OPTION: -initialcolor
 .TP
-\fB\-initialcolor\fR \fIcolor\fR
+\fB\-initialcolor\fI color\fR
+.
 Specifies the color to display in the color dialog when it pops
 up. \fIcolor\fR must be in a form acceptable to the \fBTk_GetColor\fR
 function.
+.\" OPTION: -parent
 .TP
-\fB\-parent\fR \fIwindow\fR
+\fB\-parent\fI window\fR
+.
 Makes \fIwindow\fR the logical parent of the color dialog. The color
 dialog is displayed on top of its parent window.
+.\" OPTION: -title
 .TP
-\fB\-title\fR \fItitleString\fR
+\fB\-title\fI titleString\fR
+.
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title will be displayed.
 .LP
@@ -39,7 +45,7 @@ string.
 .SH EXAMPLE
 .PP
 .CS
-button .b \-bg [tk_chooseColor \-initialcolor gray \-title "Choose color"]
+button .b -bg [tk_chooseColor -initialcolor gray -title "Choose color"]
 .CE
 .SH KEYWORDS
 color, color selection, dialog

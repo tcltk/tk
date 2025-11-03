@@ -10,7 +10,7 @@
 .SH NAME
 ttk::radiobutton \- Mutually exclusive option widget
 .SH SYNOPSIS
-\fBttk::radiobutton\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::radiobutton\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -41,8 +41,10 @@ In addition to the standard
 \fBstate\fR and \fBstyle\fR
 commands (see \fBttk::widget\fR),
 radiobutton widgets support the following additional commands:
+.\" METHOD: invoke
 .TP
 \fIpathname\fB invoke\fR
+.
 Sets the \fB\-variable\fR to the \fB\-value\fR, selects the widget,
 and evaluates the associated \fB\-command\fR.
 Returns the result of the \fB\-command\fR, or the empty

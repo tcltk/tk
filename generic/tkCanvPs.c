@@ -44,33 +44,30 @@ typedef struct TkPostscriptInfo {
     int x, y, width, height;	/* Area to print, in canvas pixel
 				 * coordinates. */
     int x2, y2;			/* x+width and y+height. */
-    char *pageXString;		/* String value of "-pagex" option or NULL. */
-    char *pageYString;		/* String value of "-pagey" option or NULL. */
+    Tcl_Obj *pageXObj;		/* Value of "-pagex" option or NULL. */
+    Tcl_Obj *pageYObj;		/* Value of "-pagey" option or NULL. */
     double pageX, pageY;	/* Postscript coordinates (in points)
 				 * corresponding to pageXString and
 				 * pageYString. Don't forget that y-values
 				 * grow upwards for Postscript! */
-    char *pageWidthString;	/* Printed width of output. */
-    char *pageHeightString;	/* Printed height of output. */
+    Tcl_Obj *pageWidthObj;	/* Printed width of output. */
+    Tcl_Obj *pageHeightObj;	/* Printed height of output. */
     double scale;		/* Scale factor for conversion: each pixel
 				 * maps into this many points. */
     Tk_Anchor pageAnchor;	/* How to anchor bbox on Postscript page. */
     int rotate;			/* Non-zero means output should be rotated on
 				 * page (landscape mode). */
-    char *fontVar;		/* If non-NULL, gives name of global variable
-				 * containing font mapping information.
-				 * Malloc'ed. */
-    char *colorVar;		/* If non-NULL, give name of global variable
-				 * containing color mapping information.
-				 * Malloc'ed. */
-    char *colorMode;		/* Mode for handling colors: "monochrome",
-				 * "gray", or "color".  Malloc'ed. */
+    Tcl_Obj *fontVarObj;	/* If non-NULL, gives name of global variable
+				 * containing font mapping information. */
+    Tcl_Obj *colorVarObj;	/* If non-NULL, give name of global variable
+				 * containing color mapping information. */
+    Tcl_Obj *colorModeObj;	/* Mode for handling colors: "monochrome",
+				 * "gray", or "color". */
     int colorLevel;		/* Numeric value corresponding to colorMode: 0
 				 * for mono, 1 for gray, 2 for color. */
-    char *fileName;		/* Name of file in which to write Postscript;
-				 * NULL means return Postscript info as
-				 * result. Malloc'ed. */
-    char *channelName;		/* If -channel is specified, the name of the
+    Tcl_Obj *fileNameObj;		/* Name of file in which to write Postscript;
+				 * NULL means return Postscript info as result. */
+    Tcl_Obj *channelNameObj;	/* If -channel is specified, the name of the
 				 * channel to use. */
     Tcl_Channel chan;		/* Open channel corresponding to fileName. */
     Tcl_HashTable fontTable;	/* Hash table containing names of all font
@@ -94,27 +91,27 @@ typedef struct TkPostscriptInfo {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-colormap", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, colorVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorVarObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-colormode", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, colorMode), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorModeObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, fileName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fileNameObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-channel", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, channelName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, channelNameObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-fontmap", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, fontVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fontVarObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
 	"", offsetof(TkPostscriptInfo, height), 0, NULL},
     {TK_CONFIG_ANCHOR, "-pageanchor", NULL, NULL,
 	"", offsetof(TkPostscriptInfo, pageAnchor), 0, NULL},
     {TK_CONFIG_STRING, "-pageheight", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, pageHeightString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageHeightObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-pagewidth", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, pageWidthString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageWidthObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-pagex", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, pageXString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageXObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_STRING, "-pagey", NULL, NULL,
-	"", offsetof(TkPostscriptInfo, pageYString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageYObj), TK_CONFIG_OBJS, NULL},
     {TK_CONFIG_BOOLEAN, "-prolog", NULL, NULL,
 	"", offsetof(TkPostscriptInfo, prolog), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-rotate", NULL, NULL,
@@ -133,7 +130,7 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		GetPostscriptPoints(Tcl_Interp *interp,
-			    char *string, double *doublePtr);
+			    Tcl_Obj *value, double *doublePtr);
 static void		PostscriptBitmap(Tk_Window tkwin, Pixmap bitmap,
 			    int startX, int startY, int width, int height,
 			    Tcl_Obj *psObj);
@@ -142,7 +139,7 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 /*
  *--------------------------------------------------------------
  *
- * TkCanvPostscriptCmd --
+ * TkCanvPostscriptObjCmd --
  *
  *	This function is invoked to process the "postscript" options of the
  *	widget command for canvas widgets. See the user documentation for
@@ -158,12 +155,12 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  */
 
 int
-TkCanvPostscriptCmd(
+TkCanvPostscriptObjCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. Caller has already parsed
-				 * this command enough to know that argv[1] is
+    Tcl_Size objc,			/* Number of arguments. */
+	Tcl_Obj *const objv[])		/* Argument strings. Caller has already parsed
+				 * this command enough to know that objv[1] is
 				 * "postscript". */
 {
     TkPostscriptInfo psInfo, *psInfoPtr = &psInfo;
@@ -192,7 +189,7 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -216,28 +213,28 @@ TkCanvPostscriptCmd(
     psInfo.y = canvasPtr->yOrigin;
     psInfo.width = -1;
     psInfo.height = -1;
-    psInfo.pageXString = NULL;
-    psInfo.pageYString = NULL;
+    psInfo.pageXObj = NULL;
+    psInfo.pageYObj = NULL;
     psInfo.pageX = 72*4.25;
     psInfo.pageY = 72*5.5;
-    psInfo.pageWidthString = NULL;
-    psInfo.pageHeightString = NULL;
+    psInfo.pageWidthObj = NULL;
+    psInfo.pageHeightObj = NULL;
     psInfo.scale = 1.0;
     psInfo.pageAnchor = TK_ANCHOR_CENTER;
     psInfo.rotate = 0;
-    psInfo.fontVar = NULL;
-    psInfo.colorVar = NULL;
-    psInfo.colorMode = NULL;
+    psInfo.fontVarObj = NULL;
+    psInfo.colorVarObj = NULL;
+    psInfo.colorModeObj = NULL;
     psInfo.colorLevel = 0;
-    psInfo.fileName = NULL;
-    psInfo.channelName = NULL;
+    psInfo.fileNameObj = NULL;
+    psInfo.channelNameObj = NULL;
     psInfo.chan = NULL;
     psInfo.prepass = 0;
     psInfo.prolog = 1;
     psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
-    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, argc-2, argv+2,
-	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY);
+    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, objv+2,
+	    &psInfo, TK_CONFIG_ARGV_ONLY);
     if (result != TCL_OK) {
 	goto cleanup;
     }
@@ -251,26 +248,26 @@ TkCanvPostscriptCmd(
     psInfo.x2 = psInfo.x + psInfo.width;
     psInfo.y2 = psInfo.y + psInfo.height;
 
-    if (psInfo.pageXString != NULL) {
-	if (GetPostscriptPoints(interp, psInfo.pageXString,
+    if (psInfo.pageXObj != NULL) {
+	if (GetPostscriptPoints(interp, psInfo.pageXObj,
 		&psInfo.pageX) != TCL_OK) {
 	    goto cleanup;
 	}
     }
-    if (psInfo.pageYString != NULL) {
-	if (GetPostscriptPoints(interp, psInfo.pageYString,
+    if (psInfo.pageYObj != NULL) {
+	if (GetPostscriptPoints(interp, psInfo.pageYObj,
 		&psInfo.pageY) != TCL_OK) {
 	    goto cleanup;
 	}
     }
-    if (psInfo.pageWidthString != NULL) {
-	if (GetPostscriptPoints(interp, psInfo.pageWidthString,
+    if (psInfo.pageWidthObj != NULL) {
+	if (GetPostscriptPoints(interp, psInfo.pageWidthObj,
 		&psInfo.scale) != TCL_OK) {
 	    goto cleanup;
 	}
 	psInfo.scale /= psInfo.width;
-    } else if (psInfo.pageHeightString != NULL) {
-	if (GetPostscriptPoints(interp, psInfo.pageHeightString,
+    } else if (psInfo.pageHeightObj != NULL) {
+	if (GetPostscriptPoints(interp, psInfo.pageHeightObj,
 		&psInfo.scale) != TCL_OK) {
 	    goto cleanup;
 	}
@@ -310,35 +307,35 @@ TkCanvPostscriptCmd(
 	break;
     }
 
-    if (psInfo.colorMode == NULL) {
+    if (psInfo.colorModeObj == NULL) {
 	psInfo.colorLevel = 2;
     } else {
-	length = strlen(psInfo.colorMode);
-	if (strncmp(psInfo.colorMode, "monochrome", length) == 0) {
+	length = strlen(Tcl_GetString(psInfo.colorModeObj));
+	if (strncmp(Tcl_GetString(psInfo.colorModeObj), "monochrome", length) == 0) {
 	    psInfo.colorLevel = 0;
-	} else if (strncmp(psInfo.colorMode, "gray", length) == 0) {
+	} else if (strncmp(Tcl_GetString(psInfo.colorModeObj), "gray", length) == 0) {
 	    psInfo.colorLevel = 1;
-	} else if (strncmp(psInfo.colorMode, "color", length) == 0) {
+	} else if (strncmp(Tcl_GetString(psInfo.colorModeObj), "color", length) == 0) {
 	    psInfo.colorLevel = 2;
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad color mode \"%s\": must be monochrome, gray, or color",
-		    psInfo.colorMode));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "COLORMODE", NULL);
+		    Tcl_GetString(psInfo.colorModeObj)));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "COLORMODE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
     }
 
-    if (psInfo.fileName != NULL) {
+    if (psInfo.fileNameObj != NULL) {
 	/*
 	 * Check that -file and -channel are not both specified.
 	 */
 
-	if (psInfo.channelName != NULL) {
+	if (psInfo.channelNameObj != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify both -file and -channel", -1));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", NULL);
+		    "can't specify both -file and -channel", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -350,13 +347,13 @@ TkCanvPostscriptCmd(
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify -file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", NULL);
+		    "can't specify -file in a safe interpreter", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
 
-	p = Tcl_TranslateFileName(interp, psInfo.fileName, &buffer);
+	p = Tcl_TranslateFileName(interp, Tcl_GetString(psInfo.fileNameObj), &buffer);
 	if (p == NULL) {
 	    goto cleanup;
 	}
@@ -367,7 +364,7 @@ TkCanvPostscriptCmd(
 	}
     }
 
-    if (psInfo.channelName != NULL) {
+    if (psInfo.channelNameObj != NULL) {
 	int mode;
 
 	/*
@@ -375,7 +372,7 @@ TkCanvPostscriptCmd(
 	 * open for writing.
 	 */
 
-	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
+	psInfo.chan = Tcl_GetChannel(interp, Tcl_GetString(psInfo.channelNameObj), &mode);
 	if (psInfo.chan == NULL) {
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -383,8 +380,8 @@ TkCanvPostscriptCmd(
 	if (!(mode & TCL_WRITABLE)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel \"%s\" wasn't opened for writing",
-		    psInfo.channelName));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "UNWRITABLE",NULL);
+		    Tcl_GetString(psInfo.channelNameObj)));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "UNWRITABLE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -431,7 +428,7 @@ TkCanvPostscriptCmd(
     if (psInfo.prolog) {
 	Tcl_AppendToObj(psObj,
 		"%!PS-Adobe-3.0 EPSF-3.0\n"
-		"%%Creator: Tk Canvas Widget\n", -1);
+		"%%Creator: Tk Canvas Widget\n", TCL_INDEX_NONE);
 
 #ifdef HAVE_PW_GECOS
 	if (!Tcl_IsSafe(interp)) {
@@ -477,7 +474,7 @@ TkCanvPostscriptCmd(
 		    Tcl_GetHashKey(&psInfo.fontTable, hPtr));
 	    p = "%%%%+ font %s\n";
 	}
-	Tcl_AppendToObj(psObj, "%%EndComments\n\n", -1);
+	Tcl_AppendToObj(psObj, "%%EndComments\n\n", TCL_INDEX_NONE);
 
 	/*
 	 * Insert the prolog
@@ -510,7 +507,7 @@ TkCanvPostscriptCmd(
 		    "%%%%IncludeResource: font %s\n",
 		    (char *) Tcl_GetHashKey(&psInfo.fontTable, hPtr));
 	}
-	Tcl_AppendToObj(psObj, "%%EndSetup\n\n", -1);
+	Tcl_AppendToObj(psObj, "%%EndSetup\n\n", TCL_INDEX_NONE);
 
 	/*
 	 * Page setup: move to page positioning point, rotate if needed, set
@@ -518,11 +515,11 @@ TkCanvPostscriptCmd(
 	 * region.
 	 */
 
-	Tcl_AppendToObj(psObj, "%%Page: 1 1\nsave\n", -1);
+	Tcl_AppendToObj(psObj, "%%Page: 1 1\nsave\n", TCL_INDEX_NONE);
 	Tcl_AppendPrintfToObj(psObj,
 		"%.1f %.1f translate\n", psInfo.pageX, psInfo.pageY);
 	if (psInfo.rotate) {
-	    Tcl_AppendToObj(psObj, "90 rotate\n", -1);
+	    Tcl_AppendToObj(psObj, "90 rotate\n", TCL_INDEX_NONE);
 	}
 	Tcl_AppendPrintfToObj(psObj,
 		"%.4g %.4g scale\n", psInfo.scale, psInfo.scale);
@@ -576,9 +573,9 @@ TkCanvPostscriptCmd(
 	    goto cleanup;
 	}
 
-	Tcl_AppendToObj(psObj, "gsave\n", -1);
+	Tcl_AppendToObj(psObj, "gsave\n", TCL_INDEX_NONE);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
-	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_AppendToObj(psObj, "grestore\n", TCL_INDEX_NONE);
 	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
@@ -600,7 +597,7 @@ TkCanvPostscriptCmd(
 		"restore showpage\n\n"
 		"%%Trailer\n"
 		"end\n"
-		"%%EOF\n", -1);
+		"%%EOF\n", TCL_INDEX_NONE);
 
 	if (psInfo.chan != NULL) {
 	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
@@ -619,35 +616,35 @@ TkCanvPostscriptCmd(
      */
 
   cleanup:
-    if (psInfo.pageXString != NULL) {
-	ckfree(psInfo.pageXString);
+    if (psInfo.pageXObj != NULL) {
+	Tcl_DecrRefCount(psInfo.pageXObj);
     }
-    if (psInfo.pageYString != NULL) {
-	ckfree(psInfo.pageYString);
+    if (psInfo.pageYObj != NULL) {
+	Tcl_DecrRefCount(psInfo.pageYObj);
     }
-    if (psInfo.pageWidthString != NULL) {
-	ckfree(psInfo.pageWidthString);
+    if (psInfo.pageWidthObj != NULL) {
+	Tcl_DecrRefCount(psInfo.pageWidthObj);
     }
-    if (psInfo.pageHeightString != NULL) {
-	ckfree(psInfo.pageHeightString);
+    if (psInfo.pageHeightObj != NULL) {
+	Tcl_DecrRefCount(psInfo.pageHeightObj);
     }
-    if (psInfo.fontVar != NULL) {
-	ckfree(psInfo.fontVar);
+    if (psInfo.fontVarObj != NULL) {
+	Tcl_DecrRefCount(psInfo.fontVarObj);
     }
-    if (psInfo.colorVar != NULL) {
-	ckfree(psInfo.colorVar);
+    if (psInfo.colorVarObj != NULL) {
+	Tcl_DecrRefCount(psInfo.colorVarObj);
     }
-    if (psInfo.colorMode != NULL) {
-	ckfree(psInfo.colorMode);
+    if (psInfo.colorModeObj != NULL) {
+	Tcl_DecrRefCount(psInfo.colorModeObj);
     }
-    if (psInfo.fileName != NULL) {
-	ckfree(psInfo.fileName);
+    if (psInfo.fileNameObj != NULL) {
+	Tcl_DecrRefCount(psInfo.fileNameObj);
     }
-    if ((psInfo.chan != NULL) && (psInfo.channelName == NULL)) {
+    if ((psInfo.chan != NULL) && (psInfo.channelNameObj == NULL)) {
 	Tcl_Close(interp, psInfo.chan);
     }
-    if (psInfo.channelName != NULL) {
-	ckfree(psInfo.channelName);
+    if (psInfo.channelNameObj != NULL) {
+	Tcl_DecrRefCount(psInfo.channelNameObj);
     }
     Tcl_DeleteHashTable(&psInfo.fontTable);
     canvasPtr->psInfo = (Tk_PostscriptInfo) oldInfoPtr;
@@ -708,8 +705,8 @@ Tk_PostscriptColor(
      * map and use the Postscript commands found there, if there are any.
      */
 
-    if (psInfoPtr->colorVar != NULL) {
-	const char *cmdString = Tcl_GetVar2(interp, psInfoPtr->colorVar,
+    if (psInfoPtr->colorVarObj != NULL) {
+	const char *cmdString = Tcl_GetVar2(interp, Tcl_GetString(psInfoPtr->colorVarObj),
 		Tk_NameOfColor(colorPtr), 0);
 
 	if (cmdString != NULL) {
@@ -780,12 +777,12 @@ Tk_PostscriptFont(
      * name and size. Use this information.
      */
 
-    if (psInfoPtr->fontVar != NULL) {
+    if (psInfoPtr->fontVarObj != NULL) {
 	const char *name = Tk_NameOfFont(tkfont);
 	Tcl_Obj **objv;
-	int objc;
+	Tcl_Size objc;
 	double size;
-	Tcl_Obj *list = Tcl_GetVar2Ex(interp, psInfoPtr->fontVar, name, 0);
+	Tcl_Obj *list = Tcl_GetVar2Ex(interp, Tcl_GetString(psInfoPtr->fontVarObj), name, 0);
 
 	if (list != NULL) {
 	    if (Tcl_ListObjGetElements(interp, list, &objc, &objv) != TCL_OK
@@ -798,7 +795,7 @@ Tk_PostscriptFont(
 			"bad font map entry for \"%s\": \"%s\"",
 			name, Tcl_GetString(list)));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "FONTMAP",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -907,11 +904,11 @@ PostscriptBitmap(
 	 * syntactically correct.
 	 */
 
-        Tcl_AppendToObj(psObj, "<>", -1);
+	Tcl_AppendToObj(psObj, "<>", TCL_INDEX_NONE);
 	return;
     }
 
-    Tcl_AppendToObj(psObj, "<", -1);
+    Tcl_AppendToObj(psObj, "<", TCL_INDEX_NONE);
     mask = 0x80;
     value = 0;
     charsInLine = 0;
@@ -929,7 +926,7 @@ PostscriptBitmap(
 		value = 0;
 		charsInLine += 2;
 		if (charsInLine >= 60) {
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    charsInLine = 0;
 		}
 	    }
@@ -941,7 +938,7 @@ PostscriptBitmap(
 	    charsInLine += 2;
 	}
     }
-    Tcl_AppendToObj(psObj, ">", -1);
+    Tcl_AppendToObj(psObj, ">", TCL_INDEX_NONE);
 
     XDestroyImage(imagePtr);
 }
@@ -1002,7 +999,7 @@ Tk_PostscriptStipple(
     psObj = GetPostscriptBuffer(interp);
     Tcl_AppendPrintfToObj(psObj, "%d %d ", width, height);
     PostscriptBitmap(tkwin, bitmap, 0, 0, width, height, psObj);
-    Tcl_AppendToObj(psObj, " StippleFill\n", -1);
+    Tcl_AppendToObj(psObj, " StippleFill\n", TCL_INDEX_NONE);
     return TCL_OK;
 }
 
@@ -1059,7 +1056,7 @@ Tk_PostscriptPath(
 				 * generated. */
     double *coordPtr,		/* Pointer to first in array of 2*numPoints
 				 * coordinates giving points for path. */
-    int numPoints)		/* Number of points at *coordPtr. */
+    Tcl_Size numPoints)		/* Number of points at *coordPtr. */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
     Tcl_Obj *psObj;
@@ -1101,53 +1098,57 @@ Tk_PostscriptPath(
 static int
 GetPostscriptPoints(
     Tcl_Interp *interp,		/* Use this for error reporting. */
-    char *string,		/* String describing a screen distance. */
+    Tcl_Obj *value,			/* Describing a screen distance. */
     double *doublePtr)		/* Place to store converted result. */
 {
-    char *end;
+    const char *rest, *string = Tcl_GetString(value);
     double d;
+    Tcl_DString ds;
 
-    d = strtod(string, &end);
-    if (end == string) {
+    if (Tcl_GetDoubleFromObj(NULL, value, &d) == TCL_OK) {
+	*doublePtr = d;
+	return TCL_OK;
+    }
+    rest = string + strlen(string);
+    while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	--rest; /* skip all spaces at the end */
+    }
+    if (rest > string) {
+	--rest; /* point to the character just before the last space */
+    }
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad distance \"%s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", (char *)NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, string, rest-string);
+    if (Tcl_GetDouble(NULL, Tcl_DStringValue(&ds), &d) != TCL_OK) {
+	Tcl_DStringFree(&ds);
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    switch (*end) {
+    Tcl_DStringFree(&ds);
+    switch (*rest) {
     case 'c':
 	d *= 72.0/2.54;
-	end++;
 	break;
     case 'i':
 	d *= 72.0;
-	end++;
 	break;
     case 'm':
 	d *= 72.0/25.4;
-	end++;
-	break;
-    case 0:
 	break;
     case 'p':
-	end++;
 	break;
     default:
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    if (*end != 0) {
-	goto error;
-    }
     *doublePtr = d;
     return TCL_OK;
-
-  error:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad distance \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", NULL);
-    return TCL_ERROR;
 }
 
 /*
@@ -1196,12 +1197,12 @@ GetPostscriptPoints(
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static void
 TkImageGetColor(
-    TkColormapData *cdata,	/* Colormap data */
+    TkColormapData *cdata,
     unsigned long pixel,	/* Pixel value to look up */
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
-    (void)cdata;
+	(void)cdata;
 
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
@@ -1258,7 +1259,7 @@ TkPostscriptImage(
     Tk_Window tkwin,
     Tk_PostscriptInfo psInfo,	/* postscript info */
     XImage *ximage,		/* Image to draw */
-    int x, int y,		/* First pixel to output */
+    int x, TCL_UNUSED(int),		/* First pixel to output */
     int width, int height)	/* Width and height of area */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
@@ -1271,7 +1272,6 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
-    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;
@@ -1360,7 +1360,7 @@ TkPostscriptImage(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't generate Postscript for images more than %d pixels wide",
 		maxWidth));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	ckfree(cdata.colors);
 	return TCL_ERROR;
     }
@@ -1406,7 +1406,7 @@ TkPostscriptImage(
 			lineLen += 2;
 			if (lineLen > 60) {
 			    lineLen = 0;
-			    Tcl_AppendToObj(psObj, "\n", -1);
+			    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 			}
 			mask = 0x80;
 			data = 0x00;
@@ -1434,7 +1434,7 @@ TkPostscriptImage(
 		    lineLen += 2;
 		    if (lineLen > 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		}
 		break;
@@ -1454,7 +1454,7 @@ TkPostscriptImage(
 		    lineLen += 6;
 		    if (lineLen > 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		}
 		break;
@@ -1462,9 +1462,9 @@ TkPostscriptImage(
 	}
 	switch (level) {
 	case 0: case 1:
-	    Tcl_AppendToObj(psObj, ">\n} image\n", -1); break;
+	    Tcl_AppendToObj(psObj, ">\n} image\n", TCL_INDEX_NONE); break;
 	default:
-	    Tcl_AppendToObj(psObj, ">\n} false 3 colorimage\n", -1); break;
+	    Tcl_AppendToObj(psObj, ">\n} false 3 colorimage\n", TCL_INDEX_NONE); break;
 	}
 	Tcl_AppendPrintfToObj(psObj, "0 %d translate\n", rows);
     }
@@ -1546,7 +1546,7 @@ Tk_PostscriptPhoto(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't generate Postscript for images more than %d pixels wide",
 		maxWidth));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1557,17 +1557,17 @@ Tk_PostscriptPhoto(
     psObj = GetPostscriptBuffer(interp);
     switch (colorLevel) {
     case 0:
-	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "1 0";
 	bpc = 1;
 	break;
     case 1:
-	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "0 1";
 	bpc = 8;
 	break;
     default:
-	Tcl_AppendToObj(psObj, "/DeviceRGB setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceRGB setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "0 1 0 1 0 1";
 	bpc = 8;
 	break;
@@ -1643,7 +1643,7 @@ Tk_PostscriptPhoto(
 		    lineLen += 2;
 		    if (lineLen >= 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		    mask = 0x80;
 		    data = 0x00;
@@ -1682,7 +1682,7 @@ Tk_PostscriptPhoto(
 		    lineLen += 2;
 		    if (lineLen >= 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		    mask = 0x80;
 		    data = 0x00;
@@ -1708,7 +1708,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 
@@ -1730,7 +1730,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 	    break;
@@ -1748,7 +1748,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 
@@ -1768,7 +1768,7 @@ Tk_PostscriptPhoto(
 		lineLen += 6;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 	    break;
@@ -1779,7 +1779,7 @@ Tk_PostscriptPhoto(
      * The end-of-data marker.
      */
 
-    Tcl_AppendToObj(psObj, ">\n", -1);
+    Tcl_AppendToObj(psObj, ">\n", TCL_INDEX_NONE);
     return TCL_OK;
 }
 

@@ -175,7 +175,7 @@ Tk_GetVisual(
 	if (Tcl_GetInt(interp, string, &visualId) == TCL_ERROR) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad X identifier for visual: \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUALID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUALID", (char *)NULL);
 	    return NULL;
 	}
 	templ.visualid = visualId;
@@ -208,9 +208,9 @@ Tk_GetVisual(
 	    for (dictPtr = visualNames; dictPtr->minLength; dictPtr++) {
 		Tcl_AppendPrintfToObj(msgObj, "%s, ", dictPtr->name);
 	    }
-	    Tcl_AppendToObj(msgObj, "or default", -1);
+	    Tcl_AppendToObj(msgObj, "or default", TCL_INDEX_NONE);
 	    Tcl_SetObjResult(interp, msgObj);
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", string, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", string, (char *)NULL);
 	    return NULL;
 	}
 	while (isspace(UCHAR(*p))) {
@@ -239,8 +239,8 @@ Tk_GetVisual(
 	    &numVisuals);
     if (visInfoList == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"couldn't find an appropriate visual", -1));
-	Tcl_SetErrorCode(interp, "TK", "VISUAL", "INAPPROPRIATE", NULL);
+		"couldn't find an appropriate visual", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "VISUAL", "INAPPROPRIATE", (char *)NULL);
 	return NULL;
     }
 
@@ -306,7 +306,7 @@ Tk_GetVisual(
     CLANG_ASSERT(bestPtr);
     *depthPtr = bestPtr->depth;
     visual = bestPtr->visual;
-    XFree((char *) visInfoList);
+    XFree(visInfoList);
 
     /*
      * If we need to find a colormap for this visual, do it now. If the visual
@@ -407,13 +407,13 @@ Tk_GetColormap(
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use colormap for %s: not on same screen", string));
-	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "SCREEN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "SCREEN", (char *)NULL);
 	return None;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use colormap for %s: incompatible visuals", string));
-	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "INCOMPATIBLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "INCOMPATIBLE", (char *)NULL);
 	return None;
     }
     colormap = Tk_Colormap(other);

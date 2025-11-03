@@ -60,7 +60,7 @@ Specifies foreground color to use when drawing active elements.
 See above for definition of active elements.
 .OP \-activerelief activeRelief Relief
 Specifies the 3-D effect desired for the active item of the widget.
-See the \fB-relief\fR option for details.
+See the \fB\-relief\fR option for details.
 .OP \-anchor anchor Anchor
 Specifies how the information in a widget (e.g. text or a bitmap)
 is to be displayed in the widget.
@@ -169,7 +169,7 @@ milliseconds the insertion cursor should remain
 .QW on
 in each blink cycle.
 .OP \-insertwidth insertWidth InsertWidth
-Specifies a  value indicating the total width of the insertion cursor.
+Specifies a non-negative value indicating the total width of the insertion cursor.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If a border has been specified for the insertion
 cursor (using the \fB\-insertborderwidth\fR option), the border
@@ -292,7 +292,7 @@ The script must return \fB0\fR, \fB1\fR, or an empty string:  a
 \fB0\fR or \fB1\fR value specifies whether the window will receive
 the input focus, and an empty string results in the default decision
 described above.
-Note: this interpretation of the option is defined entirely by
+Note that this interpretation of the option is defined entirely by
 the Tcl scripts that implement traversal:  the widget implementations
 ignore the option entirely, so you can change its meaning if you
 redefine the keyboard traversal scripts.
@@ -316,7 +316,8 @@ Specifies the integer index of a character to underline in the widget.
 This option is used by the default bindings to implement keyboard
 traversal for menu buttons and menu entries.
 0 corresponds to the first character of the text displayed in the
-widget, 1 to the next character, and so on.
+widget, 1 to the next character, and so on. \fBend\fR corresponds to the
+last character, \fBend\fR-1 to the before last character, and so on.
 .OP \-wraplength wrapLength WrapLength
 For widgets that can perform word-wrapping, this option specifies
 the maximum line length.
@@ -324,7 +325,7 @@ Lines that would exceed this length are wrapped onto the next line,
 so that no line is longer than the specified length.
 The value may be specified in any of the standard forms for
 screen distances.
-If this value is less than or equal to 0 then no wrapping is done:  lines
+If this value is negative or zero then no wrapping is done:  lines
 will break only at newline characters in the text.
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 Specifies the prefix for a command used to communicate with horizontal

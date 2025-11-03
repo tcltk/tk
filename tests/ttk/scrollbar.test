@@ -1,10 +1,9 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::scrollbar widget tests
+#
 
-testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
-
+# NOTE
+#
 # Before 2019 the code in library/ttk/scrollbar.tcl would replace the
 # constructor of ttk::scrollbar with the constructor of tk::scrollbar
 # unless the -class or -style options were specified..
@@ -13,9 +12,30 @@ testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
 # test was changed to expect the class to be TScrollbar instead of
 # Scrollbar.
 
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
+
 test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
  -constraints {
-     coreScrollbar
+     aqua
 } -body {
     ttk::scrollbar .sb -command "yadda"
     list [winfo class .sb] [.sb cget -command]
@@ -25,7 +45,7 @@ test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
 
 test scrollbar-swapout-2 "... regardless of whether -style ..." \
 -constraints {
-    coreScrollbar
+    aqua
 } -body {
     ttk::style layout Vertical.Custom.TScrollbar \
 	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
@@ -36,7 +56,7 @@ test scrollbar-swapout-2 "... regardless of whether -style ..." \
 }
 
 test scrollbar-swapout-3 "... or -class is specified." -constraints {
-    coreScrollbar
+    aqua
 } -body {
     ttk::scrollbar .sb -command "yadda" -class Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command]
@@ -79,6 +99,7 @@ test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
     pack [ttk::scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -94,6 +115,7 @@ test scrollbar-10.2.1 {<Shift-MouseWheel> event on horizontal scrollbar} -setup 
     pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <Shift-MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -108,6 +130,7 @@ test scrollbar-10.2.2 {<MouseWheel> event on horizontal scrollbar} -setup {
     pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -119,7 +142,7 @@ test scrollbar-11.1 "style command" -body {
     ttk::scrollbar .wv  ; # default is  -orient vertical
     ttk::scrollbar .wh -orient horizontal
     list [.wv cget -style] [.wv style] [winfo class .wv] \
-         [.wh cget -style] [.wh style] [winfo class .wh]
+	    [.wh cget -style] [.wh style] [winfo class .wh]
 } -cleanup {
     destroy .wv .wh
 } -result {{} Vertical.TScrollbar TScrollbar {} Horizontal.TScrollbar TScrollbar}
@@ -131,5 +154,8 @@ test scrollbar-11.2 "style command" -body {
     destroy .w
 } -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
 
-tcltest::cleanupTests
+#
+# TESTFILE CLEANUP
+#
 
+tcltest::cleanupTests

@@ -13,11 +13,7 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
-#else
-#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
-#endif
+#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
 
 #endif
 
@@ -58,7 +54,8 @@ TTKAPI void		Ttk_RegisterCleanup(Tcl_Interp *interp,
 				void *deleteData,
 				Ttk_CleanupProc *cleanupProc);
 /* 5 */
-TTKAPI int		Ttk_RegisterElementSpec(Ttk_Theme theme,
+TTK_DEPRECATED("Use Ttk_RegisterElement")
+int			Ttk_RegisterElementSpec(Ttk_Theme theme,
 				const char *elementName,
 				const Ttk_ElementSpec *elementSpec,
 				void *clientData);
@@ -143,9 +140,8 @@ TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
 /* Slot 38 is reserved */
 /* Slot 39 is reserved */
 /* 40 */
-TTK_DEPRECATED("")
-int			Ttk_GetOrientFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *orient);
+TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
+				Tcl_Obj *objPtr, Ttk_Orient *orient);
 
 typedef struct TtkStubs {
     int magic;
@@ -158,7 +154,7 @@ typedef struct TtkStubs {
     Ttk_Theme (*ttk_GetCurrentTheme) (Tcl_Interp *interp); /* 2 */
     Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp *interp, const char *name, Ttk_Theme parent); /* 3 */
     void (*ttk_RegisterCleanup) (Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc); /* 4 */
-    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
+    TCL_DEPRECATED_API("Use Ttk_RegisterElement") int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
     Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp *interp, Ttk_Theme theme, const char *elementName, const Ttk_ElementSpec *elementSpec, void *clientData); /* 6 */
     int (*ttk_RegisterElementFactory) (Tcl_Interp *interp, const char *name, Ttk_ElementFactory factoryProc, void *clientData); /* 7 */
     void (*ttk_RegisterLayout) (Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec); /* 8 */
@@ -193,7 +189,7 @@ typedef struct TtkStubs {
     void (*reserved37)(void);
     void (*reserved38)(void);
     void (*reserved39)(void);
-    TCL_DEPRECATED_API("") int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
+    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;
@@ -284,5 +280,9 @@ extern const TtkStubs *ttkStubsPtr;
 #endif /* defined(USE_TTK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#ifdef TK_NO_DEPRECATED
+#   undef Ttk_RegisterElementSpec
+#endif
 
 #endif /* _TTKDECLS */

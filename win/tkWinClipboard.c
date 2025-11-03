@@ -47,7 +47,7 @@ TkSelGetSelection(
 				 * returned. */
     Tk_GetSelProc *proc,	/* Procedure to call to process the selection,
 				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     char *data, *destPtr;
     Tcl_DString ds;
@@ -60,10 +60,10 @@ TkSelGetSelection(
 	goto error;
     }
     if (!OpenClipboard(NULL)) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "clipboard cannot be opened, another application grabbed it"));
-        Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"clipboard cannot be opened, another application grabbed it"));
+	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", (char *)NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -100,7 +100,7 @@ TkSelGetSelection(
 	     */
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, "cp######", -1);
+	    Tcl_DStringAppend(&ds, "cp######", TCL_INDEX_NONE);
 	    data = (char *)GlobalLock(handle);
 
 	    /*
@@ -109,8 +109,8 @@ TkSelGetSelection(
 	     */
 
 	    locale = LANGIDFROMLCID(*((int*)data));
-	    GetLocaleInfoA(locale, LOCALE_IDEFAULTANSICODEPAGE,
-		    Tcl_DStringValue(&ds)+2, Tcl_DStringLength(&ds)-2);
+	    GetLocaleInfoA((ULONG)locale, LOCALE_IDEFAULTANSICODEPAGE,
+		    Tcl_DStringValue(&ds)+2, (int)Tcl_DStringLength(&ds)-2);
 	    GlobalUnlock(handle);
 
 	    encoding = Tcl_GetEncoding(NULL, Tcl_DStringValue(&ds));
@@ -132,7 +132,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = (char *)GlobalLock(handle);
-	(void)Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_ExternalToUtfDString(encoding, data, TCL_INDEX_NONE, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
@@ -204,7 +204,7 @@ TkSelGetSelection(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "%s selection doesn't exist or form \"%s\" not defined",
 	    Tk_GetAtomName(tkwin, selection), Tk_GetAtomName(tkwin, target)));
-    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -227,15 +227,13 @@ TkSelGetSelection(
 
 int
 XSetSelectionOwner(
-    Display *display,
+    TCL_UNUSED(Display *),
     Atom selection,
     Window owner,
-    Time time)
+    TCL_UNUSED(Time))
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
-    (void)display;
-    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -277,15 +275,14 @@ XSetSelectionOwner(
 void
 TkWinClipboardRender(
     TkDisplay *dispPtr,
-    UINT format)
+    TCL_UNUSED(UINT))
 {
     TkClipboardTarget *targetPtr;
     TkClipboardBuffer *cbPtr;
     HGLOBAL handle;
     char *buffer, *p, *rawText, *endPtr;
-    int length;
+    size_t length;
     Tcl_DString ds;
-    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -333,17 +330,17 @@ TkWinClipboardRender(
     *buffer = '\0';
 
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToWCharDString(rawText, -1, &ds);
+	Tcl_UtfToWCharDString(rawText, TCL_INDEX_NONE, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 2);
+		Tcl_DStringLength(&ds) + 2);
 	if (!handle) {
 	    Tcl_DStringFree(&ds);
 	    return;
 	}
 	buffer = (char *)GlobalLock(handle);
 	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 2);
+		Tcl_DStringLength(&ds) + 2);
 	GlobalUnlock(handle);
 	Tcl_DStringFree(&ds);
 	SetClipboardData(CF_UNICODETEXT, handle);
@@ -369,12 +366,13 @@ TkWinClipboardRender(
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
-    TkClipboardTarget *targetPtr)
+    clipboardOption opt)
 {
-    HWND hwnd = TkWinGetHWND(winPtr->window);
-    (void)targetPtr;
+    if (opt == CLIPBOARD_APPEND || opt == CLIPBOARD_CLEAR) {
+	HWND hwnd = TkWinGetHWND(winPtr->window);
 
-    UpdateClipboard(hwnd);
+	UpdateClipboard(hwnd);
+    }
 }
 
 /*
@@ -453,9 +451,8 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
-    (void)eventPtr;
 }
 
 /*

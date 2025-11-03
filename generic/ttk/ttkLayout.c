@@ -9,8 +9,8 @@
 #include "tkInt.h"
 #include "ttkThemeInt.h"
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Ttk_Box and Ttk_Padding utilities:
@@ -31,6 +31,13 @@ Ttk_BoxContains(Ttk_Box box, int x, int y)
 	&& box.y <= y && y < box.y + box.height;
 }
 
+int
+TtkBoxEqual(Ttk_Box box1, Ttk_Box box2)
+{
+    return box1.x == box2.x && box1.y == box2.y
+	&& box1.width == box2.width && box1.height == box2.height;
+}
+
 Tcl_Obj *
 Ttk_NewBoxObj(Ttk_Box box)
 {
@@ -46,14 +53,14 @@ Ttk_NewBoxObj(Ttk_Box box)
 
 /*
  * packTop, packBottom, packLeft, packRight --
- * 	Carve out a parcel of the specified height (resp width)
- * 	from the specified cavity.
+ *	Carve out a parcel of the specified height (resp width)
+ *	from the specified cavity.
  *
  * Returns:
- * 	The new parcel.
+ *	The new parcel.
  *
  * Side effects:
- * 	Adjust the cavity.
+ *	Adjust the cavity.
  */
 
 static Ttk_Box packTop(Ttk_Box *cavity, int height)
@@ -95,14 +102,14 @@ static Ttk_Box packRight(Ttk_Box *cavity, int width)
 
 /*
  * Ttk_PackBox --
- * 	Carve out a parcel of the specified size on the specified side
- * 	in the specified cavity.
+ *	Carve out a parcel of the specified size on the specified side
+ *	in the specified cavity.
  *
  * Returns:
- * 	The new parcel.
+ *	The new parcel.
  *
  * Side effects:
- * 	Adjust the cavity.
+ *	Adjust the cavity.
  */
 
 Ttk_Box Ttk_PackBox(Ttk_Box *cavity, int width, int height, Ttk_Side side)
@@ -118,7 +125,7 @@ Ttk_Box Ttk_PackBox(Ttk_Box *cavity, int width, int height, Ttk_Side side)
 
 /*
  * Ttk_PadBox --
- * 	Shrink a box by the specified padding amount.
+ *	Shrink a box by the specified padding amount.
  */
 Ttk_Box Ttk_PadBox(Ttk_Box b, Ttk_Padding p)
 {
@@ -133,7 +140,7 @@ Ttk_Box Ttk_PadBox(Ttk_Box b, Ttk_Padding p)
 
 /*
  * Ttk_ExpandBox --
- * 	Grow a box by the specified padding amount.
+ *	Grow a box by the specified padding amount.
  */
 Ttk_Box Ttk_ExpandBox(Ttk_Box b, Ttk_Padding p)
 {
@@ -146,8 +153,8 @@ Ttk_Box Ttk_ExpandBox(Ttk_Box b, Ttk_Padding p)
 
 /*
  * Ttk_StickBox --
- * 	Place a box of size w * h in the specified parcel,
- * 	according to the specified sticky bits.
+ *	Place a box of size w * h in the specified parcel,
+ *	according to the specified sticky bits.
  */
 Ttk_Box Ttk_StickBox(Ttk_Box parcel, int width, int height, unsigned sticky)
 {
@@ -206,7 +213,7 @@ Ttk_Box Ttk_StickBox(Ttk_Box parcel, int width, int height, unsigned sticky)
 
 /*
  * AnchorToSticky --
- * 	Convert a Tk_Anchor enum to a TTK_STICKY bitmask.
+ *	Convert a Tk_Anchor enum to a TTK_STICKY bitmask.
  */
 static Ttk_Sticky AnchorToSticky(Tk_Anchor anchor)
 {
@@ -226,8 +233,8 @@ static Ttk_Sticky AnchorToSticky(Tk_Anchor anchor)
 
 /*
  * Ttk_AnchorBox --
- * 	Place a box of size w * h in the specified parcel,
- * 	according to the specified anchor.
+ *	Place a box of size w * h in the specified parcel,
+ *	according to the specified anchor.
  */
 Ttk_Box Ttk_AnchorBox(Ttk_Box parcel, int width, int height, Tk_Anchor anchor)
 {
@@ -236,7 +243,7 @@ Ttk_Box Ttk_AnchorBox(Ttk_Box parcel, int width, int height, Tk_Anchor anchor)
 
 /*
  * Ttk_PlaceBox --
- * 	Combine Ttk_PackBox() and Ttk_StickBox().
+ *	Combine Ttk_PackBox() and Ttk_StickBox().
  */
 Ttk_Box Ttk_PlaceBox(
     Ttk_Box *cavity, int width, int height, Ttk_Side side, unsigned sticky)
@@ -247,8 +254,9 @@ Ttk_Box Ttk_PlaceBox(
 
 /*
  * Ttk_PositionBox --
- * 	Pack and stick a box according to PositionSpec flags.
+ *	Pack and stick a box according to PositionSpec flags.
  */
+
 MODULE_SCOPE Ttk_Box
 Ttk_PositionBox(Ttk_Box *cavity, int width, int height, Ttk_PositionSpec flags)
 {
@@ -266,9 +274,9 @@ Ttk_PositionBox(Ttk_Box *cavity, int width, int height, Ttk_PositionSpec flags)
 
 /*
  * TTKInitPadding --
- * 	Common factor of Ttk_GetPaddingFromObj and Ttk_GetBorderFromObj.
- * 	Initializes Ttk_Padding record, supplying default values
- * 	for missing entries.
+ *	Common factor of Ttk_GetPaddingFromObj and Ttk_GetBorderFromObj.
+ *	Initializes Ttk_Padding record, supplying default values
+ *	for missing entries.
  */
 static void TTKInitPadding(int padc, int pixels[4], Ttk_Padding *pad)
 {
@@ -289,24 +297,24 @@ static void TTKInitPadding(int padc, int pixels[4], Ttk_Padding *pad)
 /*
  * Ttk_GetPaddingFromObj --
  *
- * 	Extract a padding specification from a Tcl_Obj * scaled
- * 	to work with a particular Tk_Window.
+ *	Extract a padding specification from a Tcl_Obj * scaled
+ *	to work with a particular Tk_Window.
  *
- * 	The string representation of a Ttk_Padding is a list
- * 	of one to four Tk_Pixel specifications, corresponding
- * 	to the left, top, right, and bottom padding.
+ *	The string representation of a Ttk_Padding is a list
+ *	of one to four Tk_Pixel specifications, corresponding
+ *	to the left, top, right, and bottom padding.
  *
- * 	If the 'bottom' (fourth) element is missing, it defaults to 'top'.
- * 	If the 'right' (third) element is missing, it defaults to 'left'.
- * 	If the 'top' (second) element is missing, it defaults to 'left'.
+ *	If the 'bottom' (fourth) element is missing, it defaults to 'top'.
+ *	If the 'right' (third) element is missing, it defaults to 'left'.
+ *	If the 'top' (second) element is missing, it defaults to 'left'.
  *
- * 	The internal representation is a Tcl_ListObj containing
- * 	one to four Tk_PixelObj objects.
+ *	The internal representation is a Tcl_ListObj containing
+ *	one to four Tk_PixelObj objects.
  *
  * Returns:
- * 	TCL_OK or TCL_ERROR.  In the latter case an error message is
- * 	left in 'interp' and '*paddingPtr' is set to all-zeros.
- * 	Otherwise, *paddingPtr is filled in with the padding specification.
+ *	TCL_OK or TCL_ERROR.  In the latter case an error message is
+ *	left in 'interp' and '*paddingPtr' is set to all-zeros.
+ *	Otherwise, *paddingPtr is filled in with the padding specification.
  *
  */
 int Ttk_GetPaddingFromObj(
@@ -316,7 +324,8 @@ int Ttk_GetPaddingFromObj(
     Ttk_Padding *pad)
 {
     Tcl_Obj **padv;
-    int i, padc, pixels[4];
+    Tcl_Size i, padc;
+    int pixels[4];
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, objPtr, &padc, &padv)) {
 	goto error;
@@ -326,7 +335,7 @@ int Ttk_GetPaddingFromObj(
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Wrong #elements in padding spec", -1));
-	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "PADDING", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "PADDING", (char *)NULL);
 	}
 	goto error;
     }
@@ -346,15 +355,16 @@ error:
 }
 
 /* Ttk_GetBorderFromObj --
- * 	Same as Ttk_GetPaddingFromObj, except padding is a list of integers
- * 	instead of Tk_Pixel specifications.  Does not require a Tk_Window
- * 	parameter.
+ *	Same as Ttk_GetPaddingFromObj, except padding is a list of integers
+ *	instead of Tk_Pixel specifications.  Does not require a Tk_Window
+ *	parameter.
  *
  */
 int Ttk_GetBorderFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad)
 {
     Tcl_Obj **padv;
-    int i, padc, pixels[4];
+    Tcl_Size i, padc;
+    int pixels[4];
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, objPtr, &padc, &padv)) {
 	goto error;
@@ -364,7 +374,7 @@ int Ttk_GetBorderFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad)
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Wrong #elements in padding spec", -1));
-	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "BORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "BORDER", (char *)NULL);
 	}
 	goto error;
     }
@@ -399,8 +409,8 @@ Ttk_Padding Ttk_MakePadding(short left, short top, short right, short bottom)
 
 /*
  * Ttk_UniformPadding --
- * 	Returns a uniform Ttk_Padding structure, with the same
- * 	border width on all sides.
+ *	Returns a uniform Ttk_Padding structure, with the same
+ *	border width on all sides.
  */
 Ttk_Padding Ttk_UniformPadding(short borderWidth)
 {
@@ -423,9 +433,9 @@ Ttk_Padding Ttk_AddPadding(Ttk_Padding p1, Ttk_Padding p2)
 }
 
 /* Ttk_RelievePadding --
- * 	Add an extra n pixels of padding according to specified relief.
- * 	This may be used in element geometry procedures to simulate
- * 	a "pressed-in" look for pushbuttons.
+ *	Add an extra n pixels of padding according to specified relief.
+ *	This may be used in element geometry procedures to simulate
+ *	a "pressed-in" look for pushbuttons.
  */
 Ttk_Padding Ttk_RelievePadding(Ttk_Padding padding, int relief, int n)
 {
@@ -454,8 +464,8 @@ Ttk_Padding Ttk_RelievePadding(Ttk_Padding padding, int relief, int n)
 
 /*
  * Ttk_GetStickyFromObj --
- * 	Returns a stickiness specification from the specified Tcl_Obj*,
- * 	consisting of any combination of n, s, e, and w.
+ *	Returns a stickiness specification from the specified Tcl_Obj*,
+ *	consisting of any combination of n, s, e, and w.
  *
  * Returns: TCL_OK if objPtr holds a valid stickiness specification,
  *	otherwise TCL_ERROR.  interp is used for error reporting if non-NULL.
@@ -475,11 +485,11 @@ int Ttk_GetStickyFromObj(
 	    case 'n': case 'N': sticky |= TTK_STICK_N; break;
 	    case 's': case 'S': sticky |= TTK_STICK_S; break;
 	    default:
-	    	if (interp) {
+		if (interp) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Bad -sticky specification %s",
 			Tcl_GetString(objPtr)));
-		    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STICKY", NULL);
+		    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STICKY", (char *)NULL);
 		}
 		return TCL_ERROR;
 	}
@@ -490,7 +500,7 @@ int Ttk_GetStickyFromObj(
 }
 
 /* Ttk_NewStickyObj --
- * 	Construct a new Tcl_Obj * containing a stickiness specification.
+ *	Construct a new Tcl_Obj * containing a stickiness specification.
  */
 Tcl_Obj *Ttk_NewStickyObj(Ttk_Sticky sticky)
 {
@@ -514,9 +524,9 @@ typedef struct Ttk_LayoutNode_ Ttk_LayoutNode;
 struct Ttk_LayoutNode_
 {
     unsigned		flags;		/* Packing and sticky flags */
-    Ttk_ElementClass 	*eclass;	/* Class record */
-    Ttk_State 	 	state;		/* Current state */
-    Ttk_Box 		parcel;		/* allocated parcel */
+    Ttk_ElementClass	*eclass;	/* Class record */
+    Ttk_State		state;		/* Current state */
+    Ttk_Box		parcel;		/* allocated parcel */
     Ttk_LayoutNode	*next, *child;
 };
 
@@ -598,7 +608,7 @@ Ttk_InstantiateLayout(Ttk_Theme theme, Ttk_TemplateNode *op)
  *	Convert a Tcl list into a layout template.
  *
  * Syntax:
- * 	layoutSpec ::= { elementName ?-option value ...? }+
+ *	layoutSpec ::= { elementName ?-option value ...? }+
  */
 
 /* NB: This must match bit definitions TTK_PACK_LEFT etc. */
@@ -611,12 +621,13 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
     static const char *const optStrings[] = {
 	"-side", "-sticky", "-expand", "-border", "-unit", "-children", 0 };
 
-    int i = 0, objc;
+    Tcl_Size i = 0, objc;
     Tcl_Obj **objv;
     Ttk_TemplateNode *head = 0, *tail = 0;
 
-    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
+    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	return 0;
+    }
 
     while (i < objc) {
 	const char *elementName = Tcl_GetString(objv[i]);
@@ -631,8 +642,9 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    const char *optName = Tcl_GetString(objv[i]);
 	    int option, value;
 
-	    if (optName[0] != '-')
+	    if (optName[0] != '-') {
 		break;
+	    }
 
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
 		    sizeof(char *), "option", 0, &option)
@@ -645,41 +657,47 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Missing value for option %s",
 			Tcl_GetString(objv[i-1])));
-		Tcl_SetErrorCode(interp, "TTK", "VALUE", "LAYOUT", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "LAYOUT", (char *)NULL);
 		goto error;
 	    }
 
 	    switch (option) {
 		case OP_SIDE:	/* <<NOTE-PACKSIDE>> */
 		    if (Tcl_GetIndexFromObjStruct(interp, objv[i], packSideStrings,
-				sizeof(char *), "side", 0, &value) != TCL_OK)
-		    {
+				sizeof(char *), "side", 0, &value) != TCL_OK) {
 			goto error;
 		    }
 		    flags |= (TTK_PACK_LEFT << value);
 
 		    break;
 		case OP_STICKY:
-		    if (Ttk_GetStickyFromObj(interp,objv[i],&sticky) != TCL_OK)
+		    if (Ttk_GetStickyFromObj(interp,objv[i],&sticky) != TCL_OK) {
 			goto error;
+		    }
 		    break;
 		case OP_EXPAND:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_EXPAND;
+		    }
 		    break;
 		case OP_BORDER:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_BORDER;
+		    }
 		    break;
 		case OP_UNIT:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_UNIT;
+		    }
 		    break;
 		case OP_CHILDREN:
 		    childSpec = objv[i];
@@ -700,8 +718,8 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	if (childSpec) {
 	    tail->child = Ttk_ParseLayoutTemplate(interp, childSpec);
 	    if (!tail->child) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
-                Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -715,8 +733,8 @@ error:
 }
 
 /* Ttk_BuildLayoutTemplate --
- * 	Build a layout template tree from a statically defined
- * 	Ttk_LayoutSpec array.
+ *	Build a layout template tree from a statically defined
+ *	Ttk_LayoutSpec array.
  */
 Ttk_LayoutTemplate Ttk_BuildLayoutTemplate(Ttk_LayoutSpec spec)
 {
@@ -810,7 +828,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 
 	/* @@@ Check again: are these necessary? Can't see any effect! */
 	if (flags & TTK_BORDER)	{ APPENDSTR("-border"); APPENDSTR("1"); }
-	if (flags & TTK_UNIT) 	{ APPENDSTR("-unit"); APPENDSTR("1"); }
+	if (flags & TTK_UNIT)	{ APPENDSTR("-unit"); APPENDSTR("1"); }
 
 	if (node->child) {
 	    APPENDSTR("-children");
@@ -830,8 +848,8 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
  */
 struct Ttk_Layout_
 {
-    Ttk_Style	 	style;
-    void 		*recordPtr;
+    Ttk_Style		style;
+    void		*recordPtr;
     Tk_OptionTable	optionTable;
     Tk_Window		tkwin;
     Ttk_LayoutNode	*root;
@@ -880,7 +898,7 @@ Ttk_Layout Ttk_CreateLayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, (char *)NULL);
 	return 0;
     }
 
@@ -891,9 +909,9 @@ Ttk_Layout Ttk_CreateLayout(
 }
 
 /* Ttk_CreateSublayout --
- * 	Creates a new sublayout.
+ *	Creates a new sublayout.
  *
- * 	Sublayouts are used to draw subparts of a compound widget.
+ *	Sublayouts are used to draw subparts of a compound widget.
  *	They use the same Tk_Window, but a different option table
  *	and data record.
  */
@@ -911,8 +929,8 @@ Ttk_CreateSublayout(
     Ttk_LayoutTemplate layoutTemplate;
 
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, Ttk_StyleName(parentLayout->style), -1);
-    Tcl_DStringAppend(&buf, baseName, -1);
+    Tcl_DStringAppend(&buf, Ttk_StyleName(parentLayout->style), TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, baseName, TCL_INDEX_NONE);
     styleName = Tcl_DStringValue(&buf);
 
     style = Ttk_GetStyle(themePtr, styleName);
@@ -921,7 +939,7 @@ Ttk_CreateSublayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, (char *)NULL);
 	return 0;
     }
 
@@ -933,7 +951,7 @@ Ttk_CreateSublayout(
 }
 
 /* Ttk_RebindSublayout --
- * 	Bind sublayout to new data source.
+ *	Bind sublayout to new data source.
  */
 void Ttk_RebindSublayout(Ttk_Layout layout, void *recordPtr)
 {
@@ -942,7 +960,7 @@ void Ttk_RebindSublayout(Ttk_Layout layout, void *recordPtr)
 
 /*
  * Ttk_QueryOption --
- * 	Look up an option from a layout's associated option.
+ *	Look up an option from a layout's associated option.
  */
 Tcl_Obj *Ttk_QueryOption(
     Ttk_Layout layout, const char *optionName, Ttk_State state)
@@ -953,7 +971,7 @@ Tcl_Obj *Ttk_QueryOption(
 
 /*
  * Ttk_LayoutStyle --
- * 	Extract Ttk_Style from Ttk_Layout.
+ *	Extract Ttk_Style from Ttk_Layout.
  */
 Ttk_Style Ttk_LayoutStyle(Ttk_Layout layout)
 {
@@ -1017,7 +1035,7 @@ static void Ttk_NodeListSize(
 
 /*
  * Ttk_LayoutNodeInternalPadding --
- * 	Returns the internal padding of a layout node.
+ *	Returns the internal padding of a layout node.
  */
 Ttk_Padding Ttk_LayoutNodeInternalPadding(
     Ttk_Layout layout, Ttk_LayoutNode *node)
@@ -1032,8 +1050,8 @@ Ttk_Padding Ttk_LayoutNodeInternalPadding(
 
 /*
  * Ttk_LayoutNodeInternalParcel --
- * 	Returns the inner area of a specified layout node,
- * 	based on current parcel and element's internal padding.
+ *	Returns the inner area of a specified layout node,
+ *	based on current parcel and element's internal padding.
  */
 Ttk_Box Ttk_LayoutNodeInternalParcel(Ttk_Layout layout, Ttk_LayoutNode *node)
 {
@@ -1042,7 +1060,7 @@ Ttk_Box Ttk_LayoutNodeInternalParcel(Ttk_Layout layout, Ttk_LayoutNode *node)
 }
 
 /* Ttk_LayoutSize --
- * 	Compute requested size of a layout.
+ *	Compute requested size of a layout.
  */
 void Ttk_LayoutSize(
     Ttk_Layout layout, Ttk_State state, int *widthPtr, int *heightPtr)
@@ -1101,7 +1119,7 @@ void Ttk_PlaceLayout(Ttk_Layout layout, Ttk_State state, Ttk_Box b)
 
 /*
  * Ttk_DrawLayout --
- * 	Draw a layout tree.
+ *	Draw a layout tree.
  */
 static void Ttk_DrawNodeList(
     Ttk_Layout layout, Ttk_State state, Ttk_LayoutNode *node, Drawable d)
@@ -1111,19 +1129,22 @@ static void Ttk_DrawNodeList(
 	int border = node->flags & TTK_BORDER;
 	int substate = state;
 
-	if (node->flags & TTK_UNIT)
+	if (node->flags & TTK_UNIT) {
 	    substate |= node->state;
+	}
 
-	if (node->child && border)
+	if (node->child && border) {
 	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	}
 
 	Ttk_DrawElement(
 	    node->eclass,
 	    layout->style,layout->recordPtr,layout->optionTable,layout->tkwin,
 	    d, node->parcel, state | node->state);
 
-	if (node->child && !border)
+	if (node->child && !border) {
 	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	}
     }
 }
 
@@ -1138,7 +1159,7 @@ void Ttk_DrawLayout(Ttk_Layout layout, Ttk_State state, Drawable d)
 
 /*
  * Ttk_IdentifyElement --
- * 	Find the element at the specified x,y coordinate.
+ *	Find the element at the specified x,y coordinate.
  */
 static Ttk_Element IdentifyNode(Ttk_Element node, int x, int y)
 {
@@ -1165,8 +1186,8 @@ Ttk_Element Ttk_IdentifyElement(Ttk_Layout layout, int x, int y)
 
 /*
  * tail --
- * 	Return the last component of an element name, e.g.,
- * 	"Scrollbar.thumb" => "thumb"
+ *	Return the last component of an element name, e.g.,
+ *	"Scrollbar.thumb" => "thumb"
  */
 static const char *tail(const char *elementName)
 {
@@ -1178,19 +1199,21 @@ static const char *tail(const char *elementName)
 
 /*
  * Ttk_FindElement --
- * 	Look up an element by name
+ *	Look up an element by name
  */
 static Ttk_Element
 FindNode(Ttk_Element node, const char *nodeName)
 {
     for (; node ; node = node->next) {
-	if (!strcmp(tail(Ttk_ElementName(node)), nodeName))
+	if (!strcmp(tail(Ttk_ElementName(node)), nodeName)) {
 	    return node;
+	}
 
 	if (node->child) {
 	    Ttk_Element childNode = FindNode(node->child, nodeName);
-	    if (childNode)
+	    if (childNode) {
 		return childNode;
+	    }
 	}
     }
     return 0;
@@ -1203,8 +1226,8 @@ Ttk_Element Ttk_FindElement(Ttk_Layout layout, const char *nodeName)
 
 /*
  * Ttk_ClientRegion --
- * 	Find the internal parcel of a named element within a given layout.
- * 	If the element is not present, use the entire window.
+ *	Find the internal parcel of a named element within a given layout.
+ *	If the element is not present, use the entire window.
  */
 Ttk_Box Ttk_ClientRegion(Ttk_Layout layout, const char *elementName)
 {
@@ -1217,7 +1240,7 @@ Ttk_Box Ttk_ClientRegion(Ttk_Layout layout, const char *elementName)
 
 /*
  * Ttk_ElementName --
- * 	Return the name (class name) of the element.
+ *	Return the name (class name) of the element.
  */
 const char *Ttk_ElementName(Ttk_Element node)
 {
@@ -1226,7 +1249,7 @@ const char *Ttk_ElementName(Ttk_Element node)
 
 /*
  * Ttk_ElementParcel --
- * 	Return the element's current parcel.
+ *	Return the element's current parcel.
  */
 Ttk_Box Ttk_ElementParcel(Ttk_Element node)
 {
@@ -1235,7 +1258,7 @@ Ttk_Box Ttk_ElementParcel(Ttk_Element node)
 
 /*
  * Ttk_PlaceElement --
- * 	Explicitly specify an element's parcel.
+ *	Explicitly specify an element's parcel.
  */
 void Ttk_PlaceElement(Ttk_Layout layout, Ttk_Element node, Ttk_Box b)
 {
@@ -1248,7 +1271,7 @@ void Ttk_PlaceElement(Ttk_Layout layout, Ttk_Element node, Ttk_Box b)
 
 /*
  * AnchorToPosition --
- * 	Convert a Tk_Anchor enum to a position bitmask.
+ *	Convert a Tk_Anchor enum to a position bitmask.
  */
 static Ttk_PositionSpec AnchorToPosition(Tk_Anchor anchor)
 {
@@ -1270,7 +1293,7 @@ static Ttk_PositionSpec AnchorToPosition(Tk_Anchor anchor)
 
 /*
  * Ttk_AnchorElement --
- * 	Explicitly specify an element's anchoring.
+ *	Explicitly specify an element's anchoring.
  */
 void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor)
 {

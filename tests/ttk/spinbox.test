@@ -2,10 +2,26 @@
 # ttk::spinbox widget tests
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test spinbox-1.0 "Spinbox tests -- setup" -body {
     ttk::spinbox .sb
@@ -213,12 +229,12 @@ test spinbox-3.0 "textarea should expand to fill widget" -setup {
     update idletasks
     set timer [after 500 {set ::spinbox_test timedout}]
     bind . <Map> {
-        after idle {
-            wm geometry . "210x80"
+	after idle {
+	    wm geometry . "210x80"
 	    update idletasks
-            set ::spinbox_test [.sb identify element 25 5]
-        }
-        bind . <Map> {}
+	    set ::spinbox_test [.sb identify element 25 5]
+	}
+	bind . <Map> {}
     }
     grid .sb -sticky ew
     vwait ::spinbox_test
@@ -234,12 +250,12 @@ test spinbox-4.0 "Increment with duplicates in -values, wrap" -setup {
 } -body {
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {
@@ -254,13 +270,13 @@ test spinbox-4.1 "Increment with duplicates in -values, wrap, initial value set"
     .sb set three
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     .sb set two    ; # the first "two" in the -values list becomes the current value
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {
@@ -274,18 +290,39 @@ test spinbox-4.2 "Increment with duplicates in -values, no wrap" -setup {
 } -body {
     set ::spinbox_test [.sb get]
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Increment>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Increment>>
+	lappend ::spinbox_test [.sb get]
     }
     for {set i 0} {$i < $max} {incr i} {
-        event generate .sb <<Decrement>>
-        lappend ::spinbox_test [.sb get]
+	event generate .sb <<Decrement>>
+	lappend ::spinbox_test [.sb get]
     }
     set ::spinbox_test
 } -cleanup {
     destroy .sb
     unset -nocomplain ::spinbox_test max
 } -result {one two three 4 5 two six six six two 5 4 three two one one one one}
+
+test spinbox-11.2 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
+    destroy .s
+    pack [ttk::spinbox .s]
+    update
+    set res {}
+} -body {
+    .s insert end "A sample text"
+    .s icursor end
+    event generate .s <<PrevWord>>  ; # shall move insert to index 9
+    .s delete insert end
+    lappend res [.s get]
+    .s delete 0 end
+    .s insert end "A sample text"
+    .s icursor 2
+    event generate .s <<NextWord>>  ; # shall move insert to index 9
+    .s delete 0 insert
+    lappend res [.s get]
+} -cleanup {
+    destroy .s
+} -result {{A sample } text}
 
 
 # nostomp: NB intentional difference between ttk::spinbox and tk::spinbox;
@@ -375,6 +412,10 @@ test spinbox-5.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests
 

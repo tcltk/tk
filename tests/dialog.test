@@ -1,10 +1,28 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
-# It is organized in the standard fashion for Tcl tests.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import dialog
+
+#
+# TESTS
+#
 
 test dialog-1.1 {tk_dialog command} -body {
     tk_dialog
@@ -18,19 +36,14 @@ test dialog-1.3 {tk_dialog command} -body {
     destroy .d
 } -returnCodes error -result {bitmap "fooBitmap" not defined}
 
-
-test dialog-2.1 {tk_dialog operation} -setup {
-    proc PressButton {btn} {
-        if {![winfo ismapped $btn]} {
-            update
-        }
-        event generate $btn <Enter>
-        event generate $btn <Button-1> -x 5 -y 5
-        event generate $btn <ButtonRelease-1> -x 5 -y 5
-    }
-} -body {
+test dialog-2.1 {tk_dialog operation} -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]
-    after 100 PressButton .d.button0
+    after 100 {
+	if {![winfo ismapped .d.button0]} {
+	    update
+	}
+	PressButton .d.button0
+    }
     set res [tk_dialog .d foo foo info 0 click]
     after cancel $x
     return $res
@@ -39,9 +52,9 @@ test dialog-2.1 {tk_dialog operation} -setup {
 } -result 0
 test dialog-2.2 {tk_dialog operation} -setup {
     proc HitReturn {w} {
-        event generate $w <Enter>
-        focus -force $w
-        event generate $w <Key> -keysym Return
+	event generate $w <Enter>
+	focus -force $w
+	event generate $w <Key> -keysym Return
     }
 } -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]
@@ -62,6 +75,9 @@ test dialog-2.3 {tk_dialog operation} -body {
     destroy .b
 } -result -1
 
-cleanupTests
-return
+#
+# TESTFILE CLEANUP
+#
 
+testutils forget dialog
+cleanupTests

@@ -13,6 +13,10 @@
 #include "tkPort.h"
 #include "tkText.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Macro that determines the size of an embedded image segment:
  */
@@ -29,11 +33,11 @@ static TkTextSegment *	EmbImageCleanupProc(TkTextSegment *segPtr,
 static void		EmbImageCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static void		EmbImageBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr,
-			    TkTextSegment *eiPtr, int objc,
+			    TkTextSegment *eiPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		EmbImageDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
@@ -43,10 +47,10 @@ static void		EmbImageDisplayProc(TkText *textPtr,
 			    Drawable dst, int screenY);
 static int		EmbImageLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    TkSizeT offset, int maxX, TkSizeT maxChars,
+			    Tcl_Size offset, int maxX, Tcl_Size maxChars,
 			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
-static void		EmbImageProc(ClientData clientData, int x, int y,
+static void		EmbImageProc(void *clientData, int x, int y,
 			    int width, int height, int imageWidth,
 			    int imageHeight);
 
@@ -73,10 +77,6 @@ static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
-typedef enum {
-    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
-} alignMode;
-
 /*
  * Information used for parsing image configuration options:
  */
@@ -84,16 +84,16 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
-	0, alignStrings, 0},
+	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padXObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padYObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
+	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageName),
+	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -119,7 +119,7 @@ int
 TkTextImageCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "image". */
@@ -158,7 +158,7 @@ TkTextImageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded image at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	objPtr = Tk_GetOptionValue(interp, &eiPtr->body.ei,
@@ -183,7 +183,7 @@ TkTextImageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded image at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
@@ -247,12 +247,12 @@ TkTextImageCmd(
 	eiPtr->size = 1;
 	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
 	eiPtr->body.ei.linePtr = NULL;
-	eiPtr->body.ei.imageName = NULL;
-	eiPtr->body.ei.imageString = NULL;
+	eiPtr->body.ei.imageNameObj = NULL;
+	eiPtr->body.ei.imageObj = NULL;
 	eiPtr->body.ei.name = NULL;
 	eiPtr->body.ei.image = NULL;
-	eiPtr->body.ei.align = ALIGN_CENTER;
-	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
+	eiPtr->body.ei.align = TK_ALIGN_CENTER;
+	eiPtr->body.ei.padXObj = eiPtr->body.ei.padYObj = NULL;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
@@ -327,19 +327,15 @@ EmbImageConfigure(
     TkText *textPtr,		/* Information about text widget that contains
 				 * embedded image. */
     TkTextSegment *eiPtr,	/* Embedded image to be configured. */
-    int objc,			/* Number of strings in objv. */
+    Tcl_Size objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of strings describing configuration
 				 * options. */
 {
     Tk_Image image;
     Tcl_DString newName;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
     char *name;
-    int dummy;
-    int count = 0;		/* The counter for picking a unique name */
-    int conflict = 0;		/* True if we have a name conflict */
-    size_t len;			/* length of image name */
+    int dummy, length;
 
     if (Tk_SetOptions(textPtr->interp, &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -354,9 +350,9 @@ EmbImageConfigure(
      * changed.
      */
 
-    if (eiPtr->body.ei.imageString != NULL) {
+    if (eiPtr->body.ei.imageObj != NULL) {
 	image = Tk_GetImage(textPtr->interp, textPtr->tkwin,
-		eiPtr->body.ei.imageString, EmbImageProc, eiPtr);
+		Tcl_GetString(eiPtr->body.ei.imageObj), EmbImageProc, eiPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
 	}
@@ -369,7 +365,7 @@ EmbImageConfigure(
     eiPtr->body.ei.image = image;
 
     if (eiPtr->body.ei.name != NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -378,53 +374,36 @@ EmbImageConfigure(
      * associated with this image, delete the name.
      */
 
-    name = eiPtr->body.ei.imageName;
-    if (name == NULL) {
-    	name = eiPtr->body.ei.imageString;
-    }
-    if (name == NULL) {
+    if (eiPtr->body.ei.imageNameObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageNameObj);
+    } else if (eiPtr->body.ei.imageObj) {
+	name = Tcl_GetString(eiPtr->body.ei.imageObj);
+    } else {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		"Either a \"-name\" or a \"-image\" argument must be"
-		" provided to the \"image create\" subcommand", -1));
+		" provided to the \"image create\" subcommand", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
-    }
-    len = strlen(name);
-    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
-	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName = (char *)
-		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
-
-	if (strncmp(name, haveName, len) == 0) {
-	    int newVal = 0;
-
-	    sscanf(haveName+len, "#%d", &newVal);
-	    if (newVal > count) {
-		count = newVal;
-	    }
-	    if (len == strlen(haveName)) {
-	    	conflict = 1;
-	    }
-	}
     }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
-
-    if (conflict) {
-    	char buf[4 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "#%d", count+1);
-	Tcl_DStringAppend(&newName, buf, -1);
+    while (Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name)) {
+	char buf[4 + TCL_INTEGER_SPACE];
+	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	Tcl_DStringSetLength(&newName, 0);
+	Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
+	name = Tcl_DStringValue(&newName);
     }
-    name = Tcl_DStringValue(&newName);
+    length = strlen(name);
+
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
-    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
-    eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
-    strcpy(eiPtr->body.ei.name, name);
+    eiPtr->body.ei.name = (char *)ckalloc(length + 1);
+    memcpy(eiPtr->body.ei.name, name, length + 1);
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     Tcl_DStringFree(&newName);
 
     return TCL_OK;
@@ -478,7 +457,7 @@ EmbImageDeleteProc(
      * options.
      */
 
-    Tk_FreeConfigOptions((char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
+    Tk_FreeConfigOptions(&eiPtr->body.ei, eiPtr->body.ei.optionTable,
 	    NULL);
     if (eiPtr->body.ei.name) {
 	ckfree(eiPtr->body.ei.name);
@@ -535,11 +514,11 @@ EmbImageLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TCL_UNUSED(TkTextIndex *),	/* Identifies first character in chunk. */
     TkTextSegment *eiPtr,	/* Segment corresponding to indexPtr. */
-    TkSizeT offset,			/* Offset within segPtr corresponding to
+    Tcl_Size offset,			/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    TCL_UNUSED(TkSizeT),	/* Chunk must not include more than this many
+    TCL_UNUSED(Tcl_Size),	/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
@@ -552,11 +531,18 @@ EmbImageLayoutProc(
 				 * set by the caller. */
 {
     int width, height;
+    int padX = 0, padY = 0;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
     }
 
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
     /*
      * See if there's room for this image on this line.
      */
@@ -566,8 +552,8 @@ EmbImageLayoutProc(
 	height = 0;
     } else {
 	Tk_SizeOfImage(eiPtr->body.ei.image, &width, &height);
-	width += 2*eiPtr->body.ei.padX;
-	height += 2*eiPtr->body.ei.padY;
+	width += 2 * padX;
+	height += 2 * padY;
     }
     if ((width > (maxX - chunkPtr->x))
 	    && !noCharsYet && (textPtr->wrapMode != TEXT_WRAPMODE_NONE)) {
@@ -583,9 +569,9 @@ EmbImageLayoutProc(
     chunkPtr->measureProc = NULL;
     chunkPtr->bboxProc = EmbImageBboxProc;
     chunkPtr->numBytes = 1;
-    if (eiPtr->body.ei.align == ALIGN_BASELINE) {
-	chunkPtr->minAscent = height - eiPtr->body.ei.padY;
-	chunkPtr->minDescent = eiPtr->body.ei.padY;
+    if (eiPtr->body.ei.align == TK_ALIGN_BASELINE) {
+	chunkPtr->minAscent = height - padY;
+	chunkPtr->minDescent = padY;
 	chunkPtr->minHeight = 0;
     } else {
 	chunkPtr->minAscent = 0;
@@ -715,9 +701,9 @@ EmbImageDisplayProc(
 
 static void
 EmbImageBboxProc(
-    TCL_UNUSED(TkText *),
+    TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -733,6 +719,7 @@ EmbImageBboxProc(
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     Tk_Image image;
+    int padX = 0, padY = 0;
 
     image = eiPtr->body.ei.image;
     if (image != NULL) {
@@ -742,19 +729,25 @@ EmbImageBboxProc(
 	*heightPtr = 0;
     }
 
-    *xPtr = chunkPtr->x + eiPtr->body.ei.padX;
+    if (eiPtr->body.ei.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padXObj, &padX);
+    }
+    if (eiPtr->body.ei.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, eiPtr->body.ei.padYObj, &padY);
+    }
+    *xPtr = chunkPtr->x + padX;
 
     switch (eiPtr->body.ei.align) {
-    case ALIGN_BOTTOM:
-	*yPtr = y + (lineHeight - *heightPtr - eiPtr->body.ei.padY);
+    case TK_ALIGN_BOTTOM:
+	*yPtr = y + (lineHeight - *heightPtr - padY);
 	break;
-    case ALIGN_CENTER:
+    case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
-    case ALIGN_TOP:
-	*yPtr = y + eiPtr->body.ei.padY;
+    case TK_ALIGN_TOP:
+	*yPtr = y + padY;
 	break;
-    case ALIGN_BASELINE:
+    case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
 	break;
     }
@@ -833,7 +826,7 @@ TkTextImageIndex(
 
 static void
 EmbImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     TCL_UNUSED(int),		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     TCL_UNUSED(int),

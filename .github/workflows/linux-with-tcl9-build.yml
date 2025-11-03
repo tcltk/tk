@@ -1,5 +1,11 @@
 name: Linux (with Tcl 9.0)
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-9-0-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 defaults:
@@ -16,7 +22,7 @@ jobs:
         compiler:
           - "gcc"
           - "clang"
-        cfgopt:
+        config:
           - ""
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
@@ -25,18 +31,18 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
-        uses: actions/checkout@v3
+      - name: Checkout Tcl 9.0
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev
+          sudo apt-get install libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -45,12 +51,12 @@ jobs:
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: ${{ matrix.cfgopt }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
-          OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
+          OPTS: ${{ matrix.compiler }}${{ matrix.config }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -61,7 +67,7 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         working-directory: tcl/unix
-      - name: Configure (opts=${{ matrix.cfgopt }})
+      - name: Configure (opts=${{ matrix.config }})
         run: |
           ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
@@ -98,45 +104,41 @@ jobs:
             echo "::error::Failure during Distribute"
             exit 1
           }
-      - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        run: |
-          cd /tmp/dist
-          echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
           - "gcc"
-        cfgopt:
+        config:
           - ""
+          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
-        uses: actions/checkout@v3
+      - name: Checkout Tcl 9.0
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev xvfb libicu-dev
+          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: ${{ matrix.cfgopt }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -147,7 +149,7 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         working-directory: tcl/unix
-      - name: Configure ${{ matrix.cfgopt }}
+      - name: Configure ${{ matrix.config }}
         run: |
           ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
@@ -172,3 +174,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15

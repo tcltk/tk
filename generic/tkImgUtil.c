@@ -11,7 +11,9 @@
 
 #include "tkInt.h"
 #include "xbytes.h"
-
+#ifdef _WIN32
+#   include "tkWinInt.h"
+#endif
 
 /*
  *----------------------------------------------------------------------

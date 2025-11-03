@@ -3,8 +3,8 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
-AC_PREREQ([2.69])
+AC_INIT([tk],[9.1])
+AC_PREREQ([2.72])
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -23,10 +23,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.1
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL="a1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -38,14 +38,8 @@ SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}])
-fi
-if test "${TCL_MINOR_VERSION}" -lt 6 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}])
-fi
 fi
 
 SC_PROG_TCLSH
@@ -130,7 +124,7 @@ SC_TCL_64BIT_FLAGS
 #	Check endianness because we can optimize some operations
 #--------------------------------------------------------------------
 
-AC_C_BIGENDIAN
+AC_C_BIGENDIAN(,,,[#])
 
 #------------------------------------------------------------------------
 # If Tcl and Tk are installed in different places, adjust the library
@@ -145,8 +139,8 @@ fi
 
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
-        Different --prefix selected for Tk and Tcl!
-        [[package require tk]] may not work correctly in tclsh.])
+	Different --prefix selected for Tk and Tcl!
+	[[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
@@ -240,61 +234,20 @@ if test "`uname -s`" = "Darwin" ; then
 	    LDFLAGS=$hold_ldflags])
     fi
     AC_CHECK_HEADERS(AvailabilityMacros.h)
-    if test "$ac_cv_header_AvailabilityMacros_h" = yes; then
-	AC_CACHE_CHECK([if weak import is available], tcl_cv_cc_weak_import, [
-	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
-		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
-		    #endif
-		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1020
-		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
-		    #endif
-		    int rand(void) __attribute__((weak_import));
-		]], [[rand();]])],
-		[tcl_cv_cc_weak_import=yes],[tcl_cv_cc_weak_import=no])
-	    CFLAGS=$hold_cflags])
-	if test $tcl_cv_cc_weak_import = yes; then
-	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
-	fi
-	AC_CACHE_CHECK([if Darwin SUSv3 extensions are available],
-	    tcl_cv_cc_darwin_c_source, [
-	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
-		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
-		    #endif
-		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-		    #endif
-		    #define _DARWIN_C_SOURCE 1
-		    #include <sys/cdefs.h>
-		]], [[]])],[tcl_cv_cc_darwin_c_source=yes],[tcl_cv_cc_darwin_c_source=no])
-	    CFLAGS=$hold_cflags])
-	if test $tcl_cv_cc_darwin_c_source = yes; then
-	    AC_DEFINE(_DARWIN_C_SOURCE, 1,
-		    [Are Darwin SUSv3 extensions available?])
-	fi
-    fi
 else
     tk_aqua=no
 fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security"
-    if test -d /System/Library/Frameworks/UserNotifications.framework; then
-        LIBS="$LIBS -framework UserNotifications"
-    fi
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
-        LIBS="$LIBS -framework UniformTypeIdentifiers"
+	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
     EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
-        AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
+	AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
     fi
 else
     #--------------------------------------------------------------------
@@ -456,7 +409,7 @@ if test $tk_aqua = no; then
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
 	else
-            enable_xft=yes
+	    enable_xft=yes
 	fi
     fi
     if test $enable_xft = "yes" ; then
@@ -469,6 +422,52 @@ if test $tk_aqua = no; then
     AC_SUBST(XFT_LIBS)
     AC_SUBST(UNIX_FONT_OBJS)
 fi
+
+#--------------------------------------------------------------------
+#	Check for libcups support
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use libcups])
+    AC_ARG_ENABLE(libcups,
+	AS_HELP_STRING([--enable-libcups],
+	    [use libcups (default: on)]),
+	[enable_libcups=$enableval], [enable_libcups="default"])
+    CUPS_CFLAGS=""
+    CUPS_LIBS=""
+    if test "$enable_libcups" = "no" ; then
+	AC_MSG_RESULT([$enable_libcups])
+    else
+	found_cups=`cups-config 2>/dev/null`
+	dnl make sure package configurator (cups-config)
+	dnl says that libcups is present.
+	if test "$found_cups" = ""; then
+	    found_cups=no
+	else
+	    found_cups=yes
+	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_LIBS=`cups-config --libs`
+	fi
+	AC_MSG_RESULT([$found_cups])
+	dnl make sure that compiling against CUPS header file doesn't bomb
+	if test "$found_cups" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    AC_CHECK_HEADER(cups/cups.h, [], [
+		found_cups=no
+		CUPS_CFLAGS=""
+		CUPS_LIBS=""
+	    ],[#include <cups/cups.h>])
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+    fi
+    AC_SUBST(CUPS_CFLAGS)
+    AC_SUBST(CUPS_LIBS)
+fi
+
 
 #--------------------------------------------------------------------
 # XXX Do this last.
@@ -537,13 +536,12 @@ AC_C_CHAR_UNSIGNED
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
-eval "TK_LIB_FILE_TCL8=libtk${LIB_SUFFIX}"
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_LIB_FILE=libtk${LIB_SUFFIX}"
+if test "$ac_cv_cygwin" = "yes" -a "$SHARED_BUILD" != "0"; then
+eval "TK_LIB_FILE=cygtcl9tk${LIB_SUFFIX}"
+EXTRA_INSTALL_BINARIES='$(INSTALL_LIBRARY) $(patsubst cyg%.dll,lib%.dll.a,${LIB_FILE}) "$(LIB_INSTALL_DIR)"'
 else
 eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
 fi
-eval "TK_LIB_FILE_TCL9=libtcl9tk${LIB_SUFFIX}"
 
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
@@ -588,25 +586,19 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     # Construct a fake local framework structure to make linking with
     # '-framework Tk' and running of tktest work
     AC_CONFIG_COMMANDS([Tk.framework], [n=Tk &&
-        f=$n.framework && v=Versions/$VERSION &&
-        rm -rf $f && mkdir -p $f/$v/Resources &&
-        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
-        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
-        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
-        unset n f v
+	f=$n.framework && v=Versions/$VERSION &&
+	rm -rf $f && mkdir -p $f/$v/Resources &&
+	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+	if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+	unset n f v
     ], VERSION=${TK_VERSION} && tk_aqua=${tk_aqua})
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
     if test "${libdir}" = '${exec_prefix}/lib'; then
-        # override libdir default
-        libdir="/Library/Frameworks"
+	# override libdir default
+	libdir="/Library/Frameworks"
     fi
-    if test ${TCL_MAJOR_VERSION} = 8 ; then
-	TK_LIB_FILE="Tk"
-    else
-	TK_LIB_FILE="Tk"
-    fi
-    TK_LIB_FILE_TCL8="Tk"
-    TK_LIB_FILE_TCL9="Tk"
+    TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
@@ -641,14 +633,11 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then
-        EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
+	EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    TK_LIB_FLAG="-l"
-    if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-	TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-    fi
+    TK_LIB_FLAG="-ltcl9"
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
 	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
@@ -714,14 +703,9 @@ AC_SUBST(INSTALL_MSGS)
 #--------------------------------------------------------------------
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
-eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
-eval "TK_STUB_LIB_DIR=${libdir}"
-
-if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"
-else
-    TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
-fi
+    TK_STUB_LIB_FILE="libtkstub.a"
+    TK_STUB_LIB_FLAG="-ltkstub"
+eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
 TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
@@ -754,8 +738,6 @@ AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_YEAR)
 
 AC_SUBST(TK_LIB_FILE)
-AC_SUBST(TK_LIB_FILE_TCL8)
-AC_SUBST(TK_LIB_FILE_TCL9)
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_STUB_LIB_FILE)

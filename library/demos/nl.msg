@@ -66,15 +66,15 @@
 ::msgcat::mcset nl "Listboxes" "Keuzelijsten"
 ::msgcat::mcset nl "The 50 states" "De 50 staten van de VS"
 ::msgcat::mcset nl "Colors: change the color scheme for the application" \
-         "Kleuren: verander het kleurenschema voor het programma"
+    "Kleuren: verander het kleurenschema voor het programma"
 ::msgcat::mcset nl "A collection of famous and infamous sayings" \
-         "Beroemde en beruchte citaten en gezegden"
+    "Beroemde en beruchte citaten en gezegden"
 
 ::msgcat::mcset nl "Entries and Spin-boxes"     "Invulvelden en Spinboxen"
 ::msgcat::mcset nl "Entries without scrollbars" "Invulvelden zonder schuifbalk"
 ::msgcat::mcset nl "Entries with scrollbars"    "Invulvelden met schuifbalk"
 ::msgcat::mcset nl "Validated entries and password fields" \
-         "Invulvelden met controle of wachtwoorden"
+    "Invulvelden met controle of wachtwoorden"
 ::msgcat::mcset nl "Spin-boxes" "Spinboxen"
 ::msgcat::mcset nl "Simple Rolodex-like form" "Simpel kaartsysteem"
 

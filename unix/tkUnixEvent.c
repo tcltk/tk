@@ -31,10 +31,10 @@ static Tcl_ThreadDataKey dataKey;
  * Prototypes for functions that are referenced only in this file:
  */
 
-static void		DisplayCheckProc(ClientData clientData, int flags);
-static void		DisplayExitHandler(ClientData clientData);
-static void		DisplayFileProc(ClientData clientData, int flags);
-static void		DisplaySetupProc(ClientData clientData, int flags);
+static void		DisplayCheckProc(void *clientData, int flags);
+static void		DisplayExitHandler(void *clientData);
+static void		DisplayFileProc(void *clientData, int flags);
+static void		DisplaySetupProc(void *clientData, int flags);
 static void		TransferXEventsToTcl(Display *display);
 #ifdef TK_USE_INPUT_METHODS
 static void		InstantiateIMCallback(Display *, XPointer client_data, XPointer call_data);
@@ -91,7 +91,7 @@ TkCreateXEventSource(void)
 
 static void
 DisplayExitHandler(
-    ClientData dummy)	/* Not used. */
+    void *dummy)	/* Not used. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -167,6 +167,7 @@ TkpOpenDisplay(
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
 #ifdef TK_USE_INPUT_METHODS
+    XSetLocaleModifiers("");
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
 	    InstantiateIMCallback, (XPointer) dispPtr);
@@ -183,13 +184,13 @@ TkpOpenDisplay(
     if (WidthMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
 	int mm;
 
-	mm = WidthOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	mm = (int)(WidthOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0));
 	WidthMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
     }
     if (HeightMMOfScreen(DefaultScreenOfDisplay(display)) <= 0) {
 	int mm;
 
-	mm = HeightOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0);
+	mm = (int)(HeightOfScreen(DefaultScreenOfDisplay(display)) * (25.4 / 75.0));
 	HeightMMOfScreen(DefaultScreenOfDisplay(display)) = mm;
     }
 
@@ -298,7 +299,7 @@ TkClipCleanup(
 
 static void
 DisplaySetupProc(
-    ClientData dummy,	/* Not used. */
+    void *dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
@@ -365,7 +366,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-	if (event.type > MappingNotify) {
+	if ((event.type >= VirtualEvent) && (event.type <= MouseWheelEvent)) {
+	    /* See [fe87e9af39]. Those are internal Tk event types, if they come
+	     * from an external source they most likely would be totally mis-interpreted */
 	    continue;
 	}
 	w = None;
@@ -431,7 +434,7 @@ TransferXEventsToTcl(
 
 static void
 DisplayCheckProc(
-    ClientData dummy,	/* Not used. */
+    void *dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
@@ -467,7 +470,7 @@ DisplayCheckProc(
 
 static void
 DisplayFileProc(
-    ClientData clientData,	/* The display pointer. */
+    void *clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
@@ -589,8 +592,8 @@ TkUnixDoOneXEvent(
 	    blockTime.tv_usec = 0;
 	}
 	fd = ConnectionNumber(dispPtr->display);
-	index = fd/(NBBY*sizeof(fd_mask));
-	bit = ((fd_mask)1) << (fd%(NBBY*sizeof(fd_mask)));
+	index = fd/(NBBY*(int)sizeof(fd_mask));
+	bit = ((fd_mask)1) << (fd%(NBBY*(int)sizeof(fd_mask)));
 	readMask[index] |= bit;
 	if (numFdBits <= fd) {
 	    numFdBits = fd+1;
@@ -615,8 +618,8 @@ TkUnixDoOneXEvent(
     for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	    dispPtr = dispPtr->nextPtr) {
 	fd = ConnectionNumber(dispPtr->display);
-	index = fd/(NBBY*sizeof(fd_mask));
-	bit = ((fd_mask)1) << (fd%(NBBY*sizeof(fd_mask)));
+	index = fd/(NBBY*(int)sizeof(fd_mask));
+	bit = ((fd_mask)1) << (fd%(NBBY*(int)sizeof(fd_mask)));
 	if ((readMask[index] & bit) || (QLength(dispPtr->display) > 0)) {
 	    DisplayFileProc(dispPtr, TCL_READABLE);
 	}
@@ -735,10 +738,6 @@ OpenIM(
     int i;
     XIMStyles *stylePtr;
     XIMStyle bestStyle = 0;
-
-    if (XSetLocaleModifiers("") == NULL) {
-	return;
-    }
 
     ++dispPtr->ximGeneration;
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);

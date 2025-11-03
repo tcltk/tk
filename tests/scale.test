@@ -1,15 +1,27 @@
 # This file is a Tcl script to test out the "scale" command
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# of Tk.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -18,10 +30,18 @@ option add *Scale.borderWidth 2
 option add *Scale.highlightThickness 2
 option add *Scale.font {Helvetica -12 bold}
 
-# Widget used in 1.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests 1.*
+#
 scale .s -from 100 -to 300
 pack .s
 update
+
+#
+# TESTS
+#
 
 test scale-1.1 {configuration options} -body {
     .s configure -activebackground #ff0000
@@ -30,7 +50,7 @@ test scale-1.1 {configuration options} -body {
     .s configure -activebackground [lindex [.s configure -activebackground] 3]
 } -result {#ff0000}
 test scale-1.2 {configuration options} -body {
-        .s configure -activebackground non-existent
+	.s configure -activebackground non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.3 {configuration options} -body {
     .s configure -background #ff0000
@@ -39,7 +59,7 @@ test scale-1.3 {configuration options} -body {
     .s configure -background [lindex [.s configure -background] 3]
 } -result {#ff0000}
 test scale-1.4 {configuration options} -body {
-        .s configure -background non-existent
+	.s configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.5 {configuration options} -body {
     .s configure -bd 4
@@ -48,8 +68,8 @@ test scale-1.5 {configuration options} -body {
     .s configure -bd [lindex [.s configure -bd] 3]
 } -result 4
 test scale-1.6 {configuration options} -body {
-        .s configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+	.s configure -bd badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.7 {configuration options} -body {
     .s configure -bigincrement 12.5
     .s cget -bigincrement
@@ -57,7 +77,7 @@ test scale-1.7 {configuration options} -body {
     .s configure -bigincrement [lindex [.s configure -bigincrement] 3]
 } -result {12.5}
 test scale-1.8 {configuration options} -body {
-        .s configure -bigincrement badValue
+	.s configure -bigincrement badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.9 {configuration options} -body {
     .s configure -bg #ff0000
@@ -66,17 +86,17 @@ test scale-1.9 {configuration options} -body {
     .s configure -bg [lindex [.s configure -bg] 3]
 } -result {#ff0000}
 test scale-1.10 {configuration options} -body {
-        .s configure -bg non-existent
+	.s configure -bg non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.11 {configuration options} -body {
     .s configure -borderwidth 1.3
     .s cget -borderwidth
 } -cleanup {
     .s configure -borderwidth [lindex [.s configure -borderwidth] 3]
-} -result 1
+} -result 1.3
 test scale-1.12 {configuration options} -body {
-        .s configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+	.s configure -borderwidth badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.13 {configuration options} -body {
     .s configure -command {set x}
     .s cget -command
@@ -90,7 +110,7 @@ test scale-1.15 {configuration options} -body {
     .s configure -cursor [lindex [.s configure -cursor] 3]
 } -result {arrow}
 test scale-1.16 {configuration options} -body {
-        .s configure -cursor badValue
+	.s configure -cursor badValue
 } -returnCodes error -result {bad cursor spec "badValue"}
 test scale-1.17 {configuration options} -body {
     .s configure -digits 5
@@ -99,7 +119,7 @@ test scale-1.17 {configuration options} -body {
     .s configure -digits [lindex [.s configure -digits] 3]
 } -result 5
 test scale-1.18 {configuration options} -body {
-        .s configure -digits badValue
+	.s configure -digits badValue
 } -returnCodes error -result {expected integer but got "badValue"}
 test scale-1.19 {configuration options} -body {
     .s configure -fg #00ff00
@@ -108,7 +128,7 @@ test scale-1.19 {configuration options} -body {
     .s configure -fg [lindex [.s configure -fg] 3]
 } -result {#00ff00}
 test scale-1.20 {configuration options} -body {
-        .s configure -fg badValue
+	.s configure -fg badValue
 } -returnCodes error -result {unknown color name "badValue"}
 test scale-1.21 {configuration options} -body {
     .s configure -font fixed
@@ -123,7 +143,7 @@ test scale-1.23 {configuration options} -body {
     .s configure -foreground [lindex [.s configure -foreground] 3]
 } -result {green}
 test scale-1.24 {configuration options} -body {
-        .s configure -foreground badValue
+	.s configure -foreground badValue
 } -returnCodes error -result {unknown color name "badValue"}
 test scale-1.25 {configuration options} -body {
     .s configure -from -15.0
@@ -132,7 +152,7 @@ test scale-1.25 {configuration options} -body {
     .s configure -from [lindex [.s configure -from] 3]
 } -result {-15.0}
 test scale-1.26 {configuration options} -body {
-        .s configure -from badValue
+	.s configure -from badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.27 {configuration options} -body {
     .s configure -highlightbackground #112233
@@ -141,7 +161,7 @@ test scale-1.27 {configuration options} -body {
     .s configure -highlightbackground [lindex [.s configure -highlightbackground] 3]
 } -result {#112233}
 test scale-1.28 {configuration options} -body {
-        .s configure -highlightbackground ugly
+	.s configure -highlightbackground ugly
 } -returnCodes error -result {unknown color name "ugly"}
 test scale-1.29 {configuration options} -body {
     .s configure -highlightcolor #123456
@@ -150,7 +170,7 @@ test scale-1.29 {configuration options} -body {
     .s configure -highlightcolor [lindex [.s configure -highlightcolor] 3]
 } -result {#123456}
 test scale-1.30 {configuration options} -body {
-        .s configure -highlightcolor non-existent
+	.s configure -highlightcolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.31 {configuration options} -body {
     .s configure -highlightthickness 2
@@ -159,8 +179,8 @@ test scale-1.31 {configuration options} -body {
     .s configure -highlightthickness [lindex [.s configure -highlightthickness] 3]
 } -result 2
 test scale-1.32 {configuration options} -body {
-        .s configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+	.s configure -highlightthickness badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.33 {configuration options} -body {
     .s configure -label {Some text}
     .s cget -label
@@ -174,8 +194,8 @@ test scale-1.35 {configuration options} -body {
     .s configure -length [lindex [.s configure -length] 3]
 } -result 130
 test scale-1.36 {configuration options} -body {
-        .s configure -length badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+	.s configure -length badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.37 {configuration options} -body {
     .s configure -orient horizontal
     .s cget -orient
@@ -183,7 +203,7 @@ test scale-1.37 {configuration options} -body {
     .s configure -orient [lindex [.s configure -orient] 3]
 } -result {horizontal}
 test scale-1.38 {configuration options} -body {
-        .s configure -orient badValue
+	.s configure -orient badValue
 } -returnCodes error -result {bad orient "badValue": must be horizontal or vertical}
 test scale-1.39 {configuration options} -body {
     .s configure -orient horizontal
@@ -198,7 +218,7 @@ test scale-1.41 {configuration options} -body {
     .s configure -relief [lindex [.s configure -relief] 3]
 } -result {ridge}
 test scale-1.42 {configuration options} -body {
-        .s configure -relief badValue
+	.s configure -relief badValue
 } -returnCodes error -result {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}
 test scale-1.43 {configuration options} -body {
     .s configure -repeatdelay 14
@@ -207,7 +227,7 @@ test scale-1.43 {configuration options} -body {
     .s configure -repeatdelay [lindex [.s configure -repeatdelay] 3]
 } -result 14
 test scale-1.44 {configuration options} -body {
-        .s configure -repeatdelay bogus
+	.s configure -repeatdelay bogus
 } -returnCodes error -result {expected integer but got "bogus"}
 test scale-1.45 {configuration options} -body {
     .s configure -repeatinterval 14
@@ -216,7 +236,7 @@ test scale-1.45 {configuration options} -body {
     .s configure -repeatinterval [lindex [.s configure -repeatinterval] 3]
 } -result 14
 test scale-1.46 {configuration options} -body {
-        .s configure -repeatinterval bogus
+	.s configure -repeatinterval bogus
 } -returnCodes error -result {expected integer but got "bogus"}
 test scale-1.47 {configuration options} -body {
     .s configure -resolution 2.0
@@ -225,7 +245,7 @@ test scale-1.47 {configuration options} -body {
     .s configure -resolution [lindex [.s configure -resolution] 3]
 } -result {2.0}
 test scale-1.48 {configuration options} -body {
-        .s configure -resolution badValue
+	.s configure -resolution badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.49 {configuration options} -body {
     .s configure -showvalue 0
@@ -234,7 +254,7 @@ test scale-1.49 {configuration options} -body {
     .s configure -showvalue [lindex [.s configure -showvalue] 3]
 } -result 0
 test scale-1.50 {configuration options} -body {
-        .s configure -showvalue badValue
+	.s configure -showvalue badValue
 } -returnCodes error -result {expected boolean value but got "badValue"}
 test scale-1.51 {configuration options} -body {
     .s configure -sliderlength 86
@@ -243,8 +263,8 @@ test scale-1.51 {configuration options} -body {
     .s configure -sliderlength [lindex [.s configure -sliderlength] 3]
 } -result 86
 test scale-1.52 {configuration options} -body {
-        .s configure -sliderlength badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+	.s configure -sliderlength badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.53 {configuration options} -body {
     .s configure -sliderrelief raised
     .s cget -sliderrelief
@@ -252,7 +272,7 @@ test scale-1.53 {configuration options} -body {
     .s configure -sliderrelief [lindex [.s configure -sliderrelief] 3]
 } -result {raised}
 test scale-1.54 {configuration options} -body {
-        .s configure -sliderrelief badValue
+	.s configure -sliderrelief badValue
 } -returnCodes error -result {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}
 test scale-1.55 {configuration options} -body {
     .s configure -state d
@@ -261,7 +281,7 @@ test scale-1.55 {configuration options} -body {
     .s configure -state [lindex [.s configure -state] 3]
 } -result {disabled}
 test scale-1.56 {configuration options} -body {
-        .s configure -state badValue
+	.s configure -state badValue
 } -returnCodes error -result {bad state "badValue": must be active, disabled, or normal}
 test scale-1.57 {configuration options} -body {
     .s configure -state n
@@ -282,7 +302,7 @@ test scale-1.61 {configuration options} -body {
     .s configure -tickinterval [lindex [.s configure -tickinterval] 3]
 } -result {4.0}
 test scale-1.62 {configuration options} -body {
-        .s configure -tickinterval badValue
+	.s configure -tickinterval badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.63 {configuration options} -body {
     .s configure -to 14.9
@@ -291,7 +311,7 @@ test scale-1.63 {configuration options} -body {
     .s configure -to [lindex [.s configure -to] 3]
 } -result {15.0}
 test scale-1.64 {configuration options} -body {
-        .s configure -to badValue
+	.s configure -to badValue
 } -returnCodes error -result {expected floating-point number but got "badValue"}
 test scale-1.65 {configuration options} -body {
     .s configure -troughcolor #ff0000
@@ -300,7 +320,7 @@ test scale-1.65 {configuration options} -body {
     .s configure -troughcolor [lindex [.s configure -troughcolor] 3]
 } -result {#ff0000}
 test scale-1.66 {configuration options} -body {
-        .s configure -troughcolor non-existent
+	.s configure -troughcolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test scale-1.67 {configuration options} -body {
     .s configure -variable x
@@ -315,10 +335,13 @@ test scale-1.69 {configuration options} -body {
     .s configure -width [lindex [.s configure -width] 3]
 } -result 32
 test scale-1.70 {configuration options} -body {
-        .s configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
-destroy .s
+	.s configure -width badValue
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-2.1 {Tk_ScaleCmd procedure} -body {
     scale
@@ -328,22 +351,26 @@ test scale-2.2 {Tk_ScaleCmd procedure} -body {
 } -returnCodes error -result {bad window path name "foo"}
 test scale-2.3 {Tk_ScaleCmd procedure} -body {
     catch {scale foo}
-    winfo child .
+    winfo children .
 } -result {}
 test scale-2.4 {Tk_ScaleCmd procedure} -body {
     scale .s -gorp dumb
 } -returnCodes error -result {unknown option "-gorp"}
 test scale-2.5 {Tk_ScaleCmd procedure} -body {
     catch {scale .s -gorp dumb}
-    winfo child .
+    winfo children .
 } -result {}
 
-
-# Widget used in 3.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests 3.*
+#
 destroy .s
 scale .s -from 100 -to 200
 pack .s
 update idletasks
+
 test scale-3.1 {ScaleWidgetCmd procedure} -body {
     .s
 } -returnCodes error -result {wrong # args: should be ".s option ?arg ...?"}
@@ -423,7 +450,14 @@ test scale-3.18 {ScaleWidgetCmd procedure, get option} -body {
     .s set 150
     .s get 37 34
 } -result {119.5}
+
+#
+# COMMON TEST SETUP
+#
+# For tests from scale-3.19
+#
 .s configure -resolution 1
+
 test scale-3.19 {ScaleWidgetCmd procedure, identify option} -body {
     .s identify
 } -returnCodes error -result {wrong # args: should be ".s identify x y"}
@@ -476,6 +510,10 @@ test scale-3.30 {ScaleWidgetCmd procedure} -body {
 test scale-3.31 {ScaleWidgetCmd procedure} -body {
     .s co
 } -returnCodes error -result {ambiguous option "co": must be cget, configure, coords, get, identify, or set}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
 
 test scale-3.32 {ScaleWidgetCmd procedure, Tk_Preserve} -setup {
@@ -556,7 +594,7 @@ test scale-5.5 {ConfigureScale procedure} -setup {
 } -body {
     scale .s -from 1.11 -to 1.89 -resolution .1 -tickinterval .76
     list [format %.1f [.s cget -from]] [format %.1f [.s cget -to]] \
-        [format %.1f [.s cget -tickinterval]]
+	[format %.1f [.s cget -tickinterval]]
 } -cleanup {
     deleteWindows
 } -result {1.1 1.9 0.8}
@@ -579,11 +617,16 @@ test scale-5.7 {ConfigureScale procedure} -setup {
     deleteWindows
 } -returnCodes error -result {bad state "bogus": must be active, disabled, or normal}
 
+#
+# COMMON TEST SETUP
+#
+# For tests scale-6.*
+#
 
-# Widget used in 6.* tests
 destroy .s
 scale .s -orient horizontal -length 200
 pack .s
+
 test scale-6.1 {ComputeFormat procedure} -body {
     .s configure -from 10 -to 100 -resolution 10
     .s set 49.3
@@ -693,8 +736,11 @@ test scale-6.21 {ComputeFormat procedure} -body {
     .s set 1001.23456789
     .s get
 } -result {1001.235}
-destroy .s
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-7.1 {ComputeScaleGeometry procedure} -constraints {
     nonPortable fonts
@@ -726,7 +772,7 @@ test scale-7.3 {ComputeScaleGeometry procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 1000 -orient vertical -showvalue 0 -width 10 \
-        -sliderlength 10
+	-sliderlength 10
     pack .s
     update
     list [winfo reqwidth .s] [winfo reqheight .s]
@@ -739,7 +785,7 @@ test scale-7.4 {ComputeScaleGeometry procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 1000 -orient vertical -showvalue 0 -bd 5 \
-        -relief sunken
+	-relief sunken
     pack .s
     update
     list [winfo reqwidth .s] [winfo reqheight .s]
@@ -764,7 +810,7 @@ test scale-7.6 {ComputeScaleGeometry procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 1000 -label "Long string" -orient horizontal \
-        -tick 500
+	-tick 500
     pack .s
     update
     list [winfo reqwidth .s] [winfo reqheight .s]
@@ -787,7 +833,7 @@ test scale-7.8 {ComputeScaleGeometry procedure} -setup {
     deleteWindows
 } -body {
     scale .s -from 0 -to 1000 -orient horizontal -showvalue 0 -bd 5 \
-        -relief raised -highlightthickness 2
+	-relief raised -highlightthickness 2
     pack .s
     update
     list [winfo reqwidth .s] [winfo reqheight .s]
@@ -806,7 +852,7 @@ test scale-8.1 {ScaleElement procedure} -constraints {
     .s set 30
     update
     list [.s identify 53 52] [.s identify 54 52] [.s identify 70 52] \
-        [.s identify 71 52]
+	[.s identify 71 52]
 } -cleanup {
     deleteWindows
 } -result {{} trough1 trough1 {}}
@@ -820,7 +866,7 @@ test scale-8.2 {ScaleElement procedure} -constraints {
     .s set 30
     update
     list [.s identify 60 2] [.s identify 60 3] [.s identify 60 302] \
-        [.s identify 60 303]
+	[.s identify 60 303]
 } -cleanup {
     deleteWindows
 } -result {{} trough1 trough2 {}}
@@ -834,7 +880,7 @@ test scale-8.3 {ScaleElement procedure} -constraints {
     .s set 30
     update
     list [.s identify 60 83] [.s identify 60 84] [.s identify 60 113] \
-        [.s identify 60 114] \
+	[.s identify 60 114] \
 } -cleanup {
     deleteWindows
 } -result {trough1 slider slider trough2}
@@ -842,12 +888,12 @@ test scale-8.4 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient vertical -bd 4 -width 10 \
-        -highlightthickness 1 -length 300 -showvalue 0
+	-highlightthickness 1 -length 300 -showvalue 0
     pack .s
     .s set 30
     update
     list [.s identify 4 40] [.s identify 5 40] [.s identify 22 40] \
-        [.s identify 23 40] \
+	[.s identify 23 40] \
 } -cleanup {
     deleteWindows
 } -result {{} trough1 trough1 {}}
@@ -857,13 +903,13 @@ test scale-8.5 {ScaleElement procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient horizontal -bd 1 \
-        -highlightthickness 2 -tick 20 -sliderlength 20 \
-        -length 200 -label Test
+	-highlightthickness 2 -tick 20 -sliderlength 20 \
+	-length 200 -label Test
     pack .s
     .s set 30
     update
     list [.s identify 150 36] [.s identify 150 37] [.s identify 150 53] \
-        [.s identify 150 54]
+	[.s identify 150 54]
 } -cleanup {
     deleteWindows
 } -result {{} trough2 trough2 {}}
@@ -873,12 +919,12 @@ test scale-8.6 {ScaleElement procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient horizontal -bd 2 \
-        -highlightthickness 1 -tick 20 -length 200
+	-highlightthickness 1 -tick 20 -length 200
     pack .s
     .s set 30
     update
     list [.s identify 150 20] [.s identify 150 21] [.s identify 150 39] \
-        [.s identify 150 40]
+	[.s identify 150 40]
 } -cleanup {
     deleteWindows
 } -result {{} trough2 trough2 {}}
@@ -886,12 +932,12 @@ test scale-8.7 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient horizontal -bd 4 -highlightthickness 2 \
-        -length 200 -width 10 -showvalue 0
+	-length 200 -width 10 -showvalue 0
     pack .s
     .s set 30
     update
     list [.s identify 30 5] [.s identify 30 6] [.s identify 30 23] \
-        [.s identify 30 24]
+	[.s identify 30 24]
 } -cleanup {
     deleteWindows
 } -result {{} trough1 trough1 {}}
@@ -899,12 +945,12 @@ test scale-8.8 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient horizontal -bd 1 -highlightthickness 2 \
-        -tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
+	-tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
     pack .s
     .s set 30
     update
     list [.s identify 2 28] [.s identify 3 28] [.s identify 202 28] \
-        [.s identify 203 28]
+	[.s identify 203 28]
 } -cleanup {
     deleteWindows
 } -result {{} trough1 trough2 {}}
@@ -912,20 +958,25 @@ test scale-8.9 {ScaleElement procedure} -setup {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -orient horizontal -bd 1 -highlightthickness 2 \
-        -tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
+	-tick 20 -sliderlength 20 -length 200 -label Test -showvalue 0
     pack .s
     .s set 80
     update
     list [.s identify 145 28] [.s identify 146 28] [.s identify 165 28] \
-        [.s identify 166 28]
+	[.s identify 166 28]
 } -cleanup {
     deleteWindows
 } -result {trough1 slider slider trough2}
 
+#
+# COMMON TEST SETUP
+#
+# For tests scale-9.*
+#
 
-#widget used in 9.* tests
 destroy .s
 pack [scale .s]
+
 test scale-9.1 {PixelToValue procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2
     update
@@ -968,12 +1019,15 @@ test scale-9.8 {PixelToValue procedure} -body {
 } -result 100
 test scale-9.9 {PixelToValue procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal
+	-orient horizontal
     update
     .s get 76 152
 } -result 65
-destroy .s
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .s
 
 test scale-10.1 {ValueToPixel procedure} -constraints {
     fonts
@@ -981,7 +1035,7 @@ test scale-10.1 {ValueToPixel procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 0 -to 100 -sliderlength 20 -length 124 -bd 2 \
-        -orient horizontal -label Test -tick 20
+	-orient horizontal -label Test -tick 20
     pack .s
     update
     list [.s coords -10] [.s coords 40] [.s coords 1000]
@@ -994,7 +1048,7 @@ test scale-10.2 {ValueToPixel procedure} -constraints {
     deleteWindows
 } -body {
     scale .s -from 100 -to 0 -sliderlength 20 -length 122 -bd 1 \
-        -orient vertical -label Test -tick 20
+	-orient vertical -label Test -tick 20
     pack .s
     update
     list [.s coords -10] [.s coords 40] [.s coords 1000]
@@ -1007,11 +1061,11 @@ test scale-11.1 {ScaleEventProc procedure} -setup {
     deleteWindows
 } -body {
     proc killScale value {
-        global x
-        if {$value > 30} {
-            destroy .s1
-            lappend x [winfo exists .s1] [info commands .s1]
-        }
+	global x
+	if {$value > 30} {
+	    destroy .s1
+	    lappend x [winfo exists .s1] [info commands .s1]
+	}
     }
     set x initial
     scale .s1 -from 0 -to 100 -command killScale
@@ -1050,11 +1104,15 @@ test scale-12.1 {ScaleCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 
-
-# Widget used in 13.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests scale-13.*
+#
 destroy .s
 pack [scale .s]
 update
+
 test scale-13.1 {SetScaleValue procedure} -body {
     .s configure -from 0 -to 100 -command {set x} -variable y
     update
@@ -1072,7 +1130,14 @@ test scale-13.3 {SetScaleValue procedure} -body {
     .s set 105
     .s get
 } -result 100
+
+#
+# COMMON TEST SETUP
+#
+# For tests scale-13.4 -
+#
 .s configure -from 100 -to 0
+
 test scale-13.4 {SetScaleValue procedure} -body {
     .s set -3
     .s get
@@ -1083,15 +1148,15 @@ test scale-13.5 {SetScaleValue procedure} -body {
 } -result 100
 test scale-13.6 {SetScaleValue procedure} -body {
     proc varTrace args {
-        global traceInfo
-        set traceInfo $args
+	global traceInfo
+	set traceInfo $args
     }
     .s configure -from 0 -to 100 -command {set x} -variable y
     update
 
     .s set 50
     update
-    trace variable y w varTrace
+    trace add variable y write varTrace
     set traceInfo empty
     set x untouched
     .s set 50
@@ -1099,88 +1164,96 @@ test scale-13.6 {SetScaleValue procedure} -body {
     list $x $traceInfo
 } -result {untouched empty}
 
-
-# Widget used in 14.* tests
+#
+# COMMON TEST SETUP
+#
+# For tests from scale-14.1
+#
 destroy .s
 pack [scale .s]
 update
+
 test scale-14.1 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result 72
 test scale-14.2 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 100 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result 76
 
 test scale-14.3 {RoundValueToResolution procedure} -body {
     .s configure -from 100 -to 0 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result 28
 test scale-14.4 {RoundValueToResolution procedure} -body {
     .s configure -from 100 -to 0 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result 24
 
 test scale-14.5 {RoundValueToResolution procedure} -body {
     .s configure -from -100 -to 0 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result -28
 test scale-14.6 {RoundValueToResolution procedure} -body {
     .s configure -from -100 -to 0 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result -24
 
 test scale-14.7 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 84 152
 } -result -72
 test scale-14.8 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to -100 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 4.0
+	-orient horizontal -resolution 4.0
     update
     .s get 86 152
 } -result -76
 
 test scale-14.9 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 0
+	-orient horizontal -resolution 0
     update
     .s get 84 152
 } -result {1.64}
 test scale-14.10 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 2.25  -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 0
+	-orient horizontal -resolution 0
     update
     .s get 86 152
 } -result {1.69}
 
 test scale-14.11 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 225 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 0 -digits 5
+	-orient horizontal -resolution 0 -digits 5
     update
     .s get 84 152
 } -result {164.25}
 test scale-14.12 {RoundValueToResolution procedure} -body {
     .s configure -from 0 -to 225 -sliderlength 10 -length 114 -bd 2 \
-        -orient horizontal -resolution 0 -digits 5
+	-orient horizontal -resolution 0 -digits 5
     update
     .s get 86 152
 } -result {168.75}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
 
 test scale-14.13 {RoundValueToResolution procedure, round-off errors} -setup {
@@ -1211,7 +1284,7 @@ test scale-14a.2 {RoundValueToResolution, RoundIntervalToResolution procedures} 
     update
 } -body {
     .s configure -length 400 -bd 0 -from -1.5 -to 1.5 -resolution 1 \
-            -tickinterval 1 -digits 2
+	    -tickinterval 1 -digits 2
     update
     .s get 250 0
 } -cleanup {
@@ -1245,7 +1318,7 @@ test scale-15.3 {ScaleVarProc procedure} -setup {
     set y 40q
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't set "y": can't assign non-numeric value to scale variable}
+} -returnCodes error -result {can't set "y": cannot assign a non-numeric value to a scale variable}
 test scale-15.4 {ScaleVarProc procedure} -setup {
     deleteWindows
 } -body {
@@ -1266,7 +1339,7 @@ test scale-15.5 {ScaleVarProc procedure} -setup {
     set y x
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't set "y": can't assign non-numeric value to scale variable}
+} -returnCodes error -result {can't set "y": cannot assign a non-numeric value to a scale variable}
 test scale-15.6 {ScaleVarProc procedure} -setup {
     deleteWindows
 } -body {
@@ -1283,7 +1356,7 @@ test scale-15.7 {ScaleVarProc procedure, variable deleted} -setup {
 } -body {
     set y 6
     scale .s -from 10 -to 0 -variable y -orient horizontal -length 150 \
-        -command "set x"
+	-command "set x"
     pack .s
     update
     set x untouched
@@ -1298,7 +1371,7 @@ test scale-15.8 {ScaleVarProc procedure, don't call -command} -setup {
 } -body {
     set y 6
     scale .s -from 0 -to 100 -variable y -orient horizontal -length 150 \
-        -command "set x"
+	-command "set x"
     pack .s
     update
     set x untouched
@@ -1364,10 +1437,10 @@ test scale-18.2 {Scale button 1 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <Button-1> -x 0 -y 0
-        event generate .s <ButtonRelease-1> -x 0 -y 0
-        update
-        set ::error
+	event generate .s <Button-1> -x 0 -y 0
+	event generate .s <ButtonRelease-1> -x 0 -y 0
+	update
+	set ::error
     } msg] $msg
 } -cleanup {
     unset ::error
@@ -1385,10 +1458,10 @@ test scale-18.3 {Scale button 2 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <Button-2> -x 0 -y 0
-        event generate .s <ButtonRelease-2> -x 0 -y 0
-        update
-        set ::error
+	event generate .s <Button-2> -x 0 -y 0
+	event generate .s <ButtonRelease-2> -x 0 -y 0
+	update
+	set ::error
     } msg] $msg
 } -cleanup {
     unset ::error
@@ -1399,7 +1472,7 @@ test scale-18.3 {Scale button 2 events [Bug 787065]} -setup {
 test scale-18.4 {Bug [415415ffff] - Long callback: One click -> Several steps} -setup {
     catch {destroy .s}
     scale .s -from 0 -to 5 -resolution 1 -variable x1 -orient horizontal -length 100 \
-            -command longCmd -repeatdelay 300
+	    -command longCmd -repeatdelay 300
     pack .s
     update
     proc longCmd {unused} {
@@ -1418,35 +1491,35 @@ test scale-18.4 {Bug [415415ffff] - Long callback: One click -> Several steps} -
 
 test scale-19 {Bug [3529885fff] - Click in through goes in wrong direction} \
     -setup {
-        catch {destroy .s}
-        catch {destroy .s1 .s2 .s3 .s4}
-        unset -nocomplain x1 x2 x3 x4 x y
-        scale .s1 -from 0 -to 100 -resolution 1  -variable x1 -digits 4 -orient horizontal -length 100
-        scale .s2 -from 0 -to 100 -resolution -1 -variable x2 -digits 4 -orient horizontal -length 100
-        scale .s3 -from 100 -to 0 -resolution 1  -variable x3 -digits 4 -orient horizontal -length 100
-        scale .s4 -from 100 -to 0 -resolution -1 -variable x4 -digits 4 -orient horizontal -length 100
-        pack .s1 .s2 .s3 .s4 -side left
-        update
+	catch {destroy .s}
+	catch {destroy .s1 .s2 .s3 .s4}
+	unset -nocomplain x1 x2 x3 x4 x y
+	scale .s1 -from 0 -to 100 -resolution 1  -variable x1 -digits 4 -orient horizontal -length 100
+	scale .s2 -from 0 -to 100 -resolution -1 -variable x2 -digits 4 -orient horizontal -length 100
+	scale .s3 -from 100 -to 0 -resolution 1  -variable x3 -digits 4 -orient horizontal -length 100
+	scale .s4 -from 100 -to 0 -resolution -1 -variable x4 -digits 4 -orient horizontal -length 100
+	pack .s1 .s2 .s3 .s4 -side left
+	update
     } \
     -body {
-        foreach {x y} [.s1 coord 50] {}
-        event generate .s1 <Button-1> -x $x -y $y
-        event generate .s1 <ButtonRelease-1> -x $x -y $y
-        foreach {x y} [.s2 coord 50] {}
-        event generate .s2 <Button-1> -x $x -y $y
-        event generate .s2 <ButtonRelease-1> -x $x -y $y
-        foreach {x y} [.s3 coord 50] {}
-        event generate .s3 <Button-1> -x $x -y $y
-        event generate .s3 <ButtonRelease-1> -x $x -y $y
-        foreach {x y} [.s4 coord 50] {}
-        event generate .s4 <Button-1> -x $x -y $y
-        event generate .s4 <ButtonRelease-1> -x $x -y $y
-        update
-        list $x1 $x2 $x3 $x4
+	foreach {x y} [.s1 coord 50] {}
+	event generate .s1 <Button-1> -x $x -y $y
+	event generate .s1 <ButtonRelease-1> -x $x -y $y
+	foreach {x y} [.s2 coord 50] {}
+	event generate .s2 <Button-1> -x $x -y $y
+	event generate .s2 <ButtonRelease-1> -x $x -y $y
+	foreach {x y} [.s3 coord 50] {}
+	event generate .s3 <Button-1> -x $x -y $y
+	event generate .s3 <ButtonRelease-1> -x $x -y $y
+	foreach {x y} [.s4 coord 50] {}
+	event generate .s4 <Button-1> -x $x -y $y
+	event generate .s4 <ButtonRelease-1> -x $x -y $y
+	update
+	list $x1 $x2 $x3 $x4
     } \
     -cleanup {
-        unset x1 x2 x3 x4 x y
-        destroy .s1 .s2 .s3 .s4
+	unset x1 x2 x3 x4 x y
+	destroy .s1 .s2 .s3 .s4
     } \
     -result {1.0 1.0 1.0 1.0}
 
@@ -1596,7 +1669,7 @@ test scale-22.1 {Bug [5d991b822e]} {
     set var INIT
     scale .b -variable var
     trace add variable var unset {apply {args {
-        .b configure -variable {}
+	.b configure -variable {}
     }}}
     pack .b
     bind .b <Configure> {unset var}
@@ -1608,7 +1681,7 @@ test scale-22.2 {Bug [5d991b822e]} {
     set var INIT
     scale .b -variable var
     trace add variable var unset {apply {args {
-        .b configure -variable new
+	.b configure -variable new
     }}}
     pack .b
     bind .b <Configure> {unset -nocomplain var}
@@ -1617,8 +1690,9 @@ test scale-22.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
-option clear
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
+option clear
 cleanupTests
-return

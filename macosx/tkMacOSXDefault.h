@@ -4,10 +4,10 @@
  *	This file defines the defaults for all options for all of
  *	the Tk widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -379,8 +379,8 @@
 #define DEF_MESSAGE_HIGHLIGHT		NORMAL_FG
 #define DEF_MESSAGE_HIGHLIGHT_WIDTH	"0"
 #define DEF_MESSAGE_JUSTIFY		"left"
-#define DEF_MESSAGE_PADX		"-1"
-#define DEF_MESSAGE_PADY		"-1"
+#define DEF_MESSAGE_PADX		NULL
+#define DEF_MESSAGE_PADY		NULL
 #define DEF_MESSAGE_RELIEF		"flat"
 #define DEF_MESSAGE_TAKE_FOCUS		"0"
 #define DEF_MESSAGE_TEXT		""
@@ -431,7 +431,7 @@
 #define DEF_SCALE_ACTIVE_BG_MONO	BLACK
 #define DEF_SCALE_BG_COLOR		NORMAL_BG
 #define DEF_SCALE_BG_MONO		WHITE
-#define DEF_SCALE_BIG_INCREMENT		"0"
+#define DEF_SCALE_BIG_INCREMENT		"0.0"
 #define DEF_SCALE_BORDER_WIDTH		"1"
 #define DEF_SCALE_COMMAND		""
 #define DEF_SCALE_CURSOR		""
@@ -439,7 +439,7 @@
 #define DEF_SCALE_FONT			"TkDefaultFont"
 #define DEF_SCALE_FG_COLOR		NORMAL_FG
 #define DEF_SCALE_FG_MONO		BLACK
-#define DEF_SCALE_FROM			"0"
+#define DEF_SCALE_FROM			"0.0"
 #define DEF_SCALE_HIGHLIGHT_BG_COLOR	DEF_SCALE_BG_COLOR
 #define DEF_SCALE_HIGHLIGHT_BG_MONO	DEF_SCALE_BG_MONO
 #define DEF_SCALE_HIGHLIGHT		NORMAL_FG
@@ -450,7 +450,7 @@
 #define DEF_SCALE_RELIEF		"flat"
 #define DEF_SCALE_REPEAT_DELAY	"300"
 #define DEF_SCALE_REPEAT_INTERVAL	"100"
-#define DEF_SCALE_RESOLUTION		"1"
+#define DEF_SCALE_RESOLUTION		"1.0"
 #define DEF_SCALE_TROUGH_COLOR		TROUGH
 #define DEF_SCALE_TROUGH_MONO		WHITE
 #define DEF_SCALE_SHOW_VALUE		"1"
@@ -458,8 +458,8 @@
 #define DEF_SCALE_SLIDER_RELIEF		"raised"
 #define DEF_SCALE_STATE			"normal"
 #define DEF_SCALE_TAKE_FOCUS		NULL
-#define DEF_SCALE_TICK_INTERVAL		"0"
-#define DEF_SCALE_TO			"100"
+#define DEF_SCALE_TICK_INTERVAL		"0.0"
+#define DEF_SCALE_TO			"100.0"
 #define DEF_SCALE_VARIABLE		""
 #define DEF_SCALE_WIDTH			"15"
 
@@ -475,7 +475,7 @@
 #define DEF_SCROLLBAR_BORDER_WIDTH	"0"
 #define DEF_SCROLLBAR_COMMAND		""
 #define DEF_SCROLLBAR_CURSOR		""
-#define DEF_SCROLLBAR_EL_BORDER_WIDTH	"-1"
+#define DEF_SCROLLBAR_EL_BORDER_WIDTH	NULL
 #define DEF_SCROLLBAR_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_SCROLLBAR_HIGHLIGHT		NORMAL_FG
 #define DEF_SCROLLBAR_HIGHLIGHT_WIDTH	"0"
@@ -517,7 +517,7 @@
 #define DEF_TEXT_PADX			"1"
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"flat"
-#define DEF_TEXT_INACTIVE_SELECT_COLOR	INACTIVE_SELECT_BG
+#define DEF_TEXT_INACTIVE_SELECT_BG_COLOR	INACTIVE_SELECT_BG
 #define DEF_TEXT_SELECT_COLOR		SELECT_BG
 #define DEF_TEXT_SELECT_MONO		BLACK
 #define DEF_TEXT_SELECT_BD_COLOR	"1"

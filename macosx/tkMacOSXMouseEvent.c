@@ -25,13 +25,6 @@ typedef struct {
     Point local;
 } MouseEventData;
 
-typedef struct {
-    uint64_t wheelTickPrev;	/* For high resolution wheels. */
-    double vWheelAcc;		/* For high resolution wheels (vertical). */
-    double hWheelAcc;		/* For high resolution wheels (horizontal). */
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
-
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
@@ -88,7 +81,7 @@ enum {
     NSEventType eventType = [theEvent type];
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
-    NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
+    //NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
@@ -105,7 +98,7 @@ enum {
     static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
 
     /*
@@ -117,7 +110,8 @@ enum {
      * window attribute set to nil.
      */
 
-    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+    if (![eventWindow isMemberOfClass:[TKWindow class]] &&
+	![eventWindow isMemberOfClass:[TKPanel class]]) {
 	if ([theEvent timestamp] == 0) {
 	    isTestingEvent = YES;
 	    eventWindow = [NSApp keyWindow];
@@ -130,7 +124,7 @@ enum {
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
-    } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
+    } else if (!NSPointInRect(location, [contentView bounds])) {
 	isOutside = YES;
     }
     button = [theEvent buttonNumber] + Button1;
@@ -246,10 +240,10 @@ enum {
 	    NSRect bounds = [contentView bounds];
 	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
 	    bounds = NSInsetRect(bounds, 2.0, 2.0);
-	    if (!NSPointInRect(viewLocation, bounds)) {
+	    if (!NSPointInRect(location, bounds)) {
 		return theEvent;
 	    }
-	    if (NSPointInRect(viewLocation, grip)) {
+	    if (NSPointInRect(location, grip)) {
 		return theEvent;
 	    }
 	    if ([NSApp tkLiveResizeEnded]) {
@@ -318,6 +312,7 @@ enum {
     if ([NSApp tkDragTarget]) {
 	TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
 	TKWindow *dragWindow = nil;
+	MacDrawable *topMacWin;
 	if (dragPtr) {
 	    dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 			    dragPtr->window);
@@ -327,7 +322,10 @@ enum {
 	    target = NULL;
 	    return theEvent;
 	}
-	winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
+	topMacWin = TkMacOSXGetHostToplevel(dragPtr);
+	if (topMacWin) {
+	    winPtr = topMacWin->winPtr;
+	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
     } else {
@@ -367,18 +365,21 @@ enum {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow* topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     }
     else {
-    	if (winPtr && winPtr->wmInfoPtr) {
-    	    local.x -= winPtr->wmInfoPtr->xInParent;
-    	    local.y -= winPtr->wmInfoPtr->yInParent;
-    	} else {
-    	    return theEvent;
-    	}
+	if (winPtr && winPtr->wmInfoPtr) {
+	    local.x -= winPtr->wmInfoPtr->xInParent;
+	    local.y -= winPtr->wmInfoPtr->yInParent;
+	} else {
+	    return theEvent;
+	}
     }
 
     /*
@@ -503,12 +504,13 @@ enum {
 	    state |= Tk_GetButtonMask(Button1);
 	}
 	if (eventType == NSMouseEntered) {
-	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
-				 global.x, global.y, state);
+	    Tk_Window new_win = Tk_CoordsToWindow(global.x, global.y,
+		 (Tk_Window) [NSApp tkPointerWindow]);
+	    Tk_UpdatePointer(new_win, global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
 	    if ([NSApp tkDragTarget]) {
-	    	Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
-	    			 global.x, global.y, state);
+		Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
+				 global.x, global.y, state);
 	    } else {
 	    Tk_UpdatePointer(NULL, global.x, global.y, state);
 	    }
@@ -542,12 +544,11 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-	CGFloat delta;
+	static unsigned long scrollCounter = 0;
+	unsigned delta;
+	CGFloat Delta;
+	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
-	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
 	xEvent.xbutton.y = win_y;
 	xEvent.xbutton.x_root = global.x;
@@ -555,41 +556,35 @@ enum {
 	xEvent.xany.send_event = false;
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
-
-#define WHEEL_DELTA 120
-#define WHEEL_DELAY 300000000
-	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
-	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
-	if (timeout) {
-	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	}
-	tsdPtr->wheelTickPrev = wheelTick;
-	delta = [theEvent deltaY];
-	if (delta != 0.0) {
-	    delta = (tsdPtr->vWheelAcc += delta);
-	    if (timeout && fabs(delta) < 1.0) {
-		delta = ((delta < 0.0) ? -1.0 : 1.0);
-	    }
-	    if (fabs(delta) >= 0.6) {
-		int intDelta = round(delta);
+	if (deltaIsPrecise) {
+	    unsigned deltaX = (unsigned)(int)[theEvent scrollingDeltaX];
+	    unsigned deltaY = (unsigned)(int)[theEvent scrollingDeltaY];
+	    delta = (deltaX << 16) | (deltaY & 0xffff);
+	    if (delta != 0) {
+		xEvent.type = TouchpadScroll;
 		xEvent.xbutton.state = state;
-		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
-		tsdPtr->vWheelAcc -= intDelta;
+		xEvent.xkey.keycode = delta;
+		xEvent.xany.serial = scrollCounter++;
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
+	} else {
+	    /*
+	     * A low precision scroll is 120 or -120 wheel units per click.
+	     * Each click generates one event.
+	     */
+	    Delta = [theEvent scrollingDeltaY];
+	    if (Delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
+		xEvent.xbutton.state = state;
+		xEvent.xkey.keycode = Delta > 0.0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	}
-	delta = [theEvent deltaX];
-	if (delta != 0.0) {
-	    delta = (tsdPtr->hWheelAcc += delta);
-	    if (timeout && fabs(delta) < 1.0) {
-		delta = ((delta < 0.0) ? -1.0 : 1.0);
-	    }
-	    if (fabs(delta) >= 0.6) {
-	    int intDelta = round(delta);
+	    Delta = [theEvent scrollingDeltaX];
+	    if (Delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state | ShiftMask;
-		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
-		tsdPtr->hWheelAcc -= intDelta;
+		xEvent.xkey.keycode = Delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
@@ -889,9 +884,9 @@ TkpWarpPointer(
     CGWarpMouseCursorPosition(pt);
 
     if (dispPtr->warpWindow) {
-        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
     } else {
-        TkGenerateButtonEventForXPointer(None);
+	TkGenerateButtonEventForXPointer(None);
     }
 }
 

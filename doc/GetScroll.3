@@ -15,15 +15,16 @@ Tk_GetScrollInfoObj, Tk_GetScrollInfo \- parse arguments for scrolling commands
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_GetScrollInfoObj(\fIinterp, objc, objv, fractionPtr, stepsPtr\fB)\fR
+\fBTk_GetScrollInfoObj\fR(\fIinterp, objc, objv, fractionPtr, stepsPtr\fR)
 .sp
 int
-\fBTk_GetScrollInfo(\fIinterp, argc, argv, fractionPtr, stepsPtr\fB)\fR
+\fBTk_GetScrollInfo\fR(\fIinterp, argc, argv, fractionPtr, stepsPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tcl_Interp" *fractionPtr
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
-.AP int objc in
+.AP Tcl_Size objc in
 Number of Tcl_Obj's in \fIobjv\fR array.
 .AP "Tcl_Obj *const *" objv in
 Argument objects.  These represent the entire widget command, of

@@ -93,12 +93,12 @@ TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry for
+    const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
     const struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
-    TkSizeT argc;
+    Tcl_Size argc;
     const char **argv = NULL;
     (void)tkwin;
 
@@ -126,14 +126,14 @@ TkGetCursorByName(
 	 *	-cursor @/winnt/cursors/globe.ani
 	 *	-cursor @C:/Winnt/cursors/E_arrow.cur
 	 *	-cursor {@C:/Program\ Files/Cursors/bart.ani}
-	 *      -cursor {{@C:/Program Files/Cursors/bart.ani}}
+	 *	-cursor {{@C:/Program Files/Cursors/bart.ani}}
 	 *	-cursor [list @[file join "C:/Program Files" Cursors bart.ani]]
 	 */
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get cursor from a file in a safe interpreter",-1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", NULL);
+		    "cannot get cursor from a file in a safe interpreter", TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", (char *)NULL);
 	    ckfree(argv);
 	    ckfree(cursorPtr);
 	    return NULL;
@@ -169,7 +169,7 @@ TkGetCursorByName(
 	ckfree(argv);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad cursor spec \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
 	return NULL;
     }
     ckfree(argv);

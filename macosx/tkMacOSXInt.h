@@ -3,9 +3,9 @@
  *
  *	Declarations of Macintosh specific shared variables and procedures.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -88,7 +88,6 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_DRAWN_UNDER_MENU	0x08
 #define TK_IS_PIXMAP		0x10
 #define TK_IS_BW_PIXMAP		0x20
-#define TK_DO_NOT_DRAW          0x40
 #define TTK_HAS_CONTRASTING_BG  0x80
 
 /*
@@ -160,16 +159,13 @@ typedef struct TkWindowPrivate MacDrawable;
  */
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
-MODULE_SCOPE void TkpRetainRegion(Region r);
-MODULE_SCOPE void TkpReleaseRegion(Region r);
-MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
 
 /*
  * Include the stubbed internal platform-specific API.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKMACINT */
 

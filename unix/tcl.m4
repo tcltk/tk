@@ -93,11 +93,11 @@ AC_DEFUN([SC_PATH_TCLCONFIG], [
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
-			`ls -d /usr/lib/tcl8.7 2>/dev/null` \
+			`ls -d /usr/lib/tcl9.1 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl8.7 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tcl8.7 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl9.1 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl9.1 2>/dev/null` \
 			; do
 		    if test -f "$i/tclConfig.sh" ; then
 			ac_cv_c_tclconfig="`(cd $i; pwd)`"
@@ -226,11 +226,11 @@ AC_DEFUN([SC_PATH_TKCONFIG], [
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
-			`ls -d /usr/lib/tk8.7 2>/dev/null` \
+			`ls -d /usr/lib/tk9.1 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
-			`ls -d /usr/local/lib/tk8.7 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tk8.7 2>/dev/null` \
+			`ls -d /usr/local/lib/tk9.1 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tk9.1 2>/dev/null` \
 			; do
 		    if test -f "$i/tkConfig.sh" ; then
 			ac_cv_c_tkconfig="`(cd $i; pwd)`"
@@ -287,10 +287,10 @@ AC_DEFUN([SC_LOAD_TCLCONFIG], [
     AC_MSG_CHECKING([for existence of ${TCL_BIN_DIR}/tclConfig.sh])
 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
-        AC_MSG_RESULT([loading])
+	AC_MSG_RESULT([loading])
 	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        AC_MSG_RESULT([could not find ${TCL_BIN_DIR}/tclConfig.sh])
+	AC_MSG_RESULT([could not find ${TCL_BIN_DIR}/tclConfig.sh])
     fi
 
     # If the TCL_BIN_DIR is the build directory (not the install directory),
@@ -300,9 +300,9 @@ AC_DEFUN([SC_LOAD_TCLCONFIG], [
     # instead of TCL_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
     if test -f "${TCL_BIN_DIR}/Makefile" ; then
-        TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
-        TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
-        TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
+	TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
+	TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
+	TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
     elif test "`uname -s`" = "Darwin"; then
 	# If Tcl was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
@@ -360,10 +360,10 @@ AC_DEFUN([SC_LOAD_TKCONFIG], [
     AC_MSG_CHECKING([for existence of ${TK_BIN_DIR}/tkConfig.sh])
 
     if test -f "${TK_BIN_DIR}/tkConfig.sh" ; then
-        AC_MSG_RESULT([loading])
+	AC_MSG_RESULT([loading])
 	. "${TK_BIN_DIR}/tkConfig.sh"
     else
-        AC_MSG_RESULT([could not find ${TK_BIN_DIR}/tkConfig.sh])
+	AC_MSG_RESULT([could not find ${TK_BIN_DIR}/tkConfig.sh])
     fi
 
     # If the TK_BIN_DIR is the build directory (not the install directory),
@@ -373,9 +373,9 @@ AC_DEFUN([SC_LOAD_TKCONFIG], [
     # instead of TK_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
     if test -f "${TK_BIN_DIR}/Makefile" ; then
-        TK_LIB_SPEC="${TK_BUILD_LIB_SPEC}"
-        TK_STUB_LIB_SPEC="${TK_BUILD_STUB_LIB_SPEC}"
-        TK_STUB_LIB_PATH="${TK_BUILD_STUB_LIB_PATH}"
+	TK_LIB_SPEC="${TK_BUILD_LIB_SPEC}"
+	TK_STUB_LIB_SPEC="${TK_BUILD_STUB_LIB_SPEC}"
+	TK_STUB_LIB_PATH="${TK_BUILD_STUB_LIB_PATH}"
     elif test "`uname -s`" = "Darwin"; then
 	# If Tk was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
@@ -990,7 +990,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 			;;
 		    *)
 			# Make sure only first arg gets _r
-		    	CC=`echo "$CC" | sed -e 's/^\([[^ ]]*\)/\1_r/'`
+			CC=`echo "$CC" | sed -e 's/^\([[^ ]]*\)/\1_r/'`
 			;;
 		esac
 		AC_MSG_RESULT([Using $CC for compiling with threads])
@@ -1079,7 +1079,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    ;;
 	CYGWIN_*|MINGW32_*|MSYS_*)
 	    SHLIB_CFLAGS="-fno-common"
-	    SHLIB_LD='${CC} -shared'
+	    SHLIB_LD='${CC} -shared -Wl,--out-implib,$(patsubst cyg%.dll,lib%.dll,$[@]).a'
 	    SHLIB_SUFFIX=".dll"
 	    DL_OBJS="tclLoadDl.o"
 	    PLAT_OBJS='${CYGWIN_OBJS}'
@@ -1087,9 +1087,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    DL_LIBS="-ldl"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    TCL_NEEDS_EXP_FILE=1
-	    TCL_EXPORT_FILE_SUFFIX='${VERSION}.dll.a'
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$[@].a"
 	    AC_CACHE_CHECK(for Cygwin version of gcc,
 		ac_cv_cygwin,
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -1252,14 +1249,14 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    # Check to enable 64-bit flags for compiler/linker
 
 	    AS_IF([test "$do64bit" = yes], [
-	        AS_IF([test "$GCC" = yes], [
-	            AC_MSG_WARN([64bit mode not supported by gcc])
-	        ], [
-	            do64bit_ok=yes
-	            SHLIB_LD="ld -64 -shared -rdata_shared"
-	            CFLAGS="$CFLAGS -64"
-	            LDFLAGS_ARCH="-64"
-	        ])
+		AS_IF([test "$GCC" = yes], [
+		    AC_MSG_WARN([64bit mode not supported by gcc])
+		], [
+		    do64bit_ok=yes
+		    SHLIB_LD="ld -64 -shared -rdata_shared"
+		    CFLAGS="$CFLAGS -64"
+		    LDFLAGS_ARCH="-64"
+		])
 	    ])
 	    ;;
 	Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
@@ -1279,13 +1276,12 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
 	    case $system in
 	    DragonFly-*|FreeBSD-*)
-		AS_IF([test "${TCL_THREADS}" = "1"], [
-		    # The -pthread needs to go in the LDFLAGS, not LIBS
-		    LIBS=`echo $LIBS | sed s/-pthread//`
-		    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-		    LDFLAGS="$LDFLAGS $PTHREAD_LIBS"])
+		# The -pthread needs to go in the LDFLAGS, not LIBS
+		LIBS=`echo $LIBS | sed s/-pthread//`
+		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+		LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
 	    ;;
-            esac
+	    esac
 
 	    AS_IF([test $doRpath = yes], [
 		CC_SEARCH_FLAGS='"-Wl,-rpath,${LIB_RUNTIME_DIR}"'])
@@ -1406,16 +1402,16 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 			    CFLAGS="$CFLAGS -arch x86_64"
 			    do64bit_ok=yes
 			]);;
-		    arm64|arm64e)
-			AC_CACHE_CHECK([if compiler accepts -arch arm64e flag],
-				tcl_cv_cc_arch_arm64e, [
+		    arm64)
+			AC_CACHE_CHECK([if compiler accepts -arch arm64 flag],
+				tcl_cv_cc_arch_arm64, [
 			    hold_cflags=$CFLAGS
-			    CFLAGS="$CFLAGS -arch arm64e"
+			    CFLAGS="$CFLAGS -arch arm64"
 			    AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])],
-				    [tcl_cv_cc_arch_arm64e=yes],[tcl_cv_cc_arch_arm64e=no])
+				    [tcl_cv_cc_arch_arm64=yes],[tcl_cv_cc_arch_arm64=no])
 			    CFLAGS=$hold_cflags])
-			AS_IF([test $tcl_cv_cc_arch_arm64e = yes], [
-			    CFLAGS="$CFLAGS -arch arm64e"
+			AS_IF([test $tcl_cv_cc_arch_arm64 = yes], [
+			    CFLAGS="$CFLAGS -arch arm64"
 			    do64bit_ok=yes
 			]);;
 		    *)
@@ -1423,20 +1419,11 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		esac
 	    ], [
 		# Check for combined 32-bit and 64-bit fat build
-		AS_IF([echo "$CFLAGS " |grep -E -q -- '-arch (ppc64|x86_64|arm64e) ' \
+		AS_IF([echo "$CFLAGS " |grep -E -q -- '-arch (ppc64|x86_64|arm64) ' \
 		    && echo "$CFLAGS " |grep -E -q -- '-arch (ppc|i386) '], [
 		    fat_32_64=yes])
 	    ])
 	    SHLIB_LD='${CC} -dynamiclib ${CFLAGS} ${LDFLAGS}'
-	    AC_CACHE_CHECK([if ld accepts -single_module flag], tcl_cv_ld_single_module, [
-		hold_ldflags=$LDFLAGS
-		LDFLAGS="$LDFLAGS -dynamiclib -Wl,-single_module"
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int i;]])],[tcl_cv_ld_single_module=yes],
-		    [tcl_cv_ld_single_module=no])
-		LDFLAGS=$hold_ldflags])
-	    AS_IF([test $tcl_cv_ld_single_module = yes], [
-		SHLIB_LD="${SHLIB_LD} -Wl,-single_module"
-	    ])
 	    SHLIB_SUFFIX=".dylib"
 	    DL_OBJS="tclLoadDyld.o"
 	    DL_LIBS=""
@@ -1459,7 +1446,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    ])
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    LD_LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
+	    LD_LIBRARY_PATH_VAR="DYLD_FALLBACK_LIBRARY_PATH"
 	    AC_DEFINE(MAC_OSX_TCL, 1, [Is this a Mac I see before me?])
 	    PLAT_OBJS='${MAC_OSX_OBJS}'
 	    PLAT_SRCS='${MAC_OSX_SRCS}'
@@ -1489,7 +1476,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		    AS_IF([test "$fat_32_64" = yes], [
 			for v in CFLAGS CPPFLAGS LDFLAGS; do
 			    eval $v'="$hold_'$v'"'
-		        done])
+			done])
 		    LIBS=$hold_libs])
 		AS_IF([test $tcl_cv_lib_corefoundation = yes], [
 		    LIBS="$LIBS -framework CoreFoundation"
@@ -1512,7 +1499,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		    AS_IF([test $tcl_cv_lib_corefoundation_64 = no], [
 			AC_DEFINE(NO_COREFOUNDATION_64, 1,
 			    [Is Darwin CoreFoundation unavailable for 64-bit?])
-                        LDFLAGS="$LDFLAGS -Wl,-no_arch_warnings"
+			LDFLAGS="$LDFLAGS -Wl,-no_arch_warnings"
 		    ])
 		])
 	    ])
@@ -1527,9 +1514,9 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    # Digital OSF/1
 	    SHLIB_CFLAGS=""
 	    AS_IF([test "$SHARED_BUILD" = 1], [
-	        SHLIB_LD='${CC} -shared'
+		SHLIB_LD='${CC} -shared'
 	    ], [
-	        SHLIB_LD='${CC} -non_shared'
+		SHLIB_LD='${CC} -non_shared'
 	    ])
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -1726,7 +1713,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		hold_ldflags=$LDFLAGS
 		LDFLAGS="$LDFLAGS -Wl,-Bexport"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int i;]])],[tcl_cv_ld_Bexport=yes],[tcl_cv_ld_Bexport=no])
-	        LDFLAGS=$hold_ldflags])
+		LDFLAGS=$hold_ldflags])
 	    AS_IF([test $tcl_cv_ld_Bexport = yes], [
 		LDFLAGS="$LDFLAGS -Wl,-Bexport"
 	    ])
@@ -1802,30 +1789,30 @@ dnl # preprocessing tests use only CPPFLAGS.
     DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
 
     AS_IF([test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""], [
-        LIB_SUFFIX=${SHARED_LIB_SUFFIX}
-        MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
-        AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)";if test -f $(LIB_FILE).a; then $(INSTALL_DATA) $(LIB_FILE).a "$(LIB_INSTALL_DIR)"; fi;'
-            DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
-        ], [
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
-        ])
+	LIB_SUFFIX=${SHARED_LIB_SUFFIX}
+	MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
+	AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
+	    INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
+	    DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
+	], [
+	    INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
+	])
     ], [
-        LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
+	LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
 
-        AS_IF([test "$RANLIB" = ""], [
-            MAKE_LIB='$(STLIB_LD) [$]@ ${OBJS}'
-        ], [
-            MAKE_LIB='${STLIB_LD} [$]@ ${OBJS} ; ${RANLIB} [$]@'
-        ])
-        INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
+	AS_IF([test "$RANLIB" = ""], [
+	    MAKE_LIB='$(STLIB_LD) [$]@ ${OBJS}'
+	], [
+	    MAKE_LIB='${STLIB_LD} [$]@ ${OBJS} ; ${RANLIB} [$]@'
+	])
+	INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
     ])
 
     # Stub lib does not depend on shared/static configuration
     AS_IF([test "$RANLIB" = ""], [
-        MAKE_STUB_LIB='${STLIB_LD} [$]@ ${STUB_LIB_OBJS}'
+	MAKE_STUB_LIB='${STLIB_LD} [$]@ ${STUB_LIB_OBJS}'
     ], [
-        MAKE_STUB_LIB='${STLIB_LD} [$]@ ${STUB_LIB_OBJS} ; ${RANLIB} [$]@'
+	MAKE_STUB_LIB='${STLIB_LD} [$]@ ${STUB_LIB_OBJS} ; ${RANLIB} [$]@'
     ])
     INSTALL_STUB_LIB='$(INSTALL_LIBRARY) $(STUB_LIB_FILE) "$(LIB_INSTALL_DIR)/$(STUB_LIB_FILE)"'
 
@@ -1833,7 +1820,7 @@ dnl # preprocessing tests use only CPPFLAGS.
     # The trick here is that we don't want to change the value of TCL_LIBS if
     # it is already set when tclConfig.sh had been loaded by Tk.
     AS_IF([test "x${TCL_LIBS}" = x], [
-        TCL_LIBS="${DL_LIBS} ${LIBS} ${MATH_LIBS}"])
+	TCL_LIBS="${DL_LIBS} ${LIBS} ${MATH_LIBS}"])
     AC_SUBST(TCL_LIBS)
 
     # See if the compiler supports casting to a union type.
@@ -1875,7 +1862,8 @@ dnl # preprocessing tests use only CPPFLAGS.
 	CFLAGS="$CFLAGS -finput-charset=UTF-8"
     fi
 
-    AC_CHECK_HEADER(stdbool.h, [AC_DEFINE(HAVE_STDBOOL_H, 1, [Do we have <stdbool.h>?])],)
+    # Check for vfork, posix_spawnp() and friends unconditionally
+    AC_CHECK_FUNCS(vfork posix_spawnp posix_spawn_file_actions_adddup2 posix_spawnattr_setflags)
 
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
@@ -1932,9 +1920,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 # Results:
 #
 #	Defines some of the following vars:
-#		NO_DIRENT_H
-#		NO_STDLIB_H
-#		NO_STRING_H
 #		NO_SYS_WAIT_H
 #		NO_DLFCN_H
 #		HAVE_SYS_PARAM_H
@@ -1943,48 +1928,9 @@ dnl # preprocessing tests use only CPPFLAGS.
 #--------------------------------------------------------------------
 
 AC_DEFUN([SC_MISSING_POSIX_HEADERS], [
-    AC_CACHE_CHECK([dirent.h], tcl_cv_dirent_h, [
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
-#include <dirent.h>]], [[
-#ifndef _POSIX_SOURCE
-#   ifdef __Lynx__
-	/*
-	 * Generate compilation error to make the test fail:  Lynx headers
-	 * are only valid if really in the POSIX environment.
-	 */
-
-	missing_procedure();
-#   endif
-#endif
-DIR *d;
-struct dirent *entryPtr;
-char *p;
-d = opendir("foobar");
-entryPtr = readdir(d);
-p = entryPtr->d_name;
-closedir(d);
-]])],[tcl_cv_dirent_h=yes],[tcl_cv_dirent_h=no])])
-
-    if test $tcl_cv_dirent_h = no; then
-	AC_DEFINE(NO_DIRENT_H, 1, [Do we have <dirent.h>?])
-    fi
-
-    AC_CHECK_HEADER(stdlib.h, tcl_ok=1, tcl_ok=0)
-    AC_EGREP_HEADER(strtol, stdlib.h, , tcl_ok=0)
-    AC_EGREP_HEADER(strtoul, stdlib.h, , tcl_ok=0)
-    if test $tcl_ok = 0; then
-	AC_DEFINE(NO_STDLIB_H, 1, [Do we have <stdlib.h>?])
-    fi
     AC_CHECK_HEADER(string.h, tcl_ok=1, tcl_ok=0)
     AC_EGREP_HEADER(strstr, string.h, , tcl_ok=0)
     AC_EGREP_HEADER(strerror, string.h, , tcl_ok=0)
-
-    # See also memmove check below for a place where NO_STRING_H can be
-    # set and why.
-
-    if test $tcl_ok = 0; then
-	AC_DEFINE(NO_STRING_H, 1, [Do we have <string.h>?])
-    fi
 
     AC_CHECK_HEADER(sys/wait.h, , [AC_DEFINE(NO_SYS_WAIT_H, 1, [Do we have <sys/wait.h>?])])
     AC_CHECK_HEADER(dlfcn.h, , [AC_DEFINE(NO_DLFCN_H, 1, [Do we have <dlfcn.h>?])])
@@ -2139,7 +2085,7 @@ AC_DEFUN([SC_TIME_HANDLER], [
     AC_CHECK_HEADERS(sys/time.h)
     AC_CHECK_HEADERS_ONCE([sys/time.h])
 
-    AC_CHECK_FUNCS(gmtime_r localtime_r mktime)
+    AC_CHECK_FUNCS(gmtime_r localtime_r)
 
     AC_CACHE_CHECK([tm_tzadj in struct tm], tcl_cv_member_tm_tzadj, [
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct tm tm; (void)tm.tm_tzadj;]])],
@@ -2310,9 +2256,6 @@ AC_DEFUN([SC_TCL_LINK_LIBS], [
     LIBS="$LIBS $THREADS_LIBS"
     AC_CHECK_FUNCS(pthread_attr_setstacksize pthread_atfork)
     LIBS=$ac_saved_libs
-
-    # TIP #509
-    AC_CHECK_DECLS([PTHREAD_MUTEX_RECURSIVE],tcl_ok=yes,tcl_ok=no, [[#include <pthread.h>]])
 ])
 
 #--------------------------------------------------------------------
@@ -2328,20 +2271,20 @@ AC_DEFUN([SC_TCL_LINK_LIBS], [
 #
 #	Might define the following vars:
 #		_ISOC99_SOURCE
+#		_FILE_OFFSET_BITS
 #		_LARGEFILE64_SOURCE
-#		_LARGEFILE_SOURCE64
 #
 #--------------------------------------------------------------------
 
 AC_DEFUN([SC_TCL_EARLY_FLAG],[
     AC_CACHE_VAL([tcl_cv_flag_]translit($1,[A-Z],[a-z]),
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$2]], [[$3]])],
-	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ 1
+	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ ]m4_default([$4],[1])[
 ]$2]], [[$3]])],
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=yes,
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=no)]))
     if test ["x${tcl_cv_flag_]translit($1,[A-Z],[a-z])[}" = "xyes"] ; then
-	AC_DEFINE($1, 1, [Add the ]$1[ flag when building])
+	AC_DEFINE($1, m4_default([$4],[1]), [Add the ]$1[ flag when building])
 	tcl_flags="$tcl_flags $1"
     fi
 ])
@@ -2351,10 +2294,10 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
     tcl_flags=""
     SC_TCL_EARLY_FLAG(_ISOC99_SOURCE,[#include <stdlib.h>],
 	[char *p = (char *)strtoll; char *q = (char *)strtoull;])
+    SC_TCL_EARLY_FLAG(_FILE_OFFSET_BITS,[#include <sys/stat.h>],
+	[switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }],64)
     SC_TCL_EARLY_FLAG(_LARGEFILE64_SOURCE,[#include <sys/stat.h>],
 	[struct stat64 buf; int i = stat64("/", &buf);])
-    SC_TCL_EARLY_FLAG(_LARGEFILE_SOURCE64,[#include <sys/stat.h>],
-	[char *p = (char *)open64;])
     if test "x${tcl_flags}" = "x" ; then
 	AC_MSG_RESULT([none])
     else
@@ -2375,26 +2318,44 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
 #	Might define the following vars:
 #		TCL_WIDE_INT_IS_LONG
 #		HAVE_STRUCT_DIRENT64, HAVE_DIR64
-#		HAVE_STRUCT_STAT64
 #		HAVE_TYPE_OFF64_T
+#		_TIME_BITS
 #
 #--------------------------------------------------------------------
 
 AC_DEFUN([SC_TCL_64BIT_FLAGS], [
-    AC_MSG_CHECKING([for 64-bit integer type])
+    AC_MSG_CHECKING([if 'long' and 'long long' have the same size (64-bit)?])
     AC_CACHE_VAL(tcl_cv_type_64bit,[
 	tcl_cv_type_64bit=none
 	# See if we could use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[switch (0) {
-            case 1: case (sizeof(long long)==sizeof(long)): ;
-        }]])],[tcl_cv_type_64bit="long long"],[])])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[switch (0) {
+	    case 1: case (sizeof(long long)==sizeof(long)): ;
+	}]])],[tcl_cv_type_64bit="long long"],[])])
     if test "${tcl_cv_type_64bit}" = none ; then
 	AC_DEFINE(TCL_WIDE_INT_IS_LONG, 1, [Do 'long' and 'long long' have the same size (64-bit)?])
 	AC_MSG_RESULT([yes])
     else
+	AC_MSG_RESULT([no])
 	# Now check for auxiliary declarations
+	AC_CACHE_CHECK([for 64-bit time_t], tcl_cv_time_t_64,[
+	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
+		[[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		[tcl_cv_time_t_64=yes],[tcl_cv_time_t_64=no])])
+	if test "x${tcl_cv_time_t_64}" = "xno" ; then
+	    # Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
+	    # which SC_TCL_EARLY_FLAGS has defined if necessary.
+	    AC_CACHE_CHECK([if _TIME_BITS=64 enables 64-bit time_t], tcl_cv__time_bits,[
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _TIME_BITS 64
+#include <sys/types.h>]],
+		    [[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		    [tcl_cv__time_bits=yes],[tcl_cv__time_bits=no])])
+	    if test "x${tcl_cv__time_bits}" = "xyes" ; then
+		AC_DEFINE(_TIME_BITS, 64, [_TIME_BITS=64 enables 64-bit time_t.])
+	    fi
+	fi
+
 	AC_CACHE_CHECK([for struct dirent64], tcl_cv_struct_dirent64,[
 	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 #include <dirent.h>]], [[struct dirent64 p;]])],
@@ -2406,18 +2367,10 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
 	AC_CACHE_CHECK([for DIR64], tcl_cv_DIR64,[
 	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 #include <dirent.h>]], [[struct dirent64 *p; DIR64 d = opendir64(".");
-            p = readdir64(d); rewinddir64(d); closedir64(d);]])],
+	    p = readdir64(d); rewinddir64(d); closedir64(d);]])],
 		[tcl_cv_DIR64=yes], [tcl_cv_DIR64=no])])
 	if test "x${tcl_cv_DIR64}" = "xyes" ; then
 	    AC_DEFINE(HAVE_DIR64, 1, [Is 'DIR64' in <sys/types.h>?])
-	fi
-
-	AC_CACHE_CHECK([for struct stat64], tcl_cv_struct_stat64,[
-	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/stat.h>]], [[struct stat64 p;
-]])],
-		[tcl_cv_struct_stat64=yes], [tcl_cv_struct_stat64=no])])
-	if test "x${tcl_cv_struct_stat64}" = "xyes" ; then
-	    AC_DEFINE(HAVE_STRUCT_STAT64, 1, [Is 'struct stat64' in <sys/stat.h>?])
 	fi
 
 	AC_CHECK_FUNCS(open64 lseek64)
@@ -2429,8 +2382,8 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
 	dnl Define HAVE_TYPE_OFF64_T only when the off64_t type and the
 	dnl functions lseek64 and open64 are defined.
 	if test "x${tcl_cv_type_off64_t}" = "xyes" && \
-	        test "x${ac_cv_func_lseek64}" = "xyes" && \
-	        test "x${ac_cv_func_open64}" = "xyes" ; then
+		test "x${ac_cv_func_lseek64}" = "xyes" && \
+		test "x${ac_cv_func_open64}" = "xyes" ; then
 	    AC_DEFINE(HAVE_TYPE_OFF64_T, 1, [Is off64_t in <sys/types.h>?])
 	    AC_MSG_RESULT([yes])
 	else
@@ -2932,7 +2885,7 @@ AC_DEFUN([SC_TCL_IPV6],[
 ]])
 if test "x$NEED_FAKE_RFC2553" = "x1"; then
    AC_DEFINE([NEED_FAKE_RFC2553], 1,
-        [Use compat implementation of getaddrinfo() and friends])
+	[Use compat implementation of getaddrinfo() and friends])
    AC_LIBOBJ([fake-rfc2553])
    AC_CHECK_FUNC(strlcpy)
 fi
@@ -2955,23 +2908,23 @@ dnl Get a default for CC_FOR_BUILD to put into Makefile.
 AC_DEFUN([AX_CC_FOR_BUILD],[# Put a plausible default for CC_FOR_BUILD in Makefile.
     if test -z "$CC_FOR_BUILD"; then
       if test "x$cross_compiling" = "xno"; then
-        CC_FOR_BUILD='$(CC)'
+	CC_FOR_BUILD='$(CC)'
       else
-        AC_MSG_CHECKING([for gcc])
-        AC_CACHE_VAL(ac_cv_path_cc, [
-            search_path=`echo ${PATH} | sed -e 's/:/ /g'`
-            for dir in $search_path ; do
-                for j in `ls -r $dir/gcc 2> /dev/null` \
-                        `ls -r $dir/gcc 2> /dev/null` ; do
-                    if test x"$ac_cv_path_cc" = x ; then
-                        if test -f "$j" ; then
-                            ac_cv_path_cc=$j
-                            break
-                        fi
-                    fi
-                done
-            done
-        ])
+	AC_MSG_CHECKING([for gcc])
+	AC_CACHE_VAL(ac_cv_path_cc, [
+	    search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+	    for dir in $search_path ; do
+		for j in `ls -r $dir/gcc 2> /dev/null` \
+			`ls -r $dir/gcc 2> /dev/null` ; do
+		    if test x"$ac_cv_path_cc" = x ; then
+			if test -f "$j" ; then
+			    ac_cv_path_cc=$j
+			    break
+			fi
+		    fi
+		done
+	    done
+	])
       fi
     fi
     AC_SUBST(CC_FOR_BUILD)
@@ -2982,18 +2935,18 @@ AC_DEFUN([AX_CC_FOR_BUILD],[# Put a plausible default for CC_FOR_BUILD in Makefi
     else
       OBJEXT_FOR_BUILD='.no'
       AC_CACHE_CHECK([for build system executable suffix], bfd_cv_build_exeext,
-        [rm -f conftest*
-         echo 'int main () { return 0; }' > conftest.c
-         bfd_cv_build_exeext=
-         ${CC_FOR_BUILD} -o conftest conftest.c 1>&5 2>&5
-         for file in conftest.*; do
-           case $file in
-           *.c | *.o | *.obj | *.ilk | *.pdb) ;;
-           *) bfd_cv_build_exeext=`echo $file | sed -e s/conftest//` ;;
-           esac
-         done
-         rm -f conftest*
-         test x"${bfd_cv_build_exeext}" = x && bfd_cv_build_exeext=no])
+	[rm -f conftest*
+	 echo 'int main () { return 0; }' > conftest.c
+	 bfd_cv_build_exeext=
+	 ${CC_FOR_BUILD} -o conftest conftest.c 1>&5 2>&5
+	 for file in conftest.*; do
+	   case $file in
+	   *.c | *.o | *.obj | *.ilk | *.pdb) ;;
+	   *) bfd_cv_build_exeext=`echo $file | sed -e s/conftest//` ;;
+	   esac
+	 done
+	 rm -f conftest*
+	 test x"${bfd_cv_build_exeext}" = x && bfd_cv_build_exeext=no])
       EXEEXT_FOR_BUILD=""
       test x"${bfd_cv_build_exeext}" != xno && EXEEXT_FOR_BUILD=${bfd_cv_build_exeext}
     fi
@@ -3029,52 +2982,52 @@ AC_DEFUN([SC_ZIPFS_SUPPORT], [
     AC_CACHE_VAL(ac_cv_path_macher, [
     search_path=`echo ${PATH} | sed -e 's/:/ /g'`
     for dir in $search_path ; do
-        for j in `ls -r $dir/macher 2> /dev/null` \
-            `ls -r $dir/macher 2> /dev/null` ; do
-        if test x"$ac_cv_path_macher" = x ; then
-            if test -f "$j" ; then
-            ac_cv_path_macher=$j
-            break
-            fi
-        fi
-        done
+	for j in `ls -r $dir/macher 2> /dev/null` \
+	    `ls -r $dir/macher 2> /dev/null` ; do
+	if test x"$ac_cv_path_macher" = x ; then
+	    if test -f "$j" ; then
+	    ac_cv_path_macher=$j
+	    break
+	    fi
+	fi
+	done
     done
     ])
     if test -f "$ac_cv_path_macher" ; then
-        MACHER_PROG="$ac_cv_path_macher"
-        AC_MSG_RESULT([$MACHER_PROG])
-        AC_MSG_RESULT([Found macher in environment])
+	MACHER_PROG="$ac_cv_path_macher"
+	AC_MSG_RESULT([$MACHER_PROG])
+    else
+	AC_MSG_RESULT([Macher not found])
     fi
     AC_MSG_CHECKING([for zip])
     AC_CACHE_VAL(ac_cv_path_zip, [
     search_path=`echo ${PATH} | sed -e 's/:/ /g'`
     for dir in $search_path ; do
-        for j in `ls -r $dir/zip 2> /dev/null` \
-            `ls -r $dir/zip 2> /dev/null` ; do
-        if test x"$ac_cv_path_zip" = x ; then
-            if test -f "$j" ; then
-            ac_cv_path_zip=$j
-            break
-            fi
-        fi
-        done
+	for j in `ls -r $dir/zip 2> /dev/null` \
+	    `ls -r $dir/zip 2> /dev/null` ; do
+	if test x"$ac_cv_path_zip" = x ; then
+	    if test -f "$j" ; then
+	    ac_cv_path_zip=$j
+	    break
+	    fi
+	fi
+	done
     done
     ])
     if test -f "$ac_cv_path_zip" ; then
-        ZIP_PROG="$ac_cv_path_zip"
-        AC_MSG_RESULT([$ZIP_PROG])
-        ZIP_PROG_OPTIONS="-rq"
-        ZIP_PROG_VFSSEARCH="*"
-        AC_MSG_RESULT([Found INFO Zip in environment])
-        # Use standard arguments for zip
+	ZIP_PROG="$ac_cv_path_zip"
+	AC_MSG_RESULT([$ZIP_PROG])
+	ZIP_PROG_OPTIONS="-rq"
+	ZIP_PROG_VFSSEARCH="*"
+	# Use standard arguments for zip
     else
-        # It is not an error if an installed version of Zip can't be located.
-        # We can use the locally distributed minizip instead
-        ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
-        ZIP_PROG_OPTIONS="-o -r"
-        ZIP_PROG_VFSSEARCH="*"
-        ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
-        AC_MSG_RESULT([No zip found on PATH. Building minizip])
+	# It is not an error if an installed version of Zip can't be located.
+	# We can use the locally distributed minizip instead
+	ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
+	ZIP_PROG_OPTIONS="-o -r"
+	ZIP_PROG_VFSSEARCH="*"
+	ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
+	AC_MSG_RESULT([No zip found on PATH. Building minizip])
     fi
     AC_SUBST(MACHER_PROG)
     AC_SUBST(ZIP_PROG)

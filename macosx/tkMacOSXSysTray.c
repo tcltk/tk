@@ -149,7 +149,7 @@ typedef TkStatusItem** StatusItemInfo;
  *
  * MacSystrayDestroy --
  *
- * 	Removes an intepreters icon from the status bar.
+ *	Removes an intepreters icon from the status bar.
  *
  * Results:
  *	None.
@@ -162,8 +162,7 @@ typedef TkStatusItem** StatusItemInfo;
 
 static void
 MacSystrayDestroy(
-    ClientData clientData,
-    TCL_UNUSED(Tcl_Interp *))
+    void *clientData)
 {
     StatusItemInfo info = (StatusItemInfo)clientData;
     if (info) {
@@ -177,8 +176,8 @@ MacSystrayDestroy(
  *
  * MacSystrayObjCmd --
  *
- * 	Main command for creating, displaying, and removing icons from the
- * 	status bar.
+ *	Main command for creating, displaying, and removing icons from the
+ *	status bar.
  *
  * Results:
  *
@@ -195,7 +194,7 @@ static int
 MacSystrayObjCmd(
     void *clientData,
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
@@ -206,7 +205,7 @@ MacSystrayObjCmd(
     static const char *modifyOptions[] =
 	{"image", "text", "b1_callback", "b3_callback", NULL};
     typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK
-        } modifyOptionsEnum;
+	} modifyOptionsEnum;
 
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp,
@@ -227,7 +226,7 @@ MacSystrayObjCmd(
 				       sizeof(char *), "command", 0, &idx);
 
     if (result != TCL_OK) {
-    	return TCL_ERROR;
+	return TCL_ERROR;
     }
     switch((optionsEnum)idx) {
     case TRAY_CREATE: {
@@ -330,9 +329,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-        /*
-         * Modify the text for the tooltip.
-         */
+	/*
+	 * Modify the text for the tooltip.
+	 */
 
 	case TRAY_TEXT: {
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
@@ -346,9 +345,9 @@ MacSystrayObjCmd(
 	    break;
 	}
 
-        /*
-         * Modify the proc for the callback.
-         */
+	/*
+	 * Modify the proc for the callback.
+	 */
 
 	case TRAY_B1_CALLBACK: {
 	    [statusItem setB1Callback : objv[3]];
@@ -366,14 +365,14 @@ MacSystrayObjCmd(
 	/*
 	 * Set all properties to nil, and release statusItem.
 	 */
-        [statusItem setImagewithImage: nil];
-        [statusItem setTextwithString: nil];
-        [statusItem setB1Callback : NULL];
-        [statusItem setB3Callback : NULL];
-        [statusItem release];
-        *info = NULL;
-        statusItem = NULL;
-        break;
+	[statusItem setImagewithImage: nil];
+	[statusItem setTextwithString: nil];
+	[statusItem setB1Callback : NULL];
+	[statusItem setB3Callback : NULL];
+	[statusItem release];
+	*info = NULL;
+	statusItem = NULL;
+	break;
     }
     }
 
@@ -401,7 +400,7 @@ MacSystrayObjCmd(
 static int SysNotifyObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     if (objc < 3) {
@@ -454,7 +453,7 @@ static int SysNotifyObjCmd(
  *
  * MacSystrayInit --
  *
- * 	Initialize this package and create script-level commands.
+ *	Initialize this package and create script-level commands.
  *      This is called from TkpInit for each interpreter.
  *
  * Results:
@@ -480,9 +479,9 @@ MacSystrayInit(Tcl_Interp *interp)
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
 
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
-            (Tcl_CmdDeleteProc *)MacSystrayDestroy);
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
+	    MacSystrayDestroy);
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
 

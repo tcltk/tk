@@ -1,58 +1,36 @@
 # This file is a Tcl script to test the visual- and colormap-handling
-# procedures in the file tkVisual.c.  It is organized in the standard
-# fashion for Tcl tests.
+# procedures in the file tkVisual.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import colors
+
+#
+# COMMON TEST SETUP
+#
 
 update
-
-# eatColors --
-# Creates a toplevel window and allocates enough colors in it to
-# use up all the slots in the colormap.
-#
-# Arguments:
-# w -        Name of toplevel window to create.
-
-proc eatColors {w} {
-    catch {destroy $w}
-    toplevel $w
-    wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
-    pack $w.c
-    for {set y 0} {$y < 8} {incr y} {
-        for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
-            $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
-                [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
-                -fill $color
-        }
-    }
-    update
-}
-
-# colorsFree --
-#
-# Returns 1 if there appear to be free colormap entries in a window,
-# 0 otherwise.
-#
-# Arguments:
-# w -            Name of window in which to check.
-# red, green, blue -    Intensities to use in a trial color allocation
-#            to see if there are colormap entries free.
-
-proc colorsFree {w {red 31} {green 245} {blue 192}} {
-    set vals [winfo rgb $w [format #%02x%02x%02x $red $green $blue]]
-    expr {([lindex $vals 0]/256 == $red) && ([lindex $vals 1]/256 == $green)
-        && ([lindex $vals 2]/256 == $blue)}
-}
 
 # If more than one visual type is available for the screen, pick one
 # that is *not* the default.
@@ -62,17 +40,24 @@ set avail [winfo visualsavailable .]
 set other {}
 if {[llength $avail] > 1} {
     foreach visual $avail {
-        if {$visual != $default} {
-            set other $visual
-            break
-        }
+	if {$visual != $default} {
+	    set other $visual
+	    break
+	}
     }
 }
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint haveOtherVisual [expr {$other ne ""}]
 testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test visual-1.1 {Tk_GetVisual, copying from other window} -body {
     toplevel .t -visual .foo.bar
@@ -341,7 +326,7 @@ test visual-3.1 {Tk_GetVisual, parsing visual string} -setup {
     deleteWindows
 } -body {
     toplevel .t1 -width 250 -height 100 \
-        -visual "[winfo visual .][winfo depth .]"
+	-visual "[winfo visual .][winfo depth .]"
     wm geometry .t1 +0+0
     update
     concat "[winfo visual .t1] [winfo depth .t1]"
@@ -529,8 +514,8 @@ test visual-8.1 {Tk_FreeColormap procedure} -setup {
     toplevel .t1 -width 300 -height 180 -colormap new
     wm geometry .t1 +0+0
     foreach i {.t2 .t3 .t4} {
-        toplevel $i -width 250 -height 150 -colormap .t1
-        wm geometry $i +0+0
+	toplevel $i -width 250 -height 150 -colormap .t1
+	wm geometry $i +0+0
     }
     destroy .t1
     destroy .t3
@@ -545,8 +530,8 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
     toplevel .t1 -width 300 -height 180 -visual $other
     wm geometry .t1 +0+0
     foreach i {.t2 .t3 .t4} {
-        toplevel $i -width 250 -height 150 -visual $other
-        wm geometry $i +0+0
+	toplevel $i -width 250 -height 150 -visual $other
+	wm geometry $i +0+0
     }
     destroy .t2
     destroy .t3
@@ -556,14 +541,13 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
     deleteWindows
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
 
 deleteWindows
-rename eatColors {}
-rename colorsFree {}
-
-# cleanup
+testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

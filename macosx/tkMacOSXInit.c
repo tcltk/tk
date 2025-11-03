@@ -15,10 +15,17 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXWm.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+
+/*
+ * This flag is set if tests are being run.
+ */
+
+int testsAreRunning = 0;
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -33,27 +40,27 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
-static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 TkMacOSXGetAppPathObjCmd;
+static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
+static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
+
 
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
-@synthesize isDrawing = _isDrawing;
-@synthesize isSigned = _isSigned;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
+@synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
+
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
-    if (_tkPointerWindow) {
-	Tcl_Release(_tkPointerWindow);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
     }
     _tkPointerWindow = winPtr;
     return;
@@ -61,11 +68,11 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkEventTarget = _tkEventTarget;
 - (void) setTkEventTarget: (TkWindow *)winPtr
 {
-    if (_tkEventTarget) {
-	Tcl_Release(_tkEventTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
     }
     _tkEventTarget = winPtr;
     return;
@@ -73,11 +80,11 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkDragTarget = _tkDragTarget;
 - (void) setTkDragTarget: (TkWindow *)winPtr
 {
-    if (_tkDragTarget) {
-	Tcl_Release(_tkDragTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
     }
     _tkDragTarget = winPtr;
     return;
@@ -114,7 +121,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 #endif
 
@@ -130,6 +137,17 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
     observe(NSTextInputContextKeyboardSelectionDidChangeNotification, keyboardChanged:);
 #undef observe
+}
+
+
+/*
+ * Fix for 10b38a7a7c.
+ */
+
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+{
+    (void) app;
+    return YES;
 }
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
@@ -173,7 +191,6 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
     */
 
     TkMacOSXInitAppleEvents(_eventInterp);
-
     }
 
 
@@ -196,18 +213,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
      */
 
     Ttk_MacOSXInit();
-
-    /*
-     * It is not safe to force activation of the NSApp until this method is
-     * called. Activating too early can cause the menu bar to be unresponsive.
-     * The call to activateIgnoringOtherApps was moved here to avoid this.
-     * However, with the release of macOS 10.15 (Catalina) that was no longer
-     * sufficient.  (See ticket bf93d098d7.)  The call to setActivationPolicy
-     * needed to be moved into this function as well.
-     */
-
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp activateIgnoringOtherApps: YES];
 
     /*
      * Add an event monitor so we continue to receive NSMouseMoved and
@@ -222,15 +228,6 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 	 {
 	     return event;
 	 }];
-
-    /*
-     * Process events to ensure that the root window is fully initialized. See
-     * ticket 56a1823c73.
-     */
-
-    [NSApp _lockAutoreleasePool];
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -258,8 +255,8 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 #else
     NSOperatingSystemVersion systemVersion;
     systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-    majorVersion = systemVersion.majorVersion;
-    minorVersion = systemVersion.minorVersion;
+    majorVersion = (int)systemVersion.majorVersion;
+    minorVersion = (int)systemVersion.minorVersion;
 #endif
 
     if (majorVersion == 10 && minorVersion == 16) {
@@ -275,17 +272,14 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 	struct utsname name;
 	char *endptr;
 	if (uname(&name) == 0) {
-	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    majorVersion = (int)strtol(name.release, &endptr, 10) + 1;
+	    if (majorVersion < 26) {
+		majorVersion -= 10;
+	    }
 	    minorVersion = 0;
 	}
     }
     [NSApp setMacOSVersion: 10000*majorVersion + 100*minorVersion];
-
-    /*
-     * We are not drawing right now.
-     */
-
-    [NSApp setIsDrawing:NO];
 
     /*
      * Be our own delegate.
@@ -386,7 +380,7 @@ static void closePanels(
 	[[NSFontPanel sharedFontPanel] orderOut:nil];
     }
     if ([NSColorPanel sharedColorPanelExists]) {
-        [[NSColorPanel sharedColorPanel] orderOut:nil];
+	[[NSColorPanel sharedColorPanel] orderOut:nil];
     }
 }
 
@@ -423,6 +417,21 @@ TCL_NORETURN void TkpExitProc(
     }
 
     /*
+     * At this point it is too late to be looking up the Tk window associated
+     * to any NSWindows, but it can happen.  This makes sure the answer is None
+     * if such a query is attempted.  It is also too late to be running any
+     * event loops, as happens in updateLayer.  Set the tkWillExit flag to
+     * prevent this.
+     */
+
+    [NSApp setTkWillExit:YES];
+    for (TKWindow *w in [NSApp orderedWindows]) {
+	if ([w respondsToSelector: @selector (tkWindow)]) {
+	    [w setTkWindow: None];
+	}
+    }
+
+    /*
      * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
      */
 
@@ -430,7 +439,7 @@ TCL_NORETURN void TkpExitProc(
     if (doCleanup == YES) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
-    exit((long)clientdata); /* Convince the compiler that we don't return. */
+    exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */
 }
 #endif
 
@@ -449,6 +458,26 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
+/*
+ * This static function is run as an idle task to order the root window front.
+ * This is only done if the window is in the normal state.  This avoids
+ * flashing the root window on the screen if it was withdrawn immediately after
+ * loading Tk.
+ */
+
+static void showRootWindow(void *clientData) {
+    NSWindow *root = (NSWindow *) clientData;
+    if ([NSApp tkWillExit]) {
+	return;
+    }
+    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->hints.initial_state == NormalState) {
+	[root makeKeyAndOrderFront:NSApp];
+    }
+    [NSApp activateIgnoringOtherApps: YES];
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -463,15 +492,15 @@ TkpInit(
     if (!initialized) {
 	struct stat st;
 	Bool shouldOpenConsole = NO;
-        Bool stdinIsNullish = (!isatty(0) &&
+	Bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#   error Mac OS X 10.6 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#   error Mac OS X 10.9 required
 #endif
 
 	initialized = 1;
@@ -487,7 +516,7 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
-            # if 0 /* This is not really an error.  Wish still runs fine. */
+	    # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	    # endif
 	}
@@ -509,40 +538,40 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 
-        /*
-         * WARNING: The finishLaunching method runs asynchronously. This
-         * creates a race between the initialization of the NSApplication and
-         * the initialization of Tk.  If Tk wins the race bad things happen
-         * with the root window (see below).  If the NSApplication wins then an
-         * AppleEvent created during launch, e.g. by dropping a file icon on
-         * the application icon, will be delivered before the procedure meant
-         * to to handle the AppleEvent has been defined.  This is handled in
-         * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * AppleEvent later, after the required procedure has been defined.
-         */
+	/*
+	 * WARNING: The finishLaunching method runs asynchronously. This
+	 * creates a race between the initialization of the NSApplication and
+	 * the initialization of Tk.  If Tk wins the race bad things happen
+	 * with the root window (see below).  If the NSApplication wins then an
+	 * AppleEvent created during launch, e.g. by dropping a file icon on
+	 * the application icon, will be delivered before the procedure meant
+	 * to to handle the AppleEvent has been defined.  This is handled in
+	 * tkMacOSXHLEvents.c by scheduling a timer event to handle the
+	 * AppleEvent later, after the required procedure has been defined.
+	 */
 
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
 
-        /*
-         * Create a Tk event source based on the Appkit event queue.
-         */
+	/*
+	 * Create a Tk event source based on the Appkit event queue.
+	 */
 
 	Tk_MacOSXSetupTkNotifier();
 
 	/*
 	 * If Tk initialization wins the race, the root window is mapped before
-         * the NSApplication is initialized.  This can cause bad things to
-         * happen.  The root window can open off screen with no way to make it
-         * appear on screen until the app icon is clicked.  This will happen if
-         * a Tk application opens a modal window in its startup script (see
-         * ticket 56a1823c73).  In other cases, an empty root window can open
-         * on screen and remain visible for a noticeable amount of time while
-         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
-         * below forces Tk to block until the Appkit event queue has been
-         * created.  This seems to be sufficient to ensure that the
-         * NSApplication initialization wins the race, avoiding these bad
-         * window behaviors.
+	 * the NSApplication is initialized.  This can cause bad things to
+	 * happen.  The root window can open off screen with no way to make it
+	 * appear on screen until the app icon is clicked.  This will happen if
+	 * a Tk application opens a modal window in its startup script (see
+	 * ticket 56a1823c73).  In other cases, an empty root window can open
+	 * on screen and remain visible for a noticeable amount of time while
+	 * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+	 * below forces Tk to block until the Appkit event queue has been
+	 * created.  This seems to be sufficient to ensure that the
+	 * NSApplication initialization wins the race, avoiding these bad
+	 * window behaviors.
 	 */
 
 	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
@@ -592,6 +621,9 @@ TkpInit(
 #if defined(USE_CUSTOM_EXIT_PROC)
 	    doCleanupFromExit = YES;
 #endif
+	} else if (getenv("TK_NO_STDERR") != NULL) {
+	    FILE *null = fopen("/dev/null", "w");
+	    dup2(fileno(null), STDERR_FILENO);
 	}
 
 	/*
@@ -617,14 +649,22 @@ TkpInit(
 	 * The root window has been created and mapped, but XMapWindow deferred its
 	 * call to makeKeyAndOrderFront because the first call to XMapWindow
 	 * occurs too early in the initialization process for that.  Process idle
-	 * tasks now, so the root window is configured, then order it front.
+	 * tasks now, so the root window is configured.
 	 */
 
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
 	    if (winPtr && Tk_IsMapped(winPtr)) {
-		[window makeKeyAndOrderFront:NSApp];
+
+		/*
+		 * Ordering the root window front in an idle task allows
+		 * checking whether it was immediately withdrawn, and
+		 * therefore does not need to be placed on the screen.
+		 */
+
+		Tcl_DoWhenIdle(showRootWindow, window);
 		break;
 	    }
 	}
@@ -658,16 +698,18 @@ TkpInit(
 	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-    Tcl_CreateObjCommand(interp, "nsimage",
+    Tcl_CreateObjCommand2(interp, "nsimage",
 	    TkMacOSXNSImageObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
-           TkMacOSVersionObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetInfoAsJSON",
+	    TkMacOSXGetInfoAsJSONObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::mac::macOSVersion",
+	    TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
 
@@ -692,9 +734,9 @@ TkpInit(
 
 static int
 TkMacOSXGetAppPathObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc != 1) {
@@ -715,7 +757,7 @@ TkMacOSXGetAppPathObjCmd(
      */
 
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), TCL_INDEX_NONE));
 
     CFRelease(mainBundleURL);
     CFRelease(appPath);
@@ -757,7 +799,7 @@ TkpGetAppName(
 	    name = p+1;
 	}
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
 }
 
 /*
@@ -780,9 +822,9 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *), /* ClientData */
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static char version[16] = "";
@@ -795,6 +837,58 @@ TkMacOSVersionObjCmd(
     }
     Tcl_SetResult(interp, version, NULL);
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetInfoAsJSONObjCmd --
+ *
+ *	Returns the contents of the Info.plist file in the application
+ *      bundle as a JSON-encoded Tcl string.
+ *
+ * Results:
+ *	Returns the JSON encoding of the Info.plist file..
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetInfoAsJSONObjCmd(
+    TCL_UNUSED(void *), /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
+{
+    static char *bytes = NULL;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    if (bytes == NULL) {
+	NSJSONWritingOptions opt = NSJSONWritingPrettyPrinted;
+	NSDictionary<NSString *, id> *infoDict = [[NSBundle mainBundle]
+						     infoDictionary];
+	NSData *infoAsJSON = [NSJSONSerialization
+				 dataWithJSONObject: infoDict
+					    options:opt
+					      error:nil];
+	if (infoAsJSON.length) {
+	    int buffer_size = (int) infoAsJSON.length + 1;
+	    bytes = malloc(buffer_size);
+	    strlcpy(bytes, infoAsJSON.bytes, buffer_size);
+	}
+    }
+    if (bytes) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(bytes, TCL_INDEX_NONE));
+	return TCL_OK;
+    }
+    return TCL_ERROR;
 }
 
 /*
@@ -822,9 +916,9 @@ TkpDisplayWarning(
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 
     if (errChannel) {
-	Tcl_WriteChars(errChannel, title, -1);
+	Tcl_WriteChars(errChannel, title, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, ": ", 2);
-	Tcl_WriteChars(errChannel, msg, -1);
+	Tcl_WriteChars(errChannel, msg, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }
@@ -865,7 +959,7 @@ TkMacOSXDefaultStartupScript(void)
 
 	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
-		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
+		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript, TCL_INDEX_NONE), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
 			appMainURL);
 		if (scriptFldrURL != NULL) {
@@ -900,11 +994,10 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
-    (void)module;
 
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */

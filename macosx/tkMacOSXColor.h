@@ -53,17 +53,6 @@ typedef union MacPixel_t {
 } MacPixel;
 
 /*
- * We maintain two colormaps, one for the LightAqua appearance and one for the
- * DarkAqua appearance.
- */
-
-enum macColormap {
-    noColormap,
-    lightColormap,
-    darkColormap,
-};
-
-/*
  * In TkMacOSXColor.c a Tk hash table is constructed from the static data
  * below to map system color names to CGColors.
  */
@@ -71,10 +60,10 @@ enum macColormap {
 typedef struct {
     const char *name;
     enum colorType type;
-    int value;
+    ThemeBrush value;
     const char *macName;
     /* Fields below are filled in after or during construction of the hash table. */
-    int index;
+    size_t index;
     NSString *selector;
 } SystemColorDatum;
 
@@ -87,10 +76,10 @@ typedef struct {
 
 static SystemColorDatum systemColorData[] = {
 {"Pixel",				rgbColor, 0, NULL, 0, NULL },
-{"Transparent",			       	clearColor,   0, NULL, 0, NULL },
+{"Transparent",					clearColor,   0, NULL, 0, NULL },
 
 {"Highlight",				HIBrush,  kThemeBrushPrimaryHighlightColor, NULL, 0, NULL },
-{"HighlightSecondary",		    	HIBrush,  kThemeBrushSecondaryHighlightColor, NULL, 0, NULL },
+{"HighlightSecondary",			HIBrush,  kThemeBrushSecondaryHighlightColor, NULL, 0, NULL },
 {"HighlightText",			HIBrush,  kThemeBrushBlack, NULL, 0, NULL },
 {"HighlightAlternate",			HIBrush,  kThemeBrushAlternatePrimaryHighlightColor, NULL, 0, NULL },
 {"PrimaryHighlightColor",		HIBrush,  kThemeBrushPrimaryHighlightColor, NULL, 0, NULL },
@@ -187,6 +176,8 @@ static SystemColorDatum systemColorData[] = {
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
 {"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
+/* This color is available since 10.3, so the fallback is unused */
+{"ControlAlternatingRowColor",	    semantic, 0, "grayColor" , 0, NULL },
 {NULL,				    rgbColor, 0, NULL, 0, NULL }
 };
 

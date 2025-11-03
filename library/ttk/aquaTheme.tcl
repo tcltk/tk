@@ -11,7 +11,6 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemLabelColor \
 	    -selectbackground systemSelectedTextBackgroundColor \
 	    -selectforeground systemSelectedTextColor \
-	    -selectborderwidth 0 \
 	    -insertwidth 1
 
 	ttk::style map . \
@@ -31,8 +30,8 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
-	        {alternate !pressed !background} white
-	        disabled systemDisabledControlTextColor}
+		{alternate !pressed !background} white
+		disabled systemDisabledControlTextColor}
 
 	# Menubutton
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
@@ -73,6 +72,20 @@ namespace eval ttk::theme::aqua {
 		selected RecessedFont
 		active RecessedFont
 		pressed RecessedFont
+	    }
+
+	# Sidebar (radio) button
+	font create SidebarFont -family .AppleSystemUIFont -size 11 -weight normal
+	ttk::style configure SidebarButton \
+	    -foreground systemControlTextColor \
+	    -font SidebarFont
+	ttk::style map SidebarButton \
+	    -foreground {
+		{disabled selected} systemWindowBackgroundColor3
+		{disabled !selected} systemDisabledControlTextColor
+		selected systemTextColor
+		active systemTextColor
+		pressed systemTextColor
 	    }
 
 	# For Entry, Combobox and Spinbox widgets the selected text background
@@ -137,9 +150,9 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
-	    -background systemTextBackgroundColor \
-            -stripedbackground systemDisabledControlTextColor \
-            -foreground systemTextColor \
+	    -background systemControlBackgroundColor \
+	    -stripedbackground systemControlAlternatingRowColor \
+	    -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
 	    -background {

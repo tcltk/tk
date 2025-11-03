@@ -258,10 +258,10 @@ AC_DEFUN([SC_LOAD_TCLCONFIG], [
     AC_MSG_CHECKING([for existence of ${TCL_BIN_DIR}/tclConfig.sh])
 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
-        AC_MSG_RESULT([loading])
+	AC_MSG_RESULT([loading])
 	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        AC_MSG_RESULT([could not find ${TCL_BIN_DIR}/tclConfig.sh])
+	AC_MSG_RESULT([could not find ${TCL_BIN_DIR}/tclConfig.sh])
     fi
 
     #
@@ -274,9 +274,9 @@ AC_DEFUN([SC_LOAD_TCLCONFIG], [
     #
 
     if test -f $TCL_BIN_DIR/Makefile ; then
-        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
-        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
-        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+	TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+	TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+	TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
     fi
 
     eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
@@ -318,10 +318,10 @@ AC_DEFUN([SC_LOAD_TKCONFIG], [
     AC_MSG_CHECKING([for existence of ${TK_BIN_DIR}/tkConfig.sh])
 
     if test -f "${TK_BIN_DIR}/tkConfig.sh" ; then
-        AC_MSG_RESULT([loading])
+	AC_MSG_RESULT([loading])
 	. "${TK_BIN_DIR}/tkConfig.sh"
     else
-        AC_MSG_RESULT([could not find ${TK_BIN_DIR}/tkConfig.sh])
+	AC_MSG_RESULT([could not find ${TK_BIN_DIR}/tkConfig.sh])
     fi
 
 
@@ -570,9 +570,9 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
     fi
 
     if test "$CYGPATH" = "echo"; then
-        DEPARG='"$<"'
+	DEPARG='"$<"'
     else
-        DEPARG='"$(shell $(CYGPATH) $<)"'
+	DEPARG='"$(shell $(CYGPATH) $<)"'
     fi
 
     # set various compiler flags depending on whether we are using gcc or cl
@@ -593,7 +593,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	if test "$ac_cv_win32" != "yes"; then
 	    AC_MSG_ERROR([${CC} cannot produce win32 executables.])
 	fi
-	if test "$do64bit" != "arm64"; then
+	if test "$do64bit" != "arm64" -a "$do64bit" != "aarch64"; then
 	    extra_cflags="$extra_cflags -DHAVE_CPUID=1"
 	fi
 
@@ -610,8 +610,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	CFLAGS=$hold_cflags
 	if test "$ac_cv_municode" = "yes" ; then
 	    extra_ldflags="$extra_ldflags -municode"
-	else
-	    extra_cflags="$extra_cflags -DTCL_BROKEN_MAINARGS"
 	fi
 	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
 	AC_CACHE_CHECK(for working -fno-lto,
@@ -626,6 +624,16 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	else
 	    CFLAGS_NOLTO=""
 	fi
+
+	AC_CACHE_CHECK([if the linker understands --disable-high-entropy-va],
+	    tcl_cv_ld_high_entropy, [
+	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS  -Wl,--disable-high-entropy-va"
+	    AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[tcl_cv_ld_high_entropy=yes],[tcl_cv_ld_high_entropy=no])
+	    CFLAGS=$hold_cflags])
+	if test $tcl_cv_ld_high_entropy = yes; then
+	    extra_ldflags="$extra_ldflags -Wl,--disable-high-entropy-va"
+	fi
+
 	AC_CACHE_CHECK([if the compiler understands -finput-charset],
 	    tcl_cv_cc_input_charset, [
 	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -finput-charset=UTF-8"
@@ -639,12 +647,12 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
     hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Wl,--enable-auto-image-base"
     AC_CACHE_CHECK(for working --enable-auto-image-base,
 	ac_cv_enable_auto_image_base,
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 	[ac_cv_enable_auto_image_base=yes],
 	[ac_cv_enable_auto_image_base=no])
     )
     CFLAGS=$hold_cflags
-    if test "$ac_cv_enable_auto_image_base" == "yes" ; then
+    if test "$ac_cv_enable_auto_image_base" = "yes" ; then
 	extra_ldflags="$extra_ldflags -Wl,--enable-auto-image-base"
     fi
 
@@ -654,7 +662,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
 	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -loleacc -lole32 -loleaut32 -lwinspool -luxtheme -luiautomationcore"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -669,18 +677,18 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            AC_MSG_RESULT([using static flags])
+	    AC_MSG_RESULT([using static flags])
 	    runtime=
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
-            AC_MSG_RESULT([using shared flags])
+	    AC_MSG_RESULT([using shared flags])
 
 	    # ad-hoc check to see if CC supports -shared.
 	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
 		AC_MSG_ERROR([${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain.])
+		You will need to upgrade to a newer version of the toolchain.])
 	    fi
 
 	    runtime=
@@ -772,20 +780,20 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
     else
 	if test "${SHARED_BUILD}" = "0" ; then
 	    # static
-            AC_MSG_RESULT([using static flags])
+	    AC_MSG_RESULT([using static flags])
 	    runtime=-MT
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
-            AC_MSG_RESULT([using shared flags])
+	    AC_MSG_RESULT([using shared flags])
 	    runtime=-MD
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 	    LIBRARIES="\${SHARED_LIBRARIES}"
 	    EXESUFFIX=".exe"
 	    case "x`echo \${VisualStudioVersion}`" in
 		x1[[4-9]]*)
-		    lflags="${lflags} -nodefaultlib:libucrt.lib"
+		    lflags="${lflags} -nodefaultlib:ucrt.lib"
 		    ;;
 		*)
 		    ;;
@@ -843,7 +851,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    LINKBIN="link"
 	fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib uxtheme.lib oleacc.lib ole32.lib uiautomationcore.lib"
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
 	SHLIB_LD_LIBS='${LIBS}'
@@ -938,32 +946,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		[Defined when cygwin/mingw does not support EXCEPTION DISPOSITION])
 	fi
 
-	# Check to see if winnt.h defines CHAR, SHORT, and LONG
-	# even if VOID has already been #defined. The win32api
-	# used by mingw and cygwin is known to do this.
-
-	AC_CACHE_CHECK(for winnt.h that ignores VOID define,
-	    tcl_cv_winnt_ignore_void,
-	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-		#define VOID void
-		#define WIN32_LEAN_AND_MEAN
-		#include <windows.h>
-		#undef WIN32_LEAN_AND_MEAN
-	    ]], [[
-		CHAR c;
-		SHORT s;
-		LONG l;
-	    ]])],
-	    [tcl_cv_winnt_ignore_void=yes],
-	    [tcl_cv_winnt_ignore_void=no])
-	)
-	if test "$tcl_cv_winnt_ignore_void" = "yes" ; then
-	    AC_DEFINE(HAVE_WINNT_IGNORE_VOID, 1,
-		    [Defined when cygwin/mingw ignores VOID define in winnt.h])
-	fi
-
-	AC_CHECK_HEADER(stdbool.h, [AC_DEFINE(HAVE_STDBOOL_H, 1, [Do we have <stdbool.h>?])],)
-
 	# See if the compiler supports casting to a union type.
 	# This is used to stop gcc from printing a compiler
 	# warning when initializing a union member.
@@ -1009,13 +991,13 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_WITH_TCL], [
-    if test -d ../../tcl8.7$1/win;  then
-	TCL_BIN_DEFAULT=../../tcl8.7$1/win
+    if test -d ../../tcl9.1$1/win;  then
+	TCL_BIN_DEFAULT=../../tcl9.1$1/win
     else
-	TCL_BIN_DEFAULT=../../tcl8.7/win
+	TCL_BIN_DEFAULT=../../tcl9.1/win
     fi
 
-    AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.7 binaries from DIR],
+    AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 9.x binaries from DIR],
 	    TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd $TCL_BIN_DEFAULT; pwd`)
     if test ! -d $TCL_BIN_DIR; then
 	AC_MSG_ERROR(Tcl directory $TCL_BIN_DIR does not exist)
@@ -1044,7 +1026,7 @@ AC_DEFUN([SC_WITH_TCL], [
 #	none
 #
 # Results
-#	Subst's the following values:
+#	Substitutes the following values:
 #		TCLSH_PROG
 #------------------------------------------------------------------------
 
@@ -1090,7 +1072,7 @@ AC_DEFUN([SC_PROG_TCLSH], [
 #	none
 #
 # Results
-#	Subst's the following values:
+#	Substitutes the following values:
 #		BUILD_TCLSH
 #------------------------------------------------------------------------
 
@@ -1270,32 +1252,32 @@ AC_DEFUN([SC_ZIPFS_SUPPORT], [
     AC_CACHE_VAL(ac_cv_path_zip, [
     search_path=`echo ${PATH} | sed -e 's/:/ /g'`
     for dir in $search_path ; do
-        for j in `ls -r $dir/zip 2> /dev/null` \
-            `ls -r $dir/zip 2> /dev/null` ; do
-        if test x"$ac_cv_path_zip" = x ; then
-            if test -f "$j" ; then
-            ac_cv_path_zip=$j
-            break
-            fi
-        fi
-        done
+	for j in `ls -r $dir/zip 2> /dev/null` \
+	    `ls -r $dir/zip 2> /dev/null` ; do
+	if test x"$ac_cv_path_zip" = x ; then
+	    if test -f "$j" ; then
+	    ac_cv_path_zip=$j
+	    break
+	    fi
+	fi
+	done
     done
     ])
     if test -f "$ac_cv_path_zip" ; then
-        ZIP_PROG="$ac_cv_path_zip"
-        AC_MSG_RESULT([$ZIP_PROG])
-        ZIP_PROG_OPTIONS="-rq"
-        ZIP_PROG_VFSSEARCH="*"
-        AC_MSG_RESULT([Found INFO Zip in environment])
-        # Use standard arguments for zip
+	ZIP_PROG="$ac_cv_path_zip"
+	AC_MSG_RESULT([$ZIP_PROG])
+	ZIP_PROG_OPTIONS="-rq"
+	ZIP_PROG_VFSSEARCH="*"
+	AC_MSG_RESULT([Found INFO Zip in environment])
+	# Use standard arguments for zip
     else
-        # It is not an error if an installed version of Zip can't be located.
-        # We can use the locally distributed minizip instead
-        ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
-        ZIP_PROG_OPTIONS="-o -r"
-        ZIP_PROG_VFSSEARCH="*"
-        ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
-        AC_MSG_RESULT([No zip found on PATH building minizip])
+	# It is not an error if an installed version of Zip can't be located.
+	# We can use the locally distributed minizip instead
+	ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
+	ZIP_PROG_OPTIONS="-o -r"
+	ZIP_PROG_VFSSEARCH="*"
+	ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
+	AC_MSG_RESULT([No zip found on PATH building minizip])
     fi
     AC_SUBST(ZIP_PROG)
     AC_SUBST(ZIP_PROG_OPTIONS)

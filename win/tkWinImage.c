@@ -170,7 +170,7 @@ PutPixel(
 	 * Pixel is bit in MSBFirst order.
 	 */
 
-	int mask = (0x80 >> (x%8));
+	unsigned char mask = (0x80 >> (x%8));
 
 	if (pixel) {
 	    (*destPtr) |= mask;
@@ -201,8 +201,8 @@ PutPixel(
 
 XImage *
 XCreateImage(
-    Display *display,
-    Visual *visual,
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Visual *),
     unsigned int depth,
     int format,
     int offset,
@@ -213,8 +213,6 @@ XCreateImage(
     int bytes_per_line)
 {
     XImage* imagePtr = (XImage*)ckalloc(sizeof(XImage));
-    (void)display;
-    (void)visual;
 
     imagePtr->width = width;
     imagePtr->height = height;
@@ -288,7 +286,7 @@ XGetImageZPixmap(
     Drawable d,
     int x, int y,
     unsigned int width, unsigned int height,
-    unsigned long plane_mask,
+    TCL_UNUSED(unsigned long),
     int	format)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
@@ -297,13 +295,12 @@ XGetImageZPixmap(
     HBITMAP hbmp, hbmpPrev;
     BITMAPINFO *bmInfo = NULL;
     HPALETTE hPal, hPalPrev1 = 0, hPalPrev2 = 0;
-    int size;
+    size_t size;
     unsigned int n;
     unsigned int depth;
     unsigned char *data;
     TkWinDCState state;
     BOOL ret;
-    (void)plane_mask;
 
     if (format != ZPixmap) {
 	TkpDisplayWarning("Only ZPixmap types are implemented",
@@ -360,7 +357,7 @@ XGetImageZPixmap(
     bmInfo->bmiHeader.biWidth		= width;
     bmInfo->bmiHeader.biHeight		= -(int) height;
     bmInfo->bmiHeader.biPlanes		= 1;
-    bmInfo->bmiHeader.biBitCount	= depth;
+    bmInfo->bmiHeader.biBitCount	= (WORD)depth;
     bmInfo->bmiHeader.biCompression	= BI_RGB;
     bmInfo->bmiHeader.biSizeImage	= 0;
     bmInfo->bmiHeader.biXPelsPerMeter	= 0;
@@ -589,7 +586,7 @@ XGetImage(
     XImage *imagePtr;
     HDC dc;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (twdPtr == NULL) {
 	/*
@@ -619,7 +616,7 @@ XGetImage(
 		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
 	imagePtr->data = (char *)ckalloc(size);
-	ZeroMemory(imagePtr->data, size);
+	memset(imagePtr->data, 0, size);
 
 	for (yy = 0; yy < height; yy++) {
 	    for (xx = 0; xx < width; xx++) {

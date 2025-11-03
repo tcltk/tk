@@ -121,6 +121,34 @@ Tk_UpdatePointer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpCopyRegion --
+ *
+ *	Makes the destination region a copy of the source region.
+ *	Currently unused on X11.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+extern int XUnionRegion(Region srca, Region srcb, Region dr_return);
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    /* XUnionRegion() in Xlib is optimized to detect copying */
+    XUnionRegion((Region)src, (Region)src, (Region)dst);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpBuildRegionFromAlphaData --
  *
  *	Set up a rectangle of the given region based on the supplied alpha
@@ -173,9 +201,9 @@ TkpBuildRegionFromAlphaData(
 		lineDataPtr += pixelStride;
 	    }
 	    if (end > x1) {
-		rect.x = x + x1;
-		rect.y = y + y1;
-		rect.width = end - x1;
+		rect.x = (short)(x + x1);
+		rect.y = (short)(y + y1);
+		rect.width = (unsigned short)(end - x1);
 		rect.height = 1;
 		TkUnionRectWithRegion(&rect, region, region);
 	    }
@@ -233,7 +261,7 @@ Tk_GetUserInactiveTime(
 	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
 	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
-	    inactiveTime = info->idle;
+	    inactiveTime = (long)info->idle;
 	}
 	XFree(info);
     }

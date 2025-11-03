@@ -1,7 +1,33 @@
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+#
+# ttk::notebook widget tests
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc inoperative {args} {}
+
+#
+# TESTS
+#
 
 test notebook-1.0 "Setup" -body {
     ttk::notebook .nb
@@ -14,7 +40,6 @@ test notebook-1.1 "Cannot add ancestor" -body {
     .nb add .
 } -returnCodes error -result "*" -match glob
 
-proc inoperative {args} {}
 
 inoperative test notebook-1.2 "Cannot add siblings" -body {
     # This is legal now
@@ -25,7 +50,7 @@ test notebook-1.3 "Cannot add toplevel" -body {
     .nb add [toplevel .nb.t]
 } -cleanup {
     destroy .t.nb
-} -returnCodes error -match glob -result "can't add .nb.t*"
+} -returnCodes error -result {cannot add ".nb.t" as content of ".nb"}
 
 test notebook-1.4 "Try to select bad tab" -body {
     .nb select @6000,6000
@@ -93,10 +118,11 @@ test notebook-4.end "Cleanup test suite 1-4.*" -body { destroy .nb }
 
 test notebook-5.1 "Virtual events" -body {
     toplevel .t
+    update
     set ::events [list]
+    pack [set nb [ttk::notebook .t.nb]] -expand true -fill both; update
     bind .t <<NotebookTabChanged>> { lappend events changed %W }
 
-    pack [set nb [ttk::notebook .t.nb]] -expand true -fill both; update
     $nb add [frame $nb.f1] ;  # triggers <<NotebookTabChanged>> (first tab gets autoselected)
     $nb add [frame $nb.f2]
     $nb add [frame $nb.f3]
@@ -341,9 +367,13 @@ test notebook-6.12 "Hide and re-add a tab" -setup {
 } -result [list 1 normal 2 hidden 2 normal]
 
 #
-# Insert:
+# COMMON TEST CLEANUP
 #
 unset nb
+
+#
+# Insert:
+#
 test notebook-7.0 "insert - setup" -body {
     pack [ttk::notebook .nb]
     for {set i 0} {$i < 5} {incr i} {
@@ -525,6 +555,20 @@ test notebook-1343984-2 "don't autoselect on destroy" -body {
     set ::history
 } -result [list DESTROY .nb.frame1 DESTROY .nb.frame2 DESTROY .nb.frame3]
 
+test notebook-198376af5a {moving tab position to a different edge} -body {
+    destroy .nb
+    ttk::notebook .nb -width 200 -height 100 -padding 0
+    ttk::frame .nb.f1
+    ttk::frame .nb.f2
+    .nb add .nb.f1 -text "One"
+    .nb add .nb.f2 -text "Two"
+    pack .nb
+    update
+    ttk::style configure TNotebook -tabposition s
+    update
+    expr {[winfo y .nb.f1] < 10}
+} -result 1
+
 test notebook-8.1 "style command" -body {
     ttk::notebook .w
     list [.w cget -style] [.w style] [winfo class .w]
@@ -538,5 +582,32 @@ test notebook-8.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TNotebook customStyle.TNotebook TNotebook}
+
+test notebook-9.1 "move last tab by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 0 2  ; # allowed: TabC moves to first tab position
+   .n insert 0 3  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Managed window index "3" out of bounds} -returnCodes error
+test notebook-9.2 "move first tab to last position by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 2 0  ; # allowed: TabA moves to last tab position
+   .n insert 3 0  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Managed window index "3" out of bounds} -returnCodes error
+
+#
+# TESTFILE CLEANUP
+#
 
 tcltest::cleanupTests

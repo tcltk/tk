@@ -1,37 +1,34 @@
-# This file is a Tcl script to test out Tk's "tk_chooseDir" and
-# It is organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out Tk's "tk_chooseDir".
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-
-#----------------------------------------------------------------------
 #
-# Procedures needed by this test file
+# TESTFILE INITIALIZATION
 #
-#----------------------------------------------------------------------
 
-proc ToPressButton {parent btn} {
-    after 100 SendButtonPress $parent $btn mouse
-}
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-proc ToEnterDirsByKey {parent dirs} {
-    after 100 [list EnterDirsByKey $parent $dirs]
-}
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
 
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import dialog
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc EnterDirsByKey {parent dirs} {
-    global tk_strictMotif
     if {$parent == "."} {
 	set w .__tk_choosedir
     } else {
@@ -48,42 +45,22 @@ proc EnterDirsByKey {parent dirs} {
     }
 }
 
-proc SendButtonPress {parent btn type} {
-    global tk_strictMotif
-    if {$parent == "."} {
-	set w .__tk_choosedir
-    } else {
-	set w $parent.__tk_choosedir
-    }
-    upvar ::tk::dialog::file::__tk_choosedir data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
+proc ToEnterDirsByKey {parent dirs} {
+    after 100 [list EnterDirsByKey $parent $dirs]
 }
 
+#
+# COMMON TEST SETUP
+#
+set parent .
 
-#----------------------------------------------------------------------
-#
-# The test suite proper
-#
-#----------------------------------------------------------------------
 # Make a dir for us to rely on for tests
 set real [makeDirectory choosedirTest]
-set dir [file dirname $real]
-set fake [file join $dir non-existant]
+set fake [file join [file dirname $real] non-existant]
 
-set parent .
+#
+# TESTS
+#
 
 test choosedir-1.1 {tk_chooseDirectory command} -body {
     tk_chooseDirectory -initialdir
@@ -168,7 +145,11 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 	    -parent $parent
 } -result $real
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
+unset fake parent real
 removeDirectory choosedirTest
+testutils forget dialog
 cleanupTests
-return

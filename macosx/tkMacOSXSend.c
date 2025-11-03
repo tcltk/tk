@@ -209,7 +209,8 @@ Tk_SetAppName(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     Tcl_Interp *interp = winPtr->mainPtr->interp;
-    int i, suffix, offset, result;
+    int suffix, result;
+    Tcl_Size i, offset;
     RegisteredInterp *riPtr, *prevPtr;
     const char *actualName;
     Tcl_DString dString;
@@ -260,14 +261,14 @@ Tk_SetAppName(
 	interpName = Tcl_GetString(interpNamePtr);
 	if (strcmp(actualName, interpName) == 0) {
 	    if (suffix == 1) {
-		Tcl_DStringAppend(&dString, name, -1);
+		Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
-		Tcl_DStringSetLength(&dString, offset + 10);
+		Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;
@@ -292,7 +293,7 @@ Tk_SetAppName(
      * TODO: DeleteProc
      */
 
-    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr, NULL);
+    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, NULL);
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "send", "send");
     }
@@ -320,34 +321,42 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData dummy,	/* Not used */
+    TCL_UNUSED(void *),	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
-    int objc,			/* Number of arguments */
+    Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
-    const char *const sendOptions[] = {"-async", "-displayof", "--", NULL};
-    char *stringRep, *destName;
+    enum {
+	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
+    };
+    static const char *const sendOptions[] = {
+	"-async",   "-displayof",   "--",  NULL
+    };
+    const char *stringRep, *destName;
     /*int async = 0;*/
-    int i, index, firstArg;
+    int i, firstArg, index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
-    (void)dummy;
 
-    for (i = 1; i < (objc - 1); ) {
+    /*
+     * Process the command options.
+     */
+
+    for (i = 1; i < (objc - 1); i++) {
 	stringRep = Tcl_GetString(objv[i]);
 	if (stringRep[0] == '-') {
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
 		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (index == 0) {
+	    if (index == SEND_ASYNC) {
 		/*async = 1;*/
+	    } else if (index == SEND_DISPLAYOF) {
 		i++;
-	    } else if (index == 1) {
-		i += 2;
-	    } else {
+	    } else /* if (index == SEND_LAST) */ {
 		i++;
+		break;
 	    }
 	} else {
 	    break;
@@ -462,18 +471,17 @@ Tk_SendObjCmd(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))		/* Window whose display is to be used for the
 				 * lookup. */
 {
     Tcl_Obj *listObjPtr;
     RegisteredInterp *riPtr;
-    (void)tkwin;
 
     listObjPtr = Tcl_NewListObj(0, NULL);
     riPtr = interpListPtr;
     while (riPtr != NULL) {
 	Tcl_ListObjAppendElement(interp, listObjPtr,
-		Tcl_NewStringObj(riPtr->name, -1));
+		Tcl_NewStringObj(riPtr->name, TCL_INDEX_NONE));
 	riPtr = riPtr->nextPtr;
     }
 
@@ -500,9 +508,8 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *dummy)		/* Not used */
+    TCL_UNUSED(Tcl_Interp *))		/* Not used */
 {
-    (void)dummy;
     return TCL_OK;
 }
 

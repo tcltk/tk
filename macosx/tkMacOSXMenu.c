@@ -174,7 +174,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 @interface TKMenu(TKMenuPrivate)
 - (id) initWithTkMenu: (TkMenu *) tkMenu;
 - (TkMenu *) tkMenu;
-- (int) tkIndexOfItem: (NSMenuItem *) menuItem;
+- (Tcl_Size) tkIndexOfItem: (NSMenuItem *) menuItem;
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
 @end
 
@@ -247,7 +247,7 @@ static Bool runMenuCommand = true;
 - (id) initWithTkMenu: (TkMenu *) tkMenu
 {
     NSString *title = [[TKNSString alloc] initWithTclUtfBytes:
-	    Tk_PathName(tkMenu->tkwin) length:-1];
+	    Tk_PathName(tkMenu->tkwin) length:TCL_INDEX_NONE];
 
     self = [self initWithTitle:title];
     [title release];
@@ -274,14 +274,18 @@ static Bool runMenuCommand = true;
     return (TkMenu *)_tkMenu;
 }
 
-- (int) tkIndexOfItem: (NSMenuItem *) menuItem
+- (Tcl_Size) tkIndexOfItem: (NSMenuItem *) menuItem
 {
-    return [self indexOfItem:menuItem] - _tkOffset;
+    NSInteger index = [self indexOfItem:menuItem];
+    if (index < 0 || (NSUInteger) index < _tkOffset) {
+	return TCL_INDEX_NONE;
+    }
+    return ((Tcl_Size)index - (Tcl_Size)_tkOffset);
 }
 
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index
 {
-    [super insertItem:newItem atIndex:index + _tkOffset];
+    [super insertItem:newItem atIndex:index + (NSInteger)_tkOffset];
     _tkItemCount++;
 }
 
@@ -341,13 +345,13 @@ static Bool runMenuCommand = true;
 {
     if (!runMenuCommand) {
 
-    	/*
-    	 * We are being called for a menu accelerator.  Tk will handle it.
-    	 * Just update the runMenuCommand flag.
-    	 */
+	/*
+	 * We are being called for a menu accelerator.  Tk will handle it.
+	 * Just update the runMenuCommand flag.
+	 */
 
-    	runMenuCommand = true;
-    	return;
+	runMenuCommand = true;
+	return;
     }
 
     /*
@@ -497,7 +501,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -518,7 +522,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -717,7 +721,7 @@ TkpMenuNewEntry(
 
 int
 TkpConfigureMenuEntry(
-    TkMenuEntry *mePtr) 	/* Information about menu entry; may or may
+    TkMenuEntry *mePtr)	/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
@@ -741,7 +745,7 @@ TkpConfigureMenuEntry(
     }
 
     if (mePtr->image) {
-    	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
 	image = TkMacOSXGetNSImageFromTkImage(mePtr->menuPtr->display,
 		mePtr->image, imageWidth, imageHeight);
     } else if (mePtr->bitmapPtr != NULL) {
@@ -757,9 +761,10 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[TKNSString alloc]
+	title = [[[TKNSString alloc]
 		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
-				length:mePtr->labelLength];
+				length:mePtr->labelLength]
+		autorelease];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -796,7 +801,7 @@ TkpConfigureMenuEntry(
     if (gc->background != defaultBg) {
 	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
 	[attributes setObject:bgcolor
-	 	       forKey:NSBackgroundColorAttributeName];
+		       forKey:NSBackgroundColorAttributeName];
     }
 
 #else
@@ -809,6 +814,7 @@ TkpConfigureMenuEntry(
     attributedTitle = [[NSAttributedString alloc] initWithString:title
 	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+    [attributedTitle release];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
@@ -839,7 +845,7 @@ TkpConfigureMenuEntry(
 	    } else {
 		[submenu setTitle:title];
 
-    		if ([menuItem isEnabled]) {
+		if ([menuItem isEnabled]) {
 
 		    /*
 		     * This menuItem might have been previously disabled which
@@ -849,7 +855,7 @@ TkpConfigureMenuEntry(
 		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    for (TkSizeT i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
+		    for (Tcl_Size i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
 			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
@@ -887,14 +893,17 @@ TkpDestroyMenuEntry(
     TKMenu *menu;
     NSInteger index;
 
-    if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
-	menu = (TKMenu *) mePtr->menuPtr->platformData;
+    if (mePtr->platformEntryData) {
 	menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	index = [menu indexOfItem:menuItem];
+	if (mePtr->menuPtr->platformData) {
+	    menu = (TKMenu *) mePtr->menuPtr->platformData;
+	    index = [menu indexOfItem:menuItem];
 
-	if (index > -1) {
-	    [menu removeItemAtIndex:index];
+	    if (index > -1) {
+		[menu removeItemAtIndex:index];
+	    }
 	}
+	[menuItem setTag:(NSInteger) NULL];
 	[menuItem release];
 	mePtr->platformEntryData = NULL;
     }
@@ -926,7 +935,7 @@ TkpPostMenu(
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
-    int index)
+    Tcl_Size index)
 {
     int result;
     Tk_Window realWin = menuPtr->tkwin;
@@ -951,8 +960,6 @@ TkpPostMenu(
 	}
 	realWin = Tk_Parent(realWin);
     }
-    NSWindow *win = [realWinView window];
-    NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
@@ -962,11 +969,11 @@ TkpPostMenu(
     inPostMenu = true;
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
-        inPostMenu = false;
-        return result;
+	inPostMenu = false;
+	return result;
     }
     if (itemIndex >= numItems) {
-    	itemIndex = numItems - 1;
+	itemIndex = numItems - 1;
     }
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
@@ -978,12 +985,13 @@ TkpPostMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     [menu popUpMenuPositioningItem:item
-			atLocation:[win tkConvertPointFromScreen:location]
-			    inView:view];
+			atLocation:location
+			    inView:nil
+			appearance:realWinView.effectiveAppearance];
     inPostMenu = false;
     return TCL_OK;
 }
@@ -1020,18 +1028,18 @@ int
 TkpPostTearoffMenu(
     TCL_UNUSED(Tcl_Interp *),	/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int index)	/* The screen coordinates where the top left
+    int x, int y, Tcl_Size index)	/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
-    	return result;
+	return result;
     }
 
     /*
@@ -1040,7 +1048,7 @@ TkpPostTearoffMenu(
      */
 
     if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
+	return TCL_OK;
     }
 
     /*
@@ -1048,7 +1056,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index < 0 || (TkSizeT)index >= menuPtr->numEntries) {
+    if (index < 0 || index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1133,10 +1141,9 @@ TkpSetWindowMenuBar(
  *	Puts the menu associated with a window into the menubar. Should only be
  *	called when the window is in front.
  *
- *      This is a no-op on all other platforms.  On OS X it is a no-op when
- *      passed a NULL menuName or a nonexistent menuName, with an exception for
- *      the first call in a new interpreter.  In that special case, passing a
- *      NULL menuName installs the default menu.
+ *      This is a no-op on all other platforms.  On OS X it installs the
+ *      menubar with the specified menuName, if possible.  If the name is NULL
+ *      it installs the default menu.
  *
  * Results:
  *	None.
@@ -1153,7 +1160,6 @@ Tk_SetMainMenubar(
     Tk_Window tkwin,		/* The frame we are setting up */
     const char *menuName)	/* The name of the menu to put in front. */
 {
-    static Tcl_Interp *currentInterp = NULL;
     TKMenu *menu = nil;
     TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -1194,14 +1200,10 @@ Tk_SetMainMenubar(
     }
 
     /*
-     * If we couldn't find a menu, do nothing unless the window belongs to a
-     * different application.  In that case, install the default menubar.
+     * If we couldn't find a menu this will install the default menubar.
      */
 
-    if (menu || interp != currentInterp) {
-	[NSApp tkSetMainMenu:menu];
-    }
-    currentInterp = interp;
+    [NSApp tkSetMainMenu:menu];
 }
 
 /*
@@ -1239,7 +1241,7 @@ CheckForSpecialMenu(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), -1);
+	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), TCL_INDEX_NONE);
 	    while (specialMenus[i].name) {
 		Tcl_DStringAppend(&ds, specialMenus[i].name,
 			specialMenus[i].len);
@@ -1287,7 +1289,7 @@ ParseAccelerator(
     while (1) {
 	i = 0;
 	while (allModifiers[i].name) {
-	    int l = allModifiers[i].len;
+	    size_t l = allModifiers[i].len;
 
 	    if (!strncasecmp(accel, allModifiers[i].name, l) &&
 		    (accel[l] == '-' || accel[l] == '+')) {
@@ -1330,7 +1332,7 @@ ParseAccelerator(
     if (ch) {
 	return [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
     } else {
-	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:-1] autorelease]
+	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:TCL_INDEX_NONE] autorelease]
 		lowercaseString];
     }
 }
@@ -1393,8 +1395,8 @@ TkpComputeStandardMenuGeometry(
     Tk_FontMetrics menuMetrics, entryMetrics;
     int modifierCharWidth, menuModifierCharWidth;
     int x, y, modifierWidth, labelWidth, indicatorSpace;
-    int windowWidth, windowHeight, accelWidth;
-    int i, maxWidth;
+    int windowWidth, maxWidth, windowHeight, accelWidth;
+    Tcl_Size i;
     int entryWidth, maxIndicatorSpace, borderWidth, activeBorderWidth;
     TkMenuEntry *mePtr;
     int haveAccel = 0;
@@ -1408,7 +1410,7 @@ TkpComputeStandardMenuGeometry(
     }
 
     menuSize = [(NSMenu *) menuPtr->platformData size];
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
@@ -1430,7 +1432,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     menuModifierCharWidth = ModifierCharWidth(menuFont);
 
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
 	    haveAccel = 1;
@@ -1438,7 +1440,7 @@ TkpComputeStandardMenuGeometry(
 	}
     }
 
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == TEAROFF_ENTRY) {
 	    continue;
@@ -1584,11 +1586,11 @@ GenerateMenuSelectEvent(
     TkMenu *menuPtr = [menu tkMenu];
 
     if (menuPtr) {
-	int index = [menu tkIndexOfItem:menuItem];
+	Tcl_Size index = [menu tkIndexOfItem:menuItem];
 
-	if (index < 0 || index >= (int) menuPtr->numEntries ||
+	if (index < 0 || index >= menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
-	    TkActivateMenuEntry(menuPtr, -1);
+	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	} else {
 	    TkActivateMenuEntry(menuPtr, index);
 	    MenuSelectEvent(menuPtr);
@@ -1662,10 +1664,10 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    int i;
+    Tcl_Size i;
 
-    TkActivateMenuEntry(menuPtr, -1);
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 
 	if (mePtr->type == CASCADE_ENTRY

@@ -4,7 +4,7 @@
  *	Implements X window calls for manipulating regions
  *
  * Copyright © 1995-1996 Sun Microsystems, Inc.
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -12,7 +12,6 @@
  */
 
 #include "tkMacOSXPrivate.h"
-static void RetainRegion(TkRegion r);
 static void ReleaseRegion(TkRegion r);
 
 #ifdef DEBUG
@@ -29,7 +28,7 @@ static int totalRegionRetainCount = 0;
  *
  * XCreateRegion --
  *
- *	Implements the equivelent of the X window function XCreateRegion. See
+ *	Implements the equivalent of the X window function XCreateRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -45,8 +44,8 @@ Region
 XCreateRegion(void)
 {
     Region region = (Region) HIShapeCreateMutable();
-    DebugLog("Created region: total regions = %d\n", ++totalRegions);
-    RetainRegion(region);
+    DebugLog("Created region: total regions = %d, total count is %d\n",
+	++totalRegions, ++totalRegionRetainCount);
     return region;
 }
 
@@ -55,7 +54,7 @@ XCreateRegion(void)
  *
  * XDestroyRegion --
  *
- *	Implements the equivelent of the X window function XDestroyRegion. See
+ *	Implements the equivalent of the X window function XDestroyRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -139,7 +138,7 @@ XSubtractRegion(
  *
  * XUnionRectWithRegion --
  *
- *	Implements the equivelent of the X window function
+ *	Implements the equivalent of the X window function
  *	XUnionRectWithRegion. See Xwindow documentation for more details.
  *
  * Results:
@@ -161,12 +160,12 @@ XUnionRectWithRegion(
 	    rectangle->width, rectangle->height);
 
     if (src_region == dest_region_return) {
-	ChkErr(TkMacOSHIShapeUnionWithRect,
+	ChkErr(HIShapeUnionWithRect,
 		(HIMutableShapeRef) dest_region_return, &r);
     } else {
 	HIShapeRef rectRgn = HIShapeCreateWithRect(&r);
 
-	ChkErr(TkMacOSHIShapeUnion, rectRgn, (HIShapeRef) src_region,
+	ChkErr(HIShapeUnion, rectRgn, (HIShapeRef) src_region,
 		(HIMutableShapeRef) dest_region_return);
 	CFRelease(rectRgn);
     }
@@ -201,7 +200,7 @@ TkMacOSXIsEmptyRegion(
  *
  * XRectInRegion --
  *
- *	Implements the equivelent of the X window function XRectInRegion. See
+ *	Implements the equivalent of the X window function XRectInRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -237,7 +236,7 @@ XRectInRegion(
  *
  * XClipBox --
  *
- *	Implements the equivelent of the X window function XClipBox. See
+ *	Implements the equivalent of the X window function XClipBox. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -334,30 +333,6 @@ TkpBuildRegionFromAlphaData(
 /*
  *----------------------------------------------------------------------
  *
- * RetainRegion --
- *
- *	Increases reference count of region.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-RetainRegion(
-    Region r)
-{
-    CFRetain(r);
-    DebugLog("Retained region: total count is %d\n", ++totalRegionRetainCount);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * ReleaseRegion --
  *
  *	Decreases reference count of region.
@@ -446,7 +421,7 @@ TkMacOSXSetWithNativeRegion(
     Region r,
     HIShapeRef rgn)
 {
-    ChkErr(TkMacOSXHIShapeSetWithShape, (HIMutableShapeRef) r, rgn);
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef) r, rgn);
 }
 
 /*
@@ -478,45 +453,36 @@ XOffsetRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHIShapeCreateEmpty, TkMacOSXHIShapeCreateMutableWithRect,
- * TkMacOSXHIShapeSetWithShape,
- * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,
- * TkMacOSHIShapeUnion --
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSHIShapeDifferenceWithRect --
  *
  *	Wrapper functions for missing/buggy HIShape API
  *
  *----------------------------------------------------------------------
  */
-
-HIShapeRef
-TkMacOSXHIShapeCreateEmpty(void)
-{
-    HIShapeRef result;
-
-    result = HIShapeCreateEmpty();
-    return result;
-}
-
-HIMutableShapeRef
-TkMacOSXHIShapeCreateMutableWithRect(
-    const CGRect *inRect)
-{
-    HIMutableShapeRef result;
-
-    result = HIShapeCreateMutableWithRect(inRect);
-    return result;
-}
-
-OSStatus
-TkMacOSXHIShapeSetWithShape(
-    HIMutableShapeRef inDestShape,
-    HIShapeRef inSrcShape)
-{
-    OSStatus result;
-
-    result = HIShapeSetWithShape(inDestShape, inSrcShape);
-    return result;
-}
 
 OSStatus
 TkMacOSHIShapeDifferenceWithRect(
@@ -531,30 +497,75 @@ TkMacOSHIShapeDifferenceWithRect(
 
     return result;
 }
-
-OSStatus
-TkMacOSHIShapeUnionWithRect(
-    HIMutableShapeRef inShape,
-    const CGRect *inRect)
-{
-    OSStatus result;
-
-    result = HIShapeUnionWithRect(inShape, inRect);
-    return result;
-}
-
-OSStatus
-TkMacOSHIShapeUnion(
-    HIShapeRef inShape1,
-    HIShapeRef inShape2,
-    HIMutableShapeRef outResult)
-{
-    OSStatus result;
-
-    result = HIShapeUnion(inShape1, inShape2, outResult);
-    return result;
-}
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XEqualRegion --
+ *
+ *	Although the undocumented function
+ *
+ *	    Boolean __attribute__((overloadable))
+ *	    __HIShapeEqual(void const *inShape1, void const *inShape2)
+ *
+ *	is probably more optimal than the approach used here,
+ *	it is "non-external" and so not easily usable by Tk Aqua.
+ *
+ *----------------------------------------------------------------------
+ */
+Bool
+XEqualRegion(
+    Region r1,
+    Region r2)
+{
+    HIShapeRef hsa = (HIShapeRef)r1, hsb = (HIShapeRef)r2;
+    if (hsa == hsb) {
+	return True;
+    }
+    CGRect ba, bb;
+    HIShapeGetBounds(hsa, &ba);
+    HIShapeGetBounds(hsb, &bb);
+    if (!CGRectEqualToRect(ba, bb)) {
+	return False;
+    }
+    HIShapeRef hsx = HIShapeCreateXor(hsa, hsb);
+    Bool result = HIShapeIsEmpty(hsx);
+    CFRelease(hsx);
+    return result;
+}
+
+int
+XUnionRegion(
+    Region srca,
+    Region srcb,
+    Region dr_return)
+{
+    ChkErr(HIShapeUnion, (HIShapeRef)srca, (HIShapeRef)srcb,
+	    (HIMutableShapeRef)dr_return);
+    return 1;
+}
+
+int
+XXorRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
+{
+    ChkErr(HIShapeXor, (HIShapeRef)sra, (HIShapeRef)srb,
+	    (HIMutableShapeRef)dr_return);
+    return 0;
+}
+
+Bool
+XPointInRegion(
+    Region r,
+    int x,
+    int y)
+{
+    CGPoint p = CGPointMake(x, y);
+    return HIShapeContainsPoint((HIShapeRef)r, &p);
+}
+
 static OSStatus
 rectCounter(
     TCL_UNUSED(int),
@@ -575,7 +586,7 @@ rectPrinter(
     TCL_UNUSED(void *))
 {
     if (rect) {
-	fprintf(stderr, "    %s\n", NSStringFromRect(*rect).UTF8String);
+	fprintf(stderr, "    %s\n", NSStringFromRect(NSRectFromCGRect(*rect)).UTF8String);
     }
     return noErr;
 }

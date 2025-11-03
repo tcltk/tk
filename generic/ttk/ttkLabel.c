@@ -37,8 +37,8 @@ typedef struct {
      */
     Tk_Font		tkfont;
     Tk_TextLayout	textLayout;
-    int 		width;
-    int 		height;
+    int		width;
+    int		height;
     int			embossed;
 
 } TextElement;
@@ -54,11 +54,7 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TextElement,foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	offsetof(TextElement,underlineObj), "-1"},
-#else
 	offsetof(TextElement,underlineObj), NULL},
-#endif
     { "-width", TK_OPTION_INT,
 	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
@@ -108,8 +104,9 @@ static int TextReqWidth(TextElement *text)
 	int avgWidth = Tk_TextWidth(text->tkfont, "0", 1);
 	if (reqWidth <= 0) {
 	    int specWidth = avgWidth * -reqWidth;
-	    if (specWidth > text->width)
+	    if (specWidth > text->width) {
 		return specWidth;
+	    }
 	} else {
 	    return avgWidth * reqWidth;
 	}
@@ -124,13 +121,13 @@ static void TextCleanup(TextElement *text)
 
 /*
  * TextDraw --
- * 	Draw a text element.
- * 	Called by TextElementDraw() and LabelElementDraw().
+ *	Draw a text element.
+ *	Called by TextElementDraw() and LabelElementDraw().
  */
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    TkSizeT underline = TCL_INDEX_NONE;
+    Tcl_Size underline = INT_MIN;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -149,9 +146,9 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     b = Ttk_AnchorBox(b, text->width, text->height, anchor);
 
     /*
-     * Clip text if it's too wide:
+     * Clip text if it's too wide or too high:
      */
-    if (b.width < text->width) {
+    if (b.width < text->width || b.height < text->height) {
 	XRectangle rect;
 
 	clipRegion = TkCreateRegion();
@@ -175,11 +172,13 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
     if (text->underlineObj != NULL) {
-	TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, 0, &underline);
-	if (underline != TCL_INDEX_NONE) {
-	    if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
-		underline++;
-	    }
+	TkGetIntForIndex(text->underlineObj, TCL_INDEX_NONE, 0, &underline);
+	if (underline < INT_MIN) {
+	    underline = INT_MIN;
+	} else if (underline > INT_MAX) {
+	    underline = INT_MAX;
+	}
+	if (underline != INT_MIN) {
 	    if (text->embossed) {
 		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 			text->textLayout, b.x+1, b.y+1, underline);
@@ -202,15 +201,18 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 }
 
 static void TextElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     TextElement *text = (TextElement *)elementRecord;
-    (void)dummy;
-    (void)paddingPtr;
 
-    if (!TextSetup(text, tkwin))
+    if (!TextSetup(text, tkwin)) {
 	return;
+    }
 
     *heightPtr = text->height;
     *widthPtr = TextReqWidth(text);
@@ -221,12 +223,14 @@ static void TextElementSize(
 }
 
 static void TextElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     TextElement *text = (TextElement *)elementRecord;
-    (void)dummy;
-    (void)state;
 
     if (TextSetup(text, tkwin)) {
 	TextDraw(text, tkwin, d, b);
@@ -243,18 +247,64 @@ static const Ttk_ElementSpec TextElementSpec = {
 };
 
 /*----------------------------------------------------------------------
+ * +++ cText (collapsing text) element.
+ *
+ * This element is the same as the Text element, except its dimensions
+ * are 0,0 when the text to display is "".
+ */
+
+static int cTextSetup(TextElement *text, Tk_Window tkwin)
+{
+    if (*Tcl_GetString(text->textObj) == '\0') {
+	return 0;
+    } else {
+	return TextSetup(text, tkwin);
+    }
+}
+
+static void cTextElementSize(
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    TextElement *text = (TextElement *)elementRecord;
+
+    if (!cTextSetup(text, tkwin)) {
+	return;
+    }
+
+    *heightPtr = text->height;
+    *widthPtr = TextReqWidth(text);
+
+    TextCleanup(text);
+
+    return;
+}
+
+static const Ttk_ElementSpec cTextElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(TextElement),
+    TextElementOptions,
+    cTextElementSize,
+    TextElementDraw
+};
+
+/*----------------------------------------------------------------------
  * +++ Image element.
  * Draws an image.
  */
 
 typedef struct {
     Tcl_Obj	*imageObj;
-    Tcl_Obj 	*stippleObj;	/* For TTK_STATE_DISABLED */
-    Tcl_Obj 	*backgroundObj;	/* " " */
+    Tcl_Obj	*stippleObj;	/* For TTK_STATE_DISABLED */
+    Tcl_Obj	*backgroundObj;	/* " " */
 
     Ttk_ImageSpec *imageSpec;
     Tk_Image	tkimg;
-    int 	width;
+    int	width;
     int		height;
 } ImageElement;
 
@@ -263,7 +313,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec ImageElementOptions[] = {
     { "-image", TK_OPTION_STRING,
 	offsetof(ImageElement,imageObj), "" },
-    { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
+    { "-stipple", TK_OPTION_STRING,	/* Really: TK_OPTION_BITMAP */
 	offsetof(ImageElement,stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
@@ -272,12 +322,12 @@ static const Ttk_ElementOptionSpec ImageElementOptions[] = {
 
 /*
  * ImageSetup() --
- * 	Look up the Tk_Image from the image element's imageObj resource.
- * 	Caller must release the image with ImageCleanup().
+ *	Look up the Tk_Image from the image element's imageObj resource.
+ *	Caller must release the image with ImageCleanup().
  *
  * Returns:
- * 	1 if successful, 0 if there was an error (unreported)
- * 	or the image resource was not specified.
+ *	1 if successful, 0 if there was an error (unreported)
+ *	or the image resource was not specified.
  */
 
 static int ImageSetup(
@@ -291,7 +341,7 @@ static int ImageSetup(
     if (!image->imageSpec) {
 	return 0;
     }
-    image->tkimg = TtkSelectImage(image->imageSpec, state);
+    image->tkimg = TtkSelectImage(image->imageSpec, tkwin, state);
     if (!image->tkimg) {
 	TtkFreeImageSpec(image->imageSpec);
 	return 0;
@@ -309,8 +359,8 @@ static void ImageCleanup(ImageElement *image)
 #ifndef MAC_OSX_TK
 /*
  * StippleOver --
- * 	Draw a stipple over the image area, to make it look "grayed-out"
- * 	when TTK_STATE_DISABLED is set.
+ *	Draw a stipple over the image area, to make it look "grayed-out"
+ *	when TTK_STATE_DISABLED is set.
  */
 static void StippleOver(
     ImageElement *image, Tk_Window tkwin, Drawable d, int x, int y)
@@ -365,7 +415,7 @@ static void ImageDraw(
 
 
     if (state & TTK_STATE_DISABLED) {
-	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
+	if (TtkSelectImage(image->imageSpec, tkwin, 0ul) == image->tkimg) {
 #ifndef MAC_OSX_TK
 	    StippleOver(image, tkwin, d, b.x,b.y);
 #endif
@@ -374,12 +424,14 @@ static void ImageDraw(
 }
 
 static void ImageElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     ImageElement *image = (ImageElement *)elementRecord;
-    (void)dummy;
-    (void)paddingPtr;
 
     if (ImageSetup(image, tkwin, 0)) {
 	*widthPtr = image->width;
@@ -389,11 +441,14 @@ static void ImageElementSize(
 }
 
 static void ImageElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     ImageElement *image = (ImageElement *)elementRecord;
-    (void)dummy;
 
     if (ImageSetup(image, tkwin, state)) {
 	ImageDraw(image, tkwin, d, b, state);
@@ -446,15 +501,15 @@ typedef struct {
      */
     Tcl_Obj		*compoundObj;
     Tcl_Obj		*spaceObj;
-    TextElement 	text;
+    TextElement	text;
     ImageElement	image;
 
     /*
      * Computed values (see LabelSetup)
      */
     Ttk_Compound	compound;
-    int  		space;
-    int 		totalWidth, totalHeight;
+    int		space;
+    int		totalWidth, totalHeight;
 } LabelElement;
 
 static const Ttk_ElementOptionSpec LabelElementOptions[] = {
@@ -473,11 +528,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(LabelElement,text.foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	offsetof(LabelElement,text.underlineObj), "-1"},
-#else
-	offsetof(LabelElement,text.underlineObj), NULL},
-#endif
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,
@@ -494,7 +545,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
      */
     { "-image", TK_OPTION_STRING,
 	offsetof(LabelElement,image.imageObj), "" },
-    { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
+    { "-stipple", TK_OPTION_STRING,	/* Really: TK_OPTION_BITMAP */
 	offsetof(LabelElement,image.stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	offsetof(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
@@ -503,13 +554,13 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
 
 /*
  * LabelSetup --
- * 	Fills in computed fields of the label element.
+ *	Fills in computed fields of the label element.
  *
- * 	Calculate the text, image, and total width and height.
+ *	Calculate the text, image, and total width and height.
  */
 
 #undef  MAX
-#define MAX(a,b) ((a) > (b) ? a : b);
+#define MAX(a,b) ((a) > (b) ? (a) : (b));
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)
 {
@@ -528,12 +579,13 @@ static void LabelSetup(
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     } else if (c->compound != TTK_COMPOUND_TEXT) {
-    	if (!ImageSetup(&c->image, tkwin, state)) {
+	if (!ImageSetup(&c->image, tkwin, state)) {
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     }
-    if (c->compound != TTK_COMPOUND_IMAGE)
+    if (c->compound != TTK_COMPOUND_IMAGE) {
 	TextSetup(&c->text, tkwin);
+    }
 
     /*
      * ASSERT:
@@ -575,14 +627,16 @@ static void LabelSetup(
 
 static void LabelCleanup(LabelElement *c)
 {
-    if (c->compound != TTK_COMPOUND_TEXT)
+    if (c->compound != TTK_COMPOUND_TEXT) {
 	ImageCleanup(&c->image);
-    if (c->compound != TTK_COMPOUND_IMAGE)
+    }
+    if (c->compound != TTK_COMPOUND_IMAGE) {
 	TextCleanup(&c->text);
+    }
 }
 
 static void LabelElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     int *widthPtr,
@@ -598,8 +652,9 @@ static void LabelElementSize(
 
     /* Requested width based on -width option, not actual text width:
      */
-    if (label->compound != TTK_COMPOUND_IMAGE)
+    if (label->compound != TTK_COMPOUND_IMAGE) {
 	textReqWidth = TextReqWidth(&label->text);
+    }
 
     switch (label->compound)
     {
@@ -627,8 +682,8 @@ static void LabelElementSize(
 
 /*
  * DrawCompound --
- * 	Helper routine for LabelElementDraw;
- * 	Handles layout for -compound {left,right,top,bottom}
+ *	Helper routine for LabelElementDraw;
+ *	Handles layout for -compound {left,right,top,bottom}
  */
 static void DrawCompound(
     LabelElement *l, Ttk_Box b, Tk_Window tkwin, Drawable d, Ttk_State state,
@@ -643,7 +698,7 @@ static void DrawCompound(
 }
 
 static void LabelElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
@@ -714,12 +769,13 @@ static const Ttk_ElementSpec LabelElementSpec = {
  * +++ Initialization.
  */
 
-MODULE_SCOPE
-void TtkLabel_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkLabel_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
     Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "ctext", &cTextElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, NULL);
 }

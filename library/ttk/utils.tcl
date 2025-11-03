@@ -46,7 +46,7 @@ proc ttk::GuessTakeFocus {w} {
 }
 
 ## ttk::traverseTo $w --
-# 	Set the keyboard focus to the specified window.
+#	Set the keyboard focus to the specified window.
 #
 proc ttk::traverseTo {w} {
     set focus [focus]
@@ -119,7 +119,7 @@ proc ttk::focusFirst {w} {
 #	See #1239190 and #1411983 for more discussion.
 #
 namespace eval ttk {
-    variable Grab 		;# map: window name -> grab token
+    variable Grab		;# map: window name -> grab token
 
     # grab token details:
     #	Two-element list containing:
@@ -301,4 +301,17 @@ bind TtkScrollable <Shift-MouseWheel> \
 bind TtkScrollable <Shift-Option-MouseWheel> \
 	{ tk::MouseWheel %W x %D -12.0 }
 
+## Touchpad scrolling
+#
+bind TtkScrollable <TouchpadScroll> {
+    if {%# %% 5 == 0} {
+	lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	if {$tk::Priv(deltaX) != 0} {
+	    %W xview scroll [expr {-$tk::Priv(deltaX)}] units
+	}
+	if {$tk::Priv(deltaY) != 0} {
+	    %W yview scroll [expr {-$tk::Priv(deltaY)}] units
+	}
+    }
+}
 #*EOF*

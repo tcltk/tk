@@ -1,23 +1,47 @@
 # This file is a Tcl script to test out the procedures in tkRectOval.c,
-# which implement canvas "rectangle" and "oval" items.  It is organized
-# in the standard fashion for Tcl tests.
+# which implement canvas "rectangle" and "oval" items.
 #
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
-# Canvas used in every test case of the whole file
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
+# For every test case of the whole file
+#
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
 update
 
-# Rectangle used in canvRect-1.* tests
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvRect-1.*
+#
 .c create rectangle 20 20 80 80 -tag test
+
 test canvRect-1.1 {configuration options: good value for -fill} -body {
     .c itemconfigure test -fill #ff0000
     list [.c itemcget test -fill] [lindex [.c itemconfigure test -fill] 4]
@@ -53,9 +77,12 @@ test canvRect-1.9 {configuration options: good value for -width} -body {
 } -result {6.0 6.0}
 test canvRect-1.10 {configuration options: bad value for -width} -body {
     .c itemconfigure test -width abc
-} -returnCodes error -result {bad screen distance "abc"}
-.c delete withtag all
+} -returnCodes error -result {expected screen distance but got "abc"}
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete withtag all
 
 test canvRect-2.1 {CreateRectOval procedure} -body {
     .c create rect
@@ -65,16 +92,16 @@ test canvRect-2.2 {CreateRectOval procedure} -body {
 } -returnCodes error -result {wrong # coordinates: expected 0 or 4, got 3}
 test canvRect-2.3 {CreateRectOval procedure} -body {
     .c create rectangle x 2 3 4
-} -returnCodes error -result {bad screen distance "x"}
+} -returnCodes error -result {expected screen distance but got "x"}
 test canvRect-2.4 {CreateRectOval procedure} -body {
     .c create rectangle 1 y 3 4
-} -returnCodes error -result {bad screen distance "y"}
+} -returnCodes error -result {expected screen distance but got "y"}
 test canvRect-2.5 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 z 4
-} -returnCodes error -result {bad screen distance "z"}
+} -returnCodes error -result {expected screen distance but got "z"}
 test canvRect-2.6 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 q
-} -returnCodes error -result {bad screen distance "q"}
+} -returnCodes error -result {expected screen distance but got "q"}
 test canvRect-2.7 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 4 -tags x
     set result {}
@@ -86,8 +113,11 @@ test canvRect-2.7 {CreateRectOval procedure} -body {
 test canvRect-2.8 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 4 -gorp foo
 } -returnCodes error -result {unknown option "-gorp"}
-.c delete withtag all
 
+#
+# COMMON TEST CLEANUP
+#
+.c delete withtag all
 
 test canvRect-3.1 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
@@ -104,25 +134,25 @@ test canvRect-3.2 {RectOvalCoords procedure} -body {
     .c coords x a 2 3 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "a"}
+} -returnCodes error -result {expected screen distance but got "a"}
 test canvRect-3.3 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 b 3 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "b"}
+} -returnCodes error -result {expected screen distance but got "b"}
 test canvRect-3.4 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 2 c 4
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "c"}
+} -returnCodes error -result {expected screen distance but got "c"}
 test canvRect-3.5 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 1 2 3 d
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "d"}
+} -returnCodes error -result {expected screen distance but got "d"}
 test canvRect-3.6 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
     .c coords x 10 25 15 40
@@ -143,7 +173,7 @@ test canvRect-4.1 {ConfigureRectOval procedure} -body {
     .c itemconfigure x -width abc
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "abc"}
+} -returnCodes error -result {expected screen distance but got "abc"}
 test canvRect-4.2 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     catch {.c itemconfigure x -width abc}
@@ -156,7 +186,7 @@ test canvRect-4.3 {ConfigureRectOval procedure} -body {
     .c itemconfigure x -width -5
 } -cleanup {
     .c delete withtag all
-} -returnCodes error -result {bad screen distance "-5"}
+} -returnCodes error -result {expected screen distance but got "-5"}
 test canvRect-4.4 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     .c itemconfigure x -width 10
@@ -167,16 +197,23 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # I can't come up with any good tests for DeleteRectOval.
 
-test canvRect-5.1 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
-    # Non-portable due to rounding differences:
+test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints nonwin -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
     .c bbox x
 } -cleanup {
     .c delete withtag all
 } -result {10 5 20 15}
-test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
-    # Non-portable due to rounding differences:
+# On Windows the bbox of rectangle items is 1 pixel larger at each border due
+# to the "bloat" implemented in ComputeRectOvalBbox() in case -outline is {}
+test canvRect-5.1.2 {ComputeRectOvalBbox procedure} -constraints win32 -body {
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c coords x 20 15 10 5
+    .c bbox x
+} -cleanup {
+    .c delete withtag all
+} -result {9 4 21 16}
+test canvRect-5.2 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
     .c itemconfigure x -width 1 -outline red
@@ -184,8 +221,7 @@ test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -cleanup {
     .c delete withtag all
 } -result {9 9 31 21}
-test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
-    # Non-portable due to rounding differences:
+test canvRect-5.3 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
     .c itemconfigure x -width 2 -outline red
@@ -193,8 +229,7 @@ test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -cleanup {
     .c delete withtag all
 } -result {9 9 31 21}
-test canvRect-5.4 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
-    # Non-portable due to rounding differences:
+test canvRect-5.4 {ComputeRectOvalBbox procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
     .c itemconfigure x -width 3 -outline red
@@ -424,15 +459,13 @@ test canvRect-10.1 {TranslateRectOval procedure} -setup {
 
 
 test canvRect-11.1 {RectOvalToPostscript procedure} -constraints {
-     nonPortable macCrash
+    nonPortable
 } -setup {
     .c delete withtag all
 } -body {
-    # Crashes on Mac because the XGetImage() call isn't implemented, causing a
-    # dereference of NULL.
     # This test is non-portable because different color information
-	# will get generated on different displays (e.g. mono displays
-	# vs. color).
+    # will get generated on different displays (e.g. mono displays
+    # vs. color).
     .c configure -bd 0 -highlightthickness 0
     .c create rect 50 60 90 80 -fill black -stipple gray50 -outline {}
     .c create oval 100 150 200 200 -fill {} -outline #ff0000 -width 5
@@ -462,10 +495,8 @@ end
 %%EOF
 }
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return
-
-
-
-
