@@ -714,91 +714,91 @@ static TreeItem *FindItem(
 
 enum {index_end, index_first, index_last};
 static const char *const indexStrings[] = {"end", "first", "last", NULL};
-Tcl_Size TreeviewCountRecursive(TreeItem *, int, int);
+Tcl_Size TreeviewCountItems(TreeItem *, int, int);
 
 /* + FindIndex --
- *	Returns the index for value or error if invalid.
+ *	Returns the index for value where index can be a valid index form.
+ *	If index is negative, -1 is returned. For an error, -2 is returned.
  */
 static Tcl_Size FindIndex(
     Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj) {
     int fn;
-    Tcl_Size index = 0;
+    Tcl_Size index = -1;
 
     if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
 	    "index", 0, &fn) == TCL_OK) {
+	/* Index enums: first, last, end */
 	if (fn == index_first) {
 	    index = 0;
 	} else if (fn == index_last) {
-	    index = TreeviewCountRecursive(item, 1, 0) - 1;
+	    index = TreeviewCountItems(item, 1, 0) - 1;
 	} else {
-	    index = TreeviewCountRecursive(item, 1, 0);
+	    index = TreeviewCountItems(item, 1, 0);
 	}
 
-    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK && index >= 0) {
+    } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, 1, &index) == TCL_OK)) {
+	/* Index number, end-n, m+n, or m-n */
+	if (index < 0 || index > LONG_MAX - 4) {
+	    index = -1;
+	}
 
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad index \"%s\": must be first, last, end, or an index number",
+	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
 	    Tcl_GetString(indexObj)));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", NULL);
-	return -1;
+	index = -2;
     }
     return index;
 }
 
 /* + FindItemByIndex --
- *	Returns the item at index in item where index can be an enum or value.
- *	If index is invalid, result is set to an error message.
+ *	Returns the item at index in item where index can be a valid index form.
+ *	If index is invalid, result is set to error message and TCL_ERROR is returned.
  */
-static TreeItem *FindItemByIndex(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj,
-    int *error, int before) {
+static int FindItemByIndex(
+    Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
     int fn;
-    Tcl_Size index = 0;
-    TreeItem *found = NULL;
-    *error = 0;
+    Tcl_Size index = -1;
+    *found = NULL;
+
 
     if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
 	    "index", 0, &fn) == TCL_OK) {
+	/* Index enums: first, last, end */
 	if (fn == index_first) {
-	    if (item->children) {
-		found = item->children;
-	    }
+	    *found = item->children;
 	} else {
-	    found = item->lastChild;
+	    *found = item->lastChild;
 	}
-	if (before && fn != index_end && found) {
-	    found = found->prev;
+	if (*found && before && fn != index_end) {
+	    *found = (*found)->prev;
 	}
 
-    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK) {
-	TreeItem *child = item->children;
-	if (child) {
-	    while (child->next && index > 0) {
+    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, endIsSize, &index) == TCL_OK) {
+	/* Index number, end-n, m+n, or m-n */
+
+	*found = item->children;
+	if (*found) {
+	    while ((*found)->next && index > 0) {
 		index--;
-		child = child->next;
+		*found = (*found)->next;
 	    }
-	    if (index <= 0) {
-		found = child;
-	    }
-	    if (before) {
-		if (found) {
-		    found = found->prev;
-		} else {
-		    found = item->lastChild;
-		}
+	    if (*found && before && index <= 0) {
+		*found = (*found)->prev;
 	    }
 	}
 
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad index \"%s\": must be first, last, end, or an index number",
+	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
 	    Tcl_GetString(indexObj)));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", NULL);
-	*error = 1;
-	return NULL;
+	return TCL_ERROR;
     }
-    return found;
+    return TCL_OK;
 }
 
 /* + GetPrevItem --
@@ -2763,7 +2763,7 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-Tcl_Size TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
+Tcl_Size TreeviewCountItems(TreeItem *parent, int hidden, int recurse) {
     Tcl_Size count = 0;
     TreeItem *item;
 
@@ -2771,7 +2771,7 @@ Tcl_Size TreeviewCountRecursive(TreeItem *parent, int hidden, int recurse) {
 	if (!item->hidden || hidden) {
 	    count++;
 	    if (recurse && item->children) {
-		count += TreeviewCountRecursive(item, hidden, recurse);
+		count += TreeviewCountItems(item, hidden, recurse);
 	    }
 	}
     }
@@ -2820,7 +2820,7 @@ static int TreeviewSizeCommand(
 	return TCL_ERROR;
     }
 
-    count = TreeviewCountRecursive(item, hidden, recurse);
+    count = TreeviewCountItems(item, hidden, recurse);
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
     return TCL_OK;
 }
@@ -3105,7 +3105,6 @@ static int TreeviewIdentifierCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *found;
-    int error = 0;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item index");
@@ -3116,11 +3115,10 @@ static int TreeviewIdentifierCommand(
 	return TCL_ERROR;
     }
 
-    found = FindItemByIndex(interp, tv, item, objv[3], &error, 0);
-    if (found && found->idObj != NULL) {
-	Tcl_SetObjResult(interp, found->idObj);
-    } else if (error) {
+    if (FindItemByIndex(interp, tv, item, objv[3], 0, 0, &found) != TCL_OK) {
 	return TCL_ERROR;
+    } else if (found && found->idObj != NULL) {
+	Tcl_SetObjResult(interp, found->idObj);
     }
     return TCL_OK;
 }
@@ -3147,6 +3145,8 @@ static int TreeviewIndexCommand(
     if (objc == 4) {
 	index = FindIndex(interp, tv, item, objv[3]);
 	if (index == -1) {
+	    return TCL_OK;
+	} else if (index == -2) {
 	    return TCL_ERROR;
 	}
     } else {
@@ -3823,7 +3823,7 @@ static int TreeviewInsertCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *sibling, *newItem;
     Tcl_HashEntry *entryPtr;
-    int isNew, error = 0;
+    int isNew;
     Tcl_Obj *idObj;
 
     if (objc < 4) {
@@ -3837,8 +3837,7 @@ static int TreeviewInsertCommand(
     }
 
     /* Locate previous sibling based on $index: */
-    sibling = FindItemByIndex(interp, tv, parent, objv[3], &error, 1);
-    if (error) {
+    if (FindItemByIndex(interp, tv, parent, objv[3], 1, 1, &sibling) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -4052,7 +4051,6 @@ static int TreeviewMoveCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
     TreeItem *sibling;
-    int error = 0;
 
     if (objc != 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item parent index");
@@ -4070,8 +4068,7 @@ static int TreeviewMoveCommand(
     }
 
     /* Locate previous sibling based on $index: */
-    sibling = FindItemByIndex(interp, tv, parent, objv[4], &error, 1);
-    if (error) {
+    if (FindItemByIndex(interp, tv, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -4116,7 +4113,7 @@ static int TreeviewSeeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
-    int scrollRow1, scrollRow2, visibleRows, error = 0;
+    int scrollRow1, scrollRow2, visibleRows;
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item ?index?");
@@ -4127,8 +4124,7 @@ static int TreeviewSeeCommand(
     }
 
     if (objc == 4) {
-	item = FindItemByIndex(interp, tv, item, objv[3], &error, 0);
-	if (error) {
+	if (FindItemByIndex(interp, tv, item, objv[3], 0, 0, &item) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -5512,7 +5508,7 @@ static int SortItems(
     }
 
     item = parent->children;
-    length = TreeviewCountRecursive(parent, 1, 0);
+    length = TreeviewCountItems(parent, 1, 0);
 
     /* Allocate storage for sort elements. */
     elmArrSize = length * sizeof(SortElement);
