@@ -7,7 +7,7 @@
  * Copyright © 2005 Neil Madden
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2008-2009 Apple Inc.
- * Copyright © 2009 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2009 Kevin Walzer.
  * Copyright © 2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
