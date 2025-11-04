@@ -5,7 +5,7 @@
 # layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz.
-# Copyright © 2021 Kevin Walzer.
+# Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
 # Copyright © 2021 Harald Oehlmann, Elmicron GmbH
 # Copyright © 2022 Emiliano Gavilan
 #
