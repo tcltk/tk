@@ -1504,7 +1504,7 @@ Tk_Window GetTkWindowForChildId(
     if (!toplevel) return NULL;
     /*
      * We are looking for a specific child ID within a specific toplevel,
-     * each one tracked sepaarately in this hash table.
+     * each one tracked separately in this hash table.
      */
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     if (!childIdTable) return NULL;
