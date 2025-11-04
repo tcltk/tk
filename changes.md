@@ -22,8 +22,7 @@ necessarily in Tk 8.
  - [Add a ttk::toggleswitch widget to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/727.md)
  - [Add a tk attribtable command to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/729.md)
  - [Implement more X11 region functions on Windows and Aqua](https://core.tcl-lang.org/tk/info/50fdbc36ad)
- 
+
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
  - [MS-Win: The "xpnative" ttk style is gone too, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
- 
