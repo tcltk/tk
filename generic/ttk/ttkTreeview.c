@@ -3930,16 +3930,28 @@ static int TreeviewDetachCommand(
     return TCL_OK;
 }
 
-/* + $tv detached ?$item? --
+/* + $tv detached ?-all|$item? --
  *	List detached items (in arbitrary order) or query the detached state of
- *	$item.
+ *	$item. With -all, will return detached items and all of their descendants.
  */
 static int TreeviewDetachedCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
+    int (*fnPtr)(Treeview*, TreeItem*) = IsDetached;
+    
+    if (objc < 2 || objc > 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-all|item?");
+	return TCL_ERROR;
+    }
 
-    if (objc == 2) {
+    if (objc == 3) {
+	if (!strcmp(Tcl_GetString(objv[2]), "-all")) {
+	    fnPtr = IsItemOrAncestorDetached;
+	}
+    }
+
+    if (objc == 2 || fnPtr == IsItemOrAncestorDetached) {
 	/* List detached items */
 	Tcl_HashSearch search;
 	Tcl_HashEntry *entryPtr = Tcl_FirstHashEntry(&tv->tree.items, &search);
@@ -3948,25 +3960,20 @@ static int TreeviewDetachedCommand(
 	while (entryPtr != NULL) {
 	    item = (TreeItem *)Tcl_GetHashValue(entryPtr);
 	    entryPtr = Tcl_NextHashEntry(&search);
-	    if (IsDetached(tv, item)) {
+	    if (fnPtr(tv, item)) {
 		Tcl_ListObjAppendElement(NULL, objPtr, item->idObj);
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);
-	return TCL_OK;
 
     } else if (objc == 3) {
 	/* Query; the root is never reported as detached */
 	if (!(item = FindItem(interp, tv, objv[2]))) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(IsDetached(tv, item)));
-	return TCL_OK;
-
-    } else {
-	Tcl_WrongNumArgs(interp, 2, objv, "?item?");
-	return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(IsItemOrAncestorDetached(tv, item)));
     }
+    return TCL_OK;
 }
 
 /* + $tv delete $items --

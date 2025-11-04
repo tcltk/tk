@@ -377,21 +377,20 @@ Returns the number of levels between \fIitem\fR and the root item.
 .TP
 \fIpathname \fBdetach \fIitemList\fR
 .
-Unlinks all of the specified items in \fIitemList\fR from the tree.
-The items and all of their descendants are still present
-and may be reinserted at another point in the tree
-with the \fBmove\fR operation,
-but will not be displayed until that is done.
-The root item may not be detached.
+Unlinks all of the specified items in \fIitemList\fR from the tree. The items
+and all of their descendants are still present and may be reinserted at another
+point in the tree with the \fBchildren\fR or \fBmove\fR operations, but will
+not be displayed until that is done. The root item may not be detached.
 See also: \fBdelete\fR.
 .\" METHOD: detached
 .TP
-\fIpathname \fBdetached \fR?\fIitem\fR?
+\fIpathname \fBdetached\fR ?\fB\-all\fR|\fIitem\fR?
 .
-If \fIitem\fR is provided, returns a boolean value indicating whether it is
-the name of a detached item (see \fBdetach\fR). Otherwise, returns a list of
-all the detached items (in an arbitrary order). The root item is never
-detached.
+Without any arguments, returns a list of all detached items, but not their
+descendants, in an arbitrary order. If \fIitem\fR is provided, returns a
+Boolean value indicating whether \fIitem\fR or an ancestor is detached or not.
+If \fB\-all\fR is specified, returns a list of all the detached items and
+their descendants in an arbitrary order. The root item is never detached.
 .\" METHOD: exists
 .TP
 \fIpathname \fBexists \fIitem\fR
