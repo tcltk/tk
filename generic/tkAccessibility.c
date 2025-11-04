@@ -6,7 +6,7 @@
  *      in hash tables that can be accessed on any platform. This core Tk API
  *      is backed by platform-specific implementations.
  *
- * Copyright (c) 2024-2025 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2024-2025 Kevin Walzer.
  * Copyright (c) 2024 Emiliano Gavilan.
  *
  * See the file "license.terms" for information on usage and redistribution of

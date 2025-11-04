@@ -7,7 +7,7 @@
  *
  * Copyright © 1995-1996 Microsoft Corp.
  * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2020 Kevin Walzer.
  * Copyright © 2020 Eric Boudaillier.
  * Copyright © 2020 Francois Vogel.
  *
