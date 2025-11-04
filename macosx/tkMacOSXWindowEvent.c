@@ -44,7 +44,6 @@ extern NSString *NSWindowWillOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 
-
 @implementation TKApplication(TKWindowEvent)
 
 - (void) windowActivation: (NSNotification *) notification
@@ -150,7 +149,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 }
 
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window
-                        defaultFrame:(NSRect)newFrame
+			defaultFrame:(NSRect)newFrame
 {
     (void)window;
 
@@ -289,10 +288,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    if (winPtr) {
-	//Tk_UnmapWindow((Tk_Window)winPtr);
-    }
 }
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
@@ -338,6 +333,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
     TkpChangeFocus(winPtr, 1);
+    Tcl_Release(winPtr);
 }
 
 #pragma mark TKApplication(TKApplicationEvent)
@@ -374,6 +370,7 @@ static void RefocusGrabWindow(void *data) {
 	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_Preserve(winPtr);
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
 	}
 	if (iconifiedWindow == nil && [win isMiniaturized]) {
@@ -412,7 +409,7 @@ static void RefocusGrabWindow(void *data) {
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
-                    hasVisibleWindows:(BOOL)flag
+		    hasVisibleWindows:(BOOL)flag
 {
     (void)sender;
     (void)flag;
@@ -961,7 +958,7 @@ Tk_MacOSXIsAppInFront(void)
 
 static Tk_RestrictAction
 ExposeRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
@@ -1104,8 +1101,8 @@ ConfigureRestrictProc(
 
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
-	unsigned int height=(unsigned int)newsize.height;
-	ClientData oldArg;
+	unsigned int height= (unsigned int)newsize.height;
+	void *oldArg;
     	Tk_RestrictProc *oldProc;
 
 	/*
@@ -1170,7 +1167,7 @@ ConfigureRestrictProc(
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
 	return;
@@ -1258,7 +1255,7 @@ static const char *const accentNames[] = {
     }
     NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
     NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "];
+				componentsSeparatedByString: @" "];
     NSString *highlight = [words count] > 3 ? [words objectAtIndex:3] : nil;
     const char *accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;

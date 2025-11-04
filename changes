@@ -8323,4 +8323,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-11-03 (bug) [c23f79]: Xft text is unusable for 32-bit visual when default visual is 24-bit (werner)
 
+2025-11-04 (bug) [6da885]: Aqua: avoid use-after-free during RefocusGrabWindow() (chavez)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
