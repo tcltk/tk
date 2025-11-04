@@ -1227,6 +1227,7 @@ DrawOrFillArc(
      * Swap the start and end if drawing clockwise.
      */
 
+    bool extent_is_360_deg = (extent >= (64*360) || extent <= -(64*360));
     start = start % (64*360);
     if (start < 0) {
 	start += (64*360);
@@ -1255,6 +1256,32 @@ DrawOrFillArc(
     ystart = (int)((yr + sin(-radian_start)*height/2.0) + 0.5);
     xend = (int)((xr + cos(radian_end)*width/2.0) + 0.5);
     yend = (int)((yr + sin(-radian_end)*height/2.0) + 0.5);
+
+    if ((xstart == xend) && (ystart == yend) && !extent_is_360_deg) {
+	/*
+	 * The extent is so small that the arc size is less than one pixel.
+	 * If the Arc, Chord, or Pie GDI function later received this, then
+	 * a complete ellipse would be drawn instead of the desired 1-pixel
+	 * size arc. The end point must be made different from the start
+	 * point. Since (at this level in the code) arcs are always drawn
+	 * counterclockwise, either xend or yend needs adjustment, depending
+	 * on the sub-range where radian_start lies (it was constrained to
+	 * the [0 ; 2*PI[ range earlier). See bug [6051a9fc]
+	 */
+	if (radian_start > PI/4) {
+	    if (radian_start < 3*PI/4) {
+		xend--;
+	    } else if (radian_start < 5*PI/4) {
+		yend++;
+	    } else if (radian_start < 7*PI/4) {
+		xend++;
+	    } else {
+		yend--;
+	    }
+	} else {
+	    yend--;
+	}
+    }
 
     /*
      * Now draw a filled or open figure. Note that we have to increase the

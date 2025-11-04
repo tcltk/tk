@@ -1369,13 +1369,13 @@ UseinputmethodsCmd(
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     if (objc == 2 + skip) {
 
-	int boolVal;
+	int boolValue;
 
 	if (Tcl_GetBooleanFromObj(interp, objv[1+skip],
-		&boolVal) != TCL_OK) {
+		&boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolVal && (dispPtr->inputMethod != NULL)) {
+	if (boolValue && (dispPtr->inputMethod != NULL)) {
 	    dispPtr->flags |= TK_DISPLAY_USE_IM;
 	} else {
 	    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
