@@ -32,11 +32,12 @@ to the userbase.
  - [nanosvg upstream changes: #273, #275: add paint order parsing](https://core.tcl-lang.org/tk/tktview/b43dbc0061)
  - [Artifacts in a few themed widgets on x11 and aqua](https://core.tcl-lang.org/tk/tktview/265ff2)
  - [Core dump Tk_GetFontFromObj](https://core.tcl-lang.org/tk/tktview/a80e5f)
- - [MS-Win canvas arcs with small extent are drawn 360 dregrees](https://core.tcl-lang.org/tk/info/6051a9)
+ - [MS-Win canvas arcs with small extent are drawn 360 degrees](https://core.tcl-lang.org/tk/info/6051a9)
  - [pixel values can report false list lengths](https://core.tcl-lang.org/tk/info/2a0a83)
  - [Xft text is unusable for 32-bit visual when default visual is 24-bit](https://core.tcl-lang.org/tk/info/c23f79)
  - [tk print: several issues printing i18n text](https://core.tcl-lang.org/tk/info/4e7a78)
  - [tk print, canvas: raw smooth not implemented](https://core.tcl-lang.org/tk/info/e10819)
+ - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
