@@ -162,6 +162,18 @@ bind TEntry <<TkAccentBackspace>> {
     ttk::entry::Backspace %W
 }
 
+# Copy the mouse wheel event bindings from Entry to TEntry
+#
+bind TEntry <Enter> {+
+    set tk::Priv(xWheelEvents) 0; set tk::Priv(yWheelEvents) 0
+}
+foreach event {<MouseWheel> <Option-MouseWheel>
+	       <Shift-MouseWheel> <Shift-Option-MouseWheel>
+	       <TouchpadScroll>} {
+    bind TEntry $event [bind Entry $event]
+}
+unset event
+
 ## EndIMEMarkedText -- Handle the end of input method selection.
 #
 proc ::ttk::entry::EndIMEMarkedText {w} {
