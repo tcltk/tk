@@ -5,7 +5,7 @@
 # presents a consistent API across the three platforms.
 
 # Copyright © 2009 Allen B. Taylor.
-# Copyright © 2024-2025 Kevin Walzer.
+# Copyright © 2024-2025 Kevin Walzer/WordTech Communications LLC.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
