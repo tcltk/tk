@@ -256,7 +256,6 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 {
     Ttk_State state = entryPtr->core.state;
     Ttk_ResourceCache cache = Ttk_GetResourceCache(entryPtr->core.interp);
-    Tk_Window tkwin = entryPtr->core.tkwin;
     Tcl_Obj *tmp;
 
     /* Initialize to fallback values:
@@ -277,11 +276,11 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 
     /* Reacquire color & border resources from resource cache.
      */
-    es->placeholderForegroundObj = Ttk_UseColor(cache, tkwin, es->placeholderForegroundObj);
-    es->foregroundObj = Ttk_UseColor(cache, tkwin, es->foregroundObj);
-    es->selForegroundObj = Ttk_UseColor(cache, tkwin, es->selForegroundObj);
-    es->insertColorObj = Ttk_UseColor(cache, tkwin, es->insertColorObj);
-    es->selBorderObj = Ttk_UseBorder(cache, tkwin, es->selBorderObj);
+    es->placeholderForegroundObj = Ttk_UseColor(cache, es->placeholderForegroundObj);
+    es->foregroundObj = Ttk_UseColor(cache, es->foregroundObj);
+    es->selForegroundObj = Ttk_UseColor(cache, es->selForegroundObj);
+    es->insertColorObj = Ttk_UseColor(cache, es->insertColorObj);
+    es->selBorderObj = Ttk_UseBorder(cache, es->selBorderObj);
 }
 
 /*------------------------------------------------------------------------
