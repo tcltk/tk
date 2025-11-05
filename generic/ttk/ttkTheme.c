@@ -953,7 +953,6 @@ int Ttk_RegisterElementSpec(Ttk_Theme theme,
 
 static int AllocateResource(
     Ttk_ResourceCache cache,
-    Tk_Window tkwin,
     Tcl_Obj **destPtr,
     int optionType)
 {
@@ -962,11 +961,11 @@ static int AllocateResource(
     switch (optionType)
     {
 	case TK_OPTION_FONT:
-	    return (*destPtr = Ttk_UseFont(cache, tkwin, resource)) != NULL;
+	    return (*destPtr = Ttk_UseFont(cache, resource)) != NULL;
 	case TK_OPTION_COLOR:
-	    return (*destPtr = Ttk_UseColor(cache, tkwin, resource)) != NULL;
+	    return (*destPtr = Ttk_UseColor(cache, resource)) != NULL;
 	case TK_OPTION_BORDER:
-	    return (*destPtr = Ttk_UseBorder(cache, tkwin, resource)) != NULL;
+	    return (*destPtr = Ttk_UseBorder(cache, resource)) != NULL;
 	default:
 	    /* no-op; always succeeds */
 	    return 1;
@@ -996,7 +995,6 @@ int InitializeElementRecord(
     Ttk_Style style,		/* Style table */
     void *widgetRecord,		/* Source of widget option values */
     Tk_OptionTable optionTable,	/* Option table describing widget record */
-    Tk_Window tkwin,		/* Corresponding window */
     Ttk_State state)	/* Widget or element state */
 {
     void *elementRecord = eclass->elementRecord;
@@ -1028,7 +1026,7 @@ int InitializeElementRecord(
 	    *dest = styleDefault ? styleDefault : elementDefault;
 	}
 
-	if (!AllocateResource(cache, tkwin, dest, elementOption->type)) {
+	if (!AllocateResource(cache, dest, elementOption->type)) {
 	    return 0;
 	}
     }
@@ -1100,7 +1098,7 @@ Ttk_ElementSize(
 	= *widthPtr = *heightPtr = 0;
 
     if (!InitializeElementRecord(
-	    eclass, style, recordPtr, optionTable, tkwin,  state))
+	    eclass, style, recordPtr, optionTable,  state))
     {
 	return;
     }
@@ -1129,7 +1127,7 @@ Ttk_DrawElement(
 	return;
     }
     if (!InitializeElementRecord(
-	    eclass, style, recordPtr, optionTable, tkwin,  state))
+	    eclass, style, recordPtr, optionTable,  state))
     {
 	return;
     }

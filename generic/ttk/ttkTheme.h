@@ -317,10 +317,10 @@ MODULE_SCOPE Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *);
 MODULE_SCOPE void Ttk_FreeResourceCache(Ttk_ResourceCache);
 
 MODULE_SCOPE Ttk_ResourceCache Ttk_GetResourceCache(Tcl_Interp*);
-MODULE_SCOPE Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-MODULE_SCOPE Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-MODULE_SCOPE Tcl_Obj *Ttk_UseBorder(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-MODULE_SCOPE Tk_Image Ttk_UseImage(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
+MODULE_SCOPE Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache, Tcl_Obj *);
+MODULE_SCOPE Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache, Tcl_Obj *);
+MODULE_SCOPE Tcl_Obj *Ttk_UseBorder(Ttk_ResourceCache, Tcl_Obj *);
+MODULE_SCOPE Tk_Image Ttk_UseImage(Ttk_ResourceCache, Tcl_Obj *);
 
 MODULE_SCOPE void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor *);
 

@@ -253,7 +253,7 @@ static void CacheWinEventHandler(void *clientData, XEvent *eventPtr)
  * InitCacheWindow --
  *	Specify the cache window if not already set.
  */
-static void InitCacheWindow(Ttk_ResourceCache cache, Tk_Window tkwin)
+static void InitCacheWindow(Ttk_ResourceCache cache)
 {
     if (cache->tkwin == NULL) {
 	cache->tkwin = Tk_MainWindow(cache->interp);
@@ -384,23 +384,23 @@ static Tcl_Obj *Ttk_Use(
  * Ttk_UseFont --
  *	Acquire a font from the cache.
  */
-Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
+Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache cache, Tcl_Obj *objPtr)
 {
-    InitCacheWindow(cache, tkwin);
+    InitCacheWindow(cache);
     return Ttk_Use(cache->interp,
-	&cache->fontTable, AllocFont, tkwin, objPtr);
+	&cache->fontTable, AllocFont, cache->tkwin, objPtr);
 }
 
 /*
  * Ttk_UseColor --
  *	Acquire a color from the cache.
  */
-Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
+Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tcl_Obj *objPtr)
 {
     objPtr = CheckNamedColor(cache, objPtr);
-    InitCacheWindow(cache, tkwin);
+    InitCacheWindow(cache);
     return Ttk_Use(cache->interp,
-	&cache->colorTable, AllocColor, tkwin, objPtr);
+	&cache->colorTable, AllocColor, cache->tkwin, objPtr);
 }
 
 /*
@@ -408,12 +408,12 @@ Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
  *	Acquire a Tk_3DBorder from the cache.
  */
 Tcl_Obj *Ttk_UseBorder(
-    Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
+    Ttk_ResourceCache cache, Tcl_Obj *objPtr)
 {
     objPtr = CheckNamedColor(cache, objPtr);
-    InitCacheWindow(cache, tkwin);
+    InitCacheWindow(cache);
     return Ttk_Use(cache->interp,
-	&cache->borderTable, AllocBorder, tkwin, objPtr);
+	&cache->borderTable, AllocBorder, cache->tkwin, objPtr);
 }
 
 /* NullImageChanged --
@@ -435,14 +435,14 @@ static void NullImageChanged(
  * Ttk_UseImage --
  *	Acquire a Tk_Image from the cache.
  */
-Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
+Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tcl_Obj *objPtr)
 {
     const char *imageName = Tcl_GetString(objPtr);
     int newEntry;
     Tcl_HashEntry *entryPtr;
     Tk_Image image;
 
-    InitCacheWindow(cache, tkwin);
+    InitCacheWindow(cache);
 #if !NEED_EXTRA_INFO
     entryPtr = Tcl_CreateHashEntry(&cache->imageTable, imageName, &newEntry);
 #else
@@ -452,7 +452,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     Tcl_DStringInit(&ds);
     Tcl_DStringAppend(&ds, imageName, -1);
     snprintf(buffer, 64, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
-	Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(tkwin));
+	Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(cache->tkwin));
     Tcl_DStringAppend(&ds, buffer, -1);
     entryPtr = Tcl_CreateHashEntry(&cache->imageTable,
 	Tcl_DStringValue(&ds), &newEntry);
@@ -463,7 +463,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 	return (Tk_Image)Tcl_GetHashValue(entryPtr);
     }
 
-    image = Tk_GetImage(cache->interp, tkwin, imageName, NullImageChanged,0);
+    image = Tk_GetImage(cache->interp, cache->tkwin, imageName, NullImageChanged,0);
     Tcl_SetHashValue(entryPtr, image);
 
     if (!image) {
