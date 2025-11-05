@@ -139,6 +139,11 @@ it refers to the item just after the last one.
 Indicates the first child in the list of children.
 .IP \fBlast\fR 12
 Indicates the last child in the list of children.
+.IP \fBend-\fInumber\fR 12
+Indicates the item at position \fInumber\fR relative to the end.
+.IP \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR 12
+Indicates the item at position \fIn\fR relative to index \fIm\fR.
+See \fBstring index\fR for valid forms.
 .SH "COLUMN IDENTIFIERS"
 Column identifiers take any of the following forms:
 .IP \(bu
@@ -525,17 +530,21 @@ or if \fIindex\fR is specified, the index of the item at \fIindex\fR in
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
-Creates a new item and returns its identifier, where \fIparent\fR is the
-identifier of the parent item, or the empty string \fB{}\fR to create a new
-top-level item and \fIindex\fR specifies where in the list of \fIparent\fR's
-children to insert the new item. See \fBINDICES\fR for valid forms of \fIindex\fR.
-If \fIindex\fR is negative or zero, the new node is inserted at the beginning;
-if \fIindex\fR is greater than or equal to the current number of children,
-it is inserted at the end.
-If \fB\-id\fR is specified, it is used as the identifier of the item;
-\fIid\fR must not already exist in the tree.
-Otherwise, a new unique identifier is generated.
-See \fBITEM OPTIONS\fR for the list of available options.
+Creates a new item, inserts it in \fIparent\fR's children at position \fIindex\fR,
+and returns its identifier. See \fBITEM OPTIONS\fR for the list of available options.
+Use the empty string \fB{}\fR for \fIparent\fR to create a new top-level item.
+See \fBINDICES\fR for valid forms of \fIindex\fR. If \fIindex\fR is negative or
+zero, the new item is inserted at the beginning; if \fIindex\fR is greater than
+or equal to the current number of children, it is inserted at the end.
+If \fB\-id\fR is specified, it is used as the identifier of the item; \fIid\fR
+must not already exist in the tree. Otherwise, a new unique identifier is generated.
+.TP
+\fIpathname \fBinsert before\fR|\fBafter\fR \fIitem\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
+.
+Creates a new item, inserts it in \fIitem\fR's parent before or after \fIitem\fR,
+and returns its identifier. See \fBITEM OPTIONS\fR for the list of available options.
+If \fB\-id\fR is specified, it is used as the identifier of the item; \fIid\fR
+must not already exist in the tree. Otherwise, a new unique identifier is generated.
 .\" METHOD: item
 .TP
 \fIpathname \fBitem \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
@@ -552,10 +561,15 @@ See \fBITEM OPTIONS\fR for the list of available options.
 \fIpathname \fBmove \fIitem parent index\fR
 .
 Moves \fIitem\fR to position \fIindex\fR in \fIparent\fR's list of children.
-See \fBINDICES\fR for valid forms of \fIindex\fR. It is illegal to move an item under one
-of its descendants. If \fIindex\fR is negative or zero, \fIitem\fR is moved
-to the beginning; if greater than or equal to the number of children,
-it is moved to the end.
+If \fIindex\fR is negative or zero, \fIitem\fR is moved to the beginning;
+if greater than or equal to the number of children, it is moved to the end.
+See \fBINDICES\fR for valid forms of \fIindex\fR.
+It is illegal to move an item under one of its descendants.
+.TP
+\fIpathname \fBmove \fIitem\fR \fBbefore\fR|\fBafter\fR \fIotherItem\fR
+.
+Moves \fIitem\fR to before or after \fIotherItem\fR in \fIotherItem\fR's
+parent's children. It is illegal to move an item under one of its descendants.
 .\" METHOD: next
 .TP
 \fIpathname \fBnext \fIitem\fR
@@ -1008,11 +1022,11 @@ If there are more values than columns,
 the extra values are ignored.
 .RE
 .IP \fB\-hidden\fR
-A boolean value indicating whether this item
+A Boolean value indicating whether this item
 should be displayed (\fB\-hidden false\fR) or hidden (\fB\-hidden true\fR).
-If a parent is hidden, all its decendants are hidden too.
+If a parent is hidden, all its descendants are hidden too.
 .IP \fB\-open\fR
-A boolean value indicating whether the item's children
+A Boolean value indicating whether the item's children
 should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
 .IP \fB\-tags\fR
 A list of tags associated with this item.

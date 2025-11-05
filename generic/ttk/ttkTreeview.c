@@ -3815,33 +3815,59 @@ static int TreeviewUnhideCommand(
  * +++ Widget commands -- tree modification.
  */
 
+enum { INSERT_AFTER, INSERT_BEFORE };
+static const char *const insertStrings[] = {
+	"after", "before", NULL };
+
 /* + $tv insert $parent $index ?-id id? ?-option value ...?
- *	Insert a new item.
+ *	Insert a new item at $index in $parent's children.
+ * + $tv insert after|before $item ?-id id? ?-option value ...?
+ *	Insert new item before or after $item.
  */
 static int TreeviewInsertCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *sibling, *newItem;
     Tcl_HashEntry *entryPtr;
-    int isNew;
+    int isNew, option;
     Tcl_Obj *idObj;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "parent index ?-id id? -options...");
+	Tcl_WrongNumArgs(interp, 2, objv, "?parent index?|?before|after item? ?-id id? -options...");
 	return TCL_ERROR;
     }
 
-    /* Get parent node: */
-    if ((parent = FindItem(interp, tv, objv[2])) == NULL) {
-	return TCL_ERROR;
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[2], insertStrings, sizeof(char *),
+	    "option", 0, &option) == TCL_OK) {
+	if ((sibling = FindItem(interp, tv, objv[3])) == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/* Check if detached */
+	parent = sibling->parent;
+	if (!parent) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot insert %s detached item",
+		insertStrings[option]));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "DETACHED", "ITEM", NULL);
+	    return TCL_ERROR;
+	}
+	if (option == INSERT_BEFORE) {
+	    sibling = sibling->prev;
+	}
+
+    } else {
+	/* Get parent item: */
+	if ((parent = FindItem(interp, tv, objv[2])) == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/* Locate previous sibling based on $index: */
+	if (FindItemByIndex(interp, tv, parent, objv[3], 1, 1, &sibling) != TCL_OK) {
+	    return TCL_ERROR;
+	}
     }
 
-    /* Locate previous sibling based on $index: */
-    if (FindItemByIndex(interp, tv, parent, objv[3], 1, 1, &sibling) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    /* Get node name:
+    /* Get item name:
      *     If -id supplied and does not already exist, use that;
      *     Otherwise autogenerate new one.
      */
@@ -4052,31 +4078,62 @@ static int TreeviewDeleteCommand(
 
 /* + $tv move $item $parent $index
  *	Move $item to the specified $index in $parent's child list.
+ * + $tv move $item before|after $otherItem
+ *	Move $item to before or after $otherItem.
  */
 static int TreeviewMoveCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
     TreeItem *sibling;
+    int option;
 
     if (objc != 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item parent index");
-	return TCL_ERROR;
-    }
-    if ((item = FindItem(interp, tv, objv[2])) == NULL
-	    || (parent = FindItem(interp, tv, objv[3])) == NULL) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?parent index?|?before|after otherItem?");
 	return TCL_ERROR;
     }
 
+    /* Get item to move */
+    if ((item = FindItem(interp, tv, objv[2])) == NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Check if root item, if so abort */
     if (item == tv->tree.root) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot move root item"));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", NULL);
 	return TCL_ERROR;
     }
 
-    /* Locate previous sibling based on $index: */
-    if (FindItemByIndex(interp, tv, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
-	return TCL_ERROR;
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[3], insertStrings, sizeof(char *),
+	    "option", 0, &option) == TCL_OK) {
+	/* Get before or after item */
+	if ((sibling = FindItem(interp, tv, objv[4])) == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/* Check if detached */
+	if (IsItemOrAncestorDetached(tv, sibling)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot move %s detached item",
+		insertStrings[option]));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "DETACHED", "ITEM", NULL);
+	    return TCL_ERROR;
+	}
+	parent = sibling->parent;
+	if (option == INSERT_BEFORE) {
+	    sibling = sibling->prev;
+	}
+
+    } else {
+	/* Get new parent */
+	if ((parent = FindItem(interp, tv, objv[3])) == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/* Locate previous sibling based on $index: */
+	if (FindItemByIndex(interp, tv, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
+	    return TCL_ERROR;
+	}
     }
 
     /* Check ancestry: */
