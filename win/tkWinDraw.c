@@ -1268,17 +1268,18 @@ DrawOrFillArc(
      * definitions between X and Windows.
      */
 
+    if ( (gc->fill_style == FillStippled
+	   || gc->fill_style == FillOpaqueStippled)
+	  && gc->stipple != None) {
+	SetBkColor(dc, gc->foreground);
+	SetTextColor(dc, gc->background);
+    }
+
     pen = SetUpGraphicsPort(gc);
     oldPen = SelectObject(dc, pen);
     if (!fill) {
 
-	if(gc->stipple != None && gc->foreground != 0) {
-	    SetBkMode(dc, OPAQUE);
-	    SetBkColor(dc, gc->foreground);
-            SetTextColor(dc, gc->background);
-	} else {
-	    SetBkMode(dc, TRANSPARENT);
-	}
+	SetBkMode(dc, TRANSPARENT);
 
 	/*
 	 * Note that this call will leave a gap of one pixel at the end of the
@@ -1289,8 +1290,23 @@ DrawOrFillArc(
 	Arc(dc, x, y, (int) (x+width+1), (int) (y+height+1), xstart, ystart,
 		xend, yend);
     } else {
-	brush = CreateSolidBrush(gc->foreground);
+	if ((gc->fill_style == FillStippled
+	    || gc->fill_style == FillOpaqueStippled)
+	  && gc->stipple != None) {
+	    TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
+
+	    if (twdPtr->type != TWD_BITMAP) {
+		Tcl_Panic("unexpected drawable type in stipple");
+	    }
+
+	    brush = CreatePatternBrush(twdPtr->bitmap.handle);
+	} else {
+	    brush = CreateSolidBrush(gc->foreground);
+	}
+
 	oldBrush = SelectObject(dc, brush);
+
+
 	if (gc->arc_mode == ArcChord) {
 	    Chord(dc, x, y, (int) (x+width+1), (int) (y+height+1),
 		    xstart, ystart, xend, yend);
