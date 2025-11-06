@@ -1038,6 +1038,9 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
+#if (defined(__MSVCRT__) || defined(_UCRT)) && (!defined(__USE_MINGW_ANSI_STDIO) || __USE_MINGW_ANSI_STDIO)
+		".stdio-mingw"
+#endif
 #if defined(_WIN32)
 		".win32"
 #endif

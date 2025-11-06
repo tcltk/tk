@@ -1,6 +1,6 @@
 # This file is a Tcl script to test systray and sysnotify features in Tk.
 #
-# Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2020 Kevin Walzer.
 # Copyright © 2020 Francois Vogel.
 # All rights reserved.
 

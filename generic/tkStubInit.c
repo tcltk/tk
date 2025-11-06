@@ -744,8 +744,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
+    XXorRegion, /* 144 */
+    XEqualRegion, /* 145 */
     0, /* 146 */
     XFreeFontSet, /* 147 */
     XCloseIM, /* 148 */
@@ -905,8 +905,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
+    XXorRegion, /* 144 */
+    XEqualRegion, /* 145 */
     0, /* 146 */
     XFreeFontSet, /* 147 */
     XCloseIM, /* 148 */
