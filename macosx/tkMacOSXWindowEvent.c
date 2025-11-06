@@ -6,7 +6,7 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2015 Kevin Walzer.
  * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -338,12 +338,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-#if 0
-    if (winPtr) {
-	Tk_UnmapWindow((Tk_Window)winPtr);
-    }
-#endif
 }
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
@@ -387,6 +381,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
     TkpChangeFocus(winPtr, 1);
+    Tcl_Release(winPtr);
 }
 
 #pragma mark TKApplication(TKApplicationEvent)
@@ -423,6 +418,7 @@ static void RefocusGrabWindow(void *data) {
 	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_Preserve(winPtr);
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
 	}
 	if (iconifiedWindow == nil && [win isMiniaturized]) {
@@ -575,11 +571,6 @@ GenerateUpdates(
     NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 
     TkMacOSXWinCGBounds(winPtr, &bounds);
-#if 0
-    if (!CGRectIntersectsRect(bounds, *updateBounds)) {
-	return 0;
-    }
-#endif
 
     /*
      * Compute the bounding box of the area that the damage occurred in.
@@ -1090,8 +1081,8 @@ ExposeRestrictProc(
     Tk_Window tkwin = (Tk_Window)winPtr;
 
     if (winPtr) {
-	unsigned int width = (unsigned int) newsize.width;
-	unsigned int height= (unsigned int) newsize.height;
+	unsigned int width = (unsigned int)newsize.width;
+	unsigned int height= (unsigned int)newsize.height;
 
 	/*
 	 * This function can be re-entered, so we need to make sure we don't
@@ -1135,7 +1126,6 @@ ExposeRestrictProc(
 	 */
 
 	[NSApp _unlockAutoreleasePool];
-
     }
 }
 
