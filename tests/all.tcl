@@ -71,7 +71,7 @@ foreach {constraint definition fileList} {
     }
 }
 tcltest::configure -notfile [lsort -unique $skipFiles]
-unset skipFiles toSkip
+unset constraint definition fileList skipFiles toSkip
 
 #
 # RUN ALL TESTS
