@@ -5,7 +5,7 @@
 # layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz.
-# Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2021 Kevin Walzer.
 # Copyright © 2021 Harald Oehlmann, Elmicron GmbH
 # Copyright © 2022 Emiliano Gavilan
 #
@@ -14,6 +14,13 @@
 
 namespace eval ::tk::print {
     namespace import -force ::tk::msgcat::*
+
+    # margins for printing text, in mm
+    variable margin
+    set margin(top)    15
+    set margin(left)   25
+    set margin(right)  15
+    set margin(bottom) 15
 
     # makeTempFile:
     #    Create a temporary file and populate its contents
@@ -42,6 +49,30 @@ namespace eval ::tk::print {
 	}
     }
 
+    # _wrapLines -
+    #   wrap long lines into lines of at most length wl at word boundaries
+    # Arguments:
+    #   str   - string to be wrapped
+    #   wl    - wrap length
+    #
+    proc _wrapLines {str wl} {
+	# This is a really simple algorithm: it breaks a line on space or tab
+	# character, collapsing them only at the breaking point.
+	# Leading space is left as-is.
+	# For a full fledged line breaking algorithm see
+	# Unicode® Standard Annex #14 "Unicode Line Breaking Algorithm"
+	set res {}
+	incr wl -1
+	set re [format {((?:^|[^[:blank:]]).{0,%d})(?:[[:blank:]]|$)} $wl]
+	foreach line [split $str \n] {
+	    lappend res {*}[lmap {_ l} [regexp -all -inline -- $re $line] {
+		set l
+	    }]
+	}
+	# the return value is a list of lines
+	return $res
+    }
+
     if {[tk windowingsystem] eq "win32"} {
 	variable printer_name
 	variable copies
@@ -62,6 +93,7 @@ namespace eval ::tk::print {
 	# for print job.
 	#
 	proc _set_dc {} {
+	    variable margin
 	    variable printargs
 	    variable printer_name
 	    variable paper_width
@@ -76,14 +108,10 @@ namespace eval ::tk::print {
 	    #Next, set values. Some are taken from the printer,
 	    #some are sane defaults.
 
-	    if {[info exists printer_name] && $printer_name ne ""} {
+	    if {[info exists printer_name]} {
 		set printargs(hDC) $printer_name
 		set printargs(pw) $paper_width
-		set printargs(pl) $paper_height
-		set printargs(lm) 1000
-		set printargs(tm) 1000
-		set printargs(rm) 1000
-		set printargs(bm) 1000
+		set printargs(ph) $paper_height
 		set printargs(resx) $dpi_x
 		set printargs(resy) $dpi_y
 		set printargs(copies) $copies
@@ -91,17 +119,38 @@ namespace eval ::tk::print {
 	    }
 	}
 
-	# _print_data
+	# _print
+	# Main entry of the print subsystem for Win32.
+	# Set the print job name and delegate to the right procedure
+	proc _print {w} {
+	    variable jobname
+
+	    set class [winfo class $w]
+	    if {$class ni {Text Canvas}} {
+		return -code error "can not print widget of class \"$class\":\
+		    should be Canvas or Text"
+	    }
+	    set jobname "[tk appname]: Tk widget $w"
+	    switch -- $class {
+		Text {
+		    _print_data2 [$w get 1.0 end] {{Courier New} 11}
+		}
+		Canvas {
+		    _print_widget $w
+		}
+	    }
+	}
+
+	# _print_data2
 	# This function prints multiple-page files, using a line-oriented
 	# function, taking advantage of knowing the character widths.
 	# Arguments:
 	# data -       Text data for printing
-	# breaklines - If non-zero, keep newlines in the string as
-	#              newlines in the output.
 	# font -       Font for printing
-	proc _print_data {data {breaklines 1} {font ""}} {
+	proc _print_data2 { data font } {
 	    variable printargs
 	    variable printer_name
+	    variable jobname
 
 	    _set_dc
 
@@ -109,20 +158,102 @@ namespace eval ::tk::print {
 		return
 	    }
 
-	    if {$font eq ""} {
-		_gdi characters $printargs(hDC) -array printcharwid
-	    } else {
-		_gdi characters $printargs(hDC) -font $font -array printcharwid
-	    }
-	    set pagewid [expr {($printargs(pw) - $printargs(rm) ) / 1000 * $printargs(resx)}]
-	    set pagehgt [expr {($printargs(pl) - $printargs(bm) ) / 1000 * $printargs(resy)}]
-	    set totallen [string length $data]
-	    set curlen 0
-	    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000}]
+	    set maxwidth [expr {
+		($printargs(pw) - $printargs(lm) - $printargs(rm)) *
+		$printargs(resx) / 1000
+	    }]
+	    set maxheight [expr {
+		($printargs(ph) - $printargs(tm) - $printargs(bm)) *
+		$printargs(resy) / 1000
+	    }]
+	    set lm [expr {$printargs(lm) * $printargs(resx) / 1000}]
+	    set tm [expr {$printargs(tm) * $printargs(resy) / 1000}]
+	    set curheight $tm
 
-	    _opendoc
+	    lassign [_opendoc $jobname $font] charwidth charheight
 	    _openpage
 
+	    set wl [expr {($maxwidth / $charwidth) + 1}]
+	    foreach line [_wrapLines $data $wl] {
+		_gdi textplain $printargs(hDC) $lm $curheight $line
+		incr curheight $charheight
+		if {$curheight + $charheight > $maxheight} {
+		    _closepage
+		    _openpage
+		    set curheight $tm
+		}
+	    }
+	    _closepage
+	    _closedoc
+	    return
+	}
+
+	# _print_data
+	# This function prints multiple-page files, using a line-oriented
+	# function, taking advantage of knowing the character widths.
+	# Arguments:
+	# data -       Text data for printing
+	# font -       Font for printing
+	proc _print_data { data font } {
+	    variable printargs
+	    variable printer_name
+	    variable charwidths
+
+	    _set_dc
+
+	    if {![info exists printer_name]} {
+		return
+	    }
+
+	    _gdi characters $printargs(hDC) -font $font \
+		-array ::tk::print::charwidths
+	    array default set ::tk::print::charwidths $charwidths(x)
+	    # check for a monospaced font
+	    set mono 0
+	    if {$charwidths(i) == $charwidths(m)} {
+		set mono $charwidths(m)
+	    }
+	    set maxwidth [expr {
+		($printargs(pw) - $printargs(lm) - $printargs(rm)) *
+		$printargs(resx) / 1000
+	    }]
+	    set maxhgt [expr {
+		($printargs(ph) - $printargs(tm) - $printargs(bm)) *
+		$printargs(resy) / 1000
+	    }]
+	    set lm [expr {$printargs(lm) * $printargs(resx) / 1000}]
+	    set tm [expr {$printargs(tm) * $printargs(resy) / 1000}]
+	    set curhgt $tm
+
+	    _opendoc "[tk appname]: Tk Print Job"
+	    _openpage
+
+	    # if a monospaced font is used, things are a bit easier
+	    # handle this case here
+	    if {$mono > 0} {
+		# can use the same line breaking algorithm as X11
+		set wl [expr {($maxwidth / $mono) + 1}]
+		foreach line [_wrapLines $data $wl] {
+		    set hgt [_gdi text $printargs(hDC) $lm $curhgt \
+			-anchor nw -justify left \
+			-text $line -font $font]
+		    incr curhgt $hgt
+#		    puts "height: $hgt"
+		    if {$curhgt + $hgt > $maxhgt} {
+			_closepage
+			_openpage
+			set curhgt $tm
+		    }
+		}
+		_closepage
+		_closedoc
+		return
+	    }
+
+	    # proportional font
+	    set totallen [string length $data]
+	    set curlen 0
+	    set breaklines 1
 	    while {$curlen < $totallen} {
 		set linestring [string range $data $curlen end]
 		if {$breaklines} {
@@ -135,37 +266,18 @@ namespace eval ::tk::print {
 			}
 		    }
 		}
-
-		set result [_print_page_nextline $linestring \
-				printcharwid printargs $curhgt $font]
-		incr curlen [lindex $result 0]
-		incr curhgt [lindex $result 1]
-		if {$curhgt + [lindex $result 1] > $pagehgt} {
+		lassign [_print_page_nextline $linestring $curhgt $font \
+		    $lm $maxwidth] len hgt
+		incr curlen $len
+		incr curhgt $hgt
+		if {$curhgt + $hgt > $maxhgt} {
 		    _closepage
 		    _openpage
-		    set curhgt [expr {$printargs(tm) * $printargs(resy) / 1000}]
+		    set curhgt $zerohgt
 		}
 	    }
-
 	    _closepage
 	    _closedoc
-	}
-
-	# _print_file
-	# This function prints multiple-page files
-	# It will either break lines or just let them run over the
-	# margins (and thus truncate).
-	# The font argument is JUST the font name, not any additional
-	# arguments.
-	# Arguments:
-	#   filename -   File to open for printing
-	#   breaklines - 1 to break lines as done on input, 0 to ignore newlines
-	#   font -       Optional arguments to supply to the text command
-	proc _print_file {filename {breaklines 1} {font ""}} {
-	    set fn [open $filename r]
-	    set data [read $fn]
-	    close $fn
-	    _print_data $data $breaklines $font
 	}
 
 	# _print_page_nextline
@@ -174,27 +286,20 @@ namespace eval ::tk::print {
 	# and y is the height of the line printed
 	# Arguments:
 	#   string -         Data to print
-	#   pdata -         Array of values for printer characteristics
-	#   cdata -         Array of values for character widths
-	#   y -              Y value to begin printing at
+	#   y -              Y value to begin printing at, in logical units
 	#   font -           if non-empty specifies a font to draw the line in
-	proc _print_page_nextline {string carray parray y font} {
-	    upvar #0 $carray charwidths
-	    upvar #0 $parray printargs
-
+	#   lm -             left margin, in logical units
+	#   maxwidth -       line length limit in logical units
+	proc _print_page_nextline {string y font lm maxwidth} {
+	    variable charwidths
 	    variable printargs
 
 	    set endindex 0
 	    set totwidth 0
-	    set maxwidth [expr {
-		(($printargs(pw) - $printargs(rm)) / 1000) * $printargs(resx)
-	    }]
 	    set maxstring [string length $string]
-	    set lm [expr {$printargs(lm) * $printargs(resx) / 1000}]
 
 	    for {set i 0} {($i < $maxstring) && ($totwidth < $maxwidth)} {incr i} {
 		incr totwidth $charwidths([string index $string $i])
-		# set width($i) $totwidth
 	    }
 
 	    set endindex $i
@@ -216,36 +321,33 @@ namespace eval ::tk::print {
 		}
 	    }
 
-	    set txt [string trim [string range $string 0 $endindex] "\r\n"]
+	    set txt [string trimright [string range $string 0 $endindex] "\r\n"]
 	    if {$font ne ""} {
-		set result [_gdi text $printargs(hDC) $lm $y \
+		set height [_gdi text $printargs(hDC) $lm $y \
 				 -anchor nw -justify left \
 				 -text $txt -font $font]
 	    } else {
-		set result [_gdi text $printargs(hDC) $lm $y \
+		set height [_gdi text $printargs(hDC) $lm $y \
 				 -anchor nw -justify left -text $txt]
 	    }
-	    return "$startindex $result"
+	    return [list $startindex $height]
 	}
 
 	# These procedures read in the canvas widget, and write all of
 	# its contents out to the Windows printer.
 
-	variable option
-	variable vtgPrint
-
-	proc _init_print_canvas {} {
-	    variable option
-	    variable vtgPrint
+	proc _init_print {} {
+	    variable margin
 	    variable printargs
+	    variable vtgPrint
 
 	    set vtgPrint(printer.bg) white
-	}
 
-	proc _is_win {} {
-	    variable printargs
-
-	    return [info exist tk_patchLevel]
+	    # convert margins to windows DC units (1000 point per inch)
+	    set printargs(tm) [expr {int($margin(top) / 25.4 * 1000)}]
+	    set printargs(lm) [expr {int($margin(left) / 25.4 * 1000)}]
+	    set printargs(rm) [expr {int($margin(right) / 25.4 * 1000)}]
+	    set printargs(bm) [expr {int($margin(bottom) / 25.4 * 1000)}]
 	}
 
 	# _print_widget
@@ -253,12 +355,19 @@ namespace eval ::tk::print {
 	# canvas widgets.  Handles opening and closing of printer.
 	# Arguments:
 	#   wid -              The widget to be printed.
-	#   printer -          Flag whether to use the default printer.
 	#   name  -            App name to pass to printer.
 
-	proc _print_widget {wid {printer default} {name "Tk Print Output"}} {
+	proc _print_widget {w} {
 	    variable printargs
 	    variable printer_name
+	    variable jobname
+
+	    # provide an early exit if the widget is not a canvas
+	    set class [winfo class $w]
+	    if {$class ne "Canvas"} {
+		return -code error "Can't print items of type $class.\
+		     No handler registered"
+	    }
 
 	    _set_dc
 
@@ -266,7 +375,7 @@ namespace eval ::tk::print {
 		return
 	    }
 
-	    _opendoc
+	    _opendoc $jobname
 	    _openpage
 
 	    # Here is where any scaling/gdi mapping should take place
@@ -275,19 +384,19 @@ namespace eval ::tk::print {
 
 	    # For normal windows, this may be fine--but for a canvas, one
 	    # wants the canvas dimensions, and not the WINDOW dimensions.
-	    if {[winfo class $wid] eq "Canvas"} {
-		set sc [$wid cget -scrollregion]
+	    if {$class eq "Canvas"} {
+		set sc [$w cget -scrollregion]
 		# if there is no scrollregion, use width and height.
 		if {$sc eq ""} {
-		    set window_x [winfo pixels $wid [$wid cget -width]]
-		    set window_y [winfo pixels $wid [$wid cget -height]]
+		    set window_x [winfo pixels $w [$w cget -width]]
+		    set window_y [winfo pixels $w [$w cget -height]]
 		} else {
-		    set window_x [lindex $sc 2]
-		    set window_y [lindex $sc 3]
+		    set window_x [winfo pixels $w [lindex $sc 2]]
+		    set window_y [winfo pixels $w [lindex $sc 3]]
 		}
 	    } else {
-		set window_x [winfo width $wid]
-		set window_y [winfo height $wid]
+		set window_x [winfo width $w]
+		set window_y [winfo height $w]
 	    }
 
 	    set printer_x [expr {
@@ -295,7 +404,7 @@ namespace eval ::tk::print {
 		$printargs(resx)  / 1000.0
 	    }]
 	    set printer_y [expr {
-		( $printargs(pl) - $printargs(tm) - $printargs(bm) ) *
+		( $printargs(ph) - $printargs(tm) - $printargs(bm) ) *
 		$printargs(resy) / 1000.0
 	    }]
 	    set factor_x [expr {$window_x / $printer_x}]
@@ -313,14 +422,7 @@ namespace eval ::tk::print {
 		-offset $printargs(resolution)
 
 	    # Handling of canvas widgets.
-	    switch [winfo class $wid] {
-		Canvas {
-		    _print_canvas $printargs(hDC) $wid
-		}
-		default {
-		    puts "Can't print items of type [winfo class $wid]. No handler registered"
-		}
-	    }
+	    _print_canvas $printargs(hDC) $w
 
 	    # End printing process.
 	    _closepage
@@ -333,7 +435,7 @@ namespace eval ::tk::print {
 	#    hdc -              The printer handle.
 	#    cw  -              The canvas widget.
 	proc _print_canvas {hdc cw} {
-	    variable  vtgPrint
+	    variable vtgPrint
 	    variable printargs
 
 	    # Get information about page being printed to
@@ -342,11 +444,16 @@ namespace eval ::tk::print {
 
 	    # Re-write each widget from cw to printer
 	    foreach id [$cw find all] {
+		if {[$cw itemcget $id -state] eq "hidden"} {
+		    # don't display hidden items
+		    continue
+		}
 		set type [$cw type $id]
 		if {[info commands _print_canvas.$type] eq "_print_canvas.$type"} {
-		    _print_canvas.[$cw type $id] $printargs(hDC) $cw $id
+		    _print_canvas.$type $printargs(hDC) $cw $id
 		} else {
-		    puts "Omitting canvas item of type $type since there is no handler registered for it"
+		    # should we use puts?
+		    # puts "Omitting canvas item of type $type since there is no handler registered for it"
 		}
 	    }
 	}
@@ -371,13 +478,15 @@ namespace eval ::tk::print {
 		return
 	    }
 
-	    set coords  [$cw coords $id]
-	    set wdth    [$cw itemcget $id -width]
-	    set arrow   [$cw itemcget $id -arrow]
-	    set arwshp  [$cw itemcget $id -arrowshape]
-	    set dash    [$cw itemcget $id -dash]
-	    set smooth  [$cw itemcget $id -smooth]
+	    set coords [$cw coords $id]
+	    set wdth   [$cw itemcget $id -width]
+	    set arrow  [$cw itemcget $id -arrow]
+	    set arwshp [$cw itemcget $id -arrowshape]
+	    set dash   [$cw itemcget $id -dash]
+	    set smooth [$cw itemcget $id -smooth]
 	    set splinesteps [$cw itemcget $id -splinesteps]
+	    set capstyle    [$cw itemcget $id -capstyle]
+	    set joinstyle   [$cw itemcget $id -joinstyle]
 
 	    set cmdargs {}
 
@@ -396,6 +505,7 @@ namespace eval ::tk::print {
 
 	    set result [_gdi line $hdc {*}$coords \
 			    -fill $color -arrow $arrow -arrowshape $arwshp \
+			    -capstyle $capstyle -joinstyle $joinstyle \
 			    {*}$cmdargs]
 	    if {$result ne ""} {
 		puts $result
@@ -530,8 +640,10 @@ namespace eval ::tk::print {
 	    variable printargs
 
 	    set color [_print_canvas.TransColor [$cw itemcget $id -fill]]
-	    #    if {"white" eq [string tolower $color]} {return}
-	    #    set color black
+#	    if {"white" eq [string tolower $color]} {
+#		return
+#	    }
+	    # set color black
 	    set txt [$cw itemcget $id -text]
 	    if {$txt eq ""} {
 		return
@@ -539,23 +651,36 @@ namespace eval ::tk::print {
 	    set coords [$cw coords $id]
 	    set anchr [$cw itemcget $id -anchor]
 
-	    set bbox [$cw bbox $id]
-	    set wdth [expr {[lindex $bbox 2] - [lindex $bbox 0]}]
-
+	    set angle [$cw itemcget $id -angle]
+	    set wdth [winfo pixels $cw [$cw itemcget $id -width]]
 	    set just [$cw itemcget $id -justify]
 
-	    # Get the real canvas font info and create a compatible font,
-	    # suitable for printer name extraction.
-	    set font [font create {*}[font actual [$cw itemcget $id -font]]]
-
-	    # Just get the name and family, or some of the _gdi commands will
-	    # fail.
-	    set font [list [font configure $font -family] \
-			  -[font configure $font -size]]
+	    # Get the real canvas font info suitable for printer
+	    set font [_make_gdi_cfont $cw [$cw itemcget $id -font]]
 
 	    _gdi text $hdc {*}$coords \
 		-fill $color -text $txt -font $font \
-		-anchor $anchr -width $wdth -justify $just
+		-anchor $anchr -width $wdth -justify $just -angle $angle
+	}
+
+	proc _make_gdi_cfont {w fname} {
+	    set fa [font actual $fname]
+	    # Transform to the third documented format in font(n)
+	    # {family size style style style style}
+	    set font [lmap k { -family -size -weight -slant } {
+		dict get $fa $k
+	    }]
+	    # add underline and overstrike
+	    foreach k { -underline -overstrike } v { underline overstrike } {
+		if {[dict get $fa $k]} {
+		    lappend font $v
+		}
+	    }
+	    # make sure size is in pixels (negative)
+	    if {[set size [lindex $font 1]] > 0} {
+		lset font 1 [winfo pixels $w -${size}p]
+	    }
+	    return $font
 	}
 
 	# _print_canvas.image
@@ -567,16 +692,15 @@ namespace eval ::tk::print {
 	proc _print_canvas.image {hdc cw id} {
 	    # First, we have to get the image name.
 	    set imagename [$cw itemcget $id -image]
-
-	    # Now we get the size.
-	    set wid [image width $imagename]
-	    set hgt [image height $imagename]
+	    if {[image type $imagename] ne "photo"} {
+		return
+	    }
 
 	    # Next, we get the location and anchor
+	    lassign [$cw coords $id] ix iy
 	    set anchor [$cw itemcget $id -anchor]
-	    set coords [$cw coords $id]
 
-	    _gdi photo $hdc -destination $coords -photo $imagename
+	    _gdi photo $hdc $ix $iy -anchor $anchor -photo $imagename
 	}
 
 	# _print_canvas.bitmap
@@ -586,15 +710,21 @@ namespace eval ::tk::print {
 	#   cw  -              The canvas widget.
 	#   id  -              The id of the canvas item.
 	proc _print_canvas.bitmap {hdc cw id} {
+	    # bitmap is not yet supported !!
+	    # do nothing until it is (if ever).
+	    return
 	    variable option
 	    variable vtgPrint
 
 	    # First, we have to get the bitmap name.
-	    set imagename [$cw itemcget $id -image]
+	    set name [$cw itemcget $id -bitmap]
 
 	    # Now we get the size.
-	    set wid [image width $imagename]
-	    set hgt [image height $imagename]
+#	    set wid [image width $imagename]
+#	    set hgt [image height $imagename]
+	    set bbox [$cw bbox $id]
+	    set wid [expr {[lindex $bbox 2] - [lindex $bbox 0]}]
+	    set hgt [expr {[lindex $bbox 3] - [lindex $bbox 1]}]
 
 	    #Next, we get the location and anchor.
 	    set anchor [$cw itemcget $id -anchor]
@@ -615,7 +745,7 @@ namespace eval ::tk::print {
 			    -height $hgt -width $wid \
 			    -background $vtgPrint(canvas.bg)]
 		canvas $tl.canvas -width $wid -height $hgt
-		$tl.canvas create image 0 0 -image $imagename -anchor nw
+		$tl.canvas create bitmap 0 0 -bitmap $name -anchor nw
 		pack $tl.canvas -side left -expand false -fill none
 		tkwait visibility $tl.canvas
 		update
@@ -626,7 +756,7 @@ namespace eval ::tk::print {
 		destroy $tl
 	    } else {
 		_gdi bitmap $hdc {*}$coords \
-		    -anchor $anchor -bitmap $imagename
+		    -anchor $anchor -bitmap $name
 	    }
 	}
 
@@ -649,7 +779,7 @@ namespace eval ::tk::print {
 	}
 
 	# Initialize all the variables once.
-	_init_print_canvas
+	_init_print
     }
     #end win32 procedures
 }
@@ -700,7 +830,7 @@ if {[tk windowingsystem] eq "x11"} {
 		return -code error "Unable to obtain the list of printers.\
 		    Command \"$cmd\" not found.\
 		    Please install the CUPS package for your system."
-	    } trap {CHILDSTATUS} {} {
+	    } trap {CHILDSTATUS} {e o} {
 		# command returns a non-0 exit status. Wrong print system?
 		set cmd [lindex [dict get $o -errorstack ] 1 2]
 		return -code error "Command \"$cmd\" return with errors"
@@ -882,10 +1012,12 @@ if {[tk windowingsystem] eq "x11"} {
 	set option(number-up)	1
 	set option(tzoom)	100; # we derive lpi and cpi from this value
 	set option(pprint)	0  ; # pretty print
-	set option(margin-top)	20 ; # ~ 7mm (~ 1/4")
-	set option(margin-left)	20 ; # ~ 7mm (~ 1/4")
-	set option(margin-right)  20 ; # ~ 7mm (~ 1/4")
-	set option(margin-bottom) 20 ; # ~ 7mm (~ 1/4")
+	# convert margins from mm to points
+	variable margin
+	set option(margin-top)    [expr {int($margin(top) * 72 / 25.4)}]
+	set option(margin-left)   [expr {int($margin(left) * 72 / 25.4)}]
+	set option(margin-right)  [expr {int($margin(right) * 72 / 25.4)}]
+	set option(margin-bottom) [expr {int($margin(bottom) * 72 / 25.4)}]
 
 	# array to collect printer information
 	variable pinfo
@@ -1185,12 +1317,23 @@ if {[tk windowingsystem] eq "x11"} {
 		set rotate 1
 	    }
 	    # Scale based on size of widget, not size of paper.
+	    set args {}
+	    set sr [$w cget -scrollregion]
+	    if {$sr != ""} {
+		set sr [lmap x $sr {
+		    winfo pixels $w $x
+		}]
+		foreach k {-x -y -width -height} x $sr {
+		    lappend args $k $x
+		}
+	    }
 	    # TODO: is this correct??
 	    set printwidth [expr {
 		$option(czoom) / 100.0 * [winfo width $w]
 	    }]
 	    set data [encoding convertto iso8859-1 [$w postscript \
-		-colormode $colormode -rotate $rotate -pagewidth $printwidth]]
+		-colormode $colormode -rotate $rotate -pagewidth $printwidth \
+		{*}$args]]
 	} elseif {$class eq "Text"} {
 	    set tzoom [expr {$option(tzoom) / 100.0}]
 	    if {$option(tzoom) != 100} {
@@ -1217,36 +1360,14 @@ if {[tk windowingsystem] eq "x11"} {
 	    # set the wrap length at 98% of computed page width in chars
 	    # the 9.8 constant is the product 10.0 (default cpi) * 0.98
 	    set wl [expr {int( 9.8 * $pw / $tzoom )}]
-	    set data [encoding convertto utf-8 [_wrapLines [$w get 1.0 end] $wl]]
+	    set data [encoding convertto utf-8 \
+		[join [_wrapLines [$w get 1.0 end] $wl] "\n"]]
 	}
 
 	# launch the job in the background
 	after idle [namespace code \
 	    [list cups print $option(printer) $data {*}$printargs]]
 	destroy $p
-    }
-
-    # _wrapLines -
-    #   wrap long lines into lines of at most length wl at word boundaries
-    # Arguments:
-    #   str   - string to be wrapped
-    #   wl    - wrap length
-    #
-    proc ::tk::print::_wrapLines {str wl} {
-	# This is a really simple algorithm: it breaks a line on space or tab
-	# character, collapsing them only at the breaking point.
-	# Leading space is left as-is.
-	# For a full fledged line breaking algorithm see
-	# Unicode® Standard Annex #14 "Unicode Line Breaking Algorithm"
-	set res {}
-	incr wl -1
-	set re [format {((?:^|[^[:blank:]]).{0,%d})(?:[[:blank:]]|$)} $wl]
-	foreach line [split $str \n] {
-	    lappend res {*}[lmap {_ l} [regexp -all -inline -- $re $line] {
-		set l
-	    }]
-	}
-	return [join $res \n]
     }
 }
 #end X11 procedures
@@ -1294,22 +1415,18 @@ namespace eval ::tk::print {
 #      w: Widget to print.
 proc ::tk::print {w} {
     switch [winfo class $w],[tk windowingsystem] {
-	"Canvas,win32" {
-	    tailcall ::tk::print::_print_widget $w 0 "Tk Print Output"
+	"Canvas,win32" -
+	"Text,win32" {
+	    tailcall ::tk::print::_print $w
 	}
-	"Canvas,x11" {
+	"Canvas,x11" -
+	"Text,x11" {
 	    tailcall ::tk::print::_print $w
 	}
 	"Canvas,aqua" {
 	    ::tk::print::_printcanvas $w
 	    set printfile /tmp/tk_canvas.pdf
 	    ::tk::print::_print $printfile
-	}
-	"Text,win32" {
-	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
-	}
-	"Text,x11" {
-	    tailcall ::tk::print::_print $w
 	}
 	"Text,aqua" {
 	    set txtfile [::tk::print::makeTempFile tk_text.txt [$w get 1.0 end]]

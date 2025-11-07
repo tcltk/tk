@@ -19,6 +19,69 @@
 #define DEFAULT_ARROW_SIZE "15"
 #define MIN_THUMB_SIZE 10
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Helper routine for drawing a few style elements:
+ *
+ * The following function is needed when drawing the trough element
+ * (which is used in scrollbars, scales, and progressbars) and the
+ * arrow and thumb elements of a scrollbar.  It draws the light or dark
+ * border color along the entire bottom and right edges, contrary to
+ * the Tk_Fill3DRectangle function, which on the windowing systems x11
+ * and aqua draws the light or dark border color along the entire top
+ * and left edges instead.
+ *
+ * An alternative approach would be to modify the function
+ * Tk_3DHorizontalBevel in the file unix/tkUnix3d.c.  That function is
+ * called in Tk_Draw3DRectangle, which in turn is invoked in
+ * Tk_Fill3DRectangle (both functions are implemented in the file
+ * generic/tk3d.c).  With that approach there would be no need for the
+ * Fill3DRectangle function below, but it would result in some (minor)
+ * changes related to the appearance of most Tk and Ttk widgets on x11
+ * and aqua.
+ */
+
+#if defined(_WIN32)
+#define Fill3DRectangle Tk_Fill3DRectangle
+#else
+static void Fill3DRectangle(
+    Tk_Window tkwin,		/* Window for which border was allocated. */
+    Drawable drawable,		/* X window or pixmap in which to draw. */
+    Tk_3DBorder border,		/* Token for border to draw. */
+    int x, int y,		/* Upper-left corner of the rectangle. */
+    int width, int height,	/* The width and height of the rectangle. */
+    int borderWidth,		/* Desired width for border, in pixels. Border
+				 * will be *inside* region. */
+    int relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
+				 * TK_RELIEF_RAISED, TK_RELIEF_SUNKEN, etc. */
+{
+    if (borderWidth == 1 && width >= 2 && height >= 2 &&
+	    (relief == TK_RELIEF_RAISED || relief == TK_RELIEF_SUNKEN)) {
+	GC flatGC  = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
+	GC darkGC  = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+	GC nGC, wGC, sGC, eGC;
+	int x1 = x, x2 = x + width - 1;
+	int y1 = y, y2 = y + height - 1;
+
+	XFillRectangle(Tk_Display(tkwin), drawable, flatGC,
+		x + 1, y + 1, width - 2, height - 2);
+
+	nGC = wGC = (relief == TK_RELIEF_RAISED ? lightGC : darkGC);
+	sGC = eGC = (relief == TK_RELIEF_RAISED ? darkGC : lightGC);
+
+	XDrawLine(Tk_Display(tkwin), drawable, nGC, x1, y1, x2-1, y1);	/* N */
+	XDrawLine(Tk_Display(tkwin), drawable, wGC, x1, y1, x1, y2-1);	/* W */
+	XDrawLine(Tk_Display(tkwin), drawable, sGC, x1, y2, x2, y2);	/* S */
+	XDrawLine(Tk_Display(tkwin), drawable, eGC, x2, y1, x2, y2);	/* E */
+    } else {
+	Tk_Fill3DRectangle(tkwin, drawable, border, x, y, width, height,
+		borderWidth, relief);
+    }
+}
+#endif
+
 /*----------------------------------------------------------------------
  * +++ Null element.  Does nothing; used as a stub.
  * Null element methods, option table and element spec are public,
@@ -243,11 +306,11 @@ static void FieldElementDraw(
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
 	GC focusGC = Tk_GCForColor(focusColor, d);
 
-	if (focusWidth > 1) {
+	if (focusWidth > 1 && b.width >= 2 && b.height >= 2) {
 	    int x1 = b.x, x2 = b.x + b.width - 1;
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
-	    GC bgGC;
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 
 	    /*
 	     * Draw the outer rounded rectangle
@@ -266,7 +329,6 @@ static void FieldElementDraw(
 	    /*
 	     * Fill the inner rectangle
 	     */
-	    bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
@@ -384,15 +446,25 @@ static void DrawFocusRing(
     gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
 
     if (solid) {
-	XRectangle rects[4] = {
-	    {(short)b.x, (short)b.y, (unsigned short)b.width, (unsigned short)thickness},				/* N */
-	    {(short)b.x, (short)(b.y + b.height - thickness), (unsigned short)b.width, (unsigned short)thickness},	/* S */
-	    {(short)b.x, (short)(b.y + thickness), (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)},	/* W */
-	    {(short)(b.x + b.width - thickness), (short)(b.y + thickness),		/* E */
-	    (unsigned short)thickness, (unsigned short)(b.height - 2*thickness)}
-	};
+	if (b.width >= 2*thickness && b.height >= 2*thickness) {
+	    XRectangle rects[4] = {
+		{(short)b.x, (short)b.y,
+		 (unsigned short)b.width, (unsigned short)thickness},	/* N */
 
-	XFillRectangles(disp, d, gc, rects, 4);
+		{(short)b.x, (short)(b.y + b.height - thickness),
+		 (unsigned short)b.width, (unsigned short)thickness},	/* S */
+
+		{(short)b.x, (short)(b.y + thickness),
+		 (unsigned short)thickness,
+		 (unsigned short)(b.height - 2*thickness)},		/* W */
+
+		{(short)(b.x + b.width - thickness), (short)(b.y + thickness),
+		 (unsigned short)thickness,
+		 (unsigned short)(b.height - 2*thickness)}		/* E */
+	    };
+
+	    XFillRectangles(disp, d, gc, rects, 4);
+	}
     } else {
 	TkDrawDottedRect(disp, d, gc, b.x, b.y, b.width, b.height);
     }
@@ -609,6 +681,7 @@ static void SizegripDraw(
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
     int x1 = b.x + b.width-1, y1 = b.y + b.height-1, x2 = x1, y2 = y1;
+    int w = WIN32_XDRAWLINE_HACK;
 
     Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
     gripThickness = gripSize * 3 / (gripCount * 5);
@@ -616,9 +689,11 @@ static void SizegripDraw(
     while (gripCount--) {
 	x1 -= gripSpace; y2 -= gripSpace;
 	for (int i = 1; i < gripThickness; i++) {
-	    XDrawLine(Tk_Display(tkwin), d, darkGC, x1,y1, x2,y2); --x1; --y2;
+	    XDrawLine(Tk_Display(tkwin), d, darkGC,
+		    x1, y1, x2+w, y2-w);	--x1; --y2;
 	}
-	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
+	XDrawLine(Tk_Display(tkwin), d, lightGC,
+		x1, y1, x2+w, y2-w);		--x1; --y2;
     }
 }
 
@@ -976,7 +1051,7 @@ static void ArrowElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+    Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, relief);
 
     padding.left = round(ArrowPadding.left * scalingLevel);
@@ -1257,7 +1332,7 @@ static void TroughElementDraw(
 	}
     }
 
-    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+    Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, relief);
 }
 
@@ -1332,7 +1407,7 @@ static void ThumbElementDraw(
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, thumb->reliefObj, &relief);
-    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+    Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, relief);
 }
 
@@ -1818,20 +1893,30 @@ static void TabElementDraw(
 	switch (nbTabsStickBit) {
 	    default:
 	    case TTK_STICK_S:
-		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-			b.x + cut, b.y, b.width - 2*cut, cut);
+		if (b.width >= 2*cut) {
+		    XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			    b.x + cut, b.y, b.width - 2*cut, cut);
+		}
 		break;
 	    case TTK_STICK_N:
-		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-			b.x + cut, b.y + b.height - cut, b.width - 2*cut, cut);
+		if (b.width >= 2*cut) {
+		    XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			    b.x + cut, b.y + b.height - cut,
+			    b.width - 2*cut, cut);
+		}
 		break;
 	    case TTK_STICK_E:
-		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-			b.x, b.y + cut, cut, b.height - 2*cut);
+		if (b.height >= 2*cut) {
+		    XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			    b.x, b.y + cut, cut, b.height - 2*cut);
+		}
 		break;
 	    case TTK_STICK_W:
-		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-			b.x + b.width - cut, b.y + cut, cut, b.height - 2*cut);
+		if (b.height >= 2*cut) {
+		    XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			    b.x + b.width - cut, b.y + cut,
+			    cut, b.height - 2*cut);
+		}
 		break;
 	}
     }
