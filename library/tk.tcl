@@ -810,12 +810,6 @@ if {[tk windowingsystem] eq "aqua"} {
     proc ::tk::mac::GetDynamicSdef {} {
 	puts ""
     }
-    #ensure that closing the root window is mapped to the ::tk::mac::Quit
-    #proc by default - reduces crashes
-    proc ::tk::mac::Quit {} {
-	exit
-    }
-    wm protocol . WM_DELETE_WINDOW ::tk::mac::Quit
 }
 
 if {[info commands ::tk::endOfWord] eq ""} {
