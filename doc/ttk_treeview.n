@@ -1169,6 +1169,9 @@ Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
+.SH "BINDINGS"
+The \fB<<Copy>>\fR binding is supported to copy the selected items or cells
+to the clipboard.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
 .SH "KEYWORDS"

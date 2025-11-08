@@ -49,6 +49,9 @@ namespace eval ttk::treeview {
 ## Widget bindings.
 #
 
+# Clipboard and selection functions
+bind Treeview	<<Copy>>		{ ::ttk::treeview::CopyToClipboard %W }
+
 # Mouse button bindings
 bind Treeview	<Motion>		{ ::ttk::treeview::Motion %W %x %y }
 bind Treeview	<B1-Leave>		{}
@@ -1061,6 +1064,91 @@ proc ::ttk::treeview::ExtendTo {w item cell {op set}} {
 	}
     }
     array set State [list current $item currentCell $cell]
+}
+
+#
+# Encode cell value into clipboard format
+#
+proc ::ttk::treeview::EncodeValue {string} {
+    if {[string first "\t" $string] < 0 && [string first "\n" $string] < 0} {
+	return $string
+    } else {
+	return [string cat "\"" [string map [list \" \"\"] $string] "\""]
+    }
+}
+
+#
+# Copy to clipboard
+#
+proc ::ttk::treeview::CopyToClipboard {w} {
+    set data ""
+    set format [expr {$::tcl_platform(platform) ne "windows" ? "UTF8_STRING" : "STRING"}]
+
+    # Determine which columns are shown
+    set columns [$w cget -displaycolumns]
+    if {[llength $columns] == 1 && $columns eq "#all"} {
+	set columns [$w cget -columns]
+	set use_values 1
+    } else {
+	set use_values 0
+    }
+
+    # Get selected items or cells in display column order
+    if {[$w cget -selecttype] eq "item"} {
+	set inc_tree [expr {"tree" in [$w cget -show]}]
+
+	foreach item [$w selection] {
+	    set list [list]
+	    if {$inc_tree} {
+		lappend list [EncodeValue [$w item $item -text]]
+	    }
+	    if {$use_values} {
+		foreach val [$w item $item -value] {
+		    lappend list [EncodeValue $val]
+		}
+	    } else {
+		foreach col $columns {
+		    lappend list [EncodeValue [$w set $item $col]]
+		}
+	    }
+	    append data [join $list "\t"] "\n"
+	}
+    } else {
+	set prev ""
+	set list [list]
+	set temp [list]
+
+	# Get selected cells by item and in display column order
+	foreach cell [$w cellselection] {
+	    lassign $cell item column
+	    if {$column ne "#0"} {
+		set column [format "#%d" [expr {[lsearch $columns $column] + 1}]]
+	    }
+	    if {$prev eq "" || $item eq $prev} {
+		lappend temp $column
+	    } else {
+		lappend list $prev [lsort -dictionary $temp]
+		set temp [list $column]
+	    }
+	    set prev $item
+	}
+	if {[llength $temp] > 0} {
+	    lappend list $prev [lsort -dictionary $temp]
+	}
+
+	# Get cell value and append to data in clipboard format
+	foreach {item cols} $list {
+	    set temp [list]
+	    foreach col $cols {
+		lappend temp [EncodeValue [$w set $item $col]]
+	    }
+	    append data [join $temp "\t"] "\n"
+	}
+    }
+
+    # Append data to clipboard
+    clipboard clear -displayof $w
+    clipboard append -displayof $w -format $format -type STRING -- $data
 }
 
 #*EOF*
