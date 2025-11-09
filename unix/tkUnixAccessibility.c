@@ -2963,6 +2963,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     return TCL_OK;
 }
 #else
+
+/* Stub command to run if Tk is compiled without accessibility support.  */
 static int TkAccessibleStubObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
 static int
