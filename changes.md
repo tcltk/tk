@@ -38,6 +38,7 @@ to the userbase.
  - [tk print: several issues printing i18n text](https://core.tcl-lang.org/tk/info/4e7a78)
  - [tk print, canvas: raw smooth not implemented](https://core.tcl-lang.org/tk/info/e10819)
  - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
+ - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
