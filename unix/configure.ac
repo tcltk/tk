@@ -470,6 +470,39 @@ fi
 
 
 #--------------------------------------------------------------------
+#	Check for Atk support
+#--------------------------------------------------------------------
+
+if test "$tk_aqua" = no; then
+  # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
+  AC_MSG_CHECKING([for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)])
+
+  if pkg-config --exists atk \
+     && pkg-config --exists atk-bridge-2.0 \
+     && pkg-config --exists dbus-1 \
+     && pkg-config --exists glib-2.0; then
+
+    AC_MSG_RESULT([yes])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0 dbus-1 glib-2.0`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0 dbus-1 glib-2.0`"
+    AC_DEFINE([USE_ATK], [1], [Define if ATK, Atk-bridge, D-Bus, and GLib are available])
+    have_atk=yes
+    AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
+  else
+    AC_MSG_RESULT([no])
+    ATK_CFLAGS=""
+    ATK_LIBS=""
+    have_atk=no
+    AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
+  fi
+
+  AC_SUBST([ATK_CFLAGS])
+  AC_SUBST([ATK_LIBS])
+fi
+
+
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #

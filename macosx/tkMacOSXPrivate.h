@@ -428,6 +428,12 @@ VISIBILITY_HIDDEN
 - (void) resetTkLayerBitmapContext;
 @end
 
+@interface TkAccessibilityElement : NSAccessibilityElement
+@property (nonatomic, strong)  TKContentView  *parentView;
+@property Tk_Window tk_win;
+@end
+
+
 @interface NSWindow(TKWm)
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;
 - (NSPoint) tkConvertPointFromScreen:(NSPoint)point;

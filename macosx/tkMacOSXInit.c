@@ -42,9 +42,9 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 static Tcl_ObjCmdProc2 TkMacOSXGetAppPathObjCmd;
 static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
+int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 
-
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
@@ -644,6 +644,7 @@ TkpInit(
 
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
+	TkMacOSXAccessibility_Init(interp);
 
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its

@@ -79,6 +79,15 @@ static unsigned long scrollCounter = 0;
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
+/* Miscellaneous accessibility data and functions. */
+#include <oleacc.h>
+typedef struct TkRootAccessible TkRootAccessible;
+typedef void (*MainThreadFunc)(int num_args, void **args);
+extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
+extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
+extern void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
+extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
+
 /*
  * Declarations of static variables used in this file.
  */
@@ -690,7 +699,7 @@ TkWinChildProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    LRESULT result;
+    LRESULT result = 0;
 
     switch (message) {
     case WM_INPUTLANGCHANGE:
@@ -753,6 +762,16 @@ TkWinChildProc(
 	    } else {
 		result = 1;
 	    }
+	}
+	break;
+
+     /* Handle MSAA queries. */
+    case WM_GETOBJECT:
+	if ((LONG)lParam == OBJID_CLIENT) {
+	    LRESULT resultOnMainThread = 0;
+	    MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
+	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
+	    return resultOnMainThread;
 	}
 	break;
 

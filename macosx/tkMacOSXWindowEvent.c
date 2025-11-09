@@ -26,6 +26,7 @@
 #endif
 */
 
+extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
  */
@@ -164,8 +165,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width, height, flags);
-    }
 
+	/*Resize accessibility frame if window is resized.*/
+	TKContentView *view = [w contentView];
+	if ([view isKindOfClass:[TKContentView class]]) {
+	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
+		if  (movedOnly) {
+		    NSAccessibilityPostNotification(self, NSAccessibilityMovedNotification);
+		} else {
+		    NSAccessibilityPostNotification(self, NSAccessibilityResizedNotification);
+		}
+	    }
+	}
+    }
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -1387,6 +1399,44 @@ static const char *const accentNames[] = {
     CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
 }
+
+/*Add support for accessibility in TKContentView.*/
+
+NSMutableArray *_tkAccessibleElements;
+
++ (BOOL)isAccessibilityElement {
+    return NO;
+}
+
+- (NSArray *)accessibilityChildren {
+    return [_tkAccessibleElements copy];
+}
+
+
+- (void)accessibilityChildrenChanged {
+    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return YES;
+}
+
+- (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
+
+    if (!_tkAccessibleElements) {
+	_tkAccessibleElements = [[NSMutableArray alloc ] init];
+    }
+
+    if (element) {
+	[_tkAccessibleElements addObject:element];
+	[self accessibilityChildrenChanged];
+    }
+}
+
+- (void)setAccessibilityParentView:(NSView *)parentView {
+    [self setAccessibilityParent:self];
+}
+
 
 @end
 

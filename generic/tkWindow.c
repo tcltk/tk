@@ -201,6 +201,8 @@ static const TkCmd commands[] = {
     {NULL,		NULL,			0}
 };
 
+extern int TkAccessibility_Init(Tcl_Interp *interp);
+
 /*
  * Forward declarations to functions defined later in this file:
  */
@@ -3222,6 +3224,14 @@ Initialize(
      */
 
     TkInitEmbeddedConfigurationInformation(interp);
+
+    /*
+     * Initalize accessibility module.
+     * Must do this early because it is bound to <Map> events,
+     * and will return an error if the commands are not
+     * available.
+     */
+     TkAccessibility_Init(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.
