@@ -538,7 +538,7 @@ if {$::tk_library ne ""} {
 	# Do not load accessibility under XQuartz on macOS. There are too many
 	# conflicts between macOS accessibility and what standard X11 expects,
 	# and this causes crashes on Darwin/XQuartz. 
-	if {![interp issafe] &&$::tcl_platform(os) ne "Darwin" && [tk windowingsystem] ne "x11"} {
+	if {![interp issafe] && !($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11")} {
 	    SourceLibFile accessibility
 	}
 	SourceLibFile icons
