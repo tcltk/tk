@@ -3231,7 +3231,7 @@ Initialize(
      * and will return an error if the commands are not
      * available.
      */
-    TkAccessibility_Init(interp);
+     TkAccessibility_Init(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.

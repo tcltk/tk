@@ -535,7 +535,12 @@ if {$::tk_library ne ""} {
 	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
-	SourceLibFile accessibility
+	# Do not load accessibility under XQuartz on macOS. There are too many
+	# conflicts between macOS accessibility and what standard X11 expects,
+	# and this causes crashes on Darwin/XQuartz. 
+	if {![interp issafe] &&$::tcl_platform(os) ne "Darwin" && [tk windowingsystem] ne "x11"} {
+	    SourceLibFile accessibility
+	}
 	SourceLibFile icons
 	SourceLibFile iconbadges
 	SourceLibFile button

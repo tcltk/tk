@@ -20,7 +20,7 @@ namespace import ::msgcat::mc
 
 # Divert to the accessible widget demo if screen reader is on.
 if {[::tk::accessible::check_screenreader] eq "1"} {
-source -encoding utf-8 [file join $tk_demoDirectory accessiblewidget]
+    source -encoding utf-8 [file join $tk_demoDirectory accessiblewidget]
 }
 
 wm title . [mc "Widget Demonstration"]
