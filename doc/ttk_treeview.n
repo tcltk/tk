@@ -139,8 +139,8 @@ it refers to the item just after the last one.
 Indicates the first child in the list of children.
 .IP \fBlast\fR 12
 Indicates the last child in the list of children.
-.IP \fBend-\fInumber\fR 12
-Indicates the item at position \fInumber\fR relative to the end.
+.IP \fBend-\fIn\fR 12
+Indicates the item at position \fIn\fR relative to the end.
 .IP \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR 12
 Indicates the item at position \fIn\fR relative to index \fIm\fR.
 See \fBstring index\fR for valid forms.
@@ -684,9 +684,11 @@ first child of \fIparent\fR if not specified, until the last item in parent.
 This is the default.
 .\" OPTION: -column
 .TP
-\fB\-column \fIcolumn\fR
+\fB\-columns \fIcolumns\fR
 .
-Only search within column \fIcolumn\fR. See also \fBCOLUMN IDENTIFIERS\fR.
+Limit search to only the columns specified in \fIcolumns\fR list.
+The default is to search in all columns.
+See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 .\" OPTION: -hidden
 .TP
 \fB\-hidden\fR
@@ -796,7 +798,7 @@ With one argument, returns a dictionary of all column/value pairs.
 With two arguments, returns the current value for column \fIcolumn\fR.
 With three or more arguments, sets the value of each column \fIcolumn\fR
 to the associated \fIvalue\fR. Use column \fB#0\fR for the tree column.
-See also \fBCOLUMN IDENTIFIERS\fR.
+See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 .\" METHOD: size
 .TP
 \fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse\fR? \fIitem\fR
@@ -872,7 +874,8 @@ Sort the list in decreasing order (“largest” items first).
 .TP
 \fB\-column \fIcolumn\fR
 .
-Sort based on values in column \fIcolumn\fR. See also \fBCOLUMN IDENTIFIERS\fR.
+Sort based on values in column \fIcolumn\fR.
+See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 The default is the first column (#0 if tree in -show or 0 if not).
 .\" OPTION: -ignoreempty
 .TP

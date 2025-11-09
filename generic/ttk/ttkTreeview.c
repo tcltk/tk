@@ -3965,7 +3965,7 @@ static int TreeviewDetachedCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     int (*fnPtr)(Treeview*, TreeItem*) = IsDetached;
-    
+
     if (objc < 2 || objc > 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-all|item?");
 	return TCL_ERROR;
@@ -4902,28 +4902,32 @@ typedef enum {
 /* + $tv search item ?-option value...? pattern
  */
 static int TreeviewSearchCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,		/* Treeview data */
+    Tcl_Interp *interp,		/* Current interpreter */
+    Tcl_Size objc,		/* Number of arguments */
+    Tcl_Obj *const objv[]) {	/* Argument values */
+
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *item = NULL;
-    TreeColumn *column = NULL;
     const char *pattern = NULL;
-    Tcl_Size i, plen, len, columnNumber = -1;
-    Tcl_Size columnFirst = FirstColumn(tv);
-    Tcl_Obj *patObj, *resultObj;
+    Tcl_Size i, plen, start, end;
+    Tcl_Obj *patObj, *resultObj = NULL, *columnsObj = NULL, *valObj, *emptyObj = NULL;
     Tcl_WideInt intVal;
     double doubleVal;
-    int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0, match;
+    int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
+    int *intArray = NULL, matches = 0;
 
     enum {
-	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMN,
+	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMNS,
 	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
 	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
-	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START, SEARCH_UNICODE
+	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START,
+	SEARCH_UNICODE
     };
     static const char *const searchStrings[] = {
-	"-all", "-ascii", "-backwards", "-column", "-dictionary", "-exact",
-	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not", "-real",
-	"-recurse", "-recursive", "-regexp", "-start", "-unicode", NULL
+	"-all", "-ascii", "-backwards", "-columns", "-dictionary", "-exact",
+	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not",
+	"-real", "-recurse", "-recursive", "-regexp", "-start", "-unicode", NULL
     };
     int matchType = SEARCH_EXACT;
     sortModes_t dataType = TYPE_ASCII;
@@ -4955,20 +4959,13 @@ static int TreeviewSearchCommand(
 	    case SEARCH_BACKWARDS:
 		forwards = 0;
 		break;
-	    case SEARCH_COLUMN:
+	    case SEARCH_COLUMNS:
 		if (i == objc - 2) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no column specified"));
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
-		if (!(column = FindColumn(interp, tv, objv[++i]))) {
-		    return TCL_ERROR;
-		}
-		if (column == &tv->tree.column0) {
-		    columnNumber = 0;
-		} else if (tv->tree.columns) {
-		    columnNumber = (column - tv->tree.columns) + 1;
-		}
+		columnsObj = objv[++i];
 		break;
 	    case SEARCH_DICTIONARY:
 		dataType = TYPE_DICTIONARY;
@@ -5056,50 +5053,76 @@ static int TreeviewSearchCommand(
 	}
     }
 
-    if (!(resultObj = Tcl_NewListObj(0,0))) {
-	return TCL_ERROR;
+    /* Map display columns or user requested column ids to data columns */
+    if (!columnsObj) {
+	TreeColumn *column;
+	start = FirstColumn(tv);
+	end = tv->tree.nDisplayColumns;
+
+	if (!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*end))) {
+	    return TCL_ERROR;
+	}
+
+	for (i = 0; i < end; i++) {
+	    column = tv->tree.displayColumns[i];
+	    if (column == &tv->tree.column0) {
+		intArray[i] = -1;
+	    } else {
+		intArray[i] = column - tv->tree.columns;
+	    }
+	}
+
+    } else {
+	TreeColumn *column;
+	start = 0;
+
+	if (Tcl_ListObjLength(interp, columnsObj, &end) != TCL_OK ||
+		!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*end))) {
+	    return TCL_ERROR;
+	}
+
+	for (i = start; i < end; i++) {
+	    if (Tcl_ListObjIndex(interp, columnsObj, i, &valObj) != TCL_OK ||
+		!(column = FindColumn(interp, tv, valObj))) {
+		Tcl_Free(intArray);
+		return TCL_ERROR;
+	    }
+
+	    if (column == &tv->tree.column0) {
+		intArray[i] = -1;
+	    } else {
+		intArray[i] = column - tv->tree.columns;
+	    }
+	}
+    }
+
+    /* Create list of matching items */
+    if (!(resultObj = Tcl_NewListObj(0,0)) ||
+	!(emptyObj = Tcl_NewStringObj("",0))) {
+	goto abort;
     }
 
     /* Loop over items, compare values to pattern, and add matches to result */
     while (item) {
-	match = 0;
+	int match = 0;
 
 	/* Skip hidden items unless allowed */
 	if (!(item->hidden) || (item->hidden && hidden)) {
-	    Tcl_Obj *valObj;
-	    Tcl_Size start, end;
-
-	    /* Get cell values */
-	    if (item->valuesObj && Tcl_ListObjLength(interp, item->valuesObj,
-		    &len) != TCL_OK) {
-		goto abort;
-	    }
-
-	    /* If searching within a column or all cells */
-	    if (columnNumber > -1) {
-		if (columnNumber <= len) {
-		    start = columnNumber;
-		    end = columnNumber;
-		} else {
-		    start = 0;
-		    end = -1;
-		}
-	    } else {
-		start = columnFirst;
-		end = len;
-	    }
+	    Tcl_Size len;
 
 	    /* Loop over text & cell values and compare to pattern */
-	    for (i = start; i <= end; ++i) {
-		if (i == 0) {
+	    for (i = start; i < end; ++i) {
+		if (intArray[i] == -1) {
 		    valObj = item->textObj;
 		} else if (item->valuesObj == NULL) {
 		    break;
-		} else if (Tcl_ListObjIndex(interp, item->valuesObj, i-1, &valObj)
-			!= TCL_OK) {
+		} else if (Tcl_ListObjIndex(interp, item->valuesObj, intArray[i],
+			&valObj) != TCL_OK) {
 		    goto abort;
 		}
-		if (!valObj) continue;
+		if (!valObj) {
+		    valObj = emptyObj;
+		}
 
 		/* Do ASCII/Unicode compare */
 		if (dataType <= TYPE_DICTIONARY) {
@@ -5145,13 +5168,13 @@ static int TreeviewSearchCommand(
 		    } /* Ignore empty values */
 		}
 
-		/* For a match, lappend to result and exit if not all */
+		/* If match, add id to result list */
 		if (match == !not) {
 		    match = 1;
-		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj)
-			    != TCL_OK) {
+		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
 			goto abort;
 		    }
+		    matches++;
 		    break;
 		} else {
 		    match = 0;
@@ -5159,12 +5182,12 @@ static int TreeviewSearchCommand(
 	    }
 	}
 
-	/* Exit loop if match found */
+	/* Exit loop if match found and not all */
 	if (match && !all) {
 	   break;
 	}
 
-	/* Move to next/prev item */
+	/* Move to next/previous item */
 	if (forwards) {
 	    item = GetNextItem(parent, item, hidden, recurse);
 	} else {
@@ -5172,12 +5195,17 @@ static int TreeviewSearchCommand(
 	}
     }
 
+    if (intArray) {
+	ckfree(intArray);
+    }
+    if (emptyObj) {
+	Tcl_BounceRefCount(emptyObj);
+    }
+
     /* Return list for all or single value */
     if (all) {
 	Tcl_SetObjResult(interp, resultObj);
-    } else {
-	Tcl_Obj *valObj = NULL;
-
+    } else if (matches == 1) {
 	if (Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj != NULL) {
 	    Tcl_SetObjResult(interp, valObj);
 	    Tcl_BounceRefCount(resultObj);
@@ -5186,7 +5214,15 @@ static int TreeviewSearchCommand(
     return TCL_OK;
 
 abort:
-    Tcl_BounceRefCount(resultObj);
+    if (intArray) {
+	ckfree(intArray);
+    }
+    if (emptyObj) {
+	Tcl_BounceRefCount(emptyObj);
+    }
+    if (resultObj) {
+	Tcl_BounceRefCount(resultObj);
+    }
     return TCL_ERROR;
 }
 
@@ -5708,7 +5744,7 @@ done:
 /* + $tv sort parent ?-option value...?
  */
 static int TreeviewSortCommand(
-    void *recordPtr,
+    void *recordPtr,		/* Treeview data */
     Tcl_Interp *interp,		/* Current interpreter */
     Tcl_Size objc,		/* Number of arguments */
     Tcl_Obj *const objv[]) {	/* Argument values */
@@ -5723,15 +5759,16 @@ static int TreeviewSortCommand(
     enum {
 	SORT_ASCII, SORT_COLUMN, SORT_COMMAND, SORT_DECREASING,
 	SORT_DICTIONARY, SORT_IGNORE_EMPTY, SORT_INCREASING, SORT_INTEGER,
-	SORT_NOCASE, SORT_REAL, SORT_RECURSE, SORT_RECURSIVE, SORT_UNICODE
+	SORT_NOCASE, SORT_REAL, SORT_RECURSE, SORT_RECURSIVE,
+	SORT_UNICODE
     };
     static const char *const sortStrings[] = {
 	"-ascii", "-column", "-command", "-decreasing", "-dictionary",
-	"-ignoreempty", "-increasing", "-integer", "-nocase", "-real", "-recurse",
-	"-recursive", "-unicode", NULL
+	"-ignoreempty", "-increasing", "-integer", "-nocase", "-real",
+	"-recurse", "-recursive", "-unicode", NULL
     };
 
-    if (objc < 3 || objc > 20) {
+    if (objc < 3 || objc > 22) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...?");
 	return TCL_ERROR;
     }
