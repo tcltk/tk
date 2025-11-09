@@ -264,8 +264,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -300,6 +300,11 @@ XFT_LIBS		= @XFT_LIBS@
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
 CUPS_LIBS		= @CUPS_LIBS@
+
+#support for atk
+ATK_CFLAGS		= @ATK_CFLAGS@
+ATK_LIBS		= @ATK_LIBS@
+
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -371,7 +376,7 @@ TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 #
 FONT_OBJS = @UNIX_FONT_OBJS@
 
-GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
+GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
 	tkClipboard.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
@@ -392,14 +397,15 @@ STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
-X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
+X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
+	tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
 	tkUnixPrint.o
 
-AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
+AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
@@ -426,7 +432,7 @@ TTK_DECLS = \
 	$(TTK_DIR)/ttk.decls
 
 GENERIC_SRCS = \
-	$(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkArgv.c \
+	$(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkAccessibility.c $(GENERIC_DIR)/tkArgv.c \
 	$(GENERIC_DIR)/tkAtom.c $(GENERIC_DIR)/tkBind.c	\
 	$(GENERIC_DIR)/tkBitmap.c $(GENERIC_DIR)/tkBusy.c \
 	$(GENERIC_DIR)/tkClipboard.c \
@@ -507,6 +513,7 @@ TTK_STUB_SRCS = \
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
+	$(UNIX_DIR)/tkUnixAccessibility.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
 	$(UNIX_DIR)/tkUnixConfig.c \
 	$(UNIX_DIR)/tkUnixCursor.c \
@@ -524,6 +531,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixPrint.c
 
 AQUA_SRCS = \
+	$(MAC_OSX_DIR)/tkMacOSXAccessibility.c \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
 	$(MAC_OSX_DIR)/tkMacOSXClipboard.c $(MAC_OSX_DIR)/tkMacOSXColor.c \
 	$(MAC_OSX_DIR)/tkMacOSXConfig.c $(MAC_OSX_DIR)/tkMacOSXCursor.c \
@@ -1006,6 +1014,10 @@ tkAppInit.o: $(UNIX_DIR)/tkAppInit.c
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
 
+tkAccessibility.o: $(GENERIC_DIR)/tkAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkAccessibility.c
+
+
 tkArgv.o: $(GENERIC_DIR)/tkArgv.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkArgv.c
 
@@ -1273,6 +1285,9 @@ tkUnix.o: $(UNIX_DIR)/tkUnix.c
 tkUnix3d.o: $(UNIX_DIR)/tkUnix3d.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix3d.c
 
+tkUnixAccessibility.o: $(UNIX_DIR)/tkUnixAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
+
 tkUnixButton.o: $(UNIX_DIR)/tkUnixButton.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixButton.c
 
@@ -1343,6 +1358,9 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+
+tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 
 tkMacOSXBitmap.o: $(MAC_OSX_DIR)/tkMacOSXBitmap.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXBitmap.c

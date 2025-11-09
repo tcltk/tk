@@ -158,6 +158,7 @@ TKOBJS = \
 	$(XLIBOBJS) \
 	$(TMP_DIR)\tkWin3d.obj \
 	$(TMP_DIR)\tkWin32Dll.obj \
+	$(TMP_DIR)\tkWinAccessibility.obj \
 	$(TMP_DIR)\tkWinButton.obj \
 	$(TMP_DIR)\tkWinClipboard.obj \
 	$(TMP_DIR)\tkWinColor.obj \
@@ -185,6 +186,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinX.obj \
 	$(TMP_DIR)\stubs.obj \
 	$(TMP_DIR)\tk3d.obj \
+	$(TMP_DIR)\tkAccessibility.obj \
 	$(TMP_DIR)\tkArgv.obj \
 	$(TMP_DIR)\tkAtom.obj \
 	$(TMP_DIR)\tkBind.obj \
@@ -338,7 +340,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib oleacc.lib uiautomationcore.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
