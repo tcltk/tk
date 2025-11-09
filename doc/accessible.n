@@ -162,7 +162,11 @@ Also, the canvas is not included in the accessibility API because it is
 a purely visual widget; the HTML5 canvas widget is not accessible to web
 API's for the same reason.
 Developers may choose to provide alternative data to provide information
-on the canvas widget, such as labels or help text. Finally, accessibility only runs in the main Tk interpreter, because of potential conflicts in child interpreters.
+on the canvas widget, such as labels or help text. Finally,
+accessibility only runs in the main Tk interpreter, because of
+potential conflicts in child interpreters; also, accessibility is not
+supported under XQuartz (the X11 environment on macOS) because of too
+many conflicts between the X11 and macOS versions of accessibility. 
 .SH KEYWORDS
 widget, tk
 '\" Local Variables:
