@@ -4932,22 +4932,26 @@ static int TreeviewSearchCommand(
     Tcl_WideInt intVal;
     double doubleVal;
     int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
-    int *intArray = NULL, matches = 0;
+    int *intArray = NULL, matches = 0, type = 1;
 
     enum {
-	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_COLUMNS,
+	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_CELL, SEARCH_COLUMNS,
 	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
 	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
 	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START,
 	SEARCH_UNICODE
     };
     static const char *const searchStrings[] = {
-	"-all", "-ascii", "-backwards", "-columns", "-dictionary", "-exact",
-	"-forwards", "-glob", "-hidden", "-integer", "-nocase", "-not",
-	"-real", "-recurse", "-recursive", "-regexp", "-start", "-unicode", NULL
+	"-all", "-ascii", "-backwards", "-cell", "-columns", "-dictionary",
+	"-exact", "-forwards", "-glob", "-hidden", "-integer", "-nocase",
+	"-not", "-real", "-recurse", "-recursive", "-regexp", "-start",
+	"-unicode", NULL
     };
     int matchType = SEARCH_EXACT;
     sortModes_t dataType = TYPE_ASCII;
+
+    /* Use this to have type default to -selecttype value. */
+    /* type = strcmp(Tcl_GetString(tv->tree.selectTypeObj), "cell");*/
 
     if (objc < 4 || objc > 25) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
@@ -4975,6 +4979,9 @@ static int TreeviewSearchCommand(
 		break;
 	    case SEARCH_BACKWARDS:
 		forwards = 0;
+		break;
+	    case SEARCH_CELL:
+		type = 0;
 		break;
 	    case SEARCH_COLUMNS:
 		if (i == objc - 2) {
@@ -5083,9 +5090,9 @@ static int TreeviewSearchCommand(
 	for (i = 0; i < end; i++) {
 	    column = tv->tree.displayColumns[i];
 	    if (column == &tv->tree.column0) {
-		intArray[i] = -1;
+		intArray[i] = 0;
 	    } else {
-		intArray[i] = column - tv->tree.columns;
+		intArray[i] = column - tv->tree.columns + 1;
 	    }
 	}
 
@@ -5106,14 +5113,14 @@ static int TreeviewSearchCommand(
 	    }
 
 	    if (column == &tv->tree.column0) {
-		intArray[i] = -1;
+		intArray[i] = 0;
 	    } else {
-		intArray[i] = column - tv->tree.columns;
+		intArray[i] = column - tv->tree.columns + 1;
 	    }
 	}
     }
 
-    /* Create list of matching items */
+    /* Create list of matching ids */
     if (!(resultObj = Tcl_NewListObj(0,0)) ||
 	!(emptyObj = Tcl_NewStringObj("",0))) {
 	goto abort;
@@ -5129,11 +5136,11 @@ static int TreeviewSearchCommand(
 
 	    /* Loop over text & cell values and compare to pattern */
 	    for (i = start; i < end; ++i) {
-		if (intArray[i] == -1) {
+		if (intArray[i] == 0) {
 		    valObj = item->textObj;
 		} else if (item->valuesObj == NULL) {
-		    break;
-		} else if (Tcl_ListObjIndex(interp, item->valuesObj, intArray[i],
+		    valObj = emptyObj;
+		} else if (Tcl_ListObjIndex(interp, item->valuesObj, intArray[i]-1,
 			&valObj) != TCL_OK) {
 		    goto abort;
 		}
@@ -5185,14 +5192,31 @@ static int TreeviewSearchCommand(
 		    } /* Ignore empty values */
 		}
 
-		/* If match, add id to result list */
+		/* If match, add item or cell id to result list */
 		if (match == !not) {
 		    match = 1;
-		    if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
-			goto abort;
+		    if (type) {
+			if (Tcl_ListObjAppendElement(interp, resultObj,
+				item->idObj) != TCL_OK) {
+			    goto abort;
+			}
+		    } else {
+			Tcl_Obj *elem[2];
+			elem[0] = item->idObj;
+			if (intArray[i] == 0) {
+			    elem[1] = tv->tree.column0.idObj;
+			} else {
+			    elem[1] = tv->tree.columns[intArray[i]-1].idObj;
+			}
+			if (Tcl_ListObjAppendElement(interp, resultObj,
+				Tcl_NewListObj(2, elem)) != TCL_OK) {
+			    goto abort;
+			}
 		    }
 		    matches++;
-		    break;
+		    if (type || !all) {
+			break;
+		    }
 		} else {
 		    match = 0;
 		}
@@ -5219,7 +5243,7 @@ static int TreeviewSearchCommand(
 	Tcl_BounceRefCount(emptyObj);
     }
 
-    /* Return list for all or single value */
+    /* Return list for all values or if not all, only the id object. */
     if (all) {
 	Tcl_SetObjResult(interp, resultObj);
     } else if (matches == 1) {

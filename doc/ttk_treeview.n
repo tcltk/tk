@@ -687,7 +687,7 @@ This is the default.
 \fB\-columns \fIcolumns\fR
 .
 Limit search to only the columns specified in \fIcolumns\fR list.
-The default is to search in all columns.
+The default is to search in all displayed columns.
 See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 .\" OPTION: -hidden
 .TP
@@ -699,8 +699,13 @@ search.
 .TP
 \fB\-recurse\fR
 .
-Search within all of the descendants of \fIparent\fR's children. The default is
-to only search within the children of \fIparent\fR.
+Search within all descendants of \fIparent\fR. The default is to only search
+within the children of \fIparent\fR.
+.\" OPTION: -cell
+.TP
+\fB\-cell\fR
+.
+Return cell ids instead of item ids. The default is to return item ids.
 .RE
 .\" METHOD: see
 .TP
