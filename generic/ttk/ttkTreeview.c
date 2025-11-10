@@ -727,12 +727,12 @@ Tcl_Size TreeviewCountItems(TreeItem *, int, int);
  *	If index is negative, -1 is returned. For an error, -2 is returned.
  */
 static Tcl_Size FindIndex(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj) {
+    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj) {
     int fn;
     Tcl_Size index = -1;
 
     if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
-	    "index", 0, &fn) == TCL_OK) {
+	    "index", TCL_EXACT, &fn) == TCL_OK) {
 	/* Index enums: first, last, end */
 	if (fn == index_first) {
 	    index = 0;
@@ -764,14 +764,14 @@ static Tcl_Size FindIndex(
  *	If index is invalid, result is set to error message and TCL_ERROR is returned.
  */
 static int FindItemByIndex(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
+    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
     int fn;
     Tcl_Size index = -1;
     *found = NULL;
 
 
     if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
-	    "index", 0, &fn) == TCL_OK) {
+	    "index", TCL_EXACT, &fn) == TCL_OK) {
 	/* Index enums: first, last, end */
 	if (fn == index_first) {
 	    *found = item->children;
@@ -1303,8 +1303,7 @@ static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
     | ButtonPressMask|ButtonReleaseMask
     | PointerMotionMask|ButtonMotionMask
-    | VirtualEventMask
-    ;
+    | VirtualEventMask;
 
 static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     Treeview *tv = (Treeview *)clientData;
@@ -3130,7 +3129,7 @@ static int TreeviewIdentifierCommand(
 	return TCL_ERROR;
     }
 
-    if (FindItemByIndex(interp, tv, item, objv[3], 0, 0, &found) != TCL_OK) {
+    if (FindItemByIndex(interp, item, objv[3], 0, 0, &found) != TCL_OK) {
 	return TCL_ERROR;
     } else if (found && found->idObj != NULL) {
 	Tcl_SetObjResult(interp, found->idObj);
@@ -3158,7 +3157,7 @@ static int TreeviewIndexCommand(
     }
 
     if (objc == 4) {
-	index = FindIndex(interp, tv, item, objv[3]);
+	index = FindIndex(interp, item, objv[3]);
 	if (index == -1) {
 	    return TCL_OK;
 	} else if (index == -2) {
@@ -3688,7 +3687,7 @@ static int TreeviewCollapseExpand(
     }
 
     if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
+	    sizeof(char *), "option", 0, &option) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3779,7 +3778,7 @@ static int TreeviewHideUnhide(
     }
 
     if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
+	    sizeof(char *), "option", 0, &option) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3855,7 +3854,7 @@ static int TreeviewInsertCommand(
     }
 
     if (Tcl_GetIndexFromObjStruct(NULL, objv[2], insertStrings, sizeof(char *),
-	    "option", 0, &option) == TCL_OK) {
+	    "option", TCL_EXACT, &option) == TCL_OK) {
 	if ((sibling = FindItem(interp, tv, objv[3])) == NULL) {
 	    return TCL_ERROR;
 	}
@@ -3879,7 +3878,7 @@ static int TreeviewInsertCommand(
 	}
 
 	/* Locate previous sibling based on $index: */
-	if (FindItemByIndex(interp, tv, parent, objv[3], 1, 1, &sibling) != TCL_OK) {
+	if (FindItemByIndex(interp, parent, objv[3], 1, 1, &sibling) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -4123,7 +4122,7 @@ static int TreeviewMoveCommand(
     }
 
     if (Tcl_GetIndexFromObjStruct(NULL, objv[3], insertStrings, sizeof(char *),
-	    "option", 0, &option) == TCL_OK) {
+	    "option", TCL_EXACT, &option) == TCL_OK) {
 	/* Get before or after item */
 	if ((sibling = FindItem(interp, tv, objv[4])) == NULL) {
 	    return TCL_ERROR;
@@ -4148,7 +4147,7 @@ static int TreeviewMoveCommand(
 	}
 
 	/* Locate previous sibling based on $index: */
-	if (FindItemByIndex(interp, tv, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
+	if (FindItemByIndex(interp, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -4205,7 +4204,7 @@ static int TreeviewSeeCommand(
     }
 
     if (objc == 4) {
-	if (FindItemByIndex(interp, tv, item, objv[3], 0, 0, &item) != TCL_OK) {
+	if (FindItemByIndex(interp, item, objv[3], 0, 0, &item) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -4727,8 +4726,8 @@ static int TreeviewCellSelectionCommand(
 
     Treeview *tv = (Treeview *)recordPtr;
     int selop, anyChange = 0, nosel = 0;
-    Tcl_Size i, nCells;
-    TreeCell *cells;
+    Tcl_Size i, nCells = 0;
+    TreeCell *cells = NULL;
     TreeItem *item;
 
     /* Get selected cells */
@@ -5768,7 +5767,7 @@ static int TreeviewSortCommand(
     Tcl_Obj *const objv[]) {	/* Argument values */
 
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *parent, *item = NULL;
+    TreeItem *parent;
     int index, nocase = 0, result = TCL_OK;
     Tcl_Obj *cmdPtr = NULL;
     Tcl_Size i;
