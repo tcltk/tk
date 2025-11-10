@@ -540,12 +540,12 @@ if {$::tk_library ne ""} {
 	# under XQuartz on macOS,  or if Tk on X11 was compiled without
 	# accessibility support. These cause interpreter failures or Tk to
 	# crash.
-	if {![interp issafe] ||\
-		!($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11") ||\
-		{![string match -nocase "*warning*" [tk::accessible::check_screenreader]]}} {
+	if { (![interp issafe] && [info exists ::tcl_platform(os)] && \
+		  !($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11")) || \
+		 ([catch {set r [tk::accessible::check_screenreader]}] == 0 && \
+		      ![string match -nocase "*warning*" $r]) } {
 	    SourceLibFile accessibility
 	}
-	
 	SourceLibFile icons
 	SourceLibFile iconbadges
 	SourceLibFile button
