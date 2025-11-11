@@ -630,10 +630,18 @@ returned.
 \fB\-start \fIitem\fR
 .
 Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
-\fIparent\fR. When resuming a search, use the \fBbefore\fR or \fBafter\fR
+\fIparent\fR. See \fB-forwards\fR and \fB-backwards\fR for default start index. 
+When resuming a search, use the \fBbefore\fR or \fBafter\fR
 subcommands to get the previous or next item to start the search at. All other
 options should be the same as the initial search including \fIparent\fR.
-
+.\" OPTION: -stop
+.TP
+\fB\-stop \fIitem\fR
+.
+End the search at item \fIitem\fR (inclusive), where \fIitem\fR must be a
+descendant of \fIparent\fR. The default is the last item or descendant of
+\fIparent\fR for \fB-forward\fR searches and first child of \fIparent\fR
+for \fB-backwards\fR searches.
 .\" OPTION: -ascii
 .TP
 \fB\-ascii\fR

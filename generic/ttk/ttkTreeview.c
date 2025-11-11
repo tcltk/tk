@@ -4925,7 +4925,7 @@ static int TreeviewSearchCommand(
     Tcl_Obj *const objv[]) {	/* Argument values */
 
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *parent, *item = NULL;
+    TreeItem *parent, *item = NULL, *stop = NULL;
     const char *pattern = NULL;
     Tcl_Size i, plen, start, end;
     Tcl_Obj *patObj, *resultObj = NULL, *columnsObj = NULL, *valObj, *emptyObj = NULL;
@@ -4939,13 +4939,13 @@ static int TreeviewSearchCommand(
 	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
 	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
 	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START,
-	SEARCH_UNICODE
+	SEARCH_STOP, SEARCH_UNICODE
     };
     static const char *const searchStrings[] = {
 	"-all", "-ascii", "-backwards", "-cell", "-columns", "-dictionary",
 	"-exact", "-forwards", "-glob", "-hidden", "-integer", "-nocase",
 	"-not", "-real", "-recurse", "-recursive", "-regexp", "-start",
-	"-unicode", NULL
+	"-stop", "-unicode", NULL
     };
     int matchType = SEARCH_EXACT;
     sortModes_t dataType = TYPE_ASCII;
@@ -5044,6 +5044,24 @@ static int TreeviewSearchCommand(
 		    return TCL_ERROR;
 		}
 		break;
+	    case SEARCH_STOP:
+		if (i == objc - 2) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no stop item specified"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", (char *)NULL);
+		    return TCL_ERROR;
+		}
+		if (!(stop = FindItem(interp, tv, objv[++i]))) {
+		    return TCL_ERROR;
+		}
+		if (stop == tv->tree.root) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot stop with root item"));
+		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
+		    return TCL_ERROR;
+		}
+		if (!AncestryCheck(interp, tv, stop, parent)) {
+		    return TCL_ERROR;
+		}
+		break;
 	}
     }
 
@@ -5052,7 +5070,7 @@ static int TreeviewSearchCommand(
 	return TCL_OK;
     }
 
-    /* If no start item, use first/last child for forwards/backwards search */
+    /* If no start item, use first child for forward search and last for backwards */
     if (!item) {
 	if (forwards) {
 	    item = parent->children;
@@ -5223,8 +5241,8 @@ static int TreeviewSearchCommand(
 	    }
 	}
 
-	/* Exit loop if match found and not all */
-	if (match && !all) {
+	/* Exit loop if match found and not all or at stop index */
+	if ((match && !all) || (item == stop)) {
 	   break;
 	}
 
