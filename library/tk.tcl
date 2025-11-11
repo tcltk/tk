@@ -535,10 +535,15 @@ if {$::tk_library ne ""} {
 	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
-	# Do not load accessibility under XQuartz on macOS. There are too many
-	# conflicts between macOS accessibility and what standard X11 expects,
-	# and this causes crashes on Darwin/XQuartz. 
-	if {![interp issafe] && !($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11")} {
+
+	# Do not load accessibility.tcl if running in a safe interpreter,
+	# under XQuartz on macOS, or if Tk on X11 was compiled without
+	# accessibility support. These cause interpreter failures or Tk to
+	# crash.
+	if {![interp issafe] &&
+		!($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11") &&
+		![catch {tk::accessible::check_screenreader} r] &&
+		![string match -nocase "*warning*" $r]} {
 	    SourceLibFile accessibility
 	}
 	SourceLibFile icons
