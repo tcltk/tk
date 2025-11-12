@@ -1554,6 +1554,7 @@ DrawTab11(
 	if (!(state & TTK_STATE_FIRST)) {
 	    clipRect.origin.x -= 5;
 	    bounds.origin.x -= 5;
+	    clipRect.size.width += 5;
 	    bounds.size.width += 5;
 	}
 	if (!(state & TTK_STATE_LAST)) {
