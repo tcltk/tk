@@ -39,6 +39,7 @@ to the userbase.
  - [tk print, canvas: raw smooth not implemented](https://core.tcl-lang.org/tk/info/e10819)
  - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
  - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
+ - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
