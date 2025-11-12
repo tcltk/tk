@@ -595,53 +595,8 @@ or \fB{}\fR if \fIitem\fR is the first child of its parent.
 Searches within \fIparent\fR's children for \fIpattern\fR and returns the
 identifier of the first match. Valid options are:
 .RS
-.\" OPTION: -exact
-.TP
-\fB\-exact\fR
-.
-\fIPattern\fR is a literal string that is compared for exact equality
-against each cell/element. This is the default.
-.\" OPTION: -glob
-.TP
-\fB\-glob\fR
-.
-\fIPattern\fR is a glob-style pattern which is matched against each
-cell/element using the same rules as the \fBstring match\fR command.
-.\" OPTION: -regexp
-.TP
-\fB\-regexp\fR
-.
-\fIPattern\fR is a regular expression that is matched against each
-cell/element using the rules described in the \fBre_syntax\fR reference page.
-.\" OPTION: -all
-.TP
-\fB\-all\fR
-.
-Return the identifiers of all of the items that match \fIpattern\fR rather
-than only the first one.
-.\" OPTION: -not
-.TP
-\fB\-not\fR
-.
-Negates the match, so only the items that do not match \fIpattern\fR, will be
-returned.
-.\" OPTION: -start
-.TP
-\fB\-start \fIitem\fR
-.
-Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
-\fIparent\fR. See \fB-forwards\fR and \fB-backwards\fR for default start index. 
-When resuming a search, use the \fBbefore\fR or \fBafter\fR
-subcommands to get the previous or next item to start the search at. All other
-options should be the same as the initial search including \fIparent\fR.
-.\" OPTION: -stop
-.TP
-\fB\-stop \fIitem\fR
-.
-End the search at item \fIitem\fR (inclusive), where \fIitem\fR must be a
-descendant of \fIparent\fR. The default is the last item or descendant of
-\fIparent\fR for \fB-forward\fR searches and first child of \fIparent\fR
-for \fB-backwards\fR searches.
+Comparisons
+.RS
 .\" OPTION: -ascii
 .TP
 \fB\-ascii\fR
@@ -677,6 +632,9 @@ Empty values will be ignored, but non-integer values will generate an error.
 \fB\-unicode\fR
 .
 Alias for \fB-ascii\fR.
+.RE
+Direction
+.RS
 .\" OPTION: -backwards
 .TP
 \fB\-backwards\fR
@@ -690,6 +648,33 @@ last child of \fIparent\fR if not specified, until the first item in parent.
 The search is to be performed forwards starting from \fI\-start\fR item or
 first child of \fIparent\fR if not specified, until the last item in parent.
 This is the default.
+.RE
+Pattern Matching
+.RS
+.\" OPTION: -exact
+.TP
+\fB\-exact\fR
+.
+\fIPattern\fR is a literal string that is compared for exact equality
+against each cell/element. Used with \fB-ascii\fR and \fB-dictionary\fR
+options. This is the default.
+.\" OPTION: -glob
+.TP
+\fB\-glob\fR
+.
+\fIPattern\fR is a glob-style pattern which is matched against each
+cell/element using the same rules as the \fBstring match\fR command.
+Used with \fB-ascii\fR and \fB-dictionary\fR options.
+.\" OPTION: -regexp
+.TP
+\fB\-regexp\fR
+.
+\fIPattern\fR is a regular expression that is matched against each
+cell/element using the rules described in the \fBre_syntax\fR reference page.
+Used with \fB-ascii\fR and \fB-dictionary\fR options.
+.RE
+Search Modifiers
+.RS
 .\" OPTION: -column
 .TP
 \fB\-columns \fIcolumns\fR
@@ -709,11 +694,50 @@ search.
 .
 Search within all descendants of \fIparent\fR. The default is to only search
 within the children of \fIparent\fR.
+.\" OPTION: -start
+.TP
+\fB\-start \fIitem\fR
+.
+Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
+\fIparent\fR. See \fB-forwards\fR and \fB-backwards\fR for default start index. 
+When resuming a search, use the \fBbefore\fR or \fBafter\fR
+subcommands to get the previous or next item to start the search at. All other
+options should be the same as the initial search including \fIparent\fR.
+.\" OPTION: -stop
+.TP
+\fB\-stop \fIitem\fR
+.
+End the search at item \fIitem\fR (inclusive), where \fIitem\fR must be a
+descendant of \fIparent\fR. The default is the last item or descendant of
+\fIparent\fR for \fB-forward\fR searches and first child of \fIparent\fR
+for \fB-backwards\fR searches.
+.\" OPTION: -wraparound
+.TP
+\fB\-wraparound\fR
+.
+When used with \fB-start\fR option, enables search to wrap-round to the
+first/last item to continue to the \fB-start\fR item.
+.RE
+Result Modifiers
+.RS
+.\" OPTION: -all
+.TP
+\fB\-all\fR
+.
+Return the identifiers of all of the items that match \fIpattern\fR rather
+than only the first one.
 .\" OPTION: -cell
 .TP
 \fB\-cell\fR
 .
 Return cell ids instead of item ids. The default is to return item ids.
+.\" OPTION: -not
+.TP
+\fB\-not\fR
+.
+Negates the match, so only the items that do not match \fIpattern\fR, will be
+returned.
+.RE
 .RE
 .\" METHOD: see
 .TP

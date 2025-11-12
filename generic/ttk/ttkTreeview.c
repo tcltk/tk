@@ -4925,27 +4925,27 @@ static int TreeviewSearchCommand(
     Tcl_Obj *const objv[]) {	/* Argument values */
 
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *parent, *item = NULL, *stop = NULL;
+    TreeItem *parent, *item = NULL, *stop = NULL, *initial;
     const char *pattern = NULL;
     Tcl_Size i, plen, start, end;
     Tcl_Obj *patObj, *resultObj = NULL, *columnsObj = NULL, *valObj, *emptyObj = NULL;
     Tcl_WideInt intVal;
     double doubleVal;
     int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
-    int *intArray = NULL, matches = 0, type = 1;
+    int *intArray = NULL, matches = 0, type = 1, wrap = 0;
 
     enum {
 	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_CELL, SEARCH_COLUMNS,
 	SEARCH_DICTIONARY, SEARCH_EXACT, SEARCH_FORWARDS, SEARCH_GLOB,
 	SEARCH_HIDDEN, SEARCH_INTEGER, SEARCH_NOCASE, SEARCH_NOT, SEARCH_REAL,
 	SEARCH_RECURSE, SEARCH_RECURSIVE, SEARCH_REGEXP, SEARCH_START,
-	SEARCH_STOP, SEARCH_UNICODE
+	SEARCH_STOP, SEARCH_UNICODE, SEARCH_WRAP
     };
     static const char *const searchStrings[] = {
 	"-all", "-ascii", "-backwards", "-cell", "-columns", "-dictionary",
 	"-exact", "-forwards", "-glob", "-hidden", "-integer", "-nocase",
 	"-not", "-real", "-recurse", "-recursive", "-regexp", "-start",
-	"-stop", "-unicode", NULL
+	"-stop", "-unicode", "-wraparound", NULL
     };
     int matchType = SEARCH_EXACT;
     sortModes_t dataType = TYPE_ASCII;
@@ -5062,6 +5062,9 @@ static int TreeviewSearchCommand(
 		    return TCL_ERROR;
 		}
 		break;
+	    case SEARCH_WRAP:
+		wrap = 1;
+		break;
 	}
     }
 
@@ -5075,9 +5078,19 @@ static int TreeviewSearchCommand(
 	if (forwards) {
 	    item = parent->children;
 	} else {
-	    item = parent->lastChild;
+	    /* Need to find last child in descendants */
+	    if (recurse) {
+		item = parent;
+		while (item->lastChild) {
+		    item = item->lastChild;
+		}
+	    } else {
+		item = parent->lastChild;
+	    }
 	}
+	wrap = 0; /* No wrap-around if starting at first or last */
     }
+    initial = item;
 
     /* Get native form of pattern */
     patObj = objv[objc-1];
@@ -5241,7 +5254,8 @@ static int TreeviewSearchCommand(
 	    }
 	}
 
-	/* Exit loop if match found and not all or at stop index */
+	/* Exit loop if match found and not all or at stop index (inclusive) */
+	/* Remove "|| (item == stop)" for exclusive stop */
 	if ((match && !all) || (item == stop)) {
 	   break;
 	}
@@ -5251,6 +5265,38 @@ static int TreeviewSearchCommand(
 	    item = GetNextItem(parent, item, hidden, recurse);
 	} else {
 	    item = GetPrevItem(parent, item, hidden, recurse);
+	}
+
+	/* Exit loop if at stop index (exclusive stop) */
+	/*if (item == stop) {
+	   break;
+	}*/
+
+	/* If at end and wrap-around is enabled */
+	if (item == NULL && wrap) {
+	    if (forwards) {
+		item = parent->children;
+		if (!stop) {
+		    /*stop = initial;	Use this for exclusive stop */
+		    stop = GetPrevItem(parent, initial, hidden, recurse);
+		}
+
+	    } else {
+		/* Need to find last child in descendants */
+		if (recurse) {
+		    item = parent;
+		    while (item->lastChild) {
+			item = item->lastChild;
+		    }
+		} else {
+		    item = parent->lastChild;
+		}
+		if (!stop) {
+		    /*stop = initial;	Use this for exclusive stop */
+		    stop = GetNextItem(parent, initial, hidden, recurse);
+		}
+	    }
+	    wrap = 0;
 	}
     }
 
