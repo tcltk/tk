@@ -199,7 +199,7 @@ DllMain(
 	    :
 	    [ok]		"i"	(TCL_OK)
 	    :
-	    "%rax", "%rdx", "%rbp", "memory"
+	    "%rax", "%rdx", "memory"
 	);
 
 #   else
@@ -274,7 +274,7 @@ DllMain(
 	    :
 	    [ok]		"i"	(TCL_OK)
 	    :
-	    "%eax", "%ebx", "%edx", "%ebp", "memory"
+	    "%eax", "%ebx", "%edx", "memory"
 	);
 
 #   endif
