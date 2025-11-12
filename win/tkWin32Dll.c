@@ -149,21 +149,13 @@ DllMain(
 
 	    "movq	%%rdx,		%%gs:0"		"\n\t"
 
-	    :
-	    /* No outputs */
-	    :
-	    [registration]	"m"	(registration),
-	    [error]		"i"	(TCL_ERROR)
-	    :
-	    "%rax", "%rdx", "memory"
-	);
+	    /*
+	     * Call TkFinalize
+	     */
 
-        /* Just do a regular C call so we don't need to worry about following
-         * the calling convention, specially the registers the function may
-         * clobber: */
-        TkFinalize(NULL);
+	    "movq	$0x0,		0x0(%%rsp)"		"\n\t"
+	    "call	TkFinalize"			"\n\t"
 
-	__asm__ __volatile__ (
 	    /*
 	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
 	     * and store a TCL_OK status
@@ -197,9 +189,11 @@ DllMain(
 	    :
 	    /* No outputs */
 	    :
-	    [ok]		"i"	(TCL_OK)
+	    [registration]	"m"	(registration),
+	    [ok]		"i"	(TCL_OK),
+	    [error]		"i"	(TCL_ERROR)
 	    :
-	    "%rax", "%rdx", "%rbp", "memory"
+	    "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "memory"
 	);
 
 #   else
@@ -225,18 +219,12 @@ DllMain(
 
 	    "movl	%%edx,		%%fs:0"		"\n\t"
 
-	    :
-	    /* No outputs */
-	    :
-	    [registration]	"m"	(registration),
-	    [error]		"i"	(TCL_ERROR)
-	    :
-	    "%eax", "%ebx", "%edx", "memory"
-	);
+	    /*
+	     * Call TkFinalize
+	     */
 
-        TkFinalize(NULL);
-
-	__asm__ __volatile__ (
+	    "movl	$0x0,		0x0(%%esp)"		"\n\t"
+	    "call	_TkFinalize"			"\n\t"
 
 	    /*
 	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
@@ -272,9 +260,11 @@ DllMain(
 	    :
 	    /* No outputs */
 	    :
-	    [ok]		"i"	(TCL_OK)
+	    [registration]	"m"	(registration),
+	    [ok]		"i"	(TCL_OK),
+	    [error]		"i"	(TCL_ERROR)
 	    :
-	    "%eax", "%ebx", "%edx", "%ebp", "memory"
+	    "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "memory"
 	);
 
 #   endif
