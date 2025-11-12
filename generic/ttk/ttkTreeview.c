@@ -4933,6 +4933,7 @@ static int TreeviewSearchCommand(
     double doubleVal;
     int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
     int *intArray = NULL, matches = 0, type = 1, wrap = 0;
+    Tcl_RegExp regexp = NULL;
 
     enum {
 	SEARCH_ALL, SEARCH_ASCII, SEARCH_BACKWARDS, SEARCH_CELL, SEARCH_COLUMNS,
@@ -5108,6 +5109,19 @@ static int TreeviewSearchCommand(
 	}
     }
 
+    /* Compile Regexp */
+    if (matchType == SEARCH_REGEXP) {
+	regexp = Tcl_GetRegExpFromObj(interp, patObj, TCL_REG_ADVANCED |
+		TCL_REG_NOSUB | (nocase ? TCL_REG_NOCASE : 0));
+	if (!regexp) {
+	    regexp = Tcl_GetRegExpFromObj(interp, patObj, TCL_REG_ADVANCED |
+		(nocase ? TCL_REG_NOCASE : 0));
+	    if (!regexp) {
+		return TCL_ERROR;
+	    }
+	}
+    }
+
     /* Map display columns or user requested column ids to data columns */
     if (!columnsObj) {
 	TreeColumn *column;
@@ -5185,7 +5199,9 @@ static int TreeviewSearchCommand(
 			const char *string = Tcl_GetStringFromObj(valObj, &len);
 			Tcl_Size numChars = (len <= plen ? len : plen);
 
-			if (!nocase) {
+			if (len == 0 && plen > 0) {
+			    match = 0; /* Empty cell should not match non empty pattern */
+			} else if (!nocase) {
 			    match = !Tcl_UtfNcmp(string, pattern, numChars);
 			} else {
 			    match = !Tcl_UtfNcasecmp(string, pattern, numChars);
@@ -5196,8 +5212,8 @@ static int TreeviewSearchCommand(
 				pattern, nocase ? TCL_MATCH_NOCASE : 0);
 
 		    } else if (matchType == SEARCH_REGEXP) {
-			match = Tcl_RegExpMatchObj(interp, valObj, patObj);
-			if (match == -1) {
+			match =  Tcl_RegExpExecObj(interp, regexp, valObj, 0, 0, 0);
+			if (match < 0) {
 			    goto abort;
 			}
 		    }
@@ -5267,13 +5283,8 @@ static int TreeviewSearchCommand(
 	    item = GetPrevItem(parent, item, hidden, recurse);
 	}
 
-	/* Exit loop if at stop index (exclusive stop) */
-	/*if (item == stop) {
-	   break;
-	}*/
-
 	/* If at end and wrap-around is enabled */
-	if (item == NULL && wrap) {
+	if (!item && wrap) {
 	    if (forwards) {
 		item = parent->children;
 		if (!stop) {
@@ -5298,6 +5309,11 @@ static int TreeviewSearchCommand(
 	    }
 	    wrap = 0;
 	}
+
+	/* Exit loop if at stop index (exclusive stop) */
+	/*if (item == stop) {
+	   break;
+	}*/
     }
 
     if (intArray) {
@@ -5311,7 +5327,7 @@ static int TreeviewSearchCommand(
     if (all) {
 	Tcl_SetObjResult(interp, resultObj);
     } else if (matches == 1) {
-	if (Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj != NULL) {
+	if (Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj) {
 	    Tcl_SetObjResult(interp, valObj);
 	    Tcl_BounceRefCount(resultObj);
 	}

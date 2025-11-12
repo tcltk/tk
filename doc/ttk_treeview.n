@@ -224,8 +224,8 @@ Sets the focus to cell \fIcell\fR. Use \fB{}\fR to clear the focus cell. Without
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
 .
 Manages cell selection. Cell selection is independent from item selection
-handled by the \fBselection\fR command. A cell is given by a list of two
-elements, item and column.
+handled by the \fBselection\fR command. A cell is specified by a list of two
+elements, the item and the column.
 For the rectangle versions of commands, the cells must be in displayed columns.
 Any change to \fB\-columns\fR clears the cell selection.
 A \fIcellList\fR argument may be a single cell or a list of cells.
@@ -620,7 +620,7 @@ values will be ignored, but non-integer values will generate an error.
 \fB\-nocase\fR
 .
 Comparisons are to be performed in a case-insensitive manner. Only used with
-\fB\-ascii\fR option.
+\fB\-ascii\fR and \fB-regexp\fR options.
 .\" OPTION: -real
 .TP
 \fB\-real\fR
@@ -656,21 +656,21 @@ Pattern Matching
 \fB\-exact\fR
 .
 \fIPattern\fR is a literal string that is compared for exact equality
-against each cell/element. Used with \fB-ascii\fR and \fB-dictionary\fR
+against each cell value. Used with \fB-ascii\fR and \fB-dictionary\fR
 options. This is the default.
 .\" OPTION: -glob
 .TP
 \fB\-glob\fR
 .
 \fIPattern\fR is a glob-style pattern which is matched against each
-cell/element using the same rules as the \fBstring match\fR command.
+cell value using the same rules as the \fBstring match\fR command.
 Used with \fB-ascii\fR and \fB-dictionary\fR options.
 .\" OPTION: -regexp
 .TP
 \fB\-regexp\fR
 .
-\fIPattern\fR is a regular expression that is matched against each
-cell/element using the rules described in the \fBre_syntax\fR reference page.
+\fIPattern\fR is an advanced regular expression that is matched against each
+cell value using the rules described in the \fBre_syntax\fR reference page.
 Used with \fB-ascii\fR and \fB-dictionary\fR options.
 .RE
 Search Modifiers
