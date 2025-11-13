@@ -1,15 +1,28 @@
-# This file is a Tcl script to test out the procedures in tkUnixFont.c.
-#
-# Many of these tests are visually oriented and cannot be checked
-# programmatically (such as "does an underlined font appear to be
-# underlined?"); these tests attempt to exercise the code in question,
-# but there are no results that can be checked.  Some tests depend on the
-# fonts having or not having certain properties, which may not be valid
-# at all sites.
+# This file is a Tcl script that tests the unix-specific features of the Tk font
+# system (implemented in tkUnixFont.c).
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTES
+#
+# * This test file is specific for the unix platform. Tests regarding the font
+#   system that are specific to the MS Windows platform go into the test file
+#   winFont.test. Tests that are platform-indifferent go into the test file
+#   font.test. Or they may exist as each other's counterparts in both
+#   unixFont.test and winFont.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * All tests in this test file are currently specific for the x11 windowing
+#   system. The file doesn't contain any tests (yet) that can be run on macOS/aqua
+#   (see also: https://core.tcl-lang.org/tk/info/98db50bdad).
+# * This test file is skipped entirely on non-unix platforms.
+# * Many of the tests are visually oriented. They do exercise the code in
+#   question, but there are no results that can be checked programmatically
+#   (such as "does an underlined font appear to be underlined?").
+# * Some tests depend on the fonts having or not having certain properties,
+#   which may not be valid at all sites.
+#
 
 #
 # TESTFILE INITIALIZATION
