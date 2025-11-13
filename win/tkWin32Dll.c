@@ -158,10 +158,10 @@ DllMain(
 	    "%rax", "%rdx", "memory"
 	);
 
-        /* Just do a regular C call so we don't need to worry about following
-         * the calling convention, specially the registers the function may
-         * clobber: */
-        TkFinalize(NULL);
+	/* Just do a regular C call so we don't need to worry about following
+	 * the calling convention, specially the registers the function may
+	 * clobber: */
+	TkFinalize(NULL);
 
 	__asm__ __volatile__ (
 	    /*
@@ -234,7 +234,7 @@ DllMain(
 	    "%eax", "%ebx", "%edx", "memory"
 	);
 
-        TkFinalize(NULL);
+	TkFinalize(NULL);
 
 	__asm__ __volatile__ (
 
