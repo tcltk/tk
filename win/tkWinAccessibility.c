@@ -539,12 +539,11 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
  */
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-	IAccessible *this,
-	VARIANT varChild,
-	BSTR *pszName)
+    TCL_UNUSED(IAccessible *),
+    TCL_UNUSED(VARIANT),
+    BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
-    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
     *pszName = NULL; /* No name for toplevel to avoid double-reading. */
     return S_OK;
 }
@@ -1122,8 +1121,6 @@ static HRESULT TkAccState(
     Tk_Window win,
     VARIANT *pvarState)
 {
-	Tcl_Interp *interp = Tk_Interp(win);
-
     if (!win || !pvarState) {
 	return E_INVALIDARG;
     }

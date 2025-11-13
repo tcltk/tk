@@ -2952,13 +2952,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
-			 TkAtkAccessibleObjCmd, NULL, NULL);
+	    TkAtkAccessibleObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
-			 EmitSelectionChanged, NULL, NULL);
+	    EmitSelectionChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
-			 EmitFocusChanged, NULL, NULL);
+	    EmitFocusChanged, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
-			 IsScreenReaderRunning, NULL, NULL);
+	    IsScreenReaderRunning, NULL, NULL);
 
     return TCL_OK;
 }
@@ -2976,11 +2976,11 @@ TkAccessibleStubObjCmd(
     static int warned = 0;
 
     if (!warned) {
-        Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("Warning: Tk accessibility support not available in this build.", -1));
-        warned = 1;
+	Tcl_SetObjResult(interp,
+	Tcl_NewStringObj("Warning: Tk accessibility support not available in this build.", -1));
+	warned = 1;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewObj()); /* Empty string after first warning. */
+	Tcl_SetObjResult(interp, Tcl_NewObj()); /* Empty string after first warning. */
     }
 
     return TCL_OK;
