@@ -5,10 +5,14 @@
 # Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE
+# NOTES
 #
-# Some of these tests may fail if another application is grabbing the clipboard
-# (e.g. an X server, or a VNC viewer) #
+# * This test file is specific for the MS Windows platform. Tests that are
+#   platform-indifferent go into the test file clipboard.test.
+# * This test file is skipped entirely on non-windows platforms.
+# * Some of these tests may fail if another application is grabbing the clipboard
+#   (e.g. an X server, or a VNC viewer) #
+#
 
 #
 # TESTFILE INITIALIZATION

@@ -9,11 +9,13 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# NOTE
+# NOTES
 #
-# Under macOS/aqua, the send command works only with interpreters that exist in
-# the same process. Tests in this test file that target an interpreter in another
-# process carry a constraint "notAqua" so that they are skipped under macos/aqua.
+# * This test file is platform-indifferent. Tests regarding the send command
+#   that are specific to the windows platform go into the test file winSend.test.
+# * Under macOS/aqua, the send command works only with interpreters that exist in
+#   the same process. Tests in this test file that target an interpreter in another
+#   process carry a constraint "notAqua" so that they are skipped under macos/aqua.
 #
 
 #

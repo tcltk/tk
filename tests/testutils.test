@@ -8,7 +8,7 @@
 
 # NOTE
 #
-# All tests in this testfile have been constrained with test constraint "testutils".
+# All tests in this test file have been constrained with test constraint "testutils".
 # This constraint isn't set anywhere, and therefore false by default. Therefore,
 # the tests in this file are skipped in a regular invocation of the Tk test suite.
 # In order to run these test, you need to use the tcltest option

@@ -1,10 +1,20 @@
-# This file is a Tcl script to test menus in Tk. This
-# file tests the Macintosh-specific features of the menu
+# This file is a Tcl script that tests the unix-specific features of the Tk menu
 # system.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTES
+#
+# * This test file is specific for the unix platform. This includes macOS.
+#   Tests regarding the menu system that are specific to the MS Windows platform
+#   go into the test file winMenu.test. Tests that are platform-indifferent go
+#   into the test file menu.test. Or they may exist as each other's counterparts
+#   in both unixMenu.test and winMenu.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-unix platforms.
+#
 
 #
 # TESTFILE INITIALIZATION
