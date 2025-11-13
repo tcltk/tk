@@ -5,6 +5,13 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 1998-1999 ActiveState Corporation.
 
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests that are
+#   platform-indifferent go into the test file dialog.test.
+# * This test file is skipped entirely on non-windows platforms.
+#
+
 #
 # TESTFILE INITIALIZATION
 #

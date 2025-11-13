@@ -4,6 +4,13 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding embedded windows that
+# are specific to the unix platform (this includes macOS) go into the test file
+# unixEmbed.test.
+#
+
 #
 # TESTFILE INITIALIZATION
 #

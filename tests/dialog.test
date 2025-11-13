@@ -1,5 +1,11 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
 
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding the dialogs that
+# are specific to the windows platform go into the test file winDialog.test.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
