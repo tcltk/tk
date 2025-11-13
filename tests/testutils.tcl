@@ -144,7 +144,7 @@ namespace eval ::tk::test::generic {
     # resetWindows --
     #
     #	Restores a proper initial window setup for a test file, cleaning up from
-    #	the state brought about by a previous testfile.
+    #	the state brought about by a previous test file.
     #
     proc resetWindows {} {
 	deleteWindows

@@ -7,6 +7,17 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTES
+#
+# * This test file is specific for the unix platform. This includes macOS.
+#   Tests regarding buttons that are specific to the MS Windows platform
+#   go into the test file winButton.test. Tests that are platform-indifferent go
+#   into the test file button.test. Or they may exist as each other's counterparts
+#   in both unixButton.test and winButton.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-unix platforms.
+#
+
 #
 # TESTFILE INITIALIZATION
 #

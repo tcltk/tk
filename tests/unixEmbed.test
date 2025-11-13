@@ -5,6 +5,13 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTES
+#
+# * This test file is specific for the unix platform. This includes macOS.
+#   Tests that are platform-indifferent go into the test file embed.test.
+# * This test file is skipped entirely on non-unix platforms.
+#
+
 #
 # TESTFILE INITIALIZATION
 #

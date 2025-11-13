@@ -5,6 +5,13 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding the font system that
+# are specific to the unix platform (this includes macOS), or to the windows
+# platform go into the test files unixFont.test or winFont.test respectively.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
