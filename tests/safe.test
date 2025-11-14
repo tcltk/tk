@@ -94,7 +94,7 @@ test safe-1.1 {Safe Tk loading into an interpreter} -setup {
     set x {}
     return $x
 } -result {}
-test safe-1.2 {Safe Tk loading into an interpreter} -setup {
+test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-lang.org/tcl/tktview/8f5e7a2633]} -constraints knownBug -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
