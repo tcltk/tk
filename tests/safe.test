@@ -48,28 +48,23 @@ resetWindows
 # COMMON TEST SETUP
 #
 
+# Avoid hard-coding the set of commands hidden in a baseline Safe Tcl interp
+# as it is subject to change in point releases without announcement.
+set tcl_hidden_cmds [apply { {} {
+    set i [interp create -safe]
+    try {
+        return [interp hidden $i]
+    } finally {
+	interp delete $i
+    }
+}}]
+
 # The set of hidden commands is platform dependent:
 
-set hidden_cmds [list bell cd clipboard encoding exec exit \
+set hidden_cmds [list {*}tcl_hidden_cmds \
+        bell cd clipboard encoding exec exit \
 	fconfigure glob grab load menu open pwd selection \
 	socket source toplevel unload wm]
-lappend hidden_cmds file tcl:encoding:dirs tcl:encoding:system
-lappend hidden_cmds tcl:file:tempdir tcl:file:home tcl:file:tildeexpand zipfs
-foreach cmd {
-    cmdtype nameofexecutable
-} {lappend hidden_cmds tcl:info:$cmd}
-foreach cmd {
-    autopurge list purge status
-} {lappend hidden_cmds tcl:process:$cmd}
-foreach cmd {
-    canonical exists info list lmkimg lmkzip mkimg mkkey mkzip mount mountdata root unmount
-} {lappend hidden_cmds tcl:zipfs:$cmd}
-foreach cmd {
-    atime attributes copy delete dirname executable exists extension
-    isdirectory isfile link lstat mkdir mtime nativename normalize
-    owned readable readlink rename rootname size stat tail tempfile
-    type volumes writable
-} {lappend hidden_cmds tcl:file:$cmd}
 if {[tk windowingsystem] ne "x11"} {
     lappend hidden_cmds tk_chooseColor tk_chooseDirectory \
 	tk_getOpenFile tk_getSaveFile tk_messageBox
@@ -94,7 +89,7 @@ test safe-1.1 {Safe Tk loading into an interpreter} -setup {
     set x {}
     return $x
 } -result {}
-test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-lang.org/tcl/tktview/8f5e7a2633]} -constraints knownBug -setup {
+test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-lang.org/tcl/tktview/8f5e7a2633]} -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
