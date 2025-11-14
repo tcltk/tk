@@ -4193,20 +4193,20 @@ static int TreeviewSeeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
-    int scrollRow1, scrollRow2, visibleRows;
+    int scrollRow1, scrollRow2, visibleRows, xpos, width;
+    TreeColumn *column = NULL;
 
     if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?index?");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?column?");
 	return TCL_ERROR;
     }
+
     if (!(item = FindItem(interp, tv, objv[2]))) {
 	return TCL_ERROR;
     }
 
-    if (objc == 4) {
-	if (FindItemByIndex(interp, item, objv[3], 0, 0, &item) != TCL_OK) {
-	    return TCL_ERROR;
-	}
+    if (objc == 4 && !(column = FindColumn(interp, tv, objv[3]))) {
+	return TCL_ERROR;
     }
 
     /* The item cannot be moved into view if any ancestor (or itself) is detached. */
@@ -4228,31 +4228,55 @@ static int TreeviewSeeCommand(
 	UpdatePositionTree(tv);
     }
 
-    /* Update the scroll information, if necessary */
+    /* Make sure the scroll information is current before use. */
+    TtkUpdateScrollInfo(tv->tree.xscrollHandle);
     TtkUpdateScrollInfo(tv->tree.yscrollHandle);
 
-    /* Make sure item is visible: */
-    if (item->rowPos < tv->tree.titleRows) {
+    /* Make sure item is visible. */
+    if (item->rowPos >= tv->tree.titleRows) {
+	visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight
+	    - tv->tree.titleRows;
+	scrollRow1 = item->rowPos - tv->tree.titleRows;
+	scrollRow2 = scrollRow1 + item->height - 1;
+
+	if (scrollRow2 >= tv->tree.yscroll.first + visibleRows) {
+	    scrollRow2 = 1 + scrollRow2 - visibleRows;
+	    TtkScrollTo(tv->tree.yscrollHandle, scrollRow2, 1);
+	}
+
+	/* On small widgets (shorter than one row high, which is also the case
+	* before the widget is initially mapped) the above command will have
+	* scrolled down too far. This is why both conditions must be checked.
+	*/
+	if (scrollRow1 < tv->tree.yscroll.first || item->height > visibleRows) {
+	    TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, 1);
+	}
+    }
+
+    if (objc == 3) {
 	return TCL_OK;
     }
-    visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight
-	    - tv->tree.titleRows;
-    scrollRow1 = item->rowPos - tv->tree.titleRows;
-    scrollRow2 = scrollRow1 + item->height - 1;
 
-    if (scrollRow2 >= tv->tree.yscroll.first + visibleRows) {
-	scrollRow2 = 1 + scrollRow2 - visibleRows;
-	TtkScrollTo(tv->tree.yscrollHandle, scrollRow2, 1);
+    /* Find column position and width. */
+    xpos = width = 0;
+    for (Tcl_Size i = FirstColumn(tv); i < tv->tree.nDisplayColumns; i++) {
+	width = tv->tree.displayColumns[i]->width;
+	if (column == tv->tree.displayColumns[i]) {
+	    break;
+	}
+	xpos += width;
     }
 
-    /* On small widgets (shorter than one row high, which is also the case
-     * before the widget is initially mapped) the above command will have
-     * scrolled down too far. This is why both conditions must be checked.
-     */
-    if (scrollRow1 < tv->tree.yscroll.first || item->height > visibleRows) {
-	TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, 1);
+    /* If a title column, abort since always viewable. */
+    if (xpos < tv->tree.titleWidth) {
+	return TCL_OK;
     }
 
+    /* If column is partially or totally out of view, scroll to it. */
+    xpos -= tv->tree.titleWidth;
+    if (xpos < tv->tree.xscroll.first || xpos+width > tv->tree.xscroll.last) {
+	TtkScrollTo(tv->tree.xscrollHandle, xpos, 1);
+    }
     return TCL_OK;
 }
 
