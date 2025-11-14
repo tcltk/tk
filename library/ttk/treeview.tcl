@@ -865,7 +865,8 @@ proc ::ttk::treeview::resize.release {w x} {
 proc ::ttk::treeview::heading.press {w x y} {
     variable State
     set column [$w column [$w identify column $x $y] -id]
-    array set State [list pressMode "heading" heading $column cursor [$w cget -cursor]]
+    array set State [list pressMode "heading" heading $column \
+	cursor [$w cget -cursor] activeHeading ""]
     $w heading $column state pressed
 }
 
@@ -879,32 +880,58 @@ proc ::ttk::treeview::heading.drag {w x y} {
 		set State(cursor) [$w cget -cursor]
 		ttk::setCursor $w $cursor
 	    }
+	    set active $State(activeHeading)
+	    if {$active ne $column} {
+		if {$active ne ""} {
+		    $w heading $active state !active
+		}
+		set State(activeHeading) $column
+		$w heading $column state active
+	    }
 	}
+
     }
 }
 
 proc ::ttk::treeview::heading.release {w x y} {
     variable State
+    set region [$w identify region $x $y]
 
-    if {[$w identify region $x $y] eq "heading"} {
+    if {$region in [list "heading" "separator"]} {
 	set column [$w column [$w identify column $x $y] -id]
-	if {$column eq $State(heading)} {
+	if {$region eq "heading" && $column eq $State(heading)} {
 	    # Sort
 	    after 0 [$w heading $State(heading) -command]
-
-	} elseif {$State(heading) ne "#0" && $column ne "#0"} {
+	} else {
 	    # Move
 	    set columns [$w cget -displaycolumns]
 	    if {[llength $columns] == 1 && $columns eq "#all"} {
 		set columns [$w cget -columns]
 	    }
-	    set index [lsearch $columns $State(heading)]
-	    set columns [lreplace $columns $index $index]
-	    set index [lsearch $columns $column]
-	    $w configure -displaycolumns [linsert $columns $index $State(heading)]
+	    if {$region eq "separator"} {
+		set index [lsearch $columns $column]
+		set column [lindex $columns [incr index]]
+		if {$column eq ""} {
+		    set column "#end"
+		}
+	    }
+	    if {$State(heading) ne "#0" && $column ne "#0"} {
+		set index [lsearch $columns $State(heading)]
+		set columns [lreplace $columns $index $index]
+		if {$column ne "#end"} {
+		    set index [lsearch $columns $column]
+		    $w configure -displaycolumns [linsert $columns $index $State(heading)]
+		} else {
+		    $w configure -displaycolumns [linsert $columns end $State(heading)]
+		}
+	    }
 	}
-    }    
-    $w heading $State(heading) state !pressed
+    }
+    if {$State(activeHeading) ne ""} {
+	$w heading $State(activeHeading) state !active
+	set State(activeHeading) {}
+    }
+    $w heading $State(heading) state [list !active !pressed]
     if {[$w cget -cursor] ne $State(cursor)} {
 	ttk::setCursor $w $State(cursor)
     }
