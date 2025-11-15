@@ -55,8 +55,8 @@ specifying the number of columns and their names.
 .OP \-displaycolumns displayColumns DisplayColumns
 A list of column identifiers (either symbolic names or integer indices)
 specifying which columns are to be displayed and the order in which they appear,
-or the string \fB#all\fP to display all columns in \fB-columns\fR order.
-The default is \fB#all\fP.
+or the string \fB#all\fR to display all columns in \fB-columns\fR order.
+The default is \fB#all\fR.
 .OP \-height height Height
 Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
@@ -1054,7 +1054,7 @@ in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
 The textual label to display for the item in the tree column.
 .IP \fB\-height\fR
-The height for the item, in integer multiples of \fB\-rowheight\fP. The default is 1.
+The height for the item, in integer multiples of \fB\-rowheight\fR. The default is 1.
 .IP \fB\-image\fR
 A Tk image, displayed next to the label in the tree column, placed according
 to \fB\-imageanchor\fR.
@@ -1139,86 +1139,92 @@ widget where the user can easily select multiple entries without the need to
 use the keyboard.
 .SH "STYLING OPTIONS"
 .PP
-The class name for a \fBttk::treeview\fP is \fBTreeview\fP.
-The treeview header class name is \fBHeading\fP.
-The treeview item class name is \fBItem\fP.
-The treeview cell class name is \fBCell\fP.
+The class name for a \fBttk::treeview\fR is \fBTreeview\fR.
+The treeview header class name is \fBHeading\fR.
+The treeview row class name is \fBRow\fR.
+The treeview item class name is \fBItem\fR.
+The treeview cell class name is \fBCell\fR.
 .PP
-Dynamic states: \fBdisabled\fP, \fBselected\fP.
+Dynamic states: \fBdisabled\fR, \fBselected\fR.
 .PP
-\fBTreeview\fP styling options configurable with \fBttk::style\fP
+\fBTreeview\fR styling options configurable with \fBttk::style\fR
 are:
 .PP
-\fB\-background\fP \fIcolor\fP
+\fB\-background\fR \fIcolor\fR
 .br
-\fB\-fieldbackground\fP \fIcolor\fP
+\fB\-fieldbackground\fR \fIcolor\fR
 .br
-\fB\-font\fP \fIfont\fP
+\fB\-font\fR \fIfont\fR
 .br
-\fB\-foreground\fP \fIcolor\fP
+\fB\-foreground\fR \fIcolor\fR
 .br
-\fB\-indent\fP \fIamount\fP
+\fB\-indent\fR \fIamount\fR
 .RS
 Specifies how far items are indented from their parents. The default is 20 pixels.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
-\fB\-columnseparatorwidth\fP \fIamount\fP
+\fB\-columnseparatorwidth\fR \fIamount\fR
 .RS
 Specifies the width of column separators. The default is 1 pixel.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
-\fB\-rowheight\fP \fIamount\fP
+\fB\-rowheight\fR \fIamount\fR
 .RS
 This is the standard height for an item. The default is 20 pixels.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
-If \fB\-rowheight\fP is not set by the style, it is set by measuring an
+If \fB\-rowheight\fR is not set by the style, it is set by measuring an
 item and a cell layout with the style's settings.
 This thus picks up the font and
 any focus ring or padding from the theme's layout.
-The \fB\-rowheight\fP may need to be set to make sure that a row
+The \fB\-rowheight\fR may need to be set to make sure that a row
 is large enough to contain any images.
 .PP
-Example of how to set \fB\-rowheight\fP, adapting to a font in a similar
+Example of how to set \fB\-rowheight\fR, adapting to a font in a similar
 way to how the default value is set:
 .RE
 .PP
 .CS
 ttk::style configure Treeview \\
-     -rowheight [expr {[font metrics \fIfont\fP -linespace] + 2}]
+     -rowheight [expr {[font metrics \fIfont\fR -linespace] + 2}]
 .CE
 .br
-\fB\-stripedbackground\fP \fIcolor\fP
+\fB\-stripedbackground\fR \fIcolor\fR
 .PP
-\fBHeading\fP styling options configurable with \fBttk::style\fP
-are:
+\fBHeading\fR styling options configurable with \fBttk::style\fR are:
 .PP
-\fB\-background\fP \fIcolor\fP
+\fB\-background\fR \fIcolor\fR
 .br
-\fB\-font\fP \fIfont\fP
+\fB\-font\fR \fIfont\fR
 .br
-\fB\-relief\fP \fIrelief\fP
+\fB\-relief\fR \fIrelief\fR
 .PP
-\fBItem\fP styling options configurable with \fBttk::style\fP
-are:
+\fBRow\fR styling options configurable with \fBttk::style\fR are:
 .PP
-\fB\-foreground\fP \fIcolor\fP
+\fB\-background\fR \fIcolor\fR
 .br
-\fB\-indicatormargins\fP \fIpadding\fP
+\fB\-focuscolor\fR \fIcolor\fR
 .br
-\fB\-indicatorsize\fP \fIamount\fP
+\fB\-focuswidth\fR \fIamount\fR
+.PP
+\fBItem\fR styling options configurable with \fBttk::style\fR are:
+.PP
+\fB\-foreground\fR \fIcolor\fR
 .br
-\fB\-padding\fP \fIpadding\fP
+\fB\-indicatormargins\fR \fIpadding\fR
+.br
+\fB\-indicatorsize\fR \fIamount\fR
+.br
+\fB\-padding\fR \fIpadding\fR
 .PP
-\fBCell\fP styling options configurable with \fBttk::style\fP
-are:
+\fBCell\fR styling options configurable with \fBttk::style\fR are:
 .PP
-\fB\-padding\fP \fIpadding\fP
+\fB\-padding\fR \fIpadding\fR
 .PP
 Some options are only available for specific themes.
 .PP
-See the \fBttk::style\fP manual page for information on how to configure
+See the \fBttk::style\fR manual page for information on how to configure
 ttk styles.
 .SH "BINDINGS"
 The \fB<<Copy>>\fR binding is supported to copy the selected items or cells

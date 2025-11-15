@@ -6741,9 +6741,17 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
  * +++ Row element.
  */
 
+#if defined(_WIN32)
+  #define WIN32_XDRAWLINE_HACK 1
+#else
+  #define WIN32_XDRAWLINE_HACK 0
+#endif
+
 typedef struct {
     Tcl_Obj *backgroundObj;
     Tcl_Obj *rowNumberObj;
+    Tcl_Obj *focusWidthObj;
+    Tcl_Obj *focusColorObj;
 } RowElement;
 
 static const Ttk_ElementOptionSpec RowElementOptions[] = {
@@ -6751,6 +6759,10 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
 	offsetof(RowElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-rownumber", TK_OPTION_INT,
 	offsetof(RowElement,rowNumberObj), "0" },
+    { "-focuswidth", TK_OPTION_PIXELS,
+	offsetof(RowElement,focusWidthObj), "2" },
+    { "-focuscolor", TK_OPTION_COLOR,
+	offsetof(RowElement,focusColorObj), "#008000" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -6760,14 +6772,49 @@ static void RowElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(Ttk_State)) {
+    Ttk_State state) {
 
+    Display *disp = Tk_Display(tkwin);
     RowElement *row = (RowElement *)elementRecord;
     XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
     GC gc = Tk_GCForColor(color, d);
+    int focusWidth = 2;
 
-    XFillRectangle(Tk_Display(tkwin), d, gc,
-	    b.x, b.y, b.width, b.height);
+    Tk_GetPixelsFromObj(NULL, tkwin, row->focusWidthObj, &focusWidth);
+
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
+	XColor *focusColor = Tk_GetColorFromObj(tkwin, row->focusColorObj);
+	GC focusGC = Tk_GCForColor(focusColor, d);
+
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
+
+	    /* Draw the outer rounded rectangle */
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
+
+	    /* Draw the inner rectangle */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /* Fill the inner rectangle */
+	    XFillRectangle(disp, d, gc, b.x+1, b.y+1, b.width-2, b.height-2);
+
+	} else {
+	    /* Draw the row as usual */
+	    XFillRectangle(disp, d, gc, b.x, b.y, b.width, b.height);
+
+	    /* Change the color of the border's outermost pixels */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	}
+
+    } else {
+	XFillRectangle(disp, d, gc, b.x, b.y, b.width, b.height);
+    }
 }
 
 static const Ttk_ElementSpec RowElementSpec = {
