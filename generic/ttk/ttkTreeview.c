@@ -1310,7 +1310,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     TreeItem *item = NULL;
     Ttk_TagSet tagset;
     int unused;
-    Tcl_Size colno = TCL_INDEX_NONE;
+    Tcl_Size colno = -1;
     TreeColumn *column = NULL;
 
     /* Figure out where to deliver the event. */
@@ -1813,7 +1813,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1) {
 	}
     }
 
-    return TCL_INDEX_NONE;
+    return -1;
 }
 
 /* + ItemDepth -- return the depth of a tree item.
@@ -3825,6 +3825,40 @@ static int TreeviewHideCommand(
 static int TreeviewUnhideCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     return TreeviewHideUnhide(recordPtr, interp, objc, objv, 0);
+}
+
+/* $tree visible $item --
+ *	Return if item is visible or not.
+ */
+static int TreeviewVisibleCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item, *parent;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+
+    if (!(item = FindItem(interp, tv, objv[2]))) {
+	return TCL_ERROR;
+    }
+
+    /* Check if detached or hidden. */
+    if (IsItemOrAncestorDetached(tv, item) || item->hidden) {
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(0));
+	return TCL_OK;
+    }
+
+    /* Check if ancestor is closed or hidden. */
+    for (parent = item->parent; parent; parent = parent->parent) {
+	if (!(parent->state & TTK_STATE_OPEN) || parent->hidden) {
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(0));
+	    return TCL_OK;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(1));
+    return TCL_OK;
 }
 
 /*------------------------------------------------------------------------
@@ -6578,6 +6612,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "style",		TtkWidgetStyleCommand,0 },
     { "tag",		0,TreeviewTagCommands },
     { "unhide",		TreeviewUnhideCommand,0 },
+    { "visible",	TreeviewVisibleCommand,0 },
     { "xview",		TreeviewXViewCommand,0 },
     { "yview",		TreeviewYViewCommand,0 },
     { 0,0,0 }

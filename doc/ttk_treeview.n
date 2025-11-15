@@ -1047,6 +1047,12 @@ Unhide all of the items in \fIitemList\fR. Same as
 [\fIpathname \fBitem \fIitem \fB\-hidden 0\fR] for each item.
 With \fI\-recurse\fR option, will also unhide all of their descendants.
 Use \fB{}\fR for root item.
+.\" METHOD: visible
+.TP
+\fIpathname \fBvisible \fIitem\fR
+.
+Returns whether \fIitem\fR is visible or not. An item is visible if it is not
+detached, hidden, and all ancestors are open and not hidden.
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items
