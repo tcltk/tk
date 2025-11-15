@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-.TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
+.TH ttk::treeview n 9.1 Tk "Tk Themed Widget"
 .so man.macros
 .BS
 .SH NAME
@@ -15,33 +15,29 @@ ttk::treeview \- hierarchical multicolumn data display widget
 .SH DESCRIPTION
 .PP
 The \fBttk::treeview\fR widget displays a hierarchical collection of items.
-Each item has a textual label, an optional image,
-and an optional list of data values.
-The data values are displayed in successive columns after
-the tree label.
+Each item has a textual label, an optional image, and an optional list of data
+values. The data values are displayed in successive columns after the tree
+label as cells.
+The order in which data values are displayed may be controlled by setting the
+\fB\-displaycolumns\fR widget option. The tree widget can also display column
+headings. Columns may be accessed by number or by symbolic names listed in the
+\fB\-columns\fR widget option; see \fBCOLUMN IDENTIFIERS\fR.
+Treeview widgets support horizontal and vertical scrolling with the standard
+\fB\-\fR[\fBxy\fR]\fBscrollcommand\fR options and [\fBxy\fR]\fBview\fR widget
+commands.
 .PP
-The order in which data values are displayed may be controlled
-by setting the \fB\-displaycolumns\fR widget option.
-The tree widget can also display column headings.
-Columns may be accessed by number or by symbolic names
-listed in the \fB\-columns\fR widget option;
-see \fBCOLUMN IDENTIFIERS\fR.
+Each item is identified by a unique name. The widget will generate item IDs if
+they are not supplied by the caller. There is a distinguished root item, named
+\fB{}\fR. The root item itself is not displayed; only its children appear at
+the top level of the hierarchy.
+Cell ids are a 2-value list consisting of the item id and column id. Items and
+cells may also be associated with 0 or more tags. Tags are used to associate
+event bindings with individual items/cells and to control their appearance.
+Items and cells can be selected depending on the \fB-selectmode\fR and
+\fB-selecttype\fR widget options. The item and cell focus determines which item
+or cell receives the keyboard focus for navigation between items and cells and
+for selection changes.
 .PP
-Each item is identified by a unique name.
-The widget will generate item IDs if they are not supplied by the caller.
-There is a distinguished root item, named \fB{}\fR.
-The root item itself is not displayed;
-its children appear at the top level of the hierarchy.
-.PP
-Each item also has a list of \fItags\fR,
-which can be used to associate event bindings with individual items
-and control the appearance of the item.
-.\" .PP
-.\" @@@HERE: describe selection, focus item
-.PP
-Treeview widgets support horizontal and vertical scrolling with the
-standard \fB\-\fR[\fBxy\fR]\fBscrollcommand\fR options
-and [\fBxy\fR]\fBview\fR widget commands.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
 \-style	\-xscrollcommand	\-yscrollcommand
@@ -62,8 +58,6 @@ Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection. Options are:
-\fBnone\fR, \fBbrowse\fR, \fBsingle\fR, \fBmultiple\fR, or \fBextended\fR
-The default mode is \fBextended\fR.
 .RS
 .PP
 .IP \fBnone\fR
@@ -84,12 +78,13 @@ In this mode, the focus and selection are independent which allows for
 keyboard traversal without changing the selection.
 The selection can be cleared via the keyboard bindings.
 .IP \fBextended\fR
-Multiple items can be selected, but the default is for only
-one item to be selected at a time.
-More items can be selected by extending the selection using the Shift and
-Control/Command keys in combination with the mouse and keyboard traversal.
+Multiple items can be selected, but the default is for only one item to be
+selected at a time. More items can be selected by extending the selection
+using the Shift and Control/Command keys in combination with the mouse and
+keyboard traversal.
 In this mode, the selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
+This is the default.
 .PP
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
@@ -124,7 +119,7 @@ Number of items at the top that should not be vertically scrolled.
 The default is 0.
 .SH "INDICES"
 .PP
-Several of the widget commands for treeview take an index as their argument.
+Several of the widget commands use an index as their argument.
 An index specifies a particular child item within it's parent, using any of
 the following forms:
 .IP \fInumber\fR 12
@@ -201,8 +196,8 @@ option), returns the bounding box of that cell within \fIitem\fR
 .TP
 \fIpathname \fBbbox {*}\fIcell\fR
 .
-Same as previous command, but uses expand operator to convert \fIcell\fR into
-item and column components.
+Same as previous command, but uses the expand operator to convert \fIcell\fR
+into item and column components.
 .\" METHOD: before
 .TP
 \fIpathname \fBbefore\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
@@ -222,19 +217,19 @@ include child or parent items.
 .TP
 \fIpathname \fBcellfocus\fR ?\fIcell\fR?
 .
-Sets the focus to cell \fIcell\fR. Use \fB{}\fR to clear the focus cell. Without
+Sets the cell focus to \fIcell\fR. Use \fB{}\fR to clear the focus cell. Without
 \fIcell\fR, returns the current focus cell id or \fB{}\fR if there is none.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
 .
-Manages cell selection. Cell selection is independent from item selection
+Manages cell selection. Cell selection is independent from the item selection
 handled by the \fBselection\fR command. A cell is specified by a list of two
 elements, the item and the column.
 For the rectangle versions of commands, the cells must be in displayed columns.
 Any change to \fB\-columns\fR clears the cell selection.
 A \fIcellList\fR argument may be a single cell or a list of cells.
-If \fIselop\fR is not specified, returns the list of selected cells.
+If \fIselop\fR is not specified, returns a list of selected cells.
 Otherwise, \fIselop\fR is one of the following:
 .RS
 .TP
@@ -247,7 +242,7 @@ Add \fIcellList\fR to the cell selection.
 Add the cells within the rectangle defined by \fIfirstCell\fR and
 \fIlastCell\fR to the cell selection.
 .TP
-\fIpathname \fBcellselection anchor ?\fIcell\fR?
+\fIpathname \fBcellselection anchor\fR ?\fIcell\fR?
 .
 Set cell selection anchor to \fIcell\fR. The anchor is used as the
 firstCell for the selection extend bindings. Without \fIcell\fR, the
@@ -256,7 +251,7 @@ string {} to unset the anchor.
 .TP
 \fIpathname \fBcellselection present\fR
 .
-Returns whether there are selected cells or not.
+Returns boolean with whether there are selected cells or not.
 .TP
 \fIpathname \fBcellselection remove \fIcellList\fR
 .
@@ -269,7 +264,8 @@ Remove the cells within the rectangle defined by \fIfirstCell\fR and
 .TP
 \fIpathname \fBcellselection set \fIcellList\fR
 .
-\fIcellList\fR becomes the new cell selection.
+Sets the selection to the cells in \fIcellList\fR. Use an empty set \fB{}\fR
+to clear the selection.
 .TP
 \fIpathname \fBcellselection set \fIfirstCell lastCell\fR
 .
@@ -283,8 +279,6 @@ Returns the number of selected cells.
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
-If the element is partially visible, the result gives the full
-area of the element, including any parts that are not visible.
 .TP
 \fIpathname \fBcellselection toggle \fIfirstCell lastCell\fR
 .
@@ -308,7 +302,8 @@ of \fIitem\fR.
 \fIpathname \fBcollapse\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Sets all of the items in \fIitemList\fR to closed state. Same as
-[\fIpathname \fBitem \fIitem \fB\-open 0\fR]. With \fI\-recurse\fR option,
+[\fIpathname \fBitem \fIitem \fB\-open 0\fR] for each item in
+\fIitemList\fR. With \fI\-recurse\fR option,
 will also close all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: column
 .TP
@@ -338,6 +333,7 @@ Specifies how the text in this column should be aligned
 with respect to the cell. \fIAnchor\fR is one of
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR.
+See \fBTk_GetAnchor\fR for more information.
 .\" OPTION: -minwidth
 .TP
 \fB\-minwidth \fIminwidth\fR
@@ -406,13 +402,14 @@ their descendants in an arbitrary order. The root item is never detached.
 \fIpathname \fBexists \fIitem\fR
 .
 Returns 1 if the specified \fIitem\fR is present in the tree,
-0 otherwise.
+0 if not.
 .\" METHOD: expand
 .TP
 \fIpathname \fBexpand\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Set all of the items in \fIitemList\fR to open state. Same as
-[\fIpathname \fBitem \fIitem \fB\-open 1\fR]. With \fI\-recurse\fR option,
+[\fIpathname \fBitem \fIitem \fB\-open 1\fR] for each item in
+\fIitemList\fR. With \fI\-recurse\fR option,
 will also open all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: focus
 .TP
@@ -447,7 +444,7 @@ Specifies an image to display to the right of the column heading.
 \fB\-anchor \fIanchor\fR
 .
 Specifies how the heading text should be aligned.
-One of the standard Tk anchor values.
+See \fBTk_GetAnchor\fR for valid values.
 .\" OPTION: -command
 .TP
 \fB\-command \fIscript\fR
@@ -461,7 +458,8 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 \fIpathname \fBhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Hide all of the items in \fIitemList\fR and all child items. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR]. With \fI\-recurse\fR option,
+[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR] for each item in
+\fIitemList\fR. With \fI\-recurse\fR option,
 will also hide all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: identifier
 .TP
@@ -703,7 +701,7 @@ within the children of \fIparent\fR.
 .TP
 \fB\-start \fIitem\fR
 .
-Start the search at item \fIitem\fR, where \fIitem\fR must be a descendant of
+Start the search at \fIitem\fR, where \fIitem\fR must be a descendant of
 \fIparent\fR. See \fB-forwards\fR and \fB-backwards\fR for default start index. 
 When resuming a search, use the \fBbefore\fR or \fBafter\fR
 subcommands to get the previous or next item to start the search at. All other
@@ -712,7 +710,7 @@ options should be the same as the initial search including \fIparent\fR.
 .TP
 \fB\-stop \fIitem\fR
 .
-End the search at item \fIitem\fR (inclusive), where \fIitem\fR must be a
+End the search at \fIitem\fR (inclusive), where \fIitem\fR must be a
 descendant of \fIparent\fR. The default is the last item or descendant of
 \fIparent\fR for \fB-forward\fR searches and first child of \fIparent\fR
 for \fB-backwards\fR searches.
@@ -720,8 +718,8 @@ for \fB-backwards\fR searches.
 .TP
 \fB\-wraparound\fR
 .
-When used with \fB-start\fR option, enables search to wrap-round to the
-first/last item to continue to the \fB-start\fR item.
+When used with the \fB-start\fR option, enables search to wrap-round to the
+first/last item to continue to the item just before the \fB-start\fR item.
 .RE
 Result Modifiers
 .RS
@@ -753,19 +751,19 @@ Ensure that \fIitem\fR is visible by setting all of \fIitem\fR's ancestors to
 if necessary, so that \fIitem\fR is within the visible portion of the tree.
 If \fIcolumn\fR is specified, then the widget is scrolled in the horizontal
 direction, if necessary, so that \fIcolumn\fR is within the visible portion
-of the tree. Only the non-title columns and rows will be scrolled.
+of the tree. Only non-title columns and rows will be scrolled.
 .TP
 \fIpathname \fBsee {*}\fIcell\fR
 .
-Same as previous command, but uses expand operator to convert \fIcell\fR into
-item and column components.
+Same as previous command, but uses the expand operator to convert \fIcell\fR
+into item and column components.
 .\" METHOD: selection
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList|from to\fR?
 .
-Manages item selection. Item selection is independent from cell selection
+Manages item selection. Item selection is independent from the cell selection
 handled by the \fBcellselection\fR command.
-If \fIselop\fR is not specified, returns the list of selected items.
+If \fIselop\fR is not specified, returns a list of selected items.
 Otherwise, \fIselop\fR is one of the following:
 .RS
 .TP
@@ -785,8 +783,7 @@ anchor is returned. Set \fIitem\fR to the empty string {} to unset the anchor.
 .TP
 \fIpathname \fBselection has \fIitemList\fR
 .
-Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
-not included in the selection.
+Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
 .TP
 \fIpathname \fBselection has \fIfromItem toItem\fR
 .
@@ -795,8 +792,7 @@ Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\f
 .TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
-Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
-not included in the selection.
+Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
 .TP
 \fIpathname \fBselection includes \fIfromItem toItem\fR
 .
@@ -818,7 +814,8 @@ the selection.
 .TP
 \fIpathname \fBselection set \fIitemList\fR
 .
-Sets selection to items in \fIitemList\fR. Use empty set {} to clear selection.
+Sets selection to items in \fIitemList\fR. Use an empty set {} to clear the
+selection.
 .TP
 \fIpathname \fBselection set \fIfromItem toItem\fR
 .
@@ -841,12 +838,13 @@ Toggle the selection state of each item between \fIfromItem\fR and \fItoItem\fR
 .TP
 \fIpathname \fBset \fIitem\fR ?\fIcolumn\fR? ?\fIvalue\fR? ?\fIcolumn value ...\fR?
 .
-Set or get item \fIitem\fR column values.
-With one argument, returns a dictionary of all column/value pairs.
-With two arguments, returns the current value for column \fIcolumn\fR.
-With three or more arguments, sets the value of each column \fIcolumn\fR
-to the associated \fIvalue\fR. Use column \fB#0\fR for the tree column.
-See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
+Set or get \fIitem\fR column values.
+With no \fIcolumn\fR or \fIvalue\fR arguments, returns a dictionary of all
+column/value pairs. With only the \fIcolumn\fR argument, returns the current
+value for \fIcolumn\fR. With \fIcolumn\fR and \fIvalue\fR arguments, sets the
+value of each column \fIcolumn\fR to the associated \fIvalue\fR. Use column
+\fB#0\fR for the tree column. See \fBCOLUMN IDENTIFIERS\fR for valid forms of
+\fIcolumn\fR.
 .\" METHOD: size
 .TP
 \fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse\fR? \fIitem\fR
@@ -924,7 +922,7 @@ Sort the list in decreasing order (“largest” items first).
 .
 Sort based on values in column \fIcolumn\fR.
 See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
-The default is the first column (#0 if tree in -show or 0 if not).
+The default is the first column (#0 if tree in -show or #1 if not).
 .\" OPTION: -ignoreempty
 .TP
 \fB\-ignoreempty\fR
@@ -951,30 +949,27 @@ over item tags when drawing.
 The following subcommands are supported:
 .RS
 .TP
-\fIpathName \fBtag add \fItag itemList\fR
+\fIpathName \fBtag add \fItagName itemList\fR
 .
-Adds the tag \fItag\fR to each of the items in \fIitemList\fR.
-If \fItag\fR is already present for a particular item,
+Adds tag \fItagName\fR to each of the items in \fIitemList\fR.
+If \fItagName\fR is already present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .TP
 \fIpathName \fBtag bind \fItagName\fR ?\fIsequence\fR? ?\fIscript\fR?
 .
-Add a Tk binding script for the event sequence \fIsequence\fR
-to the tag \fItagName\fR.  When an X event is delivered to an item,
-binding scripts for each of the item's \fB\-tags\fR are evaluated
-in order as per \fIbindtags(n)\fR.
+Add a Tk binding script for the event sequence \fIsequence\fR to the tag
+\fItagName\fR. When an X event is delivered to an item, binding scripts for
+each of the item's \fB\-tags\fR are evaluated in order as per \fIbindtags(n)\fR.
 If the event can be associated with a cell (i.e. mouse events) any
 bindings for the cell's \fB\-tags\fR are evaluated as well.
 .RS
 .PP
-\fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events
-are sent to the focus item.
-\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
-are sent to the item under the mouse pointer.
-No other event types are supported.
+\fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events are sent to the focus item.
+\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events are sent to
+the item under the mouse pointer. No other event types are supported.
 .PP
-The binding \fIscript\fR undergoes \fB%\fR-substitutions before
-evaluation; see \fBbind\fR(n) for details.
+The binding \fIscript\fR undergoes \fB%\fR-substitutions before evaluation;
+see \fBbind\fR(n) for details.
 .RE
 .TP
 \fIpathName \fBtag cell \fIsubcommand...\fR
@@ -983,70 +978,65 @@ Manages tags on individual cells.
 A \fIcellList\fR argument may be a single cell or a list of cells.
 .RS
 .TP
-\fIpathName \fBtag cell add \fItag cellList\fR
+\fIpathName \fBtag cell add \fItagName cellList\fR
 .
-Adds the specified \fItag\fR to each of the listed \fIcellList\fR.
-If \fItag\fR is already present for a particular cell,
-then the tag list for that cell is unchanged.
+Adds tag \fItagName\fR to each of the cells in \fIcellList\fR.
+If \fItagName\fR is already present for a particular cell,
+then the tag list for that cell is not changed.
 .TP
 \fIpathName \fBtag cell has \fItagName\fR ?\fIcell\fR?
 .
-If \fIcell\fR is specified, returns 1 or 0
-depending on whether the specified cell has the named tag.
-Otherwise, returns a list of all cells which have
-the specified tag.
+If \fIcell\fR is specified, returns a boolean value with whether \fIcell\fR
+has tag \fItagName\fR. Without \fIcell\fR, a list of all cells which have
+tag \fItagName\fR is returned.
 .TP
-\fIpathName \fBtag cell remove \fItag\fR ?\fIcellList\fR?
+\fIpathName \fBtag cell remove \fItagName\fR ?\fIcellList\fR?
 .
-Removes the specified \fItag\fR from each of the listed \fIcellList\fR.
-If \fIcellList\fR is omitted, removes \fItag\fR from each cell in the tree.
+Removes tag \fItagName\fR from each of the cells in \fIcellList\fR. If
+\fIcellList\fR is omitted, tag \fItagName\fR is removed from all cells in the
+tree.
 .RE
 .TP
 \fIpathName \fBtag configure \fItagName\fR ?\fIoption\fR? ?\fIvalue option value...\fR?
 .
-Query or modify the options for the specified \fItagName\fR.
-If one or more \fIoption/value\fR pairs are specified,
-sets the value of those options for the specified tag.
-If a single \fIoption\fR is specified,
-returns the value of that option
+Query or modify the options for tag \fItagName\fR. If one or more \fIoption\fR
+and \fIvalue\fR pairs are specified, each option is set to the following value.
+If a single \fIoption\fR is specified, the value of that option is returned
 (or the empty string if the option has not been specified for \fItagName\fR).
-With no additional arguments,
-returns a dictionary of the option settings for \fItagName\fR.
-See \fBTAG OPTIONS\fR for the list of available options.
+With no arguments, a dictionary of the option settings for tag \fItagName\fR is
+returned. See \fBTAG OPTIONS\fR for the list of available options.
 .TP
 \fIpathName \fBtag delete \fItagName\fR
 .
-Deletes all tag information for the \fItagName\fR argument. The command
-removes the tag from all items and cells in the widget and also deletes any
-other information associated with the tag, such as bindings and display
-information. The command returns an empty string.
+Deletes tag \fItagName\fR and any associated information. The tag is deleted
+from all items and cells in the widget and also any other information
+associated with the tag is deleted, such as bindings and display information.
 .TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 .
-If \fIitem\fR is specified, returns 1 or 0
-depending on whether the specified item has the named tag.
-Otherwise, returns a list of all items which have
-the specified tag.
+If \fIitem\fR is specified, returns a boolean value with whether \fIitem\fR
+has tag \fItagName\fR or not. Without \fIitem\fR, returns a list of all items
+which have tag \fItagName\fR.
 .TP
 \fIpathName \fBtag names\fR
 .
 Returns a list of all tags used by the widget.
 .TP
-\fIpathName \fBtag remove \fItag\fR ?\fIitemList\fR?
+\fIpathName \fBtag remove \fItagName\fR ?\fIitemList\fR?
 .
-Removes the tag \fItag\fR from each of the items in \fIitemList\fR. If
-\fIitemList\fR is omitted, removes \fItag\fR from all of the items in the tree.
-If \fItag\fR is not present for a particular item,
-then the \fB\-tags\fR for that item are unchanged.
+Removes tag \fItagName\fR from each of the items in \fIitemList\fR. If
+\fIitemList\fR is omitted, then tag \fItagName\fR is removed from all items in
+the tree. If tag \fItagName\fR is not present for an item, then the \fB\-tags\fR
+for that item are not changed.
 .RE
 .\" METHOD: unhide
 .TP
 \fIpathname \fBunhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Unhide all of the items in \fIitemList\fR. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR] for each item.
-With \fI\-recurse\fR option, will also unhide all of their descendants.
-Use \fB{}\fR for root item.
+[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR] for each item in
+\fIitemList\fR. With \fI\-recurse\fR option, will also unhide all
+of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: visible
 .TP
 \fIpathname \fBvisible \fIitem\fR
@@ -1055,54 +1045,48 @@ Returns whether \fIitem\fR is visible or not. An item is visible if it is not
 detached, hidden, and all ancestors are open and not hidden.
 .SH "ITEM OPTIONS"
 .PP
-The following item options may be specified for items
-in the \fBinsert\fR and \fBitem\fR widget commands.
-.IP \fB\-text\fR
-The textual label to display for the item in the tree column.
-.IP \fB\-height\fR
-The height for the item, in integer multiples of \fB\-rowheight\fR. The default is 1.
-.IP \fB\-image\fR
-A Tk image, displayed next to the label in the tree column, placed according
+The following item options can be set or get with the \fBinsert\fR and
+\fBitem\fR commands:
+.IP \fB\-height \fIinteger\fR
+The height of the item in multiples of \fB\-rowheight\fR. The default is 1.
+.IP \fB\-image \fIname\fR
+Display image \fIname\fR next to the label in the tree column, placed according
 to \fB\-imageanchor\fR.
-.IP \fB\-imageanchor\fR
-Specifies how the \fB\-image\fR is displayed relative to the text.
-The default is \fBw\fR. One of the standard Tk anchor values.
-.IP \fB\-values\fR
-The list of values associated with the item.
-.RS
-.PP
-Each item should have the same number of values as
-the \fB\-columns\fR widget option.
-If there are fewer values than columns,
-the remaining values are assumed empty.
-If there are more values than columns,
-the extra values are ignored.
-.RE
-.IP \fB\-hidden\fR
-A Boolean value indicating whether this item
-should be displayed (\fB\-hidden false\fR) or hidden (\fB\-hidden true\fR).
-If a parent is hidden, all its descendants are hidden too.
-.IP \fB\-open\fR
-A Boolean value indicating whether the item's children
-should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
-.IP \fB\-tags\fR
+.IP \fB\-imageanchor \fIanchor\fR
+Specifies how the \fB\-image\fR is to be displayed relative to the text. The
+default is \fBw\fR. See \fBTk_GetAnchor\fR for valid values.
+.IP \fB\-hidden \fIboolean\fR
+A Boolean value indicating whether the item should be displayed (\fBfalse\fR) or
+hidden (\fBtrue\fR). If a parent is hidden, then all its descendants are hidden too.
+.IP \fB\-open \fIboolean\fR
+A Boolean value indicating whether the item's children should be displayed
+(\fBtrue\fR) or hidden (\fBfalse\fR).
+.IP \fB\-tags \fIlist\fR
 A list of tags associated with this item.
+.IP \fB\-text \fItext\fR
+The textual label to display for the item in the tree column.
+.IP \fB\-values \fIlist\fR
+The list of values associated with the item. Each item should have the same
+number of values as the \fB\-columns\fR widget option. If there are fewer
+values than columns, the remaining values are assumed empty. If there are more
+values than columns, the extra values are ignored.
 .SH "TAG OPTIONS"
 .PP
-The following options may be specified on tags:
-.IP \fB\-foreground\fR
+The following tag options can be set or get with the \fBtag configure\fR command:
+.IP \fB\-foreground \fIcolor\fR
 Specifies the text foreground color.
-.IP \fB\-background\fR
+.IP \fB\-background \fIcolor\fR
 Specifies the cell or item background color.
-.IP \fB\-font\fR
+.IP \fB\-font \fIfont\fR
 Specifies the font to use when drawing text.
-.IP \fB\-image\fR
+.IP \fB\-image \fIname\fR
 Specifies the cell or item image.
-.IP \fB\-imageanchor\fR
-Specifies the cell or item image anchor.
-.IP \fB\-padding\fR
-Specifies the cell padding. A data cell will have a default padding of {4 0}
-.IP \fB\-stripedbackground\fR
+.IP \fB\-imageanchor \fIanchor\fR
+Specifies the cell or item image anchor. See \fBTk_GetAnchor\fR for valid values.
+.IP \fB\-padding \fIamount\fR
+Specifies the cell padding. A data cell will have a default padding of {4 0}.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+.IP \fB\-stripedbackground \fIboolean\fR
 Specifies the cell or item background color for alternate lines,
 if \fB\-striped\fR is true.
 .PP
