@@ -141,7 +141,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(IAccessible *this, DISP
 /* Prototypes of empty stub functions required by MSAA-toplevels. */
 HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
-HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
 HRESULT STDMETHODCALLTYPE TkRootAccessible_put_accName(IAccessible *this, VARIANT varChild, BSTR szName);
@@ -157,6 +156,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(IAccessible 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
+HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR* pszHelp);
@@ -244,6 +244,9 @@ void InitChildIdTable(void);
 void ClearChildIdTableForToplevel(Tk_Window toplevel);
 TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
 static TkRootAccessible *CreateRootAccessible(Tcl_Interp *interp, HWND hwnd, const char *pathName);
+static LONGTkCreateVirtualChildId(Tcl_Interp *interp, Tk_Window parent, int index, LONG role);
+LONG TkCreateVirtualAccessible(Tcl_Interp *interp, Tk_Window parent, int index, LONG msaaRole);
+static BOOL ResolveVirtualChild(Tcl_Interp *interp, Tk_Window container, LONG childId, LONG *outRole, const char **outLabel, int *outIndex);
 static void SetChildIdForTkWindow(Tk_Window win, int id, Tcl_HashTable *childIdTable);
 static int GetChildIdForTkWindow(Tk_Window win, Tcl_HashTable *childIdTable);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
@@ -281,13 +284,6 @@ HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accKeyboardShortcut(
     TCL_UNUSED(IAccessible *), /* this */
     TCL_UNUSED(VARIANT), /* varChild */
     TCL_UNUSED(BSTR *)) /* pszKeyboardShortcut */
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(
-    TCL_UNUSED(IAccessible *), /* this */
-    TCL_UNUSED(VARIANT *)) /*pvarChildren */
 {
     return E_NOTIMPL;
 }
@@ -486,18 +482,73 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
 }
 
 /*
- * Function to map accessible name to MSAA.
+ * Function to map accessible name to MSAA. We pass the description string
+ * to the name property so that we can get correct labeling on both NVDA
+ * and Narrator.
  */
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-    TCL_UNUSED(IAccessible *),
-    TCL_UNUSED(VARIANT),
+    IAccessible *this,
+    VARIANT varChild,
     BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
-    *pszName = NULL; /* No name for toplevel to avoid double-reading. */
-    return S_OK;
+    *pszName = NULL;
+
+    TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    if (!tkAccessible->toplevel) {
+        TkGlobalUnlock();
+        return E_INVALIDARG;
+    }
+
+    /* Toplevel. */
+    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+        *pszName = SysAllocString(L"Window");
+        TkGlobalUnlock();
+        return S_OK;
+    }
+
+    /* Real child widget. */
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (child) {
+            HRESULT hr = TkAccDescription(child, pszName);
+            TkGlobalUnlock();
+            return hr;
+        }
+    }
+
+    /* Virtual child. */
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+        Tcl_HashSearch search;
+        Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+        while (h) {
+            Tk_Window container = (Tk_Window)Tcl_GetHashKey(TkAccessibilityObject, h);
+            LONG role;
+            const char *label;
+            int idx;
+
+            if (ResolveVirtualChild(tkAccessible->interp, container, varChild.lVal,
+                                    &role, &label, &idx)) {
+                if (label && *label) {
+                    *pszName = SysAllocString(Tcl_UtfToWCharDString(label, -1, NULL));
+                } else {
+                    wchar_t buf[64];
+                    swprintf(buf, _countof(buf), L"Item %d", idx);
+                    *pszName = SysAllocString(buf);
+                }
+                TkGlobalUnlock();
+                return *pszName ? S_OK : E_OUTOFMEMORY;
+            }
+            h = Tcl_NextHashEntry(&search);
+        }
+    }
+
+    TkGlobalUnlock();
+    return E_INVALIDARG;
 }
+
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(
@@ -536,22 +587,99 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(
 {
     if (!pvarState) return E_INVALIDARG;
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-	pvarState->vt = VT_I4;
-	pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
-	return S_OK;
+        pvarState->vt = VT_I4;
+        pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
+        return S_OK;
     }
 
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-	Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-	if (!child) {
-	   TkGlobalUnlock();
-	   return E_INVALIDARG;
-	}
-	HRESULT hr = TkAccState(child, pvarState);
-	TkGlobalUnlock();
-	return hr;
+        /* Check if it's a virtual child first */
+        Tcl_HashSearch search;
+        Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+        while (h) {
+            Tk_Window container = (Tk_Window)Tcl_GetHashKey(TkAccessibilityObject, h);
+            LONG role;
+            const char *label;
+            int idx;
+
+            if (ResolveVirtualChild(tkAccessible->interp, container, varChild.lVal,
+                                    &role, &label, &idx)) {
+                /* Found virtual child - determine if selected. */
+                long state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
+                
+                const char *pathStr = Tk_PathName(container);
+                char cmd[512];
+				
+		/* Determine correct selection command and role using MSAA role. */
+		VARIANT varRole;
+		VariantInit(&varRole);
+
+		int isTree = 0;
+		int isList = 0;
+		int isTable = 0;
+
+		if (TkAccRole(container, &varRole) == S_OK && varRole.vt == VT_I4) {
+		    LONG role = varRole.lVal;
+
+		    switch (role) {
+		    case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+			isTree = 1;
+			break;
+
+		    case ROLE_SYSTEM_LIST:          /* Listbox. */
+			isList = 1;
+			break;
+
+		    case ROLE_SYSTEM_TABLE:         /* Table widget. */
+			isTable = 1;
+			break;
+
+		    default:
+			break;
+		    }
+		}  
+                if (isList) {
+                    snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+                } else if (isTable || isTree) {
+                    snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+                } else {
+                    h = Tcl_NextHashEntry(&search);
+                    continue;
+                }
+                
+                if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
+                    Tcl_Obj *res = Tcl_GetObjResult(tkAccessible->interp);
+                    Tcl_Size len;
+                    if (Tcl_ListObjLength(tkAccessible->interp, res, &len) == TCL_OK && len > 0) {
+                        Tcl_Obj *obj;
+                        Tcl_ListObjIndex(tkAccessible->interp, res, 0, &obj);
+                        int selIdx;
+                        if (Tcl_GetIntFromObj(NULL, obj, &selIdx) == TCL_OK && selIdx == idx) {
+                            state |= STATE_SYSTEM_SELECTED | STATE_SYSTEM_FOCUSED;
+                        }
+                    }
+                }
+                
+                pvarState->vt = VT_I4;
+                pvarState->lVal = state;
+                TkGlobalUnlock();
+                return S_OK;
+            }
+            h = Tcl_NextHashEntry(&search);
+        }
+        
+        /* Not a virtual child, check regular widget. */
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (!child) {
+            TkGlobalUnlock();
+            return E_INVALIDARG;
+        }
+        HRESULT hr = TkAccState(child, pvarState);
+        TkGlobalUnlock();
+        return hr;
     }
     TkGlobalUnlock();
     return DISP_E_MEMBERNOTFOUND;
@@ -699,6 +827,95 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_accSelect(
     TCL_UNUSED(VARIANT)) /* varChild */
 {
     return E_NOTIMPL;
+}
+
+/* Function to get accessible selection on Tk widget. */
+static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accSelection(
+	IAccessible *this, 
+	VARIANT *pvarChildren)
+{
+    VariantInit(pvarChildren);
+    pvarChildren->vt = VT_EMPTY;
+
+    TkRootAccessible *tkAcc = (TkRootAccessible *)this;
+    TkGlobalLock();
+
+    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkAcc->win);
+    Tk_Window focused = (Tk_Window)focusPtr;
+    if (!focused) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    /* Determine correct selection command and role using MSAA role. */
+    VARIANT varRole;
+    VariantInit(&varRole);
+
+    int isTree = 0;
+    int isList = 0;
+    int isTable = 0;
+
+    if (TkAccRole(focused, &varRole) == S_OK && varRole.vt == VT_I4) {
+	LONG role = varRole.lVal;
+
+	switch (role) {
+        case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+            isTree = 1;
+            break;
+
+        case ROLE_SYSTEM_LIST:          /* Listbox. */
+            isList = 1;
+            break;
+
+        case ROLE_SYSTEM_TABLE:         /* Table widget. */
+            isTable = 1;
+            break;
+
+        default:
+            break;
+	}
+    }
+
+    if (!isList && !isTree && !isTable) {
+        TkGlobalUnlock();
+        return S_FALSE;
+    }
+
+    const char *path = Tk_PathName(focused);
+    char cmd[512];
+    int index = -1;
+
+    if (isList || isTable) {
+        snprintf(cmd, sizeof(cmd), "%s curselection", path);
+    } else if (isTree) {
+        snprintf(cmd, sizeof(cmd), "%s selection", path);
+    }
+
+    if (Tcl_Eval(tkAcc->interp, cmd) == TCL_OK) {
+        Tcl_Obj *res = Tcl_GetObjResult(tkAcc->interp);
+        Tcl_Size len;
+        if (Tcl_ListObjLength(tkAcc->interp, res, &len) == TCL_OK && len > 0) {
+            Tcl_Obj *obj;
+            Tcl_ListObjIndex(tkAcc->interp, res, 0, &obj);
+            Tcl_GetIntFromObj(NULL, obj, &index);
+        }
+    }
+
+    if (index >= 0) {
+        LONG role = isList ? ROLE_SYSTEM_LISTITEM :
+	    isTree ? ROLE_SYSTEM_OUTLINEITEM : ROLE_SYSTEM_ROW;
+
+        LONG virtId = TkCreateVirtualAccessible(tkAcc->interp, focused, index, role);
+        if (virtId > 0) {
+            pvarChildren->vt = VT_I4;
+            pvarChildren->lVal = virtId;
+            TkGlobalUnlock();
+            return S_OK;
+        }
+    }
+
+    TkGlobalUnlock();
+    return S_FALSE;
 }
 
 /* Function to return default action for role. */
@@ -859,36 +1076,47 @@ static HRESULT TkAccRole(
     Tk_Window win,
     VARIANT *pvarRole)
 {
-    if (!win || !pvarRole) return E_INVALIDARG;
-    TkGlobalLock();
+       if (!win || !pvarRole) return E_INVALIDARG;
 
+    VariantInit(pvarRole);
+    pvarRole->vt = VT_I4;
+    pvarRole->lVal = ROLE_SYSTEM_CLIENT;
+
+    /* Virtual child? */
+    LONG role;
+    const char *label;
+    int idx;
+    Tcl_Interp *interp = Tk_Interp(win);  // Get interp from window
+    if (interp && ResolveVirtualChild(interp, win, 0, &role, &label, &idx)) {
+        pvarRole->lVal = role;
+        return S_OK;
+    }
+
+    TkGlobalLock();
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (ClientData)win);
     if (!hPtr) {
-	TkGlobalUnlock();
-	return S_FALSE;
+        TkGlobalUnlock();
+        return S_FALSE;
     }
 
-    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
-    if (!hPtr2) {
-	TkGlobalUnlock();
-	return S_FALSE;
+    Tcl_HashTable *attrs = Tcl_GetHashValue(hPtr);
+    Tcl_HashEntry *hRole = Tcl_FindHashEntry(attrs, "role");
+    if (!hRole) {
+        TkGlobalUnlock();
+        return S_FALSE;
     }
 
-    const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    /* Fallback value. ROLE_SYSTEM_CLIENT for MSAA. */
+    const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hRole));
     LONG result = ROLE_SYSTEM_CLIENT;
 
     for (int i = 0; roleMap[i].tkrole != NULL; i++) {
-	if (strcmp(tkrole, roleMap[i].tkrole) == 0) {
-	   result = roleMap[i].winrole;
-	   break;
-	}
+        if (strcmp(tkrole, roleMap[i].tkrole) == 0) {
+            result = roleMap[i].winrole;
+            break;
+        }
     }
 
-    pvarRole->vt = VT_I4;
     pvarRole->lVal = result;
-
     TkGlobalUnlock();
     return S_OK;
 }
@@ -1067,22 +1295,97 @@ static HRESULT TkAccState(
     Tk_Window win,
     VARIANT *pvarState)
 {
+	
     if (!win || !pvarState) {
-	return E_INVALIDARG;
+        return E_INVALIDARG;
     }
+    
+    long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE;
+    
+    /* Check if this is a virtual child */
+    Tcl_Interp *interp = Tk_Interp(win);
+    if (interp) {
+        LONG role;
+        const char *label;
+        int idx;
+        if (ResolveVirtualChild(interp, win, 0, &role, &label, &idx)) {
+            /* Virtual child - check if it's selected */
+            state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
+            
+            /* Check selection state from the container widget */
+            const char *pathStr = Tk_PathName(win);;
+            char cmd[512];
+	    
+	    /* Determine correct selection command and role using MSAA role. */
+	    VARIANT varRole;
+	    VariantInit(&varRole);
+
+	    int isTree = 0;
+	    int isList = 0;
+	    int isTable = 0;
+
+	    if (TkAccRole(win, &varRole) == S_OK && varRole.vt == VT_I4) {
+		LONG role = varRole.lVal;
+
+		switch (role) {
+		case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+		    isTree = 1;
+		    break;
+
+		case ROLE_SYSTEM_LIST:          /* Listbox. */
+		    isList = 1;
+		    break;
+
+		case ROLE_SYSTEM_TABLE:         /* Table widget. */
+		    isTable = 1;
+		    break;
+
+		default:
+		    break;
+		}
+	    }
+            
+            if (isList) {
+                snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+            } else if (isTable || isTree) {
+                snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+            } else {
+                goto check_regular_widget;
+            }
+            
+            if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                Tcl_Obj *res = Tcl_GetObjResult(interp);
+                Tcl_Size len;
+                if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
+                    Tcl_Obj *obj;
+                    Tcl_ListObjIndex(interp, res, 0, &obj);
+                    int selIdx;
+                    if (Tcl_GetIntFromObj(NULL, obj, &selIdx) == TCL_OK && selIdx == idx) {
+                        state |= STATE_SYSTEM_SELECTED | STATE_SYSTEM_FOCUSED;
+                    }
+                }
+            }
+            
+            pvarState->vt = VT_I4;
+            pvarState->lVal = state;
+            return S_OK;
+        }
+    }
+    
+ check_regular_widget:
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
 	return S_FALSE;
     }
     Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
 
-    long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE; /* Reasonable default. */
+    state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE; /* Reasonable default. */
 
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "state");
     if (hPtr2) {
 	const char *stateresult = Tcl_GetString(Tcl_GetHashValue(hPtr2));
 	if (strcmp(stateresult, "disabled") == 0) {
-	   state = STATE_SYSTEM_UNAVAILABLE;
+	    state = STATE_SYSTEM_UNAVAILABLE;
 	}
     }
 
@@ -1091,16 +1394,16 @@ static HRESULT TkAccState(
     if (rolePtr) {
 	const char *tkrole = Tcl_GetString(Tcl_GetHashValue(rolePtr));
 	if (strcmp(tkrole, "Checkbutton") == 0 ||
-	   strcmp(tkrole, "Radiobutton") == 0 ||
-	   strcmp(tkrole, "Toggleswitch") == 0) {
-	   Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
-	   if (valuePtr) {
+	    strcmp(tkrole, "Radiobutton") == 0 ||
+	    strcmp(tkrole, "Toggleswitch") == 0) {
+	    Tcl_HashEntry *valuePtr = Tcl_FindHashEntry(AccessibleAttributes, "value");
+	    if (valuePtr) {
 		const char *value = Tcl_GetString(Tcl_GetHashValue(valuePtr));
 		if (value && strcmp(value, "1") == 0) {
-		   state |= STATE_SYSTEM_CHECKED;
+		    state |= STATE_SYSTEM_CHECKED;
 		}
-	   } else {
-	   }
+	    } else {
+	    }
 	}
     }
 
@@ -1119,6 +1422,7 @@ static HRESULT TkAccValue(
     Tk_Window win,
     BSTR *pValue)
 {
+	
     if (!win || !pValue) return E_INVALIDARG;
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) return S_FALSE;
@@ -1130,8 +1434,24 @@ static HRESULT TkAccValue(
     Tcl_DStringInit(&ds);
     *pValue = SysAllocString(Tcl_UtfToWCharDString(val, -1, &ds));
     Tcl_DStringFree(&ds);
+	
+    /* Update the description for Narrator, which will be picked up by accName. */
+    VARIANT roleVar;
+    if (TkAccRole(win, &roleVar) == S_OK &&
+	roleVar.vt == VT_I4 &&
+	(roleVar.lVal == ROLE_SYSTEM_LIST ||
+	 roleVar.lVal == ROLE_SYSTEM_TABLE ||
+	 roleVar.lVal == ROLE_SYSTEM_OUTLINE)) {
+	Tcl_HashEntry *hName = Tcl_FindHashEntry(AccessibleAttributes, "description");
+	if (!hName) {
+	    hName = Tcl_CreateHashEntry(AccessibleAttributes, "description", NULL);
+	}
+	Tcl_SetHashValue(hName, Tcl_NewStringObj(val, -1));
+    }
+
     return S_OK;
 }
+
 
 /* Event proc which calls the ActionEventProc procedure. */
 static int ActionEventProc(
@@ -1404,6 +1724,217 @@ static TkRootAccessible *CreateRootAccessible(
     NotifyWinEvent(EVENT_OBJECT_SHOW, hwnd, OBJID_CLIENT, CHILDID_SELF);
     NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, CHILDID_SELF);
     return tkAccessible;
+}
+
+/* Function to create childID for virtual elements like listbox/table/tree rows. */
+static LONG TkCreateVirtualChildId(
+	Tcl_Interp *interp, 
+	Tk_Window parent, 
+	int index, 
+	LONG role)
+{
+    if (!interp || !parent) return 0;
+
+    Tk_Window toplevel = GetToplevelOfWidget(parent);
+    if (!toplevel) return 0;
+
+    TkGlobalLock();
+    Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+    if (!childIdTable) {
+        TkGlobalUnlock();
+        return 0;
+    }
+
+    LONG containerId = GetChildIdForTkWindow(parent, childIdTable);
+    LONG virtualId = containerId + index + 1;  /* virtual IDs start after container */
+
+    /* Store in TkAccessibilityObject under parent → "virtual" → index. */
+    Tcl_HashEntry *hParent = Tcl_FindHashEntry(TkAccessibilityObject, parent);
+    if (!hParent) {
+        TkGlobalUnlock();
+        return virtualId;
+    }
+
+    Tcl_HashTable *attrs = Tcl_GetHashValue(hParent);
+    Tcl_HashEntry *hVirt;
+    int isNew;
+    hVirt = Tcl_CreateHashEntry(attrs, "virtual", &isNew);
+
+    Tcl_HashTable *virtTab;
+    if (isNew) {
+        virtTab = ckalloc(sizeof(Tcl_HashTable));
+        Tcl_InitHashTable(virtTab, TCL_STRING_KEYS);
+        Tcl_SetHashValue(hVirt, virtTab);
+    } else {
+        virtTab = Tcl_GetHashValue(hVirt);
+    }
+
+    char key[32];
+    snprintf(key, sizeof(key), "%d", index);
+    Tcl_HashEntry *hItem = Tcl_CreateHashEntry(virtTab, key, &isNew);
+
+    Tcl_Obj *info = Tcl_NewListObj(0, NULL);
+    Tcl_ListObjAppendElement(interp, info, Tcl_NewLongObj(virtualId));
+    Tcl_ListObjAppendElement(interp, info, Tcl_NewLongObj(role));
+    /* Label will be added later by TkCreateVirtualAccessible. */
+    Tcl_SetHashValue(hItem, info);
+
+    TkGlobalUnlock();
+    return virtualId;
+}
+
+/* Function to create accessible objects for virtual elements like listbox/table/tree rows. */
+LONG TkCreateVirtualAccessible(
+	Tcl_Interp *interp, 
+	Tk_Window parent, 
+	int index, 
+	LONG msaaRole)
+{
+    if (!interp || !parent) return 0;
+
+    const char *parent_path = Tk_PathName(parent);
+    char cmd[512];
+    const char *label = NULL;
+
+    /* Determine correct selection command and role using MSAA role. */
+    VARIANT varRole;
+    VariantInit(&varRole);
+
+    int isTree = 0;
+    int isList = 0;
+    int isTable = 0;
+
+    if (TkAccRole(parent, &varRole) == S_OK && varRole.vt == VT_I4) {
+	LONG role = varRole.lVal;
+
+	switch (role) {
+        case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+            isTree = 1;
+            break;
+
+        case ROLE_SYSTEM_LIST:          /* Listbox. */
+            isList = 1;
+            break;
+
+        case ROLE_SYSTEM_TABLE:         /* Table widget. */
+            isTable = 1;
+            break;
+
+        default:
+            break;
+	}
+    }
+
+    /* Get label. */
+    if (isList) {
+        snprintf(cmd, sizeof(cmd), "%s get %d", parent_path, index);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            label = Tcl_GetString(Tcl_GetObjResult(interp));
+        }
+    } else if ((isTree) || (isTable)) {
+        /* Get item ID at index. */
+        snprintf(cmd, sizeof(cmd), "%s children {} %d", parent_path, index);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            Tcl_Obj *list = Tcl_GetObjResult(interp);
+            Tcl_Size count;
+            Tcl_Obj **elems;
+            if (Tcl_ListObjGetElements(interp, list, &count, &elems) == TCL_OK && index < count) {
+                const char *itemid = Tcl_GetString(elems[index]);
+                snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+                if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                    label = Tcl_GetString(Tcl_GetObjResult(interp));
+                }
+            }
+        }
+    }
+
+    if (!label || !*label) {
+        char buf[64];
+        snprintf(buf, sizeof(buf), "Item %d", index);
+        label = buf;
+    }
+
+    LONG virtId = TkCreateVirtualChildId(interp, parent, index, msaaRole);
+
+    /* Store label in virtual hash. */
+    Tcl_HashEntry *hParent = Tcl_FindHashEntry(TkAccessibilityObject, parent);
+    if (hParent && virtId > 0) {
+        Tcl_HashTable *attrs = Tcl_GetHashValue(hParent);
+        Tcl_HashEntry *hVirt = Tcl_FindHashEntry(attrs, "virtual");
+        if (hVirt) {
+            Tcl_HashTable *virtTab = Tcl_GetHashValue(hVirt);
+            char key[32];
+            snprintf(key, sizeof(key), "%d", index);
+            Tcl_HashEntry *hItem = Tcl_FindHashEntry(virtTab, key);
+            if (hItem) {
+                Tcl_Obj *info = Tcl_GetHashValue(hItem);
+                Tcl_ListObjAppendElement(interp, info, Tcl_NewStringObj(label, -1));
+            }
+        }
+    }
+
+    return virtId;
+}
+
+/* Function to resolve virtual child elements and ID's. */
+static BOOL ResolveVirtualChild(
+	Tcl_Interp *interp,
+	Tk_Window container, 
+	LONG childId, 
+	LONG *outRole, 
+	const char **outLabel, 
+	int *outIndex)
+{
+     if (!container || !outRole || !outLabel || !outIndex) return FALSE;
+
+    Tcl_HashEntry *h = Tcl_FindHashEntry(TkAccessibilityObject, container);
+    if (!h) return FALSE;
+
+    Tcl_HashTable *attrs = Tcl_GetHashValue(h);
+    Tcl_HashEntry *hVirt = Tcl_FindHashEntry(attrs, "virtual");
+    if (!hVirt) return FALSE;
+
+    Tcl_HashTable *virtTab = Tcl_GetHashValue(hVirt);
+    LONG baseId = GetChildIdForTkWindow(container, GetChildIdTableForToplevel(container)) + 1;
+    int index = (int)(childId - baseId);
+    if (index < 0) return FALSE;
+
+    char key[32];
+    snprintf(key, sizeof(key), "%d", index);
+    Tcl_HashEntry *hItem = Tcl_FindHashEntry(virtTab, key);
+    if (!hItem) return FALSE;
+
+ //   Tcl_Interp *interp = Tk_Interp(container);  // or pass from tkAcc
+    Tcl_Obj *info = Tcl_GetHashValue(hItem);
+    Tcl_Size len;
+
+    if (Tcl_ListObjLength(interp, info, &len) != TCL_OK || len < 3) return FALSE;
+
+    Tcl_Obj *obj = NULL;
+
+    /* Index 0: virtual ID. */
+    if (Tcl_ListObjIndex(interp, info, 0, &obj) == TCL_OK && obj) {
+        long virtId;
+        Tcl_GetLongFromObj(interp, obj, &virtId);
+    }
+
+    /* Index 1: role. */
+    if (Tcl_ListObjIndex(interp, info, 1, &obj) == TCL_OK && obj) {
+        long role;
+        if (Tcl_GetLongFromObj(interp, obj, &role) == TCL_OK) {
+            *outRole = (LONG)role;
+        }
+    }
+
+    /* Index 2: label. */
+    if (Tcl_ListObjIndex(interp, info, 2, &obj) == TCL_OK && obj) {
+        *outLabel = Tcl_GetString(obj);
+    } else {
+        *outLabel = NULL;
+    }
+
+    *outIndex = index;
+    return TRUE;
 }
 
 /* Function to map Tk window to MSAA ID's. */
@@ -1784,51 +2315,108 @@ int IsScreenReaderRunning(
  */
 
 static int EmitSelectionChanged(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *ip,
     int objc,
     Tcl_Obj *const objv[])
 {
-    if (objc < 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "window?");
-	return TCL_ERROR;
+   if (objc < 2) {
+        Tcl_WrongNumArgs(ip, 1, objv, "window?");
+        return TCL_ERROR;
     }
 
     Tk_Window path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (!path) {
-	Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(ip, "Invalid window name", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     Tk_Window toplevel = GetToplevelOfWidget(path);
     if (!toplevel || !Tk_IsTopLevel(toplevel)) {
-	Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult(ip, "Window must be in a toplevel", TCL_STATIC);
+        return TCL_ERROR;
     }
 
     Tk_MakeWindowExist(path);
-
-    /* Update checked state. */
     ComputeAndCacheCheckedState(path, ip);
 
     TkGlobalLock();
     Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
     LONG childId = GetChildIdForTkWindow(path, childIdTable);
+    HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+    UpdateWindow(hwnd);
 
-    if (childId > 0) {
-	HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
+    /* Determine correct selection command and role using MSAA role. */
+    VARIANT varRole;
+    VariantInit(&varRole);
 
-	/* Send comprehensive notifications. */
-	NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
-	NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-	NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
+    int isTree = 0;
+    int isList = 0;
+    int isTable = 0;
+
+    if (TkAccRole(toplevel, &varRole) == S_OK && varRole.vt == VT_I4) {
+	LONG role = varRole.lVal;
+
+	switch (role) {
+        case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+            isTree = 1;
+            break;
+
+        case ROLE_SYSTEM_LIST:          /* Listbox. */
+            isList = 1;
+            break;
+
+        case ROLE_SYSTEM_TABLE:         /* Table widget. */
+            isTable = 1;
+            break;
+
+        default:
+            break;
+	}
     }
+
+
+    if (isList || isTree || isTable) {
+        const char *pathStr = Tk_PathName(path);
+        char cmd[512];
+        if (isList || isTable) {
+            snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+        } else {
+            snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+        }
+
+        int index = -1;
+        if (Tcl_Eval(ip, cmd) == TCL_OK) {
+            Tcl_Obj *res = Tcl_GetObjResult(ip);
+            Tcl_Size len;
+            if (Tcl_ListObjLength(ip, res, &len) == TCL_OK && len > 0) {
+                Tcl_Obj *obj;
+                Tcl_ListObjIndex(ip, res, 0, &obj);
+                Tcl_GetIntFromObj(NULL, obj, &index);
+            }
+        }
+
+        if (index >= 0) {
+            LONG role = isList ? ROLE_SYSTEM_LISTITEM :
+                        isTree ? ROLE_SYSTEM_OUTLINEITEM : ROLE_SYSTEM_ROW;
+            LONG virtId = TkCreateVirtualAccessible(ip, path, index, role);
+            if (virtId > 0) {
+                /* Narrator needs these events in this specific order. */
+                NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, virtId);
+            }
+        }
+    }
+
+    /* Container events for NVDA. */
+    NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
+    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 
     TkGlobalUnlock();
     return TCL_OK;
 }
-
-
 
 /*
  *----------------------------------------------------------------------
