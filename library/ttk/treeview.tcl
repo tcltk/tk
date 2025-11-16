@@ -121,14 +121,15 @@ bind Treeview	<Mod3-Control-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-Control-End>	{ %W xview moveto 1.0 }
 
 # Other keys
-bind Treeview	<Return>		{ ::ttk::treeview::ToggleFocus %W toggle }
-bind Treeview	<space>			{ ::ttk::treeview::ToggleFocus %W select }
-bind Treeview	<<Invoke>>		{ ::ttk::treeview::ToggleFocus %W select }
+bind Treeview	<Return>		{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<Control-Return>	{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<<Invoke>>		{ ::ttk::treeview::ActivateItem %W }
+
+bind Treeview	<space>			{ ::ttk::treeview::ToggleSelected %W select }
+bind Treeview	<Control-space>		{ ::ttk::treeview::ToggleSelected %W select }
+
 bind Treeview	<Tab>			{ ::ttk::treeview::KeyNav %W right; break }
 bind Treeview	<Shift-Tab>		{ ::ttk::treeview::KeyNav %W left; break }
-#bind Treeview	<Return>		{ ::ttk::treeview::KeyNav %W down; break }
-#bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up; break }
-bind Treeview	<Control-Return>	{ ::ttk::treeview::ToggleFocus %W toggle }
 bind Treeview	<Control-Tab>		[bind all <<NextWindow>>]
 bind Treeview	<Control-Shift-Tab>	[bind all <<PrevWindow>>]
 bind Treeview	<minus>			{ ::ttk::treeview::CloseItem %W {} }
@@ -175,18 +176,18 @@ proc ::ttk::treeview::GetCurrent {w skip} {
     set focus [$w focus]
 
     if {$State(current) ne "" && !$skip} {
-	set current $State(current)
+	set item $State(current)
     } elseif {$focus ne ""} {
-	set current $focus
+	set item $focus
     } else {
-	set current $anchor
+	set item $anchor
     }
 
     # Just in case, give it a valid value
-    if {$current eq ""} {
-	set current [$w identifier {} 0]
+    if {$item eq ""} {
+	set item [$w identifier {} 0]
     }
-    return $current
+    return $item
 }
 
 # Get current cell
@@ -196,12 +197,12 @@ proc ::ttk::treeview::GetCurrentCell {w skip} {
     lassign [$w cellfocus] focus colFocus
 
     if {$State(currentCell) ne "" && !$skip} {
-	lassign $State(currentCell) current column
+	lassign $State(currentCell) item column
     } elseif {$colFocus ne ""} {
-	set current $focus
+	set item $focus
 	set column $colFocus
     } else {
-	set current $anchor
+	set item $anchor
 	set column $colAnchor
     }
 
@@ -221,7 +222,7 @@ proc ::ttk::treeview::GetCurrentCell {w skip} {
 	set colNum [lsearch $list $column]
 	incr colNum
     }
-    return [list $current $column $colNum]
+    return [list $item $column $colNum]
 }
 
 # Get top most visible item
@@ -309,11 +310,11 @@ proc ::ttk::treeview::PageRight {w} {
 proc ::ttk::treeview::KeyNav {w fn} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
-	lassign [GetCurrentCell $w 1] current colId colNum
+	lassign [GetCurrentCell $w 1] item colId colNum
     } else {
-	set current [GetCurrent $w 1]
+	set item [GetCurrent $w 1]
     }
-    if {$current eq ""} { return }
+    if {$item eq ""} { return }
 
     switch -- $fn {
 	left {
@@ -322,10 +323,10 @@ proc ::ttk::treeview::KeyNav {w fn} {
 		if {$colNum > [FirstColumnNum $w]} {
 		    incr colNum -1
 		}
-	    } elseif {[$w item $current -open] && [$w haschildren $current]} {
-		CloseItem $w $current
+	    } elseif {[$w item $item -open] && [$w haschildren $item]} {
+		CloseItem $w $item
 	    } else {
-		set current [$w parent $current]
+		set item [$w parent $item]
 	    }
 	}
 	right {
@@ -334,24 +335,24 @@ proc ::ttk::treeview::KeyNav {w fn} {
 		if {$colNum < [LastColumnNum $w]} {
 		    incr colNum
 		}
-	    } elseif {![$w item $current -open] && [$w haschildren $current]} {
-		OpenItem $w $current
+	    } elseif {![$w item $item -open] && [$w haschildren $item]} {
+		OpenItem $w $item
 	    }
 	}
 	up {
 	    # Move up one item/cell
-	    set current [$w before $current]
+	    set item [$w before $item]
 	}
 	down {
 	    # Move down one item/cell
-	    set current [$w after $current]
+	    set item [$w after $item]
 	}
 	first {
 	    # Move to first cell in item or first child in parent
 	    if {$cellmode} {
 		set colNum [FirstColumnNum $w]
 	    } else {
-		set current [$w id [$w parent $current] first]
+		set item [$w id [$w parent $item] first]
 	    }
 	}
 	last {
@@ -359,18 +360,18 @@ proc ::ttk::treeview::KeyNav {w fn} {
 	    if {$cellmode} {
 		set colNum [LastColumnNum $w]
 	    } else {
-		set current [$w id [$w parent $current] last]
+		set item [$w id [$w parent $item] last]
 	    }
 	}
 	top {
 	    # Move to top item in col
 	    $w yview moveto 0
-	    set current [TopItem $w]
+	    set item [TopItem $w]
 	}
 	bottom {
 	    # Move to bottom item in col
 	    $w yview moveto 1
-	    set current [BottomItem $w]
+	    set item [BottomItem $w]
 	}
 	pageLeft {
 	    # Move to left most visible column
@@ -386,20 +387,20 @@ proc ::ttk::treeview::KeyNav {w fn} {
 	}
 	pageTop {
 	    # Move to top most visible item
-	    set current [PageTop $w]
+	    set item [PageTop $w]
 	}
 	pageBottom {
 	    # Move to bottom most visible item
-	    set current [PageBottom $w]
+	    set item [PageBottom $w]
 	}
     }
 
     # Do select
-    if {$current ne {}} {
+    if {$item ne {}} {
 	if {$cellmode} {
-	    SelectOp $w $current [list $current [format "#%d" $colNum]] moveto
+	    SelectOp $w $item [list $item [format "#%d" $colNum]] moveto
 	} else {
-	    SelectOp $w $current "" moveto
+	    SelectOp $w $item "" moveto
 	}
     }
 }
@@ -410,17 +411,17 @@ proc ::ttk::treeview::KeyNav {w fn} {
 proc ::ttk::treeview::PageNav {w fn} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
-	lassign [GetCurrentCell $w 1] current colId colNum
+	lassign [GetCurrentCell $w 1] item colId colNum
     } else {
-	set current [GetCurrent $w 1]
+	set item [GetCurrent $w 1]
     }
-    if {$current eq ""} { return }
+    if {$item eq ""} { return }
 
     if {$fn in [list down left right up]} {
 	if {$cellmode} {
-	    lassign [$w bbox $current $colId] x y width height
+	    lassign [$w bbox $item $colId] x y width height
 	} else {
-	    lassign [$w bbox $current] x y width height
+	    lassign [$w bbox $item] x y width height
 	}
 	if {$x ne ""} {
 	    incr x [expr {$width / 2}]
@@ -442,7 +443,7 @@ proc ::ttk::treeview::PageNav {w fn} {
 		update idletasks
 		if {$cellmode && $x ne ""} {
 		    # Select cell at same coord
-		    lassign [$w identify cell $x $y] current colId
+		    lassign [$w identify cell $x $y] item colId
 		}
 	    } else {
 		if {$cellmode} {
@@ -459,7 +460,7 @@ proc ::ttk::treeview::PageNav {w fn} {
 		update idletasks
 		if {$cellmode && $x ne ""} {
 		    # Select cell at same coord
-		    lassign [$w identify cell $x $y] current colId
+		    lassign [$w identify cell $x $y] item colId
 		}
 	    } else {
 		if {$cellmode} {
@@ -475,10 +476,10 @@ proc ::ttk::treeview::PageNav {w fn} {
 		# Scroll up 1 page and select item/cell at same coord
 		$w yview scroll -1 pages
 		update idletasks
-		set current [$w identify item $x $y]
+		set item [$w identify item $x $y]
 	    } else {
 		# Select topmost item/cell if at top already
-		set current [$w id {} first]
+		set item [$w id {} first]
 	    }
 	}
 	down {
@@ -488,12 +489,12 @@ proc ::ttk::treeview::PageNav {w fn} {
 		# Scroll down 1 page and select item/cell at same coord
 		$w yview scroll 1 pages
 		update idletasks
-		set current [$w identify item $x $y]
+		set item [$w identify item $x $y]
 	    } else {
 		# Select bottom-most item/cell if at bottom already
-		set current [$w id {} last]
-		while {[$w haschildren $current] && [$w item $current -open]} {
-		    set current [$w id $current last]
+		set item [$w id {} last]
+		while {[$w haschildren $item] && [$w item $item -open]} {
+		    set item [$w id $item last]
 		}
 	    }
 	}
@@ -502,7 +503,7 @@ proc ::ttk::treeview::PageNav {w fn} {
 	    if {$cellmode} {
 		set colId [FirstColumnId $w]
 	    } else {
-		set current [$w id [$w parent $current] first]
+		set item [$w id [$w parent $item] first]
 	    }
 	}
 	last {
@@ -510,18 +511,18 @@ proc ::ttk::treeview::PageNav {w fn} {
 	    if {$cellmode} {
 		set colId [LastColumnId $w]
 	    } else {
-		set current [$w id [$w parent $current] last]
+		set item [$w id [$w parent $item] last]
 	    }
 	}
 	top {
 	    # Move to & select topmost item/cell
 	    $w yview moveto 0
-	    set current [TopItem $w]
+	    set item [TopItem $w]
 	}
 	bottom {
 	    # Move to & select bottom-most item/cell
 	    $w yview moveto 1
-	    set current [BottomItem $w]
+	    set item [BottomItem $w]
 	}
 	pageLeft {
 	    # Move to & select leftmost item/cell in current screen view
@@ -537,20 +538,20 @@ proc ::ttk::treeview::PageNav {w fn} {
 	}
 	pageTop {
 	    # Move to & select topmost item/cell in current screen view
-	    set current [PageTop $w]
+	    set item [PageTop $w]
 	}
 	pageBottom {
 	    # Move to & select bottommost item/cell in current screen view
-	    set current [PageBottom $w]
+	    set item [PageBottom $w]
 	}
     }
 
     # Do select
-    if {$current ne ""} {
+    if {$item ne ""} {
 	if {$cellmode} {
-	    SelectOp $w $current [list $current $colId] moveto
+	    SelectOp $w $item [list $item $colId] moveto
 	} else {
-	    SelectOp $w $current "" moveto
+	    SelectOp $w $item "" moveto
 	}
     }
 }
@@ -561,11 +562,11 @@ proc ::ttk::treeview::PageNav {w fn} {
 proc ::ttk::treeview::SelectionExtend {w fn} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
-	lassign [GetCurrentCell $w 0] current colId colNum
+	lassign [GetCurrentCell $w 0] item colId colNum
     } else {
-	set current [GetCurrent $w 0]
+	set item [GetCurrent $w 0]
     }
-    if {$current eq ""} { return }
+    if {$item eq ""} { return }
 
     switch -- $fn {
 	left {
@@ -586,18 +587,18 @@ proc ::ttk::treeview::SelectionExtend {w fn} {
 	}
 	up {
 	    # Extend selection to prev item
-	    set current [$w before $current]
+	    set item [$w before $item]
 	}
 	down {
 	    # Extend selection to next item
-	    set current [$w after $current]
+	    set item [$w after $item]
 	}
 	first {
 	    # Move to first cell in item or first child in parent
 	    if {$cellmode} {
 		set colNum [FirstColumnNum $w]
 	    } else {
-		set current [$w id [$w parent $current] first]
+		set item [$w id [$w parent $item] first]
 	    }
 	}
 	last {
@@ -605,16 +606,16 @@ proc ::ttk::treeview::SelectionExtend {w fn} {
 	    if {$cellmode} {
 		set colNum [LastColumnNum $w]
 	    } else {
-		set current [$w id [$w parent $current] last]
+		set item [$w id [$w parent $item] last]
 	    }
 	}
 	top {
 	    # Select all cells/items from current to top
-	    set current [TopItem $w]
+	    set item [TopItem $w]
 	}
 	bottom {
 	    # Select all cells/items from current to bottom
-	    set current [BottomItem $w]
+	    set item [BottomItem $w]
 	}
 	pageLeft {
 	    # Select all cells from current to first column in current screen view
@@ -630,20 +631,20 @@ proc ::ttk::treeview::SelectionExtend {w fn} {
 	}
 	pageTop {
 	    # Select all cells from current to first row in current screen view
-	    set current [PageTop $w]
+	    set item [PageTop $w]
 	}
 	pageBottom {
 	    # Select all cells from current to last row in current screen view
-	    set current [PageBottom $w]
+	    set item [PageBottom $w]
 	}
     }
 
     # Do select
-    if {$current ne ""} {
+    if {$item ne ""} {
 	if {$cellmode} {
-	    SelectOp $w $current [list $current [format "#%d" $colNum]] extend
+	    SelectOp $w $item [list $item [format "#%d" $colNum]] extend
 	} else {
-	    SelectOp $w $current "" extend
+	    SelectOp $w $item "" extend
 	}
     }
 }
@@ -661,11 +662,11 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
-	lassign [GetCurrentCell $w 0] current colId colNum
+	lassign [GetCurrentCell $w 0] item colId colNum
     } else {
-	set current [GetCurrent $w 0]
+	set item [GetCurrent $w 0]
     }
-    if {$current eq ""} { return }
+    if {$item eq ""} { return }
 
     switch -- $fn {
 	all {
@@ -691,8 +692,8 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 	}
 	row {
 	    if {$cellmode} {
-		$w cellselection set [list $current [FirstColumnId $w]] \
-		    [list $current [LastColumnId $w]]
+		$w cellselection set [list $item [FirstColumnId $w]] \
+		    [list $item [LastColumnId $w]]
 	    }
 	}
     }
@@ -790,10 +791,16 @@ proc ::ttk::treeview::Select {w x y op} {
 # DoubleClick -- Double-Button-1 binding.
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
-    if {[set row [$w identify item $x $y]] ne ""} {
-	Toggle $w $row
+    if {[set item [$w identify item $x $y]] ne ""} {
+	set element [$w identify element $x $y]
+	if {$element eq "Treeitem.indicator"} {
+	    ToggleItem $w $item
+	} else {
+	    set column [$w identify column $x $y]
+	    ActivateItem $w $item $column
+	}
     } else {
-	Press $w $x $y ;# perform single-click action
+	Press $w $x $y;# perform single-click action
     }
 }
 
@@ -814,7 +821,7 @@ proc ::ttk::treeview::Press {w x y} {
 	    SelectOp $w $item $cell choose
 	    switch -glob -- [$w identify element $x $y] {
 		*indicator -
-		*disclosure { Toggle $w $item }
+		*disclosure { ToggleItem $w $item }
 	    }
 	}
     }
@@ -1024,9 +1031,9 @@ proc ::ttk::treeview::CloseItem {w item} {
 }
 
 #
-# Toggle -- toggle opened/closed state of item
+# ToggleItem -- toggle opened/closed state of item
 #
-proc ::ttk::treeview::Toggle {w item} {
+proc ::ttk::treeview::ToggleItem {w item} {
     # don't allow toggling on indicators that
     # are not present in front of leaf items
     if {![$w haschildren $item]} {
@@ -1041,11 +1048,11 @@ proc ::ttk::treeview::Toggle {w item} {
 }
 
 #
-# ToggleFocus -- toggle opened/closed state of focus item
+# ToggleSelected -- toggle selected state of item
 #
-proc ::ttk::treeview::ToggleFocus {w op} {
+proc ::ttk::treeview::ToggleSelected {w op} {
     set focus [$w focus]
-    if {$focus eq "" || [$w cget -selectmode] in [list "none" "browse"]} {
+    if {[$w cget -selectmode] in [list "none" "browse"]} {
 	return
     }
 
@@ -1054,11 +1061,28 @@ proc ::ttk::treeview::ToggleFocus {w op} {
     } else {
 	set cell ""
     }
+    if {$cell ne "" && $focus eq ""} {
+	lassign $cell focus column
+    }
 
-    if {$op eq "toggle" && [$w haschildren $focus]} {
-	Toggle $w $focus
+    # Toggle selected state
+    SelectOp $w $focus $cell toggle
+}
+
+#
+# Default action for invoke
+#
+proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
+    if {$item eq ""} {
+	set item [$w focus]
+	set cell [$w cellfocus]
+	set column [lindex $cell 1]
+    }
+    
+    if {[info procs EditItem] ne ""} {
+	EditItem $w $item $column
     } else {
-	SelectOp $w $focus $cell toggle
+	ToggleItem $w $item
     }
 }
 
