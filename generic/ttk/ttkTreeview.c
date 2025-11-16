@@ -4395,6 +4395,7 @@ static int TreeviewFocusCommand(
 
     } else {
 	TreeItem *newFocus;
+	int changed;
 
 	/* Get item */
 	if (!(newFocus = FindItem(interp, tv, objv[2]))) {
@@ -4413,9 +4414,14 @@ static int TreeviewFocusCommand(
 	    return TCL_ERROR;
 	}
 
+	changed = (tv->tree.focus != newFocus);
 	tv->tree.focus = newFocus;
 	tv->tree.focusCol = NULL;
 	TtkRedisplayWidget(&tv->core);
+
+	if (changed) {
+	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	}
     }
     return TCL_OK;
 }
@@ -4446,6 +4452,7 @@ static int TreeviewCellFocusCommand(
     } else {
 	TreeCell cell;
 	Tcl_Size len;
+	int changed;
 
 	/* Clear focus or get cell */
 	Tcl_ListObjLength(interp, objv[2], &len);
@@ -4469,9 +4476,14 @@ static int TreeviewCellFocusCommand(
 	    return TCL_ERROR;
 	}
 
+	changed = (tv->tree.focus != cell.item || tv->tree.focusCol != cell.column);
 	tv->tree.focus = cell.item;
 	tv->tree.focusCol = cell.column;
 	TtkRedisplayWidget(&tv->core);
+
+	if (changed) {
+	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	}
     }
     return TCL_OK;
 }

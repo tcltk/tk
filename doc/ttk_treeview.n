@@ -1104,18 +1104,20 @@ Other cells can have images through the cell tag -image option.
 .SH "VIRTUAL EVENTS"
 .PP
 The treeview widget generates the following virtual events.
-.IP <<TreeviewSelect>>
+.IP \fB<<TreeviewSelect>>\fR
 Generated whenever the selection or cellselection changes.
 It might also be generated when selection is affected but not actually changed.
 Further, multiple selection changes could happen before events can be processed
 leading to multiple events with the same visible selection.
-.IP <<TreeviewOpen>>
+.IP \fB<<TreeviewOpen>>\fR
 Generated just before setting the focus item to \fB\-open true\fR.
-.IP <<TreeviewClose>>
+.IP \fB<<TreeviewClose>>\fR
 Generated just after setting the focus item to \fB\-open false\fR.
+.IP \fB<<TreeviewFocus>>\fR
+Generated whenever the item or cell focus changes including when unset.
 .PP
-The \fBfocus\fR and \fBselection\fR widget commands can be used
-to determine the affected item or items.
+The \fBfocus\fR, \fBcellfocus\fR, \fBselection\fR, and \fBcellselection\fR
+widget commands can be used to determine the affected item(s) or cell(s).
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
