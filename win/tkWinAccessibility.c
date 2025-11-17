@@ -268,6 +268,7 @@ static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accName(IAccessibl
 static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
 static TkVirtualChildAccessible *CreateVirtualChildAccessible(Tk_Window container, LONG childId, LONG role, const char *label, int index);
 static HRESULT GetVirtualItemRect(Tcl_Interp *interp, Tk_Window container, int index, RECT *rect);
+static void EnsureVirtualChildrenCreated(Tcl_Interp *interp, Tk_Window container);
 
 /* VTable for virtual child accessible objects. */
 static IAccessibleVtbl tkVirtualChildAccessibleVtbl = {
@@ -569,7 +570,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
  * to the name property so that we can get correct labeling on both NVDA
  * and Narrator.
  */
-
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     IAccessible *this,
     VARIANT varChild,
@@ -592,17 +592,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
         return S_OK;
     }
 
-    /* Real child widget. */
-    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-        if (child) {
-            HRESULT hr = TkAccDescription(child, pszName);
-            TkGlobalUnlock();
-            return hr;
-        }
-    }
-
-    /* Virtual child. */
+    /* Check for virtual child FIRST before regular widgets. */
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
         Tcl_HashSearch search;
         Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
@@ -614,8 +604,12 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
 
             if (ResolveVirtualChild(tkAccessible->interp, container, varChild.lVal,
                                     &role, &label, &idx)) {
+                /* Found a virtual child - return its specific label. */
                 if (label && *label) {
-                    *pszName = SysAllocString(Tcl_UtfToWCharDString(label, -1, NULL));
+                    Tcl_DString ds;
+                    Tcl_DStringInit(&ds);
+                    *pszName = SysAllocString(Tcl_UtfToWCharDString(label, -1, &ds));
+                    Tcl_DStringFree(&ds);
                 } else {
                     wchar_t buf[64];
                     swprintf(buf, _countof(buf), L"Item %d", idx);
@@ -625,6 +619,16 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
                 return *pszName ? S_OK : E_OUTOFMEMORY;
             }
             h = Tcl_NextHashEntry(&search);
+        }
+    }
+
+    /* Not a virtual child - check for regular widget. */
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (child) {
+            HRESULT hr = TkAccDescription(child, pszName);
+            TkGlobalUnlock();
+            return hr;
         }
     }
 
@@ -663,6 +667,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(
 }
 
 /* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_FOCUSABLE. */
+/* Function to map accessible state to MSAA. For toplevel, return STATE_SYSTEM_FOCUSABLE. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(
     IAccessible *this,
     VARIANT varChild,
@@ -680,93 +685,92 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accState(
     
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
         /* Check if it's a virtual child first. */
-	Tcl_HashSearch search;
-	Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
-	while (h) {
-	    Tk_Window container = (Tk_Window)Tcl_GetHashKey(TkAccessibilityObject, h);
-	    LONG role;
-	    const char *label;
-	    int idx;
+        Tcl_HashSearch search;
+        Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+        while (h) {
+            Tk_Window container = (Tk_Window)Tcl_GetHashKey(TkAccessibilityObject, h);
+            LONG role;
+            const char *label;
+            int idx;
 
-	    if (ResolveVirtualChild(tkAccessible->interp, container, varChild.lVal,
-				    &role, &label, &idx)) {
-		/* Found virtual child - determine if selected. */
-		long state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
+            if (ResolveVirtualChild(tkAccessible->interp, container, varChild.lVal,
+                                    &role, &label, &idx)) {
+                /* Found virtual child - determine if selected. */
+                long state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
         
-		const char *pathStr = Tk_PathName(container);
-		char cmd[512];
+                const char *pathStr = Tk_PathName(container);
+                char cmd[512];
         
-		/* Determine correct selection command and role using MSAA role. */
-		VARIANT varRole;
-		VariantInit(&varRole);
+                /* Determine correct selection command and role using MSAA role - CHECK CONTAINER NOT TOPLEVEL. */
+                VARIANT varRole;
+                VariantInit(&varRole);
 
-		int isTree = 0;
-		int isList = 0;
-		int isTable = 0;
+                int isTree = 0;
+                int isList = 0;
+                int isTable = 0;
 
-		if (TkAccRole(container, &varRole) == S_OK && varRole.vt == VT_I4) {
-		    LONG role = varRole.lVal;
+                /* CRITICAL FIX: Check container role, not toplevel. */
+                if (TkAccRole(container, &varRole) == S_OK && varRole.vt == VT_I4) {
+                    LONG containerRole = varRole.lVal;
 
-		    switch (role) {
-		    case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
-			isTree = 1;
-			break;
+                    switch (containerRole) {
+                    case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
+                        isTree = 1;
+                        break;
 
-		    case ROLE_SYSTEM_LIST:          /* Listbox. */
-			isList = 1;
-			break;
+                    case ROLE_SYSTEM_LIST:          /* Listbox. */
+                        isList = 1;
+                        break;
 
-		    case ROLE_SYSTEM_TABLE:         /* Table widget. */
-			isTable = 1;
-			break;
+                    case ROLE_SYSTEM_TABLE:         /* Table widget. */
+                        isTable = 1;
+                        break;
 
-		    default:
-			break;
-		    }
-		}  
+                    default:
+                        break;
+                    }
+                }  
         
-		int selIdx = -1;
-		if (isList) {
-		    snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
-		} else if (isTable || isTree) {
-		    snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
-		} else {
-		    h = Tcl_NextHashEntry(&search);
-		    VariantClear(&varRole);
-		    continue;
-		}
+                int selIdx = -1;
+                if (isList) {
+                    snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+                } else if (isTable || isTree) {
+                    snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+                } else {
+                    h = Tcl_NextHashEntry(&search);
+                    VariantClear(&varRole);
+                    continue;
+                }
         
-		TkGlobalLock();
-		if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
-		    Tcl_Obj *res = Tcl_GetObjResult(tkAccessible->interp);
-		    Tcl_Size len;
-		    if (Tcl_ListObjLength(tkAccessible->interp, res, &len) == TCL_OK && len > 0) {
-			Tcl_Obj *obj;
-			Tcl_ListObjIndex(tkAccessible->interp, res, 0, &obj);
-			Tcl_GetIntFromObj(NULL, obj, &selIdx);
-		    }
-		}
-		TkGlobalUnlock();
+                if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
+                    Tcl_Obj *res = Tcl_GetObjResult(tkAccessible->interp);
+                    Tcl_Size len;
+                    if (Tcl_ListObjLength(tkAccessible->interp, res, &len) == TCL_OK && len > 0) {
+                        Tcl_Obj *obj;
+                        Tcl_ListObjIndex(tkAccessible->interp, res, 0, &obj);
+                        Tcl_GetIntFromObj(NULL, obj, &selIdx);
+                    }
+                }
 
-		if (selIdx == idx) {
-		    state |= STATE_SYSTEM_SELECTED;
+                if (selIdx == idx) {
+                    state |= STATE_SYSTEM_SELECTED;
 
-		    /* Only add FOCUSED if container has keyboard focus. */
-		    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)container);
-		    if (focusPtr && (Tk_Window)focusPtr == container) {
-			state |= STATE_SYSTEM_FOCUSED;
-		    }
-		}
+                    /* Only add FOCUSED if container has keyboard focus. */
+                    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)container);
+                    if (focusPtr && (Tk_Window)focusPtr == container) {
+                        state |= STATE_SYSTEM_FOCUSED;
+                    }
+                }
 
-		VariantClear(&varRole);
+                VariantClear(&varRole);
 
-		pvarState->vt = VT_I4;
-		pvarState->lVal = state;
-		TkGlobalUnlock();
-		return S_OK;
-	    }
-	    h = Tcl_NextHashEntry(&search);
-	}
+                pvarState->vt = VT_I4;
+                pvarState->lVal = state;
+                TkGlobalUnlock();
+                return S_OK;
+            }
+            h = Tcl_NextHashEntry(&search);
+        }
         
         /* Not a virtual child, check regular widget. */
         Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
@@ -846,6 +850,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(
         if (Tk_IsMapped((Tk_Window)child)) {
             /* Check if this widget has virtual children. */
             VARIANT roleVar;
+            VariantInit(&roleVar);
             if (TkAccRole((Tk_Window)child, &roleVar) == S_OK && roleVar.vt == VT_I4) {
                 LONG role = roleVar.lVal;
                 if (role == ROLE_SYSTEM_LIST ||
@@ -857,18 +862,24 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(
 
                     if (role == ROLE_SYSTEM_LIST) {
                         snprintf(cmd, sizeof(cmd), "%s size", path);
+                        if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
+                            int count;
+                            if (Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(tkAccessible->interp), &count) == TCL_OK) {
+                                virtualCount += count;
+                            }
+                        }
                     } else {
-                        snprintf(cmd, sizeof(cmd), "%s children {}", path);
-                    }
-
-                    if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
-                        Tcl_Obj *res = Tcl_GetObjResult(tkAccessible->interp);
-                        int count;
-                        if (Tcl_GetIntFromObj(NULL, res, &count) == TCL_OK) {
-                            virtualCount += count;
+                        /* For tree/table, count children. */
+                        snprintf(cmd, sizeof(cmd), "llength [%s children {}]", path);
+                        if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
+                            int count;
+                            if (Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(tkAccessible->interp), &count) == TCL_OK) {
+                                virtualCount += count;
+                            }
                         }
                     }
                 }
+                VariantClear(&roleVar);
             }
         }
     }
@@ -2057,7 +2068,7 @@ static BOOL ResolveVirtualChild(
 	const char **outLabel, 
 	int *outIndex)
 {
-     if (!container || !outRole || !outLabel || !outIndex) return FALSE;
+    if (!container || !outRole || !outLabel || !outIndex) return FALSE;
 
     Tcl_HashEntry *h = Tcl_FindHashEntry(TkAccessibilityObject, container);
     if (!h) return FALSE;
@@ -2067,7 +2078,10 @@ static BOOL ResolveVirtualChild(
     if (!hVirt) return FALSE;
 
     Tcl_HashTable *virtTab = Tcl_GetHashValue(hVirt);
-    LONG baseId = GetChildIdForTkWindow(container, GetChildIdTableForToplevel(container)) + 1;
+    Tk_Window toplevel = GetToplevelOfWidget(container);
+	Tcl_HashTable *childIdTable = GetChildIdTableForToplevel(toplevel);
+	if (!childIdTable) return FALSE;
+	LONG baseId = GetChildIdForTkWindow(container, childIdTable) + 1;
     int index = (int)(childId - baseId);
     if (index < 0) return FALSE;
 
@@ -2418,14 +2432,7 @@ static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accSelect(
     return E_NOTIMPL;
 }
 
-static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accNavigate(
-    TCL_UNUSED(IAccessible *), /* this */
-    TCL_UNUSED(long), /* navDir */
-    TCL_UNUSED(VARIANT), /* varStart */
-    TCL_UNUSED(VARIANT *)) /* pvarEndUpAt */
-{
-    return E_NOTIMPL;
-}
+
 
 static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accHitTest(
     TCL_UNUSED(IAccessible *), /* this */
@@ -2733,6 +2740,7 @@ static TkVirtualChildAccessible *CreateVirtualChildAccessible(
 }
 
 /* Get precise screen location of virtual child. */
+/* Get precise screen location of virtual child. */
 static HRESULT GetVirtualItemRect(
     Tcl_Interp *interp,
     Tk_Window container,
@@ -2745,12 +2753,16 @@ static HRESULT GetVirtualItemRect(
     VariantInit(&roleVar);
 
     if (TkAccRole(container, &roleVar) != S_OK || roleVar.vt != VT_I4) {
+        VariantClear(&roleVar);
         return E_FAIL;
     }
 
     LONG role = roleVar.lVal;
+    VariantClear(&roleVar);
+    
     Tcl_Obj *resultObj;
     int x, y, w, h;
+    Tcl_Size listLen; 
 
     switch (role) {
     case ROLE_SYSTEM_LIST: {
@@ -2759,7 +2771,9 @@ static HRESULT GetVirtualItemRect(
         if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
 
         resultObj = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, resultObj, NULL) != 4) return E_FAIL;
+        if (Tcl_ListObjLength(interp, resultObj, &listLen) != TCL_OK || listLen != 4) {
+            return E_FAIL;
+        }
 
         Tcl_Obj *elem;
 
@@ -2798,7 +2812,9 @@ static HRESULT GetVirtualItemRect(
         if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
 
         resultObj = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, resultObj, NULL) != 4) return E_FAIL;
+        if (Tcl_ListObjLength(interp, resultObj, &listLen) != TCL_OK || listLen != 4) {
+            return E_FAIL;
+        }
 
         Tcl_Obj *elem;
 
@@ -2821,7 +2837,7 @@ static HRESULT GetVirtualItemRect(
         break;
     }
     default:
-	return E_FAIL;
+        return E_FAIL;
     }
 
     /* Convert relative coords to screen. */
@@ -2836,6 +2852,149 @@ static HRESULT GetVirtualItemRect(
     return S_OK;
 }
 
+/* Navigate virtual children. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accNavigate(
+    IAccessible *this,
+    long navDir,
+    VARIANT varStart,
+    VARIANT *pvarEndUpAt)
+{
+    if (!pvarEndUpAt) return E_INVALIDARG;
+    VariantInit(pvarEndUpAt);
+
+    /* Virtual children only support CHILDID_SELF. */
+    if (varStart.vt != VT_I4 || varStart.lVal != CHILDID_SELF) {
+        return E_INVALIDARG;
+    }
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    Tcl_Interp *interp = Tk_Interp(virtualChild->container);
+    if (!interp) return E_FAIL;
+
+    const char *path = Tk_PathName(virtualChild->container);
+    char cmd[512];
+    int totalItems = 0;
+
+    /* Get total number of items. */
+    VARIANT roleVar;
+    VariantInit(&roleVar);
+    if (TkAccRole(virtualChild->container, &roleVar) != S_OK || roleVar.vt != VT_I4) {
+        VariantClear(&roleVar);
+        return E_FAIL;
+    }
+
+    LONG role = roleVar.lVal;
+    VariantClear(&roleVar);
+
+    if (role == ROLE_SYSTEM_LIST) {
+        snprintf(cmd, sizeof(cmd), "%s size", path);
+    } else {
+        snprintf(cmd, sizeof(cmd), "llength [%s children {}]", path);
+    }
+
+    TkGlobalLock();
+    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+        Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(interp), &totalItems);
+    }
+    TkGlobalUnlock();
+
+    int targetIndex = -1;
+
+    switch (navDir) {
+    case NAVDIR_NEXT:
+        if (virtualChild->index + 1 < totalItems) {
+            targetIndex = virtualChild->index + 1;
+        }
+        break;
+
+    case NAVDIR_PREVIOUS:
+        if (virtualChild->index > 0) {
+            targetIndex = virtualChild->index - 1;
+        }
+        break;
+
+    case NAVDIR_FIRSTCHILD:
+        targetIndex = 0;
+        break;
+
+    case NAVDIR_LASTCHILD:
+        if (totalItems > 0) {
+            targetIndex = totalItems - 1;
+        }
+        break;
+
+    default:
+        return E_NOTIMPL;
+    }
+
+    if (targetIndex >= 0 && targetIndex < totalItems) {
+        /* Create virtual child for target. */
+        LONG itemRole = (role == ROLE_SYSTEM_LIST) ? ROLE_SYSTEM_LISTITEM :
+                        (role == ROLE_SYSTEM_OUTLINE) ? ROLE_SYSTEM_OUTLINEITEM :
+                        ROLE_SYSTEM_ROW;
+
+        TkGlobalLock();
+        LONG virtId = TkCreateVirtualAccessible(interp, virtualChild->container, targetIndex, itemRole);
+        TkGlobalUnlock();
+
+        if (virtId > 0) {
+            pvarEndUpAt->vt = VT_I4;
+            pvarEndUpAt->lVal = virtId;
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
+/* Ensure all virtual children are pre-created for a container. */
+static void EnsureVirtualChildrenCreated(
+	Tcl_Interp *interp, 
+	Tk_Window container)
+{
+    if (!interp || !container) return;
+
+    VARIANT roleVar;
+    VariantInit(&roleVar);
+    
+    if (TkAccRole(container, &roleVar) != S_OK || roleVar.vt != VT_I4) {
+        VariantClear(&roleVar);
+        return;
+    }
+
+    LONG role = roleVar.lVal;
+    VariantClear(&roleVar);
+
+    if (role != ROLE_SYSTEM_LIST && 
+        role != ROLE_SYSTEM_TABLE && 
+        role != ROLE_SYSTEM_OUTLINE) {
+        return;
+    }
+
+    const char *path = Tk_PathName(container);
+    char cmd[512];
+    int itemCount = 0;
+
+    /* Get item count. */
+    if (role == ROLE_SYSTEM_LIST) {
+        snprintf(cmd, sizeof(cmd), "%s size", path);
+    } else {
+        snprintf(cmd, sizeof(cmd), "llength [%s children {}]", path);
+    }
+
+    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+        Tcl_GetIntFromObj(NULL, Tcl_GetObjResult(interp), &itemCount);
+    }
+
+    /* Create virtual children for all items. */
+    LONG itemRole = (role == ROLE_SYSTEM_LIST) ? ROLE_SYSTEM_LISTITEM :
+                    (role == ROLE_SYSTEM_OUTLINE) ? ROLE_SYSTEM_OUTLINEITEM :
+                    ROLE_SYSTEM_ROW;
+
+    for (int i = 0; i < itemCount; i++) {
+        TkCreateVirtualAccessible(interp, container, i, itemRole);
+    }
+}
 
 
 /*
@@ -3044,7 +3203,7 @@ static int EmitSelectionChanged(
     int objc,
     Tcl_Obj *const objv[])
 {
-   if (objc < 2) {
+    if (objc < 2) {
         Tcl_WrongNumArgs(ip, 1, objv, "window?");
         return TCL_ERROR;
     }
@@ -3070,7 +3229,7 @@ static int EmitSelectionChanged(
     HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
     UpdateWindow(hwnd);
 
-    /* Determine correct selection command and role using MSAA role. */
+    /* Determine correct selection command and role using MSAA role - CHECK PATH NOT TOPLEVEL. */
     VARIANT varRole;
     VariantInit(&varRole);
 
@@ -3078,10 +3237,11 @@ static int EmitSelectionChanged(
     int isList = 0;
     int isTable = 0;
 
-    if (TkAccRole(toplevel, &varRole) == S_OK && varRole.vt == VT_I4) {
-	LONG role = varRole.lVal;
+    /* Check path widget's role, not toplevel. */
+    if (TkAccRole(path, &varRole) == S_OK && varRole.vt == VT_I4) {
+        LONG role = varRole.lVal;
 
-	switch (role) {
+        switch (role) {
         case ROLE_SYSTEM_OUTLINE:       /* Treeview. */
             isTree = 1;
             break;
@@ -3096,10 +3256,11 @@ static int EmitSelectionChanged(
 
         default:
             break;
-	}
+        }
     }
 
-
+	/* Ensure virtual children exist. */
+    EnsureVirtualChildrenCreated(ip, path);
     if (isList || isTree || isTable) {
         const char *pathStr = Tk_PathName(path);
         char cmd[512];
@@ -3125,19 +3286,20 @@ static int EmitSelectionChanged(
                         isTree ? ROLE_SYSTEM_OUTLINEITEM : ROLE_SYSTEM_ROW;
             LONG virtId = TkCreateVirtualAccessible(ip, path, index, role);
             if (virtId > 0) {
-                /* Narrator needs these events in this specific order. */
-				NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, virtId);
-				NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
-				NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
+                /* Narrator needs these events in this specific order for virtual children. */
+                NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
                 NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, virtId);
             }
         }
     }
 
-    /* Container events for NVDA. */
+    /* Container events for NVDA and other screen readers. */
     NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
     NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 
+    VariantClear(&varRole);
     TkGlobalUnlock();
     return TCL_OK;
 }
