@@ -55,6 +55,17 @@ typedef struct TkRootAccessible {
     LONG refCount;
 } TkRootAccessible;
 
+/* TkVirtualChildAccessible structure for virtual children. */
+typedef struct TkVirtualChildAccessible {
+    IAccessibleVtbl *lpVtbl;
+    Tk_Window container;      
+    LONG childId;             
+    LONG role;               
+    const char *label;       
+    int index;             
+    LONG refCount;
+} TkVirtualChildAccessible;
+
 /*
  * Map script-level roles to C roles for MSAA.
  */
@@ -216,7 +227,77 @@ static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Prototypes for virtual child widgets. These have their own 
+ * IAccessible implementation. This implementation is necessary
+ * for Narrator to pick up virtual objects, like listbox rows,
+ * across the MSAA-UIA bridge built into Windows.
+ *
+ *----------------------------------------------------------------------
+ */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_QueryInterface(IAccessible *this, REFIID riid, void **ppvObject);
+static ULONG STDMETHODCALLTYPE TkVirtualChildAccessible_AddRef(IAccessible *this);
+static ULONG STDMETHODCALLTYPE TkVirtualChildAccessible_Release(IAccessible *this);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetTypeInfoCount(IAccessible *this, UINT *pctinfo);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetTypeInfo(IAccessible *this, UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetIDsOfNames(IAccessible *this, REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_Invoke(IAccessible *this, DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accParent(IAccessible *this, IDispatch **ppdispParent);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accChildCount(IAccessible *this, LONG *pcChildren);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accChild(IAccessible *this, VARIANT varChild, IDispatch **ppdispChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accName(IAccessible *this, VARIANT varChild, BSTR *pszName);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accValue(IAccessible *this, VARIANT varChild, BSTR *pszValue);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accDescription(IAccessible *this, VARIANT varChild, BSTR *pszDescription);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accRole(IAccessible *this, VARIANT varChild, VARIANT *pvarRole);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accState(IAccessible *this, VARIANT varChild, VARIANT *pvarState);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accHelp(IAccessible *this, VARIANT varChild, BSTR *pszHelp);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accHelpTopic(IAccessible *this, BSTR *pszHelpFile, VARIANT varChild, long *pidTopic);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accKeyboardShortcut(IAccessible *this, VARIANT varChild, BSTR *pszKeyboardShortcut);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accFocus(IAccessible *this, VARIANT *pvarChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accSelection(IAccessible *this, VARIANT *pvarChildren);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accDefaultAction(IAccessible *this, VARIANT varChild, BSTR *pszDefaultAction);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accSelect(IAccessible *this, long flags, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accLocation(IAccessible *this, LONG *pxLeft, LONG *pyTop, LONG *pcxWidth, LONG *pcyHeight, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accNavigate(IAccessible *this, long navDir, VARIANT varStart, VARIANT *pvarEndUpAt);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accHitTest(IAccessible *this, long xLeft, long yTop, VARIANT *pvarChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accDoDefaultAction(IAccessible *this, VARIANT varChild);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accName(IAccessible *this, VARIANT varChild, BSTR szName);
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accValue(IAccessible *this, VARIANT varChild, BSTR szValue);
+static TkVirtualChildAccessible *CreateVirtualChildAccessible(Tk_Window container, LONG childId, LONG role, const char *label, int index);
 
+/* VTable for virtual child accessible objects. */
+static IAccessibleVtbl tkVirtualChildAccessibleVtbl = {
+    TkVirtualChildAccessible_QueryInterface,
+    TkVirtualChildAccessible_AddRef,
+    TkVirtualChildAccessible_Release,
+    TkVirtualChildAccessible_GetTypeInfoCount,
+    TkVirtualChildAccessible_GetTypeInfo,
+    TkVirtualChildAccessible_GetIDsOfNames,
+    TkVirtualChildAccessible_Invoke,
+    TkVirtualChildAccessible_get_accParent,
+    TkVirtualChildAccessible_get_accChildCount,
+    TkVirtualChildAccessible_get_accChild,
+    TkVirtualChildAccessible_get_accName,
+    TkVirtualChildAccessible_get_accValue,
+    TkVirtualChildAccessible_get_accDescription,
+    TkVirtualChildAccessible_get_accRole,
+    TkVirtualChildAccessible_get_accState,
+    TkVirtualChildAccessible_get_accHelp,
+    TkVirtualChildAccessible_get_accHelpTopic,
+    TkVirtualChildAccessible_get_accKeyboardShortcut,
+    TkVirtualChildAccessible_get_accFocus,
+    TkVirtualChildAccessible_get_accSelection,
+    TkVirtualChildAccessible_get_accDefaultAction,
+    TkVirtualChildAccessible_accSelect,
+    TkVirtualChildAccessible_accLocation,
+    TkVirtualChildAccessible_accNavigate,
+    TkVirtualChildAccessible_accHitTest,
+    TkVirtualChildAccessible_accDoDefaultAction,
+    TkVirtualChildAccessible_put_accName,
+    TkVirtualChildAccessible_put_accValue
+}; 
 /*
  *----------------------------------------------------------------------
  *
@@ -729,19 +810,58 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChildCount(
     LONG *pcChildren)
 {
     if (!pcChildren) return E_INVALIDARG;
+
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
-    if (!tkAccessible->toplevel) {
-	TkGlobalUnlock();
-	*pcChildren = 0;
-	return S_FALSE;
-    }
-    int count = TkAccChildCount(tkAccessible->toplevel);
-    TkGlobalUnlock();
 
-    *pcChildren = count < 0 ? 0 : count;
+    if (!tkAccessible->toplevel) {
+        TkGlobalUnlock();
+        *pcChildren = 0;
+        return S_FALSE;
+    }
+
+    /* Count regular child widgets. */
+    int regularCount = TkAccChildCount(tkAccessible->toplevel);
+    int virtualCount = 0;
+
+    /* Count virtual children from containers that support them. */
+    TkWindow *winPtr = (TkWindow *)tkAccessible->toplevel;
+    for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (Tk_IsMapped((Tk_Window)child)) {
+            /* Check if this widget has virtual children. */
+            VARIANT roleVar;
+            if (TkAccRole((Tk_Window)child, &roleVar) == S_OK && roleVar.vt == VT_I4) {
+                LONG role = roleVar.lVal;
+                if (role == ROLE_SYSTEM_LIST ||
+                    role == ROLE_SYSTEM_TABLE ||
+                    role == ROLE_SYSTEM_OUTLINE) {
+                    /* Get item count from widget. */
+                    const char *path = Tk_PathName((Tk_Window)child);
+                    char cmd[512];
+
+                    if (role == ROLE_SYSTEM_LIST) {
+                        snprintf(cmd, sizeof(cmd), "%s size", path);
+                    } else {
+                        snprintf(cmd, sizeof(cmd), "%s children {}", path);
+                    }
+
+                    if (Tcl_Eval(tkAccessible->interp, cmd) == TCL_OK) {
+                        Tcl_Obj *res = Tcl_GetObjResult(tkAccessible->interp);
+                        int count;
+                        if (Tcl_GetIntFromObj(NULL, res, &count) == TCL_OK) {
+                            virtualCount += count;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    TkGlobalUnlock();
+    *pcChildren = (regularCount + virtualCount) < 0 ? 0 : (regularCount + virtualCount);
     return S_OK;
 }
+
 
 /* Function to get accessible children to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(
@@ -751,25 +871,61 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accChild(
 {
     if (!ppdispChild) return E_INVALIDARG;
     *ppdispChild = NULL;
-    if (varChild.vt != VT_I4 || varChild.lVal <= 0) return E_INVALIDARG;
+
+    if (varChild.vt != VT_I4 || varChild.lVal <= 0) {
+        return E_INVALIDARG;
+    }
 
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+
     if (!tkAccessible->toplevel) {
-	TkGlobalUnlock();
-	return E_INVALIDARG;
+        TkGlobalUnlock();
+        return E_INVALIDARG;
     }
-    ClearChildIdTableForToplevel(tkAccessible->toplevel);
-    int nextId = 1;
-    AssignChildIdsRecursive(tkAccessible->toplevel, &nextId, tkAccessible->interp, tkAccessible->toplevel);
-    Tk_Window childWin = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-    if (!childWin) {
-	TkGlobalUnlock();
-	return E_INVALIDARG;
+
+    LONG childId = varChild.lVal;
+
+    /* First try to find a regular widget. */
+    Tk_Window childWin = GetTkWindowForChildId(childId, tkAccessible->toplevel);
+    if (childWin) {
+        /* Return the container's IAccessible for regular widgets. */
+        TkRootAccessible *childAccessible = GetTkAccessibleForWindow(childWin);
+        if (childAccessible) {
+            *ppdispChild = (IDispatch *)childAccessible;
+            childAccessible->lpVtbl->AddRef((IAccessible *)childAccessible);
+            TkGlobalUnlock();
+            return S_OK;
+        }
     }
+
+    /* If not found as regular widget, try virtual children. */
+    Tcl_HashSearch search;
+    Tcl_HashEntry *h = Tcl_FirstHashEntry(TkAccessibilityObject, &search);
+    while (h) {
+        Tk_Window container = (Tk_Window)Tcl_GetHashKey(TkAccessibilityObject, h);
+        LONG role;
+        const char *label;
+        int index;
+
+        if (ResolveVirtualChild(tkAccessible->interp, container, childId, &role, &label, &index)) {
+            /* Create virtual child accessible object. */
+            TkVirtualChildAccessible *virtualChild =
+                CreateVirtualChildAccessible(container, childId, role, label, index);
+
+            if (virtualChild) {
+                *ppdispChild = (IDispatch *)virtualChild;
+                TkGlobalUnlock();
+                return S_OK;
+            }
+        }
+        h = Tcl_NextHashEntry(&search);
+    }
+
     TkGlobalUnlock();
-    return S_OK;
+    return E_INVALIDARG;
 }
+
 
 /* Function to get accessible frame to MSAA. */
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_accLocation(
@@ -1195,7 +1351,7 @@ ComputeAndCacheCheckedState(
 	   haveVarName = 1;
 	}
     } else {
-	/* evaluation failed; clean up and return */
+	/* evaluation failed; clean up and return. */
 	Tcl_DecrRefCount(varCmd);
 	return;
     }
@@ -1226,7 +1382,7 @@ ComputeAndCacheCheckedState(
 		}
 	   }
 	} else {
-	   /* variable exists but has no value — fall back to instate selected. */
+	   /* Variable exists but has no value — fall back to instate selected. */
 	   Tcl_Obj *stateCmd = Tcl_ObjPrintf("%s instate selected", path);
 	   if (!stateCmd) return;
 	   Tcl_IncrRefCount(stateCmd);
@@ -1302,17 +1458,17 @@ static HRESULT TkAccState(
     
     long state = STATE_SYSTEM_FOCUSABLE | STATE_SYSTEM_SELECTABLE;
     
-    /* Check if this is a virtual child */
+    /* Check if this is a virtual child. */
     Tcl_Interp *interp = Tk_Interp(win);
     if (interp) {
         LONG role;
         const char *label;
         int idx;
         if (ResolveVirtualChild(interp, win, 0, &role, &label, &idx)) {
-            /* Virtual child - check if it's selected */
+            /* Virtual child - check if it's selected. */
             state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
             
-            /* Check selection state from the container widget */
+            /* Check selection state from the container widget. */
             const char *pathStr = Tk_PathName(win);;
             char cmd[512];
 	    
@@ -1904,7 +2060,6 @@ static BOOL ResolveVirtualChild(
     Tcl_HashEntry *hItem = Tcl_FindHashEntry(virtTab, key);
     if (!hItem) return FALSE;
 
- //   Tcl_Interp *interp = Tk_Interp(container);  // or pass from tkAcc
     Tcl_Obj *info = Tcl_GetHashValue(hItem);
     Tcl_Size len;
 
@@ -2112,6 +2267,442 @@ static void AssignChildIdsRecursive(
     for (TkWindow *child = winPtr->childList; child != NULL; child = child->nextPtr) {
 	AssignChildIdsRecursive((Tk_Window)child, nextId, interp, toplevel);
     }
+}
+
+ /*----------------------------------------------------------------------
+ *
+ * Functions to create and manage accessibility for virtual child widgets -
+ * listbox rows, table rows, and tree nodes. Actual IAccessible objects 
+ * are required by Narrator to be spoken. Many of these functions are stubbed
+ * out/no-op but are required to be present.
+ * 
+ *----------------------------------------------------------------------
+ */
+ 
+ /* Stubbed functions that return E_NOTIMPL. */
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetTypeInfoCount(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(UINT *)) /* pctinfo */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetTypeInfo(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(UINT), /* iTInfo */
+    TCL_UNUSED(LCID), /* lcid */
+    TCL_UNUSED(ITypeInfo **)) /* ppTInfo */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_GetIDsOfNames(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(REFIID), /* riid */
+    TCL_UNUSED(LPOLESTR *), /* rgszNames */
+    TCL_UNUSED(UINT), /* cNames */
+    TCL_UNUSED(LCID), /* lcid */
+    TCL_UNUSED(DISPID *)) /* rgDispId */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_Invoke(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(DISPID), /* dispIdMember */
+    TCL_UNUSED(REFIID), /* riid */
+    TCL_UNUSED(LCID), /* lcid */
+    TCL_UNUSED(WORD), /* wFlags */
+    TCL_UNUSED(DISPPARAMS *), /* pDispParams */
+    TCL_UNUSED(VARIANT *), /* pVarResult */
+    TCL_UNUSED(EXCEPINFO *), /* pExcepInfo */
+    TCL_UNUSED(UINT *)) /* puArgErr */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accChildCount(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(LONG *)) /* pcChildren */
+{
+    /* Virtual children have no children of their own */
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accChild(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(IDispatch **)) /* ppdispChild */
+{
+    /* Virtual children have no children of their own */
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accDescription(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR *)) /* pszDescription */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accHelp(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR *)) /* pszHelp */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accHelpTopic(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(BSTR *), /* pszHelpFile */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(long *)) /* pidTopic */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accKeyboardShortcut(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR *)) /* pszKeyboardShortcut */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accFocus(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT *)) /* pvarChild */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accSelection(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT *)) /* pvarChildren */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accDefaultAction(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR *)) /* pszDefaultAction */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accSelect(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(long), /* flags */
+    TCL_UNUSED(VARIANT)) /* varChild */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accNavigate(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(long), /* navDir */
+    TCL_UNUSED(VARIANT), /* varStart */
+    TCL_UNUSED(VARIANT *)) /* pvarEndUpAt */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accHitTest(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(long), /* xLeft */
+    TCL_UNUSED(long), /* yTop */
+    TCL_UNUSED(VARIANT *)) /* pvarChild */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accDoDefaultAction(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT)) /* varChild */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accName(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR)) /* szName */
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_put_accValue(
+    TCL_UNUSED(IAccessible *), /* this */
+    TCL_UNUSED(VARIANT), /* varChild */
+    TCL_UNUSED(BSTR)) /* szValue */
+{
+    return E_NOTIMPL;
+} 
+
+/*
+* Begin actual TkVirtualChildAccessible functions. 
+*/
+ 
+ /* QueryInterface for virtual children. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_QueryInterface(
+    IAccessible *this,
+    REFIID riid,
+    void **ppvObject)
+{
+    if (!ppvObject) return E_INVALIDARG;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IDispatch) ||
+        IsEqualIID(riid, &IID_IAccessible)) {
+        *ppvObject = this;
+        TkVirtualChildAccessible_AddRef(this);
+        return S_OK;
+    }
+
+    *ppvObject = NULL;
+    return E_NOINTERFACE;
+}
+
+/* AddRef for virtual children. */
+static ULONG STDMETHODCALLTYPE TkVirtualChildAccessible_AddRef(IAccessible *this)
+{
+    if (!this) return 0;
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    return InterlockedIncrement(&virtualChild->refCount);
+}
+
+/* Release for virtual children. */
+static ULONG STDMETHODCALLTYPE TkVirtualChildAccessible_Release(IAccessible *this)
+{
+    if (!this) return 0;
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    ULONG count = InterlockedDecrement(&virtualChild->refCount);
+
+    if (count == 0) {
+        TkGlobalLock();
+        /* Clean up any allocated resources. */
+        if (virtualChild->label) {
+            /* Note: label points to Tcl object string, don't free it. */
+        }
+        ckfree(virtualChild);
+        TkGlobalUnlock();
+    }
+    return count;
+}
+
+/* Get parent - returns the container widget's IAccessible. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accParent(
+    IAccessible *this,
+    IDispatch **ppdispParent)
+{
+    if (!ppdispParent) return E_INVALIDARG;
+    *ppdispParent = NULL;
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    TkRootAccessible *containerAccessible = GetTkAccessibleForWindow(virtualChild->container);
+
+    if (containerAccessible) {
+        *ppdispParent = (IDispatch *)containerAccessible;
+        containerAccessible->lpVtbl->AddRef((IAccessible *)containerAccessible);
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+/* Get name for virtual child. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accName(
+    IAccessible *this,
+    VARIANT varChild,
+    BSTR *pszName)
+{
+    if (!pszName) return E_INVALIDARG;
+    *pszName = NULL;
+
+    /* Virtual children only support CHILDID_SELF. */
+    if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+        return E_INVALIDARG;
+    }
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+
+    if (virtualChild->label && *virtualChild->label) {
+        Tcl_DString ds;
+        Tcl_DStringInit(&ds);
+        *pszName = SysAllocString(Tcl_UtfToWCharDString(virtualChild->label, -1, &ds));
+        Tcl_DStringFree(&ds);
+        return *pszName ? S_OK : E_OUTOFMEMORY;
+    } else {
+        /* Fallback name. */
+        wchar_t buf[64];
+        swprintf(buf, _countof(buf), L"Item %d", virtualChild->index);
+        *pszName = SysAllocString(buf);
+        return *pszName ? S_OK : E_OUTOFMEMORY;
+    }
+}
+
+/* Get role for virtual child. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accRole(
+    IAccessible *this,
+    VARIANT varChild,
+    VARIANT *pvarRole)
+{
+    if (!pvarRole) return E_INVALIDARG;
+
+    /* Virtual children only support CHILDID_SELF. */
+    if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+        return E_INVALIDARG;
+    }
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    pvarRole->vt = VT_I4;
+    pvarRole->lVal = virtualChild->role;
+    return S_OK;
+}
+
+/* Get state for virtual child. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accState(
+    IAccessible *this,
+    VARIANT varChild,
+    VARIANT *pvarState)
+{
+    if (!pvarState) return E_INVALIDARG;
+
+    /* Virtual children only support CHILDID_SELF. */
+    if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+        return E_INVALIDARG;
+    }
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+    pvarState->vt = VT_I4;
+
+    /* Base states for virtual children */
+    long state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
+
+    /* Check if this virtual child is selected. */
+    Tcl_Interp *interp = Tk_Interp(virtualChild->container);
+    if (interp) {
+        const char *pathStr = Tk_PathName(virtualChild->container);
+        char cmd[512];
+
+        /* Determine selection command based on container role.*/
+        VARIANT containerRole;
+        VariantInit(&containerRole);
+
+        if (TkAccRole(virtualChild->container, &containerRole) == S_OK &&
+            containerRole.vt == VT_I4) {
+
+            switch (containerRole.lVal) {
+                case ROLE_SYSTEM_LIST:
+                    snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+                    break;
+                case ROLE_SYSTEM_OUTLINE:
+                case ROLE_SYSTEM_TABLE:
+                    snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+                    break;
+                default:
+                    goto set_state;
+            }
+
+            if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                Tcl_Obj *res = Tcl_GetObjResult(interp);
+                Tcl_Size len;
+                if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
+                    Tcl_Obj *obj;
+                    Tcl_ListObjIndex(interp, res, 0, &obj);
+                    int selIdx;
+                    if (Tcl_GetIntFromObj(NULL, obj, &selIdx) == TCL_OK &&
+                        selIdx == virtualChild->index) {
+                        state |= STATE_SYSTEM_SELECTED | STATE_SYSTEM_FOCUSED;
+                    }
+                }
+            }
+        }
+    }
+
+set_state:
+    pvarState->lVal = state;
+    return S_OK;
+}
+
+/* Get value for virtual child (typically same as name for list items. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accValue(
+    IAccessible *this,
+    VARIANT varChild,
+    BSTR *pszValue)
+{
+    /* For virtual children, value is typically the same as name. */
+    return TkVirtualChildAccessible_get_accName(this, varChild, pszValue);
+}
+
+/* Get location for virtual child. */
+static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accLocation(
+    IAccessible *this,
+    LONG *pxLeft,
+    LONG *pyTop,
+    LONG *pcxWidth,
+    LONG *pcyHeight,
+    VARIANT varChild)
+{
+    if (!pxLeft || !pyTop || !pcxWidth || !pcyHeight) return E_INVALIDARG;
+
+    /* Virtual children only support CHILDID_SELF. */
+    if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
+        return E_INVALIDARG;
+    }
+
+    TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
+
+    /* Calculate position based on index and container geometry. */
+    Tk_Window container = virtualChild->container;
+    if (!container || !Tk_IsMapped(container)) {
+        return E_FAIL;
+    }
+
+    int containerX, containerY;
+    Tk_GetRootCoords(container, &containerX, &containerY);
+    int containerWidth = Tk_Width(container);
+    int containerHeight = Tk_Height(container);
+
+    /* Simple calculation: divide container by number of items. */
+    int itemHeight = containerHeight / 10; /* Approximate, should be calculated properly. */
+    int itemY = containerY + (virtualChild->index * itemHeight);
+
+    *pxLeft = containerX;
+    *pyTop = itemY;
+    *pcxWidth = containerWidth;
+    *pcyHeight = itemHeight;
+
+    return S_OK;
+}
+
+/* Create a virtual child accessible object. */
+static TkVirtualChildAccessible *CreateVirtualChildAccessible(
+    Tk_Window container,
+    LONG childId,
+    LONG role,
+    const char *label,
+    int index)
+{
+    TkVirtualChildAccessible *virtualChild =
+        (TkVirtualChildAccessible *)ckalloc(sizeof(TkVirtualChildAccessible));
+
+    if (!virtualChild) return NULL;
+
+    virtualChild->lpVtbl = &tkVirtualChildAccessibleVtbl;
+    virtualChild->container = container;
+    virtualChild->childId = childId;
+    virtualChild->role = role;
+    virtualChild->label = label;
+    virtualChild->index = index;
+    virtualChild->refCount = 1;
+
+    return virtualChild;
+
 }
 
 /*
