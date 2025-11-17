@@ -1640,21 +1640,6 @@ static HRESULT TkAccValue(
     Tcl_DStringInit(&ds);
     *pValue = SysAllocString(Tcl_UtfToWCharDString(val, -1, &ds));
     Tcl_DStringFree(&ds);
-	
-    /* Update the description for Narrator, which will be picked up by accName. */
-    VARIANT roleVar;
-    if (TkAccRole(win, &roleVar) == S_OK &&
-	roleVar.vt == VT_I4 &&
-	(roleVar.lVal == ROLE_SYSTEM_LIST ||
-	 roleVar.lVal == ROLE_SYSTEM_TABLE ||
-	 roleVar.lVal == ROLE_SYSTEM_OUTLINE)) {
-	Tcl_HashEntry *hName = Tcl_FindHashEntry(AccessibleAttributes, "description");
-	if (!hName) {
-	    hName = Tcl_CreateHashEntry(AccessibleAttributes, "description", NULL);
-	}
-	Tcl_SetHashValue(hName, Tcl_NewStringObj(val, -1));
-    }
-
     return S_OK;
 }
 
