@@ -1310,7 +1310,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     TreeItem *item = NULL;
     Ttk_TagSet tagset;
     int unused;
-    Tcl_Size colno = -1;
+    Tcl_Size colno;
     TreeColumn *column = NULL;
 
     /* Figure out where to deliver the event. */
@@ -1319,15 +1319,18 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	case KeyRelease:
 	case VirtualEvent:
 	    item = tv->tree.focus;
+	    column = tv->tree.focusCol;
 	    break;
 	case ButtonPress:
 	case ButtonRelease:
 	    item = IdentifyItem(tv, event->xbutton.y);
 	    colno = IdentifyDisplayColumn(tv, event->xbutton.x, &unused);
+	    column = tv->tree.displayColumns[colno];
 	    break;
 	case MotionNotify:
 	    item = IdentifyItem(tv, event->xmotion.y);
 	    colno = IdentifyDisplayColumn(tv, event->xmotion.x, &unused);
+	    column = tv->tree.displayColumns[colno];
 	    break;
 	default:
 	    break;
@@ -1344,8 +1347,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, item->tagsObj);
 
     /* Pick up any cell tags. */
-    if (colno >= 0) {
-	column = tv->tree.displayColumns[colno];
+    if (column) {
 	if (column == &tv->tree.column0) {
 	    colno = 0;
 	} else {
@@ -1360,8 +1362,8 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 
     /* Fire binding: */
     Tcl_Preserve(clientData);
-    Tk_BindEvent(tv->tree.bindingTable, event, tv->core.tkwin,
-	    tagset->nTags, (void **)tagset->tags);
+    Tk_BindEvent(tv->tree.bindingTable, event, tv->core.tkwin, tagset->nTags,
+	    (void **)tagset->tags);
     Tcl_Release(clientData);
 
     Ttk_FreeTagSet(tagset);
