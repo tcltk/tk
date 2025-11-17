@@ -2466,8 +2466,6 @@ static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accSelect(
     return E_NOTIMPL;
 }
 
-
-
 static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accHitTest(
     TCL_UNUSED(IAccessible *), /* this */
     TCL_UNUSED(long), /* xLeft */
@@ -2829,46 +2827,44 @@ static HRESULT GetVirtualItemRect(
         break;
     }
 
-    case ROLE_SYSTEM_OUTLINE:
-    case ROLE_SYSTEM_TABLE: {
-        char itemCmd[512];
+	case ROLE_SYSTEM_OUTLINE:
+	case ROLE_SYSTEM_TABLE: {
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s children {}", path);
+    if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
 
-        /* Treeview/table: get item ID. */
-        snprintf(itemCmd, sizeof(itemCmd), "%s children {} %d", path, index);
-        if (Tcl_Eval(interp, itemCmd) != TCL_OK) return E_FAIL;
-
-        Tcl_Obj *itemIdObj = Tcl_GetObjResult(interp);
-        const char *itemId = Tcl_GetString(itemIdObj);
-
-        /* bbox on item. */
-        snprintf(cmd, sizeof(cmd), "%s bbox %s", path, itemId);
-        if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
-
-        resultObj = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, resultObj, &listLen) != TCL_OK || listLen != 4) {
-            return E_FAIL;
-        }
-
-        Tcl_Obj *elem;
-
-        if (Tcl_ListObjIndex(interp, resultObj, 0, &elem) != TCL_OK ||
-            Tcl_GetIntFromObj(interp, elem, &x) != TCL_OK)
-            return E_FAIL;
-
-        if (Tcl_ListObjIndex(interp, resultObj, 1, &elem) != TCL_OK ||
-            Tcl_GetIntFromObj(interp, elem, &y) != TCL_OK)
-            return E_FAIL;
-
-        if (Tcl_ListObjIndex(interp, resultObj, 2, &elem) != TCL_OK ||
-            Tcl_GetIntFromObj(interp, elem, &w) != TCL_OK)
-            return E_FAIL;
-
-        if (Tcl_ListObjIndex(interp, resultObj, 3, &elem) != TCL_OK ||
-            Tcl_GetIntFromObj(interp, elem, &h) != TCL_OK)
-            return E_FAIL;
-
-        break;
+    Tcl_Obj *childrenList = Tcl_GetObjResult(interp);
+    Tcl_Size count;
+    if (Tcl_ListObjLength(interp, childrenList, &count) != TCL_OK || index >= count || index < 0) {
+        return E_FAIL;
     }
+
+    Tcl_Obj *itemIdObj = NULL;
+    if (Tcl_ListObjIndex(interp, childrenList, index, &itemIdObj) != TCL_OK || itemIdObj == NULL) {
+        return E_FAIL;
+    }
+
+    const char *itemId = Tcl_GetString(itemIdObj);
+
+    /* Get the full row bounding box */
+    Tcl_ResetResult(interp);
+    snprintf(cmd, sizeof(cmd), "%s bbox %s", path, itemId);
+    if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
+
+    Tcl_Obj *bboxResult = Tcl_GetObjResult(interp);
+    Tcl_Size listLen;
+    if (Tcl_ListObjLength(interp, bboxResult, &listLen) != TCL_OK || listLen != 4) {
+        return E_FAIL;
+    }
+
+    Tcl_Obj *elem;
+    if (Tcl_ListObjIndex(interp, bboxResult, 0, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &x) != TCL_OK) return E_FAIL;
+    if (Tcl_ListObjIndex(interp, bboxResult, 1, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &y) != TCL_OK) return E_FAIL;
+    if (Tcl_ListObjIndex(interp, bboxResult, 2, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &w) != TCL_OK) return E_FAIL;
+    if (Tcl_ListObjIndex(interp, bboxResult, 3, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &h) != TCL_OK) return E_FAIL;
+
+    break;
+}
     default:
         return E_FAIL;
     }
@@ -3464,62 +3460,56 @@ static int EmitFocusChanged(
         if (role == ROLE_SYSTEM_LIST || 
             role == ROLE_SYSTEM_TABLE || 
             role == ROLE_SYSTEM_OUTLINE) {
-            
-            /* Ensure virtual children are created. */
-            EnsureVirtualChildrenCreated(interp, win);
-            
-            /* Send focus event for container first. */
-            NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
-            
-            /* Check if there's a current selection and announce it. */
-            const char *pathStr = Tk_PathName(win);
-            char cmd[512];
-            
-            if (role == ROLE_SYSTEM_LIST) {
-                snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
-            } else {
-                snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
-            }
-            
-            int selIndex = -1;
-            if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                Tcl_Obj *res = Tcl_GetObjResult(interp);
-                Tcl_Size len;
-                if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
-                    Tcl_Obj *obj;
-                    Tcl_ListObjIndex(interp, res, 0, &obj);
-                    Tcl_GetIntFromObj(NULL, obj, &selIndex);
-                }
-            }
-            
-            /* If there's a selection, announce it. */
-            if (selIndex >= 0) {
-                LONG itemRole = (role == ROLE_SYSTEM_LIST) ? ROLE_SYSTEM_LISTITEM :
-                                (role == ROLE_SYSTEM_OUTLINE) ? ROLE_SYSTEM_OUTLINEITEM :
-                                ROLE_SYSTEM_ROW;
-                
-                LONG virtId = TkCreateVirtualAccessible(interp, win, selIndex, itemRole);
-                if (virtId > 0) {
-                    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, virtId);
-                    NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
-                }
-            } else {
-                /* No selection - announce the container has items. */
-                NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
-            }
-            
-            VariantClear(&roleVar);
-            TkGlobalUnlock();
-            return TCL_OK;
-        }
-        VariantClear(&roleVar);
+	    /* Ensure virtual children exist. */
+	    EnsureVirtualChildrenCreated(interp, win);
+
+	    /* Focus stays on the container — this is what native Windows list controls do. */
+	    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+
+	    /* Announce selection if exists. */
+	    const char *pathStr = Tk_PathName(win);
+	    char cmd[512];
+	    if (role == ROLE_SYSTEM_LIST || 
+		role == ROLE_SYSTEM_TABLE) {
+		snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+	    } else {
+		snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+	    }
+
+	    int selIndex = -1;
+	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+		Tcl_Obj *res = Tcl_GetObjResult(interp);
+		Tcl_Size len;
+		if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
+		    Tcl_Obj *obj;
+		    Tcl_ListObjIndex(interp, res, 0, &obj);
+		    Tcl_GetIntFromObj(NULL, obj, &selIndex);
+		}
+	    }
+
+	    if (selIndex >= 0) {
+		LONG itemRole = (role == ROLE_SYSTEM_LIST) ? ROLE_SYSTEM_LISTITEM :
+		    (role == ROLE_SYSTEM_OUTLINE|| role == ROLE_SYSTEM_TABLE) ? ROLE_SYSTEM_OUTLINEITEM : ROLE_SYSTEM_ROW;
+
+		LONG virtId = TkCreateVirtualAccessible(interp, win, selIndex, itemRole);
+		if (virtId > 0) {
+		    /* Only send selection event — NOT focus. */
+		    NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
+		    /* Optional: some screen readers like the explicit state change. */
+		    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
+		}
+	    }
+	}
     }
-    
-    /* Regular widget focus. */
-    NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+
+    /* Optional but helpful: let screen readers know the container state changed. */
+    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
+
+    VariantClear(&roleVar);
     TkGlobalUnlock();
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
