@@ -2827,44 +2827,44 @@ static HRESULT GetVirtualItemRect(
         break;
     }
 
-	case ROLE_SYSTEM_OUTLINE:
-	case ROLE_SYSTEM_TABLE: {
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s children {}", path);
-    if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
+    case ROLE_SYSTEM_OUTLINE:
+    case ROLE_SYSTEM_TABLE: {
+	char cmd[512];
+	snprintf(cmd, sizeof(cmd), "%s children {}", path);
+	if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
 
-    Tcl_Obj *childrenList = Tcl_GetObjResult(interp);
-    Tcl_Size count;
-    if (Tcl_ListObjLength(interp, childrenList, &count) != TCL_OK || index >= count || index < 0) {
-        return E_FAIL;
+	Tcl_Obj *childrenList = Tcl_GetObjResult(interp);
+	Tcl_Size count;
+	if (Tcl_ListObjLength(interp, childrenList, &count) != TCL_OK || index >= count || index < 0) {
+	    return E_FAIL;
+	}
+
+	Tcl_Obj *itemIdObj = NULL;
+	if (Tcl_ListObjIndex(interp, childrenList, index, &itemIdObj) != TCL_OK || itemIdObj == NULL) {
+	    return E_FAIL;
+	}
+
+	const char *itemId = Tcl_GetString(itemIdObj);
+
+	/* Get the full row bounding box */
+	Tcl_ResetResult(interp);
+	snprintf(cmd, sizeof(cmd), "%s bbox %s", path, itemId);
+	if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
+
+	Tcl_Obj *bboxResult = Tcl_GetObjResult(interp);
+	Tcl_Size listLen;
+	if (Tcl_ListObjLength(interp, bboxResult, &listLen) != TCL_OK || listLen != 4) {
+	    return E_FAIL;
+	}
+
+	Tcl_Obj *elem;
+	if (Tcl_ListObjIndex(interp, bboxResult, 0, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &x) != TCL_OK) return E_FAIL;
+	if (Tcl_ListObjIndex(interp, bboxResult, 1, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &y) != TCL_OK) return E_FAIL;
+	if (Tcl_ListObjIndex(interp, bboxResult, 2, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &w) != TCL_OK) return E_FAIL;
+	if (Tcl_ListObjIndex(interp, bboxResult, 3, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &h) != TCL_OK) return E_FAIL;
+
+	break;
     }
-
-    Tcl_Obj *itemIdObj = NULL;
-    if (Tcl_ListObjIndex(interp, childrenList, index, &itemIdObj) != TCL_OK || itemIdObj == NULL) {
-        return E_FAIL;
-    }
-
-    const char *itemId = Tcl_GetString(itemIdObj);
-
-    /* Get the full row bounding box */
-    Tcl_ResetResult(interp);
-    snprintf(cmd, sizeof(cmd), "%s bbox %s", path, itemId);
-    if (Tcl_Eval(interp, cmd) != TCL_OK) return E_FAIL;
-
-    Tcl_Obj *bboxResult = Tcl_GetObjResult(interp);
-    Tcl_Size listLen;
-    if (Tcl_ListObjLength(interp, bboxResult, &listLen) != TCL_OK || listLen != 4) {
-        return E_FAIL;
-    }
-
-    Tcl_Obj *elem;
-    if (Tcl_ListObjIndex(interp, bboxResult, 0, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &x) != TCL_OK) return E_FAIL;
-    if (Tcl_ListObjIndex(interp, bboxResult, 1, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &y) != TCL_OK) return E_FAIL;
-    if (Tcl_ListObjIndex(interp, bboxResult, 2, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &w) != TCL_OK) return E_FAIL;
-    if (Tcl_ListObjIndex(interp, bboxResult, 3, &elem) != TCL_OK || Tcl_GetIntFromObj(interp, elem, &h) != TCL_OK) return E_FAIL;
-
-    break;
-}
     default:
         return E_FAIL;
     }
