@@ -2792,107 +2792,110 @@ static TkVirtualChildAccessible *CreateVirtualChildAccessible(
 }
 
 /* Get bounding box for virtual children. */
-
 static HRESULT GetVirtualItemRect(
     Tcl_Interp *interp,
     Tk_Window container,
     int index,
     RECT *rect)
 {
+    if (!interp || !container || !rect) return E_FAIL;
+
     const char *path = Tk_PathName(container);
-    char cmdBuf[512];
     VARIANT roleVar;
     VariantInit(&roleVar);
 
-    /* Determine role. */
     if (TkAccRole(container, &roleVar) != S_OK || roleVar.vt != VT_I4) {
         VariantClear(&roleVar);
         return E_FAIL;
     }
-
     LONG role = roleVar.lVal;
     VariantClear(&roleVar);
 
-    Tcl_Obj *resultObj;
-    int x = 0, y = 0, w = 0, h = 0;
-    Tcl_Size listLen;
+    Tcl_Obj *cmd = NULL;
+    Tcl_Obj *resultObj = NULL;
+    HRESULT hr = E_FAIL;
 
     switch (role) {
-    /* Listbox. */
     case ROLE_SYSTEM_LIST: {
-        snprintf(cmdBuf, sizeof(cmdBuf), "%s bbox %d", path, index);
-        if (Tcl_Eval(interp, cmdBuf) != TCL_OK) return E_FAIL;
+        /* Listbox bbox. */
+        cmd = Tcl_ObjPrintf("%s bbox %d", path, index);
+        Tcl_IncrRefCount(cmd);
 
+        if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) goto cleanup;
         resultObj = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, resultObj, &listLen) != TCL_OK || listLen != 4) {
-            return E_FAIL;
-        }
+        Tcl_IncrRefCount(resultObj);
 
+        Tcl_Size len;
+        if (Tcl_ListObjLength(interp, resultObj, &len) != TCL_OK || len != 4) goto cleanup;
+
+        int x, y, w, h;
         Tcl_Obj *elem;
+        Tcl_ListObjIndex(interp, resultObj, 0, &elem); Tcl_GetIntFromObj(interp, elem, &x);
+        Tcl_ListObjIndex(interp, resultObj, 1, &elem); Tcl_GetIntFromObj(interp, elem, &y);
+        Tcl_ListObjIndex(interp, resultObj, 2, &elem); Tcl_GetIntFromObj(interp, elem, &w);
+        Tcl_ListObjIndex(interp, resultObj, 3, &elem); Tcl_GetIntFromObj(interp, elem, &h);
 
-        Tcl_ListObjIndex(interp, resultObj, 0, &elem);
-        Tcl_GetIntFromObj(interp, elem, &x);
+        int rootX, rootY;
+        Tk_GetRootCoords(container, &rootX, &rootY);
 
-        Tcl_ListObjIndex(interp, resultObj, 1, &elem);
-        Tcl_GetIntFromObj(interp, elem, &y);
+        rect->left   = rootX + x;
+        rect->top    = rootY + y;
+        rect->right  = rect->left + w;
+        rect->bottom = rect->top + h;
 
-        Tcl_ListObjIndex(interp, resultObj, 2, &elem);
-        Tcl_GetIntFromObj(interp, elem, &w);
-
-        Tcl_ListObjIndex(interp, resultObj, 3, &elem);
-        Tcl_GetIntFromObj(interp, elem, &h);
-
-        break;
+        hr = S_OK;
+        goto cleanup;
     }
 
-    /* Treeview (outline/table). */
     case ROLE_SYSTEM_OUTLINE:
     case ROLE_SYSTEM_TABLE: {
-        Tcl_Obj *childrenList, *itemIdObj;
-        Tcl_Size count, llen;
-        Tcl_Obj *bboxObj, *elem;
-        const char *itemId;
-        int rowX, rowY, rowW, rowH;
+        /* Treeview: get item ID first. */
+        cmd = Tcl_ObjPrintf("%s children {}", path);
+        Tcl_IncrRefCount(cmd);
+        if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) goto cleanup;
 
-        /* Get item ID for this row. */
-        Tcl_Obj *cmd = Tcl_ObjPrintf("%s children {}", path);
-        if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
-            Tcl_DecrRefCount(cmd);
-            return E_FAIL;
-        }
-        Tcl_DecrRefCount(cmd);
+        resultObj = Tcl_GetObjResult(interp);
+        Tcl_IncrRefCount(resultObj);
+        Tcl_DecrRefCount(cmd); cmd = NULL;
 
-        childrenList = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, childrenList, &count) != TCL_OK ||
-            index < 0 || index >= count) {
-            return E_FAIL;
+        Tcl_Size count;
+        if (Tcl_ListObjLength(interp, resultObj, &count) != TCL_OK || index < 0 || (Tcl_Size)index >= count) {
+            goto cleanup;
         }
 
-        Tcl_ListObjIndex(interp, childrenList, index, &itemIdObj);
-        itemId = Tcl_GetString(itemIdObj);
+        Tcl_Obj *itemIdObj = NULL;
+        Tcl_ListObjIndex(interp, resultObj, index, &itemIdObj);
+        const char *itemId = Tcl_GetString(itemIdObj);
+        if (!itemId || itemId[0] == '\0') goto cleanup;
 
-        /* Get bbox of the row in tree column (#0). */
+        /* Get bbox of the row (tree column #0). */
         cmd = Tcl_ObjPrintf("%s bbox %s", path, itemId);
+        Tcl_IncrRefCount(cmd);
         if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) != TCL_OK) {
             Tcl_DecrRefCount(cmd);
-            return E_FAIL;
-        }
-        Tcl_DecrRefCount(cmd);
-
-        bboxObj = Tcl_GetObjResult(interp);
-        if (Tcl_ListObjLength(interp, bboxObj, &llen) != TCL_OK || llen != 4) {
-            return E_FAIL;
+            goto cleanup;
         }
 
-        Tcl_ListObjIndex(interp, bboxObj, 0, &elem); Tcl_GetIntFromObj(interp, elem, &rowX);
-        Tcl_ListObjIndex(interp, bboxObj, 1, &elem); Tcl_GetIntFromObj(interp, elem, &rowY);
-        Tcl_ListObjIndex(interp, bboxObj, 2, &elem); Tcl_GetIntFromObj(interp, elem, &rowW);
-        Tcl_ListObjIndex(interp, bboxObj, 3, &elem); Tcl_GetIntFromObj(interp, elem, &rowH);
+        Tcl_DecrRefCount(resultObj);
+        resultObj = Tcl_GetObjResult(interp);
+        Tcl_IncrRefCount(resultObj);
+        Tcl_DecrRefCount(cmd); cmd = NULL;
 
-        /* Header height adjustment  (critical for Narrator). */
+        Tcl_Size len;
+        if (Tcl_ListObjLength(interp, resultObj, &len) != TCL_OK || len != 4) goto cleanup;
+
+        int rowX, rowY, rowW, rowH;
+        Tcl_Obj *elem;
+        Tcl_ListObjIndex(interp, resultObj, 0, &elem); Tcl_GetIntFromObj(interp, elem, &rowX);
+        Tcl_ListObjIndex(interp, resultObj, 1, &elem); Tcl_GetIntFromObj(interp, elem, &rowY);
+        Tcl_ListObjIndex(interp, resultObj, 2, &elem); Tcl_GetIntFromObj(interp, elem, &rowW);
+        Tcl_ListObjIndex(interp, resultObj, 3, &elem); Tcl_GetIntFromObj(interp, elem, &rowH);
+
+        /* Get header height. */
         int headerHeight = 0;
-        Tcl_Obj *hdrCmd = Tcl_ObjPrintf("%s bbox heading", path);
-        if (Tcl_EvalObjEx(interp, hdrCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+        cmd = Tcl_ObjPrintf("%s bbox heading", path);
+        Tcl_IncrRefCount(cmd);
+        if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) == TCL_OK) {
             Tcl_Obj *hdrBox = Tcl_GetObjResult(interp);
             Tcl_Size hlen;
             if (Tcl_ListObjLength(interp, hdrBox, &hlen) == TCL_OK && hlen == 4) {
@@ -2901,38 +2904,30 @@ static HRESULT GetVirtualItemRect(
                 Tcl_GetIntFromObj(interp, hElem, &headerHeight);
             }
         }
-        Tcl_DecrRefCount(hdrCmd);
+        Tcl_DecrRefCount(cmd); cmd = NULL;
 
-        /* Full row spans widget width. */
-        Tk_Window tkwin = Tk_NameToWindow(interp, path, Tk_MainWindow(interp));
-        if (tkwin == NULL) {
-            return E_FAIL;
-        }
+        int rootX, rootY;
+        Tk_GetRootCoords(container, &rootX, &rootY);
 
-        x = 0;
-        y = rowY + headerHeight;
-        w = Tk_Width(tkwin);
-        h = rowH;
+        rect->left   = rootX;
+        rect->top    = rootY + rowY + headerHeight;
+        rect->right  = rootX + Tk_Width(container);
+        rect->bottom = rect->top + rowH;
 
-        break;
+        hr = S_OK;
+        goto cleanup;
     }
 
     default:
-        return E_FAIL;
+        hr = E_FAIL;
+        goto cleanup;
     }
 
-    /* Convert to screen coordinates. */
-    int rootX, rootY;
-    Tk_GetRootCoords(container, &rootX, &rootY);
-
-    rect->left   = rootX + x;
-    rect->top    = rootY + y;
-    rect->right  = rect->left + w;
-    rect->bottom = rect->top  + h;
-
-    return S_OK;
+ cleanup:
+    if (cmd)        Tcl_DecrRefCount(cmd);
+    if (resultObj)  Tcl_DecrRefCount(resultObj);
+    return hr;
 }
-
 
 /* Navigate virtual children. */
 static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_accNavigate(
