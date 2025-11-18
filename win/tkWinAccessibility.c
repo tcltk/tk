@@ -2626,8 +2626,6 @@ static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accState(
     VARIANT *pvarState)
 {
     if (!pvarState) return E_INVALIDARG;
-
-    /* Virtual children only support CHILDID_SELF. */
     if (varChild.vt != VT_I4 || varChild.lVal != CHILDID_SELF) {
         return E_INVALIDARG;
     }
@@ -2635,65 +2633,87 @@ static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accState(
     TkVirtualChildAccessible *virtualChild = (TkVirtualChildAccessible *)this;
     pvarState->vt = VT_I4;
 
-    /* Base states for virtual children */
     long state = STATE_SYSTEM_SELECTABLE | STATE_SYSTEM_FOCUSABLE;
 
-    /* Check if this virtual child is selected. */
     Tcl_Interp *interp = Tk_Interp(virtualChild->container);
-    if (interp) {
-        const char *pathStr = Tk_PathName(virtualChild->container);
-        char cmd[512];
+    if (!interp) {
+        pvarState->lVal = state;
+        return S_OK;
+    }
 
-        /* Determine selection command based on container role.*/
-        VARIANT containerRole;
-        VariantInit(&containerRole);
+    const char *pathStr = Tk_PathName(virtualChild->container);
+    char cmd[512];
 
-        if (TkAccRole(virtualChild->container, &containerRole) == S_OK &&
-            containerRole.vt == VT_I4) {
+    VARIANT containerRole;
+    VariantInit(&containerRole);
+    LONG role = ROLE_SYSTEM_CLIENT;
+    if (TkAccRole(virtualChild->container, &containerRole) == S_OK && containerRole.vt == VT_I4) {
+        role = containerRole.lVal;
+    }
+    VariantClear(&containerRole);
 
-            LONG role = containerRole.lVal;
-            int selIdx = -1;
+    int isSelected = 0;
+    int isFocused = 0;
 
-            switch (role) {
-                case ROLE_SYSTEM_LIST:
-                    snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+    TkGlobalLock();
+
+    /* Check selection */
+    if (role == ROLE_SYSTEM_LIST) {
+        snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+    } else {
+        snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
+    }
+    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+        Tcl_Obj *res = Tcl_GetObjResult(interp);
+        Tcl_Size len;
+        if (Tcl_ListObjLength(interp, res, &len) == TCL_OK) {
+            for (Tcl_Size i = 0; i < len; i++) {
+                Tcl_Obj *obj;
+                int idx;
+                Tcl_ListObjIndex(interp, res, i, &obj);
+                Tcl_GetIntFromObj(NULL, obj, &idx);
+                if (idx == virtualChild->index) {
+                    isSelected = 1;
                     break;
-                case ROLE_SYSTEM_OUTLINE:
-                case ROLE_SYSTEM_TABLE:
-                    snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
-                    break;
-                default:
-                    goto set_state;
-            }
-
-            TkGlobalLock();
-            if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                Tcl_Obj *res = Tcl_GetObjResult(interp);
-                Tcl_Size len;
-                if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
-                    Tcl_Obj *obj;
-                    Tcl_ListObjIndex(interp, res, 0, &obj);
-                    Tcl_GetIntFromObj(NULL, obj, &selIdx);
-                }
-            }
-            TkGlobalUnlock();
-
-            if (selIdx == virtualChild->index) {
-                state |= STATE_SYSTEM_SELECTED;
-				/* Only add FOCUSED if container has keyboard focus. */
-                TkWindow *focusPtr = TkGetFocusWin((TkWindow*)virtualChild->container);
-                if (focusPtr && (Tk_Window)focusPtr == virtualChild->container) {
-                    state |= STATE_SYSTEM_FOCUSED;
                 }
             }
         }
-        VariantClear(&containerRole);
     }
 
-set_state:
+    /* Check focus (independent of selection) */
+    if (role == ROLE_SYSTEM_LIST) {
+        isFocused = isSelected;  /* listbox: focus = selection */
+    } else {
+        snprintf(cmd, sizeof(cmd), "%s focus", pathStr);
+        if (Tcl_Eval(interp, cmd) == TCL_OK) {
+            const char *focusId = Tcl_GetStringResult(interp);
+            if (focusId && focusId[0] != '\0') {
+                snprintf(cmd, sizeof(cmd), "lsearch -exact [%s children {}] %s", pathStr, focusId);
+                if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                    int focusIdx;
+                    if (Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &focusIdx) == TCL_OK) {
+                        isFocused = (focusIdx == virtualChild->index);
+                    }
+                }
+            }
+        }
+    }
+
+    if (isSelected) state |= STATE_SYSTEM_SELECTED;
+    if (isFocused)  state |= STATE_SYSTEM_FOCUSED;
+
+    /* Add FOCUSED if container has keyboard focus and this is the focused item */
+    TkWindow *focusWin = TkGetFocusWin((TkWindow*)virtualChild->container);
+    if (focusWin && (Tk_Window)focusWin == virtualChild->container && isFocused) {
+        state |= STATE_SYSTEM_FOCUSED;
+    }
+
+    TkGlobalUnlock();
+
     pvarState->lVal = state;
     return S_OK;
 }
+
 /* Get value for virtual child (typically same as name for list items. */
 static HRESULT STDMETHODCALLTYPE TkVirtualChildAccessible_get_accValue(
     IAccessible *this,
@@ -3441,6 +3461,7 @@ static void TkRootAccessible_DestroyHandler(
  *
  *----------------------------------------------------------------------
  */
+
 static int EmitFocusChanged(
     TCL_UNUSED(void *), /* cd */
     Tcl_Interp *interp,
@@ -3487,66 +3508,83 @@ static int EmitFocusChanged(
     VARIANT roleVar;
     VariantInit(&roleVar);
     
+    LONG role = ROLE_SYSTEM_CLIENT;
     if (TkAccRole(win, &roleVar) == S_OK && roleVar.vt == VT_I4) {
-        LONG role = roleVar.lVal;
-        
-        if (role == ROLE_SYSTEM_LIST || 
-            role == ROLE_SYSTEM_TABLE || 
-            role == ROLE_SYSTEM_OUTLINE) {
-	    /* Ensure virtual children exist. */
-	    EnsureVirtualChildrenCreated(interp, win);
+        role = roleVar.lVal;
+    }
+    VariantClear(&roleVar);
 
-	    /*
-	     * Do NOT send focus to the container for virtual-item widgets.
-	     * Treeview/Table require focus on the *virtual row item*,
-	     * which EmitSelectionChanged() handles.
-	     */
-	    if (role == ROLE_SYSTEM_LIST) {
-		/* Native-style listbox behavior. */
-		NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+    BOOL isVirtualContainer = (role == ROLE_SYSTEM_LIST || 
+                               role == ROLE_SYSTEM_TABLE || 
+                               role == ROLE_SYSTEM_OUTLINE);
+
+    if (isVirtualContainer) {
+        EnsureVirtualChildrenCreated(interp, win);
+
+        const char *pathStr = Tk_PathName(win);
+        char cmd[512];
+        int focusIndex = -1;
+
+        /* Get the actual focused item (not selection!) */
+        if (role == ROLE_SYSTEM_LIST) {
+            /* Listbox: focus = first selected item (or -1) */
+            snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
+            if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                Tcl_Obj *res = Tcl_GetObjResult(interp);
+                Tcl_Size len;
+                if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
+                    Tcl_Obj *obj;
+                    Tcl_ListObjIndex(interp, res, 0, &obj);
+                    Tcl_GetIntFromObj(NULL, obj, &focusIndex);
+                }
+            }
+        } else {
+            /* Treeview/Table: use 'focus' command. */
+            snprintf(cmd, sizeof(cmd), "%s focus", pathStr);
+            if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                const char *focusId = Tcl_GetStringResult(interp);
+                if (focusId && focusId[0] != '\0') {
+                    /* Convert item ID to index. */
+                    snprintf(cmd, sizeof(cmd), "lsearch -exact [%s children {}] %s", pathStr, focusId);
+                    if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                        Tcl_GetIntFromObj(interp, Tcl_GetObjResult(interp), &focusIndex);
+                    }
+                }
+            }
+        }
+
+        /* Send focus to the correct virtual child. */
+        if (focusIndex >= 0) {
+            LONG itemRole;
+	    switch (role) {
+	    case ROLE_SYSTEM_LIST:
+		itemRole = ROLE_SYSTEM_LISTITEM;
+		break;
+	    case ROLE_SYSTEM_OUTLINE:
+		itemRole = ROLE_SYSTEM_OUTLINEITEM;
+		break;
+	    default:
+		itemRole = ROLE_SYSTEM_ROW;
+		break;
 	    }
 
-
-	    /* Announce selection if exists. */
-	    const char *pathStr = Tk_PathName(win);
-	    char cmd[512];
-	    if (role == ROLE_SYSTEM_LIST || 
-		role == ROLE_SYSTEM_TABLE) {
-		snprintf(cmd, sizeof(cmd), "%s curselection", pathStr);
-	    } else {
-		snprintf(cmd, sizeof(cmd), "%s selection", pathStr);
-	    }
-
-	    int selIndex = -1;
-	    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-		Tcl_Obj *res = Tcl_GetObjResult(interp);
-		Tcl_Size len;
-		if (Tcl_ListObjLength(interp, res, &len) == TCL_OK && len > 0) {
-		    Tcl_Obj *obj;
-		    Tcl_ListObjIndex(interp, res, 0, &obj);
-		    Tcl_GetIntFromObj(NULL, obj, &selIndex);
-		}
-	    }
-
-	    if (selIndex >= 0) {
-		LONG itemRole = (role == ROLE_SYSTEM_LIST) ? ROLE_SYSTEM_LISTITEM :
-		    (role == ROLE_SYSTEM_OUTLINE|| role == ROLE_SYSTEM_TABLE) ? ROLE_SYSTEM_OUTLINEITEM : ROLE_SYSTEM_ROW;
-
-		LONG virtId = TkCreateVirtualAccessible(interp, win, selIndex, itemRole);
-		if (virtId > 0) {
-		    /* Only send selection event — NOT focus. */
-		    NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, virtId);
-		    /* Optional: some screen readers like the explicit state change. */
-		    NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
-		}
-	    }
-	}
+            LONG virtId = TkCreateVirtualAccessible(interp, win, focusIndex, itemRole);
+            if (virtId > 0) {
+                NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, virtId);
+                NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, virtId);
+            }
+        } else if (role == ROLE_SYSTEM_LIST) {
+            /* Listbox with no selection: send focus to container */
+            NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
+        }
+    } else {
+        /* Regular widget: send focus to container */
+        NotifyWinEvent(EVENT_OBJECT_FOCUS, hwnd, OBJID_CLIENT, childId);
     }
 
-    /* Optional but helpful: let screen readers know the container state changed. */
+    /* Always send state change on container */
     NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 
-    VariantClear(&roleVar);
     TkGlobalUnlock();
     return TCL_OK;
 }
