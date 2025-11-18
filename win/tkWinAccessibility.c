@@ -2036,27 +2036,11 @@ static LONG TkCreateVirtualAccessible(
                 const char *itemid = Tcl_GetString(items[index]);
                 
                 /* For tree/table, get the text from the item. */
-                /* First try -text option. */
-                snprintf(cmd, sizeof(cmd), "%s item %s -text", parent_path, itemid);
+		snprintf(cmd, sizeof(cmd), "::tk::accessible::_gettreeviewdata %s", parent_path);
                 if (Tcl_Eval(interp, cmd) == TCL_OK) {
                     const char *text = Tcl_GetString(Tcl_GetObjResult(interp));
                     if (text && *text) {
                         label = text;
-                    }
-                }
-                
-                /* If -text is empty, try getting values from first column. */
-                if (!label || !*label) {
-                    snprintf(cmd, sizeof(cmd), "%s item %s -values", parent_path, itemid);
-                    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                        Tcl_Obj *valuesList = Tcl_GetObjResult(interp);
-                        Tcl_Size valCount;
-                        Tcl_Obj **values;
-                        
-                        if (Tcl_ListObjGetElements(interp, valuesList, &valCount, &values) == TCL_OK &&
-                            valCount > 0) {
-                            label = Tcl_GetString(values[0]);
-                        }
                     }
                 }
             }
