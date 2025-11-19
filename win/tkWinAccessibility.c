@@ -1645,7 +1645,7 @@ void HandleWMGetObjectOnMainThread(
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
 
-    /* Handle MSAA requests */
+    /* Handle MSAA requests. */
     if ((LONG)lParam == OBJID_CLIENT) {
 	TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
 	if (!msaaProvider) {
@@ -1852,7 +1852,7 @@ static int EmitSelectionChanged(
     if (childId > 0) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
-	/* Send comprehensive notifications for Narrator compatibility */
+	/* Send comprehensive notifications for Narrator compatibility. */
 	NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
 	NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 	NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
