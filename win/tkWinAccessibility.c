@@ -587,6 +587,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
 
     /* Toplevel. */
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->toplevel));
 	int wlen = GetWindowTextLengthW(hwnd);
 	WCHAR *wbuf = (WCHAR *)ckalloc((wlen + 1) * sizeof(WCHAR));
 
