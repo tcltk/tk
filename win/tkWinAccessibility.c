@@ -215,7 +215,6 @@ static HRESULT TkAccHelp(Tk_Window win, BSTR *pszHelp);
 static int TkAccChildCount(Tk_Window win);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 static HRESULT TkAccChild_GetRect(Tcl_Interp *interp, char *path, RECT *rect);
-static HRESULT TkAccName(Tk_Window win, BSTR *pszName);
 
 
 /*
@@ -895,37 +894,6 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
  *
  *----------------------------------------------------------------------
  */
-
-/* Function to map accessible name to MSAA. */
-static HRESULT TkAccName(
-    Tk_Window win,
-    BSTR *pszName)
-{
-    if (!win || !pszName) return E_INVALIDARG;
-    TkGlobalLock();
-
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (ClientData)win);
-    if (!hPtr) {
-	TkGlobalUnlock();
-	return S_FALSE;
-    }
-
-    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
-    if (!hPtr2) {
-	TkGlobalUnlock();
-	return S_FALSE;
-    }
-
-    const char *name = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    Tcl_DString ds;
-    Tcl_DStringInit(&ds);
-    *pszName = SysAllocString(Tcl_UtfToWCharDString(name, -1, &ds));
-    Tcl_DStringFree(&ds);
-
-    TkGlobalUnlock();
-    return S_OK;
-}
 
 /* Function to map accessible role to MSAA. */
 static HRESULT TkAccRole(
