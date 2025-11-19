@@ -587,14 +587,22 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
 
     /* Toplevel. */
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
-        const char *title = Tk_PathName(tkAccessible->toplevel);
-        Tcl_DString ds;
-        Tcl_DStringInit(&ds);
-        *pszName = SysAllocString(Tcl_UtfToWCharDString(title, -1, &ds));
-        Tcl_DStringFree(&ds);
-        TkGlobalUnlock();
-        return S_OK;
+	int wlen = GetWindowTextLengthW(hwnd);
+	WCHAR *wbuf = (WCHAR *)ckalloc((wlen + 1) * sizeof(WCHAR));
+
+	/* Read the actual UTF-16 title. */
+	if (!GetWindowTextW(hwnd, wbuf, wlen + 1)) {
+	    ckfree((char *)wbuf);
+	    *pszName = SysAllocString(L"");
+	    TkGlobalUnlock();
+	    return S_OK;
+	}
+	*pszName = SysAllocString(wbuf);
+	ckfree((char *)wbuf);
+	TkGlobalUnlock();
+	return S_OK;
     }
+
 
     /* Check for virtual child FIRST before regular widgets. */
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
