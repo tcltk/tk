@@ -12,7 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && defined(NDEBUG)
 
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by
@@ -101,7 +101,7 @@ DllMain(
     DWORD reason,
     LPVOID reserved)
 {
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && defined(NDEBUG)
     TCLEXCEPTION_REGISTRATION registration;
 #endif
     (void)reserved;
@@ -123,9 +123,9 @@ DllMain(
 	 * guaranteed Tk is always being unloaded from a stable condition.
 	 */
 
-#ifdef HAVE_NO_SEH
-#   if defined(__aarch64__)
-	/* Don't run TkFinalize(NULL) on mingw-w64 for ARM64, since we don't have corresponding assembler-code. */
+#if defined(HAVE_NO_SEH) || defined(__aarch64__) || !defined(NDEBUG)
+#   if defined(__aarch64__) || !defined(NDEBUG)
+	TkFinalize(NULL);
 #   elif defined(_WIN64)
 	__asm__ __volatile__ (
 
