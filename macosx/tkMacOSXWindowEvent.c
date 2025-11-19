@@ -1264,12 +1264,11 @@ static const char *const accentNames[] = {
     [self setFrameSize:self.frame.size];
 
     /*
-     * Create the *Tglswitch*.trough and *Tglswitch*.slider
-     * elements for the Toggleswitch* styles if necessary
+     * Update some style elements
      */
     Tcl_Interp *interp = Tk_Interp(tkwin);
-    int code = Tcl_EvalEx(interp, "ttk::toggleswitch::CondUpdateElements",
-	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    int code = Tcl_EvalEx(interp, "ttk::AppearanceChanged", TCL_INDEX_NONE,
+	    TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	Tcl_BackgroundException(interp, code);
     }

@@ -1059,9 +1059,8 @@ proc ttk::toggleswitch::CondMakeElements {} {
 # ttk::toggleswitch::CondUpdateElements
 #
 # Updates the Tglswitch*.trough and Tglswitch*.slider elements for the
-# Toggleswitch* styles if necessary.  Invoked from within the proc
-# ttk::ThemeChanged (see ttk.tcl) and the C code for macOSX, after sending the
-# virtual events <<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>>.
+# Toggleswitch* styles if necessary.  Invoked from within the procedures
+# ttk::ThemeChanged and ttk::AppearanceChanged (see ttk.tcl).
 #------------------------------------------------------------------------------
 proc ttk::toggleswitch::CondUpdateElements {} {
     variable madeElements
