@@ -78,7 +78,8 @@ proc ::ttk::ThemeChanged {} {
 
 ### ::ttk::AppearanceChanged --
 #	Called from the C code for macOSX, after sending the virtual events
-#	<<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>>.
+#	<<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>> to "." and the
+#	toplevel windows.
 #	Updates the elements of the Toggleswitch* and Wide.TSpinbox styles.
 #
 proc ::ttk::AppearanceChanged {} {
