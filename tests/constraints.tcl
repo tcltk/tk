@@ -1,8 +1,7 @@
 # constraints.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It defines test constraints that are used by several test files in the
-# Tk test suite.
+# This file is sourced into each test file by "main.tcl". It defines test
+# constraints that are used by several test files in the Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
