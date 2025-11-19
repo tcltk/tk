@@ -248,7 +248,7 @@ test canvas-1.47 {configure throws error on bad option} -body {
 #
 # For tests canvas-2.*
 #
-catch {destroy .c}
+destroy .c
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
