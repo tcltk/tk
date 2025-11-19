@@ -2,7 +2,8 @@
  * tkWinAccessibility.c
  *
  *    This file implements the platform-native Microsoft Active
- *    Accessibility and the UI Automation APIs for Tk on Windows.
+ *    Accessibility API for Tk on Windows and supports UI Automation
+ *    through the MSAA-UIA bridge provided by Windows.
  *
  * Copyright (c) 2024-2025 Kevin Walzer
  *
@@ -54,48 +55,34 @@ typedef struct TkRootAccessible {
     LONG refCount;
 } TkRootAccessible;
 
-/* UI Automation Provider structure */
-typedef struct TkUiaProvider {
-    IRawElementProviderSimpleVtbl *lpVtbl;
-    TkRootAccessible *msaaProvider;
-    Tk_Window tkwin;
-    LONG refCount;
-} TkUiaProvider;
-
 /*
- * Map script-level roles to C roles for both MSAA and UI Automation.
- * UI Automation control type values are from UIAutomation.h.
+ * Map script-level roles to C roles for MSAA.
  */
 
 struct WinRoleMap {
     const char *tkrole;
     LONG winrole;
-    LONG uiaControlType;
 };
 
-/* Define constants for the role lookup type. */
-#define ACC_ROLE_MSAA 0
-#define ACC_ROLE_UIA 1
-
 const struct WinRoleMap roleMap[] = {
-    {"Button", ROLE_SYSTEM_PUSHBUTTON, 50000},       /* UIA_ButtonControlTypeId */
-    {"Canvas", ROLE_SYSTEM_CLIENT, 50033},           /* UIA_PaneControlTypeId */
-    {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON, 50002}, /* UIA_CheckBoxControlTypeId */
-    {"Combobox", ROLE_SYSTEM_COMBOBOX, 50003},       /* UIA_ComboBoxControlTypeId */
-    {"Entry", ROLE_SYSTEM_TEXT, 50004},              /* UIA_EditControlTypeId */
-    {"Label", ROLE_SYSTEM_STATICTEXT, 50020},        /* UIA_TextControlTypeId */
-    {"Listbox", ROLE_SYSTEM_LIST, 50008},            /* UIA_ListControlTypeId */
-    {"Notebook", ROLE_SYSTEM_PAGETABLIST, 50018},    /* UIA_TabControlTypeId */
-    {"Progressbar", ROLE_SYSTEM_PROGRESSBAR, 50017}, /* UIA_ProgressBarControlTypeId */
-    {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON, 50012}, /* UIA_RadioButtonControlTypeId */
-    {"Scale", ROLE_SYSTEM_SLIDER, 50015},            /* UIA_SliderControlTypeId */
-    {"Scrollbar", ROLE_SYSTEM_SCROLLBAR, 50014},     /* UIA_ScrollBarControlTypeId */
-    {"Spinbox", ROLE_SYSTEM_SPINBUTTON, 50016},      /* UIA_SpinnerControlTypeId */
-    {"Table", ROLE_SYSTEM_TABLE, 50025},             /* UIA_TableControlTypeId */
-    {"Text", ROLE_SYSTEM_TEXT, 50004},               /* UIA_EditControlTypeId */
-    {"Tree", ROLE_SYSTEM_OUTLINE, 50023},            /* UIA_TreeControlTypeId */
-    {"Toggleswitch", ROLE_SYSTEM_CHECKBUTTON, 50002}, /* UIA_CheckBoxControlTypeId - closest match */
-    {NULL, 0, 0}
+    {"Button", ROLE_SYSTEM_PUSHBUTTON},
+    {"Canvas", ROLE_SYSTEM_CLIENT},
+    {"Checkbutton", ROLE_SYSTEM_CHECKBUTTON},
+    {"Combobox", ROLE_SYSTEM_COMBOBOX},
+    {"Entry", ROLE_SYSTEM_TEXT},
+    {"Label", ROLE_SYSTEM_STATICTEXT},
+    {"Listbox", ROLE_SYSTEM_LIST},
+    {"Notebook", ROLE_SYSTEM_PAGETABLIST},
+    {"Progressbar", ROLE_SYSTEM_PROGRESSBAR},
+    {"Radiobutton", ROLE_SYSTEM_RADIOBUTTON},
+    {"Scale", ROLE_SYSTEM_SLIDER},
+    {"Scrollbar", ROLE_SYSTEM_SCROLLBAR},
+    {"Spinbox", ROLE_SYSTEM_SPINBUTTON},
+    {"Table", ROLE_SYSTEM_TABLE},
+    {"Text", ROLE_SYSTEM_TEXT},
+    {"Tree", ROLE_SYSTEM_OUTLINE},
+    {"Toggleswitch", ROLE_SYSTEM_CHECKBUTTON},
+    {NULL, 0}
 };
 
 /* Hash table for managing accessibility attributes. */
@@ -105,12 +92,6 @@ extern Tcl_HashTable *TkAccessibilityObject;
 static Tcl_HashTable *tkAccessibleTable;
 static int tkAccessibleTableInitialized = 0;
 static Tcl_HashTable *toplevelChildTables = NULL;
-
-/* UI Automation provider tables and interfaces. */
-static Tcl_HashTable *tkUiaProviderTable;
-static int tkUiaProviderTableInitialized = 0;
-static IUIAutomation *g_pUIAutomation = NULL;
-static BOOL g_UIAutomationInitialized = FALSE;
 
 /* Data structures for managing execution on main thread. */
 typedef void (*MainThreadFunc)(int num_args, void** args);
@@ -217,43 +198,13 @@ static IAccessibleVtbl tkRootAccessibleVtbl = {
 /*
  *----------------------------------------------------------------------
  *
- * Prototypes for UI Automation Provider. UI Automation is being implemented
- * as a layer above the MSAA implementation using LegacyIAccessible pattern.
- * The current implementation is not very robust and screen readers that rely
- * primarily on UIA, particularly Narrator, will not be well-supported.
- *
- *----------------------------------------------------------------------
- */
-
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(IRawElementProviderSimple *this, REFIID riid, void **ppvObject);
-static ULONG STDMETHODCALLTYPE TkUiaProvider_AddRef(IRawElementProviderSimple *this);
-static ULONG STDMETHODCALLTYPE TkUiaProvider_Release(IRawElementProviderSimple *this);
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(IRawElementProviderSimple *this, enum ProviderOptions *pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(IRawElementProviderSimple *this, PATTERNID patternId, IUnknown **pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(IRawElementProviderSimple *this, PROPERTYID propertyId, VARIANT *pRetVal);
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(IRawElementProviderSimple *this, IRawElementProviderSimple **pRetVal);
-
-/* UI Automation Provider VTable. */
-static IRawElementProviderSimpleVtbl tkUiaProviderVtbl = {
-    TkUiaProvider_QueryInterface,
-    TkUiaProvider_AddRef,
-    TkUiaProvider_Release,
-    TkUiaProvider_get_ProviderOptions,
-    TkUiaProvider_GetPatternProvider,
-    TkUiaProvider_GetPropertyValue,
-    TkUiaProvider_get_HostRawElementProvider
-};
-
-/*
- *----------------------------------------------------------------------
- *
  * Prototypes for child widgets using MSAA childId. These will be called
  * from a global lock or explicitly run on the main thread.
  *
  *----------------------------------------------------------------------
  */
 
-static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole, int format);
+static HRESULT TkAccRole(Tk_Window win, VARIANT *pvarRole);
 static void ComputeAndCacheCheckedState(Tk_Window win, Tcl_Interp *interp);
 static HRESULT TkAccState(Tk_Window win, VARIANT *pvarState);
 static void TkAccFocus(int num_args, void **args);
@@ -535,17 +486,58 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_Invoke(
 }
 
 /*
- * Function to map accessible name to MSAA.
+ * Function to map accessible name to MSAA. We pass the description string
+ * to the name property so that we can get correct labeling on both NVDA
+ * and Narrator.
  */
 
 static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
-    TCL_UNUSED(IAccessible *),
-    TCL_UNUSED(VARIANT),
+    IAccessible *this,
+    VARIANT varChild,
     BSTR *pszName)
 {
     if (!pszName) return E_INVALIDARG;
-    *pszName = NULL; /* No name for toplevel to avoid double-reading. */
-    return S_OK;
+    *pszName = NULL;
+
+    TkGlobalLock();
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
+    if (!tkAccessible->toplevel) {
+        TkGlobalUnlock();
+        return E_INVALIDARG;
+    }
+
+    /* Toplevel. */
+    if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
+	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->toplevel));
+	int wlen = GetWindowTextLengthW(hwnd);
+	WCHAR *wbuf = (WCHAR *)ckalloc((wlen + 1) * sizeof(WCHAR));
+
+	/* Read the actual UTF-16 title. */
+	if (!GetWindowTextW(hwnd, wbuf, wlen + 1)) {
+	    ckfree((char *)wbuf);
+	    *pszName = SysAllocString(L"");
+	    TkGlobalUnlock();
+	    return S_OK;
+	}
+	*pszName = SysAllocString(wbuf);
+	ckfree((char *)wbuf);
+	TkGlobalUnlock();
+	return S_OK;
+    }
+
+
+    /* Child widgets - return description. */
+    if (varChild.vt == VT_I4 && varChild.lVal > 0) {
+        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+        if (child) {            
+            HRESULT hr = TkAccDescription(child, pszName);
+            TkGlobalUnlock();
+            return hr;
+        }
+    }
+
+    TkGlobalUnlock();
+    return E_INVALIDARG;
 }
 
 /* Function to map accessible role to MSAA. For toplevels, return ROLE_SYSTEM_WINDOW. */
@@ -569,7 +561,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accRole(
 	    TkGlobalUnlock();
 	    return E_INVALIDARG;
 	}
-	HRESULT hr = TkAccRole(child, pvarRole, ACC_ROLE_MSAA);
+	HRESULT hr = TkAccRole(child, pvarRole);
 	TkGlobalUnlock();
 	return hr;
     }
@@ -903,11 +895,10 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accDescription(
  *----------------------------------------------------------------------
  */
 
-/* Function to map accessible role to MSAA or UIA. */
+/* Function to map accessible role to MSAA. */
 static HRESULT TkAccRole(
     Tk_Window win,
-    VARIANT *pvarRole,
-    int format)
+    VARIANT *pvarRole)
 {
     if (!win || !pvarRole) return E_INVALIDARG;
     TkGlobalLock();
@@ -926,16 +917,11 @@ static HRESULT TkAccRole(
     }
 
     const char *tkrole = Tcl_GetString(Tcl_GetHashValue(hPtr2));
-    /* Fallback value. ROLE_SYSTEM_CLIENT for MSAA, 0 (Custom) for UIA. */
-    LONG result = (format == ACC_ROLE_MSAA) ? ROLE_SYSTEM_CLIENT : 0;
+    LONG result = ROLE_SYSTEM_CLIENT; /* Fallback value */
 
     for (int i = 0; roleMap[i].tkrole != NULL; i++) {
 	if (strcmp(tkrole, roleMap[i].tkrole) == 0) {
-	    if (format == ACC_ROLE_MSAA) {
-		result = roleMap[i].winrole;
-	    } else if (format == ACC_ROLE_UIA) {
-		result = roleMap[i].uiaControlType;
-	    }
+	    result = roleMap[i].winrole;
 	    break;
 	}
     }
@@ -1640,258 +1626,6 @@ static void AssignChildIdsRecursive(
 /*
  *----------------------------------------------------------------------
  *
- * UI Automation Provider implementation using LegacyIAccessible pattern.
- * This lets UIA automatically bridge to our existing MSAA implementation.
- *
- *----------------------------------------------------------------------
- */
-
-/* UI Automation Provider QueryInterface. */
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_QueryInterface(
-    IRawElementProviderSimple *this,
-    REFIID riid,
-    void **ppvObject)
-{
-    if (!ppvObject) return E_INVALIDARG;
-
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-
-    /* Common provider IIDs. */
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-	IsEqualIID(riid, &IID_IRawElementProviderSimple)) {
-	*ppvObject = this;
-	TkUiaProvider_AddRef(this);
-	return S_OK;
-    }
-
-    /* Forward to embedded MSAA provider for other interfaces. */
-    if (provider->msaaProvider) {
-	return provider->msaaProvider->lpVtbl->QueryInterface(
-	    (IAccessible *)provider->msaaProvider, riid, ppvObject);
-    }
-
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
-}
-
-/* UI Automation Provider AddRef. */
-static ULONG STDMETHODCALLTYPE TkUiaProvider_AddRef(
-    IRawElementProviderSimple *this)
-{
-    if (!this) return 0;
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    return InterlockedIncrement(&provider->refCount);
-}
-
-/* UI Automation Provider Release. */
-static ULONG STDMETHODCALLTYPE TkUiaProvider_Release(
-    IRawElementProviderSimple *this)
-{
-    if (!this) return 0;
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-    ULONG count = InterlockedDecrement(&provider->refCount);
-    if (count == 0) {
-	TkGlobalLock();
-	if (provider->msaaProvider) {
-	    TkRootAccessible_Release((IAccessible *)provider->msaaProvider);
-	}
-	ckfree(provider);
-	TkGlobalUnlock();
-    }
-    return count;
-}
-
-/* UI Automation Provider options. */
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_ProviderOptions(
-    TCL_UNUSED(IRawElementProviderSimple *), /* this */
-    enum ProviderOptions *pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
-    return S_OK;
-}
-
-/* UI Automation Pattern Provider.*/
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPatternProvider(
-    IRawElementProviderSimple *this,
-    PATTERNID patternId,
-    IUnknown **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-    *pRetVal = NULL;
-
-    /* Support LegacyIAccessible pattern - this bridges UIA to MSAA. */
-    if (patternId == UIA_LegacyIAccessiblePatternId) {
-	/* Return the provider itself as the LegacyIAccessible pattern. */
-	*pRetVal = (IUnknown *)this;
-	TkUiaProvider_AddRef(this);
-	return S_OK;
-    }
-
-    return S_OK;
-}
-
-/* UI Automation Property Provider. */
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_GetPropertyValue(
-    IRawElementProviderSimple *this,
-    PROPERTYID propertyId,
-    VARIANT *pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-
-    VariantInit(pRetVal);
-    TkUiaProvider *provider = (TkUiaProvider *)this;
-
-    if (!provider || !provider->msaaProvider) {
-	return E_FAIL;
-    }
-
-    /*
-     * For most properties, let the LegacyIAccessible pattern handle them
-     * through the MSAA bridge. We only need to handle a few critical ones.
-     */
-
-    switch (propertyId) {
-    case 30003: /* UIA_ControlTypePropertyId */
-	{
-	    /* Still need control type for basic element classification. */
-	    VARIANT varRole;
-	    VariantInit(&varRole);
-	    TkAccRole(provider->tkwin, &varRole, ACC_ROLE_UIA);
-	    pRetVal->vt = VT_I4;
-	    pRetVal->lVal = (varRole.vt == VT_I4) ? varRole.lVal : 50032; /* UIA_CustomControlTypeId */
-	    VariantClear(&varRole);
-	    break;
-	}
-
-    case 30016: /* UIA_IsControlElementPropertyId */
-    case 30017: /* UIA_IsContentElementPropertyId */
-	{
-	    /* These should generally be true for accessible elements. */
-	    pRetVal->vt = VT_BOOL;
-	    pRetVal->boolVal = VARIANT_TRUE;
-	    break;
-	}
-
-    case 30010: /* UIA_IsEnabledPropertyId */
-	{
-	    /* Basic enabled state. */
-	    VARIANT varState;
-	    VariantInit(&varState);
-	    TkAccState(provider->tkwin, &varState);
-	    pRetVal->vt = VT_BOOL;
-	    pRetVal->boolVal = (varState.vt == VT_I4 && (varState.lVal & STATE_SYSTEM_UNAVAILABLE)) ?
-		VARIANT_FALSE : VARIANT_TRUE;
-	    VariantClear(&varState);
-	    break;
-	}
-
-    case 30005: /* UIA_NamePropertyId */
-	{
-	    /* Get name from MSAA. */
-	    BSTR name = NULL;
-	    VARIANT varChild;
-	    varChild.vt = VT_I4;
-	    varChild.lVal = CHILDID_SELF;
-
-	    HRESULT hr = TkRootAccessible_get_accName(
-						      (IAccessible *)provider->msaaProvider, varChild, &name);
-
-	    if (SUCCEEDED(hr) && name) {
-		pRetVal->vt = VT_BSTR;
-		pRetVal->bstrVal = name;
-	    } else {
-		pRetVal->vt = VT_EMPTY;
-	    }
-	    break;
-	}
-
-    default:
-	/* For all other properties, LegacyIAccessible will handle them. */
-	pRetVal->vt = VT_EMPTY;
-	break;
-    }
-
-    return S_OK;
-}
-
-/* UI Automation Host Element Provider. */
-static HRESULT STDMETHODCALLTYPE TkUiaProvider_get_HostRawElementProvider(
-    TCL_UNUSED(IRawElementProviderSimple *), /* this */
-    IRawElementProviderSimple **pRetVal)
-{
-    if (!pRetVal) return E_INVALIDARG;
-    *pRetVal = NULL;
-    return S_OK;
-}
-
-/*
- * Create UI Automation Provider.
- */
-static TkUiaProvider *CreateUiaProvider(TkRootAccessible *msaaProvider, Tk_Window tkwin)
-{
-    if (!msaaProvider) return NULL;
-
-    TkUiaProvider *provider = (TkUiaProvider *)ckalloc(sizeof(TkUiaProvider));
-    if (!provider) return NULL;
-
-    provider->lpVtbl = &tkUiaProviderVtbl;
-    provider->msaaProvider = msaaProvider;
-    provider->tkwin = tkwin;
-    provider->refCount = 1;
-
-    TkRootAccessible_AddRef((IAccessible *)msaaProvider);
-
-    return provider;
-}
-
-/*
- * Initialize UI Automation.
- */
-static BOOL InitializeUIAutomation(void)
-{
-    if (g_UIAutomationInitialized) {
-	return TRUE;
-    }
-
-    HRESULT hr = CoCreateInstance(&CLSID_CUIAutomation, NULL, CLSCTX_INPROC_SERVER,
-				 &IID_IUIAutomation, (void**)&g_pUIAutomation);
-    if (SUCCEEDED(hr)) {
-	g_UIAutomationInitialized = TRUE;
-	return TRUE;
-    }
-
-    return FALSE;
-}
-
-/*
- * Initialize UI Automation Provider table.
- */
-void InitUiaProviderTable(void)
-{
-    if (!tkUiaProviderTableInitialized) {
-	tkUiaProviderTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-	if (tkUiaProviderTable) {
-	    Tcl_InitHashTable(tkUiaProviderTable, TCL_ONE_WORD_KEYS);
-	    tkUiaProviderTableInitialized = 1;
-	}
-    }
-}
-
-/*
- * Get UI Automation Provider for window.
- */
-static TkUiaProvider *GetUiaProviderForWindow(Tk_Window win)
-{
-    if (!win || !tkUiaProviderTableInitialized) return NULL;
-    Tcl_HashEntry *entry = Tcl_FindHashEntry(tkUiaProviderTable, win);
-    if (entry) return (TkUiaProvider *)Tcl_GetHashValue(entry);
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * Threading functions. These manage the integration of accessibility operations
  * on background threads and Tk execution on the main thread.
  *
@@ -1911,10 +1645,8 @@ void HandleWMGetObjectOnMainThread(
 
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
 
-    /* For both MSAA and UIA requests, create the MSAA provider first. */
-    if ((LONG)lParam == OBJID_CLIENT ||
-	lParam == (LPARAM)&IID_IRawElementProviderSimple) {
-
+    /* Handle MSAA requests */
+    if ((LONG)lParam == OBJID_CLIENT) {
 	TkRootAccessible *msaaProvider = GetTkAccessibleForWindow(tkwin);
 	if (!msaaProvider) {
 	    Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -1926,31 +1658,8 @@ void HandleWMGetObjectOnMainThread(
 	    }
 	}
 
-	if (msaaProvider) {
-	    if ((LONG)lParam == OBJID_CLIENT) {
-		/* MSAA request. */
-		if (outResult) {
-		    *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)msaaProvider);
-		}
-	    } else {
-		/* UIA request - create a simple UIA provider that bridges to MSAA. */
-		TkUiaProvider *uiaProvider = CreateUiaProvider(msaaProvider, tkwin);
-		if (uiaProvider && outResult) {
-		    *outResult = UiaReturnRawElementProvider(hwnd, wParam, lParam,
-			(IRawElementProviderSimple *)uiaProvider);
-
-		    /* Cache the UIA provider. */
-		    TkGlobalLock();
-		    if (!tkUiaProviderTableInitialized) {
-			InitUiaProviderTable();
-		    }
-		    Tcl_HashEntry *entry;
-		    int newEntry;
-		    entry = Tcl_CreateHashEntry(tkUiaProviderTable, tkwin, &newEntry);
-		    Tcl_SetHashValue(entry, uiaProvider);
-		    TkGlobalUnlock();
-		}
-	    }
+	if (msaaProvider && outResult) {
+	    *outResult = LresultFromObject(&IID_IAccessible, wParam, (IUnknown *)msaaProvider);
 	}
     }
 }
@@ -2143,36 +1852,11 @@ static int EmitSelectionChanged(
     if (childId > 0) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(toplevel));
 
-	/* Send comprehensive notifications. */
+	/* Send comprehensive notifications for Narrator compatibility */
 	NotifyWinEvent(EVENT_OBJECT_VALUECHANGE, hwnd, OBJID_CLIENT, childId);
 	NotifyWinEvent(EVENT_OBJECT_STATECHANGE, hwnd, OBJID_CLIENT, childId);
 	NotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hwnd, OBJID_CLIENT, childId);
-
-	/* UIA will automatically pick up these changes through LegacyIAccessible. */
-	TkUiaProvider *tkProvider = GetUiaProviderForWindow(toplevel);
-	if (tkProvider) {
-	    IRawElementProviderSimple *provider = (IRawElementProviderSimple *)tkProvider;
-
-	    VARIANT oldVal, newVal;
-	    VariantInit(&oldVal);
-	    VariantInit(&newVal);
-
-	    oldVal.vt = VT_BOOL;
-	    oldVal.boolVal = VARIANT_FALSE;
-	    newVal.vt = VT_BOOL;
-	    newVal.boolVal = VARIANT_TRUE;
-
-	    /* LegacyIAccessible pattern will handle the property change notifications. */
-	    UiaRaiseAutomationPropertyChangedEvent(
-		provider,
-		UIA_LegacyIAccessibleStatePropertyId,
-		oldVal,
-		newVal
-	    );
-
-	    VariantClear(&oldVal);
-	    VariantClear(&newVal);
-	}
+	NotifyWinEvent(EVENT_OBJECT_SELECTION, hwnd, OBJID_CLIENT, childId);
     }
 
     TkGlobalUnlock();
@@ -2232,18 +1916,6 @@ static void TkRootAccessible_DestroyHandler(
     if (tkAccessibleTableInitialized) {
 	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkAccessibleTable, tkAccessible->toplevel);
 	if (entry) {
-	    Tcl_DeleteHashEntry(entry);
-	}
-    }
-
-    /* Clean up UI Automation provider table. */
-    if (tkUiaProviderTableInitialized) {
-	Tcl_HashEntry *entry = Tcl_FindHashEntry(tkUiaProviderTable, tkAccessible->toplevel);
-	if (entry) {
-	    TkUiaProvider *uiaProvider = (TkUiaProvider *)Tcl_GetHashValue(entry);
-	    if (uiaProvider) {
-		TkUiaProvider_Release((IRawElementProviderSimple *)uiaProvider);
-	    }
 	    Tcl_DeleteHashEntry(entry);
 	}
     }
@@ -2317,8 +1989,7 @@ static int EmitFocusChanged(
  * TkRootAccessibleObjCmd --
  *
  *    Main command for adding and managing accessibility objects to Tk
- *    widgets on Windows using the Microsoft Active Accessibility and
- *    UI Automation APIs.
+ *    widgets on Windows using the Microsoft Active Accessibility API.
  *
  * Results:
  *      A standard Tcl result.
@@ -2401,11 +2072,7 @@ int TkWinAccessiblity_Init(
     InitAccessibilityMainThread();
     InitTkAccessibleTable();
     InitChildIdTable();
-    InitUiaProviderTable();
     TkGlobalUnlock();
-
-    /* Initialize UI Automation */
-    InitializeUIAutomation();
 
     /* Initialize Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
