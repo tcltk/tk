@@ -2,7 +2,8 @@
  * tkWinAccessibility.c
  *
  *    This file implements the platform-native Microsoft Active
- *    Accessibility API for Tk on Windows.
+ *    Accessibility API for Tk on Windows and supports UI Automation
+ *    through the MSAA-UIA bridge provided by Windows.
  *
  * Copyright (c) 2024-2025 Kevin Walzer
  *
