@@ -718,169 +718,6 @@ static TreeItem *FindItem(
     }
 }
 
-enum {index_end, index_first, index_last};
-static const char *const indexStrings[] = {"end", "first", "last", NULL};
-Tcl_Size TreeviewCountItems(TreeItem *, int, int);
-
-/* + FindIndex --
- *	Returns the index for value where index can be a valid index form.
- *	If index is negative, -1 is returned. For an error, -2 is returned.
- */
-static Tcl_Size FindIndex(
-    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj) {
-    int fn;
-    Tcl_Size index = -1;
-
-    if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
-	    "index", TCL_EXACT, &fn) == TCL_OK) {
-	/* Index enums: first, last, end */
-	if (fn == index_first) {
-	    index = 0;
-	} else if (fn == index_last) {
-	    index = TreeviewCountItems(item, 1, 0) - 1;
-	} else {
-	    index = TreeviewCountItems(item, 1, 0);
-	}
-
-    } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, 1, &index) == TCL_OK)) {
-	/* Index number, end-n, m+n, or m-n */
-	if (index < 0 || index > LONG_MAX - 4) {
-	    index = -1;
-	}
-
-    } else {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
-	    Tcl_GetString(indexObj)));
-	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", (char *)NULL);
-	index = -2;
-    }
-    return index;
-}
-
-/* + FindItemByIndex --
- *	Returns the item at index in item where index can be a valid index form.
- *	If index is invalid, result is set to error message and TCL_ERROR is returned.
- */
-static int FindItemByIndex(
-    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
-    int fn;
-    Tcl_Size index = -1;
-    *found = NULL;
-
-
-    if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
-	    "index", TCL_EXACT, &fn) == TCL_OK) {
-	/* Index enums: first, last, end */
-	if (fn == index_first) {
-	    *found = item->children;
-	} else {
-	    *found = item->lastChild;
-	}
-	if (*found && before && fn != index_end) {
-	    *found = (*found)->prev;
-	}
-
-    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, endIsSize, &index) == TCL_OK) {
-	/* Index number, end-n, m+n, or m-n */
-
-	*found = item->children;
-	if (*found) {
-	    while ((*found)->next && index > 0) {
-		index--;
-		*found = (*found)->next;
-	    }
-	    if (*found && before && index <= 0) {
-		*found = (*found)->prev;
-	    }
-	}
-
-    } else {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
-	    Tcl_GetString(indexObj)));
-	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", (char *)NULL);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-/* + GetPrevItem --
- *	Return the previous visible item in widget view
- */
-TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
-    TreeItem *current = item;
-
-    if (!current || !root) {
-	return NULL;
-    }
-
-    /* Loop over prev items until we find a visible one */
-    while (current != NULL) {
-	if (current->prev != NULL) {
-	    current = current->prev;
-	    while ((recurse && current->lastChild) && (allow_hidden ||
-		    (current->state & TTK_STATE_OPEN && !current->hidden))) {
-		current = current->lastChild;
-	    }
-	} else if (current->parent != root && recurse) {
-	    current = current->parent;
-	} else {
-	    /* No more items */
-	    return NULL;
-	}
-
-	/* Exit loop if found prev visible item */
-	if (!current->hidden || allow_hidden) {
-	    break;
-	}
-    }
-    return current;
-}
-
-/* + GetNextItem --
- *	Return the next visible item in widget view
- */
-TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
-    TreeItem *current = item;
-
-    if (!current || !root) {
-	return NULL;
-    }
-
-    /* Loop over next items until we find a visible one */
-    while (current != NULL) {
-	if ((recurse && current->children) && (allow_hidden ||
-		(current->state & TTK_STATE_OPEN && !current->hidden))) {
-	    current = current->children;
-	} else if (current->next != NULL) {
-	    current = current->next;
-	} else if (current->parent != root && recurse) {
-	    while (current->parent != root) {
-		current = current->parent;
-		if (current->next != NULL) {
-		   current = current->next;
-		   break;
-		} else if (current->parent == root) {
-		    /* No more items */
-		    return NULL;
-		}
-	    }
-	} else {
-	    /* No more items */
-	    return NULL;
-	}
-
-	/* Exit loop if found next visible item */
-	if (!current->hidden || allow_hidden) {
-	    break;
-	}
-    }
-    return current;
-}
-
 /* + GetItemListFromObj --
  *	Parse a Tcl_Obj * as a list of items.
  *	Returns a NULL-terminated array of items; result must
@@ -907,13 +744,6 @@ static TreeItem **GetItemListFromObj(
     }
     items[i] = NULL;
     return items;
-}
-
-/* + ItemName --
- *	Returns the item's ID.
- */
-static const char *ItemName(Treeview *tv, TreeItem *item) {
-    return (const char *)Tcl_GetHashKey(&tv->tree.items, item->entryPtr);
 }
 
 /*------------------------------------------------------------------------
@@ -2317,7 +2147,7 @@ static void DrawCells(
 
     /* If explicit padding was asked for, skip default. */
     if (Ttk_QueryStyle(Ttk_LayoutStyle(tv->tree.cellLayout), &displayItemCell,
-		    tv->tree.displayOptionTable, "-padding", state) != NULL) {
+	    tv->tree.displayOptionTable, "-padding", state) != NULL) {
 	defaultPadding = 0;
     }
 
@@ -2615,6 +2445,13 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 /*------------------------------------------------------------------------
  * +++ Utilities for widget commands
  */
+
+/* + ItemName --
+ *	Returns the item's ID.
+ */
+static const char *ItemName(Treeview *tv, TreeItem *item) {
+    return (const char *)Tcl_GetHashKey(&tv->tree.items, item->entryPtr);
+}
 
 /* + NotAncestryCheck --
  *	Verify that specified item is not an ancestor of the specified parent;
@@ -2934,6 +2771,39 @@ static int TreeviewPrevCommand(
     return TCL_OK;
 }
 
+/* + GetPrevItem --
+ *	Return the previous visible item in widget view
+ */
+TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
+    TreeItem *current = item;
+
+    if (!current || !root) {
+	return NULL;
+    }
+
+    /* Loop over prev items until we find a visible one */
+    while (current != NULL) {
+	if (current->prev != NULL) {
+	    current = current->prev;
+	    while ((recurse && current->lastChild) && (allow_hidden ||
+		    (current->state & TTK_STATE_OPEN && !current->hidden))) {
+		current = current->lastChild;
+	    }
+	} else if (current->parent != root && recurse) {
+	    current = current->parent;
+	} else {
+	    /* No more items */
+	    return NULL;
+	}
+
+	/* Exit loop if found prev visible item */
+	if (!current->hidden || allow_hidden) {
+	    break;
+	}
+    }
+    return current;
+}
+
 /* + $tv before ?-opt ...? $item --
  *	Get item before $item in view, which may be a sibling or parent
  */
@@ -2980,6 +2850,47 @@ static int TreeviewBeforeCommand(
 	Tcl_SetObjResult(interp, before->idObj);
     }
     return TCL_OK;
+}
+
+/* + GetNextItem --
+ *	Return the next visible item in widget view
+ */
+TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int allow_hidden, int recurse) {
+    TreeItem *current = item;
+
+    if (!current || !root) {
+	return NULL;
+    }
+
+    /* Loop over next items until we find a visible one */
+    while (current != NULL) {
+	if ((recurse && current->children) && (allow_hidden ||
+		(current->state & TTK_STATE_OPEN && !current->hidden))) {
+	    current = current->children;
+	} else if (current->next != NULL) {
+	    current = current->next;
+	} else if (current->parent != root && recurse) {
+	    while (current->parent != root) {
+		current = current->parent;
+		if (current->next != NULL) {
+		   current = current->next;
+		   break;
+		} else if (current->parent == root) {
+		    /* No more items */
+		    return NULL;
+		}
+	    }
+	} else {
+	    /* No more items */
+	    return NULL;
+	}
+
+	/* Exit loop if found next visible item */
+	if (!current->hidden || allow_hidden) {
+	    break;
+	}
+    }
+    return current;
 }
 
 /* + $tv after ?-opt ...? $item --
@@ -3114,6 +3025,94 @@ static int TreeviewBetweenCommand(
     return TCL_OK;
 }
 
+enum {index_end, index_first, index_last};
+static const char *const indexStrings[] = {"end", "first", "last", NULL};
+
+/* + FindIndex --
+ *	Returns the index for value where index can be a valid index form.
+ *	If index is negative, -1 is returned. For an error, -2 is returned.
+ */
+static Tcl_Size FindIndex(
+    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj) {
+    int fn;
+    Tcl_Size index = -1;
+
+    if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
+	    "index", TCL_EXACT, &fn) == TCL_OK) {
+	/* Index enums: first, last, end */
+	if (fn == index_first) {
+	    index = 0;
+	} else if (fn == index_last) {
+	    index = TreeviewCountItems(item, 1, 0) - 1;
+	} else {
+	    index = TreeviewCountItems(item, 1, 0);
+	}
+
+    } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, 1, &index) == TCL_OK)) {
+	/* Index number, end-n, m+n, or m-n */
+	if (index < 0 || index > LONG_MAX - 4) {
+	    index = -1;
+	}
+
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
+	    Tcl_GetString(indexObj)));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", (char *)NULL);
+	index = -2;
+    }
+    return index;
+}
+
+/* + FindItemByIndex --
+ *	Returns the item at index in item where index can be a valid index form.
+ *	If index is invalid, result is set to error message and TCL_ERROR is returned.
+ */
+static int FindItemByIndex(
+    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
+    int fn;
+    Tcl_Size index = -1;
+    *found = NULL;
+
+
+    if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
+	    "index", TCL_EXACT, &fn) == TCL_OK) {
+	/* Index enums: first, last, end */
+	if (fn == index_first) {
+	    *found = item->children;
+	} else {
+	    *found = item->lastChild;
+	}
+	if (*found && before && fn != index_end) {
+	    *found = (*found)->prev;
+	}
+
+    } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, endIsSize, &index) == TCL_OK) {
+	/* Index number, end-n, m+n, or m-n */
+
+	*found = item->children;
+	if (*found) {
+	    while ((*found)->next && index > 0) {
+		index--;
+		*found = (*found)->next;
+	    }
+	    if (*found && before && index <= 0) {
+		*found = (*found)->prev;
+	    }
+	}
+
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
+	    Tcl_GetString(indexObj)));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", (char *)NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
 /* + $tv identifier $item index --
  *	Return the id of the item at index in parent $item.
  */
@@ -3205,7 +3204,7 @@ static int TreeviewBBoxCommand(
     Ttk_Box bbox;
 
     if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?column");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?column?");
 	return TCL_ERROR;
     }
 
@@ -3441,7 +3440,7 @@ static int TreeviewItemCommand(
     TreeItem *item;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item ?-option ?value??...");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?-option? ?value? ?-option value ...?");
 	return TCL_ERROR;
     }
     if (!(item = FindItem(interp, tv, objv[2]))) {
@@ -3469,7 +3468,7 @@ static int TreeviewColumnCommand(
     TreeColumn *column;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "column -option value...");
+	Tcl_WrongNumArgs(interp, 2, objv, "column ?-option? ?value? ?-option value ...?");
 	return TCL_ERROR;
     }
     if (!(column = FindColumn(interp, tv, objv[2]))) {
@@ -3498,7 +3497,7 @@ static int TreeviewHeadingCommand(
     TreeColumn *column;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "column -option value...");
+	Tcl_WrongNumArgs(interp, 2, objv, "column ?-option? ?value? ?-option value ...?");
 	return TCL_ERROR;
     }
     if (!(column = FindColumn(interp, tv, objv[2]))) {
@@ -3885,7 +3884,7 @@ static int TreeviewInsertCommand(
     Tcl_Obj *idObj;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?parent index?|?before|after item? ?-id id? -options...");
+	Tcl_WrongNumArgs(interp, 2, objv, "?parent index?|?before|after item? ?-id id? ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -4522,7 +4521,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?from to?");
 	return TCL_ERROR;
     }
 
@@ -4535,7 +4534,7 @@ static int TreeviewSelectionCommand(
 	    selop != SELECTION_SIZE) ||
 	    (objc > 3 && (selop == SELECTION_SIZE || selop == SELECTION_PRESENT)) ||
 	    (objc > 4 && selop == SELECTION_ANCHOR)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?from to?");
 	return TCL_ERROR;
 
     } else if (objc == 4) {
@@ -4826,7 +4825,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?from to?");
 	return TCL_ERROR;
     }
 
@@ -4838,7 +4837,7 @@ static int TreeviewCellSelectionCommand(
     nosel = (selop == SELECTION_ANCHOR || selop == SELECTION_PRESENT || selop == SELECTION_SIZE);
     if ((objc == 3 && !nosel) || (objc == 4 && (selop == SELECTION_PRESENT ||
 	    selop == SELECTION_SIZE)) || (objc == 5 && nosel)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells|from? ?to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?from to?");
 	return TCL_ERROR;
     } else if (objc == 4 && selop != SELECTION_ANCHOR) {
 	cells = GetCellListFromObj(interp, tv, objv[3], &nCells);
@@ -5027,7 +5026,7 @@ static int TreeviewSearchCommand(
     /* type = strcmp(Tcl_GetString(tv->tree.selectTypeObj), "cell");*/
 
     if (objc < 4 || objc > 25) {
-	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...? pattern");
+	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-options ...? pattern");
 	return TCL_ERROR;
     }
 
@@ -5962,7 +5961,7 @@ static int TreeviewSortCommand(
     };
 
     if (objc < 3 || objc > 22) {
-	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-option value ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-options ...?");
 	return TCL_ERROR;
     }
 
@@ -6156,7 +6155,7 @@ static int TreeviewTagConfigureCommand(
     Ttk_Tag tag;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?-option ?value ...??");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?-option? ?value? ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -6318,7 +6317,7 @@ static int TreeviewTagNamesCommand(
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 3, objv, "");
+	Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	return TCL_ERROR;
     }
 
