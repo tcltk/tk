@@ -1,5 +1,6 @@
-# This file is a Tcl script to test the "tk" command, except those for
-# "tk busy", which are in the test file busy.test.
+# This file is a Tcl script to test the "tk" command, except those for:
+# - "tk attribtable", which are in the test file attribtabl.test
+# - "tk busy", which are in the test file busy.test
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
