@@ -2446,13 +2446,6 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
  * +++ Utilities for widget commands
  */
 
-/* + ItemName --
- *	Returns the item's ID.
- */
-static const char *ItemName(Treeview *tv, TreeItem *item) {
-    return (const char *)Tcl_GetHashKey(&tv->tree.items, item->entryPtr);
-}
-
 /* + NotAncestryCheck --
  *	Verify that specified item is not an ancestor of the specified parent;
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
@@ -2462,9 +2455,8 @@ static int NotAncestryCheck(
     TreeItem *p = parent;
     while (p) {
 	if (p == item) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "Cannot insert %s as descendant of %s",
-		    ItemName(tv, item), ItemName(tv, parent)));
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Cannot insert %s as descendant of %s",
+		Tcl_GetString(item->idObj), Tcl_GetString(parent->idObj)));
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ANCESTRY", (char *)NULL);
 	    return 0;
 	}
@@ -2487,7 +2479,7 @@ static int AncestryCheck(
 	p = p->parent;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("Item %s is not a descendant of %s",
-	    ItemName(tv, item), ItemName(tv, parent)));
+	Tcl_GetString(item->idObj), Tcl_GetString(parent->idObj)));
     Tcl_SetErrorCode(interp, "TTK", "TREE", "ANCESTRY", (char *)NULL);
     return 0;
 }
@@ -2550,6 +2542,13 @@ static int TreeviewChildrenCommand(
 
 	/* Sanity-check: */
 	for (i = 0; newChildren[i]; ++i) {
+	    if (newChildren[i] == tv->tree.root) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Cannot insert root as child item", -1));
+		Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", (char *)NULL);
+		ckfree(newChildren);
+		return TCL_ERROR;	
+	    }
 	    if (!NotAncestryCheck(interp, tv, newChildren[i], item)) {
 		ckfree(newChildren);
 		return TCL_ERROR;
