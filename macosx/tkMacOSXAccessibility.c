@@ -474,6 +474,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	(role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
