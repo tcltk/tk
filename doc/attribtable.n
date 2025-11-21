@@ -9,7 +9,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-tk attribtable \- Create an attribute table, used to query and modify
+attribtable \- Create an attribute table, used to query and modify
 arbitrary data attached to any widget.
 .SH SYNOPSIS
 \fBtk attribtable \fItableName\fR
