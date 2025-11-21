@@ -6,7 +6,7 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer.
+ * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
  * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -26,7 +26,6 @@
 #endif
 */
 
-extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
  */
@@ -165,19 +164,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width, height, flags);
-
-	/*Resize accessibility frame if window is resized.*/
-	TKContentView *view = [w contentView];
-	if ([view isKindOfClass:[TKContentView class]]) {
-	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
-		if  (movedOnly) {
-		    NSAccessibilityPostNotification(element, NSAccessibilityMovedNotification);
-		} else {
-		    NSAccessibilityPostNotification(element, NSAccessibilityResizedNotification);
-		}
-	    }
-	}
     }
+
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -350,6 +338,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+
+#if 0
+    if (winPtr) {
+	Tk_UnmapWindow((Tk_Window)winPtr);
+    }
+#endif
 }
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
@@ -393,7 +387,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
     TkpChangeFocus(winPtr, 1);
-    Tcl_Release(winPtr);
 }
 
 #pragma mark TKApplication(TKApplicationEvent)
@@ -430,7 +423,6 @@ static void RefocusGrabWindow(void *data) {
 	    [win orderOut:NSApp];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
-	    Tcl_Preserve(winPtr);
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
 	}
 	if (iconifiedWindow == nil && [win isMiniaturized]) {
@@ -583,6 +575,11 @@ GenerateUpdates(
     NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 
     TkMacOSXWinCGBounds(winPtr, &bounds);
+#if 0
+    if (!CGRectIntersectsRect(bounds, *updateBounds)) {
+	return 0;
+    }
+#endif
 
     /*
      * Compute the bounding box of the area that the damage occurred in.
@@ -1093,8 +1090,8 @@ ExposeRestrictProc(
     Tk_Window tkwin = (Tk_Window)winPtr;
 
     if (winPtr) {
-	unsigned int width = (unsigned int)newsize.width;
-	unsigned int height= (unsigned int)newsize.height;
+	unsigned int width = (unsigned int) newsize.width;
+	unsigned int height= (unsigned int) newsize.height;
 
 	/*
 	 * This function can be re-entered, so we need to make sure we don't
@@ -1138,6 +1135,7 @@ ExposeRestrictProc(
 	 */
 
 	[NSApp _unlockAutoreleasePool];
+
     }
 }
 
@@ -1375,15 +1373,15 @@ static const char *const accentNames[] = {
 }
 
 -(void) resetTkLayerBitmapContext {
-    static CGColorSpaceRef colorspace = NULL;
-    if (colorspace == NULL) {
-	colorspace = CGColorSpaceCreateDeviceRGB();
-	CGColorSpaceRetain(colorspace);
-    }
+    NSScreen *screen = [[self window] screen];
+    NSNumber *screenNumber = [[screen deviceDescription] objectForKey:@"NSScreenNumber"];
+    CGDirectDisplayID displayID = [screenNumber unsignedIntValue];
+    CGColorSpaceRef colorspace = CGDisplayCopyColorSpace(displayID);
     CGContextRef newCtx = CGBitmapContextCreate(
 	    NULL, self.layer.contentsScale * self.frame.size.width,
 	    self.layer.contentsScale * self.frame.size.height, 8, 0, colorspace,
-	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast // will also need to specify this when capturing
+	    // will also need to specify this when capturing
+	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast
     );
     CGContextScaleCTM(newCtx, self.layer.contentsScale, self.layer.contentsScale);
 #if 0
@@ -1399,44 +1397,6 @@ static const char *const accentNames[] = {
     CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
 }
-
-/*Add support for accessibility in TKContentView.*/
-
-NSMutableArray *_tkAccessibleElements;
-
-+ (BOOL)isAccessibilityElement {
-    return NO;
-}
-
-- (NSArray *)accessibilityChildren {
-    return [_tkAccessibleElements copy];
-}
-
-
-- (void)accessibilityChildrenChanged {
-    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
-}
-
-- (BOOL)accessibilityIsIgnored {
-    return YES;
-}
-
-- (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
-
-    if (!_tkAccessibleElements) {
-	_tkAccessibleElements = [[NSMutableArray alloc ] init];
-    }
-
-    if (element) {
-	[_tkAccessibleElements addObject:element];
-	[self accessibilityChildrenChanged];
-    }
-}
-
-- (void)setAccessibilityParentView:(NSView *)parentView {
-    [self setAccessibilityParent:self];
-}
-
 
 @end
 
