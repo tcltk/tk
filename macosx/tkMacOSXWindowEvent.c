@@ -1387,6 +1387,8 @@ static const char *const accentNames[] = {
 	    // will also need to specify this when capturing
 	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast
     );
+    // CGDisplayCopyColorSpace retains the colorspace.
+    CGColorSpaceRelease(colorspace);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
 		      self.layer.contentsScale);
 #if 0
