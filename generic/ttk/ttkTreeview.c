@@ -1195,7 +1195,6 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     Tk_BindEvent(tv->tree.bindingTable, event, tv->core.tkwin, tagset->nTags,
 	    (void **)tagset->tags);
     Tcl_Release(clientData);
-
     Ttk_FreeTagSet(tagset);
 }
 
@@ -1990,8 +1989,8 @@ static void DrawHeadings(Treeview *tv, Drawable d) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	if (x0+x+column->width > tv->tree.titleWidth) {
-	    DisplayLayout(tv->tree.headingLayout,
-		    column, column->headingState, parcel, d);
+	    DisplayLayout(tv->tree.headingLayout, column, column->headingState,
+		    parcel, d);
 	}
 	x += column->width;
 	++i;
@@ -2003,8 +2002,8 @@ static void DrawHeadings(Treeview *tv, Drawable d) {
     while ((i < tv->tree.nTitleColumns) && (i < tv->tree.nDisplayColumns)) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
-	DisplayLayout(tv->tree.headingLayout,
-	    column, column->headingState, parcel, d);
+	DisplayLayout(tv->tree.headingLayout, column, column->headingState,
+		parcel, d);
 	x += column->width;
 	++i;
     }
@@ -2158,7 +2157,7 @@ static void DrawCells(
 		column->width - tv->tree.colSeparatorWidth : column->width;
 	Ttk_Box parcel = Ttk_MakeBox(parcelX, y, parcelWidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItemCell;
-	Ttk_State stateCell = state;
+	Ttk_State cellState = state;
 	Tk_Anchor textAnchor, imageAnchor;
 	xPad = column->separator ? tv->tree.colSeparatorWidth/2 : 0;
 
@@ -2169,16 +2168,19 @@ static void DrawCells(
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemCellSel;
-	    stateCell |= TTK_STATE_SELECTED;
+	    cellState |= TTK_STATE_SELECTED;
+	}
+
+	if (item == tv->tree.focus && tv->tree.focusCol == column) {
+	    cellState |= TTK_STATE_FOCUS;
 	}
 
 	if (column->tagset) {
 	    displayItemLocal = *displayItemUsed;
 	    displayItemUsed = &displayItemLocal;
-	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
-		    displayItemUsed);
+	    Ttk_TagSetValues(tv->tree.tagTable,column->tagset,displayItemUsed);
 	    OverrideStriped(tv, item, displayItemUsed);
-	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
+	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, cellState,
 		    displayItemUsed);
 	}
 
@@ -2191,10 +2193,10 @@ static void DrawCells(
 	    Tk_GetAnchorFromObj(NULL, displayItemUsed->imageAnchorObj,
 		    &imageAnchor);
 	}
-	/* displayItem was used to draw the full item backgound.
+	/* displayItem was used to draw the full item background.
 	   Redraw cell background if needed. */
-	if (displayItemUsed != &displayItemCell) {
-	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
+	if (displayItemUsed != &displayItemCell || state != cellState) {
+	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, cellState,
 		    parcel, d);
 	}
 
@@ -2203,8 +2205,8 @@ static void DrawCells(
 	    parcel = Ttk_PadBox(parcel, cellPadding);
 	}
 
-	DisplayLayoutTree(imageAnchor, textAnchor,
-		layout, displayItemUsed, state, parcel, d);
+	DisplayLayoutTree(imageAnchor, textAnchor, layout, displayItemUsed,
+		state & ~TTK_STATE_FOCUS, parcel, d);
     }
 }
 
@@ -2240,8 +2242,8 @@ static void DrawItem(
 
     /* Draw row background: */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
-				     TreeWidth(tv), rowHeight);
+	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y, TreeWidth(tv),
+		rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -2256,8 +2258,8 @@ static void DrawItem(
 
     /* Draw row background for non-scrolled area: */
     if (tv->tree.nTitleColumns >= 1) {
-	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
-		tv->tree.titleWidth, rowHeight);
+	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x,y,tv->tree.titleWidth,
+		rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -2271,22 +2273,25 @@ static void DrawItem(
 	int xTree = tv->tree.nTitleColumns >= 1 ? xTitle : x;
 	Ttk_Box parcel = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItem;
-	Ttk_State stateCell = state;
+	Ttk_State cellState = state;
 	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
 	Ttk_Padding cellPadding = {(short)indent, 0, 0, 0};
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;
-	    stateCell |= TTK_STATE_SELECTED;
+	    cellState |= TTK_STATE_SELECTED;
+	}
+
+	if (item == tv->tree.focus && column == tv->tree.focusCol) {
+	    cellState |= TTK_STATE_FOCUS;
 	}
 
 	if (column->tagset) {
 	    displayItemLocal = *displayItemUsed;
 	    displayItemUsed = &displayItemLocal;
-	    Ttk_TagSetValues(tv->tree.tagTable, column->tagset,
-		    displayItemUsed);
+	    Ttk_TagSetValues(tv->tree.tagTable,column->tagset,displayItemUsed);
 	    OverrideStriped(tv, item, displayItemUsed);
-	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, stateCell,
+	    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, cellState,
 		    displayItemUsed);
 	}
 
@@ -2305,14 +2310,14 @@ static void DrawItem(
 		    &imageAnchor);
 	}
 
-	if (displayItemUsed != &displayItem) {
-	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
+	if (displayItemUsed != &displayItem || state != cellState) {
+	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, cellState,
 		    parcel, d);
 	}
 
 	parcel = Ttk_PadBox(parcel, cellPadding);
-	DisplayLayoutTree(imageAnchor, textAnchor,
-		tv->tree.itemLayout, displayItemUsed, state, parcel, d);
+	DisplayLayoutTree(imageAnchor, textAnchor, tv->tree.itemLayout,
+		displayItemUsed, state & ~TTK_STATE_FOCUS, parcel, d);
 	xTitle += colwidth;
     }
 
@@ -2389,7 +2394,6 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	DrawTreeArea(tv, d);
     } else {
 	/* The tree area needs to be clipped */
-
 	int x, y;
 
 	x = tv->tree.treeArea.x;
@@ -6661,15 +6665,15 @@ TTK_LAYOUT("Treeview",
 	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
 
 TTK_LAYOUT("Item",
-    TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
-	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
-	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
+	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Cell",
-    TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
-	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
+	TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
@@ -6679,7 +6683,7 @@ TTK_LAYOUT("Heading",
 	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
 
 TTK_LAYOUT("Row",
-    TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
+	TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
 
 TTK_LAYOUT("Separator",
     TTK_NODE("Treeitem.separator", TTK_FILL_BOTH))
@@ -6807,9 +6811,9 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
     { "-rownumber", TK_OPTION_INT,
 	offsetof(RowElement,rowNumberObj), "0" },
     { "-focuswidth", TK_OPTION_PIXELS,
-	offsetof(RowElement,focusWidthObj), "2" },
+	offsetof(RowElement,focusWidthObj), "1" },
     { "-focuscolor", TK_OPTION_COLOR,
-	offsetof(RowElement,focusColorObj), "#008000" },
+	offsetof(RowElement,focusColorObj), "#000000" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 

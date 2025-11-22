@@ -1239,12 +1239,19 @@ Specifies the background color of the tree entries. The default is same as Treev
 .TP
 \fB\-focuscolor\fR \fIcolor\fR
 .
-Specifies the color of the focus ring for tree entries. The default is #008000.
+Specifies the color of the focus ring for tree entries. The default is #000000.
 .TP
 \fB\-focuswidth\fR \fIpixels\fR
 .
 Specifies the thickness of the focus ring for tree entries in pixels. The
-default is 2 pixels.
+default is 1 pixel.
+.PP
+Example of how to set focus ring options for a spreadsheet-style focus ring:
+.PP
+.CS
+ttk::style configure Row -focuscolor #008000 -focuswidth 2
+.CE
+
 .RE
 .PP
 The \fBItem\fR styling options configurable with \fBttk::style\fR are:
