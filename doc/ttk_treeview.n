@@ -177,10 +177,12 @@ treeview widgets support the following additional commands:
 .TP
 \fIpathname \fBafter\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
-Returns the identifier of item after \fIitem\fR in the current view. Can be
+Returns the identifier of the item after \fIitem\fR in the current view. Can be
 the first child, next sibling, next sibling of an ancestor, or {} for none.
-With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child or parent items.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
+If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
+The \fBnext\fR method is equivalent to "\fBafter -hidden -norecurse\fR"
 .\" METHOD: bbox
 .TP
 \fIpathname \fBbbox\fR \fIitem\fR ?\fIcolumn\fR?
@@ -202,17 +204,20 @@ into item and column components.
 .TP
 \fIpathname \fBbefore\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
-Returns the identifier of item before \fIitem\fR in the current view.
+Returns the identifier of the item before \fIitem\fR in the current view.
 Can be the previous sibling, parent of \fIitem\fR, or {} for none.
-With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child or parent items.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
+If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
+The \fBprev\fR method is equivalent to "\fBbefore -hidden -norecurse\fR"
 .\" METHOD: between
 .TP
-\fIpathname \fBbetween\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfrom to\fR
+\fIpathname \fBbetween\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfirst last\fR
 .
-Returns a list of all of the items between \fIfrom\fR and \fIto\fR, inclusive.
-With \fB-hidden\fR, will include hidden items. With \fB-norecurse\fR, won't
-include child or parent items.
+Returns a list of items from \fIfirst\fR through \fIlast\fR, inclusive.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
+If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .\" METHOD: cellfocus
 .TP
 \fIpathname \fBcellfocus\fR ?\fIcell\fR?
@@ -237,15 +242,15 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add \fIcellList\fR to the cell selection.
 .TP
-\fIpathname \fBcellselection add \fIfirstCell lastCell\fR
+\fIpathname \fBcellselection add \fIfirst last\fR
 .
-Add the cells within the rectangle defined by \fIfirstCell\fR and
-\fIlastCell\fR to the cell selection.
+Add the cells within the rectangle defined by \fIfirst\fR and
+\fIlast\fR to the cell selection.
 .TP
 \fIpathname \fBcellselection anchor\fR ?\fIcell\fR?
 .
 Set cell selection anchor to \fIcell\fR. The anchor is used as the
-firstCell for the selection extend bindings. Without \fIcell\fR, the
+first for the selection extend bindings. Without \fIcell\fR, the
 current cell selection anchor is returned. Set \fIcell\fR to the empty
 string {} to unset the anchor.
 .TP
@@ -257,20 +262,20 @@ Returns boolean with whether there are selected cells or not.
 .
 Remove \fIcellList\fR from the cell selection.
 .TP
-\fIpathname \fBcellselection remove \fIfirstCell lastCell\fR
+\fIpathname \fBcellselection remove \fIfirst last\fR
 .
-Remove the cells within the rectangle defined by \fIfirstCell\fR and
-\fIlastCell\fR from the cell selection.
+Remove the cells within the rectangle defined by \fIfirst\fR and
+\fIlast\fR from the cell selection.
 .TP
 \fIpathname \fBcellselection set \fIcellList\fR
 .
 Sets the selection to the cells in \fIcellList\fR. Use an empty set \fB{}\fR
 to clear the selection.
 .TP
-\fIpathname \fBcellselection set \fIfirstCell lastCell\fR
+\fIpathname \fBcellselection set \fIfirst last\fR
 .
 Set the selection to the cells within the rectangle defined by
-\fIfirstCell\fR and \fIlastCell\fR. Other cells are unselected.
+\fIfirst\fR and \fIlast\fR. Other cells are unselected.
 .TP
 \fIpathname \fBcellselection size\fR
 .
@@ -280,10 +285,10 @@ Returns the number of selected cells.
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
 .TP
-\fIpathname \fBcellselection toggle \fIfirstCell lastCell\fR
+\fIpathname \fBcellselection toggle \fIfirst last\fR
 .
 Toggle the selection state of the cells within the rectangle defined
-by \fIfirstCell\fR and \fIlastCell\fR.
+by \fIfirst\fR and \fIlast\fR.
 .RE
 .\" METHOD: children
 .TP
@@ -689,8 +694,8 @@ See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 .TP
 \fB\-hidden\fR
 .
-Search within hidden items too. The default is to exclude hidden items from the
-search.
+Search within hidden and closed items too. The default is to exclude hidden
+items from the search.
 .\" OPTION: -recurse
 .TP
 \fB\-recurse\fR
@@ -760,7 +765,7 @@ Same as previous command, but uses the expand operator to convert \fIcell\fR
 into item and column components.
 .\" METHOD: selection
 .TP
-\fIpathname \fBselection\fR ?\fIselop itemList|from to\fR?
+\fIpathname \fBselection\fR ?\fIselop itemList|first last\fR?
 .
 Manages item selection. Item selection is independent from the cell selection
 handled by the \fBcellselection\fR command.
@@ -772,13 +777,16 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add items in \fIitemList\fR to the selection.
 .TP
-\fIpathname \fBselection add \fIfromItem toItem\fR
+\fIpathname \fBselection add\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
 .
-Add items between \fIfromItem\fR and \fItoItem\fR (inclusive) to the selection.
+Add items from \fIfirst\fR to \fIlast\fR (inclusive) to the selection.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
+If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
 \fIpathname \fBselection anchor ?\fIitem\fR?
 .
-Sets the selection anchor to \fIitem\fR. The anchor is used as the fromItem
+Sets the selection anchor to \fIitem\fR. The anchor is used as the from item
 for the selection extend bindings. Without \fIitem\fR, the current selection
 anchor is returned. Set \fIitem\fR to the empty string {} to unset the anchor.
 .TP
@@ -786,41 +794,47 @@ anchor is returned. Set \fIitem\fR to the empty string {} to unset the anchor.
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
 .TP
-\fIpathname \fBselection has \fIfromItem toItem\fR
+\fIpathname \fBselection has \fIfirst last\fR
 .
-Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\fR
-(inclusive), or 0 if any are not.
+Returns 1 if selection includes all items from \fIfirst\fR to \fIlast\fR
+(inclusive), or 0 if any are not selected.
 .TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
 .TP
-\fIpathname \fBselection includes \fIfromItem toItem\fR
+\fIpathname \fBselection includes \fIfirst last\fR
 .
-Returns 1 if selection includes all items between \fIfromItem\fR and \fItoItem\fR
-(inclusive), or 0 if any are not.
+Returns 1 if selection includes all items from \fIfirst\fR to \fIlast\fR
+(inclusive), or 0 if any are not selected.
 .TP
 \fIpathname \fBselection present\fR
 .
-Returns whether there are selected items or not.
+Returns boolean with whether there are selected items or not.
 .TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
 Remove all of the items in \fIitemList\fR from the selection.
 .TP
-\fIpathname \fBselection remove \fIfromItem toItem\fR
+\fIpathname \fBselection remove\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
 .
-Remove all of the items between \fIfromItem\fR and \fItoItem\fR (inclusive) from
+Remove all of the items from \fIfirst\fR to \fIlast\fR (inclusive) from
 the selection.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
+If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
 \fIpathname \fBselection set \fIitemList\fR
 .
 Sets selection to items in \fIitemList\fR. Use an empty set {} to clear the
 selection.
 .TP
-\fIpathname \fBselection set \fIfromItem toItem\fR
+\fIpathname \fBselection set\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
 .
-Sets selection to the items between \fIfromItem\fR and \fItoItem\fR (inclusive).
+Sets selection to the items from \fIfirst\fR to \fIlast\fR (inclusive).
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
+If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
 \fIpathname \fBselection size\fR
 .
@@ -830,10 +844,13 @@ Returns the number of selected items.
 .
 Toggle the selection state of each item in \fIitemList\fR.
 .TP
-\fIpathname \fBselection toggle \fIfromItem toItem\fR
+\fIpathname \fBselection toggle\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
 .
-Toggle the selection state of each item between \fIfromItem\fR and \fItoItem\fR
+Toggle the selection state of each item from \fIfirst\fR to \fIlast\fR
 (inclusive).
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
+If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .RE
 .\" METHOD: set
 .TP
@@ -850,9 +867,10 @@ value of each column \fIcolumn\fR to the associated \fIvalue\fR. Use column
 .TP
 \fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse\fR? \fIitem\fR
 .
-Returns the number of children belonging to \fIitem\fR. With \fI\-hidden\fR
-option, will include hidden items. With \fI\-recurse\fR option, will include
-all descendants.
+Returns the number of children belonging to \fIitem\fR.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
+If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .\" METHOD: sort
 .TP
 \fIpathname \fBsort \fIparent\fR ?\fI\-option ...\fR?

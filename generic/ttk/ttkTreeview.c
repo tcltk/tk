@@ -2634,9 +2634,35 @@ Tcl_Size TreeviewCountItems(TreeItem *parent, int hidden, int recurse) {
     return count;
 }
 
-enum { OPT_HIDDEN, OPT_RECURSE, OPT_RECURSIVE, OPT_NORECURSE };
-static const char *const optStrings[] = {
-	"-hidden", "-recurse", "-recursive", "-norecurse", NULL };
+/*
+ * Get Hidden and Recurse options
+ */
+enum { OPT_HIDDEN, OPT_NOHIDDEN, OPT_RECURSE, OPT_RECURSIVE, OPT_NORECURSE };
+static const char *const optionStrings[] = {
+	"-hidden", "-nohidden", "-recurse", "-recursive", "-norecurse", NULL };
+
+static int GetHiddenRecurseOptions(
+    Tcl_Interp *interp, Tcl_Obj *const objv[], Tcl_Size start, Tcl_Size last, int *hidden, int *recurse) {
+    Tcl_Size i, option;
+
+    for (i = start; i < last; ++i) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char *), "option", 0, &option) == TCL_OK) {
+	    if (option == OPT_HIDDEN) {
+		*hidden = 1;
+	    } else if (option == OPT_NOHIDDEN) {
+		*hidden = 0;
+	    } else if (option != OPT_NORECURSE) {
+		*recurse = 1;
+	    } else {
+		*recurse = 0;
+	    }
+	} else {
+	    return TCL_ERROR;
+	}
+    }
+    return TCL_OK;
+}
 
 /* + $tv size ?-opt ...? $item --
  *	Return count of immediate children associated with $item or with
@@ -2647,7 +2673,7 @@ static int TreeviewSizeCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     int option = -1, hidden = 0, recurse = 0;
-    Tcl_Size i, count;
+    Tcl_Size count;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-recurse? item");
@@ -2655,19 +2681,8 @@ static int TreeviewSizeCommand(
     }
 
     if (objc > 3) {
-	for (i = 2; i < objc-1; ++i) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
-		    sizeof(char *), "option", 0, &option) == TCL_OK) {
-		if (option == OPT_HIDDEN) {
-		    hidden = 1;
-		} else if (option != OPT_NORECURSE) {
-		    recurse = 1;
-		} else {
-		    recurse = 0;
-		}
-	    } else {
-		return TCL_ERROR;
-	    }
+	if (GetHiddenRecurseOptions(interp, objv, 2, objc-1, &hidden, &recurse) != TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -2815,7 +2830,6 @@ static int TreeviewBeforeCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *before;
     int option = -1, hidden = 0, recurse = 1;
-    Tcl_Size i;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -2823,19 +2837,8 @@ static int TreeviewBeforeCommand(
     }
 
     if (objc > 3) {
-	for (i = 2; i < objc-1; ++i) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
-		    sizeof(char *), "option", 0, &option) == TCL_OK) {
-		if (option == OPT_HIDDEN) {
-		    hidden = 1;
-		} else if (option != OPT_NORECURSE) {
-		    recurse = 1;
-		} else {
-		    recurse = 0;
-		}
-	    } else {
-		return TCL_ERROR;
-	    }
+	if (GetHiddenRecurseOptions(interp, objv, 2, objc-1, &hidden, &recurse) != TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -2904,7 +2907,6 @@ static int TreeviewAfterCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *after;
     int option = -1, hidden = 0, recurse = 1;
-    Tcl_Size i;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -2912,19 +2914,8 @@ static int TreeviewAfterCommand(
     }
 
     if (objc > 3) {
-	for (i = 2; i < objc-1; ++i) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
-		    sizeof(char *), "option", 0, &option) == TCL_OK) {
-		if (option == OPT_HIDDEN) {
-		    hidden = 1;
-		} else if (option != OPT_NORECURSE) {
-		    recurse = 1;
-		} else {
-		    recurse = 0;
-		}
-	    } else {
-		return TCL_ERROR;
-	    }
+	if (GetHiddenRecurseOptions(interp, objv, 2, objc-1, &hidden, &recurse) != TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -2987,27 +2978,15 @@ static int TreeviewBetweenCommand(
     TreeItem *from, *to;
     Tcl_Obj *resultObj;
     int option = -1, hidden = 0, recurse = 1;
-    Tcl_Size i;
 
     if (objc < 3 || objc > 6) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? from to");
+	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? first last");
 	return TCL_ERROR;
     }
 
     if (objc > 3) {
-	for (i = 2; i < objc-2; ++i) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
-		    sizeof(char *), "option", 0, &option) == TCL_OK) {
-		if (option == OPT_HIDDEN) {
-		    hidden = 1;
-		} else if (option != OPT_NORECURSE) {
-		    recurse = 1;
-		} else {
-		    recurse = 0;
-		}
-	    } else {
-		return TCL_ERROR;
-	    }
+	if (GetHiddenRecurseOptions(interp, objv, 2, objc-2, &hidden, &recurse) != TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -4507,9 +4486,10 @@ static int TreeviewSelectionCommand(
     };
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop = 0, i, selChange = 0;
+    int selop = 0, selChange = 0, hidden = 0, recurse = 1;
     TreeItem *item, **items = NULL, *from, *to;
     Tcl_Obj *listObj = NULL;
+    Tcl_Size i;
 
     /* Get selection */
     if (objc == 2) {
@@ -4523,8 +4503,8 @@ static int TreeviewSelectionCommand(
 	return TCL_OK;
     }
 
-    if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?from to?");
+    if (objc < 3 || objc > 7) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?options first last?");
 	return TCL_ERROR;
     }
 
@@ -4537,7 +4517,7 @@ static int TreeviewSelectionCommand(
 	    selop != SELECTION_SIZE) ||
 	    (objc > 3 && (selop == SELECTION_SIZE || selop == SELECTION_PRESENT)) ||
 	    (objc > 4 && selop == SELECTION_ANCHOR)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?from to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?options first last?");
 	return TCL_ERROR;
 
     } else if (objc == 4) {
@@ -4545,10 +4525,15 @@ static int TreeviewSelectionCommand(
 	if (!items) {
 	    return TCL_ERROR;
 	}
-    } else if (objc == 5) {
-	int hidden = 0;
-	int recurse = 1;
-	if (!(from = FindItem(interp, tv, objv[3])) || !(to = FindItem(interp, tv, objv[4]))) {
+    } else if (objc > 5) {
+	if (GetHiddenRecurseOptions(interp, objv, 3, objc-2, &hidden, &recurse) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+
+    if (objc >= 5) {
+	if (!(from = FindItem(interp, tv, objv[objc-2])) ||
+		!(to = FindItem(interp, tv, objv[objc-1]))) {
 	    return TCL_ERROR;
 	}
 	if (from == tv->tree.root || to == tv->tree.root) {
@@ -4559,10 +4544,12 @@ static int TreeviewSelectionCommand(
 
 	listObj = GetBetweenList(interp, tv, from, to, hidden, recurse);
 	if (listObj) {
+	    Tcl_IncrRefCount(listObj);
 	    items = GetItemListFromObj(interp, tv, listObj);
 	} else {
 	    return TCL_ERROR;
 	}
+
 	if (!items) {
 	    return TCL_ERROR;
 	}
@@ -4590,7 +4577,7 @@ static int TreeviewSelectionCommand(
 		} else {
 		    tv->tree.selAnchor = NULL;
 		}
-		if (tv->tree.selAnchorColObj != NULL) {
+		if (tv->tree.selAnchorColObj) {
 		    Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		    tv->tree.selAnchorColObj = NULL;
 		}
@@ -4664,6 +4651,9 @@ static int TreeviewSelectionCommand(
     if (objc == 4) {
 	ckfree(items);
     }
+    if (listObj) {
+	Tcl_DecrRefCount(listObj);
+    }
     if (selChange) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
 	TtkRedisplayWidget(&tv->core);
@@ -4704,7 +4694,8 @@ static int SelObjChangeElement(
     return anyChange;
 }
 
-/* + $tree cellselection ?add|remove|set|toggle $items?
+/* + CellSelectionRange --
+ *	SElect cells within a range.
  */
 static int CellSelectionRange(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *fromCell, Tcl_Obj *toCell,
@@ -4828,7 +4819,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?from to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?first last?");
 	return TCL_ERROR;
     }
 
@@ -4840,7 +4831,7 @@ static int TreeviewCellSelectionCommand(
     nosel = (selop == SELECTION_ANCHOR || selop == SELECTION_PRESENT || selop == SELECTION_SIZE);
     if ((objc == 3 && !nosel) || (objc == 4 && (selop == SELECTION_PRESENT ||
 	    selop == SELECTION_SIZE)) || (objc == 5 && nosel)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?from to?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|present|remove|set|size|toggle? ?cells?|?first last?");
 	return TCL_ERROR;
     } else if (objc == 4 && selop != SELECTION_ANCHOR) {
 	cells = GetCellListFromObj(interp, tv, objv[3], &nCells);
