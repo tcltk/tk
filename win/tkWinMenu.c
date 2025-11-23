@@ -572,13 +572,11 @@ ReconfigureWindowsMenu(
     TkMenu *menuPtr = (TkMenu *)clientData;
     TkMenuEntry *mePtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
-    char *itemText = NULL;
     LPCWSTR lpNewItem;
     UINT flags;
     UINT itemID;
     Tcl_Size i, count;
 	int systemMenu = 0, base;
-    Tcl_DString translatedText;
 	MENUITEMINFOW itemInfo;  
 
     if (NULL == winMenuHdl) {
@@ -598,6 +596,9 @@ ReconfigureWindowsMenu(
 
     count = menuPtr->numEntries;
     for (i = 0; i < count; i++) {
+	char *itemText = NULL;
+	Tcl_DString translatedText;
+
 	mePtr = menuPtr->entries[i];
 	lpNewItem = NULL;
 	flags = MF_BYPOSITION;
@@ -611,7 +612,6 @@ ReconfigureWindowsMenu(
 	itemText = GetEntryText(menuPtr, mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-		Tcl_DStringInit(&translatedText);
 		Tcl_UtfToWCharDString(itemText, TCL_INDEX_NONE, &translatedText);
 	    lpNewItem = (LPCWSTR) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
@@ -744,14 +744,12 @@ ReconfigureWindowsMenu(
             
             Tcl_DStringFree(&accessText);
         }
+	Tcl_DStringFree(&translatedText);
+	if (itemText != NULL) {
+	    ckfree(itemText);
+	    itemText = NULL;
+	}
     }
-	
-    Tcl_DStringFree(&translatedText);
-    if (itemText != NULL) {
-	ckfree(itemText);
-	itemText = NULL;
-    }
-
 
     if ((menuPtr->menuType == MENUBAR)
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
