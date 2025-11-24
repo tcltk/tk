@@ -912,7 +912,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc handler {type offset count} {
@@ -923,7 +923,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc reallyBadHandler {path type offset count} {
