@@ -2664,6 +2664,7 @@ static int GetHiddenRecurseOptions(
     return TCL_OK;
 }
 
+
 /* + $tv size ?-opt ...? $item --
  *	Return count of immediate children associated with $item or with
  *	-recurse, all sub children. With -hidden, include hidden items.
@@ -4471,60 +4472,139 @@ static int TreeviewCellFocusCommand(
     return TCL_OK;
 }
 
-/* + $tree selection ?add|remove|set|toggle $items|$from $to?
+/* + $tree selection anchor ?$item?
  */
-static int TreeviewSelectionCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    enum {
+static int TreeviewSelectionAnchor(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "?item?");
+	return TCL_ERROR;
+    }
+
+    if (objc == 3) {
+	if (tv->tree.selAnchor) {
+	    Tcl_SetObjResult(interp, (tv->tree.selAnchor)->idObj);
+	}
+
+    } else {
+	TreeItem *item;
+
+	if (!(item = FindItem(interp, tv, objv[3]))) {
+	    return TCL_ERROR;
+	}
+
+	/* Set item anchor and clear cell column anchor */
+	tv->tree.selAnchor = (item != tv->tree.root ? item : NULL);
+	if (tv->tree.selAnchorColObj) {
+	    Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+	    tv->tree.selAnchorColObj = NULL;
+	}
+    }
+    return TCL_OK;
+}
+
+/* + $tree selection has|includes items
+ */
+static int TreeviewSelectionIncludes(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_Size i, len;
+    TreeItem *item;
+    Tcl_Obj *idObj;
+    int result = 0;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "items");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_ListObjLength(interp, objv[3], &len) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    for (i = 0; i < len; i++) {
+	if (Tcl_ListObjIndex(interp, objv[3], i, &idObj) != TCL_OK ||
+	    !(item = FindItem(interp, tv, idObj))) {
+	    return TCL_ERROR;
+	}
+
+	if (!(result = (item->state & TTK_STATE_SELECTED))) {
+	    break;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result ? 1 : 0));
+    return TCL_OK;
+}
+
+/* + $tree selection present
+ */
+static int TreeviewSelectionPresent(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    int present = 0;
+    TreeItem *item;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 3, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+	if (item->state & TTK_STATE_SELECTED) {
+	    present = 1;
+	    break;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(present));
+    return TCL_OK;
+}
+
+/* + $tree selection size
+ */
+static int TreeviewSelectionSize(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_WideInt count = 0;
+    TreeItem *item;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 3, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+	if (item->state & TTK_STATE_SELECTED) {
+	    count++;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
+   return TCL_OK;
+}
+
+typedef enum {
 	SELECTION_ADD, SELECTION_ANCHOR, SELECTION_HAS, SELECTION_INCLUDES,
 	SELECTION_PRESENT, SELECTION_REMOVE, SELECTION_SET, SELECTION_SIZE,
 	SELECTION_TOGGLE
-    };
-    static const char *const selopStrings[] = {
+} selOp_t;
+static const char *const selopStrings[] = {
 	"add", "anchor", "has", "includes", "present", "remove", "set", "size",
 	"toggle", NULL
-    };
+};
 
-    Treeview *tv = (Treeview *)recordPtr;
-    int selop = 0, selChange = 0, hidden = 0, recurse = 1;
-    TreeItem *item, **items = NULL, *from, *to;
-    Tcl_Obj *listObj = NULL;
+/* + $tree selection add|remove|set|toggle ?items?|?options first last?
+ */
+static int TreeviewSelectionSet(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
     Tcl_Size i;
+    TreeItem *item, **items = NULL, *from, *to;
+    int changed = 0, hidden = 0, recurse = 1;
+    Tcl_Obj *listObj = NULL;
 
-    /* Get selection */
-    if (objc == 2) {
-	Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
-	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
-	    if (item->state & TTK_STATE_SELECTED) {
-		Tcl_ListObjAppendElement(NULL, resultObj, item->idObj);
-	    }
-	}
-	Tcl_SetObjResult(interp, resultObj);
-	return TCL_OK;
-    }
-
-    if (objc < 3 || objc > 7) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?options first last?");
+    if (objc < 4 || objc > 7) {
+	Tcl_WrongNumArgs(interp, 3, objv, "?items?|?options first last?");
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
-	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    if ((objc == 3 && selop != SELECTION_ANCHOR && selop != SELECTION_PRESENT &&
-	    selop != SELECTION_SIZE) ||
-	    (objc > 3 && (selop == SELECTION_SIZE || selop == SELECTION_PRESENT)) ||
-	    (objc > 4 && selop == SELECTION_ANCHOR)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|anchor|has|includes|present|remove|set|size|toggle? ?items?|?options first last?");
-	return TCL_ERROR;
-
-    } else if (objc == 4) {
+    if (objc == 4) {
 	items = GetItemListFromObj(interp, tv, objv[3]);
-	if (!items) {
-	    return TCL_ERROR;
-	}
     } else if (objc > 5) {
 	if (GetHiddenRecurseOptions(interp, objv, 3, objc-2, &hidden, &recurse) != TCL_OK) {
 	    return TCL_ERROR;
@@ -4542,6 +4622,16 @@ static int TreeviewSelectionCommand(
 	    return TCL_ERROR;
 	}
 
+	/* Correct order */
+	if (tv->tree.rowPosNeedsUpdate) {
+	    UpdatePositionTree(tv);
+	}
+	if (from->itemPos > to->itemPos) {
+	    item = from;
+	    from = to;
+	    to = item;
+	}
+
 	listObj = GetBetweenList(interp, tv, from, to, hidden, recurse);
 	if (listObj) {
 	    Tcl_IncrRefCount(listObj);
@@ -4550,8 +4640,19 @@ static int TreeviewSelectionCommand(
 	    return TCL_ERROR;
 	}
 
-	if (!items) {
-	    return TCL_ERROR;
+    }
+
+    if (!items) {
+	return TCL_ERROR;
+    }
+
+    /* Clear existing selection */
+    if (selop == SELECTION_SET) {
+	for (item=tv->tree.root; item; item = NextPreorder(item)) {
+	    if (item->state & TTK_STATE_SELECTED) {
+		item->state &= ~TTK_STATE_SELECTED;
+		changed = 1;
+	    }
 	}
     }
 
@@ -4561,104 +4662,99 @@ static int TreeviewSelectionCommand(
 	    for (i=0; items[i]; ++i) {
 		if (!(items[i]->state & TTK_STATE_SELECTED)) {
 		    items[i]->state |= TTK_STATE_SELECTED;
-		    selChange = 1;
+		    changed = 1;
 		}
 	    }
-	    break;
-	case SELECTION_ANCHOR:
-	    /* Set or get selection anchor */
-	    if (objc == 3) {
-		if (tv->tree.selAnchor) {
-		    Tcl_SetObjResult(interp, (tv->tree.selAnchor)->idObj);
-		}
-	    } else {
-		if (items[0] != tv->tree.root) {
-		    tv->tree.selAnchor = items[0];
-		} else {
-		    tv->tree.selAnchor = NULL;
-		}
-		if (tv->tree.selAnchorColObj) {
-		    Tcl_DecrRefCount(tv->tree.selAnchorColObj);
-		    tv->tree.selAnchorColObj = NULL;
-		}
-	    }
-	    break;
-	case SELECTION_HAS:
-	case SELECTION_INCLUDES:
-	    /* Check if in selection */
-	    int result = 1;
-	    for (i=0; items[i]; ++i) {
-		if (!(items[i]->state & TTK_STATE_SELECTED)) {
-		    result = 0;
-		    break;
-		}
-	    }
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(i > 0 ? result : 0));
-	    break;
-	case SELECTION_PRESENT:
-	    /* Get whether there area selected items or not */
-	    int present = 0;
-	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
-		if (item->state & TTK_STATE_SELECTED) {
-		    present = 1;
-		    break;
-		}
-	    }
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(present));
 	    break;
 	case SELECTION_REMOVE:
 	    /* Remove from selection */
 	    for (i=0; items[i]; ++i) {
 		if (items[i]->state & TTK_STATE_SELECTED) {
 		    items[i]->state &= ~TTK_STATE_SELECTED;
-		    selChange = 1;
+		    changed = 1;
 		}
 	    }
 	    break;
 	case SELECTION_SET:
 	    /* Set selection */
-	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
-		if (item->state & TTK_STATE_SELECTED) {
-		    item->state &= ~TTK_STATE_SELECTED;
-		    selChange = 1;
-		}
-	    }
-	    /* Select */
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
-		selChange = 1;
+		changed = 1;
 	    }
-	    break;
-	case SELECTION_SIZE:
-	    /* Number of selected items */
-	    Tcl_WideInt count = 0;
-	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
-		if (item->state & TTK_STATE_SELECTED) {
-		    count++;
-		}
-	    }
-	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
 	    break;
 	case SELECTION_TOGGLE:
 	    /* Toggle selection state */
 	    for (i=0; items[i]; ++i) {
 		items[i]->state ^= TTK_STATE_SELECTED;
-		selChange = 1;
+		changed = 1;
 	    }
 	    break;
     }
 
-    if (objc == 4) {
+    if (items) {
 	ckfree(items);
     }
     if (listObj) {
 	Tcl_DecrRefCount(listObj);
     }
-    if (selChange) {
+    if (changed) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
 	TtkRedisplayWidget(&tv->core);
     }
     return TCL_OK;
+}
+
+/* + $tree selection ?selop $items|$from $to?
+ */
+static int TreeviewSelectionCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv = (Treeview *)recordPtr;
+    int selop, result;
+    TreeItem *item;
+
+    /* Get selection */
+    if (objc == 2) {
+	Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
+	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+	    if (item->state & TTK_STATE_SELECTED) {
+		Tcl_ListObjAppendElement(NULL, resultObj, item->idObj);
+	    }
+	}
+	Tcl_SetObjResult(interp, resultObj);
+	return TCL_OK;
+
+    } else if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "selop ?args ...?");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
+	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    switch (selop) {
+	case SELECTION_ADD:
+	case SELECTION_REMOVE:
+	case SELECTION_SET:
+	case SELECTION_TOGGLE:
+	    result = TreeviewSelectionSet(tv, interp, objc, objv, selop);
+	    break;
+	case SELECTION_ANCHOR:
+	    result = TreeviewSelectionAnchor(tv, interp, objc, objv);
+	    break;
+	case SELECTION_HAS:
+	case SELECTION_INCLUDES:
+	    result = TreeviewSelectionIncludes(tv, interp, objc, objv);
+	    break;
+	case SELECTION_PRESENT:
+	    result = TreeviewSelectionPresent(tv, interp, objc, objv);
+	    break;
+	case SELECTION_SIZE:
+	    result = TreeviewSelectionSize(tv, interp, objc, objv);
+	    break;
+    }
+    return result;
 }
 
 /* + SelObjChangeElement --

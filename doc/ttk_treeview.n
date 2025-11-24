@@ -794,19 +794,9 @@ anchor is returned. Set \fIitem\fR to the empty string {} to unset the anchor.
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
 .TP
-\fIpathname \fBselection has \fIfirst last\fR
-.
-Returns 1 if selection includes all items from \fIfirst\fR to \fIlast\fR
-(inclusive), or 0 if any are not selected.
-.TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are not.
-.TP
-\fIpathname \fBselection includes \fIfirst last\fR
-.
-Returns 1 if selection includes all items from \fIfirst\fR to \fIlast\fR
-(inclusive), or 0 if any are not selected.
 .TP
 \fIpathname \fBselection present\fR
 .
