@@ -31,7 +31,7 @@ $w.p add [labelframe $w.p.l2 -text "Phase Space"]
 # Create the canvas containing the graphical representation of the
 # simulated system.
 canvas $w.c -width 320 -height 200 -background white -bd 2 -relief sunken
-$w.c create text 5 5 -anchor nw -text "Click to Adjust Bob Start Position"
+$w.c create text 5 5 -anchor nw -fill black -text "Click to Adjust Bob Start Position"
 # Coordinates of these items don't matter; they will be set properly below
 $w.c create line 0 25 320 25   -tags plate -fill grey50 -width 2
 $w.c create oval 155 20 165 30 -tags pivot -fill grey50 -outline {}
@@ -50,8 +50,8 @@ for {set i 90} {$i>=0} {incr i -10} {
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
 }
 
-$w.k create text 0 0 -anchor ne -text "\u03b8" -tags label_theta
-$w.k create text 0 0 -anchor ne -text "\u03b4\u03b8" -tags label_dtheta
+$w.k create text 0 0 -anchor ne -fill black -text "\u03b8" -tags label_theta
+$w.k create text 0 0 -anchor ne -fill black -text "\u03b4\u03b8" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
