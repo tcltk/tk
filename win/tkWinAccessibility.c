@@ -502,8 +502,8 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     TkGlobalLock();
     TkRootAccessible *tkAccessible = (TkRootAccessible *)this;
     if (!tkAccessible->toplevel) {
-        TkGlobalUnlock();
-        return E_INVALIDARG;
+	TkGlobalUnlock();
+	return E_INVALIDARG;
     }
 
     /* Toplevel. */
@@ -528,12 +528,12 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
 
     /* Child widgets - return description. */
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
-        Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-        if (child) {            
-            HRESULT hr = TkAccDescription(child, pszName);
-            TkGlobalUnlock();
-            return hr;
-        }
+	Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
+	if (child) {            
+	    HRESULT hr = TkAccDescription(child, pszName);
+	    TkGlobalUnlock();
+	    return hr;
+	}
     }
 
     TkGlobalUnlock();
