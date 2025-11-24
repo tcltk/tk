@@ -130,6 +130,12 @@ Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
+.PP
+Besides the standard \fBTSpinbox\fP layout with small arrow buttons, in
+which the up arrow is placed above the down arrow, \fBttk::spinbox\fP
+widgets support the \fBWide.TSpinbox\fP style, whose up and down arrows
+are of a more user-friendly size and in which the up arrow is placed to
+the right of the down arrow.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n), spinbox(n)
 .SH KEYWORDS

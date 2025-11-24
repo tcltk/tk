@@ -61,7 +61,7 @@ proc ttk::wideSpinbox::CreateElements theme {
     set aImg [CreateImg]
     set uparrowImgsArr($theme) [list $img $dImg $pImg $aImg]
     CreateElem WideSpinbox.uparrow image [list $img \
-	disabled $dImg  pressed $pImg  active $aImg]
+	    disabled $dImg  pressed $pImg  active $aImg]
 
     # Create the WideSpinbox.downarrow element
 
@@ -72,7 +72,7 @@ proc ttk::wideSpinbox::CreateElements theme {
     set aImg [CreateImg]
     set downarrowImgsArr($theme) [list $img $dImg $pImg $aImg]
     CreateElem WideSpinbox.downarrow image [list $img \
-	disabled $dImg  pressed $pImg  active $aImg]
+	    disabled $dImg  pressed $pImg  active $aImg]
 
     # Create the WideSpinbox.gap element
 
