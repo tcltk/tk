@@ -1036,6 +1036,7 @@ static void BoxArrowElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     size -= Ttk_PaddingWidth(ArrowPadding);
+    size += 2;
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(ArrowPadding);
     *heightPtr += Ttk_PaddingWidth(ArrowPadding);
