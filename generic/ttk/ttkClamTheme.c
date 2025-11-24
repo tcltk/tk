@@ -867,6 +867,7 @@ static void SpinboxArrowElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
+    size += 2;
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
