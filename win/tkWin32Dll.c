@@ -12,7 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(__GNUC__)
 
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by
@@ -158,10 +158,10 @@ DllMain(
 	    "%rax", "%rdx", "memory"
 	);
 
-        /* Just do a regular C call so we don't need to worry about following
-         * the calling convention, specially the registers the function may
-         * clobber: */
-        TkFinalize(NULL);
+	/* Just do a regular C call so we don't need to worry about following
+	 * the calling convention, specially the registers the function may
+	 * clobber: */
+	TkFinalize(NULL);
 
 	__asm__ __volatile__ (
 	    /*
@@ -234,7 +234,7 @@ DllMain(
 	    "%eax", "%ebx", "%edx", "memory"
 	);
 
-        TkFinalize(NULL);
+	TkFinalize(NULL);
 
 	__asm__ __volatile__ (
 
