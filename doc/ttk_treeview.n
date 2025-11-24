@@ -242,7 +242,7 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add \fIcellList\fR to the cell selection.
 .TP
-\fIpathname \fBcellselection add \fIfirst last\fR
+\fIpathname \fBcellselection add\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Add the cells within the rectangle defined by \fIfirst\fR and
 \fIlast\fR to the cell selection.
@@ -262,7 +262,7 @@ Returns boolean with whether there are selected cells or not.
 .
 Remove \fIcellList\fR from the cell selection.
 .TP
-\fIpathname \fBcellselection remove \fIfirst last\fR
+\fIpathname \fBcellselection remove\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Remove the cells within the rectangle defined by \fIfirst\fR and
 \fIlast\fR from the cell selection.
@@ -272,7 +272,7 @@ Remove the cells within the rectangle defined by \fIfirst\fR and
 Sets the selection to the cells in \fIcellList\fR. Use an empty set \fB{}\fR
 to clear the selection.
 .TP
-\fIpathname \fBcellselection set \fIfirst last\fR
+\fIpathname \fBcellselection set\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Set the selection to the cells within the rectangle defined by
 \fIfirst\fR and \fIlast\fR. Other cells are unselected.
@@ -285,7 +285,7 @@ Returns the number of selected cells.
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
 .TP
-\fIpathname \fBcellselection toggle \fIfirst last\fR
+\fIpathname \fBcellselection toggle\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Toggle the selection state of the cells within the rectangle defined
 by \fIfirst\fR and \fIlast\fR.
@@ -777,7 +777,7 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add items in \fIitemList\fR to the selection.
 .TP
-\fIpathname \fBselection add\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection add\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Add items from \fIfirst\fR to \fIlast\fR (inclusive) to the selection.
 Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
@@ -806,7 +806,7 @@ Returns boolean with whether there are selected items or not.
 .
 Remove all of the items in \fIitemList\fR from the selection.
 .TP
-\fIpathname \fBselection remove\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection remove\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Remove all of the items from \fIfirst\fR to \fIlast\fR (inclusive) from
 the selection.
@@ -819,7 +819,7 @@ If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will b
 Sets selection to items in \fIitemList\fR. Use an empty set {} to clear the
 selection.
 .TP
-\fIpathname \fBselection set\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection set\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Sets selection to the items from \fIfirst\fR to \fIlast\fR (inclusive).
 Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
@@ -834,7 +834,7 @@ Returns the number of selected items.
 .
 Toggle the selection state of each item in \fIitemList\fR.
 .TP
-\fIpathname \fBselection toggle\fR ?\fI\-hidden\fR? ?\fI\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection toggle\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Toggle the selection state of each item from \fIfirst\fR to \fIlast\fR
 (inclusive).
