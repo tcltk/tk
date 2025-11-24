@@ -316,6 +316,29 @@ bind Entry <B2-Motion> {
 	::tk::EntryScanDrag %W %x
      }
 }
+bind Entry <Enter> {+
+    set tk::Priv(xWheelEvents) 0; set tk::Priv(yWheelEvents) 0
+}
+bind Entry <MouseWheel> {
+    tk::EntryScrollByUnits %W y %D -40.0
+}
+bind Entry <Option-MouseWheel> {
+    tk::EntryScrollByUnits %W y %D -12.0
+}
+bind Entry <Shift-MouseWheel> {
+    tk::EntryScrollByUnits %W x %D -40.0
+}
+bind Entry <Shift-Option-MouseWheel> {
+    tk::EntryScrollByUnits %W x %D -12.0
+}
+bind Entry <TouchpadScroll> {
+    if {%# %% 5 == 0} {
+	lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	if {$tk::Priv(deltaX) != 0} {
+	    %W xview scroll [expr {-$tk::Priv(deltaX)}] units
+	}
+    }
+}
 
 # ::tk::EntryClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary
@@ -667,13 +690,12 @@ proc ::tk::EntryPreviousChar {w start} {
     return $pos
 }
 
-
 # ::tk::EntryScanMark --
 #
 # Marks the start of a possible scan drag operation
 #
 # Arguments:
-# w -	The entry window from which the text to get
+# w -	The entry window from which to get the text
 # x -	x location on screen
 
 proc ::tk::EntryScanMark {w x} {
@@ -688,7 +710,7 @@ proc ::tk::EntryScanMark {w x} {
 # Marks the start of a possible scan drag operation
 #
 # Arguments:
-# w -	The entry window from which the text to get
+# w -	The entry window from which to get the text
 # x -	x location on screen
 
 proc ::tk::EntryScanDrag {w x} {
@@ -707,7 +729,7 @@ proc ::tk::EntryScanDrag {w x} {
 # Returns the selected text of the entry with respect to the -show option.
 #
 # Arguments:
-# w -         The entry window from which the text to get
+# w -	The entry window from which to get the text
 
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
@@ -717,4 +739,28 @@ proc ::tk::EntryGetSelection {w} {
 		[string length $entryString]]
     }
     return $entryString
+}
+
+# ::tk::EntryScrollByUnits --
+#
+# Scrolls the entry by units.
+#
+# Arguments:
+# w -		The entry window that received a mouse wheel event.
+# axis -	x if the event contains the Shift modifier and y otherwise.
+# amount -	Delta value from the mouse wheel event.
+# factor -	$amount/$factor = number of scroll units for $w xview scroll.
+
+proc ::tk::EntryScrollByUnits {w axis amount factor} {
+    # Count both the <MouseWheel> and <Shift-MouseWheel>
+    # events, and ignore the non-dominant ones
+    variable ::tk::Priv
+    incr Priv(${axis}WheelEvents)
+    if {($Priv(xWheelEvents) + $Priv(yWheelEvents) > 10) &&
+	    ($axis eq "x" && $Priv(xWheelEvents) < $Priv(yWheelEvents) ||
+	     $axis eq "y" && $Priv(yWheelEvents) < $Priv(xWheelEvents))} {
+	return
+    }
+
+    tk::MouseWheel $w x $amount $factor units
 }
