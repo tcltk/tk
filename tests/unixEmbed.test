@@ -97,7 +97,7 @@ test unixEmbed-1.5 {Tk_UseWindow procedure, creating Container records} -constra
     childTkProcess eval {
 	destroy {*}[winfo children .]
 	toplevel .t -use $w
-	list [testembed] [expr [lindex [lindex [testembed all] 0] 0] - $w]
+	list [testembed] [expr {[lindex [lindex [testembed all] 0] 0] - $w}]
     }
 } -cleanup {
     deleteWindows

@@ -35,14 +35,14 @@ resetWindows
 proc raise_getOrder {} {
     set x [winfo rootx .raise]
     set y [winfo rooty .raise]
-    list [winfo name [winfo containing [expr $x+50] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+90] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+130] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+70] [expr $y+100]]] \
-	    [winfo name [winfo containing [expr $x+110] [expr $y+100]]] \
-	    [winfo name [winfo containing [expr $x+50] [expr $y+130]]] \
-	    [winfo name [winfo containing [expr $x+90] [expr $y+130]]] \
-	    [winfo name [winfo containing [expr $x+130] [expr $y+130]]]
+    list [winfo name [winfo containing [expr {$x+50}] [expr {$y+70}]]] \
+	    [winfo name [winfo containing [expr {$x+90}] [expr {$y+70}]]] \
+	    [winfo name [winfo containing [expr {$x+130}] [expr {$y+70}]]] \
+	    [winfo name [winfo containing [expr {$x+70}] [expr {$y+100}]]] \
+	    [winfo name [winfo containing [expr {$x+110}] [expr {$y+100}]]] \
+	    [winfo name [winfo containing [expr {$x+50}] [expr {$y+130}]]] \
+	    [winfo name [winfo containing [expr {$x+90}] [expr {$y+130}]]] \
+	    [winfo name [winfo containing [expr {$x+130}] [expr {$y+130}]]]
 }
 
 # raise_makeToplevels --

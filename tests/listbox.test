@@ -47,7 +47,7 @@ proc mkPartial {{w .partial}} {
 	    eleven twelve thirteen fourteen fifteen
     update
     scan [wm geometry $w] "%dx%d" width height
-    wm geometry $w ${width}x[expr $height-3]
+    wm geometry $w ${width}x[expr {$height-3}]
     update
 }
 
@@ -2327,8 +2327,8 @@ pack .l
 .l insert 0 a bb c d e f g h i j k l m n o p q r s
 .l insert 0 0123456789a123456789b123456789c123456789d123456789
 update
-set width [expr [lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]]
-set height [expr [lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]]
+set width [expr {[lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]}]
+set height [expr {[lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]}]
 
 test listbox-13.1 {ListboxScanTo procedure} -constraints {
 	fonts
@@ -2336,7 +2336,7 @@ test listbox-13.1 {ListboxScanTo procedure} -constraints {
     .l yview 0
     .l xview 0
     .l scan mark 10 20
-    .l scan dragto [expr 10-$width] [expr 20-$height]
+    .l scan dragto [expr {10-$width}] [expr {20-$height}]
     update
     list [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0.2 0.4} {0.5 0.75}}
@@ -2349,7 +2349,7 @@ test listbox-13.2 {ListboxScanTo procedure} -constraints {
     .l scan dragto 20 40
     update
     set x [list [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]]
-    .l scan dragto [expr 20-$width] [expr 40-$height]
+    .l scan dragto [expr {20-$width}] [expr {40-$height}]
     update
     lappend x [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0 0.2} {0 0.25} {0.2 0.4} {0.5 0.75}}
@@ -2362,7 +2362,7 @@ test listbox-13.3 {ListboxScanTo procedure} -constraints {
     .l scan dragto 5 10
     update
     set x [list [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]]
-    .l scan dragto [expr 5+$width] [expr 10+$height]
+    .l scan dragto [expr {5+$width}] [expr {10+$height}]
     update
     lappend x [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0.8 1} {0.75 1} {0.6 0.8} {0.25 0.5}}

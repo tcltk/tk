@@ -181,7 +181,7 @@ test unixfont-4.1 {TkpGetFontFamilies procedure} x11 {
 } {}
 
 test unixfont-5.1 {Tk_MeasureChars procedure: no chars to be measured} x11 {
-    .b.l config -text "000000" -wrap [expr $ax*3]
+    .b.l config -text "000000" -wrap [expr {$ax*3}]
     .b.l config -wrap 0
 } {}
 test unixfont-5.2 {Tk_MeasureChars procedure: no right margin} x11 {
@@ -198,48 +198,48 @@ test unixfont-5.3 {Tk_MeasureChars procedure: loop over chars} x11 {
 # COMMON TEST SETUP
 #
 
-.b.l config -wrap [expr $ax*10]
+.b.l config -wrap [expr {$ax*10}]
 
 test unixfont-5.4 {Tk_MeasureChars procedure: reached right edge} x11 {
     .b.l config -text "0000000000000"
     getsize .b.l
-} "[expr $ax*10] [expr $ay*2]"
+} "[expr {$ax*10}] [expr {$ay*2}]"
 test unixfont-5.5 {Tk_MeasureChars procedure: ran out of chars} x11 {
     .b.l config -text "000000"
     getsize .b.l
-} "[expr $ax*6] $ay"
+} "[expr {$ax*6}] $ay"
 test unixfont-5.6 {Tk_MeasureChars procedure: find last word} x11 {
     .b.l config -text "000000 00000"
     getsize .b.l
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax*6}] [expr {$ay*2}]"
 test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} x11 {
     .b.l config -text "000000     00000"
     getsize .b.l
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax*6}] [expr {$ay*2}]"
 test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11} {
     .b.l config -text "00  000     00000"
     getsize .b.l
-} "[expr $ax*7] [expr $ay*2]"
+} "[expr {$ax*7}] [expr {$ay*2}]"
 test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
-    .b.c index $t @[expr int($ax*2.5)],1
+    .b.c index $t @[expr {int($ax*2.5)}],1
 } 2
 test unixfont-5.10 {Tk_MeasureChars procedure: TK_AT_LEAST_ONE} x11 {
     .b.l config -text "000000000000"
     getsize .b.l
-} "[expr $ax*10] [expr $ay*2]"
+} "[expr {$ax*10}] [expr {$ay*2}]"
 test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} x11 {
     set a [.b.l cget -wrap]
     .b.l config -text "000000" -wrap 1
     set x [getsize .b.l]
     .b.l config -wrap $a
     set x
-} "$ax [expr $ay*6]"
+} "$ax [expr {$ay*6}]"
 test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {x11} {
     .b.l config -text "000   \n000"
     getsize .b.l
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax*6}] [expr {$ay*2}]"
 
 test unixfont-6.1 {Tk_DrawChars procedure: loop test} x11 {
     .b.l config -text "a"
@@ -316,7 +316,7 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
     incr x [font measure TkFixedFont "\012"]   ;# 2
     incr x [font measure TkFixedFont "\101"]   ;# 1
     set x
-} [expr $cx*13]
+} [expr {$cx*13}]
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
     font metrics TkFixedFont -fixed
 } 1
@@ -327,7 +327,7 @@ test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 nonPo
     incr x [font measure TkFixedFont "\002"]   ;# 4
     incr x [font measure TkFixedFont "\012"]   ;# 2
     set x
-} [expr $cx*10]
+} [expr {$cx*10}]
 test unixfont-8.7 {InitFont procedure: XA_UNDERLINE_POSITION} x11 {
     catch {font actual -adobe-courier-bold-i-normal--0-0-0-0-m-0-iso8859-1}
     set x {}
@@ -354,22 +354,22 @@ test unixfont-9.1 {2 chars substituted in inserted text} {x11 nonPortable} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
-    lappend x [.b.c index $t @[expr $ax*0],0]
-    lappend x [.b.c index $t @[expr $ax*1],0]
-    lappend x [.b.c index $t @[expr $ax*2],0]
-    lappend x [.b.c index $t @[expr $ax*3],0]
+    lappend x [.b.c index $t @[expr {$ax*0}],0]
+    lappend x [.b.c index $t @[expr {$ax*1}],0]
+    lappend x [.b.c index $t @[expr {$ax*2}],0]
+    lappend x [.b.c index $t @[expr {$ax*3}],0]
 } {0 1 1 2}
 test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
 # Constrained by nonPortable, see unixfont-8.4
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
-    lappend x [.b.c index $t @[expr $ax*0],0]
-    lappend x [.b.c index $t @[expr $ax*1],0]
-    lappend x [.b.c index $t @[expr $ax*2],0]
-    lappend x [.b.c index $t @[expr $ax*3],0]
-    lappend x [.b.c index $t @[expr $ax*4],0]
-    lappend x [.b.c index $t @[expr $ax*5],0]
+    lappend x [.b.c index $t @[expr {$ax*0}],0]
+    lappend x [.b.c index $t @[expr {$ax*1}],0]
+    lappend x [.b.c index $t @[expr {$ax*2}],0]
+    lappend x [.b.c index $t @[expr {$ax*3}],0]
+    lappend x [.b.c index $t @[expr {$ax*4}],0]
+    lappend x [.b.c index $t @[expr {$ax*5}],0]
 } {0 1 1 1 1 2}
 
 #
