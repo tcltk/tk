@@ -16,6 +16,7 @@ Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
 
 # Bug fixes
+ - [Improve the look of the ttk::spinbox widgets in the built-in themes](https://core.tcl-lang.org/tk/tktview/4d2baa)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
