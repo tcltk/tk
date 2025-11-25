@@ -4721,10 +4721,6 @@ static int TreeviewSelectionCommand(
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
-
-    } else if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "selop ?args ...?");
-	return TCL_ERROR;
     }
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
@@ -4799,6 +4795,58 @@ static int TreeviewCellSelectionAnchor(
 	    Tcl_IncrRefCount(tv->tree.selAnchorColObj);
 	}
     }
+    return TCL_OK;
+}
+
+/* + $tree cellselection has|includes cells
+ */
+static int TreeviewCellSelectionIncludes(
+    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_Size i, j, len, nElements;
+    TreeItem *item;
+    Tcl_Obj *idObj;
+    int result = 0;
+    TreeCell cell;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "cells");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_ListObjLength(interp, objv[3], &len) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    for (i = 0; i < len; i++) {
+	result = 0;
+
+	if (Tcl_ListObjIndex(interp, objv[3], i, &idObj) != TCL_OK ||
+	    GetCellFromObj(interp, tv, idObj, 0, NULL, &cell) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	item = cell.item;
+	if (!item->selObj) {
+	    break;	
+	}
+	
+	if (Tcl_ListObjLength(NULL, item->selObj, &nElements) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+
+	for (j = 0; j < nElements; j++) {
+	    if (Tcl_ListObjIndex(interp, item->selObj, j, &idObj) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if (FindColumn(NULL, tv, idObj) == cell.column) {
+		result = 1;
+		break;
+	    }
+	}
+	if (!result) {
+	    break;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
 }
 
@@ -5056,7 +5104,7 @@ static int TreeviewCellSelectionCommand(
 	    break;
 	case SELECTION_HAS:
 	case SELECTION_INCLUDES:
-	    result = TCL_ERROR;
+	    result = TreeviewCellSelectionIncludes(tv, interp, objc, objv);
 	    break;
 	case SELECTION_PRESENT:
 	    result = TreeviewCellSelectionPresent(tv, interp, objc, objv);
@@ -6899,9 +6947,9 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
     { "-rownumber", TK_OPTION_INT,
 	offsetof(RowElement,rowNumberObj), "0" },
     { "-focuswidth", TK_OPTION_PIXELS,
-	offsetof(RowElement,focusWidthObj), "1" },
+	offsetof(RowElement,focusWidthObj), "2" },
     { "-focuscolor", TK_OPTION_COLOR,
-	offsetof(RowElement,focusColorObj), "#000000" },
+	offsetof(RowElement,focusColorObj), "#008000" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
