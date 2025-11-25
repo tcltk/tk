@@ -1049,7 +1049,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
-    unix notAqua failsOnUbuntu failsOnXQuartz
+    unix notAqua failsOnCILinux failsOnXQuartz
 } -setup {
     deleteWindows
 } -body {

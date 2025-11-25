@@ -337,7 +337,7 @@ test unixWm-8.3 {icon windows} unix {
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-8.4 {icon windows} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -690,7 +690,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnCILinux failsOnXQuartz} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -907,7 +907,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -918,7 +918,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu fail
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -1500,7 +1500,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1893,7 +1893,7 @@ if {[tk windowingsystem] eq "aqua"} {
     after 1000; # Give Apple's _windowserver some time to catch up.
 }
 
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnCILinux failsOnXQuartz} {
     update
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +100+100
@@ -2058,7 +2058,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr {$x + 350}] $y] \
 	    [winfo containing [expr {$x + 450}] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuartz} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     destroy .t2
     update

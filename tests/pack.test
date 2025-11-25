@@ -1590,7 +1590,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnUbuntu
+# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnCILinux
 # because they are failing in the GitHub CI environment, using Linux Ubuntu.
 # These tests are also constrained with failsOnXQuartz because they fail
 # on macOS when building with clang --disable-aqua (which uses XQuartz)
@@ -1615,7 +1615,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # colored.  So, evidently, even though the size changes are honored,
 # the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
-    macOrUnix failsOnUbuntu failsOnXQuartz
+    macOrUnix failsOnCILinux failsOnXQuartz
 } -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
@@ -1661,7 +1661,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 1}
 
-test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test pack-18.2 {unmap content when container unmapped} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big

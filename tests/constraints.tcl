@@ -11,7 +11,7 @@ namespace import -force tcltest::testConstraint
 #
 # OPERATING SYSTEM
 #
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnCILinux [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 if {$tcl_platform(os) eq "Darwin"} {
     scan $tcl_platform(osVersion) "%d" macosVersion
 }
