@@ -242,10 +242,11 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add \fIcellList\fR to the cell selection.
 .TP
-\fIpathname \fBcellselection add\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBcellselection add\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
-Add the cells within the rectangle defined by \fIfirst\fR and
-\fIlast\fR to the cell selection.
+Add the cells within the rectangle defined by \fIfirst\fR and \fIlast\fR to the
+cell selection. With \fB-nohidden\fR, hidden cells will be excluded and with
+\fB-norecurse\fR, cell in descendant items will be excluded.
 .TP
 \fIpathname \fBcellselection anchor\fR ?\fIcell\fR?
 .
@@ -262,20 +263,22 @@ Returns boolean with whether there are selected cells or not.
 .
 Remove \fIcellList\fR from the cell selection.
 .TP
-\fIpathname \fBcellselection remove\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBcellselection remove\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
-Remove the cells within the rectangle defined by \fIfirst\fR and
-\fIlast\fR from the cell selection.
+Remove the cells within the rectangle defined by \fIfirst\fR and \fIlast\fR
+from the cell selection. With \fB-nohidden\fR, hidden cells will be excluded
+and with \fB-norecurse\fR, cell in descendant items will be excluded.
 .TP
 \fIpathname \fBcellselection set \fIcellList\fR
 .
 Sets the selection to the cells in \fIcellList\fR. Use an empty set \fB{}\fR
 to clear the selection.
 .TP
-\fIpathname \fBcellselection set\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBcellselection set\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
-Set the selection to the cells within the rectangle defined by
-\fIfirst\fR and \fIlast\fR. Other cells are unselected.
+Set the selection to the cells within the rectangle defined by \fIfirst\fR and
+\fIlast\fR. Other cells are unselected. With \fB-nohidden\fR, hidden cells will
+be excluded and with \fB-norecurse\fR, cell in descendant items will be excluded.
 .TP
 \fIpathname \fBcellselection size\fR
 .
@@ -285,10 +288,11 @@ Returns the number of selected cells.
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
 .TP
-\fIpathname \fBcellselection toggle\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBcellselection toggle\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
-Toggle the selection state of the cells within the rectangle defined
-by \fIfirst\fR and \fIlast\fR.
+Toggle the selection state of the cells within the rectangle defined by
+\fIfirst\fR and \fIlast\fR. With \fB-nohidden\fR, hidden cells will be excluded
+and with \fB-norecurse\fR, cell in descendant items will be excluded.
 .RE
 .\" METHOD: children
 .TP
@@ -777,10 +781,10 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add items in \fIitemList\fR to the selection.
 .TP
-\fIpathname \fBselection add\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection add\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Add items from \fIfirst\fR to \fIlast\fR (inclusive) to the selection.
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
@@ -806,11 +810,11 @@ Returns boolean with whether there are selected items or not.
 .
 Remove all of the items in \fIitemList\fR from the selection.
 .TP
-\fIpathname \fBselection remove\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection remove\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Remove all of the items from \fIfirst\fR to \fIlast\fR (inclusive) from
 the selection.
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
@@ -819,10 +823,10 @@ If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will b
 Sets selection to items in \fIitemList\fR. Use an empty set {} to clear the
 selection.
 .TP
-\fIpathname \fBselection set\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection set\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Sets selection to the items from \fIfirst\fR to \fIlast\fR (inclusive).
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .TP
@@ -834,11 +838,11 @@ Returns the number of selected items.
 .
 Toggle the selection state of each item in \fIitemList\fR.
 .TP
-\fIpathname \fBselection toggle\fR ?\fB\-hidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
+\fIpathname \fBselection toggle\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
 Toggle the selection state of each item from \fIfirst\fR to \fIlast\fR
 (inclusive).
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .RE

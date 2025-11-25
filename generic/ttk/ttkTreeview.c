@@ -4594,7 +4594,7 @@ static int TreeviewSelectionSet(
     Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
     Tcl_Size i;
     TreeItem *item, **items = NULL, *from, *to;
-    int changed = 0, hidden = 0, recurse = 1;
+    int changed = 0, hidden = 1, recurse = 1;
     Tcl_Obj *listObj = NULL;
 
     if (objc < 4 || objc > 7) {
@@ -4910,7 +4910,7 @@ static int TreeviewCellSelect(
  */
 static int TreeviewCellSelectionSet(
     Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
-    int changed = 0, hidden = 0, recurse = 1, result = TCL_OK;
+    int changed = 0, hidden = 1, recurse = 1, result = TCL_OK;
     Tcl_Size i;
 
 
@@ -6705,6 +6705,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "next",		TreeviewNextCommand,0 },
     { "parent",		TreeviewParentCommand,0 },
     { "prev",		TreeviewPrevCommand,0 },
+    { "range",		TreeviewBetweenCommand,0 },
     { "search",		TreeviewSearchCommand,0 },
     { "see",		TreeviewSeeCommand,0 },
     { "selection",	TreeviewSelectionCommand,0 },
