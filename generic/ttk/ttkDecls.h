@@ -280,4 +280,8 @@ extern const TtkStubs *ttkStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
+#ifdef TK_NO_DEPRECATED
+#   undef Ttk_RegisterElementSpec
+#endif
+
 #endif /* _TTKDECLS */

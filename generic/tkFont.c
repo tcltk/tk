@@ -585,7 +585,7 @@ Tk_FontObjCmd(
 			TCL_INDEX_NONE, 40, "...");
 		Tcl_AppendToObj(resultPtr, "\"", TCL_INDEX_NONE);
 		Tcl_SetObjResult(interp, resultPtr);
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -634,7 +634,7 @@ Tk_FontObjCmd(
 	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "named font \"%s\" does not exist", string));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (objc == 3) {
@@ -977,7 +977,7 @@ TkCreateNamedFont(
 	    if (interp) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"named font \"%s\" already exists", name));
-		Tcl_SetErrorCode(interp, "TK", "FONT", "EXISTS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "FONT", "EXISTS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -1029,7 +1029,7 @@ TkDeleteNamedFont(
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "named font \"%s\" does not exist", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", name, (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -1132,7 +1132,12 @@ Tk_AllocFontFromObj(
 
 	    FreeFontObj(objPtr);
 	    oldFontPtr = NULL;
-	} else if (Tk_Screen(tkwin) == oldFontPtr->screen) {
+	} else if (Tk_Screen(tkwin) == oldFontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == oldFontPtr->colormap
+		&& Tk_Visual(tkwin) == oldFontPtr->visual
+#endif
+	) {
 	    oldFontPtr->resourceRefCount++;
 	    return (Tk_Font) oldFontPtr;
 	}
@@ -1154,7 +1159,12 @@ Tk_AllocFontFromObj(
     firstFontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
     for (fontPtr = firstFontPtr; (fontPtr != NULL);
 	    fontPtr = fontPtr->nextPtr) {
-	if (Tk_Screen(tkwin) == fontPtr->screen) {
+	if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 	    fontPtr->resourceRefCount++;
 	    fontPtr->objRefCount++;
 	    objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
@@ -1216,7 +1226,7 @@ Tk_AllocFontFromObj(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"failed to allocate font due to internal system font engine"
 		" problem", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "FONT", "INTERNAL_PROBLEM", NULL);
+	Tcl_SetErrorCode(interp, "TK", "FONT", "INTERNAL_PROBLEM", (char *)NULL);
 	return NULL;
     }
 
@@ -1225,6 +1235,8 @@ Tk_AllocFontFromObj(
     fontPtr->cacheHashPtr = cacheHashPtr;
     fontPtr->namedHashPtr = namedHashPtr;
     fontPtr->screen = Tk_Screen(tkwin);
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
     fontPtr->nextPtr = firstFontPtr;
     Tcl_SetHashValue(cacheHashPtr, fontPtr);
 
@@ -1317,7 +1329,12 @@ Tk_GetFontFromObj(
 
 	    FreeFontObj(objPtr);
 	    fontPtr = NULL;
-	} else if (Tk_Screen(tkwin) == fontPtr->screen) {
+	} else if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 	    return (Tk_Font) fontPtr;
 	}
     }
@@ -1336,7 +1353,12 @@ Tk_GetFontFromObj(
     if (hashPtr != NULL) {
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(hashPtr); fontPtr != NULL;
 		fontPtr = fontPtr->nextPtr) {
-	    if (Tk_Screen(tkwin) == fontPtr->screen) {
+	    if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 		fontPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
 		objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
@@ -3443,7 +3465,7 @@ ConfigAttributesObj(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" option missing",
 			Tcl_GetString(optionPtr)));
-		Tcl_SetErrorCode(interp, "TK", "FONT", "NO_ATTRIBUTE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "FONT", "NO_ATTRIBUTE", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -3744,7 +3766,7 @@ ParseFontNameObj(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "font \"%s\" does not exist", string));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, (char *)NULL);
 	}
 	return TCL_ERROR;
     }

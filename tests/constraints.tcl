@@ -10,11 +10,22 @@
 namespace import -force tcltest::testConstraint
 
 #
+# OPERATING SYSTEM
+#
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+if {$tcl_platform(os) eq "Darwin"} {
+    scan $tcl_platform(osVersion) "%d" macosVersion
+}
+testConstraint notMacosSequoiaOrOlder [expr {($tcl_platform(os) ne "Darwin") || ($macosVersion > 24)}]
+unset -nocomplain macosVersion
+
+#
 # WINDOWING SYSTEM AND DISPLAY
 #
 testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
+testConstraint win32 [expr {[tk windowingsystem] eq "win32"}]
 testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
@@ -42,7 +53,6 @@ if {[llength [info commands send]]} {
 childTkProcess exit
 testutils forget child
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuartz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 #

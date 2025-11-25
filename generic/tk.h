@@ -70,10 +70,10 @@ extern "C" {
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
 #   define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#   define TK_RELEASE_SERIAL	3
+#   define TK_RELEASE_SERIAL	4
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0.3"
+#   define TK_PATCH_LEVEL		"9.0.4"
 #endif /* TK_MAJOR_VERSION */
 
 /*
@@ -1555,7 +1555,7 @@ typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
  *----------------------------------------------------------------------
  */
 
-#include "tkDecls.h"
+#include "tkDecls.h"  /* IWYU pragma: export */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

@@ -2,12 +2,39 @@
 #
 # Copyright © 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests that are
+#   platform-indifferent go into the test file msgbox.test.
+# * This test file is skipped entirely on non-windows platforms.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 testConstraint getwindowinfo [expr {[llength [info command ::testgetwindowinfo]] > 0}]
+
+#
+# COMMON TEST SETUP
+#
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
@@ -33,7 +60,9 @@ proc GetWindowInfo {title button} {
     testwinevent $hwnd $button WM_COMMAND
 }
 
-# -------------------------------------------------------------------------
+#
+# TESTS
+#
 
 test winMsgbox-1.1 {tk_messageBox ok} -constraints {win getwindowinfo} -setup {
     wm iconify .
@@ -178,7 +207,6 @@ test winMsgbox-1.13 {tk_messageBox yesnocancel} -constraints {win getwindowinfo}
     wm deiconify .
 } -result {cancel}
 
-# -------------------------------------------------------------------------
 
 test winMsgbox-2.1 {tk_messageBox message} -constraints {win getwindowinfo} -setup {
     wm iconify .
@@ -245,7 +273,6 @@ test winMsgbox-2.4 {tk_messageBox message (empty)} -constraints {
     wm deiconify .
 } -result [list ok ""]
 
-# -------------------------------------------------------------------------
 
 test winMsgbox-3.1 {tk_messageBox detail (sourceforge bug #1692927)} -constraints {
     win getwindowinfo
@@ -282,13 +309,14 @@ test winMsgbox-3.2 {tk_messageBox detail (unicode)} -constraints {
     wm deiconify .
 } -result [list ok "Поиск\n\nстраниц"]
 
-# -------------------------------------------------------------------------
+#
+# TESTFILE CLEANUP
+#
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}
 }
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

@@ -335,7 +335,7 @@ int Ttk_GetPaddingFromObj(
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Wrong #elements in padding spec", -1));
-	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "PADDING", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "PADDING", (char *)NULL);
 	}
 	goto error;
     }
@@ -374,7 +374,7 @@ int Ttk_GetBorderFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad)
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Wrong #elements in padding spec", -1));
-	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "BORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "BORDER", (char *)NULL);
 	}
 	goto error;
     }
@@ -489,7 +489,7 @@ int Ttk_GetStickyFromObj(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Bad -sticky specification %s",
 			Tcl_GetString(objPtr)));
-		    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STICKY", NULL);
+		    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STICKY", (char *)NULL);
 		}
 		return TCL_ERROR;
 	}
@@ -625,8 +625,9 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
     Tcl_Obj **objv;
     Ttk_TemplateNode *head = 0, *tail = 0;
 
-    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
+    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	return 0;
+    }
 
     while (i < objc) {
 	const char *elementName = Tcl_GetString(objv[i]);
@@ -641,8 +642,9 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    const char *optName = Tcl_GetString(objv[i]);
 	    int option, value;
 
-	    if (optName[0] != '-')
+	    if (optName[0] != '-') {
 		break;
+	    }
 
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
 		    sizeof(char *), "option", 0, &option)
@@ -655,41 +657,47 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Missing value for option %s",
 			Tcl_GetString(objv[i-1])));
-		Tcl_SetErrorCode(interp, "TTK", "VALUE", "LAYOUT", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "LAYOUT", (char *)NULL);
 		goto error;
 	    }
 
 	    switch (option) {
 		case OP_SIDE:	/* <<NOTE-PACKSIDE>> */
 		    if (Tcl_GetIndexFromObjStruct(interp, objv[i], packSideStrings,
-				sizeof(char *), "side", 0, &value) != TCL_OK)
-		    {
+				sizeof(char *), "side", 0, &value) != TCL_OK) {
 			goto error;
 		    }
 		    flags |= (TTK_PACK_LEFT << value);
 
 		    break;
 		case OP_STICKY:
-		    if (Ttk_GetStickyFromObj(interp,objv[i],&sticky) != TCL_OK)
+		    if (Ttk_GetStickyFromObj(interp,objv[i],&sticky) != TCL_OK) {
 			goto error;
+		    }
 		    break;
 		case OP_EXPAND:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_EXPAND;
+		    }
 		    break;
 		case OP_BORDER:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_BORDER;
+		    }
 		    break;
 		case OP_UNIT:
-		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK)
+		    if (Tcl_GetBooleanFromObj(interp,objv[i],&value) != TCL_OK) {
 			goto error;
-		    if (value)
+		    }
+		    if (value) {
 			flags |= TTK_UNIT;
+		    }
 		    break;
 		case OP_CHILDREN:
 		    childSpec = objv[i];
@@ -711,7 +719,7 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    tail->child = Ttk_ParseLayoutTemplate(interp, childSpec);
 	    if (!tail->child) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
-		Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -890,7 +898,7 @@ Ttk_Layout Ttk_CreateLayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, (char *)NULL);
 	return 0;
     }
 
@@ -931,7 +939,7 @@ Ttk_CreateSublayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, (char *)NULL);
 	return 0;
     }
 
@@ -1121,19 +1129,22 @@ static void Ttk_DrawNodeList(
 	int border = node->flags & TTK_BORDER;
 	int substate = state;
 
-	if (node->flags & TTK_UNIT)
+	if (node->flags & TTK_UNIT) {
 	    substate |= node->state;
+	}
 
-	if (node->child && border)
+	if (node->child && border) {
 	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	}
 
 	Ttk_DrawElement(
 	    node->eclass,
 	    layout->style,layout->recordPtr,layout->optionTable,layout->tkwin,
 	    d, node->parcel, state | node->state);
 
-	if (node->child && !border)
+	if (node->child && !border) {
 	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	}
     }
 }
 
@@ -1194,13 +1205,15 @@ static Ttk_Element
 FindNode(Ttk_Element node, const char *nodeName)
 {
     for (; node ; node = node->next) {
-	if (!strcmp(tail(Ttk_ElementName(node)), nodeName))
+	if (!strcmp(tail(Ttk_ElementName(node)), nodeName)) {
 	    return node;
+	}
 
 	if (node->child) {
 	    Ttk_Element childNode = FindNode(node->child, nodeName);
-	    if (childNode)
+	    if (childNode) {
 		return childNode;
+	    }
 	}
     }
     return 0;

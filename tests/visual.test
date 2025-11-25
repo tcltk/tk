@@ -1,19 +1,34 @@
 # This file is a Tcl script to test the visual- and colormap-handling
-# procedures in the file tkVisual.c.  It is organized in the standard
-# fashion for Tcl tests.
+# procedures in the file tkVisual.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import colors
+
+#
+# COMMON TEST SETUP
+#
 
 update
 
@@ -23,6 +38,7 @@ update
 set default "[winfo visual .] [winfo depth .]"
 set avail [winfo visualsavailable .]
 set other {}
+set 32bitsVisual {}
 if {[llength $avail] > 1} {
     foreach visual $avail {
 	if {$visual != $default} {
@@ -30,12 +46,27 @@ if {[llength $avail] > 1} {
 	    break
 	}
     }
+    foreach visual $avail {
+	if {[lindex $visual 1] == 32} {
+	    set 32bitsVisual $visual
+	    break
+	}
+    }
 }
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint haveOtherVisual [expr {$other ne ""}]
 testConstraint havePseudocolorVisual [string match *pseudocolor* $avail]
 testConstraint haveMultipleVisuals [expr {[llength $avail] > 1}]
+testConstraint haveDefault24bitsVisual [expr {[winfo depth .] == 24}]
+testConstraint have32bitsVisual [expr {$32bitsVisual ne ""}]
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test visual-1.1 {Tk_GetVisual, copying from other window} -body {
     toplevel .t -visual .foo.bar
@@ -519,14 +550,29 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
     deleteWindows
 } -result {}
 
+
+test visual-9.1 {Using two different visuals on the same screen - bug c23f79ef96} -constraints {
+    haveDefault24bitsVisual have32bitsVisual
+} -setup {
+    deleteWindows
+} -body {
+    set res [winfo depth .]
+    toplevel .t -visual $32bitsVisual
+    pack [label .t.l -text "Any text"]  ; # Shall not crash ("X Error of failed request:  BadValue [...]")
+    update
+    lappend res [winfo depth .t]
+} -cleanup {
+    deleteWindows
+} -result {24 32}
+
+
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
 testutils forget colors
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

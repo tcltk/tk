@@ -1,18 +1,33 @@
 # This file is a Tcl script to test the code in the file tkTextWind.c.
-# This file is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import text
+
+#
+# COMMON TEST SETUP
+#
 
 deleteWindows
 
@@ -62,7 +77,9 @@ wm deiconify .
 
 update
 
-# ----------------------------------------------------------------------
+#
+# TESTS
+#
 
 test textWind-1.1 {basic tests of options} -setup {
     .t delete 1.0 end
@@ -147,8 +164,13 @@ test textWind-1.6 {basic tests of options} -setup {
     5x$fixedHeight+[xchar 2]+[yline 2] \
     {-stretch {} {} 0 1}]
 
+#
+# COMMON TEST SETUP
+#
+
 .t delete 1.0 end
 .t insert end "This is the first line"
+
 test textWind-2.1 {TkTextWindowCmd procedure} -body {
     .t window
 } -returnCodes error -result {wrong # args: should be ".t window option ?arg ...?"}
@@ -304,7 +326,12 @@ test textWind-2.22 {TkTextWindowCmd procedure} -setup {
 } -body {
     .t window c
 } -returnCodes error -result {ambiguous window option "c": must be cget, configure, create, or names}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .f
+
 test textWind-2.23 {TkTextWindowCmd procedure, "names" option} -setup {
     .t delete 1.0 end
 } -body {
@@ -468,6 +495,10 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     update
     .t index .t.b
 } -result {1.6}
+
+#
+# COMMON TEST SETUP
+#
 
 .t delete 1.0 end
 frame .f -width 10 -height 20 -bg $color
@@ -1645,10 +1676,9 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
 
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 option clear
 testutils forget text
 cleanupTests
-return

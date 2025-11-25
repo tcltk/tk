@@ -141,6 +141,18 @@ namespace eval ::tk::test::generic {
 	vwait [namespace current]::_pause($num)
     }
 
+    # resetWindows --
+    #
+    #	Restores a proper initial window setup for a test file, cleaning up from
+    #	the state brought about by a previous test file.
+    #
+    proc resetWindows {} {
+	deleteWindows
+	wm geometry . {}
+	raise .
+	update
+    }
+
     # On macOS windows are not allowed to overlap the menubar at the top of the
     # screen or the dock.  So tests which move a window and then check whether it
     # got moved to the requested location should use a y coordinate larger than the
@@ -326,7 +338,7 @@ namespace eval ::tk::test::child {
 
     # childTkInterp --
     #
-    # 	Create a new Tk application in a child interpreter, with
+    #	Create a new Tk application in a child interpreter, with
     #	a given name and class.
     #
     proc childTkInterp {name args} {
@@ -362,20 +374,29 @@ namespace eval ::tk::test::child {
 
     # childTkProcess --
     #
-    # 	Create a new Tk application in a child process, and enable it to
+    #	Create a new Tk application in a child process, and enable it to
     #	evaluate scripts on our behalf.
     #
     #	Suggestion: replace with child interp or thread ?
     #
     proc childTkProcess {subcmd args} {
 	variable fd
+	variable interpCount
 	switch -- $subcmd {
 	    create {
 		if {[info exists fd] && [string length $fd]} {
 		    childTkProcess exit
 		}
+		# Beware of bug #280189e35d. We prevent that bug by not relying
+		# on the automatic detection of duplicate interp names, as
+		# advertised by the manual page for "tk appname". Instead, we
+		# pass a unique appname to the executable that is being invoked
+		# below.
+		if {! [info exists interpCount]} {
+		    set interpCount 1
+		}
 		set fd [open "|[list [::tcltest::interpreter] \
-			-geometry +0+0 -name tktest] $args" r+]
+			-geometry +0+0 -name tktest[incr interpCount]] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {

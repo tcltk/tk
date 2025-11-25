@@ -1,17 +1,32 @@
 # This file is a Tcl script to test out the B-tree facilities of
 # Tk's text widget (the contents of the file "tkTextBTree.c".  There are
-# several file with additional tests for other features of text widgets.
-# This file is organized in the standard fashion for Tcl tests.
+# several files with additional tests for other features of text widgets.
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc setup {} {
     .t delete 1.0 100000.0
@@ -59,10 +74,18 @@ proc setupBig {} {
     .t debug 1
 }
 
-# Widget used in tests 1.* - 13.*
+#
+# COMMON TEST SETUP
+#
+# For tests 1.* - 13.*
+#
 destroy .t
 text .t
 .t debug on
+
+#
+# TESTS
+#
 
 test btree-1.1 {basic insertions} -body {
     .t delete 1.0 100000.0
@@ -901,8 +924,11 @@ test btree-13.8 {tag searching} -setup {
     .t tag add x 190.3 191.2
     .t tag next x 3.5
 } -result {190.3 191.2}
-destroy .t
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .t
 
 test btree-14.1 {check tag presence} -setup {
     destroy .t
@@ -1305,9 +1331,8 @@ test btree-18.9 {tag search back, large complex btree spans} -setup {
 } -result {{500.0 520.0} {200.0 220.0}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 rename setup {}
 cleanupTests
-return

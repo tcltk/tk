@@ -689,7 +689,7 @@ CreateCGImageFromDrawableRect(
 		CGImageGetBitsPerComponent(cg_image),
 		CGImageGetBitsPerPixel(cg_image) * width * dstScaleFactor / 8,
 		colorspace,
-		CGImageGetAlphaInfo(cg_image));
+		CGImageGetBitmapInfo(cg_image));
 	CGColorSpaceRelease(colorspace);
 	// Prevent a faint outline from appearing when downscaling Retina captures; possibly also faster
 	CGContextSetInterpolationQuality(cg_context, kCGInterpolationNone);
@@ -1183,9 +1183,13 @@ XCopyPlane(
 		    CGImageRelease(submask);
 		    CGImageRelease(subimage);
 		} else {
+		    srcRect = CGRectMake(src_x, src_y, width, height);
+		    CGImageRef subimage = CGImageCreateWithImageInRect(
+			    img, srcRect);
 		    dstRect = CGRectMake(dest_x, dest_y, width, height);
-		    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
+		    TkMacOSXDrawCGImage(dst, gc, dc.context, subimage,
 			    gc->foreground, imageBackground, dstRect);
+		    CGImageRelease(subimage);
 		    CGImageRelease(img);
 		}
 	    } else {

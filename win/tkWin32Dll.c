@@ -12,7 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#ifdef HAVE_NO_SEH
+#if defined(__GNUC__)
 
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by
@@ -101,7 +101,7 @@ DllMain(
     DWORD reason,
     LPVOID reserved)
 {
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && defined(NDEBUG)
     TCLEXCEPTION_REGISTRATION registration;
 #endif
     (void)reserved;
@@ -123,9 +123,9 @@ DllMain(
 	 * guaranteed Tk is always being unloaded from a stable condition.
 	 */
 
-#ifdef HAVE_NO_SEH
-#   if defined(__aarch64__)
-	/* Don't run TkFinalize(NULL) on mingw-w64 for ARM64, since we don't have corresponding assembler-code. */
+#if defined(HAVE_NO_SEH) || defined(__aarch64__) || !defined(NDEBUG)
+#   if defined(__aarch64__) || !defined(NDEBUG)
+	TkFinalize(NULL);
 #   elif defined(_WIN64)
 	__asm__ __volatile__ (
 
@@ -149,13 +149,21 @@ DllMain(
 
 	    "movq	%%rdx,		%%gs:0"		"\n\t"
 
-	    /*
-	     * Call TkFinalize
-	     */
+	    :
+	    /* No outputs */
+	    :
+	    [registration]	"m"	(registration),
+	    [error]		"i"	(TCL_ERROR)
+	    :
+	    "%rax", "%rdx", "memory"
+	);
 
-	    "movq	$0x0,		0x0(%%rsp)"		"\n\t"
-	    "call	TkFinalize"			"\n\t"
+	/* Just do a regular C call so we don't need to worry about following
+	 * the calling convention, specially the registers the function may
+	 * clobber: */
+	TkFinalize(NULL);
 
+	__asm__ __volatile__ (
 	    /*
 	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
 	     * and store a TCL_OK status
@@ -189,11 +197,9 @@ DllMain(
 	    :
 	    /* No outputs */
 	    :
-	    [registration]	"m"	(registration),
-	    [ok]		"i"	(TCL_OK),
-	    [error]		"i"	(TCL_ERROR)
+	    [ok]		"i"	(TCL_OK)
 	    :
-	    "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "memory"
+	    "%rax", "%rdx", "memory"
 	);
 
 #   else
@@ -219,12 +225,18 @@ DllMain(
 
 	    "movl	%%edx,		%%fs:0"		"\n\t"
 
-	    /*
-	     * Call TkFinalize
-	     */
+	    :
+	    /* No outputs */
+	    :
+	    [registration]	"m"	(registration),
+	    [error]		"i"	(TCL_ERROR)
+	    :
+	    "%eax", "%ebx", "%edx", "memory"
+	);
 
-	    "movl	$0x0,		0x0(%%esp)"		"\n\t"
-	    "call	_TkFinalize"			"\n\t"
+	TkFinalize(NULL);
+
+	__asm__ __volatile__ (
 
 	    /*
 	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
@@ -260,11 +272,9 @@ DllMain(
 	    :
 	    /* No outputs */
 	    :
-	    [registration]	"m"	(registration),
-	    [ok]		"i"	(TCL_OK),
-	    [error]		"i"	(TCL_ERROR)
+	    [ok]		"i"	(TCL_OK)
 	    :
-	    "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "memory"
+	    "%eax", "%ebx", "%edx", "memory"
 	);
 
 #   endif

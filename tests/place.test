@@ -1,28 +1,54 @@
-# This file is a Tcl script to test out the "place" command.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "place" command.
 #
 # Copyright © 1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTE
+#
+# This test file is woefully incomplete.  At present, only a
+# few of the features are tested.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 # Used for constraining memory leak tests
 testConstraint memory [llength [info commands memory]]
 
-# XXX - This test file is woefully incomplete.  At present, only a
-# few of the features are tested.
+#
+# COMMON TEST SETUP
+#
+# For tests 1.* - 8.*
+#
 
-# Widgets used in tests 1.* - 8.*
 toplevel .t -width 300 -height 200 -bd 0
 wm geom .t +0+0
 frame .t.f -width 154 -height 84 -bd 2 -relief raised
 place .t.f -x 48 -y 38
 frame .t.f2 -width 30 -height 60 -bd 2 -relief raised
 update
+
+#
+# TESTS
+#
 
 test place-1.1 {Tk_PlaceCmd procedure, "info" option} -setup {
     place forget .t.f2
@@ -302,8 +328,11 @@ test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints 
     update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 42 32 0 1}
-destroy .t
 
+#
+# COMMON TEST CLEANUP
+#
+destroy .t
 
 test place-9.1 {PlaceObjCmd} -body {
     place
@@ -523,10 +552,8 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
     rename stress {}
 } -result {0 0 0}
 
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return
-
-
-

@@ -1,16 +1,41 @@
-# This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests. This
-# file tests the Macintosh-specific features of the menu
-# system.
+# This file is a Tcl script that tests the features of the Tk menu system that
+# are specific to MS Windows.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests regarding
+#   the menu system that are specific to the unix platform (this includes macOS)
+#   go into the test file unixMenu.test. Tests that are platform-indifferent go
+#   into test file menu.test. Or they may exists as each other's counterparts in
+#   both unixMenu.test and winMenu.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-windows platforms.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
 
 test winMenu-1.1 {GetNewID} -constraints win -setup {
     destroy .m1
@@ -1185,7 +1210,7 @@ test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -constraints {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test winMenu-32.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints {
-    unix nonUnixUserInteraction
+    win nonUnixUserInteraction
 } -setup {
     destroy .mb
 } -body {
@@ -1288,7 +1313,7 @@ test winMenu-32.14 {TkpComputeStandardMenuGeometry - second indicator less or eq
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
 test winMenu-32.15 {TkpComputeStandardMenuGeometry - second indicator larger} -constraints {
-    testImageType unix
+    testImageType win
 } -setup {
     destroy .m1
     catch {image delete image1}
@@ -1374,12 +1399,13 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
     emptyTest win
 } -body {}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 deleteWindows
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl
 # End:
-

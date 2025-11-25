@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:
@@ -158,7 +158,7 @@ jobs:
           CFGOPT: --enable-64bit ${{ matrix.config }}
       - name: Build Tk
         run: |
-          make all tktest || {
+          make all install tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
