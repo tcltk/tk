@@ -284,7 +284,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
-# Tests place-8.1 and place-8.2 are constrained with failsOnUbuntu
+# Tests place-8.1 and place-8.2 are constrained with failsOnCILinux
 # because they are failing in the GitHub CI environment, using Linux Ubuntu.
 # These tests are also constrained with failsOnXQuartz because they fail
 # on macOS when building with clang --disable-aqua (which uses XQuartz)
@@ -294,7 +294,7 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
 # 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
 # having happened. The cause for this is unknown (see comments in WaitForMapNotify).
 
-test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
@@ -310,7 +310,7 @@ test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints 
     update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
-test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
