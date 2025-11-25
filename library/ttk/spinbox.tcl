@@ -27,6 +27,9 @@ ttk::bindMouseWheel TSpinbox		{ ttk::spinbox::Spin %W }
 bind TSpinbox <Shift-MouseWheel> {
     # Ignore the event
 }
+bind TSpinbox <Shift-Option-MouseWheel> {
+    # Ignore the event
+}
 bind TSpinbox <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
     # TouchpadScroll events fire about 60 times per second.
