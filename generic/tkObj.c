@@ -91,6 +91,8 @@ static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
+static Tcl_Size	LengthOneOrTwo(Tcl_Obj *objPtr);
+
 
 /*
  * The following structure defines the implementation of the "pixel" Tcl
@@ -104,7 +106,7 @@ static const TkObjType pixelObjType = {
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
+    TCL_OBJTYPE_V1(LengthOneOrTwo)},
     0
 };
 
@@ -127,7 +129,7 @@ static const TkObjType mmObjType = {
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
+    TCL_OBJTYPE_V1(LengthOneOrTwo)},
     0
 };
 
@@ -146,6 +148,35 @@ static const TkObjType windowObjType = {
     0
 };
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * LengthOneOrTwo --
+ *
+ *	Determine the length of a "pixel" or "mm". It returns 2 if there is any
+ *	space between the float and the 'c', 'i', 'm' or 'p', 1 otherwise.
+ *
+ *----------------------------------------------------------------------
+ */
+Tcl_Size
+LengthOneOrTwo(
+    Tcl_Obj *objPtr)
+{
+    if (objPtr->bytes) {
+	const char *p = objPtr->bytes + strlen(objPtr->bytes);
+	while (strchr(" \f\n\r\t\v", *--p)) {
+	    // skip spacing at end;
+	}
+	if (strchr("cimp", *p)) {
+	    // Check whether character is preceded by space
+	    if (strchr(" \f\n\r\t\v", *--p)) {
+		return 2;
+	    }
+	}
+    }
+    return 1;
+}
+
 /*
  *----------------------------------------------------------------------
  *

@@ -91,8 +91,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      */
     HINSTANCE handle;
     *phlib = handle = LoadLibraryW(L"uxtheme.dll");
-    if (handle != 0)
-    {
+    if (handle != 0) {
 	/*
 	 * We have successfully loaded the library. Proceed in storing the
 	 * addresses of the functions we want to use.
@@ -101,7 +100,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 #define LOADPROC(name) \
 	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
 
-	if (   LOADPROC(OpenThemeData)
+	if (LOADPROC(OpenThemeData)
 	    && LOADPROC(CloseThemeData)
 	    && LOADPROC(GetThemePartSize)
 	    && LOADPROC(GetThemeSysSize)
@@ -110,9 +109,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	    && LOADPROC(GetThemeTextExtent)
 	    && LOADPROC(DrawThemeText)
 	    && LOADPROC(IsThemeActive)
-	    && LOADPROC(IsAppThemed)
-	)
-	{
+	    && LOADPROC(IsAppThemed)) {
 	    return procs;
 	}
 #undef LOADPROC
@@ -128,7 +125,8 @@ LoadXPThemeProcs(HINSTANCE *phlib)
  */
 
 static void
-XPThemeDeleteProc(void *clientData)
+XPThemeDeleteProc(
+    void *clientData)
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
     FreeLibrary(themeData->hlibrary);
@@ -459,13 +457,14 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     elementData->hTheme = elementData->procs->OpenThemeData(
 	elementData->hwnd, elementData->info->className);
 
-    if (!elementData->hTheme)
+    if (!elementData->hTheme) {
 	return 0;
+    }
 
     elementData->drawable = d;
     if (d != 0) {
 	elementData->hDC = TkWinGetDrawableDC(Tk_Display(tkwin), d,
-	    &elementData->dcState);
+		&elementData->dcState);
     }
 
     return 1;
@@ -500,8 +499,9 @@ static void GenericElementSize(
     HRESULT result;
     SIZE size;
 
-    if (!InitElementData(elementData, tkwin, 0))
+    if (!InitElementData(elementData, tkwin, 0)) {
 	return;
+    }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
 	result = elementData->procs->GetThemePartSize(
@@ -583,8 +583,9 @@ GenericSizedElementSize(
 {
     ElementData *elementData = (ElementData *)clientData;
 
-    if (!InitElementData(elementData, tkwin, 0))
+    if (!InitElementData(elementData, tkwin, 0)) {
 	return;
+    }
 
     GenericElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
@@ -593,10 +594,12 @@ GenericSizedElementSize(
 	(elementData->info->flags >> 8) & 0xff);
     *heightPtr = elementData->procs->GetThemeSysSize(NULL,
 	elementData->info->flags & 0xff);
-    if (elementData->info->flags & HALF_HEIGHT)
+    if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
-    if (elementData->info->flags & HALF_WIDTH)
+    }
+    if (elementData->info->flags & HALF_WIDTH) {
 	*widthPtr /= 2;
+    }
 }
 
 static const Ttk_ElementSpec GenericSizedElementSpec = {
@@ -619,8 +622,9 @@ SpinboxArrowElementSize(
 {
     ElementData *elementData = (ElementData *)clientData;
 
-    if (!InitElementData(elementData, tkwin, 0))
+    if (!InitElementData(elementData, tkwin, 0)) {
 	return;
+    }
 
     GenericSizedElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
@@ -657,11 +661,13 @@ static void ThumbElementDraw(
     /*
      * Don't draw the thumb if we are disabled.
      */
-    if (state & TTK_STATE_DISABLED)
+    if (state & TTK_STATE_DISABLED) {
 	return;
+    }
 
-    if (!InitElementData(elementData, tkwin, d))
+    if (!InitElementData(elementData, tkwin, d)) {
 	return;
+    }
 
     elementData->procs->DrawThemeBackground(elementData->hTheme,
 	elementData->hDC, elementData->info->partId, stateId,
@@ -801,8 +807,9 @@ static void TabElementDraw(
 
     RECT rc = BoxToRect(b);
 
-    if (!InitElementData(elementData, tkwin, d))
+    if (!InitElementData(elementData, tkwin, d)) {
 	return;
+    }
 
     if (nbTabsStickBit == TTK_STICK_S) {
 	if (state & TTK_STATE_FIRST) {
@@ -945,8 +952,9 @@ static void TextElementSize(
     Tcl_Size len;
     Tcl_DString ds;
 
-    if (!InitElementData(elementData, tkwin, 0))
+    if (!InitElementData(elementData, tkwin, 0)) {
 	return;
+    }
 
     src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
@@ -984,8 +992,9 @@ static void TextElementDraw(
     Tcl_Size len;
     Tcl_DString ds;
 
-    if (!InitElementData(elementData, tkwin, d))
+    if (!InitElementData(elementData, tkwin, d)) {
 	return;
+    }
 
     src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
@@ -1185,11 +1194,12 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     Tcl_Obj **objv;
     Tcl_Size i, objc;
 
-    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
+    if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	return TCL_ERROR;
+    }
     if (objc != 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	return TCL_ERROR;
     }
     for (i = 0; i < objc; ++i) {
@@ -1246,7 +1256,7 @@ Ttk_CreateVsapiElement(
     if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1267,7 +1277,7 @@ Ttk_CreateVsapiElement(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Missing value for \"%s\".",
 			Tcl_GetString(objv[i])));
-		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", (char *)NULL);
 		goto retErr;
 	    }
 	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
@@ -1310,15 +1320,17 @@ Ttk_CreateVsapiElement(
 		if (Tcl_GetBooleanFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		if (tmp)
+		if (tmp) {
 		    flags |= HALF_HEIGHT;
+		}
 		break;
 	    case O_HALFWIDTH:
 		if (Tcl_GetBooleanFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		if (tmp)
+		if (tmp) {
 		    flags |= HALF_WIDTH;
+		}
 		break;
 	    }
 	}
@@ -1329,8 +1341,9 @@ Ttk_CreateVsapiElement(
 	Tcl_Obj **specs;
 	Tcl_Size n, j, count;
 	int status = TCL_OK;
-	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
+	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK) {
 	    goto retErr;
+	}
 	/* we over-allocate to ensure there is a terminating entry */
 	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable) * (count + 1));
 	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
@@ -1372,7 +1385,7 @@ Ttk_CreateVsapiElement(
     elementPtr->className = wname;
 
     elementData = NewElementData(themeData->procs, elementPtr);
-    Ttk_RegisterElementSpec(
+    Ttk_RegisterElement(NULL,
 	theme, elementName, elementPtr->elementSpec, elementData);
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
@@ -1399,8 +1412,9 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     const ElementInfo *infoPtr;
 
     procs = LoadXPThemeProcs(&hlibrary);
-    if (!procs)
+    if (!procs) {
 	return TCL_ERROR;
+    }
     procs->stubWindow = hwnd;
 
     /*
@@ -1409,8 +1423,9 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     parentPtr = Ttk_GetTheme(interp, "winnative");
     themePtr = Ttk_CreateTheme(interp, "xpnative", parentPtr);
 
-    if (!themePtr)
+    if (!themePtr) {
 	return TCL_ERROR;
+    }
 
     /*
      * Set theme data and cleanup proc
@@ -1441,12 +1456,12 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
 	void *clientData = NewElementData(procs, infoPtr);
-	Ttk_RegisterElementSpec(
+	Ttk_RegisterElement(NULL,
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
     }
 
-    Ttk_RegisterElementSpec(themePtr, "Scale.trough", &ttkNullElementSpec, 0);
+    Ttk_RegisterElement(NULL, themePtr, "Scale.trough", &ttkNullElementSpec, 0);
 
     /*
      * Layouts:

@@ -1,21 +1,47 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkUnixEmbed.c.  It is organized in the standard fashion for Tcl
-# tests.
+# tkUnixEmbed.c.
 #
 # Copyright © 1996-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+# NOTES
+#
+# * This test file is specific for the unix platform. This includes macOS.
+#   Tests that are platform-indifferent go into the test file embed.test.
+# * This test file is skipped entirely on non-unix platforms.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import colors child
 
+#
+# COMMON TEST SETUP
+#
+
 childTkProcess create
 childTkProcess eval {wm withdraw .}
+
+#
+# TESTS
+#
 
 test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
@@ -1102,6 +1128,10 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} -constraints unix -setup {
 } -cleanup {
     deleteWindows
 } -result {{{} .} .f1}
+
+#
+# COMMON TEST CLEANUP
+#
 catch {interp delete child}
 
 test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} -constraints {
@@ -1253,11 +1283,10 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
 } -result {.main.b {pushed .main.b} .embed.b {pushed .embed.b}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 deleteWindows
 childTkProcess exit
 testutils forget child colors
 cleanupTests
-return

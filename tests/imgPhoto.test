@@ -1,6 +1,5 @@
 # This file is a Tcl script to test out the "photo" image type and the other
-# procedures in the file tkImgPhoto.c. It is organized in the standard fashion
-# for Tcl tests.
+# procedures in the file tkImgPhoto.c.
 #
 # Copyright © 1994 The Australian National University
 # Copyright © 1994-1997 Sun Microsystems, Inc.
@@ -10,8 +9,9 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 
+# NOTES
 #
-# This file is somewhat caothic: the order of the tests does not
+# This file is somewhat chaotic: the order of the tests does not
 # really follow the order of the corresponding functions in
 # tkImgPhoto.c. Probably, because early versions had only a few tests
 # and over time test cases were added in bits and pieces.
@@ -21,8 +21,6 @@
 # To help keeping the overview, the table below lists where to find
 # tests for each of the functions in tkImgPhoto.c. The function are
 # listed in the order as they appear in the source file.
-#
-
 #
 # Function name                         Tests for function
 #--------------------------------------------------------------------------
@@ -55,11 +53,8 @@
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------
 #
-
 #
 # Some tests are not specific to a function in tkImgPhoto.c. They are:
-#
-
 #
 # Test name(s)          Description
 #--------------------------------------------------------------------------
@@ -72,15 +67,53 @@
 # imgPhoto-13.*         Tests for separation in different interpreters
 # imgPhoto-14.*         Test GIF format. Would belong to imgGIF.test
 #                       - which does not exist.
+
+#
+# TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc checkImgTrans {img} {
+    set result {}
+    foreachPixel $img x y {
+	if {[$img transparency get $x $y]} {
+	    lappend result $x,$y
+	}
+    }
+    return $result
+}
+
+proc checkImgTransLoop {img script1 script2} {
+    set result {}
+    foreachPixel $img x y {
+	eval $script1
+	lappend result {*}[checkImgTrans $img]
+	append result :
+	eval $script2
+	lappend result {*}[checkImgTrans $img]
+	append result .
+    }
+    return $result
+}
 
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
@@ -95,27 +128,10 @@ proc foreachPixel {img xVar yVar script} {
 	}
     }
 }
-proc checkImgTrans {img} {
-    set result {}
-    foreachPixel $img x y {
-	if {[$img transparency get $x $y]} {
-	    lappend result $x,$y
-	}
-    }
-    return $result
-}
-proc checkImgTransLoop {img script1 script2} {
-    set result {}
-    foreachPixel $img x y {
-	eval $script1
-	lappend result {*}[checkImgTrans $img]
-	append result :
-	eval $script2
-	lappend result {*}[checkImgTrans $img]
-	append result .
-    }
-    return $result
-}
+
+#
+# COMMON TEST SETUP
+#
 
 imageInit
 set README [makeFile {
@@ -125,6 +141,9 @@ set README [makeFile {
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
 
+#
+# TESTS
+#
 
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
@@ -2098,7 +2117,11 @@ test imgPhoto-22.3 {option -metadata, clear value} -setup {
     catch {image delete photo1}
 } -result {}
 
-# 23.x GIF images with metadata
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-23.* : GIF images with metadata
+#
 
 # The following gif core data is used by the following data.
 # N.B. this is the same image as test imgPhoto-18.10
@@ -2134,7 +2157,7 @@ test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifdata $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts -nonewline $h $data
     close $h
@@ -2167,7 +2190,7 @@ test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2204,7 +2227,7 @@ test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2242,7 +2265,7 @@ test imgPhoto-23.8 {create: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2283,7 +2306,7 @@ test imgPhoto-23.10 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2325,7 +2348,7 @@ test imgPhoto-23.12 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2368,7 +2391,7 @@ test imgPhoto-23.14 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2407,7 +2430,7 @@ test imgPhoto-23.16 {output data with comment (from -metadata property)}\
 test imgPhoto-23.17 {output file with comment (from -metadata property)}\
 -setup {
     set data $::gifstart$::gifdata$::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
 } -body {
     image create photo gif1 -data $data
     gif1 configure -metadata [dict create comment ABCD]
@@ -2438,7 +2461,7 @@ test imgPhoto-23.18 {configure: empty metadata parameter overwrites image metada
 test imgPhoto-23.19 {write: empty metadata parameter overwrites image metadata} -setup {
     image create photo gif1 -data $::gifstart$::gifdata$::gifend\
 	    -metadata {comment bar}
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
 } -body {
     gif1 write $path -format gif -metadata {}
     image delete gif1
@@ -2603,10 +2626,14 @@ test imgPhoto-23.29 {GIF multiple options metadata in -index 1} -setup {
     catch {image delete gif1}
 } -result {{update region} {0 0 16 16} {delay time} 4096 {disposal method} {do not dispose} {user interaction} 1}
 
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-24.*
+#
 unset -nocomplain gifstart gifdata gifend
-
-
 set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+
 test imgPhoto-24.1 {Read GIF file with -from option - Bug [1576528]} -body {
     set earthPhotoFile [file join [file dirname [info script]] earth.gif]
     image create photo gif1
@@ -2655,9 +2682,15 @@ test imgPhoto-24.6 {Read GIF file with -from option, read large region from smal
 } -cleanup {
     catch {image delete gif1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
-unset earthPhotoFile
 
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-25.*
+#
+unset earthPhotoFile
 set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
+
 test imgPhoto-25.1 {Read PNG file with -from option - Bug [1576528]} -body {
     image create photo png1
     png1 read $ousterPhotoFile -from 102 62 135 97
@@ -2701,12 +2734,12 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -cleanup {
     catch {image delete png1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
+
+#
+# TESTFILE CLEANUP
+#
+
 unset ousterPhotoFile
-
-#
-# CLEANUP
-#
-
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}
@@ -2715,7 +2748,6 @@ removeFile README-imgPhoto
 
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

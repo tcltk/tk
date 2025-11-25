@@ -1,17 +1,54 @@
 # This file is a Tcl script to test out Tk's "tk_messageBox" command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding the message boxes
+# that are specific to the windows platform go into the test file winMsgBox.test.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import dialog
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc ChooseMsg {parent btn} {
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn mouse
+    }
+}
+
+proc ChooseMsgByKey {parent btn} {
+    if {! $::dialogIsNative} {
+	after 100 SendButtonPress $parent $btn key
+    }
+}
+
+#
+# TESTS
+#
 
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
@@ -75,19 +112,6 @@ test msgbox-1.18 {tk_messageBox command} -body {
 test msgbox-1.19 {tk_messageBox command} -body {
     tk_messageBox -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
-
-
-proc ChooseMsg {parent btn} {
-    if {! $::dialogIsNative} {
-	after 100 SendButtonPress $parent $btn mouse
-    }
-}
-
-proc ChooseMsgByKey {parent btn} {
-    if {! $::dialogIsNative} {
-	after 100 SendButtonPress $parent $btn key
-    }
-}
 
 #
 # Try out all combinations of (type) x (default button) and
@@ -414,9 +438,8 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
 } -result {ok}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget dialog
 cleanupTests
-return

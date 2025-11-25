@@ -7,9 +7,32 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTE
+#
+# Note: this test file is woefully incomplete.  Right now there are
+# only bits and pieces of tests.  Please make this file more complete
+# as you fix bugs and add features.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
@@ -48,9 +71,11 @@ proc getTroughSize {w} {
     }
 }
 
-# XXX Note: this test file is woefully incomplete.  Right now there are
-# only bits and pieces of tests.  Please make this file more complete
-# as you fix bugs and add features.
+#
+# COMMON TEST SETUP
+#
+# For tests scrollbar-1.*
+#
 
 foreach {width height} [wm minsize .] {
     set height [expr {($height < 200) ? 200 : $height}]
@@ -62,6 +87,11 @@ pack .f -side left
 scrollbar .s
 pack .s -side right -fill y
 update
+
+#
+# TESTS
+#
+
 set i 1
 foreach test {
     {-activebackground #ff0000 #ff0000 non-existent
@@ -106,7 +136,11 @@ foreach test {
     .s configure $name [lindex [.s configure $name] 3]
 }
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .s
+
 test scrollbar-2.1 {Tk_ScrollbarCmd procedure} -returnCodes error -body {
     scrollbar
 } -result {wrong # args: should be "scrollbar pathName ?-option value ...?"}
@@ -132,9 +166,14 @@ test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
     destroy .s
 } -result .s
 
+
+#
+# COMMON TEST SETUP
+#
 scrollbar .s -orient vertical -highlightthickness 2 -bd 2
 pack .s -side right -fill y
 update
+
 test scrollbar-3.1 {ScrollbarWidgetCmd procedure} {
     list [catch {.s} msg] $msg
 } {1 {wrong # args: should be ".s option ?arg ...?"}}
@@ -170,7 +209,12 @@ test scrollbar-3.9 {ScrollbarWidgetCmd procedure, "activate" option} {
 test scrollbar-3.10 {ScrollbarWidgetCmd procedure, "cget" option} {
     list [catch {.s cget -orient} msg] $msg
 } {0 vertical}
+
+#
+# COMMON TEST SETUP
+#
 scrollbar .s2
+
 test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {
     expr {[.s2 cget -bd] == [lindex [.s2 configure -bd] 3]}
 } 1
@@ -189,7 +233,12 @@ test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
 test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
     # empty test; duplicated scrollbar-3.13
 } {}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .s2
+
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]
 } 20
@@ -283,6 +332,10 @@ test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetri
 			   / ($height - 1 - [testmetrics cyvscroll .s]*2)}]]}
 } 1
 
+#
+# COMMON TEST SETUP
+#
+
 toplevel .t -width 250 -height 100
 wm geom .t +0+0
 scrollbar .t.s -orient horizontal -borderwidth 2
@@ -292,22 +345,29 @@ update
 test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.t.s fraction 100 0]
 } {0.5}
-if {[testConstraint testmetrics]} {
-    # Only Windows has [testmetrics]
-    place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
-} else {
-    if {[tk windowingsystem] eq "x11"} {
-	place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
+
+test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} -setup {
+    if {[testConstraint testmetrics]} {
+	# Only Windows has [testmetrics]
+	place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
     } else {
-	# macOS aqua
-	place configure .t.s -width [expr {2*([.t.s cget -highlightthickness] + [.t.s cget -bd])}]
+	if {[tk windowingsystem] eq "x11"} {
+	    place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
+	} else {
+	    # macOS aqua
+	    place configure .t.s -width [expr {2*([.t.s cget -highlightthickness] + [.t.s cget -bd])}]
+	}
     }
-}
-update
-test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} {
+    update
+} -body {
     format {%.6g} [.t.s fraction 100 0]
-} 0
+} -result 0
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t
+
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg
 } {1 {wrong # args: should be ".s get"}}
@@ -422,6 +482,10 @@ test scrollbar-5.1 {ScrollbarCmdDeletedProc procedure} {
     rename .s1 {}
     list [info command .s?] [winfo exists .s1]
 } {{} 0}
+
+#
+# COMMON TEST SETUP
+#
 
 catch {destroy .s}
 scrollbar .s -orient vertical -relief sunken -bd 2 -highlightthickness 2
@@ -559,6 +623,10 @@ test scrollbar-6.38 {ScrollbarPosition procedure} win {
     .s identify [expr {[winfo width .s] - 1}] 100
 } {trough2}
 
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .t}
 toplevel .t -width 250 -height 150
 wm geometry .t +0+0
@@ -607,9 +675,14 @@ test scrollbar-7.1 {EventuallyRedraw} {
     lappend result [.s cget -orient]
 } {horizontal vertical}
 
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .t}
 toplevel .t
 wm geometry .t +0+0
+
 test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} notAqua {
     # constrained by notAqua because this test clicks on an arrow of the
     # scrollbar - but macOS has no such arrows in modern scrollbars
@@ -653,7 +726,9 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
     set result
 } {1 0 1}
 
-set l [interp hidden]
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test scrollbar-9.1 {scrollbar widget vs hidden commands} {
@@ -662,7 +737,7 @@ test scrollbar-9.1 {scrollbar widget vs hidden commands} {
     interp hide {} .s
     destroy .s
     list [winfo children .] [interp hidden]
-} [list {} $l]
+} [list {} [interp hidden]]
 
 test scrollbar-10.1 {<MouseWheel> event on scrollbar} -setup {
     destroy .t .s
@@ -748,9 +823,10 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     destroy .top.s .top
 } -result {}
 
+#
+# TESTFILE CLEANUP
+#
+
 catch {destroy .s}
 catch {destroy .t}
-
-# cleanup
 cleanupTests
-return

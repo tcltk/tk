@@ -1,6 +1,6 @@
 # README:  Tk
 
-This is the **Tk 9.0.3** source distribution.
+This is the **Tk 9.0.4** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).

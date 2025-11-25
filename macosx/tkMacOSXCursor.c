@@ -367,7 +367,7 @@ TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry
+    const char *string)		/* Description of cursor. See manual entry
 				 * for details on legal syntax. */
 {
     TkMacOSXCursor *macCursorPtr = NULL;

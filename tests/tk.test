@@ -1,16 +1,36 @@
-# This file is a Tcl script to test the tk command.
-# It is organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test the "tk" command, except those for
+# "tk busy", which are in the test file busy.test.
 #
 # Copyright © 1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # Copyright © 2002 ActiveState Corporation.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 testConstraint testprintf [llength [info command testprintf]]
+
+#
+# TESTS
+#
 
 test tk-1.1 {tk command: general} -body {
     tk
@@ -19,8 +39,13 @@ test tk-1.2 {tk command: general} -body {
     tk xyz
 } -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
 
+#
+# COMMON TEST SETUP
+#
+
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
+
 test tk-2.1 {tk command: appname} -body {
     tk appname xyz abc
 } -returnCodes error -result {wrong # args: should be "tk appname ?newName?"}
@@ -34,10 +59,19 @@ test tk-2.3 {tk command: appname} -constraints unix -body {
 test tk-2.4 {tk command: appname} -body {
     tk appname [tk appname]
 } -result [tk appname]
+
+#
+# COMMON TEST CLEANUP
+#
 tk appname $appname
+
+#
+# COMMON TEST SETUP
+#
 
 # Value stored to restore default settings after 3.* tests
 set scaling [tk scaling]
+
 test tk-3.1 {tk command: scaling} -body {
     tk scaling -displayof
 } -returnCodes error -result {value for "-displayof" missing}
@@ -81,10 +115,19 @@ test tk-3.11 {tk command: scaling: heightmm} -body {
     expr {int((25.4*[winfo screenheight .])/(72*1.25) + 0.5) \
 	- [winfo screenmmheight .]}
 } -result 0
+
+#
+# COMMON TEST CLEANUP
+#
 tk scaling $scaling
+
+#
+# COMMON TEST SETUP
+#
 
 # Value stored to restore default settings after 4.* tests
 set useim [tk useinputmethods]
+
 test tk-4.1 {tk command: useinputmethods} -body {
     tk useinputmethods -displayof
 } -returnCodes error -result {value for "-displayof" missing}
@@ -183,8 +226,8 @@ test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expec
     testprintf -21474836480
 } -result {-21474836480 18446744052234715136}
 
-# tests of [tk busy] in busy.test
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return

@@ -545,7 +545,7 @@ enum {
 	}
     } else {
 	static unsigned long scrollCounter = 0;
-	int delta;
+	unsigned delta;
 	CGFloat Delta;
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
@@ -557,8 +557,8 @@ enum {
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
 	if (deltaIsPrecise) {
-	    int deltaX = [theEvent scrollingDeltaX];
-	    int deltaY = [theEvent scrollingDeltaY];
+	    unsigned deltaX = (unsigned)(int)[theEvent scrollingDeltaX];
+	    unsigned deltaY = (unsigned)(int)[theEvent scrollingDeltaY];
 	    delta = (deltaX << 16) | (deltaY & 0xffff);
 	    if (delta != 0) {
 		xEvent.type = TouchpadScroll;
