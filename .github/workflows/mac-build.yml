@@ -71,7 +71,7 @@ jobs:
         working-directory: tk/unix
     steps:
       - name: Checkout Tk
-        uses: actions/checkout
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Check out Tcl 9.0
