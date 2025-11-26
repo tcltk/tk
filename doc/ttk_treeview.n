@@ -1236,9 +1236,9 @@ Applies to all:
 .IP \(bu
 \fB<Button-1>\fR will set the focus (all modes) and selection (all except none select mode) to the item or cell under the mouse pointer.
 .IP \(bu
-\fB<B1-Motion>\fR will drag a column divider for resize or a column for a move.
+\fB<B1-Motion>\fR will drag a column divider for resize, a column header for a column move, or selection for expanding the selection (multiple or extended select modes only).
 .IP \(bu
-\fB<ButtonRelease-1>\fR will drop a column divider for resize or column for a move.
+\fB<ButtonRelease-1>\fR will drop a column divider for resize, column header for a move, or set the selection.
 .IP \(bu
 \fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem.
 .IP \(bu

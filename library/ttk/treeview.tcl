@@ -711,21 +711,6 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 }
 
 #
-# IndentifyCell -- Locate the cell at coordinate
-#	Only active when -selecttype is "cell", and leaves cell empty otherwise.
-#       Down the call chain it is enough to check cell to know the selecttype.
-#
-proc ::ttk::treeview::IdentifyCell {w x y} {
-    set cell {}
-    if {[$w cget -selecttype] eq "cell"} {
-	# Later handling assumes that the column in the cell ID is of the
-	# format #N, which is always the case from "identify cell"
-	set cell [$w identify cell $x $y]
-    }
-    return $cell
-}
-
-#
 # MouseSelect -- Select item or cell using button 1
 #
 proc ::ttk::treeview::MouseSelect {w x y op} {
@@ -778,35 +763,62 @@ proc ::ttk::treeview::Press {w x y} {
 	heading { Heading.press $w $x $y }
 	separator { Resize.press $w $x $y }
 	tree -
-	cell {
-	    set item [$w identify item $x $y]
-	    set cell [IdentifyCell $w $x $y]
-
-	    SelectOp $w $item $cell choose
-	    switch -glob -- [$w identify element $x $y] {
-		*indicator -
-		*disclosure { ToggleOpenState $w $item }
-	    }
-	}
+	cell { Select.press $w $x $y }
     }
 }
 
 proc ::ttk::treeview::Drag {w x y} {
     variable State
     switch $State(pressMode) {
-	resize	{ Resize.drag $w $x }
 	heading	{ Heading.drag $w $x $y }
+	resize	{ Resize.drag $w $x }
+	selection { Select.drag $w $x $y }
     }
 }
 
 proc ::ttk::treeview::Release {w x y} {
     variable State
     switch $State(pressMode) {
-	resize	{ Resize.release $w $x }
 	heading	{ Heading.release $w $x $y }
+	resize	{ Resize.release $w $x }
+	selection { }
     }
     set State(pressMode) none
     Motion $w $x $y
+}
+
+#
+# Interactive cell selection
+#
+proc ttk::treeview::Select.press {w x y} {
+    set item [$w identify item $x $y]
+    if {[$w cget -selecttype] eq "cell"} {
+	set cell [$w identify cell $x $y]
+    } else {
+	set cell ""
+    }
+
+    SelectOp $w $item $cell choose
+    switch -glob -- [$w identify element $x $y] {
+	*indicator -
+	*disclosure { ToggleOpenState $w $item }
+	default {
+	    variable State
+	    if {[$w cget -selectmode] in [list multiple extended]} {
+		set State(pressMode) "selection"
+	    }
+	}
+    }
+}
+
+proc ttk::treeview::Select.drag {w x y} {
+    set item [$w identify item $x $y]
+    if {[$w cget -selecttype] eq "cell"} {
+	set cell [$w identify cell $x $y]
+	$w cellselection set [$w cellselection anchor] $cell
+    } else {
+	$w selection set [$w selection anchor] $item
+    }
 }
 
 #
@@ -972,20 +984,36 @@ proc ::ttk::treeview::select.extend.extended {w item cell} { ExtendTo $w $item $
 #
 proc ::ttk::treeview::OpenItem {w item args} {
     if {$item ne ""} {
-	$w focus $item
+	if {[$w cget -selecttype] eq "item"} {
+	    $w focus $item
+	}
     } else {
-	set item [$w focus]
+	if {[$w cget -selecttype] eq "item"} {
+	    set item [$w focus]
+	} else {
+	    set cell [$w cellfocus]
+	    lassign $cell item column
+	}
     }
+    if {$item eq ""} return
     event generate $w <<TreeviewOpen>>
     $w expand {*}$args [list $item]
 }
 
 proc ::ttk::treeview::CloseItem {w item} {
     if {$item ne ""} {
-	$w focus $item
+	if {[$w cget -selecttype] eq "item"} {
+	    $w focus $item
+	}
     } else {
-	set item [$w focus]
+	if {[$w cget -selecttype] eq "item"} {
+	    set item [$w focus]
+	} else {
+	    set cell [$w cellfocus]
+	    lassign $cell item column
+	}
     }
+    if {$item eq ""} return
     $w collapse [list $item]
     event generate $w <<TreeviewClose>>
 }
