@@ -61,7 +61,7 @@ Controls how the built-in class bindings manage the selection. Options are:
 .RS
 .PP
 .IP \fBnone\fR
-The selection cannot be changed.
+The selection cannot be changed. Focus and item/cell navigation is still allowed.
 .IP \fBbrowse\fR
 Only one item will be selected at a time.
 The selection follows the focus during keyboard traversal.
@@ -69,20 +69,20 @@ In this mode, the selection cannot be removed via the keyboard bindings.
 .IP \fBsingle\fR
 Only a single item can be selected at a time.
 Selecting an item unselects all other items.
-In this mode, the selection follows the focus during keyboard traversal.
+The selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
 .IP \fBmultiple\fR
 Multiple items can be selected.
 Selecting an item does not change the selection state of other items.
 In this mode, the focus and selection are independent which allows for
-keyboard traversal without changing the selection.
+keyboard traversal to change the focus without changing the selection.
 The selection can be cleared via the keyboard bindings.
 .IP \fBextended\fR
 Multiple items can be selected, but the default is for only one item to be
 selected at a time. More items can be selected by extending the selection
 using the Shift and Control/Command keys in combination with the mouse and
 keyboard traversal.
-In this mode, the selection follows the focus during keyboard traversal.
+The selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
 This is the default.
 .PP
@@ -1124,6 +1124,135 @@ over tags.
 The -image option on an item, and on an item tag, controls the image next to
 the label in the tree column.
 Other cells can have images through the cell tag -image option.
+.PP
+.SH "DEFAULT BINDINGS"
+.PP
+The following bindings are implemented by Treeview class. The current item is
+the item with the focus and the current cell is the cell with the cell focus.
+Unless otherwise stated, on the Mac the Option key is used in place of the
+Control key in the descriptions below.
+.PP
+When \fB-selecttype\fR is set to \fBitem\fR:
+.RS
+.IP \(bu
+The \fB<Left>\fR key will close an item if it has children or if not, move the focus to the parent item and select it.
+.IP \(bu
+The \fB<Right>\fR key will open an item if it has children.
+.IP \(bu
+The \fB<Up>\fR key will move the focus to the previous visible item and select it.
+The \fB<Shift-Up>\fR key will extend the selection to the previous visible item (multiple and extended select modes only).
+The \fB<Control-Up>\fR key will move the focus to the top-most on-screen item and select it.
+The \fB<Control-Shift-Up>\fR key will extend the selection to the top-most on-screen item (multiple and extended select modes only).
+.IP \(bu
+The \fB<Down>\fR key will move the focus to the next visible item and select it.
+The \fB<Shift-Down>\fR key will extend the selection to the next visible item (multiple and extended select modes only).
+The \fB<Control-Down>\fR key will move the focus to the bottom-most on-screen item and select it.
+The \fB<Control-Shift-Down>\fR key will extend the selection to the bottom-most on-screen item (multiple and extended select modes only).
+.IP \(bu
+The \fB<Home>\fR key will move the focus to the first child of the current item's parent.
+The \fB<Shift-Home>\fR key will extend the selection to the first child of the current item's parent (multiple and extended select modes only).
+The \fB<Control-Home>\fR key will move the focus to the first item in the tree.
+The \fB<Control-Shift-Home>\fR key will extend the selection to the first item in the tree (multiple and extended select modes only).
+.IP \(bu
+The \fB<End>\fR key will move the focus to the last child of the current item's parent.
+The \fB<Shift-End>\fR key will extend the selection to the last child of the current item's parent (multiple and extended select modes only).
+The \fB<Control-End>\fR key will move the focus to the last item in the tree.
+The \fB<Control-Shift-End>\fR key will extend the selection to the last item in the tree (multiple and extended select modes only).
+.IP \(bu
+The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the item at the same location.
+The \fB<Shift-Prior>\fR key will scroll left 1 screenful.
+The \fB<Control-Prior>\fR key will move to the top-most on-screen item and select it.
+.IP \(bu
+The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selection to the item at the same location.
+The \fB<Shift-Next>\fR key will scroll right 1 screenful.
+The \fB<Control-Next>\fR key will move to the bottom-most on-screen item and select it.
+.IP \(bu
+The \fB<Return>\fR key will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, the open state of the current item will be toggled.
+The \fB<Control-Return>\fR key will toggle the open/close state of the current item.
+.IP \(bu
+The \fB<space>\fR key will toggle the selection state of the current item (single, multiple, and extended select modes only).
+The \fB<Shift-space>\fR key will select the current item (single, multiple, and extended select modes only).
+.IP \(bu
+The \fB<Tab>\fR and \fB<plus>\fR keys will open the current item.
+The \fB<Shift-Tab>\fR and \fB<minus>\fR keys will close the current item.
+The \fB<asterisk>\fR key will open the current item and all of its descendants.
+.RE
+.PP
+When \fB-selecttype\fR is set to \fBcell\fR:
+.RS
+.IP \(bu
+The \fB<Left>\fR key will move the focus to the previous cell in the row and select it.
+\fB<Shift-Left>\fR will extend the selection to the previous cell (multiple and extended select modes only).
+\fB<Control-Left>\fR will move the focus to the left-most on-screen cell in the row and select it.
+\fB<Control-Shift-Left>\fR will extend the selection to the left-most on-screen cell in the row (multiple and extended select modes only).
+.IP \(bu
+The \fB<Right>\fR key will move move the focus to the next cell in the row and select it.
+\fB<Shift-Right>\fR will extend the selection to the next cell (multiple and extended select modes only).
+\fB<Control-Right>\fR will move the focus to the right-most on-screen cell in the row and select it.
+\fB<Control-Shift-Left>\fR will extend the selection to the right-most on-screen cell in the row (multiple and extended select modes only).
+.IP \(bu
+The \fB<Up>\fR key will move the focus to the above cell in the column and select it.
+\fB<Shift-Up>\fR will extend the selection to the above cell (multiple and extended select modes only).
+\fB<Control-Up>\fR will move the focus to the cell at the top of the screen in the same column and select it.
+\fB<Control-Shift-Up>\fR will extend the selection to the cell at the top of the screen in the same column (multiple and extended select modes only).
+.IP \(bu
+The \fB<Down>\fR key will move the focus to the below cell in the column and select it.
+\fB<Shift-Down>\fR will extend the selection to the below cell (multiple and extended select modes only).
+\fB<Control-Down>\fR will move the focus to the cell at the bottom of the screen in the same column and select it.
+\fB<Control-Shift-Down>\fR will extend the selection to the cell at the bottom of the screen in the same column (multiple and extended select modes only).
+.IP \(bu
+The \fB<Home>\fR key will move the focus to the first cell in the row and select it.
+\fB<Shift-Home>\fR will extend the selection to the first cell in the row (multiple and extended select modes only).
+\fB<Control-Home>\fR will move the focus to the top-left cell in the tree and select it.
+\fB<Control-Shift-Home>\fR will extend the selection to the top-left cell in the tree (multiple and extended select modes only).
+.IP \(bu
+The \fB<End>\fR key will move the focus to the last cell in the row and select it.
+\fB<Shift-End>\fR will extend the selection to the last cell in the row (multiple and extended select modes only).
+\fB<Control-End>\fR will move the focus to the bottom-right cell in the tree and select it.
+\fB<Control-Shift-End>\fR will extend the selection to the bottom-right cell in the tree (multiple and extended select modes only).
+.IP \(bu
+The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the cell at the same location.
+\fB<Shift-Prior>\fR will scroll left 1 screenful and set the focus and selection to the cell at the same location.
+\fB<Control-Prior>\fR will move the focus to the cell at the top of the screen in the same column and select it.
+\fB<Control-Shift-Prior>\fR will move the focus to the cell at the right side of the screen in the same row and select it.
+.IP \(bu
+The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selection to the cell at the same location.
+\fB<Shift-Next>\fR will scroll right 1 screenful and set the focus and selection to the cell at the same location.
+\fB<Control-Next>\fR will move the focus to the cell at the bottom of the screen in the same column and select it.
+\fB<Control-Shift-Next>\fR will move the focus to the cell at the left side of the screen in the same row and select it.
+.IP \(bu
+The \fB<Return>\fR key will activate the current cell by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, same as \fB<Down>\fR.
+\fB<Shift-Return>\fR is same as \fBUp\fR.
+\fB<Tab>\fR is same as \fBRight\fR.
+\fB<Shift-Tab>\fR is same as \fBLeft\fR.
+.IP \(bu
+The \fB<space>\fR key will toggle the selection state of the current cell (single, multiple, and extended select modes only).
+\fB<Shift-space>\fR will select all cells in the row (multiple and extended select modes only).
+\fB<Control-space>\fR will select all cells in the column (multiple and extended select modes only).
+.RE
+.PP
+Applies to all:
+.RS
+.IP \(bu
+\fB<Button-1>\fR will set the focus (all modes) and selection (all except none select mode) to the item or cell under the mouse pointer.
+.IP \(bu
+\fB<B1-Motion>\fR will drag a column divider for resize or a column for a move.
+.IP \(bu
+\fB<ButtonRelease-1>\fR will drop a column divider for resize or column for a move.
+.IP \(bu
+\fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem.
+.IP \(bu
+\fB<Shift-Button-1>\fR will select a range of items or cells from the anchor to the selected item/cell (multiple and extended select modes only).
+.IP \(bu
+\fB<Control-Button-1>\fR will toggle the selection state of an item or cell (single, multiple, and extended select modes only).
+.IP \(bu
+\fB<<SelectAll>>\fR virtual event will select all items or cells in the widget (multiple and extended select modes only).
+.IP \(bu
+\fB<<SelectNone>>\fR virtual event will unselect all items or cells.
+.IP \(bu
+The \fB<<Copy>>\fR virtual event will copy the selected items or cells to the clipboard.
+.RE
+.PP
 .SH "VIRTUAL EVENTS"
 .PP
 The treeview widget generates the following virtual events.
@@ -1144,6 +1273,7 @@ widget commands can be used to determine the affected item(s) or cell(s).
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
+.PP
 .SH "STANDARD STYLES"
 .PP
 \fBTtk::treeview\fR widgets support the \fBCheckTreeview\fR style in all
@@ -1312,10 +1442,6 @@ Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fR manual page for information on how to configure
 ttk styles.
-.SH "BINDINGS"
-Support for \fB<<Copy>>\fR binding was added to copy the selected items or cells
-to the clipboard without the use of the \fB-exportselection\fR option and use
-of the \fBPRIMARY\fR selection.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
 .SH "KEYWORDS"
