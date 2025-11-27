@@ -9,14 +9,12 @@
 #
 # Structure of the module:
 #   - Private procedures and data
-#   - Public procedure
+#   - Public procedures
 #==============================================================================
 
 # Private procedures and data
 # ===========================
 
-interp alias {} ttk::wideSpinbox::CreateImg \
-	     {} image create photo -format $::tk::svgFmt
 interp alias {} ttk::wideSpinbox::CreateElem {} ttk::style element create
 
 namespace eval ttk::wideSpinbox {
@@ -28,10 +26,9 @@ namespace eval ttk::wideSpinbox {
 <svg width="20" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
  <circle cx="10" cy="8" r="8" fill="bg"/>
  <path d="m6 6 4 4 4-4" fill="none" stroke-linecap="round" stroke-linejoin="round" }
-    variable gapImg [CreateImg -data {
-<svg width="4" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg"/>}]
 
-    variable onAndroid [expr {[info exists ::tk::android] && $::tk::android}]
+    variable onAndroid	  [expr {[info exists ::tk::android] && $::tk::android}]
+    variable madeElements 0
 }
 
 #------------------------------------------------------------------------------
@@ -190,8 +187,37 @@ proc ttk::wideSpinbox::UpdateElements theme {
     $aImg configure -data $imgData
 }
 
-# Public procedure
-# ================
+# Public procedures
+# =================
+
+#------------------------------------------------------------------------------
+# ttk::wideSpinbox::CondMakeElements
+#
+# Creates the elements WideSpinbox.uparrow and WideSpinbox.downarrow of the
+# Wide.TSpinbox layout if necessary.  Invoked from within the C code, by the
+# ttk::spinbox widget initialization hook.
+#------------------------------------------------------------------------------
+proc ttk::wideSpinbox::CondMakeElements {} {
+    variable madeElements
+    if {!$madeElements} {
+	# If Tk's scaling factor was changed via "tk scaling"
+	# then $::tk::svgFmt now has the updated value.
+
+	interp alias {} ::ttk::wideSpinbox::CreateImg \
+		     {} image create photo -format $::tk::svgFmt
+	variable gapImg [CreateImg -data {
+<svg width="4" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg"/>}]
+
+	set theme [ttk::style theme use]
+	CreateElements $theme
+	UpdateElements $theme
+
+	variable elemInfoArr
+	set elemInfoArr($theme) 1
+
+	set madeElements 1
+    }
+} 
 
 #------------------------------------------------------------------------------
 # ttk::wideSpinbox::MakeOrUpdateElements
@@ -202,6 +228,11 @@ proc ttk::wideSpinbox::UpdateElements theme {
 # ttk::AppearanceChanged (see ttk.tcl).
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::MakeOrUpdateElements {} {
+    variable madeElements
+    if {!$madeElements} {
+	return ""
+    }
+
     variable elemInfoArr
     set theme [ttk::style theme use]
 
