@@ -122,18 +122,24 @@ test entry-2.2 "Initial scroll position" -body {
 } -result {0.0 0.5}
 # NOTE: result can vary depending on font.
 
-# Bounding box / scrolling tests.
-test entry-3.0 "Series 3 setup" -body {
-    ttk::style theme use default
-    variable fixed TkFixedFont
-    variable cw [font measure $fixed a]
-    variable ch [font metrics $fixed -linespace]
-    variable bd 3	;# border + padding + extra space for focus ring
-    variable ux [font measure $fixed 乎]
+#
+# COMMON TEST SETUP
+#
+# for tests entry-3.*
+#
+ttk::style theme use default
+variable fixed TkFixedFont
+variable cw [font measure $fixed a]
+variable ch [font metrics $fixed -linespace]
+variable bd 3	;# border + padding + extra space for focus ring
+variable ux [font measure $fixed 乎]
+pack [ttk::entry .e -font $fixed -width 20]
+update
 
-    pack [ttk::entry .e -font $fixed -width 20]
-    update
-}
+#
+# Test entry-3.0 has been removed in favour of the common test setup
+# for tests entry-3.0 above.
+#
 
 test entry-3.1 "bbox widget command" -body {
     .e delete 0 end
