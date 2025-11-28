@@ -2454,7 +2454,7 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
 static int NotAncestryCheck(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item, TreeItem *parent) {
+    Tcl_Interp *interp, TreeItem *item, TreeItem *parent) {
     TreeItem *p = parent;
     while (p) {
 	if (p == item) {
@@ -2473,7 +2473,7 @@ static int NotAncestryCheck(
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
 static int AncestryCheck(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item, TreeItem *parent) {
+    Tcl_Interp *interp, TreeItem *item, TreeItem *parent) {
     TreeItem *p = item;
     while (p) {
 	if (p == parent) {
@@ -2552,7 +2552,7 @@ static int TreeviewChildrenCommand(
 		ckfree(newChildren);
 		return TCL_ERROR;
 	    }
-	    if (!NotAncestryCheck(interp, tv, newChildren[i], item)) {
+	    if (!NotAncestryCheck(interp, newChildren[i], item)) {
 		ckfree(newChildren);
 		return TCL_ERROR;
 	    }
@@ -2672,7 +2672,7 @@ static int TreeviewSizeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int option = -1, hidden = 0, recurse = 0;
+    int hidden = 0, recurse = 0;
     Tcl_Size count;
 
     if (objc < 3 || objc > 5) {
@@ -2829,7 +2829,7 @@ static int TreeviewBeforeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *before;
-    int option = -1, hidden = 0, recurse = 1;
+    int hidden = 0, recurse = 1;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -2906,7 +2906,7 @@ static int TreeviewAfterCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *after;
-    int option = -1, hidden = 0, recurse = 1;
+    int hidden = 0, recurse = 1;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -2977,7 +2977,7 @@ static int TreeviewBetweenCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *from, *to;
     Tcl_Obj *resultObj;
-    int option = -1, hidden = 0, recurse = 1;
+    int hidden = 0, recurse = 1;
 
     if (objc < 3 || objc > 6) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? first last");
@@ -3658,19 +3658,17 @@ static int TreeviewCollapseExpand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int open) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int option = -1, changed = 0;
+    int hidden = 0, recurse = 0, changed = 0;
     Tcl_Obj *openObj;
     Tcl_Size i = 0;
-
-    static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
 	return TCL_ERROR;
     }
 
-    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-	    sizeof(char *), "option", 0, &option) != TCL_OK) {
+    if (objc == 4 && GetHiddenRecurseOptions(interp, objv, 2, objc-1, &hidden,
+	    &recurse) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3695,7 +3693,7 @@ static int TreeviewCollapseExpand(
 
     /* Do expand/collapse for each item */
     for (i = 0; items[i]; ++i) {
-	changed |= TreeviewOpenRecursive(items[i], open, openObj, option > -1);
+	changed |= TreeviewOpenRecursive(items[i], open, openObj, recurse);
     }
 
     /* Update widget if any changes were made */
@@ -3750,18 +3748,16 @@ static int TreeviewHideUnhide(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int hide) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int option = -1, changed = 0;
+    int hidden = 0, recurse = 0, changed = 0;
     Tcl_Size i = 0;
-
-    static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
 	return TCL_ERROR;
     }
 
-    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-	    sizeof(char *), "option", 0, &option) != TCL_OK) {
+    if (objc == 4 && GetHiddenRecurseOptions(interp, objv, 2, objc-1, &hidden,
+	    &recurse) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3782,7 +3778,7 @@ static int TreeviewHideUnhide(
 
     /* Do hide/unhide for each item */
     for (i = 0; items[i]; ++i) {
-	changed |= TreeviewHideRecursive(items[i], hide, option > -1);
+	changed |= TreeviewHideRecursive(items[i], hide, recurse);
     }
 
     /* Update widget if any changes were made */
@@ -4170,7 +4166,7 @@ static int TreeviewMoveCommand(
     }
 
     /* Check ancestry: */
-    if (!NotAncestryCheck(interp, tv, item, parent)) {
+    if (!NotAncestryCheck(interp, item, parent)) {
 	return TCL_ERROR;
     }
 
@@ -4688,6 +4684,8 @@ static int TreeviewSelectionSet(
 		changed = 1;
 	    }
 	    break;
+	default:
+	    break;
     }
 
     if (items) {
@@ -4708,7 +4706,7 @@ static int TreeviewSelectionSet(
 static int TreeviewSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, result;
+    int selop, result = TCL_OK;
     TreeItem *item;
 
     /* Get selection */
@@ -5058,7 +5056,7 @@ static int TreeviewCellSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, result;
+    int selop, result = TCL_OK;
 
     /* Get selected cells */
     if (objc == 2) {
@@ -5250,7 +5248,7 @@ static int TreeviewSearchCommand(
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		if (!AncestryCheck(interp, tv, item, parent)) {
+		if (!AncestryCheck(interp, item, parent)) {
 		    return TCL_ERROR;
 		}
 		break;
@@ -5268,7 +5266,7 @@ static int TreeviewSearchCommand(
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		if (!AncestryCheck(interp, tv, stop, parent)) {
+		if (!AncestryCheck(interp, stop, parent)) {
 		    return TCL_ERROR;
 		}
 		break;
