@@ -123,6 +123,10 @@ test entry-2.2 "Initial scroll position" -body {
 # NOTE: result can vary depending on font.
 
 #
+# Test section 3.*: Bounding box / scrolling tests.
+#
+
+#
 # COMMON TEST SETUP
 #
 # for tests entry-3.*
