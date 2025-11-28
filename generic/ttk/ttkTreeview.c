@@ -119,6 +119,9 @@ static void RemoveTagFromCellsAtItem(TreeItem *, Ttk_Tag);
  */
 static TreeItem *NewItem(void) {
     TreeItem *item = (TreeItem *)ckalloc(sizeof(*item));
+    if (item == NULL) {
+	return NULL;
+    }
 
     item->entryPtr = NULL;
     item->parent = item->children = item->lastChild = NULL;
@@ -735,6 +738,11 @@ static TreeItem **GetItemListFromObj(
     }
 
     items = (TreeItem **)ckalloc((nElements + 1)*sizeof(TreeItem*));
+    if (!items) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	return NULL;
+    }
     for (i = 0; i < nElements; ++i) {
 	items[i] = FindItem(interp, tv, elements[i]);
 	if (!items[i]) {
@@ -786,6 +794,11 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv) {
     /* Initialize columns array and columnNames hash table: */
     tv->tree.nColumns = ncols;
     tv->tree.columns = (TreeColumn *)ckalloc(tv->tree.nColumns * sizeof(TreeColumn));
+    if (!tv->tree.columns) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	return TCL_ERROR;
+    }
 
     for (i = 0; i < ncols; ++i) {
 	int isNew;
@@ -830,11 +843,21 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv) {
     if (!strcmp(Tcl_GetString(tv->tree.displayColumnsObj), "#all")) {
 	ndcols = tv->tree.nColumns;
 	displayColumns = (TreeColumn **)ckalloc((ndcols+1) * sizeof(TreeColumn*));
+	if (!displayColumns) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	    Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	    return TCL_ERROR;
+	}
 	for (index = 0; index < ndcols; ++index) {
 	    displayColumns[index+1] = tv->tree.columns + index;
 	}
     } else {
 	displayColumns = (TreeColumn **)ckalloc((ndcols+1) * sizeof(TreeColumn*));
+	if (!displayColumns) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	    Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	    return TCL_ERROR;
+	}
 	for (index = 0; index < ndcols; ++index) {
 	    displayColumns[index+1] = GetColumn(interp, tv, dcolumns[index]);
 	    if (!displayColumns[index+1]) {
@@ -1107,7 +1130,11 @@ static TreeCell *GetCellListFromObj(
 	}
     }
 
-    cells = (TreeCell *) ckalloc(n * sizeof(TreeCell));
+    if (!(cells = (TreeCell *) ckalloc(n * sizeof(TreeCell)))) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	return NULL;
+    }
     for (i = 0; i < n; ++i) {
 	if (GetCellFromObj(interp, tv, elements[i], 0, NULL, &cells[i]) != TCL_OK) {
 	    ckfree(cells);
@@ -3925,6 +3952,11 @@ static int TreeviewInsertCommand(
 
     /* Create and configure new item: */
     newItem = NewItem();
+    if (!newItem) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
+	return TCL_ERROR;
+    }
     Tk_InitOptions(interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
     newItem->idObj = idObj;
     Tcl_IncrRefCount(newItem->idObj);
@@ -5336,6 +5368,8 @@ static int TreeviewSearchCommand(
 	end = tv->tree.nDisplayColumns;
 
 	if (!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*end))) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
+	    Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -6506,7 +6540,7 @@ static int TreeviewTagAddCommand(
     return TCL_OK;
 }
 
-/* Make sure tagset at column is allocated and initialised */
+/* Make sure tagset at column is allocated and initialized */
 static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber) {
     Tcl_Size i, newSize = columnNumber + 1;
     if (newSize < tv->tree.nColumns + 1) {
@@ -6519,6 +6553,9 @@ static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber
 	} else {
 	    item->cellTagSets = (Ttk_TagSet *)
 		    ckrealloc(item->cellTagSets, sizeof(Ttk_TagSet) * newSize);
+	}
+	if (item->cellTagSets == NULL) {
+	    return;
 	}
 	for (i = item->nTagSets; i < newSize; i++) {
 	    item->cellTagSets[i] = NULL;
@@ -6798,6 +6835,7 @@ TTK_LAYOUT("Treeview",
 	TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
 
+#ifndef USE_FOCUS_RING
 TTK_LAYOUT("Item",
 	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
@@ -6818,6 +6856,32 @@ TTK_LAYOUT("Heading",
 
 TTK_LAYOUT("Row",
 	TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
+#else
+TTK_LAYOUT("Item",
+    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
+	    TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH))))
+
+TTK_LAYOUT("Cell",
+    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
+	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH))))
+
+TTK_LAYOUT("Heading",
+    TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
+    TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
+	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
+	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
+
+TTK_LAYOUT("Row",
+    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
+	TTK_NODE("Treeitem.row", TTK_FILL_BOTH)))
+#endif
 
 TTK_LAYOUT("Separator",
     TTK_NODE("Treeitem.separator", TTK_FILL_BOTH))
