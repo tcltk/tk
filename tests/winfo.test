@@ -164,7 +164,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
 
     set x [winfo containing -display .t.f [expr {[winfo rootx .t]+600}] \
 	[expr {[winfo rooty .t.f]+450}]]
-    expr {($x == ".") || ($x == "")}
+    expr {($x eq ".") || ($x eq "")}
 } -cleanup {
     destroy .t
 } -result 1

@@ -45,12 +45,12 @@ if {[testConstraint defaultPseudocolor8]} {
     set i 0
     while {$i<$numcolors} {
 	set color [.c itemcget $i -fill]
-	if {$color != ""} {
+	if {$color ne ""} {
 	    foreach {r g b} [winfo rgb . $color] {}
 	    set r [expr {$r/256}]
 	    set g [expr {$g/256}]
 	    set b [expr {$b/256}]
-	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+	    if {"$color" ne "#[format %02x%02x%02x $r $g $b]"} {
 		testConstraint colorsLeftover 0
 	    }
 	}

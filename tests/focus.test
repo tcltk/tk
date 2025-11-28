@@ -41,7 +41,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	childInterp eval {
 	    focus -force .
 	    set i 0
-	    while {[focus] != "."} {
+	    while {[focus] ne "."} {
 		after 100
 		incr i
 		if {$i > 10} {
