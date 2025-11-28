@@ -33,6 +33,14 @@ testutils import scroll
 # LOCAL UTILITY PROCS
 #
 
+# For tests 10.*
+proc bbY {item} {
+    set bb [.tv bbox $item "#1"]
+    set y [lindex $bb 1]
+    if {$y eq ""} {return "_"}
+    return [expr {$y - $::baseBbY}]
+}
+
 # get list of column IDs from list of display column ids.
 #
 proc columnids {tv dcols} {
@@ -776,18 +784,16 @@ test treeview-9.4 {no scrolling on see command on an item below a detached item;
     destroy .top
 } -result {1 {}}
 
-test treeview-10.0 "See command" -setup {
-    # Setup common for all 10.* tests
-    ttk::style configure Treeview -rowheight 20
-    tvSetupWithItems
-    set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
-    proc bbY {item} {
-	set bb [.tv bbox $item "#1"]
-	set y [lindex $bb 1]
-	if {$y eq ""} {return "_"}
-	return [expr {$y - $::baseBbY}]
-    }
-} -body {
+#
+# COMMON TEST SETUP
+#
+# for all 10.* tests
+#
+ttk::style configure Treeview -rowheight 20
+tvSetupWithItems
+set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
+
+test treeview-10.0 "See command" -body {
     set res ""
     lappend res [bbY nn99]
     .tv see nn99
