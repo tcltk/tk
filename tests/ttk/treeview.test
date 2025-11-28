@@ -770,7 +770,7 @@ test treeview-9.4 {no scrolling on see command on an item below a detached item;
     .top.tree see dirD-4
     update
     set after [lindex [.top.vs get] 1]
-    set res [expr {($after == $before)}]
+    set res [expr {$after == $before}]
     lappend res [.top.tree bbox dirD-4]
 } -cleanup {
     destroy .top

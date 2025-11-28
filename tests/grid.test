@@ -342,7 +342,7 @@ test grid-6.6 {location (x)} -body {
     set result ""
     for {set x -10} { $x < 220} { incr x} {
 	set a [grid location . $x 0]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $x->$a
 	    set got $a
 	}
@@ -359,7 +359,7 @@ test grid-6.7 {location (y)} -body {
     set result ""
     for {set y -10} { $y < 110} { incr y} {
 	set a [grid location . 0 $y]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $y->$a
 	    set got $a
 	}
@@ -382,7 +382,7 @@ test grid-6.8 {location (weights)} -body {
     set result ""
     for {set y -10} { $y < 210} { incr y} {
 	set a [grid location . $y $y]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $y->$a
 	    set got $a
 	}
