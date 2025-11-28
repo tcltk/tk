@@ -87,7 +87,9 @@ test entry-1.8 "Index is between 0 and end" -body {
 
 test entry-1.done "Cleanup" -body { destroy .e }
 
-# Scrollbar tests.
+#
+# Section 2. Scrollbar tests
+#
 
 test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
@@ -123,7 +125,7 @@ test entry-2.2 "Initial scroll position" -body {
 # NOTE: result can vary depending on font.
 
 #
-# Test section 3.*: Bounding box / scrolling tests.
+# Section 3. Bounding box / scrolling tests
 #
 
 #
@@ -188,7 +190,9 @@ test entry-3.last "Series 3 cleanup" -body {
     destroy .e
 }
 
-# Selection tests:
+#
+# Section 4. Selection tests
+#
 
 test entry-4.0 "Selection test - setup" -body {
     ttk::entry .e
@@ -246,7 +250,9 @@ test entry-4.7 {sel.first and sel.last gravity} -body {
     lappend result [.e index sel.first] [.e index sel.last] [.e get]
 } -result {5 9 5 12 01XXX2YYY3456789}
 
-# Self-destruct tests.
+#
+# Section 5. Self-destruct tests
+#
 
 test entry-5.1 {widget deletion while active} -body {
     destroy .e
@@ -259,8 +265,9 @@ test entry-5.1 {widget deletion while active} -body {
 
 # TODO: test killing .e in -validatecommand, -invalidcommand, variable trace;
 
-
-# -textvariable tests.
+#
+# Section 6. -textvariable tests
+#
 
 test entry-6.1 {Update linked variable in write trace} -body {
     catch {destroy .e}
