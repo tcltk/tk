@@ -630,13 +630,14 @@ name is for backward-compatibility reasons.) This is the default.
 \fB\-dictionary\fR
 .
 The values are to be compared to \fIpattern\fR using dictionary-style
-comparisons. For search, this is the same as \fB-ascii\fR.
+comparisons. For search, this is the same as \fB-ascii\fR. NOTE: This means
+I18n and I018N are not the same.
 .\" OPTION: -integer
 .TP
 \fB\-integer\fR
 .
 The values are to be compared to \fIpattern\fR as integers. Empty
-values will be ignored, but non-integer values will generate an error.
+values will be ignored, but non-numeric values will generate an error.
 .\" OPTION: -nocase
 .TP
 \fB\-nocase\fR
@@ -648,7 +649,7 @@ Comparisons are to be performed in a case-insensitive manner. Only used with
 \fB\-real\fR
 .
 The values are to be compared to \fIpattern\fR as floating-point values.
-Empty values will be ignored, but non-integer values will generate an error.
+Empty values will be ignored, but non-numeric values will generate an error.
 .\" OPTION: -unicode
 .TP
 \fB\-unicode\fR
@@ -661,15 +662,14 @@ Direction
 .TP
 \fB\-backwards\fR
 .
-The search is to be performed backwards starting from \fI\-start\fR item or
-last child of \fIparent\fR if not specified, until the first item in parent.
+The search is to be performed backwards starting from \fB\-start\fR item or
+cell.
 .\" OPTION: -forwards
 .TP
 \fB\-forwards\fR
 .
-The search is to be performed forwards starting from \fI\-start\fR item or
-first child of \fIparent\fR if not specified, until the last item in parent.
-This is the default.
+The search is to be performed forwards starting from \fB\-start\fR item or
+cell. This is the default.
 .RE
 Pattern Matching
 .RS
@@ -709,7 +709,7 @@ See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
 \fB\-hidden\fR
 .
 Search within hidden and closed items too. The default is to exclude hidden
-items from the search.
+and descendants of closed items from the search.
 .\" OPTION: -recurse
 .TP
 \fB\-recurse\fR
@@ -718,28 +718,41 @@ Search within all descendants of \fIparent\fR. The default is to only search
 within the children of \fIparent\fR.
 .\" OPTION: -start
 .TP
-\fB\-start \fIitem\fR
+\fB\-start \fIitem\fR|\fIcell\fR
 .
-Start the search at \fIitem\fR, where \fIitem\fR must be a descendant of
-\fIparent\fR. See \fB-forwards\fR and \fB-backwards\fR for default start index. 
+Start the search at \fIitem\fR or if the \fB-cell\fR option is also specified,
+then start the search at \fIcell\fR.
+The default start item and cell when used with the \fB-forwards\fR option is
+the first child of \fIparent\fR and the first display column.
+For the \fB-backwards\fR option, the default is the last child of \fIparent\fR
+(or descendant when used with \fB-recurse\fR) and the last display column.
+The \fIitem\fR or \fIcell\fR must be a descendant of \fIparent\fR.
 When resuming a search, use the \fBbefore\fR or \fBafter\fR
 subcommands to get the previous or next item to start the search at. All other
 options should be the same as the initial search including \fIparent\fR.
 .\" OPTION: -stop
 .TP
-\fB\-stop \fIitem\fR
+\fB\-stop \fIitem\fR|\fIcell\fR
 .
-End the search at \fIitem\fR (inclusive), where \fIitem\fR must be a
-descendant of \fIparent\fR. The default is the last item or descendant of
-\fIparent\fR for \fB-forward\fR searches and first child of \fIparent\fR
-for \fB-backwards\fR searches.
+Stop the search at \fIitem\fR or if the \fB-cell\fR option is also specified,
+then stop the search at \fIcell\fR.
+The default stop item and cell when used with the \fB-forwards\fR option is the
+last child of \fIparent\fR (or descendant when used with \fB-recurse\fR) and
+the last display column.
+For the \fB-backwards\fR option, the default is the first child of \fIparent\fR
+and the first display column.
+When used with the \fB-wraparound\fR option, the default is just before the
+start item or cell (in other words, the start item or cell won't be searched
+again). This means, to wrap-around and stop at the start item, only use the
+\fB-start\fR and \fB-wraparound\fR options. If the \fB-start\fR and \fB-stop\fR
+options both use the same item, then only that item will be searched.
+The \fIitem\fR or \fIcell\fR must be a descendant of \fIparent\fR.
 .\" OPTION: -wraparound
 .TP
 \fB\-wraparound\fR
 .
 When used with the \fB-start\fR option, enables the search to wrap-round to the
-first/last item in parent to continue to the item just before the \fB-start\fR
-item.
+first/last item in \fIparent\fR to continue to the \fB-stop\fR item or cell.
 .RE
 Result Modifiers
 .RS
@@ -754,6 +767,7 @@ than only the first one.
 \fB\-cell\fR
 .
 Return cell ids instead of item ids. The default is to return item ids.
+Also switches the \fB-start\fR and \fB-stop\fR options to use cell values.
 .\" OPTION: -not
 .TP
 \fB\-not\fR
@@ -1284,7 +1298,7 @@ widget where the user can easily select multiple entries without the need to
 use the keyboard.
 .SH "STYLING OPTIONS"
 .PP
-The following are the widget components for the \fBttk::style\fR command: 
+The following are the widget components for the \fBttk::style\fR command:
 .RS
 .IP \(bu
 The class name for a \fBttk::treeview\fR is \fBTreeview\fR.

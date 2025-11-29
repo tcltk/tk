@@ -4856,9 +4856,9 @@ static int TreeviewCellSelectionIncludes(
 	}
 	item = cell.item;
 	if (!item->selObj) {
-	    break;	
+	    break;
 	}
-	
+
 	if (Tcl_ListObjLength(NULL, item->selObj, &nElements) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -5034,7 +5034,7 @@ static int TreeviewCellSelectionSet(
 		GetCellFromObj(interp, tv, objv[objc-1], 1, &toNo, &cellTo) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	
+
 	if (cellFrom.item == tv->tree.root || cellTo.item == tv->tree.root) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot select root item"));
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
@@ -5164,10 +5164,13 @@ static int TreeviewSearchCommand(
     Tcl_Obj *const objv[]) {	/* Argument values */
 
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *parent, *item = NULL, *stop = NULL, *initial;
+    TreeItem *parent, *startItem = NULL, *stopItem = NULL, *item;
+    TreeColumn *startColumn = NULL, *stopColumn = NULL;
+
     const char *pattern = NULL;
-    Tcl_Size i, plen, start, end;
-    Tcl_Obj *patObj, *resultObj = NULL, *columnsObj = NULL, *valObj, *emptyObj = NULL;
+    Tcl_Size i, plen, firstCol, lastCol, initCol, finalCol;
+    Tcl_Obj *patObj, *resultObj = NULL, *columnsObj = NULL, *valObj;
+    Tcl_Obj *emptyObj = NULL, *startObj = NULL, *stopObj = NULL;
     Tcl_WideInt intVal;
     double doubleVal;
     int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
@@ -5268,39 +5271,19 @@ static int TreeviewSearchCommand(
 		break;
 	    case SEARCH_START:
 		if (i == objc - 2) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no start item specified"));
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no start item or cell specified"));
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		if (!(item = FindItem(interp, tv, objv[++i]))) {
-		    return TCL_ERROR;
-		}
-		if (item == tv->tree.root) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot start with root item"));
-		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
-		    return TCL_ERROR;
-		}
-		if (!AncestryCheck(interp, item, parent)) {
-		    return TCL_ERROR;
-		}
+		startObj = objv[++i];
 		break;
 	    case SEARCH_STOP:
 		if (i == objc - 2) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no stop item specified"));
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("no stop item or cell specified"));
 		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		if (!(stop = FindItem(interp, tv, objv[++i]))) {
-		    return TCL_ERROR;
-		}
-		if (stop == tv->tree.root) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot stop with root item"));
-		    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
-		    return TCL_ERROR;
-		}
-		if (!AncestryCheck(interp, stop, parent)) {
-		    return TCL_ERROR;
-		}
+		stopObj = objv[++i];
 		break;
 	    case SEARCH_WRAP:
 		wrap = 1;
@@ -5313,24 +5296,77 @@ static int TreeviewSearchCommand(
 	return TCL_OK;
     }
 
-    /* If no start item, use first child for forward search and last for backwards */
-    if (!item) {
+    /* Get start and stop items or cells */
+    if (type) {
+	if (startObj && !(startItem = FindItem(interp, tv, startObj))) {
+	    return TCL_ERROR;
+	}
+	if (stopObj && !(stopItem = FindItem(interp, tv, stopObj))) {
+	    return TCL_ERROR;
+	}
+
+    } else {
+	TreeCell cell;
+
+	if (startObj) {
+	    if (GetCellFromObj(interp, tv, startObj, 0, NULL, &cell) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    startItem = cell.item;
+	    startColumn = cell.column;
+	}
+	if (stopObj) {
+	    if (GetCellFromObj(interp, tv, stopObj, 0, NULL, &cell) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    stopItem = cell.item;
+	    stopColumn = cell.column;
+	}
+    }
+
+    /* If we have start item, validate it. If not, use first child for forward
+     * search and last descendant of last child for backwards search. */
+    if (startItem) {
+	if (startItem == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot start with root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (!AncestryCheck(interp, startItem, parent)) {
+	    return TCL_ERROR;
+	}
+    } else {
 	if (forwards) {
-	    item = parent->children;
+	    startItem = parent->children;
 	} else {
 	    /* Need to find last child in descendants */
 	    if (recurse) {
-		item = parent;
-		while (item->lastChild) {
-		    item = item->lastChild;
+		startItem = parent;
+		while (startItem->lastChild) {
+		    startItem = startItem->lastChild;
 		}
 	    } else {
-		item = parent->lastChild;
+		startItem = parent->lastChild;
 	    }
 	}
 	wrap = 0; /* No wrap-around if starting at first or last */
     }
-    initial = item;
+    item = startItem;
+
+    /* If have stop item, validate it. */
+    if (stopItem) {
+	if (stopItem == tv->tree.root) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot stop with root item"));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ROOT", "ITEM", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (!AncestryCheck(interp, stopItem, parent)) {
+	    return TCL_ERROR;
+	}
+	if (stopItem == startItem) {
+	    wrap = 0;
+	}
+    }
 
     /* Get native form of pattern */
     patObj = objv[objc-1];
@@ -5364,44 +5400,64 @@ static int TreeviewSearchCommand(
     /* Map display columns or user requested column ids to data columns */
     if (!columnsObj) {
 	TreeColumn *column;
-	start = FirstColumn(tv);
-	end = tv->tree.nDisplayColumns;
+	firstCol = FirstColumn(tv);
+	lastCol = tv->tree.nDisplayColumns;
+	initCol = firstCol;
+	finalCol = lastCol;
 
-	if (!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*end))) {
+	if (!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*lastCol))) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
 	    Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
-	for (i = 0; i < end; i++) {
+	for (i = 0; i < lastCol; i++) {
+	    /* Get display column index */
 	    column = tv->tree.displayColumns[i];
 	    if (column == &tv->tree.column0) {
 		intArray[i] = 0;
 	    } else {
 		intArray[i] = column - tv->tree.columns + 1;
 	    }
+
+	    /* Map column to start/stop columns, if any */
+	    if (column == startColumn) {
+		initCol = i;
+	    } else if (column == stopColumn) {
+		finalCol = i+1;
+	    }
 	}
 
     } else {
 	TreeColumn *column;
-	start = 0;
+	firstCol = 0;
 
-	if (Tcl_ListObjLength(interp, columnsObj, &end) != TCL_OK ||
-		!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*end))) {
+	if (Tcl_ListObjLength(interp, columnsObj, &lastCol) != TCL_OK ||
+		!(intArray = (int *)ckalloc(sizeof(Tcl_Size)*lastCol))) {
 	    return TCL_ERROR;
 	}
+	initCol = firstCol;
+	finalCol = lastCol;
 
-	for (i = start; i < end; i++) {
+	for (i = firstCol; i < lastCol; i++) {
 	    if (Tcl_ListObjIndex(interp, columnsObj, i, &valObj) != TCL_OK ||
 		!(column = FindColumn(interp, tv, valObj))) {
 		Tcl_Free(intArray);
 		return TCL_ERROR;
 	    }
 
+	    /* Get display column index */
 	    if (column == &tv->tree.column0) {
 		intArray[i] = 0;
 	    } else {
 		intArray[i] = column - tv->tree.columns + 1;
+	    }
+
+	    /* Map column to start/stop columns, if any */
+	    if (column == startColumn) {
+		initCol = i;
+	    } else if (column == stopColumn) {
+		finalCol = i+1;
 	    }
 	}
     }
@@ -5415,13 +5471,39 @@ static int TreeviewSearchCommand(
     /* Loop over items, compare values to pattern, and add matches to result */
     while (item) {
 	int match = 0;
+	Tcl_Size start, end, incr;
+
+	/* Get column array start and end index */
+	if (startItem != stopItem) {
+	    /* Search items with no overlap */
+	    if (forwards) {
+		start = (item != startItem ? firstCol : initCol);
+		end = (item != stopItem ? lastCol : finalCol);
+		incr = 1;
+	    } else {
+		start = (item != startItem ? lastCol-1 : initCol);
+		end = (item != stopItem ? firstCol-1 : finalCol);
+		incr = -1;
+	    }
+	} else {
+	    /* Only search within same item */
+	    if (initCol < finalCol) {
+		start = initCol;
+		end = finalCol;
+		incr = 1;
+	    } else {
+		start = initCol;
+		end = finalCol-2;
+		incr = -1;
+	    }
+	}
 
 	/* Skip hidden items unless allowed */
 	if (!(item->hidden) || (item->hidden && hidden)) {
 	    Tcl_Size len;
 
-	    /* Loop over text & cell values and compare to pattern */
-	    for (i = start; i < end; ++i) {
+	    /* Loop over cell values and compare to pattern */
+	    for (i = start; i != end && i >= 0 && i < lastCol; i += incr) {
 		if (intArray[i] == 0) {
 		    valObj = item->textObj;
 		} else if (item->valuesObj == NULL) {
@@ -5512,8 +5594,7 @@ static int TreeviewSearchCommand(
 	}
 
 	/* Exit loop if match found and not all or at stop index (inclusive) */
-	/* Remove "|| (item == stop)" for exclusive stop */
-	if ((match && !all) || (item == stop)) {
+	if ((match && !all) || (item == stopItem)) {
 	   break;
 	}
 
@@ -5528,9 +5609,16 @@ static int TreeviewSearchCommand(
 	if (!item && wrap) {
 	    if (forwards) {
 		item = parent->children;
-		if (!stop) {
-		    /*stop = initial;	Use this for exclusive stop */
-		    stop = GetPrevItem(parent, initial, hidden, recurse);
+
+		/* Set item and column to new stop */
+		if (!stopItem) {
+		    if (type || initCol == firstCol) {
+			stopItem = GetPrevItem(parent, startItem, hidden, recurse);
+		    } else {
+			stopItem = startItem; /* Inclusive */
+			finalCol = initCol; /* Exclusive */
+			startItem = NULL;
+		    }
 		}
 
 	    } else {
@@ -5543,18 +5631,21 @@ static int TreeviewSearchCommand(
 		} else {
 		    item = parent->lastChild;
 		}
-		if (!stop) {
-		    /*stop = initial;	Use this for exclusive stop */
-		    stop = GetNextItem(parent, initial, hidden, recurse);
+
+		/* Set item and column to new stop */
+		if (!stopItem) {
+		    if (type || initCol == lastCol) {
+			stopItem = GetNextItem(parent, startItem, hidden, recurse);
+			finalCol = initCol-1; /* Exclusive */
+		    } else {
+			stopItem = startItem; /* Inclusive */
+			finalCol = initCol; /* Exclusive */
+			startItem = NULL;
+		    }
 		}
 	    }
 	    wrap = 0;
 	}
-
-	/* Exit loop if at stop index (exclusive stop) */
-	/*if (item == stop) {
-	   break;
-	}*/
     }
 
     if (intArray) {
@@ -5568,9 +5659,11 @@ static int TreeviewSearchCommand(
     if (all) {
 	Tcl_SetObjResult(interp, resultObj);
     } else if (matches == 1) {
-	if (Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj) {
+	if (type && Tcl_ListObjIndex(interp, resultObj, 0, &valObj) == TCL_OK && valObj) {
 	    Tcl_SetObjResult(interp, valObj);
 	    Tcl_BounceRefCount(resultObj);
+	} else {
+	    Tcl_SetObjResult(interp, resultObj);
 	}
     }
     return TCL_OK;

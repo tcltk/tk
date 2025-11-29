@@ -6347,7 +6347,7 @@ test Search-73.8 {Invalid column} -body {
 
 test Search-73.9 {No start item} -body {
 	.tv search {} -start pattern
-    } -result {no start item specified} -returnCodes {1}
+    } -result {no start item or cell specified} -returnCodes {1}
 
 test Search-73.10 {Invalid start item} -body {
 	.tv search {} -start bogus pattern
@@ -6361,179 +6361,187 @@ test Search-73.12 {Start item not under parent} -body {
 	.tv search blue -start teal pattern
     } -result {Item teal is not a descendant of blue} -returnCodes {1}
 
-test Search-73.13 {No stop item} -body {
-	.tv search {} -stop pattern
-    } -result {no stop item specified} -returnCodes {1}
+test Search-73.13 {Invalid start cell} -body {
+	.tv search {} -cell -start bogus pattern
+    } -result {Cell id must be a list of two elements} -returnCodes {1}
 
-test Search-73.14 {Invalid stop item} -body {
+test Search-73.14 {No stop item} -body {
+	.tv search {} -stop pattern
+    } -result {no stop item or cell specified} -returnCodes {1}
+
+test Search-73.15 {Invalid stop item} -body {
 	.tv search {} -stop bogus pattern
     } -result {Item bogus not found} -returnCodes {1}
 
-test Search-73.15 {Root stop item} -body {
+test Search-73.16 {Root stop item} -body {
 	.tv search {} -stop {} pattern
     } -result {cannot stop with root item} -returnCodes {1}
 
-test Search-73.16 {Stop item not under parent} -body {
+test Search-73.17 {Stop item not under parent} -body {
 	.tv search blue -stop teal pattern
     } -result {Item teal is not a descendant of blue} -returnCodes {1}
 
-test Search-73.17 {No pattern} -body {
+test Search-73.18 {Invalid stop cell} -body {
+	.tv search {} -cell -stop bogus pattern
+    } -result {Cell id must be a list of two elements} -returnCodes {1}
+
+test Search-73.19 {No pattern} -body {
 	.tv search {} -ascii {}
     } -result {red}
 
-test Search-73.18 {No dictionary pattern} -body {
+test Search-73.20 {No dictionary pattern} -body {
 	.tv search {} -dictionary {}
     } -result {red}
 
-test Search-73.19 {Invalid integer} -body {
+test Search-73.21 {Invalid integer} -body {
 	.tv search {} -integer bogus
     } -result {expected integer but got "bogus"} -returnCodes {1}
 
-test Search-73.20 {Invalid real} -body {
+test Search-73.22 {Invalid real} -body {
 	.tv search {} -real bogus
     } -result {expected floating-point number but got "bogus"} -returnCodes {1}
 
-test Search-73.21 {Invalid regexp} -body {
+test Search-73.23 {Invalid regexp} -body {
 	.tv search {} -regexp "a("
     } -result {cannot compile regular expression pattern: parentheses () not balanced} -returnCodes {1}
 
-test Search-73.22 {Empty pattern} -body {
+test Search-73.24 {Empty pattern} -body {
 	.tv search {} {}
     } -result {red}
 
-test Search-73.23 {Compare ASCII Type} -body {
+test Search-73.25 {Compare ASCII Type} -body {
 	.tv search {} -ascii Yellow
     } -result {yellow}
 
-test Search-73.24 {Compare ASCII No Match} -body {
+test Search-73.26 {Compare ASCII No Match} -body {
 	.tv search {} -ascii Violet
     }
 
-test Search-73.25 {Compare Dictionary Type} -body {
+test Search-73.27 {Compare Dictionary Type} -body {
 	.tv search {} -dictionary Green
     } -result {green}
 
-test Search-73.26 {Compare Dictionary No Match} -body {
+test Search-73.28 {Compare Dictionary No Match} -body {
 	.tv search {} -dictionary Violet
     }
 
-test Search-73.27 {Compare Integer Type} -body {
+test Search-73.29 {Compare Integer Type} -body {
 	.tv search {}  -integer -column Decimal 0
     } -result {black}
 
-test Search-73.28 {Compare Integer No Match} -body {
+test Search-73.30 {Compare Integer No Match} -body {
 	.tv search {}  -integer -column Decimal 42
     }
 
-test Search-73.29 {Compare Case Sensitive} -body {
+test Search-73.31 {Compare Case Sensitive} -body {
 	.tv search {}  Blue
     } -result {blue}
 
-test Search-73.30 {Compare Case Sensitive No Match} -body {
+test Search-73.32 {Compare Case Sensitive No Match} -body {
 	.tv search {}  blue
     }
 
-test Search-73.31 {Compare Not Case Sensitive} -body {
+test Search-73.33 {Compare Not Case Sensitive} -body {
 	.tv search {} -nocase green
     } -result {green}
 
-test Search-73.32 {Compare Not Case Sensitive No Match} -body {
+test Search-73.34 {Compare Not Case Sensitive No Match} -body {
 	.tv search {} -nocase violet
     }
 
-test Search-73.33 {Compare Real Type} -body {
+test Search-73.35 {Compare Real Type} -body {
 	.tv search {} -exact -real -column Float 0
     } -result {black}
 
-test Search-73.34 {Compare Real No Match} -body {
+test Search-73.36 {Compare Real No Match} -body {
 	.tv search {} -exact -real -column Float 42.43
     }
 
-test Search-73.35 {Compare Unicode Type} -setup {
+test Search-73.37 {Compare Unicode Type} -setup {
 	.tv insert {} end -id unicode -text "\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef" -values [list #123456 42 42.43]
     } -body {
 	.tv search {} -unicode -glob "*\xea*"
     } -result {unicode}
 
-test Search-73.36 {Compare Unicode No Match} -body {
+test Search-73.38 {Compare Unicode No Match} -body {
 	.tv search {} -unicode -glob "*\xd0*"
     }
 
-test Search-73.37 {Compare Unicode Type 2} -setup {
+test Search-73.39 {Compare Unicode Type 2} -setup {
 	.tv insert {} end -id unicode2 -text "\u1f00\u1f10\u1f20\u1f30\u1f40\u1f50\u1f60\u1f70\u1f80\u1f90\u1fa0\u1fb0\u1fc0\u1fd0\u1fe0" -values [list #654321 24 44.42]
     } -body {
 	.tv search {} -unicode -glob "*\u1f60*"
     } -result {unicode2}
 
-test Search-73.38 {Compare Unicode No Match 2} -body {
+test Search-73.40 {Compare Unicode No Match 2} -body {
 	.tv search {} -unicode -glob "*\u1f61*"
     }
 
-test Search-73.39 {Direction Backwards Order} -body {
+test Search-73.41 {Direction Backwards Order} -body {
 	.tv search {} -backwards -glob *n*
     } -result {brown}
 
-test Search-73.40 {Direction Backwards No Match} -body {
+test Search-73.42 {Direction Backwards No Match} -body {
 	.tv search {} -backwards -glob *z*
     }
 
-test Search-73.41 {Direction Forwards Order} -body {
+test Search-73.43 {Direction Forwards Order} -body {
 	.tv search {} -forwards -glob *n*
     } -result {green}
 
-test Search-73.42 {Direction Forwards No Match} -body {
+test Search-73.44 {Direction Forwards No Match} -body {
 	.tv search {} -forwards -glob *z*
     }
 
-test Search-73.43 {Pattern Exact match} -body {
+test Search-73.45 {Pattern Exact match} -body {
 	.tv search {} -exact Green
     } -result {green}
 
-test Search-73.44 {Pattern Exact No Match} -body {
+test Search-73.46 {Pattern Exact No Match} -body {
 	.tv search {} -exact Violet
     }
 
-test Search-73.45 {Pattern Exact No Empty Match} -setup {
+test Search-73.47 {Pattern Exact No Empty Match} -setup {
 	.tv insert {} end -id empty -text Empty
     } -body {
 	.tv search {} -exact Violet
     }
 
-test Search-73.46 {Pattern Glob Match} -body {
+test Search-73.48 {Pattern Glob Match} -body {
 	.tv search {} -glob *lue
     } -result {blue}
 
-test Search-73.47 {Pattern Glob No Match} -body {
+test Search-73.49 {Pattern Glob No Match} -body {
 	.tv search {} -glob Vio*
     }
 
-test Search-73.48 {Pattern Regexp Match} -body {
+test Search-73.50 {Pattern Regexp Match} -body {
 	.tv search {} -regexp {Red|Yellow}
     } -result {red}
 
-test Search-73.49 {Pattern Regexp No Match} -body {
+test Search-73.51 {Pattern Regexp No Match} -body {
 	.tv search {} -regexp {Violet|Amber}
     }
 
-test Search-73.50 {Pattern Regexp All Pattern} -body {
+test Search-73.52 {Pattern Regexp All Pattern} -body {
 	.tv search {} -regexp -all {[rgb]+[ef]*}
     } -result {green orange purple brown gray}
 
-test Search-73.51 {Modifier Single Column} -body {
+test Search-73.53 {Modifier Single Column} -body {
 	.tv search {} -column #0 -all -nocase -glob *a*
     } -result {orange black gray}
 
-test Search-73.52 {Modifier Multiple Columns} -body {
+test Search-73.54 {Modifier Multiple Columns} -body {
 	.tv search {} -columns [list #0 Hex] -all -glob B*
     } -result {blue brown black}
 
-test Search-73.53 {Modifier No Hidden Items} -setup {
+test Search-73.55 {Modifier No Hidden Items} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -all -glob *n*
     } -result {green brown}
 
-test Search-73.54 {Modifier Include Hidden Items} -setup {
+test Search-73.56 {Modifier Include Hidden Items} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -all -glob -hidden *n*
@@ -6541,37 +6549,37 @@ test Search-73.54 {Modifier Include Hidden Items} -setup {
 	.tv item orange -hidden 0
     } -result {green orange brown}
 
-test Search-73.55 {Modifier Recurse } -body {
+test Search-73.57 {Modifier Recurse } -body {
 	.tv search {} -recurse Cyan
     } -result {cyan}
 
-test Search-73.56 {Modifier Recurse Glob} -body {
+test Search-73.58 {Modifier Recurse Glob} -body {
 	.tv search {} -recurse -glob Dark*
     } -result {darkred}
 
-test Search-73.57 {Modifier Recurse All} -body {
+test Search-73.59 {Modifier Recurse All} -body {
 	.tv search {} -all -recurse -glob Dark*
     } -result {darkred darkblue}
 
-test Search-73.58 {Modifier Recurse Not Hidden} -setup {
+test Search-73.60 {Modifier Recurse Not Hidden} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -recurse Coral
     }
 
-test Search-73.59 {Modifier Recurse Not Hidden Backwards} -setup {
+test Search-73.61 {Modifier Recurse Not Hidden Backwards} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -recurse -backwards Coral
     }
 
-test Search-73.60 {Modifier Recurse Hidden} -setup {
+test Search-73.62 {Modifier Recurse Hidden} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -recurse -hidden Coral
     } -result {coral}
 
-test Search-73.61 {Modifier Recurse Hidden Backwards} -setup {
+test Search-73.63 {Modifier Recurse Hidden Backwards} -setup {
 	.tv item orange -hidden 1
     } -body {
 	.tv search {} -recurse -hidden -backwards Coral
@@ -6579,129 +6587,157 @@ test Search-73.61 {Modifier Recurse Hidden Backwards} -setup {
 	.tv item orange -hidden 0
     } -result {coral}
 
-test Search-73.62 {Modifier Start Item} -body {
+test Search-73.64 {Modifier Start Item} -body {
 	.tv search {} -start blue -glob *n*
     } -result {orange}
 
-test Search-73.63 {Modifier Start Item After Match} -body {
+test Search-73.65 {Modifier Start Item After Match} -body {
 	.tv search {} -start black -glob *n*
     }
 
-test Search-73.64 {Modifier Start at End} -body {
+test Search-73.66 {Modifier Start at End} -body {
 	.tv search {} -start gray -glob *n*
     }
 
-test Search-73.65 {Modifier Stop Item} -body {
+test Search-73.67 {Modifier Stop Item} -body {
 	.tv search {} -stop blue -glob *n*
     } -result {green}
 
-test Search-73.66 {Modifier Stop Item Before Match} -body {
+test Search-73.68 {Modifier Stop Item Before Match} -body {
 	.tv search {} -stop blue -glob *o*
     }
 
-test Search-73.67 {Modifier Stop at Start} -body {
+test Search-73.69 {Modifier Stop at Start} -body {
 	.tv search {} -stop red -glob *n*
     }
 
-test Search-73.68 {Modifier Start and Stop Are Same} -body {
+test Search-73.70 {Modifier Start and Stop Are Same} -body {
 	.tv search {} -start blue -stop blue -glob *n*
     }
 
-test Search-73.69 {Modifier Wrap-around} -body {
+test Search-73.71 {Modifier Wrap-around} -body {
 	.tv search {} -start yellow -wrap Blue
     } -result {blue}
 
-test Search-73.70 {Modifier Wrap-around No Match} -body {
+test Search-73.72 {Modifier Wrap-around No Match} -body {
 	.tv search {} -start yellow -wrap Violet
     }
 
-test Search-73.71 {Result All Modifier} -body {
+test Search-73.73 {Result All Modifier} -body {
 	.tv search {} -all -glob *n*
     } -result {green orange brown}
 
-test Search-73.72 {Result Single Cell} -body {
+test Search-73.74 {Result Single Cell} -body {
 	.tv search {} -cell -glob -nocase *b*
-    } -result {blue #0}
+    } -result {{blue #0}}
 
-test Search-73.73 {Result Not Modifier} -body {
+test Search-73.75 {Result Not Modifier} -body {
 	.tv search {} -not -column #0 Red
     } -result {green}
 
-test Search-73.74 {Multiple Columns Recurse} -body {
+test Search-73.76 {Multiple Columns Recurse} -body {
 	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse *b*
     } -result {pink darkred blue mediumblue darkblue brown wheat black beige}
 
-test Search-73.75 {Multiple Columns Recurse with Stop Index} -body {
+test Search-73.77 {Multiple Columns Recurse with Stop Index} -body {
 	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -stop brown *b*
     } -result {pink darkred blue mediumblue darkblue brown}
 
-test Search-73.76 {Multiple Cells and Columns} -body {
+test Search-73.78 {Multiple Cells and Columns} -body {
 	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell *b*
     } -result {{pink Hex} {darkred Hex} {blue #0} {mediumblue #0} {darkblue #0} {darkblue Hex} {brown #0} {wheat Hex} {black #0} {beige #0}}
 
-test Search-73.77 {Multiple Cells with Stop Index} -body {
-	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -stop brown *b*
+test Search-73.79 {Multiple Columns with Stop Index} -body {
+	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -stop {brown Float} *b*
     } -result {{pink Hex} {darkred Hex} {blue #0} {mediumblue #0} {darkblue #0} {darkblue Hex} {brown #0}}
 
-test Search-73.78 {Multiple Cells with Start and Wrap} -body {
-	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -start brown -wrap *b*
+test Search-73.80 {Multiple Columns with Start and Wrap} -body {
+	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -start {brown #0} -wrap *b*
     } -result {{brown #0} {wheat Hex} {black #0} {beige #0} {pink Hex} {darkred Hex} {blue #0} {mediumblue #0} {darkblue #0} {darkblue Hex}}
 
-test Search-73.79 {Multiple Cells with Start, Stop, and Wrap} -body {
-	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -start brown -stop blue -wrap *b*
+test Search-73.81 {Multiple Columns with Start, Stop, and Wrap} -body {
+	.tv search {} -columns [list #0 Hex] -all -nocase -glob -recurse -cell -start {brown #0} -stop {blue Float} -wrap *b*
     } -result {{brown #0} {wheat Hex} {black #0} {beige #0} {pink Hex} {darkred Hex} {blue #0}}
 
-test Search-73.80 {Search Setup} -body {
+test Search-73.82 {All Cells with Start, Stop, and Wrap} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {brown Float} -stop {orange #0} -wrap *b*
+    } -result {{wheat Hex} {black #0} {beige #0} {pink Hex} {darkred Hex} {blue #0} {mediumblue #0} {darkblue #0} {darkblue Hex}}
+
+test Search-73.83 {All Cells in Same Item} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {darkblue #0} -stop {darkblue Float} -wrap *b*
+    } -result {{darkblue #0} {darkblue Hex}}
+
+test Search-73.84 {All Cells in Same Item Reverse Order} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {darkblue Float} -stop {darkblue #0} -wrap -backwards *b*
+    } -result {{darkblue Hex} {darkblue #0}}
+
+test Search-73.85 {All Cells, Forwards, and Wraparound} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {blue Hex} -stop {green #0} -wrap *b*
+    } -result {{mediumblue #0} {darkblue #0} {darkblue Hex} {brown #0} {wheat Hex} {black #0} {beige #0} {pink Hex} {darkred Hex}}
+
+test Search-73.86 {All Cells, Backwards, and Wraparound} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {blue Hex} -stop {orange #0} -wrap -backwards *b*
+    } -result {{blue #0} {darkred Hex} {pink Hex} {beige #0} {black #0} {wheat Hex} {brown #0}}
+
+test Search-73.87 {All Cells, Forwards, and Wraparound to Same Item} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {blue Hex} -wrap *b*
+    } -result {{mediumblue #0} {darkblue #0} {darkblue Hex} {brown #0} {wheat Hex} {black #0} {beige #0} {pink Hex} {darkred Hex} {blue #0}}
+
+test Search-73.88 {All Cells, Backwards, and Wraparound to Same Item} -body {
+	.tv search {} -all -nocase -glob -recurse -cell -start {blue Hex} -wrap -backwards *b*
+    } -result {{blue #0} {darkred Hex} {pink Hex} {beige #0} {black #0} {wheat Hex} {brown #0} {darkblue Hex} {darkblue #0} {mediumblue #0}}
+
+test Search-73.89 {Search Setup} -body {
 	set children [.tv children {}]
 	.tv unhide -recurse {}
     }
 
-test Search-73.81 {In Child} -setup {
+test Search-73.90 {In Child} -setup {
 	.tv children {} $children
     } -body {
 	.tv search blue -all -glob *n*
     } -result {cyan}
 
-test Search-73.82 {In Child No Case} -setup {
+test Search-73.91 {In Child No Case} -setup {
 	.tv children {} $children
     } -body {
 	.tv search blue -all -glob -nocase *n*
     } -result {cyan navy}
 
-test Search-73.83 {No match} -setup {
+test Search-73.92 {No match} -setup {
 	.tv children {} $children
     } -body {
 	.tv search {} bogus
     }
 
-test Search-73.84 {Childless Item} -setup {
+test Search-73.93 {Childless Item} -setup {
 	.tv children {} $children
     } -body {
 	.tv search black -glob *
     }
 
-test Search-73.85 {No Columns But Have #0} -setup {
+test Search-73.94 {No Columns But Have #0} -setup {
 	.tv children {} $children
 	.tv configure -columns {}
     } -body {
 	.tv search {} Black
     } -result {black}
 
-test Search-73.86 {No Columns and No #0} -setup {
+test Search-73.95 {No Columns and No #0} -setup {
 	.tv children {} $children
 	.tv configure -columns {} -show headings
     } -body {
 	.tv search {} Black
     }
 
-test Search-73.87 {Empty tree} -setup {
+test Search-73.96 {Empty tree} -setup {
 	.tv children {} {}
 	.tv configure -columns {} -show headings
     } -body {
 	.tv search {} bogus
     }
 
-test Search-73.88 {Cleanup} -body {
+test Search-73.97 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
