@@ -29,9 +29,16 @@ proc inoperative {args} {}
 # TESTS
 #
 
-test notebook-1.0 "Setup" -body {
-    ttk::notebook .nb
-} -result .nb
+#
+# COMMON TEST SETUP
+#
+ttk::notebook .nb
+
+#
+# Test notebook-1.0 has been removed. It mainly served as a setup for the
+# subsequent tests. The statement in that test has been moved to the
+# COMMON TEST SETUP section above.
+#
 
 #
 # Error handling tests:

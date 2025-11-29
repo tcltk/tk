@@ -3,6 +3,15 @@
 # Derived from core test suite entry-19.1 through entry-19.20
 #
 
+# NOTE
+#
+# Various consecutive validation tests build each one upon the previous.
+# This leads to:
+# - test failures if one of them is skipped, e.g. through an invocation using
+#   the tcltest options "-match", "-skip" or "-limitconstraints 1".
+# - cascading failures if an intermediate test doesn't pass.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -39,31 +48,28 @@ foreach i {1 2 3 4} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 
+rename entry {}
+interp alias {} entry {} ttk::entry
+destroy .e
+catch {unset textVar}
+unset -nocomplain validationData; # not necessary
+entry .e -validate all \
+	-validatecommand $validateCmd1 \
+	-invalidcommand bell \
+	-textvariable textVar \
+	;
+pack .e
+
 #
 # TESTS
 #
 
-test validate-0.0 "Setup" -constraints ttkEntry -body {
-    rename entry {}
-    interp alias {} entry {} ttk::entry
-    return;
-}
-
-test validate-0.1 "More setup" -body {
-    destroy .e
-    catch {unset textVar}
-    unset -nocomplain validationData; # not necessary
-    entry .e -validate all \
-	    -validatecommand $validateCmd1 \
-	    -invalidcommand bell \
-	    -textvariable textVar \
-	    ;
-    pack .e
-}
-
-# The validation tests build each one upon the previous, so cascading
-# failures aren't good
 #
+# Tests validate-0.0 and validate-0.1 have been removed. They didn't have any
+# expected result and therefore weren't proper tests. The statements in these
+# tests have been moved to the COMMON TEST SETUP section above.
+#
+
 test validate-1.1 {entry widget validation - insert} -body {
     .e insert 0 a
     set validationData
@@ -123,7 +129,6 @@ test validate-1.9 {entry widget validation - vmode focus} -body {
 #
 # COMMON TEST SETUP
 #
-
 .e configure -validate all
 
 test validate-1.10 {entry widget validation - vmode all} -body {
