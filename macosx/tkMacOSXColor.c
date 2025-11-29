@@ -670,9 +670,6 @@ TkpGetColor(
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
-			color.red   = (unsigned short)(rgba[0] * 65535.0);
-			color.green = (unsigned short)(rgba[1] * 65535.0);
-			color.blue  = (unsigned short)(rgba[2] * 65535.0);
 #endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
@@ -687,10 +684,10 @@ TkpGetColor(
 		}
 #else //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		GetRGBA(entry, p.ulong, rgba);
+#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
-#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		haveValidXColor = True;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
