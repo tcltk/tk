@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:
@@ -19,11 +19,11 @@ jobs:
         working-directory: tk/macosx
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Check out Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
@@ -71,11 +71,11 @@ jobs:
         working-directory: tk/unix
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Check out Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch

@@ -4,6 +4,21 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
+Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
+
+Tk 9.0.4 continues the Tk 9.0 series of releases.  The Tk 9.0 series
+does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
+To make use of Tk 9.0.4, first a Tcl 9.0 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [Improve the look of the ttk::spinbox widgets in the built-in themes](https://core.tcl-lang.org/tk/tktview/4d2baa)
+ - [SVG rendering: Correctly paint stroke leftover path](https://core.tcl-lang.org/tk/tktview/c51a56)
+
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
 Tk 9.0.3 continues the Tk 9.0 series of releases.  The Tk 9.0 series
@@ -21,6 +36,25 @@ to the userbase.
  - [loading windows dll's in Cygwin doesn't work with high-entropy-va](https://core.tcl-lang.org/tk/tktview/06892c)
  - [TIP 604 widget demo: canvas text fill color not specified](https://core.tcl-lang.org/tk/tktview/6cc48b)
  - [Undefined behavior while touchpad scrolling](https://core.tcl-lang.org/tk/tktview/92e408)
+ - [leak in XCreateBitmapFromData() in ImgGetPhoto()](https://core.tcl-lang.org/tk/tktview/6c4795)
+ - [Add support for Copy/Cut/Paste keys in X11](https://core.tcl-lang.org/tk/tktview/04e173)
+ - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
+ - [tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP](https://core.tcl-lang.org/tk/tktview/95da0f)
+ - [image svg: support paint order and fix possible nan race condition](https://core.tcl-lang.org/tk/tktview/b43dbc)
+ - [Windows: install man pages](https://core.tcl-lang.org/tk/tktview/816739)
+ - [Windows: install pkg-config file](https://core.tcl-lang.org/tk/tktview/2c240b)
+ - [Windows: Missing border pixels in alt theme](https://core.tcl-lang.org/tk/tktview/8b725d)
+ - [nanosvg upstream changes: #273, #275: add paint order parsing](https://core.tcl-lang.org/tk/tktview/b43dbc0061)
+ - [Artifacts in a few themed widgets on x11 and aqua](https://core.tcl-lang.org/tk/tktview/265ff2)
+ - [Core dump Tk_GetFontFromObj](https://core.tcl-lang.org/tk/tktview/a80e5f)
+ - [MS-Win canvas arcs with small extent are drawn 360 degrees](https://core.tcl-lang.org/tk/info/6051a9)
+ - [pixel values can report false list lengths](https://core.tcl-lang.org/tk/info/2a0a83)
+ - [Xft text is unusable for 32-bit visual when default visual is 24-bit](https://core.tcl-lang.org/tk/info/c23f79)
+ - [tk print: several issues printing i18n text](https://core.tcl-lang.org/tk/info/4e7a78)
+ - [tk print, canvas: raw smooth not implemented](https://core.tcl-lang.org/tk/info/e10819)
+ - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
+ - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
+ - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 

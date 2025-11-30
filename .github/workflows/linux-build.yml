@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 defaults:
@@ -31,11 +31,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
@@ -111,7 +111,7 @@ jobs:
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
@@ -119,7 +119,7 @@ jobs:
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
@@ -135,7 +135,7 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Checkout Tcl 9.0

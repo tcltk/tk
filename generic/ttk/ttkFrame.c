@@ -211,7 +211,7 @@ error:
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Bad label anchor specification %s", Tcl_GetString(objPtr)));
-	Tcl_SetErrorCode(interp, "TTK", "LABEL", "ANCHOR", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LABEL", "ANCHOR", (char *)NULL);
     }
     return TCL_ERROR;
 }

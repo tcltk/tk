@@ -59,9 +59,9 @@ static const enum BorderColor thinShadowColors[6][4] = {
 static void DrawCorner(
     Tk_Window tkwin,
     Drawable d,
-    Tk_3DBorder border,			/* get most GCs from here... */
-    GC borderGC,			/* "window border" color GC */
-    int x,int y, int width,int height,	/* where to draw */
+    Tk_3DBorder border,				/* get most GCs from here... */
+    GC borderGC,				/* "window border" color GC */
+    int x, int y, int width, int height,	/* where to draw */
     int corner,				/* 0 => top left; 1 => bottom right */
     enum BorderColor color)
 {
@@ -69,14 +69,21 @@ static void DrawCorner(
     GC gc;
 
     --width; --height;
-    points[0].x = x;			points[0].y = y+height;
-    points[1].x = x+width*corner;	points[1].y = y+height*corner;
-    points[2].x = x+width;		points[2].y = y;
+    points[0].x = x;			  points[0].y = y+height;
+    points[1].x = corner ? x + width : x; points[1].y = corner ? y + height : y;
+    points[2].x = x+width;		  points[2].y = y;
 
-    if (color == BRDR)
+    if (corner == 0) {
+	points[2].x += WIN32_XDRAWLINE_HACK;
+    } else {
+	points[2].y -= WIN32_XDRAWLINE_HACK;
+    }
+
+    if (color == BRDR) {
 	gc = borderGC;
-    else
+    } else {
 	gc = Tk_3DBorderGC(tkwin, border, (int)color);
+    }
 
     XDrawLines(Tk_Display(tkwin), d, gc, points, 3, CoordModeOrigin);
 }
@@ -372,10 +379,11 @@ static void FieldElementDraw(
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
 	GC focusGC = Tk_GCForColor(focusColor, d);
 
-	if (focusWidth > 1) {
+	if (focusWidth > 1 && b.width >= 2 && b.height >= 2) {
 	    int x1 = b.x, x2 = b.x + b.width - 1;
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 
 	    /*
 	     * Draw the outer rounded rectangle
@@ -394,7 +402,6 @@ static void FieldElementDraw(
 	    /*
 	     * Fill the inner rectangle
 	     */
-	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
@@ -862,6 +869,7 @@ static void BoxArrowElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
+    size += round(scalingLevel);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -1091,8 +1099,9 @@ static void ThumbElementDraw(
     /*
      * Don't draw the thumb if we are disabled.
      * This makes it behave like Windows ... if that's what we want.
-    if (state & TTK_STATE_DISABLED)
+    if (state & TTK_STATE_DISABLED) {
 	return;
+    }
      */
 
     Tk_GetReliefFromObj(NULL, thumb->reliefObj, &relief);

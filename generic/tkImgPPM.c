@@ -154,20 +154,20 @@ FileReadPPM(
     if (type == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"couldn't read raw PPM header from file \"%s\"", fileName));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"PPM image file \"%s\" has dimension(s) <= 0", fileName));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((maxIntensity <= 0) || (maxIntensity > 0xffff)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"PPM image file \"%s\" has bad maximum intensity value %d",
 		fileName, maxIntensity));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", (char *)NULL);
 	return TCL_ERROR;
     } else if (maxIntensity > 0x00ff) {
 	bytesPerChannel = 2;
@@ -230,7 +230,7 @@ FileReadPPM(
 		    "error reading PPM image file \"%s\": %s", fileName,
 		    Tcl_Eof(chan)?"not enough data":Tcl_PosixError(interp)));
 	    if (Tcl_Eof(chan)) {
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "EOF", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "EOF", (char *)NULL);
 	    }
 	    ckfree(pixelPtr);
 	    return TCL_ERROR;
@@ -499,20 +499,20 @@ StringReadPPM(
     if (type == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"couldn't read raw PPM header from string", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"PPM image data has dimension(s) <= 0", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((maxIntensity <= 0) || (maxIntensity > 0xffff)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"PPM image data has bad maximum intensity value %d",
 		maxIntensity));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", (char *)NULL);
 	return TCL_ERROR;
     } else if (maxIntensity > 0x00ff) {
 	bytesPerChannel = 2;
@@ -557,7 +557,7 @@ StringReadPPM(
 	if (block.pitch*height > dataSize) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "truncated PPM data", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	block.pixelPtr = dataBuffer + srcX * block.pixelSize;
@@ -593,7 +593,7 @@ StringReadPPM(
 	    ckfree(pixelPtr);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "truncated PPM data", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (maxIntensity < 0x00ff) {

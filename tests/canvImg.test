@@ -1,27 +1,45 @@
 # This file is a Tcl script to test out the procedures in tkCanvImg.c,
-# which implement canvas "image" items.  It is organized in the standard
-# fashion for Tcl tests.
+# which implement canvas "image" items.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
 
-# Canvas used in every test case of the whole file
+#
+# COMMON TEST SETUP
+#
+# For every test case of the whole file
+#
 canvas .c
 pack .c
 update
 
+#
+# TESTS
+#
 
 test canvImg-1.1 {options for image items} -body {
     .c create image 50 50 -anchor nw -tags i1
@@ -386,11 +404,15 @@ test canvImg-7.2 {DisplayImage procedure, no image} -body {
     update
 } -result {}
 
-
-# image used in 8.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvImg-8.*
+#
 if {[testConstraint testImageType]} {
     image create test foo
 }
+
 test canvImg-8.1 {ImageToArea procedure} -constraints testImageType -setup {
 	.c create image 50 100 -image foo -tags image -anchor nw
 	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
@@ -553,6 +575,10 @@ test canvImg-8.18 {ImageToArea procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 } -result {rect}
+
+#
+# COMMON TEST CLEANUP
+#
 .c delete all
 
 test canvImg-8.19 {ImageToArea procedure} -constraints testImageType -body {
@@ -711,10 +737,13 @@ test canvImg-8.44 {ImageToArea procedure} -constraints testImageType -body {
 } -cleanup {
 	.c delete all
 } -result {}
+
+#
+# COMMON TEST SETUP
+#
 if {[testConstraint testImageType]} {
 	image delete foo
 }
-
 
 test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -804,13 +833,12 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -result {{foo2 display 0 0 80 60}}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

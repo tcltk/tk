@@ -1,26 +1,17 @@
-# This file is a Tcl script to test entry widgets in Tk.  It is
-# organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test that a Safe Base interpreter cannot write
+# to the PRIMARY selection.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-
-# Import utility procs for specific functional areas
-testutils import child
-
-# ------------------------------------------------------------------------------
-# Tests that a Safe Base interpreter cannot write to the PRIMARY selection.
-# ------------------------------------------------------------------------------
+# NOTES
+#
 # - Tests 3.*, 6.* test that the fix for ticket de156e9efe implemented in branch
 #   bug-de156e9efe has been applied and still works.  They test that a Safe Base
 #   child interpreter cannot write to the PRIMARY selection.
-# - The other tests verify that the parent interpreter and an child interpreter
+# - The other tests verify that the parent interpreter and a child interpreter
 #   CAN write to the PRIMARY selection, and therefore that the test scripts
 #   themselves are valid.
 # - A text, entry, ttk::entry, listbox, spinbox or ttk::spinbox widget can have
@@ -31,7 +22,30 @@ testutils import child
 # - The spinbox, ttk::spinbox are variants of entry, ttk::entry respectively.
 # - The command "childTkInterp" is not needed for Safe Base children because
 #   safe::loadTk does something similar and works correctly.
-# ------------------------------------------------------------------------------
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import child
+
+#
+# COMMON TEST SETUP
+#
 
 namespace eval ::_test_tmp {}
 
@@ -183,6 +197,10 @@ set ::_test_tmp::script {
 
 # Do this once for the parent interpreter.
 eval $::_test_tmp::script
+
+#
+# TESTS
+#
 
 test safePrimarySelection-1.1 {parent interpreter, text, no existing selection} -setup {
     catch {interp delete child2}
@@ -1185,10 +1203,9 @@ test safePrimarySelection-6.10 {IMPORTANT, safe interpreter, ttk::spinbox spun/s
 } -result {OLD_VALUE----OLD_VALUE}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 namespace delete ::_test_tmp
 testutils forget child
 cleanupTests
-return

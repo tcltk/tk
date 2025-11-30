@@ -1,11 +1,29 @@
-
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
-
-### treeview tag invariants:
 #
+# Tests for tags in the ttk::treeview widget
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# Treeview tag invariants:
 
 proc itemConstraints {tv item} {
     # $tag in [$tv item $item -tags] <==> [$tv tag has $tag $item]
@@ -28,16 +46,20 @@ proc treeConstraints {tv} {
 
     itemConstraints $tv {}
 }
-#
-###
 
-test treetags-1.0 "Setup" -body {
-    set tv [ttk::treeview .tv -columns "A B C"]
-    .tv insert {} end -id item1 -text "Item 1"
-    pack .tv
-} -cleanup {
-    treeConstraints $tv
-}
+#
+# COMMON TEST SETUP
+#
+# For all tests in this test file
+#
+set tv [ttk::treeview .tv -columns "A B C"]
+.tv insert {} end -id item1 -text "Item 1"
+pack .tv
+treeConstraints $tv
+
+#
+# TESTS
+#
 
 test treetags-1.1 "Bad tag list" -body {
     $tv item item1 -tags {bad {list}here bad}
@@ -267,7 +289,8 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
 } -result [list rm1 item1 <<Remove>> rm2 item1 <<Remove>> rm3 item1 <<Remove>>]
 
 #
+# TESTFILE CLEANUP
+#
 
-test treetags-end "Cleanup" -body { destroy $tv }
-
+destroy $tv
 tcltest::cleanupTests

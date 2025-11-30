@@ -281,7 +281,7 @@ TkTextTagCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
 			" enter, leave, and virtual events may be used", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	} else if (objc == 5) {

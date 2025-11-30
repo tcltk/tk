@@ -1,20 +1,35 @@
 # This file is a Tcl script to test out the code in tkImgFmtPPM.c,
 # which reads and write PPM-format image files for photo widgets.
-# The files is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import image
 
 imageInit
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # Note that we do not use [tcltest::makeFile] because it is
 # only suitable for text files
@@ -24,6 +39,10 @@ proc put {file data} {
     puts -nonewline $f $data
     close $f
 }
+
+#
+# TESTS
+#
 
 test imgPPM-1.1 {FileReadPPM procedure} -body {
     put test.ppm "P6\n0 256\n255\nabcdef"
@@ -230,14 +249,13 @@ test imgPPM-5.9 {StringReadPPM procedure} -setup {
 } -result {5 4}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 imageFinish
 catch {file delete test.ppm}
 testutils forget image
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl

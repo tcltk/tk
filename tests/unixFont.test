@@ -1,23 +1,52 @@
-# This file is a Tcl script to test out the procedures in tkUnixFont.c.
-# It is organized in the standard fashion for Tcl tests.
-#
-# Many of these tests are visually oriented and cannot be checked
-# programmatically (such as "does an underlined font appear to be
-# underlined?"); these tests attempt to exercise the code in question,
-# but there are no results that can be checked.  Some tests depend on the
-# fonts having or not having certain properties, which may not be valid
-# at all sites.
+# This file is a Tcl script that tests the unix-specific features of the Tk font
+# system (implemented in tkUnixFont.c).
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTES
+#
+# * This test file is specific for the unix platform. Tests regarding the font
+#   system that are specific to the MS Windows platform go into the test file
+#   winFont.test. Tests that are platform-indifferent go into the test file
+#   font.test. Or they may exist as each other's counterparts in both
+#   unixFont.test and winFont.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * All tests in this test file are currently specific for the x11 windowing
+#   system. The file doesn't contain any tests (yet) that can be run on macOS/aqua
+#   (see also: https://core.tcl-lang.org/tk/info/98db50bdad).
+# * This test file is skipped entirely on non-unix platforms.
+# * Many of the tests are visually oriented. They do exercise the code in
+#   question, but there are no results that can be checked programmatically
+#   (such as "does an underlined font appear to be underlined?").
+# * Some tests depend on the fonts having or not having certain properties,
+#   which may not be valid at all sites.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Import utility procs for specific functional areas
 testutils import geometry
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 if {[tk windowingsystem] eq "x11"} {
     if {[testConstraint withXft]} {
@@ -26,6 +55,7 @@ if {[tk windowingsystem] eq "x11"} {
 	set fontsystemcmd [auto_execok xlsfonts]
     }
 }
+
 foreach {constraint font} {
     hasArial      arial
     hasCourierNew "courier new"
@@ -53,6 +83,10 @@ foreach {constraint font} {
     }
 }
 
+#
+# COMMON TEST SETUP
+#
+
 catch {destroy .b}
 toplevel .b
 wm geom .b +0+0
@@ -74,6 +108,10 @@ set cx [font measure TkFixedFont 0]
 
 set ax [winfo reqwidth .b.l]
 set ay [winfo reqheight .b.l]
+
+#
+# TESTS
+#
 
 test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
     list [catch {font measure {} xyz} msg] $msg
@@ -155,7 +193,13 @@ test unixfont-5.3 {Tk_MeasureChars procedure: loop over chars} x11 {
     .b.l config -text "0\3770\377"
     .b.l config -text "000000000000000"
 } {}
+
+#
+# COMMON TEST SETUP
+#
+
 .b.l config -wrap [expr $ax*10]
+
 test unixfont-5.4 {Tk_MeasureChars procedure: reached right edge} x11 {
     .b.l config -text "0000000000000"
     getsize .b.l
@@ -329,9 +373,8 @@ test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
 } {0 1 1 1 1 2}
 
 #
-# CLEANUP
+# TESTFILE CLEANUP
 #
 
 testutils forget geometry
 cleanupTests
-return
