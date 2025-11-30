@@ -129,6 +129,13 @@ static void initColorTable()
     if (@available(macOS 10.14, *)) {
 	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
 	lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+
+	/*
+	 * These retains prevent a crash on macOS 10.15 Catalina.
+	 * See bug [3a4310ee].
+	 */
+	[darkAqua retain];
+	[lightAqua retain];
     }
 #endif
 
