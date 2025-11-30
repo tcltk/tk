@@ -119,7 +119,7 @@ Number of items at the top that should not be vertically scrolled.
 The default is 0.
 .SH "INDICES"
 .PP
-Several of the widget commands use an index as their argument.
+Several of the widget subcommands use an index as their argument.
 An index specifies a particular child item within it's parent, using any of
 the following forms:
 .IP \fInumber\fR 12
@@ -127,27 +127,33 @@ Specifies the numerical index of a child within its parent, where 0
 corresponds to the first item.
 .IP \fBend\fR 12
 Indicates the end of the list of children.
-For most commands this refers to the last child, but for a few
-commands such as \fBindex\fR, \fBinsert\fR, and \fBmove\fR
-it refers to the item just after the last one.
+For most subcommands this refers to the last child, but for a few such as
+\fBindex\fR, \fBinsert\fR, and \fBmove\fR it refers to the item just after
+the last one.
 .IP \fBfirst\fR 12
 Indicates the first child in the list of children.
 .IP \fBlast\fR 12
 Indicates the last child in the list of children.
 .IP \fBend-\fIn\fR 12
-Indicates the item at position \fIn\fR relative to the end.
+Indicates the item at position \fIn\fR relative to the end
+where \fBend-1\fR is the last item in the list of children.
 .IP \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR 12
 Indicates the item at position \fIn\fR relative to index \fIm\fR.
 See \fBstring index\fR for valid forms.
 .SH "COLUMN IDENTIFIERS"
 Column identifiers take any of the following forms:
 .IP \(bu
-A symbolic name from the list of \fB\-columns\fR.
+A symbolic name from the list defined by \fB\-columns\fR option.
 .IP \(bu
-An integer \fIn\fR, specifying the \fIn\fRth data column.
+An integer \fIn\fR, specifying the \fIn\fRth data column. This is an index
+corresponding to the columns in the \fB\-columns\fR option and the value is
+taken from the item's \fB-values\fR option.
 .IP \(bu
 A string of the form \fB#\fIn\fR, where \fIn\fR is an integer, specifying
-the \fIn\fRth display column.
+the \fIn\fRth display column. Column \fB#0\fR is always the tree column
+even if not shown. The subsequent columns are defined by the
+\fB\-displaycolumns\fR option. For example, \fB#1\fR is the first column in
+\fB\-displaycolumns\fR.
 .IP \(bu
 In the form of \fBend-\fIn\fR, specifying the \fIn\fRth display column
 from the end, where \fBend-1\fR is the last displayed column.
@@ -155,30 +161,18 @@ from the end, where \fBend-1\fR is the last displayed column.
 In the form of \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR for the \fIn\fRth data
 column relative to column \fIm\fR. See \fBstring index\fR for valid forms.
 .PP
-\fBNOTE:\fR
-.IP \(bu
-The data column number is the index in the \fB\-columns\fR list and
-corresponds to the same index in the item's \fB\-values\fR list.
-.IP \(bu
-The display column number is the index-1 in the \fB\-displaycolumns\fR list and
-corresponds to the order the columns are displayed except for column \fB#0\fR
-which always refers to the tree column, even if \fB\-show tree\fR is not specified.
-The display columns may be in a different order or exclude columns in the
-\fB\-columns\fR list. If \fB\-displaycolumns\fR is not set, then data column
-\fIn\fR is displayed in display column \fB#\fIn+1\fR.
-.PP
 .SH "WIDGET COMMAND"
 In addition to the standard
 \fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
 \fBstate\fR, \fBstyle\fR, \fBxview\fR and \fByview\fR
-commands (see \fBttk::widget\fR),
-treeview widgets support the following additional commands:
+subcommands (see \fBttk::widget\fR),
+treeview widgets support the following additional subcommands:
 .\" METHOD: after
 .TP
 \fIpathname \fBafter\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
-Returns the identifier of the item after \fIitem\fR in the current view. Can be
-the first child, next sibling, next sibling of an ancestor, or {} for none.
+Returns the identifier of the item after \fIitem\fR in the current view. It can
+be the first child, next sibling, next sibling of an ancestor, or {} for none.
 Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
 Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
 If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
@@ -198,14 +192,14 @@ option), returns the bounding box of that cell within \fIitem\fR
 .TP
 \fIpathname \fBbbox {*}\fIcell\fR
 .
-Same as previous command, but uses the expand operator to convert \fIcell\fR
+Same as previous subcommand, but uses the expand operator to convert \fIcell\fR
 into item and column components.
 .\" METHOD: before
 .TP
 \fIpathname \fBbefore\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
 .
-Returns the identifier of the item before \fIitem\fR in the current view.
-Can be the previous sibling, parent of \fIitem\fR, or {} for none.
+Returns the identifier of the item before \fIitem\fR in the current view. It
+can be the previous sibling, parent of \fIitem\fR, or {} for none.
 Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
 Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
 If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
@@ -223,15 +217,15 @@ If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items w
 \fIpathname \fBcellfocus\fR ?\fIcell\fR?
 .
 Sets the cell focus to \fIcell\fR. Use \fB{}\fR to clear the focus cell. Without
-\fIcell\fR, returns the current focus cell id or \fB{}\fR if there is none.
+\fIcell\fR, returns the current focus cell id or \fB{}\fR if none.
 .\" METHOD: cellselection
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
 .
 Manages cell selection. The cell selection is independent from the item selection
-handled by the \fBselection\fR command. A cell is specified by a list of two
+handled by the \fBselection\fR subcommand. A cell is specified by a list of two
 elements, the item and the column.
-For the rectangle versions of commands, the cells must be in displayed columns.
+For the rectangle versions of these subcommands, the cells must be in displayed columns.
 Any change to \fB\-columns\fR clears the cell selection.
 A \fIcellList\fR argument may be a single cell or a list of cells.
 If \fIselop\fR is not specified, returns a list of selected cells.
@@ -321,8 +315,8 @@ of \fIitem\fR.
 \fIpathname \fBcollapse\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Sets all of the items in \fIitemList\fR to closed state. Same as
-[\fIpathname \fBitem \fIitem \fB\-open 0\fR] for each item in
-\fIitemList\fR. With \fI\-recurse\fR option,
+"\fIpathname \fBitem \fIitem \fB\-open 0\fR" for each item in
+\fIitemList\fR. With the \fI\-recurse\fR option,
 will also close all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: column
 .TP
@@ -427,15 +421,15 @@ Returns 1 if the specified \fIitem\fR is present in the tree,
 \fIpathname \fBexpand\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Set all of the items in \fIitemList\fR to open state. Same as
-[\fIpathname \fBitem \fIitem \fB\-open 1\fR] for each item in
-\fIitemList\fR. With \fI\-recurse\fR option,
+"\fIpathname \fBitem \fIitem \fB\-open 1\fR" for each item in
+\fIitemList\fR. With the \fI\-recurse\fR option,
 will also open all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: focus
 .TP
 \fIpathname \fBfocus \fR?\fIitem\fR?
 .
 Sets the focus item to \fIitem\fR. Use \fB{}\fR to clear focus item. Without
-\fIitem\fR, returns the current focus item id or \fB{}\fR if there is none.
+\fIitem\fR, returns the current focus item id or \fB{}\fR if none.
 .\" METHOD: haschildren
 .TP
 \fIpathname \fBhaschildren \fIitem\fR
@@ -477,8 +471,8 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 \fIpathname \fBhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Hide all of the items in \fIitemList\fR and all child items. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 1\fR] for each item in
-\fIitemList\fR. With \fI\-recurse\fR option,
+"\fIpathname \fBitem \fIitem \fB\-hidden 1\fR" for each item in
+\fIitemList\fR. With the \fI\-recurse\fR option,
 will also hide all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: identifier
 .TP
@@ -552,14 +546,15 @@ or if \fIindex\fR is specified, the index of the item at \fIindex\fR in
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
-Creates a new item, inserts it in \fIparent\fR's children at position \fIindex\fR,
-and returns its identifier. See \fBITEM OPTIONS\fR for the list of available options.
-Use the empty string \fB{}\fR for \fIparent\fR to create a new top-level item.
-See \fBINDICES\fR for valid forms of \fIindex\fR. If \fIindex\fR is negative or
-zero, the new item is inserted at the beginning; if \fIindex\fR is greater than
-or equal to the current number of children, it is inserted at the end.
-If \fB\-id\fR is specified, it is used as the identifier of the item; \fIid\fR
-must not already exist in the tree. Otherwise, a new unique identifier is generated.
+Creates a new item, inserts it in \fIparent\fR's children at position
+\fIindex\fR, and returns its identifier. See \fBITEM OPTIONS\fR for the list of
+available options. Use the empty string \fB{}\fR for \fIparent\fR to create a
+new top-level item. See \fBINDICES\fR for valid forms of \fIindex\fR. If
+\fIindex\fR is negative or zero, the new item is inserted at the beginning; if
+\fIindex\fR is greater than or equal to the current number of children, it is
+inserted at the end. If \fB\-id\fR is specified, then \fIid\fR is used as the
+identifier of the item; \fIid\fR must not already exist in the tree. Otherwise,
+a new unique identifier is generated.
 .TP
 \fIpathname \fBinsert before\fR|\fBafter\fR \fIitem\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
@@ -630,8 +625,8 @@ name is for backward-compatibility reasons.) This is the default.
 \fB\-dictionary\fR
 .
 The values are to be compared to \fIpattern\fR using dictionary-style
-comparisons. For search, this is the same as \fB-ascii\fR. NOTE: This means
-I18n and I018N are not the same.
+comparisons. For search, this is the same as \fB-ascii\fR but also sets
+\fB-nocase\fR. NOTE: This means I18n and I018N are not the same.
 .\" OPTION: -integer
 .TP
 \fB\-integer\fR
@@ -643,7 +638,8 @@ values will be ignored, but non-numeric values will generate an error.
 \fB\-nocase\fR
 .
 Comparisons are to be performed in a case-insensitive manner. Only used with
-\fB\-ascii\fR and \fB-regexp\fR options.
+\fB\-ascii\fR and \fB-dictionary\fR options for the \fB-exact\fR, \fB-glob\fR,
+and \fB-regexp\fR matching.
 .\" OPTION: -real
 .TP
 \fB\-real\fR
@@ -789,14 +785,14 @@ of the tree. Only non-title columns and rows will be scrolled.
 .TP
 \fIpathname \fBsee {*}\fIcell\fR
 .
-Same as previous command, but uses the expand operator to convert \fIcell\fR
+Same as previous subcommand, but uses the expand operator to convert \fIcell\fR
 into item and column components.
 .\" METHOD: selection
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList|first last\fR?
 .
 Manages item selection. The item selection is independent from the cell selection
-handled by the \fBcellselection\fR command.
+handled by the \fBcellselection\fR subcommand.
 If \fIselop\fR is not specified, returns a list of selected items.
 Otherwise, \fIselop\fR is one of the following:
 .RS
@@ -877,18 +873,19 @@ If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will b
 Set or get \fIitem\fR column values.
 With no \fIcolumn\fR or \fIvalue\fR arguments, returns a dictionary of all
 column/value pairs. With only the \fIcolumn\fR argument, returns the current
-value for \fIcolumn\fR. With \fIcolumn\fR and \fIvalue\fR arguments, sets the
-value of each column \fIcolumn\fR to the associated \fIvalue\fR. Use column
-\fB#0\fR for the tree column. See \fBCOLUMN IDENTIFIERS\fR for valid forms of
-\fIcolumn\fR.
+value for \fIcolumn\fR. With one or more \fIcolumn\fR and \fIvalue\fR pair
+arguments, sets the value of each \fIcolumn\fR to the associated \fIvalue\fR.
+Use column \fB#0\fR for the tree column. See \fBCOLUMN IDENTIFIERS\fR for
+valid forms of \fIcolumn\fR.
 .\" METHOD: size
 .TP
 \fIpathname \fBsize\fR ?\fB\-hidden\fR? ?\fB\-recurse\fR? \fIitem\fR
 .
 Returns the count of children belonging to \fIitem\fR.
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
-Use \fB-recurse\fR to include descendants of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
-If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to
+exclude them. Use \fB-recurse\fR to include descendants of \fIitem\fR and
+\fB-norecurse\fR (default) to exclude them. If both \fB-hidden\fR and
+\fB-recurse\fR are used, descendants of closed items will be included.
 .\" METHOD: sort
 .TP
 \fIpathname \fBsort \fIparent\fR ?\fI\-option ...\fR?
@@ -910,7 +907,7 @@ same as \fB-ascii\fR except (a) case is ignored except as a tie-breaker and
 (b) if two strings contain embedded numbers, the numbers compare as integers,
 not characters. For example, in \fB-dictionary\fR mode, "bigBoy" sorts between
 "bigbang" and "bigboy", and "x10y" sorts between "x9y" and "x11y". Overrides
-the -nocase option.
+the \fB-nocase\fR option.
 .\" OPTION: -integer
 .TP
 \fB\-integer\fR
@@ -958,8 +955,8 @@ Sort the list in decreasing order (“largest” items first).
 \fB\-column \fIcolumn\fR
 .
 Sort based on values in column \fIcolumn\fR.
-See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR.
-The default is the first column (#0 if tree in -show or #1 if not).
+See \fBCOLUMN IDENTIFIERS\fR for valid forms of \fIcolumn\fR. The default is
+the first display column (\fB#0\fR if tree in -show or \fB#1\fR if not).
 .\" OPTION: -ignoreempty
 .TP
 \fB\-ignoreempty\fR
@@ -1071,8 +1068,8 @@ for that item are not changed.
 \fIpathname \fBunhide\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
 Unhide all of the items in \fIitemList\fR. Same as
-[\fIpathname \fBitem \fIitem \fB\-hidden 0\fR] for each item in
-\fIitemList\fR. With \fI\-recurse\fR option, will also unhide all
+"\fIpathname \fBitem \fIitem \fB\-hidden 0\fR" for each item in
+\fIitemList\fR. With the \fI\-recurse\fR option, will also unhide all
 of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: visible
 .TP
@@ -1083,7 +1080,7 @@ detached, hidden, and all ancestors are open and not hidden.
 .SH "ITEM OPTIONS"
 .PP
 The following item options can be set or get with the \fBinsert\fR and
-\fBitem\fR commands:
+\fBitem\fR subcommands:
 .IP \fB\-height \fIinteger\fR
 The height of the item in multiples of \fB\-rowheight\fR. The default is 1.
 .IP \fB\-image \fIname\fR
@@ -1109,7 +1106,7 @@ values than columns, the remaining values are assumed empty. If there are more
 values than columns, the extra values are ignored.
 .SH "TAG OPTIONS"
 .PP
-The following tag options can be set or get with the \fBtag configure\fR command:
+The following tag options can be set or get with the \fBtag configure\fR subcommand:
 .IP \fB\-foreground \fIcolor\fR
 Specifies the text foreground color.
 .IP \fB\-background \fIcolor\fR
@@ -1283,7 +1280,7 @@ Generated just after setting the focus item to \fB\-open false\fR.
 Generated whenever the focus or cellfocus changes including when unset.
 .PP
 The \fBfocus\fR, \fBcellfocus\fR, \fBselection\fR, and \fBcellselection\fR
-widget commands can be used to determine the affected item(s) or cell(s).
+widget subcommands can be used to determine the affected item(s) or cell(s).
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
