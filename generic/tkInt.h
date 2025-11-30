@@ -33,6 +33,9 @@
 #endif
 #include <stdint.h>
 #include <stdlib.h>
+#if defined(_MSC_VER) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ < 202311L))
+#include <stdbool.h>
+#endif
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
@@ -1137,7 +1140,7 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  * Exported internals.
  */
 
-#include "tkIntDecls.h"
+#include "tkIntDecls.h"  /* IWYU pragma: export */
 
 #ifdef __cplusplus
 extern "C" {

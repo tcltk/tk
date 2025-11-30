@@ -69,8 +69,9 @@ static void ActivateElement(ElementStateTracker *es, Ttk_Element element)
  */
 static void ReleaseElement(ElementStateTracker *es)
 {
-    if (!es->pressedElement)
+    if (!es->pressedElement) {
 	return;
+    }
 
     Ttk_ChangeElementState(
 	es->pressedElement, 0,TTK_STATE_PRESSED|TTK_STATE_ACTIVE);
@@ -78,8 +79,9 @@ static void ReleaseElement(ElementStateTracker *es)
 
     /* Reactivate element under the mouse cursor:
      */
-    if (es->activeElement)
-	Ttk_ChangeElementState(es->activeElement, TTK_STATE_ACTIVE,0);
+    if (es->activeElement) {
+	Ttk_ChangeElementState(es->activeElement, TTK_STATE_ACTIVE, 0);
+    }
 
     TtkRedisplayWidget(es->corePtr);
 }
@@ -138,8 +140,9 @@ ElementStateEventProc(void *clientData, XEvent *ev)
 	    break;
 	case LeaveNotify:
 	    ActivateElement(es, 0);
-	    if (ev->xcrossing.mode == NotifyGrab)
+	    if (ev->xcrossing.mode == NotifyGrab) {
 		PressElement(es, 0);
+	    }
 	    break;
 	case EnterNotify:
 	    element = Ttk_IdentifyElement(
@@ -149,8 +152,9 @@ ElementStateEventProc(void *clientData, XEvent *ev)
 	case ButtonPress:
 	    element = Ttk_IdentifyElement(
 		layout, ev->xbutton.x, ev->xbutton.y);
-	    if (element)
+	    if (element) {
 		PressElement(es, element);
+	    }
 	    break;
 	case ButtonRelease:
 	    ReleaseElement(es);

@@ -1,23 +1,44 @@
-#!/usr/local/bin/wish -f
-#
 # This script displays provides visual tests for many of Tk's features.
 # Each test displays a window with various information in it, along
 # with instructions about how the window should appear.  You can look
 # at the window to make sure it appears as expected.  Individual tests
 # are kept in separate ".tcl" files in this directory.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-set auto_path ". $auto_path"
-wm title . "Visual Tests for Tk"
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 set testNum 1
 
-# Each menu entry invokes a visual test file
+#
+# LOCAL UTILITY PROCS
+#
+
+proc end {} {
+    cleanupTests
+    set ::EndOfVisualTests 1
+}
+
+# lpr --
+#
+#	Print the contents of a canvas
+#
+proc lpr {c args} {
+    exec lpr <<[eval [list $c postscript] $args]
+}
 
 proc runTest {file} {
     global testNum
@@ -29,18 +50,18 @@ proc runTest {file} {
     incr testNum
 }
 
-# The following procedure is invoked to print the contents of a canvas:
+#
+# COMMON TEST SETUP
+#
 
-proc lpr {c args} {
-    exec lpr <<[eval [list $c postscript] $args]
-}
+set auto_path ". $auto_path"
+wm title . "Visual Tests for Tk"
 
-proc end {} {
-    cleanupTests
-    set ::EndOfVisualTests 1
-}
+#
+# TESTS
+#
 
-# ----------------------------------------------------------------------
+# Each menu entry invokes a visual test file
 
 test 1.1 {running visual tests} -constraints userInteraction -body {
     #-------------------------------------------------------
@@ -108,6 +129,10 @@ test 1.1 {running visual tests} -constraints userInteraction -body {
 
     concat ""
 } -result {}
+
+#
+# TESTFILE CLEANUP
+#
 
 if {![testConstraint userInteraction]} {
     cleanupTests

@@ -718,13 +718,15 @@ static void SashElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashPadObj, &sashPad);
 
-    if (sashThickness < handleSize + 2*sashPad)
+    if (sashThickness < handleSize + 2*sashPad) {
 	sashThickness = handleSize + 2*sashPad;
+    }
 
-    if (orient == TTK_ORIENT_HORIZONTAL)
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	*heightPtr = sashThickness;
-    else
+    } else {
 	*widthPtr = sashThickness;
+    }
 }
 
 static void SashElementDraw(
