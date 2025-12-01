@@ -64,12 +64,6 @@ pack .e
 # TESTS
 #
 
-#
-# Tests validate-0.0 and validate-0.1 have been removed. They didn't have any
-# expected result and therefore weren't proper tests. The statements in these
-# tests have been moved to the COMMON TEST SETUP section above.
-#
-
 test validate-1.1 {entry widget validation - insert} -body {
     .e insert 0 a
     set validationData

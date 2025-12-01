@@ -32,13 +32,11 @@ proc inoperative {args} {}
 #
 # COMMON TEST SETUP
 #
-ttk::notebook .nb
+set widgetCreateResult [ttk::notebook .nb]
 
-#
-# Test notebook-1.0 has been removed. It mainly served as a setup for the
-# subsequent tests. The statement in that test has been moved to the
-# COMMON TEST SETUP section above.
-#
+test notebook-1.0 "Setup" -body {
+    set widgetCreateResult
+} -result .nb
 
 #
 # Error handling tests:
@@ -621,4 +619,5 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
 # TESTFILE CLEANUP
 #
 
+unset widgetCreateResult
 tcltest::cleanupTests
