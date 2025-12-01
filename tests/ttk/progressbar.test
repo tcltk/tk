@@ -23,8 +23,13 @@ resetWindows
 # TESTS
 #
 
+#
+# COMMON TEST SETUP
+#
+set widgetCreateResult [ttk::progressbar .pb]
+
 test progressbar-1.1 "Setup" -body {
-    ttk::progressbar .pb
+    set widgetCreateResult
 } -result .pb
 
 test progressbar-1.2 "Linked variable" -body {
@@ -98,9 +103,11 @@ test progressbar-2.5 "error in write trace" -body {
     set PB		;# NOTREACHED
 } -cleanup { unset PB } -returnCodes error -match glob -result "*YIPES!"
 
-test progressbar-end "Cleanup" -body {
-    destroy .pb
-}
+#
+# COMMON TEST CLEANUP
+#
+unset widgetCreateResult
+destroy .pb
 
 # check existence and default value of each non-core option of the widget
 test progressbar-3.1 "progressbar non-core options" -setup {
