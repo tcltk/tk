@@ -1138,7 +1138,7 @@ WinSysNotifyCmd(
 
     /*
      * Send the notification balloon.   DO NOT touch uCallbackMessage 
-     * or NIF_MESSAGE — keep callbacks alive. Display
+     * or NIF_MESSAGE - keep callbacks alive. Display
      * the system tray icon with the NIIF_USER flag - it will
      * display in the body of the notification window but NOT
      * the titlebar. This is a limitation of this API when customizing
