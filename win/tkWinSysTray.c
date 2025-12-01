@@ -1079,10 +1079,9 @@ WinSysNotifyCmd(
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
-    NOTIFYICONDATAW ni;
-  
-    if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "command ...");
+
+    if (objc != 5) {
+        Tcl_WrongNumArgs(interp, 1, objv, "notify id title detail");
         return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
@@ -1090,41 +1089,32 @@ WinSysNotifyCmd(
             Tcl_GetString(objv[1]), "\": must be notify", NULL);
         return TCL_ERROR;
     }
-    if (objc != 5) {
-        Tcl_WrongNumArgs(interp, 2, objv, "id title detail");
-        return TCL_ERROR;
-    }
-  
+
     icoPtr = GetIcoPtr(interp, icoInterpPtr, objv[2]);
     if (icoPtr == NULL) {
         return TCL_ERROR;
     }
-  
+
     /*
-     * Get the root toplevel.
+     * ---------------------------------------------------------------
+     *  AppUserModelID setup (preserves your original block)
+     * ---------------------------------------------------------------
      */
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (mainWin == NULL) {
         Tcl_AppendResult(interp, "No main window available", NULL);
         return TCL_ERROR;
     }
-    Tk_Window top = Tk_NameToWindow(interp, ".", mainWin);
-    if (top == NULL) {
-        Tcl_AppendResult(interp, "Cannot resolve main toplevel", NULL);
-        return TCL_ERROR;
-    }
-  
-    /*
-     * Read window title from Tk.
-     */
     if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
         Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
         return TCL_ERROR;
     }
+
     const char *titleUtf = Tcl_GetStringResult(interp);
     Tcl_DString dsTitle;
     Tcl_DStringInit(&dsTitle);
     WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
+
     WCHAR appid[256];
     if (titleW[0]) {
         wcsncpy_s(appid, 256, titleW, _TRUNCATE);
@@ -1132,130 +1122,54 @@ WinSysNotifyCmd(
         wcscpy_s(appid, 256, L"TclApp");
     }
     Tcl_DStringFree(&dsTitle);
-  
-    /*
-     * Sanitize by replacing spaces with underscores.
-     * AppUserModelID strings do not support spaces.
-     */
+
     for (WCHAR *p = appid; *p; p++) {
         if (*p == L' ' || *p == L'\t') {
             *p = L'_';
         }
     }
-   
-    /*
-     * Set the title as the name of the process
-     * generating the notification.
-     */
     SetCurrentProcessExplicitAppUserModelID(appid);
-  
-    /*
-     * Prepare properly scaled icon for notification (48x48 optimal size.)
-     */
-    HICON hIconToUse = icoPtr->hIcon;
-    HICON hScaledIcon = NULL;
-   
-    /* Create 48x48 scaled version for crisp notification display. */
-    hScaledIcon = (HICON)CopyImage(
-        icoPtr->hIcon,
-        IMAGE_ICON,
-        48, 48,
-        LR_COPYFROMRESOURCE
-    );
-   
-    if (hScaledIcon && hScaledIcon != icoPtr->hIcon) {
-        hIconToUse = hScaledIcon;
-    }
 
     /*
-     * Check if tray icon already exists (without destroying it).
+     * ---------------------------------------------------------------
+     *  Ensure the tray icon exists (added at startup elsewhere)
+     *  DO NOT modify uCallbackMessage here! Only update NIF_INFO
+     * ---------------------------------------------------------------
      */
+    // Only modify NIF_INFO for the notification
+    NOTIFYICONDATAW ni;
     ZeroMemory(&ni, sizeof(ni));
-    ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = icoInterpPtr->hwnd;
-    ni.uID = icoPtr->id;
-    ni.uFlags = NIF_MESSAGE;  // Minimal flags to detect existence
-    ni.uCallbackMessage = ICON_MESSAGE;
+    ni.cbSize = sizeof(ni);
+    ni.hWnd  = icoInterpPtr->hwnd;
+    ni.uID   = icoPtr->id;
+    ni.uFlags = NIF_INFO;            // Only update the notification
+    ni.dwInfoFlags = NIIF_NONE;      // No body icon
 
-    BOOL iconExists = Shell_NotifyIconW(NIM_MODIFY, &ni);  // TRUE if icon exists
-
-    if (!iconExists) {
-      /* Icon doesn't exist - ADD with basic properties. */
-        ni.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-        ni.hIcon = hIconToUse;
-        wcscpy_s(ni.szTip, 128, L"Tcl Application");
-        
-        BOOL addOk = Shell_NotifyIconW(NIM_ADD, &ni);
-        if (!addOk) {
-            char buf[64];
-            sprintf_s(buf, sizeof(buf), "Failed to add tray icon (error %lu)", GetLastError());
-            Tcl_AppendResult(interp, buf, NULL);
-            if (hScaledIcon && hScaledIcon != icoPtr->hIcon) {
-                DestroyIcon(hScaledIcon);
-            }
-            return TCL_ERROR;
-        }
-    }
-  
-    /*
-     * Now MODIFY existing icon (or newly added one) to show notification.
-     * This PRESERVES all existing properties (tooltips, click handlers, etc.)
-     */
-    ZeroMemory(&ni, sizeof(ni));
-    ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = icoInterpPtr->hwnd;
-    ni.uID = icoPtr->id;
-    ni.uFlags = NIF_INFO | NIF_ICON;
-    ni.dwInfoFlags = NIIF_USER | NIIF_LARGE_ICON; /* Use custom icon. */
-    ni.hIcon = hIconToUse; /* Use scaled icon. */
-  
     Tcl_DString ds;
     Tcl_DStringInit(&ds);
-  
-    /* Title text. */
-    WCHAR *wtitle = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]),
-                                          TCL_INDEX_NONE, &ds);
+
+    WCHAR *wtitle = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]), TCL_INDEX_NONE, &ds);
     wcsncpy_s(ni.szInfoTitle, ARRAYSIZE(ni.szInfoTitle), wtitle, _TRUNCATE);
     Tcl_DStringSetLength(&ds, 0);
-  
-    /* Detail text. */
-    WCHAR *winfo = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]),
-                                         TCL_INDEX_NONE, &ds);
-    wcsncpy_s(ni.szInfo, ARRAYSIZE(ni.szInfo), winfo, _TRUNCATE);
+
+    WCHAR *wtext = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
+    wcsncpy_s(ni.szInfo, ARRAYSIZE(ni.szInfo), wtext, _TRUNCATE);
     Tcl_DStringFree(&ds);
-  
-    /*
-     * Set the version to support modern features.
-     */
+
     ni.uVersion = NOTIFYICON_VERSION_4;
-    Shell_NotifyIconW(NIM_SETVERSION, &ni);
-  
-    /* Show the notification. */
-    BOOL notifyOk = Shell_NotifyIconW(NIM_MODIFY, &ni);
-  
-    if (!notifyOk) {
-      /* Try fallback method without NIIF_USER flag. */
-      ni.dwInfoFlags = NIIF_INFO; /* Use system info icon as fallback. */
-      notifyOk = Shell_NotifyIconW(NIM_MODIFY, &ni);
-      
-        if (!notifyOk) {
-            char buf[64];
-            sprintf_s(buf, sizeof(buf), "Notification failed (error %lu) but tray icon preserved", GetLastError());
-            Tcl_AppendResult(interp, buf, NULL);
-            if (hScaledIcon && hScaledIcon != icoPtr->hIcon) {
-                DestroyIcon(hScaledIcon);
-            }
-            return TCL_ERROR;
-        }
+
+    if (!Shell_NotifyIconW(NIM_MODIFY, &ni)) {
+        char buf[64];
+        sprintf_s(buf, sizeof(buf),
+                  "Notification failed (error %lu)",
+                  GetLastError());
+        Tcl_AppendResult(interp, buf, NULL);
+        return TCL_ERROR;
     }
-  
-    /* Clean up scaled icon after Windows has copied the reference. */
-    if (hScaledIcon && hScaledIcon != icoPtr->hIcon) {
-        DestroyIcon(hScaledIcon);
-    }
-  
+
     return TCL_OK;
 }
+
 
 
 /*
