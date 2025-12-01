@@ -131,7 +131,7 @@ static void initColorTable()
 	lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
 	/*
-	 * These retains prevent a crash on macOS 10.15 Catalina.
+	 * These retains prevent a crash on some macOS versions.
 	 * See bug [3a4310ee].
 	 */
 	[darkAqua retain];
