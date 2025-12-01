@@ -1096,54 +1096,64 @@ WinSysNotifyCmd(
     }
 
     /*
-     * ---------------------------------------------------------------
-     *  AppUserModelID setup (preserves your original block)
-     * ---------------------------------------------------------------
+     *
+     *  AppUserModelID setup. 
+     *  We only set the AppID *once* the first time this routine runs.
+     *  Setting it after the tray icon exists breaks callbacks + image.
+     * 
      */
-    Tk_Window mainWin = Tk_MainWindow(interp);
-    if (mainWin == NULL) {
-        Tcl_AppendResult(interp, "No main window available", NULL);
-        return TCL_ERROR;
-    }
-    if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
-        Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
-        return TCL_ERROR;
-    }
-
-    const char *titleUtf = Tcl_GetStringResult(interp);
-    Tcl_DString dsTitle;
-    Tcl_DStringInit(&dsTitle);
-    WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
-
-    WCHAR appid[256];
-    if (titleW[0]) {
-        wcsncpy_s(appid, 256, titleW, _TRUNCATE);
-    } else {
-        wcscpy_s(appid, 256, L"TclApp");
-    }
-    Tcl_DStringFree(&dsTitle);
-
-    for (WCHAR *p = appid; *p; p++) {
-        if (*p == L' ' || *p == L'\t') {
-            *p = L'_';
+    static int appidSet = 0;
+    if (!appidSet) {
+        Tk_Window mainWin = Tk_MainWindow(interp);
+        if (mainWin == NULL) {
+            Tcl_AppendResult(interp, "No main window available", NULL);
+            return TCL_ERROR;
         }
+
+        if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
+            Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+            return TCL_ERROR;
+        }
+
+        const char *titleUtf = Tcl_GetStringResult(interp);
+        Tcl_DString dsTitle;
+        Tcl_DStringInit(&dsTitle);
+        WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
+
+        WCHAR appid[256];
+        if (titleW[0]) {
+            wcsncpy_s(appid, 256, titleW, _TRUNCATE);
+        } else {
+            wcscpy_s(appid, 256, L"TclApp");
+        }
+        Tcl_DStringFree(&dsTitle);
+
+        /* Sanitize the title string. appID cannot support spaces. */
+        for (WCHAR *p = appid; *p; p++) {
+            if (*p == L' ' || *p == L'\t')
+                *p = L'_';
+        }
+
+        SetCurrentProcessExplicitAppUserModelID(appid);
+        appidSet = 1;
     }
-    SetCurrentProcessExplicitAppUserModelID(appid);
 
     /*
-     * ---------------------------------------------------------------
-     *  Ensure the tray icon exists (added at startup elsewhere)
-     *  DO NOT modify uCallbackMessage here! Only update NIF_INFO
-     * ---------------------------------------------------------------
+     * Send the notification balloon.   DO NOT touch uCallbackMessage 
+	 * or NIF_MESSAGE — keep callbacks alive. Display
+	 * the system tray icon with the NIIF_USER flag - it will
+	 * display in the body of the notification window but NOT
+	 * the titlebar. This is a limitation of this API when customizing
+	 * the titlebar string with AppUserModelID.
      */
-    // Only modify NIF_INFO for the notification
+	 
     NOTIFYICONDATAW ni;
     ZeroMemory(&ni, sizeof(ni));
     ni.cbSize = sizeof(ni);
     ni.hWnd  = icoInterpPtr->hwnd;
     ni.uID   = icoPtr->id;
-    ni.uFlags = NIF_INFO;            // Only update the notification
-    ni.dwInfoFlags = NIIF_NONE;      // No body icon
+    ni.uFlags = NIF_INFO;        
+    ni.dwInfoFlags = NIIF_USER;
 
     Tcl_DString ds;
     Tcl_DStringInit(&ds);
@@ -1219,8 +1229,9 @@ WinIcoInit(
 }
 
 /*
- * Local variables:
+ * Local Variables:
  * mode: c
- * indent-tabs-mode: nil
+ * c-basic-offset: 4
+ * fill-column: 78
  * End:
  */
