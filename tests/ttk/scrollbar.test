@@ -64,8 +64,13 @@ test scrollbar-swapout-3 "... or -class is specified." -constraints {
     destroy .sb
 }
 
+#
+# COMMON TEST SETUP
+#
+set widgetCreateResult [ttk::scrollbar .tsb]
+
 test scrollbar-1.0 "Setup" -body {
-    ttk::scrollbar .tsb
+    set widgetCreateResult
 } -result .tsb
 
 test scrollbar-1.1 "Set method" -body {
@@ -158,4 +163,6 @@ test scrollbar-11.2 "style command" -body {
 # TESTFILE CLEANUP
 #
 
+unset widgetCreateResult
+deleteWindows
 tcltest::cleanupTests
