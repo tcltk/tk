@@ -1096,11 +1096,9 @@ WinSysNotifyCmd(
     }
 
     /*
-     *
      *  AppUserModelID setup. 
      *  We only set the AppID *once* the first time this routine runs.
-     *  Setting it after the tray icon exists breaks callbacks + image.
-     * 
+     *  Setting it after the tray icon exists breaks callbacks + image. 
      */
     static int appidSet = 0;
     if (!appidSet) {
@@ -1140,11 +1138,11 @@ WinSysNotifyCmd(
 
     /*
      * Send the notification balloon.   DO NOT touch uCallbackMessage 
-	 * or NIF_MESSAGE — keep callbacks alive. Display
-	 * the system tray icon with the NIIF_USER flag - it will
-	 * display in the body of the notification window but NOT
-	 * the titlebar. This is a limitation of this API when customizing
-	 * the titlebar string with AppUserModelID.
+     * or NIF_MESSAGE — keep callbacks alive. Display
+     * the system tray icon with the NIIF_USER flag - it will
+     * display in the body of the notification window but NOT
+     * the titlebar. This is a limitation of this API when customizing
+     * the titlebar string with AppUserModelID.
      */
 	 
     NOTIFYICONDATAW ni;
