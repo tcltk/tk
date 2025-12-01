@@ -23,8 +23,13 @@ resetWindows
 # TESTS
 #
 
-test combobox-1.0 "Combobox tests -- setup" -body {
-    ttk::combobox .cb
+#
+# COMMON TEST SETUP
+#
+set widgetCreateResult [ttk::combobox .cb]
+
+test combobox-1.0 "Widget creation" -body {
+    set widgetCreateResult
 } -result .cb
 
 test combobox-1.1 "Bad -values list" -body {
@@ -81,7 +86,11 @@ test combobox-2.8 "current -- set to end index in an empty combobox" -body {
     .cb current end
 } -returnCodes error -result {index "end" out of range}
 
-test combobox-2.end "Cleanup" -body { destroy .cb }
+#
+# COMMON TEST CLEANUP
+#
+destroy .cb
+unset widgetCreateResult
 
 test combobox-3 "Read postoffset value dynamically from current style" -body {
     ttk::combobox .cb -values [list a b c] -style "DerivedStyle.TCombobox"

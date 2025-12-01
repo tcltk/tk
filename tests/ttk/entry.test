@@ -39,8 +39,13 @@ proc bgerror {error} {
 # TESTS
 #
 
+#
+# COMMON TEST SETUP
+#
+set widgetCreateResult [ttk::entry .e]
+
 test entry-1.1 "Create entry widget" -body {
-    ttk::entry .e
+    set widgetCreateResult
 } -result .e
 
 test entry-1.2 "Insert" -body {
@@ -439,5 +444,7 @@ test entry-12.2 "style command" -body {
 # TESTFILE CLEANUP
 #
 
+unset widgetCreateResult
+deleteWindows
 testutils forget entry scroll
 tcltest::cleanupTests

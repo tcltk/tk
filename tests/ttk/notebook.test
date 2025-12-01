@@ -381,13 +381,19 @@ test notebook-6.12 "Hide and re-add a tab" -setup {
 unset nb
 
 #
+# COMMON TEST SETUP
+#
+# For tests 7.*
+#
+pack [ttk::notebook .nb]
+for {set i 0} {$i < 5} {incr i} {
+    .nb add [ttk::frame .nb.f$i] -text "$i"
+}
+
+#
 # Insert:
 #
 test notebook-7.0 "insert - setup" -body {
-    pack [ttk::notebook .nb]
-    for {set i 0} {$i < 5} {incr i} {
-	.nb add [ttk::frame .nb.f$i] -text "$i"
-    }
     .nb select .nb.f1
     list [.nb index current] [.nb tabs]
 } -result [list 1 [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]]
@@ -620,4 +626,5 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
 #
 
 unset widgetCreateResult
+deleteWindows
 tcltest::cleanupTests
