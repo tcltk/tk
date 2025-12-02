@@ -3,13 +3,18 @@
 # Derived from core test suite entry-19.1 through entry-19.20
 #
 
-# NOTE
+# NOTES
 #
-# Various consecutive validation tests build each one upon the previous.
-# This leads to:
-# - test failures if one of them is skipped, e.g. through an invocation using
-#   the tcltest options "-match", "-skip" or "-limitconstraints 1".
-# - cascading failures if an intermediate test doesn't pass.
+# * Various consecutive validation tests build each one upon the previous.
+#   This leads to:
+#   - test failures if one of them is skipped, e.g. through an invocation using
+#     the tcltest options "-match", "-skip" or "-limitconstraints 1".
+#   - cascading failures if an intermediate test doesn't pass.
+#
+# * The local test constraint "ttkEntry" (below) lets the test author switch
+#   between using the ttk entry and the core Tk entry for these tests. Setting
+#   this constraint to 0 (false) leads to a setting 1 (true) for the local test
+#   constraint "coreEntry".
 #
 
 #
@@ -36,7 +41,7 @@ testutils import entry
 # LOCAL TEST CONSTRAINTS
 #
 
-testConstraint ttkEntry 1
+testConstraint ttkEntry 1; # see section NOTES above
 testConstraint coreEntry [expr {![testConstraint ttkEntry]}]
 testConstraint NA 0
 
@@ -44,12 +49,15 @@ testConstraint NA 0
 # COMMON TEST SETUP
 #
 
+if {[testConstraint ttkEntry]} {
+    rename entry {}
+    interp alias {} entry {} ttk::entry
+}
+
 foreach i {1 2 3 4} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
 
-rename entry {}
-interp alias {} entry {} ttk::entry
 destroy .e
 catch {unset textVar}
 unset -nocomplain validationData; # not necessary
