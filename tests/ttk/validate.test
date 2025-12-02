@@ -247,7 +247,6 @@ test validate-2.1 "Validation script changes value" -body {
 #
 # COMMON TEST CLEANUP
 #
-
 destroy .e
 catch {unset textVar}
 
@@ -266,13 +265,14 @@ test validate-2.2 "configure in -validatecommand" -body {
 ### invalid state behavior
 #
 
+#
+# COMMON TEST SETUP
+#
+set E "123"
+ttk::entry .e -validatecommand {string is integer -strict %P} \
+	-validate all -textvariable E
+
 test validate-3.0 "Setup" -body {
-    set ::E "123"
-    ttk::entry .e \
-	-validatecommand {string is integer -strict %P} \
-	-validate all \
-	-textvariable ::E \
-	;
     return [list [.e get] [.e state]]
 } -result [list 123 {}]
 
@@ -309,8 +309,6 @@ test validate-3.6 "...until the value becomes valid" -constraints NA -body {
     return [list [.e get] [.e state]]
 } -result [list 1234 {}]
 
-test validate-3.last "Cleanup" -body { destroy .e }
-
 #
 # TESTFILE CLEANUP
 #
@@ -318,6 +316,7 @@ test validate-3.last "Cleanup" -body { destroy .e }
 foreach i {1 2 3 4} {
     unset validateCmd$i
 }
-unset i
+unset i E
 testutils forget entry
+deleteWindows
 tcltest::cleanupTests
