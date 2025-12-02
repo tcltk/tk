@@ -662,7 +662,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
 	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -loleacc -lole32 -loleaut32 -lwinspool -luxtheme -luiautomationcore"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -851,7 +851,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    LINKBIN="link"
 	fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib uxtheme.lib oleacc.lib ole32.lib uiautomationcore.lib"
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
 	SHLIB_LD_LIBS='${LIBS}'
@@ -991,10 +991,10 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_WITH_TCL], [
-    if test -d ../../tcl9.0$1/win;  then
-	TCL_BIN_DEFAULT=../../tcl9.0$1/win
+    if test -d ../../tcl9.1$1/win;  then
+	TCL_BIN_DEFAULT=../../tcl9.1$1/win
     else
-	TCL_BIN_DEFAULT=../../tcl9.0/win
+	TCL_BIN_DEFAULT=../../tcl9.1/win
     fi
 
     AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 9.x binaries from DIR],

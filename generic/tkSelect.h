@@ -25,14 +25,10 @@
 typedef struct TkSelectionInfo {
     Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Tk_Window owner;		/* Current owner of this selection. */
-#if TCL_MAJOR_VERSION > 8
     unsigned long serial;	/* Serial number of last XSelectionSetOwner
 				 * request made to server for this selection
 				 * (used to filter out redundant
 				 * SelectionClear events). */
-#else
-    int serial;
-#endif
     Time time;			/* Timestamp used to acquire selection. */
     Tk_LostSelProc *clearProc;	/* Procedure to call when owner loses
 				 * selection. */

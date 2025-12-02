@@ -4,7 +4,7 @@
  *	tkUnixSysNotify.c implements a "sysnotify" Tcl command which
  *	permits one to post system notifications based on the libnotify API.
  *
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2020 Kevin Walzer.
  * Copyright © 2020 Christian Werner for runtime linking
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -47,7 +47,7 @@ TCL_DECLARE_MUTEX(ln_mutex);
  */
 
 static Tcl_CmdDeleteProc SysNotifyDeleteCmd;
-static Tcl_ObjCmdProc SysNotifyCmd;
+static Tcl_ObjCmdProc2 SysNotifyCmd;
 
 /*
  *----------------------------------------------------------------------
@@ -102,7 +102,7 @@ static int
 SysNotifyCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     const char *title;
@@ -218,7 +218,7 @@ SysNotify_Init(
     Tcl_MutexUnlock(&ln_mutex);
     if (!notify_init) return TCL_OK;
 
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd,
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd,
 	    interp, SysNotifyDeleteCmd);
     return TCL_OK;
 }

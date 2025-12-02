@@ -3,19 +3,19 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[9.0])
+AC_INIT([tk],[9.1])
 AC_CONFIG_SRCDIR([../generic/tk.h])
-AC_PREREQ([2.69])
+AC_PREREQ([2.72])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=9.0
+TK_VERSION=9.1
 TK_MAJOR_VERSION=9
-TK_MINOR_VERSION=0
-TK_PATCH_LEVEL=".4"
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL="a1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -222,45 +222,23 @@ TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
-eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
-eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
-if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
-else
- eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
-fi
-else
 eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
 fi
-fi
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
-else
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
-fi
+eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
-TK_LIB_FLAG="-l"
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-fi
+TK_LIB_FLAG="-ltcl9"
 eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}tk${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
-else
-    eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
-fi
+eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
 eval "TK_BUILD_STUB_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_STUB_LIB_FLAG}\""
 
 TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"
@@ -307,8 +285,6 @@ AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
-AC_SUBST(TK_DLL_FILE_TCL8)
-AC_SUBST(TK_DLL_FILE_TCL9)
 AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)

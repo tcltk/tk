@@ -6,7 +6,7 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2015 Kevin Walzer.
  * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -26,6 +26,7 @@
 #endif
 */
 
+extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
  */
@@ -164,8 +165,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width, height, flags);
-    }
 
+	/*Resize accessibility frame if window is resized.*/
+	TKContentView *view = [w contentView];
+	if ([view isKindOfClass:[TKContentView class]]) {
+	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
+		if  (movedOnly) {
+		    NSAccessibilityPostNotification(element, NSAccessibilityMovedNotification);
+		} else {
+		    NSAccessibilityPostNotification(element, NSAccessibilityResizedNotification);
+		}
+	    }
+	}
+    }
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -1250,6 +1262,17 @@ static const char *const accentNames[] = {
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
     // Force a redraw of the view.
     [self setFrameSize:self.frame.size];
+
+    /*
+     * Create the *Tglswitch*.trough and *Tglswitch*.slider
+     * elements for the Toggleswitch* styles if necessary
+     */
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    int code = Tcl_EvalEx(interp, "ttk::toggleswitch::CondUpdateElements",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -1382,6 +1405,44 @@ static const char *const accentNames[] = {
     CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
 }
+
+/*Add support for accessibility in TKContentView.*/
+
+NSMutableArray *_tkAccessibleElements;
+
++ (BOOL)isAccessibilityElement {
+    return NO;
+}
+
+- (NSArray *)accessibilityChildren {
+    return [_tkAccessibleElements copy];
+}
+
+
+- (void)accessibilityChildrenChanged {
+    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return YES;
+}
+
+- (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
+
+    if (!_tkAccessibleElements) {
+	_tkAccessibleElements = [[NSMutableArray alloc ] init];
+    }
+
+    if (element) {
+	[_tkAccessibleElements addObject:element];
+	[self accessibilityChildrenChanged];
+    }
+}
+
+- (void)setAccessibilityParentView:(NSView *)parentView {
+    [self setAccessibilityParent:self];
+}
+
 
 @end
 

@@ -8,7 +8,7 @@
  * Copyright © 1994-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2010 Kevin Walzer.
  * Copyright © 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -7243,17 +7243,16 @@ XSetInputFocus(
  *----------------------------------------------------------------------
  */
 
-int
+size_t
 TkpChangeFocus(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
     int force)			/* Non-zero means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-    if (!winPtr ||
-	(winPtr->flags & TK_ALREADY_DEAD) ||
-	!Tk_IsMapped(winPtr) ||
-	winPtr->atts.override_redirect) {
+    if (!winPtr || (winPtr->flags & TK_ALREADY_DEAD)
+	    || !Tk_IsMapped(winPtr) ||
+	    winPtr->atts.override_redirect) {
 	return 0;
     }
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {

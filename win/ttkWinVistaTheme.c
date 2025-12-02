@@ -1,5 +1,5 @@
 /*
- * Tk theme engine which uses the Windows XP "Visual Styles" API
+ * Tk theme engine which uses the Windows "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
  *
  * Copyright © 2003 Georgios Petasis, petasis@iit.demokritos.gr.
@@ -20,127 +20,29 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 #include "ttk/ttkThemeInt.h"
-
-typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
-		 LPCWSTR pszClassList);
-typedef HRESULT (STDAPICALLTYPE CloseThemeDataProc)(HTHEME hTheme);
-typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
-		 HDC hdc, int iPartId, int iStateId, const RECT *pRect,
-		 OPTIONAL const RECT *pClipRect);
-typedef HRESULT (STDAPICALLTYPE DrawThemeEdgeProc)(HTHEME hTheme,
-		 HDC hdc, int iPartId, int iStateId, const RECT *pDestRect,
-		 unsigned int uEdge, unsigned int uFlags,
-		 OPTIONAL RECT *pContentRect);
-typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
-		 int iPartId, int iStateId,
-		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
-typedef int     (STDAPICALLTYPE GetThemeSysSizeProc)(HTHEME,int);
-/* GetThemeTextExtent and DrawThemeText only used with BROKEN_TEXT_ELEMENT */
-typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, const RECT *pBoundingRect, RECT *pExtent);
-typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
-typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(void);
-typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(void);
-
-typedef struct
-{
-    OpenThemeDataProc			*OpenThemeData;
-    CloseThemeDataProc			*CloseThemeData;
-    GetThemePartSizeProc		*GetThemePartSize;
-    GetThemeSysSizeProc			*GetThemeSysSize;
-    DrawThemeBackgroundProc		*DrawThemeBackground;
-    DrawThemeEdgeProc			*DrawThemeEdge;
-    DrawThemeTextProc		        *DrawThemeText;
-    GetThemeTextExtentProc		*GetThemeTextExtent;
-    IsThemeActiveProc			*IsThemeActive;
-    IsAppThemedProc			*IsAppThemed;
-
-    HWND                                stubWindow;
-} XPThemeProcs;
-
-typedef struct
-{
-    HINSTANCE hlibrary;
-    XPThemeProcs *procs;
-} XPThemeData;
+#ifdef _MSC_VER
+#   pragma comment (lib, "uxtheme.lib")
+#endif
 
 /*
- *----------------------------------------------------------------------
- *
- * LoadXPThemeProcs --
- *	Initialize XP theming support.
- *
- *	XP theme support is included in UXTHEME.DLL
- *	We dynamically load this DLL at runtime instead of linking
- *	to it at build-time.
- *
- * Returns:
- *	A pointer to an XPThemeProcs table if successful, NULL otherwise.
- */
-
-static XPThemeProcs *
-LoadXPThemeProcs(HINSTANCE *phlib)
-{
-    /*
-     * Load the library "uxtheme.dll", where the native widget
-     * drawing routines are implemented.  This will only succeed
-     * if we are running at least on Windows XP.
-     */
-    HINSTANCE handle;
-    *phlib = handle = LoadLibraryW(L"uxtheme.dll");
-    if (handle != 0) {
-	/*
-	 * We have successfully loaded the library. Proceed in storing the
-	 * addresses of the functions we want to use.
-	 */
-	XPThemeProcs *procs = (XPThemeProcs *)ckalloc(sizeof(XPThemeProcs));
-#define LOADPROC(name) \
-	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
-
-	if (LOADPROC(OpenThemeData)
-	    && LOADPROC(CloseThemeData)
-	    && LOADPROC(GetThemePartSize)
-	    && LOADPROC(GetThemeSysSize)
-	    && LOADPROC(DrawThemeBackground)
-	    && LOADPROC(DrawThemeEdge)
-	    && LOADPROC(GetThemeTextExtent)
-	    && LOADPROC(DrawThemeText)
-	    && LOADPROC(IsThemeActive)
-	    && LOADPROC(IsAppThemed)) {
-	    return procs;
-	}
-#undef LOADPROC
-	ckfree(procs);
-    }
-    return 0;
-}
-
-/*
- * XPThemeDeleteProc --
+ * VistaThemeDeleteProc --
  *
  *      Release any theme allocated resources.
  */
 
 static void
-XPThemeDeleteProc(
-    void *clientData)
+VistaThemeDeleteProc(
+    TCL_UNUSED(void *))
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
-    FreeLibrary(themeData->hlibrary);
-    ckfree(clientData);
 }
 
 static int
-XPThemeEnabled(
+VistaThemeEnabled(
     TCL_UNUSED(Ttk_Theme),
-    void *clientData)
+    TCL_UNUSED(void *))
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
-    int active = themeData->procs->IsThemeActive();
-    int themed = themeData->procs->IsAppThemed();
+    int active = IsThemeActive();
+    int themed = IsAppThemed();
 
     return (active && themed);
 }
@@ -161,7 +63,7 @@ BoxToRect(Ttk_Box b)
 }
 
 /*
- * Map Tk state bitmaps to XP style enumerated values.
+ * Map Tk state bitmaps to Vista style enumerated values.
  */
 static const Ttk_StateTable null_statemap[] = { {0,0,0} };
 
@@ -350,7 +252,7 @@ static const Ttk_StateTable tabitem_statemap[] =
  *
  * The following structure is passed as the 'clientData' pointer
  * to most elements in this theme.  It contains data relevant
- * to a single XP Theme "part".
+ * to a single Vista Theme "part".
  *
  * <<NOTE-GetThemeMargins>>:
  *	In theory, we should be call GetThemeMargins(...TMT_CONTENTRECT...)
@@ -366,14 +268,14 @@ static const Ttk_StateTable tabitem_statemap[] =
  *	BP_PUSHBUTTONS).  Set the IGNORE_THEMESIZE flag to skip this call.
  */
 
-typedef struct	/* XP element specifications */
+typedef struct	/* Vista element specifications */
 {
     const char	*elementName;	/* Tk theme engine element name */
     const Ttk_ElementSpec *elementSpec;
 				/* Element spec (usually GenericElementSpec) */
     LPCWSTR	className;	/* Windows window class name */
     int	partId;		/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
-    const Ttk_StateTable *statemap;	/* Map Tk states to XP states */
+    const Ttk_StateTable *statemap;	/* Map Tk states to Vista states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
     unsigned	flags;
 #   define	IGNORE_THEMESIZE 0x80000000U /* See NOTE-GetThemePartSize */
@@ -389,7 +291,7 @@ typedef struct
      * Static data, initialized when element is registered:
      */
     const ElementInfo	*info;
-    XPThemeProcs *procs;	/* Pointer to theme procedure table */
+    HWND parentHwnd;
 
     /*
      * Dynamic data, allocated by InitElementData:
@@ -404,11 +306,11 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, const ElementInfo *info)
+NewElementData(HWND hwnd, const ElementInfo *info)
 {
-    ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
+    ElementData *elementData = (ElementData *)Tcl_Alloc(sizeof(ElementData));
 
-    elementData->procs = procs;
+    elementData->parentHwnd = hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
 
@@ -424,12 +326,12 @@ static void DestroyElementData(void *clientData)
 {
     ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree((void *)elementData->info->statemap);
-	ckfree((void *)elementData->info->className);
-	ckfree((void *)elementData->info->elementName);
-	ckfree((void *)elementData->info);
+	Tcl_Free((void *)elementData->info->statemap);
+	Tcl_Free((void *)elementData->info->className);
+	Tcl_Free((void *)elementData->info->elementName);
+	Tcl_Free((void *)elementData->info);
     }
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -451,11 +353,11 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
     } else  {
-	elementData->hwnd = elementData->procs->stubWindow;
+	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = elementData->procs->OpenThemeData(
-	elementData->hwnd, elementData->info->className);
+    elementData->hTheme = OpenThemeData(
+	    elementData->hwnd, elementData->info->className);
 
     if (!elementData->hTheme) {
 	return 0;
@@ -473,7 +375,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 static void
 FreeElementData(ElementData *elementData)
 {
-    elementData->procs->CloseThemeData(elementData->hTheme);
+    CloseThemeData(elementData->hTheme);
     if (elementData->drawable != 0) {
 	TkWinReleaseDrawableDC(
 	    elementData->drawable, elementData->hDC, &elementData->dcState);
@@ -483,7 +385,7 @@ FreeElementData(ElementData *elementData)
 /*----------------------------------------------------------------------
  * +++ Generic element implementation.
  *
- * Used for elements which are handled entirely by the XP Theme API,
+ * Used for elements which are handled entirely by the Vista Theme API,
  * such as radiobutton and checkbutton indicators, scrollbar arrows, etc.
  */
 
@@ -504,7 +406,7 @@ static void GenericElementSize(
     }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	result = elementData->procs->GetThemePartSize(
+	result = GetThemePartSize(
 	    elementData->hTheme,
 	    NULL,
 	    elementData->info->partId,
@@ -548,7 +450,7 @@ static void GenericElementDraw(
     }
     rc = BoxToRect(b);
 
-    elementData->procs->DrawThemeBackground(
+    DrawThemeBackground(
 	elementData->hTheme,
 	elementData->hDC,
 	elementData->info->partId,
@@ -571,7 +473,7 @@ static const Ttk_ElementSpec GenericElementSpec =
 /*----------------------------------------------------------------------
  * +++ Sized element implementation.
  *
- * Used for elements which are handled entirely by the XP Theme API,
+ * Used for elements which are handled entirely by the Vista Theme API,
  * but that require a fixed size adjustment.
  * Note that GetThemeSysSize calls through to GetSystemMetrics
  */
@@ -590,9 +492,9 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
 
-    *widthPtr = elementData->procs->GetThemeSysSize(NULL,
+    *widthPtr = GetThemeSysSize(NULL,
 	(elementData->info->flags >> 8) & 0xff);
-    *heightPtr = elementData->procs->GetThemeSysSize(NULL,
+    *heightPtr = GetThemeSysSize(NULL,
 	elementData->info->flags & 0xff);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
@@ -655,7 +557,7 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
 
     /*
@@ -669,7 +571,7 @@ static void ThumbElementDraw(
 	return;
     }
 
-    elementData->procs->DrawThemeBackground(elementData->hTheme,
+    DrawThemeBackground(elementData->hTheme,
 	elementData->hDC, elementData->info->partId, stateId,
 	&rc, NULL);
 
@@ -819,7 +721,7 @@ static void TabElementDraw(
 	/*
 	 * Draw the border and fill into rc
 	 */
-	elementData->procs->DrawThemeBackground(
+	DrawThemeBackground(
 	    elementData->hTheme, elementData->hDC, partId, stateId, &rc, NULL);
     } else {
 	/*
@@ -827,7 +729,7 @@ static void TabElementDraw(
 	 */
 	RECT rc2 = rc;
 	--rc2.top; --rc2.left; ++rc2.bottom; ++rc2.right;
-	elementData->procs->DrawThemeBackground(
+	DrawThemeBackground(
 	    elementData->hTheme, elementData->hDC, partId, stateId, &rc2, &rc);
     }
 
@@ -839,17 +741,17 @@ static void TabElementDraw(
 	case TTK_STICK_S:
 	    break;
 	case TTK_STICK_N:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_RIGHT|BF_BOTTOM, NULL);
 	    break;
 	case TTK_STICK_E:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_TOP|BF_BOTTOM, NULL);
 	    break;
 	case TTK_STICK_W:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_TOP|BF_RIGHT|BF_BOTTOM, NULL);
 	    break;
@@ -912,118 +814,6 @@ static const Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#ifdef BROKEN_TEXT_ELEMENT
-
-/*
- *----------------------------------------------------------------------
- * Text element (does not work yet).
- *
- * According to "Using Windows XP Visual Styles",  we need to select
- * a font into the DC before calling DrawThemeText().
- * There's just no easy way to get an HFONT out of a Tk_Font.
- * Maybe GetThemeFont() would work?
- *
- */
-
-typedef struct
-{
-    Tcl_Obj *textObj;
-    Tcl_Obj *fontObj;
-} TextElement;
-
-static const Ttk_ElementOptionSpec TextElementOptions[] =
-{
-    { "-text", TK_OPTION_STRING,
-	offsetof(TextElement,textObj), "" },
-    { "-font", TK_OPTION_FONT,
-	offsetof(TextElement,fontObj), DEFAULT_FONT },
-    { NULL }
-};
-
-static void TextElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    TextElement *element = elementRecord;
-    ElementData *elementData = clientData;
-    RECT rc = {0, 0};
-    HRESULT hr = S_OK;
-    const char *src;
-    Tcl_Size len;
-    Tcl_DString ds;
-
-    if (!InitElementData(elementData, tkwin, 0)) {
-	return;
-    }
-
-    src = Tcl_GetStringFromObj(element->textObj, &len);
-    Tcl_DStringInit(&ds);
-    hr = elementData->procs->GetThemeTextExtent(
-	    elementData->hTheme,
-	    elementData->hDC,
-	    elementData->info->partId,
-	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    Tcl_UtfToWCharDString(src, len, &ds),
-	    -1,
-	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
-	    NULL,
-	    &rc);
-
-    if (SUCCEEDED(hr)) {
-	*widthPtr = rc.right - rc.left;
-	*heightPtr = rc.bottom - rc.top;
-    }
-    if (*widthPtr < 80) *widthPtr = 80;
-    if (*heightPtr < 20) *heightPtr = 20;
-
-    Tcl_DStringFree(&ds);
-    FreeElementData(elementData);
-}
-
-static void TextElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
-{
-    TextElement *element = elementRecord;
-    ElementData *elementData = clientData;
-    RECT rc = BoxToRect(b);
-    HRESULT hr = S_OK;
-    const char *src;
-    Tcl_Size len;
-    Tcl_DString ds;
-
-    if (!InitElementData(elementData, tkwin, d)) {
-	return;
-    }
-
-    src = Tcl_GetStringFromObj(element->textObj, &len);
-    Tcl_DStringInit(&ds);
-    hr = elementData->procs->DrawThemeText(
-	    elementData->hTheme,
-	    elementData->hDC,
-	    elementData->info->partId,
-	    Ttk_StateTableLookup(elementData->info->statemap, state),
-	    Tcl_UtfToWCharDString(src, len, &ds),
-	    -1,
-	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
-	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
-	    &rc);
-
-    Tcl_DStringFree(&ds);
-    FreeElementData(elementData);
-}
-
-static const Ttk_ElementSpec TextElementSpec =
-{
-    TK_STYLE_VERSION_2,
-    sizeof(TextElement),
-    TextElementOptions,
-    TextElementSize,
-    TextElementDraw
-};
-
-#endif	/* BROKEN_TEXT_ELEMENT */
-
 /*----------------------------------------------------------------------
  * +++ Widget layouts:
  */
@@ -1071,7 +861,7 @@ TTK_LAYOUT("Vertical.TScale",
 TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
- * +++ XP element info table:
+ * +++ Vista element info table:
  */
 
 #define PAD(l,t,r,b) {l,t,r,b}
@@ -1166,10 +956,6 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-#ifdef BROKEN_TEXT_ELEMENT
-    { "Labelframe.text", &TextElementSpec, L"BUTTON",
-	BP_GROUPBOX, groupbox_statemap, NOPAD, 0 },
-#endif
     { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
 #undef PAD
@@ -1233,14 +1019,14 @@ Ttk_CreateVsapiElement(
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
+    HWND hwnd = (HWND)clientData;
     ElementInfo *elementPtr = NULL;
     void *elementData;
     LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
-    int flags = 0;
+    unsigned flags = 0;
     Tcl_Size length = 0;
     char *name;
     LPWSTR wname;
@@ -1299,14 +1085,14 @@ Ttk_CreateVsapiElement(
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.left = pad.right = tmp;
+		pad.left = pad.right = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_HEIGHT:
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.top = pad.bottom = tmp;
+		pad.top = pad.bottom = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_SYSSIZE:
@@ -1345,8 +1131,8 @@ Ttk_CreateVsapiElement(
 	    goto retErr;
 	}
 	/* we over-allocate to ensure there is a terminating entry */
-	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable) * (count + 1));
-	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
+	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable) * ((size_t)count + 1));
+	memset(stateTable, 0, sizeof(Ttk_StateTable) * ((size_t)count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
 	    status = Ttk_GetStateSpecFromObj(interp, specs[n], &spec);
@@ -1358,33 +1144,33 @@ Ttk_CreateVsapiElement(
 	    }
 	}
 	if (status != TCL_OK) {
-	    ckfree(stateTable);
+	    Tcl_Free(stateTable);
 	    Tcl_DStringFree(&classBuf);
 	    return status;
 	}
     } else {
-	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable));
+	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable));
 	memset(stateTable, 0, sizeof(Ttk_StateTable));
     }
 
-    elementPtr = (ElementInfo *)ckalloc(sizeof(ElementInfo));
+    elementPtr = (ElementInfo *)Tcl_Alloc(sizeof(ElementInfo));
     elementPtr->elementSpec = elementSpec;
     elementPtr->partId = partId;
     elementPtr->statemap = stateTable;
     elementPtr->padding = pad;
-    elementPtr->flags = HEAP_ELEMENT | flags;
+    elementPtr->flags = HEAP_ELEMENT | (unsigned)flags;
 
     /* set the element name to an allocated copy */
-    name = (char *)ckalloc(strlen(elementName) + 1);
+    name = (char *)Tcl_Alloc(strlen(elementName) + 1);
     strcpy(name, elementName);
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = (LPWSTR)ckalloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
+    wname = (LPWSTR)Tcl_Alloc((size_t)Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(themeData->procs, elementPtr);
+    elementData = NewElementData(hwnd, elementPtr);
     Ttk_RegisterElement(NULL,
 	theme, elementName, elementPtr->elementSpec, elementData);
 
@@ -1403,25 +1189,16 @@ retErr:
  */
 
 MODULE_SCOPE int
-TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
+TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
-    XPThemeData *themeData;
-    XPThemeProcs *procs;
-    HINSTANCE hlibrary;
-    Ttk_Theme themePtr, parentPtr, vistaPtr;
+    Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
-
-    procs = LoadXPThemeProcs(&hlibrary);
-    if (!procs) {
-	return TCL_ERROR;
-    }
-    procs->stubWindow = hwnd;
 
     /*
      * Create the new style engine.
      */
     parentPtr = Ttk_GetTheme(interp, "winnative");
-    themePtr = Ttk_CreateTheme(interp, "xpnative", parentPtr);
+    themePtr = Ttk_CreateTheme(interp, "vista", parentPtr);
 
     if (!themePtr) {
 	return TCL_ERROR;
@@ -1431,31 +1208,15 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = (XPThemeData *)ckalloc(sizeof(XPThemeData));
-    themeData->procs = procs;
-    themeData->hlibrary = hlibrary;
-
-    Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, themeData);
-    Ttk_RegisterCleanup(interp, themeData, XPThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
-
-    /*
-     * Create the vista theme on suitable platform versions and set the theme
-     * enable function. The theme itself is defined in script.
-     */
-
-    if (TkWinGetPlatformTheme() == TK_THEME_WIN_VISTA) {
-	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
-	if (vistaPtr) {
-	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, themeData);
-	}
-    }
+    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, hwnd);
+    Ttk_RegisterCleanup(interp, hwnd, VistaThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
 
     /*
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	void *clientData = NewElementData(procs, infoPtr);
+	void *clientData = NewElementData(hwnd, infoPtr);
 	Ttk_RegisterElement(NULL,
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
@@ -1468,7 +1229,7 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
-    Tcl_PkgProvide(interp, "ttk::theme::xpnative", TTK_VERSION);
+    Tcl_PkgProvide(interp, "ttk::theme::vista", TTK_VERSION);
 
     return TCL_OK;
 }

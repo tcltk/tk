@@ -201,6 +201,8 @@ static const TkCmd commands[] = {
     {NULL,		NULL,			0}
 };
 
+extern int TkAccessibility_Init(Tcl_Interp *interp);
+
 /*
  * Forward declarations to functions defined later in this file:
  */
@@ -1046,16 +1048,14 @@ TkCreateMainWindow(
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
 #endif
-	;
+		;
 	if (info.isNativeObjectProc == 2) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
-		    info.objProc2, (void *)
-		    version, NULL);
+		    info.objProc2, (void *)version, NULL);
 
 	} else {
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		version, NULL);
+	    Tcl_CreateObjCommand(interp, "::tk::build-info",
+		    info.objProc, (void *)version, NULL);
 	}
     }
 
@@ -3224,6 +3224,14 @@ Initialize(
      */
 
     TkInitEmbeddedConfigurationInformation(interp);
+
+    /*
+     * Initalize accessibility module.
+     * Must do this early because it is bound to <Map> events,
+     * and will return an error if the commands are not
+     * available.
+     */
+     TkAccessibility_Init(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.

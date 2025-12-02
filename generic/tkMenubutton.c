@@ -164,7 +164,7 @@ static void		MenuButtonImageProc(void *clientData,
 static char *		MenuButtonTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static Tcl_ObjCmdProc MenuButtonWidgetObjCmd;
+static Tcl_ObjCmdProc2 MenuButtonWidgetObjCmd;
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
 			    Tcl_Obj *const objv[]);
@@ -233,7 +233,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->tkwin = tkwin;
     mbPtr->display = Tk_Display(tkwin);
     mbPtr->interp = interp;
-    mbPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    mbPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(mbPtr->tkwin), MenuButtonWidgetObjCmd, mbPtr,
 	    MenuButtonCmdDeletedProc);
     mbPtr->optionTable = optionTable;
@@ -322,7 +322,7 @@ static int
 MenuButtonWidgetObjCmd(
     void *clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
@@ -478,8 +478,6 @@ ConfigureMenuButton(
     Tcl_Obj *errorResult = NULL;
     int error;
     Tk_Image image;
-    int borderWidth, highlightWidth;
-    int padX, padY;
 
     /*
      * Eliminate any existing trace on variables monitored by the menubutton.
@@ -530,35 +528,6 @@ ConfigureMenuButton(
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->activeBorder);
 	} else {
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
-	}
-
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->borderWidthObj, &borderWidth);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->highlightWidthObj, &highlightWidth);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padXObj, &padX);
-	Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
-	if (borderWidth < 0) {
-	    borderWidth = 0;
-	    Tcl_DecrRefCount(mbPtr->borderWidthObj);
-	    mbPtr->borderWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->borderWidthObj);
-	}
-	if (highlightWidth < 0) {
-	    highlightWidth = 0;
-	    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
-	    mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->highlightWidthObj);
-	}
-	if (padX < 0) {
-	    padX = 0;
-	    Tcl_DecrRefCount(mbPtr->padXObj);
-	    mbPtr->padXObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->padXObj);
-	}
-	if (padY < 0) {
-	    padY = 0;
-	    Tcl_DecrRefCount(mbPtr->padYObj);
-	    mbPtr->padYObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*

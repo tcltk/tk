@@ -75,7 +75,7 @@ EXTERN COLORREF		TkWinGetBorderPixels(Tk_Window tkwin,
 EXTERN HDC		TkWinGetDrawableDC(Display *display, Drawable d,
 				TkWinDCState *state);
 /* 17 */
-EXTERN int		TkWinGetModifierState(void);
+EXTERN unsigned int	TkWinGetModifierState(void);
 /* 18 */
 EXTERN HPALETTE		TkWinGetSystemPalette(void);
 /* 19 */
@@ -117,8 +117,7 @@ EXTERN char *		TkAlignImageData(XImage *image, int alignment,
 				int bitOrder);
 /* 34 */
 EXTERN void		TkWinSetHINSTANCE(HINSTANCE hInstance);
-/* 35 */
-EXTERN int		TkWinGetPlatformTheme(void);
+/* Slot 35 is reserved */
 /* 36 */
 EXTERN LRESULT __stdcall TkWinChildProc(HWND hwnd, UINT message,
 				WPARAM wParam, LPARAM lParam);
@@ -333,7 +332,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinFillRect) (HDC dc, int x, int y, int width, int height, int pixel); /* 14 */
     COLORREF (*tkWinGetBorderPixels) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 15 */
     HDC (*tkWinGetDrawableDC) (Display *display, Drawable d, TkWinDCState *state); /* 16 */
-    int (*tkWinGetModifierState) (void); /* 17 */
+    unsigned int (*tkWinGetModifierState) (void); /* 17 */
     HPALETTE (*tkWinGetSystemPalette) (void); /* 18 */
     HWND (*tkWinGetWrapperWindow) (Tk_Window tkwin); /* 19 */
     int (*tkWinHandleMenuEvent) (HWND *phwnd, UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, LRESULT *plResult); /* 20 */
@@ -351,7 +350,7 @@ typedef struct TkIntPlatStubs {
     Tcl_Obj * (*tkWinGetMenuSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 32 */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 33 */
     void (*tkWinSetHINSTANCE) (HINSTANCE hInstance); /* 34 */
-    int (*tkWinGetPlatformTheme) (void); /* 35 */
+    void (*reserved35)(void);
     LRESULT (__stdcall *tkWinChildProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 36 */
     void (*reserved37)(void);
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 38 */
@@ -551,8 +550,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkAlignImageData) /* 33 */
 #define TkWinSetHINSTANCE \
 	(tkIntPlatStubsPtr->tkWinSetHINSTANCE) /* 34 */
-#define TkWinGetPlatformTheme \
-	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
+/* Slot 35 is reserved */
 #define TkWinChildProc \
 	(tkIntPlatStubsPtr->tkWinChildProc) /* 36 */
 /* Slot 37 is reserved */
@@ -738,6 +736,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 #ifndef TK_NO_DEPRECATED
 #   define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
+#   define TkWinGetPlatformTheme() 3
 #endif
 
 #undef TCL_STORAGE_CLASS

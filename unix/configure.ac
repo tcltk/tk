@@ -3,8 +3,8 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[9.0])
-AC_PREREQ([2.69])
+AC_INIT([tk],[9.1])
+AC_PREREQ([2.72])
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -23,10 +23,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=9.0
+TK_VERSION=9.1
 TK_MAJOR_VERSION=9
-TK_MINOR_VERSION=0
-TK_PATCH_LEVEL=".4"
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL="a1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -470,6 +470,39 @@ fi
 
 
 #--------------------------------------------------------------------
+#	Check for Atk support
+#--------------------------------------------------------------------
+
+if test "$tk_aqua" = no; then
+  # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
+  AC_MSG_CHECKING([for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)])
+
+  if pkg-config --exists atk \
+     && pkg-config --exists atk-bridge-2.0 \
+     && pkg-config --exists dbus-1 \
+     && pkg-config --exists glib-2.0; then
+
+    AC_MSG_RESULT([yes])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0 dbus-1 glib-2.0`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0 dbus-1 glib-2.0`"
+    AC_DEFINE([USE_ATK], [1], [Define if ATK, Atk-bridge, D-Bus, and GLib are available])
+    have_atk=yes
+    AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
+  else
+    AC_MSG_RESULT([no])
+    ATK_CFLAGS=""
+    ATK_LIBS=""
+    have_atk=no
+    AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
+  fi
+
+  AC_SUBST([ATK_CFLAGS])
+  AC_SUBST([ATK_LIBS])
+fi
+
+
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
@@ -536,17 +569,11 @@ AC_C_CHAR_UNSIGNED
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
-eval "TK_LIB_FILE_TCL8=libtk${LIB_SUFFIX}"
 if test "$ac_cv_cygwin" = "yes" -a "$SHARED_BUILD" != "0"; then
-eval "TK_LIB_FILE_TCL9=cygtcl9tk${LIB_SUFFIX}"
+eval "TK_LIB_FILE=cygtcl9tk${LIB_SUFFIX}"
 EXTRA_INSTALL_BINARIES='$(INSTALL_LIBRARY) $(patsubst cyg%.dll,lib%.dll.a,${LIB_FILE}) "$(LIB_INSTALL_DIR)"'
 else
-eval "TK_LIB_FILE_TCL9=libtcl9tk${LIB_SUFFIX}"
-fi
-if test ${TCL_MAJOR_VERSION} = 8 ; then
-eval "TK_LIB_FILE=${TK_LIB_FILE_TCL8}"
-else
-eval "TK_LIB_FILE=${TK_LIB_FILE_TCL9}"
+eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
 fi
 
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
@@ -604,13 +631,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 	# override libdir default
 	libdir="/Library/Frameworks"
     fi
-    if test ${TCL_MAJOR_VERSION} = 8 ; then
-	TK_LIB_FILE="Tk"
-    else
-	TK_LIB_FILE="Tk"
-    fi
-    TK_LIB_FILE_TCL8="Tk"
-    TK_LIB_FILE_TCL9="Tk"
+    TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
@@ -649,10 +670,7 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    TK_LIB_FLAG="-l"
-    if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-	TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
-    fi
+    TK_LIB_FLAG="-ltcl9"
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
 	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
@@ -753,8 +771,6 @@ AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_YEAR)
 
 AC_SUBST(TK_LIB_FILE)
-AC_SUBST(TK_LIB_FILE_TCL8)
-AC_SUBST(TK_LIB_FILE_TCL9)
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(TK_STUB_LIB_FILE)

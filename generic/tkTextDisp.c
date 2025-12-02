@@ -1170,7 +1170,8 @@ LayoutDLine(
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
     Tcl_Size byteOffset;
-    int ascent, descent, code, elide, elidesize;
+    int ascent, descent, code, elidesize;
+    bool elide;
     StyleValues *sValuePtr;
     TkTextElideInfo info;	/* Keep track of elide state. */
 
@@ -5260,12 +5261,6 @@ TkTextRelayoutWindow(
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	highlightWidth = 0;
-	Tcl_DecrRefCount(textPtr->highlightWidthObj);
-	textPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(textPtr->highlightWidthObj);
-    }
     dInfoPtr->x = highlightWidth + borderWidth + padX;
     dInfoPtr->y = highlightWidth + borderWidth + padY;
     dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - highlightWidth

@@ -370,7 +370,7 @@ The following build configurations are available:
 The Xcode projects refer to the toplevel tcl and tk source directories via the
 the TCL_SRCROOT and TK_SRCROOT user build settings, by default these are set to
 the project-relative paths '../../tcl' and '../../tk', if your source
-directories are named differently, e.g. '../../tcl9.0' and '../../tk9.0', you
+directories are named differently, e.g. '../../tcl9.1' and '../../tk9.1', you
 need to manually change the TCL_SRCROOT and TK_SRCROOT settings by editing your
 ${USER}.pbxuser file (located inside the Tk.xcodeproj bundle directory) with a
 text editor.

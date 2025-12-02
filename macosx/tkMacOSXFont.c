@@ -442,7 +442,7 @@ static int
 startOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
@@ -500,7 +500,7 @@ static int
 endOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
@@ -651,8 +651,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*

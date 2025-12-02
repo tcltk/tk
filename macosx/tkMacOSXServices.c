@@ -3,7 +3,7 @@
  *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
- * Copyright © 2010-2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2010-2019 Kevin Walzer.
  * Copyright © 2019 Marc Culler.
  * Copyright © 2010 Adrian Robert.
  *

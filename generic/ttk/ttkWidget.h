@@ -106,15 +106,9 @@ MODULE_SCOPE int TtkWidgetStyleCommand(
  */
 MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetConstructorObjCmd;
 
-#if TCL_MAJOR_VERSION > 8
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand2(interp, name, \
 	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
-#else
-#define RegisterWidget(interp, name, specPtr) \
-    Tcl_CreateObjCommand(interp, name, \
-	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
-#endif
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --

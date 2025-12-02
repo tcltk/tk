@@ -87,19 +87,11 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Structure used to draw 3-D border and
 				 * background when window is active. NULL
 				 * means no such border exists. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *borderWidthObj;	/* Width of border. */
-#else
-    int borderWidth;
-#endif
     int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
-#else
-    int highlightWidth;
-#endif
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
@@ -135,16 +127,11 @@ typedef struct {
 				 * size of the text string or bitmap is
 				 * ignored in computing desired window
 				 * size. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *wrapLengthObj;	/* Line length (in pixels) at which to wrap
 				 * onto next line. 0 means don't wrap
 				 * except at newlines. */
     Tcl_Obj *padXObj, *padYObj;	/* Extra space around text or bitmap (pixels
 				 * on each side). */
-#else
-    int wrapLength;
-    int padX, padY;
-#endif
     Tk_Anchor anchor;		/* Where text/bitmap should be displayed
 				 * inside window region. */
     Tk_Justify justify;		/* Justification to use for multi-line

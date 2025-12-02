@@ -5,14 +5,14 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-*"
+    - "core-**"
 permissions:
   contents: read
 env:
   ERROR_ON_FAILURES: 1
 jobs:
   framework:
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         shell: bash
@@ -22,11 +22,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: tk
-      - name: Check out Tcl 9.0
+      - name: Check out Tcl 9.1
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: core-9-0-branch
+          ref: main
           path: tcl
       - name: Prepare checked out repositories
         run: |
@@ -56,7 +56,7 @@ jobs:
           fi
         timeout-minutes: 30
   prefix:
-    runs-on: macos-15
+    runs-on: macos-26
     strategy:
       matrix:
         symbols:
@@ -74,11 +74,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: tk
-      - name: Check out Tcl 9.0
+      - name: Check out Tcl 9.1
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: core-9-0-branch
+          ref: main
           path: tcl
       - name: Prepare checked out repositories
         env:

@@ -37,7 +37,7 @@ Tk_GetPixmap(
     int depth)
 {
     TkWinDrawable *newTwdPtr, *twdPtr;
-    int planes;
+    DWORD planes;
     Screen *screen;
 
     LastKnownRequestProcessed(display)++;
@@ -59,11 +59,11 @@ Tk_GetPixmap(
     screen = ScreenOfDisplay(display, 0);
     planes = 1;
     if (depth == DefaultDepthOfScreen(screen)) {
-	planes = PTR2INT(screen->ext_data);
+	planes = (DWORD)PTR2INT(screen->ext_data);
 	depth /= planes;
     }
     newTwdPtr->bitmap.handle =
-	    CreateBitmap(width, height, (DWORD) planes, (DWORD) depth, NULL);
+	    CreateBitmap(width, height, planes, (DWORD) depth, NULL);
 
     /*
      * CreateBitmap tries to use memory on the graphics card. If it fails,
@@ -81,8 +81,8 @@ Tk_GetPixmap(
 	bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
 	bitmapInfo.bmiHeader.biWidth = width;
 	bitmapInfo.bmiHeader.biHeight = height;
-	bitmapInfo.bmiHeader.biPlanes = planes;
-	bitmapInfo.bmiHeader.biBitCount = depth;
+	bitmapInfo.bmiHeader.biPlanes = (WORD)planes;
+	bitmapInfo.bmiHeader.biBitCount = (WORD)depth;
 	bitmapInfo.bmiHeader.biCompression = BI_RGB;
 	bitmapInfo.bmiHeader.biSizeImage = 0;
 	dc = GetDC(NULL);

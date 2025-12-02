@@ -4,171 +4,27 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
+Release Tk 9.1a1 arises from the check-in with tag `core-9-1-a1`.
 
-Tk 9.0.4 continues the Tk 9.0 series of releases.  The Tk 9.0 series
-does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
-To make use of Tk 9.0.4, first a Tcl 9.0 release must be present.
+Tk 9.1a1 continues the Tk 9.x series of releases.  The Tk 9.x series
+do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
+To make use of Tk 9.1a1, first a Tcl 9.0 or 9.1 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
 necessarily in Tk 8.
 
-Tk patch releases have the primary purpose of delivering bug fixes
-to the userbase.
+# 9.1 Features and Interfaces
+ - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [Handle negative screen distances](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+ - [Extend Tk_CanvasTextInfo](https://core.tcl-lang.org/tips/doc/trunk/tip/704.md)
+ - [Add new states to ttk::treeview and ttk::notebook](https://core.tcl-lang.org/tips/doc/trunk/tip/719.md)
+ - [Limit tk_messageBox to physical screen width](https://core.tcl-lang.org/tk/info/e19f1d891)
+ - [Constrain own Dialogs to the physical screen size](https://core.tcl-lang.org/tk/info/7c28f835)
+ - [Add a ttk::toggleswitch widget to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/727.md)
+ - [Add a tk attribtable command to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/729.md)
+ - [Implement more X11 region functions on Windows and Aqua](https://core.tcl-lang.org/tk/info/50fdbc36ad)
+ - [Add accessibility/screen reader support to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/733.md)
+ - [Scroll entry with mouse wheel](https://core.tcl-lang.org/tips/doc/trunk/tip/736.md)
 
-# Bug fixes
- - [Improve the look of the ttk::spinbox widgets in the built-in themes](https://core.tcl-lang.org/tk/tktview/4d2baa)
- - [SVG rendering: Correctly paint stroke leftover path](https://core.tcl-lang.org/tk/tktview/c51a56)
-
-Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
-
-Tk 9.0.3 continues the Tk 9.0 series of releases.  The Tk 9.0 series
-does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
-To make use of Tk 9.0.3, first a Tcl 9.0 release must be present.
-As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
-
-Tk patch releases have the primary purpose of delivering bug fixes
-to the userbase.
-
-# Bug fixes
- - [Pressing Alt-<key> triggers an error popup](https://core.tcl-lang.org/tk/tktview/a30d3e)
- - [error popup on ttk::scale with invisible trough](https://core.tcl-lang.org/tk/tktview/d25b72)
- - [loading windows dll's in Cygwin doesn't work with high-entropy-va](https://core.tcl-lang.org/tk/tktview/06892c)
- - [TIP 604 widget demo: canvas text fill color not specified](https://core.tcl-lang.org/tk/tktview/6cc48b)
- - [Undefined behavior while touchpad scrolling](https://core.tcl-lang.org/tk/tktview/92e408)
- - [leak in XCreateBitmapFromData() in ImgGetPhoto()](https://core.tcl-lang.org/tk/tktview/6c4795)
- - [Add support for Copy/Cut/Paste keys in X11](https://core.tcl-lang.org/tk/tktview/04e173)
- - [Aqua: compiler warning in tkMacOSXImage.c](https://core.tcl-lang.org/tk/tktview/7f3751)
- - [tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP](https://core.tcl-lang.org/tk/tktview/95da0f)
- - [image svg: support paint order and fix possible nan race condition](https://core.tcl-lang.org/tk/tktview/b43dbc)
- - [Windows: install man pages](https://core.tcl-lang.org/tk/tktview/816739)
- - [Windows: install pkg-config file](https://core.tcl-lang.org/tk/tktview/2c240b)
- - [Windows: Missing border pixels in alt theme](https://core.tcl-lang.org/tk/tktview/8b725d)
- - [nanosvg upstream changes: #273, #275: add paint order parsing](https://core.tcl-lang.org/tk/tktview/b43dbc0061)
- - [Artifacts in a few themed widgets on x11 and aqua](https://core.tcl-lang.org/tk/tktview/265ff2)
- - [Core dump Tk_GetFontFromObj](https://core.tcl-lang.org/tk/tktview/a80e5f)
- - [MS-Win canvas arcs with small extent are drawn 360 degrees](https://core.tcl-lang.org/tk/info/6051a9)
- - [pixel values can report false list lengths](https://core.tcl-lang.org/tk/info/2a0a83)
- - [Xft text is unusable for 32-bit visual when default visual is 24-bit](https://core.tcl-lang.org/tk/info/c23f79)
- - [tk print: several issues printing i18n text](https://core.tcl-lang.org/tk/info/4e7a78)
- - [tk print, canvas: raw smooth not implemented](https://core.tcl-lang.org/tk/info/e10819)
- - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
- - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
- - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
-
-Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
-
-Tk 9.0.2 continues the Tk 9.0 series of releases.  The Tk 9.0 series
-does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
-To make use of Tk 9.0.2, first a Tcl 9.0 release must be present.
-As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
-
-Tk patch releases have the primary purpose of delivering bug fixes
-to the userbase.
-
-## Improved widget appearance
- - [Visible grip element added in ttk::panedwindow sashes of most built-in themes](https://core.tcl-lang.org/tk/tktview/9902d8)
-
-# Bug fixes
- - [inaccurate scrollbar error-message](https://core.tcl-lang.org/tk/tktview/f88118)
- - [Build tk 9.0.1 failed on macos 10.13](https://core.tcl-lang.org/tk/tktview/cb5d77)
- - [image svg upstream out of bound read nanosvg#262](https://core.tcl-lang.org/tk/tktview/121786)
- - [wm iconbitmap does not correctly set the icon pixmap hint on macOS](https://core.tcl-lang.org/tk/tktview/13ac26)
- - [Backspace crashes 9.0 interpreter on FreeBSD](https://core.tcl-lang.org/tk/tktview/1da19a)
- - [Bug in the ttk::scale widget of the "default" theme](https://core.tcl-lang.org/tk/tktview/126d07)
- - [Wrong appearance of the ttk::menubutton indicator of the "xpnative" theme](https://core.tcl-lang.org/tk/tktview/525536)
- - [English shortcuts for Chinese locale](https://core.tcl-lang.org/tk/tktview/c99266)
- - [Tk_Get3DBorderColors broken by design](https://core.tcl-lang.org/tk/tktview/517165)
- - [MS-Win: Incorrect system menu entries for transient toplevels](https://core.tcl-lang.org/tk/tktview/159aa5)
- - [MS-Win: Withdrawn Tk transient windows can reappear in Windows taskbar preview](https://core.tcl-lang.org/tk/tktview/91d0e9)
- - [Aqua windows don't always move focus correctly](https://core.tcl-lang.org/tk/tktview/28d33f)
- - [Cross compiling using x86_64-w64-mingw32-gcc](https://core.tcl-lang.org/tk/tktview/f6d40f)
- - [BWidget Drag & Drop no longer works on Aqua](https://core.tcl-lang.org/tk/tktview/855ec4)
- - [tk print command fails with canvas widget](https://core.tcl-lang.org/tk/tktview/d2eac2)
- - [tk print command fails on windows](https://core.tcl-lang.org/tk/tktview/bb5c3d)
- - [tk print fails for canvas items with non integer widths](https://core.tcl-lang.org/tk/tktview/7716cb)
- - [tk print canvas with smooth lines crashes on windows](https://core.tcl-lang.org/tk/tktview/9b23b6)
- - [Collect utility procs for the Tk test suite](https://core.tcl-lang.org/tk/tktview/718cbc)
- - [Setting ttk state may change the a variable passed by value](https://core.tcl-lang.org/tk/info/7231bf)
- - [wm iconbitmap does not support icon files with png images on Windows](https://core.tcl-lang.org/tk/info/17b509)
- - [block cursor size on a tab is too large](https://core.tcl-lang.org/tk/info/5d0bc3)
- - [macOS clipboard managers do not notice clipboard changes done by Tk](https://core.tcl-lang.org/tk/info/e94c8b)
-
-# Incompatibilities
- - [The ActiveCodePage element has been removed from the Windows executable manifest for wish](https://core.tcl-lang.org/tips/doc/trunk/tip/716.md)
-
-Release Tk 9.0.1 arises from the check-in with tag `core-9-0-1`.
-
-Tk 9.0.1 continues the Tk 9.0 series of releases.  The Tk 9.0 series
-does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
-To make use of Tk 9.0.1, first a Tcl 9.0 release must be present.
-As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
-
-Tk patch releases have the primary purpose of delivering bug fixes
-to the userbase.  As the first patch release in the Tk 9.0 series,
-Tk 9.0.1 also includes a small number of interface changes that complete
-some incomplete features first delivered in Tk 9.0.0.
-
-# Completed 9.0 Features and Interfaces
- - [TIP #706: Expose three Tk "In Context" functions via stubs table](https://core.tcl-lang.org/tips/doc/trunk/tip/706.md)
- - [Tilde file syntax not available on 9.0 but used by "~/.Xdefaults"](https://core.tcl-lang.org/tk/tktview/fcfddc)
- - [leftover use of tilde in filename string](https://core.tcl-lang.org/tk/tktview/767702)
-
-# Bug fixes
- - [Canvas widget handles pixel objects incorrectly in Tk 9.0](https://core.tcl-lang.org/tk/tktview/610a73)
- - [SIGABRT from Tk_DeleteErrorHandler()](https://core.tcl-lang.org/tk/tktview/f52986)
- - [build failure on macOS < 10.13](https://core.tcl-lang.org/tk/tktview/d48cbf)
- - [Two potentially bogus binding scripts for <TouchpadScroll>](https://core.tcl-lang.org/tk/tktview/73c5e3)
- - [Aqua: canvas items are not always redrawn](https://core.tcl-lang.org/tk/tktview/5869c2)
- - [Aqua: color rgb values do not behave as expected when appearance is changed](https://core.tcl-lang.org/tk/tktview/01f58b)
- - [Aqua: winfo rgb . systemLabelColor returns a weird result on aqua](https://core.tcl-lang.org/tk/tktview/23b57a)
- - [Aqua: background thread became slower](https://core.tcl-lang.org/tk/tktview/547cc6)
- - [Use of Tcl_Obj vs char * in Widget storage](https://core.tcl-lang.org/tk/tktview/f91aa2)
- - [cannot build .chm help file (Windows)](https://core.tcl-lang.org/tk/tktview/bb110c)
- - [Tk initialization overwrites thread specific data](https://core.tcl-lang.org/tk/tktview/bcbf4c)
- - [File clamTheme.tcl misses code related to the -indicatorforeground option](https://core.tcl-lang.org/tk/tktview/a69fd7)
- - [Segfault when using menu(button) with the -font option](https://core.tcl-lang.org/tk/tktview/8ce672)
- - [Bind mechanism vs. GNOME](https://core.tcl-lang.org/tk/tktview/6bdf1a)
- - [many PIXEL options don't keep their configured value](https://core.tcl-lang.org/tk/tktview/29ba53)
- - [Menu entry underline does not consider activeborderwidth](https://core.tcl-lang.org/tk/tktview/844c0b)
-
-Release Tk 9.0.0 arises from the check-in with tag `core-9-0-0`.
-
-Highlighted differences between Tk 9.0 and Tk 8.6 are summarized below,
-with focus on changes important to programmers using the Tk library and
-writing Tcl scripts containing Tk commands.
-
-## Many improvements to use of platform features and conventions.
- - Built-in widgets and themes are scaling-aware.
- - Improved support of two-finger gestures, where available
- - The `tk windowingsystem` "aqua" needs macOS 10.9 or later
-
-## New commands and options
- - `tk sysnotify` — Access to the OS notifications system
- - `tk systray` — Access to the OS tray facility
- - `tk print` — Access to the OS printing facility
-
-## Widget options
- - New `ttk::progressbar` option: **-text**
- - `$frame ... -backgroundimage $img -tile $bool`
- - `$menu id`, `$menu add|insert ... ?$id? ...`
- - `$image get ... -withalpha ...`
- - All indices now accept the forms **end**, **end-int**, **int+|-int**
-
-## Improved widget appearance
- - `ttk::notebook` with nondefault tab positions
-
-## Images
- - Partial SVG support
- - Read/write access to photo image metadata
-
-## Known bugs
- - [Inconsistent reporting of child geometry changes to grid container](https://core.tcl-lang.org/tk/tktview/beaa8e)
- - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
- - [The wm manage command does not work on current macOS versions](https://core.tcl-lang.org/tk/tktview/8a6012)
- - [Slow processing irregular transparencies](https://core.tcl-lang.org/tk/tktview/919066)
- - [text's cursor width on 0th column](https://core.tcl-lang.org/tk/tktview/47fbfc)
- - [text widget breaks graphemes with combining diacritical marks](https://core.tcl-lang.org/tk/tktview/442208)
-
+# Potential incompatibilities to 9.0
+ - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: The "xpnative" ttk style is gone too, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)

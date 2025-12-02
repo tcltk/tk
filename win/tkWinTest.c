@@ -26,11 +26,11 @@ HWND tkWinCurrentDialog;
  * Forward declarations of functions defined later in this file:
  */
 
-static Tcl_ObjCmdProc TestclipboardObjCmd;
-static Tcl_ObjCmdProc TestwineventObjCmd;
-static Tcl_ObjCmdProc TestfindwindowObjCmd;
-static Tcl_ObjCmdProc TestgetwindowinfoObjCmd;
-static Tcl_ObjCmdProc TestwinlocaleObjCmd;
+static Tcl_ObjCmdProc2 TestclipboardObjCmd;
+static Tcl_ObjCmdProc2 TestwineventObjCmd;
+static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
+static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
+static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -58,15 +58,15 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-    Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
+    Tcl_CreateObjCommand2(interp, "testclipboard", TestclipboardObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testwinevent", TestwineventObjCmd,
+    Tcl_CreateObjCommand2(interp, "testwinevent", TestwineventObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testfindwindow", TestfindwindowObjCmd,
+    Tcl_CreateObjCommand2(interp, "testfindwindow", TestfindwindowObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
+    Tcl_CreateObjCommand2(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
+    Tcl_CreateObjCommand2(interp, "testwinlocale", TestwinlocaleObjCmd,
 	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
@@ -129,7 +129,7 @@ AppendSystemError(
     Tcl_Interp *interp,		/* Current interpreter. */
     DWORD error)		/* Result code from error. */
 {
-    int length;
+    Tcl_Size length;
     WCHAR *wMsgPtr, **wMsgPtrPtr = &wMsgPtr;
     const char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
@@ -154,8 +154,8 @@ AppendSystemError(
 		0, NULL);
 	if (length > 0) {
 	    wMsgPtr = (WCHAR *) LocalAlloc(LPTR, (length + 1) * sizeof(WCHAR));
-	    MultiByteToWideChar(CP_ACP, 0, msgPtr, length + 1, wMsgPtr,
-		    length + 1);
+	    MultiByteToWideChar(CP_ACP, 0, msgPtr, (int)length + 1, wMsgPtr,
+		    (int)length + 1);
 	    LocalFree(msgPtr);
 	}
     }
@@ -231,7 +231,7 @@ static int
 TestclipboardObjCmd(
     void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -265,7 +265,7 @@ static int
 TestwineventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     HWND hwnd = 0;
@@ -430,10 +430,10 @@ static int
 TestfindwindowObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-	LPCWSTR title = NULL, windowClass = NULL;
+    LPCWSTR title = NULL, windowClass = NULL;
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -505,7 +505,7 @@ static int
 TestgetwindowinfoObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tcl_WideInt hwnd;
@@ -563,7 +563,7 @@ static int
 TestwinlocaleObjCmd(
     TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     if (objc != 1) {

@@ -1,4 +1,4 @@
-name: Linux (with Tcl 9.1)
+name: Linux (with Tcl 9.0)
 on:
   push:
     branches:
@@ -31,14 +31,14 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl 9.1
-        uses: actions/checkout@v5
+      - name: Checkout Tcl 9.0
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -116,14 +116,14 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl 9.1
-        uses: actions/checkout@v5
+      - name: Checkout Tcl 9.0
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |

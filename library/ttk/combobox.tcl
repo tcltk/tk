@@ -56,6 +56,9 @@ ttk::bindMouseWheel TCombobox		{ ttk::combobox::Scroll %W }
 bind TCombobox <Shift-MouseWheel> {
     # Ignore the event
 }
+bind TCombobox <Shift-Option-MouseWheel> {
+    # Ignore the event
+}
 bind TCombobox <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
     # TouchpadScroll events fire about 60 times per second.

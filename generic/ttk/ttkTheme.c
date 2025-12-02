@@ -1129,8 +1129,7 @@ Ttk_DrawElement(
 	return;
     }
     if (!InitializeElementRecord(
-	    eclass, style, recordPtr, optionTable, tkwin,  state))
-    {
+	    eclass, style, recordPtr, optionTable, tkwin,  state)) {
 	return;
     }
     eclass->specPtr->draw(
@@ -1727,7 +1726,7 @@ static int
 StyleObjCmd(
     void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
-    int objc,				/* Number of arguments */
+    Tcl_Size objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
 {
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
@@ -1798,7 +1797,7 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
     /*
      * Register commands:
      */
-    Tcl_CreateObjCommand(interp, "::ttk::style", StyleObjCmd, pkgPtr, 0);
+    Tcl_CreateObjCommand2(interp, "::ttk::style", StyleObjCmd, pkgPtr, 0);
 
     nsPtr = Tcl_FindNamespace(interp, "::ttk", NULL, TCL_LEAVE_ERR_MSG);
     Tcl_Export(interp, nsPtr, "style", 0 /* dontResetList */);

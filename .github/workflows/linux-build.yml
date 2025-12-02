@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-*"
+    - "core-**"
 permissions:
   contents: read
 defaults:
@@ -34,11 +34,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: tk
-      - name: Checkout Tcl 9.0
+      - name: Checkout Tcl 9.1
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: core-9-0-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -138,11 +138,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: tk
-      - name: Checkout Tcl 9.0
+      - name: Checkout Tcl 9.1
         uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
-          ref: core-9-0-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |

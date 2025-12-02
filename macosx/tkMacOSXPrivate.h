@@ -260,7 +260,6 @@ MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
 #define TkMacOSXGetCGContextForDrawable(drawable) ((CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
-MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
@@ -274,17 +273,14 @@ MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
 MODULE_SCOPE void	TkMacOSXSelDeadWindow(TkWindow *winPtr);
 MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
 			    NSWindow *macWindow);
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXStandardAboutPanelObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXIconBitmapObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXNSImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXStandardAboutPanelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXIconBitmapObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
 MODULE_SCOPE int	TkMacOSXServices_Init(Tcl_Interp *interp);
-MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXRegisterServiceWidgetObjCmd;
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 MODULE_SCOPE int	TkMacOSXNSImage_Init(Tcl_Interp *interp);
-MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
-					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
 MODULE_SCOPE NSColor*   controlAccentColor(void);
@@ -438,6 +434,12 @@ VISIBILITY_HIDDEN
 - (void) tkToolbarButton: (id) sender;
 - (void) resetTkLayerBitmapContext;
 @end
+
+@interface TkAccessibilityElement : NSAccessibilityElement
+@property (nonatomic, strong)  TKContentView  *parentView;
+@property Tk_Window tk_win;
+@end
+
 
 @interface NSWindow(TKWm)
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;

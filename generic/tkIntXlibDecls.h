@@ -434,8 +434,10 @@ EXTERN char *		XSetICValues(XIC xic, ...);
 EXTERN char *		XGetICValues(XIC xic, ...);
 /* 143 */
 EXTERN void		XSetICFocus(XIC xic);
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
+/* 144 */
+EXTERN int		XXorRegion(Region sra, Region srb, Region dr_return);
+/* 145 */
+EXTERN Bool		XEqualRegion(Region r1, Region r2);
 /* Slot 146 is reserved */
 /* 147 */
 EXTERN void		XFreeFontSet(Display *display, XFontSet fontset);
@@ -854,8 +856,10 @@ EXTERN char *		XSetICValues(XIC xic, ...);
 EXTERN char *		XGetICValues(XIC xic, ...);
 /* 143 */
 EXTERN void		XSetICFocus(XIC xic);
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
+/* 144 */
+EXTERN int		XXorRegion(Region sra, Region srb, Region dr_return);
+/* 145 */
+EXTERN Bool		XEqualRegion(Region r1, Region r2);
 /* Slot 146 is reserved */
 /* 147 */
 EXTERN void		XFreeFontSet(Display *display, XFontSet fontset);
@@ -1046,8 +1050,8 @@ typedef struct TkIntXlibStubs {
     char * (*xSetICValues) (XIC xic, ...); /* 141 */
     char * (*xGetICValues) (XIC xic, ...); /* 142 */
     void (*xSetICFocus) (XIC xic); /* 143 */
-    void (*reserved144)(void);
-    void (*reserved145)(void);
+    int (*xXorRegion) (Region sra, Region srb, Region dr_return); /* 144 */
+    Bool (*xEqualRegion) (Region r1, Region r2); /* 145 */
     void (*reserved146)(void);
     void (*xFreeFontSet) (Display *display, XFontSet fontset); /* 147 */
     int (*xCloseIM) (XIM im); /* 148 */
@@ -1207,8 +1211,8 @@ typedef struct TkIntXlibStubs {
     char * (*xSetICValues) (XIC xic, ...); /* 141 */
     char * (*xGetICValues) (XIC xic, ...); /* 142 */
     void (*xSetICFocus) (XIC xic); /* 143 */
-    void (*reserved144)(void);
-    void (*reserved145)(void);
+    int (*xXorRegion) (Region sra, Region srb, Region dr_return); /* 144 */
+    Bool (*xEqualRegion) (Region r1, Region r2); /* 145 */
     void (*reserved146)(void);
     void (*xFreeFontSet) (Display *display, XFontSet fontset); /* 147 */
     int (*xCloseIM) (XIM im); /* 148 */
@@ -1515,8 +1519,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
 #define XSetICFocus \
 	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
+#define XXorRegion \
+	(tkIntXlibStubsPtr->xXorRegion) /* 144 */
+#define XEqualRegion \
+	(tkIntXlibStubsPtr->xEqualRegion) /* 145 */
 /* Slot 146 is reserved */
 #define XFreeFontSet \
 	(tkIntXlibStubsPtr->xFreeFontSet) /* 147 */
@@ -1821,8 +1827,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
 #define XSetICFocus \
 	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
-/* Slot 144 is reserved */
-/* Slot 145 is reserved */
+#define XXorRegion \
+	(tkIntXlibStubsPtr->xXorRegion) /* 144 */
+#define XEqualRegion \
+	(tkIntXlibStubsPtr->xEqualRegion) /* 145 */
 /* Slot 146 is reserved */
 #define XFreeFontSet \
 	(tkIntXlibStubsPtr->xFreeFontSet) /* 147 */

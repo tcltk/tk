@@ -1213,13 +1213,9 @@ XCopyPlane(
 		    CGImageRelease(submask);
 		    CGImageRelease(subimage);
 		} else {
-		    srcRect = CGRectMake(src_x, src_y, width, height);
-		    CGImageRef subimage = CGImageCreateWithImageInRect(
-			    img, srcRect);
 		    dstRect = CGRectMake(dest_x, dest_y, width, height);
-		    TkMacOSXDrawCGImage(dst, gc, dc.context, subimage,
+		    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
 			    gc->foreground, imageBackground, dstRect);
-		    CGImageRelease(subimage);
 		    CGImageRelease(img);
 		}
 	    } else {
@@ -1625,7 +1621,7 @@ int
 TkMacOSXNSImageObjCmd(
     void *clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *)clientData;
@@ -1742,7 +1738,7 @@ TkMacOSXNSImageCreate(
 	TkMacOSXNSImageDelete(modelPtr);
 	return TCL_ERROR;
     }
-    Tcl_CreateObjCommand(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
+    Tcl_CreateObjCommand2(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
     *clientDataPtr = modelPtr;
     return TCL_OK;
 }

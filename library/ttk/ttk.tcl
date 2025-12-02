@@ -15,6 +15,7 @@ namespace eval ::ttk {
 source -encoding utf-8 [file join $::ttk::library fonts.tcl]
 source -encoding utf-8 [file join $::ttk::library cursors.tcl]
 source -encoding utf-8 [file join $::ttk::library utils.tcl]
+source -encoding utf-8 [file join $::ttk::library elements.tcl]
 
 ## ttk::deprecated $old $new --
 #	Define $old command as a deprecated alias for $new command
@@ -57,6 +58,8 @@ package ifneeded tile 0.8.6 { package provide tile 0.8.6 }
 #	Sends a <<ThemeChanged>> virtual event to all widgets.
 #
 proc ::ttk::ThemeChanged {} {
+    toggleswitch::CondUpdateElements			;# see elements.tcl
+
     set Q .
     while {[llength $Q]} {
 	set QN [list]
@@ -142,6 +145,7 @@ proc ::ttk::setTreeviewRowHeight {} {
 #
 source -encoding utf-8 [file join $::ttk::library button.tcl]
 source -encoding utf-8 [file join $::ttk::library menubutton.tcl]
+source -encoding utf-8 [file join $::ttk::library toggleswitch.tcl]
 source -encoding utf-8 [file join $::ttk::library scrollbar.tcl]
 source -encoding utf-8 [file join $::ttk::library scale.tcl]
 source -encoding utf-8 [file join $::ttk::library progress.tcl]
@@ -173,7 +177,7 @@ proc ttk::LoadThemes {} {
 	alt		altTheme.tcl
 	clam		clamTheme.tcl
 	winnative	winTheme.tcl
-	xpnative	{xpTheme.tcl vistaTheme.tcl}
+	vista		vistaTheme.tcl
 	aqua		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
@@ -190,14 +194,14 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 # Notes:
 #	+ On OSX, aqua theme is the default
-#	+ On Windows, xpnative takes precedence over winnative if available.
+#	+ On Windows, vista takes precedence over winnative if available.
 #	+ On X11, users can use the X resource database to
 #	  specify a preferred theme (*TkTheme: themeName);
 #	  otherwise "default" is used.
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua vista xpnative winnative]
+    set preferred [list aqua vista winnative]
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {

@@ -53,7 +53,7 @@ static unsigned long transparentColor;
 
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
-
+static HIShapeRef GetClipRgn(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -1148,7 +1148,7 @@ TkMacOSXSetupDrawingContext(
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
 //#if 0 // disable clipping (almost works, but windows can open up blank)
-    dc.clipRgn = TkMacOSXGetClipRgn(d);
+    dc.clipRgn = GetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
 	/*
@@ -1387,7 +1387,7 @@ TkMacOSXRestoreDrawingContext(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetClipRgn --
+ * GetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
  *	drawable.
@@ -1402,7 +1402,7 @@ TkMacOSXRestoreDrawingContext(
  */
 
 HIShapeRef
-TkMacOSXGetClipRgn(
+GetClipRgn(
     Drawable drawable)		/* Drawable. */
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;

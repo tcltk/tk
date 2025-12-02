@@ -6,7 +6,7 @@
  *	to post system notifications.
  *
  * Copyright © 2005 Anton Kovalenko.
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2020 Kevin Walzer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -198,8 +198,8 @@ typedef struct {
  * Forward declarations for procedures defined in this file.
  */
 
-static Tcl_ObjCmdProc TrayIconCreateCmd;
-static Tcl_ObjCmdProc TrayIconObjectCmd;
+static Tcl_ObjCmdProc2 TrayIconCreateCmd;
+static Tcl_ObjCmdProc2 TrayIconObjectCmd;
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp *interp,
 	Tcl_Size objc, Tcl_Obj *const objv[], int addflags);
 static int PostBalloon(DockIcon* icon, const char *utf8msg,
@@ -248,7 +248,7 @@ static int
 TrayIconObjectCmd(
     void *cd,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     DockIcon *icon = (DockIcon*)cd;
@@ -1597,7 +1597,7 @@ static int
 TrayIconCreateCmd(
     void *cd,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window mainWindow = (Tk_Window)cd;
@@ -1669,7 +1669,7 @@ TrayIconCreateCmd(
 	}
     }
 
-    icon->widgetCmd = Tcl_CreateObjCommand(interp, Tcl_GetString(objv[1]),
+    icon->widgetCmd = Tcl_CreateObjCommand2(interp, Tcl_GetString(objv[1]),
 	    TrayIconObjectCmd, icon, TrayIconDeleteProc);
 
     /* Sometimes a command just can't be created... */
@@ -1716,7 +1716,7 @@ int
 Tktray_Init(
     Tcl_Interp *interp)
 {
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray",
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray",
 	    TrayIconCreateCmd, Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }

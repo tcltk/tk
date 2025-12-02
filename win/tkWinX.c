@@ -79,6 +79,15 @@ static unsigned long scrollCounter = 0;
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
+/* Miscellaneous accessibility data and functions. */
+#include <oleacc.h>
+typedef struct TkRootAccessible TkRootAccessible;
+typedef void (*MainThreadFunc)(int num_args, void **args);
+extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
+extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
+extern void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
+extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
+
 /*
  * Declarations of static variables used in this file.
  */
@@ -87,7 +96,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
-static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
 					 * keyboard input */
@@ -329,69 +337,6 @@ TkWinXCleanup(
 
     TkWinWmCleanup(hInstance);
     TkWinCleanupContainerList();
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *	    TK_THEME_WIN_VISTA	Vista or higher
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkWinTheme == 0) {
-	OSVERSIONINFOW os;
-
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	GetVersionExW(&os);
-
-	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-	    Tcl_Panic("Windows NT is the only supported platform");
-	}
-
-	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
-	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
-	 * windows classic theme was selected.
-	 */
-	if (os.dwMajorVersion == 5 && os.dwMinorVersion >= 1) {
-	    HKEY hKey;
-	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
-	    LPCWSTR szCurrent = L"Current";
-	    DWORD dwSize = 200;
-	    WCHAR pBuffer[200];
-
-	    memset(pBuffer, 0, dwSize);
-	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
-		    KEY_READ, &hKey) != ERROR_SUCCESS) {
-		tkWinTheme = TK_THEME_WIN_XP;
-	    } else {
-		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
-		RegCloseKey(hKey);
-		if (wcscmp(pBuffer, L"Windows Standard") == 0) {
-		    tkWinTheme = TK_THEME_WIN_CLASSIC;
-		} else {
-		    tkWinTheme = TK_THEME_WIN_XP;
-		}
-	    }
-	} else if (os.dwMajorVersion > 5) {
-	    tkWinTheme = TK_THEME_WIN_VISTA;
-	} else {
-	    tkWinTheme = TK_THEME_WIN_CLASSIC;
-	}
-    }
-    return tkWinTheme;
 }
 
 /*
@@ -754,7 +699,7 @@ TkWinChildProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    LRESULT result;
+    LRESULT result = 0;
 
     switch (message) {
     case WM_INPUTLANGCHANGE:
@@ -817,6 +762,16 @@ TkWinChildProc(
 	    } else {
 		result = 1;
 	    }
+	}
+	break;
+
+     /* Handle MSAA queries. */
+    case WM_GETOBJECT:
+	if ((LONG)lParam == OBJID_CLIENT) {
+	    LRESULT resultOnMainThread = 0;
+	    MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
+	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
+	    return resultOnMainThread;
 	}
 	break;
 

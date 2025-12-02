@@ -170,7 +170,7 @@ static void		MessageEventProc(void *clientData,
 static char *		MessageTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static Tcl_ObjCmdProc MessageWidgetObjCmd;
+static Tcl_ObjCmdProc2 MessageWidgetObjCmd;
 static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
@@ -246,7 +246,7 @@ Tk_MessageObjCmd(
     msgPtr->tkwin = tkwin;
     msgPtr->display = Tk_Display(tkwin);
     msgPtr->interp = interp;
-    msgPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    msgPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(msgPtr->tkwin), MessageWidgetObjCmd, msgPtr,
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
@@ -298,7 +298,7 @@ static int
 MessageWidgetObjCmd(
     void *clientData,	/* Information about message widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr = (Message *)clientData;
@@ -439,7 +439,6 @@ ConfigureMessage(
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    int width, borderWidth, highlightWidth, padX, padY;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -480,45 +479,6 @@ ConfigureMessage(
 	Tcl_TraceVar2(interp, Tcl_GetString(msgPtr->textVarNameObj), NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
-    }
-
-    /*
-     * A few other options need special processing, such as setting the
-     * background from a 3-D border or handling special defaults that couldn't
-     * be specified to Tk_ConfigureWidget.
-     */
-
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
-    if (borderWidth < 0) {
-	Tcl_DecrRefCount(msgPtr->borderWidthObj);
-	msgPtr->borderWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->borderWidthObj);
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
-    if (highlightWidth < 0) {
-	Tcl_DecrRefCount(msgPtr->highlightWidthObj);
-	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
-    }
-    if (msgPtr->padXObj) {
-	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
-	if (padX < 0) {
-	    Tcl_DecrRefCount(msgPtr->padXObj);
-	    msgPtr->padXObj = NULL;
-	}
-    }
-    if (msgPtr->padYObj) {
-	Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
-	if (padY < 0) {
-	    Tcl_DecrRefCount(msgPtr->padYObj);
-	    msgPtr->padYObj = NULL;
-	}
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
-    if (width < 0) {
-	Tcl_DecrRefCount(msgPtr->widthObj);
-	msgPtr->widthObj = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(msgPtr->widthObj);
     }
 
     Tk_FreeSavedOptions(&savedOptions);

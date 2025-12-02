@@ -440,12 +440,3 @@ XVisualIDFromVisual(
 {
     return visual->visualid;
 }
-
-int
-XOffsetRegion(
-    TCL_UNUSED(Region),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int))
-{
-	return 0;
-}

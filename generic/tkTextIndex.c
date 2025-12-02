@@ -1559,7 +1559,7 @@ TkTextIndexForwChars(
     Tcl_Size byteOffset;
     char *start, *end, *p;
     int ch;
-    int elide = 0;
+    bool elide = false;
     int checkElided = (type & COUNT_DISPLAY);
 
     if (charCount < 0) {
@@ -1636,7 +1636,7 @@ TkTextIndexForwChars(
 			     * elide will be zero, of course).
 			     */
 
-			    elide = 0;
+			    elide = false;
 			    while (--infoPtr->elidePriority > 0) {
 				if (infoPtr->tagCnts[infoPtr->elidePriority]
 					& 1) {
@@ -1822,8 +1822,8 @@ TkTextIndexCount(
     TkTextSegment *segPtr, *seg2Ptr = NULL;
     TkTextElideInfo *infoPtr = NULL;
     Tcl_Size byteOffset, maxBytes, count = 0;
-    int elide = 0;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     /*
      * Find seg that contains src index, and remember how many bytes not to
@@ -2086,8 +2086,8 @@ TkTextIndexBackChars(
     TkTextElideInfo *infoPtr = NULL;
     int lineIndex, segSize;
     const char *p, *start, *end;
-    int elide = 0;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     if (charCount < 0) {
 	TkTextIndexForwChars(textPtr, srcPtr, -charCount, dstPtr, type);
@@ -2174,7 +2174,7 @@ TkTextIndexBackChars(
 			 * will be zero, of course).
 			 */
 
-			elide = 0;
+			elide = false;
 			while (--infoPtr->elidePriority > 0) {
 			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
 				elide = infoPtr->tagPtrs[

@@ -19,8 +19,8 @@
  *
  * If an application using Tcl_Main() is compiled with USE_TCL_STUBS,
  * Tcl_Main() will be replaced by a stub function, which loads
- * libtcl9.0.so/tcl90.dll and then calls its Tcl_MainEx(). If
- * libtcl9.0.so/tcl90.dll is not present (at runtime), a crash is what happens.
+ * libtcl9.1.so/tcl91.dll and then calls its Tcl_MainEx(). If
+ * libtcl9.1.so/tcl91.dll is not present (at runtime), a crash is what happens.
  *
  * So ... tkAppInit.c should not be compiled with USE_TCL_STUBS
  * (unless you want to use the TIP #596 functionality)

@@ -494,7 +494,7 @@ XCreateColormap(
     logPalettePtr = (LOGPALETTE *) logPalBuf;
     logPalettePtr->palVersion = 0x300;
     sysPal = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
-    logPalettePtr->palNumEntries = GetPaletteEntries(sysPal, 0, 256,
+    logPalettePtr->palNumEntries = (WORD)GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
     cmap = (TkWinColormap *)ckalloc(sizeof(TkWinColormap));

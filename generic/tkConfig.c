@@ -1020,11 +1020,15 @@ DoObjConfig(
 	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
 	    if (nullOK) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "expected screen distance or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
+	    wrongPixel:
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected screen distance%s but got \"%.50s\"",
+			(nullOK ? " or \"\"": ""), Tcl_GetString(valuePtr)));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
+	} else if (!(optionPtr->specPtr->flags & TK_OPTION_NEG_OK) && (newPixels < 0)) {
+	    goto wrongPixel;
 	}
 	if (internalPtr != NULL) {
 	    *((int *)oldInternalPtr) = *((int *)internalPtr);
@@ -1109,15 +1113,15 @@ DoObjConfig(
 #if defined(USE_TCL_STUBS)
 # undef Tcl_IsEmpty
 # define Tcl_IsEmpty \
-    ((int (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
+    ((bool (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
 #endif
 
-int
+bool
 TkObjIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
     if (objPtr == NULL) {
-	return 1;
+	return true;
     }
     if (objPtr->bytes == NULL) {
 #if defined(USE_TCL_STUBS)

@@ -7,7 +7,7 @@
  * Copyright © 1996 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer/WordTech Commununications LLC.
+ * Copyright © 2015 Kevin Walzer.
  * Copyright © 2018-2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution

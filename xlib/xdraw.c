@@ -37,10 +37,10 @@ XDrawLine(
 {
     XPoint points[2];
 
-    points[0].x = x1;
-    points[0].y = y1;
-    points[1].x = x2;
-    points[1].y = y2;
+    points[0].x = (short)x1;
+    points[0].y = (short)y1;
+    points[1].x = (short)x2;
+    points[1].y = (short)y2;
     return XDrawLines(display, d, gc, points, 2, CoordModeOrigin);
 }
 
@@ -72,10 +72,10 @@ XFillRectangle(
     unsigned int height)
 {
     XRectangle rectangle;
-    rectangle.x = x;
-    rectangle.y = y;
-    rectangle.width = width;
-    rectangle.height = height;
+    rectangle.x = (short)x;
+    rectangle.y = (short)y;
+    rectangle.width = (unsigned short)width;
+    rectangle.height = (unsigned short)height;
     return XFillRectangles(display, d, gc, &rectangle, 1);
 }
 

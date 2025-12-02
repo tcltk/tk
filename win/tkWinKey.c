@@ -97,7 +97,7 @@ TkpGetString(
 				 * result. */
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
-    int len;
+    Tcl_Size len;
     char buf[6];
 
     Tcl_DStringInit(dsPtr);

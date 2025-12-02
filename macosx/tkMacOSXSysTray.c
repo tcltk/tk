@@ -6,7 +6,7 @@
  *      window and a "sysnotify" command to post system notifications.
  *      In macOS the icon appears on the right hand side of the menu bar.
  *
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2020 Kevin Walzer.
  * Copyright © 2020 Jan Nijtmans.
  * Copyright © 2020 Marc Culler.
  *
@@ -194,7 +194,7 @@ static int
 MacSystrayObjCmd(
     void *clientData,
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
@@ -400,7 +400,7 @@ MacSystrayObjCmd(
 static int SysNotifyObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     if (objc < 3) {
@@ -479,9 +479,9 @@ MacSystrayInit(Tcl_Interp *interp)
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
 
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
 	    MacSystrayDestroy);
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
 

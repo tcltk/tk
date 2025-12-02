@@ -3,7 +3,7 @@
 #	Notification badges for Tk applications.
 #
 #
-# Copyright © 2021 Kevin Walzer/WordTech Communications LLC
+# Copyright © 2021 Kevin Walzer
 
 namespace eval ::tk::icons {}
 

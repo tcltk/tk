@@ -190,8 +190,7 @@ static void		ProxyWindowEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		DisplayProxyWindow(void *clientData);
 static void		PanedWindowWorldChanged(void *instanceData);
-static int		PanedWindowWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc2 PanedWindowWidgetObjCmd;
 static void		PanedWindowLostPaneProc(void *clientData,
 			    Tk_Window tkwin);
 static void		PanedWindowReqProc(void *clientData,
@@ -433,7 +432,7 @@ Tk_PanedWindowObjCmd(
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
     pwPtr->interp = interp;
-    pwPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    pwPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(pwPtr->tkwin), PanedWindowWidgetObjCmd, pwPtr,
 	    PanedWindowCmdDeletedProc);
     pwPtr->optionTable = pwOpts->pwOptions;
@@ -523,7 +522,7 @@ static int
 PanedWindowWidgetObjCmd(
     void *clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;
@@ -920,11 +919,6 @@ ConfigurePanes(
 			pwPtr->paneOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
 		Tk_GetPixelsFromObj(NULL, tkwin, pwPtr->panes[j]->minSizeObj, &minSize);
-		if (minSize < 0) {
-		    Tcl_DecrRefCount(pwPtr->panes[j]->minSizeObj);
-		    pwPtr->panes[j]->minSizeObj = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(pwPtr->panes[j]->minSizeObj);
-		}
 		found = 1;
 
 		/*
@@ -986,11 +980,6 @@ ConfigurePanes(
 	    panePtr->paneHeight = Tk_ReqHeight(tkwin) + doubleBw;
 	}
 	Tk_GetPixelsFromObj(NULL, panePtr->tkwin, panePtr->minSizeObj, &minSize);
-	if (minSize < 0) {
-	    Tcl_DecrRefCount(panePtr->minSizeObj);
-	    panePtr->minSizeObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(panePtr->minSizeObj);
-	}
 
 	/*
 	 * Set up the geometry management callbacks for this pane.
@@ -2501,7 +2490,7 @@ SetSticky(
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 
-    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	/*

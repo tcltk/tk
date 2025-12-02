@@ -536,6 +536,13 @@ DoConfig(
 				Tcl_GetString(arg), "\"", (char *)NULL);
 		    }
 		    return TCL_ERROR;
+		} else if (!(specPtr->specFlags & TK_OPTION_NEG_OK) && (dummy < 0)) {
+			if (interp) {
+			    Tcl_AppendResult(interp, "expected screen distance ",
+				    nullOK ? " or \"\"" : "",
+				    "but got \"", Tcl_GetString(arg), "\"", (char *)NULL);
+			}
+			return TCL_ERROR;
 		} else {
 		    Tcl_IncrRefCount(arg);
 		    if (*(Tcl_Obj **)ptr != NULL) {
