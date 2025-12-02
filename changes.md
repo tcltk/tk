@@ -55,6 +55,7 @@ to the userbase.
  - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
  - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
  - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
+ - [::tk::startOfCluster (and friends) only understand ICU locale syntax](https://core.tcl-lang.org/tk/info/095db8)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 
