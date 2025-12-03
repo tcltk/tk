@@ -1278,39 +1278,6 @@ TkMacOSXWinCGBounds(
     bounds->size.width = winPtr->changes.width;
     bounds->size.height = winPtr->changes.height;
 }
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXWinNSBounds --
- *
- *	Given a Tk window this function determines the window's bounds in
- *	the coordinate system of the TKContentView in which this Tk window
- *	is contained, which has the origin at the lower left corner.  This
- *      fills in an NSRect struct and requires the TKContentView as a
- *      parameter
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills in an NSRect.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXWinNSBounds(
-    TkWindow *winPtr,
-    NSView *view,
-    NSRect *bounds)
-{
-    bounds->size.width = winPtr->changes.width;
-    bounds->size.height = winPtr->changes.height;
-    bounds->origin.x = winPtr->privatePtr->xOff;
-    bounds->origin.y = ([view bounds].size.height -
-		       bounds->size.height -
-		       winPtr->privatePtr->yOff);
-}
 
 /*
  *----------------------------------------------------------------------
