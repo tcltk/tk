@@ -662,7 +662,7 @@ proc ::ttk::treeview::SelectNone {w} {
 }
 
 #
-# Motion -- pointer motion binding.
+# Motion -- pointer motion binding when no button pressed.
 #	Sets cursor, active element ...
 #
 proc ::ttk::treeview::Motion {w x y} {
@@ -792,6 +792,8 @@ proc ::ttk::treeview::Release {w x y} {
 #
 proc ttk::treeview::Select.press {w x y} {
     set item [$w identify item $x $y]
+    if {$item eq ""} return
+
     if {[$w cget -selecttype] eq "cell"} {
 	set cell [$w identify cell $x $y]
     } else {
@@ -812,12 +814,35 @@ proc ttk::treeview::Select.press {w x y} {
 }
 
 proc ttk::treeview::Select.drag {w x y} {
-    set item [$w identify item $x $y]
     if {[$w cget -selecttype] eq "cell"} {
 	set cell [$w identify cell $x $y]
-	$w cellselection set [$w cellselection anchor] $cell
+	if {$cell eq ""} {
+	    if {[$w identify region $x $y] in [list heading separator] || $y < 0} {
+		$w yview scroll -1 units
+		set item [::ttk::treeview::PageTop $w]
+		set column [$w identify column $x 5]
+		if {$item ne "" && $column ne ""} {
+		    set cell [list $item $column]
+		}
+	    }
+	}
+	if {$cell ne ""} {
+	    $w cellselection set [$w cellselection anchor] $cell
+	    $w see {*}$cell
+	}
+
     } else {
-	$w selection set [$w selection anchor] $item
+	set item [$w identify item $x $y]
+	if {$item eq ""} {
+	    if {[$w identify region $x $y] in [list heading separator] || $y < 0} {
+		$w yview scroll -1 units
+		set item [::ttk::treeview::PageTop $w]
+	    }
+	}
+	if {$item ne ""} {
+	    $w selection set [$w selection anchor] $item
+	    $w see $item
+	}
     }
 }
 
