@@ -152,7 +152,6 @@ testConstraint defaultPseudocolor8 [expr {
 #
 # VARIOUS
 #
-testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
     [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])
