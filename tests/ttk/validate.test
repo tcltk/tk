@@ -11,7 +11,7 @@
 #
 #   A consequence of this practice is that attempts to run tests selectively/
 #   individually using the tcltest options "-match", "-skip" or "-limitconstraints 1"
-#   leads to unintended failures. Therefore, invocations using these options
+#   lead to unintende failures. Therefore, invocations using these options
 #   may be considered invalid for the ttk test suite (but not for the
 #   corresponding core Tk tests).
 #
