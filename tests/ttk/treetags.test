@@ -48,18 +48,17 @@ proc treeConstraints {tv} {
 }
 
 #
-# COMMON TEST SETUP
-#
-# For all tests in this test file
-#
-set tv [ttk::treeview .tv -columns "A B C"]
-.tv insert {} end -id item1 -text "Item 1"
-pack .tv
-treeConstraints $tv
-
-#
 # TESTS
 #
+
+test treetags-1.0 "Setup" -body {
+
+    set tv [ttk::treeview .tv -columns "A B C"]
+    .tv insert {} end -id item1 -text "Item 1"
+    pack .tv
+} -cleanup {
+    treeConstraints $tv
+}
 
 test treetags-1.1 "Bad tag list" -body {
     $tv item item1 -tags {bad {list}here bad}
@@ -288,9 +287,10 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
     treeConstraints $tv
 } -result [list rm1 item1 <<Remove>> rm2 item1 <<Remove>> rm3 item1 <<Remove>>]
 
+test treetags-end "Cleanup" -body { destroy $tv }
+
 #
 # TESTFILE CLEANUP
 #
 
-destroy $tv
 tcltest::cleanupTests
