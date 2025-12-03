@@ -2,6 +2,19 @@
 # ttk::toggleswitch widget tests
 #
 
+# NOTES
+#
+# * The ttk test suite holds many tests that build upon a previous one. This
+#   is not incidental; it occurs systematically for groups of contiguous tests
+#   in most ttk test files.
+#
+#   A consequence of this practice is that attempts to run tests selectively/
+#   individually using the tcltest options "-match", "-skip" or "-limitconstraints 1"
+#   leads to unintended failures. Therefore, invocations using these options
+#   may be considered invalid for the ttk test suite (but not for the
+#   corresponding core Tk tests).
+#
+
 #
 # TESTFILE INITIALIZATION
 #

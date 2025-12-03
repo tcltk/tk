@@ -2,15 +2,26 @@
 # ttk::scrollbar widget tests
 #
 
-# NOTE
+# NOTES
 #
-# Before 2019 the code in library/ttk/scrollbar.tcl would replace the
-# constructor of ttk::scrollbar with the constructor of tk::scrollbar
-# unless the -class or -style options were specified..
-# Now there is an implementation of ttk::scrollbar for macOS.  The
-# tests are left in place, though, except that scrollbar-swapout-1
-# test was changed to expect the class to be TScrollbar instead of
-# Scrollbar.
+# * The ttk test suite holds many tests that build upon a previous one. This
+#   is not incidental; it occurs systematically for groups of contiguous tests
+#   in most ttk test files.
+#
+#   A consequence of this practice is that attempts to run tests selectively/
+#   individually using the tcltest options "-match", "-skip" or "-limitconstraints 1"
+#   leads to unintended failures. Therefore, invocations using these options
+#   may be considered invalid for the ttk test suite (but not for the
+#   corresponding core Tk tests).
+#
+# * Before 2019 the code in library/ttk/scrollbar.tcl would replace the
+#   constructor of ttk::scrollbar with the constructor of tk::scrollbar
+#   unless the -class or -style options were specified..
+#   Now there is an implementation of ttk::scrollbar for macOS.  The
+#   tests are left in place, though, except that scrollbar-swapout-1
+#   test was changed to expect the class to be TScrollbar instead of
+#   Scrollbar.
+#
 
 #
 # TESTFILE INITIALIZATION
