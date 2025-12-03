@@ -1166,7 +1166,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     TreeItem *item = NULL;
     Ttk_TagSet tagset;
     int unused;
-    Tcl_Size colno;
+    Tcl_Size colno = TCL_INDEX_NONE;
     TreeColumn *column = NULL;
 
     /* Figure out where to deliver the event. */
@@ -1176,6 +1176,11 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	case VirtualEvent:
 	    item = tv->tree.focus;
 	    column = tv->tree.focusCol;
+	    if (column == &tv->tree.column0) {
+		colno = 0;
+	    } else if (column != NULL) {
+		colno = column - tv->tree.columns + 1;
+	    }
 	    break;
 	case ButtonPress:
 	case ButtonRelease:
@@ -1203,12 +1208,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, item->tagsObj);
 
     /* Pick up any cell tags. */
-    if (column) {
-	if (column == &tv->tree.column0) {
-	    colno = 0;
-	} else {
-	    colno = column - tv->tree.columns + 1;
-	}
+    if (colno >= 0) {
 	if (colno < item->nTagSets) {
 	    if (item->cellTagSets[colno]) {
 		Ttk_TagSetAddSet(tagset, item->cellTagSets[colno]);
