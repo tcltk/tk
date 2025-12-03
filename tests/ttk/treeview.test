@@ -33,14 +33,6 @@ testutils import scroll
 # LOCAL UTILITY PROCS
 #
 
-# For tests 10.*
-proc bbY {item} {
-    set bb [.tv bbox $item "#1"]
-    set y [lindex $bb 1]
-    if {$y eq ""} {return "_"}
-    return [expr {$y - $::baseBbY}]
-}
-
 # get list of column IDs from list of display column ids.
 #
 proc columnids {tv dcols} {
@@ -124,11 +116,10 @@ proc tvSetupWithItems {} {
 # TESTS
 #
 
-#
-# COMMON TEST SETUP
-#
-tvSetup
-.tv configure -columns {a b c}
+test treeview-1.1 "columns" -body {
+    tvSetup
+    .tv configure -columns {a b c}
+}
 
 test treeview-1.2 "Bad columns" -body {
     #.tv configure -columns {illegal "list"value}
@@ -440,15 +431,11 @@ test treeview-5.16 "no change after illegal attempt" -body {
     .tv item newnode -height
 } -result 1
 
-#
-# COMMON TEST SETUP
-#
-.tv insert {} end -id dtest
-foreach id [list a b c d e] {
-    .tv insert dtest end -id $id
-}
-
 test treeview-6.1 "deletion - setup" -body {
+    .tv insert {} end -id dtest
+    foreach id [list a b c d e] {
+	.tv insert dtest end -id $id
+    }
     .tv children dtest
 } -result [list a b c d e]
 
@@ -789,16 +776,18 @@ test treeview-9.4 {no scrolling on see command on an item below a detached item;
     destroy .top
 } -result {1 {}}
 
-#
-# COMMON TEST SETUP
-#
-# for all 10.* tests
-#
-ttk::style configure Treeview -rowheight 20
-tvSetupWithItems
-set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
-
-test treeview-10.0 "See command" -body {
+test treeview-10.0 "See command" -setup {
+    # Setup common for all 10.* tests
+    ttk::style configure Treeview -rowheight 20
+    tvSetupWithItems
+    set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
+    proc bbY {item} {
+	set bb [.tv bbox $item "#1"]
+	set y [lindex $bb 1]
+	if {$y eq ""} {return "_"}
+	return [expr {$y - $::baseBbY}]
+    }
+} -body {
     set res ""
     lappend res [bbY nn99]
     .tv see nn99
@@ -998,26 +987,29 @@ test treeview-11.17 "<<TreeviewSelect>> when setting the selection" -body {
 # identify tests
 #
 
+test treeview-identify-setup "identify series - setup" -body {
+    destroy .tv
+    ttk::setTheme default
+    ttk::style configure Treeview -rowheight 10m
+    ttk::style configure Treeview.Heading -font {Arial 10}
+    ttk::treeview .tv -columns [list A B C]
+    .tv insert {} end -id branch -text branch -open true
+    .tv insert branch end -id item1 -text item1 -height 2
+    .tv insert branch end -id item2 -text item2
+    .tv insert branch end -id item3 -text item3
+    .tv insert {} end -id item4 -text item4
+
+    .tv column #0 -width 200	;# 0-200
+    .tv column A -width 200	;# 200-400
+    .tv column B -width 200	;# 400-600
+    .tv column C -width 200	;# 600-800 (plus slop for margins)
+
+    wm geometry . {} ; pack .tv ; update
+}
+
 #
 # COMMON TEST SETUP
 #
-destroy .tv
-ttk::setTheme default
-ttk::style configure Treeview -rowheight 10m
-ttk::style configure Treeview.Heading -font {Arial 10}
-ttk::treeview .tv -columns [list A B C]
-.tv insert {} end -id branch -text branch -open true
-.tv insert branch end -id item1 -text item1 -height 2
-.tv insert branch end -id item2 -text item2
-.tv insert branch end -id item3 -text item3
-.tv insert {} end -id item4 -text item4
-
-.tv column #0 -width 200	;# 0-200
-.tv column A -width 200	;# 200-400
-.tv column B -width 200	;# 400-600
-.tv column C -width 200	;# 600-800 (plus slop for margins)
-
-wm geometry . {} ; pack .tv ; update
 
 # treeview-identify-setup sets heading row font to Arial with size 10 points,
 # so the heading line center y-coordinate is (in pixels):
@@ -1207,16 +1199,17 @@ test treeview-identify-11 "bbox supporting -height" -body {
     set result
 } -result [list 40 40 80 20 100 20  20 40 60 20 80 20]
 
-#
-# COMMON TEST SETUP
-#
-destroy .tv
-ttk::setTheme default
-# Test that style rowheight is in control
-ttk::style configure Treeview -rowheight 73
-tvSetupWithItems
+test treeview-identify-cleanup "identify - cleanup" -body {
+    destroy .tv
+}
+
 
 test treeview-rowheight-1 "rowheight - setup" -body {
+    destroy .tv
+    ttk::setTheme default
+    # Test that style rowheight is in control
+    ttk::style configure Treeview -rowheight 73
+    tvSetupWithItems
     lindex [.tv bbox nn a] 3
 } -result 73
 
@@ -1285,6 +1278,7 @@ test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
 #
 # COMMON TEST CLEANUP
 #
+
 destroy .tv
 
 ### Misc. tests:

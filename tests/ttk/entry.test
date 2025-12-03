@@ -39,13 +39,8 @@ proc bgerror {error} {
 # TESTS
 #
 
-#
-# COMMON TEST SETUP
-#
-set widgetCreateResult [ttk::entry .e]
-
 test entry-1.1 "Create entry widget" -body {
-    set widgetCreateResult
+    ttk::entry .e
 } -result .e
 
 test entry-1.2 "Insert" -body {
@@ -92,9 +87,7 @@ test entry-1.8 "Index is between 0 and end" -body {
 
 test entry-1.done "Cleanup" -body { destroy .e }
 
-#
-# Test section 2. Scrollbar tests
-#
+# Scrollbar tests.
 
 test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
@@ -129,28 +122,18 @@ test entry-2.2 "Initial scroll position" -body {
 } -result {0.0 0.5}
 # NOTE: result can vary depending on font.
 
-#
-# Test section 3. Bounding box / scrolling tests
-#
+# Bounding box / scrolling tests.
+test entry-3.0 "Series 3 setup" -body {
+    ttk::style theme use default
+    variable fixed TkFixedFont
+    variable cw [font measure $fixed a]
+    variable ch [font metrics $fixed -linespace]
+    variable bd 3	;# border + padding + extra space for focus ring
+    variable ux [font measure $fixed 乎]
 
-#
-# COMMON TEST SETUP
-#
-# for tests entry-3.*
-#
-ttk::style theme use default
-variable fixed TkFixedFont
-variable cw [font measure $fixed a]
-variable ch [font metrics $fixed -linespace]
-variable bd 3	;# border + padding + extra space for focus ring
-variable ux [font measure $fixed 乎]
-pack [ttk::entry .e -font $fixed -width 20]
-update
-
-#
-# Test entry-3.0 has been removed in favour of the common test setup
-# for tests entry-3.0 above.
-#
+    pack [ttk::entry .e -font $fixed -width 20]
+    update
+}
 
 test entry-3.1 "bbox widget command" -body {
     .e delete 0 end
@@ -195,9 +178,7 @@ test entry-3.last "Series 3 cleanup" -body {
     destroy .e
 }
 
-#
-# Test section 4. Selection tests
-#
+# Selection tests:
 
 test entry-4.0 "Selection test - setup" -body {
     ttk::entry .e
@@ -255,9 +236,7 @@ test entry-4.7 {sel.first and sel.last gravity} -body {
     lappend result [.e index sel.first] [.e index sel.last] [.e get]
 } -result {5 9 5 12 01XXX2YYY3456789}
 
-#
-# Test section 5. Self-destruct tests
-#
+# Self-destruct tests.
 
 test entry-5.1 {widget deletion while active} -body {
     destroy .e
@@ -270,9 +249,8 @@ test entry-5.1 {widget deletion while active} -body {
 
 # TODO: test killing .e in -validatecommand, -invalidcommand, variable trace;
 
-#
-# Test section 6. -textvariable tests
-#
+
+# -textvariable tests.
 
 test entry-6.1 {Update linked variable in write trace} -body {
     catch {destroy .e}
@@ -444,7 +422,5 @@ test entry-12.2 "style command" -body {
 # TESTFILE CLEANUP
 #
 
-unset widgetCreateResult
-deleteWindows
 testutils forget entry scroll
 tcltest::cleanupTests

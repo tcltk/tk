@@ -3,20 +3,6 @@
 # Derived from core test suite entry-19.1 through entry-19.20
 #
 
-# NOTES
-#
-# * Various consecutive validation tests build each one upon the previous.
-#   This leads to:
-#   - test failures if one of them is skipped, e.g. through an invocation using
-#     the tcltest options "-match", "-skip" or "-limitconstraints 1".
-#   - cascading failures if an intermediate test doesn't pass.
-#
-# * The local test constraint "ttkEntry" (below) lets the test author switch
-#   between using the ttk entry and the core Tk entry for these tests. Setting
-#   this constraint to 0 (false) leads to a setting 1 (true) for the local test
-#   constraint "coreEntry".
-#
-
 #
 # TESTFILE INITIALIZATION
 #
@@ -41,7 +27,7 @@ testutils import entry
 # LOCAL TEST CONSTRAINTS
 #
 
-testConstraint ttkEntry 1; # see section NOTES above
+testConstraint ttkEntry 1
 testConstraint coreEntry [expr {![testConstraint ttkEntry]}]
 testConstraint NA 0
 
@@ -49,29 +35,35 @@ testConstraint NA 0
 # COMMON TEST SETUP
 #
 
-if {[testConstraint ttkEntry]} {
-    rename entry {}
-    interp alias {} entry {} ttk::entry
-}
-
 foreach i {1 2 3 4} {
     set validateCmd$i [list validateCommand$i %W %d %i %P %s %S %v %V]
 }
-
-destroy .e
-catch {unset textVar}
-unset -nocomplain validationData; # not necessary
-entry .e -validate all \
-	-validatecommand $validateCmd1 \
-	-invalidcommand bell \
-	-textvariable textVar \
-	;
-pack .e
 
 #
 # TESTS
 #
 
+test validate-0.0 "Setup" -constraints ttkEntry -body {
+    rename entry {}
+    interp alias {} entry {} ttk::entry
+    return;
+}
+
+test validate-0.1 "More setup" -body {
+    destroy .e
+    catch {unset textVar}
+    unset -nocomplain validationData; # not necessary
+    entry .e -validate all \
+	    -validatecommand $validateCmd1 \
+	    -invalidcommand bell \
+	    -textvariable textVar \
+	    ;
+    pack .e
+}
+
+# The validation tests build each one upon the previous, so cascading
+# failures aren't good
+#
 test validate-1.1 {entry widget validation - insert} -body {
     .e insert 0 a
     set validationData
@@ -131,6 +123,7 @@ test validate-1.9 {entry widget validation - vmode focus} -body {
 #
 # COMMON TEST SETUP
 #
+
 .e configure -validate all
 
 test validate-1.10 {entry widget validation - vmode all} -body {
@@ -247,6 +240,7 @@ test validate-2.1 "Validation script changes value" -body {
 #
 # COMMON TEST CLEANUP
 #
+
 destroy .e
 catch {unset textVar}
 
@@ -265,14 +259,13 @@ test validate-2.2 "configure in -validatecommand" -body {
 ### invalid state behavior
 #
 
-#
-# COMMON TEST SETUP
-#
-set E "123"
-ttk::entry .e -validatecommand {string is integer -strict %P} \
-	-validate all -textvariable E
-
 test validate-3.0 "Setup" -body {
+    set ::E "123"
+    ttk::entry .e \
+	-validatecommand {string is integer -strict %P} \
+	-validate all \
+	-textvariable ::E \
+	;
     return [list [.e get] [.e state]]
 } -result [list 123 {}]
 
@@ -309,6 +302,8 @@ test validate-3.6 "...until the value becomes valid" -constraints NA -body {
     return [list [.e get] [.e state]]
 } -result [list 1234 {}]
 
+test validate-3.last "Cleanup" -body { destroy .e }
+
 #
 # TESTFILE CLEANUP
 #
@@ -316,7 +311,6 @@ test validate-3.6 "...until the value becomes valid" -constraints NA -body {
 foreach i {1 2 3 4} {
     unset validateCmd$i
 }
-unset i E
+unset i
 testutils forget entry
-deleteWindows
 tcltest::cleanupTests
