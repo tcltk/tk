@@ -23,10 +23,9 @@ resetWindows
 # TESTS
 #
 
-#
-# COMMON TEST SETUP
-#
-pack [ttk::labelframe .lf] -expand true -fill both
+test labelframe-1.0 "Setup" -body {
+    pack [ttk::labelframe .lf] -expand true -fill both
+}
 
 test labelframe-2.1 "Can't use indirect descendant as labelwidget" -body {
     ttk::frame .lf.t
@@ -133,12 +132,13 @@ test labelframe-4.6 "Destroy nonchild content" -body {
     .lf cget -labelwidget
 } -result {}
 
-#
-# COMMON TEST CLEANUP
-#
-destroy .lf
+test labelframe-5.0 "Cleanup" -body {
+    destroy .lf
+}
 
-test labelframe-6.1 {Stacking order, labelframe should raise sibling -labelwidget above self} -body {
+# 1342876 -- labelframe should raise sibling -labelwidget above self.
+#
+test labelframe-6.1 "Stacking order" -body {
     toplevel .t
     pack [ttk::checkbutton .t.x1]
     pack [ttk::labelframe .t.lf -labelwidget [ttk::label .t.lb]]
