@@ -61,8 +61,8 @@ static int accessibilityTablesInitialized = 0;
 #endif
 
 struct MacRoleMap {
-    const char *tkrole;           /* Tk role string */
-    CFStringRef macrole;          /* CF role constant (CFStringRef) */
+    const char *tkrole;           /* Tk role string. */
+    CFStringRef macrole;          /* CF role constant (CFStringRef). */
 };
 
 const struct MacRoleMap roleMap[] = {
@@ -354,7 +354,6 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 - (NSString*) accessibilityTitle
 {
-    return nil;
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
 
     /* Return value for labels and text widgets. */
@@ -475,6 +474,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	(role && CFStringCompare(role, kAXIncrementorRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXListRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTableRole, 0) == kCFCompareEqualTo) ||
+	(role && CFStringCompare(role, kAXGroupRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXProgressIndicatorRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {

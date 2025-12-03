@@ -12,22 +12,7 @@
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && defined(NDEBUG)
-
-/*
- * Unlike Borland and Microsoft, we don't register exception handlers by
- * pushing registration records onto the runtime stack. Instead, we register
- * them by creating an TCLEXCEPTION_REGISTRATION within the activation record.
- */
-
-typedef struct TCLEXCEPTION_REGISTRATION {
-    struct TCLEXCEPTION_REGISTRATION *link;
-    EXCEPTION_DISPOSITION (*handler)(
-	    struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
-    void *ebp;
-    void *esp;
-    int status;
-} TCLEXCEPTION_REGISTRATION;
+#if defined(__GNUC__)
 
 /*
  * Need to add noinline flag to DllMain declaration so that gcc -O3 does not
@@ -38,7 +23,7 @@ typedef struct TCLEXCEPTION_REGISTRATION {
 BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason,
 			    LPVOID reserved) __attribute__ ((noinline));
 
-#else /* !HAVE_NO_SEH */
+#else
 
 /*
  * The following declaration is for the VC++ DLL entry point.
@@ -46,7 +31,7 @@ BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason,
 
 BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason,
 			    LPVOID reserved);
-#endif /* HAVE_NO_SEH */
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -101,9 +86,6 @@ DllMain(
     DWORD reason,
     LPVOID reserved)
 {
-#if defined(HAVE_NO_SEH) && !defined(__aarch64__) && defined(NDEBUG)
-    TCLEXCEPTION_REGISTRATION registration;
-#endif
     (void)reserved;
 
     /*
@@ -118,181 +100,7 @@ DllMain(
 	break;
 
     case DLL_PROCESS_DETACH:
-	/*
-	 * Protect the call to TkFinalize in an SEH block. We can't be
-	 * guaranteed Tk is always being unloaded from a stable condition.
-	 */
-
-#if defined(HAVE_NO_SEH) || defined(__aarch64__) || !defined(NDEBUG)
-#   if defined(__aarch64__) || !defined(NDEBUG)
 	TkFinalize(NULL);
-#   elif defined(_WIN64)
-	__asm__ __volatile__ (
-
-	    /*
-	     * Construct an TCLEXCEPTION_REGISTRATION to protect the call to
-	     * TkFinalize
-	     */
-
-	    "leaq	%[registration], %%rdx"		"\n\t"
-	    "movq	%%gs:0,		%%rax"		"\n\t"
-	    "movq	%%rax,		0x0(%%rdx)"	"\n\t" /* link */
-	    "leaq	1f(%%rip),	%%rax"		"\n\t"
-	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
-	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* rbp */
-	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* rsp */
-	    "movl	%[error],	0x20(%%rdx)"	"\n\t" /* status */
-
-	    /*
-	     * Link the TCLEXCEPTION_REGISTRATION on the chain
-	     */
-
-	    "movq	%%rdx,		%%gs:0"		"\n\t"
-
-	    :
-	    /* No outputs */
-	    :
-	    [registration]	"m"	(registration),
-	    [error]		"i"	(TCL_ERROR)
-	    :
-	    "%rax", "%rdx", "memory"
-	);
-
-	/* Just do a regular C call so we don't need to worry about following
-	 * the calling convention, specially the registers the function may
-	 * clobber: */
-	TkFinalize(NULL);
-
-	__asm__ __volatile__ (
-	    /*
-	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
-	     * and store a TCL_OK status
-	     */
-
-	    "movq	%%gs:0,		%%rdx"		"\n\t"
-	    "movl	%[ok],		%%eax"		"\n\t"
-	    "movl	%%eax,		0x20(%%rdx)"	"\n\t"
-	    "jmp	2f"				"\n"
-
-	    /*
-	     * Come here on an exception. Get the TCLEXCEPTION_REGISTRATION that
-	     * we previously put on the chain.
-	     */
-
-	    "1:"					"\t"
-	    "movq	%%gs:0,		%%rdx"		"\n\t"
-	    "movq	0x10(%%rdx),	%%rdx"		"\n\t"
-
-	    /*
-	     * Come here however we exited. Restore context from the
-	     * TCLEXCEPTION_REGISTRATION in case the stack is unbalanced.
-	     */
-
-	    "2:"					"\t"
-	    "movq	0x18(%%rdx),	%%rsp"		"\n\t"
-	    "movq	0x10(%%rdx),	%%rbp"		"\n\t"
-	    "movq	0x0(%%rdx),	%%rax"		"\n\t"
-	    "movq	%%rax,		%%gs:0"		"\n\t"
-
-	    :
-	    /* No outputs */
-	    :
-	    [ok]		"i"	(TCL_OK)
-	    :
-	    "%rax", "%rdx", "memory"
-	);
-
-#   else
-	__asm__ __volatile__ (
-
-	    /*
-	     * Construct an TCLEXCEPTION_REGISTRATION to protect the call to
-	     * TkFinalize
-	     */
-
-	    "leal	%[registration], %%edx"		"\n\t"
-	    "movl	%%fs:0,		%%eax"		"\n\t"
-	    "movl	%%eax,		0x0(%%edx)"	"\n\t" /* link */
-	    "leal	1f,		%%eax"		"\n\t"
-	    "movl	%%eax,		0x4(%%edx)"	"\n\t" /* handler */
-	    "movl	%%ebp,		0x8(%%edx)"	"\n\t" /* ebp */
-	    "movl	%%esp,		0xc(%%edx)"	"\n\t" /* esp */
-	    "movl	%[error],	0x10(%%edx)"	"\n\t" /* status */
-
-	    /*
-	     * Link the TCLEXCEPTION_REGISTRATION on the chain
-	     */
-
-	    "movl	%%edx,		%%fs:0"		"\n\t"
-
-	    :
-	    /* No outputs */
-	    :
-	    [registration]	"m"	(registration),
-	    [error]		"i"	(TCL_ERROR)
-	    :
-	    "%eax", "%ebx", "%edx", "memory"
-	);
-
-	TkFinalize(NULL);
-
-	__asm__ __volatile__ (
-
-	    /*
-	     * Come here on a normal exit. Recover the TCLEXCEPTION_REGISTRATION
-	     * and store a TCL_OK status
-	     */
-
-	    "movl	%%fs:0,		%%edx"		"\n\t"
-	    "movl	%[ok],		%%eax"		"\n\t"
-	    "movl	%%eax,		0x10(%%edx)"	"\n\t"
-	    "jmp	2f"				"\n"
-
-	    /*
-	     * Come here on an exception. Get the TCLEXCEPTION_REGISTRATION that
-	     * we previously put on the chain.
-	     */
-
-	    "1:"					"\t"
-	    "movl	%%fs:0,		%%edx"		"\n\t"
-	    "movl	0x8(%%edx),	%%edx"		"\n"
-
-
-	    /*
-	     * Come here however we exited. Restore context from the
-	     * TCLEXCEPTION_REGISTRATION in case the stack is unbalanced.
-	     */
-
-	    "2:"					"\t"
-	    "movl	0xc(%%edx),	%%esp"		"\n\t"
-	    "movl	0x8(%%edx),	%%ebp"		"\n\t"
-	    "movl	0x0(%%edx),	%%eax"		"\n\t"
-	    "movl	%%eax,		%%fs:0"		"\n\t"
-
-	    :
-	    /* No outputs */
-	    :
-	    [ok]		"i"	(TCL_OK)
-	    :
-	    "%eax", "%ebx", "%edx", "memory"
-	);
-
-#   endif
-#else /* HAVE_NO_SEH */
-	__try {
-	    /*
-	     * Run and remove our exit handlers, if they haven't already been
-	     * run. Just in case we are being unloaded prior to Tcl (it can
-	     * happen), we won't leave any dangling pointers hanging around
-	     * for when Tcl gets unloaded later.
-	     */
-
-	    TkFinalize(NULL);
-	} __except (EXCEPTION_EXECUTE_HANDLER) {
-	    /* empty handler body. */
-	}
-#endif
-
 	break;
     }
     return TRUE;

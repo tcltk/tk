@@ -14,7 +14,7 @@
 if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq ""} {
     # Do not load if screen reader is not running or command is unavailable
     proc ::tk::accessible args {
-    	return 0
+	return 0
     }
 } else {
     if {[tk windowingsystem] eq "x11" && [::tk::accessible::check_screenreader] eq 1} {

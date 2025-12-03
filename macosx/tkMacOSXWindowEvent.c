@@ -1375,19 +1375,25 @@ static const char *const accentNames[] = {
 }
 
 -(void) resetTkLayerBitmapContext {
-    static CGColorSpaceRef colorspace = NULL;
-    if (colorspace == NULL) {
-	colorspace = CGColorSpaceCreateDeviceRGB();
-	CGColorSpaceRetain(colorspace);
-    }
+    NSScreen *screen = [[self window] screen];
+    NSNumber *screenNumber = [[screen deviceDescription]
+				 objectForKey:@"NSScreenNumber"];
+    CGDirectDisplayID displayID = [screenNumber unsignedIntValue];
+    CGColorSpaceRef colorspace = CGDisplayCopyColorSpace(displayID);
     CGContextRef newCtx = CGBitmapContextCreate(
 	    NULL, self.layer.contentsScale * self.frame.size.width,
-	    self.layer.contentsScale * self.frame.size.height, 8, 0, colorspace,
-	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast // will also need to specify this when capturing
+	    self.layer.contentsScale * self.frame.size.height, 8, 0,
+	    colorspace,
+	    // will also need to specify this when capturing
+	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast
     );
-    CGContextScaleCTM(newCtx, self.layer.contentsScale, self.layer.contentsScale);
+    // CGDisplayCopyColorSpace retains the colorspace.
+    CGColorSpaceRelease(colorspace);
+    CGContextScaleCTM(newCtx, self.layer.contentsScale,
+		      self.layer.contentsScale);
 #if 0
-    fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n", (float)self.layer.contentsScale,
+    fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n",
+	    (float)self.layer.contentsScale,
 	    NSStringFromSize(self.frame.size).UTF8String, colorspace, newCtx,
 	    self.tkLayerBitmapContext ?
 	    (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
