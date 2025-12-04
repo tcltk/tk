@@ -75,7 +75,7 @@ typedef struct ImageModel {
 typedef struct {
     Tk_ImageType *imageTypeList;/* First in a list of all known image
 				 * types. */
-    int initialized;		/* Set to 1 if we've initialized the
+    bool initialized;		/* Set to 1 if we've initialized the
 				 * structure. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -151,7 +151,7 @@ Tk_CreateImageType(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
     }
     copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));

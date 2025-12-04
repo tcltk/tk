@@ -53,7 +53,7 @@ static unsigned long transparentColor;
 
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
-
+static HIShapeRef GetClipRgn(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -77,10 +77,10 @@ TkMacOSXInitCGDrawing(
     TCL_UNUSED(int),
     int limit)
 {
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
 	    Tcl_ResetResult(interp);
@@ -1112,14 +1112,14 @@ TkMacOSXSetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-Bool
+bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *)d;
-    Bool canDraw = true;
+    bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
     CGFloat drawingHeight;
@@ -1146,7 +1146,7 @@ TkMacOSXSetupDrawingContext(
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
 //#if 0 // disable clipping (almost works, but windows can open up blank)
-    dc.clipRgn = TkMacOSXGetClipRgn(d);
+    dc.clipRgn = GetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
 	/*
@@ -1351,7 +1351,7 @@ TkMacOSXSetupDrawingContext(
 end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    if (!canDraw && macDraw->winPtr != NULL) {
+    if (!canDraw && (macDraw->winPtr != NULL)) {
 	fprintf(stderr, "Cannot draw in %s - postponing.\n",
 		Tk_PathName(macDraw->winPtr));
     }
@@ -1432,7 +1432,7 @@ TkMacOSXRestoreDrawingContext(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetClipRgn --
+ * GetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
  *	drawable.
@@ -1447,7 +1447,7 @@ TkMacOSXRestoreDrawingContext(
  */
 
 HIShapeRef
-TkMacOSXGetClipRgn(
+GetClipRgn(
     Drawable drawable)		/* Drawable. */
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;

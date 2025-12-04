@@ -23,7 +23,7 @@
  */
 
 typedef struct {
-    int initialized;
+    bool initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -66,7 +66,7 @@ TkCreateXEventSource(void)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	Tcl_CreateEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
 	TkCreateExitHandler(DisplayExitHandler, NULL);
     }
@@ -98,7 +98,7 @@ DisplayExitHandler(
     (void)dummy;
 
     Tcl_DeleteEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 }
 
 /*

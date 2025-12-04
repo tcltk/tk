@@ -1,0 +1,58 @@
+set widgetDemo 1
+
+wm withdraw .
+
+set _w  [toplevel .acc]
+wm title $_w "Accessible Widget Demo"
+wm resizable $_w 0 0
+set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
+
+ttk::label $_w.x -text "This is a demonstration of accessible widgets in Tcl/Tk. Please click on the buttons
+below to interact with the different widgets and see how they support accessibility." -padding 5
+
+pack $_w.x -side top -fill x -expand no
+
+pack [ttk::frame $_w.f] -side bottom -fill x -expand no
+
+set data {
+{{Buttons} button.tcl}
+{{Check-buttons (select any of a group)} check.tcl}
+{{Radio-buttons (select one of a group)} radio.tcl}
+{{The simple Themed Tk widgets}  ttkbut.tcl}
+{{Color picker} clrpick.tcl}
+{{File selection dialog}  filebox.tcl}
+{{Font selection dialog} fontchoose.tcl}
+{{Message boxes} msgbox.tcl}
+{{A list of the 50 states} states.tcl}
+{{A table of countries} mclist.tcl}
+{{A directory browser tree} tree.tcl}
+{{Combo-boxes} combo.tcl}
+{{Entry} entry1.tcl}
+{{Editable text} text.tcl}
+{{Spin-box} ttkspin.tcl}
+{{Menus} menu.tcl}
+{{Notebook} ttknote.tcl}
+{{Paned window} ttkpane.tcl}
+{{Scale} hscale.tcl}
+}
+
+foreach item $data {
+set name [file rootname [file tail [lindex $item 1]]]
+set srcfile [file join $tk_demoDirectory [file tail [lindex $item 1]]]
+set btn [ttk::button $_w.f.$name -text [lindex $item 0] -padding 5 -command [list source $srcfile]]
+pack $btn -fill x -expand no
+}
+
+return
+
+
+# Local Variables:
+# mode: tcl
+# End:
+
+
+
+
+
+
+

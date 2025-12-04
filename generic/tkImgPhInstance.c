@@ -61,7 +61,7 @@ static int		ReclaimColors(ColorTableId *id, int numColors);
  */
 
 static Tcl_HashTable imgPhotoColorHash;
-static int imgPhotoColorHashInitialized;
+static bool imgPhotoColorHashInitialized;
 #define N_COLOR_HASH	(sizeof(ColorTableId) / sizeof(int))
 
 /*
@@ -1081,7 +1081,7 @@ GetColorTable(
     id.gamma = instancePtr->gamma;
     if (!imgPhotoColorHashInitialized) {
 	Tcl_InitHashTable(&imgPhotoColorHash, N_COLOR_HASH);
-	imgPhotoColorHashInitialized = 1;
+	imgPhotoColorHashInitialized = true;
     }
     entry = Tcl_CreateHashEntry(&imgPhotoColorHash, (char *) &id, &isNew);
 

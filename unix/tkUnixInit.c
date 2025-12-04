@@ -45,6 +45,7 @@ TkpInit(
     (void)SysNotify_Init (interp);
     Icu_Init(interp);
     Cups_Init(interp);
+    TkAtkAccessibility_Init(interp);
     return TCL_OK;
 }
 

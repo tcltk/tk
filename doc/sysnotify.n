@@ -31,8 +31,9 @@ tk sysnotify "Alert" \e
 The macOS and Windows versions are native implementations using system
 API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
-each platform the notification includes a platform-specific default image to
-accompany the text.
+macOS and Linux, the notification includes a platform-specific default image to
+accompany the text. On Windows, the notification displays the same image as the one
+in the system tray; Windows images will display best if they are 32x32 pixels. 
 .TP
 \fBmacOS\fR
 .

@@ -335,7 +335,7 @@ typedef struct {
 				 * Windows brain damage where it sends the
 				 * WM_GETMINMAXINFO message before the
 				 * WM_CREATE window. */
-    int initialized;		/* Flag indicating whether thread-specific
+    bool initialized;		/* Flag indicating whether thread-specific
 				 * elements of module have been
 				 * initialized. */
     int firstWindow;		/* Flag, cleared when the first window is
@@ -350,7 +350,7 @@ static Tcl_ThreadDataKey dataKey;
  * they must be shared across threads.
  */
 
-static int initialized;		/* Flag indicating whether module has been
+static bool initialized;		/* Flag indicating whether module has been
 				 * initialized. */
 
 TCL_DECLARE_MUTEX(winWmMutex)
@@ -642,7 +642,7 @@ InitWindowClass(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	tsdPtr->firstWindow = 1;
 	tsdPtr->iconPtr = NULL;
     }
@@ -651,7 +651,7 @@ InitWindowClass(
 	if (!initialized) {
 	    WNDCLASSW windowClass;
 
-	    initialized = 1;
+	    initialized = true;
 
 	    memset(&windowClass, 0, sizeof(WNDCLASSW));
 
@@ -1748,14 +1748,14 @@ TkWinWmCleanup(
     if (!initialized) {
 	return;
     }
-    initialized = 0;
+    initialized = false;
 
     tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	return;
     }
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 
     /*
      * COM library cleanup.

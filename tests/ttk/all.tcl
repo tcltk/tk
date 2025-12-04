@@ -47,6 +47,14 @@ unset ignoredIndices ignoredOptions index tcltestOptions
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
 
+# Determine test files to skip
+set skipFiles [tcltest::configure -notfile]
+if {"vista" ni [ttk::style theme names]} {
+    lappend skipFiles vsapi.test
+    tcltest::configure -notfile [lsort -unique $skipFiles]
+}
+unset skipFiles
+
 #
 # RUN ALL TESTS
 #

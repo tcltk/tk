@@ -1,12 +1,18 @@
-# This file is a Tcl script to test out Tk's interactions with the window
-# manager, including the "wm" command. It tests window manager interactions
-# that work across platforms. Window manager tests that only work on a specific
-# platform should be placed in unixWm.test or winWm.test.
+# This file is a Tcl script to test out platform-indifferent interactions
+# with the window manager, including the "wm" command.
+
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding the window manager that
+# are specific to the unix platform (this includes macOS), or to the windows
+# platform go into the test files unixWm.test or winWm.test respectively.
+#
 
 #
 # TESTFILE INITIALIZATION
@@ -2538,6 +2544,45 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 } -cleanup {
     deleteWindows
 } -result {}
+
+test wm-forget-1.5 {check wm forget for unmapped parent (ref. #3205464,#2967911,#3567786,#3381288)
+    #
+    # Moved here from winWm.test, test winWm-9.2 (cf. ticket #83eed90f93).
+    #
+} -constraints {
+    failsOnUbuntu failsOnXQuartz
+} -setup {
+    destroy .t
+    toplevel .t
+    frame .t.f -background blue -height 200 -width 200
+    frame .t.f.x -background red -height 100 -width 100
+    set result {}
+} -body {
+    pack .t.f.x
+    pack .t.f
+    lappend aid [after 5000 {set ::result timeout}] [after 500 {
+	wm manage .t.f
+	wm iconify .t
+	lappend aid [after 500 {
+	    wm forget .t.f
+	    wm deiconify .t
+	    lappend aid [after 500 {
+		pack .t.f
+		lappend aid [after 500 {
+		    set ::result [expr {
+			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
+	    }]
+	}]
+    }]
+    vwait ::result
+    foreach id $aid {
+	after cancel $id
+    }
+    set result
+} -cleanup {
+    destroy .t.f.x .t.f .t
+    unset -nocomplain result aid id
+} -result ok
 
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}

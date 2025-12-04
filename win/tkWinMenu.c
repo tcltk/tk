@@ -572,13 +572,12 @@ ReconfigureWindowsMenu(
     TkMenu *menuPtr = (TkMenu *)clientData;
     TkMenuEntry *mePtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
-    char *itemText = NULL;
     LPCWSTR lpNewItem;
     UINT flags;
     UINT itemID;
     Tcl_Size i, count;
-	int systemMenu = 0, base;
-    Tcl_DString translatedText;
+    int systemMenu = 0, base;
+    MENUITEMINFOW itemInfo;
 
     if (NULL == winMenuHdl) {
 	return;
@@ -597,6 +596,9 @@ ReconfigureWindowsMenu(
 
     count = menuPtr->numEntries;
     for (i = 0; i < count; i++) {
+	char *itemText = NULL;
+	Tcl_DString translatedText;
+
 	mePtr = menuPtr->entries[i];
 	lpNewItem = NULL;
 	flags = MF_BYPOSITION;
@@ -610,7 +612,6 @@ ReconfigureWindowsMenu(
 	itemText = GetEntryText(menuPtr, mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-		Tcl_DStringInit(&translatedText);
 		Tcl_UtfToWCharDString(itemText, TCL_INDEX_NONE, &translatedText);
 	    lpNewItem = (LPCWSTR) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
@@ -720,13 +721,35 @@ ReconfigureWindowsMenu(
 	if (!systemMenu) {
 	    InsertMenuW(winMenuHdl, 0xFFFFFFFF, flags, itemID, lpNewItem);
 	}
+	/*
+	 * For owner-drawn items, set the menu item string data
+	 * so screen readers can access the label text.
+	 */
+	if ((flags & MF_OWNERDRAW) && itemText != NULL) {
+	    Tcl_DString accessText;
+
+	    memset(&itemInfo, 0, sizeof(itemInfo));
+	    itemInfo.cbSize = sizeof(MENUITEMINFOW);
+	    itemInfo.fMask = MIIM_STRING | MIIM_DATA;
+
+	    /* Convert to wide string for accessibility. */
+	    Tcl_DStringInit(&accessText);
+	    Tcl_UtfToWCharDString(itemText, TCL_INDEX_NONE, &accessText);
+	    itemInfo.dwTypeData = (LPWSTR)Tcl_DStringValue(&accessText);
+	    itemInfo.cch = (UINT)Tcl_DStringLength(&accessText) / sizeof(WCHAR);
+	    itemInfo.dwItemData = (ULONG_PTR)mePtr;
+
+	    /* Set the menu item info - this makes text available to screen readers. */
+	    SetMenuItemInfoW(winMenuHdl, (UINT)i, TRUE, &itemInfo);
+
+	    Tcl_DStringFree(&accessText);
+	}
 	Tcl_DStringFree(&translatedText);
 	if (itemText != NULL) {
 	    ckfree(itemText);
 	    itemText = NULL;
 	}
     }
-
 
     if ((menuPtr->menuType == MENUBAR)
 	    && (menuPtr->parentTopLevelPtr != NULL)) {

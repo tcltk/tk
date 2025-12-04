@@ -93,7 +93,7 @@ typedef struct {
 } DataKey;
 
 typedef struct {
-    int initialized;		/* 0 means table below needs initializing. */
+    bool initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable predefBitmapTable;
 				/* Hash table created by Tk_DefineBitmap to
 				 * map from a name to a collection of in-core
@@ -1025,7 +1025,7 @@ BitmapInit(
      */
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	dummy = Tcl_CreateInterp();
 	Tcl_InitHashTable(&tsdPtr->predefBitmapTable, TCL_STRING_KEYS);
 

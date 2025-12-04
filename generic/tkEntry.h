@@ -301,8 +301,8 @@ enum selelement {
  * the Entry widget.
  */
 
-MODULE_SCOPE int	TkpDrawEntryBorderAndFocus(Entry *entryPtr,
-			    Drawable d, int isSpinbox);
+MODULE_SCOPE bool	TkpDrawEntryBorderAndFocus(Entry *entryPtr,
+			    Drawable d, bool isSpinbox);
 MODULE_SCOPE int	TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d);
 
 #endif /* _TKENTRY */

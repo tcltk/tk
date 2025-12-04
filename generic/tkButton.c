@@ -17,7 +17,7 @@
 #include "default.h"
 
 typedef struct {
-    int defaultsInitialized;
+    bool defaultsInitialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -633,7 +633,7 @@ ButtonCreate(
 
     if (!tsdPtr->defaultsInitialized) {
 	TkpButtonSetDefaults();
-	tsdPtr->defaultsInitialized = 1;
+	tsdPtr->defaultsInitialized = true;
     }
 
     if (objc < 2) {

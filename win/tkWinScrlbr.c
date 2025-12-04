@@ -50,7 +50,7 @@ typedef struct WinScrollbar {
  * Cached system metrics used to determine scrollbar geometry.
  */
 
-static int initialized = 0;
+static bool initialized = false;
 static int hArrowWidth, hThumb; /* Horizontal control metrics. */
 static int vArrowHeight, vThumb; /* Vertical control metrics. */
 
@@ -117,7 +117,7 @@ TkpCreateScrollbar(
     if (!initialized) {
 	Tcl_MutexLock(&winScrlbrMutex);
 	UpdateScrollbarMetrics();
-	initialized = 1;
+	initialized = true;
 	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 

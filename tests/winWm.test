@@ -1,9 +1,21 @@
-# This file tests  is a Tcl script to test the procedures in the file
-# tkWinWm.c.
+# This file is a Tcl script to test out interactions with the window manager
+# that are specific for the windows platform, including the "wm" command
+# (these are implemented in the file tkWinWm.c).
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests regarding
+#   the window manager that are specific to the unix platform (this includes
+#   macOS) go into the test file unixWm.test. Tests that are platform-indifferent
+#   go into test file wm.test. Or they may exists as each other's counterparts
+#   in both unixWm.test and winWm.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-windows platforms.
+#
 
 #
 # TESTFILE INITIALIZATION
@@ -542,38 +554,9 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     destroy .tx .t .sd
 } -result ok
 
-test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuartz} -setup {
-    destroy .t
-    toplevel .t
-    set winwm92 {}
-    frame .t.f -background blue -height 200 -width 200
-    frame .t.f.x -background red -height 100 -width 100
-} -body {
-    pack .t.f.x
-    pack .t.f
-    lappend aid [after 5000 {set ::winwm92 timeout}] [after 500 {
-	wm manage .t.f
-	wm iconify .t
-	lappend aid [after 500 {
-	    wm forget .t.f
-	    wm deiconify .t
-	    lappend aid [after 500 {
-		pack .t.f
-		lappend aid [after 500 {
-		    set ::winwm92 [expr {
-			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
-	    }]
-	}]
-    }]
-    vwait ::winwm92
-    foreach id $aid {
-	after cancel $id
-    }
-    set winwm92
-} -cleanup {
-    destroy .t.f.x .t.f .t
-    unset -nocomplain winwm92 aid id
-} -result ok
+#
+# Moved test winWm-9.2 to wm-forget-1.5 in wm.test (cf. ticket #83eed90f93).
+#
 
 #
 # TESTFILE CLEANUP
