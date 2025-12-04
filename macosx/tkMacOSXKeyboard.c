@@ -133,8 +133,8 @@ static UniChar xvirtual2unichar[512];	/* virtual with index to unichar */
  * Flags.
  */
 
-static BOOL initialized = NO;
-static BOOL keyboardChanged = YES;
+static bool initialized = false;
+static bool keyboardChanged = true;
 
 /*
  * Prototypes for static functions used in this file.
@@ -155,7 +155,7 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    keyboardChanged = YES;
+    keyboardChanged = true;
     UpdateKeymaps();
 }
 @end
@@ -222,7 +222,7 @@ InitHashTables(void)
 	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keysym));
     }
     UpdateKeymaps();
-    initialized = YES;
+    initialized = true;
 }
 
 /*
@@ -348,7 +348,7 @@ KeyDataToUnicode(
 	    }
 	    CFRelease(currentKeyboardLayout);
 	}
-	keyboardChanged = 0;
+	keyboardChanged = false;
     }
     if (layoutData) {
 	OptionBits options = 0;

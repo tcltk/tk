@@ -3071,8 +3071,9 @@ PanedWindowIdentifyCoords(
     int x, int y)		/* Coordinates of the point to identify. */
 {
     int i, sashHeight, sashWidth, thisx, thisy;
-    int found, isHandle, lpad, rpad, tpad, bpad;
+    int found, lpad, rpad, tpad, bpad;
     int first, last, handleSize, sashPad;
+	bool isHandle;
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
@@ -3115,7 +3116,7 @@ PanedWindowIdentifyCoords(
     }
 
     GetFirstLastVisiblePane(pwPtr, &first, &last);
-    isHandle = 0;
+    isHandle = false;
     found = -1;
     for (i = 0; i < pwPtr->numPanes - 1; i++) {
 	if (pwPtr->panes[i]->hide || i == last) {
@@ -3137,11 +3138,11 @@ PanedWindowIdentifyCoords(
 		thisy = pwPtr->panes[i]->handley;
 		if (pwPtr->orient == ORIENT_HORIZONTAL) {
 		    if (thisy <= y && y <= (thisy + handleSize)) {
-			isHandle = 1;
+			isHandle = true;
 		    }
 		} else {
 		    if (thisx <= x && x <= (thisx + handleSize)) {
-			isHandle = 1;
+			isHandle = true;
 		    }
 		}
 	    }

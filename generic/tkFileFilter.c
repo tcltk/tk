@@ -15,7 +15,7 @@
 
 static int		AddClause(Tcl_Interp *interp, FileFilter *filterPtr,
 			    Tcl_Obj *patternsObj, Tcl_Obj *ostypesObj,
-			    int isWindows);
+			    bool isWindows);
 static FileFilter *	GetFilter(FileFilterList *flistPtr, const char *name);
 
 /*
@@ -77,7 +77,7 @@ TkGetFileFilters(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     FileFilterList *flistPtr,	/* Stores the list of file filters. */
     Tcl_Obj *types,		/* Value of the -filetypes option. */
-    int isWindows)		/* True if we are running on Windows. */
+    bool isWindows)		/* True if we are running on Windows. */
 {
     Tcl_Size i, listObjc;
     Tcl_Obj ** listObjv = NULL;
@@ -226,7 +226,7 @@ AddClause(
     FileFilter *filterPtr,	/* Stores the new filter clause */
     Tcl_Obj *patternsObj,	/* A Tcl list of glob patterns. */
     Tcl_Obj *ostypesObj,	/* A Tcl list of Mac OSType strings. */
-    int isWindows)		/* True if we are running on Windows; False if
+    bool isWindows)		/* True if we are running on Windows; False if
 				 * we are running on the Mac; Glob patterns
 				 * need to be processed differently on these
 				 * two platforms */

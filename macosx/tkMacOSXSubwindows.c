@@ -152,7 +152,7 @@ XMapWindow(
 	return BadWindow;
     }
     MacDrawable *macWin = (MacDrawable *)window;
-    static Bool initialized = NO;
+    static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
     //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
@@ -260,7 +260,7 @@ XMapWindow(
 	event.xvisibility.state = VisibilityUnobscured;
 	NotifyVisibility(winPtr, &event);
     } else {
-	initialized = YES;
+	initialized = true;
     }
     return Success;
 }

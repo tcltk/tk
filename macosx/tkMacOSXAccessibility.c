@@ -47,7 +47,7 @@ static int ActionEventProc(Tcl_Event *ev, int flags);
 char *callback_command;
 static Tcl_HashTable *TkWindowToElementTable = NULL;
 static Tcl_HashTable *ElementToTkWindowTable = NULL;
-static int accessibilityTablesInitialized = 0;
+static bool accessibilityTablesInitialized = false;
 
 /*
  * Map script-level roles to CoreFoundation role constants, which are bridged
@@ -752,7 +752,7 @@ static void InitAccessibilityHashTables(void)
 	Tcl_InitHashTable(TkWindowToElementTable, TCL_ONE_WORD_KEYS);
 	Tcl_InitHashTable(ElementToTkWindowTable, TCL_ONE_WORD_KEYS);
 
-	accessibilityTablesInitialized = 1;
+	accessibilityTablesInitialized = true;
     }
 }
 
@@ -860,7 +860,7 @@ void TkAccessibility_CleanupHashTables(void)
 
     TkWindowToElementTable = NULL;
     ElementToTkWindowTable = NULL;
-    accessibilityTablesInitialized = 0;
+    accessibilityTablesInitialized = false;
 }
 
 /*

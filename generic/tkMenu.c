@@ -78,7 +78,7 @@
 #define MENU_HASH_KEY "tkMenus"
 
 typedef struct {
-    int menusInitialized;	/* Flag indicates whether thread-specific
+    bool menusInitialized;	/* Flag indicates whether thread-specific
 				 * elements of the Windows Menu module have
 				 * been initialized. */
     Tk_OptionTable menuOptionTable;
@@ -93,7 +93,7 @@ static Tcl_ThreadDataKey dataKey;
  * module has been initialized. The Mutex protects access to that flag.
  */
 
-static int menusInitialized;
+static bool menusInitialized;
 TCL_DECLARE_MUTEX(menuMutex)
 
 /*
@@ -3668,7 +3668,7 @@ static void
 MenuCleanup(
     TCL_UNUSED(void *))
 {
-    menusInitialized = 0;
+    menusInitialized = false;
 }
 
 /*
@@ -3698,7 +3698,7 @@ TkMenuInit(void)
 	Tcl_MutexLock(&menuMutex);
 	if (!menusInitialized) {
 	    TkpMenuInit();
-	    menusInitialized = 1;
+	    menusInitialized = true;
 	}
 
 	/*
@@ -3724,7 +3724,7 @@ TkMenuInit(void)
 		Tk_CreateOptionTable(NULL, specsArray[RADIO_BUTTON_ENTRY]);
 	tsdPtr->entryOptionTables[CHECK_BUTTON_ENTRY] =
 		Tk_CreateOptionTable(NULL, specsArray[CHECK_BUTTON_ENTRY]);
-	tsdPtr->menusInitialized = 1;
+	tsdPtr->menusInitialized = true;
     }
 }
 

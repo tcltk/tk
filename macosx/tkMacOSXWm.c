@@ -6686,7 +6686,7 @@ TkMacOSXMakeRealWindowExist(
     NSString *identifier;
     char *tabbingId = NULL;
     long tabbingMode = NSWindowTabbingModeAutomatic;
-    static int initialized = 0;
+    static bool initialized = false;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -6728,7 +6728,7 @@ TkMacOSXMakeRealWindowExist(
 	    Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&pathnameToTabbingId, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
-	    initialized = 1;
+	    initialized = true;
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr));
 	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;

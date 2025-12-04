@@ -142,7 +142,7 @@ typedef struct {
     Tk_PhotoImageFormatVersion3 *formatListVersion3;
 				/* Pointer to the first in the list of known
 				 * photo image formats in Version3 format.*/
-    int initialized;		/* Set to 1 if we've initialized the
+    bool initialized;		/* Set to true if we've initialized the
 				 * structure. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -287,7 +287,7 @@ Tk_CreatePhotoImageFormat(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
     copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
@@ -314,7 +314,7 @@ Tk_CreatePhotoImageFormatVersion3(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
     copyPtr = (Tk_PhotoImageFormatVersion3 *)
