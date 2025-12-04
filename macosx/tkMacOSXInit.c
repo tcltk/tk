@@ -403,7 +403,7 @@ static void closePanels(
 #if defined(USE_CUSTOM_EXIT_PROC)
 static bool doCleanupFromExit = false;
 
-bool TkpWantsExitProc(void) {
+int TkpWantsExitProc(void) {
     return doCleanupFromExit;
 }
 
