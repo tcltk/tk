@@ -1583,13 +1583,13 @@ EntryWorldChanged(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkpDrawEntryBorderAndFocus(
     TCL_UNUSED(Entry *),
     TCL_UNUSED(Drawable),
-    TCL_UNUSED(int))
+    TCL_UNUSED(bool))
 {
-    return 0;
+    return false;
 }
 
 /*
