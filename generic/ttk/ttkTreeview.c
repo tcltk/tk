@@ -6928,7 +6928,6 @@ TTK_LAYOUT("Treeview",
 	TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
 
-#ifndef USE_FOCUS_RING
 TTK_LAYOUT("Item",
 	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
@@ -6949,32 +6948,6 @@ TTK_LAYOUT("Heading",
 
 TTK_LAYOUT("Row",
 	TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
-#else
-TTK_LAYOUT("Item",
-    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
-	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
-	    TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
-	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH))))
-
-TTK_LAYOUT("Cell",
-    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
-	TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	    TTK_NODE("Treeitem.text", TTK_FILL_BOTH))))
-
-TTK_LAYOUT("Heading",
-    TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
-    TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
-	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
-
-TTK_LAYOUT("Row",
-    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
-	TTK_NODE("Treeitem.row", TTK_FILL_BOTH)))
-#endif
 
 TTK_LAYOUT("Separator",
     TTK_NODE("Treeitem.separator", TTK_FILL_BOTH))
@@ -7102,9 +7075,9 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
     { "-rownumber", TK_OPTION_INT,
 	offsetof(RowElement,rowNumberObj), "0" },
     { "-focuswidth", TK_OPTION_PIXELS,
-	offsetof(RowElement,focusWidthObj), "2" },
+	offsetof(RowElement,focusWidthObj), "1" },
     { "-focuscolor", TK_OPTION_COLOR,
-	offsetof(RowElement,focusColorObj), "#008000" },
+	offsetof(RowElement,focusColorObj), "#000000" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
