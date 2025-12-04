@@ -169,7 +169,7 @@ MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long gre
  */
 
 #define USE_CUSTOM_EXIT_PROC
-EXTERN bool TkpWantsExitProc(void);
+EXTERN int TkpWantsExitProc(void);
 EXTERN TCL_NORETURN void TkpExitProc(void *);
 
 #endif /* _TKMACPORT */
