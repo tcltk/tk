@@ -51,7 +51,7 @@ TkplatformtestInit(
      * Set a flag indicating that testing is in progress.
      */
 
-    testsAreRunning = 1;
+    testsAreRunning = true;
 
     /*
      * Add commands for platform specific tests on MacOS here.
