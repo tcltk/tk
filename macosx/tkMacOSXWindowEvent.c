@@ -1037,7 +1037,7 @@ ExposeRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
-    static bool initialized = NO;
+    static bool initialized = false;
     if (context && ![NSApp tkWillExit]) {
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
@@ -1059,7 +1059,7 @@ ExposeRestrictProc(
 
 	if (!initialized) {
 	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    initialized = YES;
+	    initialized = true;
 	}
     }
 }

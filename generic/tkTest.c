@@ -202,7 +202,7 @@ int
 Tktest_Init(
     Tcl_Interp *interp)		/* Interpreter for application. */
 {
-    static int initialized = 0;
+    static bool initialized = false;
 
     if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
 	return TCL_ERROR;
@@ -264,7 +264,7 @@ Tktest_Init(
      */
 
     if (!initialized) {
-	initialized = 1;
+	initialized = true;
 	Tk_CreateImageType(&imageType);
     }
 

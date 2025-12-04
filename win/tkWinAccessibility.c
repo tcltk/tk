@@ -90,7 +90,7 @@ extern Tcl_HashTable *TkAccessibilityObject;
 
 /* Hash tables for linking Tk windows to accessibility object and HWND. */
 static Tcl_HashTable *tkAccessibleTable;
-static int tkAccessibleTableInitialized = 0;
+static bool tkAccessibleTableInitialized = false;
 static Tcl_HashTable *toplevelChildTables = NULL;
 
 /* Data structures for managing execution on main thread. */
@@ -1552,7 +1552,7 @@ void InitTkAccessibleTable(void)
 	tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
 	if (tkAccessibleTable) {
 	    Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
-	    tkAccessibleTableInitialized = 1;
+	    tkAccessibleTableInitialized = true;
 	}
     }
 }

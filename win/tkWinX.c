@@ -94,7 +94,7 @@ extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
 
 static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
-static int childClassInitialized;	/* Registered child class? */
+static bool childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
@@ -246,10 +246,10 @@ TkWinXInit(
     CHARSETINFO lpCs;
     DWORD lpCP;
 
-    if (childClassInitialized != 0) {
+    if (childClassInitialized) {
 	return;
     }
-    childClassInitialized = 1;
+    childClassInitialized = true;
 
     comctl.dwSize = sizeof(INITCOMMONCONTROLSEX);
     comctl.dwICC = ICC_WIN95_CLASSES;
@@ -322,7 +322,7 @@ TkWinXCleanup(
      */
 
     if (childClassInitialized) {
-	childClassInitialized = 0;
+	childClassInitialized = false;
 	UnregisterClassW(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
