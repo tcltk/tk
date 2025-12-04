@@ -46,7 +46,7 @@
  */
 
 typedef struct {
-    int initialized;		/* 0 means table below needs initializing. */
+    bool initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable hashTable;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -206,7 +206,7 @@ Tk_CreateOptionTable(
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(&tsdPtr->hashTable, TCL_ONE_WORD_KEYS);
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
     }
 
     /*
@@ -592,7 +592,7 @@ DoObjConfig(
 				 * representation of the value if
 				 * savedOptionPtr is NULL. */
     const Tk_OptionSpec *specPtr;
-    int nullOK;
+    bool nullOK;
 
     /*
      * Save the old object form for the value, if there is one.
@@ -624,7 +624,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *)&internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) != 0;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;

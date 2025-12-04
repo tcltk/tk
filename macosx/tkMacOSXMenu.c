@@ -735,7 +735,7 @@ TkpConfigureMenuEntry(
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
 			mePtr->fontPtr : mePtr->menuPtr->fontPtr);
-    static int initialized = 0;
+    static bool initialized = 0;
 
     if (!initialized) {
 	TkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);

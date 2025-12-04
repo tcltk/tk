@@ -5,12 +5,19 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-# NOTE
+# NOTES
 #
-# Many of these tests are visually oriented and cannot be checked
-# programmatically (such as "does an underlined font appear to be
-# underlined?"); these tests attempt to exercise the code in question,
-# but there are no results that can be checked.
+# * This test file is specific for the windows platform. Tests regarding the font
+#   system that are specific to the unix platform go into the test file
+#   unixFont.test. Tests that are platform-indifferent go into the test file
+#   font.test. Or they may exists as each other's counterparts in both
+#   unixFont.test and winFont.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-windows platforms.
+# * Many of the tests are visually oriented. They do exercise the code in
+#   question, but there are no results that can be checked programmatically
+#   (such as "does an underlined font appear to be underlined?").
+#
 
 #
 # TESTFILE INITIALIZATION

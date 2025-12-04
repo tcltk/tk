@@ -177,7 +177,7 @@ typedef struct StackLevel {
 } StackLevel;
 
 typedef struct {
-    int initialized;		/* 0 means the ThreadSpecific Data structure
+    bool initialized;		/* 0 means the ThreadSpecific Data structure
 				 * for the current thread needs to be
 				 * initialized. */
     ElArray *stacks[NUM_STACKS];
@@ -1432,7 +1432,7 @@ OptionThreadExitProc(
 	    ckfree(tsdPtr->stacks[i]);
 	}
 	ckfree(tsdPtr->levels);
-	tsdPtr->initialized = 0;
+	tsdPtr->initialized = false;
     }
 }
 
@@ -1468,8 +1468,8 @@ OptionInit(
      * First, once-only initialization.
      */
 
-    if (tsdPtr->initialized == 0) {
-	tsdPtr->initialized = 1;
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = true;
 	tsdPtr->cachedWindow = NULL;
 	tsdPtr->numLevels = 5;
 	tsdPtr->curLevel = -1;

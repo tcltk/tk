@@ -40,7 +40,7 @@ typedef struct WinButton {
  */
 
 typedef struct {
-    BOOLEAN initialized;
+    bool initialized;
     int boxSize;		/* Width & height of the box. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -156,7 +156,7 @@ InitBoxes(Tk_Window tkwin)
     double scalingLevel = TkScalingLevel(tkwin);
 
     tsdPtr->boxSize = (int)(16.0 * scalingLevel);
-    tsdPtr->initialized = TRUE;
+    tsdPtr->initialized = true;
 }
 
 /*

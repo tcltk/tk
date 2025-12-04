@@ -550,7 +550,7 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
     deleteWindows
 } -result {}
 
-#
+
 test visual-9.1 {Using two different visuals on the same screen - bug c23f79ef96} -constraints {
     haveDefault24bitsVisual have32bitsVisual
 } -setup {
@@ -565,6 +565,8 @@ test visual-9.1 {Using two different visuals on the same screen - bug c23f79ef96
     deleteWindows
 } -result {24 32}
 
+
+#
 # TESTFILE CLEANUP
 #
 

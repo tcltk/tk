@@ -498,10 +498,10 @@ TkMacOSXInitAppleEvents(
     TCL_UNUSED(Tcl_Interp *))
 {
     NSAppleEventManager *aeManager = [NSAppleEventManager sharedAppleEventManager];
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleQuitApplicationEvent:withReplyEvent:)

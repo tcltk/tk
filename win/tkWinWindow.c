@@ -14,7 +14,7 @@
 #include "tkBusy.h"
 
 typedef struct {
-    int initialized;		/* 0 means table below needs initializing. */
+    bool initialized;		/* false means table below needs initializing. */
     Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window
 				 * handles. */
 } ThreadSpecificData;
@@ -57,7 +57,7 @@ Tk_AttachHWND(
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
     }
 
     /*
@@ -113,7 +113,7 @@ Tk_HWNDToWindow(
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
     }
     entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, hwnd);
     if (entryPtr != NULL) {

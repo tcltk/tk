@@ -1,9 +1,20 @@
-# This file is a Tcl script to test menus in Tk. This # file tests the
-# features of the menu system that are specific for MS Windows.
+# This file is a Tcl script that tests the features of the Tk menu system that
+# are specific to MS Windows.
 #
 # Copyright © 1995-1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
+
+# NOTES
+#
+# * This test file is specific for the MS Windows platform. Tests regarding
+#   the menu system that are specific to the unix platform (this includes macOS)
+#   go into the test file unixMenu.test. Tests that are platform-indifferent go
+#   into test file menu.test. Or they may exists as each other's counterparts in
+#   both unixMenu.test and winMenu.test, but only if they are an integral part
+#   of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-windows platforms.
+#
 
 #
 # TESTFILE INITIALIZATION
@@ -1199,7 +1210,7 @@ test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -constraints {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test winMenu-32.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints {
-    unix nonUnixUserInteraction
+    win nonUnixUserInteraction
 } -setup {
     destroy .mb
 } -body {
@@ -1302,7 +1313,7 @@ test winMenu-32.14 {TkpComputeStandardMenuGeometry - second indicator less or eq
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
 test winMenu-32.15 {TkpComputeStandardMenuGeometry - second indicator larger} -constraints {
-    testImageType unix
+    testImageType win
 } -setup {
     destroy .m1
     catch {image delete image1}

@@ -49,7 +49,7 @@ typedef struct {
 				 * windows. */
     TkDisplay *displayList;	/* List of all displays currently in use by
 				 * the current thread. */
-    int initialized;		/* 0 means the structures above need
+    bool initialized;		/* false means the structures above need
 				 * initializing. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -201,6 +201,8 @@ static const TkCmd commands[] = {
     {NULL,		NULL,			0}
 };
 
+extern int TkAccessibility_Init(Tcl_Interp *interp);
+
 /*
  * Forward declarations to functions defined later in this file:
  */
@@ -335,7 +337,7 @@ CreateTopLevelWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 
 	/*
 	 * Create built-in image types.
@@ -2981,7 +2983,7 @@ DeleteWindowsExitProc(
 
     tsdPtr->numMainWindows = 0;
     tsdPtr->mainWindowList = NULL;
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 }
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
@@ -3223,6 +3225,14 @@ Initialize(
      */
 
     TkInitEmbeddedConfigurationInformation(interp);
+
+    /*
+     * Initalize accessibility module.
+     * Must do this early because it is bound to <Map> events,
+     * and will return an error if the commands are not
+     * available.
+     */
+     TkAccessibility_Init(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.

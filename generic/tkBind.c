@@ -1233,7 +1233,7 @@ ClearPromotionLists(
  * otherwise this should belong to function TkBindInit().
  */
 TCL_DECLARE_MUTEX(bindMutex);
-static int initialized = 0;
+static bool initialized = false;
 
 void
 TkBindInit(
@@ -1367,7 +1367,7 @@ TkBindInit(
 		Tcl_SetHashValue(hPtr, eiPtr);
 	    }
 
-	    initialized = 1;
+	    initialized = true;
 	}
 	Tcl_MutexUnlock(&bindMutex);
     }
@@ -2778,7 +2778,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int isModKeyOnly = 0;
+    bool isModKeyOnly = false;
     Tcl_Size i;
 
     assert(dispPtr);
@@ -2808,7 +2808,7 @@ MatchPatterns(
     if (IsKeyEventType(curEvent->xev.type)) {
 	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
-		isModKeyOnly = 1;
+		isModKeyOnly = true;
 		break;
 	    }
 	}
