@@ -260,7 +260,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
-	(void)sender;
+    (void)sender;
 
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
@@ -330,7 +330,67 @@ static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
 {
-    Tcl_Obj *result = NULL;
+    static Tcl_Obj *result = NULL;
+    if (result) {
+	return result;
+    }
+
+    // In a Tk framework the demos directory and the Wish.app are both in the
+    // framework's Resources directory.  An app can find its filesystem path,
+    // by calling CFBundleGetMainBundle, so the Wish.app can find the demo
+    // directory in the Tk framework, wherever that may be installed.  That
+    // scheme is used in the code below.  The original implementation used the
+    // pkgconfig command to try to find the demo directory.  However, the paths
+    // cached by the pkgconfig command come from the original construction of
+    // the framework in the build directory, not from the final installed
+    // location of the framework.  That means that the pkgconfig scheme will
+    // only work as long as the build directory exists, and will not work when
+    // the Tk library was built on a different machine, say for a binary
+    // distribution.  Here we try the pkgconfig approach in the case where
+    // CFBundleGetMainBundle fails, e.g. when using package require Tk in
+    // tclsh, and just hope that Tk was built by the user and the build
+    // directory is still intact.
+
+    char widgetPath[PATH_MAX + 1] = "";
+    CFURLRef wishAppURL, resourcesURL, scriptsURL, demosURL, widgetURL;
+    wishAppURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    if (wishAppURL) {
+	resourcesURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
+			     wishAppURL);
+	CFRelease(wishAppURL);
+	widgetPath[0] = '\0';
+    }
+    if (resourcesURL) {
+	scriptsURL = CFURLCreateCopyAppendingPathComponent(NULL,
+	    resourcesURL, CFSTR("Scripts"), True);
+	CFRelease(resourcesURL);
+    }
+    if (scriptsURL) {
+	demosURL = CFURLCreateCopyAppendingPathComponent(NULL,
+	    scriptsURL, CFSTR("demos"), True);
+	CFRelease(scriptsURL);
+    }
+    if (demosURL) {
+	widgetURL = CFURLCreateCopyAppendingPathComponent(NULL,
+	    demosURL, CFSTR("widget"), False);
+	CFRelease(demosURL);
+    }
+    if (widgetURL) {
+	CFURLGetFileSystemRepresentation(widgetURL, true,
+	      (unsigned char *) widgetPath, PATH_MAX);
+	CFRelease(widgetURL);
+    }
+    if (widgetPath[0]) {
+	Tcl_Obj *path = Tcl_NewStringObj(widgetPath, strlen(widgetPath));
+	Tcl_IncrRefCount(path);
+	result = Tcl_FSGetNormalizedPath(interp, path);
+	Tcl_IncrRefCount(result);
+	Tcl_DecrRefCount(path);
+	return result;
+    }
+
+    // Apparently we are not running as an app, so we fall back to using
+    // pkgconfig and hope the build directory is still there.
 
     if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
 		   TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
@@ -340,6 +400,7 @@ GetWidgetDemoPath(
 	Tcl_IncrRefCount(libpath);
 	Tcl_IncrRefCount(demo[0]);
 	result = Tcl_FSJoinToPath(libpath, 1, demo);
+	Tcl_IncrRefCount(result);
 	Tcl_DecrRefCount(demo[0]);
 	Tcl_DecrRefCount(libpath);
     }
