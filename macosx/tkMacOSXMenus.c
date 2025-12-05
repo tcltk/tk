@@ -352,7 +352,11 @@ GetWidgetDemoPath(
     // directory is still intact.
 
     char widgetPath[PATH_MAX + 1] = "";
-    CFURLRef wishAppURL, resourcesURL, scriptsURL, demosURL, widgetURL;
+    CFURLRef wishAppURL = NULL,
+	     resourcesURL = NULL,
+	     scriptsURL = NULL,
+	     demosURL = NULL,
+	     widgetURL = NULL;
     wishAppURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
     if (wishAppURL) {
 	resourcesURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
