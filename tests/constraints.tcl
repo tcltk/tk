@@ -78,7 +78,6 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 
 testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-testConstraint withoutXft [expr {![testConstraint withXft]}]
 unset fs
 
 # Expected results of some tests on Linux rely on availability of the "times"
