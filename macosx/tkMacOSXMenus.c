@@ -389,7 +389,7 @@ GetWidgetDemoPath(
 	result = Tcl_FSGetNormalizedPath(interp, path);
 	Tcl_IncrRefCount(result);
 	Tcl_DecrRefCount(path);
-	printf("Using %s\n", widgetPath);
+	// printf("Using %s\n", widgetPath);
 	return result;
     }
 
@@ -409,7 +409,7 @@ GetWidgetDemoPath(
 	Tcl_DecrRefCount(libpath);
     }
     Tcl_ResetResult(interp);
-    printf("Using pkgconfig -> %s\n", Tcl_GetString(result));
+    // printf("Using pkgconfig -> %s\n", Tcl_GetString(result));
     return result;
 }
 
