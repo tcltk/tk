@@ -1267,8 +1267,8 @@ static const char *const accentNames[] = {
      * Update some style elements
      */
     Tcl_Interp *interp = Tk_Interp(tkwin);
-    int code = Tcl_EvalEx(interp, "ttk::AppearanceChanged", TCL_INDEX_NONE,
-	    TCL_EVAL_GLOBAL);
+    int code = Tcl_EvalEx(interp, "after 0 ttk::AppearanceChanged",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	Tcl_BackgroundException(interp, code);
     }
