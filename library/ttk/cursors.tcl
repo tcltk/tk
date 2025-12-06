@@ -47,24 +47,24 @@ namespace eval ttk {
 	none		none
 
 	standard	left_ptr
-	text 		xterm
+	text		xterm
 	link		hand2
 	crosshair	crosshair
 	busy		watch
 	forbidden	pirate
+	move		fleur
 
-	hresize 	sb_h_double_arrow
-	vresize 	sb_v_double_arrow
+	hresize		sb_h_double_arrow
+	vresize		sb_v_double_arrow
 
-	nresize 	top_side
-	sresize 	bottom_side
-	wresize 	left_side
-	eresize 	right_side
+	nresize		top_side
+	sresize		bottom_side
+	wresize		left_side
+	eresize		right_side
 	nwresize	top_left_corner
 	neresize	top_right_corner
 	swresize	bottom_left_corner
 	seresize	bottom_right_corner
-	move		fleur
 
     }
 
@@ -81,14 +81,15 @@ namespace eval ttk {
 		crosshair	crosshair
 		busy		wait
 		forbidden	no
+		move		fleur
 
-		vresize 	size_ns
-		nresize 	size_ns
+		vresize		size_ns
+		nresize		size_ns
 		sresize		size_ns
 
 		wresize		size_we
 		eresize		size_we
-		hresize 	size_we
+		hresize		size_we
 
 		nwresize	size_nw_se
 		swresize	size_ne_sw
@@ -101,18 +102,19 @@ namespace eval ttk {
 	"aqua" {
 	    array set Cursors {
 		standard	arrow
-		text 	ibeam
-		link	pointinghand
+		text		ibeam
+		link		pointinghand
 		crosshair	crosshair
-		busy	watch
+		busy		wait
 		forbidden	notallowed
+		move		closedhand
 
-		hresize 	resizeleftright
-		vresize 	resizeupdown
-		nresize	resizeup
-		sresize	resizedown
-		wresize	resizeleft
-		eresize	resizeright
+		hresize		resizeleftright
+		vresize		resizeupdown
+		nresize		resizeup
+		sresize		resizedown
+		wresize		resizeleft
+		eresize		resizeright
 	    }
 	}
     }
@@ -138,12 +140,12 @@ proc ttk::cursor {name} {
 proc ttk::setCursor {w name} {
     variable Cursors
     if {[info exists Cursors($name)]} {
-        set cursorname $Cursors($name)
+	set cursorname $Cursors($name)
     }  else {
-        set cursorname $name
+	set cursorname $name
     }
     if {[$w cget -cursor] ne $cursorname} {
-        $w configure -cursor $cursorname
+	$w configure -cursor $cursorname
     }
 }
 
@@ -157,10 +159,10 @@ proc ttk::setCursor {w name} {
 proc ttk::saveCursor {w saveVar excludeList} {
     upvar $saveVar sv
     if {![info exists sv]} {
-        set sv [$w cget -cursor]
+	set sv [$w cget -cursor]
     }
     if {[$w cget -cursor] ni $excludeList} {
-        set sv [$w cget -cursor]
+	set sv [$w cget -cursor]
     }
 }
 

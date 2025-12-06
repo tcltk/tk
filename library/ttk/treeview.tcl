@@ -13,12 +13,12 @@ namespace eval ttk::treeview {
     # Press/drag/release:
     #
     set State(pressMode)	none
-    set State(pressX)		0
+    set State(moved)		0
 
-    # For pressMode == "resize"
+    # For pressMode eq "resize"
     set State(resizeColumn)	#0
 
-    # For pressmode == "heading"
+    # For pressMode eq "heading"
     set State(heading)	{}
     set State(cursor)	{}
 
@@ -754,7 +754,7 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 }
 
 #
-# Interactive column resize and move handlers
+# Interactive column resize, column move, and expand selection handlers
 #
 proc ::ttk::treeview::Press {w x y} {
     focus $w
@@ -788,9 +788,11 @@ proc ::ttk::treeview::Release {w x y} {
 }
 
 #
-# Interactive cell selection
+# Interactive item/cell expand selection
 #
 proc ttk::treeview::Select.press {w x y} {
+    variable State
+
     set item [$w identify item $x $y]
     if {$item eq ""} return
 
@@ -805,7 +807,6 @@ proc ttk::treeview::Select.press {w x y} {
 	*indicator -
 	*disclosure { ToggleOpenState $w $item }
 	default {
-	    variable State
 	    if {[$w cget -selectmode] in [list multiple extended]} {
 		set State(pressMode) "selection"
 	    }
@@ -814,6 +815,9 @@ proc ttk::treeview::Select.press {w x y} {
 }
 
 proc ttk::treeview::Select.drag {w x y} {
+    variable State
+    if {$State(pressMode) ne "selection"} return
+
     if {[$w cget -selecttype] eq "cell"} {
 	set cell [$w identify cell $x $y]
 	if {$cell eq ""} {
@@ -847,7 +851,7 @@ proc ttk::treeview::Select.drag {w x y} {
 }
 
 #
-# Interactive column resizing.
+# Interactive column resizing
 #
 proc ::ttk::treeview::Resize.press {w x y} {
     variable State
@@ -865,73 +869,94 @@ proc ::ttk::treeview::Resize.release {w x} {
 }
 
 #
-# Interactive column move.
+# Interactive column move
 #
 proc ::ttk::treeview::Heading.press {w x y} {
     variable State
     set column [$w column [$w identify column $x $y] -id]
-    array set State [list pressMode "heading" heading $column \
-	cursor [$w cget -cursor] activeHeading ""]
+    if {$column eq ""} return
+
+    # Get column positions
+    set columns [$w cget -displaycolumns]
+    if {[lindex $columns 0] eq "#all"} {
+	set columns [$w cget -columns]
+    }
+    set x0 0
+    set x1 0
+    set list [list]
+    foreach col [concat [list #0] $columns] {
+	lappend list $col [set x0 $x1] [incr x1 [$w column $col -width]]
+    }
+
+    array set State [list pressMode "heading" heading $column moved 0 \
+	cursor [$w cget -cursor] activeHeading "" columns $list x0 $x]
     $w heading $column state pressed
 }
 
 proc ::ttk::treeview::Heading.drag {w x y} {
     variable State
-    if {[$w identify region $x $y] eq "heading"} {
+    set halo 5
+
+    if {$State(pressMode) ne "heading" || $State(heading) eq "#0" ||
+	    abs($State(x0) - $x) < $halo} {
+	return
+    }
+
+    if {[$w identify region $x $y] in [list "heading" "separator"]} {
 	set column [$w column [$w identify column $x $y] -id]
-	if {$column ne $State(heading)} {
-	    if {$State(heading) ne "#0" && [$w cget -cursor] eq $State(cursor)} {
-		set cursor [ttk::cursor move]
-		set State(cursor) [$w cget -cursor]
-		ttk::setCursor $w $cursor
+	if {$column eq "#0"} return
+
+	# Show move cursor
+	if {[$w cget -cursor] eq $State(cursor)} {
+	    set cursor [ttk::cursor move]
+	    if {$cursor eq ""} {
+	        set cursor "fleur"
 	    }
-	    set active $State(activeHeading)
-	    if {$active ne $column} {
-		if {$active ne ""} {
-		    $w heading $active state !active
-		}
-		set State(activeHeading) $column
-		$w heading $column state active
-	    }
+	    set State(cursor) [$w cget -cursor]
+	    ttk::setCursor $w $cursor
 	}
 
+	# Activate column to be moved
+	set active $State(activeHeading)
+	if {$active ne $column} {
+	    if {$active ne ""} {
+		$w heading $active state !active
+	    }
+	    set State(activeHeading) $column
+	    $w heading $column state active
+	}
+
+	# Move column if crosses into another column
+	set columns [$w cget -displaycolumns]
+	if {[lindex $columns 0] eq "#all"} {
+	    set columns [$w cget -columns]
+	}
+	set index -1
+	foreach {col x0 x1} $State(columns) {
+	    if {$x >= $x0 && $x <= $x1} {
+		set idx [lsearch $columns $State(heading)]
+		set columns [linsert [lremove $columns $idx] $index $State(heading)]
+		$w configure -displaycolumns $columns
+		set State(moved) 1
+	    }
+	    incr index
+	}
     }
 }
 
 proc ::ttk::treeview::Heading.release {w x y} {
     variable State
-    set region [$w identify region $x $y]
+    if {$State(pressMode) ne "heading"} return
 
-    if {$region in [list "heading" "separator"]} {
+    if {[$w identify region $x $y] eq "heading"} {
 	set column [$w column [$w identify column $x $y] -id]
-	if {$region eq "heading" && $column eq $State(heading)} {
-	    # Sort
+	if {!$State(moved)} {
+	    # Do sort
 	    after 0 [$w heading $State(heading) -command]
-	} else {
-	    # Move
-	    set columns [$w cget -displaycolumns]
-	    if {[lindex $columns 0] eq "#all"} {
-		set columns [$w cget -columns]
-	    }
-	    if {$region eq "separator"} {
-		set index [lsearch $columns $column]
-		set column [lindex $columns [incr index]]
-		if {$column eq ""} {
-		    set column "#end"
-		}
-	    }
-	    if {$State(heading) ne "#0" && $column ne "#0"} {
-		set index [lsearch $columns $State(heading)]
-		set columns [lreplace $columns $index $index]
-		if {$column ne "#end"} {
-		    set index [lsearch $columns $column]
-		    $w configure -displaycolumns [linsert $columns $index $State(heading)]
-		} else {
-		    $w configure -displaycolumns [linsert $columns end $State(heading)]
-		}
-	    }
 	}
+	set State(moved) 0
     }
+
     if {$State(activeHeading) ne ""} {
 	$w heading $State(activeHeading) state !active
 	set State(activeHeading) {}
@@ -943,7 +968,7 @@ proc ::ttk::treeview::Heading.release {w x y} {
 }
 
 #
-# Selection modes.
+# Selection modes
 #
 
 #
