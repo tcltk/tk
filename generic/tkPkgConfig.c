@@ -47,6 +47,29 @@
 #  define CFG_FONTSYSTEM	"x11"
 #endif
 
+/*
+  The macOS framework build first installs the framework in the build
+  directory and then copies it to /Library/Frameworks/Tk.framework.
+  Without these macros the pkgconfig paths point into the build
+  directory instead of into the installed framework.
+*/
+
+#if defined(MAC_OSX_TK) && defined(TK_FRAMEWORK)
+  #define VERSION_DIR "/Library/Frameworks/Tk.framework/Versions/"TK_VERSION
+  #define CFG_INSTALL_LIBDIR VERSION_DIR
+  #define CFG_RUNTIME_LIBDIR CFG_INSTALL_LIBDIR
+  #define CFG_INSTALL_BINDIR VERSION_DIR
+  #define CFG_RUNTIME_BINDIR CFG_INSTALL_BINDIR
+  #define CFG_INSTALL_DOCDIR VERSION_DIR "/Resources/Documentation"
+  #define CFG_RUNTIME_DOCDIR CFG_INSTALL_DOCDIR
+  #define CFG_INSTALL_SCRDIR VERSION_DIR "/Resources/Scripts"
+  #define CFG_RUNTIME_SCRDIR CFG_INSTALL_SCRDIR
+  #define CFG_INSTALL_INCDIR VERSION_DIR "/Headers"
+  #define CFG_RUNTIME_INCDIR CFG_INSTALL_INCDIR
+  #define CFG_INSTALL_DEMODIR VERSION_DIR "/Resources/Scripts/demos"
+  #define CFG_RUNTIME_DEMODIR CFG_INSTALL_DEMODIR
+#endif
+
 static const Tcl_Config cfg[] = {
     {"fontsystem",		CFG_FONTSYSTEM},
 
