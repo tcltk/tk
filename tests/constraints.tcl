@@ -52,8 +52,7 @@ if {[llength [info commands send]]} {
 childTkProcess exit
 testutils forget child
 
-# testConstraint failsOnXQuartz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-testConstraint failsOnXQuartz 1; # set temporarily to see how tests fail at Github CI
+testConstraint failsOnXQuartz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 #
 # FONTS
