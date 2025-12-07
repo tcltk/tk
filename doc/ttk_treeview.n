@@ -1259,7 +1259,7 @@ Applies to all:
 .IP \(bu
 \fB<<SelectAll>>\fR virtual event will select all items or cells in the widget (multiple and extended select modes only).
 .IP \(bu
-\fB<<SelectNone>>\fR virtual event will unselect all items or cells.
+\fB<<SelectNone>>\fR virtual event will unselect all items or cells (except browse mode).
 .IP \(bu
 The \fB<<Copy>>\fR virtual event will copy the selected items or cells to the clipboard.
 .RE
@@ -1277,7 +1277,7 @@ Generated just before setting the focus item to \fB\-open true\fR.
 .IP \fB<<TreeviewClose>>\fR
 Generated just after setting the focus item to \fB\-open false\fR.
 .IP \fB<<TreeviewFocus>>\fR
-Generated whenever the focus or cellfocus changes including when unset.
+Generated whenever the focus or cell focus changes including when unset.
 .PP
 The \fBfocus\fR, \fBcellfocus\fR, \fBselection\fR, and \fBcellselection\fR
 widget subcommands can be used to determine the affected item(s) or cell(s).
@@ -1391,6 +1391,15 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 \fB\-relief\fR \fIrelief\fR
 .
 Specifies the relief to use for the heading.
+.PP
+Example of how to set the current sorted column header font to bold black and
+all other column header fonts to normal gray similar to how the Mac Finder works:
+.PP
+.CS
+font create TkSelectedFont {*}[font configure TkHeadingFont] -weight bold
+ttk::style map Heading -foreground [list selected black alternate black "" gray30] \\
+    -font [list selected TkSelectedFont alternate TkSelectedFont "" TkHeadingFont]
+.CE
 .RE
 .PP
 The \fBRow\fR styling options configurable with \fBttk::style\fR are:
@@ -1415,7 +1424,6 @@ Example of how to set focus ring options for a spreadsheet-style focus ring:
 .CS
 ttk::style configure Row -focuscolor #008000 -focuswidth 2
 .CE
-
 .RE
 .PP
 The \fBItem\fR styling options configurable with \fBttk::style\fR are:
