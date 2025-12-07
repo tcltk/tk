@@ -141,8 +141,8 @@ one character forward.
 Pressing F9 rebuilds the console window by destroying all its children
 and reloading the Tcl script that defined the console's behaviour.
 .IP [12]
-Scrolling the mouse wheel up while holding Control increases the
-console font size, while scrolling down decreases it.
+Scrolling the mouse wheel while holding Cmd (macOS) or Ctrl (other platforms)
+increases (scroll up) or decreases (scroll down) the console font size.
 .PP
 Most other behaviour is the same as a conventional text widget except
 for the way that the \fI<<Cut>>\fR event is handled identically to the
