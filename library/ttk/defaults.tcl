@@ -185,7 +185,9 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style map Item -indicatorbackground \
-	    [list selected $colors(-indicator)]
+	    [list {selected disabled}	$colors(-disabledindicator) \
+		  selected		$colors(-indicator) \
+		  disabled		$colors(-frame)]
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
