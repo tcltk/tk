@@ -140,6 +140,9 @@ one character forward.
 .IP [11]
 Pressing F9 rebuilds the console window by destroying all its children
 and reloading the Tcl script that defined the console's behaviour.
+.IP [12]
+Scrolling the mouse wheel up while holding Control increases the
+console font size, while scrolling down decreases it.
 .PP
 Most other behaviour is the same as a conventional text widget except
 for the way that the \fI<<Cut>>\fR event is handled identically to the
