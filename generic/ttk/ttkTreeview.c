@@ -6986,7 +6986,7 @@ static void TreeitemIndicatorSize(
     int size = 0;
     Ttk_Padding margins;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    Tk_GetPixels(NULL, tkwin, Tcl_GetString(indicator->sizeObj), &size);
     if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
 
