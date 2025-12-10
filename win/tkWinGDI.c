@@ -905,7 +905,7 @@ static Tcl_Size ParseArrow (
 static Tcl_Size ParseArrShp(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
@@ -983,11 +983,11 @@ static Tcl_Size ParseCapStyle (
 static Tcl_Size ParseSmooth(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
-    int boolValue;
+    bool boolValue;
     Tcl_Size index;
 
     static const struct SmoothMethod {
@@ -1711,7 +1711,7 @@ static int GdiCharWidths(
     }
 
     {
-	int i;
+	unsigned char i;
 	char ind[2];
 	ind[1] = '\0';
 
@@ -1999,7 +1999,7 @@ static int GdiText(
 	Tcl_DStringInit(&ds);
 	wstring = Tcl_UtfToWCharDString(layout->chunks[i].start,
 	    layout->chunks[i].numBytes, &ds);
-	retval = TextOutW(hDC, xi, yi, wstring, Tcl_DStringLength(&ds)/2);
+	retval = TextOutW(hDC, xi, yi, wstring, (int)Tcl_DStringLength(&ds)/2);
 	Tcl_DStringFree(&ds);
 	ya += fm.linespace;
 	nlseen = 0;
@@ -2051,7 +2051,7 @@ static int GdiTextPlain(
     string = Tcl_GetStringFromObj(objv[4], &strlen);
     Tcl_DStringInit(&ds);
     wstring = Tcl_UtfToWCharDString(string, strlen, &ds);
-    retval = TextOutW(hDC, x0, y0, wstring, Tcl_DStringLength(&ds)/2);
+    retval = TextOutW(hDC, x0, y0, wstring, (int)Tcl_DStringLength(&ds)/2);
     Tcl_DStringFree(&ds);
     Tcl_SetObjResult(interp, Tcl_NewIntObj(retval));
     return TCL_OK;
@@ -3624,7 +3624,7 @@ static HANDLE BitmapToDIB(
 
     /* Calculate size of memory block required to store BITMAPINFO. */
 
-    dwLen = bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD);
+    dwLen = (DWORD)(bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD));
 
     /* Get a DC. */
 
@@ -3678,7 +3678,7 @@ static HANDLE BitmapToDIB(
 
     /* Realloc the buffer big enough to hold all the bits. */
 
-    dwLen = bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD) + bi.biSizeImage;
+    dwLen = (DWORD)(bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD) + bi.biSizeImage);
 
     if ((h = GlobalReAlloc(hDIB, dwLen, 0)) != 0) {
 	hDIB = h;
@@ -3821,7 +3821,7 @@ static HPALETTE GetSystemPalette(void)
     /* Set some important fields. */
 
     lpLogPal->palVersion = 0x300;
-    lpLogPal->palNumEntries = nColors;
+    lpLogPal->palNumEntries = (WORD)nColors;
 
     /* Copy the current system palette into our logical palette. */
 
