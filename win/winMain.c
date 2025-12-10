@@ -151,13 +151,6 @@ _tWinMain(
     consoleRequired = TRUE;
 
     /*
-     * Set up the default locale to be standard "C" locale so parsing is
-     * performed correctly.
-     */
-
-    setlocale(LC_ALL, "C");
-
-    /*
      * Get our args from the c-runtime. Ignore lpszCmdLine.
      */
 
@@ -297,13 +290,6 @@ _tmain(
     int argc,
     TCHAR **argv)
 {
-    /*
-     * Set up the default locale to be standard "C" locale so parsing is
-     * performed correctly.
-     */
-
-    setlocale(LC_ALL, "C");
-
     /*
      * Console emulation widget not required as this entry is from the
      * console subsystem, thus stdin,out,err already have end-points.
