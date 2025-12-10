@@ -475,6 +475,8 @@ typedef struct {
     TreeColumn *focusCol;	/* Current focus column */
     TreeItem *selAnchor;	/* Selection anchor item */
     Tcl_Obj *selAnchorColObj;	/* Selection anchor column */
+    TreeItem *current;		/* Current mouse over item */
+    Tcl_Size currentCol;	/* Current mouse over column */
 
     /* Widget options: */
     Tcl_Obj *columnsObj;	/* List of symbolic column names */
@@ -1158,18 +1160,42 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1); /*forward*/
 static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
     | ButtonPressMask|ButtonReleaseMask
+    | EnterWindowMask|LeaveWindowMask
     | PointerMotionMask|ButtonMotionMask
     | VirtualEventMask;
+
+static void TreeviewProcessEvent(Treeview *tv, XEvent *event, TreeItem *item, Tcl_Size colno) {
+    Ttk_TagSet tagset;
+
+    /* Use a local copy of tagset, in case a binding script stomps on -tags. */
+    tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, item->tagsObj);
+    if (!tagset) {
+	return;
+    }
+
+    /* Pick up any cell tags and ignore return error. */
+    if (colno >= 0 && colno < item->nTagSets) {
+	if (item->cellTagSets[colno]) {
+	    Ttk_TagSetAddSet(tagset, item->cellTagSets[colno]);
+	}
+    }
+
+    /* Fire binding */
+    Tcl_Preserve((void *)tv);
+    Tk_BindEvent(tv->tree.bindingTable, event, tv->core.tkwin, tagset->nTags,
+	    (void **)tagset->tags);
+    Tcl_Release((void *)tv);
+    Ttk_FreeTagSet(tagset);
+}
 
 static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     Treeview *tv = (Treeview *)clientData;
     TreeItem *item = NULL;
-    Ttk_TagSet tagset;
     int unused;
-    Tcl_Size colno = TCL_INDEX_NONE;
+    Tcl_Size colno = -1;
     TreeColumn *column = NULL;
 
-    /* Figure out where to deliver the event. */
+    /* Get item and column for the event. */
     switch (event->type) {
 	case KeyPress:
 	case KeyRelease:
@@ -1183,45 +1209,57 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	    }
 	    break;
 	case ButtonPress:
+	    item = IdentifyItem(tv, event->xbutton.y);
+	    colno = IdentifyDisplayColumn(tv, event->xbutton.x, &unused);
+	    break;
 	case ButtonRelease:
 	    item = IdentifyItem(tv, event->xbutton.y);
 	    colno = IdentifyDisplayColumn(tv, event->xbutton.x, &unused);
-	    column = tv->tree.displayColumns[colno];
+	    break;
+	case EnterNotify:
+	    item = IdentifyItem(tv, event->xcrossing.y);
+	    colno = IdentifyDisplayColumn(tv, event->xcrossing.x, &unused);
+	    break;
+	case LeaveNotify:
+	    item = tv->tree.current;
+	    colno = tv->tree.currentCol;
 	    break;
 	case MotionNotify:
 	    item = IdentifyItem(tv, event->xmotion.y);
 	    colno = IdentifyDisplayColumn(tv, event->xmotion.x, &unused);
-	    column = tv->tree.displayColumns[colno];
 	    break;
 	default:
 	    break;
     }
 
-    if (!item) {
-	return;
+    /* Process event */
+    if (item) {
+	TreeviewProcessEvent(tv, event, item, colno);
     }
 
-    /* ASSERT: Ttk_GetTagSetFromObj succeeds.
-     * NB: must use a local copy of the tagset,
-     * in case a binding script stomps on -tags.
-     */
-    tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, item->tagsObj);
+    /* Use Motion to generate internal Enter and Leave events */
+    if ((event->type == MotionNotify) || (event->type == ButtonRelease)) {
+	if (item != tv->tree.current || colno != tv->tree.currentCol) {
+	    /* Leave */
+	    if (tv->tree.current) {
+		event->type = LeaveNotify;
+		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, event, tv->tree.current, tv->tree.currentCol);
+	    }
 
-    /* Pick up any cell tags. */
-    if (colno >= 0) {
-	if (colno < item->nTagSets) {
-	    if (item->cellTagSets[colno]) {
-		Ttk_TagSetAddSet(tagset, item->cellTagSets[colno]);
+	    /* Enter */
+	    if (item) {
+		event->type = EnterNotify;
+		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, event, item, colno);
 	    }
 	}
     }
 
-    /* Fire binding: */
-    Tcl_Preserve(clientData);
-    Tk_BindEvent(tv->tree.bindingTable, event, tv->core.tkwin, tagset->nTags,
-	    (void **)tagset->tags);
-    Tcl_Release(clientData);
-    Ttk_FreeTagSet(tagset);
+    if (event->type != KeyPress && event->type != KeyRelease && event->type != VirtualEvent) {
+	tv->tree.current = item;
+	tv->tree.currentCol = colno;
+    }
 }
 
 /*------------------------------------------------------------------------
@@ -1287,6 +1325,8 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr) {
     tv->tree.focusCol = NULL;
     tv->tree.selAnchor = NULL;
     tv->tree.selAnchorColObj = NULL;
+    tv->tree.current = NULL;
+    tv->tree.currentCol = -1;
 
     /* Create root item "": */
     tv->tree.root = NewItem();
@@ -2611,6 +2651,27 @@ static int TreeviewChildrenCommand(
 	    }
 	    InsertItem(item, child, newChildren[i]);
 	    child = newChildren[i];
+	}
+
+	/* If focus item is detached, unset it */
+	if (tv->tree.focus && (tv->tree.focus)->parent == NULL) {
+	    tv->tree.focus = NULL;
+	    tv->tree.focusCol = NULL;
+	}
+
+	/* If selection anchor item is detached, unset it */
+	if (tv->tree.selAnchor && (tv->tree.selAnchor)->parent == NULL) {
+	    tv->tree.selAnchor = NULL;
+	    if (tv->tree.selAnchorColObj) {
+	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		tv->tree.selAnchorColObj = NULL;
+	    }
+	}
+
+	/* If current item is detached, unset it */
+	if (tv->tree.current && (tv->tree.current)->parent == NULL) {
+	    tv->tree.current = NULL;
+	    tv->tree.currentCol = -1;
 	}
 
 	ckfree(newChildren);
@@ -4011,6 +4072,27 @@ static int TreeviewDetachCommand(
 	DetachItem(items[i]);
     }
 
+    /* If focus item is detached, unset it */
+    if (tv->tree.focus && (tv->tree.focus)->parent == NULL) {
+	tv->tree.focus = NULL;
+	tv->tree.focusCol = NULL;
+    }
+
+    /* If selection anchor item is detached, unset it */
+    if (tv->tree.selAnchor && (tv->tree.selAnchor)->parent == NULL) {
+	tv->tree.selAnchor = NULL;
+	if (tv->tree.selAnchorColObj) {
+	    Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+	    tv->tree.selAnchorColObj = NULL;
+	}
+    }
+
+    /* If current item is detached, unset it */
+    if (tv->tree.current && (tv->tree.current)->parent == NULL) {
+	tv->tree.current = NULL;
+	tv->tree.currentCol = -1;
+    }
+
     tv->tree.rowPosNeedsUpdate = 1;
     TtkRedisplayWidget(&tv->core);
     ckfree(items);
@@ -4120,9 +4202,26 @@ static int TreeviewDeleteCommand(
     /* Free items: */
     while (delq) {
 	TreeItem *next = delq->next;
+
+	/* If item has focus, unset it */
 	if (tv->tree.focus == delq) {
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
+	}
+
+	/* If item has selection anchor, unset it */
+	if (tv->tree.selAnchor == delq) {
+	    tv->tree.selAnchor = NULL;
+	    if (tv->tree.selAnchorColObj) {
+	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		tv->tree.selAnchorColObj = NULL;
+	    }
+	}
+
+	/* If item is current item, unset it */
+	if (tv->tree.current == delq) {
+	    tv->tree.current = NULL;
+	    tv->tree.currentCol = -1;
 	}
 	FreeItem(delq);
 	delq = next;
@@ -4496,6 +4595,37 @@ static int TreeviewCellFocusCommand(
 	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
 	}
     }
+    return TCL_OK;
+}
+
+/* + $tree current
+ */
+static int TreeviewCurrentCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv = (Treeview *)recordPtr;
+    Tcl_Obj *listPtr = NULL;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 2, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    if (!(listPtr = Tcl_NewListObj(0, NULL))) {
+	return TCL_ERROR;
+    }
+
+    if (tv->tree.current) {
+	Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.current)->idObj);
+    } else {
+	Tcl_BounceRefCount(listPtr);
+	return TCL_OK;
+    }
+
+    if (tv->tree.currentCol >= 0 && tv->tree.currentCol < tv->tree.nDisplayColumns) {
+	Tcl_ListObjAppendElement(interp, listPtr,
+	    (tv->tree.displayColumns[tv->tree.currentCol])->idObj);
+    }
+    Tcl_SetObjResult(interp, listPtr);
     return TCL_OK;
 }
 
@@ -6399,8 +6529,8 @@ static int TreeviewTagBindCommand(
 	    if (mask & (~TreeviewBindEventMask)) {
 		Tk_DeleteBinding(interp, bindingTable, tag, sequence);
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "unsupported event %s\nonly key, button, motion, and"
-		    " virtual events supported", sequence));
+		    "unsupported event %s\nonly key, button, motion, enter,"
+		    " leave, and virtual events supported", sequence));
 		Tcl_SetErrorCode(interp, "TTK", "TREE", "BIND_EVENTS", (char *)NULL);
 		return TCL_ERROR;
 	    }
@@ -6858,6 +6988,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "collapse",	TreeviewCollapseCommand,0 },
     { "column",		TreeviewColumnCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
+    { "current",	TreeviewCurrentCommand,0 },
     { "delete",		TreeviewDeleteCommand,0 },
     { "depth",		TreeviewDepthCommand,0 },
     { "detach",		TreeviewDetachCommand,0 },

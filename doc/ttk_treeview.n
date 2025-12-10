@@ -380,6 +380,13 @@ heading column separator.
 .PP
 Use \fIpathname \fBcolumn #0\fR to configure the tree column.
 .RE
+.\" METHOD: current
+.TP
+\fIpathname \fBcurrent\fR
+.
+Returns the current item id and column id, if any, or {} if none. The current
+item is the item under the mouse pointer. Use in \fB<Enter>\fR and \fB<Leave>\fR
+event handlers to get the item and column for the event.
 .\" METHOD: delete
 .TP
 \fIpathname \fBdelete \fIitemList\fR
@@ -999,8 +1006,12 @@ bindings for the cell's \fB\-tags\fR are evaluated as well.
 .RS
 .PP
 \fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events are sent to the focus item.
-\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events are sent to
-the item under the mouse pointer. No other event types are supported.
+The \fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events are sent
+to the item under the mouse pointer.
+The \fBEnter\fR and \fBLeave\fR events are sent to the item under the mouse
+pointer or the last item under the mouse pointer, respectively. They are used
+to detect when the mouse pointer enters or leaves a cell.
+No other event types are supported.
 .PP
 The binding \fIscript\fR undergoes \fB%\fR-substitutions before evaluation;
 see \fBbind\fR(n) for details.
